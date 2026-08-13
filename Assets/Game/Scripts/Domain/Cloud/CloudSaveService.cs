@@ -51,6 +51,60 @@ namespace GlimmerGrove.Cloud
         public static void UseBackend(ICloudSaveBackend backend)
             => _backend = backend ?? new NullCloudBackend();
 
+        // ------------------------------------------------------------ the latch
+        /// <summary>
+        /// Claims the sync latch. Held by a sync, and equally by anything that changes
+        /// <em>which account this device is</em> — linking a provider, or adopting the
+        /// account one already belongs to.
+        ///
+        /// <para>
+        /// Syncs have always excluded each other. Nothing excluded a sync from an
+        /// identity change, and the OAuth consent screen makes that collision routine
+        /// rather than rare: opening it backgrounds the app and returning foregrounds it,
+        /// so <c>Boot.Pump.OnApplicationPause</c> fires <see cref="BeginSync"/> at the
+        /// exact moment the sign-in completes and <see cref="CloudState"/> is being
+        /// rewritten. The sync then addresses one account holding the other's
+        /// credentials, and the rules refuse it — <i>both</i> directions, since
+        /// <c>isOwner(uid)</c> gates reads too.
+        /// </para>
+        ///
+        /// <para>
+        /// Observed live on 2026-08-13: a burst of PERMISSION_DENIED on every pull and
+        /// push immediately after adopting an account, clearing itself once the racing
+        /// cycle finished. Nothing was lost, because the identity change had already
+        /// committed and the next clean sync agreed with it — but it logged at error
+        /// level, which this file reserves for a write the client believed was valid.
+        /// </para>
+        /// </summary>
+        static bool TryClaim() => Interlocked.CompareExchange(ref _syncing, 1, 0) == 0;
+
+        static void Release() => Volatile.Write(ref _syncing, 0);
+
+        /// <summary>
+        /// Waits for the latch rather than refusing the moment it is busy.
+        ///
+        /// A sync starts every time the app is foregrounded, which is precisely when a
+        /// player opens the account screen and taps a provider — so failing fast here
+        /// would turn "a background sync happened to be in flight" into "something went
+        /// wrong", which is the exact failure this whole change set exists to remove. A
+        /// cycle is one pull and one push, so the wait is short and the alternative is
+        /// worse. The timeout only exists so a wedged sync cannot make the button dead
+        /// forever; reporting it is honest, and the player can tap again.
+        /// </summary>
+        static async Task<bool> ClaimAsync(CancellationToken cancellation)
+        {
+            const int TimeoutMs = 10000;
+            const int PollMs = 50;
+
+            for (int waited = 0; waited < TimeoutMs; waited += PollMs)
+            {
+                if (TryClaim()) return true;
+                await Task.Delay(PollMs, cancellation);
+            }
+
+            return TryClaim();
+        }
+
         // ---------------------------------------------------------------- sync
         /// <summary>
         /// Runs a sync and forgets about it. The result lands in the save file; nothing
@@ -73,7 +127,7 @@ namespace GlimmerGrove.Cloud
             if (!IsAvailable) return CloudResult.Failed(CloudFailure.Offline, "no cloud backend");
             if (!SaveService.IsLoaded) return CloudResult.Failed(CloudFailure.Error, "save not loaded");
 
-            if (Interlocked.CompareExchange(ref _syncing, 1, 0) != 0)
+            if (!TryClaim())
                 return CloudResult.Failed(CloudFailure.Error, "a sync is already running");
 
             try
@@ -91,7 +145,7 @@ namespace GlimmerGrove.Cloud
             }
             finally
             {
-                Volatile.Write(ref _syncing, 0);
+                Release();
             }
         }
 
@@ -173,17 +227,30 @@ namespace GlimmerGrove.Cloud
         {
             if (!IsAvailable) return CloudResult.Failed(CloudFailure.Offline, "no cloud backend");
 
-            var (result, identity) = await _backend.LinkAsync(credential, cancellation);
+            if (!await ClaimAsync(cancellation))
+                return CloudResult.Failed(CloudFailure.Error, "a sync is already running");
 
-            // Not a fault: the player linked this provider on another device. The caller
-            // has to ask before anything can be done about it, because the answer costs
-            // one of the two accounts.
-            if (result.Failure == CloudFailure.AlreadyLinkedElsewhere) return result;
-            if (!result.Ok) return result;
+            try
+            {
+                var (result, identity) = await _backend.LinkAsync(credential, cancellation);
 
-            if (identity.IsValid) CloudState.SignIn(identity.UserId);
-            SaveService.Save();
+                // Not a fault: the player linked this provider on another device. The
+                // caller has to ask before anything can be done about it, because the
+                // answer costs one of the two accounts.
+                if (result.Failure == CloudFailure.AlreadyLinkedElsewhere) return result;
+                if (!result.Ok) return result;
 
+                if (identity.IsValid) CloudState.SignIn(identity.UserId);
+                SaveService.Save();
+            }
+            finally
+            {
+                Release();
+            }
+
+            // Released first: SyncAsync claims the latch itself, and by this point the
+            // identity has settled, so a sync arriving now — including the one the
+            // consent screen's foreground fires — sees a consistent account.
             await SyncAsync(cancellation);
             return CloudResult.Success;
         }
@@ -213,28 +280,41 @@ namespace GlimmerGrove.Cloud
             if (!IsAvailable) return CloudResult.Failed(CloudFailure.Offline, "no cloud backend");
             if (!SaveService.IsLoaded) return CloudResult.Failed(CloudFailure.Error, "save not loaded");
 
-            var (signIn, identity) = await _backend.SignInWithCredentialAsync(credential, cancellation);
-            if (!signIn.Ok) return signIn;
-            if (!identity.IsValid) return CloudResult.Failed(CloudFailure.Unauthenticated, "no user id");
+            if (!await ClaimAsync(cancellation))
+                return CloudResult.Failed(CloudFailure.Error, "a sync is already running");
 
-            // Local state is dropped before the pull, so a failure here leaves the device
-            // on a clean signed-in account rather than on the old one wearing a new name.
-            SaveService.Wipe();
-            CloudState.SignIn(identity.UserId);
-
-            var (pull, snapshot) = await _backend.PullAsync(identity.UserId, cancellation);
-            if (!pull.Ok) return pull;
-
-            if (snapshot != null && snapshot.Exists && snapshot.Save != null)
+            try
             {
-                SaveService.Adopt(snapshot.Save);
-                CloudState.SignIn(identity.UserId);      // the document may predate the link
+                var (signIn, identity) = await _backend.SignInWithCredentialAsync(credential, cancellation);
+                if (!signIn.Ok) return signIn;
+                if (!identity.IsValid) return CloudResult.Failed(CloudFailure.Unauthenticated, "no user id");
+
+                // Local state is dropped before the pull, so a failure here leaves the
+                // device on a clean signed-in account rather than on the old one wearing
+                // a new name.
+                SaveService.Wipe();
+                CloudState.SignIn(identity.UserId);
+
+                var (pull, snapshot) = await _backend.PullAsync(identity.UserId, cancellation);
+                if (!pull.Ok) return pull;
+
+                if (snapshot != null && snapshot.Exists && snapshot.Save != null)
+                {
+                    SaveService.Adopt(snapshot.Save);
+                    CloudState.SignIn(identity.UserId);  // the document may predate the link
+                }
+
+                PlayerProgression.Invalidate();
+                SaveService.Flush();
+            }
+            finally
+            {
+                Release();
             }
 
-            PlayerProgression.Invalidate();
-            SaveService.Flush();
+            // Both outside the latch. Raising Synced under it would deadlock any handler
+            // that repaints by asking for a sync, and SyncAsync claims the latch itself.
             Raise(Synced);
-
             return await SyncAsync(cancellation);
         }
 

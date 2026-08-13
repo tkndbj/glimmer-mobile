@@ -119,19 +119,37 @@ namespace GlimmerGrove.Tests
         {
             // If this fails, a level that shipped in the original build has been
             // removed or renamed, and updating players' stars would land nowhere.
-            var catalog = LoadBundledCatalog();
-            if (catalog.IsEmpty) Assert.Ignore("no bundled content available in this run");
+            var index = LoadBundledIndex();
+            if (index.IsEmpty) Assert.Ignore("no bundled content available in this run");
 
             CollectionAssert.IsEmpty(
-                LegacyPlayerPrefsImport.MissingFromCatalog(catalog),
+                LegacyPlayerPrefsImport.MissingFromCatalog(index),
                 "LegacyIndexOrder is frozen; a level it names must never leave the catalog");
         }
 
-        internal static LevelCatalog LoadBundledCatalog()
+        /// <summary>
+        /// The manifest index, which is all the boot path ever reads. Cheap enough that
+        /// tests about identity and ordering never touch a chapter body.
+        /// </summary>
+        internal static CatalogIndex LoadBundledIndex()
         {
             var source = new Content.Sources.BundledContentSource();
             var result = new LevelRepository(source).LoadAsync().GetAwaiter().GetResult();
-            return result.Catalog;
+            return result.Catalog.Index;
+        }
+
+        /// <summary>
+        /// Every shipped level, bodies and all. Only the tests that genuinely inspect
+        /// grids use this — the same split the game itself makes.
+        /// </summary>
+        internal static System.Collections.Generic.List<LevelDefinition> LoadBundledLevels()
+        {
+            var source = new Content.Sources.BundledContentSource();
+            var result = new LevelRepository(source).LoadEverythingAsync().GetAwaiter().GetResult();
+
+            var levels = new System.Collections.Generic.List<LevelDefinition>();
+            foreach (var body in result.Catalog.LoadedBodies()) levels.AddRange(body.Levels);
+            return levels;
         }
     }
 }

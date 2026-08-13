@@ -124,10 +124,10 @@ namespace GlimmerGrove.Progression
             return new ProgressionTotals(xp, credits, cleared, stars);
         }
 
-        /// <summary>Convenience for the live catalog.</summary>
-        public static ProgressionTotals Compute(IEnumerable<LevelRecord> records,
-                                                LevelCatalog catalog, ProgressionTable table)
-            => Compute(records, new CatalogChapterMap(catalog), table);
+        // There is no catalog-shaped overload here any more, and deliberately not: a
+        // CatalogIndex *is* an IChapterMap, so the live call binds to the one above with
+        // nothing in between. An overload taking the concrete type would also have
+        // silently out-resolved it and recursed.
 
         static int ClampStars(int stars)
             => stars < 0 ? 0 : stars > LevelRecord.MaxStars ? LevelRecord.MaxStars : stars;

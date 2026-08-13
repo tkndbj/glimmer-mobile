@@ -14,10 +14,21 @@ namespace GlimmerGrove.Content
     /// </summary>
     public static class ContentSchema
     {
-        public const int Version = 1;
+        /// <summary>
+        /// v2 moved chapter membership and order into the manifest, so the boot path
+        /// reads one small file instead of every chapter body. Raised rather than made
+        /// optional because a v1 manifest lists no levels at all, and a client that
+        /// tried to read one would see a game with no glades in it — a silent empty
+        /// catalog is far worse than a clear refusal.
+        ///
+        /// It cost nothing to raise: remote delivery was still switched off and one
+        /// chapter had shipped, so there was no content anywhere to migrate. The same
+        /// change made after a CDN goes live is a migration under live players.
+        /// </summary>
+        public const int Version = 2;
 
         /// <summary>Oldest content this build can still read.</summary>
-        public const int MinimumSupported = 1;
+        public const int MinimumSupported = 2;
 
         public static bool CanRead(int schemaVersion)
             => schemaVersion >= MinimumSupported && schemaVersion <= Version;

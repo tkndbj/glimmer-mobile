@@ -211,13 +211,25 @@ namespace GlimmerGrove
         IEnumerator LoadOpeningChapter()
         {
             var catalog = GameContent.Catalog;
-            var target = LevelUnlock.NextToPlay(catalog) ?? catalog.First;
-            var chapter = catalog.ChapterOf(target);
 
-            if (chapter == null) { _target = 1f; yield break; }
+            var target = LevelUnlock.NextToPlay(catalog.Index);
+            if (!target.IsValid) target = catalog.First;
+
+            var chapterId = catalog.ChapterOf(target);
+            if (!chapterId.IsValid) { _target = 1f; yield break; }
+
+            // The one chapter body the game reads at launch, and it lands here on
+            // purpose: the splash already has a progress bar, and it is the same
+            // chapter whose art is about to be fetched anyway. Every other chapter's
+            // grids stay on disk until the player walks into them.
+            var bodyTask = catalog.ChapterAsync(chapterId);
+            while (!bodyTask.IsCompleted) yield return null;
+
+            if (bodyTask.IsFaulted) { Debug.LogException(bodyTask.Exception); _target = 1f; yield break; }
+            if (bodyTask.Result == null) { _target = 1f; yield break; }
 
             var progress = new Progress<float>(t => _target = .90f + .10f * t);
-            var task = AssetLibrary.EnsureChapterAsync(chapter, catalog, progress);
+            var task = AssetLibrary.EnsureChapterAsync(bodyTask.Result, progress);
 
             while (!task.IsCompleted) yield return null;
             if (task.IsFaulted) Debug.LogException(task.Exception);

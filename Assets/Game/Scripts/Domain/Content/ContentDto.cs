@@ -38,7 +38,13 @@ namespace GlimmerGrove.Content
         /// <summary>Bumped whenever the chapter file changes, so the cache knows to refetch.</summary>
         public int version;
 
-        /// <summary>Sort order across chapters. Leave gaps so later chapters can slot in.</summary>
+        /// <summary>
+        /// Sort order across chapters. Leave gaps so later chapters can slot in.
+        ///
+        /// The manifest is the only place order is written. That is what lets a chapter
+        /// be reordered, or a new one slotted between two shipped ones, by pushing this
+        /// one small file — without reshipping a single chapter body.
+        /// </summary>
         public int order;
 
         /// <summary>Set false to retire a chapter without deleting it from the server.</summary>
@@ -46,6 +52,19 @@ namespace GlimmerGrove.Content
 
         /// <summary>Minimum app build that may load this chapter. 0 means anything.</summary>
         public int minAppVersion;
+
+        /// <summary>
+        /// This chapter's level ids, in play order. Present in the manifest so the boot
+        /// path can know the whole game's shape — which glades exist, in what order,
+        /// belonging to which chapter — after reading one small file, instead of opening
+        /// and parsing every chapter body on every launch.
+        ///
+        /// It is the authority on membership and order; the chapter body is the
+        /// authority on what each level actually is. Nobody writes this list by hand —
+        /// <c>Content ▸ Sync Manifest</c> derives it from the bodies, so the two cannot
+        /// drift, and the build gate proves they have not.
+        /// </summary>
+        public string[] levels;
     }
 
     [Serializable]
@@ -53,8 +72,18 @@ namespace GlimmerGrove.Content
     {
         public int schemaVersion;
         public string id;
-        public int order;
         public string nameKey;
+
+        /// <summary>
+        /// A tripwire, not a setting. Order lives in the manifest — see
+        /// <see cref="ManifestChapterDto.order"/> — and a chapter that tried to state
+        /// its own would be a second source of truth for where the game goes next.
+        ///
+        /// The field is kept only so validation can see a stale one and fail the build
+        /// with an explanation, rather than JsonUtility silently discarding it and the
+        /// author believing a number that does nothing.
+        /// </summary>
+        public int order;
 
         // shared art, inherited by every level in the chapter
         public string accent;
@@ -91,10 +120,11 @@ namespace GlimmerGrove.Content
         public string slate;
         public string backdrop;
 
-        // ---- text, referenced by key and never shown raw --------------------
-        public string nameKey;
-        public string taglineKey;
-        public string lessonKey;
+        // ---- text ------------------------------------------------------------
+        // Deliberately absent. A level's loc keys are derived from its id — see
+        // LevelDefinition.DefaultNameKey — so that anything holding a LevelId can name
+        // a glade without reading this file. Overridable keys would have made the
+        // manifest index insufficient for the map and the home screen.
     }
 
     /// <summary>

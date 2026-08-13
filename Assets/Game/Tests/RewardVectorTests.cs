@@ -168,7 +168,7 @@ namespace GlimmerGrove.Tests
         public void TheShippedTableAndTheVectorTableUseTheSameReader()
         {
             var file = Load();
-            Assert.AreEqual(ContentSchema.Version, file.progression.schemaVersion,
+            Assert.AreEqual(ProgressionSchema.Version, file.progression.schemaVersion,
                             "the vectors were authored against a different content schema");
         }
     }

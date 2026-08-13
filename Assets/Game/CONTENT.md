@@ -52,8 +52,8 @@ record of what the original build shipped, not a description of the game.
 
 ```
 Assets/StreamingAssets/Content/
-  manifest.json              index of chapters; a chapter is invisible until listed here
-  chapters/<chapter_id>.json one chapter and all of its levels
+  manifest.json              every chapter and every glade id, in order
+  chapters/<chapter_id>.json one chapter's grids, colours and art keys
   loc/<lang>.json            strings, keyed
 ```
 
@@ -61,17 +61,65 @@ StreamingAssets rather than Resources: `Resources/` is force-loaded into the
 build's serialised blob and can never be patched. These stay ordinary files that
 a downloaded pack can shadow.
 
+## The index and the bodies
+
+The catalog is two halves, and knowing which half you are touching is most of
+understanding this system.
+
+**The index** (`CatalogIndex`) is built from `manifest.json` alone and is always
+resident. It answers identity, order and membership: which glades exist, in what
+order, belonging to which chapter. That is everything the boot path needs —
+totalling stars, deriving XP, working out where the player is up to, deciding
+what is unlocked. At forty chapters and eight hundred glades the manifest is
+about 25 KB and parses in well under a millisecond.
+
+**A chapter body** (`ChapterBody`) holds grids, par, colours and art keys. It is
+read when the player enters that chapter and evicted when they leave, exactly
+like that chapter's textures. `ChapterResidency` keeps two, so stepping back to
+the previous chapter on the map does not re-read a file.
+
+The reason this split is load-bearing: the game used to open and parse *every*
+chapter on *every* launch. On Android that costs at least one frame per chapter,
+because StreamingAssets is only reachable through `UnityWebRequest` there and the
+completion callback cannot fire before the end of the frame. Fifty chapters meant
+roughly a second and a half of launch spent parsing levels nobody was about to
+play, growing forever. It was invisible in the Editor, where StreamingAssets is
+an ordinary folder.
+
+Two consequences worth holding on to:
+
+- **The manifest is the authority on membership and order; the body is the
+  authority on content.** Nobody writes the manifest's level lists by hand —
+  `Glimmer Grove ▸ Content ▸ Sync Manifest` generates them from the bodies. The
+  build gate then proves the two still agree, so forgetting to run it fails a
+  build rather than silently hiding a glade.
+- **A level's strings are derived from its id** (`level.<id>.name`, `.tagline`,
+  `.lesson`) and cannot be overridden. That is what lets the map, the home
+  screen's "next up" line and the win overlay name a glade without reading its
+  chapter. An overridable key would have made naming something you can only know
+  after a file read, and the index would have stopped being sufficient.
+
 ## Adding a chapter
 
 1. `Glimmer Grove ▸ Content ▸ Create Chapter Template` — scaffolds the JSON.
 2. Author the grids (grammar below). **Leave `par` out** — it is derived from the
-   board, so an omitted par can never be wrong while a typed one can.
+   board, so an omitted par can never be wrong while a typed one can. **Do set
+   `backdrop`**: a chapter that does not name its own art inherits another
+   chapter's, which puts it in another chapter's asset bundle.
 3. Add `chapter.<id>.name` and, per level, `level.<id>.name` / `.tagline` /
    `.lesson` to `loc/en.json`. Missing keys fail validation.
-4. Add the chapter to `manifest.json` with a `version` and an `order`. Orders are
-   sparse (10, 20, 30…) so a chapter can be slotted between two later.
-5. `Glimmer Grove ▸ Validate Content`. It must report zero errors — builds refuse
+4. Add the chapter to `manifest.json` with a `version` and an unused `order`.
+   Orders are sparse (10, 20, 30…) so a chapter can be slotted between two later,
+   and two chapters sharing one is an error. **`order` lives only here** — a
+   chapter body that states its own is rejected, because where the game goes next
+   must be readable from one file and changeable by pushing that one file.
+5. `Glimmer Grove ▸ Content ▸ Sync Manifest` — fills in the chapter's level list
+   from the body and bumps its `version`. Run it after *every* content edit.
+6. `Glimmer Grove ▸ Validate Content`. It must report zero errors — builds refuse
    to run otherwise.
+
+Drop new art into `Assets/Game/Art/…` at any point; it is given an address and
+filed into the right bundle group on import. Nothing to remember, nothing to run.
 
 ## Token grammar
 
@@ -94,6 +142,13 @@ A level inherits `accent`, `slate` and `backdrop` from its chapter unless it set
 its own. Prefer inheriting: twenty levels sharing one backdrop is the difference
 between a 60 MB game and a 2 GB one. `mapX`/`mapY` are fractions of the
 *chapter's* band of the map, not of the whole map, so chapters stay independent.
+
+A *chapter* inherits nothing. It must name its own `backdrop`, and validation
+fails if it does not. Two chapters silently defaulting to the same backdrop is
+how one chapter's art ends up owned by another chapter's bundle — harmless while
+everything is local, a whole extra download once chapters are delivered remotely.
+Art that genuinely is shared by several chapters goes in the global group, which
+the Addressables tooling works out for itself.
 
 ## Progression
 
@@ -195,16 +250,41 @@ loaded textures by chapter size (~20 levels) rather than by catalog size, so no
 virtualisation or pooling is needed. Arrows at the screen edges step between
 chapters.
 
-### Turning on Addressables
+### Addressing
 
-The abstraction is live; the backend ships inert. The migration is automated —
-run the three menu items **in order**, checking the console after each:
+An asset's address is its path below `Assets/Game/` with the extension dropped:
+`Assets/Game/Art/Ui/btn_green.png` is `Art/Ui/btn_green`. `AddressableAddresses`
+is the single source of truth for that rule and for which bundle group an address
+belongs in; the importer hook, the repair sweep and the audit all read it, so they
+cannot disagree.
+
+**Registration is automatic.** `AddressableAutoRegister` is an `AssetPostprocessor`:
+anything landing under `Art/`, `Audio/` or `Fonts/` is given its address and filed
+into the right group as it imports — on a drag-and-drop, a fresh clone, or a
+`git pull` with the Editor closed. Deleted assets have their entries removed.
+
+This used to be a menu item, and that is exactly why it is not one now. A menu
+item is a thing a person has to remember during the week a chapter ships, and this
+project had already been bitten by that class of bug once: the splash screen
+hardcoded `play_0, play_1, play_2`, so every content drop needed somebody to edit
+a screen. The migration tool that replaced it then rotted into a no-op — it
+scanned `Assets/Game/Resources`, which its own step 3 had deleted — leaving a
+repair tool that silently did nothing in a project whose art pipeline depended on
+it. New chapter art would have imported fine, validated fine, built fine, and
+shipped with no backdrop.
+
+Two menu items remain, and neither is required in normal work:
 
 ```
-Glimmer Grove ▸ Addressables ▸ 1 - Mark Assets Addressable
-Glimmer Grove ▸ Addressables ▸ 2 - Verify Addresses      ← must pass before step 3
-Glimmer Grove ▸ Addressables ▸ 3 - Move Out Of Resources
+Glimmer Grove ▸ Addressables ▸ Sync All Assets     re-file everything from scratch
+Glimmer Grove ▸ Addressables ▸ Audit Addresses     prove every request resolves
 ```
+
+Use **Sync** after a merge that touched the Addressables settings, or after moving
+a backdrop between chapters (which changes who owns it). Use **Audit** any time;
+it also runs from the build gate, so an unaddressed asset fails the build instead
+of reaching a player. Grouping mistakes — chapter art in the wrong bundle, shared
+art claimed by one chapter — are reported as warnings by the same pass.
 
 `GLIMMER_ADDRESSABLES` is defined automatically by the `versionDefines` entry in
 `GlimmerGrove.Domain.asmdef` and `GlimmerGrove.Presentation.asmdef` whenever the
@@ -212,26 +292,9 @@ Addressables package is installed. `Boot` then selects `AddressablesAssetProvide
 
 **Do not put it in Player Settings ▸ Scripting Define Symbols.** Those are stored
 *per build target*, so a define added while on Standalone is absent on Android and
-iOS — and since the assets no longer live under `Resources/`, a mobile build would
+iOS — and since the assets do not live under `Resources/`, a mobile build would
 ship with no art at all and no error saying why. The asmdef defines it for every
 platform at once, which is the point.
-
-What the steps do:
-
-- **1** gives every asset an address equal to its old Resources path
-  (`Art/Ui/btn_green`), labels the animation-frame folders so `LoadAll` still
-  works, and files chapter art into its own group so a chapter bundles — and
-  later downloads — as a unit.
-- **2** checks every address the game will *ever* request, built from
-  `AssetManifest` plus the catalog, against what is actually marked. This is the
-  step that catches a missing asset before a player does. Do not skip it.
-- **3** moves the folders out of `Resources/`. Addressable entries follow an
-  asset's GUID and the addresses are stored explicitly, so the move cannot break
-  them.
-
-Reversible at any point: remove the define and the game falls back to
-`ResourcesAssetProvider`. Note that after step 3 the files are no longer under
-`Resources/`, so a rollback means moving them back too.
 
 ### Building a player
 
@@ -248,6 +311,50 @@ no errors that point at the cause.
 Until the define is set, `ResourcesAssetProvider` is used and everything works —
 it simply cannot stream or genuinely free memory, because Resources cannot.
 
+### The app icon
+
+The launcher icon is **not** game art and does not live under `Assets/Game/Art/`.
+Everything in that folder is forced to a UI sprite by `ArtImportRules` and swept
+into an Addressables group; the icon is consumed by the build pipeline instead and
+is never loaded at runtime. It lives in `Assets/Game/Branding/Icons/`.
+
+The five files there are generated, not authored. One artwork
+(`Tools/IconSource/glimmer_launcher.jpeg`) is the master; `make_launcher_icons.py`
+derives every shape the two stores want:
+
+```
+python Tools/make_launcher_icons.py          # regenerate the PNGs
+Glimmer Grove ▸ Apply Launcher Icons         # write them into PlayerSettings
+Glimmer Grove ▸ Validate Launcher Icons      # 37 slots, all assigned
+```
+
+| file | used by |
+|---|---|
+| `icon_master_1024` | every iOS slot, including the 1024 App Store icon |
+| `icon_android_adaptive_background_432` + `..._foreground_432` | Android 8+, i.e. every supported device |
+| `icon_android_round_512`, `icon_android_legacy_512` | `android:roundIcon` / `android:icon` fallbacks |
+
+Three things about that script are worth knowing before changing the artwork:
+
+- **The master is a rounded badge on black.** Every platform masks the icon itself,
+  so shipping the black field would draw a black frame around the real icon. The
+  script finds the badge, insets past the glass rim the artist drew along its edge,
+  and extends the nearest real pixel outward into the corners. The result is a
+  true full-bleed square.
+- **The iOS master is written as RGB, deliberately.** App Store Connect rejects a
+  1024 icon that carries an alpha channel.
+- **The adaptive background is a fitted gradient, not a blurred plate.** An adaptive
+  icon's background layer has to cover the area the character stands in front of.
+  Erasing him and blurring leaves a ghost of the silhouette that peeks out from
+  behind the foreground layer, so the script fits a cubic polynomial per channel to
+  the pixels that *are* background and evaluates it everywhere. The sparkles are
+  composited back on top; the light rays are not, because they radiate from behind
+  him and would end abruptly.
+
+The subject in the foreground layer is fitted to 286 px of the 432 px canvas — just
+under the 72 dp every launcher mask keeps — so the crown and the plinth survive a
+circular mask.
+
 ## Strings
 
 Every player-facing string is a key in `loc/<lang>.json`. The build gate scans the
@@ -261,3 +368,19 @@ write them out (see `WinOverlay.RankKeys`) rather than concatenating.
 own version and **skips** — never crashes on — anything above it. Adding an
 optional field is not a breaking change; removing or repurposing one is.
 `minAppVersion` on a manifest entry hides content from clients too old for it.
+
+``progression.json`` versions **separately**, via `ProgressionSchema`. It is delivered
+on its own — the manifest carries a `progressionVersion` so it can be refetched without
+touching a chapter — and it changes far more often than the catalog's shape. Sharing one
+number would mean a *catalog* format bump invalidated the *reward* file for every client
+that had not updated, silently dropping them back to the built-in curve over a change
+that had nothing to do with the economy. Two formats, two readers, two versions.
+
+**v2** moved chapter membership and order into the manifest so the boot path reads
+one file instead of every chapter. `MinimumSupported` was raised with it rather
+than the field being made optional, because a v1 manifest lists no levels at all
+and a client that read one would show a game with no glades in it — a clear
+refusal beats a silent empty catalog. It cost nothing to do: remote delivery was
+still off and one chapter had shipped, so there was no content anywhere to
+migrate. The same change made after a CDN goes live is a migration under live
+players, which is the whole argument for doing this kind of thing early.

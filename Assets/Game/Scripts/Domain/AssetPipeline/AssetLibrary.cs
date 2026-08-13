@@ -96,7 +96,7 @@ namespace GlimmerGrove.AssetPipeline
         /// releasing the previous chapter's. Returns immediately when it is already
         /// resident, which is the common case of replaying a level.
         /// </summary>
-        public static async Task EnsureChapterAsync(ChapterDefinition chapter, LevelCatalog catalog,
+        public static async Task EnsureChapterAsync(ChapterBody chapter,
                                                     IProgress<float> progress = null,
                                                     CancellationToken cancellation = default)
         {
@@ -105,7 +105,7 @@ namespace GlimmerGrove.AssetPipeline
 
             ReleaseChapter();
 
-            var requests = AssetManifest.ChapterAssets(chapter, catalog);
+            var requests = AssetManifest.ChapterAssets(chapter);
             foreach (var request in requests) _chapterAddresses.Add(request.Address);
 
             LoadedChapter = chapter.Id;

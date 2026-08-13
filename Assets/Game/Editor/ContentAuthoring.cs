@@ -22,7 +22,7 @@ namespace GlimmerGrove.EditorTools
         public static void ReportLevels()
         {
             var load = EditorContentLoader.Load();
-            if (load.Catalog.IsEmpty)
+            if (load.Index.IsEmpty)
             {
                 Debug.LogError("[Glimmer] no content found under " + ContentRoot);
                 return;
@@ -32,7 +32,7 @@ namespace GlimmerGrove.EditorTools
             sb.AppendLine($"{"#",-4}{"level id",-24}{"chapter",-18}{"size",-8}{"par",-6}{"gold",-6}{"silver",-7}stars");
 
             int order = 0;
-            foreach (var level in load.Catalog.Levels)
+            foreach (var level in load.AllLevels())
             {
                 var report = LevelValidator.Validate(level);
                 string flag = report.HasErrors ? "  BROKEN" : report.IsClean ? "" : "  (warnings)";
@@ -64,20 +64,26 @@ namespace GlimmerGrove.EditorTools
             AssetDatabase.Refresh();
 
             Debug.Log($"[Glimmer] created {path}\n" +
-                      $"Add an entry to {ContentRoot}/manifest.json to publish it, and add its " +
+                      $"Next: add an entry to {ContentRoot}/manifest.json with an unused \"order\", " +
+                      "then run Content \u25B8 Sync Manifest to fill in its level list, and add its " +
                       $"strings to the localisation tables.\nToken grammar: {LevelLayout.Grammar}");
             EditorUtility.RevealInFinder(path);
         }
 
         /// <summary>
-        /// A chapter skeleton. Par is left out on purpose — it is derived from the
-        /// board, so an omitted par can never be wrong, while a typed one can.
+        /// A chapter skeleton.
+        ///
+        /// Par is left out on purpose — it is derived from the board, so an omitted par
+        /// can never be wrong while a typed one can. So is <c>order</c>: it lives in the
+        /// manifest, and a template that emitted one would have every new chapter
+        /// claiming the same position. The backdrop is written out rather than left to a
+        /// default, because a chapter that does not name its own art ends up sharing
+        /// another chapter's asset bundle.
         /// </summary>
         static string Template(string chapterId) =>
 $@"{{
   ""schemaVersion"": {ContentSchema.Version},
   ""id"": ""{chapterId}"",
-  ""order"": 20,
 
   ""accent"": ""#FFC93C"",
   ""slate"": ""#123640"",

@@ -315,10 +315,10 @@ namespace GlimmerGrove.Tests
             Assert.IsTrue(fetch.Success);
 
             var table = Read(fetch.Text);
-            var catalog = SaveMigrationTests.LoadBundledCatalog();
+            var index = SaveMigrationTests.LoadBundledIndex();
 
             bool anyOverride = false;
-            foreach (var chapter in catalog.Chapters)
+            foreach (var chapter in index.Chapters)
                 anyOverride |= table.HasOverrideFor(chapter.Id);
 
             Assert.IsTrue(anyOverride,

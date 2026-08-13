@@ -52,6 +52,11 @@ namespace GlimmerGrove.EditorTools
         /// <summary>
         /// Checks that every asset the game asks for actually exists on disk.
         ///
+        /// Existing on disk and being loadable are different things: this proves the
+        /// file is there, and Addressables ▸ Audit Addresses proves the game can reach
+        /// it. Both run from the build gate, because a file with no address is exactly
+        /// as missing as a file that was never drawn.
+        ///
         /// The list of expected assets comes from <see cref="AssetManifest"/> and the
         /// catalog — it used to be a hand-typed array here, which meant a content drop
         /// could add a backdrop that nothing ever checked for. It also searches by
@@ -61,10 +66,10 @@ namespace GlimmerGrove.EditorTools
         [MenuItem("Glimmer Grove/Validate Art", false, 21)]
         public static void ValidateArt()
         {
-            var catalog = EditorContentLoader.Load().Catalog;
+            var content = EditorContentLoader.Load();
 
             var expected = AssetManifest.GlobalAssets();
-            expected.AddRange(AssetManifest.AllChapterAssets(catalog));
+            expected.AddRange(AssetManifest.AllChapterAssets(content.Bodies));
 
             var present = IndexAssetsByAddress();
             var missing = new List<string>();

@@ -40,19 +40,29 @@ namespace GlimmerGrove
         /// <summary>Levels of this chapter in play order, resolved against the catalog.</summary>
         public IReadOnlyList<LevelDefinition> Levels { get; private set; } = new LevelDefinition[0];
 
-        public static MapLayout Build(ChapterDefinition chapter, LevelCatalog catalog)
+        /// <summary>
+        /// Builds the geometry from a loaded chapter body, ordered by the index.
+        ///
+        /// Both halves are needed and neither substitutes for the other: the body knows
+        /// where each glade sits on its strip, and the index knows what order they come
+        /// in. Order is the manifest's, so a chapter body that happens to list its
+        /// levels differently cannot change what the player walks along.
+        /// </summary>
+        public static MapLayout Build(ChapterBody chapter, IReadOnlyList<LevelId> order)
         {
             var layout = new MapLayout();
-            if (chapter == null || catalog == null) return layout;
+            if (chapter == null) return layout;
 
-            layout.Chapter = chapter;
-            layout.Strips = chapter.MapStrips;
-            layout.TotalHeight = Mathf.Max(StripHeight, chapter.StripCount * StripHeight);
+            var definition = chapter.Definition;
 
-            var levels = new List<LevelDefinition>(chapter.LevelCount);
+            layout.Chapter = definition;
+            layout.Strips = definition.MapStrips;
+            layout.TotalHeight = Mathf.Max(StripHeight, definition.StripCount * StripHeight);
+
+            var levels = new List<LevelDefinition>(chapter.Count);
             float highest = 0f;
 
-            foreach (var level in catalog.LevelsOf(chapter.Id))
+            foreach (var level in chapter.InIndexOrder(order))
             {
                 var authored = level.Presentation.MapPosition;
                 var p = new Vector2(Mathf.Clamp01(authored.x), Mathf.Clamp01(authored.y));

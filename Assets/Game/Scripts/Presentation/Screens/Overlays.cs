@@ -130,13 +130,13 @@ namespace GlimmerGrove
         /// from the catalog rather than counted, so it stays correct when a chapter gains
         /// levels in a content drop.
         /// </summary>
-        bool FinishedAChapter(LevelCatalog catalog)
+        bool FinishedAChapter(CatalogIndex index)
         {
-            var level = catalog.Find(LevelId);
-            if (level == null) return false;
+            var chapter = index.ChapterOf(LevelId);
+            if (!chapter.IsValid) return false;
 
-            foreach (var sibling in catalog.LevelsOf(level.Chapter))
-                if (!PlayerProgress.IsCleared(sibling.Id)) return false;
+            foreach (var sibling in index.LevelsOf(chapter))
+                if (!PlayerProgress.IsCleared(sibling)) return false;
 
             return true;
         }
@@ -146,9 +146,9 @@ namespace GlimmerGrove
             // "Last" means the catalog has nothing after this level, not a fixed count,
             // so publishing a new chapter turns the end screen back into a next button
             // without any code here changing.
-            var catalog = GameContent.Catalog;
-            var next = catalog.Next(LevelId);
-            bool last = next == null;
+            var index = GameContent.Index;
+            var next = index.Next(LevelId);
+            bool last = !next.IsValid;
 
             UIKit.Scrim(Content, .62f);
 
@@ -209,17 +209,17 @@ namespace GlimmerGrove
                 rewardY -= 54f;
             }
 
-            if (last && PlayerProgress.AllCleared(catalog))
+            if (last && PlayerProgress.AllCleared(index))
                 UIKit.Titled("Done", Panel, Loc.Get("ui.win.all_done"), 32, Pal.Gold,
                              TextAnchor.MiddleCenter, new Vector2(760f, 44f), new Vector2(.5f, 1f),
                              new Vector2(0f, rewardY), 3f, 3f);
 
-            var nextId = last ? LevelId.None : next.Id;
+            var nextId = last ? LevelId.None : next;
 
             // Offered here and nowhere else. A player who has just finished a chapter has
             // something worth keeping, which is exactly when asking them to protect it is
             // a service rather than an obstacle — and the answer costs nothing either way.
-            bool offerAccount = FinishedAChapter(catalog) && AccountOverlay.ShouldOffer();
+            bool offerAccount = FinishedAChapter(index) && AccountOverlay.ShouldOffer();
 
             var nextButton = UIKit.TextButton("Next", Panel, "btn_green",
                                         Loc.Get(last ? "ui.win.glades" : "ui.win.next"), 48,
@@ -254,7 +254,7 @@ namespace GlimmerGrove
 
             if (FirstClear && !last)
             {
-                string opened = Loc.Format("ui.win.opened", Loc.Get(next.NameKey));
+                string opened = Loc.Format("ui.win.opened", Loc.Get(LevelDefinition.DefaultNameKey(next)));
                 Tween.After(1.0f + .42f * Stars, () =>
                 {
                     if (!this) return;

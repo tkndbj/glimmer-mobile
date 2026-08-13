@@ -1,8 +1,6 @@
 {
-  "schemaVersion": 1,
+  "schemaVersion": 2,
   "id": "c01_shallows",
-  "order": 10,
-
   "accent": "#FFC93C",
   "slate": "#123640",
   "backdrop": "play_0",

@@ -154,7 +154,6 @@ namespace GlimmerGrove.Cloud
                     await _auth.CurrentUser.LinkWithProviderAsync(Provider(credential.ProviderId));
 
                 var user = _auth.CurrentUser;
-                await RefreshTokenAsync(user);
                 return (CloudResult.Success, new CloudIdentity(user.UserId, IsLinked(user)));
             }
             catch (Exception e)
@@ -192,7 +191,6 @@ namespace GlimmerGrove.Cloud
                     return (CloudResult.Failed(CloudFailure.Unauthenticated, "no user after sign in"),
                             CloudIdentity.None);
 
-                await RefreshTokenAsync(user);
                 return (CloudResult.Success, new CloudIdentity(user.UserId, IsLinked(user)));
             }
             catch (Exception e)
@@ -261,43 +259,6 @@ namespace GlimmerGrove.Cloud
 
             error = default;
             return false;
-        }
-
-        /// <summary>
-        /// Forces the ID token current before an identity is handed back to the sync.
-        ///
-        /// Firestore authenticates with a token it caches, and after an <b>in-process</b>
-        /// account change — sign out, then sign in as the account the provider already
-        /// owns — it can keep presenting the previous account's token while the sync has
-        /// moved on to the new uid. The rules then deny <i>both</i> directions, because
-        /// <c>isOwner(uid)</c> compares the requested path against whoever the token says
-        /// is calling; a read failing is the tell, since no shape check can explain it.
-        ///
-        /// <para>
-        /// Observed live on 2026-08-13: every pull and push after an adopt returned
-        /// PERMISSION_DENIED until the process was restarted, at which point a fresh
-        /// Firestore instance picked up the persisted user and sync recovered on its own.
-        /// </para>
-        ///
-        /// <para>
-        /// A failure here is deliberately not fatal. The link or adopt has already
-        /// succeeded on the server by this point, and turning a refresh blip into a failed
-        /// sign-in would tell the player their account was not linked when it was. The
-        /// next sync reports any real problem through the normal path.
-        /// </para>
-        /// </summary>
-        static async Task RefreshTokenAsync(FirebaseUser user)
-        {
-            if (user == null) return;
-
-            try
-            {
-                await user.TokenAsync(true);
-            }
-            catch (Exception e)
-            {
-                Debug.LogWarning("[Cloud] token refresh after account change failed: " + e.Message);
-            }
         }
 
         static bool IsLinked(FirebaseUser user)

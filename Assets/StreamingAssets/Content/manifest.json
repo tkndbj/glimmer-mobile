@@ -1,13 +1,18 @@
 {
-  "schemaVersion": 1,
+  "schemaVersion": 2,
   "progressionVersion": 1,
   "chapters": [
     {
       "id": "c01_shallows",
-      "version": 1,
+      "version": 2,
       "order": 10,
       "disabled": false,
-      "minAppVersion": 0
+      "minAppVersion": 0,
+      "levels": [
+        "c01_first_light",
+        "c01_twin_streams",
+        "c01_prism_heart"
+      ]
     }
   ]
 }

@@ -18,23 +18,10 @@ namespace GlimmerGrove.Progression
         bool TryGetChapter(LevelId level, out ChapterId chapter);
     }
 
-    /// <summary>The live catalog, as a chapter map.</summary>
-    public sealed class CatalogChapterMap : IChapterMap
-    {
-        readonly LevelCatalog _catalog;
-
-        public CatalogChapterMap(LevelCatalog catalog) => _catalog = catalog;
-
-        public bool TryGetChapter(LevelId level, out ChapterId chapter)
-        {
-            chapter = ChapterId.None;
-            if (_catalog == null) return false;
-            if (!_catalog.TryFind(level, out var definition)) return false;
-
-            chapter = definition.Chapter;
-            return true;
-        }
-    }
+    // The live implementation is CatalogIndex itself. There is no adapter between the
+    // two on purpose: the index already *is* the set of glades that genuinely exist,
+    // which is the exact question this interface asks, and a wrapper would only add a
+    // place for the two answers to diverge.
 
     /// <summary>A fixed mapping. Used by the shared reward vectors and by tests.</summary>
     public sealed class FixedChapterMap : IChapterMap

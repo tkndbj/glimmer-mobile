@@ -41,13 +41,33 @@ What that means in practice here:
    want to call the UI from logic, raise an event instead — see `GameSettings.Changed`.
 4. **Content is data, not code.** Levels live in `Assets/StreamingAssets/Content/`.
    Adding a chapter must never require a code change.
+4a. **The manifest owns membership and order; a chapter body owns content.** The boot
+   path reads `manifest.json` and nothing else — `CatalogIndex` is built from it and is
+   what progression, unlocking and the save file key on. Chapter bodies load on entering
+   a chapter and are evicted on leaving, exactly like that chapter's art. Never make the
+   boot path read a chapter body: that is a cost per chapter, paid at every launch,
+   forever, and it is invisible in the Editor because only Android routes
+   StreamingAssets through `UnityWebRequest`. Nobody hand-writes the manifest's level
+   lists — `Content ▸ Sync Manifest` derives them and the build gate proves they agree.
 5. **Omit `par` when authoring.** It is derived from the board. A typed one can drift.
+5a. **A level's loc keys are derived from its id and cannot be overridden.** That is
+   what lets anything holding a `LevelId` name a glade without reading a chapter body.
+   An overridable key makes the index insufficient and drags a file read into the map.
 6. **All player-facing text is a loc key.** The build gate scans the source for
    key-shaped literals and fails on any that is missing. Do not build keys by
    concatenation — write them out (see `WinOverlay.RankKeys`).
 7. **All asset loading goes through `AssetLibrary`.** Never call `Resources.Load` or
    `Addressables` directly. Never hand-list asset paths — derive them from the
    catalog via `AssetManifest`.
+7a. **Asset registration is an importer hook, never a menu item.** `AddressableAutoRegister`
+   addresses anything under `Art/`, `Audio/` or `Fonts/` as it imports;
+   `AddressableAddresses` is the single source of truth for the path→address→group rule.
+   A step someone has to remember on shipping week will be forgotten — it already was
+   once here, and the tool meant to fix it rotted into a silent no-op scanning a folder
+   that had been deleted. The build gate runs `AddressableAudit` for the same reason:
+   making an error unlikely is not the same as proving it did not happen. A chapter
+   must name its own `backdrop`; art shared by several chapters belongs in the global
+   group, never in whichever chapter was processed last.
 8. **The map shows one chapter at a time.** That is what bounds node count and texture
    memory by chapter size instead of catalog size. Do not "improve" it into one long map.
 9. **XP and earned credits are derived, never accumulated.** They are a pure function of
@@ -56,6 +76,10 @@ What that means in practice here:
    retuned for existing players, and cannot be recovered when it is lost. The only
    stored progression numbers are the high-water floors in `ProgressionStore`, and they
    are floors — never a source of truth.
+9b. **`progression.json` versions independently of the catalog** (`ProgressionSchema`,
+   not `ContentSchema`). It ships on its own cadence, so a catalog format bump must never
+   invalidate the reward table for clients that have not updated — they would fall back to
+   the built-in curve and lose live tuning for an unrelated change.
 9a. **The reward rule exists twice and must stay identical.** `ProgressionLedger.cs` and
    `firebase/functions/src/progression.ts`. Both run `firebase/shared/reward-vectors.json`
    as a test, so drift fails a build instead of desynchronising the economy. Change one,
@@ -127,6 +151,13 @@ and tested migration, localisation, analytics seam, scoped asset pipeline on
 Addressables (assets are out of `Resources/`), chapter-paginated map, enforced
 layering, EditMode test suite, **player progression** (derived XP, levels and credits
 on a double-entry ledger, save schema v2, monotonic merge).
+
+**Content schema v2 — lazy chapter loading.** The manifest now carries every chapter's
+ordered level ids, so boot reads one ~25 KB file rather than opening every chapter (at
+forty chapters that was ~800 grid parses and, on Android, a frame per chapter). See
+*The index and the bodies* in `CONTENT.md`. Addressables registration is now an importer
+hook plus a build-gate audit; the old three-step migration is gone, its step 3 having
+long since completed and its step 1 having quietly become a no-op.
 
 **Cloud save: the server is live, the client waits on one SDK install.**
 Firebase project `glimmer-groove-1cd60` — Firestore in `eur3`, security rules released,

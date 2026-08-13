@@ -26,8 +26,7 @@ namespace GlimmerGrove.Tests
             return new LevelDefinition(
                 LevelId.Parse("t_level"), ChapterId.Parse("t_chapter"),
                 layout, LevelTuning.Default(par),
-                new LevelPresentation(mapPos, null, null, null),
-                null, null, null);
+                new LevelPresentation(mapPos, null, null, null));
         }
 
         static bool HasError(LevelValidationReport report, string fragment)
@@ -111,9 +110,34 @@ namespace GlimmerGrove.Tests
         [Test]
         public void ComputedParCountsOnlyTheTurnsActuallyOwed()
         {
-            // one tile is a quarter turn out, the other is already correct
+            // "*E#R/1 @W#R/0": the critter is already correct and costs nothing. The
+            // heart sits one quarter turn *clockwise* of its solution, and a tap only
+            // ever turns clockwise — BoardView.ApplyTurn(i, 1); dir -1 exists solely for
+            // Undo, which decrements the move count rather than spending one. So getting
+            // it home costs three taps, not one.
             var report = LevelValidator.Validate(Level(SolvableRows));
-            Assert.AreEqual(1, report.ComputedPar, report.Describe());
+            Assert.AreEqual(3, report.ComputedPar, report.Describe());
+        }
+
+        /// <summary>
+        /// Par is taps, not angular distance, and the two differ because the board turns
+        /// one way. Pinned as its own test because it is the assumption every shipped
+        /// par rests on: if a counter-clockwise tap is ever added, every par in the game
+        /// drops and the gold and silver thresholds move with it.
+        /// </summary>
+        [Test]
+        public void ParIsMeasuredInClockwiseTapsNotShortestRotation()
+        {
+            var parsed = LevelGridParser.Parse(new LevelLayout(2, 1, new[] { "*E#R/1 @W#R/0" }));
+            Assert.IsTrue(parsed.Ok, string.Join("; ", parsed.Errors));
+
+            Assert.AreEqual(3, PuzzleFactory.MinimumMoves(parsed.Cells),
+                            "one turn clockwise from solved is three taps back, not one");
+
+            // and the far side: three turns out is one tap home
+            var other = LevelGridParser.Parse(new LevelLayout(2, 1, new[] { "*E#R/3 @W#R/0" }));
+            Assert.IsTrue(other.Ok, string.Join("; ", other.Errors));
+            Assert.AreEqual(1, PuzzleFactory.MinimumMoves(other.Cells));
         }
 
         [Test]
@@ -130,10 +154,10 @@ namespace GlimmerGrove.Tests
         [Test]
         public void EveryShippedLevelIsValid()
         {
-            var catalog = SaveMigrationTests.LoadBundledCatalog();
-            if (catalog.IsEmpty) Assert.Ignore("no bundled content available in this run");
+            var levels = SaveMigrationTests.LoadBundledLevels();
+            if (levels.Count == 0) Assert.Ignore("no bundled content available in this run");
 
-            foreach (var report in LevelValidator.ValidateAll(catalog))
+            foreach (var report in LevelValidator.ValidateAll(levels))
                 Assert.IsFalse(report.HasErrors, report.Describe());
         }
     }

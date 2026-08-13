@@ -139,11 +139,11 @@ namespace GlimmerGrove.Content
             }
 
             // Parse before caching, so a corrupt download is never written to disk.
-            var probe = new LevelCatalogBuilder();
-            if (!ContentMapper.TryReadChapter(fetch.Text, probe, entry.order, out _, out _))
+            var problems = new List<string>();
+            if (!ContentMapper.TryReadChapter(fetch.Text, problems, out _))
             {
                 Debug.LogWarning($"[Content] downloaded chapter '{id}' is malformed, discarding: " +
-                                 string.Join("; ", probe.Problems));
+                                 string.Join("; ", problems));
                 return false;
             }
 

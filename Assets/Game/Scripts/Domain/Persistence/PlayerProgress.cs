@@ -45,30 +45,41 @@ namespace GlimmerGrove.Persistence
 
         public static bool IsCleared(LevelId id) => Record(id).IsCleared;
 
+        // Every question below is asked of the index rather than of the catalog, and
+        // that is the point: totalling stars, checking completion and finding where the
+        // player is up to need only to know which glades exist and in what order. None
+        // of them needs a grid or a backdrop, so none of them should be able to cause a
+        // chapter body to be read — least of all on the boot path, where all three run.
+
         /// <summary>Stars earned across the levels currently in the catalog.</summary>
-        public static int TotalStars(LevelCatalog catalog)
+        public static int TotalStars(CatalogIndex index)
         {
+            if (index == null) return 0;
+
             int total = 0;
-            foreach (var level in catalog.Levels) total += Stars(level.Id);
+            foreach (var id in index.LevelIds) total += Stars(id);
             return total;
         }
 
-        public static int MaxStars(LevelCatalog catalog) => catalog.Count * 3;
+        public static int MaxStars(CatalogIndex index) => (index?.Count ?? 0) * 3;
 
-        public static bool AllCleared(LevelCatalog catalog)
+        public static bool AllCleared(CatalogIndex index)
         {
-            if (catalog.IsEmpty) return false;
-            foreach (var level in catalog.Levels)
-                if (!IsCleared(level.Id)) return false;
+            if (index == null || index.IsEmpty) return false;
+
+            foreach (var id in index.LevelIds)
+                if (!IsCleared(id)) return false;
             return true;
         }
 
         /// <summary>The first catalogued level the player has not cleared yet.</summary>
-        public static LevelDefinition FirstUncleared(LevelCatalog catalog)
+        public static LevelId FirstUncleared(CatalogIndex index)
         {
-            foreach (var level in catalog.Levels)
-                if (!IsCleared(level.Id)) return level;
-            return null;
+            if (index == null) return LevelId.None;
+
+            foreach (var id in index.LevelIds)
+                if (!IsCleared(id)) return id;
+            return LevelId.None;
         }
 
         // ------------------------------------------------------------- writing

@@ -32,10 +32,18 @@ namespace GlimmerGrove.Content
             return new LevelValidationReport(level.Id, issues, computedPar);
         }
 
-        public static List<LevelValidationReport> ValidateAll(LevelCatalog catalog)
+        /// <summary>
+        /// Validates a set of levels. Takes the definitions rather than a catalog
+        /// because validation is an Editor pass over content that is already in hand —
+        /// the game never has every level loaded at once, and a signature implying it
+        /// could would invite exactly that.
+        /// </summary>
+        public static List<LevelValidationReport> ValidateAll(IEnumerable<LevelDefinition> levels)
         {
-            var reports = new List<LevelValidationReport>(catalog.Count);
-            foreach (var level in catalog.Levels) reports.Add(Validate(level));
+            var reports = new List<LevelValidationReport>();
+            if (levels == null) return reports;
+
+            foreach (var level in levels) reports.Add(Validate(level));
             return reports;
         }
 

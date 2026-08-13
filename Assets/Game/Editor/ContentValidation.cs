@@ -20,14 +20,16 @@ namespace GlimmerGrove.EditorTools
     {
         public readonly List<string> Errors = new List<string>();
         public readonly List<string> Warnings = new List<string>();
-        public LevelCatalog Catalog = LevelCatalog.Empty;
+        public EditorContent Content;
+
+        public CatalogIndex Index => Content?.Index ?? CatalogIndex.Empty;
 
         public bool Ok => Errors.Count == 0;
 
         public string Summarise()
         {
             var sb = new StringBuilder();
-            sb.Append($"[Glimmer] {Catalog.Count} level(s) across {Catalog.Chapters.Count} chapter(s): ");
+            sb.Append($"[Glimmer] {Index.Count} level(s) across {Index.ChapterCount} chapter(s): ");
             sb.Append(Errors.Count == 0 ? "no errors" : $"{Errors.Count} error(s)");
             if (Warnings.Count > 0) sb.Append($", {Warnings.Count} warning(s)");
             return sb.ToString();
@@ -61,23 +63,46 @@ namespace GlimmerGrove.EditorTools
             var result = new ContentValidationResult();
 
             var load = EditorContentLoader.Load();
-            result.Catalog = load.Catalog;
+            result.Content = load;
 
             // Anything the loader had to skip is a content bug, not a runtime nicety.
             foreach (var problem in load.Problems) result.Errors.Add(problem);
 
-            if (load.Catalog.IsEmpty)
+            if (load.Index.IsEmpty)
             {
                 result.Errors.Add("no levels loaded from Assets/StreamingAssets/Content");
                 return result;
             }
 
-            ValidateLevels(load.Catalog, result, verbose);
-            ValidateLocalisation(load.Catalog, result);
-            ValidateProgression(load.Catalog, result, verbose);
-            ValidateLegacyMigration(load.Catalog, result);
+            ValidateChapterOrder(load.Index, result);
+            ValidateLevels(load, result, verbose);
+            ValidateLocalisation(load, result);
+            ValidateProgression(load.Index, result, verbose);
+            ValidateLegacyMigration(load.Index, result);
 
             return result;
+        }
+
+        /// <summary>
+        /// Two chapters at the same order sort by id, which is deterministic but is
+        /// almost never what the author meant — and the mistake is invisible until
+        /// players find the game's chapters in an order nobody chose. Orders are sparse
+        /// (10, 20, 30) precisely so there is never a reason for a collision.
+        /// </summary>
+        static void ValidateChapterOrder(CatalogIndex index, ContentValidationResult result)
+        {
+            var byOrder = new Dictionary<int, ChapterId>();
+
+            foreach (var chapter in index.Chapters)
+            {
+                if (byOrder.TryGetValue(chapter.Order, out var other))
+                {
+                    result.Errors.Add($"chapters '{other}' and '{chapter.Id}' both claim order " +
+                                      $"{chapter.Order} in manifest.json; give them distinct orders");
+                    continue;
+                }
+                byOrder[chapter.Order] = chapter.Id;
+            }
         }
 
         /// <summary>
@@ -89,7 +114,7 @@ namespace GlimmerGrove.EditorTools
         /// chapter that does not exist would silently pay the default rate forever
         /// while looking, in the file, exactly like it was working.
         /// </summary>
-        static void ValidateProgression(LevelCatalog catalog, ContentValidationResult result, bool verbose)
+        static void ValidateProgression(CatalogIndex index, ContentValidationResult result, bool verbose)
         {
             var source = new BundledContentSource();
             var fetch = source.FetchAsync(ContentPaths.Progression, default).GetAwaiter().GetResult();
@@ -110,22 +135,22 @@ namespace GlimmerGrove.EditorTools
             // Anything the reader survived but had to skip is still an authoring bug.
             foreach (var problem in problems) result.Errors.Add(problem);
 
-            foreach (var chapter in catalog.Chapters)
+            foreach (var chapter in index.Chapters)
             {
                 if (!table.HasOverrideFor(chapter.Id) && verbose)
                     Debug.Log($"[Glimmer] chapter '{chapter.Id}' uses the default reward rule");
             }
 
-            ValidateRewardChaptersExist(fetch.Text, catalog, result);
+            ValidateRewardChaptersExist(fetch.Text, index, result);
 
             if (!verbose) return;
 
             long maximumXp = 0;
-            foreach (var level in catalog.Levels)
-                maximumXp += table.RuleFor(level.Chapter).XpFor(3);
+            foreach (var id in index.LevelIds)
+                maximumXp += table.RuleFor(index.ChapterOf(id)).XpFor(3);
 
             var reachable = table.LevelFor(maximumXp);
-            Debug.Log($"[Glimmer] progression verified: {catalog.Count} glade(s) at three stars " +
+            Debug.Log($"[Glimmer] progression verified: {index.Count} glade(s) at three stars " +
                       $"is {maximumXp} XP, reaching level {reachable.Level} of {table.MaxLevel}");
         }
 
@@ -134,7 +159,7 @@ namespace GlimmerGrove.EditorTools
         /// Reported as a warning rather than an error because authoring the rule before
         /// the chapter is a legitimate order to work in.
         /// </summary>
-        static void ValidateRewardChaptersExist(string json, LevelCatalog catalog,
+        static void ValidateRewardChaptersExist(string json, CatalogIndex index,
                                                 ContentValidationResult result)
         {
             var dto = JsonUtility.FromJson<ProgressionDto>(json);
@@ -144,16 +169,19 @@ namespace GlimmerGrove.EditorTools
             {
                 if (entry == null || string.IsNullOrEmpty(entry.chapterId)) continue;
                 if (!ChapterId.TryParse(entry.chapterId, out var id, out _)) continue;
-                if (catalog.FindChapter(id) != null) continue;
+                if (index.ContainsChapter(id)) continue;
 
                 result.Warnings.Add($"progression.json sets rewards for chapter '{entry.chapterId}', " +
                                     "which is not in the catalog; the rule is inert");
             }
         }
 
-        static void ValidateLevels(LevelCatalog catalog, ContentValidationResult result, bool verbose)
+        static void ValidateLevels(EditorContent content, ContentValidationResult result, bool verbose)
         {
-            foreach (var report in LevelValidator.ValidateAll(catalog))
+            var byId = new Dictionary<LevelId, LevelDefinition>();
+            foreach (var level in content.AllLevels()) byId[level.Id] = level;
+
+            foreach (var report in LevelValidator.ValidateAll(byId.Values))
             {
                 foreach (var issue in report.Issues)
                 {
@@ -162,17 +190,14 @@ namespace GlimmerGrove.EditorTools
                     else result.Warnings.Add(line);
                 }
 
-                if (verbose && report.IsClean)
-                {
-                    var level = catalog.Find(report.Id);
+                if (verbose && report.IsClean && byId.TryGetValue(report.Id, out var level))
                     Debug.Log($"[Glimmer] {report.Id} verified " +
                               $"({level.Layout.Width}x{level.Layout.Height}, par {level.Tuning.Par})");
-                }
             }
         }
 
         /// <summary>Every key a level references must exist in the fallback language.</summary>
-        static void ValidateLocalisation(LevelCatalog catalog, ContentValidationResult result)
+        static void ValidateLocalisation(EditorContent content, ContentValidationResult result)
         {
             var source = new BundledContentSource();
             var fetch = source.FetchAsync(ContentPaths.Localisation(Loc.FallbackLanguage), default)
@@ -187,14 +212,17 @@ namespace GlimmerGrove.EditorTools
             var table = LocTable.Parse(fetch.Text, out string error);
             if (error != null) { result.Errors.Add(error); return; }
 
-            foreach (var chapter in catalog.Chapters)
+            foreach (var chapter in content.Index.Chapters)
                 Require(table, chapter.NameKey, $"chapter '{chapter.Id}'", result);
 
-            foreach (var level in catalog.Levels)
+            // Keyed off the id, so every glade the manifest names is checked whether or
+            // not its body could be read - a missing string and a missing chapter are
+            // different bugs and must not mask each other.
+            foreach (var id in content.Index.LevelIds)
             {
-                Require(table, level.NameKey, $"level '{level.Id}'", result);
-                Require(table, level.TaglineKey, $"level '{level.Id}'", result);
-                Require(table, level.LessonKey, $"level '{level.Id}'", result);
+                Require(table, LevelDefinition.DefaultNameKey(id), $"level '{id}'", result);
+                Require(table, LevelDefinition.DefaultTaglineKey(id), $"level '{id}'", result);
+                Require(table, LevelDefinition.DefaultLessonKey(id), $"level '{id}'", result);
             }
 
             ValidateKeysUsedInCode(table, result);
@@ -257,9 +285,9 @@ namespace GlimmerGrove.EditorTools
         /// The frozen legacy index table must still point at real levels, or players
         /// updating from the original build would silently lose their stars.
         /// </summary>
-        static void ValidateLegacyMigration(LevelCatalog catalog, ContentValidationResult result)
+        static void ValidateLegacyMigration(CatalogIndex index, ContentValidationResult result)
         {
-            foreach (var missing in LegacyPlayerPrefsImport.MissingFromCatalog(catalog))
+            foreach (var missing in LegacyPlayerPrefsImport.MissingFromCatalog(index))
                 result.Errors.Add($"legacy save migration maps to '{missing}', which is no longer in the catalog; " +
                                   "removing a level that shipped in the original build orphans player progress");
         }
@@ -274,17 +302,30 @@ namespace GlimmerGrove.EditorTools
         {
             var result = ContentValidation.Run();
 
-            foreach (var w in result.Warnings) Debug.LogWarning("[Glimmer] " + w);
+            // Content being sound is only half of shippable. An unaddressed asset
+            // produces no content error at all - the JSON is perfect, the file is on
+            // disk - and then the player gets a chapter with no backdrop. The audit is
+            // the only thing standing between that and the store, so it runs here.
+            var errors = new List<string>(result.Errors);
+            var warnings = new List<string>(result.Warnings);
 
-            if (result.Ok)
+#if GLIMMER_HAS_ADDRESSABLES
+            var audit = AddressableAudit.Run();
+            errors.AddRange(audit.Errors);
+            warnings.AddRange(audit.Warnings);
+#endif
+
+            foreach (var w in warnings) Debug.LogWarning("[Glimmer] " + w);
+
+            if (errors.Count == 0)
             {
                 Debug.Log(result.Summarise());
                 return;
             }
 
-            foreach (var e in result.Errors) Debug.LogError("[Glimmer] " + e);
+            foreach (var e in errors) Debug.LogError("[Glimmer] " + e);
             throw new BuildFailedException(
-                $"content validation failed with {result.Errors.Count} error(s); see the console");
+                $"the build gate found {errors.Count} error(s); see the console");
         }
     }
 }

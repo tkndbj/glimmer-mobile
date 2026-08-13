@@ -40,6 +40,11 @@ namespace GlimmerGrove.Content
             foreach (var problem in result.Problems)
                 Debug.LogWarning("[Content] " + problem);
 
+            // Chapter bodies are read on entering a chapter, so their problems arrive
+            // long after this method returns. This is the one place that decides such a
+            // report is a log line rather than, say, a telemetry event.
+            result.Catalog.ProblemReported += problem => Debug.LogWarning("[Content] " + problem);
+
             if (result.Catalog.IsEmpty)
             {
                 // The cache may be the culprit; drop it so the next launch is clean.

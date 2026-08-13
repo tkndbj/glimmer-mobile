@@ -1,20 +1,29 @@
 using System;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace GlimmerGrove.Content
 {
     /// <summary>
-    /// The catalog the game is currently playing, read synchronously from anywhere.
+    /// The catalog the game is currently playing, read from anywhere.
     ///
-    /// Loading is asynchronous and happens once during the splash; everything after
-    /// that reads this. Publishing swaps a whole immutable catalog in one assignment,
-    /// so a screen can never observe a half-applied content update — it either sees
-    /// the old world or the new one.
+    /// Publishing swaps a whole immutable catalog in one assignment, so a screen can
+    /// never observe a half-applied content update — it either sees the old world or
+    /// the new one.
+    ///
+    /// The conveniences here are all index questions, which are always answerable
+    /// without touching a file. Anything needing a level's grid or art goes through
+    /// <see cref="LevelAsync"/> and is therefore honest about the fact that it may have
+    /// to read one — a screen that wants a board can await; a screen that wants a name
+    /// or a position in the order never has to.
     /// </summary>
     public static class GameContent
     {
         static LevelCatalog _catalog = LevelCatalog.Empty;
 
         public static LevelCatalog Catalog => _catalog;
+
+        public static CatalogIndex Index => _catalog.Index;
 
         public static bool IsLoaded { get; private set; }
 
@@ -39,12 +48,23 @@ namespace GlimmerGrove.Content
         }
 
         // -------------------------------------------------------- conveniences
-        public static LevelDefinition Find(LevelId id) => _catalog.Find(id);
-
-        public static bool TryFind(LevelId id, out LevelDefinition level) => _catalog.TryFind(id, out level);
-
-        public static ChapterDefinition ChapterOf(LevelDefinition level) => _catalog.ChapterOf(level);
-
         public static int Count => _catalog.Count;
+
+        public static bool Contains(LevelId id) => _catalog.Contains(id);
+
+        public static ChapterId ChapterOf(LevelId id) => _catalog.ChapterOf(id);
+
+        public static ChapterIndexEntry FindChapter(ChapterId id) => _catalog.FindChapter(id);
+
+        /// <summary>The level's definition, reading its chapter body if need be.</summary>
+        public static Task<LevelDefinition> LevelAsync(LevelId id, CancellationToken cancellation = default)
+            => _catalog.LevelAsync(id, cancellation);
+
+        public static Task<ChapterBody> ChapterAsync(ChapterId id, CancellationToken cancellation = default)
+            => _catalog.ChapterAsync(id, cancellation);
+
+        /// <summary>The definition if its chapter is already resident, which it is while playing it.</summary>
+        public static bool TryResident(LevelId id, out LevelDefinition level)
+            => _catalog.TryResidentLevel(id, out level);
     }
 }

@@ -56,11 +56,13 @@ namespace GlimmerGrove
         public static long Xp => PlayerProgression.Xp;
 
         // -- grove completion, read straight from the star ledger ---------------
-        static LevelCatalog Catalog => GameContent.Catalog;
+        // The index, not the catalog: totalling stars is a question about which glades
+        // exist, and this is read every time the profile strip redraws.
+        static CatalogIndex Index => GameContent.Index;
 
-        public static int TotalStars => PlayerProgress.TotalStars(Catalog);
+        public static int TotalStars => PlayerProgress.TotalStars(Index);
 
-        public static int MaxStars => PlayerProgress.MaxStars(Catalog);
+        public static int MaxStars => PlayerProgress.MaxStars(Index);
 
         public static float GroveProgress => MaxStars == 0 ? 0f : TotalStars / (float)MaxStars;
 

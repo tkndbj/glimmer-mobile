@@ -162,10 +162,10 @@ namespace GlimmerGrove.Persistence
         /// Sanity net for the frozen table: every legacy id must still exist in the
         /// catalog, or an updating player's stars would land nowhere. Editor-time check.
         /// </summary>
-        public static IEnumerable<string> MissingFromCatalog(LevelCatalog catalog)
+        public static IEnumerable<string> MissingFromCatalog(CatalogIndex index)
         {
             foreach (var raw in LegacyIndexOrder)
-                if (!LevelId.TryParse(raw, out var id, out _) || !catalog.Contains(id))
+                if (!LevelId.TryParse(raw, out var id, out _) || index == null || !index.Contains(id))
                     yield return raw;
         }
     }

@@ -21,11 +21,17 @@ namespace GlimmerGrove.Content
     }
 
     /// <summary>
-    /// Reads a manifest and its chapters from a source, and assembles a catalog.
+    /// Reads the manifest and hands back a catalog.
     ///
-    /// It knows nothing about where the bytes came from, which is what lets exactly
-    /// the same code path serve the bundled build, the on-device cache, an Editor
-    /// validation pass and a future CDN.
+    /// It reads the manifest and nothing else. That is the whole point: the boot path
+    /// touches one small file however large the game becomes, and chapter bodies are
+    /// fetched by the catalog when a player actually walks into one. The previous
+    /// design opened and parsed every chapter on every launch, which cost a frame per
+    /// chapter on Android — where StreamingAssets can only be reached through
+    /// UnityWebRequest — and grew forever.
+    ///
+    /// It knows nothing about where the bytes came from, which is what lets exactly the
+    /// same code path serve the bundled build, the on-device cache and a future CDN.
     /// </summary>
     public sealed class LevelRepository
     {
@@ -33,66 +39,96 @@ namespace GlimmerGrove.Content
 
         public LevelRepository(IContentSource source) => _source = source;
 
+        /// <summary>
+        /// The boot path. Reads the manifest, builds the index, and returns a catalog
+        /// that will fetch chapter bodies on demand.
+        /// </summary>
         public async Task<ContentLoadResult> LoadAsync(CancellationToken cancellation = default)
         {
-            var builder = new LevelCatalogBuilder();
+            var problems = new List<string>();
 
-            var manifestFetch = await _source.FetchAsync(ContentPaths.Manifest, cancellation);
-            if (!manifestFetch.Success)
-            {
-                builder.Report($"could not read {ContentPaths.Manifest} ({manifestFetch.Error})");
-                return new ContentLoadResult(LevelCatalog.Empty, builder.Problems);
-            }
+            var index = await ReadIndexAsync(problems, cancellation);
+            if (index == null) return new ContentLoadResult(LevelCatalog.Empty, problems);
 
-            var manifest = ContentMapper.ReadManifest(manifestFetch.Text, out string manifestError);
-            if (manifest == null)
-            {
-                builder.Report(manifestError);
-                return new ContentLoadResult(LevelCatalog.Empty, builder.Problems);
-            }
-
-            foreach (var entry in manifest.chapters)
-            {
-                if (cancellation.IsCancellationRequested) break;
-                await LoadChapterAsync(entry, builder, cancellation);
-            }
-
-            return new ContentLoadResult(builder.Build(), builder.Problems);
+            var catalog = new LevelCatalog(index, new ChapterLoader(_source), new ChapterResidency());
+            return new ContentLoadResult(catalog, problems);
         }
 
-        async Task LoadChapterAsync(ManifestChapterDto entry, LevelCatalogBuilder builder,
-                                    CancellationToken cancellation)
+        /// <summary>
+        /// Reads the manifest *and* every chapter body, for tooling that genuinely needs
+        /// the whole game in hand — the Editor validators, the authoring reports and the
+        /// tests. The game never calls this; that separation is what stops a convenience
+        /// for the Editor turning back into a cost the player pays at launch.
+        /// </summary>
+        public async Task<ContentLoadResult> LoadEverythingAsync(CancellationToken cancellation = default)
         {
-            if (entry == null || entry.disabled) return;
+            var problems = new List<string>();
 
-            if (!ChapterId.TryParse(entry.id, out var chapterId, out string idError))
+            var index = await ReadIndexAsync(problems, cancellation);
+            if (index == null) return new ContentLoadResult(LevelCatalog.Empty, problems);
+
+            var loader = new ChapterLoader(_source);
+            var bodies = new List<ChapterBody>(index.ChapterCount);
+
+            foreach (var chapter in index.Chapters)
             {
-                builder.Report($"manifest lists chapter '{entry.id}' which is rejected: {idError}");
-                return;
+                if (cancellation.IsCancellationRequested) break;
+
+                var result = await loader.LoadAsync(chapter.Id, cancellation);
+                problems.AddRange(result.Problems);
+
+                if (result.Body == null) continue;
+                bodies.Add(result.Body);
+
+                VerifyAgainstIndex(chapter, result.Body, problems);
             }
 
-            // Content that needs newer client code is skipped, never half-loaded.
-            if (entry.minAppVersion > 0 && ContentConfig.AppVersion < entry.minAppVersion)
-                return;
+            return new ContentLoadResult(LevelCatalog.FromLoaded(index, bodies), problems);
+        }
 
-            string path = ContentPaths.Chapter(chapterId);
-            var fetch = await _source.FetchAsync(path, cancellation);
+        async Task<CatalogIndex> ReadIndexAsync(List<string> problems, CancellationToken cancellation)
+        {
+            var fetch = await _source.FetchAsync(ContentPaths.Manifest, cancellation);
             if (!fetch.Success)
             {
-                builder.Report($"chapter '{chapterId}' listed in the manifest but unreadable ({fetch.Error})");
-                return;
+                problems.Add($"could not read {ContentPaths.Manifest} ({fetch.Error})");
+                return null;
             }
 
-            if (!ContentMapper.TryReadChapter(fetch.Text, builder, entry.order, out var chapter, out var levels))
-                return;
-
-            if (chapter.Id != chapterId)
+            var manifest = ContentMapper.ReadManifest(fetch.Text, out string manifestError);
+            if (manifest == null)
             {
-                builder.Report($"chapter file at {path} calls itself '{chapter.Id}'");
-                return;
+                problems.Add(manifestError);
+                return null;
             }
 
-            builder.AddChapter(chapter, levels);
+            var builder = new CatalogIndexBuilder();
+            foreach (var entry in manifest.chapters) builder.Add(entry, ContentConfig.AppVersion);
+
+            var index = builder.Build();
+            problems.AddRange(builder.Problems);
+            return index;
+        }
+
+        /// <summary>
+        /// The manifest says which levels a chapter has; the body says what they are.
+        /// Any disagreement is an authoring bug that only tooling can see, because at
+        /// runtime a level the index does not name is simply never asked for.
+        /// </summary>
+        static void VerifyAgainstIndex(ChapterIndexEntry entry, ChapterBody body, List<string> problems)
+        {
+            var listed = new HashSet<LevelId>();
+            foreach (var id in entry.LevelIds) listed.Add(id);
+
+            foreach (var id in entry.LevelIds)
+                if (!body.Contains(id))
+                    problems.Add($"manifest lists '{id}' in chapter '{entry.Id}', " +
+                                 "but the chapter file does not contain it");
+
+            foreach (var level in body.Levels)
+                if (!listed.Contains(level.Id))
+                    problems.Add($"chapter '{entry.Id}' contains level '{level.Id}', which the manifest " +
+                                 "does not list; it will not appear in the game — run Content ▸ Sync Manifest");
         }
     }
 }

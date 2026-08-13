@@ -97,12 +97,18 @@ namespace GlimmerGrove.AssetPipeline
         /// <summary>
         /// Art owned by one chapter: its map strips, its backdrop, and any backdrop a
         /// level inside it overrides. Read from the content, never hand-listed.
+        ///
+        /// It takes a loaded <see cref="ChapterBody"/> rather than a catalog because a
+        /// chapter's art is only ever needed at the moment its body is read — both are
+        /// scoped to entering that chapter, and asking for a body here would hide a
+        /// file read inside a method that looks like a lookup.
         /// </summary>
-        public static List<AssetRequest> ChapterAssets(ChapterDefinition chapter, LevelCatalog catalog)
+        public static List<AssetRequest> ChapterAssets(ChapterBody chapter)
         {
             var list = new List<AssetRequest>(8);
             if (chapter == null) return list;
 
+            var definition = chapter.Definition;
             var seen = new HashSet<string>();
 
             void AddSprite(string address)
@@ -111,26 +117,23 @@ namespace GlimmerGrove.AssetPipeline
                     list.Add(AssetRequest.Sprite(address));
             }
 
-            foreach (var strip in chapter.MapStrips) AddSprite(MapArt(strip));
-            AddSprite(Backdrop(chapter.Backdrop));
+            foreach (var strip in definition.MapStrips) AddSprite(MapArt(strip));
+            AddSprite(Backdrop(definition.Backdrop));
 
-            if (catalog != null)
-            {
-                foreach (var level in catalog.LevelsOf(chapter.Id))
-                    AddSprite(Backdrop(level.Presentation.ResolveBackdrop(chapter)));
-            }
+            foreach (var level in chapter.Levels)
+                AddSprite(Backdrop(level.Presentation.ResolveBackdrop(definition)));
 
             return list;
         }
 
         /// <summary>Every chapter's art, for the Editor's completeness check.</summary>
-        public static List<AssetRequest> AllChapterAssets(LevelCatalog catalog)
+        public static List<AssetRequest> AllChapterAssets(IEnumerable<ChapterBody> chapters)
         {
             var list = new List<AssetRequest>();
-            if (catalog == null) return list;
+            if (chapters == null) return list;
 
-            foreach (var chapter in catalog.Chapters)
-                list.AddRange(ChapterAssets(chapter, catalog));
+            foreach (var chapter in chapters)
+                list.AddRange(ChapterAssets(chapter));
 
             return list;
         }

@@ -1,5 +1,4 @@
 using System;
-using System.Collections.Generic;
 using UnityEngine;
 
 namespace GlimmerGrove.Content
@@ -7,16 +6,18 @@ namespace GlimmerGrove.Content
     /// <summary>
     /// A run of levels that ship together and share their art.
     ///
-    /// The chapter is the delivery unit: one JSON file, one backdrop, one map strip,
-    /// downloaded and cached as a whole. Adding a fortnightly content drop means
-    /// publishing one more of these, and nothing that already shipped is touched.
+    /// The chapter is the delivery unit: one JSON file, one backdrop, one set of map
+    /// strips, downloaded and cached as a whole. Adding a fortnightly content drop
+    /// means publishing one more of these, and nothing that already shipped is touched.
+    ///
+    /// It holds what a chapter *is*, not where it sits or what belongs to it. Order and
+    /// membership are the manifest's, recorded in <see cref="ChapterIndexEntry"/> — so
+    /// a chapter body carries no opinion about its own position, and reordering the
+    /// game never means reshipping one.
     /// </summary>
     public sealed class ChapterDefinition
     {
         public readonly ChapterId Id;
-
-        /// <summary>Sort order across chapters. Sparse on purpose, so 15 fits between 10 and 20.</summary>
-        public readonly int Order;
 
         public readonly string NameKey;
 
@@ -32,30 +33,22 @@ namespace GlimmerGrove.Content
         /// </summary>
         public readonly string[] MapStrips;
 
-        /// <summary>Level ids in play order. The catalog holds the definitions.</summary>
-        public readonly IReadOnlyList<LevelId> LevelIds;
-
-        public ChapterDefinition(ChapterId id, int order, string nameKey,
-                                 Color accent, Color slate, string backdrop, string[] mapStrips,
-                                 IReadOnlyList<LevelId> levelIds)
+        public ChapterDefinition(ChapterId id, string nameKey,
+                                 Color accent, Color slate, string backdrop, string[] mapStrips)
         {
             if (!id.IsValid) throw new ArgumentException("chapter needs a valid id", nameof(id));
 
             Id = id;
-            Order = order;
             NameKey = string.IsNullOrEmpty(nameKey) ? DefaultNameKey(id) : nameKey;
             Accent = accent;
             Slate = slate;
             Backdrop = backdrop;
             MapStrips = mapStrips != null && mapStrips.Length > 0 ? mapStrips : new[] { "strip0" };
-            LevelIds = levelIds ?? Array.Empty<LevelId>();
         }
 
         public int StripCount => MapStrips.Length;
 
         public static string DefaultNameKey(ChapterId id) => "chapter." + id.Value + ".name";
-
-        public int LevelCount => LevelIds.Count;
 
         public override string ToString() => Id.Value;
     }

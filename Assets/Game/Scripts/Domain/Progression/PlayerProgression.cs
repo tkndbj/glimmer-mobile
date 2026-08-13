@@ -83,9 +83,10 @@ namespace GlimmerGrove.Progression
         /// </summary>
         public static ProgressionTotals RewardFor(LevelRecord before, LevelRecord after)
         {
-            var chapter = GameContent.TryFind(after?.Id ?? LevelId.None, out var level)
-                ? level.Chapter
-                : ChapterId.None;
+            // The index answers this without reading anything: which chapter a glade
+            // belongs to is manifest knowledge, and the win screen must not stall on a
+            // file read to show a number.
+            var chapter = GameContent.ChapterOf(after?.Id ?? LevelId.None);
 
             return ProgressionLedger.Delta(before, after, chapter, ProgressionRules.Table);
         }
@@ -128,7 +129,7 @@ namespace GlimmerGrove.Progression
             _dirty = false;
 
             var table = ProgressionRules.Table;
-            _totals = ProgressionLedger.Compute(PlayerProgress.Records, GameContent.Catalog, table);
+            _totals = ProgressionLedger.Compute(PlayerProgress.Records, GameContent.Index, table);
 
             // Three floors, applied as one: whichever demands the most XP wins, and
             // everything downstream — level, progress bar, remaining XP — then stays

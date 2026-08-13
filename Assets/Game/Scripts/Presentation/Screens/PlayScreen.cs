@@ -33,8 +33,58 @@ namespace GlimmerGrove
 
         protected override void Build()
         {
-            if (!Resolve()) return;
+            // The chapter is normally already in hand - the map loaded it to draw the
+            // node that was just tapped - so this completes without yielding and the
+            // board appears in the same frame it always did. It only ever waits when
+            // the player arrived some other way: a deep link, or a "next" that stepped
+            // over a chapter boundary.
+            StartCoroutine(ResolveThenBuild());
+        }
 
+        IEnumerator ResolveThenBuild()
+        {
+            var chapterId = GameContent.ChapterOf(LevelId);
+            if (!chapterId.IsValid)
+            {
+                Debug.LogError($"[Play] unknown level '{LevelId}', returning to the map");
+                yield return BailOut();
+                yield break;
+            }
+
+            var task = GameContent.ChapterAsync(chapterId);
+            while (!task.IsCompleted) yield return null;
+
+            if (task.IsFaulted) Debug.LogException(task.Exception);
+
+            var body = task.Result;
+            _def = body?.Find(LevelId);
+            _chapter = body?.Definition;
+
+            if (_def == null || _chapter == null)
+            {
+                Debug.LogError($"[Play] level '{LevelId}' could not be read, returning to the map");
+                yield return BailOut();
+                yield break;
+            }
+
+            if (!PuzzleFactory.TryCreate(_def, out _puzzle, out var errors))
+            {
+                Debug.LogError($"[Play] level '{LevelId}' is unplayable: {string.Join("; ", errors)}");
+                yield return BailOut();
+                yield break;
+            }
+
+            // Must happen before anything asks for a sprite: it registers which
+            // addresses belong to this chapter, and an asset fetched before that
+            // registration would be filed as global and never released.
+            _ = AssetLibrary.EnsureChapterAsync(body);
+
+            if (!this) yield break;
+            BuildResolved();
+        }
+
+        void BuildResolved()
+        {
             Scenery.Cover(Content, "Bg/" + _def.Presentation.ResolveBackdrop(_chapter), 0f, .22f);
             Fireflies.Spawn(Content, 18, new Color(1f, .97f, .86f), 5f, 18f);
 
@@ -55,38 +105,6 @@ namespace GlimmerGrove
             LevelAnalytics.TrackStarted(_def, PlayerProgress.Record(_def.Id).Clears + 1);
 
             StartCoroutine(RaiseBoard());
-        }
-
-        /// <summary>
-        /// Finds the level and builds its board, bailing out to the map rather than
-        /// throwing. A level can legitimately be missing — content removed from the
-        /// catalog, a stale deep link — and that must never be a crash.
-        /// </summary>
-        bool Resolve()
-        {
-            _def = GameContent.Find(LevelId);
-            if (_def == null)
-            {
-                Debug.LogError($"[Play] unknown level '{LevelId}', returning to the map");
-                StartCoroutine(BailOut());
-                return false;
-            }
-
-            _chapter = GameContent.ChapterOf(_def);
-
-            // Must happen before anything asks for a sprite: it registers which
-            // addresses belong to this chapter, and an asset fetched before that
-            // registration would be filed as global and never released.
-            _ = AssetLibrary.EnsureChapterAsync(_chapter, GameContent.Catalog);
-
-            if (!PuzzleFactory.TryCreate(_def, out _puzzle, out var errors))
-            {
-                Debug.LogError($"[Play] level '{LevelId}' is unplayable: {string.Join("; ", errors)}");
-                StartCoroutine(BailOut());
-                return false;
-            }
-
-            return true;
         }
 
         /// <summary>

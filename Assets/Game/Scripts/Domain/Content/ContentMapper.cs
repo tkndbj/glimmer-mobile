@@ -11,6 +11,10 @@ namespace GlimmerGrove.Content
     /// named, and the rest of the chapter still loads. The alternative — an exception
     /// on a background thread three days after a content drop — is how live games
     /// lose a weekend.
+    ///
+    /// Problems go to a plain collection rather than to a particular builder, because
+    /// the same mapping serves the runtime loader, the Editor validator and the tests,
+    /// and none of them should have to own each other's reporting type.
     /// </summary>
     public static class ContentMapper
     {
@@ -22,18 +26,19 @@ namespace GlimmerGrove.Content
         /// </summary>
         const string DefaultAccentHex = "#FFC93C";
         const string DefaultSlateHex = "#16222E";
-        const string DefaultBackdrop = "play_0";
 
-        /// <param name="orderFallback">
-        /// Sort order from the manifest, used when the chapter file does not state one.
-        /// The manifest is the index, so it is allowed to place a chapter that has no
-        /// opinion about where it belongs.
-        /// </param>
-        public static bool TryReadChapter(string json, LevelCatalogBuilder builder, int orderFallback,
-                                          out ChapterDefinition chapter, out List<LevelDefinition> levels)
+        /// <summary>
+        /// Used only to keep a chapter renderable when its body forgot to name a
+        /// backdrop. It is reported as a problem rather than applied silently: a
+        /// chapter inheriting art from a constant is how one chapter's backdrop ends
+        /// up owned by another chapter's asset bundle. Validation fails the build on
+        /// it, so this fallback can only ever be seen by a partial download.
+        /// </summary>
+        const string LastResortBackdrop = "play_0";
+
+        public static bool TryReadChapter(string json, ICollection<string> problems, out ChapterBody body)
         {
-            chapter = null;
-            levels = null;
+            body = null;
 
             ChapterDto dto;
             try
@@ -42,52 +47,56 @@ namespace GlimmerGrove.Content
             }
             catch (System.Exception e)
             {
-                builder.Report($"chapter file is not valid JSON: {e.Message}");
+                problems.Add($"chapter file is not valid JSON: {e.Message}");
                 return false;
             }
 
-            if (dto == null) { builder.Report("chapter file is empty"); return false; }
+            if (dto == null) { problems.Add("chapter file is empty"); return false; }
 
             string schemaProblem = ContentSchema.Explain(dto.schemaVersion);
             if (schemaProblem != null)
             {
-                builder.Report($"chapter '{dto.id}' {schemaProblem}");
+                problems.Add($"chapter '{dto.id}' {schemaProblem}");
                 return false;
             }
 
             if (!ChapterId.TryParse(dto.id, out var chapterId, out string idError))
             {
-                builder.Report($"chapter id '{dto.id}' rejected: {idError}");
+                problems.Add($"chapter id '{dto.id}' rejected: {idError}");
                 return false;
             }
 
-            levels = new List<LevelDefinition>();
-            var levelIds = new List<LevelId>();
+            // Order lives in the manifest. A body carrying one is a stale file whose
+            // author believes a number that does nothing — say so rather than discard it.
+            if (dto.order != 0)
+                problems.Add($"chapter '{chapterId}' sets \"order\": {dto.order} in its body; " +
+                             "order belongs in manifest.json and this value is ignored");
 
+            if (string.IsNullOrEmpty(dto.backdrop))
+                problems.Add($"chapter '{chapterId}' does not name a backdrop; " +
+                             $"falling back to '{LastResortBackdrop}', which belongs to another chapter's bundle");
+
+            var levels = new List<LevelDefinition>();
             if (dto.levels != null)
             {
                 foreach (var levelDto in dto.levels)
-                {
-                    if (!TryReadLevel(levelDto, chapterId, builder, out var level)) continue;
-                    levels.Add(level);
-                    levelIds.Add(level.Id);
-                }
+                    if (TryReadLevel(levelDto, chapterId, problems, out var level))
+                        levels.Add(level);
             }
 
-            chapter = new ChapterDefinition(
+            var definition = new ChapterDefinition(
                 chapterId,
-                dto.order != 0 ? dto.order : orderFallback,
                 dto.nameKey,
                 ParseColour(dto.accent, ParseColour(DefaultAccentHex, Color.white)),
                 ParseColour(dto.slate, ParseColour(DefaultSlateHex, Color.black)),
-                string.IsNullOrEmpty(dto.backdrop) ? DefaultBackdrop : dto.backdrop,
-                dto.mapStrips,
-                levelIds);
+                string.IsNullOrEmpty(dto.backdrop) ? LastResortBackdrop : dto.backdrop,
+                dto.mapStrips);
 
+            body = new ChapterBody(definition, levels);
             return true;
         }
 
-        static bool TryReadLevel(LevelDto dto, ChapterId chapter, LevelCatalogBuilder builder,
+        static bool TryReadLevel(LevelDto dto, ChapterId chapter, ICollection<string> problems,
                                  out LevelDefinition level)
         {
             level = null;
@@ -95,13 +104,13 @@ namespace GlimmerGrove.Content
 
             if (!LevelId.TryParse(dto.id, out var id, out string idError))
             {
-                builder.Report($"level id '{dto.id}' in chapter '{chapter}' rejected: {idError}");
+                problems.Add($"level id '{dto.id}' in chapter '{chapter}' rejected: {idError}");
                 return false;
             }
 
             if (dto.rows == null || dto.rows.Length == 0)
             {
-                builder.Report($"level '{id}' has no rows");
+                problems.Add($"level '{id}' has no rows");
                 return false;
             }
 
@@ -115,7 +124,7 @@ namespace GlimmerGrove.Content
             }
             catch (System.Exception e)
             {
-                builder.Report($"level '{id}' has an unusable grid: {e.Message}");
+                problems.Add($"level '{id}' has an unusable grid: {e.Message}");
                 return false;
             }
 
@@ -127,7 +136,7 @@ namespace GlimmerGrove.Content
                 var parsed = LevelGridParser.Parse(layout);
                 if (!parsed.Ok)
                 {
-                    builder.Report($"level '{id}' cannot be parsed: {string.Join("; ", parsed.Errors)}");
+                    problems.Add($"level '{id}' cannot be parsed: {string.Join("; ", parsed.Errors)}");
                     return false;
                 }
                 par = PuzzleFactory.MinimumMoves(parsed.Cells);
@@ -145,8 +154,7 @@ namespace GlimmerGrove.Content
                 OptionalColour(dto.slate),
                 dto.backdrop);
 
-            level = new LevelDefinition(id, chapter, layout, tuning, presentation,
-                                        dto.nameKey, dto.taglineKey, dto.lessonKey);
+            level = new LevelDefinition(id, chapter, layout, tuning, presentation);
             return true;
         }
 

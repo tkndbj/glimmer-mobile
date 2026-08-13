@@ -179,7 +179,8 @@ namespace GlimmerGrove.Progression
 
             if (dto == null) { problems.Add("progression file is empty"); return false; }
 
-            string schemaProblem = ContentSchema.Explain(dto.schemaVersion);
+            // Its own schema, not the catalog's — see ProgressionSchema for why.
+            string schemaProblem = ProgressionSchema.Explain(dto.schemaVersion);
             if (schemaProblem != null) { problems.Add("progression file " + schemaProblem); return false; }
 
             if (dto.xpToNext == null || dto.xpToNext.Length == 0)

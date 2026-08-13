@@ -29,44 +29,87 @@ namespace GlimmerGrove
         ScrollRect _scroll;
         RectTransform _viewport, _map;
         LevelCatalog _catalog;
-        ChapterDefinition _chapter;
+        CatalogIndex _index;
+
+        /// <summary>What the manifest knows: identity, order, membership. Always here.</summary>
+        ChapterIndexEntry _entry;
+
+        /// <summary>This chapter's grids and art keys. Awaited before the map is drawn.</summary>
+        ChapterBody _body;
+
         MapLayout _layout;
         readonly Dictionary<LevelId, RectTransform> _nodes = new Dictionary<LevelId, RectTransform>();
 
         static readonly string[] Rocks = { "rock_grass", "rock_wide", "rock_tall", "rock_chip", "rock_plain" };
 
+        /// <summary>
+        /// Seconds between one glade popping in and the next, and the longest the whole
+        /// arrival is allowed to take. The step shrinks as a chapter grows rather than
+        /// the entrance growing with it — at a flat 0.11s a thirty glade chapter would
+        /// still be assembling itself three seconds after the player arrived.
+        /// </summary>
+        const float PopStagger = .11f;
+        const float PopStaggerTotal = 1.4f;
+
+        static float PopDelay(int index, int count)
+        {
+            float step = count > 1 ? Mathf.Min(PopStagger, PopStaggerTotal / (count - 1)) : 0f;
+            return index * step;
+        }
+
         protected override void Build()
         {
             _catalog = GameContent.Catalog;
+            _index = _catalog.Index;
 
-            _chapter = ChapterId.IsValid
-                ? _catalog.FindChapter(ChapterId)
-                : LevelUnlock.CurrentChapter(_catalog);
+            _entry = ChapterId.IsValid
+                ? _index.FindChapter(ChapterId)
+                : LevelUnlock.CurrentChapter(_index);
 
-            if (_chapter == null)
-            {
-                BuildHeader();
-                NavBar.Build(Content, NavBar.Tab.None);
-                return;
-            }
+            // The header is index knowledge - chapter name, total stars - so it draws
+            // immediately and never waits on a file.
+            BuildHeader();
+            NavBar.Build(Content, NavBar.Tab.None);
 
-            ChapterId = _chapter.Id;
-            _layout = MapLayout.Build(_chapter, _catalog);
+            if (_entry == null) return;
+
+            ChapterId = _entry.Id;
+            StartCoroutine(BuildChapter());
+        }
+
+        /// <summary>
+        /// Draws the map once this chapter's body is in hand.
+        ///
+        /// Usually there is nothing to wait for: the splash loaded the opening chapter,
+        /// and stepping to a neighbour normally finds it still resident, so the task is
+        /// already complete and not a single frame is lost. The wait only materialises
+        /// on a genuine first visit - which is the one moment the file is actually
+        /// needed, and the only content the player ever pays to load.
+        /// </summary>
+        IEnumerator BuildChapter()
+        {
+            var bodyTask = _catalog.ChapterAsync(_entry.Id);
+            while (!bodyTask.IsCompleted) yield return null;
+
+            if (bodyTask.IsFaulted) { Debug.LogException(bodyTask.Exception); yield break; }
+
+            _body = bodyTask.Result;
+            if (_body == null || !this) yield break;
+
+            _layout = MapLayout.Build(_body, _entry.LevelIds);
 
             // Swapping chapters swaps their art; this is where the previous
             // chapter's backdrops and strips are actually released.
-            _ = AssetLibrary.EnsureChapterAsync(_chapter, _catalog);
+            _ = AssetLibrary.EnsureChapterAsync(_body);
 
             BuildScroller();
             BuildMapArt();
             BuildTrails();
             BuildNodes();
             BuildChapterEnd();
-            BuildHeader();
             BuildChapterArrows();
 
-            NavBar.Build(Content, NavBar.Tab.None);
-            StartCoroutine(FocusCurrent());
+            yield return FocusCurrent();
         }
 
         // ------------------------------------------------------------- scroller
@@ -162,7 +205,7 @@ namespace GlimmerGrove
                 var to = last ? _layout.TeaserPosition : _layout.PositionOf(levels[i + 1].Id);
                 bool live = last
                     ? PlayerProgress.IsCleared(levels[i].Id)
-                    : LevelUnlock.IsUnlocked(_catalog, levels[i + 1].Id);
+                    : LevelUnlock.IsUnlocked(_index, levels[i + 1].Id);
 
                 var trail = _map.gameObject.AddComponent<Trail>();
                 trail.Setup(_map, from, to, 13, live ? Pal.Gold : new Color(1f, .99f, .92f, .8f), live);
@@ -178,18 +221,18 @@ namespace GlimmerGrove
         void BuildNode(LevelDefinition level, int indexInChapter)
         {
             int stars = PlayerProgress.Stars(level.Id);
-            bool unlocked = LevelUnlock.IsUnlocked(_catalog, level.Id);
+            bool unlocked = LevelUnlock.IsUnlocked(_index, level.Id);
 
             // Numbering runs across the whole game, so glade 3 of chapter 2 still
             // reads as its true position in the catalog.
-            int displayNumber = _catalog.OrderOf(level.Id) + 1;
+            int displayNumber = _index.OrderOf(level.Id) + 1;
 
             var node = MakePerch(_layout.PositionOf(level.Id), Rocks[indexInChapter % Rocks.Length], indexInChapter);
             _nodes[level.Id] = node;
 
             string skin = !unlocked ? "node_lock" : (stars > 0 ? "node_s" + stars : "node_open");
             if (unlocked && stars == 0)
-                UIKit.Halo(node, level.Presentation.ResolveAccent(_chapter), 360f, .34f);
+                UIKit.Halo(node, level.Presentation.ResolveAccent(_body.Definition), 360f, .34f);
 
             var id = level.Id;
             var btn = UIKit.Button("Btn", node, Art.S("Map/" + skin), new Vector2(196f, 196f),
@@ -204,14 +247,16 @@ namespace GlimmerGrove
             Plate(node, unlocked ? Loc.Get(level.NameKey) : Loc.Get("ui.levels.locked"),
                   unlocked ? Pal.Cream : new Color(1f, 1f, 1f, .62f), -196f);
 
+            float delay = PopDelay(indexInChapter, _layout.Levels.Count);
+
             node.localScale = Vector3.zero;
-            Tween.Pop(node, 0f, .6f, .18f + indexInChapter * .11f).OnDone(() => { if (btn) btn.Rehome(); });
-            Tween.After(.2f + indexInChapter * .11f,
+            Tween.Pop(node, 0f, .6f, .18f + delay).OnDone(() => { if (btn) btn.Rehome(); });
+            Tween.After(.2f + delay,
                         () => Audio.Sfx("pop", .32f, 1f + indexInChapter * .09f), this);
 
             if (unlocked && stars == 0)
             {
-                Tween.After(.55f + indexInChapter * .11f,
+                Tween.After(.55f + delay,
                             () => { if (btn) Tween.Breathe(btn.transform, .045f, 1.6f); }, this);
                 var arrow = UIKit.Img("Pointer", node, Art.S("Map/pointer"), Color.white,
                                       new Vector2(92f, 100f), new Vector2(.5f, .5f), new Vector2(0f, 178f));
@@ -226,11 +271,11 @@ namespace GlimmerGrove
         /// </summary>
         void BuildChapterEnd()
         {
-            var next = LevelUnlock.ChapterAfter(_catalog, _chapter.Id);
+            var next = LevelUnlock.ChapterAfter(_index, _entry.Id);
             var node = MakePerch(_layout.TeaserPosition, "rock_sand", 99);
 
             bool onward = next != null;
-            bool reachable = onward && LevelUnlock.IsChapterUnlocked(_catalog, next.Id);
+            bool reachable = onward && LevelUnlock.IsChapterUnlocked(_index, next.Id);
 
             var disc = UIKit.Img("Seal", node, Art.S("Map/" + (reachable ? "node_open" : "node_lock")),
                                  reachable ? Color.white : new Color(.88f, .90f, .94f, .95f),
@@ -256,8 +301,10 @@ namespace GlimmerGrove
                       new Color(1f, 1f, 1f, .62f), -196f);
             }
 
+            int count = _layout.Levels.Count;
+
             node.localScale = Vector3.zero;
-            Tween.Pop(node, 0f, .6f, .18f + _layout.Levels.Count * .11f);
+            Tween.Pop(node, 0f, .6f, .18f + PopDelay(count, count));
         }
 
         /// <summary>Floating rock with a soft shadow, gently bobbing.</summary>
@@ -311,17 +358,17 @@ namespace GlimmerGrove
 
             var banner = UIKit.Img("Banner", Content, Art.S("Ui/banner"), Color.white,
                                    new Vector2(520f, 148f), new Vector2(.5f, 1f), new Vector2(0f, -142f));
-            string title = _chapter != null ? Loc.Get(_chapter.NameKey) : Loc.Get("ui.levels.title");
+            string title = _entry != null ? Loc.Get(_entry.NameKey) : Loc.Get("ui.levels.title");
             UIKit.Titled("Title", banner.transform, title.ToUpperInvariant(), 40, new Color(.36f, .24f, .16f),
                          TextAnchor.MiddleCenter, outline: 0f, shadow: 2f);
             banner.transform.localScale = Vector3.zero;
             Tween.Pop(banner.transform, 0f, .6f, .1f);
 
             Scenery.Pill(Content,
-                         $"{PlayerProgress.TotalStars(_catalog)} / {PlayerProgress.MaxStars(_catalog)}",
+                         $"{PlayerProgress.TotalStars(_index)} / {PlayerProgress.MaxStars(_index)}",
                          36, new Vector2(196f, 78f), new Vector2(1f, 1f), new Vector2(-106f, -132f), null, "ic_star");
 
-            if (_chapter == null) return;
+            if (_entry == null) return;
 
             var swipe = UIKit.Titled("Swipe", Content, Loc.Get("ui.levels.swipe"), 26,
                                      new Color(1f, .96f, .88f, .5f), TextAnchor.MiddleCenter,
@@ -333,8 +380,8 @@ namespace GlimmerGrove
         /// <summary>Left and right arrows for stepping between chapters.</summary>
         void BuildChapterArrows()
         {
-            var previous = LevelUnlock.ChapterBefore(_catalog, _chapter.Id);
-            var next = LevelUnlock.ChapterAfter(_catalog, _chapter.Id);
+            var previous = LevelUnlock.ChapterBefore(_index, _entry.Id);
+            var next = LevelUnlock.ChapterAfter(_index, _entry.Id);
 
             if (previous != null)
             {
@@ -343,7 +390,7 @@ namespace GlimmerGrove
                                  new Vector2(0f, .5f), new Vector2(78f, 0f), () => GoToChapter(target));
             }
 
-            if (next != null && LevelUnlock.IsChapterUnlocked(_catalog, next.Id))
+            if (next != null && LevelUnlock.IsChapterUnlocked(_index, next.Id))
             {
                 var target = next.Id;
                 UIKit.IconButton("NextChapter", Content, "sq_dark", "ic_right", new Vector2(104f, 104f),
@@ -368,10 +415,10 @@ namespace GlimmerGrove
 
             _scroll.verticalNormalizedPosition = 0f;
 
-            var target = LevelUnlock.NextToPlay(_catalog);
-            if (target == null || !_layout.Has(target.Id)) yield break;
+            var target = LevelUnlock.NextToPlay(_index);
+            if (!target.IsValid || !_layout.Has(target)) yield break;
 
-            float want = NormalisedFor(_layout.PositionOf(target.Id).y);
+            float want = NormalisedFor(_layout.PositionOf(target).y);
             if (want <= 0.001f) yield break;
 
             yield return new WaitForSecondsRealtime(.35f);

@@ -21,13 +21,12 @@ namespace GlimmerGrove.Content
         public readonly LevelPresentation Presentation;
 
         /// <summary>Localisation keys. Never display these raw — go through Loc.</summary>
-        public readonly string NameKey;
-        public readonly string TaglineKey;
-        public readonly string LessonKey;
+        public string NameKey => DefaultNameKey(Id);
+        public string TaglineKey => DefaultTaglineKey(Id);
+        public string LessonKey => DefaultLessonKey(Id);
 
         public LevelDefinition(LevelId id, ChapterId chapter, LevelLayout layout, LevelTuning tuning,
-                               LevelPresentation presentation,
-                               string nameKey, string taglineKey, string lessonKey)
+                               LevelPresentation presentation)
         {
             if (!id.IsValid) throw new ArgumentException("level needs a valid id", nameof(id));
             if (!chapter.IsValid) throw new ArgumentException("level needs a valid chapter", nameof(chapter));
@@ -37,15 +36,15 @@ namespace GlimmerGrove.Content
             Layout = layout ?? throw new ArgumentNullException(nameof(layout));
             Tuning = tuning ?? throw new ArgumentNullException(nameof(tuning));
             Presentation = presentation ?? throw new ArgumentNullException(nameof(presentation));
-
-            NameKey = string.IsNullOrEmpty(nameKey) ? DefaultNameKey(id) : nameKey;
-            TaglineKey = string.IsNullOrEmpty(taglineKey) ? DefaultTaglineKey(id) : taglineKey;
-            LessonKey = string.IsNullOrEmpty(lessonKey) ? DefaultLessonKey(id) : lessonKey;
         }
 
         /// <summary>
-        /// Authors may leave the keys out; these conventions mean a level only has to
-        /// name itself once. Anything unconventional can still be set explicitly.
+        /// A level's strings are a pure function of its id, by convention and with no
+        /// override. That is what lets anything holding only a <see cref="LevelId"/> —
+        /// the map, the home screen's "next up" line, the win overlay naming what just
+        /// opened — label a glade without reading its chapter body. An overridable key
+        /// would have made naming something you could only know after a file read, and
+        /// the whole index would have stopped being sufficient.
         /// </summary>
         public static string DefaultNameKey(LevelId id) => "level." + id.Value + ".name";
         public static string DefaultTaglineKey(LevelId id) => "level." + id.Value + ".tagline";

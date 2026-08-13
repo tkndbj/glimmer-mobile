@@ -48,97 +48,106 @@ namespace GlimmerGrove.Tests
         }
 
         // ------------------------------------------------------------- ordering
-        static LevelDefinition Level(string id, string chapter)
-            => new LevelDefinition(
-                LevelId.Parse(id), ChapterId.Parse(chapter),
-                new LevelLayout(1, 1, new[] { "-EW/0" }), LevelTuning.Default(1),
-                new LevelPresentation(Vector2.zero, null, null, null), null, null, null);
+        // Ordering is the index's job, and the index is built from the manifest alone.
+        // That is what these exercise: the boot path must know the whole shape of the
+        // game without opening a single chapter body.
 
-        static ChapterDefinition Chapter(string id, int order, params string[] levelIds)
+        static ManifestChapterDto Chapter(string id, int order, params string[] levelIds)
+            => new ManifestChapterDto { id = id, order = order, version = 1, levels = levelIds };
+
+        static CatalogIndex IndexOf(params ManifestChapterDto[] chapters)
         {
-            var ids = new List<LevelId>();
-            foreach (var l in levelIds) ids.Add(LevelId.Parse(l));
-            return new ChapterDefinition(ChapterId.Parse(id), order, null,
-                                         Color.white, Color.black, "bg", new[] { "strip0" }, ids);
+            var builder = new CatalogIndexBuilder();
+            foreach (var chapter in chapters) builder.Add(chapter, 1);
+            return builder.Build();
         }
 
         [Test]
-        public void PlayOrderFollowsChapterOrderNotInsertionOrder()
+        public void PlayOrderFollowsChapterOrderNotManifestOrder()
         {
-            var builder = new LevelCatalogBuilder();
+            // deliberately listed out of order
+            var index = IndexOf(Chapter("c02", 20, "b1"),
+                                Chapter("c01", 10, "a1", "a2"));
 
-            // deliberately added out of order
-            builder.AddChapter(Chapter("c02", 20, "b1"), new[] { Level("b1", "c02") });
-            builder.AddChapter(Chapter("c01", 10, "a1", "a2"),
-                               new[] { Level("a1", "c01"), Level("a2", "c01") });
-
-            var catalog = builder.Build();
-
-            Assert.AreEqual(3, catalog.Count);
-            Assert.AreEqual("a1", catalog.At(0).Id.Value);
-            Assert.AreEqual("a2", catalog.At(1).Id.Value);
-            Assert.AreEqual("b1", catalog.At(2).Id.Value);
+            Assert.AreEqual(3, index.Count);
+            Assert.AreEqual("a1", index.At(0).Value);
+            Assert.AreEqual("a2", index.At(1).Value);
+            Assert.AreEqual("b1", index.At(2).Value);
         }
 
         [Test]
         public void InsertingALevelDoesNotDisturbOtherIds()
         {
-            var before = new LevelCatalogBuilder();
-            before.AddChapter(Chapter("c01", 10, "a1", "a2"),
-                              new[] { Level("a1", "c01"), Level("a2", "c01") });
-            var oldCatalog = before.Build();
-
-            var after = new LevelCatalogBuilder();
-            after.AddChapter(Chapter("c01", 10, "a1", "tutorial", "a2"),
-                             new[] { Level("a1", "c01"), Level("tutorial", "c01"), Level("a2", "c01") });
-            var newCatalog = after.Build();
+            var before = IndexOf(Chapter("c01", 10, "a1", "a2"));
+            var after = IndexOf(Chapter("c01", 10, "a1", "tutorial", "a2"));
 
             // positions shift, which is exactly why nothing may be keyed on them
-            Assert.AreEqual(1, oldCatalog.OrderOf(LevelId.Parse("a2")));
-            Assert.AreEqual(2, newCatalog.OrderOf(LevelId.Parse("a2")));
+            Assert.AreEqual(1, before.OrderOf(LevelId.Parse("a2")));
+            Assert.AreEqual(2, after.OrderOf(LevelId.Parse("a2")));
 
             // identity does not, which is why records stay attached to the right level
-            Assert.IsTrue(newCatalog.Contains(LevelId.Parse("a2")));
-            Assert.AreEqual("a2", newCatalog.Find(LevelId.Parse("a2")).Id.Value);
+            Assert.IsTrue(after.Contains(LevelId.Parse("a2")));
         }
 
         [Test]
         public void NextAndPreviousWalkAcrossChapterBoundaries()
         {
-            var builder = new LevelCatalogBuilder();
-            builder.AddChapter(Chapter("c01", 10, "a1"), new[] { Level("a1", "c01") });
-            builder.AddChapter(Chapter("c02", 20, "b1"), new[] { Level("b1", "c02") });
-            var catalog = builder.Build();
+            var index = IndexOf(Chapter("c01", 10, "a1"), Chapter("c02", 20, "b1"));
 
-            Assert.AreEqual("b1", catalog.Next(LevelId.Parse("a1")).Id.Value);
-            Assert.AreEqual("a1", catalog.Previous(LevelId.Parse("b1")).Id.Value);
-            Assert.IsNull(catalog.Next(LevelId.Parse("b1")));
-            Assert.IsTrue(catalog.IsLast(LevelId.Parse("b1")));
+            Assert.AreEqual("b1", index.Next(LevelId.Parse("a1")).Value);
+            Assert.AreEqual("a1", index.Previous(LevelId.Parse("b1")).Value);
+            Assert.IsFalse(index.Next(LevelId.Parse("b1")).IsValid);
+            Assert.IsTrue(index.IsLast(LevelId.Parse("b1")));
         }
 
         [Test]
-        public void ALevelNoChapterListsIsReportedAndDropped()
+        public void ALevelIdClaimedByTwoChaptersIsReportedAndKeptOnce()
         {
-            var builder = new LevelCatalogBuilder();
-            builder.AddChapter(Chapter("c01", 10, "a1"),
-                               new[] { Level("a1", "c01"), Level("orphan", "c01") });
+            var builder = new CatalogIndexBuilder();
+            builder.Add(Chapter("c01", 10, "shared"), 1);
+            builder.Add(Chapter("c02", 20, "shared"), 1);
 
-            var catalog = builder.Build();
+            var index = builder.Build();
 
-            Assert.AreEqual(1, catalog.Count, "an unlisted level must not silently appear");
+            // A save record names a level, not a chapter. Two chapters owning one id
+            // would make it ambiguous which reward rule that record was paid at.
+            Assert.AreEqual(1, index.Count);
+            Assert.AreEqual("c01", index.ChapterOf(LevelId.Parse("shared")).Value);
             Assert.IsTrue(builder.HasProblems);
         }
 
         [Test]
-        public void AChapterListingAnUnknownLevelIsReported()
+        public void EveryLevelKnowsItsChapterWithoutReadingABody()
         {
-            var builder = new LevelCatalogBuilder();
-            builder.AddChapter(Chapter("c01", 10, "a1", "ghost"), new[] { Level("a1", "c01") });
+            var index = IndexOf(Chapter("c01", 10, "a1", "a2"), Chapter("c02", 20, "b1"));
 
-            var catalog = builder.Build();
+            Assert.AreEqual("c01", index.ChapterOf(LevelId.Parse("a2")).Value);
+            Assert.AreEqual("c02", index.ChapterOf(LevelId.Parse("b1")).Value);
 
-            Assert.AreEqual(1, catalog.Count);
-            Assert.IsTrue(builder.HasProblems);
+            // The index is the game's IChapterMap, which is what stops a forged save
+            // minting currency from level ids that do not exist.
+            Assert.IsTrue(index.TryGetChapter(LevelId.Parse("a1"), out _));
+            Assert.IsFalse(index.TryGetChapter(LevelId.Parse("invented"), out _));
         }
+
+        [Test]
+        public void ARetiredOrTooNewChapterIsSkippedEntirely()
+        {
+            var retired = new ManifestChapterDto { id = "c09", order = 90, disabled = true,
+                                                   levels = new[] { "z1" } };
+            var future = new ManifestChapterDto { id = "c10", order = 100, minAppVersion = 99,
+                                                  levels = new[] { "z2" } };
+
+            var builder = new CatalogIndexBuilder();
+            builder.Add(Chapter("c01", 10, "a1"), 1);
+            builder.Add(retired, 1);
+            builder.Add(future, 1);
+
+            var index = builder.Build();
+
+            Assert.AreEqual(1, index.Count);
+            Assert.IsFalse(builder.HasProblems, "skipping content meant for other clients is not a fault");
+        }
+
     }
 }

@@ -279,13 +279,14 @@ namespace GlimmerGrove
 
         static string NextGladeLine()
         {
-            var catalog = GameContent.Catalog;
-            var next = LevelUnlock.NextToPlay(catalog);
+            var next = LevelUnlock.NextToPlay(GameContent.Index);
 
-            if (next == null || PlayerProgress.IsCleared(next.Id))
+            if (!next.IsValid || PlayerProgress.IsCleared(next))
                 return Loc.Get("ui.home.all_awake");
 
-            return Loc.Format("ui.home.next_up", Loc.Get(next.NameKey));
+            // Named from the id alone, so the home screen never reads a chapter file
+            // just to draw one line of text.
+            return Loc.Format("ui.home.next_up", Loc.Get(LevelDefinition.DefaultNameKey(next)));
         }
 
         public override void OnPresented()
