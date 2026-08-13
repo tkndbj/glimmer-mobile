@@ -95,6 +95,71 @@ its own. Prefer inheriting: twenty levels sharing one backdrop is the difference
 between a 60 MB game and a 2 GB one. `mapX`/`mapY` are fractions of the
 *chapter's* band of the map, not of the whole map, so chapters stay independent.
 
+## Progression
+
+`Content/progression.json` holds the XP curve and what a glade pays out. It is content
+rather than code for the same reason levels are: rewards get retuned, and a retune must
+not need a store review.
+
+```json
+{
+  "schemaVersion": 1,
+  "maxLevel": 500,
+  "xpToNext": [100, 150, 200, ...],   // cost of level 1→2, 2→3, ...
+  "tailXpToNext": 1250,               // the first level past the authored band
+  "tailXpIncrement": 150,             // added per level after that, forever
+  "rewards": { "xpFirstClear": 40, "xpPerStar": 20,
+               "creditsFirstClear": 30, "creditsPerStar": 15 },
+  "chapterRewards": [ { "chapterId": "c01_shallows", "xpPerStar": 15 } ]
+}
+```
+
+Bands are increments, not cumulative totals, so inserting a band changes one number
+rather than every number after it. A chapter override inherits any field it does not
+set — `-1` means unwritten, because `0` is a legitimate payout for a tutorial. Bump
+`progressionVersion` in `manifest.json` when you change the file, or the refresher will
+not pull it.
+
+**XP is derived, never stored.** A player's level is recomputed from their star ledger
+on every launch:
+
+```
+xp = Σ over cleared glades of (xpFirstClear + xpPerStar × stars)
+```
+
+That is what makes it safe to retune this file at all. It also means a replay pays the
+*difference* between the old record and the new one, so beating nothing earns nothing
+with no rule needed to say so. Credits work the same way, plus the parts that cannot be
+derived: `balance = max(earned, high-water) + granted − spent`.
+
+Three things follow that are easy to get wrong:
+
+- **Re-run the seed script after every content drop.** The server derives credits from
+  its own copy of the catalog, and a glade it has not been seeded with earns nothing.
+  `node firebase/seed/seed-config.mjs`. Nobody loses anything if you forget — the earned
+  floor on both sides holds the balance up — but the new chapter pays out only once the
+  server knows it exists.
+- **Only ever raise a reward, or accept that the floor holds.** Lowering one recomputes
+  a smaller value for everyone. `ProgressionStore` and `earnedHighWater` stop anybody's
+  level or balance actually falling, but the extra is then invisible to new players
+  only. Prefer lengthening the curve to cutting a payout.
+- **Never add a payout that is not a function of the record.** A reward for "played
+  today" or "watched an advert" is not derivable and must go through `grantedBaseline`
+  on the server, not through this file.
+
+### The rule exists twice
+
+`ProgressionLedger.cs` and `firebase/functions/src/progression.ts` both compute earned
+credits, because the client needs it offline and the server needs it to catch a forged
+save. They are held together by `firebase/shared/reward-vectors.json`, which both sides
+run as a test. Change one without the other and a build goes red rather than the economy
+quietly desynchronising.
+
+Three rules keep them identical, and each has a reason: a glade the catalog cannot vouch
+for earns nothing (or an invented level id would mint currency), stars are clamped to
+three (or a forged record would), and a level id counts once (which the map-keyed wire
+format now also enforces structurally).
+
 ## Remote delivery
 
 Off by default and fully playable that way. To turn it on, set

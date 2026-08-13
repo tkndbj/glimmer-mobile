@@ -132,6 +132,11 @@ namespace GlimmerGrove.Persistence
             dto.settings ??= new SettingsDto();
             dto.wallet ??= WalletDto.Unwritten();
             dto.levels ??= Array.Empty<LevelRecordDto>();
+            dto.cloud ??= new CloudStateDto();
+
+            // A v1 file has no progression section at all, and an absent one must read
+            // as "no floor yet" rather than as a floor of zero written on purpose.
+            dto.progression ??= ProgressionStateDto.Unwritten();
         }
 
         static SaveFileDto CreateDefault() => new SaveFileDto
@@ -140,6 +145,8 @@ namespace GlimmerGrove.Persistence
             settings = new SettingsDto(),
             wallet = WalletDto.Unwritten(),
             levels = Array.Empty<LevelRecordDto>(),
+            progression = ProgressionStateDto.Unwritten(),
+            cloud = new CloudStateDto(),
         };
 
         static void TryDelete(string path)

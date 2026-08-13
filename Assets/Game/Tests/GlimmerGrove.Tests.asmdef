@@ -3,6 +3,7 @@
     "rootNamespace": "GlimmerGrove.Tests",
     "references": [
         "GlimmerGrove.Domain",
+        "GlimmerGrove.Cloud",
         "UnityEngine.TestRunner",
         "UnityEditor.TestRunner"
     ],

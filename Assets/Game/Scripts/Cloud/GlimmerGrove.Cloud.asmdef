@@ -1,0 +1,23 @@
+{
+    "name": "GlimmerGrove.Cloud",
+    "rootNamespace": "GlimmerGrove.Cloud",
+    "references": [
+        "GlimmerGrove.Domain",
+        "Firebase.Functions"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [
+        {
+            "name": "com.google.firebase.firestore",
+            "expression": "11.0",
+            "define": "GLIMMER_FIREBASE"
+        }
+    ],
+    "noEngineReferences": false
+}

@@ -20,6 +20,14 @@ namespace GlimmerGrove.Content
     {
         public int schemaVersion;
         public ManifestChapterDto[] chapters;
+
+        /// <summary>
+        /// Bumped when <c>progression.json</c> changes, so the refresher knows to pull
+        /// it. Without a version the reward table could only be retuned by shipping a
+        /// build, which is the thing keeping it in content was meant to avoid.
+        /// 0 means never versioned, and the bundled copy stands.
+        /// </summary>
+        public int progressionVersion;
     }
 
     [Serializable]
@@ -87,6 +95,80 @@ namespace GlimmerGrove.Content
         public string nameKey;
         public string taglineKey;
         public string lessonKey;
+    }
+
+    /// <summary>
+    /// The XP curve and what a level pays out.
+    ///
+    /// Authored as increments rather than cumulative totals, because inserting a
+    /// level band then changes one number instead of every number after it. The
+    /// table covers the hand-tuned early game; <see cref="tailXpToNext"/> and
+    /// <see cref="tailXpIncrement"/> continue it arithmetically forever, so the
+    /// curve can never simply run out under a long-lived player.
+    /// </summary>
+    [Serializable]
+    public sealed class ProgressionDto
+    {
+        public int schemaVersion;
+
+        /// <summary>Level cap. Bounds the derivation loop as well as the design.</summary>
+        public int maxLevel;
+
+        /// <summary>xpToNext[0] is the cost of reaching level 2 from level 1.</summary>
+        public int[] xpToNext;
+
+        /// <summary>Cost of the first level past the authored table.</summary>
+        public int tailXpToNext;
+
+        /// <summary>Added to the tail cost for each level beyond that.</summary>
+        public int tailXpIncrement;
+
+        public RewardRuleDto rewards;
+
+        /// <summary>Per-chapter overrides. A chapter with no entry uses the defaults.</summary>
+        public ChapterRewardDto[] chapterRewards;
+    }
+
+    /// <summary>
+    /// What one level pays out, as a function of the best result held on it.
+    ///
+    /// -1 means "not written, inherit" rather than zero, because zero is a legitimate
+    /// payout for a tutorial chapter and the two must stay distinguishable.
+    /// </summary>
+    [Serializable]
+    public sealed class RewardRuleDto
+    {
+        public int xpFirstClear = -1;
+        public int xpPerStar = -1;
+        public int creditsFirstClear = -1;
+        public int creditsPerStar = -1;
+    }
+
+    /// <summary>
+    /// Declares its own fields rather than inheriting them from <see cref="RewardRuleDto"/>.
+    ///
+    /// JsonUtility does read inherited fields, but relying on it here would mean the
+    /// whole reward-override feature rested on a serialiser behaviour whose failure is
+    /// silent — every chapter would quietly pay the default rate, and nothing in the
+    /// file or the console would say so. Four repeated lines buy certainty.
+    /// </summary>
+    [Serializable]
+    public sealed class ChapterRewardDto
+    {
+        public string chapterId;
+
+        public int xpFirstClear = -1;
+        public int xpPerStar = -1;
+        public int creditsFirstClear = -1;
+        public int creditsPerStar = -1;
+
+        public RewardRuleDto AsRule() => new RewardRuleDto
+        {
+            xpFirstClear = xpFirstClear,
+            xpPerStar = xpPerStar,
+            creditsFirstClear = creditsFirstClear,
+            creditsPerStar = creditsPerStar,
+        };
     }
 
     [Serializable]

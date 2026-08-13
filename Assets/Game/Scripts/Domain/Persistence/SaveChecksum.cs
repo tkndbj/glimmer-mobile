@@ -35,13 +35,23 @@ namespace GlimmerGrove.Persistence
         }
 
         /// <summary>
-        /// True when the file is intact, or predates checksums. Absence is treated as
-        /// trust on purpose: adding this must not invalidate saves already on devices.
+        /// True when the file is intact, or when it cannot meaningfully be checked.
+        ///
+        /// Two cases are trusted rather than rejected, both for the same reason: a
+        /// false "corrupt" verdict costs a player everything, while a missed
+        /// truncation costs one load.
+        ///
+        /// An absent checksum predates the feature. A checksum written by a different
+        /// schema version cannot match, because the hash covers the serialised object
+        /// and this build's object has fields the writer had never heard of — so every
+        /// save on every device would fail the moment the schema grew. The next write
+        /// stamps a current checksum and full checking resumes.
         /// </summary>
         public static bool Verify(SaveFileDto dto)
         {
             if (dto == null) return false;
             if (string.IsNullOrEmpty(dto.checksum)) return true;
+            if (dto.schemaVersion != SaveSchema.Version) return true;
 
             return string.Equals(dto.checksum, Compute(dto), System.StringComparison.Ordinal);
         }

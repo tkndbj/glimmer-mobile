@@ -1,16 +1,22 @@
 using GlimmerGrove.Content;
 using GlimmerGrove.Persistence;
-using UnityEngine;
+using GlimmerGrove.Progression;
 
 namespace GlimmerGrove
 {
     /// <summary>
-    /// The read model the home screen paints: rank, grove progress and balances.
+    /// The read model the home screen paints: level, grove progress and balances.
     ///
-    /// Nothing is stored here any more — it is a view over <see cref="PlayerProgress"/>,
+    /// Nothing is stored here — it is a view over <see cref="PlayerProgression"/>,
     /// <see cref="Wallet"/> and the live catalog. Keeping it as a facade means the HUD
-    /// has one place to ask, while persistence and content each stay responsible for
-    /// their own half.
+    /// has one place to ask, while progression, persistence and content each stay
+    /// responsible for their own part.
+    ///
+    /// Note there are no setters for the balances any more. A settable balance is the
+    /// exact shape of the bug the ledger exists to prevent: credits are earned by
+    /// deriving them from cleared glades, granted by the server against a receipt, or
+    /// spent through <see cref="PlayerProgression.TrySpend"/>. Assigning a number is
+    /// none of those things.
     /// </summary>
     public static class Profile
     {
@@ -22,36 +28,39 @@ namespace GlimmerGrove
             set => Wallet.DisplayName = value;
         }
 
-        public static int Coins
-        {
-            get => Wallet.Coins;
-            set => Wallet.Coins = value;
-        }
-
-        public static int Gems
-        {
-            get => Wallet.Gems;
-            set => Wallet.Gems = value;
-        }
-
         public static int Hearts
         {
             get => Wallet.Hearts;
             set => Wallet.Hearts = value;
         }
 
-        // -- real progression, read straight from the star ledger ---------------
+        // -- currency, derived from the ledger ----------------------------------
+        public static long Coins => PlayerProgression.Credits;
+
+        public static long Gems => PlayerProgression.Gems;
+
+        public static bool CanAfford(long coins) => PlayerProgression.CanAfford(Currency.Credits, coins);
+
+        public static bool Spend(long coins, string reason)
+            => PlayerProgression.TrySpend(Currency.Credits, coins, reason);
+
+        // -- level, derived from the star ledger and the reward table -----------
+        public static PlayerLevel Level => PlayerProgression.Level;
+
+        /// <summary>Kept as "rank" because that is what the HUD calls it.</summary>
+        public static int Rank => PlayerProgression.Level.Level;
+
+        /// <summary>0..1 through the current level.</summary>
+        public static float RankProgress => PlayerProgression.Level.Progress01;
+
+        public static long Xp => PlayerProgression.Xp;
+
+        // -- grove completion, read straight from the star ledger ---------------
         static LevelCatalog Catalog => GameContent.Catalog;
 
         public static int TotalStars => PlayerProgress.TotalStars(Catalog);
 
         public static int MaxStars => PlayerProgress.MaxStars(Catalog);
-
-        /// <summary>Rank rises every three stars. Purely derived, nothing stored.</summary>
-        public static int Rank => 1 + TotalStars / 3;
-
-        /// <summary>0..1 through the current rank.</summary>
-        public static float RankProgress => (TotalStars % 3) / 3f;
 
         public static float GroveProgress => MaxStars == 0 ? 0f : TotalStars / (float)MaxStars;
 
@@ -60,7 +69,7 @@ namespace GlimmerGrove
             => GroveProgress >= (index + 1) / 3f - 0.0001f;
 
         /// <summary>Format 1250 as "1.2k" so pills stay narrow.</summary>
-        public static string Short(int value)
+        public static string Short(long value)
         {
             if (value >= 1000000) return (value / 1000000f).ToString("0.#") + "M";
             if (value >= 10000) return (value / 1000f).ToString("0") + "k";

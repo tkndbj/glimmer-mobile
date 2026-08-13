@@ -7,6 +7,7 @@ using GlimmerGrove.Content;
 using GlimmerGrove.Content.Sources;
 using GlimmerGrove.Localization;
 using GlimmerGrove.Persistence;
+using GlimmerGrove.Progression;
 using UnityEditor;
 using UnityEditor.Build;
 using UnityEditor.Build.Reporting;
@@ -73,9 +74,81 @@ namespace GlimmerGrove.EditorTools
 
             ValidateLevels(load.Catalog, result, verbose);
             ValidateLocalisation(load.Catalog, result);
+            ValidateProgression(load.Catalog, result, verbose);
             ValidateLegacyMigration(load.Catalog, result);
 
             return result;
+        }
+
+        /// <summary>
+        /// Proves the XP curve and reward table are usable.
+        ///
+        /// The curve is content, which means it can be retuned without a store review —
+        /// and means a typo in it reaches players the same way. A band costing zero XP
+        /// would hand out unbounded levels at once, and a reward override naming a
+        /// chapter that does not exist would silently pay the default rate forever
+        /// while looking, in the file, exactly like it was working.
+        /// </summary>
+        static void ValidateProgression(LevelCatalog catalog, ContentValidationResult result, bool verbose)
+        {
+            var source = new BundledContentSource();
+            var fetch = source.FetchAsync(ContentPaths.Progression, default).GetAwaiter().GetResult();
+
+            if (!fetch.Success)
+            {
+                result.Errors.Add($"missing {ContentPaths.Progression}");
+                return;
+            }
+
+            var problems = new List<string>();
+            if (!ProgressionTable.TryRead(fetch.Text, out var table, problems))
+            {
+                foreach (var problem in problems) result.Errors.Add(problem);
+                return;
+            }
+
+            // Anything the reader survived but had to skip is still an authoring bug.
+            foreach (var problem in problems) result.Errors.Add(problem);
+
+            foreach (var chapter in catalog.Chapters)
+            {
+                if (!table.HasOverrideFor(chapter.Id) && verbose)
+                    Debug.Log($"[Glimmer] chapter '{chapter.Id}' uses the default reward rule");
+            }
+
+            ValidateRewardChaptersExist(fetch.Text, catalog, result);
+
+            if (!verbose) return;
+
+            long maximumXp = 0;
+            foreach (var level in catalog.Levels)
+                maximumXp += table.RuleFor(level.Chapter).XpFor(3);
+
+            var reachable = table.LevelFor(maximumXp);
+            Debug.Log($"[Glimmer] progression verified: {catalog.Count} glade(s) at three stars " +
+                      $"is {maximumXp} XP, reaching level {reachable.Level} of {table.MaxLevel}");
+        }
+
+        /// <summary>
+        /// A reward override for a chapter that is not in the catalog is dead config.
+        /// Reported as a warning rather than an error because authoring the rule before
+        /// the chapter is a legitimate order to work in.
+        /// </summary>
+        static void ValidateRewardChaptersExist(string json, LevelCatalog catalog,
+                                                ContentValidationResult result)
+        {
+            var dto = JsonUtility.FromJson<ProgressionDto>(json);
+            if (dto?.chapterRewards == null) return;
+
+            foreach (var entry in dto.chapterRewards)
+            {
+                if (entry == null || string.IsNullOrEmpty(entry.chapterId)) continue;
+                if (!ChapterId.TryParse(entry.chapterId, out var id, out _)) continue;
+                if (catalog.FindChapter(id) != null) continue;
+
+                result.Warnings.Add($"progression.json sets rewards for chapter '{entry.chapterId}', " +
+                                    "which is not in the catalog; the rule is inert");
+            }
         }
 
         static void ValidateLevels(LevelCatalog catalog, ContentValidationResult result, bool verbose)

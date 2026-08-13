@@ -5,19 +5,36 @@ namespace GlimmerGrove.Persistence
     /// <summary>
     /// The on-disk shape of a save file.
     ///
-    /// Two rules keep this survivable for the life of the game. Every record is keyed
-    /// by a level's permanent id, never by its position, so content can be reordered
-    /// or inserted without a player's history sliding onto the wrong levels. And every
-    /// optional value has a "not written" state distinct from a real value, because
-    /// JsonUtility fills missing fields with zero and a missing sound setting must not
-    /// read as "muted".
+    /// Three rules keep this survivable for the life of the game. Every record is
+    /// keyed by a level's permanent id, never by its position, so content can be
+    /// reordered or inserted without a player's history sliding onto the wrong levels.
+    /// Every optional value has a "not written" state distinct from a real value,
+    /// because JsonUtility fills missing fields with zero and a missing sound setting
+    /// must not read as "muted". And nothing derivable is stored — XP and earned
+    /// credits are recomputed from the level records, so they cannot drift, be
+    /// double-counted across devices, or be forged by editing a number.
+    ///
+    /// <para>
+    /// <b>Adding a field is not free.</b> <see cref="SaveChecksum"/> hashes the
+    /// serialised object, so a file written by an older schema can never match a
+    /// newer build's hash. That is why verification is skipped across versions —
+    /// without it, growing this file would fail every save on every device at once.
+    /// </para>
     /// </summary>
     public static class SaveSchema
     {
-        public const int Version = 1;
+        /// <summary>
+        /// v1 — levels, settings, flat coin/gem balances.
+        /// v2 — currency ledgers (granted/spent/earned high-water), progression
+        ///      high-water marks, cloud sync state.
+        /// </summary>
+        public const int Version = 2;
 
         /// <summary>Progress that predates this file: index-keyed keys in PlayerPrefs.</summary>
         public const int LegacyPlayerPrefsVersion = 0;
+
+        /// <summary>Flat <c>wallet.coins</c> / <c>wallet.gems</c> balances, before ledgers.</summary>
+        public const int FlatWalletVersion = 1;
 
         public const string FileName = "progress.json";
         public const string BackupFileName = "progress.backup.json";
@@ -57,6 +74,12 @@ namespace GlimmerGrove.Persistence
         public WalletDto wallet;
         public LevelRecordDto[] levels;
 
+        /// <summary>High-water marks that stop a retune from taking anything away.</summary>
+        public ProgressionStateDto progression;
+
+        /// <summary>Who this save belongs to and when it last reached the server.</summary>
+        public CloudStateDto cloud;
+
         /// <summary>Where the player left off, so the map can open in the right place.</summary>
         public string lastPlayedLevelId;
 
@@ -80,9 +103,11 @@ namespace GlimmerGrove.Persistence
     }
 
     /// <summary>
-    /// Soft currencies. The economy is not built yet, so these are placeholders —
-    /// but they live in the save file from the start so that building it later is a
-    /// feature change rather than another migration of everyone's data.
+    /// Currencies, and the player's chosen name.
+    ///
+    /// <see cref="coins"/> and <see cref="gems"/> are the v1 shape: flat balances the
+    /// client was free to set. They are read once, folded into a ledger's granted
+    /// baseline so nobody loses what they had, and never written again.
     /// </summary>
     [Serializable]
     public sealed class WalletDto
@@ -93,7 +118,95 @@ namespace GlimmerGrove.Persistence
         public int hearts;
         public string displayName;
 
+        /// <summary>One ledger per currency, keyed by a permanent currency id.</summary>
+        public CurrencyLedgerDto[] currencies;
+
         public static WalletDto Unwritten() => new WalletDto { coins = -1, gems = -1, hearts = -1 };
+    }
+
+    /// <summary>
+    /// Double-entry state for one currency.
+    ///
+    /// A balance is <c>max(derived earned, earnedHighWater) + granted - spent</c>. Only
+    /// the terms that cannot be derived are stored, and each is monotonic or
+    /// server-owned, which is what lets two devices be merged without inventing money
+    /// or losing a purchase.
+    /// </summary>
+    [Serializable]
+    public sealed class CurrencyLedgerDto
+    {
+        /// <summary>Permanent id — <c>credits</c>, <c>gems</c>. Never renamed or reused.</summary>
+        public string currency;
+
+        /// <summary>
+        /// Everything given rather than earned: the starting seed, purchases, gifts.
+        /// Server-owned once cloud save is live; the client may never raise it.
+        /// </summary>
+        public long grantedBaseline;
+
+        /// <summary>Spends the server has confirmed and folded in.</summary>
+        public long spentBaseline;
+
+        /// <summary>
+        /// Floor under the derived earnings. Stops a reward retune, or a chapter that
+        /// is temporarily out of the catalog, from reducing a balance a player is
+        /// already holding.
+        /// </summary>
+        public long earnedHighWater;
+
+        /// <summary>Spends made since the last sync, each with an idempotency key.</summary>
+        public SpendEntryDto[] pendingSpends;
+
+        /// <summary>
+        /// Debits at or before this moment are already inside <see cref="spentBaseline"/>.
+        /// Persisted because a merge on a later launch still needs it to tell a debit
+        /// the server has absorbed from one it has never seen.
+        /// </summary>
+        public long confirmedThroughUnix;
+    }
+
+    /// <summary>
+    /// One debit, identified so that submitting it twice can only charge once.
+    ///
+    /// The id is generated where the spend happens and never reused. It is what makes
+    /// a retry after a dropped response safe, which is the whole reason a bare
+    /// counter is not good enough here.
+    /// </summary>
+    [Serializable]
+    public sealed class SpendEntryDto
+    {
+        public string id;
+        public long amount;
+        public long unix;
+
+        /// <summary>What it was spent on. Carried for support and for analytics.</summary>
+        public string reason;
+    }
+
+    [Serializable]
+    public sealed class ProgressionStateDto
+    {
+        /// <summary>-1 means never written.</summary>
+        public long xpHighWater;
+        public int levelHighWater;
+
+        public static ProgressionStateDto Unwritten()
+            => new ProgressionStateDto { xpHighWater = -1, levelHighWater = -1 };
+    }
+
+    [Serializable]
+    public sealed class CloudStateDto
+    {
+        /// <summary>The authenticated account this save belongs to. Empty when local only.</summary>
+        public string userId;
+
+        /// <summary>Bumped on every local write, so a backend can order two snapshots.</summary>
+        public long revision;
+
+        public long lastSyncedUnix;
+
+        /// <summary>Identifies the writing device in a merge, for support and diagnostics.</summary>
+        public string deviceId;
     }
 
     [Serializable]

@@ -1,0 +1,35 @@
+pluginManagement {
+    repositories {
+        **ARTIFACTORYREPOSITORY**
+        gradlePluginPortal()
+        google()
+        mavenCentral()
+    }
+}
+
+include ':launcher'
+include ':unityLibrary'
+**INCLUDES**
+
+dependencyResolutionManagement {
+    repositoriesMode.set(RepositoriesMode.PREFER_SETTINGS)
+    repositories {
+        **ARTIFACTORYREPOSITORY**
+        google()
+        mavenCentral()
+// Android Resolver Repos Start
+        // Built from a File rather than a hand-assembled "file:///" string, because this
+        // project's path contains spaces and a raw space is not legal in a URI — Gradle
+        // fails with "Cannot convert URI ... to a file". File.toURI() percent-encodes it.
+        // The dollar-slashy string is kept so Windows backslashes are not read as escapes.
+        def unityProjectPath = $/**DIR_UNITYPROJECT**/$.replace("\\", "/")
+        maven {
+            url = new File(unityProjectPath + "/Assets/GeneratedLocalRepo/Firebase/m2repository").toURI() // Packages/com.google.firebase.firestore/Firebase/Editor/FirestoreDependencies.xml:23, Packages/com.google.firebase.app/Firebase/Editor/AppDependencies.xml:25, Packages/com.google.firebase.auth/Firebase/Editor/AuthDependencies.xml:23
+        }
+        mavenLocal()
+// Android Resolver Repos End
+        flatDir {
+            dirs "${project(':unityLibrary').projectDir}/libs"
+        }
+    }
+}

@@ -1,0 +1,242 @@
+using System.Collections.Generic;
+using GlimmerGrove.Persistence;
+
+namespace GlimmerGrove.Cloud
+{
+    /// <summary>
+    /// Converts a save between the local file shape and the Firestore document shape.
+    ///
+    /// Written out by hand rather than serialised as one opaque JSON string, and the
+    /// reason is worth stating because the shortcut is tempting. If the ledger were a
+    /// string, the security rules could not check anything about it, and — far more
+    /// importantly — the server could not re-derive earned currency from it. That
+    /// derivation is the thing that stops a forged save minting money. A blob would
+    /// have quietly given that up in exchange for thirty fewer lines.
+    ///
+    /// Keys are part of the wire contract. Renaming one is a breaking change for every
+    /// device that has already synced, exactly like renaming a level id.
+    /// </summary>
+    public static class FirestoreSaveMapper
+    {
+        public const int MaxLevelsPerDocument = 5000;
+
+        /// <summary>The field a single glade's record lives under, for a partial write.</summary>
+        public static string LevelFieldPath(string levelId) => "levels." + levelId;
+
+        // ------------------------------------------------------------- to cloud
+        /// <summary>
+        /// One glade's record. Keyed by level id in the parent map rather than carrying
+        /// the id inside itself, which is what makes a duplicate structurally impossible.
+        /// </summary>
+        public static Dictionary<string, object> LevelValue(LevelRecordDto record)
+            => new Dictionary<string, object>
+            {
+                { "stars", (long)record.stars },
+                { "bestMoves", (long)record.bestMoves },
+                { "clears", (long)record.clears },
+                { "firstClearedUnix", record.firstClearedUnix },
+                { "lastPlayedUnix", record.lastPlayedUnix },
+            };
+
+        /// <summary>
+        /// The whole document. Used for the first write, when nothing exists to diff
+        /// against; afterwards a sync sends <see cref="HeaderFields"/> plus only the
+        /// glades that actually changed.
+        /// </summary>
+        public static Dictionary<string, object> ToDocument(SaveFileDto dto)
+        {
+            if (dto == null) return null;
+
+            var document = HeaderFields(dto);
+            document["levels"] = LevelMap(dto);
+            return document;
+        }
+
+        /// <summary>
+        /// The ledger as a map, not an array. Three things follow, and all of them
+        /// matter: a level id cannot appear twice, the server can key its lookups
+        /// directly, and a sync can write <c>levels.c01_first_light</c> on its own
+        /// instead of re-uploading the whole ledger because one glade gained a star.
+        /// </summary>
+        public static Dictionary<string, object> LevelMap(SaveFileDto dto)
+        {
+            var levels = new Dictionary<string, object>();
+            if (dto?.levels == null) return levels;
+
+            foreach (var record in dto.levels)
+            {
+                if (record == null || string.IsNullOrEmpty(record.levelId)) continue;
+                if (levels.Count >= MaxLevelsPerDocument && !levels.ContainsKey(record.levelId)) break;
+
+                levels[record.levelId] = LevelValue(record);
+            }
+
+            return levels;
+        }
+
+        /// <summary>Everything except the ledger. Small, and sent whenever anything is.</summary>
+        public static Dictionary<string, object> HeaderFields(SaveFileDto dto)
+        {
+            if (dto == null) return null;
+
+            return new Dictionary<string, object>
+            {
+                { "schemaVersion", (long)dto.schemaVersion },
+                { "updatedUnix", dto.updatedUnix },
+                { "lastPlayedLevelId", dto.lastPlayedLevelId ?? string.Empty },
+                { "legacyImportDone", dto.legacyImportDone },
+                { "checksum", dto.checksum ?? string.Empty },
+
+                { "settings", new Dictionary<string, object>
+                    {
+                        { "music", (long)(dto.settings?.music.state ?? 0) },
+                        { "sfx", (long)(dto.settings?.sfx.state ?? 0) },
+                        { "haptics", (long)(dto.settings?.haptics.state ?? 0) },
+                        { "language", dto.settings?.language ?? string.Empty },
+                    }
+                },
+
+                // Currency is deliberately absent. The balances that matter live in
+                // players/{uid}/private/wallet, which the client cannot write, and
+                // sending a second copy here would leave two documents claiming to
+                // know what a player is holding. Only the parts nothing is spending
+                // travel with the save.
+                { "wallet", new Dictionary<string, object>
+                    {
+                        { "hearts", (long)(dto.wallet?.hearts ?? -1) },
+                        { "displayName", dto.wallet?.displayName ?? string.Empty },
+                    }
+                },
+
+                { "progression", new Dictionary<string, object>
+                    {
+                        { "xpHighWater", dto.progression?.xpHighWater ?? -1L },
+                        { "levelHighWater", (long)(dto.progression?.levelHighWater ?? -1) },
+                    }
+                },
+
+                { "cloud", new Dictionary<string, object>
+                    {
+                        { "userId", dto.cloud?.userId ?? string.Empty },
+                        { "revision", dto.cloud?.revision ?? 0L },
+                        { "lastSyncedUnix", dto.cloud?.lastSyncedUnix ?? 0L },
+                        { "deviceId", dto.cloud?.deviceId ?? string.Empty },
+                    }
+                },
+            };
+        }
+
+        // ----------------------------------------------------------- from cloud
+        /// <summary>
+        /// Reads a document back. Treats every field as missing until proven otherwise,
+        /// because a document may have been written by a newer build, an older one, or
+        /// a support tool, and none of those are reasons to throw on a background
+        /// thread during a sync.
+        /// </summary>
+        public static SaveFileDto FromDocument(IDictionary<string, object> doc)
+        {
+            if (doc == null) return null;
+
+            var dto = new SaveFileDto
+            {
+                schemaVersion = (int)Long(doc, "schemaVersion", SaveSchema.Version),
+                updatedUnix = Long(doc, "updatedUnix", 0),
+                lastPlayedLevelId = Str(doc, "lastPlayedLevelId"),
+                legacyImportDone = Bool(doc, "legacyImportDone"),
+                checksum = Str(doc, "checksum"),
+                settings = new SettingsDto(),
+                wallet = WalletDto.Unwritten(),
+                progression = ProgressionStateDto.Unwritten(),
+                cloud = new CloudStateDto(),
+            };
+
+            if (Map(doc, "settings") is IDictionary<string, object> settings)
+            {
+                dto.settings.music = new StoredFlag { state = (int)Long(settings, "music", 0) };
+                dto.settings.sfx = new StoredFlag { state = (int)Long(settings, "sfx", 0) };
+                dto.settings.haptics = new StoredFlag { state = (int)Long(settings, "haptics", 0) };
+                dto.settings.language = Str(settings, "language");
+            }
+
+            if (Map(doc, "wallet") is IDictionary<string, object> wallet)
+            {
+                dto.wallet.hearts = (int)Long(wallet, "hearts", -1);
+                dto.wallet.displayName = Str(wallet, "displayName");
+            }
+
+            if (Map(doc, "progression") is IDictionary<string, object> progression)
+            {
+                dto.progression.xpHighWater = Long(progression, "xpHighWater", -1);
+                dto.progression.levelHighWater = (int)Long(progression, "levelHighWater", -1);
+            }
+
+            if (Map(doc, "cloud") is IDictionary<string, object> cloud)
+            {
+                dto.cloud.userId = Str(cloud, "userId");
+                dto.cloud.revision = Long(cloud, "revision", 0);
+                dto.cloud.lastSyncedUnix = Long(cloud, "lastSyncedUnix", 0);
+                dto.cloud.deviceId = Str(cloud, "deviceId");
+            }
+
+            dto.levels = ReadLevels(doc);
+            return dto;
+        }
+
+        static LevelRecordDto[] ReadLevels(IDictionary<string, object> doc)
+        {
+            if (!doc.TryGetValue("levels", out object raw) || !(raw is IDictionary<string, object> map))
+                return new LevelRecordDto[0];
+
+            var records = new List<LevelRecordDto>();
+
+            foreach (var pair in map)
+            {
+                if (string.IsNullOrEmpty(pair.Key)) continue;
+                if (!(pair.Value is IDictionary<string, object> entry)) continue;
+
+                records.Add(new LevelRecordDto
+                {
+                    levelId = pair.Key,
+                    stars = (int)Long(entry, "stars", 0),
+                    bestMoves = (int)Long(entry, "bestMoves", 0),
+                    clears = (int)Long(entry, "clears", 0),
+                    firstClearedUnix = Long(entry, "firstClearedUnix", 0),
+                    lastPlayedUnix = Long(entry, "lastPlayedUnix", 0),
+                });
+            }
+
+            return records.ToArray();
+        }
+
+        // ------------------------------------------------------------- readers
+        /// <summary>
+        /// Firestore hands numbers back as long, but a document touched by the console
+        /// or a support script can hold an int or a double for the same field. Reading
+        /// through one converter means a hand-edited document loads rather than
+        /// throwing halfway through a sync.
+        /// </summary>
+        static long Long(IDictionary<string, object> map, string key, long fallback)
+        {
+            if (map == null || !map.TryGetValue(key, out object value) || value == null) return fallback;
+
+            switch (value)
+            {
+                case long l: return l;
+                case int i: return i;
+                case double d: return (long)d;
+                case float f: return (long)f;
+                case string s: return long.TryParse(s, out long parsed) ? parsed : fallback;
+                default: return fallback;
+            }
+        }
+
+        static string Str(IDictionary<string, object> map, string key)
+            => map != null && map.TryGetValue(key, out object value) && value is string s ? s : string.Empty;
+
+        static bool Bool(IDictionary<string, object> map, string key)
+            => map != null && map.TryGetValue(key, out object value) && value is bool b && b;
+
+        static object Map(IDictionary<string, object> map, string key)
+            => map != null && map.TryGetValue(key, out object value) ? value : null;
+    }
+}

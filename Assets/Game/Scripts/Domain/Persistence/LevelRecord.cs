@@ -11,6 +11,14 @@ namespace GlimmerGrove.Persistence
     /// </summary>
     public sealed class LevelRecord
     {
+        /// <summary>
+        /// Three stars is the ceiling everywhere: the board cannot award more, the
+        /// save clamps to it, and both the client and the server clamp again when
+        /// deriving currency, because a forged record is the one place a fourth star
+        /// could come from.
+        /// </summary>
+        public const int MaxStars = 3;
+
         public readonly LevelId Id;
         public readonly int Stars;
         public readonly int BestMoves;
@@ -67,7 +75,7 @@ namespace GlimmerGrove.Persistence
             if (!LevelId.TryParse(dto.levelId, out var id, out _)) return false;
 
             record = new LevelRecord(id,
-                                     Clamp(dto.stars, 0, 3),
+                                     Clamp(dto.stars, 0, MaxStars),
                                      dto.bestMoves < 0 ? 0 : dto.bestMoves,
                                      dto.clears < 0 ? 0 : dto.clears,
                                      dto.firstClearedUnix,

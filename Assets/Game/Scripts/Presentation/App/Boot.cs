@@ -1,5 +1,6 @@
 using GlimmerGrove.Analytics;
 using GlimmerGrove.AssetPipeline;
+using GlimmerGrove.Cloud;
 using GlimmerGrove.Content;
 using GlimmerGrove.Persistence;
 using UnityEngine;
@@ -48,6 +49,12 @@ namespace GlimmerGrove
             // downstream goes through AssetLibrary and never learns which it got.
 #if GLIMMER_ADDRESSABLES
             AssetLibrary.UseProvider(new AddressablesAssetProvider());
+#endif
+
+            // Cloud save is chosen the same way, and ships inert until a backend is
+            // installed. The game is fully playable through the null one.
+#if GLIMMER_FIREBASE
+            CloudSaveService.UseBackend(new FirebaseCloudSaveBackend());
 #endif
 
 #if UNITY_EDITOR || DEVELOPMENT_BUILD
@@ -137,15 +144,27 @@ namespace GlimmerGrove
 
             void OnApplicationPause(bool paused)
             {
-                if (paused) SaveService.Flush();
+                if (paused) Persist();
+                else CloudSaveService.BeginSync();     // returning: pick up another device's work
             }
 
             void OnApplicationFocus(bool focused)
             {
-                if (!focused) SaveService.Flush();
+                if (!focused) Persist();
             }
 
             void OnApplicationQuit() => SaveService.Flush();
+
+            /// <summary>
+            /// Disk first, then the network. The write is synchronous and certain; the
+            /// sync may not survive the process being killed a moment later, and must
+            /// never be what the local save is waiting on.
+            /// </summary>
+            static void Persist()
+            {
+                SaveService.Flush();
+                CloudSaveService.BeginSync();
+            }
         }
     }
 }

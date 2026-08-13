@@ -50,3 +50,22 @@ crashlytics-build.properties
 /[Ll]ibrary/com.unity.addressables/aa/*
 /[Aa]ssets/StreamingAssets/aa.meta
 /[Aa]ssets/StreamingAssets/aa/*
+
+# Firebase Unity SDK packages: build inputs with a canonical download URL, ~75 MB.
+# Committing them would add that to the history on every version bump.
+# Restore with: pwsh GooglePackages/fetch.ps1
+/GooglePackages/*.tgz
+
+# Firebase
+firebase-debug.log
+firebase-debug.*.log
+.firebase/
+/firebase/functions/node_modules/
+/firebase/functions/lib/
+/firebase/seed/products.json
+/firebase/seed/*.local.json
+
+# Firebase config downloaded from the console. google-services.json is not a secret,
+# but service-account keys and the Apple .p8 absolutely are, and they land nearby.
+*-service-account*.json
+*.p8

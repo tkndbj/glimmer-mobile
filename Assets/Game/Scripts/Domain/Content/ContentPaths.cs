@@ -15,6 +15,12 @@ namespace GlimmerGrove.Content
         /// <summary>Index of every chapter the build or the server knows about.</summary>
         public const string Manifest = Root + "/manifest.json";
 
+        /// <summary>
+        /// The XP curve and reward table. Content rather than code so rewards can be
+        /// retuned without a store review — the same argument that put levels here.
+        /// </summary>
+        public const string Progression = Root + "/progression.json";
+
         public static string Chapter(ChapterId id) => $"{Root}/chapters/{id.Value}.json";
 
         public static string Localisation(string languageCode) => $"{Root}/loc/{languageCode}.json";

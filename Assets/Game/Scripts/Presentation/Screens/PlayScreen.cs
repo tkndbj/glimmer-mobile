@@ -4,6 +4,7 @@ using GlimmerGrove.AssetPipeline;
 using GlimmerGrove.Content;
 using GlimmerGrove.Localization;
 using GlimmerGrove.Persistence;
+using GlimmerGrove.Progression;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -264,8 +265,15 @@ namespace GlimmerGrove
             var before = PlayerProgress.Record(_def.Id);
             int previousBest = before.BestMoves;
             bool firstClear = !before.IsCleared;
+            int levelBefore = PlayerProgression.Level.Level;
 
             PlayerProgress.RecordRun(_def.Id, stars, moves);
+
+            // The reward is the difference between the record before and after, not a
+            // payout for the run. A replay that does not beat the old result is worth
+            // nothing, and that falls out of the subtraction rather than needing a rule.
+            var reward = PlayerProgression.RewardFor(before, PlayerProgress.Record(_def.Id));
+            int levelAfter = PlayerProgression.Level.Level;
 
             LevelAnalytics.TrackCompleted(_def, moves, stars, _def.Tuning.HintAllowance - _board.HintsLeft,
                                           Time.unscaledTime - _startedAt, firstClear);
@@ -278,6 +286,9 @@ namespace GlimmerGrove
                 v.Par = _puzzle.Gold;
                 v.PreviousBest = previousBest;
                 v.FirstClear = firstClear;
+                v.XpGained = reward.Xp;
+                v.CreditsGained = reward.EarnedCredits;
+                v.LevelledUpTo = levelAfter > levelBefore ? levelAfter : 0;
             });
         }
 

@@ -50,12 +50,37 @@ What that means in practice here:
    catalog via `AssetManifest`.
 8. **The map shows one chapter at a time.** That is what bounds node count and texture
    memory by chapter size instead of catalog size. Do not "improve" it into one long map.
+9. **XP and earned credits are derived, never accumulated.** They are a pure function of
+   the star ledger via `ProgressionLedger`. An accumulator cannot be merged across
+   devices (nothing distinguishes "cleared twice" from "counted twice"), cannot be
+   retuned for existing players, and cannot be recovered when it is lost. The only
+   stored progression numbers are the high-water floors in `ProgressionStore`, and they
+   are floors — never a source of truth.
+9a. **The reward rule exists twice and must stay identical.** `ProgressionLedger.cs` and
+   `firebase/functions/src/progression.ts`. Both run `firebase/shared/reward-vectors.json`
+   as a test, so drift fails a build instead of desynchronising the economy. Change one,
+   change the other, and add a vector. Re-run the seed script after every content drop.
+10. **The client never raises `grantedBaseline`.** Currency that was given rather than
+    earned is server-owned, enforced by Firestore security rules, not by this code.
+    Receipt validation must be idempotent on the store transaction id. See
+    `ICloudSaveBackend`.
+11. **Cloud conflicts merge; they never prompt.** `SaveMerge.Join` is a join — idempotent
+    and order-independent — so both devices' work survives. A "keep local or cloud?"
+    dialog is data loss wearing a consent costume. Do not add one.
+11a. **The ledger is a map keyed by level id, never an array.** That makes a duplicated
+    record unrepresentable rather than something the server has to filter, and lets a
+    sync write `levels.<id>` alone instead of re-uploading thousands of entries.
+    `SaveDelta.Between` decides what to send; an unchanged save sends nothing at all.
+12. **Adding a field to `SaveFileDto` interacts with the checksum.** `SaveChecksum` hashes
+    the serialised object, so a file written by an older schema can never match a newer
+    build's hash. `Verify` therefore skips across versions. Bump `SaveSchema.Version`
+    when you add a section, or every save on every device fails at once.
 
 ## Layout
 
 ```
 Assets/Game/Scripts/Domain/        GlimmerGrove.Domain       (no UnityEngine.UI)
-  Board/ Content/ Persistence/ Progression/ Localization/ Analytics/ AssetPipeline/
+  Board/ Content/ Persistence/ Progression/ Cloud/ Localization/ Analytics/ AssetPipeline/
 Assets/Game/Scripts/Presentation/  GlimmerGrove.Presentation (Domain + UnityEngine.UI)
   App/ Board/ Screens/ Dev/
 Assets/Game/Editor/                GlimmerGrove.Editor
@@ -100,9 +125,49 @@ Builds are gated: `ContentBuildGate` fails the build on any content error.
 Done and verified: content pipeline, stable ids, versioned atomic save with checksum
 and tested migration, localisation, analytics seam, scoped asset pipeline on
 Addressables (assets are out of `Resources/`), chapter-paginated map, enforced
-layering, EditMode test suite.
+layering, EditMode test suite, **player progression** (derived XP, levels and credits
+on a double-entry ledger, save schema v2, monotonic merge).
 
-Not done, both deliberate: **cloud save** (needs a backend decision) and a **visual
-level editor** (tooling — the thing most likely to matter next for shipping cadence).
-Remote content delivery is built but switched off; set `ContentConfig.RemoteBaseUrl`
-to enable.
+**Cloud save: the server is live, the client waits on one SDK install.**
+Firebase project `glimmer-groove-1cd60` — Firestore in `eur3`, security rules released,
+three functions on Node 22 in `europe-west1`, anonymous auth on, both apps registered.
+`firebase/README.md` is the guide; `firebase/e2e/smoke-test.mjs` proves the rules hold
+and passes 16/16 live.
+
+The Unity side is written (`Assets/Game/Scripts/Cloud/`, assembly `GlimmerGrove.Cloud`)
+and the Firebase Unity SDK 13.15.0 is wired into `Packages/manifest.json`. It waits on
+one thing: **the Editor has not resolved the packages yet.** Click the Editor window —
+Unity only re-resolves on focus. `GLIMMER_FIREBASE` then gets defined by the asmdef
+`versionDefines` and `Boot` picks the real backend over `NullCloudBackend`.
+
+**The SDK is installed as UPM tarballs, not a scoped registry and not `.unitypackage`.**
+Google publishes no registry for it; `Packages/manifest.json` points at `file:` paths
+under `GooglePackages/`, which are gitignored — run `pwsh GooglePackages/fetch.ps1` on a
+fresh clone. Tarballs still carry a package version, which is what `versionDefines`
+needs; a `.unitypackage` does not, which is why that route would break the define.
+All Firebase packages must share one version.
+
+Two traps in that SDK: `Firebase.Functions` ships as **source with its own asmdef**, so
+`GlimmerGrove.Cloud.asmdef` must reference it explicitly (App, Auth and Firestore are
+plugin DLLs and auto-reference). And the Functions source needs `Google.MiniJson.dll`,
+which lives in the **app** package.
+
+**Accounts: anonymous by default, Apple and Google to link.** No login screen — a
+player is signed in silently on first launch and the game is fully playable having never
+seen `AccountOverlay`. Linking is offered once a chapter is finished, at most twice ever,
+because that is when there is something worth protecting. Firebase drives the OAuth flow
+itself via `FederatedOAuthProvider`, so **neither Apple's nor Google's Unity plugin is a
+dependency** — one code path, both providers, both platforms. Moving to native sign-in
+sheets later is a change to `LinkCredential` only.
+
+The one destructive prompt in the game lives here: a provider already attached to another
+grove cannot be merged, because currency was granted and spent separately against each
+account. `CloudSaveService.AdoptLinkedAccountAsync` replaces the local save and says so
+first. Do not "improve" it into a silent merge.
+
+Not done, deliberate: **in-app purchases** (the four store secrets hold `UNSET`, so
+receipts are refused — correct until real store products exist), **Play Games Services**
+(better Android sign-in and the natural home for the "ranks" leaderboards, but
+Android-only so it cannot be the identity), and a **visual level editor** (tooling — the
+thing most likely to matter next for shipping cadence). Remote content delivery is built
+but switched off; set `ContentConfig.RemoteBaseUrl` to enable.

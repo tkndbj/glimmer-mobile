@@ -20,9 +20,24 @@ namespace GlimmerGrove.Persistence
         /// <summary>Raised after a run is recorded, so screens can refresh.</summary>
         public static event Action<LevelRecord> RecordChanged;
 
+        /// <summary>
+        /// Raised when the whole record set is replaced rather than added to — a load,
+        /// a wipe, or a merge with another device. Anything caching a total derived
+        /// from these records has to recompute, and no per-record event fires to tell
+        /// it so.
+        /// </summary>
+        public static event Action Reloaded;
+
         // ------------------------------------------------------------- reading
         public static LevelRecord Record(LevelId id)
             => _records.TryGetValue(id, out var record) ? record : LevelRecord.Empty(id);
+
+        /// <summary>
+        /// Every record held, including levels no longer in the catalog. Progression
+        /// is derived from these rather than from the catalog, so a chapter hidden by
+        /// <c>minAppVersion</c> cannot take back what a player already earned.
+        /// </summary>
+        public static IReadOnlyCollection<LevelRecord> Records => _records.Values;
 
         public static int Stars(LevelId id) => Record(id).Stars;
 
@@ -98,6 +113,9 @@ namespace GlimmerGrove.Persistence
             }
 
             if (LevelId.TryParse(dto.lastPlayedLevelId, out var last, out _)) LastPlayed = last;
+
+            try { Reloaded?.Invoke(); }
+            catch (Exception e) { UnityEngine.Debug.LogException(e); }
         }
 
         internal static void WriteInto(SaveFileDto dto)

@@ -1,0 +1,26 @@
+{
+  "schemaVersion": 1,
+
+  "maxLevel": 500,
+
+  "xpToNext": [100, 150, 200, 260, 330, 410, 500, 600, 710, 830, 960, 1100],
+  "tailXpToNext": 1250,
+  "tailXpIncrement": 150,
+
+  "rewards": {
+    "xpFirstClear": 40,
+    "xpPerStar": 20,
+    "creditsFirstClear": 30,
+    "creditsPerStar": 15
+  },
+
+  "chapterRewards": [
+    {
+      "chapterId": "c01_shallows",
+      "xpFirstClear": 25,
+      "xpPerStar": 15,
+      "creditsFirstClear": 20,
+      "creditsPerStar": 10
+    }
+  ]
+}

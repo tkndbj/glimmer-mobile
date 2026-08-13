@@ -112,12 +112,34 @@ namespace GlimmerGrove
         public int Stars, Moves, Par, PreviousBest;
         public bool FirstClear;
 
+        /// <summary>What this run added, already folded into the ledger. Zero on a worse replay.</summary>
+        public long XpGained, CreditsGained;
+
+        /// <summary>The level just reached, or 0 when this run did not raise it.</summary>
+        public int LevelledUpTo;
+
         /// <summary>
         /// Written out rather than assembled as "ui.win.rank" + stars, so the keys are
         /// visible to the build's string checker. A key that only exists at runtime is
         /// a key nothing can verify.
         /// </summary>
         static readonly string[] RankKeys = { "ui.win.rank1", "ui.win.rank2", "ui.win.rank3" };
+
+        /// <summary>
+        /// True when this run completed the last uncleared glade of its chapter. Derived
+        /// from the catalog rather than counted, so it stays correct when a chapter gains
+        /// levels in a content drop.
+        /// </summary>
+        bool FinishedAChapter(LevelCatalog catalog)
+        {
+            var level = catalog.Find(LevelId);
+            if (level == null) return false;
+
+            foreach (var sibling in catalog.LevelsOf(level.Chapter))
+                if (!PlayerProgress.IsCleared(sibling.Id)) return false;
+
+            return true;
+        }
 
         protected override void Build()
         {
@@ -162,17 +184,54 @@ namespace GlimmerGrove
                          TextAnchor.MiddleCenter, new Vector2(760f, 44f), new Vector2(.5f, 1f),
                          new Vector2(0f, -416f), 0f, 0f);
 
+            // Only shown when the run actually improved the record. A replay that beat
+            // nothing earns nothing, and saying "+0 XP" would read as a bug.
+            float rewardY = -462f;
+            if (XpGained > 0 || CreditsGained > 0)
+            {
+                var reward = UIKit.Titled("Reward", Panel,
+                                          Loc.Format("ui.win.reward", XpGained, CreditsGained), 32, Pal.Mint,
+                                          TextAnchor.MiddleCenter, new Vector2(760f, 44f),
+                                          new Vector2(.5f, 1f), new Vector2(0f, rewardY), 2f, 2f);
+                reward.transform.localScale = Vector3.zero;
+                Tween.Pop(reward.transform, 0f, .55f, 1.15f + .42f * Stars);
+                rewardY -= 46f;
+            }
+
+            if (LevelledUpTo > 0)
+            {
+                var levelUp = UIKit.Titled("LevelUp", Panel,
+                                           Loc.Format("ui.win.level_up", LevelledUpTo), 40, Pal.Gold,
+                                           TextAnchor.MiddleCenter, new Vector2(760f, 52f),
+                                           new Vector2(.5f, 1f), new Vector2(0f, rewardY), 4f, 4f);
+                levelUp.transform.localScale = Vector3.zero;
+                Tween.Pop(levelUp.transform, 0f, .7f, 1.45f + .42f * Stars);
+                rewardY -= 54f;
+            }
+
             if (last && PlayerProgress.AllCleared(catalog))
                 UIKit.Titled("Done", Panel, Loc.Get("ui.win.all_done"), 32, Pal.Gold,
                              TextAnchor.MiddleCenter, new Vector2(760f, 44f), new Vector2(.5f, 1f),
-                             new Vector2(0f, -462f), 3f, 3f);
+                             new Vector2(0f, rewardY), 3f, 3f);
 
             var nextId = last ? LevelId.None : next.Id;
+
+            // Offered here and nowhere else. A player who has just finished a chapter has
+            // something worth keeping, which is exactly when asking them to protect it is
+            // a service rather than an obstacle — and the answer costs nothing either way.
+            bool offerAccount = FinishedAChapter(catalog) && AccountOverlay.ShouldOffer();
+
             var nextButton = UIKit.TextButton("Next", Panel, "btn_green",
                                         Loc.Get(last ? "ui.win.glades" : "ui.win.next"), 48,
                                         new Vector2(560f, 140f), new Vector2(.5f, 0f), new Vector2(0f, 232f),
                                         () => Close(() =>
                                         {
+                                            if (offerAccount)
+                                            {
+                                                AccountOverlay.NoteOffered();
+                                                Flow.Modal<AccountOverlay>();
+                                                return;
+                                            }
                                             if (last) Flow.Go<LevelsScreen>();
                                             else Flow.Go<PlayScreen>(v => v.LevelId = nextId);
                                         }));
@@ -286,6 +345,10 @@ namespace GlimmerGrove
             UIKit.Titled("Credit", Panel, Loc.Get("ui.settings.credit"), 24, new Color(.52f, .40f, .31f, .85f),
                          TextAnchor.MiddleCenter, new Vector2(700f, 36f), new Vector2(.5f, 1f),
                          new Vector2(0f, -474f), 0f, 0f);
+
+            UIKit.TextButton("Account", Panel, "btn_blue", Loc.Get("ui.settings.account"), 38,
+                             new Vector2(560f, 120f), new Vector2(.5f, 0f), new Vector2(0f, 406f),
+                             () => Close(() => Flow.Modal<AccountOverlay>()));
 
             UIKit.TextButton("Wipe", Panel, "btn_red", Loc.Get("ui.settings.reset"), 38, new Vector2(560f, 120f),
                              new Vector2(.5f, 0f), new Vector2(0f, 262f), ConfirmWipe);

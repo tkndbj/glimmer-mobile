@@ -1,0 +1,30 @@
+/** Deployment-wide constants. One place to change, so nothing drifts apart. */
+
+/**
+ * Where the functions run.
+ *
+ * Keep this in the same region as Firestore. A function in one continent reading a
+ * database in another pays that round trip on every single call, and the economy
+ * endpoints are the ones a player waits on.
+ */
+export const REGION = "europe-west1";
+
+/** Must match `applicationIdentifier` in Unity's Player Settings, for both stores. */
+export const BUNDLE_ID = "com.digikeygames.glimmergrove";
+
+/** Firestore paths, named once so a typo cannot become two collections. */
+export const PATHS = {
+  player: (uid: string) => `players/${uid}`,
+  wallet: (uid: string) => `players/${uid}/private/wallet`,
+  spend: (uid: string, spendId: string) => `players/${uid}/spendLog/${spendId}`,
+  receipt: (store: string, transactionId: string) => `receipts/${store}__${transactionId}`,
+  progressionConfig: "config/progression",
+  productsConfig: "config/products",
+};
+
+/** Bounds on a single call, so one request cannot become an unbounded transaction. */
+export const MAX_SPENDS_PER_CALL = 50;
+
+/** Currency ids. These are permanent — they key save files and this database. */
+export const CURRENCIES = ["credits", "gems"] as const;
+export type CurrencyId = (typeof CURRENCIES)[number];

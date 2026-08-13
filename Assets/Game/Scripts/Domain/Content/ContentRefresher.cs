@@ -51,8 +51,12 @@ namespace GlimmerGrove.Content
                 return false;
             }
 
-            var localVersions = await ReadLocalVersionsAsync(cancellation);
+            var localManifest = await ReadLocalManifestAsync(cancellation);
+            var localVersions = ChapterVersions(localManifest);
             var wanted = new List<ManifestChapterDto>();
+
+            int localProgressionVersion = localManifest?.progressionVersion ?? 0;
+            bool wantProgression = remoteManifest.progressionVersion > localProgressionVersion;
 
             foreach (var entry in remoteManifest.chapters)
             {
@@ -67,7 +71,7 @@ namespace GlimmerGrove.Content
                 wanted.Add(entry);
             }
 
-            if (wanted.Count == 0) return false;
+            if (wanted.Count == 0 && !wantProgression) return false;
 
             int written = 0;
             foreach (var entry in wanted)
@@ -83,10 +87,43 @@ namespace GlimmerGrove.Content
                 return false;
             }
 
+            if (wantProgression && !await FetchProgressionAsync(cancellation))
+            {
+                Debug.LogWarning("[Content] progression table could not be refreshed; " +
+                                 "keeping the previous manifest");
+                return false;
+            }
+
             // Only now is it safe to say the cache holds this manifest's world.
             bool ok = await _cache.WriteAsync(ContentPaths.Manifest, remoteFetch.Text, cancellation);
-            if (ok) Debug.Log($"[Content] cached {written} updated chapter(s), live next launch");
+            if (ok) Debug.Log($"[Content] cached {written} updated chapter(s)" +
+                              (wantProgression ? " and a new reward table" : "") + ", live next launch");
             return ok;
+        }
+
+        /// <summary>
+        /// Pulls a retuned reward table. Parsed before it is cached, exactly as a
+        /// chapter is, so a malformed download can never reach the disk and be read
+        /// back on a launch where nothing is around to notice.
+        /// </summary>
+        async Task<bool> FetchProgressionAsync(CancellationToken cancellation)
+        {
+            var fetch = await _remote.FetchAsync(ContentPaths.Progression, cancellation);
+            if (!fetch.Success)
+            {
+                Debug.LogWarning("[Content] could not download the reward table: " + fetch.Error);
+                return false;
+            }
+
+            var problems = new List<string>();
+            if (!Progression.ProgressionTable.TryRead(fetch.Text, out _, problems))
+            {
+                Debug.LogWarning("[Content] downloaded reward table is malformed, discarding: " +
+                                 string.Join("; ", problems));
+                return false;
+            }
+
+            return await _cache.WriteAsync(ContentPaths.Progression, fetch.Text, cancellation);
         }
 
         async Task<bool> FetchChapterAsync(ManifestChapterDto entry, CancellationToken cancellation)
@@ -113,16 +150,19 @@ namespace GlimmerGrove.Content
             return await _cache.WriteAsync(path, fetch.Text, cancellation);
         }
 
-        /// <summary>Chapter versions the device already has, cache shadowing bundled.</summary>
-        async Task<Dictionary<ChapterId, int>> ReadLocalVersionsAsync(CancellationToken cancellation)
+        /// <summary>The manifest the device already has, cache shadowing bundled.</summary>
+        async Task<ManifestDto> ReadLocalManifestAsync(CancellationToken cancellation)
+        {
+            var fetch = await _local.FetchAsync(ContentPaths.Manifest, cancellation);
+            if (!fetch.Success) return null;
+
+            return ContentMapper.ReadManifest(fetch.Text, out _);
+        }
+
+        static Dictionary<ChapterId, int> ChapterVersions(ManifestDto manifest)
         {
             var versions = new Dictionary<ChapterId, int>();
-
-            var fetch = await _local.FetchAsync(ContentPaths.Manifest, cancellation);
-            if (!fetch.Success) return versions;
-
-            var manifest = ContentMapper.ReadManifest(fetch.Text, out _);
-            if (manifest == null) return versions;
+            if (manifest?.chapters == null) return versions;
 
             foreach (var entry in manifest.chapters)
             {

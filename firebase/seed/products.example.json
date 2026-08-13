@@ -1,0 +1,14 @@
+{
+  "_comment": [
+    "Copy to products.json and edit, then run the seed script. Until products.json",
+    "exists, redeemPurchase refuses every receipt with 'product is not configured',",
+    "which is the correct behaviour before any real store products exist.",
+    "",
+    "The keys MUST be the product ids exactly as configured in App Store Connect and",
+    "the Play Console. The amount is what the server grants — it is deliberately not",
+    "in the app, because a client that names its own reward names any number it likes."
+  ],
+  "credits_pouch_small": { "currency": "credits", "amount": 500 },
+  "credits_pouch_large": { "currency": "credits", "amount": 3000 },
+  "gems_handful": { "currency": "gems", "amount": 20 }
+}

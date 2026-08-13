@@ -31,9 +31,13 @@ namespace GlimmerGrove.Persistence
 
             bool imported = LegacyPlayerPrefsImport.Apply(dto);
 
+            // Order matters only in that progress must be in place before anything
+            // derives from it; the sections are otherwise independent.
             PlayerProgress.LoadFrom(dto);
             GameSettings.LoadFrom(dto);
             Wallet.LoadFrom(dto);
+            ProgressionStore.LoadFrom(dto);
+            CloudState.LoadFrom(dto);
 
             _loaded = true;
 
@@ -63,9 +67,33 @@ namespace GlimmerGrove.Persistence
 
         static bool Write()
         {
+            var dto = Snapshot();
+
+            bool ok = _store.Save(dto);
+            if (ok) _dirty = false;
+            return ok;
+        }
+
+        /// <summary>
+        /// The current state as a file, without writing it.
+        ///
+        /// The cloud sync needs exactly this — a snapshot it can merge against what the
+        /// server holds — and building it here rather than in the sync keeps one place
+        /// that knows the whole layout, which is the point of this type.
+        /// </summary>
+        public static SaveFileDto Snapshot()
+        {
+            CloudState.NextRevision();
+
             var dto = new SaveFileDto
             {
                 schemaVersion = SaveSchema.Version,
+
+                // Stamped here, not only in SaveStore.Save. The cloud sync takes a
+                // snapshot without writing it to disk, and SaveMerge decides which side
+                // holds the newer preferences by comparing this — a snapshot claiming
+                // the epoch would lose every one of those comparisons.
+                updatedUnix = SaveSchema.NowUnix(),
                 settings = new SettingsDto(),
                 wallet = WalletDto.Unwritten(),
                 legacyImportDone = true,
@@ -74,10 +102,31 @@ namespace GlimmerGrove.Persistence
             PlayerProgress.WriteInto(dto);
             GameSettings.WriteInto(dto);
             Wallet.WriteInto(dto);
+            ProgressionStore.WriteInto(dto);
+            CloudState.WriteInto(dto);
 
-            bool ok = _store.Save(dto);
-            if (ok) _dirty = false;
-            return ok;
+            return dto;
+        }
+
+        /// <summary>
+        /// Replaces everything in memory with a merged file and writes it.
+        ///
+        /// Used by the cloud sync once it has joined the local and remote saves. It
+        /// goes through the same load path as a launch, so there is no second way for
+        /// state to enter the game and no chance of the two drifting apart.
+        /// </summary>
+        public static bool Adopt(SaveFileDto dto)
+        {
+            if (dto == null || !_loaded) return false;
+
+            PlayerProgress.LoadFrom(dto);
+            GameSettings.LoadFrom(dto);
+            Wallet.LoadFrom(dto);
+            ProgressionStore.LoadFrom(dto);
+            CloudState.LoadFrom(dto);
+
+            _dirty = true;
+            return Write();
         }
 
         /// <summary>Erases everything and starts again. Used by the settings screen.</summary>
@@ -92,12 +141,14 @@ namespace GlimmerGrove.Persistence
                 settings = new SettingsDto(),
                 wallet = WalletDto.Unwritten(),
                 levels = new LevelRecordDto[0],
+                progression = ProgressionStateDto.Unwritten(),
                 legacyImportDone = true,
             };
 
             PlayerProgress.LoadFrom(fresh);
             Wallet.LoadFrom(fresh);
-            // settings deliberately survive a progress wipe
+            ProgressionStore.LoadFrom(fresh);
+            // settings and the cloud identity deliberately survive a progress wipe
 
             _dirty = true;
             Flush();

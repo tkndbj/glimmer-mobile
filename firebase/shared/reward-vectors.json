@@ -1,0 +1,132 @@
+{
+  "_comment": [
+    "The contract between ProgressionLedger.cs and functions/src/progression.ts.",
+    "",
+    "Earned currency is derived twice on purpose: the client derives it so the game",
+    "works offline, and the server derives it so a forged save can be caught rather",
+    "than merely disbelieved. Two implementations of one rule will drift — this file is",
+    "what makes the drift fail a test instead of quietly desynchronising money.",
+    "",
+    "Run by Assets/Game/Tests/RewardVectorTests.cs and",
+    "firebase/functions/test/reward-vectors.mjs. Change the arithmetic on either side",
+    "and add a vector proving what changed.",
+    "",
+    "'credits' is checked by both sides. 'xp' is checked only by the client, because XP",
+    "has no economic effect and the server has no reason to compute it.",
+    "",
+    "Shapes are chosen so Unity's JsonUtility can read the file too: arrays of objects",
+    "rather than maps, since JsonUtility cannot deserialise a dictionary."
+  ],
+
+  "progression": {
+    "schemaVersion": 1,
+    "maxLevel": 100,
+    "xpToNext": [100],
+    "tailXpToNext": 100,
+    "tailXpIncrement": 0,
+
+    "rewards": {
+      "xpFirstClear": 40,
+      "xpPerStar": 20,
+      "creditsFirstClear": 30,
+      "creditsPerStar": 15
+    },
+
+    "chapterRewards": [
+      {
+        "chapterId": "c_generous",
+        "xpFirstClear": 100,
+        "xpPerStar": 50,
+        "creditsFirstClear": 60,
+        "creditsPerStar": 40
+      },
+      {
+        "chapterId": "c_free",
+        "xpFirstClear": 0,
+        "xpPerStar": 0,
+        "creditsFirstClear": 0,
+        "creditsPerStar": 0
+      },
+      {
+        "chapterId": "c_partial",
+        "creditsPerStar": 25
+      }
+    ]
+  },
+
+  "levelChapters": [
+    { "levelId": "plain_one", "chapterId": "c_plain" },
+    { "levelId": "plain_two", "chapterId": "c_plain" },
+    { "levelId": "generous_one", "chapterId": "c_generous" },
+    { "levelId": "free_one", "chapterId": "c_free" },
+    { "levelId": "partial_one", "chapterId": "c_partial" }
+  ],
+
+  "cases": [
+    { "name": "no records at all", "levels": [], "credits": 0, "xp": 0 },
+
+    { "name": "played but never cleared is worth nothing",
+      "levels": [{ "levelId": "plain_one", "stars": 0 }], "credits": 0, "xp": 0 },
+
+    { "name": "one star, chapter with no override, so the default rule",
+      "levels": [{ "levelId": "plain_one", "stars": 1 }], "credits": 45, "xp": 60 },
+
+    { "name": "three stars on the default rule",
+      "levels": [{ "levelId": "plain_one", "stars": 3 }], "credits": 75, "xp": 100 },
+
+    { "name": "two glades in one chapter add up",
+      "levels": [
+        { "levelId": "plain_one", "stars": 3 },
+        { "levelId": "plain_two", "stars": 2 }
+      ], "credits": 135, "xp": 180 },
+
+    { "name": "a chapter override replaces the default rule",
+      "levels": [{ "levelId": "generous_one", "stars": 2 }], "credits": 140, "xp": 200 },
+
+    { "name": "a chapter may legitimately pay nothing, and zero is not 'unwritten'",
+      "levels": [{ "levelId": "free_one", "stars": 3 }], "credits": 0, "xp": 0 },
+
+    { "name": "a partial override inherits the fields it does not set",
+      "levels": [{ "levelId": "partial_one", "stars": 2 }], "credits": 80, "xp": 80 },
+
+    { "name": "a partial override at three stars",
+      "levels": [{ "levelId": "partial_one", "stars": 3 }], "credits": 105, "xp": 100 },
+
+    { "name": "chapters with different rules mix correctly",
+      "levels": [
+        { "levelId": "plain_one", "stars": 1 },
+        { "levelId": "generous_one", "stars": 3 },
+        { "levelId": "free_one", "stars": 3 }
+      ], "credits": 225, "xp": 310 },
+
+    { "name": "a level id the catalog does not know earns nothing",
+      "levels": [{ "levelId": "invented", "stars": 3 }], "credits": 0, "xp": 0 },
+
+    { "name": "invented ids cannot inflate a real total",
+      "levels": [
+        { "levelId": "plain_one", "stars": 3 },
+        { "levelId": "invented", "stars": 3 },
+        { "levelId": "also_invented", "stars": 3 }
+      ], "credits": 75, "xp": 100 },
+
+    { "name": "a duplicated level id counts once",
+      "levels": [
+        { "levelId": "plain_one", "stars": 3 },
+        { "levelId": "plain_one", "stars": 3 }
+      ], "credits": 75, "xp": 100 },
+
+    { "name": "stars above three are clamped",
+      "levels": [{ "levelId": "plain_one", "stars": 99 }], "credits": 75, "xp": 100 },
+
+    { "name": "negative stars read as uncleared",
+      "levels": [{ "levelId": "plain_one", "stars": -5 }], "credits": 0, "xp": 0 },
+
+    { "name": "order does not change the total",
+      "levels": [
+        { "levelId": "free_one", "stars": 3 },
+        { "levelId": "generous_one", "stars": 3 },
+        { "levelId": "plain_two", "stars": 1 },
+        { "levelId": "plain_one", "stars": 2 }
+      ], "credits": 285, "xp": 390 }
+  ]
+}

@@ -1,0 +1,126 @@
+rules_version = '2';
+
+// Glimmer Grove — Firestore security rules.
+//
+// These rules are the security boundary of the economy. Not the C# client, not the
+// Cloud Functions: this file. Everything else can be decompiled, patched or replayed
+// by anyone holding the device, so any invariant that matters has to be expressed
+// here or on a server the player cannot reach.
+//
+// The layout exists to make that boundary trivial to audit. The save document and the
+// currency ledger are separate documents with separate rules, rather than one document
+// whose currency fields have to be diffed field by field on every write. A rule that
+// says "this document is server-only" is one line and cannot be got subtly wrong.
+//
+//   players/{uid}                    the save. Client reads and writes it.
+//   players/{uid}/private/wallet     granted and spent baselines. Client reads only.
+//   players/{uid}/spendLog/{id}      idempotency records for debits. Client reads only.
+//   receipts/{store}__{txn}          global receipt claims. Client cannot see them.
+//   config/{doc}                     reward table and product catalog. Read-only.
+//
+// What these rules deliberately do NOT do: validate the contents of the level ledger
+// element by element. Firestore rules have no loops, so per-record checks are not
+// expressible here. That validation lives in the wallet functions, which recompute
+// earned currency from the ledger in TypeScript and ignore anything they cannot
+// verify. The consequence is the important one: a player who forges their save can
+// change what their own progress screen says, and cannot mint a single credit.
+//
+// `levels` is a map keyed by level id rather than an array. That makes a duplicated
+// record impossible to express rather than something the server has to filter, and it
+// lets a sync write `levels.c01_first_light` alone instead of re-uploading a ledger
+// that may run to thousands of entries.
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function signedIn() {
+      return request.auth != null && request.auth.uid != null;
+    }
+
+    function isOwner(uid) {
+      return signedIn() && request.auth.uid == uid;
+    }
+
+    // ------------------------------------------------------------- the save
+    match /players/{uid} {
+
+      // Shape checks only. Anything expensive or unbounded is the functions' job.
+      function wellFormed() {
+        let d = request.resource.data;
+        return d.keys().hasOnly([
+                 'schemaVersion', 'updatedUnix', 'settings', 'wallet', 'levels',
+                 'progression', 'cloud', 'lastPlayedLevelId', 'legacyImportDone',
+                 'checksum'
+               ])
+               && d.schemaVersion is int
+               && d.schemaVersion >= 1 && d.schemaVersion <= 100
+               && d.levels is map
+               && d.levels.size() <= 5000
+               && (!('lastPlayedLevelId' in d) || d.lastPlayedLevelId is string);
+      }
+
+      // The revision only ever moves forward, which gives the sync optimistic
+      // concurrency for free. It is >= rather than > so that retrying a push whose
+      // response was lost succeeds instead of wedging the device.
+      function revisionAdvances() {
+        return !('cloud' in resource.data)
+               || !('revision' in resource.data.cloud)
+               || (request.resource.data.cloud.revision is int
+                   && request.resource.data.cloud.revision >= resource.data.cloud.revision);
+      }
+
+      // Documents are capped so one account cannot be used to store arbitrary data.
+      // A full ledger for a 500-glade catalog is a few tens of kilobytes.
+      function withinSize() {
+        return request.resource.data.levels.size() <= 5000;
+      }
+
+      allow get, list: if isOwner(uid);
+      allow create:    if isOwner(uid) && wellFormed() && withinSize();
+      allow update:    if isOwner(uid) && wellFormed() && withinSize() && revisionAdvances();
+
+      // Account deletion is a support and compliance operation, never a client call.
+      allow delete: if false;
+
+      // --------------------------------------------------- server-owned money
+      // The single most important rule in the file. `granted` is what an attacker
+      // actually wants: a client that can raise it can print currency, and with real
+      // purchases in play that is indistinguishable from stealing revenue. Only the
+      // Admin SDK — which these rules do not apply to — may write here.
+      match /private/{document} {
+        allow read:  if isOwner(uid);
+        allow write: if false;
+      }
+
+      // Debit idempotency records. Written by the wallet function so that submitting
+      // the same spend id twice can only ever charge once.
+      match /spendLog/{spendId} {
+        allow read:  if isOwner(uid);
+        allow write: if false;
+      }
+    }
+
+    // ------------------------------------------------------------- receipts
+    // Keyed globally rather than per player, because the attack is redeeming one
+    // real purchase across many accounts. Never readable by a client: knowing which
+    // transaction ids exist is itself useful to someone trying to replay them.
+    match /receipts/{receiptId} {
+      allow read, write: if false;
+    }
+
+    // --------------------------------------------------------------- config
+    // The reward table and the product catalog. The client reads the reward table so
+    // its predictions match the server's arithmetic; it may never write either, since
+    // the product catalog is what decides how much a purchase is worth.
+    match /config/{document} {
+      allow read:  if signedIn();
+      allow write: if false;
+    }
+
+    // Anything not named above is denied. New collections have to be granted access
+    // deliberately rather than inheriting it by accident.
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

@@ -2,6 +2,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using GlimmerGrove.AssetPipeline;
+using GlimmerGrove.Cloud;
 using GlimmerGrove.Content;
 using GlimmerGrove.Localization;
 using GlimmerGrove.Progression;
@@ -182,6 +183,10 @@ namespace GlimmerGrove
             _target = 1f;
             ContentBootstrap.BeginBackgroundRefresh();
 
+            // Both of these are fire-and-forget for the same reason: nothing between
+            // tapping the icon and playing a glade is allowed to wait on a network.
+            CloudSaveService.BeginSync();
+
             while (Time.unscaledTime - started < MinimumShow || _shown < .999f) yield return null;
 
             Audio.Sfx("chime2", .5f, 1.05f);
@@ -239,6 +244,12 @@ namespace GlimmerGrove
             var loc = Loc.LoadAsync(ContentBootstrap.LocalSource);
             while (!loc.IsCompleted) yield return null;
             if (loc.IsFaulted) Debug.LogException(loc.Exception);
+
+            // The reward table reads through the same layered source, so a downloaded
+            // pack can retune the curve exactly the way it can add a chapter.
+            var rules = ProgressionRules.LoadAsync(ContentBootstrap.LocalSource);
+            while (!rules.IsCompleted) yield return null;
+            if (rules.IsFaulted) Debug.LogException(rules.Exception);
 
             _target = .12f;
         }
