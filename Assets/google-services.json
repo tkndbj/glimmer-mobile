@@ -7,6 +7,50 @@
   "client": [
     {
       "client_info": {
+        "mobilesdk_app_id": "1:310440655052:android:e5e250271ddeec9b492a69",
+        "android_client_info": {
+          "package_name": "com.arcade.glimmergrove"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "310440655052-a1e7btpqfco3dgnq9sn2ts2fb1solm0m.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.arcade.glimmergrove",
+            "certificate_hash": "834a18e7691fbca84e58fec96ea20d25cab786a7"
+          }
+        },
+        {
+          "client_id": "310440655052-g70cbf38g6tqr7rb63k3bbjkrvlut49i.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAsZqiejNvMmp19nVn2YTSSjRtUxphOE48"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "310440655052-g70cbf38g6tqr7rb63k3bbjkrvlut49i.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "310440655052-4et8giosit4bugqajcll3njutsd4selt.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.digikeygames.glimmergrove"
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "client_info": {
         "mobilesdk_app_id": "1:310440655052:android:b05416dd16b8ba4d492a69",
         "android_client_info": {
           "package_name": "com.digikeygames.glimmergrove"
