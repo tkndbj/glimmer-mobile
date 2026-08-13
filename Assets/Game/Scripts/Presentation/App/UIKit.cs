@@ -52,10 +52,23 @@ namespace GlimmerGrove
             return img;
         }
 
+        /// <summary>
+        /// A single line of text by default: <paramref name="wrap"/> is off because most
+        /// labels here are chrome — counts, captions, headings — sized to their box, and
+        /// for those wrapping is worse than spilling. A coin count that folds onto two
+        /// lines breaks the HUD; one that overhangs by a few pixels does not.
+        ///
+        /// <para>
+        /// Anything the player reads as a <i>sentence</i> must pass <c>wrap: true</c>.
+        /// Without it the string renders as one unbroken line and simply leaves the
+        /// screen — there is no clipping to hint that text is missing, which is how
+        /// <c>ui.account.guest_body</c> shipped unreadable.
+        /// </para>
+        /// </summary>
         public static Text Label(string name, Transform parent, string text, int size, Color colour,
                                  TextAnchor anchor = TextAnchor.MiddleCenter,
                                  Vector2 boxSize = default, Vector2 anchorPt = default, Vector2 pos = default,
-                                 FontStyle style = FontStyle.Normal)
+                                 FontStyle style = FontStyle.Normal, bool wrap = false)
         {
             RectTransform rt;
             if (boxSize == default && anchorPt == default) rt = Node(name, parent);
@@ -68,7 +81,7 @@ namespace GlimmerGrove
             t.alignment = anchor;
             t.fontStyle = style;
             t.raycastTarget = false;
-            t.horizontalOverflow = HorizontalWrapMode.Overflow;
+            t.horizontalOverflow = wrap ? HorizontalWrapMode.Wrap : HorizontalWrapMode.Overflow;
             t.verticalOverflow = VerticalWrapMode.Overflow;
             t.supportRichText = false;
             return t;
@@ -78,9 +91,9 @@ namespace GlimmerGrove
         public static Text Titled(string name, Transform parent, string text, int size, Color colour,
                                   TextAnchor anchor = TextAnchor.MiddleCenter,
                                   Vector2 boxSize = default, Vector2 anchorPt = default, Vector2 pos = default,
-                                  float outline = 4f, float shadow = 5f)
+                                  float outline = 4f, float shadow = 5f, bool wrap = false)
         {
-            var t = Label(name, parent, text, size, colour, anchor, boxSize, anchorPt, pos);
+            var t = Label(name, parent, text, size, colour, anchor, boxSize, anchorPt, pos, wrap: wrap);
             if (outline > 0f)
             {
                 var o = t.gameObject.AddComponent<Outline>();

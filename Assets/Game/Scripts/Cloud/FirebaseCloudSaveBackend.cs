@@ -154,6 +154,7 @@ namespace GlimmerGrove.Cloud
                     await _auth.CurrentUser.LinkWithProviderAsync(Provider(credential.ProviderId));
 
                 var user = _auth.CurrentUser;
+                await RefreshTokenAsync(user);
                 return (CloudResult.Success, new CloudIdentity(user.UserId, IsLinked(user)));
             }
             catch (Exception e)
@@ -191,6 +192,7 @@ namespace GlimmerGrove.Cloud
                     return (CloudResult.Failed(CloudFailure.Unauthenticated, "no user after sign in"),
                             CloudIdentity.None);
 
+                await RefreshTokenAsync(user);
                 return (CloudResult.Success, new CloudIdentity(user.UserId, IsLinked(user)));
             }
             catch (Exception e)
@@ -224,13 +226,79 @@ namespace GlimmerGrove.Cloud
                 : GoogleAuthProvider.GetCredential(credential.IdToken, credential.AccessToken);
 
         /// <summary>
-        /// Auth reports through <see cref="FirebaseException"/> with an
-        /// <see cref="AuthError"/> code. Firestore and Functions do not derive from it —
-        /// they throw their own types — so a FirebaseException reaching here came from
-        /// Auth, and the code check only guards against a value outside the enum.
+        /// Pulls the <see cref="AuthError"/> out of whichever exception type Auth chose
+        /// to throw. Firestore and Functions do not derive from
+        /// <see cref="FirebaseException"/> — they throw their own types — so one reaching
+        /// here came from Auth, and the <c>Enum.IsDefined</c> check only guards against a
+        /// code outside the enum.
+        ///
+        /// <para>
+        /// <b><see cref="FirebaseAccountLinkException"/> is the trap.</b> Despite the name
+        /// it derives from <see cref="Exception"/> directly, <i>not</i> from
+        /// <see cref="FirebaseException"/> — verified by reflection over
+        /// Firebase.Auth.dll 13.15.0. It carries the same <c>int ErrorCode</c>, but a type
+        /// check on <c>FirebaseException</c> misses it entirely. It is what the link calls
+        /// throw for precisely the case this screen exists to handle — a provider already
+        /// attached to another grove — so missing it silently downgrades an expected,
+        /// actionable outcome into <see cref="CloudFailure.Error"/> and the player is told
+        /// "something went wrong" about a situation the game knows exactly how to resolve.
+        /// </para>
         /// </summary>
-        static bool IsAuthError(FirebaseException e)
-            => Enum.IsDefined(typeof(AuthError), e.ErrorCode);
+        static bool TryAuthError(Exception e, out AuthError error)
+        {
+            int? code = e switch
+            {
+                FirebaseAccountLinkException link => link.ErrorCode,
+                FirebaseException firebase => firebase.ErrorCode,
+                _ => null,
+            };
+
+            if (code is int value && Enum.IsDefined(typeof(AuthError), value))
+            {
+                error = (AuthError)value;
+                return true;
+            }
+
+            error = default;
+            return false;
+        }
+
+        /// <summary>
+        /// Forces the ID token current before an identity is handed back to the sync.
+        ///
+        /// Firestore authenticates with a token it caches, and after an <b>in-process</b>
+        /// account change — sign out, then sign in as the account the provider already
+        /// owns — it can keep presenting the previous account's token while the sync has
+        /// moved on to the new uid. The rules then deny <i>both</i> directions, because
+        /// <c>isOwner(uid)</c> compares the requested path against whoever the token says
+        /// is calling; a read failing is the tell, since no shape check can explain it.
+        ///
+        /// <para>
+        /// Observed live on 2026-08-13: every pull and push after an adopt returned
+        /// PERMISSION_DENIED until the process was restarted, at which point a fresh
+        /// Firestore instance picked up the persisted user and sync recovered on its own.
+        /// </para>
+        ///
+        /// <para>
+        /// A failure here is deliberately not fatal. The link or adopt has already
+        /// succeeded on the server by this point, and turning a refresh blip into a failed
+        /// sign-in would tell the player their account was not linked when it was. The
+        /// next sync reports any real problem through the normal path.
+        /// </para>
+        /// </summary>
+        static async Task RefreshTokenAsync(FirebaseUser user)
+        {
+            if (user == null) return;
+
+            try
+            {
+                await user.TokenAsync(true);
+            }
+            catch (Exception e)
+            {
+                Debug.LogWarning("[Cloud] token refresh after account change failed: " + e.Message);
+            }
+        }
 
         static bool IsLinked(FirebaseUser user)
         {
@@ -487,16 +555,16 @@ namespace GlimmerGrove.Cloud
         {
             var inner = e is AggregateException aggregate ? aggregate.Flatten().InnerException ?? e : e;
 
-            if (inner is FirebaseException auth && IsAuthError(auth))
+            if (TryAuthError(inner, out var authError))
             {
-                switch ((AuthError)auth.ErrorCode)
+                switch (authError)
                 {
                     // The player linked this provider on another device. Expected, not
                     // a fault, and the only failure here the UI has to talk about.
                     case AuthError.CredentialAlreadyInUse:
                     case AuthError.AccountExistsWithDifferentCredentials:
                     case AuthError.EmailAlreadyInUse:
-                        return CloudResult.Failed(CloudFailure.AlreadyLinkedElsewhere, auth.Message);
+                        return CloudResult.Failed(CloudFailure.AlreadyLinkedElsewhere, inner.Message);
 
                     // Backing out of the consent screen is a choice, not an error, so it
                     // is reported as retryable and logged quietly.
@@ -505,7 +573,7 @@ namespace GlimmerGrove.Cloud
                         return CloudResult.Failed(CloudFailure.Offline, "cancelled by the player");
 
                     case AuthError.NetworkRequestFailed:
-                        return CloudResult.Failed(CloudFailure.Offline, auth.Message);
+                        return CloudResult.Failed(CloudFailure.Offline, inner.Message);
                 }
             }
 

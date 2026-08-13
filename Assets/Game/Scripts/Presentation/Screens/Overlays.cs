@@ -287,8 +287,7 @@ namespace GlimmerGrove
                                     new Vector2(26f, 26f), new Vector2(0f, 1f), new Vector2(96f, y + 4f));
                 var t = UIKit.Titled("l" + i, Panel, Loc.Get(lineKeys[i]), 32, new Color(.36f, .25f, .18f),
                                      TextAnchor.UpperLeft, new Vector2(620f, 98f), new Vector2(0f, 1f),
-                                     new Vector2(452f, y - 16f), 0f, 0f);
-                t.horizontalOverflow = HorizontalWrapMode.Wrap;
+                                     new Vector2(452f, y - 16f), 0f, 0f, wrap: true);
                 var tr = (RectTransform)t.transform;
                 tr.localScale = Vector3.zero;
                 Tween.Pop(tr, 0f, .45f, .12f + i * .07f);

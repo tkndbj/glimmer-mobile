@@ -98,8 +98,7 @@ namespace GlimmerGrove
             var edge = UIKit.Img("Edge", bg.transform, Art.RoundOutline(30, 3f), new Color(1, 1, 1, 0f));
             UIKit.StretchTo((RectTransform)edge.transform, 0, 0, 0, 0);
             var t = UIKit.Titled("Text", bg.transform, message, 34, tint ?? Pal.Cream, TextAnchor.MiddleCenter,
-                                 outline: 3f, shadow: 3f);
-            t.horizontalOverflow = HorizontalWrapMode.Wrap;
+                                 outline: 3f, shadow: 3f, wrap: true);
             UIKit.StretchTo((RectTransform)t.transform, 30, 8, 30, 12);
             t.color = Pal.A(t.color, 0f);
 

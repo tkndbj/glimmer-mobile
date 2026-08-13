@@ -25,6 +25,7 @@ namespace GlimmerGrove
     {
         Text _status;
         Transform _switchButton;
+        Transform _google, _apple;
         bool _busy;
 
         /// <summary>Set when the provider is already attached to another grove.</summary>
@@ -49,8 +50,13 @@ namespace GlimmerGrove
             UIKit.Titled("Why", Panel,
                          Loc.Get(linked ? "ui.account.linked_body" : "ui.account.guest_body"),
                          26, new Color(.44f, .32f, .24f, .95f),
+                         // -340 rather than -310: the box is anchored UpperCenter, so its
+                         // top edge is where the first line lands, and at -310 that edge
+                         // sat inside the status line above it. Invisible while the copy
+                         // was one long unwrapped line running off both edges of the
+                         // screen; obvious the moment it wrapped.
                          TextAnchor.UpperCenter, new Vector2(700f, 110f), new Vector2(.5f, 1f),
-                         new Vector2(0f, -310f), 0f, 0f);
+                         new Vector2(0f, -340f), 0f, 0f, wrap: true);
 
             // "Lives only on this device" is abstract; "47 glades and keeper level 12
             // live only on this device" is not. Shown only once there is something to
@@ -61,7 +67,8 @@ namespace GlimmerGrove
                              Loc.Format("ui.account.guest_stakes",
                                         PlayerProgression.ClearedGlades, PlayerProgression.Level.Level),
                              28, Pal.Rose, TextAnchor.MiddleCenter,
-                             new Vector2(700f, 44f), new Vector2(.5f, 1f), new Vector2(0f, -418f), 2f, 2f);
+                             new Vector2(700f, 44f), new Vector2(.5f, 1f), new Vector2(0f, -418f), 2f, 2f,
+                             wrap: true);
             }
 
             if (!CloudSaveService.IsAvailable)
@@ -72,16 +79,16 @@ namespace GlimmerGrove
             }
             else if (!linked)
             {
-                UIKit.TextButton("Google", Panel, "btn_green", Loc.Get("ui.account.google"), 36,
+                _google = UIKit.TextButton("Google", Panel, "btn_green", Loc.Get("ui.account.google"), 36,
                                  new Vector2(600f, 118f), new Vector2(.5f, 0f), new Vector2(0f, 430f),
-                                 () => Begin(LinkCredential.ForGoogle()));
+                                 () => Begin(LinkCredential.ForGoogle())).transform;
 
                 // Offered on both platforms, not only iOS. App Store Guideline 4.8
                 // requires Apple wherever another third-party sign-in appears, and a
                 // player with an Apple ID on Android should not be turned away either.
-                UIKit.TextButton("Apple", Panel, "btn_blue", Loc.Get("ui.account.apple"), 36,
+                _apple = UIKit.TextButton("Apple", Panel, "btn_blue", Loc.Get("ui.account.apple"), 36,
                                  new Vector2(600f, 118f), new Vector2(.5f, 0f), new Vector2(0f, 296f),
-                                 () => Begin(LinkCredential.ForApple()));
+                                 () => Begin(LinkCredential.ForApple())).transform;
             }
 
             UIKit.TextButton("Close", Panel, "btn_green", Loc.Get("ui.common.done"), 46,
@@ -151,6 +158,14 @@ namespace GlimmerGrove
             Audio.Sfx("nope", .5f);
 
             if (_switchButton != null) return;
+
+            // The sign-in buttons sit in exactly this space, and neither can help now:
+            // this provider belongs to another grove, and the choice left is to adopt it
+            // or walk away. Leaving them would stack two buttons in one slot and run the
+            // cost line straight through the other. Trying the other provider instead is
+            // still reachable — Settings ▸ Account reopens this screen from scratch.
+            if (_google != null) _google.gameObject.SetActive(false);
+            if (_apple != null) _apple.gameObject.SetActive(false);
 
             var button = UIKit.TextButton("Switch", Panel, "btn_red", Loc.Get("ui.account.switch"), 34,
                                           new Vector2(600f, 118f), new Vector2(.5f, 0f),
