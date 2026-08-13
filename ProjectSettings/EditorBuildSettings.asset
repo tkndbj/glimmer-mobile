@@ -8,4 +8,5 @@ EditorBuildSettings:
   - enabled: 1
     path: Assets/Game/Scenes/Glimmer.unity
     guid: 30eaf26288d9bec47b2996376b3941fe
-  m_configObjects: {}
+  m_configObjects:
+    com.unity.addressableassets: {fileID: 11400000, guid: 00d9e1c27dfde2749b9b3655b42e4659, type: 2}

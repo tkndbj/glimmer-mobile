@@ -1,0 +1,12 @@
+{
+  "schemaVersion": 1,
+  "chapters": [
+    {
+      "id": "c01_shallows",
+      "version": 1,
+      "order": 10,
+      "disabled": false,
+      "minAppVersion": 0
+    }
+  ]
+}

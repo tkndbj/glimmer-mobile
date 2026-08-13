@@ -1,0 +1,64 @@
+{
+  "schemaVersion": 1,
+  "id": "c01_shallows",
+  "order": 10,
+
+  "accent": "#FFC93C",
+  "slate": "#123640",
+  "backdrop": "play_0",
+  "mapStrips": ["strip0", "strip1", "strip2"],
+
+  "levels": [
+    {
+      "id": "c01_first_light",
+      "width": 5,
+      "height": 5,
+      "mapX": 0.33,
+      "mapY": 0.205,
+      "rows": [
+        ". -ES/2 -EW/3 @W#A/3 .",
+        "@E#A/2 -NEW/3 -ESW/3 -EW/3 @W#A/2",
+        "-ES/3 -ESW/3 -NEW/1 -ESW/2 @W#A/1",
+        "*N#W/3 -N/2 -ES/2 -NESW/0 @W#A/1",
+        ". -E/1 -NW/3 -N/3 ."
+      ]
+    },
+    {
+      "id": "c01_twin_streams",
+      "width": 6,
+      "height": 6,
+      "mapX": 0.67,
+      "mapY": 0.415,
+      "accent": "#4FC1FF",
+      "slate": "#0F2A4A",
+      "backdrop": "play_1",
+      "rows": [
+        ". @E#R/3 -EW/1 -SW/3 @S#R/3 .",
+        "@E#B/3 -ESW/2 @W#B/2 -NE/1 -NSW/3 @S#R/2",
+        "-E/3 -NSW/3 @S#B/1 -ES/3 -NESW/0 -NW/1",
+        "-ES/1 -NESW/0 -NSW/2 -NS/1 -NE/3 -SW/2",
+        "@N#B/2 -NS/1 -N/3 -NS/3 -ES/0! -NW/0!",
+        ". -NE/1 *W#B/2 @N#R/1 *N#R/1 ."
+      ]
+    },
+    {
+      "id": "c01_prism_heart",
+      "width": 6,
+      "height": 7,
+      "mapX": 0.32,
+      "mapY": 0.625,
+      "accent": "#FF74D4",
+      "slate": "#241540",
+      "backdrop": "play_2",
+      "rows": [
+        "*S#B/1 @E#M/2 -SW/3 -ES/3 *W#G/2 @S#G/1",
+        "-NES/1 -EW/3 -NSW/1 -NES/3 -ESW/3 -NW/1",
+        "*N#R/3 @E#M/2 -NSW/2 -NS/3 -NE/3 -SW/1",
+        "@S#W/3 -E/2 -NSW/0! -NS/3 @S#G/1 @N#G/3",
+        "-NES/0! -SW/1 @N#M/1 -NE/2 -NEW/3 -SW/2",
+        "@N#W/3 -NES/1 -EW/1 -ESW/1 *W#G/2 -NS/3",
+        "@E#W/3 -NEW/0! *W#R/1 -NE/3 *W#B/3 @N#G/3"
+      ]
+    }
+  ]
+}

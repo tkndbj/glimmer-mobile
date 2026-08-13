@@ -1,0 +1,83 @@
+{
+  "language": "en",
+  "entries": [
+    { "key": "chapter.c01_shallows.name", "text": "The Shallows" },
+
+    { "key": "level.c01_first_light.name", "text": "First Light" },
+    { "key": "level.c01_first_light.tagline", "text": "A single heart wakes the glade" },
+    { "key": "level.c01_first_light.lesson", "text": "Tap a conduit to turn it. Light every sleeping critter." },
+
+    { "key": "level.c01_twin_streams.name", "text": "Twin Streams" },
+    { "key": "level.c01_twin_streams.tagline", "text": "Two hearts, two hues, no mixing" },
+    { "key": "level.c01_twin_streams.lesson", "text": "Critters only wake to their own colour. Keep the streams apart." },
+
+    { "key": "level.c01_prism_heart.name", "text": "Prism Heart" },
+    { "key": "level.c01_prism_heart.tagline", "text": "Blend the light, wake the deep grove" },
+    { "key": "level.c01_prism_heart.lesson", "text": "Joined hearts blend: red plus blue makes blossom, all three make radiance." },
+
+    { "key": "ui.levels.title", "text": "CHOOSE A GLADE" },
+    { "key": "ui.levels.locked", "text": "locked" },
+    { "key": "ui.levels.locked_hint", "text": "clear the glade before it to open this one" },
+    { "key": "ui.levels.more_soon", "text": "more glades soon" },
+    { "key": "ui.levels.swipe", "text": "swipe to explore the chain" },
+
+    { "key": "ui.play.no_hints", "text": "no whispers left in this glade" },
+    { "key": "ui.play.hint_used", "text": "a whisper turns one conduit  (+2 moves)" },
+
+    { "key": "ui.win.rank1", "text": "SOLVED" },
+    { "key": "ui.win.rank2", "text": "LOVELY!" },
+    { "key": "ui.win.rank3", "text": "PERFECT!" },
+    { "key": "ui.win.new_best", "text": "a new best for this glade" },
+    { "key": "ui.win.best_is", "text": "your best here is {0}" },
+    { "key": "ui.win.moves", "text": "{0} moves  -  {1} for three stars" },
+    { "key": "ui.win.all_done", "text": "the whole grove is awake" },
+    { "key": "ui.win.next", "text": "NEXT GLADE" },
+    { "key": "ui.win.glades", "text": "GLADES" },
+    { "key": "ui.win.opened", "text": "{0} has opened" },
+
+    { "key": "ui.home.next_up", "text": "next up  ·  {0}" },
+    { "key": "ui.home.all_awake", "text": "every glade is awake  ·  chase three stars" },
+
+    { "key": "ui.levels.chapter_locked", "text": "clear this chapter to go on" },
+
+    { "key": "ui.pause.title", "text": "PAUSED" },
+    { "key": "ui.pause.resume", "text": "RESUME" },
+    { "key": "ui.pause.restart", "text": "RESTART" },
+    { "key": "ui.pause.glades", "text": "GLADES" },
+    { "key": "ui.pause.home", "text": "HOME" },
+
+    { "key": "ui.settings.title", "text": "SETTINGS" },
+    { "key": "ui.settings.toggle_row", "text": "music   sound   buzz" },
+    { "key": "ui.settings.music", "text": "music" },
+    { "key": "ui.settings.sound", "text": "sound" },
+    { "key": "ui.settings.buzz", "text": "buzz" },
+    { "key": "ui.settings.version", "text": "Glimmer Grove  v{0}" },
+    { "key": "ui.settings.credit", "text": "art & audio by CraftPix" },
+    { "key": "ui.settings.reset", "text": "RESET PROGRESS" },
+    { "key": "ui.settings.reset_confirm", "text": "TAP AGAIN TO ERASE" },
+
+    { "key": "ui.howto.title", "text": "HOW TO PLAY" },
+    { "key": "ui.howto.line1", "text": "Tap a conduit to turn it a quarter step." },
+    { "key": "ui.howto.line2", "text": "Guide light from every heart-crystal to the sleeping critters." },
+    { "key": "ui.howto.line3", "text": "Hearts joined into one network blend their colours." },
+    { "key": "ui.howto.line4", "text": "A critter only wakes to the exact colour it dreams of." },
+    { "key": "ui.howto.line5", "text": "Rooted tiles wear a padlock and will not turn." },
+    { "key": "ui.howto.line6", "text": "Fewer moves, more stars. There is no timer here." },
+    { "key": "ui.howto.red", "text": "red" },
+    { "key": "ui.howto.blue", "text": "blue" },
+    { "key": "ui.howto.blossom", "text": "blossom" },
+
+    { "key": "ui.nav.shop", "text": "shop" },
+    { "key": "ui.nav.items", "text": "items" },
+    { "key": "ui.nav.home", "text": "home" },
+    { "key": "ui.nav.ranks", "text": "ranks" },
+
+    { "key": "ui.soon.shop", "text": "Chests, critter skins and conduit styles will live here." },
+    { "key": "ui.soon.items", "text": "Boosters and keepsakes you collect in the glades." },
+    { "key": "ui.soon.ranks", "text": "Weekly leaderboards for the fastest, calmest solvers." },
+
+    { "key": "ui.common.got_it", "text": "GOT IT" },
+    { "key": "ui.common.done", "text": "DONE" },
+    { "key": "ui.common.coming_soon", "text": "COMING SOON" }
+  ]
+}
