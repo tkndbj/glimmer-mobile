@@ -61,6 +61,12 @@ namespace GlimmerGrove.Persistence
                 // A union: seeing a lesson cannot be undone, so between two devices the
                 // player has seen whatever either of them showed.
                 tipsSeen = TipLedger.Join(mine.tipsSeen, other.tipsSeen),
+
+                // The later day outright, and the larger counts within a shared day. The
+                // rule lives with the feature rather than here, for the reason Hearts.Join
+                // does: a merge that holds its own copy of a rule stops agreeing with the
+                // game that enforces it.
+                daily = Daily.DailyChests.Join(mine.daily, other.daily),
             };
 
             return merged;
@@ -167,6 +173,13 @@ namespace GlimmerGrove.Persistence
                 // disagree about it.
                 hearts = hearts.Count,
                 heartsNextRefillUnix = hearts.NextRefillUnix,
+
+                // The later deadline, where the count above takes the smaller. A boost
+                // cannot be minted by two devices refilling each other — it comes from a
+                // chest whose award is already deduplicated by its own derived id — so
+                // the conservative rule would only ever cut short a boost the player has.
+                heartBoostUntilUnix = Hearts.JoinBoost(mine.heartBoostUntilUnix,
+                                                       other.heartBoostUntilUnix),
 
                 // Preferences: the newest real value, and never an empty one over a
                 // real one. A device that has never been renamed carries "", and

@@ -275,7 +275,78 @@ Three things follow that are easy to get wrong:
   only. Prefer lengthening the curve to cutting a payout.
 - **Never add a payout that is not a function of the record.** A reward for "played
   today" or "watched an advert" is not derivable and must go through `grantedBaseline`
-  on the server, not through this file.
+  on the server, not through this file. The daily chests below are exactly that case,
+  and show the shape it has to take: the *rates* are content here, the *grant* is an
+  identified claim the server adjudicates.
+
+### Daily chests
+
+The optional `daily` block. Three chests, earned by finishing runs and opened by hand
+from the home screen.
+
+```json
+"daily": {
+  "runsPerChest": 3,
+  "chests": [
+    {
+      "guaranteed": [ { "kind": "credits", "min": 60, "max": 90 } ],
+      "options": [
+        { "kind": "credits", "min": 40, "max": 70, "weight": 45 },
+        { "kind": "hearts",  "min": 1,  "max": 1,  "weight": 30 },
+        { "kind": "gems",    "min": 1,  "max": 1,  "weight": 25 }
+      ]
+    }
+  ]
+}
+```
+
+`kind` is a permanent id: `credits`, `gems`, `hearts`, `heart_boost` — and a boost's
+band is measured in **hours**. Omit the whole block and the built-in table in
+`DailyChestTable.Default` stands; it is deliberately not a schema bump, because a
+daily-chest retune must not invalidate the XP curve for clients that have not updated.
+
+A chest pays **every guaranteed band, then exactly one weighted option**. That shape is
+not an accident:
+
+- **Nothing is bought, so nothing is a loot box.** These chests are earned by playing and
+  can never be purchased. That is what keeps them outside loot-box law in most places
+  rather than merely compliant with it. Do not put a price on one.
+- **One pick means the odds are a list that sums to 100.** With several picks the true
+  odds of an outcome stop being any number written in the file, and the honest disclosure
+  becomes a simulation. `Glimmer Grove ▸ Validate Content` prints the published odds, and
+  the chest overlay shows them to the player.
+- **The guaranteed band is why there is no pity counter.** Every chest pays something
+  worth having, so "thirty chests and nothing" cannot happen — which removes the usual
+  reason to keep per-player streak state that would then have to merge and be recomputed
+  server-side.
+- **Later chests must never pay less.** They cost more play. The build gate fails on a
+  table where a chest's floor is below the one before it.
+
+**A chest's contents are computed, never stored.** They are a pure function of
+(account id, day, chest index) through a specified generator — FNV-1a then xorshift32,
+all 32-bit — so the same chest holds the same thing however many times it is asked, on
+every device, before and after a crash. Two consequences worth knowing: force-quitting
+the opening animation cannot reroll a prize, and the server can work out what a chest was
+worth without being told.
+
+**Re-run the seed script when you change the block.** `claimAwards` refuses to grant
+anything if `config/progression` has no usable daily table — granting a guess would be
+inventing money — so a retune that is not seeded stops the chests paying out rather than
+paying the wrong amount.
+
+#### The generator exists twice, too
+
+`DailyChestTable.cs` and `firebase/functions/src/daily.ts`, pinned by the
+`dailyChestConfig` / `dailyChestCases` vectors in the same shared file. Those vectors use
+a **synthetic** table, not the shipped one, so retuning real drop rates does not turn them
+red — what is under contract is the arithmetic. The hash constants, the shift amounts, the
+stream numbers, the modulo and the summing of same-kind drops are all part of it, and
+changing any of them rerolls every unopened chest in the world.
+
+The one that bites: a chest whose floor and whose bonus are both credits must award **one**
+summed amount. Both would otherwise carry the id `daily:{day}:{chest}:credits`, the second
+would be refused as a duplicate, and the player would be paid half of what the server
+grants.
 
 ### The rule exists twice
 

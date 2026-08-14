@@ -5,6 +5,7 @@ using System.Text;
 using System.Text.RegularExpressions;
 using GlimmerGrove.Content;
 using GlimmerGrove.Content.Sources;
+using GlimmerGrove.Daily;
 using GlimmerGrove.Localization;
 using GlimmerGrove.Persistence;
 using GlimmerGrove.Progression;
@@ -210,6 +211,7 @@ namespace GlimmerGrove.EditorTools
             }
 
             ValidateRewardChaptersExist(fetch.Text, index, result);
+            ValidateDailyChests(table.Daily, result, verbose);
 
             if (!verbose) return;
 
@@ -220,6 +222,98 @@ namespace GlimmerGrove.EditorTools
             var reachable = table.LevelFor(maximumXp);
             Debug.Log($"[Glimmer] progression verified: {index.Count} glade(s) at three stars " +
                       $"is {maximumXp} XP, reaching level {reachable.Level} of {table.MaxLevel}");
+        }
+
+        /// <summary>
+        /// The daily chest table, checked for the things the reader cannot know.
+        ///
+        /// <para>
+        /// The reader rejects a table that is malformed. This rejects one that is merely
+        /// wrong: chests that get worse as they get harder, a boost longer than the rules
+        /// allow, a chest with no variable slot at all. None of those would throw, and all
+        /// of them would ship.
+        /// </para>
+        /// <para>
+        /// It also prints the published odds. That is the point of running it verbosely
+        /// before a drop — the disclosure a store or a regulator may ask for is generated
+        /// from the file the game actually rolls against, so it cannot be out of date.
+        /// </para>
+        /// </summary>
+        static void ValidateDailyChests(DailyChestTable daily, ContentValidationResult result, bool verbose)
+        {
+            if (daily == null) { result.Errors.Add("progression.json produced no daily chest table"); return; }
+
+            if (daily.ChestCount < 1)
+            {
+                result.Errors.Add("the daily table has no chests");
+                return;
+            }
+
+            long previousFloor = -1;
+
+            for (int i = 0; i < daily.ChestCount; i++)
+            {
+                var chest = daily.Chest(i);
+
+                long floor = 0;
+                foreach (var band in chest.Guaranteed)
+                {
+                    floor += band.Min;
+
+                    if (band.Kind == ChestDropKind.HeartBoost && band.Max > HeartRules.MaxBoostHours)
+                        result.Errors.Add($"daily chest {i} guarantees a {band.Max}h heart boost, " +
+                                          $"more than the {HeartRules.MaxBoostHours}h ceiling");
+                }
+
+                // Later chests cost more play, so they have to be worth more. A table where
+                // the third is meaner than the first reads to a player as the game
+                // punishing them for keeping going, and nothing else in the build catches it.
+                if (floor < previousFloor)
+                    result.Errors.Add($"daily chest {i} guarantees less than chest {i - 1} " +
+                                      $"({floor} against {previousFloor}); a later chest costs more " +
+                                      "play and must never pay less");
+                previousFloor = floor;
+
+                foreach (var option in chest.Options)
+                {
+                    if (option.Band.Kind == ChestDropKind.HeartBoost &&
+                        option.Band.Max > HeartRules.MaxBoostHours)
+                        result.Errors.Add($"daily chest {i} can drop a {option.Band.Max}h heart boost, " +
+                                          $"more than the {HeartRules.MaxBoostHours}h ceiling");
+                }
+
+                if (chest.Options.Count == 0)
+                    result.Warnings.Add($"daily chest {i} has no bonus slot, so it pays the same " +
+                                        "thing every day");
+            }
+
+            if (!verbose) return;
+
+            for (int i = 0; i < daily.ChestCount; i++)
+            {
+                var chest = daily.Chest(i);
+                var line = new System.Text.StringBuilder()
+                    .Append("[Glimmer] daily chest ").Append(i + 1)
+                    .Append(" (after ").Append(daily.RunsFor(i)).Append(" runs) always pays");
+
+                foreach (var band in chest.Guaranteed)
+                    line.Append(' ').Append(band.Min).Append('-').Append(band.Max)
+                        .Append(' ').Append(ChestDropKinds.Id(band.Kind));
+
+                if (chest.Options.Count > 0)
+                {
+                    line.Append("  ·  bonus:");
+                    for (int o = 0; o < chest.Options.Count; o++)
+                    {
+                        var option = chest.Options[o];
+                        line.Append("  ").Append(ChestDropKinds.Id(option.Band.Kind))
+                            .Append(' ').Append(option.Band.Min).Append('-').Append(option.Band.Max)
+                            .Append(" at ").Append(chest.ChanceOf(o).ToString("0.#")).Append('%');
+                    }
+                }
+
+                Debug.Log(line.ToString());
+            }
         }
 
         /// <summary>

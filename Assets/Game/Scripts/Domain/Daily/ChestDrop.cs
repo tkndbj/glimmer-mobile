@@ -1,0 +1,116 @@
+using System;
+using GlimmerGrove.Persistence;
+
+namespace GlimmerGrove.Daily
+{
+    /// <summary>
+    /// What a chest can contain.
+    ///
+    /// An enum rather than the string ids used for currencies and levels, and the
+    /// difference is deliberate: nothing persists a reward kind. Drops are recomputed
+    /// from the day and the chest index every time they are needed, so no save file and
+    /// no server document holds one of these, and reordering the members cannot move
+    /// anybody's history. The ids in the content file are strings for the usual reason —
+    /// see <see cref="ChestDropKinds"/> — and are mapped here on read.
+    /// </summary>
+    public enum ChestDropKind
+    {
+        None = 0,
+
+        /// <summary>Soft currency. Server-owned once the backend is live.</summary>
+        Credits,
+
+        /// <summary>Hard currency. Server-owned, and the one an attacker actually wants.</summary>
+        Gems,
+
+        /// <summary>
+        /// Hearts, clamped at <see cref="HeartRules.Max"/> like every other grant.
+        ///
+        /// A full player loses the surplus, and that is on purpose. The obvious kindness
+        /// — paying the overflow out as credits instead — would make the reward depend on
+        /// how many hearts the player happened to be holding, and the server has no view
+        /// of that. It would then be unable to recompute what a chest was worth, which is
+        /// the one property the whole design rests on. The table compensates by keeping
+        /// hearts to the early chest, where the guaranteed credits already carry the
+        /// reward, and by making the band generous when it does land.
+        /// </summary>
+        Hearts,
+
+        /// <summary>
+        /// Faster heart regeneration for a fixed window. See <see cref="HeartBoost"/>.
+        /// Amount is the duration in hours, so the band is authored the way it reads.
+        /// </summary>
+        HeartBoost,
+    }
+
+    /// <summary>
+    /// The permanent ids a content file uses for drop kinds.
+    ///
+    /// Strings, and never renamed or reused, for the same reason a <c>LevelId</c> is a
+    /// string: a published content file names them, and an enum's numbering is an
+    /// implementation detail that must not be able to leak into data.
+    /// </summary>
+    public static class ChestDropKinds
+    {
+        public const string Credits = "credits";
+        public const string Gems = "gems";
+        public const string Hearts = "hearts";
+        public const string HeartBoost = "heart_boost";
+
+        public static ChestDropKind Parse(string id)
+        {
+            if (string.Equals(id, Credits, StringComparison.Ordinal)) return ChestDropKind.Credits;
+            if (string.Equals(id, Gems, StringComparison.Ordinal)) return ChestDropKind.Gems;
+            if (string.Equals(id, Hearts, StringComparison.Ordinal)) return ChestDropKind.Hearts;
+            if (string.Equals(id, HeartBoost, StringComparison.Ordinal)) return ChestDropKind.HeartBoost;
+            return ChestDropKind.None;
+        }
+
+        public static string Id(ChestDropKind kind)
+        {
+            switch (kind)
+            {
+                case ChestDropKind.Credits: return Credits;
+                case ChestDropKind.Gems: return Gems;
+                case ChestDropKind.Hearts: return Hearts;
+                case ChestDropKind.HeartBoost: return HeartBoost;
+                default: return string.Empty;
+            }
+        }
+
+        /// <summary>
+        /// Which kinds are currency, and therefore adjudicated by the server rather than
+        /// applied by the client. Asked in one place so the two halves of the grant path
+        /// cannot come to different conclusions about what needs a receipt.
+        /// </summary>
+        public static bool IsCurrency(ChestDropKind kind)
+            => kind == ChestDropKind.Credits || kind == ChestDropKind.Gems;
+
+        /// <summary>The currency ledger a drop belongs to, or empty when it is not currency.</summary>
+        public static string CurrencyOf(ChestDropKind kind)
+            => kind == ChestDropKind.Credits ? Currency.Credits
+             : kind == ChestDropKind.Gems ? Currency.Gems
+             : string.Empty;
+    }
+
+    /// <summary>One resolved reward: a kind and how much of it.</summary>
+    public readonly struct ChestDrop
+    {
+        public readonly ChestDropKind Kind;
+        public readonly int Amount;
+
+        public ChestDrop(ChestDropKind kind, int amount)
+        {
+            Kind = kind;
+            Amount = amount < 0 ? 0 : amount;
+        }
+
+        public bool IsValid => Kind != ChestDropKind.None && Amount > 0;
+
+        public static readonly ChestDrop None = new ChestDrop(ChestDropKind.None, 0);
+
+        public bool IsCurrency => ChestDropKinds.IsCurrency(Kind);
+
+        public override string ToString() => $"{Amount} {ChestDropKinds.Id(Kind)}";
+    }
+}

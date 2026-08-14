@@ -37,6 +37,7 @@ namespace GlimmerGrove.Persistence
             GameSettings.LoadFrom(dto);
             Wallet.LoadFrom(dto);
             TipLedger.LoadFrom(dto);
+            Daily.DailyChests.LoadFrom(dto);
             ProgressionStore.LoadFrom(dto);
             CloudState.LoadFrom(dto);
 
@@ -104,6 +105,7 @@ namespace GlimmerGrove.Persistence
             GameSettings.WriteInto(dto);
             Wallet.WriteInto(dto);
             TipLedger.WriteInto(dto);
+            Daily.DailyChests.WriteInto(dto);
             ProgressionStore.WriteInto(dto);
             CloudState.WriteInto(dto);
 
@@ -125,6 +127,7 @@ namespace GlimmerGrove.Persistence
             GameSettings.LoadFrom(dto);
             Wallet.LoadFrom(dto);
             TipLedger.LoadFrom(dto);
+            Daily.DailyChests.LoadFrom(dto);
             ProgressionStore.LoadFrom(dto);
             CloudState.LoadFrom(dto);
 
@@ -144,6 +147,7 @@ namespace GlimmerGrove.Persistence
                 settings = new SettingsDto(),
                 wallet = WalletDto.Unwritten(),
                 levels = new LevelRecordDto[0],
+                daily = new DailyStateDto(),
                 progression = ProgressionStateDto.Unwritten(),
                 legacyImportDone = true,
             };
@@ -151,6 +155,7 @@ namespace GlimmerGrove.Persistence
             PlayerProgress.LoadFrom(fresh);
             Wallet.LoadFrom(fresh);
             TipLedger.LoadFrom(fresh);
+            Daily.DailyChests.LoadFrom(fresh);
             ProgressionStore.LoadFrom(fresh);
             // settings and the cloud identity deliberately survive a progress wipe
 

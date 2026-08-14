@@ -124,8 +124,18 @@ namespace GlimmerGrove.Persistence
             var walletB = merged.wallet ?? WalletDto.Unwritten();
             if (walletA.hearts != walletB.hearts) return true;
             if (walletA.heartsNextRefillUnix != walletB.heartsNextRefillUnix) return true;
+            if (walletA.heartBoostUntilUnix != walletB.heartBoostUntilUnix) return true;
             if (!Same(walletA.displayName, walletB.displayName)) return true;
             if (!Same(walletA.avatarId, walletB.avatarId)) return true;
+
+            // Today's chest counters. Small, and they change several times a session, so
+            // they are compared rather than assumed — a day that rolled over on one device
+            // has to reach the other or its chests would still look unopened.
+            var dailyA = remote.daily ?? new DailyStateDto();
+            var dailyB = merged.daily ?? new DailyStateDto();
+            if (dailyA.dayKey != dailyB.dayKey) return true;
+            if (dailyA.runs != dailyB.runs) return true;
+            if (dailyA.claimed != dailyB.claimed) return true;
 
             var progressA = remote.progression ?? ProgressionStateDto.Unwritten();
             var progressB = merged.progression ?? ProgressionStateDto.Unwritten();

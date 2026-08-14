@@ -33,8 +33,14 @@ namespace GlimmerGrove.Persistence
         ///      regenerates and gates play.
         /// v5 — the set of mechanic tips already shown (<see cref="SaveFileDto.tipsSeen"/>),
         ///      so a lesson taught once is never repeated on any of a player's devices.
+        /// v6 — the daily chest counters (<see cref="SaveFileDto.daily"/>), the heart-regen
+        ///      boost deadline (<see cref="WalletDto.heartBoostUntilUnix"/>) and pending
+        ///      grants (<see cref="CurrencyLedgerDto.pendingGrants"/>). The last of those
+        ///      is the one that matters: it is how currency a player has been *given*
+        ///      reaches them offline without the client ever raising its own granted
+        ///      baseline, which is the field the server owns and an attacker wants.
         /// </summary>
-        public const int Version = 5;
+        public const int Version = 6;
 
         /// <summary>Progress that predates this file: index-keyed keys in PlayerPrefs.</summary>
         public const int LegacyPlayerPrefsVersion = 0;
@@ -99,6 +105,9 @@ namespace GlimmerGrove.Persistence
         /// </summary>
         public string[] tipsSeen;
 
+        /// <summary>Today's chest counters. See <see cref="DailyStateDto"/>.</summary>
+        public DailyStateDto daily;
+
         /// <summary>
         /// Integrity check over the rest of the file. Empty on files written before
         /// checksums existed, which are accepted and gain one on the next write.
@@ -143,6 +152,17 @@ namespace GlimmerGrove.Persistence
         /// from the next read instead of back-paying time nobody waited.
         /// </summary>
         public long heartsNextRefillUnix;
+
+        /// <summary>
+        /// When the faster heart regeneration bought by a chest runs out, as a Unix
+        /// timestamp; 0 when no boost is running.
+        ///
+        /// A deadline rather than a remaining duration, for exactly the reason
+        /// <see cref="heartsNextRefillUnix"/> is: a duration has to be decremented by
+        /// something, and nothing runs while the app is closed. A deadline is simply
+        /// compared, and the comparison is correct after a week in the background.
+        /// </summary>
+        public long heartBoostUntilUnix;
 
         public string displayName;
 
@@ -193,6 +213,21 @@ namespace GlimmerGrove.Persistence
         public SpendEntryDto[] pendingSpends;
 
         /// <summary>
+        /// Currency awarded but not yet confirmed by the server, each with an idempotency
+        /// key. The mirror image of <see cref="pendingSpends"/>, and the reason the client
+        /// can hand a player a daily chest while offline without ever touching
+        /// <see cref="grantedBaseline"/>.
+        ///
+        /// <para>
+        /// These are a <em>claim</em>, not money. They count toward the displayed balance
+        /// so the reward is real the instant it is opened, and they are replaced — not
+        /// added to — by the server's own figure on the next sync. If the server disagrees
+        /// about what a chest was worth, the server is right.
+        /// </para>
+        /// </summary>
+        public GrantEntryDto[] pendingGrants;
+
+        /// <summary>
         /// Debits at or before this moment are already inside <see cref="spentBaseline"/>.
         /// Persisted because a merge on a later launch still needs it to tell a debit
         /// the server has absorbed from one it has never seen.
@@ -216,6 +251,66 @@ namespace GlimmerGrove.Persistence
 
         /// <summary>What it was spent on. Carried for support and for analytics.</summary>
         public string reason;
+    }
+
+    /// <summary>
+    /// One award, identified so that granting it twice is impossible rather than merely
+    /// unlikely.
+    ///
+    /// <para>
+    /// The id is <b>derived, not random</b>, and that is the difference between this and
+    /// <see cref="SpendEntryDto"/>. A spend needs a fresh key because the same purchase
+    /// made twice is two purchases. An award needs a <em>reproducible</em> key, because
+    /// the whole point is that day 20315's third chest can be granted exactly once, no
+    /// matter how many devices claim it, how many times the response is lost, or whether
+    /// the player reinstalls in between. The server keys its own record on the same
+    /// string, so the second attempt is refused by the database rather than by any code
+    /// remembering anything.
+    /// </para>
+    /// </summary>
+    [Serializable]
+    public sealed class GrantEntryDto
+    {
+        /// <summary>Derived and stable, e.g. <c>daily:20315:2:credits</c>.</summary>
+        public string id;
+
+        public long amount;
+        public long unix;
+
+        /// <summary>What earned it. Carried for support and for analytics.</summary>
+        public string reason;
+    }
+
+    /// <summary>
+    /// The daily chest counters, and nothing else.
+    ///
+    /// <para>
+    /// Three integers, which is the smallest state that survives a reset nobody runs, a
+    /// merge nobody supervises and a clock nobody controls. The day is a whole-day count
+    /// since the epoch (see <c>DailyRules</c>), so a stale day is noticed on the next
+    /// read rather than by a timer that has to fire at midnight in every timezone.
+    /// </para>
+    /// <para>
+    /// Note what is <em>not</em> here: what any chest contained. Drops are recomputed from
+    /// the player, the day and the chest index every time they are needed, so there is no
+    /// stored prize to drift from the table, to be edited by a player, or to have to be
+    /// migrated when the table is retuned.
+    /// </para>
+    /// </summary>
+    [Serializable]
+    public sealed class DailyStateDto
+    {
+        /// <summary>
+        /// Which day these counters describe. Zero means none — 1970 is not a day any
+        /// live player has counters for, so no separate "unwritten" flag is needed.
+        /// </summary>
+        public int dayKey;
+
+        /// <summary>Runs finished today, won or lost.</summary>
+        public int runs;
+
+        /// <summary>Chests opened today.</summary>
+        public int claimed;
     }
 
     [Serializable]

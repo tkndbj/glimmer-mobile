@@ -205,7 +205,11 @@ namespace GlimmerGrove
             var card = Section("Record", 430f, 1);
             CardTitle(card, "ui.profile.record", CardWidth);
 
-            Tile(card, -310f, 40f, "ic_star", $"{Profile.TotalStars}", "ui.profile.stars", Pal.Gold);
+            // Shown against the total the catalog holds, which is where the home screen's
+            // old grove bar went when that panel became the daily one. A bare star count
+            // says how far you have come; this one also says how far there is to go.
+            Tile(card, -310f, 40f, "ic_star", $"{Profile.TotalStars}/{Profile.MaxStars}",
+                 "ui.profile.stars", Pal.Gold);
             Tile(card, 0f, 40f, "ic_home", $"{Profile.ChaptersCompleted}/{Profile.ChapterCount}",
                  "ui.profile.chapters", Pal.Aqua);
             Tile(card, 310f, 40f, "ic_star3d", $"{Profile.PerfectGlades}", "ui.profile.perfect", Pal.Sun);

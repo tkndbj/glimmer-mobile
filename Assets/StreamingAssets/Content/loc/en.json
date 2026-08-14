@@ -35,13 +35,29 @@
     { "key": "ui.win.best_is", "text": "your best here is {0}" },
     { "key": "ui.win.moves", "text": "{0} moves  -  {1} for three stars" },
     { "key": "ui.win.reward", "text": "+{0} glimmer  ·  +{1} credits" },
-    { "key": "ui.win.all_done", "text": "the whole grove is awake" },
     { "key": "ui.win.next", "text": "NEXT GLADE" },
     { "key": "ui.win.glades", "text": "GLADES" },
     { "key": "ui.win.opened", "text": "{0} has opened" },
 
     { "key": "ui.home.next_up", "text": "next up  ·  {0}" },
     { "key": "ui.home.all_awake", "text": "every glade is awake  ·  chase three stars" },
+    { "key": "ui.home.bonuses", "text": "DAILY BONUSES" },
+
+    { "key": "ui.daily.played", "text": "{0} / {1} played" },
+    { "key": "ui.daily.next_chest", "text": "play {0} more to earn the next chest" },
+    { "key": "ui.daily.ready", "text": "a chest is waiting  ·  tap to open" },
+    { "key": "ui.daily.all_open", "text": "every chest is open  ·  more tomorrow" },
+    { "key": "ui.daily.resets_in", "text": "resets in {0}" },
+    { "key": "ui.daily.chest_title", "text": "DAILY CHEST" },
+    { "key": "ui.daily.collect", "text": "COLLECT" },
+    { "key": "ui.daily.odds", "text": "bonus chances" },
+    { "key": "ui.daily.hearts_full", "text": "your hearts were already full" },
+    { "key": "ui.daily.boost_on", "text": "hearts return twice as fast for {0}" },
+
+    { "key": "ui.reward.credits", "text": "coins" },
+    { "key": "ui.reward.gems", "text": "gems" },
+    { "key": "ui.reward.hearts", "text": "hearts" },
+    { "key": "ui.reward.heart_boost", "text": "fast hearts" },
 
     { "key": "ui.levels.chapter_locked", "text": "clear this chapter to go on" },
 
@@ -181,6 +197,8 @@
     { "key": "ui.defeat.reason", "text": "The light touched a thornstone and the glade went dark." },
     { "key": "ui.defeat.moves_title", "text": "OUT OF TURNS" },
     { "key": "ui.defeat.moves_reason", "text": "The grove grew tired before the glade woke. Fewer turns, more thinking." },
+    { "key": "ui.defeat.conduit_title", "text": "IT GAVE WAY" },
+    { "key": "ui.defeat.conduit_reason", "text": "That conduit was brittle and could not take another turn. Watch the number on them." },
     { "key": "ui.defeat.try_again", "text": "TRY AGAIN" },
     { "key": "ui.defeat.out_of_hearts", "text": "No hearts left. Rest a while and the grove will wake you." },
 

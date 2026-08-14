@@ -18,7 +18,14 @@ import { onCall, HttpsError, CallableRequest } from "firebase-functions/v2/https
 import { defineSecret } from "firebase-functions/params";
 import { logger } from "firebase-functions";
 
-import { BUNDLE_ID, CURRENCIES, CurrencyId, MAX_SPENDS_PER_CALL, PATHS, REGION } from "./config";
+import {
+  BUNDLE_ID, CURRENCIES, CurrencyId,
+  MAX_AWARDS_PER_CALL, MAX_SPENDS_PER_CALL, PATHS, REGION,
+} from "./config";
+import {
+  chestCurrencyValue, MAX_DAYS_AHEAD, MAX_DAYS_BEHIND,
+  parseDailyClaim, todayKey, usableDailyConfig,
+} from "./daily";
 import { ReceiptRejected, validateReceipt } from "./receipts";
 import {
   deriveEarned,
@@ -217,6 +224,171 @@ export const submitSpends = onCall(callOptions, async (request): Promise<{
   });
 
   return { wallets: toReply(wallet, confirmed), rejected };
+});
+
+// --------------------------------------------------------------- claim awards
+interface SubmittedAward {
+  id?: unknown;
+  claimedAmount?: unknown;
+  unix?: unknown;
+  reason?: unknown;
+}
+
+/**
+ * Grants currency the client has already shown the player, at the amount the *server*
+ * works out it was worth.
+ *
+ * <p>Three properties carry this endpoint.</p>
+ *
+ * The amount is recomputed, never accepted. `rollChest` re-rolls the same deterministic
+ * sequence the client rolled, from the account id, the day and the chest index, using
+ * the drop table in `config/progression`. A client that inflates its claim gains
+ * nothing, which is precisely what makes it safe for the client to pay itself
+ * optimistically while offline.
+ *
+ * The grant is keyed on an id derived from what earned it — `daily:{day}:{chest}:{ccy}`
+ * — rather than on a random one. So the same chest submitted from two devices, or
+ * resubmitted after a lost response, or replayed by hand, collides with a document that
+ * already exists and confirms instead of granting. Idempotency is enforced by the
+ * database refusing the second write, not by this code remembering anything.
+ *
+ * And a day that has not happened yet cannot be claimed. Everything else about the
+ * client's daily state is forgeable — the run counter lives in a document the player
+ * can write — so the honest bound on abuse is *one full day's chests per day*, which is
+ * exactly what an honest player gets. That is a deliberate trade: proving somebody
+ * played three glades would mean trusting a different forgeable number, and the prize
+ * for cheating is a reward that was never scarce.
+ */
+export const claimAwards = onCall(callOptions, async (request): Promise<{
+  wallets: WalletReply[];
+  rejected: string[];
+}> => {
+  const uid = requireUid(request);
+  const db = getFirestore();
+
+  const submitted = (request.data?.awards ?? []) as SubmittedAward[];
+  if (!Array.isArray(submitted)) {
+    throw new HttpsError("invalid-argument", "awards must be a list");
+  }
+  if (submitted.length > MAX_AWARDS_PER_CALL) {
+    throw new HttpsError("invalid-argument", `at most ${MAX_AWARDS_PER_CALL} awards per call`);
+  }
+
+  const today = todayKey(Date.now());
+  const rejected: string[] = [];
+
+  const clean = submitted.flatMap((award) => {
+    const id = typeof award.id === "string" ? award.id : "";
+    if (!id) return [];
+
+    const claim = parseDailyClaim(id);
+    if (!claim) { rejected.push(id); return []; }
+
+    if (!CURRENCIES.includes(claim.currency as CurrencyId)) { rejected.push(id); return []; }
+
+    if (claim.dayKey > today + MAX_DAYS_AHEAD || claim.dayKey < today - MAX_DAYS_BEHIND) {
+      logger.warn("refused an award for a day outside the window", {
+        uid, id, claimedDay: claim.dayKey, today,
+      });
+      rejected.push(id);
+      return [];
+    }
+
+    return [{
+      id,
+      claim,
+      currency: claim.currency as CurrencyId,
+      claimedAmount: typeof award.claimedAmount === "number" ? Math.floor(award.claimedAmount) : 0,
+      unix: typeof award.unix === "number" ? Math.floor(award.unix) : 0,
+      reason: typeof award.reason === "string" ? award.reason.slice(0, 64) : "",
+    }];
+  });
+
+  const confirmed: Record<string, string[]> = {};
+
+  const wallet = await db.runTransaction(async (transaction) => {
+    const config = await loadProgressionConfig(transaction);
+
+    const walletRef = db.doc(PATHS.wallet(uid));
+    const walletSnapshot = await transaction.get(walletRef);
+    const state = readWallet(walletSnapshot, config);
+
+    // Every read before the first write, as Firestore requires.
+    const existing = await Promise.all(
+      clean.map((award) => transaction.get(db.doc(PATHS.grant(uid, award.id))))
+    );
+
+    await deriveEarned(transaction, uid, state, config);   // ratchets the floor
+
+    const daily = usableDailyConfig((config as { daily?: unknown }).daily);
+
+    if (!daily) {
+      // The config predates the daily block, or was seeded badly. Granting a guess
+      // would be inventing money, so nothing is granted and nothing is confirmed —
+      // the client keeps its local copy and tries again after the seeder has run.
+      logger.error("config/progression has no usable daily table; refusing to grant awards", { uid });
+      return state;
+    }
+
+    for (let i = 0; i < clean.length; i++) {
+      const award = clean[i];
+      (confirmed[award.currency] ??= []);
+
+      if (existing[i].exists) {
+        // Seen before. It is already inside `granted`; saying so again tells the client
+        // to stop sending it and moves no balance.
+        confirmed[award.currency].push(award.id);
+        continue;
+      }
+
+      if (award.claim.chestIndex >= daily.chests.length) {
+        rejected.push(award.id);
+        continue;
+      }
+
+      const amount = chestCurrencyValue(
+        daily, uid, award.claim.dayKey, award.claim.chestIndex, award.currency);
+
+      if (amount <= 0) {
+        // That chest holds none of this currency. Either the client is on a different
+        // drop table — a content push it has not fetched yet — or the claim is invented.
+        // Either way there is nothing to grant, and the client will adopt the server's
+        // balance on this same reply.
+        logger.warn("award names a chest that pays nothing in that currency", {
+          uid, id: award.id, currency: award.currency,
+        });
+        rejected.push(award.id);
+        continue;
+      }
+
+      if (amount !== award.claimedAmount) {
+        // Worth seeing, never worth acting on. A mismatch is usually a client on an
+        // older drop table; the server's figure stands either way.
+        logger.info("award amount differs from the client's claim", {
+          uid, id: award.id, server: amount, client: award.claimedAmount,
+        });
+      }
+
+      transaction.set(db.doc(PATHS.grant(uid, award.id)), {
+        currency: award.currency,
+        amount,
+        claimedAmount: award.claimedAmount,
+        reason: award.reason,
+        dayKey: award.claim.dayKey,
+        chestIndex: award.claim.chestIndex,
+        clientUnix: award.unix,
+        grantedAt: FieldValue.serverTimestamp(),
+      });
+
+      state[award.currency].granted += amount;
+      confirmed[award.currency].push(award.id);
+    }
+
+    transaction.set(walletRef, { ...state, updatedAt: FieldValue.serverTimestamp() });
+    return state;
+  });
+
+  return { wallets: toReply(wallet, {}, confirmed), rejected };
 });
 
 // ------------------------------------------------------------ redeem purchase

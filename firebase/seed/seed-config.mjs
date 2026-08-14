@@ -114,9 +114,64 @@ function buildProgressionConfig() {
       chapterRewards,
       levelChapters,
       seeds: readSeeds(),
+      daily: readDaily(progression),
     },
     levelCount,
   };
+}
+
+/**
+ * The daily chest table, published verbatim so the server can re-roll a chest for
+ * itself.
+ *
+ * This is not optional tuning. `claimAwards` recomputes what a chest was worth rather
+ * than believing the client, and it cannot do that without the same weights and bands
+ * the client rolled against. A config document missing this block makes the server
+ * refuse every award — deliberately, since granting a guess would be inventing money —
+ * so it is validated here rather than discovered in production.
+ */
+function readDaily(progression) {
+  const daily = progression.daily;
+
+  if (!daily || !Array.isArray(daily.chests) || daily.chests.length === 0) {
+    throw new Error(
+      "progression.json has no 'daily' block. The server re-rolls each chest to decide " +
+      "what it pays, so seeding without one would make every daily chest fail to grant."
+    );
+  }
+
+  const chests = daily.chests.map((chest, index) => {
+    const guaranteed = (chest.guaranteed ?? []).map((band) => band8(band, index, "guaranteed"));
+    if (guaranteed.length === 0) {
+      throw new Error(`daily chest ${index} guarantees nothing; every chest must pay something`);
+    }
+
+    const options = (chest.options ?? []).map((option) => ({
+      ...band8(option, index, "option"),
+      weight: Math.max(1, Math.floor(option.weight ?? 1)),
+    }));
+
+    return { guaranteed, options };
+  });
+
+  return { runsPerChest: Math.max(1, Math.floor(daily.runsPerChest ?? 3)), chests };
+}
+
+const DROP_KINDS = new Set(["credits", "gems", "hearts", "heart_boost"]);
+
+function band8(band, chestIndex, role) {
+  if (!band || !DROP_KINDS.has(band.kind)) {
+    throw new Error(`daily chest ${chestIndex} ${role} names unknown reward kind '${band?.kind}'`);
+  }
+
+  const min = Math.floor(band.min ?? 0);
+  const max = Math.floor(band.max ?? 0);
+
+  if (min < 1 || max < min) {
+    throw new Error(`daily chest ${chestIndex} ${role} '${band.kind}' has band ${min}..${max}`);
+  }
+
+  return { kind: band.kind, min, max };
 }
 
 // -------------------------------------------------------- Firestore REST encoding
@@ -176,6 +231,7 @@ await writeDoc(token, "config/progression", config);
 console.log(
   `config/progression: ${levelCount} level(s), ` +
   `${Object.keys(config.chapterRewards).length} chapter override(s), ` +
+  `${config.daily.chests.length} daily chest(s) every ${config.daily.runsPerChest} run(s), ` +
   `seeds ${config.seeds.credits} credits / ${config.seeds.gems} gems`
 );
 

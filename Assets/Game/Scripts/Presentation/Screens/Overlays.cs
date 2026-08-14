@@ -87,25 +87,37 @@ namespace GlimmerGrove
     {
         public PlayScreen Screen;
         public int HeartsLeft;
+        public DefeatReason Reason;
         public int LampsLit, LampCount;
 
         /// <summary>False when the player was already at zero — then nothing was taken.</summary>
         public bool HeartWasCharged;
 
 
+        /// <summary>
+        /// Written out rather than built from the enum name, so the loc gate can see
+        /// every key. A concatenated key is invisible to the scanner and ships missing.
+        /// </summary>
+        static string TitleKey(DefeatReason reason)
+            => reason == DefeatReason.ConduitLost ? "ui.defeat.conduit_title" : "ui.defeat.moves_title";
+
+        static string ReasonKey(DefeatReason reason)
+            => reason == DefeatReason.ConduitLost ? "ui.defeat.conduit_reason" : "ui.defeat.moves_reason";
+
         protected override void Build()
         {
             bool canRetry = HeartsLeft > 0;
 
-            MakePanel(new Vector2(880f, 880f), Loc.Get("ui.defeat.moves_title"), dismissOnScrim: false);
+            MakePanel(new Vector2(880f, 880f), Loc.Get(TitleKey(Reason)), dismissOnScrim: false);
 
             // Body copy, drawn the way every other panel here draws it: wrapped, and
             // with no outline or shadow. Those two are for headings sitting on a ribbon;
             // on a 32pt sentence they smear the strokes together and it stops reading.
-            Body("Why", Loc.Get("ui.defeat.moves_reason"), -186f, 150f);
+            Body("Why", Loc.Get(ReasonKey(Reason)), -186f, 150f);
 
-            // Running out of turns gives no clue how close you were, so say it.
-            if (LampCount > 0)
+            // Running out of turns gives no clue how close you were, so say it. After a
+            // crumble the player watched the cause, and a score would only distract.
+            if (Reason == DefeatReason.OutOfMoves && LampCount > 0)
                 UIKit.Titled("Score", Panel, $"{LampsLit}/{LampCount}", 44,
                              LampsLit >= LampCount - 1 ? Pal.Gold : Pal.Cream,
                              TextAnchor.MiddleCenter, new Vector2(400f, 70f),
@@ -354,22 +366,15 @@ namespace GlimmerGrove
 
             // Only shown when the run actually improved the record. A replay that beat
             // nothing earns nothing, and saying "+0 XP" would read as a bug.
-            float rewardY = -462f;
             if (XpGained > 0 || CreditsGained > 0)
             {
                 var reward = UIKit.Titled("Reward", Panel,
                                           Loc.Format("ui.win.reward", XpGained, CreditsGained), 32, Pal.Mint,
                                           TextAnchor.MiddleCenter, new Vector2(760f, 44f),
-                                          new Vector2(.5f, 1f), new Vector2(0f, rewardY), 2f, 2f);
+                                          new Vector2(.5f, 1f), new Vector2(0f, -462f), 2f, 2f);
                 reward.transform.localScale = Vector3.zero;
                 Tween.Pop(reward.transform, 0f, .55f, 1.15f + .42f * Stars);
-                rewardY -= 46f;
             }
-
-            if (last && PlayerProgress.AllCleared(index))
-                UIKit.Titled("Done", Panel, Loc.Get("ui.win.all_done"), 32, Pal.Gold,
-                             TextAnchor.MiddleCenter, new Vector2(760f, 44f), new Vector2(.5f, 1f),
-                             new Vector2(0f, rewardY), 3f, 3f);
 
             var nextId = last ? LevelId.None : next;
 

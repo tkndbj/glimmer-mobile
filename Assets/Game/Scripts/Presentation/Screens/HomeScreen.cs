@@ -1,5 +1,6 @@
 using System;
 using GlimmerGrove.Content;
+using GlimmerGrove.Daily;
 using GlimmerGrove.Localization;
 using GlimmerGrove.Persistence;
 using GlimmerGrove.Progression;
@@ -17,16 +18,65 @@ namespace GlimmerGrove
         public override string Track => "mus_menu";
 
         Image _hero;
+        RectTransform _dailyPanel;
+        RectTransform _resourceRow;
+        Text _resetClock;
+        float _clockTick;
 
         protected override void Build()
         {
             BuildBackdrop();
             BuildTopBar();
             BuildResources();
-            BuildProgress();
+            BuildDaily();
             BuildHero();
             BuildPlay();
             NavBar.Build(Content, NavBar.Tab.Home);
+
+            // Midnight arrives while a screen is open exactly as often as it arrives while
+            // it is not, and opening a chest changes both panels from under themselves.
+            DailyChests.Changed += OnDailyChanged;
+            PlayerProgression.Changed += OnWalletChanged;
+            Wallet.HeartsChanged += OnHeartsChanged;
+        }
+
+        void OnDestroy()
+        {
+            DailyChests.Changed -= OnDailyChanged;
+            PlayerProgression.Changed -= OnWalletChanged;
+            Wallet.HeartsChanged -= OnHeartsChanged;
+        }
+
+        void OnDailyChanged()
+        {
+            // Guarded because the event can arrive from a save load during teardown, and
+            // rebuilding a panel onto a destroyed screen throws where nobody is looking.
+            if (this == null || !_dailyPanel) return;
+            BuildDaily();
+        }
+
+        void OnHeartsChanged(Hearts hearts) => OnWalletChanged();
+
+        void OnWalletChanged()
+        {
+            if (this == null || !_resourceRow) return;
+            BuildResources();
+        }
+
+        /// <summary>
+        /// Ticks the reset clock once a second.
+        ///
+        /// Only the one label, and only when it would actually change. Rebuilding the
+        /// panel every second would restart every tween on it, which is how a shine
+        /// becomes a stutter.
+        /// </summary>
+        void Update()
+        {
+            _clockTick += Time.unscaledDeltaTime;
+            if (_clockTick < 1f) return;
+
+            _clockTick = 0f;
+            if (_resetClock) _resetClock.text = ResetLine();
         }
 
         // ------------------------------------------------------------- backdrop
@@ -127,9 +177,22 @@ namespace GlimmerGrove
             return string.Format(Loc.Get("ui.hearts.next"), Profile.HeartCountdown());
         }
 
+        /// <summary>
+        /// Hearts, coins and gems.
+        ///
+        /// Rebuilt on change rather than painted once. All three move while this screen is
+        /// open — a heart lands on a timer, and a chest pays out into an overlay drawn on
+        /// top of it — and a pill still showing the number from thirty seconds ago is how
+        /// a player concludes the reward did not arrive.
+        /// </summary>
         void BuildResources()
         {
+            int sibling = _resourceRow ? _resourceRow.GetSiblingIndex() : -1;
+            if (_resourceRow) Destroy(_resourceRow.gameObject);
+
             var row = UIKit.Box("Resources", Content, new Vector2(1000f, 92f), new Vector2(.5f, 1f), new Vector2(0f, -250f));
+            _resourceRow = row;
+            if (sibling >= 0) row.SetSiblingIndex(sibling);
 
             // Hearts are real now, so this is no longer a "coming soon" — an empty
             // player gets the gate with its live countdown, everyone else gets told
@@ -178,64 +241,178 @@ namespace GlimmerGrove
             Tween.Pop(bg.transform, 0f, .55f, .18f + Mathf.Abs(x) * .0004f);
         }
 
-        // ----------------------------------------------------------- progression
-        void BuildProgress()
+        // -------------------------------------------------------- daily bonuses
+        /// <summary>
+        /// The daily chests: how much has been played today, and the chests that has
+        /// earned.
+        ///
+        /// <para>
+        /// This panel used to show lifetime stars, which was a fine thing to show and the
+        /// wrong thing to put chests on — a bar that moves three times in a player's whole
+        /// history cannot carry a daily loop, and the chests on it opened themselves. The
+        /// grove total still lives on the profile screen, where a record belongs.
+        /// </para>
+        /// <para>
+        /// Rebuilt rather than repainted when the day rolls over or a chest is opened.
+        /// It is a dozen images built once a navigation, and a repaint path would be a
+        /// second description of the same panel that has to be kept in step with this one.
+        /// </para>
+        /// </summary>
+        void BuildDaily()
         {
-            int have = Profile.TotalStars, max = Profile.MaxStars;
+            int sibling = _dailyPanel ? _dailyPanel.GetSiblingIndex() : -1;
+            if (_dailyPanel) Destroy(_dailyPanel.gameObject);
 
-            var panel = UIKit.Img("Progress", Content, Art.Round(28), new Color(.04f, .09f, .12f, .72f),
-                                  new Vector2(900f, 196f), new Vector2(.5f, 1f), new Vector2(0f, -432f));
+            int runs = DailyChests.Runs, target = DailyChests.RunsForAll;
+
+            var panel = UIKit.Img("Daily", Content, Art.Round(28), new Color(.04f, .09f, .12f, .72f),
+                                  new Vector2(900f, 208f), new Vector2(.5f, 1f), new Vector2(0f, -438f));
+            _dailyPanel = (RectTransform)panel.transform;
+            if (sibling >= 0) _dailyPanel.SetSiblingIndex(sibling);
+
             var edge = UIKit.Img("Edge", panel.transform, Art.RoundOutline(28, 3f), new Color(1, 1, 1, .14f));
             UIKit.StretchTo((RectTransform)edge.transform, 0, 0, 0, 0);
 
-            UIKit.Titled("Title", panel.transform, "GROVE AWAKENING", 32, Pal.Gold, TextAnchor.MiddleLeft,
-                         new Vector2(460f, 40f), new Vector2(0f, 1f), new Vector2(358f, -36f), 3f, 3f);
-            UIKit.Titled("Count", panel.transform, $"{have} / {max}", 32, Pal.Cream, TextAnchor.MiddleRight,
-                         new Vector2(200f, 40f), new Vector2(1f, 1f), new Vector2(-142f, -36f), 3f, 3f);
+            UIKit.Titled("Title", panel.transform, Loc.Get("ui.home.bonuses"), 32, Pal.Gold,
+                         TextAnchor.MiddleLeft, new Vector2(400f, 40f), new Vector2(0f, 1f),
+                         new Vector2(348f, -38f), 3f, 3f);
+
+            // The reset clock, ticking. An expiry a player cannot see is an expiry that
+            // reads as the game having eaten their chest.
+            _resetClock = UIKit.Titled("Reset", panel.transform, ResetLine(), 26,
+                                       new Color(1f, .95f, .84f, .62f), TextAnchor.MiddleRight,
+                                       new Vector2(300f, 36f), new Vector2(1f, 1f),
+                                       new Vector2(-40f, -38f), 0f, 0f);
 
             var track = UIKit.Img("Track", panel.transform, Art.Round(16), new Color(.02f, .05f, .07f, .9f),
-                                  new Vector2(816f, 38f), new Vector2(.5f, .5f), new Vector2(0f, -14f));
+                                  new Vector2(816f, 38f), new Vector2(.5f, .5f), new Vector2(0f, -16f));
             var fill = UIKit.Img("Fill", track.transform, Art.Round(14), Pal.Gold,
                                  new Vector2(0f, 28f), new Vector2(0f, .5f), new Vector2(5f, 0f));
             var fillRT = (RectTransform)fill.transform;
             fillRT.pivot = new Vector2(0f, .5f);
-            float full = 806f * Profile.GroveProgress;
+
+            float full = 806f * (target <= 0 ? 0f : Mathf.Clamp01(runs / (float)target));
             Tween.Run(.9f, Ease.OutCubic, t =>
             {
                 if (!fillRT) return;
                 fillRT.sizeDelta = new Vector2(full * t, 28f);
                 fill.color = Color.Lerp(Pal.Sun, Pal.Gold, t);
-            }, fill).Delay(.5f);
+            }, fill).Delay(.35f);
 
-            // milestone chests at a third, two thirds and the whole grove
-            for (int i = 0; i < 3; i++)
-            {
-                bool reached = Profile.MilestoneReached(i);
-                float px = -408f + 816f * ((i + 1) / 3f);
-                var chest = UIKit.Img("M" + i, track.transform,
-                                      Art.S(reached ? "Ui/ic_chest_open" : "Ui/ic_chest"),
-                                      reached ? Color.white : new Color(.55f, .58f, .62f, .95f),
-                                      new Vector2(74f, 74f), new Vector2(.5f, .5f), new Vector2(px, 6f));
-                chest.preserveAspect = true;
-                if (reached)
-                {
-                    UIKit.Halo(chest.transform, Pal.Gold, 130f, .5f);
-                    Tween.Breathe(chest.transform, .07f, 1.6f, i * .7f);
-                }
-            }
+            int count = Mathf.Max(1, DailyChests.ChestCount);
+            for (int i = 0; i < count; i++) BuildChest(track.transform, i, count);
 
-            UIKit.Titled("Hint", panel.transform,
-                         have >= max ? "every glade is awake" : "earn stars to open the next chest",
-                         24, new Color(1f, .95f, .84f, .55f), TextAnchor.MiddleCenter,
-                         new Vector2(880f, 34f), new Vector2(.5f, 0f), new Vector2(0f, 26f), 0f, 0f);
+            UIKit.Titled("Hint", panel.transform, HintLine(), 24, new Color(1f, .95f, .84f, .58f),
+                         TextAnchor.MiddleCenter, new Vector2(880f, 34f), new Vector2(.5f, 0f),
+                         new Vector2(0f, 24f), 0f, 0f);
 
-            var icon = UIKit.Img("Star", panel.transform, Art.S("Ui/star_full"), Color.white,
-                                 new Vector2(72f, 72f), new Vector2(0f, 1f), new Vector2(64f, -40f));
+            var icon = UIKit.Img("Gift", panel.transform, Art.S("Ui/ic_gift"), Color.white,
+                                 new Vector2(72f, 72f), new Vector2(0f, 1f), new Vector2(62f, -42f));
             icon.preserveAspect = true;
             Tween.Breathe(icon.transform, .07f, 2.1f);
 
-            panel.transform.localScale = Vector3.zero;
-            Tween.Pop(panel.transform, 0f, .6f, .3f);
+            if (sibling < 0)
+            {
+                panel.transform.localScale = Vector3.zero;
+                Tween.Pop(panel.transform, 0f, .6f, .3f);
+            }
+        }
+
+        /// <summary>
+        /// One chest on the bar.
+        ///
+        /// A ready chest is a button and shines; the other two are images and do not.
+        /// That distinction is the entire interaction, so it is drawn as loudly as the
+        /// panel can afford — a chest that is tappable and looks like scenery is a reward
+        /// most players never collect.
+        /// </summary>
+        void BuildChest(Transform track, int index, int count)
+        {
+            var state = DailyChests.StateOf(index);
+            float px = -408f + 816f * ((index + 1) / (float)count);
+
+            if (state != ChestState.Ready)
+            {
+                bool opened = state == ChestState.Opened;
+                var img = UIKit.Img("C" + index, track,
+                                    Art.S(opened ? "Ui/ic_chest_open" : "Ui/ic_chest"),
+                                    opened ? new Color(1f, 1f, 1f, .72f) : new Color(.5f, .54f, .58f, .92f),
+                                    new Vector2(78f, 78f), new Vector2(.5f, .5f), new Vector2(px, 8f));
+                img.preserveAspect = true;
+
+                if (!opened)
+                {
+                    // How many more runs this one needs, so the bar reads as a plan
+                    // rather than as three identical grey boxes.
+                    int needed = DailyChests.RunsFor(index) - DailyChests.Runs;
+                    if (needed > 0)
+                        UIKit.Titled("N" + index, img.transform, needed.ToString(), 24, Pal.Cream,
+                                     TextAnchor.MiddleCenter, new Vector2(40f, 30f),
+                                     new Vector2(.5f, 0f), new Vector2(0f, -12f), 3f, 0f);
+                }
+                return;
+            }
+
+            int chestIndex = index;
+            var btn = UIKit.Button("C" + index, track, Art.S("Ui/ic_chest"),
+                                   new Vector2(96f, 96f), new Vector2(.5f, .5f), new Vector2(px, 8f),
+                                   () => OpenChest(chestIndex));
+
+            var face = btn.GetComponent<Image>();
+            face.preserveAspect = true;
+
+            UIKit.Halo(btn.transform, Pal.Gold, 168f, .55f);
+            Shine(btn.transform, 150f, index * .6f);
+            Tween.Breathe(btn.transform, .075f, 1.5f, index * .4f);
+            btn.Rehome();
+        }
+
+        /// <summary>
+        /// The rotating star of light behind a chest that is ready to open.
+        ///
+        /// Four soft capsules turning slowly. Cheaper than a particle system, works in a
+        /// uGUI hierarchy without a second canvas, and reads at a glance on a phone in
+        /// daylight — which is the only test that matters for a call to action.
+        /// </summary>
+        static void Shine(Transform parent, float size, float phase)
+        {
+            var host = UIKit.Box("Shine", parent, Vector2.one * size, new Vector2(.5f, .5f), Vector2.zero);
+            host.SetAsFirstSibling();
+
+            for (int i = 0; i < 4; i++)
+            {
+                var ray = UIKit.Img("r" + i, host, Art.SoftCapsule(28, 160), Pal.A(Pal.Sun, .34f),
+                                    new Vector2(20f, size * 1.28f), new Vector2(.5f, .5f), Vector2.zero);
+                ray.transform.localRotation = Quaternion.Euler(0, 0, i * 45f);
+            }
+
+            Tween.Run(7f, Ease.Linear,
+                      t => { if (host) host.localRotation = Quaternion.Euler(0, 0, t * 360f); },
+                      host.gameObject, "spin").Loop(-1, false).Delay(phase);
+
+            Tween.Run(1.7f, Ease.InOutSine,
+                      t => { if (host) host.localScale = Vector3.one * Mathf.Lerp(.86f, 1.06f, t); },
+                      host.gameObject, "pulse").Loop(-1, true).Delay(phase);
+        }
+
+        void OpenChest(int index)
+        {
+            if (Flow.HasModal) return;
+            Flow.Modal<ChestOverlay>(v => v.ChestIndex = index);
+        }
+
+        string ResetLine() => Loc.Format("ui.daily.resets_in",
+                                         Profile.Countdown(DailyChests.SecondsUntilReset));
+
+        string HintLine()
+        {
+            if (DailyChests.HasReadyChest) return Loc.Get("ui.daily.ready");
+            if (DailyChests.DayComplete) return Loc.Get("ui.daily.all_open");
+
+            int needed = DailyChests.RunsToNextChest;
+            return needed > 0
+                ? Loc.Format("ui.daily.next_chest", needed)
+                : Loc.Format("ui.daily.played", DailyChests.Runs, DailyChests.RunsForAll);
         }
 
         // ---------------------------------------------------------------- hero

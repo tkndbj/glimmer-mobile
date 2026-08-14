@@ -23,6 +23,12 @@ export const PATHS = {
   player: (uid: string) => `players/${uid}`,
   wallet: (uid: string) => `players/${uid}/private/wallet`,
   spend: (uid: string, spendId: string) => `players/${uid}/spendLog/${spendId}`,
+
+  // Awards, keyed by an id derived from what earned them rather than generated. That
+  // is what makes a daily chest payable exactly once: the second attempt collides with
+  // a document that already exists, on any device, after any reinstall.
+  grant: (uid: string, grantId: string) => `players/${uid}/grantLog/${grantId}`,
+
   receipt: (store: string, transactionId: string) => `receipts/${store}__${transactionId}`,
   progressionConfig: "config/progression",
   productsConfig: "config/products",
@@ -30,6 +36,13 @@ export const PATHS = {
 
 /** Bounds on a single call, so one request cannot become an unbounded transaction. */
 export const MAX_SPENDS_PER_CALL = 50;
+
+/**
+ * Awards per call. Generous, because a device that has been offline for a fortnight
+ * arrives with every day's chests at once and losing them to a batch limit would be a
+ * support case for something the player genuinely earned.
+ */
+export const MAX_AWARDS_PER_CALL = 100;
 
 /** Currency ids. These are permanent — they key save files and this database. */
 export const CURRENCIES = ["credits", "gems"] as const;

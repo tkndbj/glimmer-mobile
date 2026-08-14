@@ -15,6 +15,7 @@ rules_version = '2';
 //   players/{uid}                    the save. Client reads and writes it.
 //   players/{uid}/private/wallet     granted and spent baselines. Client reads only.
 //   players/{uid}/spendLog/{id}      idempotency records for debits. Client reads only.
+//   players/{uid}/grantLog/{id}      idempotency records for awards. Client reads only.
 //   receipts/{store}__{txn}          global receipt claims. Client cannot see them.
 //   config/{doc}                     reward table and product catalog. Read-only.
 //
@@ -50,7 +51,7 @@ service cloud.firestore {
         return d.keys().hasOnly([
                  'schemaVersion', 'updatedUnix', 'settings', 'wallet', 'levels',
                  'progression', 'cloud', 'lastPlayedLevelId', 'legacyImportDone',
-                 'tipsSeen', 'checksum'
+                 'tipsSeen', 'daily', 'checksum'
                ])
                && d.schemaVersion is int
                && d.schemaVersion >= 1 && d.schemaVersion <= 100
@@ -60,7 +61,13 @@ service cloud.firestore {
                // Which lessons the player has been shown. Client-owned and harmless —
                // it buys nothing — but bounded anyway, because an unbounded array the
                // client controls is a way to make the document expensive to read.
-               && (!('tipsSeen' in d) || (d.tipsSeen is list && d.tipsSeen.size() <= 64));
+               && (!('tipsSeen' in d) || (d.tipsSeen is list && d.tipsSeen.size() <= 64))
+               // Today's chest counters. Client-owned and forgeable, and that is
+               // accounted for: nothing here decides what a chest pays. The server
+               // re-rolls each chest itself and refuses a second grant for the same id,
+               // so the worst a forged counter buys is a day's chests without playing
+               // for them — which is what an honest player gets anyway.
+               && (!('daily' in d) || d.daily is map);
       }
 
       // The revision only ever moves forward, which gives the sync optimistic
@@ -99,6 +106,16 @@ service cloud.firestore {
       // Debit idempotency records. Written by the wallet function so that submitting
       // the same spend id twice can only ever charge once.
       match /spendLog/{spendId} {
+        allow read:  if isOwner(uid);
+        allow write: if false;
+      }
+
+      // Award idempotency records, written by claimAwards. The id is derived from what
+      // earned the award — daily:{day}:{chest}:{currency} — rather than generated, so a
+      // second claim from any device, after any reinstall, hits a document that already
+      // exists. That, and not any check in the client, is what makes a daily chest
+      // payable exactly once.
+      match /grantLog/{grantId} {
         allow read:  if isOwner(uid);
         allow write: if false;
       }

@@ -24,6 +24,7 @@ namespace GlimmerGrove.Persistence
         static readonly Dictionary<string, long> _legacyMirror = new Dictionary<string, long>();
 
         static Hearts _hearts = Hearts.Full;
+        static long _heartBoostUntil;
         static string _name = DefaultName;
         static string _avatarId = string.Empty;
 
@@ -33,6 +34,60 @@ namespace GlimmerGrove.Persistence
         /// case a screen cannot predict for itself.
         /// </summary>
         public static event System.Action<Hearts> HeartsChanged;
+
+        /// <summary>
+        /// When faster heart regeneration runs out, or 0 when none is running.
+        ///
+        /// Read rather than tested for "is it on", because the rule needs the deadline
+        /// itself: a catch-up that spans the expiry has to pay some refills at the fast
+        /// rate and the rest at the slow one. See <see cref="HeartRules.PeriodAt"/>.
+        /// </summary>
+        public static long HeartBoostUntilUnix => _heartBoostUntil;
+
+        public static bool HeartBoostActive => _heartBoostUntil > GameClock.NowUnix();
+
+        /// <summary>Seconds of boost left, for a countdown. 0 when none is running.</summary>
+        public static long HeartBoostSecondsLeft
+        {
+            get
+            {
+                long left = _heartBoostUntil - GameClock.NowUnix();
+                return left < 0 ? 0 : left;
+            }
+        }
+
+        /// <summary>
+        /// Starts, or extends, faster heart regeneration.
+        ///
+        /// Extends rather than replaces: a boost won while one is already running adds to
+        /// it, because the alternative — the new one overwriting a longer remaining
+        /// window — takes something away from a player for the crime of doing well twice.
+        /// Capped at <see cref="HeartRules.MaxBoostHours"/> past now so no sequence of
+        /// awards can stack into a permanent one.
+        /// </summary>
+        public static void GrantHeartBoost(long hours)
+        {
+            if (hours <= 0) return;
+
+            long now = GameClock.NowUnix();
+            long from = _heartBoostUntil > now ? _heartBoostUntil : now;
+            long until = from + hours * 3600L;
+
+            long ceiling = now + HeartRules.MaxBoostHours * 3600L;
+            if (until > ceiling) until = ceiling;
+
+            if (until <= _heartBoostUntil) return;
+
+            _heartBoostUntil = until;
+
+            // The running refill timer is shortened by the boost, and Hearts.At is what
+            // knows by how much. Committing the caught-up state here means the countdown
+            // on screen drops the moment the chest is opened rather than at the next read.
+            Commit(_hearts.At(now, _heartBoostUntil));
+
+            SaveService.Save();
+            HeartsChanged?.Invoke(_hearts);
+        }
 
         /// <summary>The ledger for a currency, created empty rather than returning null.</summary>
         public static CurrencyLedger Ledger(string currency)
@@ -65,7 +120,7 @@ namespace GlimmerGrove.Persistence
         {
             get
             {
-                var refreshed = _hearts.At(GameClock.NowUnix());
+                var refreshed = _hearts.At(GameClock.NowUnix(), _heartBoostUntil);
                 if (refreshed.Count == _hearts.Count && refreshed.NextRefillUnix == _hearts.NextRefillUnix)
                     return _hearts;
 
@@ -84,10 +139,10 @@ namespace GlimmerGrove.Persistence
         {
             long now = GameClock.NowUnix();
 
-            var before = _hearts.At(now);
+            var before = _hearts.At(now, _heartBoostUntil);
             if (!before.CanPlay) { Commit(before); return false; }
 
-            Commit(before.Spend(amount, now));
+            Commit(before.Spend(amount, now, _heartBoostUntil));
             return true;
         }
 
@@ -96,7 +151,8 @@ namespace GlimmerGrove.Persistence
         /// server correction. Kept separate from spending so the two can be audited
         /// apart once hearts cost money.
         /// </summary>
-        public static void GrantHearts(int amount) => Commit(_hearts.Grant(amount, GameClock.NowUnix()));
+        public static void GrantHearts(int amount)
+            => Commit(_hearts.Grant(amount, GameClock.NowUnix(), _heartBoostUntil));
 
         static void Commit(Hearts next)
         {
@@ -166,9 +222,11 @@ namespace GlimmerGrove.Persistence
             // negative means the field was never written, so the seed applies. A file
             // from before hearts regenerated carries a count and no deadline; Hearts.At
             // starts the clock from the next read rather than back-paying the gap.
+            _heartBoostUntil = w.heartBoostUntilUnix < 0 ? 0L : w.heartBoostUntilUnix;
+
             _hearts = w.hearts < 0
                 ? Hearts.Full
-                : new Hearts(w.hearts, w.heartsNextRefillUnix).At(GameClock.NowUnix());
+                : new Hearts(w.hearts, w.heartsNextRefillUnix).At(GameClock.NowUnix(), _heartBoostUntil);
 
             _name = string.IsNullOrEmpty(w.displayName) ? DefaultName : w.displayName;
             _avatarId = w.avatarId ?? string.Empty;
@@ -206,6 +264,7 @@ namespace GlimmerGrove.Persistence
                 gems = LegacyMirror(Currency.Gems),
                 hearts = _hearts.Count,
                 heartsNextRefillUnix = _hearts.NextRefillUnix,
+                heartBoostUntilUnix = _heartBoostUntil,
                 displayName = _name,
                 avatarId = _avatarId,
                 currencies = currencies,

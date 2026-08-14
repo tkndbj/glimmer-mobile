@@ -102,10 +102,31 @@ What that means in practice here:
    `firebase/functions/src/progression.ts`. Both run `firebase/shared/reward-vectors.json`
    as a test, so drift fails a build instead of desynchronising the economy. Change one,
    change the other, and add a vector. Re-run the seed script after every content drop.
+9c. **So does the chest generator.** `DailyChestTable.cs` and `functions/src/daily.ts`,
+   pinned by the `dailyChestCases` vectors in that same file. A chest's contents are a
+   pure function of (account id, day, chest index) — FNV-1a then xorshift32, all 32-bit
+   so JavaScript can reproduce it exactly. That is what lets the server work out what a
+   chest was worth instead of believing the client, and what stops a player rerolling a
+   prize by force-quitting the opening animation. The hash constants, the shift amounts,
+   the stream numbers and the modulo are all contract; changing any of them rerolls every
+   unopened chest in the world.
 10. **The client never raises `grantedBaseline`.** Currency that was given rather than
     earned is server-owned, enforced by Firestore security rules, not by this code.
     Receipt validation must be idempotent on the store transaction id. See
     `ICloudSaveBackend`.
+10a. **An award reaches the player as a claim, not as a balance.** A reward the client
+    hands out while offline — a daily chest today, anything similar later — goes into
+    `CurrencyLedger.TryAward` as an entry whose id is **derived from what earned it**,
+    never generated. That one decision is what makes the whole path safe: two devices
+    claiming the same chest produce identical entries that union to one, a resubmission
+    after a dropped reply confirms instead of paying, and the server keys its own record
+    on the same string so the database refuses the second grant. The server recomputes
+    the amount and grants its own figure; the client's number is a prediction. Never
+    reach for `GrantLocally` — it is for the account seed and nothing else.
+10b. **Daily chests are earned, never bought.** That is what keeps them outside loot-box
+    rules rather than merely compliant with them, and it is why the odds can be printed
+    on the panel. Do not put a price on one, and do not add a second weighted pick — one
+    pick is what makes the published odds a list that sums to a hundred.
 11. **Cloud conflicts merge; they never prompt.** `SaveMerge.Join` is a join — idempotent
     and order-independent — so both devices' work survives. A "keep local or cloud?"
     dialog is data loss wearing a consent costume. Do not add one.
@@ -169,6 +190,32 @@ and tested migration, localisation, analytics seam, scoped asset pipeline on
 Addressables (assets are out of `Resources/`), chapter-paginated map, enforced
 layering, EditMode test suite, **player progression** (derived XP, levels and credits
 on a double-entry ledger, save schema v3, monotonic merge).
+
+**Daily bonuses — the home screen's chests are real.** The panel that used to show
+lifetime stars is now the daily loop: three chests, one per three finished runs (won or
+lost, any glade), opened by hand, resetting at UTC midnight. `Assets/Game/Scripts/Domain/Daily/`
+holds it; the state is three integers in save schema **v6** and everything else is derived.
+
+Four decisions are worth not re-litigating. Contents are **computed from (account, day,
+chest)** rather than stored, so a chest cannot be rerolled by killing the app and the
+server can recompute it — see invariant 9c. Currency reaches the player as a **claim with
+a derived id**, so it is spendable offline without the client ever raising `grantedBaseline`
+— invariant 10a; the server endpoint is `claimAwards`, backed by `players/{uid}/grantLog/{id}`.
+Every chest has a **guaranteed floor**, which is why there is no pity counter and no
+per-player streak state to merge. And the drop rates are **content** in `progression.json`,
+published to `config/progression` by the seeder, with the odds printed by `Validate Content`
+and shown on the chest overlay.
+
+The `heart_boost` drop halves heart regeneration (4h instead of 8h) for 24 hours;
+`Hearts.At` takes the boost deadline and asks per refill, so a catch-up spanning the
+expiry pays some hearts fast and the rest slow. It merges by taking the **later** deadline
+— generous where the heart count is conservative — because the award behind it is already
+deduplicated by its own id.
+
+One honest limit: the run counter lives in the player's own save document and is therefore
+forgeable. The server bounds abuse to one day's chests per day, which is what an honest
+player gets; proving somebody played three glades would mean trusting a different forgeable
+number, and the prize for cheating is a reward that was never scarce.
 
 **The profile screen owns identity.** `ProfileScreen` is the fifth nav tab: name,
 keeper level and honorific, a derived grove record, a companion picker, and the account

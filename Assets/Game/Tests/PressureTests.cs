@@ -141,8 +141,15 @@ namespace GlimmerGrove.Tests
                           string.Join("; ", result.Errors));
         }
 
+        /// <summary>
+        /// The count is how many turns the conduit <em>survives</em>, so "~2" takes two
+        /// turns safely and gives way on the third. That distinction is load-bearing:
+        /// a crumble now loses the glade, and validation lets a conduit be owed exactly
+        /// its whole allowance — with the count meaning anything else, the last turn of
+        /// a legitimate solution would kill the run.
+        /// </summary>
         [Test]
-        public void TurningWearsAFragileConduitDownAndThenItShatters()
+        public void AFragileConduitSurvivesItsCountAndBreaksOnTheNextTurn()
         {
             var board = Board(3, 1, new[] { "*E#R/0 -EW/0~2 @W#R/0" });
 
@@ -151,12 +158,31 @@ namespace GlimmerGrove.Tests
 
             board.Turn(1);
             Assert.AreEqual(1, board.FragileLeft(1));
-            Assert.IsFalse(board.Shattered(1));
+            Assert.IsFalse(board.Shattered(1), "one of its two turns");
 
             board.Turn(1);
             Assert.AreEqual(0, board.FragileLeft(1));
-            Assert.IsTrue(board.Shattered(1));
+            Assert.IsFalse(board.Shattered(1), "both turns spent, but it holds");
+
+            board.Turn(1);
+            Assert.IsTrue(board.Shattered(1), "the turn past its allowance breaks it");
             Assert.AreEqual(1, board.ShatteredAt);
+        }
+
+        /// <summary>
+        /// The property the validator relies on: a conduit owed exactly its allowance
+        /// can always reach its solution without breaking.
+        /// </summary>
+        [Test]
+        public void AConduitOwedItsWholeAllowanceStillSurvivesSolvingIt()
+        {
+            // "-EW" is symmetric every half turn, so /1 owes one turn; ~1 grants one.
+            var board = Board(3, 1, new[] { "*E#R/0 -EW/1~1 @W#R/0" });
+
+            board.Turn(1);
+
+            Assert.IsFalse(board.Shattered(1), "solving it must never be what breaks it");
+            Assert.IsTrue(board.Used(1));
         }
 
         /// <summary>
@@ -169,7 +195,8 @@ namespace GlimmerGrove.Tests
             var board = Board(3, 1, new[] { "*E#R/0 -EW/0~1 @W#R/0" });
             Assert.AreNotEqual(0, board.Energy(2), "the critter starts lit through the conduit");
 
-            board.Turn(1);
+            board.Turn(1);          // its one safe turn
+            board.Turn(1);          // and the one that breaks it
             board.Evaluate();
 
             Assert.IsFalse(board.Used(1));
@@ -200,6 +227,7 @@ namespace GlimmerGrove.Tests
             var start = board.Snapshot();
 
             board.Turn(1);
+            board.Turn(1);
             Assert.IsTrue(board.Shattered(1));
 
             board.Reset(start);
@@ -226,7 +254,7 @@ namespace GlimmerGrove.Tests
                 "@N#R/0  -N/0",
             }));
 
-            Assert.IsTrue(Has(doomed, LevelIssueSeverity.Error, "cannot be won"), doomed.Describe());
+            Assert.IsTrue(Has(doomed, LevelIssueSeverity.Error, "would crumble on the way"), doomed.Describe());
         }
 
         [Test]
@@ -239,7 +267,7 @@ namespace GlimmerGrove.Tests
                 "@N#R/0  -N/0",
             }));
 
-            Assert.IsFalse(Has(fine, LevelIssueSeverity.Error, "cannot be won"), fine.Describe());
+            Assert.IsFalse(Has(fine, LevelIssueSeverity.Error, "would crumble on the way"), fine.Describe());
         }
 
         [Test]
@@ -257,7 +285,7 @@ namespace GlimmerGrove.Tests
             if (levels.Count == 0) Assert.Ignore("no bundled content available in this run");
 
             foreach (var report in LevelValidator.ValidateAll(levels))
-                Assert.IsFalse(Has(report, LevelIssueSeverity.Error, "cannot be won"), report.Describe());
+                Assert.IsFalse(Has(report, LevelIssueSeverity.Error, "would crumble on the way"), report.Describe());
         }
     }
 }

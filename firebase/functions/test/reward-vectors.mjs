@@ -77,13 +77,51 @@ for (const required of ["does not know", "duplicated", "clamped", "negative", "i
   }
 }
 
-console.log(`\n${vectors.cases.length} vector(s), ${failures} failure(s)`);
+// ------------------------------------------------------------- daily chests
+/**
+ * The second contract in this file: the chest generator.
+ *
+ * A chest is rolled twice — by the client so the reward can be shown and spent while
+ * offline, and here so the grant can be adjudicated without believing the client. If
+ * the two ever disagree, a player watches a number change after a sync, which is the
+ * single worst thing an economy can do in front of somebody.
+ */
+const dailyCompiled = join(REPO, "firebase", "functions", "lib", "daily.js");
+const { rollChest } = await import(pathToFileURL(dailyCompiled).href);
+
+const dailyConfig = vectors.dailyChestConfig;
+const dailyCases = vectors.dailyChestCases ?? [];
+
+if (!dailyConfig || dailyCases.length === 0) {
+  failures++;
+  console.log("  FAIL the daily chest vectors are missing");
+}
+
+let dailyFailures = 0;
+
+for (const testCase of dailyCases) {
+  const rolled = rollChest(dailyConfig, testCase.playerKey, testCase.dayKey, testCase.chestIndex);
+  const got = rolled.map((d) => `${d.kind}=${d.amount}`).join(",");
+  const want = (testCase.drops ?? []).map((d) => `${d.kind}=${d.amount}`).join(",");
+
+  if (got !== want) {
+    dailyFailures++;
+    console.log(`  FAIL daily '${testCase.name}': expected ${want || "(nothing)"}, got ${got || "(nothing)"}`);
+  }
+}
+
+failures += dailyFailures;
+console.log(`  ${dailyCases.length - dailyFailures}/${dailyCases.length} daily chest vector(s) ok`);
+
+console.log(`\n${vectors.cases.length} reward vector(s), ${dailyCases.length} chest vector(s), ` +
+            `${failures} failure(s)`);
 
 if (failures > 0) {
   console.log(
-    "\nThe server no longer matches the shared reward vectors. If the change was intended, " +
+    "\nThe server no longer matches the shared vectors. If the change was intended, " +
     "update firebase/shared/reward-vectors.json and make the same change in " +
-    "Assets/Game/Scripts/Domain/Progression/ProgressionLedger.cs."
+    "Assets/Game/Scripts/Domain/Progression/ProgressionLedger.cs or " +
+    "Assets/Game/Scripts/Domain/Daily/DailyChestTable.cs."
   );
 }
 

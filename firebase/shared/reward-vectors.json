@@ -128,5 +128,1890 @@
         { "levelId": "plain_two", "stars": 1 },
         { "levelId": "plain_one", "stars": 2 }
       ], "credits": 285, "xp": 390 }
+  ],
+  "_dailyComment": [
+    "The contract between DailyChestTable.cs and functions/src/daily.ts.",
+    "",
+    "A daily chest's contents are rolled twice: by the client so the reward can be",
+    "shown and spent offline, and by the server so the grant can be adjudicated",
+    "without believing the client's number. Two implementations of one generator will",
+    "drift, and the symptom would be a player watching a balance change after a sync.",
+    "",
+    "The config below is synthetic, not the shipped table. What is under test is the",
+    "algorithm — the hash, the shift amounts, the stream numbers, the modulo and the",
+    "merging of same-kind drops — so retuning the real drop rates must not turn these",
+    "red. Change any of that arithmetic on either side and add a vector proving what",
+    "changed; every unopened chest in the world is rerolled by it."
+  ],
+  "dailyChestConfig": {
+    "runsPerChest": 3,
+    "chests": [
+      {
+        "guaranteed": [
+          {
+            "kind": "credits",
+            "min": 10,
+            "max": 99
+          },
+          {
+            "kind": "gems",
+            "min": 1,
+            "max": 1
+          }
+        ],
+        "options": [
+          {
+            "kind": "hearts",
+            "min": 1,
+            "max": 3,
+            "weight": 7
+          },
+          {
+            "kind": "credits",
+            "min": 5,
+            "max": 5,
+            "weight": 2
+          },
+          {
+            "kind": "heart_boost",
+            "min": 6,
+            "max": 12,
+            "weight": 1
+          }
+        ]
+      },
+      {
+        "guaranteed": [
+          {
+            "kind": "credits",
+            "min": 100,
+            "max": 100
+          }
+        ],
+        "options": [
+          {
+            "kind": "credits",
+            "min": 1,
+            "max": 50,
+            "weight": 1
+          }
+        ]
+      },
+      {
+        "guaranteed": [
+          {
+            "kind": "gems",
+            "min": 4,
+            "max": 4
+          }
+        ],
+        "options": []
+      },
+      {
+        "guaranteed": [
+          {
+            "kind": "credits",
+            "min": 1,
+            "max": 100000
+          }
+        ],
+        "options": [
+          {
+            "kind": "gems",
+            "min": 1,
+            "max": 999,
+            "weight": 1
+          },
+          {
+            "kind": "hearts",
+            "min": 1,
+            "max": 5,
+            "weight": 997
+          }
+        ]
+      }
+    ]
+  },
+  "dailyChestCases": [
+    {
+      "name": "(empty)@0#0",
+      "playerKey": "",
+      "dayKey": 0,
+      "chestIndex": 0,
+      "drops": [
+        {
+          "kind": "credits",
+          "amount": 67
+        },
+        {
+          "kind": "gems",
+          "amount": 1
+        },
+        {
+          "kind": "hearts",
+          "amount": 1
+        }
+      ]
+    },
+    {
+      "name": "(empty)@0#1",
+      "playerKey": "",
+      "dayKey": 0,
+      "chestIndex": 1,
+      "drops": [
+        {
+          "kind": "credits",
+          "amount": 121
+        }
+      ]
+    },
+    {
+      "name": "(empty)@0#2",
+      "playerKey": "",
+      "dayKey": 0,
+      "chestIndex": 2,
+      "drops": [
+        {
+          "kind": "gems",
+          "amount": 4
+        }
+      ]
+    },
+    {
+      "name": "(empty)@0#3",
+      "playerKey": "",
+      "dayKey": 0,
+      "chestIndex": 3,
+      "drops": [
+        {
+          "kind": "credits",
+          "amount": 26744
+        },
+        {
+          "kind": "hearts",
+          "amount": 3
+        }
+      ]
+    },
+    {
+      "name": "(empty)@1#0",
+      "playerKey": "",
+      "dayKey": 1,
+      "chestIndex": 0,
+      "drops": [
+        {
+          "kind": "credits",
+          "amount": 38
+        },
+        {
+          "kind": "gems",
+          "amount": 1
+        },
+        {
+          "kind": "hearts",
+          "amount": 1
+        }
+      ]
+    },
+    {
+      "name": "(empty)@1#1",
+      "playerKey": "",
+      "dayKey": 1,
+      "chestIndex": 1,
+      "drops": [
+        {
+          "kind": "credits",
+          "amount": 132
+        }
+      ]
+    },
+    {
+      "name": "(empty)@1#2",
+      "playerKey": "",
+      "dayKey": 1,
+      "chestIndex": 2,
+      "drops": [
+        {
+          "kind": "gems",
+          "amount": 4
+        }
+      ]
+    },
+    {
+      "name": "(empty)@1#3",
+      "playerKey": "",
+      "dayKey": 1,
+      "chestIndex": 3,
+      "drops": [
+        {
+          "kind": "credits",
+          "amount": 66734
+        },
+        {
+          "kind": "hearts",
+          "amount": 3
+        }
+      ]
+    },
+    {
+      "name": "(empty)@7#0",
+      "playerKey": "",
+      "dayKey": 7,
+      "chestIndex": 0,
+      "drops": [
+        {
+          "kind": "credits",
+          "amount": 41
+        },
+        {
+          "kind": "gems",
+          "amount": 1
+        }
+      ]
+    },
+    {
+      "name": "(empty)@7#1",
+      "playerKey": "",
+      "dayKey": 7,
+      "chestIndex": 1,
+      "drops": [
+        {
+          "kind": "credits",
+          "amount": 136
+        }
+      ]
+    },
+    {
+      "name": "(empty)@7#2",
+      "playerKey": "",
+      "dayKey": 7,
+      "chestIndex": 2,
+      "drops": [
+        {
+          "kind": "gems",
+          "amount": 4
+        }
+      ]
+    },
+    {
+      "name": "(empty)@7#3",
+      "playerKey": "",
+      "dayKey": 7,
+      "chestIndex": 3,
+      "drops": [
+        {
+          "kind": "credits",
+          "amount": 26595
+        },
+        {
+          "kind": "hearts",
+          "amount": 1
+        }
+      ]
+    },
+    {
+      "name": "(empty)@20315#0",
+      "playerKey": "",
+      "dayKey": 20315,
+      "chestIndex": 0,
+      "drops": [
+        {
+          "kind": "credits",
+          "amount": 25
+        },
+        {
+          "kind": "gems",
+          "amount": 1
+        }
+      ]
+    },
+    {
+      "name": "(empty)@20315#1",
+      "playerKey": "",
+      "dayKey": 20315,
+      "chestIndex": 1,
+      "drops": [
+        {
+          "kind": "credits",
+          "amount": 119
+        }
+      ]
+    },
+    {
+      "name": "(empty)@20315#2",
+      "playerKey": "",
+      "dayKey": 20315,
+      "chestIndex": 2,
+      "drops": [
+        {
+          "kind": "gems",
+          "amount": 4
+        }
+      ]
+    },
+    {
+      "name": "(empty)@20315#3",
+      "playerKey": "",
+      "dayKey": 20315,
+      "chestIndex": 3,
+      "drops": [
+        {
+          "kind": "credits",
+          "amount": 16094
+        },
+        {
+          "kind": "hearts",
+          "amount": 5
+        }
+      ]
+    },
+    {
+      "name": "(empty)@99999#0",
+      "playerKey": "",
+      "dayKey": 99999,
+      "chestIndex": 0,
+      "drops": [
+        {
+          "kind": "credits",
+          "amount": 55
+        },
+        {
+          "kind": "gems",
+          "amount": 1
+        },
+        {
+          "kind": "hearts",
+          "amount": 2
+        }
+      ]
+    },
+    {
+      "name": "(empty)@99999#1",
+      "playerKey": "",
+      "dayKey": 99999,
+      "chestIndex": 1,
+      "drops": [
+        {
+          "kind": "credits",
+          "amount": 117
+        }
+      ]
+    },
+    {
+      "name": "(empty)@99999#2",
+      "playerKey": "",
+      "dayKey": 99999,
+      "chestIndex": 2,
+      "drops": [
+        {
+          "kind": "gems",
+          "amount": 4
+        }
+      ]
+    },
+    {
+      "name": "(empty)@99999#3",
+      "playerKey": "",
+      "dayKey": 99999,
+      "chestIndex": 3,
+      "drops": [
+        {
+          "kind": "credits",
+          "amount": 82867
+        },
+        {
+          "kind": "hearts",
+          "amount": 5
+        }
+      ]
+    },
+    {
+      "name": "a@0#0",
+      "playerKey": "a",
+      "dayKey": 0,
+      "chestIndex": 0,
+      "drops": [
+        {
+          "kind": "credits",
+          "amount": 98
+        },
+        {
+          "kind": "gems",
+          "amount": 1
+        },
+        {
+          "kind": "hearts",
+          "amount": 2
+        }
+      ]
+    },
+    {
+      "name": "a@0#1",
+      "playerKey": "a",
+      "dayKey": 0,
+      "chestIndex": 1,
+      "drops": [
+        {
+          "kind": "credits",
+          "amount": 145
+        }
+      ]
+    },
+    {
+      "name": "a@0#2",
+      "playerKey": "a",
+      "dayKey": 0,
+      "chestIndex": 2,
+      "drops": [
+        {
+          "kind": "gems",
+          "amount": 4
+        }
+      ]
+    },
+    {
+      "name": "a@0#3",
+      "playerKey": "a",
+      "dayKey": 0,
+      "chestIndex": 3,
+      "drops": [
+        {
+          "kind": "credits",
+          "amount": 26342
+        },
+        {
+          "kind": "hearts",
+          "amount": 2
+        }
+      ]
+    },
+    {
+      "name": "a@1#0",
+      "playerKey": "a",
+      "dayKey": 1,
+      "chestIndex": 0,
+      "drops": [
+        {
+          "kind": "credits",
+          "amount": 32
+        },
+        {
+          "kind": "gems",
+          "amount": 1
+        },
+        {
+          "kind": "hearts",
+          "amount": 3
+        }
+      ]
+    },
+    {
+      "name": "a@1#1",
+      "playerKey": "a",
+      "dayKey": 1,
+      "chestIndex": 1,
+      "drops": [
+        {
+          "kind": "credits",
+          "amount": 113
+        }
+      ]
+    },
+    {
+      "name": "a@1#2",
+      "playerKey": "a",
+      "dayKey": 1,
+      "chestIndex": 2,
+      "drops": [
+        {
+          "kind": "gems",
+          "amount": 4
+        }
+      ]
+    },
+    {
+      "name": "a@1#3",
+      "playerKey": "a",
+      "dayKey": 1,
+      "chestIndex": 3,
+      "drops": [
+        {
+          "kind": "credits",
+          "amount": 71366
+        },
+        {
+          "kind": "hearts",
+          "amount": 1
+        }
+      ]
+    },
+    {
+      "name": "a@7#0",
+      "playerKey": "a",
+      "dayKey": 7,
+      "chestIndex": 0,
+      "drops": [
+        {
+          "kind": "credits",
+          "amount": 98
+        },
+        {
+          "kind": "gems",
+          "amount": 1
+        },
+        {
+          "kind": "hearts",
+          "amount": 3
+        }
+      ]
+    },
+    {
+      "name": "a@7#1",
+      "playerKey": "a",
+      "dayKey": 7,
+      "chestIndex": 1,
+      "drops": [
+        {
+          "kind": "credits",
+          "amount": 105
+        }
+      ]
+    },
+    {
+      "name": "a@7#2",
+      "playerKey": "a",
+      "dayKey": 7,
+      "chestIndex": 2,
+      "drops": [
+        {
+          "kind": "gems",
+          "amount": 4
+        }
+      ]
+    },
+    {
+      "name": "a@7#3",
+      "playerKey": "a",
+      "dayKey": 7,
+      "chestIndex": 3,
+      "drops": [
+        {
+          "kind": "credits",
+          "amount": 47594
+        },
+        {
+          "kind": "hearts",
+          "amount": 4
+        }
+      ]
+    },
+    {
+      "name": "a@20315#0",
+      "playerKey": "a",
+      "dayKey": 20315,
+      "chestIndex": 0,
+      "drops": [
+        {
+          "kind": "credits",
+          "amount": 85
+        },
+        {
+          "kind": "gems",
+          "amount": 1
+        },
+        {
+          "kind": "hearts",
+          "amount": 2
+        }
+      ]
+    },
+    {
+      "name": "a@20315#1",
+      "playerKey": "a",
+      "dayKey": 20315,
+      "chestIndex": 1,
+      "drops": [
+        {
+          "kind": "credits",
+          "amount": 140
+        }
+      ]
+    },
+    {
+      "name": "a@20315#2",
+      "playerKey": "a",
+      "dayKey": 20315,
+      "chestIndex": 2,
+      "drops": [
+        {
+          "kind": "gems",
+          "amount": 4
+        }
+      ]
+    },
+    {
+      "name": "a@20315#3",
+      "playerKey": "a",
+      "dayKey": 20315,
+      "chestIndex": 3,
+      "drops": [
+        {
+          "kind": "credits",
+          "amount": 19666
+        },
+        {
+          "kind": "hearts",
+          "amount": 5
+        }
+      ]
+    },
+    {
+      "name": "a@99999#0",
+      "playerKey": "a",
+      "dayKey": 99999,
+      "chestIndex": 0,
+      "drops": [
+        {
+          "kind": "credits",
+          "amount": 78
+        },
+        {
+          "kind": "gems",
+          "amount": 1
+        },
+        {
+          "kind": "hearts",
+          "amount": 2
+        }
+      ]
+    },
+    {
+      "name": "a@99999#1",
+      "playerKey": "a",
+      "dayKey": 99999,
+      "chestIndex": 1,
+      "drops": [
+        {
+          "kind": "credits",
+          "amount": 122
+        }
+      ]
+    },
+    {
+      "name": "a@99999#2",
+      "playerKey": "a",
+      "dayKey": 99999,
+      "chestIndex": 2,
+      "drops": [
+        {
+          "kind": "gems",
+          "amount": 4
+        }
+      ]
+    },
+    {
+      "name": "a@99999#3",
+      "playerKey": "a",
+      "dayKey": 99999,
+      "chestIndex": 3,
+      "drops": [
+        {
+          "kind": "credits",
+          "amount": 96835
+        },
+        {
+          "kind": "hearts",
+          "amount": 3
+        }
+      ]
+    },
+    {
+      "name": "abc123@0#0",
+      "playerKey": "abc123",
+      "dayKey": 0,
+      "chestIndex": 0,
+      "drops": [
+        {
+          "kind": "credits",
+          "amount": 97
+        },
+        {
+          "kind": "gems",
+          "amount": 1
+        },
+        {
+          "kind": "hearts",
+          "amount": 2
+        }
+      ]
+    },
+    {
+      "name": "abc123@0#1",
+      "playerKey": "abc123",
+      "dayKey": 0,
+      "chestIndex": 1,
+      "drops": [
+        {
+          "kind": "credits",
+          "amount": 129
+        }
+      ]
+    },
+    {
+      "name": "abc123@0#2",
+      "playerKey": "abc123",
+      "dayKey": 0,
+      "chestIndex": 2,
+      "drops": [
+        {
+          "kind": "gems",
+          "amount": 4
+        }
+      ]
+    },
+    {
+      "name": "abc123@0#3",
+      "playerKey": "abc123",
+      "dayKey": 0,
+      "chestIndex": 3,
+      "drops": [
+        {
+          "kind": "credits",
+          "amount": 31620
+        },
+        {
+          "kind": "hearts",
+          "amount": 5
+        }
+      ]
+    },
+    {
+      "name": "abc123@1#0",
+      "playerKey": "abc123",
+      "dayKey": 1,
+      "chestIndex": 0,
+      "drops": [
+        {
+          "kind": "credits",
+          "amount": 24
+        },
+        {
+          "kind": "gems",
+          "amount": 1
+        },
+        {
+          "kind": "hearts",
+          "amount": 2
+        }
+      ]
+    },
+    {
+      "name": "abc123@1#1",
+      "playerKey": "abc123",
+      "dayKey": 1,
+      "chestIndex": 1,
+      "drops": [
+        {
+          "kind": "credits",
+          "amount": 140
+        }
+      ]
+    },
+    {
+      "name": "abc123@1#2",
+      "playerKey": "abc123",
+      "dayKey": 1,
+      "chestIndex": 2,
+      "drops": [
+        {
+          "kind": "gems",
+          "amount": 4
+        }
+      ]
+    },
+    {
+      "name": "abc123@1#3",
+      "playerKey": "abc123",
+      "dayKey": 1,
+      "chestIndex": 3,
+      "drops": [
+        {
+          "kind": "credits",
+          "amount": 71611
+        },
+        {
+          "kind": "hearts",
+          "amount": 4
+        }
+      ]
+    },
+    {
+      "name": "abc123@7#0",
+      "playerKey": "abc123",
+      "dayKey": 7,
+      "chestIndex": 0,
+      "drops": [
+        {
+          "kind": "credits",
+          "amount": 34
+        },
+        {
+          "kind": "gems",
+          "amount": 1
+        },
+        {
+          "kind": "hearts",
+          "amount": 2
+        }
+      ]
+    },
+    {
+      "name": "abc123@7#1",
+      "playerKey": "abc123",
+      "dayKey": 7,
+      "chestIndex": 1,
+      "drops": [
+        {
+          "kind": "credits",
+          "amount": 116
+        }
+      ]
+    },
+    {
+      "name": "abc123@7#2",
+      "playerKey": "abc123",
+      "dayKey": 7,
+      "chestIndex": 2,
+      "drops": [
+        {
+          "kind": "gems",
+          "amount": 4
+        }
+      ]
+    },
+    {
+      "name": "abc123@7#3",
+      "playerKey": "abc123",
+      "dayKey": 7,
+      "chestIndex": 3,
+      "drops": [
+        {
+          "kind": "credits",
+          "amount": 9631
+        },
+        {
+          "kind": "hearts",
+          "amount": 4
+        }
+      ]
+    },
+    {
+      "name": "abc123@20315#0",
+      "playerKey": "abc123",
+      "dayKey": 20315,
+      "chestIndex": 0,
+      "drops": [
+        {
+          "kind": "credits",
+          "amount": 15
+        },
+        {
+          "kind": "gems",
+          "amount": 1
+        }
+      ]
+    },
+    {
+      "name": "abc123@20315#1",
+      "playerKey": "abc123",
+      "dayKey": 20315,
+      "chestIndex": 1,
+      "drops": [
+        {
+          "kind": "credits",
+          "amount": 138
+        }
+      ]
+    },
+    {
+      "name": "abc123@20315#2",
+      "playerKey": "abc123",
+      "dayKey": 20315,
+      "chestIndex": 2,
+      "drops": [
+        {
+          "kind": "gems",
+          "amount": 4
+        }
+      ]
+    },
+    {
+      "name": "abc123@20315#3",
+      "playerKey": "abc123",
+      "dayKey": 20315,
+      "chestIndex": 3,
+      "drops": [
+        {
+          "kind": "credits",
+          "amount": 36466
+        },
+        {
+          "kind": "hearts",
+          "amount": 4
+        }
+      ]
+    },
+    {
+      "name": "abc123@99999#0",
+      "playerKey": "abc123",
+      "dayKey": 99999,
+      "chestIndex": 0,
+      "drops": [
+        {
+          "kind": "credits",
+          "amount": 13
+        },
+        {
+          "kind": "gems",
+          "amount": 1
+        },
+        {
+          "kind": "hearts",
+          "amount": 1
+        }
+      ]
+    },
+    {
+      "name": "abc123@99999#1",
+      "playerKey": "abc123",
+      "dayKey": 99999,
+      "chestIndex": 1,
+      "drops": [
+        {
+          "kind": "credits",
+          "amount": 147
+        }
+      ]
+    },
+    {
+      "name": "abc123@99999#2",
+      "playerKey": "abc123",
+      "dayKey": 99999,
+      "chestIndex": 2,
+      "drops": [
+        {
+          "kind": "gems",
+          "amount": 4
+        }
+      ]
+    },
+    {
+      "name": "abc123@99999#3",
+      "playerKey": "abc123",
+      "dayKey": 99999,
+      "chestIndex": 3,
+      "drops": [
+        {
+          "kind": "credits",
+          "amount": 14695
+        },
+        {
+          "kind": "hearts",
+          "amount": 1
+        }
+      ]
+    },
+    {
+      "name": "uid_QW9zXk21@0#0",
+      "playerKey": "uid_QW9zXk21",
+      "dayKey": 0,
+      "chestIndex": 0,
+      "drops": [
+        {
+          "kind": "credits",
+          "amount": 72
+        },
+        {
+          "kind": "gems",
+          "amount": 1
+        },
+        {
+          "kind": "heart_boost",
+          "amount": 9
+        }
+      ]
+    },
+    {
+      "name": "uid_QW9zXk21@0#1",
+      "playerKey": "uid_QW9zXk21",
+      "dayKey": 0,
+      "chestIndex": 1,
+      "drops": [
+        {
+          "kind": "credits",
+          "amount": 133
+        }
+      ]
+    },
+    {
+      "name": "uid_QW9zXk21@0#2",
+      "playerKey": "uid_QW9zXk21",
+      "dayKey": 0,
+      "chestIndex": 2,
+      "drops": [
+        {
+          "kind": "gems",
+          "amount": 4
+        }
+      ]
+    },
+    {
+      "name": "uid_QW9zXk21@0#3",
+      "playerKey": "uid_QW9zXk21",
+      "dayKey": 0,
+      "chestIndex": 3,
+      "drops": [
+        {
+          "kind": "credits",
+          "amount": 16936
+        },
+        {
+          "kind": "hearts",
+          "amount": 4
+        }
+      ]
+    },
+    {
+      "name": "uid_QW9zXk21@1#0",
+      "playerKey": "uid_QW9zXk21",
+      "dayKey": 1,
+      "chestIndex": 0,
+      "drops": [
+        {
+          "kind": "credits",
+          "amount": 94
+        },
+        {
+          "kind": "gems",
+          "amount": 1
+        },
+        {
+          "kind": "hearts",
+          "amount": 2
+        }
+      ]
+    },
+    {
+      "name": "uid_QW9zXk21@1#1",
+      "playerKey": "uid_QW9zXk21",
+      "dayKey": 1,
+      "chestIndex": 1,
+      "drops": [
+        {
+          "kind": "credits",
+          "amount": 116
+        }
+      ]
+    },
+    {
+      "name": "uid_QW9zXk21@1#2",
+      "playerKey": "uid_QW9zXk21",
+      "dayKey": 1,
+      "chestIndex": 2,
+      "drops": [
+        {
+          "kind": "gems",
+          "amount": 4
+        }
+      ]
+    },
+    {
+      "name": "uid_QW9zXk21@1#3",
+      "playerKey": "uid_QW9zXk21",
+      "dayKey": 1,
+      "chestIndex": 3,
+      "drops": [
+        {
+          "kind": "credits",
+          "amount": 37744
+        },
+        {
+          "kind": "hearts",
+          "amount": 3
+        }
+      ]
+    },
+    {
+      "name": "uid_QW9zXk21@7#0",
+      "playerKey": "uid_QW9zXk21",
+      "dayKey": 7,
+      "chestIndex": 0,
+      "drops": [
+        {
+          "kind": "credits",
+          "amount": 17
+        },
+        {
+          "kind": "gems",
+          "amount": 1
+        },
+        {
+          "kind": "hearts",
+          "amount": 1
+        }
+      ]
+    },
+    {
+      "name": "uid_QW9zXk21@7#1",
+      "playerKey": "uid_QW9zXk21",
+      "dayKey": 7,
+      "chestIndex": 1,
+      "drops": [
+        {
+          "kind": "credits",
+          "amount": 108
+        }
+      ]
+    },
+    {
+      "name": "uid_QW9zXk21@7#2",
+      "playerKey": "uid_QW9zXk21",
+      "dayKey": 7,
+      "chestIndex": 2,
+      "drops": [
+        {
+          "kind": "gems",
+          "amount": 4
+        }
+      ]
+    },
+    {
+      "name": "uid_QW9zXk21@7#3",
+      "playerKey": "uid_QW9zXk21",
+      "dayKey": 7,
+      "chestIndex": 3,
+      "drops": [
+        {
+          "kind": "credits",
+          "amount": 99699
+        },
+        {
+          "kind": "hearts",
+          "amount": 2
+        }
+      ]
+    },
+    {
+      "name": "uid_QW9zXk21@20315#0",
+      "playerKey": "uid_QW9zXk21",
+      "dayKey": 20315,
+      "chestIndex": 0,
+      "drops": [
+        {
+          "kind": "credits",
+          "amount": 91
+        },
+        {
+          "kind": "gems",
+          "amount": 1
+        },
+        {
+          "kind": "hearts",
+          "amount": 2
+        }
+      ]
+    },
+    {
+      "name": "uid_QW9zXk21@20315#1",
+      "playerKey": "uid_QW9zXk21",
+      "dayKey": 20315,
+      "chestIndex": 1,
+      "drops": [
+        {
+          "kind": "credits",
+          "amount": 143
+        }
+      ]
+    },
+    {
+      "name": "uid_QW9zXk21@20315#2",
+      "playerKey": "uid_QW9zXk21",
+      "dayKey": 20315,
+      "chestIndex": 2,
+      "drops": [
+        {
+          "kind": "gems",
+          "amount": 4
+        }
+      ]
+    },
+    {
+      "name": "uid_QW9zXk21@20315#3",
+      "playerKey": "uid_QW9zXk21",
+      "dayKey": 20315,
+      "chestIndex": 3,
+      "drops": [
+        {
+          "kind": "credits",
+          "amount": 61396
+        },
+        {
+          "kind": "hearts",
+          "amount": 4
+        }
+      ]
+    },
+    {
+      "name": "uid_QW9zXk21@99999#0",
+      "playerKey": "uid_QW9zXk21",
+      "dayKey": 99999,
+      "chestIndex": 0,
+      "drops": [
+        {
+          "kind": "credits",
+          "amount": 30
+        },
+        {
+          "kind": "gems",
+          "amount": 1
+        },
+        {
+          "kind": "hearts",
+          "amount": 3
+        }
+      ]
+    },
+    {
+      "name": "uid_QW9zXk21@99999#1",
+      "playerKey": "uid_QW9zXk21",
+      "dayKey": 99999,
+      "chestIndex": 1,
+      "drops": [
+        {
+          "kind": "credits",
+          "amount": 142
+        }
+      ]
+    },
+    {
+      "name": "uid_QW9zXk21@99999#2",
+      "playerKey": "uid_QW9zXk21",
+      "dayKey": 99999,
+      "chestIndex": 2,
+      "drops": [
+        {
+          "kind": "gems",
+          "amount": 4
+        }
+      ]
+    },
+    {
+      "name": "uid_QW9zXk21@99999#3",
+      "playerKey": "uid_QW9zXk21",
+      "dayKey": 99999,
+      "chestIndex": 3,
+      "drops": [
+        {
+          "kind": "credits",
+          "amount": 6556
+        },
+        {
+          "kind": "hearts",
+          "amount": 3
+        }
+      ]
+    },
+    {
+      "name": "player-one@0#0",
+      "playerKey": "player-one",
+      "dayKey": 0,
+      "chestIndex": 0,
+      "drops": [
+        {
+          "kind": "credits",
+          "amount": 90
+        },
+        {
+          "kind": "gems",
+          "amount": 1
+        },
+        {
+          "kind": "hearts",
+          "amount": 3
+        }
+      ]
+    },
+    {
+      "name": "player-one@0#1",
+      "playerKey": "player-one",
+      "dayKey": 0,
+      "chestIndex": 1,
+      "drops": [
+        {
+          "kind": "credits",
+          "amount": 149
+        }
+      ]
+    },
+    {
+      "name": "player-one@0#2",
+      "playerKey": "player-one",
+      "dayKey": 0,
+      "chestIndex": 2,
+      "drops": [
+        {
+          "kind": "gems",
+          "amount": 4
+        }
+      ]
+    },
+    {
+      "name": "player-one@0#3",
+      "playerKey": "player-one",
+      "dayKey": 0,
+      "chestIndex": 3,
+      "drops": [
+        {
+          "kind": "credits",
+          "amount": 20631
+        },
+        {
+          "kind": "hearts",
+          "amount": 5
+        }
+      ]
+    },
+    {
+      "name": "player-one@1#0",
+      "playerKey": "player-one",
+      "dayKey": 1,
+      "chestIndex": 0,
+      "drops": [
+        {
+          "kind": "credits",
+          "amount": 43
+        },
+        {
+          "kind": "gems",
+          "amount": 1
+        },
+        {
+          "kind": "hearts",
+          "amount": 1
+        }
+      ]
+    },
+    {
+      "name": "player-one@1#1",
+      "playerKey": "player-one",
+      "dayKey": 1,
+      "chestIndex": 1,
+      "drops": [
+        {
+          "kind": "credits",
+          "amount": 146
+        }
+      ]
+    },
+    {
+      "name": "player-one@1#2",
+      "playerKey": "player-one",
+      "dayKey": 1,
+      "chestIndex": 2,
+      "drops": [
+        {
+          "kind": "gems",
+          "amount": 4
+        }
+      ]
+    },
+    {
+      "name": "player-one@1#3",
+      "playerKey": "player-one",
+      "dayKey": 1,
+      "chestIndex": 3,
+      "drops": [
+        {
+          "kind": "credits",
+          "amount": 96082
+        },
+        {
+          "kind": "hearts",
+          "amount": 3
+        }
+      ]
+    },
+    {
+      "name": "player-one@7#0",
+      "playerKey": "player-one",
+      "dayKey": 7,
+      "chestIndex": 0,
+      "drops": [
+        {
+          "kind": "credits",
+          "amount": 22
+        },
+        {
+          "kind": "gems",
+          "amount": 1
+        },
+        {
+          "kind": "hearts",
+          "amount": 3
+        }
+      ]
+    },
+    {
+      "name": "player-one@7#1",
+      "playerKey": "player-one",
+      "dayKey": 7,
+      "chestIndex": 1,
+      "drops": [
+        {
+          "kind": "credits",
+          "amount": 150
+        }
+      ]
+    },
+    {
+      "name": "player-one@7#2",
+      "playerKey": "player-one",
+      "dayKey": 7,
+      "chestIndex": 2,
+      "drops": [
+        {
+          "kind": "gems",
+          "amount": 4
+        }
+      ]
+    },
+    {
+      "name": "player-one@7#3",
+      "playerKey": "player-one",
+      "dayKey": 7,
+      "chestIndex": 3,
+      "drops": [
+        {
+          "kind": "credits",
+          "amount": 33512
+        },
+        {
+          "kind": "hearts",
+          "amount": 3
+        }
+      ]
+    },
+    {
+      "name": "player-one@20315#0",
+      "playerKey": "player-one",
+      "dayKey": 20315,
+      "chestIndex": 0,
+      "drops": [
+        {
+          "kind": "credits",
+          "amount": 49
+        },
+        {
+          "kind": "gems",
+          "amount": 1
+        },
+        {
+          "kind": "hearts",
+          "amount": 1
+        }
+      ]
+    },
+    {
+      "name": "player-one@20315#1",
+      "playerKey": "player-one",
+      "dayKey": 20315,
+      "chestIndex": 1,
+      "drops": [
+        {
+          "kind": "credits",
+          "amount": 126
+        }
+      ]
+    },
+    {
+      "name": "player-one@20315#2",
+      "playerKey": "player-one",
+      "dayKey": 20315,
+      "chestIndex": 2,
+      "drops": [
+        {
+          "kind": "gems",
+          "amount": 4
+        }
+      ]
+    },
+    {
+      "name": "player-one@20315#3",
+      "playerKey": "player-one",
+      "dayKey": 20315,
+      "chestIndex": 3,
+      "drops": [
+        {
+          "kind": "credits",
+          "amount": 93566
+        },
+        {
+          "kind": "hearts",
+          "amount": 1
+        }
+      ]
+    },
+    {
+      "name": "player-one@99999#0",
+      "playerKey": "player-one",
+      "dayKey": 99999,
+      "chestIndex": 0,
+      "drops": [
+        {
+          "kind": "credits",
+          "amount": 64
+        },
+        {
+          "kind": "gems",
+          "amount": 1
+        }
+      ]
+    },
+    {
+      "name": "player-one@99999#1",
+      "playerKey": "player-one",
+      "dayKey": 99999,
+      "chestIndex": 1,
+      "drops": [
+        {
+          "kind": "credits",
+          "amount": 142
+        }
+      ]
+    },
+    {
+      "name": "player-one@99999#2",
+      "playerKey": "player-one",
+      "dayKey": 99999,
+      "chestIndex": 2,
+      "drops": [
+        {
+          "kind": "gems",
+          "amount": 4
+        }
+      ]
+    },
+    {
+      "name": "player-one@99999#3",
+      "playerKey": "player-one",
+      "dayKey": 99999,
+      "chestIndex": 3,
+      "drops": [
+        {
+          "kind": "credits",
+          "amount": 87720
+        },
+        {
+          "kind": "hearts",
+          "amount": 3
+        }
+      ]
+    },
+    {
+      "name": "é中@0#0",
+      "playerKey": "é中",
+      "dayKey": 0,
+      "chestIndex": 0,
+      "drops": [
+        {
+          "kind": "credits",
+          "amount": 68
+        },
+        {
+          "kind": "gems",
+          "amount": 1
+        },
+        {
+          "kind": "hearts",
+          "amount": 2
+        }
+      ]
+    },
+    {
+      "name": "é中@0#1",
+      "playerKey": "é中",
+      "dayKey": 0,
+      "chestIndex": 1,
+      "drops": [
+        {
+          "kind": "credits",
+          "amount": 122
+        }
+      ]
+    },
+    {
+      "name": "é中@0#2",
+      "playerKey": "é中",
+      "dayKey": 0,
+      "chestIndex": 2,
+      "drops": [
+        {
+          "kind": "gems",
+          "amount": 4
+        }
+      ]
+    },
+    {
+      "name": "é中@0#3",
+      "playerKey": "é中",
+      "dayKey": 0,
+      "chestIndex": 3,
+      "drops": [
+        {
+          "kind": "credits",
+          "amount": 63963
+        },
+        {
+          "kind": "hearts",
+          "amount": 1
+        }
+      ]
+    },
+    {
+      "name": "é中@1#0",
+      "playerKey": "é中",
+      "dayKey": 1,
+      "chestIndex": 0,
+      "drops": [
+        {
+          "kind": "credits",
+          "amount": 57
+        },
+        {
+          "kind": "gems",
+          "amount": 1
+        },
+        {
+          "kind": "hearts",
+          "amount": 3
+        }
+      ]
+    },
+    {
+      "name": "é中@1#1",
+      "playerKey": "é中",
+      "dayKey": 1,
+      "chestIndex": 1,
+      "drops": [
+        {
+          "kind": "credits",
+          "amount": 148
+        }
+      ]
+    },
+    {
+      "name": "é中@1#2",
+      "playerKey": "é中",
+      "dayKey": 1,
+      "chestIndex": 2,
+      "drops": [
+        {
+          "kind": "gems",
+          "amount": 4
+        }
+      ]
+    },
+    {
+      "name": "é中@1#3",
+      "playerKey": "é中",
+      "dayKey": 1,
+      "chestIndex": 3,
+      "drops": [
+        {
+          "kind": "credits",
+          "amount": 96411
+        },
+        {
+          "kind": "hearts",
+          "amount": 5
+        }
+      ]
+    },
+    {
+      "name": "é中@7#0",
+      "playerKey": "é中",
+      "dayKey": 7,
+      "chestIndex": 0,
+      "drops": [
+        {
+          "kind": "credits",
+          "amount": 71
+        },
+        {
+          "kind": "gems",
+          "amount": 1
+        },
+        {
+          "kind": "hearts",
+          "amount": 2
+        }
+      ]
+    },
+    {
+      "name": "é中@7#1",
+      "playerKey": "é中",
+      "dayKey": 7,
+      "chestIndex": 1,
+      "drops": [
+        {
+          "kind": "credits",
+          "amount": 108
+        }
+      ]
+    },
+    {
+      "name": "é中@7#2",
+      "playerKey": "é中",
+      "dayKey": 7,
+      "chestIndex": 2,
+      "drops": [
+        {
+          "kind": "gems",
+          "amount": 4
+        }
+      ]
+    },
+    {
+      "name": "é中@7#3",
+      "playerKey": "é中",
+      "dayKey": 7,
+      "chestIndex": 3,
+      "drops": [
+        {
+          "kind": "credits",
+          "amount": 90095
+        },
+        {
+          "kind": "hearts",
+          "amount": 2
+        }
+      ]
+    },
+    {
+      "name": "é中@20315#0",
+      "playerKey": "é中",
+      "dayKey": 20315,
+      "chestIndex": 0,
+      "drops": [
+        {
+          "kind": "credits",
+          "amount": 56
+        },
+        {
+          "kind": "gems",
+          "amount": 1
+        }
+      ]
+    },
+    {
+      "name": "é中@20315#1",
+      "playerKey": "é中",
+      "dayKey": 20315,
+      "chestIndex": 1,
+      "drops": [
+        {
+          "kind": "credits",
+          "amount": 136
+        }
+      ]
+    },
+    {
+      "name": "é中@20315#2",
+      "playerKey": "é中",
+      "dayKey": 20315,
+      "chestIndex": 2,
+      "drops": [
+        {
+          "kind": "gems",
+          "amount": 4
+        }
+      ]
+    },
+    {
+      "name": "é中@20315#3",
+      "playerKey": "é中",
+      "dayKey": 20315,
+      "chestIndex": 3,
+      "drops": [
+        {
+          "kind": "credits",
+          "amount": 582
+        },
+        {
+          "kind": "hearts",
+          "amount": 3
+        }
+      ]
+    },
+    {
+      "name": "é中@99999#0",
+      "playerKey": "é中",
+      "dayKey": 99999,
+      "chestIndex": 0,
+      "drops": [
+        {
+          "kind": "credits",
+          "amount": 96
+        },
+        {
+          "kind": "gems",
+          "amount": 1
+        },
+        {
+          "kind": "hearts",
+          "amount": 1
+        }
+      ]
+    },
+    {
+      "name": "é中@99999#1",
+      "playerKey": "é中",
+      "dayKey": 99999,
+      "chestIndex": 1,
+      "drops": [
+        {
+          "kind": "credits",
+          "amount": 110
+        }
+      ]
+    },
+    {
+      "name": "é中@99999#2",
+      "playerKey": "é中",
+      "dayKey": 99999,
+      "chestIndex": 2,
+      "drops": [
+        {
+          "kind": "gems",
+          "amount": 4
+        }
+      ]
+    },
+    {
+      "name": "é中@99999#3",
+      "playerKey": "é中",
+      "dayKey": 99999,
+      "chestIndex": 3,
+      "drops": [
+        {
+          "kind": "credits",
+          "amount": 24023
+        },
+        {
+          "kind": "hearts",
+          "amount": 5
+        }
+      ]
+    }
   ]
 }

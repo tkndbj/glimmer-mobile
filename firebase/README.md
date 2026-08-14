@@ -18,6 +18,7 @@ actually be defended:
 | Granted currency (seed, purchases) | `players/{uid}/private/wallet` | read only |
 | Spent currency | `players/{uid}/private/wallet` | read only |
 | Debit idempotency records | `players/{uid}/spendLog/{id}` | read only |
+| Award idempotency records | `players/{uid}/grantLog/{id}` | read only |
 | Receipt claims | `receipts/{store}__{txn}` | neither |
 | Reward table, product catalog | `config/*` | read only |
 
@@ -46,6 +47,11 @@ them identical, each for a reason: a glade the catalog cannot vouch for earns no
 an invented level id mints currency), stars clamp to three (or a forged record buys a
 fourth), and a level id counts once.
 
+The same file now pins a second rule: the **daily chest generator**, in `daily.ts` here
+and `DailyChestTable.cs` there. Those vectors use a synthetic drop table rather than the
+shipped one, so retuning real rates does not turn them red — what is under contract is the
+arithmetic, and every constant in it is load-bearing. See *Daily chests*.
+
 `config/progression` is what the server treats as the catalog, so **re-run the seed script
 after every content drop** or new glades earn nothing. Nobody loses a balance if you
 forget — `earnedFloor` on the wallet only ever ratchets up — but the new chapter does not
@@ -65,8 +71,9 @@ which is most syncs, since the common trigger is the app being backgrounded.
 firestore.rules          the security boundary. Read this first.
 firebase.json            deploy config
 functions/src/
-  index.ts               getWallet, submitSpends, redeemPurchase
+  index.ts               getWallet, submitSpends, claimAwards, redeemPurchase
   progression.ts         server-side derivation — mirrors ProgressionLedger.cs
+  daily.ts               daily chest generator — mirrors DailyChestTable.cs
   receipts.ts            Apple and Google validation, fails closed
   wallet.ts              balance arithmetic over the private wallet document
 seed/seed-config.mjs     publishes the reward table from the shipped content
@@ -79,6 +86,7 @@ Deployed and verified live on 2026-08-13:
 
 - Firestore database in `eur3`, security rules released
 - `getWallet`, `submitSpends`, `redeemPurchase` on Node 22 in `europe-west1`
+- `claimAwards` written and building; **not yet deployed** — see *Daily chests* below
 - Anonymous authentication enabled
 - Android and iOS apps registered for `com.digikeygames.glimmergrove`
 - `config/progression` seeded from the shipped content
@@ -132,6 +140,38 @@ firebase functions:secrets:set GOOGLE_PLAY_SERVICE_ACCOUNT # the whole service-a
 The Google service account needs the **Android Publisher** role, granted in the Play
 Console under *Users and permissions*, not only in Google Cloud IAM. That step is easy
 to miss and produces a 401 that looks like a bad key.
+
+## Daily chests
+
+Three chests a day, earned by playing and opened by hand on the home screen. They are the
+first thing in the game that gives a player currency they did not *earn* by clearing a
+glade, so they are the first thing to go through `claimAwards`.
+
+The shape is the mirror image of `submitSpends`, and for the same reason:
+
+1. The client rolls the chest, shows the reward and counts it locally at once — a chest
+   opened on a plane has to be spendable on that plane. It lands in a queue of identified
+   entries, never in `grantedBaseline`, which the client may not touch.
+2. On the next sync it submits those entries. **The amounts carry no authority.**
+   `claimAwards` re-rolls the same chest itself, from the account id, the day and the chest
+   index, using the drop table in `config/progression`, and grants its own figure. A client
+   that inflates its claim gains nothing.
+3. The grant is keyed on `players/{uid}/grantLog/daily:{day}:{chest}:{currency}` — an id
+   **derived** from what earned it rather than generated. So the same chest submitted from
+   two devices, resubmitted after a lost response, or replayed by hand, collides with a
+   document that already exists and confirms instead of granting.
+
+Two things to know before touching it:
+
+- **`claimAwards` refuses everything if `config/progression` has no usable `daily` block.**
+  Granting a guess would be inventing money. So a drop-table change that has not been
+  seeded stops chests paying rather than paying the wrong amount, and `seed-config.mjs`
+  throws rather than publishing a config without one.
+- **The run counter is forgeable and that is accounted for.** It lives in the player's own
+  save document. The real bound is one day's chests per day per account, enforced by the
+  derived ids plus a check that the claimed day is not in the future. That is what an
+  honest player gets anyway; proving somebody played three glades would mean trusting a
+  different number the same player writes.
 
 ## Two invariants, and how they are held
 

@@ -55,6 +55,11 @@ namespace GlimmerGrove.Cloud
             => Task.FromResult((CloudResult.Failed(CloudFailure.Offline, "no cloud backend configured"),
                                 new List<CloudWalletState>()));
 
+        public Task<(CloudResult result, List<CloudWalletState> wallets)> SubmitAwardsAsync(
+            string userId, IReadOnlyList<GrantEntryDto> awards, CancellationToken cancellation = default)
+            => Task.FromResult((CloudResult.Failed(CloudFailure.Offline, "no cloud backend configured"),
+                                new List<CloudWalletState>()));
+
         public Task<(CloudResult result, List<CloudWalletState> wallets)> RedeemPurchaseAsync(
             string userId, PurchaseReceipt receipt, CancellationToken cancellation = default)
             => Task.FromResult((CloudResult.Failed(CloudFailure.Offline, "no cloud backend configured"),

@@ -404,6 +404,49 @@ namespace GlimmerGrove.Cloud
             }
         }
 
+        /// <summary>
+        /// Offers up awards the client has already applied, for the server to adjudicate.
+        ///
+        /// Only the ids travel with any authority. The amounts are sent because they make
+        /// a support case legible — "the client thought this chest was worth 240" — and
+        /// are otherwise ignored: <c>claimAwards</c> re-rolls each chest from the account
+        /// id, the day and the index, and grants its own answer.
+        /// </summary>
+        public async Task<(CloudResult result, List<CloudWalletState> wallets)> SubmitAwardsAsync(
+            string userId, IReadOnlyList<GrantEntryDto> awards, CancellationToken cancellation = default)
+        {
+            if (!await EnsureReadyAsync())
+                return (CloudResult.Failed(CloudFailure.Offline, "Firebase unavailable"), Empty());
+
+            if (awards == null || awards.Count == 0) return (CloudResult.Success, Empty());
+
+            try
+            {
+                var payload = new List<object>(awards.Count);
+                foreach (var award in awards)
+                {
+                    if (award == null || string.IsNullOrEmpty(award.id)) continue;
+                    payload.Add(new Dictionary<string, object>
+                    {
+                        { "id", award.id },
+                        { "claimedAmount", award.amount },
+                        { "unix", award.unix },
+                        { "reason", award.reason ?? string.Empty },
+                    });
+                }
+
+                var reply = await CallAsync("claimAwards",
+                                            new Dictionary<string, object> { { "awards", payload } });
+
+                WarnAboutRejections(reply);
+                return (CloudResult.Success, ReadWalletStates(reply));
+            }
+            catch (Exception e)
+            {
+                return (Classify(e, "claim awards"), Empty());
+            }
+        }
+
         public async Task<(CloudResult result, List<CloudWalletState> wallets)> RedeemPurchaseAsync(
             string userId, PurchaseReceipt receipt, CancellationToken cancellation = default)
         {
@@ -472,6 +515,13 @@ namespace GlimmerGrove.Cloud
                 {
                     foreach (var id in idList)
                         if (id is string s && s.Length > 0) state.ConfirmedSpendIds.Add(s);
+                }
+
+                if (entry.TryGetValue("confirmedGrantIds", out object grantIds) &&
+                    grantIds is IEnumerable<object> grantList)
+                {
+                    foreach (var id in grantList)
+                        if (id is string s && s.Length > 0) state.ConfirmedGrantIds.Add(s);
                 }
 
                 states.Add(state);

@@ -331,6 +331,27 @@ namespace GlimmerGrove.Cloud
         /// </summary>
         static async Task ReconcileWalletAsync(string userId, CancellationToken cancellation)
         {
+            bool reconciled = false;
+
+            // Awards first, debits second. A daily chest opened offline should be able to
+            // pay for the spend that followed it, and submitting them the other way round
+            // would present the server with a debit against a balance it has not yet
+            // credited — refused, and then retried forever.
+            var awards = new List<GrantEntryDto>();
+            foreach (var ledger in Wallet.Ledgers)
+                foreach (var entry in ledger.PendingGrants)
+                    awards.Add(entry.ToDto());
+
+            if (awards.Count > 0)
+            {
+                var (granted, wallets) = await _backend.SubmitAwardsAsync(userId, awards, cancellation);
+                if (granted.Ok && wallets != null)
+                {
+                    ApplyWalletStates(wallets);
+                    reconciled = true;
+                }
+            }
+
             var pending = new List<SpendEntryDto>();
             foreach (var ledger in Wallet.Ledgers)
                 foreach (var entry in ledger.PendingSpends)
@@ -345,6 +366,11 @@ namespace GlimmerGrove.Cloud
                     return;                       // the reply already carries the balances
                 }
             }
+
+            // Skipped only when an award submission already returned fresh balances and
+            // there were no debits to send; otherwise a purchase made on another device
+            // has to arrive here even when this one has nothing of its own to offer.
+            if (reconciled) return;
 
             var (read, current) = await _backend.ReadWalletAsync(userId, cancellation);
             if (read.Ok && current != null) ApplyWalletStates(current);
@@ -397,7 +423,8 @@ namespace GlimmerGrove.Cloud
                     state.SpentBaseline,
                     state.ConfirmedSpendIds,
                     state.ConfirmedThroughUnix,
-                    state.EarnedFloor);
+                    state.EarnedFloor,
+                    state.ConfirmedGrantIds);
             }
 
             SaveService.MarkDirty();

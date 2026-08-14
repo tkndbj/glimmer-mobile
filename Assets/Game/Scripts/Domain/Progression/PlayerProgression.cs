@@ -114,6 +114,38 @@ namespace GlimmerGrove.Progression
         public static bool CanAfford(string currency, long amount)
             => amount <= 0 || Balance(currency) >= amount;
 
+        // ------------------------------------------------------------- awarding
+        /// <summary>
+        /// Credits a currency for something the player was given rather than earned.
+        ///
+        /// <para>
+        /// Note what this does <em>not</em> do: it does not raise the granted baseline.
+        /// That field is the server's, because a client that can raise it is a client that
+        /// can print money, and it is the only field an attacker with real purchases in
+        /// play is interested in. What lands here instead is a claim carrying an id
+        /// derived from whatever earned it, which counts toward the balance immediately —
+        /// so a reward opened on a plane is spendable on that plane — and which the server
+        /// either confirms into the baseline or replaces with its own figure on the next
+        /// sync.
+        /// </para>
+        /// <para>
+        /// Returns false when an award with that id is already held, which is how a reward
+        /// that can only be given once says so. Callers do not need to remember anything.
+        /// </para>
+        /// </summary>
+        public static bool Award(string currency, long amount, string id, string reason, long unix)
+        {
+            if (amount <= 0 || string.IsNullOrEmpty(id)) return false;
+
+            EnsureFresh();
+
+            if (!Wallet.Ledger(currency).TryAward(id, amount, unix, reason, out _)) return false;
+
+            SaveService.Save();
+            Invalidate();
+            return true;
+        }
+
         // ------------------------------------------------------------- internals
         /// <summary>
         /// Which derived earnings back a currency. Only credits are earned by playing;

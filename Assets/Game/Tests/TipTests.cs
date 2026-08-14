@@ -29,6 +29,13 @@ namespace GlimmerGrove.Tests
         /// <summary>A board with no budget, so the budget tip does not crowd the test.</summary>
         static LevelTuning NoBudget => new LevelTuning(3, 0f, 0f, 3, LevelTuning.Unlimited);
 
+        /// <summary>The head of the teaching queue, or an invalid sighting when empty.</summary>
+        static MechanicSighting First(Puzzle board, System.Func<Mechanic, bool> seen)
+        {
+            var queue = MechanicScan.Unseen(board, seen);
+            return queue.Count == 0 ? default : queue[0];
+        }
+
         static bool Contains(List<MechanicSighting> found, Mechanic wanted)
         {
             foreach (var s in found) if (s.Mechanic.Equals(wanted)) return true;
@@ -55,19 +62,70 @@ namespace GlimmerGrove.Tests
             Assert.IsFalse(Contains(found, Mechanic.RootedTile));
         }
 
+        /// <summary>
+        /// A glade bringing two ideas queues both rather than holding one back for a
+        /// later glade that happens to repeat it — the player would otherwise meet the
+        /// second one unexplained in between.
+        /// </summary>
+        [Test]
+        public void EveryUnseenMechanicOnABoardIsQueued()
+        {
+            // a rooted tile and a critter wanting a blend, on one board
+            var board = Board(3, 1, new[] { "*E#R/0 @EW#M/0! *W#B/0" });
+
+            var queue = MechanicScan.Unseen(board, _ => false);
+
+            Assert.AreEqual(3, queue.Count, "budget, rooted and blending are all new here");
+            Assert.IsTrue(queue[0].Mechanic.Equals(Mechanic.MoveBudget), queue[0].Mechanic.ToString());
+            Assert.IsTrue(queue[1].Mechanic.Equals(Mechanic.RootedTile), queue[1].Mechanic.ToString());
+            Assert.IsTrue(queue[2].Mechanic.Equals(Mechanic.ColourMixing), queue[2].Mechanic.ToString());
+        }
+
+        [Test]
+        public void AlreadyTaughtMechanicsAreLeftOutOfTheQueue()
+        {
+            var board = Board(3, 1, new[] { "*E#R/0 @EW#M/0! *W#B/0" });
+
+            var queue = MechanicScan.Unseen(board, m => m.Equals(Mechanic.MoveBudget));
+
+            Assert.AreEqual(2, queue.Count);
+            Assert.IsFalse(queue.Exists(s => s.Mechanic.Equals(Mechanic.MoveBudget)));
+        }
+
+        [Test]
+        public void ACritterWantingABlendIsPointedAt()
+        {
+            var board = Board(3, 1, new[] { "*E#R/0 @EW#M/0 *W#B/0" }, NoBudget);
+            var found = MechanicScan.InBoard(board);
+
+            Assert.IsTrue(Contains(found, Mechanic.ColourMixing));
+
+            foreach (var s in found)
+                if (s.Mechanic.Equals(Mechanic.ColourMixing))
+                    Assert.AreEqual(1, s.CellIndex, "the tip should ring the critter that wants the blend");
+        }
+
+        /// <summary>Two hearts alone are not a blend — twin_streams wants them apart.</summary>
+        [Test]
+        public void TwoHeartColoursWithNoBlendedCritterTeachNothing()
+        {
+            var board = Board(3, 1, new[] { "*E#R/0 @EW#R/0 *W#B/0" }, NoBudget);
+            Assert.IsFalse(Contains(MechanicScan.InBoard(board), Mechanic.ColourMixing));
+        }
+
         /// <summary>Brittle conduits lead: they are the only lesson that costs something.</summary>
         [Test]
         public void TheBrittleConduitIsTaughtBeforeTheBudget()
         {
             var board = Board(3, 1, new[] { "*E#R/0 -EW/0~3 @W#R/0" });
 
-            var first = MechanicScan.FirstUnseen(board, _ => false);
+            var first = First(board, _ => false);
             Assert.IsTrue(first.Mechanic.Equals(Mechanic.FragileConduit), first.Mechanic.ToString());
 
-            var next = MechanicScan.FirstUnseen(board, m => m.Equals(Mechanic.FragileConduit));
+            var next = First(board, m => m.Equals(Mechanic.FragileConduit));
             Assert.IsTrue(next.Mechanic.Equals(Mechanic.MoveBudget), next.Mechanic.ToString());
 
-            var none = MechanicScan.FirstUnseen(board, _ => true);
+            var none = First(board, _ => true);
             Assert.IsFalse(none.Mechanic.IsValid, "a veteran player is never interrupted");
         }
 
@@ -99,7 +157,8 @@ namespace GlimmerGrove.Tests
         {
             // A mechanic missing from the order can be detected but never taught, which
             // is the kind of gap that only shows up as "why did nobody see this tip".
-            var all = new[] { Mechanic.FragileConduit, Mechanic.MoveBudget, Mechanic.RootedTile };
+            var all = new[] { Mechanic.FragileConduit, Mechanic.MoveBudget,
+                              Mechanic.RootedTile, Mechanic.ColourMixing };
 
             foreach (var m in all)
             {

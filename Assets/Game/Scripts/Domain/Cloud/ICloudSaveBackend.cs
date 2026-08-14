@@ -116,6 +116,17 @@ namespace GlimmerGrove.Cloud
 
         /// <summary>Spend ids the server has folded into the baseline.</summary>
         public List<string> ConfirmedSpendIds = new List<string>();
+
+        /// <summary>
+        /// Award ids the server has recorded and folded into
+        /// <see cref="GrantedBaseline"/>.
+        ///
+        /// Until an id appears here the client keeps counting that award locally, so a
+        /// dropped reply costs a resubmission rather than a player's daily chest. Once it
+        /// does appear the local copy is dropped, because it is inside the baseline now
+        /// and counting both would show a balance the server will not honour.
+        /// </summary>
+        public List<string> ConfirmedGrantIds = new List<string>();
     }
 
     /// <summary>
@@ -295,6 +306,28 @@ namespace GlimmerGrove.Cloud
         /// </summary>
         Task<(CloudResult result, List<CloudWalletState> wallets)> SubmitSpendsAsync(
             string userId, IReadOnlyList<SpendEntryDto> spends,
+            CancellationToken cancellation = default);
+
+        /// <summary>
+        /// Submits awards the client has applied optimistically, for the server to
+        /// adjudicate.
+        ///
+        /// <para>
+        /// The amounts on the entries are a <em>claim</em>, not an instruction. The server
+        /// recomputes what each award was worth from its own copy of the rules — for a
+        /// daily chest, by re-rolling the same deterministic sequence from the account id,
+        /// the day and the chest index — and grants its own figure. A client that inflates
+        /// an amount therefore gains nothing, which is what allows the reward to be shown
+        /// and spent offline in the first place.
+        /// </para>
+        /// <para>
+        /// Safe to call with entries the server has already recorded: each id is derived
+        /// from what earned it rather than generated, so the second submission collides
+        /// with the first in the database and confirms rather than grants.
+        /// </para>
+        /// </summary>
+        Task<(CloudResult result, List<CloudWalletState> wallets)> SubmitAwardsAsync(
+            string userId, IReadOnlyList<GrantEntryDto> awards,
             CancellationToken cancellation = default);
 
         /// <summary>Hands a store receipt to the server, which validates and grants.</summary>

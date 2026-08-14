@@ -106,7 +106,16 @@ namespace GlimmerGrove
         public int FragileLeft(int i)
             => IsFragile(i) ? Mathf.Max(0, C[i].fragile - Wear[i]) : int.MaxValue;
 
-        public bool Shattered(int i) => IsFragile(i) && Wear[i] >= C[i].fragile;
+        /// <summary>
+        /// Crumbled. Note the strict comparison: <c>fragile</c> is how many turns the
+        /// conduit <em>survives</em>, so it breaks on the one after that.
+        ///
+        /// This is load-bearing now that a crumble ends the run. Validation allows a
+        /// conduit to be owed exactly its whole allowance, so with a &gt;= here the last
+        /// turn of a legitimate solution would break the tile and lose the glade — an
+        /// unwinnable level that looks perfectly authored.
+        /// </summary>
+        public bool Shattered(int i) => IsFragile(i) && Wear[i] > C[i].fragile;
 
         /// <summary>Set when the last turn crumbled a conduit, so the view can react. -1 otherwise.</summary>
         public int ShatteredAt = -1;

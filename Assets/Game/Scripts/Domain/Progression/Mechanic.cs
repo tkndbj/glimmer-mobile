@@ -27,6 +27,9 @@ namespace GlimmerGrove.Progression
         public static readonly Mechanic MoveBudget = new Mechanic("moves");
         public static readonly Mechanic RootedTile = new Mechanic("rooted");
 
+        /// <summary>Two heart colours, and a critter that wants them blended.</summary>
+        public static readonly Mechanic ColourMixing = new Mechanic("mixing");
+
         /// <summary>
         /// Teaching order, most disruptive first.
         ///
@@ -35,13 +38,13 @@ namespace GlimmerGrove.Progression
         /// several ideas at once this decides which gets the moment, and the rest wait
         /// for a later glade that has them.
         ///
-        /// Colour is deliberately absent. Blending and keeping streams apart are the
-        /// game's oldest rules and the How To panel already teaches both; a tip that
-        /// fires on the second glade to repeat them is interruption, not instruction.
+        /// A glade may teach more than one thing; they are shown in this order, one
+        /// after another, rather than the rest waiting for a later glade that happens
+        /// to repeat them.
         /// </summary>
         public static readonly Mechanic[] TeachingOrder =
         {
-            FragileConduit, MoveBudget, RootedTile,
+            FragileConduit, MoveBudget, RootedTile, ColourMixing,
         };
 
         public bool IsValid => !string.IsNullOrEmpty(Id);
@@ -90,7 +93,7 @@ namespace GlimmerGrove.Progression
             var found = new List<MechanicSighting>();
             if (board == null) return found;
 
-            int fragile = -1, rooted = -1;
+            int fragile = -1, rooted = -1, blended = -1;
 
             for (int i = 0; i < board.C.Length; i++)
             {
@@ -98,6 +101,12 @@ namespace GlimmerGrove.Progression
 
                 if (cell.fragile > 0 && fragile < 0) fragile = i;
                 if (cell.locked && rooted < 0) rooted = i;
+
+                // A critter asking for more than one channel is the only proof that
+                // blending is actually required here — two heart colours on their own
+                // may just as well mean "keep these apart".
+                if (cell.kind == Kind.Lamp && cell.colour != 0 &&
+                    (cell.colour & (cell.colour - 1)) != 0 && blended < 0) blended = i;
             }
 
             if (fragile >= 0) found.Add(new MechanicSighting(Mechanic.FragileConduit, fragile));
@@ -106,31 +115,34 @@ namespace GlimmerGrove.Progression
             if (board.HasBudget) found.Add(new MechanicSighting(Mechanic.MoveBudget, -1));
 
             if (rooted >= 0) found.Add(new MechanicSighting(Mechanic.RootedTile, rooted));
+            if (blended >= 0) found.Add(new MechanicSighting(Mechanic.ColourMixing, blended));
 
             return found;
         }
 
         /// <summary>
-        /// The one idea worth teaching here: the highest-priority mechanic on this board
-        /// the player has not met. Returns a sighting with an invalid mechanic when
-        /// there is nothing new, which is the common case after the first few glades.
+        /// Every idea on this board the player has not met, in teaching order.
+        ///
+        /// A glade can bring two at once — a rooted tile and a blend, say — and holding
+        /// the second back until some later glade repeats it means the player meets it
+        /// unexplained in between. Shown one after another instead, which is a short
+        /// queue rather than a wall of text: the list is empty on almost every glade
+        /// after the first few.
         /// </summary>
-        public static MechanicSighting FirstUnseen(Puzzle board, System.Func<Mechanic, bool> seen)
+        public static List<MechanicSighting> Unseen(Puzzle board, System.Func<Mechanic, bool> seen)
         {
             var present = InBoard(board);
+            var queue = new List<MechanicSighting>();
 
             foreach (var candidate in Mechanic.TeachingOrder)
             {
-                foreach (var sighting in present)
-                {
-                    if (!sighting.Mechanic.Equals(candidate)) continue;
-                    if (seen != null && seen(candidate)) break;
+                if (seen != null && seen(candidate)) continue;
 
-                    return sighting;
-                }
+                foreach (var sighting in present)
+                    if (sighting.Mechanic.Equals(candidate)) { queue.Add(sighting); break; }
             }
 
-            return default;
+            return queue;
         }
     }
 }

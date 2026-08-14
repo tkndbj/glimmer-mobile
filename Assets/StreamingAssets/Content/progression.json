@@ -22,5 +22,35 @@
       "creditsFirstClear": 20,
       "creditsPerStar": 10
     }
-  ]
+  ],
+
+  "daily": {
+    "runsPerChest": 3,
+
+    "chests": [
+      {
+        "guaranteed": [ { "kind": "credits", "min": 60, "max": 90 } ],
+        "options": [
+          { "kind": "credits", "min": 40, "max": 70, "weight": 45 },
+          { "kind": "hearts",  "min": 1,  "max": 1,  "weight": 30 },
+          { "kind": "gems",    "min": 1,  "max": 1,  "weight": 25 }
+        ]
+      },
+      {
+        "guaranteed": [ { "kind": "credits", "min": 110, "max": 160 } ],
+        "options": [
+          { "kind": "credits",     "min": 80, "max": 130, "weight": 45 },
+          { "kind": "gems",        "min": 2,  "max": 3,   "weight": 40 },
+          { "kind": "heart_boost", "min": 24, "max": 24,  "weight": 15 }
+        ]
+      },
+      {
+        "guaranteed": [ { "kind": "credits", "min": 200, "max": 280 } ],
+        "options": [
+          { "kind": "gems",        "min": 4,  "max": 6,  "weight": 62 },
+          { "kind": "heart_boost", "min": 24, "max": 24, "weight": 38 }
+        ]
+      }
+    ]
+  }
 }

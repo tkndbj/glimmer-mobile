@@ -38,6 +38,14 @@ export interface WalletReply {
   confirmedThroughUnix: number;
   earnedFloor: number;
   confirmedSpendIds: string[];
+
+  /**
+   * Award ids this server holds a record for, and has therefore already folded into
+   * `grantedBaseline`. The client drops them from its own queue on seeing them; until
+   * it does it keeps counting them locally, so a lost reply costs a resubmission rather
+   * than a player's daily chest.
+   */
+  confirmedGrantIds: string[];
 }
 
 export function emptyCurrency(): CurrencyState {
@@ -86,7 +94,11 @@ export function readWallet(
   return wallet;
 }
 
-export function toReply(wallet: WalletDoc, confirmed: Record<string, string[]>): WalletReply[] {
+export function toReply(
+  wallet: WalletDoc,
+  confirmed: Record<string, string[]>,
+  confirmedGrants: Record<string, string[]> = {}
+): WalletReply[] {
   return CURRENCIES.map((currency) => ({
     currency,
     grantedBaseline: wallet[currency].granted,
@@ -94,6 +106,7 @@ export function toReply(wallet: WalletDoc, confirmed: Record<string, string[]>):
     confirmedThroughUnix: wallet[currency].confirmedThroughUnix,
     earnedFloor: wallet[currency].earnedFloor,
     confirmedSpendIds: confirmed[currency] ?? [],
+    confirmedGrantIds: confirmedGrants[currency] ?? [],
   }));
 }
 

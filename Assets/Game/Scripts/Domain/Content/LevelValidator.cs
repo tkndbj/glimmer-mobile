@@ -164,7 +164,8 @@ namespace GlimmerGrove.Content
                 int owed = probe.TurnsOwed(i);
                 if (owed > cells[i].fragile)
                     Error(issues, $"the fragile conduit at {x},{y} needs {owed} turn(s) to reach its " +
-                                  $"solution but survives only {cells[i].fragile}; the level cannot be won");
+                                  $"solution but survives only {cells[i].fragile}; it would crumble on the " +
+                                  "way and lose the glade");
             }
         }
 

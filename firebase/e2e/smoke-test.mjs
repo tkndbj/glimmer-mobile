@@ -28,12 +28,32 @@ const FS = `https://firestore.googleapis.com/v1/projects/${PROJECT}/databases/(d
 
 const SEED_CREDITS = 1250;
 
+/**
+ * The Android app's web API key, used to mint an anonymous token to test the rules with.
+ *
+ * The app id is looked up rather than assumed. Once both an Android and an iOS app are
+ * registered, `apps:sdkconfig ANDROID` refuses to guess which one is meant and exits
+ * non-zero — which is a confusing way for this script to die, since nothing about the
+ * project is actually wrong.
+ */
 function apiKey() {
   if (process.argv[2]) return process.argv[2];
 
-  const config = execSync(`firebase apps:sdkconfig ANDROID --project ${PROJECT}`, {
+  const listed = execSync(`firebase apps:list ANDROID --project ${PROJECT}`, {
     encoding: "utf8", stdio: ["ignore", "pipe", "pipe"],
   });
+
+  const appId = listed.match(/(1:\d+:android:[0-9a-f]+)/);
+  if (!appId) {
+    throw new Error(
+      `no Android app found on ${PROJECT}. Pass the web API key as the first argument instead.`
+    );
+  }
+
+  const config = execSync(
+    `firebase apps:sdkconfig ANDROID ${appId[1]} --project ${PROJECT}`,
+    { encoding: "utf8", stdio: ["ignore", "pipe", "pipe"] }
+  );
 
   const match = config.match(/"current_key"\s*:\s*"([^"]+)"/);
   if (!match) throw new Error("could not read the app's API key; pass it as the first argument");
@@ -89,7 +109,20 @@ const save = {
     settings: { mapValue: { fields: { music: { integerValue: "1" }, sfx: { integerValue: "1" },
                                       haptics: { integerValue: "1" }, language: { stringValue: "en" } } } },
     wallet: { mapValue: { fields: { hearts: { integerValue: "5" },
+                                    heartBoostUntilUnix: { integerValue: "0" },
                                     displayName: { stringValue: "Grovekeeper" } } } },
+    // Today's chest counters. Present here for one reason: this fixture is the only
+    // thing in the repo that tests a real write against the *deployed* rules, so a
+    // field the client sends and this does not is a field nothing checks. That gap is
+    // how a `daily` key that was added locally and never released reached a handset
+    // and turned every sync into PERMISSION_DENIED.
+    //
+    // The rule to keep: when FirestoreSaveMapper gains a top-level field, add it here
+    // in the same commit. CloudWireTests already compares the mapper against the rules
+    // *file*; only this compares it against the rules that are actually live.
+    daily: { mapValue: { fields: { dayKey: { integerValue: "20315" },
+                                   runs: { integerValue: "2" },
+                                   claimed: { integerValue: "0" } } } },
     progression: { mapValue: { fields: { xpHighWater: { integerValue: "100" },
                                          levelHighWater: { integerValue: "2" } } } },
     cloud: { mapValue: { fields: { userId: { stringValue: uid }, revision: { integerValue: "1" },

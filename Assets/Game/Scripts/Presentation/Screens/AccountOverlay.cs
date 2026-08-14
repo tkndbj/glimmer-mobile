@@ -1,3 +1,4 @@
+using System;
 using System.Collections;
 using System.Threading.Tasks;
 using GlimmerGrove.Cloud;
@@ -32,68 +33,114 @@ namespace GlimmerGrove
         LinkCredential _contested;
         bool _armed;
 
+        // Laid out by stacking downward from the top edge. Everything here is anchored
+        // to the panel top and positioned by its own centre — UIKit.Box pivots every box
+        // centrally whatever its anchor — so a row's position is computed rather than
+        // guessed. Mixing top-anchored text with bottom-anchored buttons is what let the
+        // stakes line and the sign-in buttons occupy the same forty pixels.
+        const float TopMargin = 100f, BottomMargin = 56f;
+        const float StatusH = 52f, WhyH = 150f, StakesH = 56f, ButtonH = 118f, CloseH = 124f;
+        const float AfterStatus = 18f, AfterWhy = 16f, AfterStakes = 22f;
+        const float BetweenButtons = 14f, BeforeClose = 26f;
+
+        /// <summary>Where the sign-in buttons start, so the switch prompt can reuse the slot.</summary>
+        float _signInTop;
+
         protected override void Build()
         {
-            MakePanel(new Vector2(860f, 880f), Loc.Get("ui.account.title"));
-
             // Linked, not merely signed in. An anonymous account has a uid and syncs
             // perfectly well, and calling that "safe" is exactly the false reassurance
             // this screen exists to prevent.
             bool linked = CloudSaveService.IsLinked;
+            bool available = CloudSaveService.IsAvailable;
 
-            _status = UIKit.Titled("Status", Panel,
-                                   linked ? Loc.Get("ui.account.linked") : Loc.Get("ui.account.guest"),
-                                   34, linked ? Pal.Mint : Pal.Rose,
-                                   TextAnchor.MiddleCenter, new Vector2(720f, 48f), new Vector2(.5f, 1f),
-                                   new Vector2(0f, -250f), 2f, 2f);
+            bool showStakes = !linked && PlayerProgression.ClearedGlades > 0;
+            bool showSignIn = available && !linked;
 
-            UIKit.Titled("Why", Panel,
-                         Loc.Get(linked ? "ui.account.linked_body" : "ui.account.guest_body"),
-                         26, new Color(.44f, .32f, .24f, .95f),
-                         // -340 rather than -310: the box is anchored UpperCenter, so its
-                         // top edge is where the first line lands, and at -310 that edge
-                         // sat inside the status line above it. Invisible while the copy
-                         // was one long unwrapped line running off both edges of the
-                         // screen; obvious the moment it wrapped.
-                         TextAnchor.UpperCenter, new Vector2(700f, 110f), new Vector2(.5f, 1f),
-                         new Vector2(0f, -340f), 0f, 0f, wrap: true);
+            // The panel is sized to what it will actually hold, so the linked state does
+            // not open a tall box with a hole where two buttons would have been.
+            float height = TopMargin + StatusH + AfterStatus + WhyH + AfterWhy;
+            if (showStakes) height += StakesH + AfterStakes;
+            if (showSignIn) height += ButtonH + BetweenButtons + ButtonH + BeforeClose;
+            height += CloseH + BottomMargin;
+
+            MakePanel(new Vector2(860f, height), Loc.Get("ui.account.title"));
+
+            float y = TopMargin;
+
+            _status = Row("Status", linked ? Loc.Get("ui.account.linked") : Loc.Get("ui.account.guest"),
+                          34, linked ? Pal.Mint : Pal.Rose, y, StatusH, TextAnchor.MiddleCenter, 2f);
+            Fit(_status, 26, 34);
+            y += StatusH + AfterStatus;
+
+            var why = Row("Why", Loc.Get(linked ? "ui.account.linked_body" : "ui.account.guest_body"),
+                          26, new Color(.44f, .32f, .24f, .95f), y, WhyH, TextAnchor.UpperCenter, 0f);
+            Fit(why, 20, 26);
+            y += WhyH + AfterWhy;
 
             // "Lives only on this device" is abstract; "47 glades and keeper level 12
             // live only on this device" is not. Shown only once there is something to
             // lose, so a brand-new player is not warned about nothing.
-            if (!linked && PlayerProgression.ClearedGlades > 0)
+            if (showStakes)
             {
-                UIKit.Titled("Stakes", Panel,
-                             Loc.Format("ui.account.guest_stakes",
-                                        PlayerProgression.ClearedGlades, PlayerProgression.Level.Level),
-                             28, Pal.Rose, TextAnchor.MiddleCenter,
-                             new Vector2(700f, 44f), new Vector2(.5f, 1f), new Vector2(0f, -418f), 2f, 2f,
-                             wrap: true);
+                var stakes = Row("Stakes",
+                                 Loc.Format("ui.account.guest_stakes",
+                                            PlayerProgression.ClearedGlades, PlayerProgression.Level.Level),
+                                 28, Pal.Rose, y, StakesH, TextAnchor.MiddleCenter, 2f);
+                Fit(stakes, 22, 28);
+                y += StakesH + AfterStakes;
             }
 
-            if (!CloudSaveService.IsAvailable)
+            // No backend in this build. Say so rather than showing buttons that cannot work.
+            if (!available) _status.text = Loc.Get("ui.account.unavailable");
+
+            if (showSignIn)
             {
-                // No backend in this build. Say so rather than showing buttons that
-                // cannot work.
-                _status.text = Loc.Get("ui.account.unavailable");
-            }
-            else if (!linked)
-            {
-                _google = UIKit.TextButton("Google", Panel, "btn_green", Loc.Get("ui.account.google"), 36,
-                                 new Vector2(600f, 118f), new Vector2(.5f, 0f), new Vector2(0f, 430f),
-                                 () => Begin(LinkCredential.ForGoogle())).transform;
+                _signInTop = y;
+
+                _google = Button("Google", "btn_green", Loc.Get("ui.account.google"), y,
+                                 () => Begin(LinkCredential.ForGoogle()));
+                y += ButtonH + BetweenButtons;
 
                 // Offered on both platforms, not only iOS. App Store Guideline 4.8
                 // requires Apple wherever another third-party sign-in appears, and a
                 // player with an Apple ID on Android should not be turned away either.
-                _apple = UIKit.TextButton("Apple", Panel, "btn_blue", Loc.Get("ui.account.apple"), 36,
-                                 new Vector2(600f, 118f), new Vector2(.5f, 0f), new Vector2(0f, 296f),
-                                 () => Begin(LinkCredential.ForApple())).transform;
+                _apple = Button("Apple", "btn_blue", Loc.Get("ui.account.apple"), y,
+                                () => Begin(LinkCredential.ForApple()));
+                y += ButtonH + BeforeClose;
             }
 
             UIKit.TextButton("Close", Panel, "btn_green", Loc.Get("ui.common.done"), 46,
-                             new Vector2(560f, 132f), new Vector2(.5f, 0f), new Vector2(0f, 118f),
+                             new Vector2(560f, CloseH), new Vector2(.5f, 1f),
+                             new Vector2(0f, -(y + CloseH * .5f)),
                              () => { if (!_busy) Close(); });
+        }
+
+        /// <summary>One stacked row of text, positioned by its top edge.</summary>
+        Text Row(string name, string text, int size, Color colour, float top, float height,
+                 TextAnchor anchor, float shadow)
+            => UIKit.Titled(name, Panel, text, size, colour, anchor,
+                            new Vector2(700f, height), new Vector2(.5f, 1f),
+                            new Vector2(0f, -(top + height * .5f)),
+                            outline: 0f, shadow: shadow, wrap: true);
+
+        Transform Button(string name, string skin, string label, float top, Action onTap)
+            => UIKit.TextButton(name, Panel, skin, label, 36,
+                                new Vector2(600f, ButtonH), new Vector2(.5f, 1f),
+                                new Vector2(0f, -(top + ButtonH * .5f)), onTap).transform;
+
+        /// <summary>
+        /// Lets a label shrink rather than spill. Every string here is translated, and
+        /// German runs half as long again — an overflow that only appears in one market
+        /// is the kind nobody sees until a review mentions it.
+        /// </summary>
+        static void Fit(Text label, int min, int max)
+        {
+            if (!label) return;
+
+            label.resizeTextForBestFit = true;
+            label.resizeTextMinSize = min;
+            label.resizeTextMaxSize = max;
         }
 
         // ------------------------------------------------------------- linking
@@ -167,24 +214,31 @@ namespace GlimmerGrove
             if (_google != null) _google.gameObject.SetActive(false);
             if (_apple != null) _apple.gameObject.SetActive(false);
 
-            var button = UIKit.TextButton("Switch", Panel, "btn_red", Loc.Get("ui.account.switch"), 34,
-                                          new Vector2(600f, 118f), new Vector2(.5f, 0f),
-                                          new Vector2(0f, 430f), ConfirmSwitch);
-            _switchButton = button.transform;
+            // Takes the slot the two sign-in buttons just vacated, measured from the same
+            // cursor Build used. Hard-coding a second set of coordinates here is what
+            // would let the cost line drift back over the button the next time either
+            // layout moved.
+            float y = _signInTop;
+
+            _switchButton = UIKit.TextButton("Switch", Panel, "btn_red", Loc.Get("ui.account.switch"), 34,
+                                             new Vector2(600f, ButtonH), new Vector2(.5f, 1f),
+                                             new Vector2(0f, -(y + ButtonH * .5f)), ConfirmSwitch).transform;
+            y += ButtonH + BetweenButtons;
 
             // Named concretely rather than as "your progress". Somebody three weeks in
             // deserves to see the three weeks before they tap, and the other account's
             // contents cannot be shown at all — reading it requires signing in as it,
             // which is the irreversible step itself.
-            UIKit.Titled("SwitchCost", Panel,
-                         Loc.Format("ui.account.switch_cost",
-                                    PlayerProgression.ClearedGlades, PlayerProgression.Level.Level),
-                         26, new Color(.62f, .26f, .24f), TextAnchor.MiddleCenter,
-                         new Vector2(700f, 40f), new Vector2(.5f, 0f), new Vector2(0f, 386f), 0f, 0f);
+            var cost = Row("SwitchCost",
+                           Loc.Format("ui.account.switch_cost",
+                                      PlayerProgression.ClearedGlades, PlayerProgression.Level.Level),
+                           26, new Color(.62f, .26f, .24f), y, 62f, TextAnchor.UpperCenter, 0f);
+            Fit(cost, 20, 26);
+            y += 62f + 8f;
 
-            UIKit.Titled("SwitchWarn", Panel, Loc.Get("ui.account.switch_warning"), 24,
-                         new Color(.62f, .26f, .24f, .9f), TextAnchor.MiddleCenter,
-                         new Vector2(700f, 40f), new Vector2(.5f, 0f), new Vector2(0f, 350f), 0f, 0f);
+            var warn = Row("SwitchWarn", Loc.Get("ui.account.switch_warning"), 24,
+                           new Color(.62f, .26f, .24f, .9f), y, 40f, TextAnchor.UpperCenter, 0f);
+            Fit(warn, 18, 24);
         }
 
         void ConfirmSwitch()

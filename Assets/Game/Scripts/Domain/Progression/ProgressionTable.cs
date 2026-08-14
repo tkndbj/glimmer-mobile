@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using GlimmerGrove.Content;
+using GlimmerGrove.Daily;
 using UnityEngine;
 
 namespace GlimmerGrove.Progression
@@ -76,12 +77,23 @@ namespace GlimmerGrove.Progression
         readonly Dictionary<ChapterId, RewardRule> _chapterRules;
 
         ProgressionTable(long[] cumulative, RewardRule defaultRule,
-                         Dictionary<ChapterId, RewardRule> chapterRules)
+                         Dictionary<ChapterId, RewardRule> chapterRules,
+                         DailyChestTable daily)
         {
             _cumulative = cumulative;
             _defaultRule = defaultRule;
             _chapterRules = chapterRules;
+            Daily = daily ?? DailyChestTable.Default;
         }
+
+        /// <summary>
+        /// The daily chest rules, published with the curve rather than beside it.
+        ///
+        /// One table, one fetch, one atomic swap. Two separately-loaded tables would let
+        /// a player briefly hold a new drop table against an old reward rate, which is
+        /// precisely the window an economy exploit lives in.
+        /// </summary>
+        public DailyChestTable Daily { get; }
 
         /// <summary>
         /// A usable curve for when no file could be read. The game stays playable and
@@ -94,7 +106,8 @@ namespace GlimmerGrove.Progression
             tailXpIncrement: 150,
             maxLevel: DefaultMaxLevel,
             defaultRule: RewardRule.Default,
-            chapterRules: new Dictionary<ChapterId, RewardRule>());
+            chapterRules: new Dictionary<ChapterId, RewardRule>(),
+            daily: DailyChestTable.Default);
 
         /// <summary>Highest level this curve defines. Level 1 always exists.</summary>
         public int MaxLevel => _cumulative.Length;
@@ -244,14 +257,20 @@ namespace GlimmerGrove.Progression
                 }
             }
 
+            // Optional, and reported through the same problems list — a daily block that
+            // does not read is a content error worth failing a build over, but never a
+            // reason to discard a perfectly good XP curve.
+            var daily = DailyChestTable.Resolve(dto.daily, problems);
+
             table = Build(dto.xpToNext, dto.tailXpToNext, dto.tailXpIncrement, maxLevel,
-                          defaultRule, chapterRules);
+                          defaultRule, chapterRules, daily);
             return true;
         }
 
         static ProgressionTable Build(int[] xpToNext, int tailXpToNext, int tailXpIncrement,
                                       int maxLevel, RewardRule defaultRule,
-                                      Dictionary<ChapterId, RewardRule> chapterRules)
+                                      Dictionary<ChapterId, RewardRule> chapterRules,
+                                      DailyChestTable daily)
         {
             if (maxLevel < 1) maxLevel = 1;
 
@@ -268,7 +287,7 @@ namespace GlimmerGrove.Progression
                 cumulative[level] = cumulative[level - 1] + step;
             }
 
-            return new ProgressionTable(cumulative, defaultRule, chapterRules);
+            return new ProgressionTable(cumulative, defaultRule, chapterRules, daily);
         }
     }
 }

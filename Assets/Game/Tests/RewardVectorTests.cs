@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using GlimmerGrove.Content;
+using GlimmerGrove.Daily;
 using GlimmerGrove.Persistence;
 using GlimmerGrove.Progression;
 using NUnit.Framework;
@@ -32,6 +33,32 @@ namespace GlimmerGrove.Tests
             public ProgressionDto progression;
             public LevelChapterDto[] levelChapters;
             public VectorCase[] cases;
+
+            /// <summary>
+            /// Synthetic on purpose, and separate from <see cref="progression"/>'s own
+            /// daily block. What is under contract is the generator, not this month's
+            /// drop rates — retuning the shipped table must not turn these red.
+            /// </summary>
+            public DailyChestDto dailyChestConfig;
+
+            public DailyVectorCase[] dailyChestCases;
+        }
+
+        [Serializable]
+        public sealed class DailyVectorCase
+        {
+            public string name;
+            public string playerKey;
+            public int dayKey;
+            public int chestIndex;
+            public DropVector[] drops;
+        }
+
+        [Serializable]
+        public sealed class DropVector
+        {
+            public string kind;
+            public int amount;
         }
 
         [Serializable]
@@ -158,6 +185,97 @@ namespace GlimmerGrove.Tests
                               $"the vectors no longer cover '{required}' — that is a case where the two " +
                               "implementations could silently disagree");
             }
+        }
+
+        // -------------------------------------------------------- daily chests
+        /// <summary>
+        /// The client half of the chest generator contract.
+        ///
+        /// A chest is rolled twice: here so the reward can be shown and spent while
+        /// offline, and again in <c>functions/src/daily.ts</c> so the grant can be
+        /// adjudicated without believing the client's number. If the two ever disagree, a
+        /// player watches a balance change after a sync — which is the worst thing an
+        /// economy can do in front of somebody, and the hardest to explain afterwards.
+        ///
+        /// Every constant behind this is part of the contract: the FNV basis and prime,
+        /// the xorshift amounts, the stream numbers, the modulo, and the summing of
+        /// same-kind drops. Changing any of them rerolls every unopened chest in the
+        /// world, so the vectors have to change with them.
+        /// </summary>
+        [Test]
+        public void EveryDailyChestVectorMatches()
+        {
+            var file = Load();
+
+            Assert.IsNotNull(file.dailyChestConfig, "the vector file has no daily chest config");
+            Assert.IsNotNull(file.dailyChestCases, "the vector file has no daily chest cases");
+            Assert.Greater(file.dailyChestCases.Length, 0);
+
+            var problems = new List<string>();
+            var table = DailyChestTable.Resolve(file.dailyChestConfig, problems);
+            Assert.IsEmpty(problems, string.Join("; ", problems));
+
+            var failures = new List<string>();
+
+            foreach (var test in file.dailyChestCases)
+            {
+                string got = Describe(table.Roll(test.playerKey, test.dayKey, test.chestIndex));
+                string want = Describe(test.drops);
+
+                if (got != want)
+                    failures.Add($"'{test.name}': expected {want}, got {got}");
+            }
+
+            Assert.IsEmpty(failures,
+                           "the client no longer rolls chests the way the server does. If this change " +
+                           "was intended, update firebase/shared/reward-vectors.json and make the same " +
+                           "change in firebase/functions/src/daily.ts — otherwise the server will grant " +
+                           "a different amount than the game showed.\n" + string.Join("\n", failures));
+        }
+
+        /// <summary>
+        /// The vectors have to keep covering the two cases a naive implementation gets
+        /// wrong: a chest with no bonus slot, and one whose floor and bonus are the same
+        /// kind and therefore have to be summed into a single award.
+        /// </summary>
+        [Test]
+        public void TheDailyVectorsCoverTheMergingAndFixedChests()
+        {
+            var file = Load();
+            var config = file.dailyChestConfig;
+
+            Assert.IsNotNull(config?.chests);
+
+            bool hasFixed = false, hasMerging = false;
+
+            foreach (var chest in config.chests)
+            {
+                if (chest.options == null || chest.options.Length == 0) hasFixed = true;
+
+                foreach (var band in chest.guaranteed)
+                    foreach (var option in chest.options ?? new DailyOptionDto[0])
+                        if (band.kind == option.kind) hasMerging = true;
+            }
+
+            Assert.IsTrue(hasFixed, "the daily vectors no longer cover a chest with no bonus slot");
+            Assert.IsTrue(hasMerging,
+                          "the daily vectors no longer cover a chest whose floor and bonus share a " +
+                          "kind — that is the case where the client would award one id twice and pay " +
+                          "half of what the server grants");
+        }
+
+        static string Describe(IEnumerable<ChestDrop> drops)
+        {
+            var parts = new List<string>();
+            foreach (var drop in drops) parts.Add($"{ChestDropKinds.Id(drop.Kind)}={drop.Amount}");
+            return parts.Count == 0 ? "(nothing)" : string.Join(",", parts);
+        }
+
+        static string Describe(DropVector[] drops)
+        {
+            var parts = new List<string>();
+            foreach (var drop in drops ?? new DropVector[0]) parts.Add($"{drop.kind}={drop.amount}");
+            return parts.Count == 0 ? "(nothing)" : string.Join(",", parts);
         }
 
         /// <summary>

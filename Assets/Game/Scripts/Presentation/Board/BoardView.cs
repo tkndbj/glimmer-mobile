@@ -141,27 +141,35 @@ namespace GlimmerGrove
         }
 
         /// <summary>
-        /// Deals with a conduit that just crumbled.
+        /// A conduit was turned once too often and gave way, which ends the run.
         ///
-        /// Clearing the undo history is the important half. A shattered conduit is not
-        /// recoverable, so an undo that stepped back past it would rewind the rotations
-        /// and leave the hole — a board the player could not have reached by playing.
-        /// Better to say plainly that this was a point of no return.
+        /// Losing the glade rather than merely breaking it is what gives the mechanic
+        /// teeth. While a crumble only damaged the board, the answer was always to press
+        /// restart — free, instant, and no reason ever to count turns. Now the count is
+        /// the whole point, and validation guarantees the solution never needs the turn
+        /// that breaks it.
         /// </summary>
         void CollectDebris()
         {
-            if (P.ShatteredAt < 0) return;
+            if (P.ShatteredAt < 0 || _lost) return;
 
             int at = P.ShatteredAt;
             P.ShatteredAt = -1;
 
+            _lost = true;
+            Locked = true;
+            _history.Clear();
+
             if (_byIndex.TryGetValue(at, out var tile)) tile.Crumble();
 
-            Audio.Sfx("shatter", .55f, 1.25f);
+            Audio.Sfx("shatter", .8f, 1.1f);
+            Audio.Duck(.3f, 1.4f);
             Haptic.Tap();
-            Tween.Punch(_floor.transform, .04f, .4f);
+            Flow.Flash(new Color(.78f, .62f, .40f), .38f, .6f);
+            Tween.Punch(_floor.transform, .07f, .5f);
 
-            _history.Clear();
+            // long enough to watch the conduit go, short enough not to feel like a wait
+            Tween.After(1.0f, () => OnDefeated?.Invoke(DefeatReason.ConduitLost), this);
         }
 
         bool[] CaptureLit()

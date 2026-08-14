@@ -106,8 +106,20 @@ namespace GlimmerGrove.Cloud
                     {
                         { "hearts", (long)(dto.wallet?.hearts ?? -1) },
                         { "heartsNextRefillUnix", dto.wallet?.heartsNextRefillUnix ?? 0L },
+                        { "heartBoostUntilUnix", dto.wallet?.heartBoostUntilUnix ?? 0L },
                         { "displayName", dto.wallet?.displayName ?? string.Empty },
                         { "avatarId", dto.wallet?.avatarId ?? string.Empty },
+                    }
+                },
+
+                // Today's chest counters. Three integers, and they have to travel: a
+                // second device that did not know a chest had been opened would draw it
+                // as waiting, and the player would tap a chest that pays nothing.
+                { "daily", new Dictionary<string, object>
+                    {
+                        { "dayKey", (long)(dto.daily?.dayKey ?? 0) },
+                        { "runs", (long)(dto.daily?.runs ?? 0) },
+                        { "claimed", (long)(dto.daily?.claimed ?? 0) },
                     }
                 },
 
@@ -150,6 +162,7 @@ namespace GlimmerGrove.Cloud
                 checksum = Str(doc, "checksum"),
                 settings = new SettingsDto(),
                 wallet = WalletDto.Unwritten(),
+                daily = new DailyStateDto(),
                 progression = ProgressionStateDto.Unwritten(),
                 cloud = new CloudStateDto(),
             };
@@ -166,8 +179,16 @@ namespace GlimmerGrove.Cloud
             {
                 dto.wallet.hearts = (int)Long(wallet, "hearts", -1);
                 dto.wallet.heartsNextRefillUnix = Long(wallet, "heartsNextRefillUnix", 0);
+                dto.wallet.heartBoostUntilUnix = Long(wallet, "heartBoostUntilUnix", 0);
                 dto.wallet.displayName = Str(wallet, "displayName");
                 dto.wallet.avatarId = Str(wallet, "avatarId");
+            }
+
+            if (Map(doc, "daily") is IDictionary<string, object> daily)
+            {
+                dto.daily.dayKey = (int)Long(daily, "dayKey", 0);
+                dto.daily.runs = (int)Long(daily, "runs", 0);
+                dto.daily.claimed = (int)Long(daily, "claimed", 0);
             }
 
             if (Map(doc, "progression") is IDictionary<string, object> progression)

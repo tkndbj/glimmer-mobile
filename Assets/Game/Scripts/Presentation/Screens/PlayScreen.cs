@@ -2,6 +2,7 @@ using System.Collections;
 using GlimmerGrove.Analytics;
 using GlimmerGrove.AssetPipeline;
 using GlimmerGrove.Content;
+using GlimmerGrove.Daily;
 using GlimmerGrove.Localization;
 using GlimmerGrove.Persistence;
 using GlimmerGrove.Progression;
@@ -26,6 +27,7 @@ namespace GlimmerGrove
         StarRow _pips;
         Btn _undo, _hint;
         bool _finished;
+        bool _hasColourKey;
         float _startedAt;
 
         public BoardView Board => _board;
@@ -94,7 +96,7 @@ namespace GlimmerGrove
 
             _boardHost = UIKit.Node("BoardHost", Content);
             _boardHost.offsetMin = new Vector2(26f, 300f);
-            _boardHost.offsetMax = new Vector2(-26f, -350f);
+            _boardHost.offsetMax = new Vector2(-26f, _hasColourKey ? -424f : -350f);
 
             _board = _boardHost.gameObject.AddComponent<BoardView>();
             _board.OnChanged = Refresh;
@@ -167,7 +169,80 @@ namespace GlimmerGrove
             _lamps = Scenery.Pill(row, "0/0", 40, new Vector2(230f, 84f), new Vector2(1f, .5f),
                                   new Vector2(-160f, 0f), null, "ic_check");
             _pips = StarRow.Create(row, new Vector2(.5f, .5f), Vector2.zero, 62f, 66f, 3);
+
+            BuildColourKey();
         }
+
+        /// <summary>
+        /// The blending chart, sitting under the counters.
+        ///
+        /// Permanent rather than a tip, because it is a lookup and not a lesson: the
+        /// rule takes five seconds to explain and a while to internalise, and a player
+        /// mid-puzzle wants to check "what does red and blue make" without being taught
+        /// anything. A modal cannot answer that; a chart on the wall can.
+        ///
+        /// Only drawn where it applies. On a single-colour glade it would be three rows
+        /// of noise above the board, so a board with one heart colour gets nothing and
+        /// keeps the space.
+        /// </summary>
+        void BuildColourKey()
+        {
+            if (!NeedsColourKey()) return;
+
+            var strip = UIKit.Box("ColourKey", Content, new Vector2(0f, 64f),
+                                  new Vector2(.5f, 1f), new Vector2(0f, -372f));
+            strip.anchorMin = new Vector2(0f, 1f);
+            strip.anchorMax = new Vector2(1f, 1f);
+            strip.sizeDelta = new Vector2(0f, 64f);
+
+            // the three pairs; every other blend is these repeated
+            Recipe(strip, -300f, Energy.R, Energy.G);
+            Recipe(strip, 0f, Energy.R, Energy.B);
+            Recipe(strip, 300f, Energy.G, Energy.B);
+
+            // the board starts lower when the chart is there, so it is never covered.
+            // Recorded rather than applied: BuildStatus runs before the host exists.
+            _hasColourKey = true;
+        }
+
+        bool NeedsColourKey()
+        {
+            int first = -1;
+
+            foreach (var cell in _puzzle.C)
+            {
+                if (cell.kind != Kind.Source) continue;
+                if (first < 0) first = cell.colour;
+                else if (cell.colour != first) return true;
+            }
+
+            return false;
+        }
+
+        /// <summary>One "a + b = c" of coloured dots. No words, so nothing to translate.</summary>
+        static void Recipe(Transform parent, float x, int a, int b)
+        {
+            Dot(parent, x - 58f, a);
+            Sign(parent, x - 29f, "+");
+            Dot(parent, x, b);
+            Sign(parent, x + 29f, "=");
+            Dot(parent, x + 58f, a | b);
+        }
+
+        static void Dot(Transform parent, float x, int energy)
+        {
+            var colour = Pal.EnergyColour(energy);
+
+            UIKit.Img("Glow", parent, Art.Glow(64, 1.9f), Pal.A(colour, .45f),
+                      Vector2.one * 46f, new Vector2(.5f, .5f), new Vector2(x, 0f));
+            UIKit.Img("Dot", parent, Art.Disc(64), Pal.Lift(colour, .25f),
+                      Vector2.one * 26f, new Vector2(.5f, .5f), new Vector2(x, 0f));
+        }
+
+        static void Sign(Transform parent, float x, string glyph)
+            => UIKit.Titled("S" + x, parent, glyph, 26, new Color(1f, .96f, .86f, .55f),
+                            TextAnchor.MiddleCenter, new Vector2(30f, 30f),
+                            new Vector2(.5f, .5f), new Vector2(x, 1f), 0f, 2f);
 
         void BuildBottomBar()
         {
@@ -241,7 +316,10 @@ namespace GlimmerGrove
                 string s = $"{_puzzle.LampsLit}/{_puzzle.LampCount}";
                 if (_lamps.text != s) { _lamps.text = s; Tween.Punch(_lamps.transform, .25f, .34f); }
             }
-            if (_pips) _pips.SetInstant(_puzzle.StarsFor(Mathf.Max(1, _puzzle.Moves)));
+            // The stars already earned here, not what this run is currently on track
+            // for. A fresh board is nought moves in, which projects to three stars and
+            // reads as "already perfect" before the player has touched anything.
+            if (_pips) _pips.SetInstant(PlayerProgress.Stars(_def.Id));
             if (_undo) _undo.Interactable = _board != null && _board.CanUndo;
             if (_hint)
             {
@@ -305,6 +383,12 @@ namespace GlimmerGrove
 
             PlayerProgress.RecordRun(_def.Id, stars, moves);
 
+            // Counted here and in Defeat, which are the two places a run actually ends.
+            // PlayerProgress hears about wins only — a defeat is not a worse clear, it
+            // simply did not happen — so there is no single Domain hook to hang this on,
+            // and pretending otherwise would silently stop counting losses.
+            DailyChests.RecordRun();
+
             // The reward is the difference between the record before and after, not a
             // payout for the run. A replay that does not beat the old result is worth
             // nothing, and that falls out of the subtraction rather than needing a rule.
@@ -342,12 +426,18 @@ namespace GlimmerGrove
             bool charged = Wallet.TrySpendHeart();
             int left = Profile.Hearts;
 
+            // A loss is a run. It cost a heart, which is the same price a win pays, and a
+            // daily loop that only rewards winning takes hearts from exactly the players
+            // who most need what the chests hold.
+            DailyChests.RecordRun();
+
             LevelAnalytics.TrackDefeated(_def, _puzzle.Moves, Time.unscaledTime - _startedAt,
                                          left, reason.ToString());
 
             Flow.Modal<DefeatOverlay>(v =>
             {
                 v.Screen = this;
+                v.Reason = reason;
                 v.HeartsLeft = left;
                 v.HeartWasCharged = charged;
 
@@ -396,27 +486,46 @@ namespace GlimmerGrove
         {
             if (_puzzle == null || _board == null) return false;
 
-            var sighting = MechanicScan.FirstUnseen(_puzzle, TipLedger.HasSeen);
-            if (!sighting.Mechanic.IsValid) return false;
+            var queue = MechanicScan.Unseen(_puzzle, TipLedger.HasSeen);
+            if (queue.Count == 0) return false;
 
             _board.Locked = true;
 
             // After the intro sweep, so the tile is actually on screen to be ringed.
-            Tween.After(.75f, () =>
-            {
-                if (!this) return;
-
-                Flow.Modal<TipOverlay>(v =>
-                {
-                    v.Mechanic = sighting.Mechanic;
-                    v.Target = sighting.HasCell
-                        ? _board.TileAt(sighting.CellIndex)
-                        : HudTargetFor(sighting.Mechanic);
-                    v.Dismissed = () => { if (this && !_finished) _board.Locked = false; };
-                });
-            }, this);
-
+            Tween.After(.75f, () => ShowTip(queue, 0), this);
             return true;
+        }
+
+        /// <summary>
+        /// Shows one tip and, when it is dismissed, the next.
+        ///
+        /// Chained on dismissal rather than shown together: a glade that introduces two
+        /// ideas would otherwise stack two modals, and the player would meet the second
+        /// before reading the first. The board stays locked until the last one closes.
+        /// </summary>
+        void ShowTip(System.Collections.Generic.List<MechanicSighting> queue, int index)
+        {
+            if (!this) return;
+
+            if (index >= queue.Count)
+            {
+                if (!_finished) _board.Locked = false;
+                return;
+            }
+
+            var sighting = queue[index];
+
+            Flow.Modal<TipOverlay>(v =>
+            {
+                v.Mechanic = sighting.Mechanic;
+                v.Target = sighting.HasCell
+                    ? _board.TileAt(sighting.CellIndex)
+                    : HudTargetFor(sighting.Mechanic);
+
+                // A short beat between them, so the second does not appear to be the
+                // first flickering.
+                v.Dismissed = () => Tween.After(.18f, () => ShowTip(queue, index + 1), this);
+            });
         }
 
         /// <summary>

@@ -213,6 +213,16 @@ namespace GlimmerGrove.Content
 
         /// <summary>Per-chapter overrides. A chapter with no entry uses the defaults.</summary>
         public ChapterRewardDto[] chapterRewards;
+
+        /// <summary>
+        /// The daily chest table. Optional: absent means the built-in one stands.
+        ///
+        /// It rides here rather than in a file of its own because it is tuned in the same
+        /// sitting as the reward rates — pulling one lever without seeing the other is how
+        /// an economy ends up paying twice — and because a second file would be a second
+        /// fetch on a phone for a few hundred bytes.
+        /// </summary>
+        public DailyChestDto daily;
     }
 
     /// <summary>
@@ -255,6 +265,74 @@ namespace GlimmerGrove.Content
             creditsFirstClear = creditsFirstClear,
             creditsPerStar = creditsPerStar,
         };
+    }
+
+    /// <summary>
+    /// The daily chest table: how much play earns a chest, and what each one holds.
+    ///
+    /// <para>
+    /// Authored as data because drop rates are the most retuned numbers in a live game,
+    /// and because they are the numbers most likely to be asked about. Apple's review
+    /// guidelines and several jurisdictions require published odds for randomised
+    /// rewards; keeping the weights in a file means the disclosure is generated from the
+    /// same source the game rolls against, rather than written by hand and drifting.
+    /// </para>
+    /// <para>
+    /// These chests are <b>earned by playing and cannot be bought</b>, which is what keeps
+    /// them outside loot-box rules almost everywhere rather than merely compliant with
+    /// them. Nothing in this file should ever gain a price.
+    /// </para>
+    /// </summary>
+    [Serializable]
+    public sealed class DailyChestDto
+    {
+        /// <summary>Runs finished per chest earned. Three by default.</summary>
+        public int runsPerChest = -1;
+
+        /// <summary>In order, easiest first. The last one is the day's prize.</summary>
+        public DailyChestEntryDto[] chests;
+    }
+
+    [Serializable]
+    public sealed class DailyChestEntryDto
+    {
+        /// <summary>Paid every time. A chest with none of these is rejected by the reader.</summary>
+        public DailyDropDto[] guaranteed;
+
+        /// <summary>Exactly one of these is picked, by weight. May be empty.</summary>
+        public DailyOptionDto[] options;
+    }
+
+    /// <summary>
+    /// One reward band. <c>kind</c> is a permanent id — <c>credits</c>, <c>gems</c>,
+    /// <c>hearts</c>, <c>heart_boost</c> — and <c>heart_boost</c> is measured in hours.
+    /// </summary>
+    [Serializable]
+    public sealed class DailyDropDto
+    {
+        public string kind;
+        public int min;
+        public int max;
+    }
+
+    /// <summary>
+    /// A band with a weight.
+    ///
+    /// Declares its own fields rather than inheriting <see cref="DailyDropDto"/>, for the
+    /// reason <see cref="ChapterRewardDto"/> gives: a serialiser behaviour whose failure
+    /// is silent has no business holding up an odds table.
+    /// </summary>
+    [Serializable]
+    public sealed class DailyOptionDto
+    {
+        public string kind;
+        public int min;
+        public int max;
+
+        /// <summary>Relative chance. The reader rejects anything below 1.</summary>
+        public int weight;
+
+        public DailyDropDto AsBand() => new DailyDropDto { kind = kind, min = min, max = max };
     }
 
     [Serializable]

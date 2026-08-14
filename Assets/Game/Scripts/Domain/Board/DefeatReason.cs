@@ -3,13 +3,20 @@ namespace GlimmerGrove
     /// <summary>
     /// Why a run ended badly.
     ///
-    /// Only one way to lose today, and the enum stays anyway: it is what the analytics
-    /// event is keyed on, and a second reason — a hazard, a timer — becomes an added
-    /// case rather than a changed signature at every call site.
+    /// Worth telling apart even though they cost the same heart. A player who ran out
+    /// of turns made a mistake spread over the whole run; one who crumbled a conduit
+    /// made a single identifiable one, and the screen should say which.
+    ///
+    /// It splits the analytics too: a glade draining hearts on the budget is tuned
+    /// wrong, while one draining them on brittle conduits is teaching badly. Those need
+    /// opposite fixes, and a single "defeated" count cannot tell you which.
     /// </summary>
     public enum DefeatReason
     {
         /// <summary>The move budget ran out with the glade unsolved.</summary>
         OutOfMoves = 0,
+
+        /// <summary>A brittle conduit was turned once too often and crumbled.</summary>
+        ConduitLost = 1,
     }
 }

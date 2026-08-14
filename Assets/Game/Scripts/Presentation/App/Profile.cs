@@ -145,11 +145,15 @@ namespace GlimmerGrove
 
         public static int MaxStars => PlayerProgress.MaxStars(Index);
 
+        /// <summary>
+        /// How much of the catalog's stars this player holds, 0..1.
+        ///
+        /// The chests that used to sit on this no longer do — the home panel is the daily
+        /// one now, and lifetime stars move three times in a whole playthrough, which is
+        /// not a thing a daily loop can be hung on. This stays because completion is a
+        /// real number worth showing; it is the profile's record card that shows it.
+        /// </summary>
         public static float GroveProgress => MaxStars == 0 ? 0f : TotalStars / (float)MaxStars;
-
-        /// <summary>Which milestone chests (a third, two thirds, all) have been reached.</summary>
-        public static bool MilestoneReached(int index)
-            => GroveProgress >= (index + 1) / 3f - 0.0001f;
 
         /// <summary>
         /// Glades cleared with all three stars.

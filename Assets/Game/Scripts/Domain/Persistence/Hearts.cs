@@ -22,8 +22,29 @@ namespace GlimmerGrove.Persistence
         /// </summary>
         public const long RefillSeconds = 8 * 60 * 60;
 
+        /// <summary>
+        /// Seconds between refills while a heart boost is running. Half the normal wait,
+        /// which is the smallest multiple a player actually feels — a boost that shaves
+        /// twenty minutes off eight hours is a boost nobody notices they have.
+        /// </summary>
+        public const long BoostedRefillSeconds = 4 * 60 * 60;
+
+        /// <summary>Longest boost a chest may award, so a bad drop table cannot grant a year.</summary>
+        public const long MaxBoostHours = 72;
+
         /// <summary>What one lost run costs. Named so the rule is not a bare 1 in the flow.</summary>
         public const int DefeatCost = 1;
+
+        /// <summary>
+        /// How long the wait starting at <paramref name="at"/> lasts.
+        ///
+        /// Asked per refill rather than once per catch-up, because a boost can expire in
+        /// the middle of a walk: a player who closes the app with two hours of boost left
+        /// and opens it a day later has earned some hearts at the fast rate and the rest
+        /// at the slow one, and rounding that either way is either a theft or a gift.
+        /// </summary>
+        public static long PeriodAt(long at, long boostUntilUnix)
+            => boostUntilUnix > at ? BoostedRefillSeconds : RefillSeconds;
     }
 
     /// <summary>
@@ -72,7 +93,26 @@ namespace GlimmerGrove.Persistence
         /// Brings the state up to date at <paramref name="now"/>, granting whatever
         /// refills have fallen due.
         /// </summary>
-        public Hearts At(long now)
+        public Hearts At(long now) => At(now, 0L);
+
+        /// <summary>
+        /// The same, with a heart boost running until <paramref name="boostUntilUnix"/>.
+        ///
+        /// <para>
+        /// The boost is passed in rather than stored on the struct because it is not a
+        /// property of the hearts — it is a fact about the account, it merges separately,
+        /// and a value type that carried it would have two states meaning "no boost" and
+        /// a merge that had to reconcile them. Keeping it a parameter is also what lets
+        /// the whole rule be exercised over arbitrary boost windows in a test.
+        /// </para>
+        /// <para>
+        /// An already-running timer is pulled forward when a boost is active, never
+        /// pushed back. A player who is granted a boost with six hours left on the clock
+        /// would otherwise get nothing from it until the following heart, which reads as
+        /// the boost simply not working.
+        /// </para>
+        /// </summary>
+        public Hearts At(long now, long boostUntilUnix)
         {
             if (IsFull) return new Hearts(HeartRules.Max, 0);
 
@@ -80,13 +120,23 @@ namespace GlimmerGrove.Persistence
             // written before hearts regenerated, or one repaired by a merge. Start it
             // now rather than granting a heart immediately, which would pay the player
             // for time they did not wait.
-            long deadline = NextRefillUnix > 0 ? NextRefillUnix : now + HeartRules.RefillSeconds;
+            long deadline = NextRefillUnix > 0
+                ? NextRefillUnix
+                : now + HeartRules.PeriodAt(now, boostUntilUnix);
+
+            // Only ever shortens: min() against a boosted wait from this moment cannot
+            // move a deadline further away, so repeating this on every read is stable.
+            if (boostUntilUnix > now)
+            {
+                long boosted = now + HeartRules.BoostedRefillSeconds;
+                if (boosted < deadline) deadline = boosted;
+            }
 
             int count = Count;
             while (count < HeartRules.Max && now >= deadline)
             {
                 count++;
-                deadline += HeartRules.RefillSeconds;
+                deadline += HeartRules.PeriodAt(deadline, boostUntilUnix);
             }
 
             return count >= HeartRules.Max ? new Hearts(HeartRules.Max, 0) : new Hearts(count, deadline);
@@ -96,11 +146,13 @@ namespace GlimmerGrove.Persistence
         /// Spends hearts, starting the refill clock if it was not already running.
         /// Returns the state unchanged when there is nothing to spend.
         /// </summary>
-        public Hearts Spend(int amount, long now)
+        public Hearts Spend(int amount, long now) => Spend(amount, now, 0L);
+
+        public Hearts Spend(int amount, long now, long boostUntilUnix)
         {
             if (amount <= 0) return this;
 
-            var current = At(now);
+            var current = At(now, boostUntilUnix);
             if (current.Count <= 0) return current;
 
             int count = current.Count - amount;
@@ -111,23 +163,36 @@ namespace GlimmerGrove.Persistence
             // first one further away.
             long deadline = current.NextRefillUnix > 0
                 ? current.NextRefillUnix
-                : now + HeartRules.RefillSeconds;
+                : now + HeartRules.PeriodAt(now, boostUntilUnix);
 
             return new Hearts(count, deadline);
         }
 
         /// <summary>Grants hearts — a purchase, a gift, a server correction.</summary>
-        public Hearts Grant(int amount, long now)
-        {
-            if (amount <= 0) return At(now);
+        public Hearts Grant(int amount, long now) => Grant(amount, now, 0L);
 
-            var current = At(now);
+        public Hearts Grant(int amount, long now, long boostUntilUnix)
+        {
+            var current = At(now, boostUntilUnix);
+            if (amount <= 0) return current;
+
             int count = current.Count + amount;
 
             return count >= HeartRules.Max
                 ? new Hearts(HeartRules.Max, 0)
                 : new Hearts(count, current.NextRefillUnix);
         }
+
+        /// <summary>
+        /// Joins two boost deadlines. The later one wins.
+        ///
+        /// Generous, where <see cref="Join"/> is conservative, and the difference is that
+        /// a boost cannot be minted by playing on two devices — it arrives from a chest,
+        /// and that chest's award is deduplicated by its own derived id long before this
+        /// runs. Taking the earlier deadline would instead let a second device that has
+        /// never opened a chest cut short a boost the player is holding on their phone.
+        /// </summary>
+        public static long JoinBoost(long a, long b) => a > b ? a : b;
 
         /// <summary>Seconds until the next heart, or 0 when full or overdue.</summary>
         public long SecondsToNext(long now)
