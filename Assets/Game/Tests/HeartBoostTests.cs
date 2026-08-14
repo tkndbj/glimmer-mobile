@@ -145,19 +145,21 @@ namespace GlimmerGrove.Tests
         }
 
         /// <summary>
-        /// A boost must not resurrect hearts the merge is supposed to keep conservative.
-        /// The count still takes the smaller side; only the rate is generous.
+        /// The boost is generous where the ledger is exact, and the two do not interfere.
+        /// Both devices produced five hearts; the tablet has played two more runs, so the
+        /// merged count is the tablet's — not because it is smaller, but because its spend
+        /// is a thing that happened and the join keeps it.
         /// </summary>
         [Test]
-        public void TheBoostDoesNotChangeHowTheHeartCountMerges()
+        public void TheBoostDoesNotChangeHowTheHeartLedgerMerges()
         {
-            var phone = new Hearts(4, T0 + Fast);
-            var tablet = new Hearts(2, T0 + Slow);
+            var phone = Hearts.Ledger(produced: 5, spent: 1, dueUnix: T0 + Fast);
+            var tablet = Hearts.Ledger(produced: 5, spent: 3, dueUnix: T0 + Slow);
 
             var merged = Hearts.Join(phone, tablet);
 
-            Assert.AreEqual(2, merged.Count);
-            Assert.AreEqual(T0 + Slow, merged.NextRefillUnix, "the later deadline has granted the least");
+            Assert.AreEqual(2, merged.Count, "both spends survive; neither device mints");
+            Assert.AreEqual(T0 + Slow, merged.NextRefillUnix, "the later deadline has paid out least");
         }
     }
 }

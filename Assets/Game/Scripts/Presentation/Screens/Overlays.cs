@@ -94,6 +94,21 @@ namespace GlimmerGrove
         /// <summary>False when the player was already at zero — then nothing was taken.</summary>
         public bool HeartWasCharged;
 
+        Btn _watch;
+        Text _watchLabel;
+
+        /// <summary>
+        /// Keeps the offer button's countdown live while the panel is open.
+        ///
+        /// A defeat panel is somewhere players sit for a while, deciding. A cooldown that
+        /// only updated when the screen was reopened would tick down invisibly and the
+        /// button would stay stale until they gave up on it.
+        /// </summary>
+        void Update() => PaintWatch();
+
+        void PaintWatch()
+            => AdOfferButton.Paint(_watch, _watchLabel, AdPlacement.HeartRefill, "ui.ads.hearts_cta");
+
 
         /// <summary>
         /// Written out rather than built from the enum name, so the loc gate can see
@@ -112,7 +127,11 @@ namespace GlimmerGrove
             // The offer only belongs on the branch that has no retry button. A player who
             // can still play does not need to be sold a video, and putting one there would
             // turn every defeat into an advertisement.
-            bool offering = !canRetry && RewardedAds.CanOffer(AdPlacement.HeartRefill);
+            //
+            // ShouldOffer, not CanOffer: a cooldown draws the button disabled with its own
+            // countdown rather than hiding it, so a player who watched one a minute ago can
+            // see when the next is due instead of concluding the offer was a fluke.
+            bool offering = !canRetry && RewardedAds.ShouldOffer(AdPlacement.HeartRefill);
 
             // Grown rather than crowded. The alternative — squeezing a third button into
             // the same 880 — leaves the last one a few pixels off the panel edge, which is
@@ -148,9 +167,11 @@ namespace GlimmerGrove
                 // the wait is how a panel reads as a trick.
                 Body("Wait", Loc.Get("ui.defeat.watch_for_hearts"), -520f, 96f, Pal.Ember);
 
-                UIKit.TextButton("WatchAd", Panel, "btn_green", Loc.Get("ui.ads.hearts_cta"), 44,
-                                 new Vector2(620f, 140f), new Vector2(.5f, 1f), new Vector2(0f, -644f),
-                                 OfferHearts);
+                _watch = UIKit.TextButton("WatchAd", Panel, "btn_green", Loc.Get("ui.ads.hearts_cta"), 44,
+                                          new Vector2(620f, 140f), new Vector2(.5f, 1f), new Vector2(0f, -644f),
+                                          OfferHearts);
+                _watchLabel = _watch.GetComponentInChildren<Text>();
+                PaintWatch();
             }
             else
             {
@@ -249,13 +270,15 @@ namespace GlimmerGrove
     {
         Text _countdown;
         bool _offering;
+        Btn _watch;
+        Text _watchLabel;
 
         protected override void Build()
         {
             // Resolved once, at the top, because it decides the panel's height as well as
             // its buttons — and asking twice risks the two disagreeing if fill arrives in
             // between, leaving a button drawn outside the panel it belongs to.
-            _offering = RewardedAds.CanOffer(AdPlacement.HeartRefill);
+            _offering = RewardedAds.ShouldOffer(AdPlacement.HeartRefill);
 
             MakePanel(new Vector2(860f, _offering ? 900f : 780f), Loc.Get("ui.hearts.empty"));
 
@@ -281,17 +304,18 @@ namespace GlimmerGrove
 
             if (_offering)
             {
-                UIKit.TextButton("WatchAd", Panel, "btn_green", Loc.Get("ui.ads.hearts_cta"), 44,
-                                 new Vector2(560f, 136f), new Vector2(.5f, 1f), new Vector2(0f, -616f),
-                                 () => Flow.Modal<AdOfferOverlay>(v =>
-                                 {
-                                     v.PlacementId = AdPlacement.HeartRefill;
+                _watch = UIKit.TextButton("WatchAd", Panel, "btn_green", Loc.Get("ui.ads.hearts_cta"), 44,
+                                          new Vector2(560f, 136f), new Vector2(.5f, 1f), new Vector2(0f, -616f),
+                                          () => Flow.Modal<AdOfferOverlay>(v =>
+                                          {
+                                              v.PlacementId = AdPlacement.HeartRefill;
 
-                                     // Closing on reward rather than repainting: this panel
-                                     // exists to explain an empty heart bar, and once it is
-                                     // no longer empty the panel has nothing to say.
-                                     v.Rewarded = () => Close();
-                                 }));
+                                              // Closing on reward rather than repainting: this
+                                              // panel exists to explain an empty heart bar, and
+                                              // once it is no longer empty it has nothing to say.
+                                              v.Rewarded = () => Close();
+                                          }));
+                _watchLabel = _watch.GetComponentInChildren<Text>();
 
                 UIKit.TextButton("Ok", Panel, "btn_blue", Loc.Get("ui.common.got_it"), 44,
                                  new Vector2(560f, 120f), new Vector2(.5f, 1f), new Vector2(0f, -744f),
@@ -309,6 +333,10 @@ namespace GlimmerGrove
 
         void Paint()
         {
+            // The offer's own cooldown runs independently of the heart clock, so it is
+            // repainted here too rather than only when the panel is built.
+            AdOfferButton.Paint(_watch, _watchLabel, AdPlacement.HeartRefill, "ui.ads.hearts_cta");
+
             if (!_countdown) return;
 
             long seconds = Profile.SecondsToNextHeart;

@@ -108,7 +108,14 @@ const save = {
     } } },
     settings: { mapValue: { fields: { music: { integerValue: "1" }, sfx: { integerValue: "1" },
                                       haptics: { integerValue: "1" }, language: { stringValue: "en" } } } },
-    wallet: { mapValue: { fields: { hearts: { integerValue: "5" },
+    // The heart ledger, plus the derived count beside it. Sub-fields of `wallet` are not
+    // named by the rules, but this fixture is the only thing that writes the shape the
+    // client actually sends, so it sends the whole of it.
+    wallet: { mapValue: { fields: { heartsProduced: { integerValue: "9" },
+                                    heartsSpent: { integerValue: "5" },
+                                    heartsDueUnix: { integerValue: "1700028800" },
+                                    hearts: { integerValue: "4" },
+                                    heartsNextRefillUnix: { integerValue: "1700028800" },
                                     heartBoostUntilUnix: { integerValue: "0" },
                                     displayName: { stringValue: "Grovekeeper" } } } },
     // Today's chest counters. Present here for one reason: this fixture is the only
@@ -123,6 +130,16 @@ const save = {
     daily: { mapValue: { fields: { dayKey: { integerValue: "20315" },
                                    runs: { integerValue: "2" },
                                    claimed: { integerValue: "0" } } } },
+    // Today's rewarded-ad allowance, here for exactly the reason `daily` is above: the
+    // mapper sends it, so this has to send it, or nothing checks that the live rules
+    // accept it. `watched` is a list of maps rather than a map keyed by placement id,
+    // because a placement id is content and a Firestore field name is not.
+    ads: { mapValue: { fields: { dayKey: { integerValue: "20315" },
+                                 lastWatchedUnix: { integerValue: "1700000000" },
+                                 watched: { arrayValue: { values: [
+                                   { mapValue: { fields: { placement: { stringValue: "heart_refill" },
+                                                           count: { integerValue: "1" } } } },
+                                 ] } } } } },
     progression: { mapValue: { fields: { xpHighWater: { integerValue: "100" },
                                          levelHighWater: { integerValue: "2" } } } },
     cloud: { mapValue: { fields: { userId: { stringValue: uid }, revision: { integerValue: "1" },

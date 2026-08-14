@@ -76,6 +76,9 @@
     { "key": "ui.ads.dismissed", "text": "the video has to finish to earn the reward" },
     { "key": "ui.ads.failed", "text": "that video did not finish  ·  nothing was taken" },
     { "key": "ui.ads.thanks", "text": "thank you  ·  it is yours" },
+    { "key": "ui.ads.btn_cooling", "text": "READY IN {0}" },
+    { "key": "ui.ads.btn_cap", "text": "BACK TOMORROW" },
+    { "key": "ui.ads.btn_loading", "text": "FINDING A VIDEO..." },
 
     { "key": "ui.levels.chapter_locked", "text": "clear this chapter to go on" },
 
@@ -208,7 +211,6 @@
     { "key": "ui.avatar.thorn", "text": "Thorn" },
 
     { "key": "ui.common.got_it", "text": "GOT IT" },
-    { "key": "ui.common.not_now", "text": "NOT NOW" },
     { "key": "ui.common.done", "text": "DONE" },
     { "key": "ui.common.coming_soon", "text": "COMING SOON" },
 
@@ -239,6 +241,9 @@
 
 
     { "key": "ui.tip.rooted.title", "text": "ROOTED" },
-    { "key": "ui.tip.rooted.body", "text": "A rooted tile cannot be turned. Treat it as a fixed part of the path and route the rest of the grove around it." }
+    { "key": "ui.tip.rooted.body", "text": "A rooted tile cannot be turned. Treat it as a fixed part of the path and route the rest of the grove around it." },
+
+    { "key": "ui.tip.mixing.title", "text": "BLENDED LIGHT" },
+    { "key": "ui.tip.mixing.body", "text": "This critter dreams of a colour no single heart carries. Join two hearts into one network and their light blends — red and green make gold." }
   ]
 }

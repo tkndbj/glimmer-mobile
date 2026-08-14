@@ -51,7 +51,7 @@ service cloud.firestore {
         return d.keys().hasOnly([
                  'schemaVersion', 'updatedUnix', 'settings', 'wallet', 'levels',
                  'progression', 'cloud', 'lastPlayedLevelId', 'legacyImportDone',
-                 'tipsSeen', 'daily', 'checksum'
+                 'tipsSeen', 'daily', 'ads', 'checksum'
                ])
                && d.schemaVersion is int
                && d.schemaVersion >= 1 && d.schemaVersion <= 100
@@ -67,7 +67,15 @@ service cloud.firestore {
                // re-rolls each chest itself and refuses a second grant for the same id,
                // so the worst a forged counter buys is a day's chests without playing
                // for them — which is what an honest player gets anyway.
-               && (!('daily' in d) || d.daily is map);
+               && (!('daily' in d) || d.daily is map)
+               // Today's rewarded-ad allowance. Client-owned and forgeable in exactly the
+               // same way, and accounted for in exactly the same way: nothing here decides
+               // what an ad paid. That is granted by the server when the ad network's own
+               // signed callback arrives, so a forged counter buys another offer and no
+               // currency at all. Bounded because the client controls its length.
+               && (!('ads' in d) || (d.ads is map
+                                     && (!('watched' in d.ads)
+                                         || (d.ads.watched is list && d.ads.watched.size() <= 64))));
       }
 
       // The revision only ever moves forward, which gives the sync optimistic

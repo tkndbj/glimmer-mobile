@@ -152,6 +152,18 @@ What that means in practice here:
 11. **Cloud conflicts merge; they never prompt.** `SaveMerge.Join` is a join — idempotent
     and order-independent — so both devices' work survives. A "keep local or cloud?"
     dialog is data loss wearing a consent costume. Do not add one.
+11b. **Anything a merge touches must be monotonic, or it is not mergeable.** A stored
+    *count* — hearts, and anything shaped like hearts — cannot be joined: two devices
+    showing 3 and 0 are equally consistent with "one spent three" and "one has not heard
+    about a refill", so every rule over the pair is wrong somewhere. Larger mints, smaller
+    deletes. Hearts shipped with smaller and destroyed a refill on every sync, because a
+    sync is pull → join → push and the stale side won before the local value had ever been
+    uploaded. The fix is the shape the currency ledger already had: store counters of
+    things that happened (`heartsProduced`, `heartsSpent`) and derive the count, so the
+    merge is `max` and the larger value is always the one that knows more. Before adding a
+    field the merge reads, check it only ever rises — and that its "absent" state is a
+    value a real one cannot hold, because `JsonUtility` writes a zero into every field an
+    older file never had.
 11a. **The ledger is a map keyed by level id, never an array.** That makes a duplicated
     record unrepresentable rather than something the server has to filter, and lets a
     sync write `levels.<id>` alone instead of re-uploading thousands of entries.
@@ -227,6 +239,16 @@ Every chest has a **guaranteed floor**, which is why there is no pity counter an
 per-player streak state to merge. And the drop rates are **content** in `progression.json`,
 published to `config/progression` by the seeder, with the odds printed by `Validate Content`
 and shown on the chest overlay.
+
+**Hearts are a ledger, not a count — save schema v8.** `Hearts` stores everything ever
+produced, everything ever spent and when the next refill is due; the count is derived and
+the merge is three `max`es. It replaces a stored count merged by taking the smaller, which
+destroyed a heart on every sync — see invariant 11b for why that was unfixable without
+changing the representation. The v4 count and deadline are still written as a derived
+mirror, for a client rolled back to an older build, and are read only when
+`heartsProduced` is zero or less, which is what identifies a pre-v8 file. Hearts were the
+only merge in the save file that could lose something; the currency ledgers, the
+progression floors, the chest and ad counters and the tip set were all already joins.
 
 The `heart_boost` drop halves heart regeneration (4h instead of 8h) for 24 hours;
 `Hearts.At` takes the boost deadline and asks per refill, so a catch-up spanning the

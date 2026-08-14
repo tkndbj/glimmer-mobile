@@ -25,6 +25,54 @@ namespace GlimmerGrove
     /// costs far more than the ad it failed to show.
     /// </para>
     /// </summary>
+    /// <summary>
+    /// The caption and enabled state of an offer button, wherever one is drawn.
+    ///
+    /// Shared by the three entry points so a cooldown reads identically on the defeat
+    /// panel, the out-of-hearts gate and the home screen. Three copies of this would be
+    /// three chances for one of them to keep saying "WATCH" while the button does nothing.
+    /// </summary>
+    static class AdOfferButton
+    {
+        /// <summary>What the button should say, given the placement's current state.</summary>
+        public static string Caption(AdOfferStatus status, string readyKey)
+        {
+            switch (status.State)
+            {
+                case AdOfferState.Ready:
+                    return Loc.Get(readyKey);
+
+                case AdOfferState.CoolingDown:
+                    return string.Format(Loc.Get("ui.ads.btn_cooling"),
+                                         Profile.Countdown(status.SecondsRemaining));
+
+                case AdOfferState.CapReached:
+                    return Loc.Get("ui.ads.btn_cap");
+
+                default:
+                    return Loc.Get("ui.ads.btn_loading");
+            }
+        }
+
+        /// <summary>
+        /// Repaints a button in place. Safe to call every frame — the label is only
+        /// assigned when it actually changed, so a countdown does not rebuild the mesh
+        /// sixty times a second for the fifty-nine frames that read the same.
+        /// </summary>
+        public static void Paint(Btn button, Text label, string placementId, string readyKey)
+        {
+            if (button == null) return;
+
+            var status = RewardedAds.Status(placementId);
+            button.Interactable = status.CanShow;
+
+            if (label == null) return;
+
+            string caption = Caption(status, readyKey);
+            if (!string.Equals(label.text, caption, StringComparison.Ordinal)) label.text = caption;
+        }
+    }
+
     public sealed class AdOfferOverlay : ModalView
     {
         /// <summary>Which placement is being offered. Set by the caller before Build runs.</summary>
@@ -42,22 +90,30 @@ namespace GlimmerGrove
 
         protected override void Build()
         {
-            MakePanel(new Vector2(880f, 820f), Loc.Get(TitleKey(PlacementId)));
+            MakePanel(new Vector2(880f, 760f), Loc.Get(TitleKey(PlacementId)));
 
             BuildRewardCard();
 
             _status = UIKit.Titled("Status", Panel, string.Empty, 30,
                                    new Color(.36f, .25f, .18f), TextAnchor.UpperCenter,
-                                   new Vector2(680f, 110f), new Vector2(.5f, 1f), new Vector2(0f, -516f),
+                                   new Vector2(680f, 96f), new Vector2(.5f, 1f), new Vector2(0f, -500f),
                                    outline: 0f, shadow: 0f, wrap: true);
 
             _watch = UIKit.TextButton("Watch", Panel, "btn_green", Loc.Get("ui.ads.watch"), 46,
-                                      new Vector2(600f, 140f), new Vector2(.5f, 1f), new Vector2(0f, -628f),
+                                      new Vector2(600f, 150f), new Vector2(.5f, 1f), new Vector2(0f, -648f),
                                       OnWatch);
 
-            UIKit.TextButton("Close", Panel, "btn_blue", Loc.Get("ui.common.not_now"), 40,
-                             new Vector2(600f, 116f), new Vector2(.5f, 1f), new Vector2(0f, -760f),
-                             () => Close());
+            // A corner cross rather than a second full-width button. Nobody taps "not now",
+            // and a whole button spent on the option to decline reads as a panel that
+            // expects to be declined.
+            //
+            // It is not removed altogether, though, and that is deliberate: a modal whose
+            // only exit is tapping the scrim is a modal that a fair number of players will
+            // experience as being trapped by an advert. That is a dark pattern, it is the
+            // kind of thing store reviewers flag, and it earns one-star reviews from people
+            // who would otherwise have watched the video tomorrow.
+            UIKit.IconButton("Dismiss", Panel, "sq_dark", "ic_close", new Vector2(84f, 84f),
+                             new Vector2(1f, 1f), new Vector2(-58f, -58f), () => Close());
 
             RewardedAds.Changed += Repaint;
             Repaint();

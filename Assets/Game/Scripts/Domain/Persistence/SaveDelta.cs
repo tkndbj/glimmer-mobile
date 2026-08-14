@@ -122,8 +122,14 @@ namespace GlimmerGrove.Persistence
 
             var walletA = remote.wallet ?? WalletDto.Unwritten();
             var walletB = merged.wallet ?? WalletDto.Unwritten();
-            if (walletA.hearts != walletB.hearts) return true;
-            if (walletA.heartsNextRefillUnix != walletB.heartsNextRefillUnix) return true;
+            // The heart ledger, and not the count beside it. The count is derived from
+            // these three, so comparing it as well would only add a way for the two
+            // answers to disagree — and comparing it *instead* would miss a refill
+            // deadline that moved without the count moving, which is precisely the state
+            // the other device needs in order to merge correctly.
+            if (walletA.heartsProduced != walletB.heartsProduced) return true;
+            if (walletA.heartsSpent != walletB.heartsSpent) return true;
+            if (walletA.heartsDueUnix != walletB.heartsDueUnix) return true;
             if (walletA.heartBoostUntilUnix != walletB.heartBoostUntilUnix) return true;
             if (!Same(walletA.displayName, walletB.displayName)) return true;
             if (!Same(walletA.avatarId, walletB.avatarId)) return true;

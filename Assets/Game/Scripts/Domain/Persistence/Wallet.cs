@@ -121,8 +121,12 @@ namespace GlimmerGrove.Persistence
             get
             {
                 var refreshed = _hearts.At(GameClock.NowUnix(), _heartBoostUntil);
-                if (refreshed.Count == _hearts.Count && refreshed.NextRefillUnix == _hearts.NextRefillUnix)
-                    return _hearts;
+
+                // The whole ledger is compared, not the count on screen. Reaching the cap
+                // advances the refill deadline without moving the count, and a device that
+                // did not persist that would merge against a deadline it had already
+                // passed. Hearts.Equals is the ledger comparison for exactly this reason.
+                if (refreshed == _hearts) return _hearts;
 
                 _hearts = refreshed;
                 SaveService.Save();
@@ -156,7 +160,7 @@ namespace GlimmerGrove.Persistence
 
         static void Commit(Hearts next)
         {
-            bool changed = next.Count != _hearts.Count || next.NextRefillUnix != _hearts.NextRefillUnix;
+            bool changed = next != _hearts;
             _hearts = next;
 
             if (!changed) return;
@@ -224,12 +228,35 @@ namespace GlimmerGrove.Persistence
             // starts the clock from the next read rather than back-paying the gap.
             _heartBoostUntil = w.heartBoostUntilUnix < 0 ? 0L : w.heartBoostUntilUnix;
 
-            _hearts = w.hearts < 0
-                ? Hearts.Full
-                : new Hearts(w.hearts, w.heartsNextRefillUnix).At(GameClock.NowUnix(), _heartBoostUntil);
+            _hearts = ReadHearts(w).At(GameClock.NowUnix(), _heartBoostUntil);
 
             _name = string.IsNullOrEmpty(w.displayName) ? DefaultName : w.displayName;
             _avatarId = w.avatarId ?? string.Empty;
+        }
+
+        /// <summary>
+        /// Reads the heart ledger, upgrading a pre-v8 file on the way through.
+        ///
+        /// <para>
+        /// An older file carries a count and a deadline and no history at all, so the
+        /// count becomes the whole of <c>produced</c> against nothing spent. That is the
+        /// only reading available and it is the right one: it preserves exactly what the
+        /// player was holding, and the invariants hold trivially because a count is never
+        /// above the cap. Every heart spent before the upgrade is simply forgotten, which
+        /// costs nothing — only the difference between the two counters is ever read.
+        /// </para>
+        /// </summary>
+        static Hearts ReadHearts(WalletDto w)
+        {
+            // > 0, never >= 0: JsonUtility writes a zero into a field a v7 file never had,
+            // so a ledger has to announce itself with a value nothing else can produce.
+            // See WalletDto.heartsProduced for why zero is unreachable for a real one.
+            if (w.heartsProduced > 0)
+                return Hearts.Ledger(w.heartsProduced, w.heartsSpent, w.heartsDueUnix);
+
+            if (w.hearts < 0) return Hearts.Full;                  // never written: seed a full set
+
+            return new Hearts(w.hearts, w.heartsNextRefillUnix);
         }
 
         /// <summary>
@@ -262,8 +289,16 @@ namespace GlimmerGrove.Persistence
             {
                 coins = LegacyMirror(Currency.Credits),
                 gems = LegacyMirror(Currency.Gems),
+                // The ledger, which is what anything merging reads.
+                heartsProduced = _hearts.Produced,
+                heartsSpent = _hearts.Spent,
+                heartsDueUnix = _hearts.DueUnix,
+
+                // and its derived mirror, for a client rolled back to a pre-v8 build.
+                // Written, never read back while the ledger is present.
                 hearts = _hearts.Count,
                 heartsNextRefillUnix = _hearts.NextRefillUnix,
+
                 heartBoostUntilUnix = _heartBoostUntil,
                 displayName = _name,
                 avatarId = _avatarId,

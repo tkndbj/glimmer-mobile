@@ -172,11 +172,20 @@ namespace GlimmerGrove.Persistence
                 coins = newer.coins,
                 gems = newer.gems,
 
-                // Hearts are consumable, so the smaller count is the honest one: taking
-                // the larger would let two devices refill each other indefinitely. The
-                // refill deadline travels with the count and joins the same way — see
-                // Hearts.Join, which owns the rule so the merge and the game cannot
-                // disagree about it.
+                // Hearts join as a ledger — everything produced, everything spent, both
+                // taken at their larger value — so a grant and a spend both survive and
+                // neither device can mint. Owned by Hearts.Join so the merge and the game
+                // cannot disagree about what a heart is.
+                //
+                // This is where hearts used to be destroyed. The old rule joined a stored
+                // count by taking the smaller, which is only defensible if the two sides
+                // are concurrent peers; a sync is pull, join, push, so the usual case is a
+                // stale snapshot winning against a device that had just been paid a
+                // refill, and then that loss being pushed back to the server.
+                heartsProduced = hearts.Produced,
+                heartsSpent = hearts.Spent,
+                heartsDueUnix = hearts.DueUnix,
+
                 hearts = hearts.Count,
                 heartsNextRefillUnix = hearts.NextRefillUnix,
 
@@ -227,15 +236,47 @@ namespace GlimmerGrove.Persistence
         }
 
         /// <summary>
-        /// Joins two devices' hearts, honouring "never written" on either side.
+        /// Joins two devices' hearts, honouring both "never written" and "written by a
+        /// build that kept no ledger".
         ///
-        /// A -1 count means that file predates hearts being stored at all, so it holds
-        /// no opinion and the other side stands. Once both are real values the rule
-        /// lives in <see cref="Hearts.Join"/> — kept there rather than here so the
-        /// merge cannot drift from what the game believes a heart is.
+        /// <para>
+        /// Where both sides carry a v8 ledger the rule is <see cref="Hearts.Join"/> and
+        /// nothing else — kept there rather than here so the merge cannot drift from what
+        /// the game believes a heart is.
+        /// </para>
+        /// <para>
+        /// A pre-v8 side carries a count and no history, which is not a ledger and cannot
+        /// be joined with one directly: its <c>spent</c> would read as zero and every
+        /// heart the modern side had spent would come back. So it is rebased onto the
+        /// modern side's <c>spent</c> first — see <see cref="Hearts.Observation"/> — and
+        /// the join then resolves to whichever side holds more. Generous, bounded by the
+        /// cap, and confined to the upgrade window; the alternative is deleting hearts
+        /// from whichever device happened to update second, which is the bug this whole
+        /// change exists to end.
+        /// </para>
+        /// <para>
+        /// When neither side has a ledger — a device's first sync after updating, against
+        /// a cloud document a pre-v8 build last wrote — both rebase onto zero and the
+        /// larger count wins. That is deliberately the generous direction: it is the exact
+        /// moment the old rule did its damage, so it is the moment worth repairing rather
+        /// than preserving.
+        /// </para>
         /// </summary>
         static Hearts JoinedHearts(WalletDto mine, WalletDto other)
         {
+            // > 0, never >= 0. An absent field deserialises as zero, so a ledger has to be
+            // recognisable by a value no absent one can hold — see WalletDto.heartsProduced.
+            bool mineHasLedger = mine.heartsProduced > 0;
+            bool otherHasLedger = other.heartsProduced > 0;
+
+            if (mineHasLedger && otherHasLedger)
+                return Hearts.Join(LedgerOf(mine), LedgerOf(other));
+
+            if (mineHasLedger) return Hearts.Join(LedgerOf(mine), RebasedOnto(other, LedgerOf(mine)));
+            if (otherHasLedger) return Hearts.Join(LedgerOf(other), RebasedOnto(mine, LedgerOf(other)));
+
+            // Neither keeps a ledger. -1 is "never written at all", which holds no opinion
+            // and must not be read as a count of zero.
             if (mine.hearts < 0 && other.hearts < 0) return Hearts.Full;
             if (mine.hearts < 0) return new Hearts(other.hearts, other.heartsNextRefillUnix);
             if (other.hearts < 0) return new Hearts(mine.hearts, mine.heartsNextRefillUnix);
@@ -243,6 +284,21 @@ namespace GlimmerGrove.Persistence
             return Hearts.Join(new Hearts(mine.hearts, mine.heartsNextRefillUnix),
                                new Hearts(other.hearts, other.heartsNextRefillUnix));
         }
+
+        static Hearts LedgerOf(WalletDto w)
+            => Hearts.Ledger(w.heartsProduced, w.heartsSpent, w.heartsDueUnix);
+
+        /// <summary>
+        /// A pre-v8 side's count, expressed against the ledger it is being joined with.
+        ///
+        /// An unwritten count holds no opinion, so it rebases to exactly the other side
+        /// rather than to empty — otherwise a wallet section that was never written would
+        /// read as a player who had spent everything.
+        /// </summary>
+        static Hearts RebasedOnto(WalletDto legacy, Hearts ledger)
+            => legacy.hearts < 0
+                ? ledger
+                : Hearts.Observation(legacy.hearts, legacy.heartsNextRefillUnix, ledger.Spent);
 
         // --------------------------------------------------------- progression
         static ProgressionStateDto JoinProgression(ProgressionStateDto mine, ProgressionStateDto other)

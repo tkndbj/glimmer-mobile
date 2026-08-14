@@ -206,7 +206,7 @@ namespace GlimmerGrove
             ResourcePill(row, -318f, Pal.Rose, "ic_heart", $"{Profile.Hearts}/{Profile.MaxHearts}", false,
                          () =>
                          {
-                             if (RewardedAds.CanOffer(AdPlacement.HeartRefill))
+                             if (RewardedAds.ShouldOffer(AdPlacement.HeartRefill))
                                  Flow.Modal<AdOfferOverlay>(v => v.PlacementId = AdPlacement.HeartRefill);
                              else if (!Profile.CanPlay) Flow.Modal<OutOfHeartsOverlay>();
                              else Scenery.Toast(Content, HeartsLine(), Pal.Rose, 2.4f);
@@ -214,7 +214,7 @@ namespace GlimmerGrove
             ResourcePill(row, 0f, Pal.Gold, null, Profile.Short(Profile.Coins), true,
                          () =>
                          {
-                             if (RewardedAds.CanOffer(AdPlacement.CoinBonus))
+                             if (RewardedAds.ShouldOffer(AdPlacement.CoinBonus))
                                  Flow.Modal<AdOfferOverlay>(v => v.PlacementId = AdPlacement.CoinBonus);
                              else
                                  Flow.Modal<ComingSoonOverlay>(v => v.Configure("Coins", "ic_chest",

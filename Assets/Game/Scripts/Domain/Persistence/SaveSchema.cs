@@ -44,8 +44,16 @@ namespace GlimmerGrove.Persistence
         ///      one was. All three are caps and pacing, not currency — what an ad actually
         ///      paid arrives through the v6 grant queue, keyed on the impression nonce, so
         ///      losing this section costs a player nothing they earned.
+        /// v8 — the heart ledger (<see cref="WalletDto.heartsProduced"/>,
+        ///      <see cref="WalletDto.heartsSpent"/>, <see cref="WalletDto.heartsDueUnix"/>),
+        ///      replacing a stored count that could not be merged without either minting
+        ///      hearts or destroying them. It destroyed them: a stale cloud snapshot won
+        ///      the join and was then pushed back, so a timer refill did not survive the
+        ///      app being backgrounded. See <see cref="Hearts"/>. The v4 count and deadline
+        ///      remain, written as a derived mirror so a client rolled back to an older
+        ///      build still reads the right number.
         /// </summary>
-        public const int Version = 7;
+        public const int Version = 8;
 
         /// <summary>Progress that predates this file: index-keyed keys in PlayerPrefs.</summary>
         public const int LegacyPlayerPrefsVersion = 0;
@@ -146,20 +154,70 @@ namespace GlimmerGrove.Persistence
         public int coins;
         public int gems;
 
-        /// <summary>Hearts held. -1 means never written, so a full set is seeded.</summary>
+        /// <summary>
+        /// Hearts held, as a <b>derived mirror</b> of the v8 ledger below. -1 means never
+        /// written, so a full set is seeded.
+        ///
+        /// Read only when <see cref="heartsProduced"/> says the writer kept no ledger —
+        /// a pre-v8 build, or a cloud document one of those last pushed. Still written on
+        /// every save, for the same reason <see cref="coins"/> is: a player rolled back to
+        /// an older build should see their real hearts rather than a seeded five.
+        /// </summary>
         public int hearts;
 
         /// <summary>
         /// When the next heart lands, as a Unix timestamp; 0 while the player is full
-        /// and no timer is running.
-        ///
-        /// The deadline is stored rather than "when we last topped up" so that refills
-        /// cannot drift: each one advances this by exactly one period, and closing the
-        /// app mid-timer neither loses nor gains the remainder. A v3 file has no value
-        /// here, which reads as 0 — see <see cref="Hearts.At"/>, which starts the clock
-        /// from the next read instead of back-paying time nobody waited.
+        /// and no timer is running. The derived mirror of <see cref="heartsDueUnix"/>,
+        /// carrying the "no timer" sentinel that the ledger deliberately does not.
         /// </summary>
         public long heartsNextRefillUnix;
+
+        /// <summary>
+        /// Every heart ever handed to this player — timer refills, chests, ads, the
+        /// starting set. Only ever rises.
+        ///
+        /// <para>
+        /// <b>Zero or less means the writer kept no ledger</b>, and that is a real
+        /// sentinel rather than a hopeful one. <c>JsonUtility</c> fills an absent field
+        /// with zero, so a pre-v8 file cannot be recognised by a -1 nobody wrote — reading
+        /// one that way would hand every existing player an empty ledger and take all five
+        /// of their hearts on the upgrade, which is a worse version of the bug this
+        /// replaces. Zero is safe to spend as the marker because it is unreachable: an
+        /// account is seeded at a full set, this only ever rises, and so any genuine
+        /// ledger has produced at least <see cref="HeartRules.Max"/>. Even if one somehow
+        /// did read as zero the fallback is <see cref="hearts"/>, which would also be
+        /// zero — the sentinel cannot cost anybody a heart.
+        /// </para>
+        ///
+        /// <para>
+        /// This field and the two below are the whole reason hearts survive a sync. A
+        /// stored count cannot be merged: two devices showing 3 and 0 are equally
+        /// consistent with "one of them spent three" and "one of them has not heard about
+        /// a refill", so any rule over the pair mints hearts in one reading and deletes
+        /// them in the other. Counters of things that happened have no such ambiguity —
+        /// the larger value is always the one that knows more, so the merge is
+        /// <c>max</c> and loses nothing. Same argument, same shape and the same reasons as
+        /// <see cref="CurrencyLedgerDto.grantedBaseline"/>; see <see cref="Hearts"/> for
+        /// the invariants and why the join preserves them.
+        /// </para>
+        /// </summary>
+        public long heartsProduced;
+
+        /// <summary>
+        /// Every heart ever consumed. Only ever rises. Read only when
+        /// <see cref="heartsProduced"/> says a ledger is present — on its own, zero is
+        /// both "spent nothing" and "field absent", and it does not have to tell them
+        /// apart.
+        /// </summary>
+        public long heartsSpent;
+
+        /// <summary>
+        /// When the pending refill lands. Advances one period per refill, and forward
+        /// again when a spend restarts an idle timer; never rewound, and never cleared on
+        /// reaching the cap — a field that is zeroed cannot be merged with <c>max</c>.
+        /// Zero means only "this timer has never started".
+        /// </summary>
+        public long heartsDueUnix;
 
         /// <summary>
         /// When the faster heart regeneration bought by a chest runs out, as a Unix
@@ -184,7 +242,10 @@ namespace GlimmerGrove.Persistence
         /// <summary>One ledger per currency, keyed by a permanent currency id.</summary>
         public CurrencyLedgerDto[] currencies;
 
-        public static WalletDto Unwritten() => new WalletDto { coins = -1, gems = -1, hearts = -1 };
+        public static WalletDto Unwritten() => new WalletDto
+        {
+            coins = -1, gems = -1, hearts = -1, heartsProduced = -1, heartsSpent = -1,
+        };
     }
 
     /// <summary>

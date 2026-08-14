@@ -104,8 +104,18 @@ namespace GlimmerGrove.Cloud
                 // travel with the save.
                 { "wallet", new Dictionary<string, object>
                     {
+                        // The heart ledger. It has to travel, and it has to travel whole:
+                        // a device that received only the count would have nothing to join
+                        // against and would be back to guessing which side is stale, which
+                        // is what used to delete a player's refills on every sync.
+                        { "heartsProduced", dto.wallet?.heartsProduced ?? -1L },
+                        { "heartsSpent", dto.wallet?.heartsSpent ?? -1L },
+                        { "heartsDueUnix", dto.wallet?.heartsDueUnix ?? 0L },
+
+                        // The derived mirror, for a client still on a pre-v8 build.
                         { "hearts", (long)(dto.wallet?.hearts ?? -1) },
                         { "heartsNextRefillUnix", dto.wallet?.heartsNextRefillUnix ?? 0L },
+
                         { "heartBoostUntilUnix", dto.wallet?.heartBoostUntilUnix ?? 0L },
                         { "displayName", dto.wallet?.displayName ?? string.Empty },
                         { "avatarId", dto.wallet?.avatarId ?? string.Empty },
@@ -120,6 +130,20 @@ namespace GlimmerGrove.Cloud
                         { "dayKey", (long)(dto.daily?.dayKey ?? 0) },
                         { "runs", (long)(dto.daily?.runs ?? 0) },
                         { "claimed", (long)(dto.daily?.claimed ?? 0) },
+                    }
+                },
+
+                // Today's ad allowance. It has to travel for the same reason the chest
+                // counters do, and for a sharper one: the cap is the only thing between a
+                // second device and a second set of ads, so a count that stays on one
+                // phone is a cap that does not exist. Its absence here also made every
+                // single sync a write — SaveDelta compares this section, and a field that
+                // never comes back always differs from the one about to be sent.
+                { "ads", new Dictionary<string, object>
+                    {
+                        { "dayKey", (long)(dto.ads?.dayKey ?? 0) },
+                        { "lastWatchedUnix", dto.ads?.lastWatchedUnix ?? 0L },
+                        { "watched", AdCounts(dto.ads) },
                     }
                 },
 
@@ -139,6 +163,34 @@ namespace GlimmerGrove.Cloud
                     }
                 },
             };
+        }
+
+        /// <summary>
+        /// Per-placement view counts, as a list of small maps.
+        ///
+        /// A list rather than a map keyed by placement id, because a placement id is
+        /// content and Firestore field names are not: an id with a dot or a slash in it
+        /// would silently become a nested path. The order is the one
+        /// <c>RewardedAds.WriteInto</c> already sorts into, so the comparison on the way
+        /// back is an ordered walk.
+        /// </summary>
+        static List<object> AdCounts(AdStateDto ads)
+        {
+            var list = new List<object>();
+            if (ads?.watched == null) return list;
+
+            foreach (var entry in ads.watched)
+            {
+                if (entry == null || string.IsNullOrEmpty(entry.placement)) continue;
+
+                list.Add(new Dictionary<string, object>
+                {
+                    { "placement", entry.placement },
+                    { "count", (long)entry.count },
+                });
+            }
+
+            return list;
         }
 
         // ----------------------------------------------------------- from cloud
@@ -163,6 +215,7 @@ namespace GlimmerGrove.Cloud
                 settings = new SettingsDto(),
                 wallet = WalletDto.Unwritten(),
                 daily = new DailyStateDto(),
+                ads = new AdStateDto(),
                 progression = ProgressionStateDto.Unwritten(),
                 cloud = new CloudStateDto(),
             };
@@ -179,6 +232,13 @@ namespace GlimmerGrove.Cloud
             {
                 dto.wallet.hearts = (int)Long(wallet, "hearts", -1);
                 dto.wallet.heartsNextRefillUnix = Long(wallet, "heartsNextRefillUnix", 0);
+
+                // -1 when the document was last written by a pre-v8 build, which is what
+                // tells SaveMerge to read the mirror above instead. Defaulting these to 0
+                // would claim a real ledger of an empty-handed player.
+                dto.wallet.heartsProduced = Long(wallet, "heartsProduced", -1);
+                dto.wallet.heartsSpent = Long(wallet, "heartsSpent", -1);
+                dto.wallet.heartsDueUnix = Long(wallet, "heartsDueUnix", 0);
                 dto.wallet.heartBoostUntilUnix = Long(wallet, "heartBoostUntilUnix", 0);
                 dto.wallet.displayName = Str(wallet, "displayName");
                 dto.wallet.avatarId = Str(wallet, "avatarId");
@@ -189,6 +249,13 @@ namespace GlimmerGrove.Cloud
                 dto.daily.dayKey = (int)Long(daily, "dayKey", 0);
                 dto.daily.runs = (int)Long(daily, "runs", 0);
                 dto.daily.claimed = (int)Long(daily, "claimed", 0);
+            }
+
+            if (Map(doc, "ads") is IDictionary<string, object> ads)
+            {
+                dto.ads.dayKey = (int)Long(ads, "dayKey", 0);
+                dto.ads.lastWatchedUnix = Long(ads, "lastWatchedUnix", 0);
+                dto.ads.watched = ReadAdCounts(ads);
             }
 
             if (Map(doc, "progression") is IDictionary<string, object> progression)
@@ -207,6 +274,31 @@ namespace GlimmerGrove.Cloud
 
             dto.levels = ReadLevels(doc);
             return dto;
+        }
+
+        /// <summary>
+        /// Per-placement view counts, tolerating anything that is not one — the same
+        /// rule <see cref="StrList"/> follows, for the same reason: this runs on a
+        /// background thread during a sync, where an exception costs the whole save.
+        /// </summary>
+        static AdViewCountDto[] ReadAdCounts(IDictionary<string, object> ads)
+        {
+            if (!ads.TryGetValue("watched", out object raw) || !(raw is IEnumerable<object> items))
+                return new AdViewCountDto[0];
+
+            var counts = new List<AdViewCountDto>();
+
+            foreach (var item in items)
+            {
+                if (!(item is IDictionary<string, object> entry)) continue;
+
+                string placement = Str(entry, "placement");
+                if (string.IsNullOrEmpty(placement)) continue;
+
+                counts.Add(new AdViewCountDto { placement = placement, count = (int)Long(entry, "count", 0) });
+            }
+
+            return counts.ToArray();
         }
 
         static LevelRecordDto[] ReadLevels(IDictionary<string, object> doc)

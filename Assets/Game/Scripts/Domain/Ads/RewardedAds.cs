@@ -163,8 +163,41 @@ namespace GlimmerGrove.Ads
             return new AdOfferStatus(AdOfferState.Ready, offer);
         }
 
-        /// <summary>Shorthand for the common case: should this button be drawn at all?</summary>
+        /// <summary>Shorthand for the common case: may this offer be taken right now?</summary>
         public static bool CanOffer(string placementId) => Status(placementId).CanShow;
+
+        /// <summary>
+        /// Whether the offer belongs on screen at all, even if it cannot be taken yet.
+        ///
+        /// <para>
+        /// Distinct from <see cref="CanOffer"/>, and the distinction is the difference
+        /// between a feature players understand and one they think is broken. A button that
+        /// vanishes during its cooldown teaches nobody anything — the player who watched a
+        /// video a minute ago simply finds the option gone and concludes it was a one-off.
+        /// Drawn and disabled with "another video in 0:32" on it, the same state teaches the
+        /// rule in one glance.
+        /// </para>
+        /// <para>
+        /// Three states still hide it, because each one is a thing that will not resolve by
+        /// waiting on this screen: no provider at all, hearts already full, and no account
+        /// to pay coins into. Showing a disabled button for those is not information, it is
+        /// a dead control.
+        /// </para>
+        /// </summary>
+        public static bool ShouldOffer(string placementId)
+        {
+            switch (Status(placementId).State)
+            {
+                case AdOfferState.Ready:
+                case AdOfferState.NotLoaded:
+                case AdOfferState.CoolingDown:
+                case AdOfferState.CapReached:
+                    return true;
+
+                default:
+                    return false;
+            }
+        }
 
         /// <summary>
         /// Whether the reward would actually land.

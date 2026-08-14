@@ -473,6 +473,15 @@ namespace GlimmerGrove.EditorTools
             foreach (var companion in content.Index.Companions)
                 Require(table, companion.NameKey, $"companion '{companion.Id}'", result);
 
+            // So are a tip's, and this is the only place that can prove they exist. A
+            // mechanic added without its two strings compiles, validates and ships; the
+            // first player to reach the glade that teaches it reads "ui.tip.<id>.title".
+            foreach (var mechanic in Mechanic.TeachingOrder)
+            {
+                Require(table, mechanic.TitleKey, $"mechanic '{mechanic.Id}'", result);
+                Require(table, mechanic.BodyKey, $"mechanic '{mechanic.Id}'", result);
+            }
+
             ValidateKeysUsedInCode(table, result);
         }
 
