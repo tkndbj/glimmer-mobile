@@ -64,9 +64,11 @@ namespace GlimmerGrove.EditorTools
             AssetDatabase.Refresh();
 
             Debug.Log($"[Glimmer] created {path}\n" +
-                      $"Next: add an entry to {ContentRoot}/manifest.json with an unused \"order\", " +
-                      "then run Content \u25B8 Sync Manifest to fill in its level list, and add its " +
-                      $"strings to the localisation tables.\nToken grammar: {LevelLayout.Grammar}");
+                      "Next: run Content \u25B8 Sync Manifest. It adopts the chapter into " +
+                      "manifest.json, picks an order and fills in its level list \u2014 nothing here " +
+                      "needs editing by hand. Then add its strings to the localisation tables; " +
+                      "validation names every key it wants.\n" +
+                      $"Token grammar: {LevelLayout.Grammar}");
             EditorUtility.RevealInFinder(path);
         }
 

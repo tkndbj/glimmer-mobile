@@ -88,6 +88,14 @@ namespace GlimmerGrove.EditorTools
 
             var expected = AssetManifest.GlobalAssets();
             expected.AddRange(AssetManifest.AllChapterAssets(bodies));
+
+            // Companion portraits are requested by a scope rather than at boot, which
+            // makes them exactly the kind of asset an audit built only from the global
+            // and chapter sets would call unused — and then fail to notice when one went
+            // missing. Read from the roster, so a companion added by a content drop is
+            // audited without anyone editing this.
+            expected.AddRange(AssetManifest.CompanionAssets(content.Index.Companions));
+
             result.Expected = expected.Count;
 
             foreach (var request in expected)

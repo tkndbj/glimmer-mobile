@@ -95,6 +95,7 @@ namespace GlimmerGrove.Content
                 return true;
             }
 
+
             switch (token[0])
             {
                 case '*': cell.kind = Kind.Source; break;
@@ -147,7 +148,30 @@ namespace GlimmerGrove.Content
                 p++;
             }
 
+            // '~N' — a conduit that crumbles after N turns.
+            if (p < token.Length && token[p] == '~')
+            {
+                if (p + 1 >= token.Length) { error = "'~' with no turn count after it"; return false; }
+
+                char n = token[p + 1];
+                if (n < '1' || n > '9')
+                {
+                    error = $"fragility '{n}' out of range, expected 1 to 9";
+                    return false;
+                }
+
+                cell.fragile = (byte)(n - '0');
+                p += 2;
+            }
+
             if (p != token.Length) { error = $"trailing characters '{token.Substring(p)}'"; return false; }
+
+            if (cell.fragile > 0 && cell.kind != Kind.Pipe)
+            {
+                error = "only a conduit can be fragile; a heart-crystal or critter that " +
+                        "crumbled would make the level unwinnable rather than harder";
+                return false;
+            }
 
             if (cell.kind == Kind.Source && cell.colour == 0)
             {

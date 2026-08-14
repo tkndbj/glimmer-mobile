@@ -146,7 +146,8 @@ namespace GlimmerGrove.Content
                 par,
                 dto.goldFactor > 0f ? dto.goldFactor : LevelTuning.DefaultGoldFactor,
                 dto.silverFactor > 0f ? dto.silverFactor : LevelTuning.DefaultSilverFactor,
-                dto.hintAllowance > 0 ? dto.hintAllowance : LevelTuning.DefaultHintAllowance);
+                dto.hintAllowance > 0 ? dto.hintAllowance : LevelTuning.DefaultHintAllowance,
+                dto.budgetFactor);
 
             var presentation = new LevelPresentation(
                 new Vector2(dto.mapX, dto.mapY),

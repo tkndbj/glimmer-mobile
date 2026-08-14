@@ -26,6 +26,7 @@ namespace GlimmerGrove.Content
             CheckPopulation(cells, issues);
             CheckArmsMate(level, cells, issues);
             CheckAuthoredSolution(level, cells, issues);
+            CheckFragileConduits(level, cells, issues);
             CheckPar(level, computedPar, issues);
             CheckPresentation(level, issues);
 
@@ -90,13 +91,22 @@ namespace GlimmerGrove.Content
                         Error(issues, $"arm at {x},{y} points at an empty cell");
                         continue;
                     }
+
+
                     if ((cells[j].solved & Puzzle.Bits[(d + 2) & 3]) == 0)
                         Error(issues, $"arm at {x},{y} is not mated by its neighbour at {nx},{ny}");
                 }
             }
         }
 
-        /// <summary>The authored orientation must actually be a winning board.</summary>
+        /// <summary>
+        /// The authored orientation must actually be a winning board.
+        ///
+        /// Judged by building a real <see cref="Puzzle"/> and asking it, rather than by
+        /// reimplementing the rules here. That is what stops the validator and the game
+        /// from ever disagreeing about what "solved" or "detonated" means — a drift that
+        /// would ship a level nobody can finish.
+        /// </summary>
         static void CheckAuthoredSolution(LevelDefinition level, Cell[] cells, List<LevelIssue> issues)
         {
             var solved = new Cell[cells.Length];
@@ -107,8 +117,62 @@ namespace GlimmerGrove.Content
             }
 
             var probe = new Puzzle(level.Id, level.Layout.Width, level.Layout.Height, level.Tuning, solved);
+
             if (!probe.Won)
                 Error(issues, $"the authored solution lights only {probe.LampsLit} of {probe.LampCount} critters");
+        }
+
+
+        /// <summary>
+        /// Fragile conduits must be able to reach their own solution.
+        ///
+        /// This is the check that keeps the mechanic honest. A conduit authored three
+        /// turns from solved but able to survive only two is a level nobody can finish —
+        /// and unlike most authoring mistakes it looks completely fine, because every
+        /// arm mates and the solved board lights perfectly. The player would simply lose
+        /// hearts against it forever.
+        ///
+        /// Cheap to prove: turns owed at the opening rotation is exactly how many turns
+        /// the tile needs, and its count is exactly how many it has.
+        /// </summary>
+        static void CheckFragileConduits(LevelDefinition level, Cell[] cells, List<LevelIssue> issues)
+        {
+            int w = level.Layout.Width;
+
+            var probe = new Puzzle(level.Id, w, level.Layout.Height, level.Tuning, Copy(cells));
+
+            for (int i = 0; i < cells.Length; i++)
+            {
+                if (cells[i].fragile == 0) continue;
+
+                int x = i % w, y = i / w;
+
+                if (cells[i].locked)
+                {
+                    Warn(issues, $"the fragile conduit at {x},{y} is also rooted, so it can never be " +
+                                 "turned and never crumbles — one of the two is a mistake");
+                    continue;
+                }
+
+                if (probe.Inert(i))
+                {
+                    Warn(issues, $"the conduit at {x},{y} looks the same in every orientation, so " +
+                                 "turning it is pointless and its fragility can never matter");
+                    continue;
+                }
+
+                int owed = probe.TurnsOwed(i);
+                if (owed > cells[i].fragile)
+                    Error(issues, $"the fragile conduit at {x},{y} needs {owed} turn(s) to reach its " +
+                                  $"solution but survives only {cells[i].fragile}; the level cannot be won");
+            }
+        }
+
+        static Cell[] Copy(Cell[] cells)
+        {
+            var copy = new Cell[cells.Length];
+            for (int i = 0; i < cells.Length; i++) copy[i] = cells[i];
+            return copy;
         }
 
         static void CheckPar(LevelDefinition level, int computedPar, List<LevelIssue> issues)

@@ -5,16 +5,23 @@ namespace GlimmerGrove.Analytics
     /// <summary>
     /// The level funnel, named once so every sink sees the same event shapes.
     ///
-    /// These four events are what difficulty tuning actually needs: how often a level
-    /// is started, how often it is finished, in how many moves, and how often a player
-    /// walks away instead. Everything else can be added later; without these, a level
-    /// that is quietly killing retention in one market is invisible.
+    /// These events are what difficulty tuning actually needs: how often a level
+    /// is started, how often it is finished, in how many moves, how often a player
+    /// walks away instead, and how often one is lost outright.
+    /// Everything else can be added later; without these, a level that is quietly
+    /// killing retention in one market is invisible.
+    ///
+    /// <see cref="Defeated"/> is the one that decides whether the difficulty is tuned
+    /// correctly. A glade players lose repeatedly is not "hard" once hearts gate
+    /// play — it is a wall they pay to hit, and it needs to be visible from day one
+    /// rather than inferred from a drop in <see cref="Completed"/>.
     /// </summary>
     public static class LevelAnalytics
     {
         public const string Started = "level_started";
         public const string Completed = "level_completed";
         public const string Abandoned = "level_abandoned";
+        public const string Defeated = "level_defeated";
         public const string HintUsed = "level_hint_used";
 
         public static void TrackStarted(LevelDefinition level, int attempt)
@@ -51,6 +58,24 @@ namespace GlimmerGrove.Analytics
                 "moves", moves,
                 "seconds", Round(seconds),
                 "reason", reason);
+        }
+
+        /// <summary>
+        /// A lost run. Carries the hearts left afterwards, because the
+        /// question that matters is not just how often players lose but how often
+        /// losing is what stops them playing.
+        /// </summary>
+        public static void TrackDefeated(LevelDefinition level, int moves, float seconds,
+                                         int heartsLeft, string reason)
+        {
+            if (level == null) return;
+            Telemetry.Track(Defeated,
+                "reason", reason,
+                "level_id", level.Id.Value,
+                "chapter_id", level.Chapter.Value,
+                "moves", moves,
+                "seconds", Round(seconds),
+                "hearts_left", heartsLeft);
         }
 
         public static void TrackHintUsed(LevelDefinition level, int hintsRemaining, int moves)

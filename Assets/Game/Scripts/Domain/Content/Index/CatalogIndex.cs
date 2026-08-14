@@ -25,26 +25,40 @@ namespace GlimmerGrove.Content
     {
         public static readonly CatalogIndex Empty =
             new CatalogIndex(Array.Empty<ChapterIndexEntry>(), Array.Empty<LevelId>(),
-                             new Dictionary<LevelId, int>(), new Dictionary<LevelId, ChapterId>());
+                             new Dictionary<LevelId, int>(), new Dictionary<LevelId, ChapterId>(),
+                             Array.Empty<AvatarDefinition>());
 
         readonly ChapterIndexEntry[] _chapters;
         readonly LevelId[] _levelIds;
         readonly Dictionary<LevelId, int> _levelOrder;
         readonly Dictionary<LevelId, ChapterId> _levelChapter;
         readonly Dictionary<ChapterId, ChapterIndexEntry> _chapterById;
+        readonly AvatarDefinition[] _companions;
 
         internal CatalogIndex(ChapterIndexEntry[] chapters, LevelId[] levelIds,
                               Dictionary<LevelId, int> levelOrder,
-                              Dictionary<LevelId, ChapterId> levelChapter)
+                              Dictionary<LevelId, ChapterId> levelChapter,
+                              AvatarDefinition[] companions)
         {
             _chapters = chapters;
             _levelIds = levelIds;
             _levelOrder = levelOrder;
             _levelChapter = levelChapter;
+            _companions = companions ?? Array.Empty<AvatarDefinition>();
 
             _chapterById = new Dictionary<ChapterId, ChapterIndexEntry>(chapters.Length);
             foreach (var c in chapters) _chapterById[c.Id] = c;
         }
+
+        /// <summary>
+        /// The companion roster, in display order.
+        ///
+        /// Index knowledge in exactly the same sense the chapter list is: it comes from
+        /// the manifest, it is small, and it is wanted everywhere without a file read.
+        /// Empty when the manifest carried none, which leaves
+        /// <see cref="AvatarCatalog"/> on the roster this build shipped with.
+        /// </summary>
+        public IReadOnlyList<AvatarDefinition> Companions => _companions;
 
         // ------------------------------------------------------------- chapters
         /// <summary>Every chapter, in play order.</summary>

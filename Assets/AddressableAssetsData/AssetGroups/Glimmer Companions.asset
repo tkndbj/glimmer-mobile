@@ -1,0 +1,183 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: bbb281ee3bf0b054c82ac2347e9e782c, type: 3}
+  m_Name: Glimmer Companions
+  m_EditorClassIdentifier: Unity.Addressables.Editor::UnityEditor.AddressableAssets.Settings.AddressableAssetGroup
+  m_GroupName: Glimmer Companions
+  m_GUID: f4eb7df85616e954483c09e9f697d7dd
+  m_SerializeEntries:
+  - m_GUID: 0fec594d953d4d60ae61beb585c4cfe5
+    m_Address: Art/Companions/marrow
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 2203660a18ea49e3865d7b3b9f3425f6
+    m_Address: Art/Companions/bramble
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 238165918bc64cfd994f670945d08a98
+    m_Address: Art/Companions/flit
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 3a500c6df43c448fb8f4f99c5ec8e9e9
+    m_Address: Art/Companions/gourd
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 3ab24c39a3e34731bad2e46516557c4a
+    m_Address: Art/Companions/fizz
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 41e35ade4cd3413da87fdba3464a6dc9
+    m_Address: Art/Companions/shell
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 429d504fdc224c7e948088d4b2092752
+    m_Address: Art/Companions/toadstool
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 50e8c26b7dd14894ba421b5d4ae47679
+    m_Address: Art/Companions/cinder
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 54773e9d433547f6ad9b008bbe75b788
+    m_Address: Art/Companions/saffron
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 5aeea80463a04fe7ba9c4d9f43e93d76
+    m_Address: Art/Companions/tadpole
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 5ec4b2194a924439aab8a8bc8a81b037
+    m_Address: Art/Companions/frond
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 6062639adf01442fb8e9b8b16fb6a604
+    m_Address: Art/Companions/monarch
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 61d12283c5b34c5ebc0a3cde43671907
+    m_Address: Art/Companions/clementine
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 63910b4874d24c8ebfc280dd67811cd0
+    m_Address: Art/Companions/thorn
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 642c927aa9b641cca7b95737cb34d737
+    m_Address: Art/Companions/coral
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 860051cb24ae43eb95e1d158b4993ec1
+    m_Address: Art/Companions/button
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 87ba8edb066045b4a65d9a7f87e02760
+    m_Address: Art/Companions/indigo
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 88d9410a6b5945a0bb559dea585bbcd9
+    m_Address: Art/Companions/timber
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 8a1e95fc957b49bb833fa638cc21d435
+    m_Address: Art/Companions/wisp
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 8f079aa47bf84e42a5a69957ee6d05a7
+    m_Address: Art/Companions/dewdrop
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 94a03445d57f4ce894248d9f22194267
+    m_Address: Art/Companions/thistle
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 9d22640969914f5ba868c17ebc1eb613
+    m_Address: Art/Companions/olive
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: a2506c8a1c814ed3b1ac760ca75f9a82
+    m_Address: Art/Companions/rust
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: a749f881ceb940968278efcedfbb1262
+    m_Address: Art/Companions/pebble
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: b9a70b4b0aea4ccf90653a6f9cb30796
+    m_Address: Art/Companions/boulder
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: bc70633c4eb6494691a067b5432acef1
+    m_Address: Art/Companions/plum
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: c291052ea1ac4e88ae75ebfe5321e94b
+    m_Address: Art/Companions/puff
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: d5e7cff6ed974cad93a5a49f1c4a2cd8
+    m_Address: Art/Companions/quill
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: dee37baaa9af4d6e84fa77d92f52db1d
+    m_Address: Art/Companions/sorrel
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: e0aa423a391a4d36995a9a17425a8157
+    m_Address: Art/Companions/sprocket
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: fd2f2c4c2e6847c195076e0a2968c00a
+    m_Address: Art/Companions/peep
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  m_ReadOnly: 0
+  m_Settings: {fileID: 11400000, guid: 6c4c5f6eb57af6542b195d29840b42f2, type: 2}
+  m_SchemaSet:
+    m_Schemas:
+    - {fileID: 11400000, guid: d82023168628a5e44a4cc82921ce9427, type: 2}
+    - {fileID: 11400000, guid: 0f070314c7ec31d44896c9016d218a56, type: 2}
+    m_SchemaDisplayOrder:
+    - Glimmer Companions_BundledAssetGroupSchema
+    - Glimmer Companions_ContentUpdateGroupSchema
+  m_IncludeInBuild: 1
+  m_IncludeInBuildMigrated: 1

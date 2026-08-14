@@ -99,6 +99,7 @@ namespace GlimmerGrove
             _board = _boardHost.gameObject.AddComponent<BoardView>();
             _board.OnChanged = Refresh;
             _board.OnSolved = Finish;
+            _board.OnDefeated = Defeat;
 
             _startedAt = Time.unscaledTime;
             PlayerProgress.NoteOpened(_def.Id);
@@ -213,8 +214,26 @@ namespace GlimmerGrove
             if (_puzzle == null) return;
             if (_moves)
             {
-                bool changed = _moves.text != _puzzle.Moves.ToString();
-                _moves.text = _puzzle.Moves.ToString();
+                // Turns remaining, not turns spent. A budget the player has to subtract
+                // in their head is not a budget they can plan against — and once it is
+                // low the number itself is the tension, so it turns amber then red.
+                string text = _puzzle.HasBudget
+                    ? _puzzle.MovesLeft.ToString()
+                    : _puzzle.Moves.ToString();
+
+                bool changed = _moves.text != text;
+                _moves.text = text;
+
+                if (_puzzle.HasBudget)
+                {
+                    int left = _puzzle.MovesLeft;
+                    _moves.color = left <= 3 ? Pal.Ember
+                                 : left <= 8 ? Pal.Gold
+                                 : Pal.Cream;
+
+                    if (changed && left <= 3) Tween.Punch(_moves.transform, .34f, .34f);
+                }
+
                 if (changed) Tween.Punch(_moves.transform, .22f, .3f);
             }
             if (_lamps)
@@ -283,7 +302,6 @@ namespace GlimmerGrove
             var before = PlayerProgress.Record(_def.Id);
             int previousBest = before.BestMoves;
             bool firstClear = !before.IsCleared;
-            int levelBefore = PlayerProgression.Level.Level;
 
             PlayerProgress.RecordRun(_def.Id, stars, moves);
 
@@ -291,7 +309,6 @@ namespace GlimmerGrove
             // payout for the run. A replay that does not beat the old result is worth
             // nothing, and that falls out of the subtraction rather than needing a rule.
             var reward = PlayerProgression.RewardFor(before, PlayerProgress.Record(_def.Id));
-            int levelAfter = PlayerProgression.Level.Level;
 
             LevelAnalytics.TrackCompleted(_def, moves, stars, _def.Tuning.HintAllowance - _board.HintsLeft,
                                           Time.unscaledTime - _startedAt, firstClear);
@@ -306,15 +323,121 @@ namespace GlimmerGrove
                 v.FirstClear = firstClear;
                 v.XpGained = reward.Xp;
                 v.CreditsGained = reward.EarnedCredits;
-                v.LevelledUpTo = levelAfter > levelBefore ? levelAfter : 0;
             });
+        }
+
+        /// <summary>
+        /// The run was lost.
+        ///
+        /// The heart is charged here rather than inside the board, because the board
+        /// knows about turns and the screen knows about the player. Note there is no
+        /// star, no move record and no reward: a defeat is not a worse clear, it simply
+        /// did not happen, and <c>PlayerProgress</c> never hears about it.
+        /// </summary>
+        void Defeat(DefeatReason reason)
+        {
+            if (_finished) return;
+            _finished = true;
+
+            bool charged = Wallet.TrySpendHeart();
+            int left = Profile.Hearts;
+
+            LevelAnalytics.TrackDefeated(_def, _puzzle.Moves, Time.unscaledTime - _startedAt,
+                                         left, reason.ToString());
+
+            Flow.Modal<DefeatOverlay>(v =>
+            {
+                v.Screen = this;
+                v.HeartsLeft = left;
+                v.HeartWasCharged = charged;
+
+                // How close they were, which only means anything when turns ran out.
+                v.LampsLit = _puzzle.LampsLit;
+                v.LampCount = _puzzle.LampCount;
+            });
+        }
+
+        /// <summary>
+        /// Another go after a defeat. Distinct from <see cref="RestartLevel"/> because
+        /// the run had already been declared over — the finished latch has to come back
+        /// off, and the board has to be rebuilt rather than merely rewound.
+        /// </summary>
+        public void RetryAfterDefeat()
+        {
+            _finished = false;
+            _startedAt = Time.unscaledTime;
+
+            _board.Restart();
+            Refresh();
         }
 
         public override void OnPresented()
         {
             if (_def == null) return;
+
+            // A brand new idea outranks the glade's flavour line. Both at once is two
+            // things to read before the first tap, and the tip is the one that is only
+            // ever offered once.
+            if (TryTeach()) return;
+
             string lesson = Loc.Get(_def.LessonKey);
             Tween.After(.35f, () => { if (this) Scenery.Toast(Content, lesson, Pal.Cream, 3.4f); }, this);
+        }
+
+        /// <summary>
+        /// Shows the one mechanic on this board the player has never met.
+        ///
+        /// "Never met" is per player, not per level — so the lesson lands on whichever
+        /// glade they happen to meet the idea in, however they got there, and a chapter
+        /// shipped next year that uses a known mechanic teaches it with no authoring.
+        /// Returns false when there is nothing new, which is almost always.
+        /// </summary>
+        bool TryTeach()
+        {
+            if (_puzzle == null || _board == null) return false;
+
+            var sighting = MechanicScan.FirstUnseen(_puzzle, TipLedger.HasSeen);
+            if (!sighting.Mechanic.IsValid) return false;
+
+            _board.Locked = true;
+
+            // After the intro sweep, so the tile is actually on screen to be ringed.
+            Tween.After(.75f, () =>
+            {
+                if (!this) return;
+
+                Flow.Modal<TipOverlay>(v =>
+                {
+                    v.Mechanic = sighting.Mechanic;
+                    v.Target = sighting.HasCell
+                        ? _board.TileAt(sighting.CellIndex)
+                        : HudTargetFor(sighting.Mechanic);
+                    v.Dismissed = () => { if (this && !_finished) _board.Locked = false; };
+                });
+            }, this);
+
+            return true;
+        }
+
+        /// <summary>
+        /// Where to point for a rule that lives in the HUD rather than on the board.
+        ///
+        /// The move budget is the case that matters: a bubble floating in the middle of
+        /// the screen saying "the counter at the top" makes the player hunt for the
+        /// thing being described. Ringing the actual pill removes the hunt.
+        ///
+        /// Resolved here rather than in the scan because the scan is Domain and knows
+        /// nothing about pills — it reports the mechanic, the screen knows where it is
+        /// drawn.
+        /// </summary>
+        RectTransform HudTargetFor(Mechanic mechanic)
+        {
+            // The pill background, not the label inside it, so the ring frames the whole
+            // readout rather than a few digits.
+            if (mechanic.Equals(Mechanic.MoveBudget) && _moves)
+                return _moves.transform.parent as RectTransform;
+
+            return null;
         }
 
         public override bool OnBack()

@@ -50,13 +50,17 @@ service cloud.firestore {
         return d.keys().hasOnly([
                  'schemaVersion', 'updatedUnix', 'settings', 'wallet', 'levels',
                  'progression', 'cloud', 'lastPlayedLevelId', 'legacyImportDone',
-                 'checksum'
+                 'tipsSeen', 'checksum'
                ])
                && d.schemaVersion is int
                && d.schemaVersion >= 1 && d.schemaVersion <= 100
                && d.levels is map
                && d.levels.size() <= 5000
-               && (!('lastPlayedLevelId' in d) || d.lastPlayedLevelId is string);
+               && (!('lastPlayedLevelId' in d) || d.lastPlayedLevelId is string)
+               // Which lessons the player has been shown. Client-owned and harmless —
+               // it buys nothing — but bounded anyway, because an unbounded array the
+               // client controls is a way to make the document expensive to read.
+               && (!('tipsSeen' in d) || (d.tipsSeen is list && d.tipsSeen.size() <= 64));
       }
 
       // The revision only ever moves forward, which gives the sync optimistic

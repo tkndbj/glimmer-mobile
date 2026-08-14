@@ -86,8 +86,12 @@ namespace GlimmerGrove
             var face = UIKit.Img("Face", frame.transform, null, Color.white,
                                  new Vector2(84f, 84f), new Vector2(.5f, .5f), new Vector2(0f, 2f));
             face.preserveAspect = true;
-            var fb = Flipbook.Attach(face, "Critters/c1", 13f);
-            fb.Offset = 3;
+
+            // The companion the player chose, not a hardcoded critter. Animated when it
+            // has frames, which the boot preload has already warmed.
+            CompanionArt.Paint(face, Profile.Avatar, animate: true);
+            var fb = face.GetComponent<Flipbook>();
+            if (fb) fb.Offset = 3;
 
             var rank = UIKit.Img("RankBadge", frame.transform, Art.Disc(64), Pal.Gold,
                                  new Vector2(50f, 50f), new Vector2(1f, 0f), new Vector2(-4f, 4f));
@@ -115,13 +119,27 @@ namespace GlimmerGrove
                              new Vector2(1f, .5f), new Vector2(-206f, 0f), () => Flow.Modal<HowToOverlay>());
         }
 
+        /// <summary>Either "full" or how long until the next heart, as m:ss.</summary>
+        static string HeartsLine()
+        {
+            if (Profile.Hearts >= Profile.MaxHearts) return Loc.Get("ui.hearts.full");
+
+            return string.Format(Loc.Get("ui.hearts.next"), Profile.HeartCountdown());
+        }
+
         void BuildResources()
         {
             var row = UIKit.Box("Resources", Content, new Vector2(1000f, 92f), new Vector2(.5f, 1f), new Vector2(0f, -250f));
 
+            // Hearts are real now, so this is no longer a "coming soon" — an empty
+            // player gets the gate with its live countdown, everyone else gets told
+            // when the next one lands.
             ResourcePill(row, -318f, Pal.Rose, "ic_heart", $"{Profile.Hearts}/{Profile.MaxHearts}", false,
-                         () => Flow.Modal<ComingSoonOverlay>(v => v.Configure("Lives", "ic_heart",
-                             "Lives refill over time. The energy system is on its way.")));
+                         () =>
+                         {
+                             if (!Profile.CanPlay) Flow.Modal<OutOfHeartsOverlay>();
+                             else Scenery.Toast(Content, HeartsLine(), Pal.Rose, 2.4f);
+                         });
             ResourcePill(row, 0f, Pal.Gold, null, Profile.Short(Profile.Coins), true,
                          () => Flow.Modal<ComingSoonOverlay>(v => v.Configure("Coins", "ic_chest",
                              "Earn coins in the glades and spend them in the shop. Coming soon.")));
@@ -230,10 +248,14 @@ namespace GlimmerGrove
             rock.preserveAspect = true;
             Tween.Bob((RectTransform)rock.transform, 9f, 3.4f);
 
+            // The companion the player chose, not a fixed critter. This is where the
+            // choice actually pays off: the profile is where you pick one, the hub is
+            // where you live with it. The screen is rebuilt on every navigation, so
+            // coming back from the profile already shows the new one.
             _hero = UIKit.Img("Critter", host, null, Color.white,
                               new Vector2(318f, 318f), new Vector2(.5f, .5f), new Vector2(0f, 30f));
             _hero.preserveAspect = true;
-            Flipbook.Attach(_hero, "Critters/c5", 15f);
+            CompanionArt.Paint(_hero, Profile.Avatar, animate: true);
             Tween.Bob((RectTransform)_hero.transform, 12f, 3.4f, .35f);
             UIKit.Halo(host, new Color(1f, .88f, .55f), 580f, .24f);
 

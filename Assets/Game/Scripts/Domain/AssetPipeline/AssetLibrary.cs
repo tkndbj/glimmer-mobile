@@ -10,23 +10,52 @@ namespace GlimmerGrove.AssetPipeline
     /// <summary>
     /// The game's one way to get hold of an asset.
     ///
-    /// It caches by address and remembers which scope each address belongs to.
-    /// Callers never say which — they ask for an address and the library knows,
-    /// because the chapter's asset set was registered when that chapter was entered.
-    /// That keeps every UI call site oblivious to memory management while still
-    /// making it possible to drop a whole chapter's art in one call.
+    /// It caches by address and remembers which <em>scope</em> each address belongs to.
+    /// Callers never say which — they ask for an address and the library knows, because
+    /// the scope's asset set was registered when that part of the game was entered.
+    /// That keeps every UI call site oblivious to memory management while still making
+    /// it possible to drop a whole screen's art in one call.
+    ///
+    /// <para>
+    /// Scopes are <b>named, and there can be any number of them</b>. That generality is
+    /// the point rather than speculative flexibility: chapters were the first thing that
+    /// needed loading and dropping as a unit, companions are the second, and a shop or a
+    /// seasonal event will be the third. When the only transient scope was hardcoded as
+    /// "the chapter", the second one had nowhere to go but a parallel copy of the same
+    /// four fields and the same release logic — which is exactly how two caches drift
+    /// until one of them leaks.
+    /// </para>
+    /// <para>
+    /// An address already held globally stays global. A scope may ask for something the
+    /// boot preload already warmed, and it must not become that scope's property — the
+    /// scope would free it on exit and the chrome would vanish from a screen that never
+    /// asked for anything.
+    /// </para>
     /// </summary>
     public static class AssetLibrary
     {
+        /// <summary>Art owned by the chapter currently being played.</summary>
+        public const string ChapterScope = "chapter";
+
+        /// <summary>Companion portraits, held only while a screen is showing them.</summary>
+        public const string CompanionScope = "companions";
+
+        sealed class Scope
+        {
+            public readonly HashSet<string> Addresses = new HashSet<string>(StringComparer.Ordinal);
+            public readonly Dictionary<string, UnityEngine.Object> One = new Dictionary<string, UnityEngine.Object>();
+            public readonly Dictionary<string, Sprite[]> Sets = new Dictionary<string, Sprite[]>();
+        }
+
         static IAssetProvider _provider = new ResourcesAssetProvider();
 
         static readonly Dictionary<string, UnityEngine.Object> _globalOne = new Dictionary<string, UnityEngine.Object>();
-        static readonly Dictionary<string, UnityEngine.Object> _chapterOne = new Dictionary<string, UnityEngine.Object>();
         static readonly Dictionary<string, Sprite[]> _globalSets = new Dictionary<string, Sprite[]>();
-        static readonly Dictionary<string, Sprite[]> _chapterSets = new Dictionary<string, Sprite[]>();
 
-        /// <summary>Addresses owned by the resident chapter.</summary>
-        static readonly HashSet<string> _chapterAddresses = new HashSet<string>(StringComparer.Ordinal);
+        static readonly Dictionary<string, Scope> _scopes = new Dictionary<string, Scope>(StringComparer.Ordinal);
+
+        /// <summary>Address to the scope holding it. Absent means global.</summary>
+        static readonly Dictionary<string, Scope> _owner = new Dictionary<string, Scope>(StringComparer.Ordinal);
 
         public static IAssetProvider Provider => _provider;
 
@@ -40,7 +69,7 @@ namespace GlimmerGrove.AssetPipeline
         {
             if (provider == null || provider == _provider) return;
 
-            ReleaseChapter();
+            ReleaseAllScopes();
             _globalOne.Clear();
             _globalSets.Clear();
             _provider = provider;
@@ -90,6 +119,106 @@ namespace GlimmerGrove.AssetPipeline
             return loaded;
         }
 
+        // --------------------------------------------------------------- scopes
+        /// <summary>
+        /// Makes <paramref name="requests"/> the contents of a named scope, releasing
+        /// whatever that scope held before. Loading the same set twice is not free —
+        /// callers that can be re-entered should check <see cref="IsScopeLoaded"/>.
+        /// </summary>
+        public static async Task EnsureScopeAsync(string key,
+                                                  IReadOnlyList<AssetRequest> requests,
+                                                  IProgress<float> progress = null,
+                                                  CancellationToken cancellation = default)
+        {
+            if (string.IsNullOrEmpty(key)) { progress?.Report(1f); return; }
+
+            ReleaseScope(key);
+
+            if (requests == null || requests.Count == 0) { progress?.Report(1f); return; }
+
+            var scope = new Scope();
+            _scopes[key] = scope;
+
+            foreach (var request in requests)
+            {
+                // Already global: leave it there. Claiming it would mean freeing the
+                // game's chrome the moment this scope closed. This is also what keeps
+                // the worn companion's portrait alive on the hub after the profile —
+                // which loaded the whole roster — is closed again.
+                if (_globalOne.ContainsKey(request.Address) || _globalSets.ContainsKey(request.Address))
+                    continue;
+
+                // Owned by a different scope: leave it there too. Two scopes sharing an
+                // address means whichever closed first would free it under the other.
+                if (_owner.ContainsKey(request.Address)) continue;
+
+                if (scope.Addresses.Add(request.Address)) _owner[request.Address] = scope;
+            }
+
+            await PreloadAsync(requests, progress, cancellation);
+        }
+
+        /// <summary>Drops a scope's assets. Safe when it was never loaded.</summary>
+        public static void ReleaseScope(string key)
+        {
+            if (string.IsNullOrEmpty(key) || !_scopes.TryGetValue(key, out var scope)) return;
+
+            _scopes.Remove(key);
+            foreach (var address in scope.Addresses) _owner.Remove(address);
+
+            scope.One.Clear();
+            scope.Sets.Clear();
+            _provider.Release(scope.Addresses);
+            scope.Addresses.Clear();
+        }
+
+        public static bool IsScopeLoaded(string key)
+            => !string.IsNullOrEmpty(key) && _scopes.ContainsKey(key);
+
+        /// <summary>
+        /// Promotes an address out of whatever scope owns it and into the global set,
+        /// keeping whatever is already cached.
+        ///
+        /// This exists for art that a screen loaded but the game goes on showing after
+        /// that screen closes. The concrete case is choosing a companion: the picker
+        /// loaded every portrait into its own scope, and the one just chosen is now
+        /// wanted on the hub — without this, closing the picker would release the
+        /// portrait the hub is about to draw, and the player's new companion would
+        /// simply not appear.
+        ///
+        /// Cheap and safe to call for an address that is already global, or one nothing
+        /// has loaded yet; the caller warms it afterwards either way.
+        /// </summary>
+        public static void Pin(string address)
+        {
+            if (string.IsNullOrEmpty(address)) return;
+            if (!_owner.TryGetValue(address, out var scope)) return;
+
+            if (scope.One.TryGetValue(address, out var one))
+            {
+                _globalOne[address] = one;
+                scope.One.Remove(address);
+            }
+
+            if (scope.Sets.TryGetValue(address, out var set))
+            {
+                _globalSets[address] = set;
+                scope.Sets.Remove(address);
+            }
+
+            // Dropped from the scope's address list as well, so releasing that scope no
+            // longer tells the provider to free it.
+            scope.Addresses.Remove(address);
+            _owner.Remove(address);
+        }
+
+        public static void ReleaseAllScopes()
+        {
+            var keys = new List<string>(_scopes.Keys);
+            foreach (var key in keys) ReleaseScope(key);
+            LoadedChapter = ChapterId.None;
+        }
+
         // ------------------------------------------------------------- chapters
         /// <summary>
         /// Makes <paramref name="chapter"/> the resident one, loading its art and
@@ -103,24 +232,14 @@ namespace GlimmerGrove.AssetPipeline
             if (chapter == null) { progress?.Report(1f); return; }
             if (LoadedChapter == chapter.Id) { progress?.Report(1f); return; }
 
-            ReleaseChapter();
-
-            var requests = AssetManifest.ChapterAssets(chapter);
-            foreach (var request in requests) _chapterAddresses.Add(request.Address);
-
             LoadedChapter = chapter.Id;
-            await PreloadAsync(requests, progress, cancellation);
+            await EnsureScopeAsync(ChapterScope, AssetManifest.ChapterAssets(chapter), progress, cancellation);
         }
 
         /// <summary>Drops the resident chapter's art. Safe when none is loaded.</summary>
         public static void ReleaseChapter()
         {
-            if (_chapterAddresses.Count == 0) { LoadedChapter = ChapterId.None; return; }
-
-            _chapterOne.Clear();
-            _chapterSets.Clear();
-            _provider.Release(_chapterAddresses);
-            _chapterAddresses.Clear();
+            ReleaseScope(ChapterScope);
             LoadedChapter = ChapterId.None;
         }
 
@@ -201,14 +320,19 @@ namespace GlimmerGrove.AssetPipeline
 
         // ------------------------------------------------------------- internals
         static Dictionary<string, UnityEngine.Object> OneCacheFor(string address)
-            => _chapterAddresses.Contains(address) ? _chapterOne : _globalOne;
+            => _owner.TryGetValue(address, out var scope) ? scope.One : _globalOne;
 
         static Dictionary<string, Sprite[]> SetCacheFor(string address)
-            => _chapterAddresses.Contains(address) ? _chapterSets : _globalSets;
+            => _owner.TryGetValue(address, out var scope) ? scope.Sets : _globalSets;
 
         /// <summary>Diagnostics for the profiler and the dev overlay.</summary>
         public static string Describe()
-            => $"provider={_provider.Name} global={_globalOne.Count + _globalSets.Count} " +
-               $"chapter={_chapterOne.Count + _chapterSets.Count} ({LoadedChapter})";
+        {
+            int scoped = 0;
+            foreach (var scope in _scopes.Values) scoped += scope.One.Count + scope.Sets.Count;
+
+            return $"provider={_provider.Name} global={_globalOne.Count + _globalSets.Count} " +
+                   $"scoped={scoped} in {_scopes.Count} scope(s) (chapter={LoadedChapter})";
+        }
     }
 }

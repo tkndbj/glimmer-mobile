@@ -105,6 +105,11 @@ namespace GlimmerGrove.Content
             var builder = new CatalogIndexBuilder();
             foreach (var entry in manifest.chapters) builder.Add(entry, ContentConfig.AppVersion);
 
+            // The roster rides the manifest, so it costs no extra fetch. A manifest
+            // without one leaves the built-in roster standing.
+            if (manifest.companions != null)
+                foreach (var companion in manifest.companions) builder.AddCompanion(companion);
+
             var index = builder.Build();
             problems.AddRange(builder.Problems);
             return index;

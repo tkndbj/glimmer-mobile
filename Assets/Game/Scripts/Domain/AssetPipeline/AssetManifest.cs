@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using GlimmerGrove.Content;
+using GlimmerGrove.Progression;
 
 namespace GlimmerGrove.AssetPipeline
 {
@@ -23,9 +24,12 @@ namespace GlimmerGrove.AssetPipeline
         public const string BackdropRoot = ArtRoot + "Bg/";
         public const string MapRoot = ArtRoot + "Map/";
         public const string UiRoot = ArtRoot + "Ui/";
+        public const string CompanionRoot = ArtRoot + "Companions/";
         public const string SfxRoot = "Audio/Sfx/";
         public const string MusicRoot = "Audio/Music/";
         public const string FontAddress = "Fonts/GameFont";
+
+        public static string Companion(string key) => CompanionRoot + key;
 
         public static string Backdrop(string key) => BackdropRoot + key;
         public static string MapArt(string key) => MapRoot + key;
@@ -46,6 +50,7 @@ namespace GlimmerGrove.AssetPipeline
             "ic_list", "ic_info", "ic_hint", "ic_right", "ic_left", "ic_lock", "ic_star",
             "ic_check", "ic_stars", "ic_gear", "ic_play", "ic_close", "ic_plus", "ic_search",
             "ic_heart", "ic_gem", "ic_chest", "ic_chest_open", "ic_key", "ic_gift", "ic_star3d",
+            "ic_profile", "ic_pencil",
             "potion1", "potion2", "potion3", "potion4", "potion5", "potion6",
         };
 
@@ -90,6 +95,51 @@ namespace GlimmerGrove.AssetPipeline
             foreach (var s in Sfxs) list.Add(AssetRequest.Clip(Sfx(s)));
 
             list.Add(AssetRequest.Font(FontAddress));
+            return list;
+        }
+
+        // ------------------------------------------------------------ companions
+        /// <summary>
+        /// Every companion portrait, for the screens that show the whole roster.
+        ///
+        /// Deliberately <em>not</em> part of <see cref="GlobalAssets"/>. A portrait is
+        /// about 45 KB, which is nothing until the roster is a hundred strong and every
+        /// one of them is decoded at every launch to be looked at on one screen. Loaded
+        /// into <see cref="AssetLibrary.CompanionScope"/> when a roster screen opens and
+        /// dropped when it closes, which is the same bargain chapter art makes.
+        ///
+        /// Derived from the roster, never hand-listed — a companion added by a content
+        /// drop is loadable without anyone editing this file.
+        /// </summary>
+        public static List<AssetRequest> CompanionAssets(IEnumerable<AvatarDefinition> roster)
+        {
+            var list = new List<AssetRequest>(32);
+            if (roster == null) return list;
+
+            var seen = new HashSet<string>();
+            foreach (var companion in roster)
+            {
+                if (!companion.IsValid) continue;
+                if (seen.Add(companion.Portrait)) list.Add(AssetRequest.Sprite(Companion(companion.Portrait)));
+            }
+
+            return list;
+        }
+
+        /// <summary>
+        /// The one companion the player is wearing, for the hub and the profile hero.
+        ///
+        /// Its animated set is requested when it has one, because the worn companion is
+        /// the single place the game can afford a flipbook — and it is already global
+        /// art, since board critters use the same sets.
+        /// </summary>
+        public static List<AssetRequest> WornCompanionAssets(AvatarDefinition companion)
+        {
+            var list = new List<AssetRequest>(2);
+            if (!companion.IsValid) return list;
+
+            list.Add(AssetRequest.Sprite(Companion(companion.Portrait)));
+            if (companion.HasAnimation) list.Add(AssetRequest.SpriteSet($"{ArtRoot}Critters/{companion.Animated}"));
             return list;
         }
 

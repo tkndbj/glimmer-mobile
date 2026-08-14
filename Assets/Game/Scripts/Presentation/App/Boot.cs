@@ -15,7 +15,14 @@ namespace GlimmerGrove
     /// </summary>
     public static class Boot
     {
-        public const int RefWidth = 1080;
+        /// <summary>
+        /// Taken from <see cref="ChapterMap.Width"/> rather than written again here.
+        /// The map validator measures glade collisions against that number, so the two
+        /// have to be the same one: a canvas widened without it would leave the gate
+        /// passing layouts that overlap on a real screen.
+        /// </summary>
+        public const int RefWidth = (int)ChapterMap.Width;
+
         public const int RefHeight = 1920;
 
         static bool _started;

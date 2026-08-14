@@ -68,6 +68,11 @@ namespace GlimmerGrove.EditorTools
             // Anything the loader had to skip is a content bug, not a runtime nicety.
             foreach (var problem in load.Problems) result.Errors.Add(problem);
 
+            // Before anything that walks the manifest, because a chapter missing from it
+            // is invisible to every check that does — including the empty-catalog one
+            // just below, which would otherwise report the symptom and hide the cause.
+            ValidateManifestCoverage(result);
+
             if (load.Index.IsEmpty)
             {
                 result.Errors.Add("no levels loaded from Assets/StreamingAssets/Content");
@@ -75,12 +80,75 @@ namespace GlimmerGrove.EditorTools
             }
 
             ValidateChapterOrder(load.Index, result);
+            ValidateCompanions(load.Index, result, verbose);
             ValidateLevels(load, result, verbose);
+            ValidateChapterMaps(load, result);
             ValidateLocalisation(load, result);
             ValidateProgression(load.Index, result, verbose);
             ValidateLegacyMigration(load.Index, result);
 
             return result;
+        }
+
+        /// <summary>
+        /// Proves the manifest accounts for every chapter file that ships.
+        ///
+        /// This is the one check that cannot be made by reading the manifest, because
+        /// its subject is what the manifest failed to say. A chapter file nobody listed
+        /// is not loaded and rejected — it is never opened, so every other validator
+        /// here passes it in silence and the build is green with a fortnight of content
+        /// missing from it. <c>Content ▸ Sync Manifest</c> now adopts such a file
+        /// automatically; this exists because making a mistake unlikely is not the same
+        /// as proving it did not happen.
+        ///
+        /// An error rather than a warning: shipping a chapter that is present in the
+        /// build and absent from the game is exactly as bad as shipping a broken one,
+        /// and the fix is one menu item.
+        /// </summary>
+        static void ValidateManifestCoverage(ContentValidationResult result)
+        {
+            if (!ChapterFiles.TryReadManifest(out var manifest, out string error))
+            {
+                result.Errors.Add(error);
+                return;
+            }
+
+            var problems = new List<string>();
+
+            foreach (var id in ChapterFiles.Unlisted(manifest, problems))
+                result.Errors.Add($"chapters/{id}.json is not listed in manifest.json, so nothing will " +
+                                  "ever read it and its glades cannot appear in the game; " +
+                                  "run Content ▸ Sync Manifest to adopt it");
+
+            // A stray .json that is not named like a chapter is a warning: it may be a
+            // scratch file, and it is at least not pretending to be shipped content.
+            foreach (var problem in problems) result.Warnings.Add(problem);
+        }
+
+        /// <summary>
+        /// Checks node placement one chapter at a time, in the index's order.
+        ///
+        /// Per-level validation cannot see this: whether two glades collide is a fact
+        /// about the pair, and how far apart they are depends on how many strips the
+        /// chapter declared. See <see cref="ChapterMapValidator"/>.
+        /// </summary>
+        static void ValidateChapterMaps(EditorContent content, ContentValidationResult result)
+        {
+            foreach (var chapter in content.Index.Chapters)
+            {
+                if (!content.Catalog.TryResidentChapter(chapter.Id, out var body)) continue;
+
+                var levels = new List<LevelDefinition>(chapter.LevelIds.Count);
+                foreach (var level in body.InIndexOrder(chapter.LevelIds)) levels.Add(level);
+
+                foreach (var issue in ChapterMapValidator.Validate(body.Definition, levels))
+                {
+                    string line = $"chapter '{chapter.Id}': {issue.Message}";
+
+                    if (issue.Severity == LevelIssueSeverity.Error) result.Errors.Add(line);
+                    else result.Warnings.Add(line);
+                }
+            }
         }
 
         /// <summary>
@@ -196,6 +264,87 @@ namespace GlimmerGrove.EditorTools
             }
         }
 
+        /// <summary>
+        /// The companion roster: art that exists, a starter anyone can wear, and a
+        /// curve that stays reachable.
+        ///
+        /// The last one is the check that earns its keep. Unlock levels are content now,
+        /// so a drop can retune them without a build — and a threshold set above what
+        /// the shipped catalog can actually reach produces a companion nobody will ever
+        /// see, which nothing else in the pipeline would notice.
+        /// </summary>
+        static void ValidateCompanions(CatalogIndex index, ContentValidationResult result, bool verbose)
+        {
+            var companions = index.Companions;
+            if (companions.Count == 0)
+            {
+                result.Warnings.Add("the manifest lists no companions; the built-in roster will be used");
+                return;
+            }
+
+            bool anyFree = false;
+            foreach (var companion in companions)
+            {
+                if (companion.UnlockLevel == 0) anyFree = true;
+
+                string portrait = "Assets/Game/Art/Companions/" + companion.Portrait + ".png";
+                if (AssetDatabase.LoadAssetAtPath<Sprite>(portrait) == null)
+                    result.Errors.Add($"companion '{companion.Id}' has no portrait at {portrait}");
+
+                if (companion.HasAnimation &&
+                    !AssetDatabase.IsValidFolder("Assets/Game/Art/Critters/" + companion.Animated))
+                    result.Errors.Add($"companion '{companion.Id}' names animation set " +
+                                      $"'{companion.Animated}', which is not a folder under Art/Critters");
+            }
+
+            if (!anyFree)
+                result.Errors.Add("no companion unlocks at level 0; a new player would have none to wear");
+
+            // What the whole shipped catalog is worth, three-starred. Anything above it
+            // is unreachable until more glades ship.
+            //
+            // Reported as one line rather than one per companion on purpose: a roster
+            // deliberately built to outlast the current content would otherwise emit
+            // dozens of warnings every run, and a validator nobody reads is a validator
+            // that has stopped working.
+            int reachable = ReachableKeeperLevel(index);
+            int beyond = 0, highest = 0;
+            foreach (var companion in companions)
+            {
+                if (companion.UnlockLevel <= reachable) continue;
+                beyond++;
+                if (companion.UnlockLevel > highest) highest = companion.UnlockLevel;
+            }
+
+            if (beyond > 0)
+                result.Warnings.Add($"{beyond} of {companions.Count} companions unlock above keeper level " +
+                                    $"{reachable}, which is all the current catalog can reach " +
+                                    $"(highest is {highest}); they are unreachable until more glades ship");
+
+            if (verbose)
+                Debug.Log($"[Glimmer] {companions.Count} companions, " +
+                          $"{ReachableCount(companions, reachable)} reachable at keeper level {reachable}");
+        }
+
+        /// <summary>The keeper level a player reaches by three-starring everything that ships.</summary>
+        static int ReachableKeeperLevel(CatalogIndex index)
+        {
+            var table = ProgressionRules.Table;
+
+            long xp = 0;
+            foreach (var id in index.LevelIds)
+                xp += table.RuleFor(index.ChapterOf(id)).XpFor(3);
+
+            return table.LevelFor(xp).Level;
+        }
+
+        static int ReachableCount(IReadOnlyList<AvatarDefinition> companions, int level)
+        {
+            int n = 0;
+            foreach (var c in companions) if (c.UnlockLevel <= level) n++;
+            return n;
+        }
+
         /// <summary>Every key a level references must exist in the fallback language.</summary>
         static void ValidateLocalisation(EditorContent content, ContentValidationResult result)
         {
@@ -224,6 +373,11 @@ namespace GlimmerGrove.EditorTools
                 Require(table, LevelDefinition.DefaultTaglineKey(id), $"level '{id}'", result);
                 Require(table, LevelDefinition.DefaultLessonKey(id), $"level '{id}'", result);
             }
+
+            // Companion names are derived from the id like a level's, so the source scan
+            // below cannot see them — only this can.
+            foreach (var companion in content.Index.Companions)
+                Require(table, companion.NameKey, $"companion '{companion.Id}'", result);
 
             ValidateKeysUsedInCode(table, result);
         }

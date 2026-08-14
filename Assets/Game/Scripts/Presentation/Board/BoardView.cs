@@ -13,6 +13,13 @@ namespace GlimmerGrove
         public Action OnChanged;
         public Action OnSolved;
 
+        /// <summary>
+        /// Raised once the losing animation has played out. Separate from
+        /// <see cref="OnSolved"/> rather than a result code, because losing costs the
+        /// player a heart and the screen has to do something quite different with it.
+        /// </summary>
+        public Action<DefeatReason> OnDefeated;
+
         readonly List<TileView> _tiles = new List<TileView>();
         readonly List<int> _history = new List<int>();
         readonly Dictionary<int, TileView> _byIndex = new Dictionary<int, TileView>();
@@ -21,6 +28,7 @@ namespace GlimmerGrove
         Image _floor;
         float _pitch;
         bool _celebrating;
+        bool _lost;
         Pal.BoardTheme _theme;
 
         // a warm pentatonic ladder: consecutive critters waking sound like a melody
@@ -28,6 +36,10 @@ namespace GlimmerGrove
 
         public int Moves => P.Moves;
         public bool CanUndo => _history.Count > 0 && !Locked;
+
+        /// <summary>One tile's transform, for anything that needs to point at the board.</summary>
+        public RectTransform TileAt(int index)
+            => _byIndex.TryGetValue(index, out var tile) ? (RectTransform)tile.transform : null;
         public int HintsLeft { get; private set; }
 
         public void Build(RectTransform host, Puzzle puzzle, Pal.BoardTheme theme, int hints = 3)
@@ -89,7 +101,7 @@ namespace GlimmerGrove
         // ----------------------------------------------------------------- input
         public void OnTileTapped(TileView tile)
         {
-            if (Locked || _celebrating) return;
+            if (Locked || _celebrating || _lost) return;
             int i = tile.Index;
 
             if (P.C[i].locked)
@@ -117,9 +129,39 @@ namespace GlimmerGrove
             _byIndex[i].Spin(dir);
             Audio.SfxVaried(UnityEngine.Random.value < .5f ? "rotate_a" : "rotate_b", .42f, .08f);
 
+            CollectDebris();
+
             P.Evaluate();
             Refresh(before);
             OnChanged?.Invoke();
+
+            // Checked after Refresh, which owns the win: a last turn that solves the
+            // board is a win, so only an unfinished run can run out of turns.
+            if (P.OutOfMoves) Exhaust();
+        }
+
+        /// <summary>
+        /// Deals with a conduit that just crumbled.
+        ///
+        /// Clearing the undo history is the important half. A shattered conduit is not
+        /// recoverable, so an undo that stepped back past it would rewind the rotations
+        /// and leave the hole — a board the player could not have reached by playing.
+        /// Better to say plainly that this was a point of no return.
+        /// </summary>
+        void CollectDebris()
+        {
+            if (P.ShatteredAt < 0) return;
+
+            int at = P.ShatteredAt;
+            P.ShatteredAt = -1;
+
+            if (_byIndex.TryGetValue(at, out var tile)) tile.Crumble();
+
+            Audio.Sfx("shatter", .55f, 1.25f);
+            Haptic.Tap();
+            Tween.Punch(_floor.transform, .04f, .4f);
+
+            _history.Clear();
         }
 
         bool[] CaptureLit()
@@ -151,6 +193,36 @@ namespace GlimmerGrove
             }
 
             if (P.Won) Celebrate();
+        }
+
+
+        /// <summary>
+        /// The turns ran out with the glade still dark.
+        ///
+        /// Quieter than a detonation on purpose. There is nothing to point at — the
+        /// player did not do a wrong thing, they did too many nearly-right ones — so
+        /// the light simply gutters rather than exploding, and the overlay does the
+        /// explaining.
+        /// </summary>
+        void Exhaust()
+        {
+            if (_lost) return;
+            _lost = true;
+            Locked = true;
+
+            Haptic.Tap();
+            Audio.Duck(.3f, 1.4f);
+            Audio.Sfx("nope", .65f, .78f);
+            Audio.Sfx("pop2", .4f, .6f, .12f);
+
+            // every lit arm fades back to dormant, slowest first, so the grove visibly
+            // goes to sleep instead of the screen just freezing
+            foreach (var t in _tiles) t.Gutter();
+
+            Flow.Flash(new Color(.24f, .31f, .46f), .40f, .7f);
+            Tween.Shake((RectTransform)_floor.transform, 7f, .45f);
+
+            Tween.After(.95f, () => OnDefeated?.Invoke(DefeatReason.OutOfMoves), this);
         }
 
         void Celebrate()
@@ -193,18 +265,24 @@ namespace GlimmerGrove
         // ------------------------------------------------------------- controls
         public void Undo()
         {
-            if (!CanUndo || _celebrating) return;
+            if (!CanUndo || _celebrating || _lost) return;
             int i = _history[_history.Count - 1];
             _history.RemoveAt(_history.Count - 1);
 
             var before = CaptureLit();
-            P.Turn(i, -1);
+
+            // wear: false — undo rewinds the rotation but never mends a conduit. The
+            // cost of having explored is the whole point of a fragile board.
+            P.Turn(i, -1, wear: false);
             P.Moves = Mathf.Max(0, P.Moves - 1);
             _byIndex[i].Spin(-1);
             Audio.SfxVaried("back", .5f, .05f);
             P.Evaluate();
             Refresh(before);
             OnChanged?.Invoke();
+
+            // No budget check here on purpose: undo gives a turn back, so it can only
+            // ever move the count away from the limit.
         }
 
         public bool Hint()
@@ -246,6 +324,11 @@ namespace GlimmerGrove
         public void Restart()
         {
             if (_celebrating) return;
+
+            // A lost board is exactly the one a player most wants to restart, and
+            // P.Reset puts the move count back to zero.
+            _lost = false;
+
             _history.Clear();
             P.Reset(_start);
             Locked = true;

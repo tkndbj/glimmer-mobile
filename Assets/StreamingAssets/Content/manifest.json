@@ -4,15 +4,235 @@
   "chapters": [
     {
       "id": "c01_shallows",
-      "version": 2,
+      "version": 3,
       "order": 10,
       "disabled": false,
       "minAppVersion": 0,
       "levels": [
         "c01_first_light",
         "c01_twin_streams",
-        "c01_prism_heart"
+        "c01_prism_heart",
+        "c01_thorn_hollow"
       ]
+    }
+  ],
+  "companions": [
+    {
+      "id": "monarch",
+      "portrait": "monarch",
+      "animated": "c5",
+      "unlockLevel": 0,
+      "disabled": false
+    },
+    {
+      "id": "cinder",
+      "portrait": "cinder",
+      "animated": "",
+      "unlockLevel": 1,
+      "disabled": false
+    },
+    {
+      "id": "timber",
+      "portrait": "timber",
+      "animated": "c2",
+      "unlockLevel": 2,
+      "disabled": false
+    },
+    {
+      "id": "sorrel",
+      "portrait": "sorrel",
+      "animated": "",
+      "unlockLevel": 3,
+      "disabled": false
+    },
+    {
+      "id": "sprocket",
+      "portrait": "sprocket",
+      "animated": "c3",
+      "unlockLevel": 4,
+      "disabled": false
+    },
+    {
+      "id": "peep",
+      "portrait": "peep",
+      "animated": "",
+      "unlockLevel": 5,
+      "disabled": false
+    },
+    {
+      "id": "thistle",
+      "portrait": "thistle",
+      "animated": "c4",
+      "unlockLevel": 6,
+      "disabled": false
+    },
+    {
+      "id": "gourd",
+      "portrait": "gourd",
+      "animated": "",
+      "unlockLevel": 7,
+      "disabled": false
+    },
+    {
+      "id": "puff",
+      "portrait": "puff",
+      "animated": "c1",
+      "unlockLevel": 8,
+      "disabled": false
+    },
+    {
+      "id": "clementine",
+      "portrait": "clementine",
+      "animated": "",
+      "unlockLevel": 9,
+      "disabled": false
+    },
+    {
+      "id": "plum",
+      "portrait": "plum",
+      "animated": "",
+      "unlockLevel": 10,
+      "disabled": false
+    },
+    {
+      "id": "frond",
+      "portrait": "frond",
+      "animated": "",
+      "unlockLevel": 12,
+      "disabled": false
+    },
+    {
+      "id": "button",
+      "portrait": "button",
+      "animated": "",
+      "unlockLevel": 14,
+      "disabled": false
+    },
+    {
+      "id": "shell",
+      "portrait": "shell",
+      "animated": "",
+      "unlockLevel": 16,
+      "disabled": false
+    },
+    {
+      "id": "dewdrop",
+      "portrait": "dewdrop",
+      "animated": "",
+      "unlockLevel": 18,
+      "disabled": false
+    },
+    {
+      "id": "flit",
+      "portrait": "flit",
+      "animated": "",
+      "unlockLevel": 20,
+      "disabled": false
+    },
+    {
+      "id": "toadstool",
+      "portrait": "toadstool",
+      "animated": "",
+      "unlockLevel": 22,
+      "disabled": false
+    },
+    {
+      "id": "quill",
+      "portrait": "quill",
+      "animated": "",
+      "unlockLevel": 24,
+      "disabled": false
+    },
+    {
+      "id": "olive",
+      "portrait": "olive",
+      "animated": "",
+      "unlockLevel": 26,
+      "disabled": false
+    },
+    {
+      "id": "indigo",
+      "portrait": "indigo",
+      "animated": "",
+      "unlockLevel": 28,
+      "disabled": false
+    },
+    {
+      "id": "tadpole",
+      "portrait": "tadpole",
+      "animated": "",
+      "unlockLevel": 30,
+      "disabled": false
+    },
+    {
+      "id": "pebble",
+      "portrait": "pebble",
+      "animated": "",
+      "unlockLevel": 33,
+      "disabled": false
+    },
+    {
+      "id": "saffron",
+      "portrait": "saffron",
+      "animated": "",
+      "unlockLevel": 36,
+      "disabled": false
+    },
+    {
+      "id": "coral",
+      "portrait": "coral",
+      "animated": "",
+      "unlockLevel": 39,
+      "disabled": false
+    },
+    {
+      "id": "rust",
+      "portrait": "rust",
+      "animated": "",
+      "unlockLevel": 42,
+      "disabled": false
+    },
+    {
+      "id": "fizz",
+      "portrait": "fizz",
+      "animated": "",
+      "unlockLevel": 45,
+      "disabled": false
+    },
+    {
+      "id": "marrow",
+      "portrait": "marrow",
+      "animated": "",
+      "unlockLevel": 48,
+      "disabled": false
+    },
+    {
+      "id": "bramble",
+      "portrait": "bramble",
+      "animated": "",
+      "unlockLevel": 52,
+      "disabled": false
+    },
+    {
+      "id": "wisp",
+      "portrait": "wisp",
+      "animated": "",
+      "unlockLevel": 56,
+      "disabled": false
+    },
+    {
+      "id": "boulder",
+      "portrait": "boulder",
+      "animated": "",
+      "unlockLevel": 60,
+      "disabled": false
+    },
+    {
+      "id": "thorn",
+      "portrait": "thorn",
+      "animated": "",
+      "unlockLevel": 65,
+      "disabled": false
     }
   ]
 }

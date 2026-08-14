@@ -57,6 +57,10 @@ namespace GlimmerGrove.Persistence
                 // Having run anywhere means it has run. Re-importing would fold the
                 // same pre-1.0 stars in a second time.
                 legacyImportDone = mine.legacyImportDone || other.legacyImportDone,
+
+                // A union: seeing a lesson cannot be undone, so between two devices the
+                // player has seen whatever either of them showed.
+                tipsSeen = TipLedger.Join(mine.tipsSeen, other.tipsSeen),
             };
 
             return merged;
@@ -148,6 +152,8 @@ namespace GlimmerGrove.Persistence
             int i = 0;
             foreach (var ledger in ledgers.Values) currencies[i++] = ledger.ToDto();
 
+            var hearts = JoinedHearts(mine, other);
+
             return new WalletDto
             {
                 // Retired v1 fields. Whichever file is newer holds the better mirror.
@@ -155,15 +161,18 @@ namespace GlimmerGrove.Persistence
                 gems = newer.gems,
 
                 // Hearts are consumable, so the smaller count is the honest one: taking
-                // the larger would let two devices refill each other indefinitely. They
-                // cannot safely gate play until the server owns the clock anyway — a
-                // device clock is user-settable and therefore not evidence of elapsed
-                // time.
-                hearts = SmallerHeartCount(mine.hearts, other.hearts),
+                // the larger would let two devices refill each other indefinitely. The
+                // refill deadline travels with the count and joins the same way — see
+                // Hearts.Join, which owns the rule so the merge and the game cannot
+                // disagree about it.
+                hearts = hearts.Count,
+                heartsNextRefillUnix = hearts.NextRefillUnix,
 
-                displayName = string.IsNullOrEmpty(newer.displayName)
-                    ? (mine.displayName ?? other.displayName)
-                    : newer.displayName,
+                // Preferences: the newest real value, and never an empty one over a
+                // real one. A device that has never been renamed carries "", and
+                // letting that win would silently undo the rename done on the other.
+                displayName = NewestSet(newer.displayName, mine.displayName, other.displayName),
+                avatarId = NewestSet(newer.avatarId, mine.avatarId, other.avatarId),
 
                 currencies = currencies,
             };
@@ -183,11 +192,37 @@ namespace GlimmerGrove.Persistence
             }
         }
 
-        static int SmallerHeartCount(int a, int b)
+        /// <summary>
+        /// The newer file's value when it has one, otherwise whichever file actually
+        /// holds a value.
+        ///
+        /// Order-independent despite reading like a preference: whenever
+        /// <paramref name="newer"/> is empty the only non-empty candidate left is the
+        /// older file, and it is the same file whichever way round the two are passed.
+        /// </summary>
+        static string NewestSet(string newer, string mine, string other)
         {
-            if (a < 0) return b;
-            if (b < 0) return a;
-            return Math.Min(a, b);
+            if (!string.IsNullOrEmpty(newer)) return newer;
+            if (!string.IsNullOrEmpty(mine)) return mine;
+            return other;
+        }
+
+        /// <summary>
+        /// Joins two devices' hearts, honouring "never written" on either side.
+        ///
+        /// A -1 count means that file predates hearts being stored at all, so it holds
+        /// no opinion and the other side stands. Once both are real values the rule
+        /// lives in <see cref="Hearts.Join"/> — kept there rather than here so the
+        /// merge cannot drift from what the game believes a heart is.
+        /// </summary>
+        static Hearts JoinedHearts(WalletDto mine, WalletDto other)
+        {
+            if (mine.hearts < 0 && other.hearts < 0) return Hearts.Full;
+            if (mine.hearts < 0) return new Hearts(other.hearts, other.heartsNextRefillUnix);
+            if (other.hearts < 0) return new Hearts(mine.hearts, mine.heartsNextRefillUnix);
+
+            return Hearts.Join(new Hearts(mine.hearts, mine.heartsNextRefillUnix),
+                               new Hearts(other.hearts, other.heartsNextRefillUnix));
         }
 
         // --------------------------------------------------------- progression

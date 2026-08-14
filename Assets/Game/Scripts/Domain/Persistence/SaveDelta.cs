@@ -110,6 +110,7 @@ namespace GlimmerGrove.Persistence
         {
             if (remote.schemaVersion != merged.schemaVersion) return true;
             if (remote.legacyImportDone != merged.legacyImportDone) return true;
+            if (!SameSet(remote.tipsSeen, merged.tipsSeen)) return true;
             if (!Same(remote.lastPlayedLevelId, merged.lastPlayedLevelId)) return true;
 
             var a = remote.settings ?? new SettingsDto();
@@ -122,7 +123,9 @@ namespace GlimmerGrove.Persistence
             var walletA = remote.wallet ?? WalletDto.Unwritten();
             var walletB = merged.wallet ?? WalletDto.Unwritten();
             if (walletA.hearts != walletB.hearts) return true;
+            if (walletA.heartsNextRefillUnix != walletB.heartsNextRefillUnix) return true;
             if (!Same(walletA.displayName, walletB.displayName)) return true;
+            if (!Same(walletA.avatarId, walletB.avatarId)) return true;
 
             var progressA = remote.progression ?? ProgressionStateDto.Unwritten();
             var progressB = merged.progression ?? ProgressionStateDto.Unwritten();
@@ -134,6 +137,21 @@ namespace GlimmerGrove.Persistence
             if (!Same(remote.cloud?.userId, merged.cloud?.userId)) return true;
 
             return false;
+        }
+
+        /// <summary>
+        /// Both lists are written sorted, so a plain ordered walk is enough — and any
+        /// difference in length is a difference in content, because the union only grows.
+        /// </summary>
+        static bool SameSet(string[] a, string[] b)
+        {
+            int na = a?.Length ?? 0, nb = b?.Length ?? 0;
+            if (na != nb) return false;
+
+            for (int i = 0; i < na; i++)
+                if (!string.Equals(a[i], b[i], StringComparison.Ordinal)) return false;
+
+            return true;
         }
 
         static bool Same(string a, string b)

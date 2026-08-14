@@ -19,17 +19,11 @@ namespace GlimmerGrove
     /// </summary>
     public sealed class MapLayout
     {
-        /// <summary>Canvas units per background strip.</summary>
-        public const float StripHeight = 1200f;
-
-        /// <summary>How far above the last level the end-of-chapter marker floats.</summary>
-        const float TeaserGap = 0.22f;
-
         readonly Dictionary<LevelId, Vector2> _positions = new Dictionary<LevelId, Vector2>();
 
         public ChapterDefinition Chapter { get; private set; }
 
-        public float TotalHeight { get; private set; } = StripHeight;
+        public float TotalHeight { get; private set; } = ChapterMap.StripHeight;
 
         /// <summary>Strip sprite keys, bottom to top.</summary>
         public IReadOnlyList<string> Strips { get; private set; } = new[] { "strip0" };
@@ -57,15 +51,14 @@ namespace GlimmerGrove
 
             layout.Chapter = definition;
             layout.Strips = definition.MapStrips;
-            layout.TotalHeight = Mathf.Max(StripHeight, definition.StripCount * StripHeight);
+            layout.TotalHeight = ChapterMap.Height(definition.StripCount);
 
             var levels = new List<LevelDefinition>(chapter.Count);
             float highest = 0f;
 
             foreach (var level in chapter.InIndexOrder(order))
             {
-                var authored = level.Presentation.MapPosition;
-                var p = new Vector2(Mathf.Clamp01(authored.x), Mathf.Clamp01(authored.y));
+                var p = ChapterMap.Place(level.Presentation.MapPosition);
 
                 layout._positions[level.Id] = p;
                 levels.Add(level);
@@ -73,7 +66,7 @@ namespace GlimmerGrove
             }
 
             layout.Levels = levels;
-            layout.TeaserPosition = new Vector2(0.66f, Mathf.Min(0.95f, highest + TeaserGap));
+            layout.TeaserPosition = ChapterMap.TeaserPosition(highest);
             return layout;
         }
 
@@ -83,6 +76,6 @@ namespace GlimmerGrove
         public bool Has(LevelId id) => _positions.ContainsKey(id);
 
         /// <summary>Distance from the bottom of the map to a strip's bottom edge.</summary>
-        public float StripBottom(int index) => index * StripHeight;
+        public float StripBottom(int index) => index * ChapterMap.StripHeight;
     }
 }

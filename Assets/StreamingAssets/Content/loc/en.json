@@ -13,7 +13,11 @@
 
     { "key": "level.c01_prism_heart.name", "text": "Prism Heart" },
     { "key": "level.c01_prism_heart.tagline", "text": "Blend the light, wake the deep grove" },
-    { "key": "level.c01_prism_heart.lesson", "text": "Joined hearts blend: red plus blue makes blossom, all three make radiance." },
+    { "key": "level.c01_prism_heart.lesson", "text": "Joined hearts blend: red plus green makes gold. Keep the blue stream to itself." },
+
+    { "key": "level.c01_thorn_hollow.name", "text": "Brittle Hollow" },
+    { "key": "level.c01_thorn_hollow.tagline", "text": "Three streams, and conduits that will not last" },
+    { "key": "level.c01_thorn_hollow.lesson", "text": "Some conduits crumble after a few turns. Plan the route before you spin." },
 
     { "key": "ui.levels.title", "text": "CHOOSE A GLADE" },
     { "key": "ui.levels.locked", "text": "locked" },
@@ -31,7 +35,6 @@
     { "key": "ui.win.best_is", "text": "your best here is {0}" },
     { "key": "ui.win.moves", "text": "{0} moves  -  {1} for three stars" },
     { "key": "ui.win.reward", "text": "+{0} glimmer  ·  +{1} credits" },
-    { "key": "ui.win.level_up", "text": "KEEPER LEVEL {0}" },
     { "key": "ui.win.all_done", "text": "the whole grove is awake" },
     { "key": "ui.win.next", "text": "NEXT GLADE" },
     { "key": "ui.win.glades", "text": "GLADES" },
@@ -55,6 +58,7 @@
     { "key": "ui.settings.buzz", "text": "buzz" },
     { "key": "ui.settings.version", "text": "Glimmer Grove  v{0}" },
     { "key": "ui.settings.credit", "text": "art & audio by CraftPix" },
+
     { "key": "ui.account.title", "text": "ACCOUNT" },
     { "key": "ui.account.guest", "text": "you are not signed in" },
     { "key": "ui.account.guest_body", "text": "Your progress is saved only on this phone. If you lose it or reinstall the game, your progress is gone. Sign in to save it online." },
@@ -77,7 +81,6 @@
     { "key": "ui.account.protect", "text": "SAVE YOUR PROGRESS" },
     { "key": "ui.account.later", "text": "NOT NOW" },
 
-    { "key": "ui.settings.account", "text": "ACCOUNT" },
     { "key": "ui.settings.reset", "text": "RESET PROGRESS" },
     { "key": "ui.settings.reset_confirm", "text": "TAP AGAIN TO ERASE" },
 
@@ -96,13 +99,108 @@
     { "key": "ui.nav.items", "text": "items" },
     { "key": "ui.nav.home", "text": "home" },
     { "key": "ui.nav.ranks", "text": "ranks" },
+    { "key": "ui.nav.profile", "text": "profile" },
 
     { "key": "ui.soon.shop", "text": "Chests, critter skins and conduit styles will live here." },
     { "key": "ui.soon.items", "text": "Boosters and keepsakes you collect in the glades." },
     { "key": "ui.soon.ranks", "text": "Weekly leaderboards for the fastest, calmest solvers." },
 
+    { "key": "ui.profile.title", "text": "profile" },
+    { "key": "ui.profile.rename", "text": "your name" },
+    { "key": "ui.profile.name_hint", "text": "Grovekeeper" },
+    { "key": "ui.profile.name_rule", "text": "up to {0} characters" },
+    { "key": "ui.profile.cancel", "text": "CANCEL" },
+    { "key": "ui.profile.xp", "text": "{0} / {1} XP to the next level" },
+    { "key": "ui.profile.xp_max", "text": "every keeper level earned" },
+    { "key": "ui.profile.next_title", "text": "{0} at level {1}" },
+    { "key": "ui.profile.record", "text": "grove record" },
+    { "key": "ui.profile.stars", "text": "stars" },
+    { "key": "ui.profile.chapters", "text": "chapters" },
+    { "key": "ui.profile.perfect", "text": "perfect" },
+    { "key": "ui.profile.glades", "text": "glades" },
+    { "key": "ui.profile.coins", "text": "coins" },
+    { "key": "ui.profile.gems", "text": "gems" },
+    { "key": "ui.profile.companions", "text": "companions" },
+    { "key": "ui.profile.unlocked", "text": "{0} of {1} awake" },
+    { "key": "ui.profile.locked_at", "text": "level {0}" },
+    { "key": "ui.profile.locked_toast", "text": "Reach keeper level {0} to wake this friend." },
+    { "key": "ui.profile.account", "text": "account" },
+    { "key": "ui.profile.guest_hint", "text": "This grove lives only on this device. Link an account and it follows you." },
+    { "key": "ui.profile.linked_hint", "text": "Your grove is backed up and will follow you to a new device." },
+    { "key": "ui.profile.protect", "text": "PROTECT MY GROVE" },
+    { "key": "ui.profile.manage", "text": "MANAGE ACCOUNT" },
+    { "key": "ui.profile.see_all", "text": "SEE ALL" },
+    { "key": "ui.profile.wearing", "text": "wearing" },
+    { "key": "ui.profile.tap_to_wear", "text": "tap to wear" },
+    { "key": "ui.profile.locked", "text": "locked" },
+    { "key": "ui.profile.next_at", "text": "next at level {0}" },
+
+    { "key": "ui.title.seedling", "text": "Seedling" },
+    { "key": "ui.title.sapling", "text": "Sapling" },
+    { "key": "ui.title.keeper", "text": "Grovekeeper" },
+    { "key": "ui.title.warden", "text": "Lightwarden" },
+    { "key": "ui.title.elder", "text": "Grove Elder" },
+
+    { "key": "ui.avatar.puff", "text": "Puff" },
+    { "key": "ui.avatar.timber", "text": "Timber" },
+    { "key": "ui.avatar.sprocket", "text": "Sprocket" },
+    { "key": "ui.avatar.thistle", "text": "Thistle" },
+    { "key": "ui.avatar.monarch", "text": "Monarch" },
+    { "key": "ui.avatar.cinder", "text": "Cinder" },
+    { "key": "ui.avatar.sorrel", "text": "Sorrel" },
+    { "key": "ui.avatar.peep", "text": "Peep" },
+    { "key": "ui.avatar.gourd", "text": "Gourd" },
+    { "key": "ui.avatar.clementine", "text": "Clementine" },
+    { "key": "ui.avatar.plum", "text": "Plum" },
+    { "key": "ui.avatar.frond", "text": "Frond" },
+    { "key": "ui.avatar.button", "text": "Button" },
+    { "key": "ui.avatar.shell", "text": "Shell" },
+    { "key": "ui.avatar.dewdrop", "text": "Dewdrop" },
+    { "key": "ui.avatar.flit", "text": "Flit" },
+    { "key": "ui.avatar.toadstool", "text": "Toadstool" },
+    { "key": "ui.avatar.quill", "text": "Quill" },
+    { "key": "ui.avatar.olive", "text": "Olive" },
+    { "key": "ui.avatar.indigo", "text": "Indigo" },
+    { "key": "ui.avatar.tadpole", "text": "Tadpole" },
+    { "key": "ui.avatar.pebble", "text": "Pebble" },
+    { "key": "ui.avatar.saffron", "text": "Saffron" },
+    { "key": "ui.avatar.coral", "text": "Coral" },
+    { "key": "ui.avatar.rust", "text": "Rust" },
+    { "key": "ui.avatar.fizz", "text": "Fizz" },
+    { "key": "ui.avatar.marrow", "text": "Marrow" },
+    { "key": "ui.avatar.bramble", "text": "Bramble" },
+    { "key": "ui.avatar.wisp", "text": "Wisp" },
+    { "key": "ui.avatar.boulder", "text": "Boulder" },
+    { "key": "ui.avatar.thorn", "text": "Thorn" },
+
     { "key": "ui.common.got_it", "text": "GOT IT" },
     { "key": "ui.common.done", "text": "DONE" },
-    { "key": "ui.common.coming_soon", "text": "COMING SOON" }
+    { "key": "ui.common.coming_soon", "text": "COMING SOON" },
+
+    { "key": "ui.defeat.title", "text": "THE LIGHT WENT OUT" },
+    { "key": "ui.defeat.reason", "text": "The light touched a thornstone and the glade went dark." },
+    { "key": "ui.defeat.moves_title", "text": "OUT OF TURNS" },
+    { "key": "ui.defeat.moves_reason", "text": "The grove grew tired before the glade woke. Fewer turns, more thinking." },
+    { "key": "ui.defeat.try_again", "text": "TRY AGAIN" },
+    { "key": "ui.defeat.out_of_hearts", "text": "No hearts left. Rest a while and the grove will wake you." },
+
+    { "key": "ui.hearts.title", "text": "HEARTS" },
+    { "key": "ui.hearts.full", "text": "Your hearts are full." },
+    { "key": "ui.hearts.next", "text": "Next heart in {0}" },
+    { "key": "ui.hearts.empty", "text": "Out of hearts" },
+    { "key": "ui.hearts.wait_to_play", "text": "Wait for a heart to return before entering a glade." },
+
+
+
+    { "key": "ui.tip.fragile.title", "text": "BRITTLE CONDUIT" },
+    { "key": "ui.tip.fragile.body", "text": "This one crumbles after a few turns — the number shows how many are left. Undoing does not mend it." },
+
+    { "key": "ui.tip.moves.title", "text": "TURNS" },
+    { "key": "ui.tip.moves.body", "text": "This is how many turns you have left. Run out with the glade still dark and it costs a heart." },
+
+
+
+    { "key": "ui.tip.rooted.title", "text": "ROOTED" },
+    { "key": "ui.tip.rooted.body", "text": "A rooted tile cannot be turned. Treat it as a fixed part of the path and route the rest of the grove around it." }
   ]
 }

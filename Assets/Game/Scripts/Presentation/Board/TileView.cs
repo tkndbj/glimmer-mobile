@@ -23,6 +23,9 @@ namespace GlimmerGrove
 
         Image _crystal, _crystalGlow;
         Image _critter, _halo, _haloGlow, _lockBadge;
+        Image _wearRing;
+        Text _wearCount;
+        int _shownWear = -1;
         Flipbook _book;
 
         bool _wasLit;
@@ -81,6 +84,7 @@ namespace GlimmerGrove
 
             if (cell.kind == Kind.Source) BuildCrystal(cell);
             else if (cell.kind == Kind.Lamp) BuildCritter(cell);
+            if (cell.fragile > 0) BuildFragility();
 
             if (cell.locked)
             {
@@ -151,6 +155,134 @@ namespace GlimmerGrove
 
         static readonly Color SleepTint = new Color(.44f, .52f, .60f, .92f);
 
+
+        // -------------------------------------------------------------- fragility
+        /// <summary>
+        /// The turns a fragile conduit has left, shown as a small count on the tile.
+        ///
+        /// A number rather than a crack texture, because the player has to be able to
+        /// <em>plan</em> against it. "This one has two left" is a decision; "this one
+        /// looks a bit cracked" is a guess, and a mechanic that costs a heart must never
+        /// be a guess.
+        /// </summary>
+        void BuildFragility()
+        {
+            _wearRing = UIKit.Img("WearRing", _fixture, Art.Ring(96, 7f), Pal.A(Pal.Ember, .55f),
+                                  Vector2.one * _size * .40f, new Vector2(1f, 1f),
+                                  new Vector2(-_size * .16f, -_size * .16f));
+
+            _wearCount = UIKit.Titled("Wear", _wearRing.transform, string.Empty, 30, Pal.Cream,
+                                      TextAnchor.MiddleCenter, Vector2.one * _size * .34f,
+                                      new Vector2(.5f, .5f), Vector2.zero, outline: 0f, shadow: 2f);
+            PaintFragility(false);
+        }
+
+        void PaintFragility(bool animate)
+        {
+            if (!_wearRing) return;
+
+            int left = _p.FragileLeft(_i);
+            if (_shownWear == left) return;
+            _shownWear = left;
+
+            _wearCount.text = left.ToString();
+
+            var tint = left <= 1 ? Pal.Ember : left <= 2 ? Pal.Gold : Pal.Mint;
+            _wearRing.color = Pal.A(tint, .75f);
+            _wearCount.color = Pal.Lift(tint, .55f);
+
+            if (!animate) return;
+
+            Tween.Punch(_wearRing.transform, .30f, .34f);
+            if (left <= 1) Tween.Shake((RectTransform)_wearRing.transform, 4f, .3f);
+        }
+
+        /// <summary>
+        /// The conduit gives way: it drops out of the board and leaves a gap.
+        ///
+        /// The tile is not destroyed, only emptied — <see cref="Puzzle.Used"/> already
+        /// reports it gone, so nothing downstream needs to know, and keeping the object
+        /// means a restart can put it back without rebuilding the grid.
+        /// </summary>
+        public void Crumble()
+        {
+            var dust = new Color(.72f, .66f, .58f);
+
+            if (_wearRing) { Tween.Tint(_wearRing, Pal.A(dust, 0f), .25f); }
+            if (_wearCount) { Tween.Tint(_wearCount, Pal.A(dust, 0f), .2f); }
+
+            foreach (var arm in _armBase) Tween.Tint(arm, Pal.A(dust, 0f), .34f, Ease.InQuad);
+            foreach (var arm in _armLit) Tween.Tint(arm, Pal.A(dust, 0f), .22f, Ease.InQuad);
+            foreach (var arm in _armGlow) Tween.Tint(arm, Pal.A(dust, 0f), .22f, Ease.InQuad);
+
+            if (_hubBase) Tween.Tint(_hubBase, Pal.A(dust, 0f), .34f, Ease.InQuad);
+            if (_hubLit) Tween.Tint(_hubLit, Pal.A(dust, 0f), .2f, Ease.InQuad);
+            if (_hubGlow) Tween.Tint(_hubGlow, Pal.A(dust, 0f), .2f, Ease.InQuad);
+
+            if (_slot) Tween.Tint(_slot, new Color(.06f, .07f, .09f, .30f), .3f);
+            if (_slotEdge) Tween.Tint(_slotEdge, new Color(1f, 1f, 1f, .03f), .3f);
+
+            Tween.Shake((RectTransform)transform, 9f, .32f);
+            Burst.Sparks(Flow.Effects, WorldCentre(), dust, 16, 190f, 22f, .6f);
+        }
+
+        /// <summary>Puts a crumbled conduit back, for a restart.</summary>
+        void RestoreFragility()
+        {
+            if (!_wearRing) return;
+
+            _shownWear = -1;
+            _wearRing.color = Pal.A(Pal.Mint, .75f);
+            _wearCount.color = Pal.Cream;
+            PaintFragility(false);
+
+            if (_slot) _slot.color = _theme.Slot;
+            if (_slotEdge) _slotEdge.color = new Color(1, 1, 1, .075f);
+
+            foreach (var arm in _armBase) arm.color = _theme.ArmBase;
+            if (_hubBase) _hubBase.color = _theme.Hub;
+        }
+
+        /// <summary>
+        /// The light going out because the turns ran out.
+        ///
+        /// Deliberately gentle, and deliberately not the same as a blast: nothing here
+        /// was the player's mistake in particular, so the grove goes to sleep rather
+        /// than being destroyed. Depth staggers it, so the dark spreads outward from
+        /// wherever the light was weakest — the same choreography as waking, run
+        /// backwards.
+        /// </summary>
+        public void Gutter()
+        {
+            float delay = Mathf.Max(0, _p.Depth[_i]) * .035f;
+            var dead = new Color(.34f, .40f, .50f);
+
+            for (int k = 0; k < _armLit.Count; k++)
+            {
+                Tween.Tint(_armLit[k], Pal.A(dead, 0f), .5f, Ease.InQuad).Delay(delay);
+                Tween.Tint(_armGlow[k], Pal.A(dead, 0f), .55f, Ease.InQuad).Delay(delay);
+            }
+
+            if (_hubLit) Tween.Tint(_hubLit, Pal.A(dead, 0f), .5f, Ease.InQuad).Delay(delay);
+            if (_hubGlow) Tween.Tint(_hubGlow, Pal.A(dead, 0f), .55f, Ease.InQuad).Delay(delay);
+
+            if (_critter) Tween.Tint(_critter, SleepTint, .5f, Ease.InQuad).Delay(delay);
+            if (_haloGlow) Tween.Tint(_haloGlow, Pal.A(dead, 0f), .5f, Ease.InQuad).Delay(delay);
+            if (_book) _book.enabled = false;
+
+            Tween.Punch(_fixture, .05f, .35f).Delay(delay);
+        }
+
+
+
+        /// <summary>This tile's centre in the effects layer's space, for a burst.</summary>
+        Vector2 WorldCentre()
+        {
+            var rt = (RectTransform)transform;
+            var world = rt.TransformPoint(rt.rect.center);
+            return Flow.Effects.InverseTransformPoint(world);
+        }
+
         // ---------------------------------------------------------------- input
         public void OnPointerClick(PointerEventData e) => _board.OnTileTapped(this);
 
@@ -163,13 +295,18 @@ namespace GlimmerGrove
             Ripple(Pal.A(Pal.Cream, .5f), .85f);
         }
 
-        /// <summary>Snap back to a given rotation, used when the level is restarted.</summary>
+        /// <summary>
+        /// Snap back to a given rotation, used when the level is restarted. Also mends
+        /// a crumbled conduit — a retry rewinds the model, and the view has to follow
+        /// it all the way.
+        /// </summary>
         public void ResetTo(int rot)
         {
             _angle = -90f * rot;
             Tween.Rotate(_rotor, _angle, .34f, Ease.OutBack);
             Tween.Punch(transform, .12f, .36f);
             _shownEnergy = -1;
+            RestoreFragility();
         }
 
         public void Refuse()
@@ -228,6 +365,8 @@ namespace GlimmerGrove
             }
 
             if (_p.C[_i].kind == Kind.Lamp) ApplyLamp(animate, delay);
+
+            PaintFragility(animate);
         }
 
         void ApplyLamp(bool animate, float delay)

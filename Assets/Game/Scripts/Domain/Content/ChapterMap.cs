@@ -1,0 +1,79 @@
+using UnityEngine;
+
+namespace GlimmerGrove.Content
+{
+    /// <summary>
+    /// The geometry of one chapter's stretch of map, in canvas units.
+    ///
+    /// These numbers live in Domain rather than beside the screen that draws them
+    /// because they are an authoring contract, not a rendering detail. Whether two
+    /// glades collide, or whether the trail between them runs backwards, is a question
+    /// about the content, and it has to be answerable by the build gate — which cannot
+    /// reach into Presentation. The alternative, a validator holding its own copy of
+    /// the numbers, would agree with the screen right up until somebody changed one.
+    ///
+    /// A level's <c>mapX</c>/<c>mapY</c> are fractions of its own chapter's map, so
+    /// turning them into a distance needs that chapter's strip count: the same
+    /// fractional gap is six times the distance in a six-strip chapter as in a
+    /// one-strip chapter. That is precisely why these checks cannot be made one level
+    /// at a time, and why <see cref="ChapterMapValidator"/> exists alongside
+    /// <see cref="LevelValidator"/> rather than inside it.
+    /// </summary>
+    public static class ChapterMap
+    {
+        /// <summary>
+        /// Canvas units across. This is the UI canvas reference width itself, not a copy
+        /// of it — <c>Boot.RefWidth</c> reads it from here, because Domain cannot read
+        /// anything from Presentation and a second copy would drift the moment either
+        /// side was retuned.
+        /// </summary>
+        public const float Width = 1080f;
+
+        /// <summary>Canvas units per background strip. A chapter is as tall as its strips.</summary>
+        public const float StripHeight = 1200f;
+
+        /// <summary>The tappable glade disc — the part a player actually sees collide.</summary>
+        public const float NodeDiameter = 196f;
+
+        /// <summary>Air between two discs, below which they read as one lump rather than two glades.</summary>
+        public const float NodeClearance = 24f;
+
+        /// <summary>Centres closer together than this overlap on screen.</summary>
+        public const float MinimumNodeSeparation = NodeDiameter + NodeClearance;
+
+        /// <summary>How far above the highest glade the end-of-chapter marker floats.</summary>
+        public const float TeaserGap = 0.22f;
+
+        /// <summary>The marker never climbs past this, or it would leave the map.</summary>
+        public const float TeaserCeiling = 0.95f;
+
+        public const float TeaserX = 0.66f;
+
+        /// <summary>The map's height in canvas units. Always at least one strip.</summary>
+        public static float Height(int stripCount)
+            => Mathf.Max(StripHeight, stripCount * StripHeight);
+
+        /// <summary>An authored position as it will actually be drawn, clamped onto the map.</summary>
+        public static Vector2 Place(Vector2 authored)
+            => new Vector2(Mathf.Clamp01(authored.x), Mathf.Clamp01(authored.y));
+
+        /// <summary>Where the end-of-chapter marker sits, given the highest glade below it.</summary>
+        public static Vector2 TeaserPosition(float highestY)
+            => new Vector2(TeaserX, Mathf.Min(TeaserCeiling, highestY + TeaserGap));
+
+        /// <summary>
+        /// The distance between two authored positions, in canvas units.
+        ///
+        /// The axes scale differently — x across a fixed width, y across however many
+        /// strips the chapter declares — so this is the only honest way to ask whether
+        /// two glades are too close. Comparing the raw fractions would call a pair in a
+        /// tall chapter cramped when they are half a screen apart.
+        /// </summary>
+        public static float Separation(Vector2 a, Vector2 b, int stripCount)
+        {
+            float dx = (a.x - b.x) * Width;
+            float dy = (a.y - b.y) * Height(stripCount);
+            return Mathf.Sqrt(dx * dx + dy * dy);
+        }
+    }
+}

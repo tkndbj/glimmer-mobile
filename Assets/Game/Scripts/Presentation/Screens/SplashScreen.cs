@@ -202,6 +202,12 @@ namespace GlimmerGrove
 
             while (!task.IsCompleted) yield return null;
             if (task.IsFaulted) Debug.LogException(task.Exception);
+
+            // The worn companion, and only that one. The rest of the roster is loaded
+            // by the screens that show it and dropped when they close, which is what
+            // keeps launch costing the same whether there are five companions or a
+            // hundred. Warmed here rather than lazily so the hub's first frame has it.
+            Profile.WarmWornAvatar();
         }
 
         /// <summary>

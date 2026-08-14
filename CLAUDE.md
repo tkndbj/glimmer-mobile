@@ -49,6 +49,12 @@ What that means in practice here:
    forever, and it is invisible in the Editor because only Android routes
    StreamingAssets through `UnityWebRequest`. Nobody hand-writes the manifest's level
    lists — `Content ▸ Sync Manifest` derives them and the build gate proves they agree.
+4b. **Every chapter file must be in the manifest, and only the Editor may check that.**
+   Because every reader walks the manifest, an unlisted chapter file is not rejected —
+   it is never opened. It validates, audits and builds green, and the drop ships without
+   it. `ChapterFiles` is the one place allowed to list the folder; `Sync Manifest` adopts
+   what it finds and `ContentValidation` fails the build on anything left over. Do not
+   make the boot path read the directory to "fix" this — on Android it cannot.
 5. **Omit `par` when authoring.** It is derived from the board. A typed one can drift.
 5a. **A level's loc keys are derived from its id and cannot be overridden.** That is
    what lets anything holding a `LevelId` name a glade without reading a chapter body.
@@ -68,8 +74,20 @@ What that means in practice here:
    making an error unlikely is not the same as proving it did not happen. A chapter
    must name its own `backdrop`; art shared by several chapters belongs in the global
    group, never in whichever chapter was processed last.
+7b. **Transient art belongs to a named `AssetLibrary` scope, never to the global set.**
+   `EnsureScopeAsync`/`ReleaseScope` bound memory by what is on screen rather than by how
+   much content exists — chapters were the first caller, companion portraits the second.
+   Two rules keep it honest: an address already global stays global, and one owned by
+   another scope is never re-claimed, or closing one screen frees art another is drawing.
+   Loading is asynchronous, so a screen that draws a scope's art must repaint when it
+   arrives; a `Image` with no sprite is a white rectangle, not a blank.
 8. **The map shows one chapter at a time.** That is what bounds node count and texture
    memory by chapter size instead of catalog size. Do not "improve" it into one long map.
+8a. **Map geometry lives in `ChapterMap` (Domain), not beside the screen.** `mapX`/`mapY`
+   are fractions of a chapter's own map, so a distance depends on its strip count — which
+   makes collisions and backwards trails facts about a chapter, checkable by the build
+   gate. A validator cannot reach into Presentation, and one holding its own copy of the
+   numbers would silently stop agreeing with the map. `MapLayout` reads them from there.
 9. **XP and earned credits are derived, never accumulated.** They are a pure function of
    the star ledger via `ProgressionLedger`. An accumulator cannot be merged across
    devices (nothing distinguishes "cleared twice" from "counted twice"), cannot be
@@ -150,7 +168,20 @@ Done and verified: content pipeline, stable ids, versioned atomic save with chec
 and tested migration, localisation, analytics seam, scoped asset pipeline on
 Addressables (assets are out of `Resources/`), chapter-paginated map, enforced
 layering, EditMode test suite, **player progression** (derived XP, levels and credits
-on a double-entry ledger, save schema v2, monotonic merge).
+on a double-entry ledger, save schema v3, monotonic merge).
+
+**The profile screen owns identity.** `ProfileScreen` is the fifth nav tab: name,
+keeper level and honorific, a derived grove record, a companion picker, and the account
+section — which moved here out of Settings, because linking is about *who the player is*
+and burying it in a preferences panel is how it stayed unfound. The companion roster is
+`AvatarCatalog` (Domain): permanent ids, art keys kept as separate strings so a re-cut
+never reaches the save file, and unlocking **derived from keeper level** rather than
+stored, for the same reasons XP is. The roster is **content** — `manifest.json` carries a
+`companions` array, so adding one is a portrait, a manifest row and a loc string, with no
+code change and no app update. `AvatarCatalog` keeps a built-in list only as the fallback
+for a client whose content has not loaded. `wallet.avatarId` is a preference, so the merge is last-writer-wins like
+`displayName`, and both now prefer a real value over an empty one: a second device that
+has never chosen must not erase the first device's choice.
 
 **Content schema v2 — lazy chapter loading.** The manifest now carries every chapter's
 ordered level ids, so boot reads one ~25 KB file rather than opening every chapter (at

@@ -14,11 +14,14 @@ namespace GlimmerGrove.Content
     {
         /// <summary>Token grammar, kept next to the data it describes.</summary>
         public const string Grammar =
-            "head + arms [+ #colour] + /startRotation [+ !]   " +
+            "head + arms [+ #colour] + /startRotation [+ !] [+ ~turns]   " +
             "head: '-' conduit, '*' heart-crystal, '@' sleeping critter, '.' empty   " +
             "arms: any of N E S W in the solved orientation   " +
             "colour: R G B, Y=R+G, M=R+B, C=G+B, W=R+G+B, A=any   " +
-            "'!' marks a rooted tile the player cannot turn";
+            "'!' marks a rooted tile the player cannot turn   " +
+            "'~1'..'~9' a fragile conduit that crumbles after that many turns and leaves " +
+            "a gap. It must be able to reach its solved orientation within its own " +
+            "count, which the validator proves.";
 
         public readonly int Width;
         public readonly int Height;

@@ -27,8 +27,14 @@ namespace GlimmerGrove.Persistence
         /// v1 — levels, settings, flat coin/gem balances.
         /// v2 — currency ledgers (granted/spent/earned high-water), progression
         ///      high-water marks, cloud sync state.
+        /// v3 — the chosen profile companion (<see cref="WalletDto.avatarId"/>).
+        /// v4 — the heart refill deadline (<see cref="WalletDto.heartsNextRefillUnix"/>),
+        ///      which turned hearts from a number nothing moved into a resource that
+        ///      regenerates and gates play.
+        /// v5 — the set of mechanic tips already shown (<see cref="SaveFileDto.tipsSeen"/>),
+        ///      so a lesson taught once is never repeated on any of a player's devices.
         /// </summary>
-        public const int Version = 2;
+        public const int Version = 5;
 
         /// <summary>Progress that predates this file: index-keyed keys in PlayerPrefs.</summary>
         public const int LegacyPlayerPrefsVersion = 0;
@@ -87,6 +93,13 @@ namespace GlimmerGrove.Persistence
         public bool legacyImportDone;
 
         /// <summary>
+        /// Permanent ids of the mechanic tips this player has been shown. Unknown ids
+        /// are carried through untouched — a lesson learned on a newer build must not
+        /// be re-taught after a trip through an older one.
+        /// </summary>
+        public string[] tipsSeen;
+
+        /// <summary>
         /// Integrity check over the rest of the file. Empty on files written before
         /// checksums existed, which are accepted and gain one on the next write.
         /// </summary>
@@ -115,8 +128,30 @@ namespace GlimmerGrove.Persistence
         /// <summary>-1 means never written, so the seeded starting balance applies.</summary>
         public int coins;
         public int gems;
+
+        /// <summary>Hearts held. -1 means never written, so a full set is seeded.</summary>
         public int hearts;
+
+        /// <summary>
+        /// When the next heart lands, as a Unix timestamp; 0 while the player is full
+        /// and no timer is running.
+        ///
+        /// The deadline is stored rather than "when we last topped up" so that refills
+        /// cannot drift: each one advances this by exactly one period, and closing the
+        /// app mid-timer neither loses nor gains the remainder. A v3 file has no value
+        /// here, which reads as 0 — see <see cref="Hearts.At"/>, which starts the clock
+        /// from the next read instead of back-paying time nobody waited.
+        /// </summary>
+        public long heartsNextRefillUnix;
+
         public string displayName;
+
+        /// <summary>
+        /// The companion shown on the profile, by permanent avatar id. Empty means the
+        /// player has never chosen one, which is not the same as choosing the first —
+        /// the roster's default may change, and a real choice must survive that.
+        /// </summary>
+        public string avatarId;
 
         /// <summary>One ledger per currency, keyed by a permanent currency id.</summary>
         public CurrencyLedgerDto[] currencies;

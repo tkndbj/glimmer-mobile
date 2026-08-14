@@ -134,6 +134,16 @@ namespace GlimmerGrove
         public const float PillFaceLift = 0.088f;
         public const float SquareFaceLift = 0.081f;
 
+        /// <summary>
+        /// The map node is a disc seen at an angle: its white face sits in the upper
+        /// half of the sprite and the rim and base fill the bottom third. A glyph
+        /// centred on the sprite lands on the rim, not the face. Measured the same way
+        /// as the two above, from the white face of <c>node_open</c> and of every
+        /// <c>node_s*</c> skin — they share one disc, so a single number covers all of
+        /// them and a glade cannot drift as it earns stars.
+        /// </summary>
+        public const float NodeFaceLift = 0.165f;
+
         /// <summary>Pill button with a label. Returns the Btn; label is child "Text".</summary>
         public static Btn TextButton(string name, Transform parent, string skin, string text, int fontSize,
                                      Vector2 size, Vector2 anchor, Vector2 pos, Action onClick)

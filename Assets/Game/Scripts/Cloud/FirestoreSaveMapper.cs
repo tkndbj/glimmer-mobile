@@ -85,6 +85,7 @@ namespace GlimmerGrove.Cloud
                 { "updatedUnix", dto.updatedUnix },
                 { "lastPlayedLevelId", dto.lastPlayedLevelId ?? string.Empty },
                 { "legacyImportDone", dto.legacyImportDone },
+                { "tipsSeen", new List<object>(dto.tipsSeen ?? new string[0]) },
                 { "checksum", dto.checksum ?? string.Empty },
 
                 { "settings", new Dictionary<string, object>
@@ -104,7 +105,9 @@ namespace GlimmerGrove.Cloud
                 { "wallet", new Dictionary<string, object>
                     {
                         { "hearts", (long)(dto.wallet?.hearts ?? -1) },
+                        { "heartsNextRefillUnix", dto.wallet?.heartsNextRefillUnix ?? 0L },
                         { "displayName", dto.wallet?.displayName ?? string.Empty },
+                        { "avatarId", dto.wallet?.avatarId ?? string.Empty },
                     }
                 },
 
@@ -143,6 +146,7 @@ namespace GlimmerGrove.Cloud
                 updatedUnix = Long(doc, "updatedUnix", 0),
                 lastPlayedLevelId = Str(doc, "lastPlayedLevelId"),
                 legacyImportDone = Bool(doc, "legacyImportDone"),
+                tipsSeen = StrList(doc, "tipsSeen"),
                 checksum = Str(doc, "checksum"),
                 settings = new SettingsDto(),
                 wallet = WalletDto.Unwritten(),
@@ -161,7 +165,9 @@ namespace GlimmerGrove.Cloud
             if (Map(doc, "wallet") is IDictionary<string, object> wallet)
             {
                 dto.wallet.hearts = (int)Long(wallet, "hearts", -1);
+                dto.wallet.heartsNextRefillUnix = Long(wallet, "heartsNextRefillUnix", 0);
                 dto.wallet.displayName = Str(wallet, "displayName");
+                dto.wallet.avatarId = Str(wallet, "avatarId");
             }
 
             if (Map(doc, "progression") is IDictionary<string, object> progression)
@@ -235,6 +241,26 @@ namespace GlimmerGrove.Cloud
 
         static bool Bool(IDictionary<string, object> map, string key)
             => map != null && map.TryGetValue(key, out object value) && value is bool b && b;
+
+        /// <summary>
+        /// A list of strings, tolerating anything that is not one.
+        ///
+        /// Firestore hands arrays back as <c>List&lt;object&gt;</c>, and a document may
+        /// have been written by a newer build or a support tool. Entries that are not
+        /// strings are dropped rather than thrown over — this runs on a background
+        /// thread during a sync, where an exception costs the whole save.
+        /// </summary>
+        static string[] StrList(IDictionary<string, object> map, string key)
+        {
+            if (map == null || !map.TryGetValue(key, out object value)) return new string[0];
+            if (!(value is IEnumerable<object> items)) return new string[0];
+
+            var list = new List<string>();
+            foreach (var item in items)
+                if (item is string s && !string.IsNullOrEmpty(s)) list.Add(s);
+
+            return list.ToArray();
+        }
 
         static object Map(IDictionary<string, object> map, string key)
             => map != null && map.TryGetValue(key, out object value) ? value : null;

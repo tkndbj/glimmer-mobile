@@ -6,15 +6,62 @@ using UnityEngine.UI;
 namespace GlimmerGrove
 {
     /// <summary>
-    /// The bottom navigation shared by the hub and the glade map. Built from the same
-    /// dark rounded chrome as the resource pills, so it reads as one system.
+    /// The bottom navigation shared by the hub and the glade map.
+    ///
+    /// <para>
+    /// Every tab is a full-height cell that takes the tap — cap, glyph and caption
+    /// together — rather than the glyph alone. A 200x176 target is what a thumb
+    /// actually hits on a phone; the old 124px icon was the whole hit box and the
+    /// caption under it was dead.
+    /// </para>
+    /// <para>
+    /// <b>There is no bar.</b> The five caps sit straight on the grove: no plate, no
+    /// wash, no seam. A plate is the cheap way to guarantee contrast, and it costs the
+    /// bottom eighth of every screen — the backdrop stops being the grove and becomes a
+    /// slab. Instead each cap earns its own contrast the way the rest of this UI does,
+    /// from the moulded jelly art's dark rim plus a soft seat shadow beneath it. That
+    /// matters because <c>grove_near</c> runs from near-white inside the light shaft to
+    /// dark teal beside it, so a flat shape would vanish on one half of the screen.
+    /// Anything added here that spans the full width — a rail, a seam, a gradient with
+    /// a visible edge — puts the slab back.
+    /// </para>
+    /// <para>
+    /// Selection is carried by size, colour and height together rather than by a single
+    /// marker: the live cap swells, lifts, turns teal and breathes. Three signals beat
+    /// one because half these glyphs are painted in full colour and half are white
+    /// silhouettes, so any scheme that leans on tinting the glyph reads differently
+    /// depending on which tab you happen to be standing on.
+    /// </para>
     /// </summary>
     public static class NavBar
     {
-        /// <summary>Vertical space the bar occupies. Screens keep their content above this.</summary>
+        /// <summary>
+        /// Vertical space the bar occupies. Screens keep their content above this.
+        /// Unchanged from the plated design on purpose — the caps were sized to fit the
+        /// budget that every screen already reserves, so dropping the plate costs no
+        /// layout anywhere else.
+        /// </summary>
         public const float Height = 206f;
 
-        public enum Tab { None, Shop, Items, Home, Ranks }
+        public enum Tab { None, Home, Shop, Items, Ranks, Profile }
+
+        /// <summary>
+        /// Tab order, left to right. Home leads because it is the way back: it is the
+        /// only tab that navigates rather than opening a panel, so it wants the corner
+        /// the thumb already rests in. Slot width is derived from this, so adding a
+        /// sixth tab re-spaces the bar rather than needing new coordinates.
+        /// </summary>
+        static readonly Tab[] Order = { Tab.Home, Tab.Shop, Tab.Items, Tab.Ranks, Tab.Profile };
+
+        const float CellW = 200f;
+        const float CellH = 176f;
+
+        /// <summary>
+        /// Cap sizes. The live one is roughly a quarter wider, which is most of what says "here";
+        /// both are sized so the taller cap plus its caption fits inside <see cref="Height"/>.
+        /// </summary>
+        const float CapLive = 152f;
+        const float CapRest = 124f;
 
         public static RectTransform Build(Transform parent, Tab active)
         {
@@ -24,83 +71,123 @@ namespace GlimmerGrove
             bar.anchorMax = new Vector2(1f, 0f);
             bar.sizeDelta = new Vector2(0f, Height);
 
-            // soft lift above the bar so it detaches from whatever scrolls behind it
-            var lift = UIKit.Img("Lift", bar, Art.FadeUp(64), new Color(.02f, .07f, .09f, .48f),
-                                 new Vector2(0f, 90f), new Vector2(.5f, 1f), new Vector2(0f, 44f));
-            var liftRT = (RectTransform)lift.transform;
-            liftRT.anchorMin = new Vector2(0f, 1f);
-            liftRT.anchorMax = new Vector2(1f, 1f);
-            liftRT.sizeDelta = new Vector2(0f, 90f);
-
-            // the plate itself: wider and taller than the bar so only its top corners show
-            var plate = UIKit.Img("Plate", bar, Art.Round(46), Pal.A(Pal.Hex("#0B4C55"), .97f),
-                                  new Vector2(0f, Height + 90f), new Vector2(.5f, 1f), new Vector2(0f, -(Height + 90f) * .5f));
-            var plateRT = (RectTransform)plate.transform;
-            plateRT.anchorMin = new Vector2(0f, 1f);
-            plateRT.anchorMax = new Vector2(1f, 1f);
-            plateRT.offsetMin = new Vector2(-56f, -(Height + 90f));
-            plateRT.offsetMax = new Vector2(56f, 0f);
-
-            // emerald wash across the top of the plate, so the bar reads as lit rather than flat
-            var wash = UIKit.Img("Wash", plate.transform, Art.FadeUp(64), Pal.A(Pal.Hex("#1AA184"), .95f));
-            var washRT = (RectTransform)wash.transform;
-            washRT.anchorMin = new Vector2(0f, 1f);
-            washRT.anchorMax = new Vector2(1f, 1f);
-            // pivot stays centred: rotating about a top pivot would throw the rect
-            // upward and wash over whatever sits above the bar
-            washRT.pivot = new Vector2(.5f, .5f);
-            washRT.sizeDelta = new Vector2(0f, 168f);
-            washRT.anchoredPosition = new Vector2(0f, -84f);
-            washRT.localRotation = Quaternion.Euler(0, 0, 180f);
-
-            var rim = UIKit.Img("Rim", plate.transform, Art.RoundOutline(46, 4f), new Color(1f, 1f, 1f, .16f));
-            UIKit.StretchTo((RectTransform)rim.transform, 0, 0, 0, 0);
-
-            // a thin bright seam along the top edge
-            var seam = UIKit.Img("Seam", bar, Art.Round(3), Pal.A(Pal.Gold, .70f),
-                                 new Vector2(0f, 5f), new Vector2(.5f, 1f), new Vector2(0f, -2f));
-            var seamRT = (RectTransform)seam.transform;
-            seamRT.anchorMin = new Vector2(0f, 1f);
-            seamRT.anchorMax = new Vector2(1f, 1f);
-            seamRT.offsetMin = new Vector2(26f, -7f);
-            seamRT.offsetMax = new Vector2(-26f, -2f);
-            UIKit.Img("SeamGlow", bar, Art.Glow(128, 2.2f), Pal.A(Pal.Gold, .20f),
-                      new Vector2(820f, 150f), new Vector2(.5f, 1f), new Vector2(0f, -6f));
-
-            Item(bar, -315f, "ic_chest", "ui.nav.shop", active == Tab.Shop,
-                 () => Flow.Modal<ComingSoonOverlay>(v => v.Configure("ui.nav.shop", "ic_chest",
-                     "ui.soon.shop")));
-            Item(bar, -105f, "ic_gift", "ui.nav.items", active == Tab.Items,
-                 () => Flow.Modal<ComingSoonOverlay>(v => v.Configure("ui.nav.items", "ic_gift",
-                     "ui.soon.items")));
-            Item(bar, 105f, "ic_home", "ui.nav.home", active == Tab.Home,
-                 active == Tab.Home ? (Action)null : () => Flow.Go<HomeScreen>());
-            Item(bar, 315f, "ic_trophy", "ui.nav.ranks", active == Tab.Ranks,
-                 () => Flow.Modal<ComingSoonOverlay>(v => v.Configure("ui.nav.ranks", "ic_trophy",
-                     "ui.soon.ranks")));
+            float slot = Boot.RefWidth / (float)Order.Length;
+            for (int i = 0; i < Order.Length; i++)
+            {
+                float x = (i - (Order.Length - 1) * .5f) * slot;
+                Item(bar, x, Order[i], active == Order[i]);
+            }
 
             return bar;
         }
 
-        /// <summary><paramref name="labelKey"/> is a localisation key, not a caption.</summary>
-        static void Item(Transform parent, float x, string icon, string labelKey, bool active, Action onClick)
+        // --------------------------------------------------------------- one tab
+        static void Item(Transform bar, float x, Tab tab, bool active)
         {
-            float size = active ? 142f : 124f;
-            var b = UIKit.IconButton("Nav_" + labelKey, parent, active ? "sq_green" : "sq_dark", icon,
-                                     new Vector2(size, size), new Vector2(.5f, .5f),
-                                     new Vector2(x, active ? 22f : 16f),
-                                     onClick ?? (() => { }), active ? .52f : .5f);
-            if (onClick == null) { b.ClickSfx = null; b.PressScale = .97f; }
+            string labelKey = LabelKey(tab);
 
-            UIKit.Titled("L_" + labelKey, parent, Loc.Get(labelKey), 24,
-                         active ? Pal.Cream : new Color(1f, .96f, .88f, .60f), TextAnchor.MiddleCenter,
-                         new Vector2(200f, 32f), new Vector2(.5f, .5f), new Vector2(x, active ? -70f : -64f), 3f, 0f);
+            // the cell is the button; everything below is decoration inside it, so a
+            // press squashes cap, glyph and caption as one object
+            var cell = UIKit.Button("Nav_" + tab, bar, Art.Pixel, new Vector2(CellW, CellH),
+                                    new Vector2(.5f, .5f), new Vector2(x, 4f), Tap(tab, active));
+            var hit = cell.GetComponent<Image>();
+            hit.color = new Color(1f, 1f, 1f, 0f);
+            if (active && Tap(tab, true) == null) { cell.ClickSfx = null; cell.PressScale = .97f; }
 
-            if (active) UIKit.Halo(b.transform, Pal.Mint, 210f, .32f);
+            float cap = active ? CapLive : CapRest;
+            float capY = active ? 22f : 14f;
 
-            b.transform.localScale = Vector3.zero;
-            Tween.Pop(b.transform, 0f, .5f, .62f + Mathf.Abs(x) * .00035f)
-                 .OnDone(() => { if (b) b.Rehome(); });
+            // Every tab carries a cap, and the live one differs by size, colour and
+            // height at once. It has to: half these glyphs are painted in full colour
+            // and half are white silhouettes, so a single marker that works under one
+            // would be the wrong marker under the next.
+            if (active) UIKit.Halo(cell.transform, Pal.Aqua, cap * 1.62f, .30f, new Vector2(0f, capY));
+
+            // what a plate used to do — a soft dark seat under the cap, sized to it, so
+            // the tab holds its own over both the light shaft and the dark teal
+            var seat = UIKit.Img("Seat", cell.transform, Art.Glow(128, 1.7f),
+                                 new Color(.02f, .07f, .09f, active ? .42f : .34f),
+                                 new Vector2(cap * 1.18f, cap * .74f), new Vector2(.5f, .5f),
+                                 new Vector2(0f, capY - cap * .40f));
+            seat.transform.SetAsFirstSibling();
+
+            var capImg = UIKit.Img("Cap", cell.transform, Art.S(active ? "Ui/jelly_teal" : "Ui/sq_dark"),
+                                   Color.white, Vector2.one * cap, new Vector2(.5f, .5f),
+                                   new Vector2(0f, capY));
+            capImg.preserveAspect = true;
+            if (active) Tween.Breathe(capImg.transform, .025f, 2.8f);
+
+            // The jelly art carries a moulded base below its lit face, so the face
+            // centre sits above the sprite's middle — the glyph rides up by the same
+            // fraction the rest of the UI uses, or it looks low in the cap.
+            var ic = UIKit.Img("Icon", capImg.transform, Icon(tab),
+                               active ? Pal.Cream : new Color(1f, .97f, .90f, .82f),
+                               Vector2.one * (active ? cap * .54f : cap * .50f), new Vector2(.5f, .5f),
+                               new Vector2(0f, cap * UIKit.SquareFaceLift));
+            ic.preserveAspect = true;
+
+            UIKit.Titled("L_" + tab, cell.transform, Loc.Get(labelKey), active ? 26 : 24,
+                         active ? Pal.Cream : new Color(1f, .96f, .88f, .70f), TextAnchor.MiddleCenter,
+                         new Vector2(CellW, 32f), new Vector2(.5f, .5f), new Vector2(0f, -66f), 4f, 3f);
+
+            cell.transform.localScale = Vector3.zero;
+            Tween.Pop(cell.transform, 0f, .5f, .62f + Mathf.Abs(x) * .00035f)
+                 .OnDone(() => { if (cell) cell.Rehome(); });
+        }
+
+        // ------------------------------------------------------------- tab tables
+        /// <summary>
+        /// Written out per tab, never built by concatenation: the build gate scans the
+        /// source for key-shaped literals and a composed key is invisible to it.
+        /// </summary>
+        static string LabelKey(Tab tab)
+        {
+            switch (tab)
+            {
+                case Tab.Home: return "ui.nav.home";
+                case Tab.Shop: return "ui.nav.shop";
+                case Tab.Items: return "ui.nav.items";
+                case Tab.Ranks: return "ui.nav.ranks";
+                default: return "ui.nav.profile";
+            }
+        }
+
+        static string SoonKey(Tab tab)
+        {
+            switch (tab)
+            {
+                case Tab.Shop: return "ui.soon.shop";
+                case Tab.Items: return "ui.soon.items";
+                default: return "ui.soon.ranks";
+            }
+        }
+
+        static Sprite Icon(Tab tab)
+        {
+            switch (tab)
+            {
+                case Tab.Home: return Art.S("Ui/ic_home");
+                case Tab.Shop: return Art.S("Ui/ic_chest");
+                case Tab.Items: return Art.S("Ui/ic_gift");
+                case Tab.Ranks: return Art.S("Ui/ic_trophy");
+                default: return Art.S("Ui/ic_profile");
+            }
+        }
+
+        /// <summary>
+        /// Home and Profile are screens; the rest are still promises. A tab already
+        /// standing on its own screen returns null and is left inert rather than
+        /// re-entering it.
+        /// </summary>
+        static Action Tap(Tab tab, bool active)
+        {
+            if (active && (tab == Tab.Home || tab == Tab.Profile)) return null;
+            if (tab == Tab.Home) return () => Flow.Go<HomeScreen>();
+            if (tab == Tab.Profile) return () => Flow.Go<ProfileScreen>();
+
+            string title = LabelKey(tab), body = SoonKey(tab);
+            var glyph = Icon(tab);
+            return () => Flow.Modal<ComingSoonOverlay>(v => v.Configure(title, glyph, body));
         }
     }
 }

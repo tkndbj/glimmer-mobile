@@ -28,6 +28,14 @@ namespace GlimmerGrove.EditorTools
         public const string ChapterGroupPrefix = "Glimmer Chapter ";
 
         /// <summary>
+        /// Companion portraits. Their own bundle rather than the global one because the
+        /// whole roster is wanted on one screen and nowhere else — putting them in the
+        /// global group would decode every companion at launch to show a picker most
+        /// sessions never open, and would grow that cost with every content drop.
+        /// </summary>
+        public const string CompanionGroup = "Glimmer Companions";
+
+        /// <summary>
         /// Art that belongs to no chapter in particular. Branding is the clear case: the
         /// launcher icon is consumed by the build pipeline and never loaded at runtime,
         /// so giving it an address would put a texture in a bundle nothing ever opens.
@@ -137,10 +145,18 @@ namespace GlimmerGrove.EditorTools
             return claims;
         }
 
+        /// <summary>Addresses under here are companion portraits, whoever asks for them.</summary>
+        public const string CompanionPrefix = "Art/Companions/";
+
         /// <summary>The group an address belongs in, given who owns what.</summary>
         public static string GroupFor(string address, Dictionary<string, ChapterId> ownership)
-            => ownership != null && ownership.TryGetValue(address, out var chapter)
+        {
+            if (address != null && address.StartsWith(CompanionPrefix, System.StringComparison.Ordinal))
+                return CompanionGroup;
+
+            return ownership != null && ownership.TryGetValue(address, out var chapter)
                 ? ChapterGroup(chapter)
                 : GlobalGroup;
+        }
     }
 }

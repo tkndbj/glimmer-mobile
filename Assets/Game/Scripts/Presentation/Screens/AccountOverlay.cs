@@ -163,7 +163,7 @@ namespace GlimmerGrove
             // this provider belongs to another grove, and the choice left is to adopt it
             // or walk away. Leaving them would stack two buttons in one slot and run the
             // cost line straight through the other. Trying the other provider instead is
-            // still reachable — Settings ▸ Account reopens this screen from scratch.
+            // still reachable — the profile screen reopens this from scratch.
             if (_google != null) _google.gameObject.SetActive(false);
             if (_apple != null) _apple.gameObject.SetActive(false);
 

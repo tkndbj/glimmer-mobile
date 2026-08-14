@@ -89,10 +89,11 @@ an ordinary folder.
 Two consequences worth holding on to:
 
 - **The manifest is the authority on membership and order; the body is the
-  authority on content.** Nobody writes the manifest's level lists by hand —
-  `Glimmer Grove ▸ Content ▸ Sync Manifest` generates them from the bodies. The
-  build gate then proves the two still agree, so forgetting to run it fails a
-  build rather than silently hiding a glade.
+  authority on content.** Nobody writes the manifest by hand — `Glimmer Grove ▸
+  Content ▸ Sync Manifest` generates its level lists from the bodies and adopts
+  any chapter file that is missing from it altogether. The build gate then proves
+  both held, so forgetting to run it fails a build rather than silently hiding a
+  glade or a whole chapter.
 - **A level's strings are derived from its id** (`level.<id>.name`, `.tagline`,
   `.lesson`) and cannot be overridden. That is what lets the map, the home
   screen's "next up" line and the win overlay name a glade without reading its
@@ -106,17 +107,30 @@ Two consequences worth holding on to:
    board, so an omitted par can never be wrong while a typed one can. **Do set
    `backdrop`**: a chapter that does not name its own art inherits another
    chapter's, which puts it in another chapter's asset bundle.
-3. Add `chapter.<id>.name` and, per level, `level.<id>.name` / `.tagline` /
-   `.lesson` to `loc/en.json`. Missing keys fail validation.
-4. Add the chapter to `manifest.json` with a `version` and an unused `order`.
-   Orders are sparse (10, 20, 30…) so a chapter can be slotted between two later,
-   and two chapters sharing one is an error. **`order` lives only here** — a
-   chapter body that states its own is rejected, because where the game goes next
-   must be readable from one file and changeable by pushing that one file.
-5. `Glimmer Grove ▸ Content ▸ Sync Manifest` — fills in the chapter's level list
-   from the body and bumps its `version`. Run it after *every* content edit.
+3. Place the glades with `mapX`/`mapY`, fractions of *this chapter's* map. Walk
+   them upward — each above the one before — and keep them apart; validation
+   measures the gap in canvas units against the chapter's strip count and warns
+   about collisions, backwards trails and anything crowding the end-of-chapter
+   marker. More levels means more `mapStrips`, not tighter packing.
+4. Add `chapter.<id>.name` and, per level, `level.<id>.name` / `.tagline` /
+   `.lesson` to `loc/en.json`. Missing keys fail validation, which names each one.
+5. `Glimmer Grove ▸ Content ▸ Sync Manifest` — adopts the new chapter into
+   `manifest.json`, picks an `order` and fills in its level list. Run it after
+   *every* content edit.
 6. `Glimmer Grove ▸ Validate Content`. It must report zero errors — builds refuse
    to run otherwise.
+
+Nothing in `manifest.json` is written by hand. Sync assigns `order` from the
+chapter's id — sparse (10, 20, 30…) so a chapter can be slotted between two that
+shipped — and says in the log what it chose; change the number there if it guessed
+wrong. **`order` lives only in the manifest**: a chapter body that states its own is
+rejected, because where the game goes next must be readable from one file and
+changeable by pushing that one file.
+
+A chapter file that never reaches the manifest is the one content mistake nothing
+used to catch. Every reader walks the manifest, so an unlisted file is not rejected —
+it is never opened, and the drop ships without it behind a green build. Sync adopts
+it, and the build gate fails on one that slipped through anyway.
 
 Drop new art into `Assets/Game/Art/…` at any point; it is given an address and
 filed into the right bundle group on import. Nothing to remember, nothing to run.
@@ -124,17 +138,35 @@ filed into the right bundle group on import. Nothing to remember, nothing to run
 ## Token grammar
 
 ```
-head + arms [+ #colour] + /startRotation [+ !]
+head + arms [+ #colour] + /startRotation [+ !] [+ ~turns]
 
 head   -  conduit    *  heart-crystal    @  sleeping critter    .  empty
 arms   any of N E S W, written in the SOLVED orientation
 colour R G B, Y=R+G, M=R+B, C=G+B, W=R+G+B, A=any
 /0..3  quarter turns clockwise the tile starts away from its solution
 !      rooted: the player cannot turn this tile
+~1..9  fragile: this conduit crumbles after that many turns
 ```
 
 Every arm must be mated by its neighbour, and the board with every rotation at 0
 must light every critter. The validator proves both.
+
+
+**Fragile conduits (`~N`)** crumble after N turns and leave a gap. Undo rewinds
+the rotation but never mends them, so exploring costs something. The validator
+proves each one can still reach its own solved orientation within its count —
+a conduit needing three turns but surviving two is an unwinnable level that
+otherwise looks perfect.
+
+**Move budget.** Every glade gets one automatically: `ceil(par × 2.6)`, always at
+least one turn above the one-star line. Override with `budgetFactor` on a level,
+or set it negative to remove the budget entirely. Running out costs a heart.
+
+**Tips teach themselves.** A glade that contains a mechanic the player has never
+met shows a one-off spotlight tip on entry — no authoring, no list to maintain.
+Adding a mechanic means adding it to `Mechanic.TeachingOrder` and writing
+`ui.tip.<id>.title` / `.body`; every chapter that uses it is then covered forever.
+Only one tip is shown per glade, most dangerous first.
 
 ## Inheritance
 
@@ -149,6 +181,49 @@ how one chapter's art ends up owned by another chapter's bundle — harmless whi
 everything is local, a whole extra download once chapters are delivered remotely.
 Art that genuinely is shared by several chapters goes in the global group, which
 the Addressables tooling works out for itself.
+
+## Companions
+
+The profile roster lives in `manifest.json`, beside the chapter list:
+
+```json
+"companions": [
+  { "id": "puff", "portrait": "puff", "animated": "c1", "unlockLevel": 0, "disabled": false },
+  { "id": "cinder", "portrait": "cinder", "animated": "", "unlockLevel": 1, "disabled": false }
+]
+```
+
+It is in the manifest rather than a body of its own because the whole roster is wanted at
+once — the picker draws the locked ones too — and an entry is a few dozen bytes, so a
+hundred companions is a few kilobytes on a file the boot path already reads. A lazily
+loaded companion file would add a read to a screen and save nothing.
+
+- **`id` is permanent.** It is written into save files and will key analytics and, once
+  the shop exists, purchases. The same rule as a `LevelId`: never renamed, never reused.
+- **`portrait`** names a sprite in `Art/Companions/`. Blank means "same as the id", which
+  is the usual case. It is a separate field so art can be re-cut without the change
+  reaching a save file.
+- **`animated`** is optional and names a sprite-set folder under `Art/Critters/`. Only the
+  five companions that also appear on a board have one. A still portrait is about 45 KB;
+  a flipbook is about 700 KB, which is the whole reason the roster can grow.
+- **`unlockLevel`** is a keeper level. Ownership is *derived* from it and never stored —
+  the same argument as derived XP — so it can be retuned for existing players.
+- **`disabled`** retires a companion without deleting anyone's choice of it.
+
+Adding one is a portrait, a manifest entry and a `ui.avatar.<id>` string. No code changes,
+and no app update once remote delivery is on. A companion's name key is derived from its
+id and cannot be overridden, exactly like a level's; `Validate Content` checks each one,
+because the source scan cannot see a key that is never written as a literal.
+
+The field was added **without raising `ContentSchema.Version`**: an older client ignores
+an unknown field and falls back to the roster it shipped with, which is a working game
+rather than a refused manifest. Raise the version only for a change old clients could not
+survive.
+
+Portraits live in their own Addressables group and load into
+`AssetLibrary.CompanionScope` when a roster screen opens, then drop when it closes. Only
+the worn companion stays resident, warmed at boot by `Profile.WarmWornAvatar`. That is
+what keeps launch costing the same at a hundred companions as at five.
 
 ## Progression
 

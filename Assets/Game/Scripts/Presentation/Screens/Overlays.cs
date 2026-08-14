@@ -70,6 +70,177 @@ namespace GlimmerGrove
         }
     }
 
+    // ===================================================================== defeat
+    /// <summary>
+    /// Shown when a run is lost.
+    ///
+    /// Built from the same panel furniture as every other overlay rather than from a
+    /// painted banner, for one reason above the rest: a banner with the word "Defeat"
+    /// baked into it cannot be translated, and this game ships everywhere. Every string
+    /// here is a loc key, so a new language is a file rather than an art order.
+    ///
+    /// The tone is deliberately gentle. A defeat already costs a heart; a screen that
+    /// also scolds is how a player decides the game is not for them. It names what went
+    /// wrong, shows what it cost, and puts "try again" under their thumb.
+    /// </summary>
+    public sealed class DefeatOverlay : ModalView
+    {
+        public PlayScreen Screen;
+        public int HeartsLeft;
+        public int LampsLit, LampCount;
+
+        /// <summary>False when the player was already at zero — then nothing was taken.</summary>
+        public bool HeartWasCharged;
+
+
+        protected override void Build()
+        {
+            bool canRetry = HeartsLeft > 0;
+
+            MakePanel(new Vector2(880f, 880f), Loc.Get("ui.defeat.moves_title"), dismissOnScrim: false);
+
+            // Body copy, drawn the way every other panel here draws it: wrapped, and
+            // with no outline or shadow. Those two are for headings sitting on a ribbon;
+            // on a 32pt sentence they smear the strokes together and it stops reading.
+            Body("Why", Loc.Get("ui.defeat.moves_reason"), -186f, 150f);
+
+            // Running out of turns gives no clue how close you were, so say it.
+            if (LampCount > 0)
+                UIKit.Titled("Score", Panel, $"{LampsLit}/{LampCount}", 44,
+                             LampsLit >= LampCount - 1 ? Pal.Gold : Pal.Cream,
+                             TextAnchor.MiddleCenter, new Vector2(400f, 70f),
+                             new Vector2(.5f, 1f), new Vector2(0f, -300f), outline: 3f, shadow: 3f);
+
+            BuildHearts();
+
+            if (canRetry)
+            {
+                UIKit.TextButton("Retry", Panel, "btn_green", Loc.Get("ui.defeat.try_again"), 52,
+                                 new Vector2(620f, 148f), new Vector2(.5f, 1f), new Vector2(0f, -560f),
+                                 () => Close(() => { if (Screen) Screen.RetryAfterDefeat(); }));
+            }
+            else
+            {
+                // Out of hearts: a retry button would be a lie, so it is not offered.
+                Body("Wait", Loc.Get("ui.defeat.out_of_hearts"), -540f, 130f, Pal.Ember);
+            }
+
+            UIKit.TextButton("Glades", Panel, "btn_blue", Loc.Get("ui.pause.glades"), 46,
+                             new Vector2(620f, 132f), new Vector2(.5f, 1f),
+                             new Vector2(0f, canRetry ? -722f : -700f),
+                             () => Close(() => Flow.Go<LevelsScreen>()));
+
+            Audio.Sfx("nope", .5f, .8f, .05f);
+        }
+
+        /// <summary>Wrapped, unadorned panel prose. Shared so both states line up.</summary>
+        Text Body(string name, string text, float y, float height, Color? colour = null)
+            => UIKit.Titled(name, Panel, text, 32, colour ?? new Color(.36f, .25f, .18f),
+                            TextAnchor.UpperCenter, new Vector2(680f, height),
+                            new Vector2(.5f, 1f), new Vector2(0f, y),
+                            outline: 0f, shadow: 0f, wrap: true);
+
+        /// <summary>
+        /// The heart row, with the one just lost drawn empty and struck through by a
+        /// short animation. Showing the cost is the point — a resource that quietly
+        /// decrements is a resource players feel cheated by later.
+        /// </summary>
+        void BuildHearts()
+        {
+            var row = UIKit.Node("Hearts", Panel);
+            row.anchorMin = row.anchorMax = new Vector2(.5f, 1f);
+            row.pivot = new Vector2(.5f, .5f);
+            row.sizeDelta = new Vector2(600f, 120f);
+            row.anchoredPosition = new Vector2(0f, -400f);
+
+            const float step = 96f;
+            float left = -(HeartRules.Max - 1) * step * .5f;
+
+            for (int k = 0; k < HeartRules.Max; k++)
+            {
+                bool held = k < HeartsLeft;
+                bool justLost = HeartWasCharged && k == HeartsLeft;
+
+                var heart = UIKit.Img("H" + k, row, Art.S("Ui/ic_heart"),
+                                      held ? Pal.Rose : new Color(.62f, .58f, .60f, .38f),
+                                      Vector2.one * 78f, new Vector2(.5f, .5f),
+                                      new Vector2(left + k * step, 0f));
+                heart.preserveAspect = true;
+
+                if (!justLost) continue;
+
+                // the one that was taken: full for a beat, then drained
+                heart.color = Pal.Rose;
+                Tween.Punch(heart.transform, .3f, .4f).Delay(.18f);
+                Tween.Tint(heart, new Color(.62f, .58f, .60f, .38f), .45f, Ease.InQuad).Delay(.30f);
+            }
+        }
+    }
+
+    // ============================================================= out of hearts
+    /// <summary>
+    /// The door, when the player has no hearts to spend.
+    ///
+    /// It counts down live rather than showing a static number, because a wait you can
+    /// watch shrink is a wait; a wait you have to re-open a screen to measure is a
+    /// wall. The countdown reads <see cref="Profile.SecondsToNextHeart"/> each frame —
+    /// the heart state catches itself up on read, so this stays correct across a
+    /// backgrounded app without any resume plumbing.
+    ///
+    /// There is no "buy hearts" button yet, and that is deliberate: the store secrets
+    /// still hold UNSET, so an offer here would be a button that cannot work. This is
+    /// where it goes when it exists.
+    /// </summary>
+    public sealed class OutOfHeartsOverlay : ModalView
+    {
+        Text _countdown;
+
+        protected override void Build()
+        {
+            MakePanel(new Vector2(860f, 780f), Loc.Get("ui.hearts.empty"));
+
+            // Wrapped and unadorned, matching every other body paragraph in the game.
+            UIKit.Titled("Why", Panel, Loc.Get("ui.hearts.wait_to_play"), 32,
+                         new Color(.36f, .25f, .18f), TextAnchor.UpperCenter,
+                         new Vector2(680f, 150f), new Vector2(.5f, 1f), new Vector2(0f, -190f),
+                         outline: 0f, shadow: 0f, wrap: true);
+
+            var empty = UIKit.Img("Heart", Panel, Art.S("Ui/ic_heart"),
+                                  new Color(.62f, .58f, .60f, .45f), Vector2.one * 138f,
+                                  new Vector2(.5f, 1f), new Vector2(0f, -380f));
+            empty.preserveAspect = true;
+            Tween.Breathe(empty.transform, .05f, 2.2f);
+
+            // The countdown is a heading, not prose, so it keeps its outline — it is
+            // the one number on this panel the player actually came to read.
+            _countdown = UIKit.Titled("Clock", Panel, string.Empty, 52, Pal.Rose,
+                                      TextAnchor.MiddleCenter, new Vector2(640f, 84f),
+                                      new Vector2(.5f, 1f), new Vector2(0f, -500f),
+                                      outline: 3f, shadow: 3f);
+            Paint();
+
+            UIKit.TextButton("Ok", Panel, "btn_green", Loc.Get("ui.common.got_it"), 48,
+                             new Vector2(560f, 136f), new Vector2(.5f, 1f), new Vector2(0f, -630f),
+                             () => Close());
+        }
+
+        void Update() => Paint();
+
+        void Paint()
+        {
+            if (!_countdown) return;
+
+            long seconds = Profile.SecondsToNextHeart;
+
+            // The clock ran out while they were looking at it — let them straight in.
+            if (Profile.CanPlay) { Close(); return; }
+
+            _countdown.text = seconds <= 0
+                ? Loc.Get("ui.hearts.full")
+                : string.Format(Loc.Get("ui.hearts.next"), Profile.Countdown(seconds));
+        }
+    }
+
     // ====================================================================== pause
     public sealed class PauseOverlay : ModalView
     {
@@ -114,9 +285,6 @@ namespace GlimmerGrove
 
         /// <summary>What this run added, already folded into the ledger. Zero on a worse replay.</summary>
         public long XpGained, CreditsGained;
-
-        /// <summary>The level just reached, or 0 when this run did not raise it.</summary>
-        public int LevelledUpTo;
 
         /// <summary>
         /// Written out rather than assembled as "ui.win.rank" + stars, so the keys are
@@ -196,17 +364,6 @@ namespace GlimmerGrove
                 reward.transform.localScale = Vector3.zero;
                 Tween.Pop(reward.transform, 0f, .55f, 1.15f + .42f * Stars);
                 rewardY -= 46f;
-            }
-
-            if (LevelledUpTo > 0)
-            {
-                var levelUp = UIKit.Titled("LevelUp", Panel,
-                                           Loc.Format("ui.win.level_up", LevelledUpTo), 40, Pal.Gold,
-                                           TextAnchor.MiddleCenter, new Vector2(760f, 52f),
-                                           new Vector2(.5f, 1f), new Vector2(0f, rewardY), 4f, 4f);
-                levelUp.transform.localScale = Vector3.zero;
-                Tween.Pop(levelUp.transform, 0f, .7f, 1.45f + .42f * Stars);
-                rewardY -= 54f;
             }
 
             if (last && PlayerProgress.AllCleared(index))
@@ -326,7 +483,7 @@ namespace GlimmerGrove
     {
         protected override void Build()
         {
-            MakePanel(new Vector2(860f, 900f), Loc.Get("ui.settings.title"));
+            MakePanel(new Vector2(860f, 800f), Loc.Get("ui.settings.title"));
 
             var row = UIKit.Box("Toggles", Panel, new Vector2(700f, 200f), new Vector2(.5f, 1f), new Vector2(0f, -260f));
             Toggle(row, "ic_music", new Vector2(-190f, 0f), () => GameSettings.MusicOn, GameSettings.SetMusic);
@@ -340,19 +497,19 @@ namespace GlimmerGrove
 
             UIKit.Titled("Ver", Panel, Loc.Format("ui.settings.version", Application.version), 28, new Color(.44f, .32f, .24f),
                          TextAnchor.MiddleCenter, new Vector2(700f, 40f), new Vector2(.5f, 1f),
-                         new Vector2(0f, -430f), 0f, 0f);
+                         new Vector2(0f, -420f), 0f, 0f);
             UIKit.Titled("Credit", Panel, Loc.Get("ui.settings.credit"), 24, new Color(.52f, .40f, .31f, .85f),
                          TextAnchor.MiddleCenter, new Vector2(700f, 36f), new Vector2(.5f, 1f),
-                         new Vector2(0f, -474f), 0f, 0f);
+                         new Vector2(0f, -462f), 0f, 0f);
 
-            UIKit.TextButton("Account", Panel, "btn_blue", Loc.Get("ui.settings.account"), 38,
-                             new Vector2(560f, 120f), new Vector2(.5f, 0f), new Vector2(0f, 406f),
-                             () => Close(() => Flow.Modal<AccountOverlay>()));
-
+            // Account lives on the profile screen, not here. It is the one part of
+            // settings that is about *who the player is* rather than how the game
+            // behaves, and burying the thing that protects a grove three taps deep in
+            // a preferences panel is how it stayed unfound.
             UIKit.TextButton("Wipe", Panel, "btn_red", Loc.Get("ui.settings.reset"), 38, new Vector2(560f, 120f),
-                             new Vector2(.5f, 0f), new Vector2(0f, 262f), ConfirmWipe);
+                             new Vector2(.5f, 0f), new Vector2(0f, 250f), ConfirmWipe);
             UIKit.TextButton("Close", Panel, "btn_green", Loc.Get("ui.common.done"), 46, new Vector2(560f, 132f),
-                             new Vector2(.5f, 0f), new Vector2(0f, 118f), () => Close());
+                             new Vector2(.5f, 0f), new Vector2(0f, 108f), () => Close());
         }
 
         bool _armed;
@@ -391,10 +548,15 @@ namespace GlimmerGrove
     // ============================================================== coming soon
     public sealed class ComingSoonOverlay : ModalView
     {
-        string _titleKey = "ui.common.coming_soon", _icon = "ic_chest", _bodyKey = "";
+        string _titleKey = "ui.common.coming_soon", _bodyKey = "";
+        Sprite _icon;
 
         /// <summary>Titles and body arrive as localisation keys, never as text.</summary>
         public void Configure(string titleKey, string icon, string bodyKey)
+            => Configure(titleKey, Art.S("Ui/" + icon), bodyKey);
+
+        /// <summary>Takes the glyph itself, for callers that already hold one.</summary>
+        public void Configure(string titleKey, Sprite icon, string bodyKey)
         {
             _titleKey = titleKey; _icon = icon; _bodyKey = bodyKey;
         }
@@ -405,8 +567,17 @@ namespace GlimmerGrove
 
             var glow = UIKit.Img("Glow", Panel, Art.Glow(128, 1.9f), Pal.A(Pal.Gold, .45f),
                                  new Vector2(380f, 380f), new Vector2(.5f, 1f), new Vector2(0f, -290f));
-            var icon = UIKit.Img("Icon", Panel, Art.S("Ui/" + _icon), Color.white,
-                                 new Vector2(230f, 230f), new Vector2(.5f, 1f), new Vector2(0f, -290f));
+
+            // Dark medallion under the glyph. Half these icons are white silhouettes,
+            // which are all but invisible on the parchment panel; the ones painted in
+            // full colour lose nothing by sitting on it.
+            var disc = UIKit.Img("Disc", Panel, Art.Disc(256), Pal.A(Pal.Hex("#08333C"), .92f),
+                                 new Vector2(298f, 298f), new Vector2(.5f, 1f), new Vector2(0f, -290f));
+            var ring = UIKit.Img("Ring", disc.transform, Art.Ring(256, 14f), Pal.A(Pal.Gold, .90f));
+            UIKit.StretchTo((RectTransform)ring.transform, 0, 0, 0, 0);
+
+            var icon = UIKit.Img("Icon", Panel, _icon != null ? _icon : Art.S("Ui/ic_chest"), Color.white,
+                                 new Vector2(200f, 200f), new Vector2(.5f, 1f), new Vector2(0f, -290f));
             icon.preserveAspect = true;
             Tween.Bob((RectTransform)icon.transform, 14f, 2.2f);
             Tween.Run(2.4f, Ease.InOutSine,

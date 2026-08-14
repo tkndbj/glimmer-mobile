@@ -43,6 +43,16 @@ namespace GlimmerGrove
         static readonly string[] Rocks = { "rock_grass", "rock_wide", "rock_tall", "rock_chip", "rock_plain" };
 
         /// <summary>
+        /// Drawn size of a map node, and where a glyph has to sit inside one to land on
+        /// the disc's white face rather than on its rim. Derived from the art via
+        /// <see cref="UIKit.NodeFaceLift"/> so the three glyphs that ride a node — the
+        /// glade number, the onward chevron and the sealed teaser's question mark — cannot
+        /// drift apart the way three hand-tuned offsets did.
+        /// </summary>
+        const float NodeSize = 196f;
+        const float NodeFaceY = NodeSize * UIKit.NodeFaceLift;
+
+        /// <summary>
         /// Seconds between one glade popping in and the next, and the longest the whole
         /// arrival is allowed to take. The step shrinks as a chapter grows rather than
         /// the entrance growing with it — at a flat 0.11s a thirty glade chapter would
@@ -150,8 +160,8 @@ namespace GlimmerGrove
                 if (sprite == null) continue;
 
                 var img = UIKit.Img("Strip" + i, _map, sprite, Color.white,
-                                    new Vector2(1080f, MapLayout.StripHeight), new Vector2(.5f, 0f),
-                                    new Vector2(0f, _layout.StripBottom(i) + MapLayout.StripHeight * .5f));
+                                    new Vector2(ChapterMap.Width, ChapterMap.StripHeight), new Vector2(.5f, 0f),
+                                    new Vector2(0f, _layout.StripBottom(i) + ChapterMap.StripHeight * .5f));
                 img.type = Image.Type.Simple;
             }
 
@@ -235,14 +245,14 @@ namespace GlimmerGrove
                 UIKit.Halo(node, level.Presentation.ResolveAccent(_body.Definition), 360f, .34f);
 
             var id = level.Id;
-            var btn = UIKit.Button("Btn", node, Art.S("Map/" + skin), new Vector2(196f, 196f),
+            var btn = UIKit.Button("Btn", node, Art.S("Map/" + skin), new Vector2(NodeSize, NodeSize),
                                    new Vector2(.5f, .5f), new Vector2(0f, 2f), () => Open(id, unlocked));
             btn.GetComponent<Image>().preserveAspect = true;
 
             if (unlocked)
                 UIKit.Titled("Num", btn.transform, displayNumber.ToString(), 62, new Color(.30f, .21f, .13f),
                              TextAnchor.MiddleCenter, new Vector2(190f, 110f), new Vector2(.5f, .5f),
-                             new Vector2(0f, stars > 0 ? 14f : 4f), 0f, 2f);
+                             new Vector2(0f, NodeFaceY), 0f, 2f);
 
             Plate(node, unlocked ? Loc.Get(level.NameKey) : Loc.Get("ui.levels.locked"),
                   unlocked ? Pal.Cream : new Color(1f, 1f, 1f, .62f), -196f);
@@ -279,24 +289,27 @@ namespace GlimmerGrove
 
             var disc = UIKit.Img("Seal", node, Art.S("Map/" + (reachable ? "node_open" : "node_lock")),
                                  reachable ? Color.white : new Color(.88f, .90f, .94f, .95f),
-                                 new Vector2(196f, 196f), new Vector2(.5f, .5f), new Vector2(0f, 2f));
+                                 new Vector2(NodeSize, NodeSize), new Vector2(.5f, .5f), new Vector2(0f, 2f));
             disc.preserveAspect = true;
 
             if (reachable)
             {
                 var target = next.Id;
-                var btn = UIKit.Button("Btn", node, Art.S("Map/node_open"), new Vector2(196f, 196f),
+                var btn = UIKit.Button("Btn", node, Art.S("Map/node_open"), new Vector2(NodeSize, NodeSize),
                                        new Vector2(.5f, .5f), new Vector2(0f, 2f), () => GoToChapter(target));
                 btn.GetComponent<Image>().preserveAspect = true;
                 UIKit.Titled("Arrow", btn.transform, "»", 64, new Color(.30f, .21f, .13f),
                              TextAnchor.MiddleCenter, new Vector2(190f, 110f), new Vector2(.5f, .5f),
-                             new Vector2(0f, -2f), 0f, 2f);
+                             new Vector2(0f, NodeFaceY), 0f, 2f);
                 Plate(node, Loc.Get(next.NameKey), Pal.Cream, -196f);
             }
             else
             {
+                // hangs off the perch rather than the seal, so it carries the seal's own
+                // offset as well as the face lift
                 UIKit.Titled("Q", node, "?", 64, new Color(.36f, .38f, .44f), TextAnchor.MiddleCenter,
-                             new Vector2(190f, 110f), new Vector2(.5f, .5f), new Vector2(0f, -2f), 0f, 2f);
+                             new Vector2(190f, 110f), new Vector2(.5f, .5f), new Vector2(0f, 2f + NodeFaceY),
+                             0f, 2f);
                 Plate(node, Loc.Get(onward ? "ui.levels.chapter_locked" : "ui.levels.more_soon"),
                       new Color(1f, 1f, 1f, .62f), -196f);
             }
@@ -447,6 +460,17 @@ namespace GlimmerGrove
                 Scenery.Toast(Content, Loc.Get("ui.levels.locked_hint"), Pal.Parchment, 1.8f);
                 return;
             }
+            // The gate. Checked on the way in rather than on the way out of a defeat,
+            // so a player is never dropped into a glade they cannot afford to lose —
+            // being told at the door is a wait, being told at the blast is a wasted run.
+            if (!Profile.CanPlay)
+            {
+                Audio.Sfx("nope", .55f);
+                if (_nodes.TryGetValue(id, out var barred)) Tween.Shake(barred, 10f, .35f);
+                Flow.Modal<OutOfHeartsOverlay>();
+                return;
+            }
+
             Audio.Sfx("unlock", .55f);
             Flow.Go<PlayScreen>(v => v.LevelId = id);
         }

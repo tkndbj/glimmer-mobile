@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using GlimmerGrove.Progression;
 
 namespace GlimmerGrove.Content
 {
@@ -16,6 +17,8 @@ namespace GlimmerGrove.Content
         readonly List<ChapterIndexEntry> _chapters = new List<ChapterIndexEntry>();
         readonly HashSet<ChapterId> _chapterIds = new HashSet<ChapterId>();
         readonly Dictionary<LevelId, ChapterId> _levelChapter = new Dictionary<LevelId, ChapterId>();
+        readonly List<AvatarDefinition> _companions = new List<AvatarDefinition>();
+        readonly HashSet<string> _companionIds = new HashSet<string>(System.StringComparer.Ordinal);
         readonly List<string> _problems = new List<string>();
 
         public IReadOnlyList<string> Problems => _problems;
@@ -84,6 +87,78 @@ namespace GlimmerGrove.Content
             return levelIds;
         }
 
+        /// <summary>
+        /// Reads one companion entry. Rejections are recorded and the companion is
+        /// dropped, never thrown on — a malformed roster entry must cost that companion
+        /// rather than the launch, exactly like a malformed chapter.
+        /// </summary>
+        public bool AddCompanion(ManifestCompanionDto entry)
+        {
+            if (entry == null) return false;
+            if (entry.disabled) return false;
+
+            if (string.IsNullOrEmpty(entry.id))
+            {
+                _problems.Add("manifest lists a companion with no id; it is ignored");
+                return false;
+            }
+
+            if (!IsCleanId(entry.id))
+            {
+                _problems.Add($"companion id '{entry.id}' is rejected: ids are lower case letters, " +
+                              "digits and underscores, because they are written into save files");
+                return false;
+            }
+
+            if (!_companionIds.Add(entry.id))
+            {
+                _problems.Add($"manifest lists companion '{entry.id}' twice; the later entry is ignored");
+                return false;
+            }
+
+            if (entry.unlockLevel < 0)
+                _problems.Add($"companion '{entry.id}' has a negative unlock level; treated as 0");
+
+            _companions.Add(new AvatarDefinition(entry.id, entry.portrait, entry.animated, entry.unlockLevel));
+            return true;
+        }
+
+        /// <summary>
+        /// Save-file safe: an id becomes a loc key and an analytics dimension, and both
+        /// break in ways nobody notices for weeks if it can contain a space or a dot.
+        /// </summary>
+        static bool IsCleanId(string id)
+        {
+            foreach (char c in id)
+            {
+                bool ok = (c >= 'a' && c <= 'z') || (c >= '0' && c <= '9') || c == '_';
+                if (!ok) return false;
+            }
+            return true;
+        }
+
+        /// <summary>
+        /// Companions in unlock order, ties broken by their place in the manifest.
+        ///
+        /// Sorted by insertion rather than <c>List.Sort</c> because that one is not
+        /// stable: two companions unlocking at the same level would swap places between
+        /// runs, and the picker would reshuffle under a player for no reason. The roster
+        /// is tens of entries, so the cost is irrelevant and the determinism is not.
+        /// </summary>
+        AvatarDefinition[] SortedCompanions()
+        {
+            var sorted = new List<AvatarDefinition>(_companions.Count);
+
+            foreach (var companion in _companions)
+            {
+                int at = sorted.Count;
+                while (at > 0 && sorted[at - 1].UnlockLevel > companion.UnlockLevel) at--;
+                sorted.Insert(at, companion);
+            }
+
+            return sorted.ToArray();
+        }
+
         public CatalogIndex Build()
         {
             // Sparse orders let a chapter slot between two shipped ones. Ties break on
@@ -105,7 +180,8 @@ namespace GlimmerGrove.Content
                     levelIds.Add(levelId);
                 }
 
-            return new CatalogIndex(_chapters.ToArray(), levelIds.ToArray(), levelOrder, _levelChapter);
+            return new CatalogIndex(_chapters.ToArray(), levelIds.ToArray(), levelOrder, _levelChapter,
+                                    SortedCompanions());
         }
     }
 }

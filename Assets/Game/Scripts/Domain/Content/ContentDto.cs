@@ -28,6 +28,55 @@ namespace GlimmerGrove.Content
         /// 0 means never versioned, and the bundled copy stands.
         /// </summary>
         public int progressionVersion;
+
+        /// <summary>
+        /// The companion roster, in display order.
+        ///
+        /// Lives in the manifest rather than a body of its own because the whole roster
+        /// is wanted at once — the picker draws the locked ones too — and an entry is a
+        /// few dozen bytes, so a hundred companions is a few kilobytes on a file the
+        /// boot path already reads. A lazily-loaded companion file would add a read to
+        /// a screen and save nothing.
+        ///
+        /// Optional, and deliberately so: this was added without raising
+        /// <see cref="ContentSchema.Version"/> because an older client simply ignores
+        /// the field and falls back to its built-in roster, which is a working game
+        /// rather than a refused manifest.
+        /// </summary>
+        public ManifestCompanionDto[] companions;
+    }
+
+    /// <summary>
+    /// One companion a player can wear on their profile.
+    ///
+    /// <see cref="id"/> is permanent — it is written into save files and will key
+    /// analytics and, once the shop exists, purchases. Renaming one is the same class
+    /// of mistake as renaming a level id.
+    /// </summary>
+    [Serializable]
+    public sealed class ManifestCompanionDto
+    {
+        public string id;
+
+        /// <summary>
+        /// Sprite key under <c>Art/Companions/</c>. Kept separate from the id so art can
+        /// be re-cut or re-named without the change reaching a single save file.
+        /// Empty means "same as the id", which is the case for every companion so far.
+        /// </summary>
+        public string portrait;
+
+        /// <summary>
+        /// Optional sprite-set key under <c>Art/Critters/</c> for companions that also
+        /// appear animated on a board. Most have none, and a still portrait is all the
+        /// profile ever needs.
+        /// </summary>
+        public string animated;
+
+        /// <summary>Keeper level this unlocks at. 0 means available from the first launch.</summary>
+        public int unlockLevel;
+
+        /// <summary>Set true to retire a companion without deleting anyone's choice of it.</summary>
+        public bool disabled;
     }
 
     [Serializable]
@@ -112,6 +161,13 @@ namespace GlimmerGrove.Content
         public float goldFactor;
         public float silverFactor;
         public int hintAllowance;
+
+        /// <summary>
+        /// Turns allowed before the run is lost, as a multiple of par. 0 takes the
+        /// default; a negative value removes the budget entirely, which is the only way
+        /// to author a glade that cannot be lost on moves.
+        /// </summary>
+        public float budgetFactor;
 
         // ---- presentation, all optional ------------------------------------
         public float mapX;

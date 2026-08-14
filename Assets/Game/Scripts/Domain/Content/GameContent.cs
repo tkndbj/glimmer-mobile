@@ -37,6 +37,11 @@ namespace GlimmerGrove.Content
             _catalog = catalog;
             IsLoaded = true;
 
+            // The roster travels in the manifest, so it arrives with the index rather
+            // than through a second fetch. Published before CatalogChanged so anything
+            // redrawing on that event already sees the new companions.
+            Progression.AvatarCatalog.Publish(catalog.Index.Companions);
+
             try
             {
                 CatalogChanged?.Invoke();

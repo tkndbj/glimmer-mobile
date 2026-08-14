@@ -36,6 +36,7 @@ namespace GlimmerGrove.Persistence
             PlayerProgress.LoadFrom(dto);
             GameSettings.LoadFrom(dto);
             Wallet.LoadFrom(dto);
+            TipLedger.LoadFrom(dto);
             ProgressionStore.LoadFrom(dto);
             CloudState.LoadFrom(dto);
 
@@ -102,6 +103,7 @@ namespace GlimmerGrove.Persistence
             PlayerProgress.WriteInto(dto);
             GameSettings.WriteInto(dto);
             Wallet.WriteInto(dto);
+            TipLedger.WriteInto(dto);
             ProgressionStore.WriteInto(dto);
             CloudState.WriteInto(dto);
 
@@ -122,6 +124,7 @@ namespace GlimmerGrove.Persistence
             PlayerProgress.LoadFrom(dto);
             GameSettings.LoadFrom(dto);
             Wallet.LoadFrom(dto);
+            TipLedger.LoadFrom(dto);
             ProgressionStore.LoadFrom(dto);
             CloudState.LoadFrom(dto);
 
@@ -147,6 +150,7 @@ namespace GlimmerGrove.Persistence
 
             PlayerProgress.LoadFrom(fresh);
             Wallet.LoadFrom(fresh);
+            TipLedger.LoadFrom(fresh);
             ProgressionStore.LoadFrom(fresh);
             // settings and the cloud identity deliberately survive a progress wipe
 
