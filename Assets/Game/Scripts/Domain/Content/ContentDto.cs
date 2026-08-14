@@ -223,6 +223,17 @@ namespace GlimmerGrove.Content
         /// fetch on a phone for a few hundred bytes.
         /// </summary>
         public DailyChestDto daily;
+
+        /// <summary>
+        /// What rewarded ads pay. Optional: absent means the built-in table stands.
+        ///
+        /// Rides here for the same two reasons the daily block does — it is tuned in the
+        /// same sitting as the chest rates and the reward curve, and a second file would
+        /// be a second fetch on a phone for a few hundred bytes. It is also the block most
+        /// likely to be changed alone, because the numbers that justify it (fill rate,
+        /// eCPM) only exist once the game is live in a market.
+        /// </summary>
+        public AdsDto ads;
     }
 
     /// <summary>
@@ -333,6 +344,62 @@ namespace GlimmerGrove.Content
         public int weight;
 
         public DailyDropDto AsBand() => new DailyDropDto { kind = kind, min = min, max = max };
+    }
+
+    /// <summary>
+    /// What rewarded ads pay, and how often one may be watched.
+    ///
+    /// <para>
+    /// Authored as data because a rewarded payout is the lever that balances ad revenue
+    /// against the heart gate, and it is tuned against numbers nobody has until the game
+    /// is live in a market. A payout that needs a store review to change is a payout that
+    /// gets set once, from a guess, and never corrected.
+    /// </para>
+    /// <para>
+    /// Note what is deliberately absent: a price. These are <b>earned by watching and
+    /// cannot be bought</b>, exactly like the daily chests, and for the same reason —
+    /// nothing here should ever gain a cost in currency, because that would turn a
+    /// rewarded ad into a purchase of a randomised outcome.
+    /// </para>
+    /// </summary>
+    [Serializable]
+    public sealed class AdsDto
+    {
+        /// <summary>
+        /// Seconds between two rewarded ads, across every placement. -1 inherits.
+        ///
+        /// Global rather than per-placement on purpose. The thing being paced is the
+        /// player's tolerance for watching videos, and that is not divided up by which
+        /// button started one.
+        /// </summary>
+        public int cooldownSeconds = -1;
+
+        /// <summary>
+        /// One entry per offered placement. A placement with no entry is switched off,
+        /// which is how an offer is withdrawn without a build.
+        /// </summary>
+        public AdPlacementDto[] placements;
+    }
+
+    /// <summary>
+    /// One rewarded placement. <c>id</c> is a permanent placement id — <c>heart_refill</c>,
+    /// <c>coin_bonus</c> — and <c>kind</c> reuses the drop vocabulary of the chest table,
+    /// so <c>heart_boost</c> is measured in hours here too.
+    /// </summary>
+    [Serializable]
+    public sealed class AdPlacementDto
+    {
+        public string id;
+        public string kind;
+
+        /// <summary>How much of <see cref="kind"/> one finished view pays.</summary>
+        public int amount;
+
+        /// <summary>
+        /// Views that pay, per UTC day. The reader rejects anything below 1 — to switch a
+        /// placement off, remove it, rather than leaving an entry that pays nothing.
+        /// </summary>
+        public int dailyCap;
     }
 
     [Serializable]

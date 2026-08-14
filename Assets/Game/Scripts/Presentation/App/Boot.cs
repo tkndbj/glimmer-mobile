@@ -1,3 +1,4 @@
+using GlimmerGrove.Ads;
 using GlimmerGrove.Analytics;
 using GlimmerGrove.AssetPipeline;
 using GlimmerGrove.Cloud;
@@ -62,6 +63,23 @@ namespace GlimmerGrove
             // installed. The game is fully playable through the null one.
 #if GLIMMER_FIREBASE
             CloudSaveService.UseBackend(new FirebaseCloudSaveBackend());
+#endif
+
+            // Rewarded ads, chosen the same way and inert by the same default. Two gates,
+            // not one: the SDK has to be compiled in *and* a real app key has to exist.
+            // Without the second, LevelPlay would start, fail, and leave the game showing
+            // offers that can never fill — which is worse than showing none.
+#if GLIMMER_ADS
+            if (AdConfig.IsConfigured)
+            {
+                var ads = new LevelPlayAdProvider(AdConfig.AppKey, AdConfig.AdUnits());
+                RewardedAds.Install(ads);
+
+                // Not awaited. Mediation start-up is a network round trip and nothing on
+                // the splash depends on it; the offers simply become available when they
+                // become available, which is what ReadinessChanged is for.
+                _ = ads.InitializeAsync();
+            }
 #endif
 
 #if UNITY_EDITOR || DEVELOPMENT_BUILD

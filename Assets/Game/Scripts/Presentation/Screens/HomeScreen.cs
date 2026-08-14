@@ -1,4 +1,5 @@
 using System;
+using GlimmerGrove.Ads;
 using GlimmerGrove.Content;
 using GlimmerGrove.Daily;
 using GlimmerGrove.Localization;
@@ -197,15 +198,28 @@ namespace GlimmerGrove
             // Hearts are real now, so this is no longer a "coming soon" — an empty
             // player gets the gate with its live countdown, everyone else gets told
             // when the next one lands.
+            // The plus goes to the best thing available, which is not the same thing every
+            // time. An ad if one is loaded and would help; otherwise the gate's countdown
+            // when the bar is empty; otherwise the honest "you are full" toast. Sending
+            // every tap to the same panel would mean showing a full player a way to get
+            // hearts they cannot hold.
             ResourcePill(row, -318f, Pal.Rose, "ic_heart", $"{Profile.Hearts}/{Profile.MaxHearts}", false,
                          () =>
                          {
-                             if (!Profile.CanPlay) Flow.Modal<OutOfHeartsOverlay>();
+                             if (RewardedAds.CanOffer(AdPlacement.HeartRefill))
+                                 Flow.Modal<AdOfferOverlay>(v => v.PlacementId = AdPlacement.HeartRefill);
+                             else if (!Profile.CanPlay) Flow.Modal<OutOfHeartsOverlay>();
                              else Scenery.Toast(Content, HeartsLine(), Pal.Rose, 2.4f);
                          });
             ResourcePill(row, 0f, Pal.Gold, null, Profile.Short(Profile.Coins), true,
-                         () => Flow.Modal<ComingSoonOverlay>(v => v.Configure("Coins", "ic_chest",
-                             "Earn coins in the glades and spend them in the shop. Coming soon.")));
+                         () =>
+                         {
+                             if (RewardedAds.CanOffer(AdPlacement.CoinBonus))
+                                 Flow.Modal<AdOfferOverlay>(v => v.PlacementId = AdPlacement.CoinBonus);
+                             else
+                                 Flow.Modal<ComingSoonOverlay>(v => v.Configure("Coins", "ic_chest",
+                                     "Earn coins in the glades and spend them in the shop. Coming soon."));
+                         });
             ResourcePill(row, 318f, Pal.Bloom, "ic_gem", Profile.Short(Profile.Gems), false,
                          () => Flow.Modal<ComingSoonOverlay>(v => v.Configure("Gems", "ic_gem",
                              "Gems will unlock hints, skins and seasonal glades.")));
@@ -273,16 +287,29 @@ namespace GlimmerGrove
             var edge = UIKit.Img("Edge", panel.transform, Art.RoundOutline(28, 3f), new Color(1, 1, 1, .14f));
             UIKit.StretchTo((RectTransform)edge.transform, 0, 0, 0, 0);
 
-            UIKit.Titled("Title", panel.transform, Loc.Get("ui.home.bonuses"), 32, Pal.Gold,
-                         TextAnchor.MiddleLeft, new Vector2(400f, 40f), new Vector2(0f, 1f),
-                         new Vector2(348f, -38f), 3f, 3f);
+            // The header is two labels sharing one 900-wide row, so both are placed from
+            // the panel edges rather than by eye. A box anchored to the right edge has its
+            // *centre* at the anchored position, so the offset has to be
+            // -(margin + width/2) — anything less hangs the box off the end of the panel,
+            // and nothing clips it, so it simply draws over the screen edge.
+            const float Margin = 40f, TitleW = 370f, ClockW = 320f;
+
+            UIKit.Shrinkable(
+                UIKit.Titled("Title", panel.transform, Loc.Get("ui.home.bonuses"), 32, Pal.Gold,
+                             TextAnchor.MiddleLeft, new Vector2(TitleW, 40f), new Vector2(0f, 1f),
+                             new Vector2(148f + TitleW * .5f, -38f), 3f, 3f), 20);
 
             // The reset clock, ticking. An expiry a player cannot see is an expiry that
             // reads as the game having eaten their chest.
-            _resetClock = UIKit.Titled("Reset", panel.transform, ResetLine(), 26,
-                                       new Color(1f, .95f, .84f, .62f), TextAnchor.MiddleRight,
-                                       new Vector2(300f, 36f), new Vector2(1f, 1f),
-                                       new Vector2(-40f, -38f), 0f, 0f);
+            //
+            // Shrinkable because this is the one label here whose width is not under our
+            // control: "resets in 10h 21m" is the short case, and a translation of it
+            // plus a two-digit hour is the long one.
+            _resetClock = UIKit.Shrinkable(
+                UIKit.Titled("Reset", panel.transform, ResetLine(), 26,
+                             new Color(1f, .95f, .84f, .62f), TextAnchor.MiddleRight,
+                             new Vector2(ClockW, 36f), new Vector2(1f, 1f),
+                             new Vector2(-(Margin + ClockW * .5f), -38f), 0f, 0f), 17);
 
             var track = UIKit.Img("Track", panel.transform, Art.Round(16), new Color(.02f, .05f, .07f, .9f),
                                   new Vector2(816f, 38f), new Vector2(.5f, .5f), new Vector2(0f, -16f));
@@ -302,9 +329,12 @@ namespace GlimmerGrove
             int count = Mathf.Max(1, DailyChests.ChestCount);
             for (int i = 0; i < count; i++) BuildChest(track.transform, i, count);
 
-            UIKit.Titled("Hint", panel.transform, HintLine(), 24, new Color(1f, .95f, .84f, .58f),
-                         TextAnchor.MiddleCenter, new Vector2(880f, 34f), new Vector2(.5f, 0f),
-                         new Vector2(0f, 24f), 0f, 0f);
+            // Inset from the panel rather than filling it, and allowed to shrink: this is
+            // a whole sentence, and it is the line most likely to grow in translation.
+            UIKit.Shrinkable(
+                UIKit.Titled("Hint", panel.transform, HintLine(), 24, new Color(1f, .95f, .84f, .58f),
+                             TextAnchor.MiddleCenter, new Vector2(820f, 34f), new Vector2(.5f, 0f),
+                             new Vector2(0f, 24f), 0f, 0f), 16);
 
             var icon = UIKit.Img("Gift", panel.transform, Art.S("Ui/ic_gift"), Color.white,
                                  new Vector2(72f, 72f), new Vector2(0f, 1f), new Vector2(62f, -42f));
@@ -398,6 +428,18 @@ namespace GlimmerGrove
         void OpenChest(int index)
         {
             if (Flow.HasModal) return;
+
+            // Only reachable on a first launch that has never had a connection: a chest
+            // rolled before the account exists is one the server would recompute
+            // differently, so it waits rather than showing a reward it cannot honour.
+            // One connection lifts this permanently — see DailyChests.CanOpen.
+            if (!DailyChests.CanOpen)
+            {
+                Audio.Sfx("nope", .5f);
+                Scenery.Toast(Content, Loc.Get("ui.daily.needs_connection"), Pal.Rose, 3f);
+                return;
+            }
+
             Flow.Modal<ChestOverlay>(v => v.ChestIndex = index);
         }
 
@@ -406,6 +448,11 @@ namespace GlimmerGrove
 
         string HintLine()
         {
+            // Said on the panel rather than only in a toast, so a player who has never
+            // been online understands the chest is waiting for them and not broken.
+            if (DailyChests.HasReadyChest && !DailyChests.CanOpen)
+                return Loc.Get("ui.daily.needs_connection");
+
             if (DailyChests.HasReadyChest) return Loc.Get("ui.daily.ready");
             if (DailyChests.DayComplete) return Loc.Get("ui.daily.all_open");
 

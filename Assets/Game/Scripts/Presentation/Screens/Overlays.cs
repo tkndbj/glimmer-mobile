@@ -1,4 +1,5 @@
 using System;
+using GlimmerGrove.Ads;
 using GlimmerGrove.Content;
 using GlimmerGrove.Localization;
 using GlimmerGrove.Persistence;
@@ -108,7 +109,16 @@ namespace GlimmerGrove
         {
             bool canRetry = HeartsLeft > 0;
 
-            MakePanel(new Vector2(880f, 880f), Loc.Get(TitleKey(Reason)), dismissOnScrim: false);
+            // The offer only belongs on the branch that has no retry button. A player who
+            // can still play does not need to be sold a video, and putting one there would
+            // turn every defeat into an advertisement.
+            bool offering = !canRetry && RewardedAds.CanOffer(AdPlacement.HeartRefill);
+
+            // Grown rather than crowded. The alternative — squeezing a third button into
+            // the same 880 — leaves the last one a few pixels off the panel edge, which is
+            // the sort of thing that looks fine on the device it was tuned on.
+            MakePanel(new Vector2(880f, offering ? 1010f : 880f),
+                      Loc.Get(TitleKey(Reason)), dismissOnScrim: false);
 
             // Body copy, drawn the way every other panel here draws it: wrapped, and
             // with no outline or shadow. Those two are for headings sitting on a ribbon;
@@ -131,18 +141,47 @@ namespace GlimmerGrove
                                  new Vector2(620f, 148f), new Vector2(.5f, 1f), new Vector2(0f, -560f),
                                  () => Close(() => { if (Screen) Screen.RetryAfterDefeat(); }));
             }
+            else if (offering)
+            {
+                // Out of hearts, but there is a way back in. The sentence changes with it:
+                // telling somebody to wait eight hours directly above a button that skips
+                // the wait is how a panel reads as a trick.
+                Body("Wait", Loc.Get("ui.defeat.watch_for_hearts"), -520f, 96f, Pal.Ember);
+
+                UIKit.TextButton("WatchAd", Panel, "btn_green", Loc.Get("ui.ads.hearts_cta"), 44,
+                                 new Vector2(620f, 140f), new Vector2(.5f, 1f), new Vector2(0f, -644f),
+                                 OfferHearts);
+            }
             else
             {
-                // Out of hearts: a retry button would be a lie, so it is not offered.
+                // Out of hearts and no ad to be had: a retry button would be a lie, so it
+                // is not offered and the honest wait is all there is to say.
                 Body("Wait", Loc.Get("ui.defeat.out_of_hearts"), -540f, 130f, Pal.Ember);
             }
 
             UIKit.TextButton("Glades", Panel, "btn_blue", Loc.Get("ui.pause.glades"), 46,
                              new Vector2(620f, 132f), new Vector2(.5f, 1f),
-                             new Vector2(0f, canRetry ? -722f : -700f),
+                             new Vector2(0f, canRetry ? -722f : offering ? -816f : -700f),
                              () => Close(() => Flow.Go<LevelsScreen>()));
 
             Audio.Sfx("nope", .5f, .8f, .05f);
+        }
+
+        /// <summary>
+        /// Opens the offer, and goes straight back into the run if it pays.
+        ///
+        /// Straight back in, rather than returning to a panel that has quietly grown a
+        /// retry button, because returning to the run is what the player agreed to watch a
+        /// video for. Making them find one more button afterwards is a tax on the thing we
+        /// just persuaded them to do.
+        /// </summary>
+        void OfferHearts()
+        {
+            Flow.Modal<AdOfferOverlay>(v =>
+            {
+                v.PlacementId = AdPlacement.HeartRefill;
+                v.Rewarded = () => Close(() => { if (Screen) Screen.RetryAfterDefeat(); });
+            });
         }
 
         /// <summary>Wrapped, unadorned panel prose. Shared so both states line up.</summary>
@@ -199,17 +238,26 @@ namespace GlimmerGrove
     /// the heart state catches itself up on read, so this stays correct across a
     /// backgrounded app without any resume plumbing.
     ///
-    /// There is no "buy hearts" button yet, and that is deliberate: the store secrets
-    /// still hold UNSET, so an offer here would be a button that cannot work. This is
-    /// where it goes when it exists.
+    /// There is still no "buy hearts" button, and that is deliberate: the store secrets
+    /// hold UNSET, so an offer here would be a button that cannot work. There is now a
+    /// <em>watch</em> button, which is a different thing entirely — it costs the player
+    /// attention rather than money, needs no store product to exist, and is shown only
+    /// when an ad is actually loaded and the day's allowance has room. When a purchase
+    /// exists it goes beside it, not instead of it.
     /// </summary>
     public sealed class OutOfHeartsOverlay : ModalView
     {
         Text _countdown;
+        bool _offering;
 
         protected override void Build()
         {
-            MakePanel(new Vector2(860f, 780f), Loc.Get("ui.hearts.empty"));
+            // Resolved once, at the top, because it decides the panel's height as well as
+            // its buttons — and asking twice risks the two disagreeing if fill arrives in
+            // between, leaving a button drawn outside the panel it belongs to.
+            _offering = RewardedAds.CanOffer(AdPlacement.HeartRefill);
+
+            MakePanel(new Vector2(860f, _offering ? 900f : 780f), Loc.Get("ui.hearts.empty"));
 
             // Wrapped and unadorned, matching every other body paragraph in the game.
             UIKit.Titled("Why", Panel, Loc.Get("ui.hearts.wait_to_play"), 32,
@@ -231,9 +279,30 @@ namespace GlimmerGrove
                                       outline: 3f, shadow: 3f);
             Paint();
 
-            UIKit.TextButton("Ok", Panel, "btn_green", Loc.Get("ui.common.got_it"), 48,
-                             new Vector2(560f, 136f), new Vector2(.5f, 1f), new Vector2(0f, -630f),
-                             () => Close());
+            if (_offering)
+            {
+                UIKit.TextButton("WatchAd", Panel, "btn_green", Loc.Get("ui.ads.hearts_cta"), 44,
+                                 new Vector2(560f, 136f), new Vector2(.5f, 1f), new Vector2(0f, -616f),
+                                 () => Flow.Modal<AdOfferOverlay>(v =>
+                                 {
+                                     v.PlacementId = AdPlacement.HeartRefill;
+
+                                     // Closing on reward rather than repainting: this panel
+                                     // exists to explain an empty heart bar, and once it is
+                                     // no longer empty the panel has nothing to say.
+                                     v.Rewarded = () => Close();
+                                 }));
+
+                UIKit.TextButton("Ok", Panel, "btn_blue", Loc.Get("ui.common.got_it"), 44,
+                                 new Vector2(560f, 120f), new Vector2(.5f, 1f), new Vector2(0f, -744f),
+                                 () => Close());
+            }
+            else
+            {
+                UIKit.TextButton("Ok", Panel, "btn_green", Loc.Get("ui.common.got_it"), 48,
+                                 new Vector2(560f, 136f), new Vector2(.5f, 1f), new Vector2(0f, -630f),
+                                 () => Close());
+            }
         }
 
         void Update() => Paint();

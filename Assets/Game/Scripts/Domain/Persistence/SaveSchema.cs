@@ -39,8 +39,13 @@ namespace GlimmerGrove.Persistence
         ///      is the one that matters: it is how currency a player has been *given*
         ///      reaches them offline without the client ever raising its own granted
         ///      baseline, which is the field the server owns and an attacker wants.
+        /// v7 — the rewarded-ad counters (<see cref="SaveFileDto.ads"/>): which day they
+        ///      describe, how many paying views each placement has had, and when the last
+        ///      one was. All three are caps and pacing, not currency — what an ad actually
+        ///      paid arrives through the v6 grant queue, keyed on the impression nonce, so
+        ///      losing this section costs a player nothing they earned.
         /// </summary>
-        public const int Version = 6;
+        public const int Version = 7;
 
         /// <summary>Progress that predates this file: index-keyed keys in PlayerPrefs.</summary>
         public const int LegacyPlayerPrefsVersion = 0;
@@ -107,6 +112,9 @@ namespace GlimmerGrove.Persistence
 
         /// <summary>Today's chest counters. See <see cref="DailyStateDto"/>.</summary>
         public DailyStateDto daily;
+
+        /// <summary>Today's rewarded-ad counters. See <see cref="AdStateDto"/>.</summary>
+        public AdStateDto ads;
 
         /// <summary>
         /// Integrity check over the rest of the file. Empty on files written before
@@ -311,6 +319,60 @@ namespace GlimmerGrove.Persistence
 
         /// <summary>Chests opened today.</summary>
         public int claimed;
+    }
+
+    /// <summary>
+    /// The rewarded-ad counters: pacing state, and nothing that is worth money.
+    ///
+    /// <para>
+    /// Every field here exists to answer "may I offer another ad?", and none of them
+    /// records what an ad paid. That belongs in the grant queue, keyed on the impression
+    /// nonce and adjudicated by the server, so a player who loses this section loses
+    /// nothing but their place in today's cap — which is exactly the failure worth having,
+    /// because the alternative is a section that can be edited to mint currency.
+    /// </para>
+    /// <para>
+    /// The day is a whole-day count since the epoch, the same one the chest counters use
+    /// (see <c>DailyRules</c>), so a stale day is noticed by the next read rather than by
+    /// a timer that has to fire at midnight in thirty-eight timezones.
+    /// </para>
+    /// </summary>
+    [Serializable]
+    public sealed class AdStateDto
+    {
+        /// <summary>
+        /// Which day these counters describe. Zero means none — no live player has
+        /// counters for 1970, so no separate "unwritten" flag is needed.
+        /// </summary>
+        public int dayKey;
+
+        /// <summary>
+        /// Paying views today, per placement. Absent means none.
+        ///
+        /// An array rather than parallel fields because placements are content-shaped: a
+        /// placement added in a future drop must land in an existing save without a
+        /// migration, and one retired must not leave a dead column behind. Duplicates are
+        /// folded on read by keeping the <em>larger</em> count, so a malformed file cannot
+        /// hand somebody a fresh allowance.
+        /// </summary>
+        public AdViewCountDto[] watched;
+
+        /// <summary>
+        /// When the last paying view finished, for the cooldown.
+        ///
+        /// Persisted rather than held in memory so that force-quitting the app is not a
+        /// way around the gap. Merges by taking the later value, which is the conservative
+        /// direction: two devices cannot shorten a cooldown by disagreeing about it.
+        /// </summary>
+        public long lastWatchedUnix;
+    }
+
+    /// <summary>One placement's paying views today. Keyed by a permanent placement id.</summary>
+    [Serializable]
+    public sealed class AdViewCountDto
+    {
+        public string placement;
+        public int count;
     }
 
     [Serializable]

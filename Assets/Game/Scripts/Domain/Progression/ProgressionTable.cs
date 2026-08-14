@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using GlimmerGrove.Ads;
 using GlimmerGrove.Content;
 using GlimmerGrove.Daily;
 using UnityEngine;
@@ -78,12 +79,13 @@ namespace GlimmerGrove.Progression
 
         ProgressionTable(long[] cumulative, RewardRule defaultRule,
                          Dictionary<ChapterId, RewardRule> chapterRules,
-                         DailyChestTable daily)
+                         DailyChestTable daily, AdRewardTable ads)
         {
             _cumulative = cumulative;
             _defaultRule = defaultRule;
             _chapterRules = chapterRules;
             Daily = daily ?? DailyChestTable.Default;
+            Ads = ads ?? AdRewardTable.Default;
         }
 
         /// <summary>
@@ -94,6 +96,17 @@ namespace GlimmerGrove.Progression
         /// precisely the window an economy exploit lives in.
         /// </summary>
         public DailyChestTable Daily { get; }
+
+        /// <summary>
+        /// What rewarded ads pay, published with the curve for the same reason the chest
+        /// table is.
+        ///
+        /// The window this closes is narrower than the chest one but the same shape: an ad
+        /// payout loaded separately from the reward curve would let a player briefly hold a
+        /// retuned ad reward against an untuned economy, and the whole point of tuning them
+        /// together is that they are one number seen from two sides.
+        /// </summary>
+        public AdRewardTable Ads { get; }
 
         /// <summary>
         /// A usable curve for when no file could be read. The game stays playable and
@@ -107,7 +120,8 @@ namespace GlimmerGrove.Progression
             maxLevel: DefaultMaxLevel,
             defaultRule: RewardRule.Default,
             chapterRules: new Dictionary<ChapterId, RewardRule>(),
-            daily: DailyChestTable.Default);
+            daily: DailyChestTable.Default,
+            ads: AdRewardTable.Default);
 
         /// <summary>Highest level this curve defines. Level 1 always exists.</summary>
         public int MaxLevel => _cumulative.Length;
@@ -262,15 +276,20 @@ namespace GlimmerGrove.Progression
             // reason to discard a perfectly good XP curve.
             var daily = DailyChestTable.Resolve(dto.daily, problems);
 
+            // Same bargain as the daily block, one step further: an unreadable ads block
+            // costs the live ad tuning and nothing else. It must not discard the XP curve,
+            // and it must not take the chest table down with it either.
+            var ads = AdRewardTable.Resolve(dto.ads, problems);
+
             table = Build(dto.xpToNext, dto.tailXpToNext, dto.tailXpIncrement, maxLevel,
-                          defaultRule, chapterRules, daily);
+                          defaultRule, chapterRules, daily, ads);
             return true;
         }
 
         static ProgressionTable Build(int[] xpToNext, int tailXpToNext, int tailXpIncrement,
                                       int maxLevel, RewardRule defaultRule,
                                       Dictionary<ChapterId, RewardRule> chapterRules,
-                                      DailyChestTable daily)
+                                      DailyChestTable daily, AdRewardTable ads)
         {
             if (maxLevel < 1) maxLevel = 1;
 
@@ -287,7 +306,7 @@ namespace GlimmerGrove.Progression
                 cumulative[level] = cumulative[level - 1] + step;
             }
 
-            return new ProgressionTable(cumulative, defaultRule, chapterRules, daily);
+            return new ProgressionTable(cumulative, defaultRule, chapterRules, daily, ads);
         }
     }
 }

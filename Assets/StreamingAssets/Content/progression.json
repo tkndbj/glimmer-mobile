@@ -52,5 +52,14 @@
         ]
       }
     ]
+  },
+
+  "ads": {
+    "cooldownSeconds": 45,
+
+    "placements": [
+      { "id": "heart_refill", "kind": "hearts",  "amount": 2,   "dailyCap": 10 },
+      { "id": "coin_bonus",   "kind": "credits", "amount": 150, "dailyCap": 6 }
+    ]
   }
 }

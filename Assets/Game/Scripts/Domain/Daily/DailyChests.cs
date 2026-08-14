@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using GlimmerGrove.Analytics;
+using GlimmerGrove.Cloud;
 using GlimmerGrove.Persistence;
 using GlimmerGrove.Progression;
 
@@ -55,15 +56,41 @@ namespace GlimmerGrove.Daily
         /// <summary>
         /// What the drops are seeded from.
         ///
-        /// The account id once the player is signed in, because that is the identity the
-        /// server recomputes against. Anonymous sign-in happens silently on first launch,
-        /// so the device fallback covers only a first session that has not reached the
-        /// network — and there the server's own recomputation is the one that lands in the
-        /// balance, so a disagreement resolves in the player's favour or the server's, but
-        /// never into two different numbers being spendable.
+        /// The account id, because that is the identity the server recomputes against —
+        /// and, thanks to <see cref="CanOpen"/>, the only one a chest is ever rolled with
+        /// when there is a server to disagree with. The device fallback is reached only
+        /// when no cloud backend is configured, where nothing is adjudicated and the roll
+        /// simply needs to be stable for this installation.
         /// </summary>
         static string PlayerKey
             => CloudState.IsSignedIn ? CloudState.UserId : CloudState.DeviceId;
+
+        /// <summary>
+        /// Whether a chest may be opened yet.
+        ///
+        /// <para>
+        /// A chest's contents are seeded from the account id, because that is the one
+        /// identifier the server can also compute from. Before the first sign-in there is
+        /// no account id, so the client would roll against the device id while the server
+        /// re-rolled against the uid — and the player would be shown one reward and given
+        /// another. There is no way around that: the client cannot know the server's seed
+        /// before it has ever spoken to the server.
+        /// </para>
+        /// <para>
+        /// So the chest waits instead of lying. In practice this is invisible: anonymous
+        /// sign-in fires from the splash screen, so an account id exists within seconds of
+        /// a first launch that has any connection at all, and it is stored in the save
+        /// from then on — every later session opens chests offline quite happily. The only
+        /// player who ever sees the wait is one whose <em>very first</em> session has no
+        /// network, and for them one connection unlocks it permanently.
+        /// </para>
+        /// <para>
+        /// When no cloud backend is configured at all the gate lifts, because then nothing
+        /// is ever adjudicated: the awards are never submitted, so there is no second
+        /// opinion for the client's roll to disagree with.
+        /// </para>
+        /// </summary>
+        public static bool CanOpen => CloudState.IsSignedIn || !CloudSaveService.IsAvailable;
 
         // ------------------------------------------------------------- reading
         public static int Runs { get { Sync(); return _runs; } }
@@ -175,6 +202,11 @@ namespace GlimmerGrove.Daily
             Sync();
 
             if (StateOf(index) != ChestState.Ready) return false;
+
+            // Checked here as well as in the UI. A reward that the server would recompute
+            // differently must not be openable through any path, and a guard that lives
+            // only in a screen is a guard the next screen forgets. See CanOpen.
+            if (!CanOpen) return false;
 
             var rolled = Table.Roll(PlayerKey, _dayKey, index);
 

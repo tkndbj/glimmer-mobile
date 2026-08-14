@@ -38,6 +38,7 @@ namespace GlimmerGrove.Persistence
             Wallet.LoadFrom(dto);
             TipLedger.LoadFrom(dto);
             Daily.DailyChests.LoadFrom(dto);
+            Ads.RewardedAds.LoadFrom(dto);
             ProgressionStore.LoadFrom(dto);
             CloudState.LoadFrom(dto);
 
@@ -106,6 +107,7 @@ namespace GlimmerGrove.Persistence
             Wallet.WriteInto(dto);
             TipLedger.WriteInto(dto);
             Daily.DailyChests.WriteInto(dto);
+            Ads.RewardedAds.WriteInto(dto);
             ProgressionStore.WriteInto(dto);
             CloudState.WriteInto(dto);
 
@@ -128,6 +130,7 @@ namespace GlimmerGrove.Persistence
             Wallet.LoadFrom(dto);
             TipLedger.LoadFrom(dto);
             Daily.DailyChests.LoadFrom(dto);
+            Ads.RewardedAds.LoadFrom(dto);
             ProgressionStore.LoadFrom(dto);
             CloudState.LoadFrom(dto);
 
@@ -156,6 +159,7 @@ namespace GlimmerGrove.Persistence
             Wallet.LoadFrom(fresh);
             TipLedger.LoadFrom(fresh);
             Daily.DailyChests.LoadFrom(fresh);
+            Ads.RewardedAds.LoadFrom(fresh);
             ProgressionStore.LoadFrom(fresh);
             // settings and the cloud identity deliberately survive a progress wipe
 

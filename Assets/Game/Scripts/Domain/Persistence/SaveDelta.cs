@@ -137,6 +137,15 @@ namespace GlimmerGrove.Persistence
             if (dailyA.runs != dailyB.runs) return true;
             if (dailyA.claimed != dailyB.claimed) return true;
 
+            // Today's ad allowance, compared for the same reason and with one of its own:
+            // the cap is the only thing standing between a second device and a fresh set
+            // of ads, so a count that stays on one phone is a cap that does not exist.
+            var adsA = remote.ads ?? new AdStateDto();
+            var adsB = merged.ads ?? new AdStateDto();
+            if (adsA.dayKey != adsB.dayKey) return true;
+            if (adsA.lastWatchedUnix != adsB.lastWatchedUnix) return true;
+            if (!SameCounts(adsA.watched, adsB.watched)) return true;
+
             var progressA = remote.progression ?? ProgressionStateDto.Unwritten();
             var progressB = merged.progression ?? ProgressionStateDto.Unwritten();
             if (progressA.xpHighWater != progressB.xpHighWater) return true;
@@ -160,6 +169,28 @@ namespace GlimmerGrove.Persistence
 
             for (int i = 0; i < na; i++)
                 if (!string.Equals(a[i], b[i], StringComparison.Ordinal)) return false;
+
+            return true;
+        }
+
+        /// <summary>
+        /// Ad view counters, compared as an ordered walk for the same reason
+        /// <see cref="SameSet"/> can: they are written sorted by placement id and
+        /// deduplicated, so equal content is byte-equal content.
+        /// </summary>
+        static bool SameCounts(AdViewCountDto[] a, AdViewCountDto[] b)
+        {
+            int na = a?.Length ?? 0, nb = b?.Length ?? 0;
+            if (na != nb) return false;
+
+            for (int i = 0; i < na; i++)
+            {
+                var x = a[i] ?? new AdViewCountDto();
+                var y = b[i] ?? new AdViewCountDto();
+
+                if (!Same(x.placement, y.placement)) return false;
+                if (x.count != y.count) return false;
+            }
 
             return true;
         }

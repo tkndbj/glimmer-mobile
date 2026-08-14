@@ -123,6 +123,28 @@ What that means in practice here:
     on the same string so the database refuses the second grant. The server recomputes
     the amount and grants its own figure; the client's number is a prediction. Never
     reach for `GrantLocally` — it is for the account seed and nothing else.
+10c. **A chest cannot be opened before the account id exists.** `DailyChests.CanOpen`.
+    The roll is seeded from the uid so the server can recompute it; before the first
+    sign-in there is none, and no scheme can invent one the server would agree with — the
+    client simply cannot know the server's seed before it has spoken to the server. So the
+    chest waits rather than showing a reward the server would overrule. Invisible in
+    practice (anonymous sign-in fires from the splash, and the id is then stored in the
+    save forever), and the gate lifts entirely when no backend is configured, because then
+    nothing is adjudicated. Do not "improve" this into rolling with the device id.
+10d. **A rewarded ad is granted by the network's callback, never claimed by the client.**
+    This is the one award that breaks the pattern above, and it has to. A chest is
+    recomputable from (account, day, index); nothing about "this player watched a video"
+    is derivable from anything, so the authority moves outside — LevelPlay's signed
+    server-to-server callback hits `adReward`, which grants in a transaction keyed on
+    `ad:{eventId}`. The obvious alternative (client nonce → custom parameter → derived
+    award id, exactly like a chest) was built first and does not survive: LevelPlay 9
+    removed `setRewardedVideoServerParams`, and `LevelPlaySegment` is documented as user
+    segmentation with no promise of reaching the callback. Building the economy's one
+    security-critical link on that would fail *silently* — ads that play, players told
+    they earned coins, and a server that never pays. So the client credits **hearts only**
+    and calls `BeginSync` for currency. Never make the client write an `ad:` claim;
+    `claimAwards` refuses them, because a claim that can never confirm is resubmitted
+    forever.
 10b. **Daily chests are earned, never bought.** That is what keeps them outside loot-box
     rules rather than merely compliant with them, and it is why the odds can be printed
     on the panel. Do not put a price on one, and do not add a second weighted pick — one
@@ -273,6 +295,28 @@ The one destructive prompt in the game lives here: a provider already attached t
 grove cannot be merged, because currency was granted and spent separately against each
 account. `CloudSaveService.AdoptLinkedAccountAsync` replaces the local save and says so
 first. Do not "improve" it into a silent merge.
+
+**Rewarded ads — hearts and coins for watching a video.** `Assets/Game/Scripts/Domain/Ads/`
+holds the policy (placements, caps, cooldown, what an offer is worth); `Assets/Game/Scripts/Ads/`
+is the LevelPlay half behind `GLIMMER_ADS`, and `NullAdProvider` keeps the whole feature dark
+in a build without the SDK. Two placements, both content in `progression.json`: `heart_refill`
+pays 2 hearts, `coin_bonus` pays 150 credits. Offered from the defeat screen when hearts run
+out, and from the home screen's two `+` buttons.
+
+Four decisions worth not re-litigating. The grant is **server-authorised** — invariant 10d,
+and the reason the design does not look like the chest one. Caps and cooldown are **pacing,
+not money**: they live in save schema **v7**, merge conservatively (larger count wins within
+a day, later day wins outright), and a save edited to clear them buys another offer and no
+currency, because the server does not count them. The offer is **never shown when it cannot
+work** — `AdOfferState` has six members and each renders a different sentence, because a
+greyed button with no explanation is how players learn a feature is broken. And the daily cap
+is deliberately **higher than any network will fill** (10/day), so it binds only as a lever
+that can be lowered from a config push.
+
+`AdConfig` holds `UNSET` for the app key and every ad unit, exactly as the store secrets do,
+so `Boot` keeps the null provider until a LevelPlay account exists. Filling those in, plus
+the `LEVELPLAY_SECRET` in Secret Manager and the callback URL on the dashboard, is the whole
+remaining step.
 
 Not done, deliberate: **in-app purchases** (the four store secrets hold `UNSET`, so
 receipts are refused — correct until real store products exist), **Play Games Services**

@@ -365,9 +365,13 @@ namespace GlimmerGrove
                              0f, 0f, wrap: true);
             }
 
-            UIKit.Titled("Odds", Content, OddsLine(), 21, new Color(1f, .96f, .86f, .42f),
-                         TextAnchor.MiddleCenter, new Vector2(900f, 34f), new Vector2(.5f, 0f),
-                         new Vector2(0f, 168f), 0f, 0f);
+            // Shrinkable: this line grows with the number of options and again with
+            // translation, and it is a disclosure — a disclosure that runs off the side
+            // of the screen is not one.
+            UIKit.Shrinkable(
+                UIKit.Titled("Odds", Content, OddsLine(), 21, new Color(1f, .96f, .86f, .42f),
+                             TextAnchor.MiddleCenter, new Vector2(940f, 34f), new Vector2(.5f, 0f),
+                             new Vector2(0f, 168f), 0f, 0f), 14);
 
             var collect = UIKit.TextButton("Collect", Content, "btn_green", Loc.Get("ui.daily.collect"), 52,
                                            new Vector2(560f, 148f), new Vector2(.5f, 0f),

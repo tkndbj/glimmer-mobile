@@ -115,9 +115,61 @@ function buildProgressionConfig() {
       levelChapters,
       seeds: readSeeds(),
       daily: readDaily(progression),
+      ads: readAds(progression),
     },
     levelCount,
   };
+}
+
+/**
+ * What each rewarded placement pays, published so the server can grant its own figure.
+ *
+ * Shaped as a map keyed by placement id rather than the array `progression.json` authors,
+ * because the server only ever asks about one placement at a time and a map makes that a
+ * lookup instead of a scan. Same reasoning as `levelChapters` above.
+ *
+ * Unlike the daily block this is <em>optional</em>. A deployment with no ad placements
+ * configured is a coherent thing — it is what this project was until today — and refusing
+ * to seed over it would mean the reward table could not be published without an ad
+ * network. What is not coherent is a placement the client offers and the server has never
+ * heard of, so anything present is validated strictly.
+ */
+function readAds(progression) {
+  const ads = progression.ads;
+  if (!ads || !Array.isArray(ads.placements) || ads.placements.length === 0) return null;
+
+  const known = ["heart_refill", "coin_bonus"];
+  const kinds = ["credits", "gems", "hearts", "heart_boost"];
+  const placements = {};
+
+  for (const placement of ads.placements) {
+    const id = placement?.id;
+
+    if (!known.includes(id)) {
+      throw new Error(
+        `ads names unknown placement '${id}'. The server grants only placements it knows, ` +
+        `so publishing one it does not would make every claim for it fail silently.`
+      );
+    }
+
+    if (placements[id]) throw new Error(`ads names placement '${id}' twice`);
+
+    if (!kinds.includes(placement.kind)) {
+      throw new Error(`ads placement '${id}' names unknown reward kind '${placement.kind}'`);
+    }
+
+    const amount = Math.floor(placement.amount ?? 0);
+    if (!Number.isFinite(amount) || amount < 1) {
+      throw new Error(`ads placement '${id}' pays ${placement.amount}; it must be at least 1`);
+    }
+
+    // The daily cap is deliberately not published. It bounds what the client offers, and
+    // the server does not enforce it — an ad grant is already bounded by something far
+    // stronger, namely a signed callback from the ad network for every single view.
+    placements[id] = { kind: placement.kind, amount };
+  }
+
+  return { placements };
 }
 
 /**
@@ -232,6 +284,7 @@ console.log(
   `config/progression: ${levelCount} level(s), ` +
   `${Object.keys(config.chapterRewards).length} chapter override(s), ` +
   `${config.daily.chests.length} daily chest(s) every ${config.daily.runsPerChest} run(s), ` +
+  `${config.ads ? Object.keys(config.ads.placements).length : 0} ad placement(s), ` +
   `seeds ${config.seeds.credits} credits / ${config.seeds.gems} gems`
 );
 

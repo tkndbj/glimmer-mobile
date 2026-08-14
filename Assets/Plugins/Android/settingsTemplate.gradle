@@ -18,9 +18,12 @@ dependencyResolutionManagement {
         google()
         mavenCentral()
 // Android Resolver Repos Start
-        def unityProjectPath = $/**DIR_UNITYPROJECT**/$.replace("\\", "/")
+        def unityProjectPath = $/file:///**DIR_UNITYPROJECT**/$.replace("\\", "/")
         maven {
-            url = new File(unityProjectPath + "/Assets/GeneratedLocalRepo/Firebase/m2repository").toURI() // Packages/com.google.firebase.firestore/Firebase/Editor/FirestoreDependencies.xml:23, Packages/com.google.firebase.app/Firebase/Editor/AppDependencies.xml:25, Packages/com.google.firebase.auth/Firebase/Editor/AuthDependencies.xml:23
+            url "https://maven.google.com/" // Assets/LevelPlay/Editor/IronSourceSDKDependencies.xml:12
+        }
+        maven {
+            url (unityProjectPath + "/Assets/GeneratedLocalRepo/Firebase/m2repository") // Packages/com.google.firebase.firestore/Firebase/Editor/FirestoreDependencies.xml:23, Packages/com.google.firebase.app/Firebase/Editor/AppDependencies.xml:25, Packages/com.google.firebase.auth/Firebase/Editor/AuthDependencies.xml:23
         }
         mavenLocal()
 // Android Resolver Repos End

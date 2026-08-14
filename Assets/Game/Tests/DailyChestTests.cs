@@ -1,4 +1,6 @@
 using System.Collections.Generic;
+using System.Threading;
+using System.Threading.Tasks;
 using GlimmerGrove.Content;
 using GlimmerGrove.Daily;
 using GlimmerGrove.Persistence;
@@ -417,6 +419,104 @@ namespace GlimmerGrove.Tests
             Assert.AreEqual(4, DailyChests.Join(mine, null).runs);
             Assert.AreEqual(4, DailyChests.Join(null, mine).runs);
             Assert.AreEqual(0, DailyChests.Join(null, null).runs);
+        }
+
+        // -------------------------------------------------- the pre-sign-in gate
+        /// <summary>
+        /// A backend that claims to exist and nothing else. Enough to put
+        /// <see cref="DailyChests.CanOpen"/> into the branch that matters.
+        /// </summary>
+        sealed class PresentBackend : Cloud.ICloudSaveBackend
+        {
+            public bool IsAvailable => true;
+            public Cloud.CloudIdentity CurrentIdentity => Cloud.CloudIdentity.None;
+
+            static Task<(Cloud.CloudResult, Cloud.CloudIdentity)> NoIdentity()
+                => Task.FromResult((Cloud.CloudResult.Failed(Cloud.CloudFailure.Offline),
+                                    Cloud.CloudIdentity.None));
+
+            static Task<(Cloud.CloudResult, List<Cloud.CloudWalletState>)> NoWallet()
+                => Task.FromResult((Cloud.CloudResult.Failed(Cloud.CloudFailure.Offline),
+                                    new List<Cloud.CloudWalletState>()));
+
+            public Task<(Cloud.CloudResult result, Cloud.CloudIdentity identity)> SignInAsync(
+                CancellationToken c = default) => NoIdentity();
+
+            public Task<(Cloud.CloudResult result, Cloud.CloudIdentity identity)> LinkAsync(
+                Cloud.LinkCredential cr, CancellationToken c = default) => NoIdentity();
+
+            public Task<(Cloud.CloudResult result, Cloud.CloudIdentity identity)> SignInWithCredentialAsync(
+                Cloud.LinkCredential cr, CancellationToken c = default) => NoIdentity();
+
+            public Task<(Cloud.CloudResult result, Cloud.CloudSnapshot snapshot)> PullAsync(
+                string u, CancellationToken c = default)
+                => Task.FromResult((Cloud.CloudResult.Failed(Cloud.CloudFailure.Offline),
+                                    Cloud.CloudSnapshot.Missing));
+
+            public Task<Cloud.CloudResult> PushAsync(string u, SaveFileDto s, SaveDelta d,
+                                                     CancellationToken c = default)
+                => Task.FromResult(Cloud.CloudResult.Failed(Cloud.CloudFailure.Offline));
+
+            public Task<(Cloud.CloudResult result, List<Cloud.CloudWalletState> wallets)> ReadWalletAsync(
+                string u, CancellationToken c = default) => NoWallet();
+
+            public Task<(Cloud.CloudResult result, List<Cloud.CloudWalletState> wallets)> SubmitSpendsAsync(
+                string u, IReadOnlyList<SpendEntryDto> s, CancellationToken c = default) => NoWallet();
+
+            public Task<(Cloud.CloudResult result, List<Cloud.CloudWalletState> wallets)> SubmitAwardsAsync(
+                string u, IReadOnlyList<GrantEntryDto> a, CancellationToken c = default) => NoWallet();
+
+            public Task<(Cloud.CloudResult result, List<Cloud.CloudWalletState> wallets)> RedeemPurchaseAsync(
+                string u, Cloud.PurchaseReceipt r, CancellationToken c = default) => NoWallet();
+        }
+
+        [TearDown]
+        public void ResetCloud()
+        {
+            Cloud.CloudSaveService.UseBackend(null);
+            CloudState.Reset();
+        }
+
+        /// <summary>
+        /// The guard that stops a player being shown one reward and given another.
+        ///
+        /// A chest is seeded from the account id so the server can recompute it. Before
+        /// the first sign-in there is no account id, and no scheme can invent one the
+        /// server would agree with — so the chest waits rather than paying out a number
+        /// the server will overrule.
+        /// </summary>
+        [Test]
+        public void AChestCannotBeOpenedBeforeTheAccountExists()
+        {
+            CloudState.Reset();
+            Cloud.CloudSaveService.UseBackend(new PresentBackend());
+
+            Assert.IsFalse(DailyChests.CanOpen,
+                           "a chest rolled without an account id is one the server would " +
+                           "re-roll differently");
+        }
+
+        [Test]
+        public void SigningInOnceUnlocksChestsForGood()
+        {
+            CloudState.Reset();
+            Cloud.CloudSaveService.UseBackend(new PresentBackend());
+            CloudState.SignIn("uid_abc123");
+
+            Assert.IsTrue(DailyChests.CanOpen,
+                          "the id is stored in the save, so every later session opens " +
+                          "chests offline quite happily");
+        }
+
+        [Test]
+        public void WithNoBackendAtAllTheGateLifts()
+        {
+            CloudState.Reset();
+            Cloud.CloudSaveService.UseBackend(null);
+
+            Assert.IsTrue(DailyChests.CanOpen,
+                          "nothing is adjudicated without a backend, so there is no second " +
+                          "opinion for the client's roll to disagree with");
         }
 
         // ------------------------------------------------------------ helpers

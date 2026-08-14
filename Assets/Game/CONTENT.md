@@ -329,6 +329,13 @@ every device, before and after a crash. Two consequences worth knowing: force-qu
 the opening animation cannot reroll a prize, and the server can work out what a chest was
 worth without being told.
 
+**A chest waits for the account id.** The seed is the uid, so a chest opened before the
+first sign-in would be re-rolled differently by the server and the player would be shown
+one reward and given another. `DailyChests.CanOpen` blocks it until an id exists, and the
+panel says why. Anonymous sign-in fires from the splash screen and the id is then in the
+save for good, so this only ever trips on a first launch with no connection at all. With
+no backend configured the gate lifts, because then nothing is adjudicated.
+
 **Re-run the seed script when you change the block.** `claimAwards` refuses to grant
 anything if `config/progression` has no usable daily table — granting a guess would be
 inventing money — so a retune that is not seeded stops the chests paying out rather than

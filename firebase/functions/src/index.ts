@@ -14,7 +14,7 @@
 
 import { initializeApp } from "firebase-admin/app";
 import { getFirestore, FieldValue, Timestamp } from "firebase-admin/firestore";
-import { onCall, HttpsError, CallableRequest } from "firebase-functions/v2/https";
+import { onCall, onRequest, HttpsError, CallableRequest } from "firebase-functions/v2/https";
 import { defineSecret } from "firebase-functions/params";
 import { logger } from "firebase-functions";
 
@@ -23,7 +23,11 @@ import {
   MAX_AWARDS_PER_CALL, MAX_SPENDS_PER_CALL, PATHS, REGION,
 } from "./config";
 import {
-  chestCurrencyValue, MAX_DAYS_AHEAD, MAX_DAYS_BEHIND,
+  ackBody, adCurrencyOf, adCurrencyValue, adGrantId,
+  isAdGrantId, usableAdConfig, verifyAdCallback,
+} from "./ads";
+import {
+  chestCurrencyValue, DailyClaim, MAX_DAYS_AHEAD, MAX_DAYS_BEHIND,
   parseDailyClaim, todayKey, usableDailyConfig,
 } from "./daily";
 import { ReceiptRejected, validateReceipt } from "./receipts";
@@ -45,6 +49,15 @@ const APPLE_KEY_ID = defineSecret("APPLE_KEY_ID");
 const APPLE_ISSUER_ID = defineSecret("APPLE_ISSUER_ID");
 const APPLE_PRIVATE_KEY = defineSecret("APPLE_PRIVATE_KEY");
 const GOOGLE_PLAY_SERVICE_ACCOUNT = defineSecret("GOOGLE_PLAY_SERVICE_ACCOUNT");
+
+/**
+ * The private key LevelPlay signs its rewarded callbacks with.
+ *
+ * Set on the LevelPlay dashboard and here, and nowhere else. Absent, every callback is
+ * refused — see `verifyAdCallback`, which fails closed rather than treating an empty key
+ * as an empty signature that matches everything.
+ */
+const LEVELPLAY_SECRET = defineSecret("LEVELPLAY_SECRET");
 
 const callOptions = { region: REGION, cors: false, enforceAppCheck: false } as const;
 
@@ -235,30 +248,22 @@ interface SubmittedAward {
 }
 
 /**
- * Grants currency the client has already shown the player, at the amount the *server*
- * works out it was worth.
+ * A submitted award that has survived parsing, tagged with how it will be adjudicated.
  *
- * <p>Three properties carry this endpoint.</p>
- *
- * The amount is recomputed, never accepted. `rollChest` re-rolls the same deterministic
- * sequence the client rolled, from the account id, the day and the chest index, using
- * the drop table in `config/progression`. A client that inflates its claim gains
- * nothing, which is precisely what makes it safe for the client to pay itself
- * optimistically while offline.
- *
- * The grant is keyed on an id derived from what earned it — `daily:{day}:{chest}:{ccy}`
- * — rather than on a random one. So the same chest submitted from two devices, or
- * resubmitted after a lost response, or replayed by hand, collides with a document that
- * already exists and confirms instead of granting. Idempotency is enforced by the
- * database refusing the second write, not by this code remembering anything.
- *
- * And a day that has not happened yet cannot be claimed. Everything else about the
- * client's daily state is forgeable — the run counter lives in a document the player
- * can write — so the honest bound on abuse is *one full day's chests per day*, which is
- * exactly what an honest player gets. That is a deliberate trade: proving somebody
- * played three glades would mean trusting a different forgeable number, and the prize
- * for cheating is a reward that was never scarce.
+ * The currency is on the daily arm only, and deliberately: a chest id names the ledger it
+ * pays into, whereas an ad id does not — the placement decides, and the placement's payout
+ * lives in server config. That asymmetry is the point. It means a client cannot watch the
+ * heart video and ask to be paid in gems, because at no point does it get to say "gems".
  */
+type CleanAward = {
+  id: string;
+  claimedAmount: number;
+  unix: number;
+  reason: string;
+  claim: DailyClaim;
+  currency: CurrencyId;
+};
+
 export const claimAwards = onCall(callOptions, async (request): Promise<{
   wallets: WalletReply[];
   rejected: string[];
@@ -277,9 +282,27 @@ export const claimAwards = onCall(callOptions, async (request): Promise<{
   const today = todayKey(Date.now());
   const rejected: string[] = [];
 
-  const clean = submitted.flatMap((award) => {
+  const clean = submitted.flatMap((award): CleanAward[] => {
     const id = typeof award.id === "string" ? award.id : "";
     if (!id) return [];
+
+    const common = {
+      id,
+      claimedAmount: typeof award.claimedAmount === "number" ? Math.floor(award.claimedAmount) : 0,
+      unix: typeof award.unix === "number" ? Math.floor(award.unix) : 0,
+      reason: typeof award.reason === "string" ? award.reason.slice(0, 64) : "",
+    };
+
+    // Ad grants are never claimed. They are paid outright by `adReward` when the network
+    // vouches for the view, because the client holds no token the callback echoes back —
+    // see `adGrantId`. So an `ad:` id arriving here is either a client from a build that
+    // predates that decision or somebody inventing one, and both are refused rather than
+    // left pending: a claim that will never confirm is a claim resubmitted forever.
+    if (isAdGrantId(id)) {
+      logger.warn("refused an ad award submitted as a claim", { uid, id });
+      rejected.push(id);
+      return [];
+    }
 
     const claim = parseDailyClaim(id);
     if (!claim) { rejected.push(id); return []; }
@@ -294,14 +317,7 @@ export const claimAwards = onCall(callOptions, async (request): Promise<{
       return [];
     }
 
-    return [{
-      id,
-      claim,
-      currency: claim.currency as CurrencyId,
-      claimedAmount: typeof award.claimedAmount === "number" ? Math.floor(award.claimedAmount) : 0,
-      unix: typeof award.unix === "number" ? Math.floor(award.unix) : 0,
-      reason: typeof award.reason === "string" ? award.reason.slice(0, 64) : "",
-    }];
+    return [{ ...common, claim, currency: claim.currency as CurrencyId }];
   });
 
   const confirmed: Record<string, string[]> = {};
@@ -313,7 +329,9 @@ export const claimAwards = onCall(callOptions, async (request): Promise<{
     const walletSnapshot = await transaction.get(walletRef);
     const state = readWallet(walletSnapshot, config);
 
-    // Every read before the first write, as Firestore requires.
+    // Every read before the first write, as Firestore requires. The ad proofs are
+    // gathered in the same pass — an ad claim is only ever granted when the network's own
+    // callback has already written one of these, and that read cannot happen later.
     const existing = await Promise.all(
       clean.map((award) => transaction.get(db.doc(PATHS.grant(uid, award.id))))
     );
@@ -390,6 +408,137 @@ export const claimAwards = onCall(callOptions, async (request): Promise<{
 
   return { wallets: toReply(wallet, {}, confirmed), rejected };
 });
+
+// ------------------------------------------------------- rewarded ad callback
+/**
+ * The ad network telling us, from its own servers, that somebody watched a video.
+ *
+ * <p>
+ * This is the only evidence in the system that a rewarded ad happened, and it is the
+ * reason invariant 10 survives a feature that hands out currency for watching something.
+ * The client's claim is a prediction; this is the fact.
+ * </p>
+ * <p>
+ * It is an `onRequest` rather than an `onCall` because the caller is LevelPlay, not a
+ * Firebase client — there is no auth context, and the request is authenticated entirely by
+ * the MD5 signature over the query string. That is a weaker primitive than we would
+ * choose, but it is the one the network offers, and the blast radius is bounded: the worst
+ * a forged callback achieves is granting one placement's configured amount to an account
+ * the attacker names, and forging it requires the shared secret.
+ * </p>
+ * <p>
+ * <b>It grants nothing.</b> It writes one document and returns. LevelPlay wants an answer
+ * inside 400ms before it starts retrying, and a wallet transaction is not a 400ms
+ * operation — but more than that, splitting the two means the write here is a single
+ * idempotent `set` that is safe to repeat as many times as the network chooses to retry.
+ * The money moves later, in `claimAwards`, under the same transaction discipline as
+ * everything else.
+ * </p>
+ * <p>
+ * Every non-retryable outcome still answers 200 with the acknowledgement. LevelPlay retries
+ * until it sees `EVENT_ID:OK`, so answering anything else to a request we will never accept
+ * — a bad signature, a probe — buys an indefinite retry loop against this endpoint.
+ * </p>
+ */
+export const adReward = onRequest(
+  { region: REGION, secrets: [LEVELPLAY_SECRET], cors: false },
+  async (request, response) => {
+    const query = request.query as Record<string, string | undefined>;
+
+    const eventId = typeof query.eventId === "string" ? query.eventId : "";
+
+    const verdict = verifyAdCallback(
+      {
+        eventId,
+        userId: query.userId,
+        rewards: query.rewards,
+        timestamp: query.timestamp,
+        signature: query.signature,
+        placement: query.placement,
+        placementName: query.placementName,
+        itemName: query.itemName,
+      },
+      configured(LEVELPLAY_SECRET)
+    );
+
+    if (!verdict.ok) {
+      logger.error("rewarded ad callback refused", {
+        reason: verdict.reason, retryable: verdict.retryable, eventId,
+      });
+
+      // Retryable means the fault is ours — an unconfigured secret — and a retry might
+      // genuinely succeed once it is fixed, so the reward is not thrown away.
+      if (verdict.retryable) { response.status(503).send("retry"); return; }
+
+      response.status(200).send(ackBody(eventId));
+      return;
+    }
+
+    const db = getFirestore();
+    const grantRef = db.doc(PATHS.grant(verdict.uid, adGrantId(verdict.eventId)));
+
+    try {
+      const granted = await db.runTransaction(async (transaction) => {
+        const config = await loadProgressionConfig(transaction);
+
+        const already = await transaction.get(grantRef);
+        const walletRef = db.doc(PATHS.wallet(verdict.uid));
+        const walletSnapshot = await transaction.get(walletRef);
+        const state = readWallet(walletSnapshot, config);
+
+        // A retry of a callback we have already paid. LevelPlay repeats until it is
+        // acknowledged, so this is the ordinary path, not an anomaly.
+        if (already.exists) return 0;
+
+        const ads = usableAdConfig((config as { ads?: unknown }).ads);
+        if (!ads) {
+          logger.error("config/progression has no usable ads table; cannot pay a confirmed view", {
+            uid: verdict.uid, placement: verdict.placement,
+          });
+          throw new Error("no ads config");     // 503, so the network retries after seeding
+        }
+
+        const currency = adCurrencyOf(ads, verdict.placement);
+
+        // A placement that pays hearts or a boost is applied by the client and has no
+        // server side. The callback still arrives and is still acknowledged — there is
+        // simply nothing to grant, and saying so is not an error.
+        if (!currency || !CURRENCIES.includes(currency as CurrencyId)) return 0;
+
+        const amount = adCurrencyValue(ads, verdict.placement, currency);
+        if (amount <= 0) return 0;
+
+        transaction.set(grantRef, {
+          currency,
+          amount,
+          reason: "rewarded_ad",
+          placement: verdict.placement,
+          eventId: verdict.eventId,
+          network: typeof query.adNetwork === "string" ? query.adNetwork.slice(0, 64) : "",
+          grantedAt: FieldValue.serverTimestamp(),
+        });
+
+        state[currency as CurrencyId].granted += amount;
+        transaction.set(walletRef, { ...state, updatedAt: FieldValue.serverTimestamp() });
+
+        return amount;
+      });
+
+      logger.info("rewarded ad confirmed", {
+        uid: verdict.uid, placement: verdict.placement, eventId: verdict.eventId, granted,
+      });
+    } catch (error) {
+      // A write that failed must be retried, or the player watched an ad for nothing.
+      logger.error("could not pay a rewarded ad callback", {
+        uid: verdict.uid, eventId: verdict.eventId, error: String(error),
+      });
+      response.status(503).send("retry");
+      return;
+    }
+
+    response.status(200).send(ackBody(verdict.eventId));
+  }
+);
 
 // ------------------------------------------------------------ redeem purchase
 /**

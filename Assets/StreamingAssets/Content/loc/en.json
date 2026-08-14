@@ -46,6 +46,7 @@
     { "key": "ui.daily.played", "text": "{0} / {1} played" },
     { "key": "ui.daily.next_chest", "text": "play {0} more to earn the next chest" },
     { "key": "ui.daily.ready", "text": "a chest is waiting  ·  tap to open" },
+    { "key": "ui.daily.needs_connection", "text": "go online once to unlock your daily bonuses" },
     { "key": "ui.daily.all_open", "text": "every chest is open  ·  more tomorrow" },
     { "key": "ui.daily.resets_in", "text": "resets in {0}" },
     { "key": "ui.daily.chest_title", "text": "DAILY CHEST" },
@@ -58,6 +59,23 @@
     { "key": "ui.reward.gems", "text": "gems" },
     { "key": "ui.reward.hearts", "text": "hearts" },
     { "key": "ui.reward.heart_boost", "text": "fast hearts" },
+
+    { "key": "ui.ads.hearts_title", "text": "REFILL HEARTS" },
+    { "key": "ui.ads.coins_title", "text": "BONUS COINS" },
+    { "key": "ui.ads.hearts_cta", "text": "WATCH FOR HEARTS" },
+    { "key": "ui.ads.watch", "text": "WATCH" },
+    { "key": "ui.ads.ready", "text": "watch a short video and it is yours" },
+    { "key": "ui.ads.opening", "text": "opening the video..." },
+    { "key": "ui.ads.loading", "text": "finding a video  ·  one moment" },
+    { "key": "ui.ads.cooling", "text": "another video in {0}" },
+    { "key": "ui.ads.cap_reached", "text": "that is every video for today  ·  more in {0}" },
+    { "key": "ui.ads.hearts_full", "text": "your hearts are already full" },
+    { "key": "ui.ads.needs_account", "text": "go online once to collect coins this way" },
+    { "key": "ui.ads.unavailable", "text": "videos are not available right now" },
+    { "key": "ui.ads.no_fill", "text": "no video to show just now  ·  try again shortly" },
+    { "key": "ui.ads.dismissed", "text": "the video has to finish to earn the reward" },
+    { "key": "ui.ads.failed", "text": "that video did not finish  ·  nothing was taken" },
+    { "key": "ui.ads.thanks", "text": "thank you  ·  it is yours" },
 
     { "key": "ui.levels.chapter_locked", "text": "clear this chapter to go on" },
 
@@ -190,6 +208,7 @@
     { "key": "ui.avatar.thorn", "text": "Thorn" },
 
     { "key": "ui.common.got_it", "text": "GOT IT" },
+    { "key": "ui.common.not_now", "text": "NOT NOW" },
     { "key": "ui.common.done", "text": "DONE" },
     { "key": "ui.common.coming_soon", "text": "COMING SOON" },
 
@@ -201,6 +220,7 @@
     { "key": "ui.defeat.conduit_reason", "text": "That conduit was brittle and could not take another turn. Watch the number on them." },
     { "key": "ui.defeat.try_again", "text": "TRY AGAIN" },
     { "key": "ui.defeat.out_of_hearts", "text": "No hearts left. Rest a while and the grove will wake you." },
+    { "key": "ui.defeat.watch_for_hearts", "text": "No hearts left — but a short video will wake the grove early." },
 
     { "key": "ui.hearts.title", "text": "HEARTS" },
     { "key": "ui.hearts.full", "text": "Your hearts are full." },

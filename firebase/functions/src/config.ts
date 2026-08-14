@@ -27,6 +27,10 @@ export const PATHS = {
   // Awards, keyed by an id derived from what earned them rather than generated. That
   // is what makes a daily chest payable exactly once: the second attempt collides with
   // a document that already exists, on any device, after any reinstall.
+  // Awards, keyed by an id derived from what earned them rather than generated. A daily
+  // chest uses `daily:{day}:{chest}:{ccy}`; a rewarded ad uses `ad:{eventId}`, where the
+  // event id comes from the network's own verification callback. Both are idempotent for
+  // the same reason: the second attempt collides with a document that already exists.
   grant: (uid: string, grantId: string) => `players/${uid}/grantLog/${grantId}`,
 
   receipt: (store: string, transactionId: string) => `receipts/${store}__${transactionId}`,

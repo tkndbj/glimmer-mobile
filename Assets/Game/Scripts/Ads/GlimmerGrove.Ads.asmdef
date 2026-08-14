@@ -1,11 +1,9 @@
 {
-    "name": "GlimmerGrove.Presentation",
-    "rootNamespace": "GlimmerGrove",
+    "name": "GlimmerGrove.Ads",
+    "rootNamespace": "GlimmerGrove.Ads",
     "references": [
         "GlimmerGrove.Domain",
-        "GlimmerGrove.Cloud",
-        "GlimmerGrove.Ads",
-        "UnityEngine.UI"
+        "Unity.LevelPlay"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],
@@ -15,16 +13,6 @@
     "autoReferenced": true,
     "defineConstraints": [],
     "versionDefines": [
-        {
-            "name": "com.unity.addressables",
-            "expression": "2.0",
-            "define": "GLIMMER_ADDRESSABLES"
-        },
-        {
-            "name": "com.google.firebase.firestore",
-            "expression": "11.0",
-            "define": "GLIMMER_FIREBASE"
-        },
         {
             "name": "com.unity.services.levelplay",
             "expression": "9.0",

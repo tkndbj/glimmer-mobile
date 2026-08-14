@@ -67,6 +67,12 @@ namespace GlimmerGrove.Persistence
                 // does: a merge that holds its own copy of a rule stops agreeing with the
                 // game that enforces it.
                 daily = Daily.DailyChests.Join(mine.daily, other.daily),
+
+                // Same shape, opposite instinct within a shared day: an ad allowance is
+                // consumable, so the larger count wins and two devices cannot refill each
+                // other by taking turns. The rule lives with the feature for the reason
+                // the one above it does.
+                ads = Ads.RewardedAds.Join(mine.ads, other.ads),
             };
 
             return merged;

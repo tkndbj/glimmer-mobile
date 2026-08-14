@@ -194,6 +194,28 @@ namespace GlimmerGrove
             return rt;
         }
 
+        /// <summary>
+        /// Lets a label shrink to fit its box instead of spilling out of it.
+        ///
+        /// <para>
+        /// The default here is <see cref="HorizontalWrapMode.Overflow"/>, which is right
+        /// for chrome sized to its content and wrong for anything holding a translated
+        /// string: German is routinely half again the length of English, and overflow has
+        /// no clipping to hint that text has left the panel. Best-fit caps at the size the
+        /// caller asked for, so nothing ever grows — a short string looks exactly as it
+        /// did, and only a long one gets smaller.
+        /// </para>
+        /// </summary>
+        public static Text Shrinkable(Text text, int minSize = 16)
+        {
+            if (text == null) return null;
+
+            text.resizeTextMaxSize = text.fontSize;
+            text.resizeTextMinSize = Mathf.Clamp(minSize, 1, text.fontSize);
+            text.resizeTextForBestFit = true;
+            return text;
+        }
+
         public static CanvasGroup Group(RectTransform rt)
         {
             var cg = rt.GetComponent<CanvasGroup>();
