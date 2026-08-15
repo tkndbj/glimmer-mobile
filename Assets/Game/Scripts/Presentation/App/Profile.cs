@@ -68,6 +68,31 @@ namespace GlimmerGrove
             return $"{seconds / 60}:{seconds % 60:00}";
         }
 
+        /// <summary>
+        /// The same clock, for a wait that can run into days.
+        ///
+        /// <para>
+        /// <see cref="Countdown"/> is right for everything it was written for — a heart, a
+        /// chest reset, the hours a streak has left — because none of those can exceed a day.
+        /// An event window can be ninety, and hours do not fold: a fortnight's event opened on
+        /// its first morning reads "ends in 335h 12m", which is a number a person has to do
+        /// arithmetic on before it means anything.
+        /// </para>
+        /// <para>
+        /// It falls through to <see cref="Countdown"/> under a day rather than printing "0d",
+        /// so the last day of an event ticks down in hours and minutes like everything else.
+        /// </para>
+        /// </summary>
+        public static string LongCountdown(long seconds)
+        {
+            if (seconds < 0) seconds = 0;
+            if (seconds < 24L * 3600L) return Countdown(seconds);
+
+            long days = seconds / (24L * 3600L);
+            long hours = seconds % (24L * 3600L) / 3600L;
+            return $"{days}d {hours}h";
+        }
+
         /// <summary>The wait until the next heart, already formatted. Empty when full.</summary>
         public static string HeartCountdown()
             => Hearts >= MaxHearts ? string.Empty : Countdown(SecondsToNextHeart);

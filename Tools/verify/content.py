@@ -1,0 +1,383 @@
+"""End-to-end check of the shipped content, mirroring LevelValidator.cs
+and ChapterMapValidator.cs."""
+import json, math, os, sys
+from collections import deque
+
+ROOT = os.path.join(os.path.dirname(os.path.abspath(__file__)),
+                    "..", "..", "Assets", "StreamingAssets", "Content")
+N, E, S, W = 1, 2, 4, 8
+BITS = [N, E, S, W]
+STEP = [(0, -1), (1, 0), (0, 1), (-1, 0)]   # N E S W, matching Puzzle.Step
+PAL = {'R': 1, 'G': 2, 'B': 4}
+COLOURS = {
+    'R': 1, 'G': 2, 'B': 4,
+    'Y': 1 | 2, 'M': 1 | 4, 'C': 2 | 4, 'W': 1 | 2 | 4, 'A': 0,
+}
+
+errors, warnings = [], []
+
+
+def rotl(mask, turns):
+    turns &= 3
+    out = 0
+    for i in range(4):
+        if mask & (1 << i):
+            out |= 1 << ((i + turns) & 3)
+    return out
+
+
+def parse_token(tok, ctx):
+    """-> dict(kind, solved, rot, locked, colour) or None for empty"""
+    if tok == '.':
+        return None
+
+
+    if tok[0] not in '-*@':
+        errors.append(f"{ctx}: unknown head '{tok[0]}' in '{tok}'")
+        return None
+
+    kind = {'-': 'pipe', '*': 'source', '@': 'lamp'}[tok[0]]
+    p, mask = 1, 0
+    while p < len(tok) and tok[p] in 'NESW':
+        mask |= {'N': N, 'E': E, 'S': S, 'W': W}[tok[p]]
+        p += 1
+    if mask == 0:
+        errors.append(f"{ctx}: '{tok}' has no arms")
+        return None
+
+    colour, rot, locked, fragile = 0, 0, False, 0
+    if p < len(tok) and tok[p] == '#':
+        c = tok[p + 1]
+        if c not in COLOURS:
+            errors.append(f"{ctx}: unknown colour '{c}' in '{tok}'")
+        colour = COLOURS.get(c, 0)
+        p += 2
+    if p < len(tok) and tok[p] == '/':
+        rot = int(tok[p + 1]); p += 2
+    if p < len(tok) and tok[p] == '!':
+        locked = True; p += 1
+    if p < len(tok) and tok[p] == '~':
+        n = tok[p + 1] if p + 1 < len(tok) else ''
+        if n < '1' or n > '9':
+            errors.append(f"{ctx}: fragility '{n}' out of range in '{tok}', expected 1 to 9")
+        else:
+            fragile = int(n)
+        p += 2
+    if p != len(tok):
+        errors.append(f"{ctx}: trailing '{tok[p:]}' in '{tok}'")
+    if fragile and kind != 'pipe':
+        errors.append(f"{ctx}: only a conduit can be fragile ('{tok}')")
+    if kind == 'source' and colour == 0:
+        errors.append(f"{ctx}: heart-crystal '{tok}' emits no colour")
+
+    return dict(kind=kind, solved=mask, rot=rot, locked=locked, colour=colour, fragile=fragile)
+
+
+def check_level(level, chapter_id):
+    lid = level.get('id', '<no id>')
+    ctx = lid
+    rows = level['rows']
+    h = level.get('height') or len(rows)
+    w = level.get('width') or max(len(r.split()) for r in rows)
+
+    if len(rows) != h:
+        errors.append(f"{ctx}: declared {h} rows, found {len(rows)}")
+        return
+
+    cells = []
+    for y, row in enumerate(rows):
+        toks = row.split()
+        if len(toks) != w:
+            errors.append(f"{ctx}: row {y} has {len(toks)} tokens, expected {w}")
+            return
+        for x, tok in enumerate(toks):
+            cells.append(parse_token(tok, f"{ctx} @{x},{y}"))
+
+    def at(x, y):
+        return cells[y * w + x] if 0 <= x < w and 0 <= y < h else None
+
+    # 1. every arm mates with a neighbour
+    for y in range(h):
+        for x in range(w):
+            c = at(x, y)
+            if not c:
+                continue
+            for d in range(4):
+                if not (c['solved'] & BITS[d]):
+                    continue
+                nb = at(x + STEP[d][0], y + STEP[d][1])
+                if nb is None:
+                    errors.append(f"{ctx}: arm at {x},{y} points off the board or at empty")
+                elif not (nb['solved'] & BITS[(d + 2) % 4]):
+                    errors.append(f"{ctx}: arm at {x},{y} unmated by neighbour")
+
+    # 2. the authored solution (all rot = 0) must light every critter
+    comp = [-1] * len(cells)
+    comp_colour = []
+    for i, c in enumerate(cells):
+        if not c or comp[i] != -1:
+            continue
+        g = len(comp_colour)
+        colour = 0
+        q = deque([i]); comp[i] = g
+        while q:
+            a = q.popleft()
+            ca = cells[a]
+            if ca['kind'] == 'source':
+                colour |= ca['colour']
+            ax, ay = a % w, a // w
+            for d in range(4):
+                if not (ca['solved'] & BITS[d]):
+                    continue
+                bx, by = ax + STEP[d][0], ay + STEP[d][1]
+                nb = at(bx, by)
+                if nb is None:
+                    continue
+                b = by * w + bx
+                if comp[b] != -1 or not (nb['solved'] & BITS[(d + 2) % 4]):
+                    continue
+                comp[b] = g
+                q.append(b)
+        comp_colour.append(colour)
+
+    # a fragile conduit must survive long enough to reach its own solution, or the
+    # level is unwinnable while looking perfectly fine. Mirrors CheckFragileConduits.
+    for i, c in enumerate(cells):
+        if not c or not c.get('fragile'):
+            continue
+        fx, fy = i % w, i // w
+        if c['locked']:
+            warnings.append(f"{ctx}: the fragile conduit at {fx},{fy} is also rooted, so it never wears")
+            continue
+        if rotl(c['solved'], 1) == c['solved']:
+            warnings.append(f"{ctx}: the conduit at {fx},{fy} is the same in every orientation, "
+                            "so its fragility can never matter")
+            continue
+        owed = 0
+        for k in range(4):
+            if rotl(c['solved'], (c['rot'] + k) & 3) == c['solved']:
+                owed = k
+                break
+        if owed > c['fragile']:
+            errors.append(f"{ctx}: the fragile conduit at {fx},{fy} needs {owed} turn(s) but "
+                          f"survives only {c['fragile']}; the level cannot be won")
+
+
+    lamps = lit = 0
+    for i, c in enumerate(cells):
+        if not c or c['kind'] != 'lamp':
+            continue
+        lamps += 1
+        have = comp_colour[comp[i]] if comp[i] >= 0 else 0
+        want = c['colour']
+        if (have != 0) if want == 0 else (have == want):
+            lit += 1
+    if lamps == 0:
+        errors.append(f"{ctx}: no critters, unwinnable")
+    elif lit != lamps:
+        errors.append(f"{ctx}: authored solution lights only {lit}/{lamps} critters")
+
+    sources = sum(1 for c in cells if c and c['kind'] == 'source')
+    if sources == 0:
+        errors.append(f"{ctx}: no heart-crystal")
+
+    # 3. derived par
+    par = 0
+    for c in cells:
+        if not c or c['locked'] or rotl(c['solved'], 1) == c['solved']:
+            continue
+        for k in range(4):
+            if rotl(c['solved'], (c['rot'] + k) & 3) == c['solved']:
+                par += k
+                break
+
+    authored = level.get('par', 0)
+    if authored and authored != par:
+        warnings.append(f"{ctx}: authored par {authored} != derived {par}")
+
+    mx, my = level.get('mapX', 0), level.get('mapY', 0)
+    if not (0 <= mx <= 1 and 0 <= my <= 1):
+        warnings.append(f"{ctx}: map position ({mx},{my}) outside 0..1")
+
+    fragile = sum(1 for c in cells if c and c.get('fragile'))
+
+    return dict(id=lid, chapter=chapter_id, w=w, h=h, par=par,
+                gold=-(-par * 135 // 100), silver=-(-par * 200 // 100),
+                lamps=lamps, sources=sources, fragile=fragile)
+
+
+# Canvas geometry, mirroring ChapterMap.cs. mapX/mapY are fractions of the chapter's
+# own map, and a chapter is as tall as the strips it declares - so the same pair of
+# fractions is a collision in a one-strip chapter and half a screen apart in a six-strip
+# one. Comparing raw fractions would be wrong for every chapter but one size.
+MAP_WIDTH, STRIP_HEIGHT = 1080.0, 1200.0
+NODE_DIAMETER, NODE_CLEARANCE = 196.0, 24.0
+MIN_SEPARATION = NODE_DIAMETER + NODE_CLEARANCE
+TEASER_GAP, TEASER_CEILING, TEASER_X = 0.22, 0.95, 0.66
+
+
+def check_chapter_map(chapter, cid, ordered):
+    """Placement checks that need the whole chapter: ChapterMapValidator.cs."""
+    strips = len(chapter.get("mapStrips") or ["strip0"])
+    height = max(STRIP_HEIGHT, strips * STRIP_HEIGHT)
+
+    def place(level):
+        return (min(1.0, max(0.0, level.get("mapX", 0))),
+                min(1.0, max(0.0, level.get("mapY", 0))))
+
+    def sep(a, b):
+        return math.hypot((a[0] - b[0]) * MAP_WIDTH, (a[1] - b[1]) * height)
+
+    pts = [(level["id"], place(level)) for level in ordered]
+
+    for i in range(len(pts)):
+        for k in range(i + 1, len(pts)):
+            gap = sep(pts[i][1], pts[k][1])
+            if gap < MIN_SEPARATION:
+                warnings.append(f"chapter '{cid}': '{pts[i][0]}' and '{pts[k][0]}' are {gap:.0f} "
+                                f"canvas units apart but a disc is {NODE_DIAMETER:.0f} across, "
+                                "so they overlap on the map")
+
+    for i in range(1, len(pts)):
+        if pts[i][1][1] <= pts[i - 1][1][1]:
+            warnings.append(f"chapter '{cid}': '{pts[i][0]}' sits at or below '{pts[i - 1][0]}' "
+                            f"(mapY {pts[i][1][1]:g} after {pts[i - 1][1][1]:g}), so the trail "
+                            "between them runs back down the map")
+
+    highest = max([p[1][1] for p in pts], default=0.0)
+    teaser = (TEASER_X, min(TEASER_CEILING, highest + TEASER_GAP))
+
+    for lid, p in pts:
+        gap = sep(p, teaser)
+        if gap < MIN_SEPARATION:
+            warnings.append(f"chapter '{cid}': '{lid}' is {gap:.0f} canvas units from the "
+                            f"end-of-chapter marker at ({teaser[0]:.2f}, {teaser[1]:.2f})")
+
+
+def main():
+    manifest = json.load(open(os.path.join(ROOT, "manifest.json"), encoding="utf-8"))
+    loc = json.load(open(os.path.join(ROOT, "loc", "en.json"), encoding="utf-8"))
+    keys = {e["key"] for e in loc["entries"]}
+
+    print(f"manifest schema v{manifest['schemaVersion']}, "
+          f"{len(manifest['chapters'])} chapter(s)\n")
+
+    # Every file carrying a schemaVersion is checked, not just the manifest. Three
+    # separate readers call ContentSchema.Explain - the manifest, each chapter body and
+    # progression.json - so bumping the contract means touching all three. Checking only
+    # the one you happened to think of is exactly how progression.json got left on v1.
+    # The catalog and the reward table version independently: progression.json is
+    # delivered on its own and changes at a different rate, so a catalog format bump
+    # must not invalidate it for clients that have not updated. See ProgressionSchema.
+    EXPECTED = {"manifest.json": 2, "progression.json": 1}
+    for f in sorted(os.listdir(os.path.join(ROOT, "chapters"))):
+        if f.endswith(".json"):
+            EXPECTED[os.path.join("chapters", f)] = 2
+
+    for rel, want in EXPECTED.items():
+        full = os.path.join(ROOT, rel)
+        if not os.path.exists(full):
+            errors.append(f"{rel} is missing")
+            continue
+        got = json.load(open(full, encoding="utf-8")).get("schemaVersion")
+        if got != want:
+            errors.append(f"{rel} is schema v{got}, this build reads v{want}")
+
+    # A chapter file nobody listed is not loaded and rejected - it is never opened, so
+    # every other check here passes it in silence and the build ships without it. The
+    # one check that cannot be made by reading the manifest, because its subject is what
+    # the manifest failed to say. Mirrors ContentValidation.ValidateManifestCoverage.
+    # Disabled entries count as listed: retired is not the same as forgotten.
+    listed_ids = {e["id"] for e in manifest["chapters"] if e.get("id")}
+    for f in sorted(os.listdir(os.path.join(ROOT, "chapters"))):
+        if not f.endswith(".json"):
+            continue
+        if f[:-5] not in listed_ids:
+            errors.append(f"chapters/{f} is not listed in manifest.json, so nothing will ever "
+                          "read it - run Content > Sync Manifest to adopt it")
+
+    # Orders are sparse so there is never a reason for two chapters to collide; a tie
+    # sorts by id, which is deterministic but is never what anyone meant.
+    seen_orders = {}
+    for entry in manifest["chapters"]:
+        order = entry.get("order", 0)
+        if order in seen_orders:
+            errors.append(f"chapters '{seen_orders[order]}' and '{entry['id']}' both claim order {order}")
+        seen_orders[order] = entry["id"]
+
+    summaries = []
+    for entry in manifest["chapters"]:
+        if entry.get("disabled"):
+            continue
+        cid = entry["id"]
+        path = os.path.join(ROOT, "chapters", f"{cid}.json")
+        if not os.path.exists(path):
+            errors.append(f"manifest lists '{cid}' but {path} is missing")
+            continue
+        chapter = json.load(open(path, encoding="utf-8"))
+        if chapter["id"] != cid:
+            errors.append(f"{path} calls itself '{chapter['id']}'")
+
+        # Order lives in the manifest. A body carrying one is a stale file whose author
+        # believes a number that does nothing.
+        if "order" in chapter:
+            errors.append(f"chapter '{cid}' sets \"order\" in its body; order belongs in manifest.json")
+
+        # A chapter that does not name its own backdrop inherits one, which puts its art
+        # in another chapter's asset bundle.
+        if not chapter.get("backdrop"):
+            errors.append(f"chapter '{cid}' does not name a backdrop")
+
+        # The manifest is the authority on membership and order; the body is the
+        # authority on content. Sync Manifest generates one from the other, so any
+        # disagreement means it was not run.
+        listed = entry.get("levels") or []
+        authored = [lv["id"] for lv in chapter["levels"]]
+        if listed != authored:
+            missing = [x for x in authored if x not in listed]
+            extra = [x for x in listed if x not in authored]
+            detail = []
+            if missing:
+                detail.append(f"body has unlisted {missing}")
+            if extra:
+                detail.append(f"manifest lists absent {extra}")
+            if not detail:
+                detail.append("same levels, different order")
+            errors.append(f"chapter '{cid}' manifest/body mismatch: {'; '.join(detail)} "
+                          "- run Content > Sync Manifest")
+
+        ckey = f"chapter.{cid}.name"
+        if ckey not in keys:
+            errors.append(f"chapter '{cid}' missing string '{ckey}'")
+
+        # Play order is the manifest's, and the map checks are about consecutive glades,
+        # so they must see that order rather than the body's.
+        by_id = {lv["id"]: lv for lv in chapter["levels"]}
+        ordered = [by_id[i] for i in listed if i in by_id] or chapter["levels"]
+        check_chapter_map(chapter, cid, ordered)
+
+        for level in chapter["levels"]:
+            s = check_level(level, cid)
+            if s:
+                summaries.append(s)
+            lid = level["id"]
+            for suffix, field in (("name", "nameKey"), ("tagline", "taglineKey"), ("lesson", "lessonKey")):
+                k = level.get(field) or f"level.{lid}.{suffix}"
+                if k not in keys:
+                    errors.append(f"level '{lid}' missing string '{k}'")
+
+    print(f"{'#':<3}{'level id':<22}{'chapter':<16}{'size':<7}{'par':<5}{'gold':<6}{'silver':<7}{'hearts':<7}{'critters':<9}brittle")
+    for i, s in enumerate(summaries, 1):
+        print(f"{i:<3}{s['id']:<22}{s['chapter']:<16}{str(s['w'])+'x'+str(s['h']):<7}"
+              f"{s['par']:<5}{s['gold']:<6}{s['silver']:<7}{s['sources']:<7}{s['lamps']:<9}{s['fragile']}")
+
+    print()
+    for w in warnings:
+        print("WARN  " + w)
+    for e in errors:
+        print("ERROR " + e)
+    print(f"\n{len(summaries)} level(s): {len(errors)} error(s), {len(warnings)} warning(s)")
+    return 1 if errors else 0
+
+
+sys.exit(main())

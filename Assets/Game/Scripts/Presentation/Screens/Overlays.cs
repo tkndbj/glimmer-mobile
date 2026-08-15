@@ -1,13 +1,56 @@
 using System;
 using GlimmerGrove.Ads;
 using GlimmerGrove.Content;
+using GlimmerGrove.Daily;
 using GlimmerGrove.Localization;
 using GlimmerGrove.Persistence;
+using GlimmerGrove.Social;
 using UnityEngine;
 using UnityEngine.UI;
 
 namespace GlimmerGrove
 {
+    /// <summary>
+    /// The line that says the streak grew, shown on whichever panel ends the run.
+    ///
+    /// <para>
+    /// It appears after a defeat as well as after a win, and that is the whole reason it
+    /// exists as a shared thing rather than as another beat in the victory sequence. A
+    /// player who has just lost is being told, in the same breath, that the run still
+    /// counted — which is true (the streak counts finished runs, not won ones) and is the
+    /// single most useful thing a defeat screen can say. A streak that only survived wins
+    /// would make the hardest glade in a chapter the place streaks go to die.
+    /// </para>
+    /// <para>
+    /// A toast rather than a panel element, so it can be dropped into either sequence
+    /// without either panel having to make room for it, and so it costs nothing on the
+    /// runs — most of them — where the streak did not move.
+    /// </para>
+    /// </summary>
+    static class StreakToast
+    {
+        public static void Show(View host, StreakNote streak, float delay)
+        {
+            if (host == null || !streak.WorthSaying) return;
+
+            Tween.After(delay, () =>
+            {
+                if (host == null) return;
+                Audio.Sfx("bell", .5f, 1.05f);
+
+                // Says so when the night put something aside. Rungs are collected by hand
+                // now, so a player who is only told "six days running" has no way to know
+                // there is a reward sitting on the streak page — and a reward nobody is
+                // told about is a reward that is never taken.
+                string line = Daily.DailyStreak.AnyPending
+                    ? Loc.Format("ui.streak.kept_waiting", streak.Days)
+                    : Loc.Format("ui.streak.kept", streak.Days);
+
+                Scenery.Toast(host.Content, line, Pal.Sun, 2.6f, new Vector2(.5f, 1f), -250f);
+            }, host);
+        }
+    }
+
     /// <summary>Shared plumbing for modal panels: scrim, springy entrance, tidy exit.</summary>
     public abstract class ModalView : View
     {
@@ -88,8 +131,12 @@ namespace GlimmerGrove
     {
         public PlayScreen Screen;
         public int HeartsLeft;
-        public DefeatReason Reason;
-        public int LampsLit, LampCount;
+
+        /// <summary>The run that was lost, decided by the screen. See <see cref="RunOutcome"/>.</summary>
+        public RunOutcome Run { get; set; }
+
+        /// <summary>What the streak did. Shown here too — see <see cref="StreakToast.Show"/>.</summary>
+        public StreakNote Streak { get; set; }
 
         /// <summary>False when the player was already at zero — then nothing was taken.</summary>
         public bool HeartWasCharged;
@@ -120,6 +167,19 @@ namespace GlimmerGrove
         static string ReasonKey(DefeatReason reason)
             => reason == DefeatReason.ConduitLost ? "ui.defeat.conduit_reason" : "ui.defeat.moves_reason";
 
+        /// <summary>
+        /// One sentence per distance, written out for the same reason
+        /// <see cref="WinOverlay.RankKeys"/> is: a key assembled at runtime is a key the
+        /// build's string checker cannot see, and it ships missing in whichever language
+        /// nobody tested.
+        ///
+        /// Indexed by turns short, minus one. The array's length is therefore the honest
+        /// statement of how far "near" reaches — widen <see cref="RunOutcome.NearMissTurns"/>
+        /// and the compiler does not care, but the sentence has to be written before a
+        /// player can be told it.
+        /// </summary>
+        static readonly string[] NearMissKeys = { "ui.defeat.near_one", "ui.defeat.near_two" };
+
         protected override void Build()
         {
             bool canRetry = HeartsLeft > 0;
@@ -137,21 +197,14 @@ namespace GlimmerGrove
             // the same 880 — leaves the last one a few pixels off the panel edge, which is
             // the sort of thing that looks fine on the device it was tuned on.
             MakePanel(new Vector2(880f, offering ? 1010f : 880f),
-                      Loc.Get(TitleKey(Reason)), dismissOnScrim: false);
+                      Loc.Get(TitleKey(Run.Reason)), dismissOnScrim: false);
 
             // Body copy, drawn the way every other panel here draws it: wrapped, and
             // with no outline or shadow. Those two are for headings sitting on a ribbon;
             // on a 32pt sentence they smear the strokes together and it stops reading.
-            Body("Why", Loc.Get(ReasonKey(Reason)), -186f, 150f);
+            Body("Why", Loc.Get(ReasonKey(Run.Reason)), -186f, 150f);
 
-            // Running out of turns gives no clue how close you were, so say it. After a
-            // crumble the player watched the cause, and a score would only distract.
-            if (Reason == DefeatReason.OutOfMoves && LampCount > 0)
-                UIKit.Titled("Score", Panel, $"{LampsLit}/{LampCount}", 44,
-                             LampsLit >= LampCount - 1 ? Pal.Gold : Pal.Cream,
-                             TextAnchor.MiddleCenter, new Vector2(400f, 70f),
-                             new Vector2(.5f, 1f), new Vector2(0f, -300f), outline: 3f, shadow: 3f);
-
+            BuildHowClose();
             BuildHearts();
 
             if (canRetry)
@@ -186,6 +239,10 @@ namespace GlimmerGrove
                              () => Close(() => Flow.Go<LevelsScreen>()));
 
             Audio.Sfx("nope", .5f, .8f, .05f);
+
+            // Last, and after the near-miss line has had its moment: a lost run still fed
+            // the streak, which is the one piece of good news this panel has.
+            StreakToast.Show(this, Streak, 1.05f);
         }
 
         /// <summary>
@@ -203,6 +260,64 @@ namespace GlimmerGrove
                 v.PlacementId = AdPlacement.HeartRefill;
                 v.Rewarded = () => Close(() => { if (Screen) Screen.RetryAfterDefeat(); });
             });
+        }
+
+        /// <summary>
+        /// How close the run came, in the strongest form the evidence supports.
+        ///
+        /// <para>
+        /// Three cases, and which one appears is decided entirely by
+        /// <see cref="RunOutcome"/> rather than by anything read off a board that has since
+        /// been restarted. When the turns ran out within one or two of finishing, the panel
+        /// says so in words and arrives with a flourish — the board has just pulsed the
+        /// conduits in question, so this is the caption to a thing the player watched, not
+        /// a claim they have to take on trust. Otherwise the lamp count stands in, which
+        /// is honest but flat. After a crumble neither is drawn: the player saw the cause,
+        /// and the distance is unknowable anyway because the conduit that broke took its
+        /// own owed turns out of the count with it.
+        /// </para>
+        /// <para>
+        /// The near-miss line is the single highest-value sentence on this panel. A defeat
+        /// that reads as nearly a win is retried; one that reads as a wall is not. It earns
+        /// that only by being true, which is why it is gated on an upper bound the player
+        /// could check by restarting — see <see cref="Puzzle.TurnsToSolution"/>.
+        /// </para>
+        /// </summary>
+        void BuildHowClose()
+        {
+            if (Run.NearMiss)
+            {
+                int index = Mathf.Clamp(Run.TurnsShort - 1, 0, NearMissKeys.Length - 1);
+
+                var line = UIKit.Titled("Close", Panel, Loc.Get(NearMissKeys[index]), 46, Pal.Gold,
+                                        TextAnchor.MiddleCenter, new Vector2(720f, 74f),
+                                        new Vector2(.5f, 1f), new Vector2(0f, -300f),
+                                        outline: 3f, shadow: 3f);
+
+                // Landed rather than present. The panel springs in over half a second, so a
+                // line that is simply there from the first frame is read as part of the
+                // furniture; one that arrives after everything has settled is read as news.
+                line.transform.localScale = Vector3.zero;
+
+                new Cue(this)
+                    .Then(.42f, () =>
+                    {
+                        if (!line) return;
+                        Tween.Pop(line.transform, 0f, .5f);
+                        Audio.Sfx("star", .6f, 1.3f);
+                        Burst.Sparks(line.transform, Vector2.zero, Pal.Gold, 12, 220f, 20f, .55f);
+                    });
+
+                return;
+            }
+
+            // No number worth quoting after a crumble — see the summary.
+            if (Run.Reason != DefeatReason.OutOfMoves || Run.LampCount <= 0) return;
+
+            UIKit.Titled("Score", Panel, $"{Run.LampsLit}/{Run.LampCount}", 44,
+                         Run.LampsLit >= Run.LampCount - 1 ? Pal.Gold : Pal.Cream,
+                         TextAnchor.MiddleCenter, new Vector2(400f, 70f),
+                         new Vector2(.5f, 1f), new Vector2(0f, -300f), outline: 3f, shadow: 3f);
         }
 
         /// <summary>Wrapped, unadorned panel prose. Shared so both states line up.</summary>
@@ -386,21 +501,54 @@ namespace GlimmerGrove
     }
 
     // ==================================================================== victory
+    /// <summary>
+    /// The payoff.
+    ///
+    /// <para>
+    /// This panel is where the game either pays a player back for the last few minutes or
+    /// does not, and almost all of that is in the <em>timing</em>. Information arriving
+    /// all at once is information; the same information arriving in an order, each piece
+    /// a beat after the last, is a reward — because at every moment there is still
+    /// something about to happen. That is the whole design, and it is why the sequence is
+    /// declared as a <see cref="Cue"/> rather than as a scatter of absolute delays: the
+    /// beats are relative, so inserting one cannot silently shove two others onto the same
+    /// frame. They had been. The rank and the reward were computed from two different
+    /// formulae over the star count and collided on a three-star win.
+    /// </para>
+    /// <para>
+    /// The reward line counts up rather than appearing finished, for the same reason.
+    /// See <see cref="Roll"/>.
+    /// </para>
+    /// </summary>
     public sealed class WinOverlay : ModalView
     {
-        public LevelId LevelId;
-        public int Stars, Moves, Par, PreviousBest;
-        public bool FirstClear;
+        /// <summary>The run that was won, decided by the screen. See <see cref="RunOutcome"/>.</summary>
+        public RunOutcome Run { get; set; }
+
+        /// <summary>What the streak did. See <see cref="StreakToast"/>.</summary>
+        public StreakNote Streak { get; set; }
 
         /// <summary>What this run added, already folded into the ledger. Zero on a worse replay.</summary>
         public long XpGained, CreditsGained;
+
+        /// <summary>
+        /// This glade's golden multiplier, as a percentage. 100 is the ordinary reward.
+        /// Already inside <see cref="CreditsGained"/> — see <see cref="GoldenTable"/>.
+        /// </summary>
+        public int GoldenPercent = 100;
 
         /// <summary>
         /// Written out rather than assembled as "ui.win.rank" + stars, so the keys are
         /// visible to the build's string checker. A key that only exists at runtime is
         /// a key nothing can verify.
         /// </summary>
-        static readonly string[] RankKeys = { "ui.win.rank1", "ui.win.rank2", "ui.win.rank3" };
+        internal static readonly string[] RankKeys = { "ui.win.rank1", "ui.win.rank2", "ui.win.rank3" };
+
+        /// <summary>Seconds between one star landing and the next.</summary>
+        const float StarGap = .42f;
+
+        /// <summary>Where the payout row sits, and how much of the first chip the second waits for.</summary>
+        const float RewardY = -496f, PayoutOverlap = .45f;
 
         /// <summary>
         /// True when this run completed the last uncleared glade of its chapter. Derived
@@ -409,7 +557,7 @@ namespace GlimmerGrove
         /// </summary>
         bool FinishedAChapter(CatalogIndex index)
         {
-            var chapter = index.ChapterOf(LevelId);
+            var chapter = index.ChapterOf(Run.Level);
             if (!chapter.IsValid) return false;
 
             foreach (var sibling in index.LevelsOf(chapter))
@@ -424,54 +572,122 @@ namespace GlimmerGrove
             // so publishing a new chapter turns the end screen back into a next button
             // without any code here changing.
             var index = GameContent.Index;
-            var next = index.Next(LevelId);
+            var next = index.Next(Run.Level);
             bool last = !next.IsValid;
+
+            int stars = Mathf.Clamp(Run.Stars, 1, 3);
+
+            // Both decided before anything is built, because between them they set the
+            // panel's height. Asking later and growing it afterwards is how a line ends up
+            // drawn a few pixels outside the panel it belongs to — which looks fine on the
+            // device it was tuned on.
+            bool paid = XpGained > 0 || CreditsGained > 0;
+            bool goldened = paid && GoldenPercent > 100;
+
+            // The player's own record after this run, against everybody else's. Decided
+            // here with the other two because it also grows the panel — see below.
+            int record = Run.NewBest ? Run.Moves
+                       : Run.PreviousBest > 0 ? Mathf.Min(Run.Moves, Run.PreviousBest)
+                       : Run.Moves;
+            var population = GroveStats.For(Run.Level);
+            bool ranked = population.IsWorthSaying(record);
 
             UIKit.Scrim(Content, .62f);
 
+            // ------------------------------------------------------ the furniture
+            // Everything is built here and animated below, so that the cue sheet reads as
+            // the sequence the player experiences rather than as a construction order.
             var banner = UIKit.Img("Victory", Content, null, Color.white,
                                    new Vector2(600f, 420f), new Vector2(.5f, .5f), new Vector2(0f, 470f));
             banner.preserveAspect = true;
             Flipbook.Attach(banner, "Fx/Victory", 34f, false);
             banner.transform.localScale = Vector3.one * .9f;
-            Tween.Scale(banner.transform, 1f, .8f, Ease.OutBack);
 
+            // Grown rather than crowded when there is a golden line to fit. The buttons
+            // are anchored to the panel's bottom edge and the readouts to its top, so the
+            // extra height appears exactly where the new line goes and nothing else moves.
             Backing = UIKit.Img("Panel", Content, Art.S("Ui/panel_main"), Color.white,
-                                new Vector2(880f, 820f), new Vector2(.5f, .5f), new Vector2(0f, -140f));
+                                new Vector2(880f, 820f + (paid ? 56f : 0f) + (goldened ? 76f : 0f)
+                                                       + (ranked ? 44f : 0f)),
+                                new Vector2(.5f, .5f), new Vector2(0f, -140f));
             Panel = (RectTransform)Backing.transform;
             Panel.localScale = Vector3.zero;
-            Tween.Scale(Panel, 1f, .55f, Ease.OutBack).Delay(.45f);
 
-            var stars = StarRow.Create(Panel, new Vector2(.5f, 1f), new Vector2(0f, -135f), 144f, 152f, 0, true);
-            stars.Reveal(Stars, .95f, .42f);
+            var starRow = StarRow.Create(Panel, new Vector2(.5f, 1f), new Vector2(0f, -135f), 144f, 152f, 0, true);
 
-            var rank = UIKit.Titled("Rank", Panel, Loc.Get(RankKeys[Mathf.Clamp(Stars, 1, 3) - 1]), 62, Pal.Rose,
+            var rank = UIKit.Titled("Rank", Panel, Loc.Get(RankKeys[stars - 1]), 62, Pal.Rose,
                                     TextAnchor.MiddleCenter, new Vector2(700f, 80f), new Vector2(.5f, 1f),
                                     new Vector2(0f, -285f), 4f, 4f);
             rank.transform.localScale = Vector3.zero;
-            Tween.Pop(rank.transform, 0f, .6f, .95f + .42f * Stars);
 
-            string bestLine = PreviousBest == 0 || Moves < PreviousBest
-                ? Loc.Get("ui.win.new_best")
-                : Loc.Format("ui.win.best_is", PreviousBest);
-            UIKit.Titled("Moves", Panel, Loc.Format("ui.win.moves", Moves, Par), 36,
+            UIKit.Titled("Moves", Panel, Loc.Format("ui.win.moves", Run.Moves, Run.Target), 36,
                          new Color(.40f, .28f, .20f), TextAnchor.MiddleCenter, new Vector2(760f, 50f),
                          new Vector2(.5f, 1f), new Vector2(0f, -368f), 0f, 2f);
-            UIKit.Titled("Best", Panel, bestLine, 30, new Color(.52f, .38f, .28f, .9f),
-                         TextAnchor.MiddleCenter, new Vector2(760f, 44f), new Vector2(.5f, 1f),
-                         new Vector2(0f, -416f), 0f, 0f);
 
-            // Only shown when the run actually improved the record. A replay that beat
-            // nothing earns nothing, and saying "+0 XP" would read as a bug.
-            if (XpGained > 0 || CreditsGained > 0)
+            // A record beaten is a result in its own right, and one a replayer may have
+            // come back specifically for. It is drawn in the same slot either way, but
+            // only the new one is worth a colour and an entrance.
+            var best = UIKit.Titled("Best", Panel,
+                                    Run.NewBest ? Loc.Get("ui.win.new_best")
+                                                : Loc.Format("ui.win.best_is", Run.PreviousBest),
+                                    30,
+                                    Run.NewBest ? Pal.Gold : new Color(.52f, .38f, .28f, .9f),
+                                    TextAnchor.MiddleCenter, new Vector2(760f, 44f), new Vector2(.5f, 1f),
+                                    new Vector2(0f, -416f), 0f, 0f);
+
+            // The payout. Two chips rather than one sentence, and each number is put there
+            // by things the player watches leave the stars — see Payout for why the flight
+            // is what makes it land rather than being decoration over a rolling label.
+            //
+            // Built only when the run actually improved the record. A replay that beat
+            // nothing earns nothing, and a chip reading "+0 XP" would look like a bug.
+            Payout xpChip = null, coinChip = null;
+            if (paid)
             {
-                var reward = UIKit.Titled("Reward", Panel,
-                                          Loc.Format("ui.win.reward", XpGained, CreditsGained), 32, Pal.Mint,
-                                          TextAnchor.MiddleCenter, new Vector2(760f, 44f),
-                                          new Vector2(.5f, 1f), new Vector2(0f, -462f), 2f, 2f);
-                reward.transform.localScale = Vector3.zero;
-                Tween.Pop(reward.transform, 0f, .55f, 1.15f + .42f * Stars);
+                float spread = XpGained > 0 && CreditsGained > 0 ? 188f : 0f;
+
+                if (XpGained > 0)
+                {
+                    // A mint gem, and mint because that is what experience already is
+                    // everywhere else here — the bar on the hub and the one on the profile
+                    // card. Art.Gem carries its own colours, so like every other reward glyph
+                    // it is drawn white rather than tinted, and being generated it cannot
+                    // arrive a frame late as a white rectangle (invariant 7b).
+                    xpChip = Payout.Chip("Xp", Panel, new Vector2(.5f, 1f), new Vector2(-spread, RewardY),
+                                         Art.Gem(128, Pal.Mint), Pal.Mint,
+                                         n => Loc.Format("ui.win.xp", n), XpGained,
+                                         Art.Gem(64, Pal.Mint), Color.white, "tick");
+                }
+
+                if (CreditsGained > 0)
+                {
+                    // Credits are the spinning coin, which has no single sprite — the glyph
+                    // is finished by RewardArt, fallback and all. The tokens use the coin's
+                    // first frame flat, untinted: gold art washed in gold stops reading as a
+                    // coin, and the disc fallback is the only case that wants a colour.
+                    var frames = Art.Frames("Ui/Coin");
+                    bool minted = frames != null && frames.Length > 0;
+
+                    coinChip = Payout.Chip("Coins", Panel, new Vector2(.5f, 1f), new Vector2(spread, RewardY),
+                                           null, Pal.Gold, n => Loc.Format("ui.win.coins", n), CreditsGained,
+                                           minted ? frames[0] : Art.Disc(128),
+                                           minted ? Color.white : Pal.Gold, "pop");
+                    RewardArt.Glyph(coinChip.Glyph, ChestDropKind.Credits, 14f);
+                }
+
+                if (xpChip != null) xpChip.Root.localScale = Vector3.zero;
+                if (coinChip != null) coinChip.Root.localScale = Vector3.zero;
             }
+
+            // A glade that paid more than it should have, said out loud. Built here with the
+            // rest of the furniture because its beat belongs to the payout's lane rather
+            // than to the main sequence — see below.
+            var goldenLine = goldened
+                ? UIKit.Titled("Golden", Panel, Loc.Format("ui.win.golden", GoldenPercent), 40, Pal.Gold,
+                               TextAnchor.MiddleCenter, new Vector2(760f, 54f),
+                               new Vector2(.5f, 1f), new Vector2(0f, RewardY - 82f), 3f, 3f)
+                : null;
+            if (goldenLine) goldenLine.transform.localScale = Vector3.zero;
 
             var nextId = last ? LevelId.None : next;
 
@@ -496,7 +712,7 @@ namespace GlimmerGrove
                                         }));
             UIKit.Halo(nextButton.transform, Pal.Mint, 640f, .3f);
 
-            var replayId = LevelId;
+            var replayId = Run.Level;
             UIKit.IconButton("Replay", Panel, "sq_orange", "ic_restart", new Vector2(120f, 120f),
                              new Vector2(.5f, 0f), new Vector2(-232f, 96f),
                              () => Close(() => Flow.Go<PlayScreen>(v => v.LevelId = replayId)));
@@ -504,23 +720,177 @@ namespace GlimmerGrove
                              new Vector2(.5f, 0f), new Vector2(232f, 96f),
                              () => Close(() => Flow.Go<LevelsScreen>()));
 
-            Tween.After(.9f, () =>
-            {
-                if (!this) return;
-                Sheen.Attach((RectTransform)nextButton.transform, 3.2f);
-                Tween.Breathe(nextButton.transform, .025f, 2f);
-            }, this);
+            // ------------------------------------------------------- the sequence
+            // Read this top to bottom: it is the order the player sees, and every number
+            // is a gap after the line above rather than a time from the start.
+            var cue = new Cue(this);
 
-            if (FirstClear && !last)
+            cue.With(() => Tween.Scale(banner.transform, 1f, .8f, Ease.OutBack));
+
+            // The panel arrives under a banner that is still settling, which is what makes
+            // the two read as one movement rather than two.
+            cue.Then(.45f, () => Tween.Scale(Panel, 1f, .55f, Ease.OutBack));
+
+            // Stars land one at a time, each a semitone above the last. The row schedules
+            // its own beats, so the playhead is walked over them by hand.
+            cue.Then(.50f, () => starRow.Reveal(Run.Stars, 0f, StarGap));
+
+            // ------------------------------------------------------ the payout lane
+            // The payout is a second lane, opened at the same instant as the stars rather
+            // than queued behind them.
+            //
+            // <para>
+            // It used to run after the rank and the record, which put a gap of three or four
+            // seconds between a player landing their last star and seeing what it was worth —
+            // long enough that the reward read as a separate announcement instead of as the
+            // consequence of the thing they had just watched. The two belong together: the
+            // reward genuinely is a function of exactly those stars (see ProgressionLedger),
+            // and the tokens are thrown out of the star row to say so. Firing the first
+            // handful while the row is still filling is what makes that claim legible.
+            // </para>
+            // <para>
+            // A lane rather than more beats on the main one, because the sequences overlap
+            // and a single playhead cannot express that — walking it forward over the payout
+            // would push the rank and the record behind it, which is the problem in reverse.
+            // The golden line moves in here too: it has to precede the coins, and the coins
+            // no longer wait for the main lane.
+            // </para>
+            // <para>
+            // The chips arrive <em>empty</em>, and that is the trick worth keeping. A prize
+            // revealed finished is information; a container already on screen with nothing in
+            // it is a question, and every token that lands is part of the answer.
+            // </para>
+            float payoutEnds = cue.Playhead;
+            if (paid)
+            {
+                var payout = new Cue(this, cue.Playhead);
+                float lastStart = payout.Playhead, lastRuns = 0f;
+
+                payout.With(() =>
+                {
+                    if (xpChip != null) Tween.Pop(xpChip.Root, .4f, .44f);
+                    if (coinChip != null) Tween.Pop(coinChip.Root, .4f, .44f, .09f);
+                    Audio.Sfx("whoosh", .32f, 1.2f);
+                });
+
+                if (xpChip != null)
+                {
+                    // Timed so the first sparks leave as the first star lands, not before it:
+                    // tokens thrown out of an empty row would be coming from nothing.
+                    payout.Then(StarGap * .8f, () => xpChip.Play(starRow.transform));
+                    lastStart = payout.Playhead; lastRuns = xpChip.Duration;
+
+                    // Held for a fraction of the first chip rather than all of it: the coins
+                    // leave while the sparks are still landing, so the two read as one
+                    // cascade. Played end to end they read as a list being recited.
+                    if (coinChip != null) payout.Wait(xpChip.Duration * PayoutOverlap);
+                }
+
+                // Lands before the coins so the number the player then watches climb is
+                // already explained — "something special happened", then the evidence, which
+                // is the way round that makes the count-up a consequence and not a
+                // coincidence. Only ever on a paid run: announcing a multiplier on top of no
+                // credits would read as the game owing the player money.
+                if (goldenLine)
+                {
+                    payout.Then(xpChip != null ? 0f : StarGap * .8f, () =>
+                    {
+                        if (!goldenLine) return;
+                        Tween.Pop(goldenLine.transform, 0f, .55f);
+                        Tween.Breathe(goldenLine.transform, .035f, 1.8f);
+                        Audio.Sfx("chime2", .7f, 1.18f);
+                        Burst.Sparks(goldenLine.transform, Vector2.zero, Pal.Gold, 18, 300f, 24f, .7f);
+                        Flow.Flash(new Color(1f, .93f, .70f), .3f, .5f);
+                    });
+                    payout.Wait(.28f);
+                }
+
+                if (coinChip != null)
+                {
+                    payout.Then(0f, () => coinChip.Play(starRow.transform));
+                    lastStart = payout.Playhead; lastRuns = coinChip.Duration;
+                }
+
+                payoutEnds = lastStart + lastRuns;
+            }
+
+            // ------------------------------------------------------- the main lane
+            cue.Wait(StarGap * stars);
+
+            cue.Then(.34f, () =>
+            {
+                Tween.Pop(rank.transform, 0f, .6f);
+                Audio.Sfx("chime", .55f, 1f + .08f * stars);
+            });
+
+            if (Run.NewBest)
+            {
+                cue.Then(.26f, () =>
+                {
+                    if (!best) return;
+                    Tween.Punch(best.transform, .34f, .45f);
+                    Audio.Sfx("star", .5f, 1.42f);
+                });
+            }
+
+            // The two lanes rejoin here. Everything below is either news in its own right or
+            // a call to leave, and none of it should arrive while coins are still in the air
+            // — least of all the shine on the Next button, which exists to ask for attention
+            // once there is nothing left worth watching.
+            cue.Wait(Mathf.Max(0f, payoutEnds - cue.Playhead));
+
+            // A new glade opening is the strongest single line on this panel, so it lands
+            // after the run has finished being scored rather than over the top of it.
+            if (Run.FirstClear && !last)
             {
                 string opened = Loc.Format("ui.win.opened", Loc.Get(LevelDefinition.DefaultNameKey(next)));
-                Tween.After(1.0f + .42f * Stars, () =>
+                cue.Then(.30f, () =>
                 {
-                    if (!this) return;
                     Audio.Sfx("unlock", .6f);
                     Scenery.Toast(Content, opened, Pal.Gold, 2.2f, new Vector2(.5f, 0f), 190f);
-                }, this);
+                });
             }
+
+            // How the player did against everybody else, when there is a population large
+            // enough to say and the answer is one worth hearing.
+            //
+            // Drawn upward only, and that is a decision rather than an oversight — see
+            // LevelStats.IsWorthSaying. Told they are ahead, a player plays more; told they
+            // are behind, a good share stop, and the ones who stop are disproportionately
+            // the ones who were already struggling. Every word of it is true either way;
+            // this is a choice about which true things belong on a victory screen.
+            if (ranked)
+            {
+                var line = UIKit.Titled("Rank%", Panel,
+                                        Loc.Format("ui.win.faster_than", population.PercentSlower(record)),
+                                        26, new Color(.44f, .32f, .24f, .9f), TextAnchor.MiddleCenter,
+                                        new Vector2(760f, 34f), new Vector2(.5f, 1f),
+                                        new Vector2(0f, goldened ? RewardY - 132f
+                                                     : paid ? RewardY - 66f : -506f), 0f, 0f);
+                line.transform.localScale = Vector3.zero;
+
+                cue.Then(.22f, () =>
+                {
+                    if (!line) return;
+                    Tween.Pop(line.transform, 0f, .45f);
+                });
+            }
+
+            // The streak, when this run is what moved it. After the glade unlock, because
+            // an unlock is about the game and a streak is about the player, and the player
+            // should be the last thing said.
+            cue.Then(.30f, () => StreakToast.Show(this, Streak, 0f));
+            if (Streak.WorthSaying) cue.Wait(.45f);
+
+            // Last, and deliberately so: the button starts asking for attention only once
+            // there is nothing left worth watching. Shining it during the celebration
+            // teaches players to skip the celebration.
+            cue.Then(.35f, () =>
+            {
+                if (!nextButton) return;
+                Sheen.Attach((RectTransform)nextButton.transform, 3.2f);
+                Tween.Breathe(nextButton.transform, .025f, 2f);
+            });
         }
 
         public override bool OnBack() { Close(() => Flow.Go<LevelsScreen>()); return true; }

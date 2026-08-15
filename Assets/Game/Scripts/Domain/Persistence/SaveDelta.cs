@@ -152,6 +152,16 @@ namespace GlimmerGrove.Persistence
             if (adsA.lastWatchedUnix != adsB.lastWatchedUnix) return true;
             if (!SameCounts(adsA.watched, adsB.watched)) return true;
 
+            // The streak's three dates. All monotonic, so a difference always means one
+            // side has seen a night the other has not — which is exactly when the other
+            // device needs to hear about it, since a streak that does not travel is a
+            // streak that restarts on every device the player owns.
+            var streakA = remote.streak ?? new StreakStateDto();
+            var streakB = merged.streak ?? new StreakStateDto();
+            if (streakA.startDay != streakB.startDay) return true;
+            if (streakA.lastPlayedDay != streakB.lastPlayedDay) return true;
+            if (streakA.collectedThroughDay != streakB.collectedThroughDay) return true;
+
             var progressA = remote.progression ?? ProgressionStateDto.Unwritten();
             var progressB = merged.progression ?? ProgressionStateDto.Unwritten();
             if (progressA.xpHighWater != progressB.xpHighWater) return true;

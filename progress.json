@@ -1,0 +1,108 @@
+{
+    "schemaVersion": 10,
+    "updatedUnix": 1786753773,
+    "settings": {
+        "music": {
+            "state": 2
+        },
+        "sfx": {
+            "state": 1
+        },
+        "haptics": {
+            "state": 1
+        },
+        "language": ""
+    },
+    "wallet": {
+        "coins": -1,
+        "gems": -1,
+        "hearts": 2,
+        "heartsNextRefillUnix": 1786762092,
+        "heartsProduced": 2,
+        "heartsSpent": 0,
+        "heartsDueUnix": 1786762092,
+        "heartBoostUntilUnix": 0,
+        "displayName": "Grovekeeper",
+        "avatarId": "monarch",
+        "currencies": [
+            {
+                "currency": "credits",
+                "grantedBaseline": 1403,
+                "spentBaseline": 0,
+                "earnedHighWater": 325,
+                "pendingSpends": [],
+                "pendingGrants": [],
+                "confirmedThroughUnix": 0
+            },
+            {
+                "currency": "gems",
+                "grantedBaseline": 12,
+                "spentBaseline": 0,
+                "earnedHighWater": 0,
+                "pendingSpends": [],
+                "pendingGrants": [],
+                "confirmedThroughUnix": 0
+            }
+        ]
+    },
+    "levels": [
+        {
+            "levelId": "c01_first_light",
+            "stars": 3,
+            "bestMoves": 31,
+            "clears": 3,
+            "firstClearedUnix": 1786658065,
+            "lastPlayedUnix": 1786742351
+        },
+        {
+            "levelId": "c01_twin_streams",
+            "stars": 3,
+            "bestMoves": 49,
+            "clears": 2,
+            "firstClearedUnix": 1786671707,
+            "lastPlayedUnix": 1786741741
+        },
+        {
+            "levelId": "c01_prism_heart",
+            "stars": 3,
+            "bestMoves": 42,
+            "clears": 1,
+            "firstClearedUnix": 1786741804,
+            "lastPlayedUnix": 1786741804
+        }
+    ],
+    "progression": {
+        "xpHighWater": 210,
+        "levelHighWater": 2
+    },
+    "cloud": {
+        "userId": "i18jBLmtwDMdAtEHjGbC0r8xqyF2",
+        "revision": 656,
+        "lastSyncedUnix": 1786753677,
+        "deviceId": "9da983d57475455f"
+    },
+    "lastPlayedLevelId": "c01_prism_heart",
+    "legacyImportDone": true,
+    "tipsSeen": [
+        "fragile",
+        "mixing",
+        "moves",
+        "rooted"
+    ],
+    "daily": {
+        "dayKey": 20680,
+        "runs": 0,
+        "claimed": 0
+    },
+    "ads": {
+        "dayKey": 20680,
+        "watched": [],
+        "lastWatchedUnix": 1786751269
+    },
+    "streak": {
+        "startDay": 20679,
+        "lastPlayedDay": 20679,
+        "collectedThroughDay": 20679
+    },
+    "checksum": "e6ac938cad3da6d7"
+}

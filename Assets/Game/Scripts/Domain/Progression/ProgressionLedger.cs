@@ -65,8 +65,25 @@ namespace GlimmerGrove.Progression
     /// </summary>
     public static class ProgressionLedger
     {
-        /// <summary>What one record is worth under the given chapter's rule.</summary>
-        public static ProgressionTotals Value(LevelRecord record, ChapterId chapter, ProgressionTable table)
+        /// <summary>
+        /// What one record is worth under the given chapter's rule.
+        ///
+        /// <para>
+        /// <paramref name="playerKey"/> seeds the golden bonus — see
+        /// <see cref="GoldenTable"/> — and an empty one means "no account yet, pay the
+        /// base". It is a parameter rather than a read of <see cref="RewardSeed"/> because
+        /// this is a pure function and has to stay one: the shared vectors run it offline
+        /// against fixed inputs, and a hidden dependency on the signed-in account would
+        /// make the two halves of invariant 9a untestable against each other.
+        /// </para>
+        /// <para>
+        /// The bonus multiplies credits and never XP. Keeping XP exact is what lets a
+        /// companion unlock be promised at a rank and arrive there — a levelling curve
+        /// with variance in it turns "three ranks to go" into a guess.
+        /// </para>
+        /// </summary>
+        public static ProgressionTotals Value(LevelRecord record, ChapterId chapter,
+                                              ProgressionTable table, string playerKey = null)
         {
             if (record == null) return ProgressionTotals.Zero;
 
@@ -76,23 +93,33 @@ namespace GlimmerGrove.Progression
             table ??= ProgressionTable.Default;
             var rule = table.RuleFor(chapter);
 
-            return new ProgressionTotals(rule.XpFor(stars), rule.CreditsFor(stars), 1, stars);
+            long credits = GoldenTable.Apply(rule.CreditsFor(stars),
+                                             table.Golden.PercentFor(playerKey, record.Id));
+
+            return new ProgressionTotals(rule.XpFor(stars), credits, 1, stars);
         }
 
         /// <summary>
         /// What a run added, as the difference between the record before and after.
         /// A worse replay yields zero without needing a rule that says so.
+        ///
+        /// The golden multiplier is the same on both sides of the subtraction — it belongs
+        /// to the glade, not to the run — so improving a record pays the bonus on the
+        /// improvement and nothing on what was already banked.
         /// </summary>
         public static ProgressionTotals Delta(LevelRecord before, LevelRecord after,
-                                              ChapterId chapter, ProgressionTable table)
-            => Value(after, chapter, table) - Value(before, chapter, table);
+                                              ChapterId chapter, ProgressionTable table,
+                                              string playerKey = null)
+            => Value(after, chapter, table, playerKey) - Value(before, chapter, table, playerKey);
 
         /// <summary>
         /// Folds every record the player holds into one total, counting only glades the
         /// chapter map recognises.
         /// </summary>
         public static ProgressionTotals Compute(IEnumerable<LevelRecord> records,
-                                                IChapterMap chapters, ProgressionTable table)
+                                                IChapterMap chapters, ProgressionTable table,
+                                                string playerKey = null,
+                                                IReadOnlyList<Events.GroveEvent> events = null)
         {
             table ??= ProgressionTable.Default;
 
@@ -101,6 +128,16 @@ namespace GlimmerGrove.Progression
 
             if (records == null || chapters == null)
                 return new ProgressionTotals(0, 0, 0, 0);
+
+            bool wantsEvents = events != null && events.Count > 0;
+
+            // Built only when there is a calendar to answer for. The event track needs a
+            // lookup by level id, and this loop is already visiting every record — walking
+            // them a second time per event would be the same work multiplied by however
+            // many events the game has ever run.
+            var byId = wantsEvents
+                ? new Dictionary<LevelId, LevelRecord>()
+                : null;
 
             var counted = new HashSet<LevelId>();
 
@@ -114,12 +151,19 @@ namespace GlimmerGrove.Progression
                 // Two records for one glade is a malformed save, not two clears.
                 if (!counted.Add(record.Id)) continue;
 
-                var totals = Value(record, chapter, table);
+                byId?.Add(record.Id, record);
+
+                var totals = Value(record, chapter, table, playerKey);
                 xp += totals.Xp;
                 credits += totals.EarnedCredits;
                 cleared += totals.ClearedGlades;
                 stars += totals.TotalStars;
             }
+
+            // Event tracks are earned, not granted — see EventLedger for why that is the
+            // only shape they can safely take. They add to the same derived total, so the
+            // earned floor covers them and nothing has to be claimed, stored or merged.
+            if (wantsEvents) credits += Events.EventLedger.CreditsFrom(events, byId);
 
             return new ProgressionTotals(xp, credits, cleared, stars);
         }

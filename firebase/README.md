@@ -74,6 +74,7 @@ functions/src/
   index.ts               getWallet, submitSpends, claimAwards, redeemPurchase
   progression.ts         server-side derivation — mirrors ProgressionLedger.cs
   daily.ts               daily chest generator — mirrors DailyChestTable.cs
+  streak.ts              streak ladder and the rule that bounds a night — mirrors StreakTable.cs
   receipts.ts            Apple and Google validation, fails closed
   wallet.ts              balance arithmetic over the private wallet document
 seed/seed-config.mjs     publishes the reward table from the shipped content
@@ -82,16 +83,24 @@ seed/products.example.json
 
 ## Status
 
-Deployed and verified live on 2026-08-13:
+Deployed and verified live on 2026-08-15:
 
-- Firestore database in `eur3`, security rules released
-- `getWallet`, `submitSpends`, `redeemPurchase` on Node 22 in `europe-west1`
-- `claimAwards` written and building; **not yet deployed** — see *Daily chests* below
+- Firestore database in `eur3`, security rules released — including the `streak` key on
+  the save document, which had to go out **before** any client that writes it, or every
+  push fails `hasOnly` with permission-denied
+- All six functions on Node 22 in `europe-west1`: `getWallet`, `submitSpends`,
+  `claimAwards`, `redeemPurchase`, `adReward`, and the `publishGroveStats` schedule
+- `claimAwards` grants daily chests *and* streak nights
 - Anonymous authentication enabled
 - Android and iOS apps registered for `com.digikeygames.glimmergrove`
-- `config/progression` seeded from the shipped content
+- `config/progression` seeded from the shipped content, streak ladder included
 - `shared/reward-vectors.json` passes on both sides, so client and server arithmetic agree
-- `firebase/e2e/smoke-test.mjs` passes against the live project
+- `firebase/e2e/smoke-test.mjs` passes **28/28** against the live project
+
+The smoke test signs in as a fresh anonymous account each run, so anything keyed on the
+account id — a glade's golden multiplier, a chest's contents — differs run to run. Assert
+against the set the published config permits, never against one number. The earned-credits
+case learned this by failing on about a third of runs while looking like a real defect.
 
 Not configured, and deliberately so: **store credentials**. The four secrets hold the
 placeholder `UNSET`, so `redeemPurchase` refuses every receipt. That is the correct
@@ -163,15 +172,49 @@ The shape is the mirror image of `submitSpends`, and for the same reason:
 
 Two things to know before touching it:
 
-- **`claimAwards` refuses everything if `config/progression` has no usable `daily` block.**
-  Granting a guess would be inventing money. So a drop-table change that has not been
-  seeded stops chests paying rather than paying the wrong amount, and `seed-config.mjs`
-  throws rather than publishing a config without one.
+- **A claim whose config block is missing is left unconfirmed, not refused.** Granting a
+  guess would be inventing money, and rejecting would throw away a reward the player earned
+  — the client only logs rejections and resubmits, so a permanent refusal is a loop for the
+  life of the account. So a drop-table change that has not been seeded stops chests paying
+  until it is, and `seed-config.mjs` throws rather than publishing a config without one.
 - **The run counter is forgeable and that is accounted for.** It lives in the player's own
   save document. The real bound is one day's chests per day per account, enforced by the
   derived ids plus a check that the claimed day is not in the future. That is what an
   honest player gets anyway; proving somebody played three glades would mean trusting a
   different number the same player writes.
+
+## Streak nights
+
+The streak ladder pays credits and gems as well as hearts, and it laps: night eight pays
+night one's rung, for ever. A night is collected by hand on the streak page and reaches the
+server the same way a chest does — a claim on `grantLog/streak:{day}:{night}:{currency}`,
+with the amount read from `config/progression.streak` and the client's figure ignored.
+
+What is different, and worth understanding before changing anything here, is that **the
+server cannot recompute a streak.** A chest is a function of (account, day, index); nothing
+about "seven days running" is derivable from anything this server observes. So the claim is
+*bounded* instead of recomputed, by two facts no client can write:
+
+1. The id carries the calendar day, and a streak has exactly one night per day. So
+   `grantLog` allows at most one streak payout per day per account, for ever.
+2. `players/{uid}/private/wallet` records the day and night last paid. `advances` in
+   `streak.ts` requires a claim to either continue — night up by exactly the days elapsed —
+   or restart, claiming no more nights than those days allow. A save edited to say "night
+   seven" every morning satisfies neither.
+
+Between them, a forged streak earns exactly what an honest one does. Three details:
+
+- **A brand-new wallet is seeded with the floor at yesterday**, so a fresh account's first
+  claim must be night one, today. An *existing* wallet with no floor is deliberately allowed
+  one unbounded claim — that is the migration for players holding a streak this server never
+  recorded, and refusing it would take nights the game has already shown them.
+- **The player's save is read but never believed.** `saveSupports` compares the claim against
+  `streak.startDay` / `lastPlayedDay` and logs a disagreement. It is not a gate: a night
+  collected offline before a streak lapsed has a `startDay` that has since moved past it, and
+  gating on that would reject a reward genuinely earned — permanently, and therefore for ever.
+- **Re-seed after retuning the ladder.** The board draws from the shipped file, the wallet is
+  credited from `config/progression`. Skip the seed and those are two different numbers in
+  front of the same player. `Validate Content` prints what one lap pays and says so.
 
 ## Two invariants, and how they are held
 

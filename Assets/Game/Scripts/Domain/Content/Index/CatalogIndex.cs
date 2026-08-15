@@ -26,7 +26,7 @@ namespace GlimmerGrove.Content
         public static readonly CatalogIndex Empty =
             new CatalogIndex(Array.Empty<ChapterIndexEntry>(), Array.Empty<LevelId>(),
                              new Dictionary<LevelId, int>(), new Dictionary<LevelId, ChapterId>(),
-                             Array.Empty<AvatarDefinition>());
+                             Array.Empty<AvatarDefinition>(), Array.Empty<Events.GroveEvent>());
 
         readonly ChapterIndexEntry[] _chapters;
         readonly LevelId[] _levelIds;
@@ -34,17 +34,20 @@ namespace GlimmerGrove.Content
         readonly Dictionary<LevelId, ChapterId> _levelChapter;
         readonly Dictionary<ChapterId, ChapterIndexEntry> _chapterById;
         readonly AvatarDefinition[] _companions;
+        readonly Events.GroveEvent[] _events;
 
         internal CatalogIndex(ChapterIndexEntry[] chapters, LevelId[] levelIds,
                               Dictionary<LevelId, int> levelOrder,
                               Dictionary<LevelId, ChapterId> levelChapter,
-                              AvatarDefinition[] companions)
+                              AvatarDefinition[] companions,
+                              Events.GroveEvent[] events)
         {
             _chapters = chapters;
             _levelIds = levelIds;
             _levelOrder = levelOrder;
             _levelChapter = levelChapter;
             _companions = companions ?? Array.Empty<AvatarDefinition>();
+            _events = events ?? Array.Empty<Events.GroveEvent>();
 
             _chapterById = new Dictionary<ChapterId, ChapterIndexEntry>(chapters.Length);
             foreach (var c in chapters) _chapterById[c.Id] = c;
@@ -59,6 +62,26 @@ namespace GlimmerGrove.Content
         /// <see cref="AvatarCatalog"/> on the roster this build shipped with.
         /// </summary>
         public IReadOnlyList<AvatarDefinition> Companions => _companions;
+
+        /// <summary>
+        /// The event calendar, in start order, past and future alike.
+        ///
+        /// Index knowledge for a stronger reason than the companion roster is: an event's
+        /// reward is derived from the star ledger, so every place that computes credits
+        /// needs the whole calendar — including events that closed months ago, which still
+        /// pay what they paid. A calendar that only held live events would take currency
+        /// away from a player the day one ended.
+        /// </summary>
+        public IReadOnlyList<Events.GroveEvent> Events => _events;
+
+        /// <summary>The event running at <paramref name="nowUnix"/>, or null.</summary>
+        public Events.GroveEvent LiveEventAt(long nowUnix)
+        {
+            for (int i = 0; i < _events.Length; i++)
+                if (_events[i].IsLiveAt(nowUnix)) return _events[i];
+
+            return null;
+        }
 
         // ------------------------------------------------------------- chapters
         /// <summary>Every chapter, in play order.</summary>

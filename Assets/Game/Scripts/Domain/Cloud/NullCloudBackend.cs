@@ -64,5 +64,14 @@ namespace GlimmerGrove.Cloud
             string userId, PurchaseReceipt receipt, CancellationToken cancellation = default)
             => Task.FromResult((CloudResult.Failed(CloudFailure.Offline, "no cloud backend configured"),
                                 new List<CloudWalletState>()));
+
+        /// <summary>
+        /// Nothing to compare against, which is exactly right: with no backend there is no
+        /// population, and a percentile over nobody is a number pretending to be a fact.
+        /// </summary>
+        public Task<(CloudResult result, Dictionary<Content.LevelId, Social.LevelStats> stats)>
+            ReadGroveStatsAsync(CancellationToken cancellation = default)
+            => Task.FromResult((CloudResult.Failed(CloudFailure.Offline, "no cloud backend configured"),
+                               new Dictionary<Content.LevelId, Social.LevelStats>()));
     }
 }

@@ -51,7 +51,7 @@ service cloud.firestore {
         return d.keys().hasOnly([
                  'schemaVersion', 'updatedUnix', 'settings', 'wallet', 'levels',
                  'progression', 'cloud', 'lastPlayedLevelId', 'legacyImportDone',
-                 'tipsSeen', 'daily', 'ads', 'checksum'
+                 'tipsSeen', 'daily', 'ads', 'streak', 'checksum'
                ])
                && d.schemaVersion is int
                && d.schemaVersion >= 1 && d.schemaVersion <= 100
@@ -75,7 +75,14 @@ service cloud.firestore {
                // currency at all. Bounded because the client controls its length.
                && (!('ads' in d) || (d.ads is map
                                      && (!('watched' in d.ads)
-                                         || (d.ads.watched is list && d.ads.watched.size() <= 64))));
+                                         || (d.ads.watched is list && d.ads.watched.size() <= 64))))
+               // The streak's three dates. Client-owned and forgeable in exactly the same
+               // way as the two blocks above, and accounted for in the same way: nothing
+               // here decides what a night pays. The ladder does pay currency now, but the
+               // server grants it from its own record of the last night it paid — a claim
+               // may only advance the night as fast as the calendar advances — so editing
+               // these buys a differently-shaped lie and no money. See functions/src/streak.ts.
+               && (!('streak' in d) || d.streak is map);
       }
 
       // The revision only ever moves forward, which gives the sync optimistic
@@ -143,6 +150,19 @@ service cloud.firestore {
     // the product catalog is what decides how much a purchase is worth.
     match /config/{document} {
       allow read:  if signedIn();
+      allow write: if false;
+    }
+
+    // The population's move counts, published by a scheduled job. Readable by anybody,
+    // deliberately: it holds no player and no identifier — nine numbers per glade,
+    // aggregated over thousands of saves — and the client fetches it from the splash,
+    // before anonymous sign-in has necessarily completed. Requiring a session would mean
+    // the one screen it feeds could not draw on a first launch, in exchange for
+    // protecting a document that is the same for everybody.
+    //
+    // Rules union rather than override, so this widens the read above without touching it.
+    match /config/stats {
+      allow read:  if true;
       allow write: if false;
     }
 

@@ -110,6 +110,12 @@ namespace GlimmerGrove.Content
             if (manifest.companions != null)
                 foreach (var companion in manifest.companions) builder.AddCompanion(companion);
 
+            // So does the calendar, and for a stronger reason: an event's reward is derived
+            // from the star ledger, so the definitions have to be resident wherever credits
+            // are computed. A manifest without any simply never runs one.
+            if (manifest.events != null)
+                foreach (var groveEvent in manifest.events) builder.AddEvent(groveEvent);
+
             var index = builder.Build();
             problems.AddRange(builder.Problems);
             return index;

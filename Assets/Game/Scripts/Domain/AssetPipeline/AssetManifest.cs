@@ -50,7 +50,8 @@ namespace GlimmerGrove.AssetPipeline
             "ic_list", "ic_info", "ic_hint", "ic_right", "ic_left", "ic_lock", "ic_star",
             "ic_check", "ic_stars", "ic_gear", "ic_play", "ic_close", "ic_plus", "ic_search",
             "ic_heart", "ic_gem", "ic_chest", "ic_chest_open", "ic_key", "ic_gift", "ic_star3d",
-            "ic_profile", "ic_pencil",
+            "ic_profile", "ic_pencil", "ic_power", "ic_heart_boost",
+            "seal_gold", "crest_gold", "bar_track", "bar_fill",
             "potion1", "potion2", "potion3", "potion4", "potion5", "potion6",
         };
 
@@ -63,12 +64,21 @@ namespace GlimmerGrove.AssetPipeline
             "palm", "boulder", "stump", "boat", "post",
         };
 
-        /// <summary>Backdrops that belong to screens rather than to any chapter.</summary>
+        /// <summary>
+        /// Backdrops that belong to screens rather than to any chapter.
+        ///
+        /// The <c>streak_*</c> trio is the grove after dark — the same islands the hub
+        /// stands on, lit by a moon. Global rather than scoped like chapter art for the
+        /// reason the flame is: three files is a fixed cost that does not grow with the
+        /// catalog, and the page is one tap off the hub, so a scope would spend a frame
+        /// loading on a navigation players make daily.
+        /// </summary>
         static readonly string[] ScreenBackdrops =
         {
             "grove_far", "grove_near", "grove_light", "splash_far",
             "home_sky", "home_ground", "home_deco",
             "map_sky", "map_ground", "map_deco",
+            "streak_sky", "streak_ground", "streak_deco",
         };
 
         static readonly string[] Sfxs =
@@ -89,6 +99,12 @@ namespace GlimmerGrove.AssetPipeline
             list.Add(AssetRequest.SpriteSet($"{ArtRoot}Fx/Victory"));
             list.Add(AssetRequest.SpriteSet($"{UiRoot}Coin"));
 
+            // The streak flame. Global rather than scoped for the reason the coin is: it is
+            // drawn on the hub, which is the first screen after the splash, so a scope
+            // would be created and never released and would only add a frame to the one
+            // navigation nobody can avoid.
+            list.Add(AssetRequest.SpriteSet($"{UiRoot}Flame"));
+
             foreach (var b in ScreenBackdrops) list.Add(AssetRequest.Sprite(Backdrop(b)));
             foreach (var u in UiSprites) list.Add(AssetRequest.Sprite(Ui(u)));
             foreach (var m in MapSprites) list.Add(AssetRequest.Sprite(MapArt(m)));
@@ -97,6 +113,13 @@ namespace GlimmerGrove.AssetPipeline
             list.Add(AssetRequest.Font(FontAddress));
             return list;
         }
+
+        // The streak page used to bring its own set with it: a camp of isometric blocks,
+        // one sprite per night plus a clearing to stand them on, derived from the ladder
+        // length so a retune would not need code. It is gone with the scene it drew — the
+        // board is built from the same jelly squares and glyphs the rest of the UI uses,
+        // which is one fewer set of art to keep in step with the reward table, and the
+        // sprites it did need are in UiSprites above where the audit can see them.
 
         // ------------------------------------------------------------ companions
         /// <summary>

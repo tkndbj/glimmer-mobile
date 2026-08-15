@@ -24,13 +24,11 @@ export const PATHS = {
   wallet: (uid: string) => `players/${uid}/private/wallet`,
   spend: (uid: string, spendId: string) => `players/${uid}/spendLog/${spendId}`,
 
-  // Awards, keyed by an id derived from what earned them rather than generated. That
-  // is what makes a daily chest payable exactly once: the second attempt collides with
-  // a document that already exists, on any device, after any reinstall.
   // Awards, keyed by an id derived from what earned them rather than generated. A daily
-  // chest uses `daily:{day}:{chest}:{ccy}`; a rewarded ad uses `ad:{eventId}`, where the
-  // event id comes from the network's own verification callback. Both are idempotent for
-  // the same reason: the second attempt collides with a document that already exists.
+  // chest uses `daily:{day}:{chest}:{ccy}`; a streak night uses `streak:{day}:{night}:{ccy}`;
+  // a rewarded ad uses `ad:{eventId}`, where the event id comes from the network's own
+  // verification callback. All three are idempotent for the same reason: the second attempt
+  // collides with a document that already exists, on any device, after any reinstall.
   grant: (uid: string, grantId: string) => `players/${uid}/grantLog/${grantId}`,
 
   receipt: (store: string, transactionId: string) => `receipts/${store}__${transactionId}`,

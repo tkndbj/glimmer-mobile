@@ -22,6 +22,8 @@
  * inputs and not all — the worst possible failure mode for money.
  */
 
+import { chestSeed, Rolls } from "./random";
+
 export const DROP_KINDS = ["credits", "gems", "hearts", "heart_boost"] as const;
 export type DropKind = (typeof DROP_KINDS)[number];
 
@@ -65,83 +67,15 @@ const STREAM_PICK = 0;
 const STREAM_AMOUNT = 1;
 const streamForGuaranteed = (index: number): number => 100 + index;
 
-const FNV_OFFSET_BASIS = 2166136261;
-const FNV_PRIME = 16777619;
-
 // -------------------------------------------------------------------- the generator
-function absorbByte(hash: number, byte: number): number {
-  return Math.imul(hash ^ (byte & 0xff), FNV_PRIME) >>> 0;
-}
+// Lives in `random.ts` now: the golden bonus needs the same sequence, and a private copy
+// here would have become two copies that drift. Every constant behind it is contract —
+// see that file and invariant 9c.
 
-function absorbChar(hash: number, code: number): number {
-  return absorbByte(absorbByte(hash, code & 0xff), (code >> 8) & 0xff);
-}
-
-function absorbString(hash: number, text: string): number {
-  let h = hash;
-  for (let i = 0; i < text.length; i++) h = absorbChar(h, text.charCodeAt(i));
-  return h;
-}
-
-/** Decimal digits, most significant first — the form a human would write. */
-function absorbInt(hash: number, value: number): number {
-  let h = hash;
-  let v = Math.trunc(value);
-
-  if (v < 0) {
-    h = absorbChar(h, 45);                        // '-'
-    v = -v;
-  }
-
-  let divisor = 1;
-  while (Math.floor(v / divisor) >= 10) divisor *= 10;
-
-  while (divisor > 0) {
-    h = absorbChar(h, 48 + (Math.floor(v / divisor) % 10));
-    divisor = Math.floor(divisor / 10);
-  }
-
-  return h;
-}
-
-function seed(playerKey: string, dayKey: number, chestIndex: number, stream: number): number {
-  let hash = FNV_OFFSET_BASIS >>> 0;
-
-  hash = absorbString(hash, playerKey ?? "");
-  hash = absorbChar(hash, 124);                   // '|'
-  hash = absorbInt(hash, dayKey);
-  hash = absorbChar(hash, 124);
-  hash = absorbInt(hash, chestIndex);
-  hash = absorbChar(hash, 124);
-  hash = absorbInt(hash, stream);
-
-  // xorshift32's one fixed point is zero, and it would return zero forever.
-  return hash === 0 ? FNV_OFFSET_BASIS >>> 0 : hash;
-}
-
-class ChestRandom {
-  private state: number;
-
+/** The chest generator, seeded the way a chest is identified. */
+class ChestRandom extends Rolls {
   constructor(playerKey: string, dayKey: number, chestIndex: number, stream: number) {
-    this.state = seed(playerKey, dayKey, chestIndex, stream);
-  }
-
-  /** xorshift32, exactly as Marsaglia gave it. */
-  next(): number {
-    let x = this.state;
-    x = (x ^ (x << 13)) >>> 0;
-    x = (x ^ (x >>> 17)) >>> 0;
-    x = (x ^ (x << 5)) >>> 0;
-    this.state = x;
-    return x;
-  }
-
-  below(bound: number): number {
-    return bound <= 1 ? 0 : this.next() % bound;
-  }
-
-  between(min: number, max: number): number {
-    return max <= min ? min : min + this.below(max - min + 1);
+    super(chestSeed(playerKey, dayKey, chestIndex, stream));
   }
 }
 

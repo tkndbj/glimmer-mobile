@@ -172,6 +172,38 @@ What that means in practice here:
     the serialised object, so a file written by an older schema can never match a newer
     build's hash. `Verify` therefore skips across versions. Bump `SaveSchema.Version`
     when you add a section, or every save on every device fails at once.
+13. **A reward is derivable, adjudicated, third-party, or not currency.** Four features
+    learned this separately and it is one rule. Currency the client hands out must reach the
+    server as something it can *recompute* — a chest from (account, day, index), a golden
+    glade from (account, level), an event track from clears dated inside a window — or as
+    something it is *told about by a third party*, which is the rewarded-ad callback, or as
+    something it can *bound* so tightly that forging it buys nothing, which is the streak.
+    The streak is the interesting one and the newest. Nothing about "seven days running" is
+    derivable from anything the server observes, and for a long time that was read as proof
+    a streak could not pay currency. It is not: the server does not need to know the streak,
+    only that a claim is no *better* than an honest one. A night is claimed as
+    `streak:{day}:{night}:{ccy}`, so `grantLog` bounds it to one payout per calendar day, and
+    `advances` in `functions/src/streak.ts` bounds the night to climb no faster than the
+    calendar climbs — a save saying "night seven" every morning fails both. What is left
+    uncapped is the very first claim of a brand-new account, which is why the per-kind
+    ceilings in `StreakRules` are an economy decision. Before adding a reward, decide which
+    of the four it is; if it is the fourth, the bound has to be server-owned state, not a
+    number read out of the save.
+13a. **A claim must never be refused for a reason that will still be true tomorrow.**
+    The client only warns about `rejected` ids and keeps resubmitting, so a permanent
+    refusal is a loop for the life of the account. That is why the server refuses a streak
+    night on `advances` (permanent, and correct) but never on the save's own dates — a
+    player who collects a night, goes offline and lets the flame lapse pushes a save whose
+    `startDay` has moved past that night, and gating on it would reject a reward they
+    genuinely earned. `saveSupports` logs the disagreement and pays anyway. Equally, a
+    missing config block leaves the claim *unconfirmed* rather than rejected, so it survives
+    until the seeder has run.
+14. **Derived rewards are free of save state, and that is why they are preferred.** The
+    golden glade bonus and the event tracks add nothing to `SaveFileDto` — no counter, no claim,
+    no merge rule — because both are pure functions of things already stored. That is not
+    an economy: it is the reason they were designed that way. Save state is where features
+    here go wrong (see 11b), so a reward that can be expressed as a function of the star
+    ledger should be.
 
 ## Layout
 
@@ -283,9 +315,18 @@ long since completed and its step 1 having quietly become a no-op.
 
 **Cloud save: the server is live, the client waits on one SDK install.**
 Firebase project `glimmer-groove-1cd60` — Firestore in `eur3`, security rules released,
-three functions on Node 22 in `europe-west1`, anonymous auth on, both apps registered.
-`firebase/README.md` is the guide; `firebase/e2e/smoke-test.mjs` proves the rules hold
-and passes 16/16 live.
+anonymous auth on, both apps registered, and **six functions** on Node 22 in
+`europe-west1`: `getWallet`, `submitSpends`, `claimAwards`, `redeemPurchase`, `adReward`
+and the `publishGroveStats` schedule. `firebase/README.md` is the guide;
+`firebase/e2e/smoke-test.mjs` proves the rules hold and passes **28/28 live**, the last
+nine of which walk a streak night through `claimAwards` end to end.
+
+One warning about that suite, learned the hard way: it signs in as a *new* anonymous
+account every run, so anything derived from the account id varies between runs. Its
+earned-credits case used to assert a single number and failed on roughly a third of runs,
+because a glade's golden multiplier is a function of (account, level). It now derives the
+achievable set from the bands published in `config/progression`. Never re-hardcode a
+figure there — a money suite that fails at random is a money suite everybody ignores.
 
 The Unity side is written (`Assets/Game/Scripts/Cloud/`, assembly `GlimmerGrove.Cloud`)
 and the Firebase Unity SDK 13.15.0 is wired into `Packages/manifest.json`. It waits on
@@ -339,6 +380,137 @@ that can be lowered from a config push.
 so `Boot` keeps the null provider until a LevelPlay account exists. Filling those in, plus
 the `LEVELPLAY_SECRET` in Secret Manager and the callback URL on the dashboard, is the whole
 remaining step.
+
+**Retention: the run outcome, the streak, the golden glade, the calendar, the percentile.**
+Five features that all hang off one seam. `RunOutcome` (Domain/Board) is decided once by
+`PlayScreen` when a run ends and handed to everything downstream — the celebration, the
+defeat copy, analytics — so a new reaction is a new reader rather than another hand in the
+board's state. The victory sequence is a `Cue` (Presentation/App): beats declared as gaps
+after one another, because the timing *is* the design and absolute delays had already
+drifted into a collision on a three-star win.
+
+The near-miss line is the one worth understanding. `Puzzle.TurnsToSolution` is an **upper
+bound** — if it says one, one turn provably finishes the glade — so a defeat that says "one
+turn from it" is a claim the player could check by restarting and counting. It returns -1
+once a needed conduit has crumbled, because the count over the survivors would read *lower*
+than the truth. That honesty is load-bearing: the effect works because the player cannot
+catch it being generous.
+
+The **streak** is three dates and no count (`startDay`, `lastPlayedDay`,
+`collectedThroughDay`, all merged by `max`, length and everything else derived) — invariant
+11b applied before the mistake rather than after it. Save schema **v10**. The **golden glade**
+is a per-(account, glade) credit multiplier folded into
+derived earnings, so it needs no claim and the server recomputes it; the **event calendar**
+is rows in `manifest.json` whose track pays from clears dated inside the window, likewise
+derived. Both are pinned by `firebase/shared/reward-vectors.json` — 24 reward, 25 golden-glade,
+120 chest vectors — and both mirror in `functions/src/progression.ts`. The **percentile**
+on the victory panel comes from `config/stats`, a daily `publishGroveStats` job that samples
+5,000 saves; it is drawn upward only, and never below 200 samples.
+
+**Streak rewards are collected by hand, and the page is the grove at night.** A rung used to
+be applied the moment a run ended, which meant the reward for a six-day streak arrived as a
+number changing behind a defeat screen — nothing about that is a reward. A night now waits on
+`StreakScreen` wearing a turning fan of light until it is tapped, and pays out into a throw,
+a burst and a stamped seal. Three decisions are worth not re-litigating. The record of what
+has been taken is a **third date**, `collectedThroughDay`, because the two obvious
+alternatives both fail invariant 11b — a count of collected rungs is hearts' old mistake, and
+per-night flags have to be cleared when a streak breaks, which is not monotonic and therefore
+not a join. Its **zero is the migration**: starting a run seeds the floor to the day before
+it, so a live file's floor is never zero, which lets zero mean "written by the build that
+paid automatically" and stops every night of a live streak paying twice on first launch.
+And **tapping a later night sweeps the earlier ones with it**, which is the only reading of a
+floor that cannot silently drop a reward. The backdrop is `Bg/streak_*` — literally the hub's
+own islands, night-graded under a moon — because sharing the hub's daylight sky made the one
+screen about nights kept read as a variant of the two screens either side of it. The hub's
+streak chip carries a count badge, without which the change trades a reward players did not
+notice for one they never take.
+
+**The ladder laps, and it pays currency.** `StreakTable.Rung` wraps: night eight pays night
+one's rung, for ever. It used to repeat the *last* rung instead, which meant a tile labelled
+"night 8" paid night seven's reward — the board and the table telling the same player two
+different things — and it forced the milestone to be small, because whatever ended the ladder
+was what every engaged player received for the rest of their life. A lap lets night seven be
+the week's peak and still come round again. The shipped lap is seven nights: **150 credits,
+1 heart, 5 gems, 2 hearts, a 12-hour boost, 3 hearts, 10 gems.**
+
+Two currency rungs is the part that needed building, and invariant 13 has the argument. In
+short: the server cannot recompute a streak, but it does not have to — a night is claimed as
+`streak:{day}:{night}:{ccy}`, the grant log bounds it to one payout per calendar day, and
+`advances` bounds the night to climb no faster than the calendar. That floor lives on the
+wallet document, which no client can write, and `readWallet` seeds it to *yesterday* for a
+brand-new account so a fresh install cannot claim a backlog. An existing account's absent
+floor deliberately allows one unbounded first claim — that is the migration, and refusing it
+would take nights the game has already shown people. The ceilings in `StreakRules` are shared
+with `functions/src/streak.ts` and are the per-day cost of a forged streak, so they are an
+economy decision. Fifteen shared vectors pin the lap and the clamp; twelve server-only cases
+pin `advances`.
+
+Two things changed underneath it. The streak's three dates **now travel with the save** — they
+never used to, so a player's flame quietly restarted on their second device, and
+`DailyStreak.Join` had nothing to join against. And the seeder **now publishes the ladder**;
+it never did, because until now the server had no opinion about a night. Re-seed after any
+change to the rungs or the game shows one number and the wallet receives another.
+
+**The board is one lap of the ladder, not the whole streak.** A streak has no end and a ladder
+does, so a board pinned to
+the first seven nights simply stopped having a tile for night eight, while `Pending` went on
+counting it and the hub badge went on advertising it. The board now draws `CycleLength` nights
+starting at `DailyStreak.BoardFirstNight`, and every tile derives from its **absolute** night:
+night eight reads "day 8", carries `Rung(8)`, and wears the crest if it ends the lap. Two rules
+keep it honest. The lap shown is the one holding the *oldest uncollected* night rather than the
+one the streak is on — otherwise night seven's reward drops off the board the moment night
+eight arrives — and the progress bar measures the lap, never the streak, because a bar against
+something unbounded can never fill. `EveryNightOfThreeWeeksIsOnTheBoardAndPays` walks
+twenty-one nights and pins all of it. The count over the flame and on the hub chip are both
+`Shrinkable` for the same reason: they are not two-digit fields.
+
+`StreakInfoOverlay` (the "i" on the streak header) answers the three things the board cannot
+draw: that a night is earned by *finishing* a glade rather than winning one, what fast hearts
+actually do, and that nothing stops at the end of the ladder. Every number in it is read from
+`StreakTable` and `HeartRules` rather than written into the copy — a panel explaining the game
+is the easiest thing in a project to leave behind when the content is retuned.
+
+**The hub's feature row: the streak and the event are two equal boxes.** Both used to be
+drawn at the size of chrome — the streak a 232×116 chip wedged into the top bar beside the
+settings gear, the event a 56-high strip — and between them they are the two reasons a
+player opens the game on a day they had not planned to. They are now 438×300 boxes on one
+row under the daily panel, built by `BuildFeature` from a shared shell (`FeatureCard`,
+`FeatureHeader`, `FeatureValue`, `FeatureStrip`, `FeatureBar`) so they read as a system.
+
+Three decisions are worth not re-litigating. The **right box holds the event or the next
+companion**, which is not a fallback bolted on: the old strip already chose between exactly
+those two and hid the loser, so the only change is that the loser takes the slot when the
+winner is absent — and there is no state of the screen with one box and a hole. The **card
+is the button** rather than carrying an invisible one over it, so a press squashes the whole
+box; there is still no plate behind the row and no rule between the two, because each box
+earns its own contrast the way the nav caps do. And the row **cost the hero a tenth of its
+size and 226px of height**, which is what the space was worth.
+
+A box holding something collectable **lights its border** (`FeatureBeacon`): a gold seat of
+light behind the card that breathes, a gold rim brightening over the resting one, and a
+cream ring that steps 18px out of the border and fades. Three layers because each does a
+different job — the seat is the only part visible from the far corner of the screen, the rim
+says the border is lit rather than merely coloured, and the ring is the "tap me", because
+motion that *leaves* the shape is what the eye catches peripherally. The corner badge is not
+redundant with it: a 54px disc is something you find once you are already looking at the
+row, and the whole problem with a collect-by-hand reward is getting somebody to look at the
+row at all. The ring is **cream, not gold** — the first version travelled gold out of a gold
+rim into a gold glow and was invisible on the screen while reading perfectly in the source.
+
+**An event wears a mark, and the mark is content.** `manifest.json` events take an optional
+`icon`, resolved by `EventMark`. It names a mark the client knows how to draw, *never* an
+art path — see *Events* in `CONTENT.md` for why that distinction is the only one that
+survives invariant 7, and why an unknown name draws the default instead of refusing the
+event. The one that ships is `Art.Bloom`: a rose curve rasterised to a distance mask, so it
+tints and needs no address, and **its openness is the event's progress** — a tight bud at
+none of the track finished, a full flower at the end of it. The three-star silhouette it
+replaces was wrong twice over, being both the vocabulary of a *glade's* reward and unable to
+say anything about where the player was.
+
+**Verifying is now in the repo.** `Tools/verify/` holds `compile.py` (every assembly
+separately, which is what actually proves the layering), `tests.py` (the EditMode suite via
+a reflection runner — 320 pass offline, 62 need the Editor and say so), `content.py` and
+`loc.py`. It no longer has to be recovered from a scratchpad.
 
 Not done, deliberate: **in-app purchases** (the four store secrets hold `UNSET`, so
 receipts are refused — correct until real store products exist), **Play Games Services**

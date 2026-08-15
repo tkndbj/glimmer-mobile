@@ -142,6 +142,58 @@ namespace GlimmerGrove
 
         public bool Solved(int i) => TurnsOwed(i) == 0;
 
+        /// <summary>
+        /// How many single turns still separate this board from the authored solution,
+        /// or -1 when the solution can no longer be reached.
+        ///
+        /// <para>
+        /// <b>This is an upper bound, and the bound is the point.</b> A board is won when
+        /// every lamp is lit (see <see cref="Evaluate"/>), which can happen with spare
+        /// conduits still pointing anywhere — so the true minimum number of turns to a win
+        /// may be lower than this, and computing it exactly would mean searching the whole
+        /// rotation space of the board on the frame a run ends. What is cheap is the
+        /// distance along the solution the level was authored with, and that is sound in
+        /// the direction that matters: if this reads 1, then one turn <em>definitely</em>
+        /// finishes the glade. Nothing that quotes this number can therefore overstate how
+        /// close the player was, which is the whole reason it exists — a near-miss line the
+        /// player can catch being generous is worse than none.
+        /// </para>
+        /// <para>
+        /// Only conduits the solution's own light graph reaches are counted. A decorative
+        /// pipe strung off the network can sit at any angle in a perfectly winnable board,
+        /// and charging the player turns for straightening it would inflate every reading.
+        /// <see cref="SolutionDepth"/> already distinguishes the two.
+        /// </para>
+        /// <para>
+        /// -1 when a conduit the solution needs has crumbled. There is then no turn count
+        /// that means anything — the board this measures against no longer exists — and
+        /// returning a number computed over the survivors would quietly report the player
+        /// as closer than they were, because <see cref="Used"/> drops a shattered cell and
+        /// takes its owed turns with it.
+        /// </para>
+        /// </summary>
+        public int TurnsToSolution
+        {
+            get
+            {
+                int total = 0;
+
+                for (int i = 0; i < C.Length; i++)
+                {
+                    // Unreached by the solution's own light: decoration, and free to be
+                    // pointing anywhere at all.
+                    if (SolutionDepth[i] == int.MaxValue) continue;
+
+                    if (Shattered(i)) return -1;
+                    if (C[i].kind == Kind.Empty) continue;
+
+                    total += TurnsOwed(i);
+                }
+
+                return total;
+            }
+        }
+
         /// <summary>Tiles whose four orientations are identical never need a turn.</summary>
         public bool Inert(int i)
         {
@@ -274,6 +326,30 @@ namespace GlimmerGrove
                     q.Enqueue(b);
                 }
             }
+        }
+
+        /// <summary>
+        /// Every conduit the authored solution still wants turned, nearest the source
+        /// first. The tiles <see cref="TurnsToSolution"/> is counting.
+        ///
+        /// Shared rather than re-derived by each caller, because a second copy of "which
+        /// tiles matter" is a second copy that can disagree with the number the player was
+        /// quoted — and the one place this is used is the moment a defeat screen points at
+        /// them and says how close it was.
+        /// </summary>
+        public void Owed(List<int> into)
+        {
+            if (into == null) return;
+            into.Clear();
+
+            for (int i = 0; i < C.Length; i++)
+            {
+                if (SolutionDepth[i] == int.MaxValue) continue;
+                if (!Used(i) || TurnsOwed(i) == 0) continue;
+                into.Add(i);
+            }
+
+            into.Sort((a, b) => SolutionDepth[a].CompareTo(SolutionDepth[b]));
         }
 
         /// <summary>Nearest-to-the-source tile that is still turned the wrong way.</summary>

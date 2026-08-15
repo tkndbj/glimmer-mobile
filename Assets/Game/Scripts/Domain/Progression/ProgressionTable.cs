@@ -79,13 +79,16 @@ namespace GlimmerGrove.Progression
 
         ProgressionTable(long[] cumulative, RewardRule defaultRule,
                          Dictionary<ChapterId, RewardRule> chapterRules,
-                         DailyChestTable daily, AdRewardTable ads)
+                         DailyChestTable daily, AdRewardTable ads, StreakTable streak,
+                         GoldenTable golden)
         {
             _cumulative = cumulative;
             _defaultRule = defaultRule;
             _chapterRules = chapterRules;
             Daily = daily ?? DailyChestTable.Default;
             Ads = ads ?? AdRewardTable.Default;
+            Streak = streak ?? StreakTable.Default;
+            Golden = golden ?? GoldenTable.Default;
         }
 
         /// <summary>
@@ -109,6 +112,26 @@ namespace GlimmerGrove.Progression
         public AdRewardTable Ads { get; }
 
         /// <summary>
+        /// What a run of consecutive days pays, published with the curve for the same
+        /// reason the two above it are.
+        ///
+        /// The window this closes is the sharpest of the three, because a streak rung and
+        /// a chest are competing for the same evening: a client holding a retuned streak
+        /// ladder against an untuned chest table has two rewards that were balanced against
+        /// each other and no longer are, and the player feels it as one of them being
+        /// pointless.
+        /// </summary>
+        public StreakTable Streak { get; }
+
+        /// <summary>
+        /// How often a glade pays more than the reward rule says. Published with the curve
+        /// because it <em>is</em> the curve seen from another angle — the average multiplier
+        /// multiplies every credit figure above it, so tuning one without the other moves
+        /// the economy by a factor nobody wrote down.
+        /// </summary>
+        public GoldenTable Golden { get; }
+
+        /// <summary>
         /// A usable curve for when no file could be read. The game stays playable and
         /// the validator fails the build, which is the right way round — a content
         /// problem should stop a build, never a player's session.
@@ -121,7 +144,9 @@ namespace GlimmerGrove.Progression
             defaultRule: RewardRule.Default,
             chapterRules: new Dictionary<ChapterId, RewardRule>(),
             daily: DailyChestTable.Default,
-            ads: AdRewardTable.Default);
+            ads: AdRewardTable.Default,
+            streak: StreakTable.Default,
+            golden: GoldenTable.Default);
 
         /// <summary>Highest level this curve defines. Level 1 always exists.</summary>
         public int MaxLevel => _cumulative.Length;
@@ -281,15 +306,26 @@ namespace GlimmerGrove.Progression
             // and it must not take the chest table down with it either.
             var ads = AdRewardTable.Resolve(dto.ads, problems);
 
+            // And the same bargain again. An unreadable streak ladder costs the live
+            // tuning of one feature; it must not take the curve, the chests or the ads
+            // down with it.
+            var streak = StreakTable.Resolve(dto.streak, problems);
+
+            // And once more. Of the four optional blocks this is the one whose absence is
+            // least visible — every glade simply pays exactly what the rule says, which is
+            // a working game — so it must be reported loudly and never allowed to be fatal.
+            var golden = GoldenTable.Resolve(dto.golden, problems);
+
             table = Build(dto.xpToNext, dto.tailXpToNext, dto.tailXpIncrement, maxLevel,
-                          defaultRule, chapterRules, daily, ads);
+                          defaultRule, chapterRules, daily, ads, streak, golden);
             return true;
         }
 
         static ProgressionTable Build(int[] xpToNext, int tailXpToNext, int tailXpIncrement,
                                       int maxLevel, RewardRule defaultRule,
                                       Dictionary<ChapterId, RewardRule> chapterRules,
-                                      DailyChestTable daily, AdRewardTable ads)
+                                      DailyChestTable daily, AdRewardTable ads,
+                                      StreakTable streak, GoldenTable golden)
         {
             if (maxLevel < 1) maxLevel = 1;
 
@@ -306,7 +342,7 @@ namespace GlimmerGrove.Progression
                 cumulative[level] = cumulative[level - 1] + step;
             }
 
-            return new ProgressionTable(cumulative, defaultRule, chapterRules, daily, ads);
+            return new ProgressionTable(cumulative, defaultRule, chapterRules, daily, ads, streak, golden);
         }
     }
 }

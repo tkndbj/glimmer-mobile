@@ -333,5 +333,25 @@ namespace GlimmerGrove.Cloud
         /// <summary>Hands a store receipt to the server, which validates and grants.</summary>
         Task<(CloudResult result, List<CloudWalletState> wallets)> RedeemPurchaseAsync(
             string userId, PurchaseReceipt receipt, CancellationToken cancellation = default);
+
+        /// <summary>
+        /// Reads the published move-count deciles for every glade.
+        ///
+        /// <para>
+        /// The one read here that is not about this player. It needs no user id and no
+        /// sign-in — it is a single public document, written by a scheduled job that
+        /// samples the population — so it is safe to call on a launch that has not
+        /// authenticated, and safe to fail: every reader treats an absent table as
+        /// "nothing to say" and draws nothing.
+        /// </para>
+        /// <para>
+        /// Deliberately <b>not</b> routed through the content sources, even though it looks
+        /// like content. It is derived from live players rather than authored, it changes
+        /// daily, and it must never end up cached in a shipped build — a snapshot of it in
+        /// StreamingAssets would be quoting last quarter's population forever.
+        /// </para>
+        /// </summary>
+        Task<(CloudResult result, Dictionary<Content.LevelId, Social.LevelStats> stats)> ReadGroveStatsAsync(
+            CancellationToken cancellation = default);
     }
 }

@@ -16,6 +16,27 @@
       ]
     }
   ],
+  "events": [
+    {
+      "id": "first_bloom",
+      "icon": "bloom",
+      "startUnix": 1786320000,
+      "endUnix": 1787529600,
+      "disabled": false,
+      "levels": [
+        "c01_first_light",
+        "c01_twin_streams",
+        "c01_prism_heart",
+        "c01_thorn_hollow"
+      ],
+      "milestones": [
+        { "goal": 1, "credits": 60 },
+        { "goal": 2, "credits": 90 },
+        { "goal": 4, "credits": 250 }
+      ]
+    }
+  ],
+
   "companions": [
     {
       "id": "monarch",

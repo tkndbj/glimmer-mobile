@@ -73,6 +73,12 @@ namespace GlimmerGrove.Persistence
                 // other by taking turns. The rule lives with the feature for the reason
                 // the one above it does.
                 ads = Ads.RewardedAds.Join(mine.ads, other.ads),
+
+                // Two dates, both taken at their larger value, and the length derived from
+                // the pair rather than stored — which is the only reason a streak is
+                // mergeable at all. See invariant 11b and DailyStreak, which owns the rule
+                // for the reason the two above it do.
+                streak = Daily.DailyStreak.Join(mine.streak, other.streak),
             };
 
             return merged;

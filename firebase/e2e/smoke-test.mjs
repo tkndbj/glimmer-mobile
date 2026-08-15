@@ -28,6 +28,9 @@ const FS = `https://firestore.googleapis.com/v1/projects/${PROJECT}/databases/(d
 
 const SEED_CREDITS = 1250;
 
+/** Matches `DailyRules.SecondsPerDay` and `daily.ts`. A day key is days since the epoch. */
+const SECONDS_PER_DAY = 86400;
+
 /**
  * The Android app's web API key, used to mint an anonymous token to test the rules with.
  *
@@ -140,6 +143,14 @@ const save = {
                                    { mapValue: { fields: { placement: { stringValue: "heart_refill" },
                                                            count: { integerValue: "1" } } } },
                                  ] } } } } },
+    // The streak's three dates, here for the same reason `daily` and `ads` are: the
+    // mapper sends them, so this has to, or nothing checks that the live rules accept
+    // them. Newer than either, and the one whose absence would be most expensive — the
+    // ladder pays currency now, so a PERMISSION_DENIED here would stop the save pushing
+    // and the nights would pile up uncollected behind it.
+    streak: { mapValue: { fields: { startDay: { integerValue: "20310" },
+                                    lastPlayedDay: { integerValue: "20315" },
+                                    collectedThroughDay: { integerValue: "20314" } } } },
     progression: { mapValue: { fields: { xpHighWater: { integerValue: "100" },
                                          levelHighWater: { integerValue: "2" } } } },
     cloud: { mapValue: { fields: { userId: { stringValue: uid }, revision: { integerValue: "1" },
@@ -197,8 +208,45 @@ check(peekReceipts.status === 403, "receipt claims are invisible to clients", `g
 const otherPlayer = await fetch(`${FS}/players/not-me`, { headers: bearer });
 check(otherPlayer.status === 403, "another player's save is unreadable", `got ${otherPlayer.status}`);
 
-check((await fetch(`${FS}/config/progression`, { headers: bearer })).ok,
-      "the reward table is readable by a signed-in client");
+const publishedConfig = await fetch(`${FS}/config/progression`, { headers: bearer });
+check(publishedConfig.ok, "the reward table is readable by a signed-in client");
+
+/**
+ * The golden percentages the server may legitimately apply, read from the live config.
+ *
+ * Needed because a glade's credit reward is not a fixed number: it carries a golden
+ * multiplier that is a pure function of (account, level), and this script signs in as a
+ * *new* anonymous account every run. Hard-coding the base made the earned-credits check
+ * below fail on roughly a third of runs — whenever either glade happened to roll above
+ * 100 for that uid — which is the worst kind of failure in a suite about money, because
+ * it teaches everyone reading it that a red line here means nothing.
+ */
+const goldenBands = (async () => {
+  const body = await publishedConfig.clone().json().catch(() => null);
+  const golden = body?.fields?.golden;
+
+  // Published as a bare array — `progression.ts` reads `config.golden` as `GoldenBand[]`.
+  // The `{ bands: [...] }` shape is only how the vector file carries them, so both are
+  // accepted here rather than assumed: reading the wrong one silently degrades to [100],
+  // which looks exactly like a passing test until a uid rolls above the base.
+  const values = golden?.arrayValue?.values
+              ?? golden?.mapValue?.fields?.bands?.arrayValue?.values
+              ?? [];
+
+  const percents = values
+    .map((band) => Number(band?.mapValue?.fields?.percent?.integerValue ?? 0))
+    .filter((percent) => percent >= 100);
+
+  if (percents.length === 0) {
+    // Never silently: a config with no readable bands means this script cannot know what
+    // the server is entitled to answer, and saying so is better than passing by luck.
+    check(false, "the golden bands are readable from the live config",
+          "none parsed — the earned-credits case below is now only checking the base");
+    return [100];
+  }
+
+  return percents;
+})();
 
 // ------------------------------------------------------------------ functions
 console.log("\nfunctions");
@@ -219,10 +267,26 @@ check(creditsOf(wallet.body)?.grantedBaseline === SEED_CREDITS,
 // The save above holds two cleared glades in c01_shallows, whose override pays
 // 20 + 10 per star: three stars is 50, two stars is 40. The server derives this from
 // the ledger itself — nothing in the request said anything about currency.
-const EXPECTED_EARNED = 90;
-check(creditsOf(wallet.body)?.earnedFloor === EXPECTED_EARNED,
+//
+// Each glade then carries its own golden multiplier, so the answer is one of a small set
+// rather than a single number. Every member of that set is still proof of the thing this
+// case is really about: the figure came from the ledger and the published bands, not from
+// anything the client said.
+const BASE_CREDITS = [50, 40];
+const percents = await goldenBands;
+
+const achievable = new Set();
+for (const first of percents) {
+  for (const second of percents) {
+    achievable.add(Math.floor((BASE_CREDITS[0] * first) / 100) +
+                   Math.floor((BASE_CREDITS[1] * second) / 100));
+  }
+}
+
+const earned = creditsOf(wallet.body)?.earnedFloor;
+check(achievable.has(earned),
       "the server derives earned credits from the ledger it was sent",
-      `expected ${EXPECTED_EARNED}, got ${creditsOf(wallet.body)?.earnedFloor}`);
+      `got ${earned}, expected one of ${[...achievable].sort((a, b) => a - b).join(", ")}`);
 
 const spendId = "smoke-" + Math.random().toString(36).slice(2, 10);
 const debit = { id: spendId, currency: "credits", amount: 100, unix: 1700000001, reason: "smoke" };
@@ -249,6 +313,80 @@ check(fakePurchase.status >= 400, "a receipt that cannot be validated is refused
       `got ${fakePurchase.status}`);
 check(creditsOf((await call("getWallet", {})).body)?.grantedBaseline === SEED_CREDITS,
       "the refused purchase granted nothing");
+
+// ------------------------------------------------------------------ streak nights
+//
+// The streak is the one reward the server cannot recompute — nothing about "seven days
+// running" is derivable from anything it observes — so instead of checking a number it
+// checks a *rate*: one night per calendar day, climbing no faster than the calendar. All
+// of that lives in `advances`, and none of it can be proved by a unit test alone, because
+// the floor it compares against is written by the server into a document no client can
+// read. This is the only place the whole path is exercised end to end.
+console.log("\nstreak nights");
+
+const gemsOf = (reply) => reply?.result?.wallets?.find((w) => w.currency === "gems");
+const rejectedBy = (reply) => reply?.result?.rejected ?? [];
+
+const today = Math.floor(Date.now() / 1000 / SECONDS_PER_DAY);
+const night = (day, n, currency) => ({
+  id: `streak:${day}:${n}:${currency}`, claimedAmount: 1, unix: 1700000003, reason: "streak_night",
+});
+
+const creditsBefore = creditsOf((await call("getWallet", {})).body)?.grantedBaseline;
+const gemsBefore = gemsOf((await call("getWallet", {})).body)?.grantedBaseline;
+
+// The floor `readWallet` seeded at yesterday. A brand-new account has no streak to speak
+// of, so the top of the ladder is exactly what it must not be able to ask for.
+const topRung = await call("claimAwards", { awards: [night(today, 7, "gems")] });
+check(gemsOf(topRung.body)?.grantedBaseline === gemsBefore,
+      "a fresh account cannot claim the seventh night today",
+      `gems ${gemsBefore} -> ${gemsOf(topRung.body)?.grantedBaseline}`);
+check(rejectedBy(topRung.body).includes(`streak:${today}:7:gems`),
+      "and it is refused rather than left pending for ever");
+
+// The one night it may claim, and the amount comes from config/progression rather than
+// from the request — `claimedAmount` above says 1.
+const firstNight = await call("claimAwards", { awards: [night(today, 1, "credits")] });
+check(creditsOf(firstNight.body)?.grantedBaseline === creditsBefore + 150,
+      "the first night pays the ladder's figure, not the client's",
+      `credits ${creditsBefore} -> ${creditsOf(firstNight.body)?.grantedBaseline}`);
+
+// The derived id is what makes this safe to resubmit, which the client does on every sync
+// until the server confirms it.
+const sameNight = await call("claimAwards", { awards: [night(today, 1, "credits")] });
+check(creditsOf(sameNight.body)?.grantedBaseline === creditsBefore + 150,
+      "resubmitting that night does not pay twice",
+      `credits -> ${creditsOf(sameNight.body)?.grantedBaseline}`);
+
+// One day on, seven nights on: the shape a forged save produces every morning.
+const outrun = await call("claimAwards", { awards: [night(today + 1, 7, "gems")] });
+check(gemsOf(outrun.body)?.grantedBaseline === gemsBefore,
+      "a night that outruns the calendar is refused",
+      `gems -> ${gemsOf(outrun.body)?.grantedBaseline}`);
+
+// The rung decides the currency, so naming a different one earns nothing. This is what
+// stops a client collecting the credit night and asking to be paid in gems.
+const wrongCurrency = await call("claimAwards", { awards: [night(today, 1, "gems")] });
+check(gemsOf(wrongCurrency.body)?.grantedBaseline === gemsBefore,
+      "a credit night cannot be claimed as gems",
+      `gems -> ${gemsOf(wrongCurrency.body)?.grantedBaseline}`);
+
+// Hearts are applied by the client and never claimed, so `hearts` is not a currency here
+// and the id does not survive parsing.
+const notCurrency = await call("claimAwards", { awards: [night(today + 1, 2, "hearts")] });
+check(rejectedBy(notCurrency.body).includes(`streak:${today + 1}:2:hearts`),
+      "an id naming a non-currency is refused outright");
+
+// The far bound. The lap itself — night eight paying night one's rung — cannot be reached
+// from a fresh account without waiting eight days, which is precisely what the floor is
+// for; it is pinned instead by the shared vectors, on both implementations. What belongs
+// here is the check that a client cannot skip the wait by dating its claim forward.
+const preFarmed = await call("claimAwards", { awards: [night(today + 7, 8, "credits")] });
+check(creditsOf(preFarmed.body)?.grantedBaseline === creditsBefore + 150,
+      "a night dated a week ahead pays nothing",
+      `credits -> ${creditsOf(preFarmed.body)?.grantedBaseline}`);
+check(rejectedBy(preFarmed.body).includes(`streak:${today + 7}:8:credits`),
+      "and is refused rather than left pending");
 
 console.log(`\n${pass} passed, ${fail} failed`);
 process.exit(fail === 0 ? 0 : 1);

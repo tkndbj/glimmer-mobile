@@ -15,6 +15,7 @@
 import { initializeApp } from "firebase-admin/app";
 import { getFirestore, FieldValue, Timestamp } from "firebase-admin/firestore";
 import { onCall, onRequest, HttpsError, CallableRequest } from "firebase-functions/v2/https";
+import { onSchedule } from "firebase-functions/v2/scheduler";
 import { defineSecret } from "firebase-functions/params";
 import { logger } from "firebase-functions";
 
@@ -30,7 +31,13 @@ import {
   chestCurrencyValue, DailyClaim, MAX_DAYS_AHEAD, MAX_DAYS_BEHIND,
   parseDailyClaim, todayKey, usableDailyConfig,
 } from "./daily";
+import {
+  advances, isStreakGrantId, MAX_STREAK_DAYS_AHEAD, MAX_STREAK_DAYS_BEHIND,
+  parseStreakClaim, raise, readSavedStreak, saveSupports, StreakClaim,
+  streakCurrencyValue, usableStreakConfig,
+} from "./streak";
 import { ReceiptRejected, validateReceipt } from "./receipts";
+import { rebuildStats } from "./stats";
 import {
   deriveEarned,
   loadProgressionConfig,
@@ -250,19 +257,28 @@ interface SubmittedAward {
 /**
  * A submitted award that has survived parsing, tagged with how it will be adjudicated.
  *
- * The currency is on the daily arm only, and deliberately: a chest id names the ledger it
- * pays into, whereas an ad id does not — the placement decides, and the placement's payout
- * lives in server config. That asymmetry is the point. It means a client cannot watch the
- * heart video and ask to be paid in gems, because at no point does it get to say "gems".
+ * The currency rides on the claim, and only because both claimable award kinds name the
+ * ledger they pay into. An ad id does not — the placement decides, and the placement's
+ * payout lives in server config — which is why an ad is never claimed here at all. That
+ * asymmetry is the point: a client cannot watch the heart video and ask to be paid in gems,
+ * because at no point does it get to say "gems".
+ *
+ * Two shapes rather than one because the two are adjudicated by different evidence. A chest
+ * is *recomputed* — the server re-rolls it and the answer is not a matter of opinion. A
+ * streak night cannot be recomputed by anybody, so it is *bounded* instead, against a floor
+ * this server owns. See `streak.ts`.
  */
-type CleanAward = {
+type CleanCommon = {
   id: string;
   claimedAmount: number;
   unix: number;
   reason: string;
-  claim: DailyClaim;
   currency: CurrencyId;
 };
+
+type CleanAward =
+  | (CleanCommon & { kind: "daily"; claim: DailyClaim })
+  | (CleanCommon & { kind: "streak"; claim: StreakClaim });
 
 export const claimAwards = onCall(callOptions, async (request): Promise<{
   wallets: WalletReply[];
@@ -304,6 +320,24 @@ export const claimAwards = onCall(callOptions, async (request): Promise<{
       return [];
     }
 
+    if (isStreakGrantId(id)) {
+      const streak = parseStreakClaim(id);
+      if (!streak) { rejected.push(id); return []; }
+
+      if (!CURRENCIES.includes(streak.currency as CurrencyId)) { rejected.push(id); return []; }
+
+      if (streak.dayKey > today + MAX_STREAK_DAYS_AHEAD ||
+          streak.dayKey < today - MAX_STREAK_DAYS_BEHIND) {
+        logger.warn("refused a streak night dated outside the window", {
+          uid, id, claimedDay: streak.dayKey, today,
+        });
+        rejected.push(id);
+        return [];
+      }
+
+      return [{ ...common, kind: "streak", claim: streak, currency: streak.currency as CurrencyId }];
+    }
+
     const claim = parseDailyClaim(id);
     if (!claim) { rejected.push(id); return []; }
 
@@ -317,8 +351,14 @@ export const claimAwards = onCall(callOptions, async (request): Promise<{
       return [];
     }
 
-    return [{ ...common, claim, currency: claim.currency as CurrencyId }];
+    return [{ ...common, kind: "daily", claim, currency: claim.currency as CurrencyId }];
   });
+
+  // Oldest first. Streak nights are judged against a floor that moves as each one is paid,
+  // so a batch that arrived out of order — a device sending a backlog, two devices merging
+  // — would otherwise have night six judged against a floor night seven had already
+  // raised. Daily chests are order-independent and ride along harmlessly.
+  clean.sort((a, b) => a.claim.dayKey - b.claim.dayKey);
 
   const confirmed: Record<string, string[]> = {};
 
@@ -336,17 +376,23 @@ export const claimAwards = onCall(callOptions, async (request): Promise<{
       clean.map((award) => transaction.get(db.doc(PATHS.grant(uid, award.id))))
     );
 
+    // The player's own account of their streak, fetched only when a streak night is being
+    // claimed and used only to log a disagreement — see `saveSupports`. Nothing is refused
+    // on it, so this is an extra read in the name of being able to explain a support
+    // ticket, not part of the decision.
+    const wantsStreak = clean.some((award) => award.kind === "streak");
+    const saved = wantsStreak
+      ? readSavedStreak((await transaction.get(db.doc(PATHS.player(uid)))).data())
+      : null;
+
     await deriveEarned(transaction, uid, state, config);   // ratchets the floor
 
     const daily = usableDailyConfig((config as { daily?: unknown }).daily);
+    const ladder = usableStreakConfig((config as { streak?: unknown }).streak);
 
-    if (!daily) {
-      // The config predates the daily block, or was seeded badly. Granting a guess
-      // would be inventing money, so nothing is granted and nothing is confirmed —
-      // the client keeps its local copy and tries again after the seeder has run.
-      logger.error("config/progression has no usable daily table; refusing to grant awards", { uid });
-      return state;
-    }
+    // Where this server last paid a streak night to. Threaded through the loop rather than
+    // re-read, because a batch pays several nights and each one moves it.
+    let floor = state.streak ?? { paidThroughDay: 0, paidNight: 0 };
 
     for (let i = 0; i < clean.length; i++) {
       const award = clean[i];
@@ -359,20 +405,63 @@ export const claimAwards = onCall(callOptions, async (request): Promise<{
         continue;
       }
 
-      if (award.claim.chestIndex >= daily.chests.length) {
-        rejected.push(award.id);
+      // A config that predates the block this award needs, or one seeded badly. Granting a
+      // guess would be inventing money, so the award is neither granted nor rejected: the
+      // client keeps its local copy and tries again after the seeder has run. Rejecting
+      // would be worse than doing nothing — it throws away a reward the player earned.
+      const table = award.kind === "streak" ? ladder : daily;
+
+      if (!table) {
+        logger.error(`config/progression has no usable ${award.kind} table; leaving the ` +
+                     "award unconfirmed rather than granting or discarding it", { uid, id: award.id });
         continue;
       }
 
-      const amount = chestCurrencyValue(
-        daily, uid, award.claim.dayKey, award.claim.chestIndex, award.currency);
+      let amount = 0;
+      let detail: Record<string, unknown>;
+
+      if (award.kind === "streak") {
+        // The whole of the security, in one call. A night may only climb as fast as the
+        // calendar climbs; see `advances`. Refused rather than left pending, because a
+        // claim that fails this will fail it for ever and a pending claim is resubmitted
+        // for the life of the account.
+        if (!advances(floor, award.claim.dayKey, award.claim.night)) {
+          logger.warn("refused a streak night that outruns the calendar", {
+            uid, id: award.id, night: award.claim.night, day: award.claim.dayKey,
+            paidNight: floor.paidNight, paidThroughDay: floor.paidThroughDay,
+          });
+          rejected.push(award.id);
+          continue;
+        }
+
+        if (saved && !saveSupports(saved, award.claim.dayKey, award.claim.night)) {
+          // Worth seeing, never worth acting on. Usually a device that has not pushed its
+          // save yet, or a night collected before a streak lapsed and restarted.
+          logger.info("a streak night does not match the save's own dates", {
+            uid, id: award.id, night: award.claim.night, day: award.claim.dayKey,
+            startDay: saved.startDay, lastPlayedDay: saved.lastPlayedDay,
+          });
+        }
+
+        amount = streakCurrencyValue(ladder!, award.claim.night, award.currency);
+        detail = { night: award.claim.night };
+      } else {
+        if (award.claim.chestIndex >= daily!.chests.length) {
+          rejected.push(award.id);
+          continue;
+        }
+
+        amount = chestCurrencyValue(
+          daily!, uid, award.claim.dayKey, award.claim.chestIndex, award.currency);
+        detail = { chestIndex: award.claim.chestIndex };
+      }
 
       if (amount <= 0) {
-        // That chest holds none of this currency. Either the client is on a different
-        // drop table — a content push it has not fetched yet — or the claim is invented.
-        // Either way there is nothing to grant, and the client will adopt the server's
-        // balance on this same reply.
-        logger.warn("award names a chest that pays nothing in that currency", {
+        // The rung, or the chest, holds none of this currency. Either the client is on a
+        // table this server has not been seeded with — a content push it fetched first —
+        // or the claim is invented. Either way there is nothing to grant, and the client
+        // will adopt the server's balance on this same reply.
+        logger.warn("award names a reward that pays nothing in that currency", {
           uid, id: award.id, currency: award.currency,
         });
         rejected.push(award.id);
@@ -381,7 +470,7 @@ export const claimAwards = onCall(callOptions, async (request): Promise<{
 
       if (amount !== award.claimedAmount) {
         // Worth seeing, never worth acting on. A mismatch is usually a client on an
-        // older drop table; the server's figure stands either way.
+        // older table; the server's figure stands either way.
         logger.info("award amount differs from the client's claim", {
           uid, id: award.id, server: amount, client: award.claimedAmount,
         });
@@ -393,14 +482,20 @@ export const claimAwards = onCall(callOptions, async (request): Promise<{
         claimedAmount: award.claimedAmount,
         reason: award.reason,
         dayKey: award.claim.dayKey,
-        chestIndex: award.claim.chestIndex,
         clientUnix: award.unix,
         grantedAt: FieldValue.serverTimestamp(),
+        ...detail,
       });
 
       state[award.currency].granted += amount;
       confirmed[award.currency].push(award.id);
+
+      // Raised inside the same transaction that moves the money, so a night cannot be
+      // paid without the floor moving with it.
+      if (award.kind === "streak") floor = raise(floor, award.claim.dayKey, award.claim.night);
     }
+
+    state.streak = floor;
 
     transaction.set(walletRef, { ...state, updatedAt: FieldValue.serverTimestamp() });
     return state;
@@ -651,5 +746,29 @@ export const redeemPurchase = onCall(
     });
 
     return { wallets: toReply(result.state, {}), granted: result.granted, currency };
+  }
+);
+
+/**
+ * Republishes the population's move counts, once a day.
+ *
+ * The only scheduled function in the project, and the only one that reads other people's
+ * saves. It writes one public document — nine numbers per glade, aggregated over thousands
+ * of players, with no identifier of any kind in it — which the client fetches from the
+ * splash to draw a single line on the victory panel.
+ *
+ * Nothing depends on it. If it never runs, the line is never drawn and every other part of
+ * the game behaves identically, which is why it can afford to be a plain daily job with no
+ * retry policy and no alerting.
+ *
+ * Three in the morning UTC is deliberately the quietest hour for a globally distributed
+ * player base, and the read is bounded to a sample — see `stats.ts` for why an exact
+ * running count would be the wrong trade.
+ */
+export const publishGroveStats = onSchedule(
+  { region: REGION, schedule: "0 3 * * *", timeZone: "Etc/UTC", timeoutSeconds: 540 },
+  async () => {
+    const { levels, saves } = await rebuildStats();
+    logger.info("grove stats rebuilt", { levels, saves });
   }
 );

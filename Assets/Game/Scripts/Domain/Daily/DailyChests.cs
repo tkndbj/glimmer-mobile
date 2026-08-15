@@ -56,14 +56,13 @@ namespace GlimmerGrove.Daily
         /// <summary>
         /// What the drops are seeded from.
         ///
-        /// The account id, because that is the identity the server recomputes against —
-        /// and, thanks to <see cref="CanOpen"/>, the only one a chest is ever rolled with
-        /// when there is a server to disagree with. The device fallback is reached only
-        /// when no cloud backend is configured, where nothing is adjudicated and the roll
-        /// simply needs to be stable for this installation.
+        /// Shared with the golden bonus rather than spelled out here, because it is the
+        /// same requirement — the server has to reach the same answer — and two copies of
+        /// an identity that is part of a wire contract is one copy too many. See
+        /// <see cref="RewardSeed"/>; <see cref="CanOpen"/> is what guarantees it is not
+        /// empty by the time a chest is rolled for real.
         /// </summary>
-        static string PlayerKey
-            => CloudState.IsSignedIn ? CloudState.UserId : CloudState.DeviceId;
+        static string PlayerKey => RewardSeed.PlayerKey;
 
         /// <summary>
         /// Whether a chest may be opened yet.

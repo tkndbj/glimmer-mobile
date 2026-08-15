@@ -39,6 +39,15 @@ namespace GlimmerGrove.Persistence
         /// </summary>
         public static IReadOnlyCollection<LevelRecord> Records => _records.Values;
 
+        /// <summary>
+        /// The same records, keyed by level id.
+        ///
+        /// For readers that ask about a named set of glades rather than about all of them —
+        /// an event's track is the first — where walking the whole collection once per
+        /// question is the same work multiplied by however many questions there are.
+        /// </summary>
+        public static IReadOnlyDictionary<LevelId, LevelRecord> RecordsById => _records;
+
         public static int Stars(LevelId id) => Record(id).Stars;
 
         public static int BestMoves(LevelId id) => Record(id).BestMoves;

@@ -16,6 +16,15 @@ namespace GlimmerGrove
     /// loc keys are written out in an array rather than assembled from the kind's id,
     /// so the build's string checker can see every one of them — a key that only exists
     /// at runtime is a key nothing can verify.
+    ///
+    /// <para>
+    /// Every glyph here carries its own colour and is drawn white — never tinted. The
+    /// heart boost used to break that rule: it was <c>ic_power</c>, the standard on/off
+    /// symbol, washed in aqua, which named the wrong thing twice. The glyph said "power
+    /// button" and the colour said nothing, so the one reward on the streak ladder a
+    /// player has never met before was also the only one they could not read. It is now
+    /// a heart with a bolt through it, built from the two glyphs this UI already ships.
+    /// </para>
     /// </summary>
     static class RewardArt
     {
@@ -53,7 +62,7 @@ namespace GlimmerGrove
             {
                 case ChestDropKind.Gems: return Art.S("Ui/ic_gem");
                 case ChestDropKind.Hearts: return Art.S("Ui/ic_heart");
-                case ChestDropKind.HeartBoost: return Art.S("Ui/ic_power");
+                case ChestDropKind.HeartBoost: return Art.S("Ui/ic_heart_boost");
                 default: return null;
             }
         }
@@ -61,6 +70,36 @@ namespace GlimmerGrove
         /// <summary>The number as the player reads it: hours for a boost, a count otherwise.</summary>
         public static string Amount(ChestDrop drop)
             => drop.Kind == ChestDropKind.HeartBoost ? drop.Amount + "h" : "+" + drop.Amount;
+
+        /// <summary>
+        /// Finishes a reward glyph that <see cref="Icon"/> could not supply on its own.
+        ///
+        /// <para>
+        /// Credits are the one kind with no sprite: they are a spinning flipbook, and
+        /// <see cref="Icon"/> returns null for them. That makes every caller that draws a
+        /// reward responsible for the same three lines, and the moment a third one appeared
+        /// — the streak board, once its ladder started paying credits — the second one had
+        /// already drifted: <c>AdOfferOverlay</c> attached the flipbook without checking
+        /// whether its frames were resident.
+        /// </para>
+        /// <para>
+        /// That check is the whole reason this is worth centralising. Art loads
+        /// asynchronously by scope (invariant 7b), and an <c>Image</c> with no sprite is a
+        /// white rectangle rather than a blank — so a hundred-pixel white square in the
+        /// middle of a reward reveal is how a caller discovers the frames had not arrived.
+        /// The fallback is a tinted disc, which reads as a coin at a glance and never as a
+        /// bug.
+        /// </para>
+        /// </summary>
+        public static void Glyph(Image icon, ChestDropKind kind, float fps = 12f)
+        {
+            if (icon == null || kind != ChestDropKind.Credits) return;
+
+            var frames = Art.Frames("Ui/Coin");
+
+            if (frames != null && frames.Length > 0) Flipbook.Attach(icon, "Ui/Coin", fps);
+            else { icon.sprite = Art.Disc(128); icon.color = Tint(kind); }
+        }
     }
 
     /// <summary>
@@ -297,17 +336,7 @@ namespace GlimmerGrove
                                  new Vector2(104f, 104f), new Vector2(.5f, 1f), new Vector2(0f, -70f));
             icon.preserveAspect = true;
 
-            if (drop.Kind == ChestDropKind.Credits)
-            {
-                // Coins are the spinning flipbook, but only if its frames are actually
-                // resident. An Image with no sprite is a white rectangle, not a blank —
-                // and a hundred-pixel white square in the middle of the reveal is the
-                // worst possible place to discover that art did not load.
-                var frames = Art.Frames("Ui/Coin");
-
-                if (frames != null && frames.Length > 0) Flipbook.Attach(icon, "Ui/Coin", 12f);
-                else { icon.sprite = Art.Disc(128); icon.color = tint; }
-            }
+            RewardArt.Glyph(icon, drop.Kind);
 
             if (drop.Kind == ChestDropKind.HeartBoost) icon.color = tint;
 

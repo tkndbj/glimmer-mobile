@@ -2,6 +2,7 @@ using System;
 using GlimmerGrove.Ads;
 using GlimmerGrove.Content;
 using GlimmerGrove.Daily;
+using GlimmerGrove.Events;
 using GlimmerGrove.Localization;
 using GlimmerGrove.Persistence;
 using GlimmerGrove.Progression;
@@ -18,9 +19,36 @@ namespace GlimmerGrove
     {
         public override string Track => "mus_menu";
 
+        // ------------------------------------------------------- the feature row
+        /// <summary>
+        /// The two boxes under the daily panel: the streak, and whatever the player is
+        /// working toward.
+        ///
+        /// <para>
+        /// They are equals on purpose. Both were smaller than the thing they carried — the
+        /// streak was a chip squeezed into the top bar beside the settings gear, and the
+        /// event was a 56-high strip that had to fit a name, a clock, a bar and a count.
+        /// Between them they are the two reasons a player opens the game on a day they had
+        /// not planned to, which is a strange thing to draw at the size of chrome.
+        /// </para>
+        /// <para>
+        /// The right box holds the event when one is running and the next companion when
+        /// one is not. That is not a fallback bolted on: the strip already chose between
+        /// exactly those two and simply hid the loser, so the only change is that the loser
+        /// now gets the slot when the winner is absent. It also means the row never draws
+        /// one box and a hole.
+        /// </para>
+        /// </summary>
+        const float RowTop = 556f;
+        const float RowHeight = 300f;
+        const float RowWidth = 900f;    // the daily panel's width, so the column lines up
+        const float RowGap = 24f;
+
         Image _hero;
         RectTransform _dailyPanel;
         RectTransform _resourceRow;
+        RectTransform _streakBox;
+        RectTransform _focusBox;
         Text _resetClock;
         float _clockTick;
 
@@ -30,6 +58,7 @@ namespace GlimmerGrove
             BuildTopBar();
             BuildResources();
             BuildDaily();
+            BuildFeature();
             BuildHero();
             BuildPlay();
             NavBar.Build(Content, NavBar.Tab.Home);
@@ -37,6 +66,7 @@ namespace GlimmerGrove
             // Midnight arrives while a screen is open exactly as often as it arrives while
             // it is not, and opening a chest changes both panels from under themselves.
             DailyChests.Changed += OnDailyChanged;
+            DailyStreak.Changed += OnStreakChanged;
             PlayerProgression.Changed += OnWalletChanged;
             Wallet.HeartsChanged += OnHeartsChanged;
         }
@@ -44,6 +74,7 @@ namespace GlimmerGrove
         void OnDestroy()
         {
             DailyChests.Changed -= OnDailyChanged;
+            DailyStreak.Changed -= OnStreakChanged;
             PlayerProgression.Changed -= OnWalletChanged;
             Wallet.HeartsChanged -= OnHeartsChanged;
         }
@@ -54,6 +85,12 @@ namespace GlimmerGrove
             // rebuilding a panel onto a destroyed screen throws where nobody is looking.
             if (this == null || !_dailyPanel) return;
             BuildDaily();
+        }
+
+        void OnStreakChanged()
+        {
+            if (this == null || !_streakBox) return;
+            BuildStreakBox();
         }
 
         void OnHeartsChanged(Hearts hearts) => OnWalletChanged();
@@ -126,8 +163,12 @@ namespace GlimmerGrove
             bar.anchorMin = new Vector2(0f, 1f); bar.anchorMax = new Vector2(1f, 1f);
             bar.sizeDelta = new Vector2(0f, 168f);
 
+            // 620 wide rather than 500: the streak chip used to sit at the far end of this
+            // bar and the card was cut back to make room for it. With the chip gone the
+            // space belongs to the name and the rank bar, which were both short of it —
+            // a name is the one string here whose length the game does not choose.
             var card = UIKit.Img("Card", bar, Art.Round(26), new Color(.05f, .11f, .14f, .74f),
-                                 new Vector2(500f, 132f), new Vector2(0f, .5f), new Vector2(292f, 0f));
+                                 new Vector2(620f, 132f), new Vector2(0f, .5f), new Vector2(352f, 0f));
             var cardEdge = UIKit.Img("Edge", card.transform, Art.RoundOutline(26, 3f), new Color(1, 1, 1, .16f));
             UIKit.StretchTo((RectTransform)cardEdge.transform, 0, 0, 0, 0);
 
@@ -149,18 +190,20 @@ namespace GlimmerGrove
             UIKit.Titled("N", rank.transform, Profile.Rank.ToString(), 30, new Color(.32f, .21f, .06f),
                          TextAnchor.MiddleCenter, outline: 0f, shadow: 0f);
 
-            UIKit.Titled("Name", card.transform, Profile.Name, 36, Pal.Cream, TextAnchor.LowerLeft,
-                         new Vector2(310f, 46f), new Vector2(0f, .5f), new Vector2(287f, 22f), 3f, 3f);
+            UIKit.Shrinkable(
+                UIKit.Titled("Name", card.transform, Profile.Name, 36, Pal.Cream, TextAnchor.LowerLeft,
+                             new Vector2(460f, 46f), new Vector2(0f, .5f), new Vector2(362f, 22f),
+                             3f, 3f), 24);
 
             // rank experience bar, filled by stars toward the next rank
             var track = UIKit.Img("XpTrack", card.transform, Art.Round(12), new Color(.02f, .05f, .07f, .85f),
-                                  new Vector2(300f, 26f), new Vector2(0f, .5f), new Vector2(282f, -22f));
+                                  new Vector2(440f, 26f), new Vector2(0f, .5f), new Vector2(352f, -22f));
             var xp = UIKit.Img("XpFill", track.transform, Art.Round(10), Pal.Mint,
                                new Vector2(0f, 18f), new Vector2(0f, .5f), new Vector2(4f, 0f));
             var xpRT = (RectTransform)xp.transform;
             xpRT.pivot = new Vector2(0f, .5f);
             xpRT.sizeDelta = new Vector2(0f, 18f);
-            float w = 292f * Profile.RankProgress;
+            float w = 432f * Profile.RankProgress;
             Tween.Run(.7f, Ease.OutCubic, t => { if (xpRT) xpRT.sizeDelta = new Vector2(w * t, 18f); }, xp).Delay(.35f);
 
             // corner buttons
@@ -279,8 +322,13 @@ namespace GlimmerGrove
 
             int runs = DailyChests.Runs, target = DailyChests.RunsForAll;
 
+            // Sits straight under the resources row. It used to leave a gap for the 56-high
+            // focus strip, which has become the second box on the row below; the panel takes
+            // that space rather than leaving it, because everything under it is now taller.
+            // Moved rather than shrunk: the panel's internals are laid out from its own
+            // edges, so its height is load-bearing and its position is not.
             var panel = UIKit.Img("Daily", Content, Art.Round(28), new Color(.04f, .09f, .12f, .72f),
-                                  new Vector2(900f, 208f), new Vector2(.5f, 1f), new Vector2(0f, -438f));
+                                  new Vector2(900f, 208f), new Vector2(.5f, 1f), new Vector2(0f, -424f));
             _dailyPanel = (RectTransform)panel.transform;
             if (sibling >= 0) _dailyPanel.SetSiblingIndex(sibling);
 
@@ -462,13 +510,592 @@ namespace GlimmerGrove
                 : Loc.Format("ui.daily.played", DailyChests.Runs, DailyChests.RunsForAll);
         }
 
+        // ------------------------------------------------------- the feature row
+        /// <summary>
+        /// Builds both boxes and decides how wide each of them is.
+        ///
+        /// <para>
+        /// The streak is always drawn, including for a player who has never had one — that
+        /// is how they learn the thing exists before they have one to lose. So the only
+        /// question here is whether there is a second box: when no event is running and the
+        /// roster holds nothing further, the streak takes the whole row rather than sitting
+        /// beside a hole.
+        /// </para>
+        /// <para>
+        /// The boxes are built from their own left edge rather than from the centre, which
+        /// is what lets the same code lay out a half-row and a full one.
+        /// </para>
+        /// </summary>
+        void BuildFeature()
+        {
+            float half = (RowWidth - RowGap) * .5f;
+            float y = -(RowTop + RowHeight * .5f);
+            float x = (RowWidth - half) * .5f;
+
+            _focusBox = UIKit.Box("Focus", Content, new Vector2(half, RowHeight),
+                                  new Vector2(.5f, 1f), new Vector2(x, y));
+
+            if (!BuildFocusBox(half))
+            {
+                Destroy(_focusBox.gameObject);
+                _focusBox = null;
+            }
+
+            bool paired = _focusBox != null;
+
+            _streakBox = UIKit.Box("Streak", Content,
+                                   new Vector2(paired ? half : RowWidth, RowHeight),
+                                   new Vector2(.5f, 1f), new Vector2(paired ? -x : 0f, y));
+            BuildStreakBox();
+
+            _streakBox.localScale = Vector3.zero;
+            Tween.Pop(_streakBox, 0f, .55f, .28f);
+
+            if (!paired) return;
+            _focusBox.localScale = Vector3.zero;
+            Tween.Pop(_focusBox, 0f, .55f, .34f);
+        }
+
+        /// <summary>
+        /// The shell every box on this row shares: one radius, one fill, and a rim in the
+        /// box's own colour.
+        ///
+        /// <para>
+        /// The card is the button rather than carrying an invisible one, so a press squashes
+        /// the whole box — glyph, number and strip together — instead of an overlay nobody
+        /// can see. There is no plate behind the row and no rule between the two: each box
+        /// earns its own contrast from its fill and rim, which it has to, because
+        /// <c>grove_near</c> runs from near-white inside the light shaft to dark teal beside
+        /// it and a flat shape would vanish over half of it.
+        /// </para>
+        /// </summary>
+        RectTransform FeatureCard(Transform host, float w, Color tint, float edge, Action onTap)
+        {
+            var btn = UIKit.Button("Card", host, Art.Round(28), new Vector2(w, RowHeight),
+                                   new Vector2(.5f, .5f), Vector2.zero, onTap);
+            btn.GetComponent<Image>().color = new Color(.04f, .09f, .12f, .76f);
+            btn.PressScale = .985f;
+            btn.ClickSfx = null;
+
+            var rim = UIKit.Img("Edge", btn.transform, Art.RoundOutline(28, 3f), Pal.A(tint, edge));
+            UIKit.StretchTo((RectTransform)rim.transform, 0, 0, 0, 0);
+            return (RectTransform)btn.transform;
+        }
+
+        /// <summary>
+        /// The box's name, and the one fact that has to sit beside it rather than under it —
+        /// a countdown, or that a companion is still locked.
+        ///
+        /// Both are placed from the card's own edges rather than by eye, and both shrink:
+        /// the title is a translated name and the meta is a translated sentence with a clock
+        /// in it, so neither width is under our control.
+        /// </summary>
+        void FeatureHeader(Transform card, float w, string title, Color tint, string meta)
+        {
+            // The meta is 200 wide inset 26 from the right, so the title gets everything left
+            // of it less a gap. Worked out from the edges rather than by eye: both strings
+            // are translated, both are right up against their box, and nothing clips them.
+            //
+            // A box with no meta still does not get the full width — the top-right corner is
+            // where a count badge hangs, and a title long enough to reach it would run under
+            // one rather than being clipped by it.
+            bool hasMeta = !string.IsNullOrEmpty(meta);
+            float tw = hasMeta ? w - 262f : w - 110f;
+
+            UIKit.Shrinkable(
+                UIKit.Titled("Title", card, title.ToUpperInvariant(), 25, tint, TextAnchor.MiddleLeft,
+                             new Vector2(tw, 34f), new Vector2(0f, 1f),
+                             new Vector2(30f + tw * .5f, -36f), 0f, 2f), 16);
+
+            if (!hasMeta) return;
+
+            UIKit.Shrinkable(
+                UIKit.Titled("Meta", card, meta, 23, new Color(1f, .95f, .84f, .66f),
+                             TextAnchor.MiddleRight, new Vector2(200f, 32f), new Vector2(1f, 1f),
+                             new Vector2(-126f, -36f), 0f, 0f), 15);
+        }
+
+        /// <summary>
+        /// The number the box is about, and what it counts.
+        ///
+        /// Both are shrinkable and neither is a two-digit field: a streak does not stop at
+        /// the end of the ladder, and the caption under it is the shortest string on the
+        /// screen in English and one of the longest in German.
+        /// </summary>
+        void FeatureValue(Transform card, float w, string value, Color colour,
+                          string caption, Color tint)
+        {
+            float vx = -w * .5f + 299f;
+
+            UIKit.Shrinkable(
+                UIKit.Titled("V", card, value, 62, colour, TextAnchor.MiddleCenter,
+                             new Vector2(200f, 74f), new Vector2(.5f, .5f), new Vector2(vx, 20f),
+                             3f, 4f), 30);
+
+            UIKit.Shrinkable(
+                UIKit.Titled("Cap", card, caption, 22, Pal.A(tint, .95f), TextAnchor.MiddleCenter,
+                             new Vector2(210f, 30f), new Vector2(.5f, .5f), new Vector2(vx, -32f),
+                             0f, 0f), 15);
+        }
+
+        /// <summary>The inset that runs along the bottom of a box, holding its one live detail.</summary>
+        RectTransform FeatureStrip(Transform card, float w)
+        {
+            var strip = UIKit.Img("Strip", card, Art.Round(18), new Color(.01f, .04f, .05f, .62f),
+                                  new Vector2(w - 72f, 54f), new Vector2(.5f, .5f),
+                                  new Vector2(0f, -(RowHeight * .5f) + 46f));
+            return (RectTransform)strip.transform;
+        }
+
+        /// <summary>
+        /// Lights a box that is holding something the player can take right now.
+        ///
+        /// <para>
+        /// The corner badge says <em>that</em> there is a reward and how many; this says
+        /// <em>which box</em> from across the screen. They are not redundant — a 54px disc is
+        /// something you find once you are already looking at the row, and the whole problem
+        /// with a collect-by-hand reward is getting somebody to look at the row at all. A
+        /// player who opens the hub for the daily chests has no reason to read the box beside
+        /// them.
+        /// </para>
+        /// <para>
+        /// Three layers, because each does a job the others cannot. A soft gold light sits
+        /// <em>behind</em> the box and breathes — the same trick the nav caps use to hold
+        /// their own contrast, run in reverse: a seat of light instead of a seat of shadow,
+        /// and the only part of this visible from the far corner of the screen. Over the
+        /// resting rim, a gold edge brightens with it, which is what says the border is lit
+        /// rather than merely coloured. And a pale ring steps out of the border and fades,
+        /// which is the "tap me": motion that <em>leaves</em> the shape is what the eye
+        /// catches peripherally, and a rim that only brightens does not.
+        /// </para>
+        /// <para>
+        /// The ring is cream rather than gold, and that is not a taste call — the first
+        /// version was gold, travelling out of a gold rim into a gold glow, and it was
+        /// invisible on the screen while looking perfectly reasonable in the code.
+        /// </para>
+        /// <para>
+        /// It grows by a fixed number of pixels rather than by a scale factor, because a
+        /// percentage would drift the moment a box changes width — which it does: the streak
+        /// takes the whole row when there is no second box. Eighteen is further than the 24px
+        /// gap between the boxes would allow a solid shape, and it can be, because the ring is
+        /// down to a tenth of its alpha before it gets there.
+        /// </para>
+        /// </summary>
+        static void FeatureBeacon(RectTransform card)
+        {
+            const float Reach = 18f;
+
+            // Behind the card, so it lights the box rather than washing its contents:
+            // a child would draw over the card's own fill, which is what everything
+            // inside one of these boxes relies on not happening.
+            var seat = UIKit.Img("Beacon", card.parent, Art.Glow(128, 1.7f), Pal.A(Pal.Gold, 0f),
+                                 card.sizeDelta + new Vector2(96f, 96f),
+                                 new Vector2(.5f, .5f), Vector2.zero);
+            seat.transform.SetAsFirstSibling();
+
+            var lit = UIKit.Img("Lit", card, Art.RoundOutline(28, 4f), Pal.A(Pal.Gold, 0f));
+            UIKit.StretchTo((RectTransform)lit.transform, 0, 0, 0, 0);
+
+            Tween.Run(1.5f, Ease.InOutSine, t =>
+            {
+                if (lit) lit.color = Pal.A(Pal.Gold, Mathf.Lerp(.22f, .95f, t));
+                if (seat) seat.color = Pal.A(Pal.Gold, Mathf.Lerp(.10f, .34f, t));
+            }, lit, "lit").Loop(-1, true);
+
+            var ring = UIKit.Img("Ring", card, Art.RoundOutline(28, 5f), Pal.A(Pal.Cream, 0f));
+            var ringRT = (RectTransform)ring.transform;
+
+            // Not ping-ponged: a ring that steps out and then walks back in reads as
+            // something breathing rather than as something leaving. It also rests for the
+            // back half of the cycle — a pulse that never stops is a pulse nobody sees.
+            Tween.Run(2.4f, Ease.Linear, t =>
+            {
+                if (!ringRT) return;
+
+                float k = Mathf.Clamp01(t / .55f);
+                float out01 = Ease.OutCubic(k);
+                UIKit.StretchTo(ringRT, -Reach * out01, -Reach * out01, -Reach * out01, -Reach * out01);
+
+                // Held bright for the first third of the step, then gone. Fading from the
+                // first frame is what made the previous ring read as a flicker.
+                ring.color = Pal.A(Pal.Cream, .75f * Mathf.Clamp01((1f - k) * 1.6f) * (k < 1f ? 1f : 0f));
+            }, ring, "ring").Loop(-1, false);
+        }
+
+        /// <summary>A bar inside a strip. Returns the track, so a caller can pin things to it.</summary>
+        RectTransform FeatureBar(Transform strip, float w, float fill01, Color tint)
+        {
+            float track = w - 132f;
+
+            var bar = UIKit.Img("Track", strip, Art.Round(9), new Color(.01f, .02f, .04f, .85f),
+                                new Vector2(track, 18f), new Vector2(.5f, .5f), Vector2.zero);
+            var fill = UIKit.Img("Fill", bar.transform, Art.Round(6), tint,
+                                 new Vector2(0f, 12f), new Vector2(0f, .5f), new Vector2(3f, 0f));
+            var fillRT = (RectTransform)fill.transform;
+            fillRT.pivot = new Vector2(0f, .5f);
+            fillRT.sizeDelta = new Vector2(0f, 12f);
+
+            float full = (track - 6f) * Mathf.Clamp01(fill01);
+            Tween.Run(.85f, Ease.OutCubic,
+                      t => { if (fillRT) fillRT.sizeDelta = new Vector2(full * t, 12f); },
+                      fill).Delay(.5f);
+
+            return (RectTransform)bar.transform;
+        }
+
+        // -------------------------------------------------------------- streak
+        /// <summary>
+        /// The flame, the number of days behind it, and what tomorrow is worth.
+        ///
+        /// <para>
+        /// This is the one thing on the screen the player already owns, and the only one
+        /// they can lose by doing nothing — which is exactly why it is the strongest reason
+        /// on the screen to come back tomorrow, and why it is no longer a chip beside the
+        /// settings gear.
+        /// </para>
+        /// <para>
+        /// Three states, drawn differently on purpose. Held and fed today: a lit flame,
+        /// flickering. Held but not yet fed: the same flame, dimmed and pulsing, with the
+        /// hours left in place of the caption — the only moment in the game where the screen
+        /// says "this is going to be taken away", and it earns that by being true. Not held
+        /// at all: a grey flame and an invitation, so a new player learns the thing exists
+        /// before they have one to lose.
+        /// </para>
+        /// <para>
+        /// Rebuilt rather than repainted, like the panels around it: the three states differ
+        /// in what exists, not just in what colour it is, and a repaint path would be a
+        /// second description of the same box to keep in step with this one.
+        /// </para>
+        /// </summary>
+        void BuildStreakBox()
+        {
+            if (!_streakBox) return;
+            for (int i = _streakBox.childCount - 1; i >= 0; i--)
+                Destroy(_streakBox.GetChild(i).gameObject);
+
+            float w = _streakBox.sizeDelta.x;
+            int days = DailyStreak.Days;
+            int pending = DailyStreak.Pending;
+            bool atRisk = DailyStreak.AtRisk;
+            bool lit = days > 0 && !atRisk;
+
+            var tint = lit ? Pal.Sun : atRisk ? Pal.Ember : new Color(.52f, .56f, .60f);
+            float gx = -w * .5f + 115f;
+
+            var card = FeatureCard(_streakBox, w, tint, lit ? .52f : .30f, OpenStreak);
+
+            // Straight after the card, so the lit rim and the ring sit under everything the
+            // box draws. They live at the border, where nothing else does.
+            if (pending > 0) FeatureBeacon(card);
+
+            FeatureHeader(card, w, Loc.Get("ui.home.streak"), tint, null);
+
+            if (lit) UIKit.Img("Glow", card, Art.Glow(128, 2f), Pal.A(Pal.Sun, .32f),
+                               new Vector2(200f, 200f), new Vector2(.5f, .5f), new Vector2(gx, 4f));
+
+            var flame = UIKit.Img("Flame", card, null,
+                                  days > 0 ? Color.white : new Color(.62f, .66f, .70f, .55f),
+                                  new Vector2(138f, 138f), new Vector2(.5f, .5f), new Vector2(gx, 4f));
+            flame.preserveAspect = true;
+
+            // Animated only while the streak is actually alive. A flame that flickers on a
+            // player who has no streak is decoration claiming to be a state.
+            if (days > 0)
+            {
+                Flipbook.Attach(flame, "Ui/Flame", 9f);
+            }
+            else
+            {
+                var frames = Art.Frames("Ui/Flame");
+                flame.sprite = frames != null && frames.Length > 0 ? frames[0] : null;
+            }
+
+            if (atRisk) Tween.Run(1.1f, Ease.InOutSine,
+                                  t => { if (flame) flame.color = Color.Lerp(new Color(1f, 1f, 1f, .45f), Color.white, t); },
+                                  flame, "risk").Loop(-1, true);
+
+            FeatureValue(card, w, days > 0 ? days.ToString() : "—",
+                         days > 0 ? Pal.Cream : new Color(1f, .96f, .86f, .5f),
+                         StreakCaption(days, atRisk), tint);
+
+            StreakStrip(FeatureStrip(card, w), w, pending);
+            StreakBadge(card, pending);
+        }
+
+        /// <summary>
+        /// What keeping the flame another night is actually worth.
+        ///
+        /// <para>
+        /// It is most of the reason the box earns its size. The count above says how long
+        /// the player has kept the streak, which is a record; this says what tomorrow pays,
+        /// which is an argument. The old chip had room for one of the two and kept the
+        /// record.
+        /// </para>
+        /// <para>
+        /// A reward already waiting outranks tomorrow's, because it is something to do now
+        /// rather than a reason to return. Neither is a number when the next rung pays
+        /// nothing, which the shipped ladder never does but a retuned one could.
+        /// </para>
+        /// </summary>
+        void StreakStrip(Transform strip, float w, int pending)
+        {
+            float sw = w - 72f;
+            float lw = sw - 90f;
+
+            var drop = DailyStreak.NextReward;
+            bool plain = pending > 0 || drop.Kind == ChestDropKind.None;
+
+            var icon = UIKit.Img("M", strip,
+                                 plain ? Art.S("Ui/ic_gift") : RewardArt.Icon(drop.Kind),
+                                 Color.white, new Vector2(40f, 40f), new Vector2(0f, .5f),
+                                 new Vector2(38f, 0f));
+            icon.preserveAspect = true;
+            if (!plain) RewardArt.Glyph(icon, drop.Kind, 10f);
+
+            string line = pending > 0 ? Loc.Get("ui.home.streak_waiting")
+                        : plain ? Loc.Get("ui.home.streak_keep")
+                        : Loc.Format("ui.home.streak_next", RewardArt.Amount(drop));
+
+            UIKit.Shrinkable(
+                UIKit.Titled("L", strip, line, 24, new Color(1f, .95f, .84f, .82f),
+                             TextAnchor.MiddleLeft, new Vector2(lw, 34f), new Vector2(0f, .5f),
+                             new Vector2(70f + lw * .5f, 0f), 0f, 0f), 15);
+        }
+
+        /// <summary>
+        /// The count of streak nights with a reward still on them, on the corner of the box.
+        ///
+        /// <para>
+        /// Load-bearing rather than decorative. A rung used to be applied silently when a
+        /// run ended; it now waits on the streak page to be tapped, which is a better moment
+        /// but only if the player knows it is there. The hub is the screen they return to,
+        /// so this is the one place that can tell them — without it the change trades a
+        /// reward they did not notice for a reward they never take.
+        /// </para>
+        /// <para>
+        /// Built last so it sits over the card's own tap area, and drawn as a number rather
+        /// than a dot because "3" is a reason to go and a dot is only a hint that there
+        /// might be one.
+        /// </para>
+        /// <para>
+        /// 66px, sized off the corner rather than off the number: it hangs 3px past the right
+        /// edge and 5px past the top, which is what makes it read as pinned <em>to</em> the
+        /// box instead of drawn inside it. <see cref="FeatureHeader"/> keeps its title clear
+        /// of that corner, so the two cannot collide however long a translation runs.
+        /// </para>
+        /// </summary>
+        void StreakBadge(Transform card, int pending)
+        {
+            if (pending <= 0) return;
+
+            var badge = UIKit.Img("Waiting", card, Art.Disc(64), Pal.Gold,
+                                  new Vector2(66f, 66f), new Vector2(1f, 1f), new Vector2(-30f, -28f));
+
+            var rim = UIKit.Img("Rim", badge.transform, Art.Ring(64, 7f), new Color(.16f, .12f, .04f, .95f));
+            UIKit.StretchTo((RectTransform)rim.transform, 0, 0, 0, 0);
+
+            // Shrinkable, because this is not a one-digit field: a player who is away for a
+            // fortnight comes back to two figures, and the count is over *nights*, which the
+            // ladder no longer caps.
+            UIKit.Shrinkable(
+                UIKit.Titled("N", badge.transform, pending.ToString(), 36, new Color(.17f, .11f, .02f),
+                             TextAnchor.MiddleCenter, new Vector2(50f, 50f),
+                             new Vector2(.5f, .5f), Vector2.zero, 0f, 0f), 22);
+
+            UIKit.Halo(badge.transform, Pal.Gold, 146f, .45f);
+
+            badge.transform.localScale = Vector3.zero;
+            Tween.Pop(badge.transform, 0f, .5f, .18f)
+                 .OnDone(() => { if (badge) Tween.Breathe(badge.transform, .10f, 1.3f); });
+        }
+
+        static string StreakCaption(int days, bool atRisk)
+        {
+            if (days <= 0) return Loc.Get("ui.streak.none");
+            if (atRisk) return Loc.Format("ui.streak.at_risk",
+                                          Profile.Countdown(DailyStreak.SecondsUntilLost));
+            return Loc.Get(days == 1 ? "ui.streak.day" : "ui.streak.days");
+        }
+
+        /// <summary>
+        /// Opens the streak page.
+        ///
+        /// A page rather than the toast this used to raise. The box answers "how many days";
+        /// the question a player actually has is "and then what", and a reward two nights
+        /// away is the thing that makes them open the game tomorrow. A line of text that
+        /// fades after three seconds cannot carry that.
+        /// </summary>
+        void OpenStreak()
+        {
+            if (Flow.HasModal) return;
+            Flow.Go<StreakScreen>();
+        }
+
+        // ------------------------------------------------------------- the focus
+        /// <summary>
+        /// The right-hand box, and whichever of two things most deserves it.
+        ///
+        /// <para>
+        /// A live event wins, and the rule is worth stating plainly: an event is the only
+        /// thing on this screen with a deadline. The unlock goal will still be there next
+        /// week; the event will not.
+        /// </para>
+        /// <para>
+        /// This is the choice the old 56-high strip already made — it simply hid the loser.
+        /// The difference now is that the loser takes the slot when the winner is absent,
+        /// which is why there is no state of this screen with one box and a gap.
+        /// </para>
+        /// <para>
+        /// Drawn once per navigation and not repainted. An event's countdown is measured in
+        /// days and the keeper level cannot move while this screen is up, so a live path
+        /// would be code that never runs.
+        /// </para>
+        /// </summary>
+        bool BuildFocusBox(float w)
+        {
+            var live = GroveEvents.Live;
+            if (live == null) return BuildGoalBox(w);
+
+            BuildEventBox(live, w);
+            return true;
+        }
+
+        /// <summary>
+        /// The live event: its name, its clock, how much of the track is done, and the mark
+        /// it wears.
+        ///
+        /// The mark is the interesting part. It is <see cref="EventMark"/> rather than a
+        /// fixed glyph, so the event picks it from the manifest; and for the bloom it opens
+        /// as the track fills, which means the picture and the bar under it say the same
+        /// thing and a glance is enough.
+        /// </summary>
+        void BuildEventBox(GroveEvent live, float w)
+        {
+            var progress = GroveEvents.ProgressOf(live);
+            int goal = Mathf.Max(1, live.FinalGoal);
+            float done = Mathf.Clamp01(progress.Finished / (float)goal);
+            float gx = -w * .5f + 115f;
+
+            var card = FeatureCard(_focusBox, w, Pal.Bloom, .50f, () => Flow.Modal<EventOverlay>());
+            FeatureHeader(card, w, Loc.Get(live.NameKey), Pal.Bloom,
+                          Loc.Format("ui.event.ends_in",
+                                     Profile.LongCountdown(GroveEvents.SecondsLeft)));
+
+            UIKit.Img("Glow", card, Art.Glow(128, 2f), Pal.A(Pal.Bloom, .28f),
+                      new Vector2(200f, 200f), new Vector2(.5f, .5f), new Vector2(gx, 4f));
+
+            var mark = UIKit.Box("Mark", card, new Vector2(148f, 148f),
+                                 new Vector2(.5f, .5f), new Vector2(gx, 4f));
+            EventMark.Paint(mark, live.Icon, Pal.Bloom, done);
+            Tween.Breathe(mark, .055f, 2.6f);
+
+            FeatureValue(card, w, Loc.Format("ui.home.fraction", progress.Finished, goal),
+                         Pal.Cream, Loc.Get("ui.home.glades"), Pal.Bloom);
+
+            Milestones(FeatureBar(FeatureStrip(card, w), w, done, Pal.Bloom),
+                       w, live, progress.Finished, goal);
+
+            Sheen.Attach(card, 4.6f);
+        }
+
+        /// <summary>
+        /// The track's rungs, as pips on the bar.
+        ///
+        /// A bar says how far along; the pips say how far to the next thing worth having,
+        /// which is the question that actually moves somebody. Placed from the event's own
+        /// milestones rather than at even spacing, because the rungs are not evenly spaced —
+        /// the shipped track pays at one, two and four of four.
+        /// </summary>
+        static void Milestones(RectTransform bar, float w, GroveEvent live, int finished, int goal)
+        {
+            float track = w - 132f;
+
+            for (int i = 0; i < live.Milestones.Count; i++)
+            {
+                int rung = live.Milestones[i].Goal;
+                float x = -track * .5f + 3f + (track - 6f) * Mathf.Clamp01(rung / (float)goal);
+
+                var pip = UIKit.Img("P" + i, bar, Art.Disc(32),
+                                    finished >= rung ? Pal.Gold : new Color(.47f, .51f, .55f, .95f),
+                                    new Vector2(18f, 18f), new Vector2(.5f, .5f), new Vector2(x, 0f));
+
+                var rim = UIKit.Img("Rim", pip.transform, Art.Ring(32, 7f),
+                                    new Color(.01f, .02f, .04f, .9f));
+                UIKit.StretchTo((RectTransform)rim.transform, 0, 0, 0, 0);
+            }
+        }
+
+        /// <summary>
+        /// The next companion the keeper level will unlock, and how far along the way the
+        /// player already is. False when the roster holds nothing further, which is what
+        /// hands the whole row to the streak.
+        ///
+        /// <para>
+        /// The rank bar in the card at the top measures progress <em>through</em> the current
+        /// rank, which has a specific weakness: it empties every time it fills, and it never
+        /// says what any of it is for. This measures the span between the unlock just earned
+        /// and the one coming, and names it. A player four ranks into a five-rank span sees a
+        /// bar four fifths full because it is four fifths full — the endowed-progress effect
+        /// used honestly, as a change of framing rather than a fabricated head start. See
+        /// <see cref="UnlockGoal"/>.
+        /// </para>
+        /// </summary>
+        bool BuildGoalBox(float w)
+        {
+            var goal = UnlockGoal.Next(Profile.Level);
+
+            // Nothing left to unlock. Drawing an empty box would be worse than drawing none:
+            // a goal bar with no goal reads as something the game forgot to fill in.
+            if (!goal.IsValid) return false;
+
+            float gx = -w * .5f + 115f;
+
+            // The meta says the condition rather than the state — "at rank 8" rather than
+            // "locked" — which is the same job the event's countdown does on the other box:
+            // both name what the player is waiting on, and only one of the two is useful.
+            var card = FeatureCard(_focusBox, w, Pal.Bloom, .38f, () => Flow.Go<ProfileScreen>());
+            FeatureHeader(card, w, Loc.Get(goal.NameKey), Pal.Bloom,
+                          Loc.Format("ui.home.at_rank", goal.AtLevel));
+
+            var portrait = UIKit.Img("Face", card, null, Color.white,
+                                     new Vector2(132f, 132f), new Vector2(.5f, .5f),
+                                     new Vector2(gx, 4f));
+            portrait.preserveAspect = true;
+            CompanionArt.Paint(portrait, AvatarCatalog.Find(goal.AvatarId), animate: false);
+
+            // Locked, and shown as such. The picture is the reason to care; dimming it is
+            // what makes it a thing to earn rather than a thing already owned.
+            //
+            // Only once the art has actually arrived, though: CompanionArt hides the frame
+            // by dropping alpha to zero when a portrait is missing, and an Image with no
+            // sprite draws a white rectangle rather than a blank. Overwriting that alpha
+            // unconditionally is how a locked companion becomes a grey slab on a slow load.
+            if (portrait.sprite != null) portrait.color = new Color(.42f, .48f, .54f, .95f);
+
+            FeatureValue(card, w, goal.RanksToGo.ToString(), Pal.Cream,
+                         Loc.Get(goal.RanksToGo == 1 ? "ui.home.rank_left" : "ui.home.ranks_left"),
+                         Pal.Bloom);
+
+            FeatureBar(FeatureStrip(card, w), w, goal.Progress01, Pal.Bloom);
+            return true;
+        }
+
         // ---------------------------------------------------------------- hero
+        /// <summary>
+        /// The companion, on its rock, between the feature row and the play button.
+        ///
+        /// It sits lower and a tenth smaller than it used to. The two boxes above take the
+        /// space the hero had, and the numbers here are what is left: the rock's foot clears
+        /// the play button and the critter's ears clear the boxes, with about the same margin
+        /// at each end. Everything inside the host is scaled together rather than re-tuned
+        /// one image at a time, so the rock and the critter cannot drift apart.
+        /// </summary>
         void BuildHero()
         {
-            var host = UIKit.Box("Hero", Content, new Vector2(600f, 500f), new Vector2(.5f, .5f), new Vector2(0f, 96f));
+            var host = UIKit.Box("Hero", Content, new Vector2(600f, 500f), new Vector2(.5f, .5f), new Vector2(0f, -130f));
 
             var rock = UIKit.Img("Rock", host, Art.S("Map/rock_grass"), Color.white,
-                                 new Vector2(420f, 330f), new Vector2(.5f, .5f), new Vector2(0f, -152f));
+                                 new Vector2(378f, 297f), new Vector2(.5f, .5f), new Vector2(0f, -137f));
             rock.preserveAspect = true;
             Tween.Bob((RectTransform)rock.transform, 9f, 3.4f);
 
@@ -477,15 +1104,15 @@ namespace GlimmerGrove
             // where you live with it. The screen is rebuilt on every navigation, so
             // coming back from the profile already shows the new one.
             _hero = UIKit.Img("Critter", host, null, Color.white,
-                              new Vector2(318f, 318f), new Vector2(.5f, .5f), new Vector2(0f, 30f));
+                              new Vector2(286f, 286f), new Vector2(.5f, .5f), new Vector2(0f, 27f));
             _hero.preserveAspect = true;
             CompanionArt.Paint(_hero, Profile.Avatar, animate: true);
             Tween.Bob((RectTransform)_hero.transform, 12f, 3.4f, .35f);
-            UIKit.Halo(host, new Color(1f, .88f, .55f), 580f, .24f);
+            UIKit.Halo(host, new Color(1f, .88f, .55f), 522f, .24f);
 
             // the hero answers a poke
-            var hit = UIKit.Button("Poke", host, Art.Pixel, new Vector2(340f, 340f),
-                                   new Vector2(.5f, .5f), new Vector2(0f, 30f), Poke);
+            var hit = UIKit.Button("Poke", host, Art.Pixel, new Vector2(306f, 306f),
+                                   new Vector2(.5f, .5f), new Vector2(0f, 27f), Poke);
             hit.GetComponent<Image>().color = new Color(1, 1, 1, 0);
             hit.ClickSfx = null;
             hit.PressScale = 1f;

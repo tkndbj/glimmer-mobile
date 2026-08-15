@@ -183,9 +183,15 @@ namespace GlimmerGrove
             _target = 1f;
             ContentBootstrap.BeginBackgroundRefresh();
 
-            // Both of these are fire-and-forget for the same reason: nothing between
+            // All three of these are fire-and-forget for the same reason: nothing between
             // tapping the icon and playing a glade is allowed to wait on a network.
             CloudSaveService.BeginSync();
+
+            // The population's move counts, for the one line on the victory panel that
+            // compares a player to everybody else. It is the most disposable request the
+            // game makes — no sign-in, no writes, and an outcome nothing waits on — which
+            // is why it is started here and never checked again.
+            CloudSaveService.BeginStatsRefresh();
 
             while (Time.unscaledTime - started < MinimumShow || _shown < .999f) yield return null;
 

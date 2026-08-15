@@ -39,7 +39,6 @@ namespace GlimmerGrove.AssetPipeline
 
         /// <summary>Companion portraits, held only while a screen is showing them.</summary>
         public const string CompanionScope = "companions";
-
         sealed class Scope
         {
             public readonly HashSet<string> Addresses = new HashSet<string>(StringComparer.Ordinal);

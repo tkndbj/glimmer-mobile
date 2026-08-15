@@ -206,10 +206,22 @@ namespace GlimmerGrove
         /// did, and only a long one gets smaller.
         /// </para>
         /// </summary>
+        /// <remarks>
+        /// <b>Wrapping is switched on here, and has to be.</b> uGUI's best-fit only shrinks
+        /// text that fails to fit <em>vertically</em>; with <see cref="HorizontalWrapMode.Overflow"/>
+        /// a single line can never fail that test, so best-fit measured a box the text was
+        /// already inside and did nothing at all. That is why the streak page's state line
+        /// ran out of its pill while being marked shrinkable. With wrapping on, an over-long
+        /// line folds, the fold overflows vertically, and best-fit then does the shrinking
+        /// it was asked for — so in practice the text shrinks first and only folds once it
+        /// has hit <paramref name="minSize"/>. Short chrome — a coin count, a day number —
+        /// reaches neither case and is unaffected.
+        /// </remarks>
         public static Text Shrinkable(Text text, int minSize = 16)
         {
             if (text == null) return null;
 
+            text.horizontalOverflow = HorizontalWrapMode.Wrap;
             text.resizeTextMaxSize = text.fontSize;
             text.resizeTextMinSize = Mathf.Clamp(minSize, 1, text.fontSize);
             text.resizeTextForBestFit = true;

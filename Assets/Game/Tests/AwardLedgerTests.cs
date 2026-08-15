@@ -84,6 +84,52 @@ namespace GlimmerGrove.Tests
                                "one chest paying two currencies is two awards, not one");
         }
 
+        /// <summary>
+        /// The exact string <c>parseStreakClaim</c> reads back on the server. Pinned rather
+        /// than assumed, because the id is the database key: the two halves agreeing is
+        /// what makes a night payable exactly once, and a change here that is not made
+        /// there re-opens every night every player has already been paid for.
+        /// </summary>
+        [Test]
+        public void StreakIdsNameTheDayTheNightAndTheCurrency()
+        {
+            Assert.AreEqual("streak:20315:3:gems", GrantEntry.StreakNightId(20315, 3, Currency.Gems));
+            Assert.AreEqual("streak:20315:1:credits",
+                            GrantEntry.StreakNightId(20315, 1, Currency.Credits));
+
+            // Night eight is night one's rung on the second lap, and it is a different
+            // award: same reward, different evening, and the day is what says so.
+            Assert.AreNotEqual(GrantEntry.StreakNightId(20315, 1, Currency.Credits),
+                               GrantEntry.StreakNightId(20322, 8, Currency.Credits));
+        }
+
+        /// <summary>
+        /// Why the day is in the id and the night alone is not enough.
+        ///
+        /// A night number is relative to <c>startDay</c>, and <c>startDay</c> moves under a
+        /// merge — <c>max</c> of the two devices' — so one evening can be night five on one
+        /// phone and night four on another. Keyed on the night, those would be two awards
+        /// and the player would be paid twice. Keyed on the calendar day they collapse to
+        /// one, which is the property invariant 10a is about.
+        /// </summary>
+        [Test]
+        public void TwoDevicesDisagreeingAboutTheNightStillPayOnce()
+        {
+            var ledger = Fresh();
+            const int Day = 20315;
+
+            Assert.IsTrue(ledger.TryAward(GrantEntry.StreakNightId(Day, 5, Currency.Gems),
+                                          10, T0, Reason, out _));
+
+            var other = Fresh();
+            Assert.IsTrue(other.TryAward(GrantEntry.StreakNightId(Day, 5, Currency.Gems),
+                                         10, T0, Reason, out _));
+
+            ledger.MergeFrom(other);
+
+            Assert.AreEqual(10, ledger.PendingGrant, "one evening is one award");
+        }
+
         [Test]
         public void NothingAndNegativeAmountsAreRefused()
         {

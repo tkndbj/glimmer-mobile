@@ -11,6 +11,29 @@ using UnityEngine.UI;
 
 namespace GlimmerGrove
 {
+    /// <summary>
+    /// What the streak did on the run that just ended: how long it now is, and whether
+    /// this run is what extended it.
+    ///
+    /// Both are needed and neither implies the other. A second run of the evening leaves a
+    /// six-day streak at six and extends nothing, and a panel that congratulated the player
+    /// every time would be congratulating them for a thing they did an hour ago.
+    /// </summary>
+    public readonly struct StreakNote
+    {
+        public readonly int Days;
+        public readonly bool Advanced;
+
+        public StreakNote(int days, bool advanced)
+        {
+            Days = days < 0 ? 0 : days;
+            Advanced = advanced;
+        }
+
+        /// <summary>Worth a line only when this run moved it. See the type summary.</summary>
+        public bool WorthSaying => Advanced && Days > 0;
+    }
+
     public sealed class PlayScreen : View
     {
         /// <summary>Which level to play. Set by whoever opened the screen.</summary>
@@ -381,6 +404,14 @@ namespace GlimmerGrove
             int previousBest = before.BestMoves;
             bool firstClear = !before.IsCleared;
 
+            // Decided once, here, and handed to everything downstream. Built *before*
+            // the record is updated, because half of what it describes — the previous
+            // best, whether this was a first clear — stops being true the moment
+            // RecordRun folds this run in. See RunOutcome.
+            var run = RunOutcome.Win(_puzzle, stars, previousBest, firstClear,
+                                     before.Clears + 1, HintsSpent,
+                                     Time.unscaledTime - _startedAt);
+
             PlayerProgress.RecordRun(_def.Id, stars, moves);
 
             // Counted here and in Defeat, which are the two places a run actually ends.
@@ -388,27 +419,59 @@ namespace GlimmerGrove
             // simply did not happen — so there is no single Domain hook to hang this on,
             // and pretending otherwise would silently stop counting losses.
             DailyChests.RecordRun();
+            var streak = RecordStreak();
 
             // The reward is the difference between the record before and after, not a
             // payout for the run. A replay that does not beat the old result is worth
             // nothing, and that falls out of the subtraction rather than needing a rule.
             var reward = PlayerProgression.RewardFor(before, PlayerProgress.Record(_def.Id));
 
-            LevelAnalytics.TrackCompleted(_def, moves, stars, _def.Tuning.HintAllowance - _board.HintsLeft,
-                                          Time.unscaledTime - _startedAt, firstClear);
+            LevelAnalytics.TrackCompleted(_def, moves, stars, run.HintsUsed,
+                                          run.Seconds, firstClear);
 
             Flow.Modal<WinOverlay>(v =>
             {
-                v.LevelId = _def.Id;
-                v.Stars = stars;
-                v.Moves = moves;
-                v.Par = _puzzle.Gold;
-                v.PreviousBest = previousBest;
-                v.FirstClear = firstClear;
+                v.Run = run;
+                v.Streak = streak;
                 v.XpGained = reward.Xp;
                 v.CreditsGained = reward.EarnedCredits;
+
+                // Already inside CreditsGained. Passed separately only so the panel can
+                // say *why* the number is larger than the glade's usual, which is the
+                // whole point of the bonus existing.
+                v.GoldenPercent = PlayerProgression.GoldenPercentFor(_def.Id);
             });
         }
+
+        /// <summary>
+        /// Feeds the streak and reports what happened, so the panel that follows can say
+        /// so.
+        ///
+        /// <para>
+        /// Measured either side of the call rather than read from an event, because the
+        /// panel needs the answer synchronously — it is built on the next line — and an
+        /// event handler would have to stash the result somewhere for it to be found
+        /// again. Two reads of a derived number is the cheapest correct version.
+        /// </para>
+        /// </summary>
+        StreakNote RecordStreak()
+        {
+            int before = DailyStreak.Days;
+            DailyStreak.Record();
+
+            return new StreakNote(DailyStreak.Days, DailyStreak.Days > before);
+        }
+
+        /// <summary>
+        /// Hints spent on the run so far.
+        ///
+        /// Derived from the allowance rather than counted, so it cannot fall out of step
+        /// with the badge the player is looking at. Clamped because a board that has not
+        /// finished building yet reports no hints left, and a negative count would travel
+        /// into analytics.
+        /// </summary>
+        int HintsSpent
+            => _board == null ? 0 : Mathf.Max(0, _def.Tuning.HintAllowance - _board.HintsLeft);
 
         /// <summary>
         /// The run was lost.
@@ -423,6 +486,15 @@ namespace GlimmerGrove
             if (_finished) return;
             _finished = true;
 
+            var record = PlayerProgress.Record(_def.Id);
+
+            // Read off the board before anything touches it. The panel this feeds offers
+            // a retry, which restarts the very board being measured — so a screen that
+            // asked afterwards would be describing a run that no longer exists.
+            var run = RunOutcome.Loss(_puzzle, reason, record.BestMoves,
+                                      record.Clears + 1, HintsSpent,
+                                      Time.unscaledTime - _startedAt);
+
             bool charged = Wallet.TrySpendHeart();
             int left = Profile.Hearts;
 
@@ -430,20 +502,17 @@ namespace GlimmerGrove
             // daily loop that only rewards winning takes hearts from exactly the players
             // who most need what the chests hold.
             DailyChests.RecordRun();
+            var streak = RecordStreak();
 
-            LevelAnalytics.TrackDefeated(_def, _puzzle.Moves, Time.unscaledTime - _startedAt,
-                                         left, reason.ToString());
+            LevelAnalytics.TrackDefeated(_def, run.Moves, run.Seconds, left, reason.ToString());
 
             Flow.Modal<DefeatOverlay>(v =>
             {
                 v.Screen = this;
-                v.Reason = reason;
+                v.Run = run;
+                v.Streak = streak;
                 v.HeartsLeft = left;
                 v.HeartWasCharged = charged;
-
-                // How close they were, which only means anything when turns ran out.
-                v.LampsLit = _puzzle.LampsLit;
-                v.LampCount = _puzzle.LampCount;
             });
         }
 

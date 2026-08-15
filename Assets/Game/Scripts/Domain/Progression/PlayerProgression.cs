@@ -88,8 +88,22 @@ namespace GlimmerGrove.Progression
             // file read to show a number.
             var chapter = GameContent.ChapterOf(after?.Id ?? LevelId.None);
 
-            return ProgressionLedger.Delta(before, after, chapter, ProgressionRules.Table);
+            return ProgressionLedger.Delta(before, after, chapter, ProgressionRules.Table,
+                                           RewardSeed.PlayerKey);
         }
+
+        /// <summary>
+        /// What multiplier this player's copy of a glade pays, as a percentage. 100 is the
+        /// ordinary reward.
+        ///
+        /// Exposed so the victory panel can say when a glade paid more than it should have.
+        /// That announcement is the entire reason the bonus is worth having — a variable
+        /// reward the player never notices is just noise in the economy — but it is only
+        /// ever a report of arithmetic that has already happened, and asking here gives the
+        /// same answer the ledger used.
+        /// </summary>
+        public static int GoldenPercentFor(LevelId level)
+            => ProgressionRules.Table.Golden.PercentFor(RewardSeed.PlayerKey, level);
 
         // ------------------------------------------------------------- spending
         /// <summary>
@@ -161,7 +175,12 @@ namespace GlimmerGrove.Progression
             _dirty = false;
 
             var table = ProgressionRules.Table;
-            _totals = ProgressionLedger.Compute(PlayerProgress.Records, GameContent.Index, table);
+            // The seed is read here, at the one place the live totals are derived, rather
+            // than inside the ledger — see ProgressionLedger.Value for why that has to stay
+            // a pure function. Empty before the first sign-in, which pays the base and can
+            // only ever be revised upward afterwards.
+            _totals = ProgressionLedger.Compute(PlayerProgress.Records, GameContent.Index, table,
+                                                RewardSeed.PlayerKey, GameContent.Index.Events);
 
             // Three floors, applied as one: whichever demands the most XP wins, and
             // everything downstream — level, progress bar, remaining XP — then stays

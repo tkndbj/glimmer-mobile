@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using GlimmerGrove.Content;
 using GlimmerGrove.Daily;
+using GlimmerGrove.Events;
 using GlimmerGrove.Persistence;
 using GlimmerGrove.Progression;
 using NUnit.Framework;
@@ -42,6 +43,42 @@ namespace GlimmerGrove.Tests
             public DailyChestDto dailyChestConfig;
 
             public DailyVectorCase[] dailyChestCases;
+
+            /// <summary>
+            /// The golden picker's own vectors: (account, level) to a percentage. The
+            /// bands live inside <see cref="progression"/> rather than beside them,
+            /// because unlike a chest's drop table the multiplier is part of the credit
+            /// derivation itself — the same table has to be in force for the end-to-end
+            /// cases below to mean anything.
+            /// </summary>
+            public GoldenVectorCase[] goldenCases;
+
+            /// <summary>
+            /// The streak ladder's own vectors, and a synthetic ladder to run them against
+            /// for the reason <see cref="dailyChestConfig"/> is synthetic: what is under
+            /// contract is the lookup — the lap, and the per-kind clamp — not the rewards
+            /// this season happens to pay.
+            /// </summary>
+            public StreakDto streakLadder;
+
+            public StreakVectorCase[] streakCases;
+
+            /// <summary>
+            /// The event calendar. Top level rather than inside <see cref="progression"/>
+            /// because it is a fact about the catalog — which glades, when — in the same
+            /// sense <see cref="levelChapters"/> is, and the reward table has no field for
+            /// it to land in.
+            /// </summary>
+            public ManifestEventDto[] events;
+        }
+
+        [Serializable]
+        public sealed class GoldenVectorCase
+        {
+            public string name;
+            public string playerKey;
+            public string levelId;
+            public int percent;
         }
 
         [Serializable]
@@ -61,6 +98,19 @@ namespace GlimmerGrove.Tests
             public int amount;
         }
 
+        /// <summary>
+        /// One night of the ladder. <c>kind</c> is empty for a night that pays nothing,
+        /// which is a state the lookup has to reach as exactly as any other.
+        /// </summary>
+        [Serializable]
+        public sealed class StreakVectorCase
+        {
+            public string name;
+            public int night;
+            public string kind;
+            public int amount;
+        }
+
         [Serializable]
         public sealed class LevelChapterDto
         {
@@ -72,6 +122,14 @@ namespace GlimmerGrove.Tests
         public sealed class VectorCase
         {
             public string name;
+
+            /// <summary>
+            /// Seeds the golden bonus. Absent — which JsonUtility reads as empty — means
+            /// no account, and therefore no bonus, which is what every case written before
+            /// the bonus existed relies on.
+            /// </summary>
+            public string playerKey;
+
             public VectorRecord[] levels;
             public long credits;
             public long xp;
@@ -82,6 +140,13 @@ namespace GlimmerGrove.Tests
         {
             public string levelId;
             public int stars;
+
+            /// <summary>
+            /// When the glade was first cleared. Only the event track reads it, and only
+            /// to ask whether the clear falls inside a window; absent — which JsonUtility
+            /// reads as zero — is 1970 and therefore inside no window any event authors.
+            /// </summary>
+            public long firstClearedUnix;
         }
 
         static string VectorPath =>
@@ -132,8 +197,50 @@ namespace GlimmerGrove.Tests
                 // deliberately include star counts a legitimate run could never produce.
                 yield return new LevelRecord(LevelId.Parse(level.levelId), level.stars,
                                              bestMoves: 10, clears: 1,
-                                             firstClearedUnix: 100, lastPlayedUnix: 100);
+                                             firstClearedUnix: level.firstClearedUnix,
+                                             lastPlayedUnix: 100);
             }
+        }
+
+        /// <summary>
+        /// The calendar, built through the same reader the game uses.
+        ///
+        /// Deliberately not hand-assembled: a track the builder would refuse — goals out of
+        /// order, a milestone past the number of glades — must not be able to pass here and
+        /// then be rejected in production.
+        /// </summary>
+        static IReadOnlyList<GroveEvent> EventsFrom(VectorFile file)
+        {
+            if (file.events == null || file.events.Length == 0) return null;
+
+            var builder = new CatalogIndexBuilder();
+
+            // The events name glades, and the builder drops an event whose glades no
+            // chapter holds — so the chapters have to go in first.
+            var byChapter = new Dictionary<string, List<string>>(StringComparer.Ordinal);
+            foreach (var entry in file.levelChapters ?? new LevelChapterDto[0])
+            {
+                if (!byChapter.TryGetValue(entry.chapterId, out var list))
+                    byChapter[entry.chapterId] = list = new List<string>();
+                list.Add(entry.levelId);
+            }
+
+            int order = 0;
+            foreach (var pair in byChapter)
+                builder.Add(new ManifestChapterDto
+                {
+                    id = pair.Key, order = order += 10, version = 1, levels = pair.Value.ToArray(),
+                }, 1);
+
+            foreach (var groveEvent in file.events) builder.AddEvent(groveEvent);
+
+            var index = builder.Build();
+
+            Assert.AreEqual(file.events.Length, index.Events.Count,
+                            "the vector file's events were not all accepted by the builder: " +
+                            string.Join("; ", builder.Problems));
+
+            return index.Events;
         }
 
         // -------------------------------------------------------------- the test
@@ -143,12 +250,14 @@ namespace GlimmerGrove.Tests
             var file = Load();
             var table = TableFrom(file);
             var chapters = ChaptersFrom(file);
+            var events = EventsFrom(file);
 
             var failures = new List<string>();
 
             foreach (var test in file.cases)
             {
-                var totals = ProgressionLedger.Compute(RecordsFrom(test), chapters, table);
+                var totals = ProgressionLedger.Compute(RecordsFrom(test), chapters, table,
+                                                       test.playerKey, events);
 
                 if (totals.EarnedCredits != test.credits)
                     failures.Add($"'{test.name}': credits expected {test.credits}, got {totals.EarnedCredits}");
@@ -162,6 +271,112 @@ namespace GlimmerGrove.Tests
                            "intended, update firebase/shared/reward-vectors.json and make the same change " +
                            "in firebase/functions/src/progression.ts, or the server will enforce different " +
                            "numbers than the game shows.\n" + string.Join("\n", failures));
+        }
+
+        /// <summary>
+        /// The golden picker, against the file both halves read.
+        ///
+        /// The multiplier is not a decoration on top of the reward rule — it is inside the
+        /// credit derivation, so the server recomputes it on every sync. A disagreement
+        /// here is a balance that moves after a sync, in front of a player, for no reason
+        /// they can see. <c>GoldenTests</c> pins the same numbers without a JSON reader,
+        /// so the generator is checked even when the Editor is closed.
+        /// </summary>
+        [Test]
+        public void EveryGoldenVectorMatches()
+        {
+            var file = Load();
+            Assert.IsNotNull(file.goldenCases, "the vector file has no golden cases");
+            Assert.Greater(file.goldenCases.Length, 0);
+
+            var golden = TableFrom(file).Golden;
+            var failures = new List<string>();
+
+            foreach (var test in file.goldenCases)
+            {
+                int got = golden.PercentFor(test.playerKey, LevelId.Parse(test.levelId));
+                if (got != test.percent)
+                    failures.Add($"'{test.name}': expected {test.percent}%, got {got}%");
+            }
+
+            Assert.IsEmpty(failures,
+                           "the client no longer matches the shared golden vectors. Every one of these " +
+                           "is a glade somebody has been paid for — see invariant 9c.\n" +
+                           string.Join("\n", failures));
+        }
+
+        [Test]
+        public void EveryStreakVectorMatches()
+        {
+            var file = Load();
+            Assert.IsNotNull(file.streakLadder, "the vector file has no streak ladder");
+            Assert.IsNotNull(file.streakCases, "the vector file has no streak cases");
+            Assert.Greater(file.streakCases.Length, 0);
+
+            // Read through the real reader, so the vectors exercise the clamp and the
+            // refusals as well as the lookup. Problems are expected here — the ladder
+            // deliberately overreaches on two nights — but the table must still build.
+            var problems = new List<string>();
+            var ladder = StreakTable.Resolve(file.streakLadder, problems);
+
+            Assert.AreEqual(file.streakLadder.rungs.Length, ladder.Length,
+                            "the reader refused the vector ladder outright: " +
+                            string.Join("; ", problems));
+
+            var failures = new List<string>();
+
+            foreach (var test in file.streakCases)
+            {
+                var rung = ladder.Rung(test.night);
+                string got = rung.IsValid ? $"{ChestDropKinds.Id(rung.Kind)}={rung.Amount}" : "(nothing)";
+                string want = string.IsNullOrEmpty(test.kind) ? "(nothing)" : $"{test.kind}={test.amount}";
+
+                if (got != want) failures.Add($"'{test.name}' (night {test.night}): expected {want}, got {got}");
+            }
+
+            Assert.IsEmpty(failures,
+                           "the client no longer matches the shared streak vectors. Every one of " +
+                           "these is a night somebody is paid for — the server grants the amount " +
+                           "and this is what the board promised.\n" + string.Join("\n", failures));
+        }
+
+        /// <summary>
+        /// The streak vectors are only worth anything if they cross the end of the ladder.
+        /// A file whose cases all sat inside the first lap would pass against an
+        /// implementation that had gone back to repeating its last rung.
+        /// </summary>
+        [Test]
+        public void TheStreakVectorsReachPastTheFirstLap()
+        {
+            var file = Load();
+            int length = file.streakLadder?.rungs?.Length ?? 0;
+            Assert.Greater(length, 0);
+
+            int beyond = 0;
+            foreach (var test in file.streakCases)
+                if (test.night > length) beyond++;
+
+            Assert.GreaterOrEqual(beyond, 3,
+                                  "fewer than three streak vectors fall past the end of the ladder, " +
+                                  "so they would not notice the lap being lost");
+        }
+
+        /// <summary>
+        /// The golden vectors are only worth anything if they actually reach more than one
+        /// band. A file where every case pays the base would pass against an implementation
+        /// that had stopped rolling at all.
+        /// </summary>
+        [Test]
+        public void TheGoldenVectorsReachMoreThanOneBand()
+        {
+            var file = Load();
+
+            var seen = new HashSet<int>();
+            foreach (var test in file.goldenCases ?? new GoldenVectorCase[0]) seen.Add(test.percent);
+
+            Assert.GreaterOrEqual(seen.Count, 3,
+                                  "the golden vectors cover fewer than three outcomes, so they would " +
+                                  "not notice a picker that had stopped picking");
         }
 
         /// <summary>
@@ -179,7 +394,8 @@ namespace GlimmerGrove.Tests
             string all = string.Join(" | ", names).ToLowerInvariant();
 
             foreach (var required in new[] { "does not know", "duplicated", "clamped", "negative",
-                                             "inherits", "pay nothing" })
+                                             "inherits", "pay nothing", "golden",
+                                             "outside its window", "whole track" })
             {
                 Assert.IsTrue(all.Contains(required),
                               $"the vectors no longer cover '{required}' — that is a case where the two " +

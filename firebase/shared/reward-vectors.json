@@ -17,21 +17,20 @@
     "Shapes are chosen so Unity's JsonUtility can read the file too: arrays of objects",
     "rather than maps, since JsonUtility cannot deserialise a dictionary."
   ],
-
   "progression": {
     "schemaVersion": 1,
     "maxLevel": 100,
-    "xpToNext": [100],
+    "xpToNext": [
+      100
+    ],
     "tailXpToNext": 100,
     "tailXpIncrement": 0,
-
     "rewards": {
       "xpFirstClear": 40,
       "xpPerStar": 20,
       "creditsFirstClear": 30,
       "creditsPerStar": 15
     },
-
     "chapterRewards": [
       {
         "chapterId": "c_generous",
@@ -51,83 +50,429 @@
         "chapterId": "c_partial",
         "creditsPerStar": 25
       }
-    ]
+    ],
+    "golden": {
+      "bands": [
+        {
+          "percent": 100,
+          "weight": 7
+        },
+        {
+          "percent": 150,
+          "weight": 2
+        },
+        {
+          "percent": 400,
+          "weight": 1
+        }
+      ]
+    }
   },
-
   "levelChapters": [
-    { "levelId": "plain_one", "chapterId": "c_plain" },
-    { "levelId": "plain_two", "chapterId": "c_plain" },
-    { "levelId": "generous_one", "chapterId": "c_generous" },
-    { "levelId": "free_one", "chapterId": "c_free" },
-    { "levelId": "partial_one", "chapterId": "c_partial" }
+    {
+      "levelId": "plain_one",
+      "chapterId": "c_plain"
+    },
+    {
+      "levelId": "plain_two",
+      "chapterId": "c_plain"
+    },
+    {
+      "levelId": "generous_one",
+      "chapterId": "c_generous"
+    },
+    {
+      "levelId": "free_one",
+      "chapterId": "c_free"
+    },
+    {
+      "levelId": "partial_one",
+      "chapterId": "c_partial"
+    }
   ],
-
   "cases": [
-    { "name": "no records at all", "levels": [], "credits": 0, "xp": 0 },
-
-    { "name": "played but never cleared is worth nothing",
-      "levels": [{ "levelId": "plain_one", "stars": 0 }], "credits": 0, "xp": 0 },
-
-    { "name": "one star, chapter with no override, so the default rule",
-      "levels": [{ "levelId": "plain_one", "stars": 1 }], "credits": 45, "xp": 60 },
-
-    { "name": "three stars on the default rule",
-      "levels": [{ "levelId": "plain_one", "stars": 3 }], "credits": 75, "xp": 100 },
-
-    { "name": "two glades in one chapter add up",
+    {
+      "name": "no records at all",
+      "levels": [],
+      "credits": 0,
+      "xp": 0
+    },
+    {
+      "name": "played but never cleared is worth nothing",
       "levels": [
-        { "levelId": "plain_one", "stars": 3 },
-        { "levelId": "plain_two", "stars": 2 }
-      ], "credits": 135, "xp": 180 },
-
-    { "name": "a chapter override replaces the default rule",
-      "levels": [{ "levelId": "generous_one", "stars": 2 }], "credits": 140, "xp": 200 },
-
-    { "name": "a chapter may legitimately pay nothing, and zero is not 'unwritten'",
-      "levels": [{ "levelId": "free_one", "stars": 3 }], "credits": 0, "xp": 0 },
-
-    { "name": "a partial override inherits the fields it does not set",
-      "levels": [{ "levelId": "partial_one", "stars": 2 }], "credits": 80, "xp": 80 },
-
-    { "name": "a partial override at three stars",
-      "levels": [{ "levelId": "partial_one", "stars": 3 }], "credits": 105, "xp": 100 },
-
-    { "name": "chapters with different rules mix correctly",
+        {
+          "levelId": "plain_one",
+          "stars": 0
+        }
+      ],
+      "credits": 0,
+      "xp": 0
+    },
+    {
+      "name": "one star, chapter with no override, so the default rule",
       "levels": [
-        { "levelId": "plain_one", "stars": 1 },
-        { "levelId": "generous_one", "stars": 3 },
-        { "levelId": "free_one", "stars": 3 }
-      ], "credits": 225, "xp": 310 },
-
-    { "name": "a level id the catalog does not know earns nothing",
-      "levels": [{ "levelId": "invented", "stars": 3 }], "credits": 0, "xp": 0 },
-
-    { "name": "invented ids cannot inflate a real total",
+        {
+          "levelId": "plain_one",
+          "stars": 1
+        }
+      ],
+      "credits": 45,
+      "xp": 60
+    },
+    {
+      "name": "three stars on the default rule",
       "levels": [
-        { "levelId": "plain_one", "stars": 3 },
-        { "levelId": "invented", "stars": 3 },
-        { "levelId": "also_invented", "stars": 3 }
-      ], "credits": 75, "xp": 100 },
-
-    { "name": "a duplicated level id counts once",
+        {
+          "levelId": "plain_one",
+          "stars": 3
+        }
+      ],
+      "credits": 75,
+      "xp": 100
+    },
+    {
+      "name": "two glades in one chapter add up",
       "levels": [
-        { "levelId": "plain_one", "stars": 3 },
-        { "levelId": "plain_one", "stars": 3 }
-      ], "credits": 75, "xp": 100 },
-
-    { "name": "stars above three are clamped",
-      "levels": [{ "levelId": "plain_one", "stars": 99 }], "credits": 75, "xp": 100 },
-
-    { "name": "negative stars read as uncleared",
-      "levels": [{ "levelId": "plain_one", "stars": -5 }], "credits": 0, "xp": 0 },
-
-    { "name": "order does not change the total",
+        {
+          "levelId": "plain_one",
+          "stars": 3
+        },
+        {
+          "levelId": "plain_two",
+          "stars": 2
+        }
+      ],
+      "credits": 135,
+      "xp": 180
+    },
+    {
+      "name": "a chapter override replaces the default rule",
       "levels": [
-        { "levelId": "free_one", "stars": 3 },
-        { "levelId": "generous_one", "stars": 3 },
-        { "levelId": "plain_two", "stars": 1 },
-        { "levelId": "plain_one", "stars": 2 }
-      ], "credits": 285, "xp": 390 }
+        {
+          "levelId": "generous_one",
+          "stars": 2
+        }
+      ],
+      "credits": 140,
+      "xp": 200
+    },
+    {
+      "name": "a chapter may legitimately pay nothing, and zero is not 'unwritten'",
+      "levels": [
+        {
+          "levelId": "free_one",
+          "stars": 3
+        }
+      ],
+      "credits": 0,
+      "xp": 0
+    },
+    {
+      "name": "a partial override inherits the fields it does not set",
+      "levels": [
+        {
+          "levelId": "partial_one",
+          "stars": 2
+        }
+      ],
+      "credits": 80,
+      "xp": 80
+    },
+    {
+      "name": "a partial override at three stars",
+      "levels": [
+        {
+          "levelId": "partial_one",
+          "stars": 3
+        }
+      ],
+      "credits": 105,
+      "xp": 100
+    },
+    {
+      "name": "chapters with different rules mix correctly",
+      "levels": [
+        {
+          "levelId": "plain_one",
+          "stars": 1
+        },
+        {
+          "levelId": "generous_one",
+          "stars": 3
+        },
+        {
+          "levelId": "free_one",
+          "stars": 3
+        }
+      ],
+      "credits": 225,
+      "xp": 310
+    },
+    {
+      "name": "a level id the catalog does not know earns nothing",
+      "levels": [
+        {
+          "levelId": "invented",
+          "stars": 3
+        }
+      ],
+      "credits": 0,
+      "xp": 0
+    },
+    {
+      "name": "invented ids cannot inflate a real total",
+      "levels": [
+        {
+          "levelId": "plain_one",
+          "stars": 3
+        },
+        {
+          "levelId": "invented",
+          "stars": 3
+        },
+        {
+          "levelId": "also_invented",
+          "stars": 3
+        }
+      ],
+      "credits": 75,
+      "xp": 100
+    },
+    {
+      "name": "a duplicated level id counts once",
+      "levels": [
+        {
+          "levelId": "plain_one",
+          "stars": 3
+        },
+        {
+          "levelId": "plain_one",
+          "stars": 3
+        }
+      ],
+      "credits": 75,
+      "xp": 100
+    },
+    {
+      "name": "stars above three are clamped",
+      "levels": [
+        {
+          "levelId": "plain_one",
+          "stars": 99
+        }
+      ],
+      "credits": 75,
+      "xp": 100
+    },
+    {
+      "name": "negative stars read as uncleared",
+      "levels": [
+        {
+          "levelId": "plain_one",
+          "stars": -5
+        }
+      ],
+      "credits": 0,
+      "xp": 0
+    },
+    {
+      "name": "order does not change the total",
+      "levels": [
+        {
+          "levelId": "free_one",
+          "stars": 3
+        },
+        {
+          "levelId": "generous_one",
+          "stars": 3
+        },
+        {
+          "levelId": "plain_two",
+          "stars": 1
+        },
+        {
+          "levelId": "plain_one",
+          "stars": 2
+        }
+      ],
+      "credits": 285,
+      "xp": 390
+    },
+    {
+      "name": "golden applies per glade for uid_alpha",
+      "playerKey": "uid_alpha",
+      "levels": [
+        {
+          "levelId": "plain_one",
+          "stars": 3
+        },
+        {
+          "levelId": "plain_two",
+          "stars": 2
+        },
+        {
+          "levelId": "generous_one",
+          "stars": 3
+        },
+        {
+          "levelId": "free_one",
+          "stars": 3
+        }
+      ],
+      "credits": 345,
+      "xp": 430
+    },
+    {
+      "name": "golden applies per glade for uid_beta",
+      "playerKey": "uid_beta",
+      "levels": [
+        {
+          "levelId": "plain_one",
+          "stars": 3
+        },
+        {
+          "levelId": "plain_two",
+          "stars": 2
+        },
+        {
+          "levelId": "generous_one",
+          "stars": 3
+        },
+        {
+          "levelId": "free_one",
+          "stars": 3
+        }
+      ],
+      "credits": 540,
+      "xp": 430
+    },
+    {
+      "name": "golden does not know an invented level either",
+      "playerKey": "uid_alpha",
+      "levels": [
+        {
+          "levelId": "plain_one",
+          "stars": 3
+        },
+        {
+          "levelId": "invented_one",
+          "stars": 3
+        }
+      ],
+      "credits": 75,
+      "xp": 100
+    },
+    {
+      "name": "an event pays nothing for clears outside its window",
+      "levels": [
+        {
+          "levelId": "plain_one",
+          "stars": 3,
+          "firstClearedUnix": 1699995000
+        },
+        {
+          "levelId": "plain_two",
+          "stars": 3,
+          "firstClearedUnix": 1699995000
+        },
+        {
+          "levelId": "generous_one",
+          "stars": 3,
+          "firstClearedUnix": 1699995000
+        }
+      ],
+      "credits": 330,
+      "xp": 450
+    },
+    {
+      "name": "an event pays its first milestone",
+      "levels": [
+        {
+          "levelId": "plain_one",
+          "stars": 3,
+          "firstClearedUnix": 1700005000
+        },
+        {
+          "levelId": "plain_two",
+          "stars": 3,
+          "firstClearedUnix": 1699995000
+        }
+      ],
+      "credits": 200,
+      "xp": 200
+    },
+    {
+      "name": "an event pays the whole track",
+      "levels": [
+        {
+          "levelId": "plain_one",
+          "stars": 2,
+          "firstClearedUnix": 1700005000
+        },
+        {
+          "levelId": "plain_two",
+          "stars": 1,
+          "firstClearedUnix": 1700005000
+        },
+        {
+          "levelId": "generous_one",
+          "stars": 3,
+          "firstClearedUnix": 1700005000
+        }
+      ],
+      "credits": 535,
+      "xp": 390
+    },
+    {
+      "name": "an event does not know an invented level either",
+      "levels": [
+        {
+          "levelId": "plain_one",
+          "stars": 3,
+          "firstClearedUnix": 1700005000
+        },
+        {
+          "levelId": "invented_one",
+          "stars": 3,
+          "firstClearedUnix": 1700005000
+        },
+        {
+          "levelId": "free_one",
+          "stars": 3,
+          "firstClearedUnix": 1700005000
+        }
+      ],
+      "credits": 125,
+      "xp": 100
+    },
+    {
+      "name": "an event and a golden stack on one save",
+      "levels": [
+        {
+          "levelId": "plain_one",
+          "stars": 3,
+          "firstClearedUnix": 1700005000
+        },
+        {
+          "levelId": "plain_two",
+          "stars": 3,
+          "firstClearedUnix": 1700005000
+        },
+        {
+          "levelId": "generous_one",
+          "stars": 3,
+          "firstClearedUnix": 1700005000
+        },
+        {
+          "levelId": "free_one",
+          "stars": 3,
+          "firstClearedUnix": 1700005000
+        }
+      ],
+      "credits": 805,
+      "xp": 450,
+      "playerKey": "uid_beta"
+    }
   ],
   "_dailyComment": [
     "The contract between DailyChestTable.cs and functions/src/daily.ts.",
@@ -2010,6 +2355,256 @@
         {
           "kind": "hearts",
           "amount": 5
+        }
+      ]
+    }
+  ],
+  "goldenCases": [
+    {
+      "name": "(none)@plain_one",
+      "playerKey": "",
+      "levelId": "plain_one",
+      "percent": 100
+    },
+    {
+      "name": "(none)@plain_two",
+      "playerKey": "",
+      "levelId": "plain_two",
+      "percent": 100
+    },
+    {
+      "name": "(none)@generous_one",
+      "playerKey": "",
+      "levelId": "generous_one",
+      "percent": 100
+    },
+    {
+      "name": "(none)@free_one",
+      "playerKey": "",
+      "levelId": "free_one",
+      "percent": 100
+    },
+    {
+      "name": "(none)@c01_first_light",
+      "playerKey": "",
+      "levelId": "c01_first_light",
+      "percent": 100
+    },
+    {
+      "name": "uid_alpha@plain_one",
+      "playerKey": "uid_alpha",
+      "levelId": "plain_one",
+      "percent": 100
+    },
+    {
+      "name": "uid_alpha@plain_two",
+      "playerKey": "uid_alpha",
+      "levelId": "plain_two",
+      "percent": 150
+    },
+    {
+      "name": "uid_alpha@generous_one",
+      "playerKey": "uid_alpha",
+      "levelId": "generous_one",
+      "percent": 100
+    },
+    {
+      "name": "uid_alpha@free_one",
+      "playerKey": "uid_alpha",
+      "levelId": "free_one",
+      "percent": 100
+    },
+    {
+      "name": "uid_alpha@c01_first_light",
+      "playerKey": "uid_alpha",
+      "levelId": "c01_first_light",
+      "percent": 150
+    },
+    {
+      "name": "uid_beta@plain_one",
+      "playerKey": "uid_beta",
+      "levelId": "plain_one",
+      "percent": 400
+    },
+    {
+      "name": "uid_beta@plain_two",
+      "playerKey": "uid_beta",
+      "levelId": "plain_two",
+      "percent": 100
+    },
+    {
+      "name": "uid_beta@generous_one",
+      "playerKey": "uid_beta",
+      "levelId": "generous_one",
+      "percent": 100
+    },
+    {
+      "name": "uid_beta@free_one",
+      "playerKey": "uid_beta",
+      "levelId": "free_one",
+      "percent": 400
+    },
+    {
+      "name": "uid_beta@c01_first_light",
+      "playerKey": "uid_beta",
+      "levelId": "c01_first_light",
+      "percent": 100
+    },
+    {
+      "name": "0123456789abcdef0123456789abcdef@plain_one",
+      "playerKey": "0123456789abcdef0123456789abcdef",
+      "levelId": "plain_one",
+      "percent": 400
+    },
+    {
+      "name": "0123456789abcdef0123456789abcdef@plain_two",
+      "playerKey": "0123456789abcdef0123456789abcdef",
+      "levelId": "plain_two",
+      "percent": 100
+    },
+    {
+      "name": "0123456789abcdef0123456789abcdef@generous_one",
+      "playerKey": "0123456789abcdef0123456789abcdef",
+      "levelId": "generous_one",
+      "percent": 100
+    },
+    {
+      "name": "0123456789abcdef0123456789abcdef@free_one",
+      "playerKey": "0123456789abcdef0123456789abcdef",
+      "levelId": "free_one",
+      "percent": 100
+    },
+    {
+      "name": "0123456789abcdef0123456789abcdef@c01_first_light",
+      "playerKey": "0123456789abcdef0123456789abcdef",
+      "levelId": "c01_first_light",
+      "percent": 100
+    },
+    {
+      "name": "uid_ünïcode@plain_one",
+      "playerKey": "uid_ünïcode",
+      "levelId": "plain_one",
+      "percent": 100
+    },
+    {
+      "name": "uid_ünïcode@plain_two",
+      "playerKey": "uid_ünïcode",
+      "levelId": "plain_two",
+      "percent": 150
+    },
+    {
+      "name": "uid_ünïcode@generous_one",
+      "playerKey": "uid_ünïcode",
+      "levelId": "generous_one",
+      "percent": 100
+    },
+    {
+      "name": "uid_ünïcode@free_one",
+      "playerKey": "uid_ünïcode",
+      "levelId": "free_one",
+      "percent": 100
+    },
+    {
+      "name": "uid_ünïcode@c01_first_light",
+      "playerKey": "uid_ünïcode",
+      "levelId": "c01_first_light",
+      "percent": 400
+    }
+  ],
+  "_goldenComment": [
+    "The contract between GoldenBonus.cs and functions/src/progression.ts.",
+    "",
+    "A glade's golden multiplier is a pure function of (account id, level id): the client",
+    "uses it to show what a clear was worth, and the server re-derives the same number when",
+    "it recomputes earned credits. Neither side tells the other. If they disagree, a player",
+    "watches their balance change after a sync, which is the worst thing an economy can do",
+    "in front of somebody.",
+    "",
+    "Everything behind it is contract: the FNV basis and prime, the xorshift shifts, the",
+    "'golden' tag, the stream number 0, the plain modulo, and the order the bands are",
+    "walked in. Changing any of them re-rolls every glade in the world.",
+    "",
+    "An empty player key pays 100 — no bonus. That is the state before the first sign-in,",
+    "and paying the base is the only direction that cannot cost anybody anything."
+  ],
+  "_streakComment": [
+    "The contract between StreakTable.cs and functions/src/streak.ts.",
+    "",
+    "The streak ladder pays currency, so what a night is worth is decided twice: the client",
+    "shows it and the server grants it, from its own copy published to config/progression.",
+    "A disagreement means a player watches a reward arrive as a different number from the",
+    "one the board promised — the same failure the chest vectors exist to prevent.",
+    "",
+    "Two things are under contract here and neither is obvious. The ladder *laps*: night",
+    "eight pays night one's rung, for ever, because a streak has no end and a ladder does.",
+    "And the per-kind ceilings are shared — a rung authored above one is clamped to the same",
+    "figure on both sides, so a content file that overreaches produces one number, not two.",
+    "",
+    "The ladder below is synthetic and deliberately unlike the shipped one: what is under",
+    "contract is the lookup, not this season's rewards. Nights 6 and 7 are authored above",
+    "the credit and gem ceilings on purpose, so the clamp is pinned rather than assumed.",
+    "",
+    "The `advances` rule that bounds a claim has no client half — the client never judges",
+    "its own claim — so it is not pinned here. It is tested in functions/test."
+  ],
+  "streakLadder": {
+    "rungs": [
+      { "kind": "credits", "amount": 120 },
+      { },
+      { "kind": "gems", "amount": 3 },
+      { "kind": "hearts", "amount": 2 },
+      { "kind": "heart_boost", "amount": 8 },
+      { "kind": "credits", "amount": 9999 },
+      { "kind": "gems", "amount": 250 }
+    ]
+  },
+  "streakCases": [
+    { "name": "night 1 opens the lap", "night": 1, "kind": "credits", "amount": 120 },
+    { "name": "night 2 pays nothing", "night": 2, "kind": "", "amount": 0 },
+    { "name": "night 3", "night": 3, "kind": "gems", "amount": 3 },
+    { "name": "night 4", "night": 4, "kind": "hearts", "amount": 2 },
+    { "name": "night 5", "night": 5, "kind": "heart_boost", "amount": 8 },
+    { "name": "night 6 is clamped to the credit ceiling", "night": 6, "kind": "credits", "amount": 2000 },
+    { "name": "night 7 is clamped to the gem ceiling", "night": 7, "kind": "gems", "amount": 100 },
+    { "name": "night 8 laps to night 1", "night": 8, "kind": "credits", "amount": 120 },
+    { "name": "night 9 laps to night 2", "night": 9, "kind": "", "amount": 0 },
+    { "name": "night 10 laps to night 3", "night": 10, "kind": "gems", "amount": 3 },
+    { "name": "night 14 ends the second lap", "night": 14, "kind": "gems", "amount": 100 },
+    { "name": "night 15 opens the third lap", "night": 15, "kind": "credits", "amount": 120 },
+    { "name": "night 100 is still on the ladder", "night": 100, "kind": "", "amount": 0 },
+    { "name": "night 0 is not a night", "night": 0, "kind": "", "amount": 0 },
+    { "name": "a negative night is not a night", "night": -3, "kind": "", "amount": 0 }
+  ],
+  "_eventComment": [
+    "The contract between EventLedger.cs and functions/src/progression.ts.",
+    "",
+    "An event's progress is a count of its glades whose *first* clear falls inside its",
+    "window, and its reward is the milestones that count has passed. Both sides derive it",
+    "from records the catalog vouches for — nothing is claimed, granted or stored — so the",
+    "reward simply becomes part of the earned credits the server already recomputes.",
+    "",
+    "Two rules the cases pin, because a naive implementation gets them wrong: a clear dated",
+    "outside the window counts for nothing however many stars it has, and a level the",
+    "catalog does not know advances no event."
+  ],
+  "events": [
+    {
+      "id": "vector_bloom",
+      "startUnix": 1700000000,
+      "endUnix": 1701000000,
+      "levels": [
+        "plain_one",
+        "plain_two",
+        "generous_one"
+      ],
+      "milestones": [
+        {
+          "goal": 1,
+          "credits": 50
+        },
+        {
+          "goal": 3,
+          "credits": 200
         }
       ]
     }

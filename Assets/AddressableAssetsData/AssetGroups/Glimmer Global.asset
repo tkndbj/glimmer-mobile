@@ -428,6 +428,11 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 4e25a7e55b7de334880b85b84d57b2e3
+    m_Address: Art/Ui/Flame
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 5105e35b4b33241b94367a139fd2ee9c
     m_Address: Art/Map/rock_wide
     m_ReadOnly: 0
@@ -478,6 +483,12 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels:
     - Art/Critters/c1
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 5649da06649f6f74585771bc8813ef70
+    m_Address: Art/Ui/Flame/f03
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - Art/Ui/Flame
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 56a3327bd127f9e3c6fdbb9a3f24a45e
     m_Address: Art/Critters/c4/f18
@@ -584,6 +595,11 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 6523793ad80ae2949af149175967b967
+    m_Address: Art/Bg/streak_deco
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 693907dcf4593804b0392c73d5113a75
     m_Address: Audio/Sfx/nope
     m_ReadOnly: 0
@@ -672,6 +688,11 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels:
     - Art/Critters/c5
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 71581f52350c1834c8a039e57271ae5c
+    m_Address: Art/Bg/streak_sky
+    m_ReadOnly: 0
+    m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 7230c831ae33a8bf5926adc57145239f
     m_Address: Art/Critters/c5/f06
@@ -915,6 +936,12 @@ MonoBehaviour:
     m_SerializedLabels:
     - Art/Critters/c3
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 96f9fbca178266148a27018f82825e13
+    m_Address: Art/Ui/Flame/f02
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - Art/Ui/Flame
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 9813f1f482030a6e56b34641364a3e0d
     m_Address: Art/Ui/wood_panel
     m_ReadOnly: 0
@@ -1075,6 +1102,11 @@ MonoBehaviour:
     m_SerializedLabels:
     - Art/Critters/c5
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: ada6cca25f684584199f5c0e16bd9d72
+    m_Address: Art/Ui/crest_gold
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: ae47ba3061249236fa6af1288d443a2a
     m_Address: Art/Critters/c4/f10
     m_ReadOnly: 0
@@ -1152,6 +1184,11 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels:
     - Art/Critters/c2
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: ba2fc3f8b4ed8b440bc8e115385f7181
+    m_Address: Art/Ui/ic_heart_boost
+    m_ReadOnly: 0
+    m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: ba721ed4cb08552f9625d759021ae926
     m_Address: Art/Ui/sq_orange
@@ -1292,6 +1329,12 @@ MonoBehaviour:
     m_SerializedLabels:
     - Art/Critters/c4
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: d1d8023dc7fd2754e8c15388e97ba05b
+    m_Address: Art/Ui/Flame/f01
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - Art/Ui/Flame
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: d49718754d32bdfebdcb6fcb7a57a084
     m_Address: Art/Critters/c1/f17
     m_ReadOnly: 0
@@ -1323,6 +1366,16 @@ MonoBehaviour:
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: d867d37a4952121f5a22fd58e8005afe
     m_Address: Art/Map/node_s3
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: d93174f2318945c4593fc76a51781611
+    m_Address: Art/Ui/bar_fill
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: da2102e3b365b5c4fbe23b51607ba42d
+    m_Address: Art/Ui/seal_gold
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
@@ -1420,6 +1473,16 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: edb8463f5f2f1c34d8955177307d0ae7
+    m_Address: Art/Ui/bar_track
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: edca7c3c89d9b6842aef77bec8664db1
+    m_Address: Art/Bg/streak_ground
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: ef4e4674f646c79127dd0ae79af69f64
     m_Address: Art/Critters/c5/f09
     m_ReadOnly: 0
@@ -1504,6 +1567,12 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels:
     - Art/Critters/c3
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: fea0a5fae838e194aa12ab9ac788c518
+    m_Address: Art/Ui/Flame/f00
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - Art/Ui/Flame
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: febef61a82956a2a591c2cb5bc6ac68f
     m_Address: Art/Critters/c4/f05

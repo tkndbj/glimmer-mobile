@@ -52,8 +52,21 @@ namespace GlimmerGrove.Persistence
         ///      app being backgrounded. See <see cref="Hearts"/>. The v4 count and deadline
         ///      remain, written as a derived mirror so a client rolled back to an older
         ///      build still reads the right number.
+        /// v9 — the daily streak (<see cref="SaveFileDto.streak"/>): the day the current
+        ///      run of consecutive days began and the last day a run was finished. Two
+        ///      dates rather than a count, because a count cannot be merged — see
+        ///      invariant 11b and <see cref="Daily.DailyStreak"/>. The length is derived
+        ///      from the pair, so nothing here is a source of truth about how long a
+        ///      streak is, only about when it started and when it was last fed.
+        /// v10 — the day through which streak rewards have been collected
+        ///      (<see cref="StreakStateDto.collectedThroughDay"/>). A streak rung is now
+        ///      handed over when the player taps it rather than applied silently at the
+        ///      end of a run, which needs somewhere to record what has been taken. A
+        ///      third date rather than a count or a set of flags, for the third time and
+        ///      the same reason: it only ever rises, so the merge is <c>max</c> like the
+        ///      other two and a rung can never be paid twice. See <see cref="Daily.DailyStreak"/>.
         /// </summary>
-        public const int Version = 8;
+        public const int Version = 10;
 
         /// <summary>Progress that predates this file: index-keyed keys in PlayerPrefs.</summary>
         public const int LegacyPlayerPrefsVersion = 0;
@@ -123,6 +136,9 @@ namespace GlimmerGrove.Persistence
 
         /// <summary>Today's rewarded-ad counters. See <see cref="AdStateDto"/>.</summary>
         public AdStateDto ads;
+
+        /// <summary>The run of consecutive days being held. See <see cref="StreakStateDto"/>.</summary>
+        public StreakStateDto streak;
 
         /// <summary>
         /// Integrity check over the rest of the file. Empty on files written before
@@ -434,6 +450,56 @@ namespace GlimmerGrove.Persistence
     {
         public string placement;
         public int count;
+    }
+
+    /// <summary>
+    /// The daily streak, as two dates and no count.
+    ///
+    /// <para>
+    /// This is invariant 11b applied before the mistake rather than after it. A stored
+    /// <em>length</em> is exactly the shape hearts used to be: two devices showing 6 and 1
+    /// are equally consistent with "one is behind" and "the streak broke and restarted",
+    /// so the merge would have to guess, and both guesses are wrong somewhere — the
+    /// generous one resurrects a streak the player really did lose, the conservative one
+    /// deletes one they really do hold.
+    /// </para>
+    /// <para>
+    /// Two dates have no such ambiguity. Both only ever rise, so the merge is <c>max</c>
+    /// on each with no special cases, and the length is <c>lastPlayedDay - startDay + 1</c>
+    /// — derived, exactly as XP, credits and the heart count are. Zero on either means
+    /// "never", which is safe as a sentinel for the reason <see cref="DailyStateDto.dayKey"/>
+    /// gives: no live player has a streak dating from 1970, and <c>JsonUtility</c> writes a
+    /// zero into every field an older file never had.
+    /// </para>
+    /// <para>
+    /// The third date is the same shape again. Rewards are collected by hand now, so
+    /// something has to record which ones have been taken, and the obvious candidates are
+    /// both wrong: a count of collected rungs is <see cref="Hearts"/>'s old mistake, and a
+    /// set of flags per run is not monotonic across a streak that breaks and restarts.
+    /// <see cref="collectedThroughDay"/> is neither — it is the last <em>day</em> whose
+    /// rung has been handed over, so it only ever rises, the merge is <c>max</c>, and a
+    /// rung already paid on one device cannot come back on another.
+    /// </para>
+    /// </summary>
+    [Serializable]
+    public sealed class StreakStateDto
+    {
+        /// <summary>Whole-day count since the epoch when the current run began. 0 for none.</summary>
+        public int startDay;
+
+        /// <summary>Whole-day count since the epoch of the last finished run. 0 for none.</summary>
+        public int lastPlayedDay;
+
+        /// <summary>
+        /// Whole-day count since the epoch of the last night whose reward was collected.
+        ///
+        /// Zero means "written by a build that paid rungs automatically", which is the one
+        /// thing a live v10 file can never say: starting a run sets this to the day before
+        /// it, and a day key is a five-figure number. <c>DailyStreak.LoadFrom</c> reads
+        /// that zero as a pre-v10 file and marks everything already earned as collected,
+        /// because under the old rule it had been.
+        /// </summary>
+        public int collectedThroughDay;
     }
 
     [Serializable]

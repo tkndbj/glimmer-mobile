@@ -269,6 +269,102 @@ namespace GlimmerGrove.Cloud
             return false;
         }
 
+        // ----------------------------------------------------------- grove stats
+        /// <summary>
+        /// The population's move counts, from the one public document a scheduled job
+        /// writes.
+        ///
+        /// <para>
+        /// No sign-in and no user id: this is the same table for everybody, and requiring
+        /// authentication for it would mean a first launch could not show it. The security
+        /// rules make <c>config/stats</c> world-readable and client-unwritable for the same
+        /// reason they do for <c>config/progression</c>.
+        /// </para>
+        /// <para>
+        /// Every failure returns an empty table rather than propagating, and a malformed
+        /// entry is skipped rather than poisoning the rest. Nothing on any screen depends
+        /// on this arriving — the worst outcome of it being wrong or missing is one
+        /// sentence not being drawn — so it must never be able to fail a launch or a sync.
+        /// </para>
+        /// </summary>
+        public async Task<(CloudResult result, Dictionary<Content.LevelId, Social.LevelStats> stats)>
+            ReadGroveStatsAsync(CancellationToken cancellation = default)
+        {
+            var empty = new Dictionary<Content.LevelId, Social.LevelStats>();
+
+            if (!await EnsureReadyAsync())
+                return (CloudResult.Failed(CloudFailure.Offline, "Firebase unavailable"), empty);
+
+            try
+            {
+                var snapshot = await _db.Collection("config").Document("stats").GetSnapshotAsync();
+                if (!snapshot.Exists) return (CloudResult.Success, empty);
+
+                var document = snapshot.ToDictionary();
+                if (!document.TryGetValue("levels", out object raw) ||
+                    !(raw is Dictionary<string, object> levels))
+                {
+                    return (CloudResult.Success, empty);
+                }
+
+                var table = new Dictionary<Content.LevelId, Social.LevelStats>(levels.Count);
+
+                foreach (var pair in levels)
+                {
+                    if (!Content.LevelId.TryParse(pair.Key, out var levelId, out _)) continue;
+                    if (!(pair.Value is Dictionary<string, object> entry)) continue;
+
+                    int samples = ReadInt(entry, "samples");
+                    if (!(entry.TryGetValue("deciles", out object rawDeciles) &&
+                          rawDeciles is List<object> list) || list.Count != 9)
+                    {
+                        continue;
+                    }
+
+                    var deciles = new int[9];
+                    bool ascending = true;
+
+                    for (int i = 0; i < 9; i++)
+                    {
+                        deciles[i] = ToInt(list[i]);
+
+                        // A table that is not ascending is not a decile table, and
+                        // interpolating through it would produce percentages at random.
+                        if (deciles[i] < 1 || (i > 0 && deciles[i] < deciles[i - 1])) ascending = false;
+                    }
+
+                    if (!ascending) continue;
+
+                    table[levelId] = new Social.LevelStats(samples, deciles);
+                }
+
+                return (CloudResult.Success, table);
+            }
+            catch (Exception e)
+            {
+                return (Classify(e, "read grove stats"), empty);
+            }
+        }
+
+        static int ReadInt(Dictionary<string, object> document, string key)
+            => document.TryGetValue(key, out object value) ? ToInt(value) : 0;
+
+        /// <summary>
+        /// Firestore hands numbers back as <c>long</c> or <c>double</c> depending on how
+        /// they were written, and a cast that assumes one of them throws on the other.
+        /// </summary>
+        static int ToInt(object value)
+        {
+            switch (value)
+            {
+                case long l: return (int)l;
+                case int i: return i;
+                case double d: return (int)d;
+                case float f: return (int)f;
+                default: return 0;
+            }
+        }
+
         // ----------------------------------------------------------- save document
         DocumentReference PlayerDoc(string uid) => _db.Collection(PlayersCollection).Document(uid);
 

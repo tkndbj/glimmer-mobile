@@ -468,6 +468,11 @@ namespace GlimmerGrove.Tests
 
             public Task<(Cloud.CloudResult result, List<Cloud.CloudWalletState> wallets)> RedeemPurchaseAsync(
                 string u, Cloud.PurchaseReceipt r, CancellationToken c = default) => NoWallet();
+
+            public Task<(Cloud.CloudResult result, Dictionary<Content.LevelId, Social.LevelStats> stats)>
+                ReadGroveStatsAsync(CancellationToken c = default)
+                => Task.FromResult((Cloud.CloudResult.Failed(Cloud.CloudFailure.Offline),
+                                    new Dictionary<Content.LevelId, Social.LevelStats>()));
         }
 
         [TearDown]

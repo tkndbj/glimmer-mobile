@@ -212,6 +212,9 @@ namespace GlimmerGrove.EditorTools
 
             ValidateRewardChaptersExist(fetch.Text, index, result);
             ValidateDailyChests(table.Daily, result, verbose);
+            ValidateStreak(table.Streak, result, verbose);
+            ValidateGolden(table.Golden, table, index, result, verbose);
+            ValidateEvents(index, result, verbose);
 
             if (!verbose) return;
 
@@ -314,6 +317,260 @@ namespace GlimmerGrove.EditorTools
 
                 Debug.Log(line.ToString());
             }
+        }
+
+        /// <summary>
+        /// The event calendar, checked for the things only a person looking at a date can
+        /// see.
+        ///
+        /// <para>
+        /// The builder has already refused anything structurally wrong — an inverted
+        /// window, a track that cannot be finished, a glade no chapter holds. What is left
+        /// is the class of mistake that produces a perfectly valid event nobody wanted: two
+        /// running at once, one that opened last year, one whose whole track is a single
+        /// glade. None of those would fail anything, and all of them ship.
+        /// </para>
+        /// <para>
+        /// The calendar is also <em>printed</em>, past events included, with the dates
+        /// resolved. An event is authored as two Unix timestamps, which is the correct
+        /// storage and an impossible thing to proofread — the single most likely mistake in
+        /// this whole feature is a window that is off by a month and looks fine in the file.
+        /// </para>
+        /// </summary>
+        static void ValidateEvents(CatalogIndex index, ContentValidationResult result, bool verbose)
+        {
+            var events = index.Events;
+            if (events == null || events.Count == 0) return;      // no calendar is not an error
+
+            long now = System.DateTimeOffset.UtcNow.ToUnixTimeSeconds();
+
+            for (int i = 0; i < events.Count; i++)
+            {
+                var groveEvent = events[i];
+
+                // Two live at once is not forbidden, but the hub shows one, so the second
+                // would be invisible to every player it was authored for.
+                for (int j = i + 1; j < events.Count; j++)
+                {
+                    var other = events[j];
+                    if (other.StartUnix >= groveEvent.EndUnix) continue;
+
+                    result.Warnings.Add($"events '{groveEvent.Id}' and '{other.Id}' overlap; the hub " +
+                                        "shows one event at a time, so the later one would be " +
+                                        "invisible for as long as they both run");
+                }
+
+                if (groveEvent.FinalGoal <= 1 && groveEvent.Levels.Count > 1)
+                    result.Warnings.Add($"event '{groveEvent.Id}' finishes at one glade but names " +
+                                        $"{groveEvent.Levels.Count}; the rest are decoration");
+
+                if (groveEvent.TotalCredits <= 0)
+                    result.Warnings.Add($"event '{groveEvent.Id}' pays nothing, so its countdown is " +
+                                        "a deadline with no prize behind it");
+
+                if (groveEvent.HasEndedAt(now)) continue;
+
+                long days = (groveEvent.EndUnix - groveEvent.StartUnix) / Events.EventRules.SecondsPerDay;
+                if (days < 2)
+                    result.Warnings.Add($"event '{groveEvent.Id}' runs for under two days; a player " +
+                                        "who opens the game every other evening would never see it");
+            }
+
+            if (!verbose) return;
+
+            foreach (var groveEvent in events)
+            {
+                string state = groveEvent.HasEndedAt(now) ? "ended"
+                             : groveEvent.IsLiveAt(now) ? "LIVE"
+                             : "upcoming";
+
+                var line = new System.Text.StringBuilder()
+                    .Append("[Glimmer] event '").Append(groveEvent.Id).Append("' ").Append(state)
+                    .Append(": ").Append(Stamp(groveEvent.StartUnix))
+                    .Append(" → ").Append(Stamp(groveEvent.EndUnix))
+                    .Append("  ·  ").Append(groveEvent.Levels.Count).Append(" glade(s)  ·  track:");
+
+                foreach (var milestone in groveEvent.Milestones)
+                    line.Append("  ").Append(milestone.Goal).Append('→').Append(milestone.Credits);
+
+                line.Append("  (").Append(groveEvent.TotalCredits).Append(" total)");
+                Debug.Log(line.ToString());
+            }
+        }
+
+        /// <summary>A Unix second as a date a person can proofread. UTC, like the window.</summary>
+        static string Stamp(long unix)
+            => System.DateTimeOffset.FromUnixTimeSeconds(unix).UtcDateTime.ToString("yyyy-MM-dd HH:mm");
+
+        /// <summary>
+        /// The golden bands, and what they do to the economy.
+        ///
+        /// <para>
+        /// <c>GoldenTable</c> already refuses a band that would pay below the base. What
+        /// is left is the question a reader cannot ask: <em>how much does this multiply
+        /// everything by</em>. The bonus sits inside the credit derivation, so its weighted
+        /// average multiplies every credits-per-star figure in the file — and unlike a
+        /// chest or an ad, nobody sees it as a line item. A table that quietly raised the
+        /// economy by forty percent would look like four harmless-looking rows.
+        /// </para>
+        /// <para>
+        /// So the average is computed and reported, and the actual effect on the catalog
+        /// is printed in credits. That is the number a tuning pass needs and the one no
+        /// individual band shows.
+        /// </para>
+        /// </summary>
+        static void ValidateGolden(GoldenTable golden, ProgressionTable table,
+                                   CatalogIndex index, ContentValidationResult result, bool verbose)
+        {
+            if (golden == null) { result.Errors.Add("progression.json produced no golden table"); return; }
+
+            if (golden.TotalWeight <= 0)
+            {
+                result.Errors.Add("the golden bands carry no weight between them, so no glade " +
+                                  "would ever be picked");
+                return;
+            }
+
+            int plainWeight = 0;
+            for (int i = 0; i < golden.Bands.Count; i++)
+                if (!golden.Bands[i].IsBonus) plainWeight += golden.Bands[i].Weight;
+
+            if (plainWeight == 0)
+                result.Errors.Add("every golden band pays a bonus, so every glade pays more than " +
+                                  "its reward rule says. That is not a bonus, it is an unannounced " +
+                                  "retune of every credit figure in the file — change the rule instead");
+            else if (plainWeight * 2 <= golden.TotalWeight)
+                result.Warnings.Add("most glades draw a golden bonus. The effect works because it " +
+                                    "is rare; at this rate a player learns to expect it and the " +
+                                    "ordinary reward starts reading as a punishment");
+
+            // The weighted average, in whole percent, computed the way the odds are.
+            long weighted = 0;
+            for (int i = 0; i < golden.Bands.Count; i++)
+                weighted += (long)golden.Bands[i].Percent * golden.Bands[i].Weight;
+
+            float average = weighted / (float)golden.TotalWeight;
+
+            if (average > 200f)
+                result.Errors.Add($"the golden bands average {average:0.#}% — they more than double " +
+                                  "every credit reward in the game. Retune the reward rule rather " +
+                                  "than hiding a multiplier in the bonus table");
+            else if (average > 140f)
+                result.Warnings.Add($"the golden bands average {average:0.#}%, which raises every " +
+                                    "credit reward by more than two fifths");
+
+            if (!verbose) return;
+
+            var line = new System.Text.StringBuilder("[Glimmer] golden bands:");
+            for (int i = 0; i < golden.Bands.Count; i++)
+                line.Append("  ").Append(golden.Bands[i].Percent).Append("% at ")
+                    .Append(golden.ChanceOf(i).ToString("0.#")).Append('%');
+            line.Append("  ·  average ").Append(average.ToString("0.#")).Append('%');
+
+            Debug.Log(line.ToString());
+
+            // What it is actually worth over the shipped catalog, at three stars — the
+            // figure a tuning pass is really asking about.
+            long plain = 0;
+            foreach (var id in index.LevelIds)
+                plain += table.RuleFor(index.ChapterOf(id)).CreditsFor(3);
+
+            Debug.Log($"[Glimmer] a full three-star catalog pays {plain} credits before the " +
+                      $"golden, and about {(long)(plain * average / 100f)} after it on average");
+        }
+
+        /// <summary>
+        /// The streak ladder, checked for the things the reader cannot know.
+        ///
+        /// <para>
+        /// <c>StreakTable</c> already refuses anything unreadable — an unknown kind, a zero,
+        /// a ladder longer than the cap. What is left is the shape, which is a design
+        /// question a reader has no opinion about: a rung that pays less than an earlier one
+        /// of the same kind, a lap so short that it comes round before a player notices it,
+        /// and a lap that pays nothing at all.
+        /// </para>
+        /// <para>
+        /// It also prints the ladder, and now prints what the lap is worth. A streak is the
+        /// one reward a player plans several days around, so the person tuning it needs to
+        /// see all of it at once, in the order the player meets it — and since the ladder
+        /// laps, the week's total is the number that actually sets the payout rate.
+        /// </para>
+        /// </summary>
+        static void ValidateStreak(StreakTable streak, ContentValidationResult result, bool verbose)
+        {
+            if (streak == null) { result.Errors.Add("progression.json produced no streak ladder"); return; }
+
+            if (streak.Length < 3)
+                result.Warnings.Add($"the streak ladder is only {streak.Length} night(s) long, so the " +
+                                    "lap comes round almost immediately and the ladder stops " +
+                                    "escalating where a player starts noticing it");
+
+            // Hearts clamp at the cap and boosts do not, so the two are not comparable and
+            // only like-for-like rungs are checked. That is enough to catch the mistake
+            // that matters: a longer streak paying less than a shorter one. Only within one
+            // lap — night eight paying less than night seven is the lap starting over,
+            // which is the design rather than a mistake.
+            for (int night = 2; night <= streak.Length; night++)
+            {
+                var rung = streak.Rung(night);
+                if (!rung.IsValid) continue;
+
+                for (int earlier = night - 1; earlier >= 1; earlier--)
+                {
+                    var before = streak.Rung(earlier);
+                    if (!before.IsValid || before.Kind != rung.Kind) continue;
+
+                    if (rung.Amount < before.Amount)
+                        result.Errors.Add($"streak night {night} pays {rung} but night {earlier} pays " +
+                                          $"{before}; a longer streak that is worth less is a " +
+                                          "reason to stop rather than to continue");
+                    break;
+                }
+            }
+
+            // What one lap hands over, split by who adjudicates it. The currency half is the
+            // half that has a server obligation attached, which is what the note below is for.
+            long credits = 0, gems = 0;
+            int paying = 0;
+
+            for (int night = 1; night <= streak.Length; night++)
+            {
+                var rung = streak.Rung(night);
+                if (!rung.IsValid) continue;
+
+                paying++;
+                if (rung.Kind == ChestDropKind.Credits) credits += rung.Amount;
+                if (rung.Kind == ChestDropKind.Gems) gems += rung.Amount;
+            }
+
+            if (paying == 0)
+            {
+                result.Errors.Add("the streak ladder pays nothing on any night, so no night is " +
+                                  "ever collectable and the streak page can only ever be empty");
+            }
+
+            if (!verbose) return;
+
+            var line = new System.Text.StringBuilder("[Glimmer] streak ladder:");
+            for (int night = 1; night <= streak.Length; night++)
+            {
+                var rung = streak.Rung(night);
+                line.Append("  n").Append(night).Append(' ')
+                    .Append(rung.IsValid ? rung.ToString() : "—");
+            }
+            line.Append("  · night ").Append(streak.Length + 1).Append(" begins the lap again");
+
+            Debug.Log(line.ToString());
+
+            if (credits <= 0 && gems <= 0) return;
+
+            // Said every time rather than only on a change, because the failure it warns
+            // about is silent: the client draws this ladder from the file, the server pays
+            // from config/progression, and a lap retuned here without a re-seed pays the old
+            // figure into a wallet while the board advertises the new one.
+            Debug.Log($"[Glimmer] one lap pays {credits} credits and {gems} gems. Both are granted " +
+                      "by the server from config/progression — run firebase/seed/seed-config.mjs " +
+                      "after this change or players will be paid the previous ladder.");
         }
 
         /// <summary>

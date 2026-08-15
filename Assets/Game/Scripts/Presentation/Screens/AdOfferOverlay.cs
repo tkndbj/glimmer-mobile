@@ -151,7 +151,7 @@ namespace GlimmerGrove
             var icon = UIKit.Img("Icon", card.transform, RewardArt.Icon(kind), Color.white,
                                  new Vector2(128f, 128f), new Vector2(.5f, 1f), new Vector2(0f, -76f));
             icon.preserveAspect = true;
-            if (kind == ChestDropKind.Credits) Flipbook.Attach(icon, "Ui/Coin", 11f);
+            RewardArt.Glyph(icon, kind, 11f);
             Tween.Breathe(icon.transform, .05f, 2.2f);
 
             _reward = UIKit.Titled("Amount", card.transform,

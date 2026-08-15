@@ -54,6 +54,27 @@
     ]
   },
 
+  "golden": {
+    "bands": [
+      { "percent": 100, "weight": 80 },
+      { "percent": 150, "weight": 13 },
+      { "percent": 250, "weight": 6 },
+      { "percent": 500, "weight": 1 }
+    ]
+  },
+
+  "streak": {
+    "rungs": [
+      { "kind": "credits",     "amount": 150 },
+      { "kind": "hearts",      "amount": 1 },
+      { "kind": "gems",        "amount": 5 },
+      { "kind": "hearts",      "amount": 2 },
+      { "kind": "heart_boost", "amount": 12 },
+      { "kind": "hearts",      "amount": 3 },
+      { "kind": "gems",        "amount": 10 }
+    ]
+  },
+
   "ads": {
     "cooldownSeconds": 45,
 

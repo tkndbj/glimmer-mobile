@@ -44,6 +44,86 @@ namespace GlimmerGrove.Content
         /// rather than a refused manifest.
         /// </summary>
         public ManifestCompanionDto[] companions;
+
+        /// <summary>
+        /// The event calendar, in no particular order.
+        ///
+        /// Lives in the manifest for the same reason the companion roster does — the whole
+        /// calendar is wanted at once, an entry is a few dozen bytes, and the boot path
+        /// already reads this file — and for one more besides: an event's reward is derived
+        /// from the star ledger, so the definitions have to be resident wherever credits
+        /// are computed, which is everywhere.
+        ///
+        /// Optional, and deliberately so: this was added without raising
+        /// <see cref="ContentSchema.Version"/> because an older client ignores the field
+        /// and simply never runs an event, which is a working game rather than a refused
+        /// manifest.
+        /// </summary>
+        public ManifestEventDto[] events;
+    }
+
+    /// <summary>
+    /// One time-boxed run at a set of glades.
+    ///
+    /// <see cref="id"/> is permanent: it names the event's loc keys and will key its
+    /// analytics, and a player's earned credits depend on it through the reward track.
+    /// Renaming one is the same class of mistake as renaming a level id — it does not
+    /// break anything visibly, it silently un-pays everybody who finished it.
+    /// </summary>
+    [Serializable]
+    public sealed class ManifestEventDto
+    {
+        public string id;
+
+        /// <summary>Unix seconds, inclusive. Compared against the trusted clock, never the device's.</summary>
+        public long startUnix;
+
+        /// <summary>Unix seconds, exclusive.</summary>
+        public long endUnix;
+
+        /// <summary>Set true to pull an event without deleting anyone's progress through it.</summary>
+        public bool disabled;
+
+        /// <summary>
+        /// Which mark the event wears. Optional; empty draws the default.
+        ///
+        /// <para>
+        /// It names <b>a mark the client knows how to draw</b>, not a sprite file, and that
+        /// distinction is the whole design. An arbitrary art path could not work here:
+        /// invariant 7 routes every sprite through <c>AssetLibrary</c> and <c>AssetManifest</c>
+        /// decides what is registered, so a filename invented in a content push would resolve
+        /// to nothing and the box would draw a white rectangle. A named mark degrades the
+        /// other way — an unknown one falls back to the default, which is a working screen.
+        /// </para>
+        /// <para>
+        /// So this buys a real content lever without lying about its reach: an event can pick
+        /// any mark the shipped client already has, and a genuinely new one is an app update,
+        /// which is honest because a new mark is new art either way.
+        /// </para>
+        /// </summary>
+        public string icon;
+
+        /// <summary>
+        /// The glades this event runs over, by permanent id. They may belong to any
+        /// chapter — an event is a lens on the catalog, not a chapter of its own, which is
+        /// what lets one be run without shipping any new content at all.
+        /// </summary>
+        public string[] levels;
+
+        /// <summary>The reward track, lowest goal first.</summary>
+        public ManifestEventMilestoneDto[] milestones;
+    }
+
+    /// <summary>
+    /// One rung: finish <c>goal</c> of the event's glades inside the window, earn
+    /// <c>credits</c>. Credits and nothing else — see <c>EventLedger</c> for why a track
+    /// that paid anything the server cannot re-derive could not be paid at all.
+    /// </summary>
+    [Serializable]
+    public sealed class ManifestEventMilestoneDto
+    {
+        public int goal;
+        public int credits;
     }
 
     /// <summary>
@@ -234,6 +314,26 @@ namespace GlimmerGrove.Content
         /// eCPM) only exist once the game is live in a market.
         /// </summary>
         public AdsDto ads;
+
+        /// <summary>
+        /// What a run of consecutive days pays. Optional: absent means the built-in ladder
+        /// stands.
+        ///
+        /// Rides here for the same reasons the two blocks above it do, plus one of its
+        /// own: a streak reward and a chest reward are competing for the same evening, so
+        /// tuning either without seeing the other is how a player ends up with no reason
+        /// to open the game twice.
+        /// </summary>
+        public StreakDto streak;
+
+        /// <summary>
+        /// The golden bonus bands. Optional: absent means the built-in table stands.
+        ///
+        /// This is the one block that changes what an ordinary glade is worth, so it is
+        /// tuned against the reward rule directly above it and never in isolation — the
+        /// average multiplier and the credits-per-star are one number seen from two sides.
+        /// </summary>
+        public GoldenDto golden;
     }
 
     /// <summary>
@@ -344,6 +444,72 @@ namespace GlimmerGrove.Content
         public int weight;
 
         public DailyDropDto AsBand() => new DailyDropDto { kind = kind, min = min, max = max };
+    }
+
+    /// <summary>
+    /// The golden bonus: how often a glade pays more than the reward rule says, and by
+    /// how much.
+    ///
+    /// <para>
+    /// Order does not matter here — unlike the streak ladder, where position is the day —
+    /// because a band is identified by its own percentage rather than by where it sits.
+    /// The odds are the weights normalised, which is what lets them be printed as a list
+    /// that sums to a hundred.
+    /// </para>
+    /// </summary>
+    [Serializable]
+    public sealed class GoldenDto
+    {
+        public GoldenBandDto[] bands;
+    }
+
+    /// <summary>
+    /// One outcome. <c>percent</c> is a multiplier on the glade's ordinary credit reward
+    /// and <b>may never be below 100</b> — the bonus only ever adds. See <c>GoldenRules</c>.
+    /// </summary>
+    [Serializable]
+    public sealed class GoldenBandDto
+    {
+        public int percent;
+        public int weight;
+    }
+
+    /// <summary>
+    /// The streak ladder: one entry per consecutive day, in order.
+    ///
+    /// Position <em>is</em> the day, which is why <c>StreakTable</c> refuses the whole
+    /// block on a bad entry rather than skipping it the way the ads table does — dropping
+    /// one rung renumbers every day above it and quietly changes what the player is owed.
+    /// </summary>
+    [Serializable]
+    public sealed class StreakDto
+    {
+        /// <summary>
+        /// Night one first. An entry with no <c>kind</c> pays nothing, which is how a night
+        /// that only marks time is authored.
+        ///
+        /// The list is one <em>lap</em> rather than the whole ladder: night eight pays what
+        /// night one pays, for ever. So its length is also the length of the board a player
+        /// sees, and lengthening it lengthens the week.
+        /// </summary>
+        public StreakRungDto[] rungs;
+    }
+
+    /// <summary>
+    /// One day of the streak ladder. <c>kind</c> reuses the chest drop vocabulary, and
+    /// <c>amount</c> reads as hearts or as hours depending on which.
+    ///
+    /// <b>Currency is allowed, and it is adjudicated.</b> A currency rung is claimed as
+    /// <c>streak:{day}:{night}:{currency}</c> and paid from the server's own copy of this
+    /// ladder, so retuning it here and forgetting to re-seed means the server pays the old
+    /// figure — see <c>StreakTable</c> for the whole path, and run the seeder after any
+    /// change. The per-kind ceilings in <c>StreakRules</c> apply on both sides.
+    /// </summary>
+    [Serializable]
+    public sealed class StreakRungDto
+    {
+        public string kind;
+        public int amount;
     }
 
     /// <summary>

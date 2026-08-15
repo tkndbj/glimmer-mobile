@@ -259,6 +259,12 @@ namespace GlimmerGrove
             img.type = Image.Type.Sliced;
             img.color = new Color(1, 1, 1, 0.004f);
 
+            // Decoration, and it sits on top of whatever it decorates. On a button that
+            // costs nothing — the press bubbles up to the Btn on the parent — but on
+            // anything whose tap target is a *sibling* below it, a raycasting sheen
+            // swallows the tap and the element silently stops working.
+            img.raycastTarget = false;
+
             float w = target.sizeDelta.x;
             var bar = UIKit.Img("bar", holder, Art.Glow(64, 1.2f), new Color(1, 1, 1, .5f),
                                 new Vector2(Mathf.Max(60f, w * width), target.sizeDelta.y * 2.4f),

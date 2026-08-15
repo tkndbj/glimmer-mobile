@@ -147,6 +147,24 @@ namespace GlimmerGrove.Cloud
                     }
                 },
 
+                // The streak's three dates, which until now never left the phone — so a
+                // player's streak silently restarted on their second device, and
+                // DailyStreak.Join had nothing to join against. Every field is monotonic,
+                // which is what makes sending them safe: the merge is three maxes and the
+                // larger value is always the one that knows more.
+                //
+                // The server reads them too, but only to log a disagreement — see
+                // `saveSupports` in functions/src/streak.ts. Nothing it pays depends on
+                // them, which is deliberate: they are client-written, and a payment rule
+                // resting on a forgeable number is not a rule.
+                { "streak", new Dictionary<string, object>
+                    {
+                        { "startDay", (long)(dto.streak?.startDay ?? 0) },
+                        { "lastPlayedDay", (long)(dto.streak?.lastPlayedDay ?? 0) },
+                        { "collectedThroughDay", (long)(dto.streak?.collectedThroughDay ?? 0) },
+                    }
+                },
+
                 { "progression", new Dictionary<string, object>
                     {
                         { "xpHighWater", dto.progression?.xpHighWater ?? -1L },
@@ -216,6 +234,7 @@ namespace GlimmerGrove.Cloud
                 wallet = WalletDto.Unwritten(),
                 daily = new DailyStateDto(),
                 ads = new AdStateDto(),
+                streak = new StreakStateDto(),
                 progression = ProgressionStateDto.Unwritten(),
                 cloud = new CloudStateDto(),
             };
@@ -256,6 +275,16 @@ namespace GlimmerGrove.Cloud
                 dto.ads.dayKey = (int)Long(ads, "dayKey", 0);
                 dto.ads.lastWatchedUnix = Long(ads, "lastWatchedUnix", 0);
                 dto.ads.watched = ReadAdCounts(ads);
+            }
+
+            // Absent on a document last written by a build that predates currency rungs,
+            // which reads back as three zeros — and zero is what the join treats as "knows
+            // nothing", so the local streak simply wins. Nothing has to detect the upgrade.
+            if (Map(doc, "streak") is IDictionary<string, object> streak)
+            {
+                dto.streak.startDay = (int)Long(streak, "startDay", 0);
+                dto.streak.lastPlayedDay = (int)Long(streak, "lastPlayedDay", 0);
+                dto.streak.collectedThroughDay = (int)Long(streak, "collectedThroughDay", 0);
             }
 
             if (Map(doc, "progression") is IDictionary<string, object> progression)

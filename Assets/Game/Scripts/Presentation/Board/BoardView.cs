@@ -22,6 +22,7 @@ namespace GlimmerGrove
 
         readonly List<TileView> _tiles = new List<TileView>();
         readonly List<int> _history = new List<int>();
+        readonly List<int> _owed = new List<int>();
         readonly Dictionary<int, TileView> _byIndex = new Dictionary<int, TileView>();
         int[] _start;
         RectTransform _grid;
@@ -31,8 +32,24 @@ namespace GlimmerGrove
         bool _lost;
         Pal.BoardTheme _theme;
 
+        /// <summary>
+        /// How many scoring turns in a row have woken something. Reset by a turn that
+        /// wakes nothing. See <see cref="Refresh"/> for what it is worth.
+        /// </summary>
+        int _chain;
+
         // a warm pentatonic ladder: consecutive critters waking sound like a melody
         static readonly int[] Ladder = { 0, 2, 4, 7, 9, 12, 14, 16, 19, 21, 24, 26 };
+
+        /// <summary>
+        /// The most the chain may raise the ladder, in semitones. A fifth.
+        ///
+        /// Capped because the rise is the reward and the ceiling is what keeps it one: an
+        /// uncapped chain walks a five-lamp glade off the top of the register, at which
+        /// point every later turn sounds the same as the last and the escalation stops
+        /// being audible at exactly the moment the player is doing best.
+        /// </summary>
+        const int ChainLiftMax = 7;
 
         public int Moves => P.Moves;
         public bool CanUndo => _history.Count > 0 && !Locked;
@@ -132,7 +149,7 @@ namespace GlimmerGrove
             CollectDebris();
 
             P.Evaluate();
-            Refresh(before);
+            Refresh(before, chains: countMove);
             OnChanged?.Invoke();
 
             // Checked after Refresh, which owns the win: a last turn that solves the
@@ -179,7 +196,29 @@ namespace GlimmerGrove
             return b;
         }
 
-        void Refresh(bool[] before)
+        /// <summary>
+        /// Repaints after a change and sounds whatever just woke.
+        ///
+        /// <para>
+        /// <paramref name="chains"/> is true only for a turn the player spent, which is
+        /// what separates progress from bookkeeping: an undo, a hint's automated turns and
+        /// a bulk resync all repaint the board but none of them is an achievement, and
+        /// letting them advance the chain would let a player climb the ladder by pressing
+        /// undo.
+        /// </para>
+        /// <para>
+        /// <b>The escalation.</b> Two of them, and they compose. Within a single turn the
+        /// lamps that wake climb a pentatonic ladder, so lighting four at once is a phrase
+        /// rather than four copies of one sound. Across turns, each consecutive turn that
+        /// wakes anything lifts that whole ladder — so a player who is solving a section
+        /// cleanly hears themselves getting somewhere, and one who is flailing hears the
+        /// pitch drop back. Neither costs the player anything or is worth anything: this
+        /// is entirely feedback, which is the only honest place for escalation of this
+        /// kind to live. Nothing about the chain reaches the score, the reward or the save
+        /// file, so there is no incentive to farm it and no state to merge.
+        /// </para>
+        /// </summary>
+        void Refresh(bool[] before, bool chains = false)
         {
             foreach (var t in _tiles) t.ApplyEnergy(true);
 
@@ -192,12 +231,33 @@ namespace GlimmerGrove
                     Audio.Sfx("pop2", .3f, .78f, Mathf.Max(0, P.Depth[t.Index]) * .028f);
             }
 
+            if (chains) _chain = woken.Count > 0 ? _chain + 1 : 0;
+
+            // Whole tones per link, so the lift stays inside the same scale the ladder is
+            // built from and a long chain never sounds out of key against a short one.
+            int lift = Mathf.Min(Mathf.Max(0, _chain - 1) * 2, ChainLiftMax);
+
             woken.Sort((a, b) => Mathf.Max(0, P.Depth[a.Index]).CompareTo(Mathf.Max(0, P.Depth[b.Index])));
             for (int k = 0; k < woken.Count; k++)
             {
                 float delay = .04f + Mathf.Max(0, P.Depth[woken[k].Index]) * .028f + k * .07f;
-                int step = Ladder[Mathf.Min(k, Ladder.Length - 1)];
-                Audio.Sfx("lit", .6f, Mathf.Pow(2f, step / 12f) * .92f, delay);
+                int step = Ladder[Mathf.Min(k, Ladder.Length - 1)] + lift;
+
+                // Louder as the phrase goes on as well as higher. Pitch alone reads as a
+                // different sound; pitch and weight together read as the same sound
+                // arriving harder.
+                Audio.Sfx("lit", .6f + Mathf.Min(k, 4) * .045f,
+                          Mathf.Pow(2f, step / 12f) * .92f, delay);
+            }
+
+            // The board itself answers a real cascade. Scaled by how many woke rather than
+            // fired flat, so the difference between one lamp and four is felt and not only
+            // heard — and skipped entirely on a win, where Celebrate has a much larger
+            // version of the same gesture a moment later.
+            if (woken.Count >= 2 && !P.Won)
+            {
+                Tween.Punch(_floor.transform, .010f * Mathf.Min(woken.Count, 5), .45f);
+                if (woken.Count >= 3) Haptic.Tap();
             }
 
             if (P.Won) Celebrate();
@@ -230,7 +290,63 @@ namespace GlimmerGrove
             Flow.Flash(new Color(.24f, .31f, .46f), .40f, .7f);
             Tween.Shake((RectTransform)_floor.transform, 7f, .45f);
 
-            Tween.After(.95f, () => OnDefeated?.Invoke(DefeatReason.OutOfMoves), this);
+            var cue = new Cue(this);
+            bool close = RevealNearMiss(cue);
+
+            // Slightly sooner after a near miss, because the pulse has already given the
+            // player something to look at and the panel is now the thing they are waiting
+            // for rather than an interruption.
+            cue.Then(close ? .70f : .95f, () => OnDefeated?.Invoke(DefeatReason.OutOfMoves));
+        }
+
+        /// <summary>
+        /// Pulses the conduits that would have finished the glade, and says whether it
+        /// did. Advances <paramref name="cue"/> over whatever it schedules.
+        ///
+        /// <para>
+        /// This is the whole near-miss moment, and it is placed here rather than on the
+        /// defeat panel for a reason that is not aesthetic: the panel draws a scrim over
+        /// the board, so by the time it exists there is nothing left to point at. The only
+        /// window where the player can be shown the answer is the second the lights are
+        /// going out — which is also, conveniently, the second it lands hardest.
+        /// </para>
+        /// <para>
+        /// It fires only when <see cref="Puzzle.TurnsToSolution"/> is a small number it can
+        /// stand behind — an upper bound, so a pulse on one tile is a promise that one turn
+        /// would genuinely have done it. That honesty is load-bearing. The effect works
+        /// because a loss that registers as nearly a win drives another attempt far harder
+        /// than a plain loss does, and it keeps working only while the player cannot catch
+        /// it being generous. Restarting and counting the turns has to agree.
+        /// </para>
+        /// </summary>
+        bool RevealNearMiss(Cue cue)
+        {
+            int turns = P.TurnsToSolution;
+            if (turns < 1 || turns > RunOutcome.NearMissTurns) return false;
+
+            P.Owed(_owed);
+            if (_owed.Count == 0) return false;
+
+            // After the guttering has begun, so the pulse arrives into a board that has
+            // already gone quiet rather than competing with it.
+            cue.Wait(.42f);
+
+            for (int k = 0; k < _owed.Count; k++)
+            {
+                // Both copied out of the loop: a `for` variable is one variable shared by
+                // every closure, so reading k inside the beat would give all of them the
+                // count rather than their own place in it.
+                int index = _owed[k];
+                int step = k;
+
+                cue.Then(k == 0 ? 0f : .24f, () =>
+                {
+                    if (_byIndex.TryGetValue(index, out var tile) && tile) tile.Beckon(Pal.Gold);
+                    Audio.Sfx("star", .55f, 1.18f + step * .12f);
+                });
+            }
+
+            return true;
         }
 
         void Celebrate()
@@ -336,6 +452,7 @@ namespace GlimmerGrove
             // A lost board is exactly the one a player most wants to restart, and
             // P.Reset puts the move count back to zero.
             _lost = false;
+            _chain = 0;
 
             _history.Clear();
             P.Reset(_start);

@@ -9,7 +9,9 @@
 
 import { getFirestore, Timestamp, Transaction } from "firebase-admin/firestore";
 import { CURRENCIES, CurrencyId, PATHS } from "./config";
+import { todayKey } from "./daily";
 import { assertUsableConfig, earnedCredits, ProgressionConfig } from "./progression";
+import { readFloor, StreakFloor } from "./streak";
 
 export interface CurrencyState {
   granted: number;
@@ -28,7 +30,19 @@ export interface CurrencyState {
   earnedFloor: number;
 }
 
-export type WalletDoc = Record<CurrencyId, CurrencyState> & { updatedAt?: Timestamp };
+export type WalletDoc = Record<CurrencyId, CurrencyState> & {
+  updatedAt?: Timestamp;
+
+  /**
+   * The last streak night this server paid for, and the day it fell on.
+   *
+   * It rides here rather than in its own document for one reason: this is the document no
+   * client can write, and the value is worthless anywhere else. It is read and raised in
+   * the same transaction that moves the money, so a night cannot be paid without the floor
+   * moving with it. See `streak.ts`.
+   */
+  streak?: StreakFloor;
+};
 
 /** What the client's `CloudWalletState` expects back. */
 export interface WalletReply {
@@ -69,6 +83,18 @@ export function readWallet(
 ): WalletDoc {
   const raw = (snapshot.exists ? snapshot.data() : undefined) as Partial<WalletDoc> | undefined;
   const wallet = {} as WalletDoc;
+
+  // The streak floor, carried through so that writing the document back cannot drop it.
+  //
+  // A brand-new wallet is seeded to *yesterday*, and that one line is what stops a fresh
+  // account claiming a long backlog of nights it never played: with a real floor in place,
+  // its first claim has to be night one, today. Existing wallets are deliberately left
+  // without one — see `advances`. A player upgrading into this build is holding a streak
+  // this server has never recorded, and an invented floor would refuse the nights the game
+  // has already shown them.
+  wallet.streak = snapshot.exists
+    ? readFloor(raw?.streak)
+    : { paidThroughDay: todayKey(Date.now()) - 1, paidNight: 0 };
 
   for (const currency of CURRENCIES) {
     const existing = raw?.[currency];
@@ -126,7 +152,10 @@ export async function deriveEarned(
   const save = await transaction.get(getFirestore().doc(PATHS.player(uid)));
   const levels = save.exists ? (save.data() as { levels?: unknown }).levels : {};
 
-  const derived = earnedCredits(levels, config).credits;
+  // The uid is passed because it seeds the golden multiplier — a glade's credits are a
+  // function of (account, level), not of the level alone. See `goldenPercent`. Omitting
+  // it would pay every player the base and quietly disagree with what the game showed them.
+  const derived = earnedCredits(levels, config, uid).credits;
 
   if (derived > wallet.credits.earnedFloor) wallet.credits.earnedFloor = derived;
 

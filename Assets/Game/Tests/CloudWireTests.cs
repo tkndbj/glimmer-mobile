@@ -63,6 +63,10 @@ namespace GlimmerGrove.Tests
                         firstClearedUnix = 1_650_000_000, lastPlayedUnix = 1_650_000_000,
                     },
                 },
+                streak = new StreakStateDto
+                {
+                    startDay = 20_310, lastPlayedDay = 20_315, collectedThroughDay = 20_314,
+                },
                 progression = new ProgressionStateDto { xpHighWater = 4200, levelHighWater = 9 },
                 cloud = new CloudStateDto
                 {
@@ -186,6 +190,32 @@ namespace GlimmerGrove.Tests
 
             Assert.AreEqual(4, restored.wallet.hearts);
             Assert.AreEqual("Fern", restored.wallet.displayName);
+
+            // The streak used to stay on the phone, so a player's flame quietly restarted
+            // on their second device. All three dates have to make the round trip or the
+            // merge on the other side has nothing to join against.
+            Assert.AreEqual(20_310, restored.streak.startDay);
+            Assert.AreEqual(20_315, restored.streak.lastPlayedDay);
+            Assert.AreEqual(20_314, restored.streak.collectedThroughDay);
+        }
+
+        /// <summary>
+        /// A document written before the streak travelled reads back as three zeros rather
+        /// than throwing — and zero is the value the join treats as "knows nothing", so the
+        /// local streak simply wins. Nothing has to detect the upgrade.
+        /// </summary>
+        [Test]
+        public void ADocumentWithNoStreakBlockReadsAsAnEmptyOne()
+        {
+            var document = FirestoreSaveMapper.ToDocument(Populated());
+            document.Remove("streak");
+
+            var restored = FirestoreSaveMapper.FromDocument(document);
+
+            Assert.IsNotNull(restored.streak);
+            Assert.AreEqual(0, restored.streak.startDay);
+            Assert.AreEqual(0, restored.streak.lastPlayedDay);
+            Assert.AreEqual(0, restored.streak.collectedThroughDay);
         }
 
         /// <summary>

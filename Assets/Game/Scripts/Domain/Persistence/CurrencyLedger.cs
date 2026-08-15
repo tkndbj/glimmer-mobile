@@ -103,6 +103,34 @@ namespace GlimmerGrove.Persistence
         /// <summary>What every daily chest grant records as its cause.</summary>
         public const string DailyChestReason = "daily_chest";
 
+        /// <summary>
+        /// The key for one night of the streak ladder.
+        ///
+        /// <para>
+        /// Two numbers, and each is carrying a different job. The <b>calendar day</b> is the
+        /// identity: a streak has exactly one night per day, so a day names a payout
+        /// uniquely and two devices collecting the same night produce the same string. The
+        /// <b>night</b> is what selects the rung, because the server pays from its own copy
+        /// of the ladder and has to know which position to read.
+        /// </para>
+        /// <para>
+        /// The day cannot be left out and the night cannot be used in its place, however
+        /// much tidier that would be. A night number is relative to <c>startDay</c>, and
+        /// <c>startDay</c> moves under a merge — so the same evening can be night five on
+        /// one device and night four on another, which would key two documents and pay
+        /// twice. A calendar day is the same number everywhere.
+        /// </para>
+        /// <para>
+        /// Parsed back by <c>parseStreakClaim</c> on the server. The format is a wire
+        /// contract; changing it re-opens every night a player has already been paid for.
+        /// </para>
+        /// </summary>
+        public static string StreakNightId(int dayKey, int night, string currency)
+            => $"streak:{dayKey}:{night}:{currency}";
+
+        /// <summary>What every streak night grant records as its cause.</summary>
+        public const string StreakNightReason = "streak_night";
+
         public GrantEntryDto ToDto()
             => new GrantEntryDto { id = Id, amount = Amount, unix = Unix, reason = Reason };
 

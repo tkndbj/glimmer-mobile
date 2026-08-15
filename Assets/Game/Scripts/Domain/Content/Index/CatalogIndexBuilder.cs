@@ -19,6 +19,8 @@ namespace GlimmerGrove.Content
         readonly Dictionary<LevelId, ChapterId> _levelChapter = new Dictionary<LevelId, ChapterId>();
         readonly List<AvatarDefinition> _companions = new List<AvatarDefinition>();
         readonly HashSet<string> _companionIds = new HashSet<string>(System.StringComparer.Ordinal);
+        readonly List<Events.GroveEvent> _events = new List<Events.GroveEvent>();
+        readonly HashSet<string> _eventIds = new HashSet<string>(System.StringComparer.Ordinal);
         readonly List<string> _problems = new List<string>();
 
         public IReadOnlyList<string> Problems => _problems;
@@ -124,6 +126,147 @@ namespace GlimmerGrove.Content
         }
 
         /// <summary>
+        /// Reads one event entry.
+        ///
+        /// <para>
+        /// Stricter than a chapter or a companion, and refused whole rather than salvaged,
+        /// because an event's reward is <em>derived</em>: a milestone that was dropped or
+        /// reordered changes what every player who finished the track has earned, and the
+        /// earned floor means they keep the higher figure forever. A half-read event is
+        /// therefore not a degraded event, it is a permanent economy change nobody
+        /// authored. Skipping it entirely costs one event and nothing else.
+        /// </para>
+        /// <para>
+        /// Level ids are <b>not</b> checked against the catalog here, and cannot be: an
+        /// event may be added in the same manifest as the chapter it runs over, and this
+        /// reads entries in file order. <see cref="Build"/> does it once every chapter is
+        /// known.
+        /// </para>
+        /// </summary>
+        public bool AddEvent(ManifestEventDto entry)
+        {
+            if (entry == null) return false;
+            if (entry.disabled) return false;
+
+            if (string.IsNullOrEmpty(entry.id) || !IsCleanId(entry.id))
+            {
+                _problems.Add($"manifest lists an event with an unusable id '{entry.id}'; ids are " +
+                              "lower case letters, digits and underscores, because a player's " +
+                              "earned credits depend on them");
+                return false;
+            }
+
+            if (!_eventIds.Add(entry.id))
+            {
+                _problems.Add($"manifest lists event '{entry.id}' twice; the later entry is ignored");
+                return false;
+            }
+
+            if (entry.endUnix <= entry.startUnix)
+            {
+                _problems.Add($"event '{entry.id}' ends at or before it starts ({entry.startUnix} " +
+                              $"to {entry.endUnix}); it is ignored");
+                return false;
+            }
+
+            long days = (entry.endUnix - entry.startUnix) / Events.EventRules.SecondsPerDay;
+            if (days > Events.EventRules.MaxWindowDays)
+            {
+                _problems.Add($"event '{entry.id}' runs for {days} days, above the supported " +
+                              $"{Events.EventRules.MaxWindowDays}; it is ignored. An event that " +
+                              "outlives interest in it is content with a countdown attached");
+                return false;
+            }
+
+            var levels = new List<LevelId>();
+            foreach (var raw in entry.levels ?? System.Array.Empty<string>())
+            {
+                if (!LevelId.TryParse(raw, out var levelId, out string error))
+                {
+                    _problems.Add($"event '{entry.id}' lists level '{raw}' which is rejected: {error}");
+                    return false;
+                }
+                if (levels.Contains(levelId))
+                {
+                    _problems.Add($"event '{entry.id}' lists level '{levelId}' twice; one glade " +
+                                  "cannot count for two");
+                    return false;
+                }
+                levels.Add(levelId);
+            }
+
+            if (levels.Count == 0)
+            {
+                _problems.Add($"event '{entry.id}' names no glades, so nothing could ever " +
+                              "advance it; it is ignored");
+                return false;
+            }
+
+            var milestones = new List<Events.EventMilestone>();
+            int previousGoal = 0;
+
+            foreach (var rung in entry.milestones ?? System.Array.Empty<ManifestEventMilestoneDto>())
+            {
+                if (rung == null) { _problems.Add($"event '{entry.id}' has an empty milestone"); return false; }
+
+                if (rung.goal <= previousGoal)
+                {
+                    _problems.Add($"event '{entry.id}' milestone goals must rise: {rung.goal} " +
+                                  $"follows {previousGoal}. An out-of-order track is refused rather " +
+                                  "than sorted, because sorting it would pay rewards nobody authored");
+                    return false;
+                }
+
+                if (rung.goal > levels.Count)
+                {
+                    _problems.Add($"event '{entry.id}' has a milestone at {rung.goal} glades but " +
+                                  $"only names {levels.Count}; it could never be reached");
+                    return false;
+                }
+
+                if (rung.credits < 0 || rung.credits > Events.EventRules.MaxMilestoneCredits)
+                {
+                    _problems.Add($"event '{entry.id}' milestone at {rung.goal} pays {rung.credits} " +
+                                  $"credits, outside 0..{Events.EventRules.MaxMilestoneCredits}");
+                    return false;
+                }
+
+                milestones.Add(new Events.EventMilestone(rung.goal, rung.credits));
+                previousGoal = rung.goal;
+            }
+
+            if (milestones.Count == 0)
+            {
+                _problems.Add($"event '{entry.id}' has no milestones, so it pays nothing and " +
+                              "would be a countdown with no reason to watch it");
+                return false;
+            }
+
+            if (milestones.Count > Events.EventRules.MaxMilestones)
+            {
+                _problems.Add($"event '{entry.id}' has {milestones.Count} milestones, above the " +
+                              $"supported {Events.EventRules.MaxMilestones}");
+                return false;
+            }
+
+            // A mark is refused only for being unusable as a name. Whether the client has
+            // one drawn is not knowable here and must not be checked here: content ships
+            // ahead of builds, so a manifest naming a mark an older client lacks has to
+            // stay valid — that client draws the default, which is a working screen.
+            string icon = entry.icon ?? string.Empty;
+            if (icon.Length > 0 && !IsCleanId(icon))
+            {
+                _problems.Add($"event '{entry.id}' asks for icon '{icon}', which is not a usable " +
+                              "name; icons are lower case letters, digits and underscores");
+                return false;
+            }
+
+            _events.Add(new Events.GroveEvent(entry.id, entry.startUnix, entry.endUnix,
+                                              levels, milestones, icon));
+            return true;
+        }
+
+        /// <summary>
         /// Save-file safe: an id becomes a loc key and an analytics dimension, and both
         /// break in ways nobody notices for weeks if it can contain a space or a dot.
         /// </summary>
@@ -181,7 +324,54 @@ namespace GlimmerGrove.Content
                 }
 
             return new CatalogIndex(_chapters.ToArray(), levelIds.ToArray(), levelOrder, _levelChapter,
-                                    SortedCompanions());
+                                    SortedCompanions(), UsableEvents());
+        }
+
+        /// <summary>
+        /// Events whose glades all exist, in start order.
+        ///
+        /// <para>
+        /// The catalog check happens here rather than in <see cref="AddEvent"/> because
+        /// entries are read in file order and an event may legitimately be listed before
+        /// the chapter it runs over. By the time this runs every chapter is known.
+        /// </para>
+        /// <para>
+        /// An event naming a glade the catalog does not have is dropped whole. The
+        /// alternative — running it over the glades that do exist — silently lowers every
+        /// goal on the track relative to what was authored, and a player who then finishes
+        /// it keeps the credits forever because the earned floor never falls.
+        /// </para>
+        /// </summary>
+        Events.GroveEvent[] UsableEvents()
+        {
+            var usable = new List<Events.GroveEvent>(_events.Count);
+
+            foreach (var groveEvent in _events)
+            {
+                bool complete = true;
+
+                foreach (var levelId in groveEvent.Levels)
+                {
+                    if (_levelChapter.ContainsKey(levelId)) continue;
+
+                    _problems.Add($"event '{groveEvent.Id}' names glade '{levelId}', which no " +
+                                  "chapter in this manifest holds; the event is ignored");
+                    complete = false;
+                    break;
+                }
+
+                if (complete) usable.Add(groveEvent);
+            }
+
+            // Start order, ties broken on id, so the calendar is deterministic rather than
+            // dependent on where somebody happened to paste the entry.
+            usable.Sort((a, b) =>
+            {
+                int byStart = a.StartUnix.CompareTo(b.StartUnix);
+                return byStart != 0 ? byStart : string.CompareOrdinal(a.Id, b.Id);
+            });
+
+            return usable.ToArray();
         }
     }
 }

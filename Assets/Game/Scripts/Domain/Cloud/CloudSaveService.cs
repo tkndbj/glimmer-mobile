@@ -117,6 +117,39 @@ namespace GlimmerGrove.Cloud
         }
 
         /// <summary>
+        /// Fetches the population's move counts and forgets about it.
+        ///
+        /// <para>
+        /// Separate from the sync and deliberately so. It needs no sign-in, it writes
+        /// nothing, it touches no save file, and nothing anywhere waits on it — the worst
+        /// case of it never completing is one sentence not appearing on a victory panel.
+        /// Folding it into <see cref="SyncAsync"/> would put a read nobody needs on the
+        /// critical path of the one operation a player's progress depends on.
+        /// </para>
+        /// </summary>
+        public static void BeginStatsRefresh(CancellationToken cancellation = default)
+        {
+            if (!IsAvailable) return;
+            _ = RefreshStatsAsync(cancellation);
+        }
+
+        /// <summary>
+        /// Reads the published stats and publishes them to <see cref="Social.GroveStats"/>.
+        ///
+        /// A failure is not reported anywhere and does not need to be: an empty table and
+        /// a table that never arrived produce identical behaviour everywhere they are read.
+        /// </summary>
+        public static async Task<CloudResult> RefreshStatsAsync(CancellationToken cancellation = default)
+        {
+            if (!IsAvailable) return CloudResult.Failed(CloudFailure.Offline, "no cloud backend");
+
+            var (result, stats) = await _backend.ReadGroveStatsAsync(cancellation);
+            if (result.Ok) Social.GroveStats.Publish(stats);
+
+            return result;
+        }
+
+        /// <summary>
         /// Pull, join, push. Safe to call at any time: a second call while one is in
         /// flight returns immediately rather than racing it, because two syncs merging
         /// the same file concurrently would each push a snapshot missing the other's

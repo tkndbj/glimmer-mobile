@@ -60,6 +60,37 @@ namespace GlimmerGrove.Daily
         }
 
         /// <summary>
+        /// Seeds from a player and a named subject rather than from a day and an index.
+        ///
+        /// <para>
+        /// The shape a reward keyed to a <em>thing</em> rather than to a date needs — the
+        /// golden bonus on a glade is the first, seeded from the level id. The layout is
+        /// deliberately different from the chest constructor's rather than reusing it with
+        /// the id stringified, so that no chest seed and no subject seed can ever collide
+        /// by coincidence and quietly correlate two tables that were tuned independently.
+        /// </para>
+        /// <para>
+        /// Like the chest seeding, <b>this layout is contract</b>. The TypeScript half
+        /// recomputes it byte for byte; changing the separator, the order or the tag
+        /// re-rolls every bonus in the world. See invariant 9c.
+        /// </para>
+        /// </summary>
+        public ChestRandom(string playerKey, string tag, string subject, int stream)
+        {
+            uint hash = FnvOffsetBasis;
+
+            Absorb(ref hash, playerKey ?? string.Empty);
+            Absorb(ref hash, '|');
+            Absorb(ref hash, tag ?? string.Empty);
+            Absorb(ref hash, '|');
+            Absorb(ref hash, subject ?? string.Empty);
+            Absorb(ref hash, '|');
+            Absorb(ref hash, stream);
+
+            _state = hash == 0u ? FnvOffsetBasis : hash;
+        }
+
+        /// <summary>
         /// FNV-1a over the UTF-16 code units of a string, one byte at a time, low byte
         /// first. Player keys are ASCII ids, so this is the same as hashing the bytes —
         /// it is spelled out per code unit so a non-ASCII key can never make the two
