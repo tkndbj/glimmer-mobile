@@ -83,8 +83,16 @@ namespace GlimmerGrove.Tests
         {
             CompanionLedger.ResetForTests();
 
+            // Derived from the roster rather than typed. The ladder is content: it was retuned
+            // to gate its last two companions at 61 and 66, at which point a hard-coded 60 made
+            // this permanently red — and a suite with a standing failure in it is a suite
+            // nobody reads. Whatever the top gate becomes, the claim stays the same one.
+            int top = 0;
+            foreach (var avatar in AvatarCatalog.All)
+                if (avatar.UnlockLevel > top) top = avatar.UnlockLevel;
+
             int previous = 0;
-            for (int level = 0; level <= 60; level++)
+            for (int level = 0; level <= top; level++)
             {
                 int count = CompanionLedger.HeldCount(level);
                 Assert.GreaterOrEqual(count, previous, "unlocking must never go backwards");
@@ -258,6 +266,121 @@ namespace GlimmerGrove.Tests
             }
         }
 
+        /// <summary>
+        /// The bug this file's whole preference section now exists to keep out.
+        ///
+        /// <para>
+        /// The merge reads recency off <c>updatedUnix</c>, and
+        /// <c>SaveService.Snapshot</c> stamps that with the current moment every time the
+        /// cloud sync asks for one. So the local side was newer in every comparison it
+        /// ever took part in, and "the newest choice wins" quietly meant "this device
+        /// wins": a phone that had never been renamed pushed its default over a name
+        /// chosen on a tablet, and a fresh install overwrote the name it had just
+        /// downloaded. Per-field stamps are what make the comparison mean what it says.
+        /// </para>
+        /// </summary>
+        [Test]
+        public void AFilesOwnDateNoLongerDecidesWhoseNameSurvives()
+        {
+            // The rename is old. The file carrying it was written long ago.
+            var renamed = File(updatedUnix: 100, name: "Fern");
+
+            // The other device renamed *earlier still*, but its file is a fresh snapshot —
+            // which is what every local side looks like, every sync, for ever.
+            var stale = File(updatedUnix: 9_000_000, name: "Bracken");
+            stale.wallet.displayNameSetUnix = 50;
+
+            foreach (var merged in new[] { SaveMerge.Join(renamed, stale), SaveMerge.Join(stale, renamed) })
+            {
+                Assert.AreEqual("Fern", merged.wallet.displayName,
+                                "the later *choice* wins, not the later snapshot");
+                Assert.AreEqual(100, merged.wallet.displayNameSetUnix);
+            }
+        }
+
+        /// <summary>
+        /// The shape of the live report: rename on a phone, then install on a tablet.
+        ///
+        /// A device that has never been renamed stores nothing at all, so it cannot be
+        /// mistaken for one that chose the default. Storing <c>DefaultName</c> is what
+        /// used to make the two indistinguishable, and the tablet then won on recency and
+        /// pushed "Grovekeeper" back over the server's copy.
+        /// </summary>
+        [Test]
+        public void AFreshInstallDoesNotOverwriteTheNameOnTheServer()
+        {
+            var server = File(updatedUnix: 1000, name: "Fern");
+
+            var fresh = File(updatedUnix: 9_000_000);
+            Assert.AreEqual(string.Empty, fresh.wallet.displayName,
+                            "an unnamed keeper stores nothing — DefaultName is shown, never written");
+
+            foreach (var merged in new[] { SaveMerge.Join(fresh, server), SaveMerge.Join(server, fresh) })
+                Assert.AreEqual("Fern", merged.wallet.displayName);
+        }
+
+        /// <summary>
+        /// A v14 file carries a real name and no stamp, which reads as the oldest possible
+        /// choice — so it survives against a device that never chose, and yields to any
+        /// rename made since. Nothing has to detect the upgrade.
+        /// </summary>
+        [Test]
+        public void AnUndatedNameOutranksNoneAndYieldsToADatedOne()
+        {
+            var legacy = File(updatedUnix: 500, name: "Bracken");
+            legacy.wallet.displayNameSetUnix = 0;
+
+            var never = File(updatedUnix: 800);
+            Assert.AreEqual("Bracken", SaveMerge.Join(never, legacy).wallet.displayName);
+            Assert.AreEqual("Bracken", SaveMerge.Join(legacy, never).wallet.displayName);
+
+            var renamed = File(updatedUnix: 200, name: "Fern");   // stamped, and much older
+            Assert.AreEqual("Fern", SaveMerge.Join(legacy, renamed).wallet.displayName);
+            Assert.AreEqual("Fern", SaveMerge.Join(renamed, legacy).wallet.displayName);
+        }
+
+        /// <summary>
+        /// Two names dated the same second — two devices renamed at once, or, far more
+        /// likely, two files that both predate the stamps. The answer is arbitrary and
+        /// must be <em>stable</em>: an order-dependent one would leave the two devices
+        /// pushing over each other for ever.
+        /// </summary>
+        [Test]
+        public void ATiedRenameResolvesTheSameWayOnBothDevices()
+        {
+            var a = File(updatedUnix: 100, name: "Fern");
+            var b = File(updatedUnix: 100, name: "Bracken");
+
+            Assert.AreEqual(SaveMerge.Join(a, b).wallet.displayName,
+                            SaveMerge.Join(b, a).wallet.displayName,
+                            "the answer cannot depend on which device is running the merge");
+
+            var once = SaveMerge.Join(a, b);
+            Assert.AreEqual(once.wallet.displayName, SaveMerge.Join(once, a).wallet.displayName);
+            Assert.AreEqual(once.wallet.displayName, SaveMerge.Join(once, b).wallet.displayName);
+        }
+
+        /// <summary>
+        /// A rename has to be sent, and it has to be sent with its date — a name that
+        /// travelled without one would be re-dated by whichever device asked last, which
+        /// is the whole failure schema v15 removes.
+        /// </summary>
+        [Test]
+        public void RenamingIsWorthASyncAndTheStampGoesWithIt()
+        {
+            var remote = File(updatedUnix: 100, name: "Bracken");
+            var local = File(updatedUnix: 200, name: "Fern");
+
+            Assert.IsTrue(SaveDelta.Between(remote, local).ScalarsChanged,
+                          "a name the server has not seen must be sent");
+
+            var restored = FirestoreSaveMapper.FromDocument(FirestoreSaveMapper.ToDocument(local));
+            Assert.AreEqual("Fern", restored.wallet.displayName);
+            Assert.AreEqual(200, restored.wallet.displayNameSetUnix);
+            Assert.IsFalse(SaveDelta.Between(restored, local).ScalarsChanged,
+                           "and once it has landed, the next sync writes nothing");
+        }
+
         [Test]
         public void MergingIsIdempotent()
         {
@@ -280,7 +403,14 @@ namespace GlimmerGrove.Tests
 
             Assert.IsTrue(SaveDelta.Between(remote, local).ScalarsChanged,
                           "a choice the server has not seen must be sent");
-            Assert.IsFalse(SaveDelta.Between(remote, File(updatedUnix: 300, avatar: "timber")).ScalarsChanged,
+
+            // Same companion, chosen at the same moment: the file's own date has moved on
+            // — a snapshot is stamped with now — and that must still send nothing, which
+            // is the whole reason SaveDelta compares fields rather than timestamps.
+            var unchanged = File(updatedUnix: 300, avatar: "timber");
+            unchanged.wallet.avatarSetUnix = remote.wallet.avatarSetUnix;
+
+            Assert.IsFalse(SaveDelta.Between(remote, unchanged).ScalarsChanged,
                            "an unchanged save still sends nothing");
         }
 
@@ -295,7 +425,82 @@ namespace GlimmerGrove.Tests
             Assert.AreEqual("Fern", restored.wallet.displayName);
         }
 
+        // --------------------------------------------------------------- wallet
+        /// <summary>
+        /// The half of the fix that lives in the wallet: <c>DefaultName</c> is what an
+        /// unnamed keeper is <em>shown</em>, and is never what is stored.
+        ///
+        /// Writing it down is what made a device with no opinion indistinguishable from
+        /// one that had chosen — after which no merge rule could have been right, because
+        /// the information it needed had already been thrown away.
+        /// </summary>
+        [Test]
+        public void AnUnnamedKeeperStoresNothingAndIsStillCalledSomething()
+        {
+            Wallet.LoadFrom(new SaveFileDto { wallet = WalletDto.Unwritten() });
+
+            Assert.AreEqual(Wallet.DefaultName, Wallet.DisplayName, "there is always something to draw");
+            Assert.IsFalse(Wallet.HasChosenName);
+
+            var written = new SaveFileDto();
+            Wallet.WriteInto(written);
+
+            Assert.AreEqual(string.Empty, written.wallet.displayName,
+                            "storing the default is what used to overwrite a real name on the server");
+            Assert.AreEqual(0, written.wallet.displayNameSetUnix);
+
+            Wallet.SetDisplayName("Fern", 4242);
+            Wallet.WriteInto(written);
+
+            Assert.AreEqual("Fern", written.wallet.displayName);
+            Assert.AreEqual(4242, written.wallet.displayNameSetUnix, "a choice is dated when it is made");
+            Assert.IsTrue(Wallet.HasChosenName);
+
+            Wallet.LoadFrom(new SaveFileDto { wallet = WalletDto.Unwritten() });
+        }
+
+        /// <summary>
+        /// A pre-v15 file holding the default name and no stamp is ambiguous — never
+        /// chosen, or chosen and it happened to be the default — and reading it as never
+        /// chosen is the safe half: the player still sees Grovekeeper, and a device that
+        /// was never renamed stops outranking one that was.
+        /// </summary>
+        [Test]
+        public void ADefaultNameFromAnOlderBuildIsReadAsNeverChosen()
+        {
+            Wallet.LoadFrom(new SaveFileDto
+            {
+                schemaVersion = 14,
+                wallet = new WalletDto { coins = -1, gems = -1, hearts = -1, displayName = Wallet.DefaultName },
+            });
+
+            Assert.AreEqual(Wallet.DefaultName, Wallet.DisplayName);
+            Assert.IsFalse(Wallet.HasChosenName, "an unstamped default cannot be told from silence");
+
+            // A stamped one is believed exactly as written, default or not.
+            Wallet.LoadFrom(new SaveFileDto
+            {
+                wallet = new WalletDto
+                {
+                    coins = -1, gems = -1, hearts = -1,
+                    displayName = Wallet.DefaultName, displayNameSetUnix = 99,
+                },
+            });
+
+            Assert.IsTrue(Wallet.HasChosenName);
+
+            Wallet.LoadFrom(new SaveFileDto { wallet = WalletDto.Unwritten() });
+        }
+
         // ------------------------------------------------------------ fixture
+        /// <summary>
+        /// A save whose preferences were chosen at <paramref name="updatedUnix"/>.
+        ///
+        /// The two dates are the same here purely because it reads well; they are not the
+        /// same thing, and the whole of schema v15 is that they must not be conflated.
+        /// The file's date moves every time a snapshot is taken, and a choice's does not.
+        /// <see cref="AFilesOwnDateNoLongerDecidesWhoseNameSurvives"/> pulls them apart.
+        /// </summary>
         static SaveFileDto File(long updatedUnix, string avatar = null, string name = null)
             => new SaveFileDto
             {
@@ -306,7 +511,9 @@ namespace GlimmerGrove.Tests
                 {
                     coins = -1, gems = -1, hearts = -1,
                     displayName = name ?? string.Empty,
+                    displayNameSetUnix = string.IsNullOrEmpty(name) ? 0L : updatedUnix,
                     avatarId = avatar ?? string.Empty,
+                    avatarSetUnix = string.IsNullOrEmpty(avatar) ? 0L : updatedUnix,
                 },
                 levels = new LevelRecordDto[0],
                 progression = ProgressionStateDto.Unwritten(),

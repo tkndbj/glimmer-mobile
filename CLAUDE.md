@@ -164,6 +164,24 @@ What that means in practice here:
     field the merge reads, check it only ever rises — and that its "absent" state is a
     value a real one cannot hold, because `JsonUtility` writes a zero into every field an
     older file never had.
+11c. **A value merged by recency must carry its own date, and its default must never be
+    stored.** The two preferences in the save — the keeper's name and their worn companion —
+    are the only things not joined on value, because they are instructions rather than
+    achievements and the most recent one is the one the player meant. That makes them the
+    only place the merge can lose something, and for a year it lost the name on every
+    device. Two mistakes, and both are general. The recency came from the *file's*
+    `updatedUnix`, which `SaveService.Snapshot` stamps with **now** every time the sync asks
+    for one — so the local side was newer in every comparison it ever took part in, and "the
+    newest choice wins" meant "this device wins". And an unnamed keeper *stored*
+    `Wallet.DefaultName`, which threw away the one fact the merge needed: a device with no
+    opinion was indistinguishable from one that had chosen, so a fresh install pushed
+    "Grovekeeper" over a name the player had picked, and a reinstall erased the name it had
+    just downloaded. The fix is `displayNameSetUnix` / `avatarSetUnix` (v15) and a default
+    that is *shown* and never written. `SaveMerge.Chosen` is still a join — a maximum over
+    (has a value, then the stamp, then ordinal order) — so it stays idempotent and
+    order-independent, which is what invariant 11 promises. Before adding anything merged by
+    recency, give it a stamp of its own and make sure its "absent" state is one no real value
+    can hold.
 11a. **The ledger is a map keyed by level id, never an array.** That makes a duplicated
     record unrepresentable rather than something the server has to filter, and lets a
     sync write `levels.<id>` alone instead of re-uploading thousands of entries.
@@ -752,6 +770,113 @@ both `int`s describing the same run, so adjacent parameters could be swapped, co
 untouched board) and `Millis` (play time, for the record). Anything shown to a player wants the
 second.
 
+**The clock counts down, and it can end a run — save schema v14, unchanged.** A glade now carries a
+time limit and the run is lost when it reaches zero: `DefeatReason.OutOfTime`, a heart, the defeat
+panel. Three decisions carry the whole feature.
+
+The limit is **derived from par**, not authored and not flat — `LevelTuning.TimeFactor`, seconds per
+par turn, default 2.0, with the same convention `BudgetFactor` uses (0 means "not authored" and only
+a negative value removes the clock, so a level cannot lose its fail state by omission). A flat sixty
+seconds is a different difficulty on every board: comfortable at par 34 and close to unwinnable at
+par 49 two glades later, and nothing about authoring a number per level makes that visible to whoever
+authored it. The shipped four come out at 68s / 98s / 76s / 92s.
+
+Stars are the **worse of two readings** — `LevelTuning.StarsFor(moves, millis)` takes
+`min(StarsForMoves, StarsForTime)`, with the clock's own gold and silver at 50% and 75% of the limit.
+Three stars therefore means efficient *and* quick, a claim the player can check against either number
+on the victory panel; a blended score would be a third number nothing on screen shows, and a player
+who lost a star would have no way to know which half cost it. There is deliberately **no moves-only
+overload** left on `Puzzle` — a caller that could ask for half the rule would get an answer that is
+right until a glade is timed, and the compiler would never mention it. Zero milliseconds means "never
+timed" and costs nothing, which is the convention `BestMillis`, `RunClock.Millis` and the save file
+already share.
+
+And the clock **starts when the board becomes playable**, not on the first conduit turned. It began
+as the latter, which was right while this was only a record — a player who studies a glade is not
+doing worse than one who spins tiles at random — and wrong the moment it became a limit: a countdown
+a player can hold at full by not touching anything lets them plan the whole solution for free and
+then execute it, which removes exactly the pressure the limit exists to apply. The edge is polled off
+`BoardView.Locked`, so the clock still does not burn during the raise animation, and `Expired` stays
+gated on `HasStarted` — without it an untouched board already satisfies `Millis >= LimitMillis` at
+zero and the run is lost on the frame it appears. Keeping the edge in `PlayScreen` rather than inside
+`RunClock` is what made that reversal one line.
+
+**What the countdown did *not* touch, and why that was the point.** What is measured and stored is
+still **elapsed play time**, never time left — remaining is derived for the HUD and reaches nothing
+else. So `LevelRecordDto.bestMillis` keeps its meaning, the map badge keeps reading `31 turns · 2:14`,
+`SaveMerge` is untouched, and `publishGroveStats` needed **no change and no deploy**: it publishes
+deciles of `bestMoves`, the standing still answers "you used fewer turns than X% of keepers", and
+every already-published `config/stats` table stays valid. If a change ever makes the save hold time
+*left* instead, all of those break at once and silently, because both are milliseconds and both look
+plausible in a save file — `CountdownTests` exists to catch it.
+
+Two smaller consequences. `RunOutcome` carries its own `TimeLimit`, so the defeat panel can put
+`Millis` in proportion without reaching back into a `Puzzle` the retry button has already restarted —
+the hazard that type exists to remove. And `TurnsShort` now answers after a timeout as well as after
+the move budget: it is refused only after a **crumbled conduit**, because that is the one ending where
+the count over the survivors reads lower than the truth. A timeout leaves the board intact, so "one
+turn from it" is exactly as sound there — and it is the ending where it drives a retry hardest.
+
+**A run that has begun is paid for, however it ends — `RunGuard`.** A heart was charged when a run
+was *lost*, so every way of ending one without losing it was free: the restart button, the back
+arrow, the pause menu's two exits, and killing the app. That barely mattered while only the move
+budget could end a run, because running out of turns creeps up on a player. A countdown does not —
+it is a visible, reliable cue to tap restart one second before the loss lands, and a gate anybody
+can step around on a whim is not a gate. So a committed run now costs a heart whatever ends it.
+
+**Committed means the first turn, or three seconds of clock, whichever comes first.** Both halves
+are needed and neither is arbitrary. Waiting only for a turn lets a player study the board for the
+whole countdown, back out free, and re-enter knowing the answer — which is exactly the free planning
+that moving the clock's start edge was meant to stop. Committing the instant the board appears would
+charge somebody who opened the wrong glade and left within a second. Three seconds is longer than a
+misplaced tap and far shorter than reading a 6×7 board.
+
+**The deliberate exits ask first** (`ForfeitOverlay`), and only on a committed run — a confirmation
+over a free action is friction that teaches players to dismiss the one that is not free. All five
+paths route through `PlayScreen`, including the pause menu's *Glades* and *Home*, which used to call
+`Flow.Go` directly and were two of the five holes. The green button is **staying**: green is this
+game's affirmative everywhere else, and the affirmative here is "keep playing".
+
+**The ending no screen ever sees is handled on disk.** A force-quit, an OOM kill, a crash and a flat
+battery are indistinguishable from each other and from each other's intent — no client can tell them
+apart and neither could a server — so the run is written down when it commits and rubbed out when it
+resolves. Anything still written down at the next launch is charged in `Boot`, straight after
+`SaveService.Load()` and before anything can start a new run. Three details carry it:
+
+- **`PlayerPrefs.Save()` is mandatory, not an optimisation.** `SetString` writes to memory and Unity
+  persists that on a *clean* quit — the one exit this does not care about. Without the explicit flush
+  the marker would be lost by the very crash it exists to catch.
+- **It is deliberately not in `SaveFileDto`.** "A run is in flight" is a fact about this *device*, not
+  the account: merged, it would charge a player on their tablet for a run open on their phone. It also
+  goes up and down, so it could never be joined — invariant 11b, straightforwardly.
+- **Nothing about it needs the network.** The marker is local, the charge is local, and the charge
+  survives to the cloud because hearts are a produced/spent ledger merged by `max` — a spend made in
+  airplane mode only ever raises `spent`, so no device that was absent for it can undo it. Offline is
+  not a way out.
+
+**Two smaller decisions.** A forfeit costs a heart and **nothing else** — no daily-chest credit and no
+streak — because those are for runs that were *finished*, won or lost, and a withdrawn run was not;
+the line is easy to explain and it stops the restart button being the fastest way to bank three
+chests. And the charge is **reported on the next launch** rather than left to be noticed, because a
+resource that quietly decrements is a resource players feel cheated by later — the rule the defeat
+panel's heart row was already built on, and it applies twice as hard to the one charge in the game
+the player did not watch happen.
+
+**What this cost, and what it did not.** No save schema change (the marker is not in the save), no
+`progression.json` retune (an honest player still pays exactly once per attempt that did not end in a
+win), and no server work. `RunGuardTests` pins it, in the Editor rather than offline: a fake store
+would prove the arithmetic and not the thing that matters, which is that the marker reaches disk
+before the process dies.
+
+**The tap rate is the number that decides whether a glade is fair.** Because gold moves are
+`par × GoldFactor` and gold seconds are `par × TimeFactor × TimeGoldFraction`, par cancels: the rate
+three stars demands is a fact about the three factors alone, `1.35 / (2.0 × 0.5)` = **1.35 taps a
+second** at the shipped defaults. Demanding on a first attempt, comfortable on a replay, which is the
+shape a three-star threshold should have. `LevelValidator.CheckClock` warns (never errors) when a
+level overriding one of those factors pushes it past 1.8 — drumming rather than solving — or needs
+more than 1.2 taps/s merely to finish, which is unwinnable rather than hard. Both `Validate Content`
+and `Tools/verify/content.py` print the clock and the rate per glade, so nobody has to derive it.
+
 **The mark is a struck medal over two lines, because a caption is not a reward.** A ranked glade
 gets a 392×196 plate: a trophy on a filled disc with a cream rim and a halo, `You are in the top
 10%`, then `31 turns · 2:14`. **A trophy and not a star**, and that is not decoration — the node's
@@ -822,8 +947,19 @@ marker holding its number → the verdict line → the standing medal → the pa
 line → replay, **NEXT GLADE**, map on one row. Both bars share one scale, which is the entire readability of the
 comparison: the shorter bar is the better run and no number is needed to see it. A run *over* the
 route continues in `Pal.Amber` past the gold, which says "these turns were spare" without the panel
-saying it in words. Confetti and a screen flash fire on the third star only — spending them on every
-win marks out none.
+saying it in words. A screen flash fires on the third star only — spending it on every win marks out
+none.
+
+**No confetti and no haptic anywhere in the win, and that is now a rule.** Both were tried on the
+panel and both are gone. The thing worth not rediscovering is *why* they were cheap to lose: the
+board has already flashed, sounded the fanfare and (before this) thrown confetti and buzzed when it
+solved — `BoardView.Celebrate` — and the panel opens about a second later. Firing either again is one
+celebration stuttering rather than two, so removing it from one place only would have looked like a
+half-finished deletion. The panel's fanfare went the same way for the same reason: `Audio.Sfx("win")`
+plays once, on the board. `Payout` no longer buzzes either — it is a two-chip payout on a screen
+players see dozens of times a session, and `Handheld.Vibrate` is one fixed-length buzz on Android, so
+there is no way to make the second one lighter than the first. `Burst.Confetti` still has four
+callers (chest, companion reveal, event), so it is not dead.
 
 Two things the old panel got wrong that are worth naming. The **four dark scorecard slots** are gone:
 a run produces a handful of numbers that mean different things, and set as identical framed rows they
@@ -874,8 +1010,47 @@ grove's own number rides at the end of its bar. The horn was cut before it shipp
 
 **Verifying is now in the repo.** `Tools/verify/` holds `compile.py` (every assembly
 separately, which is what actually proves the layering), `tests.py` (the EditMode suite via
-a reflection runner — 380 pass offline, 62 need the Editor and say so), `content.py` and
+a reflection runner — 467 pass offline, 71 need the Editor and say so), `content.py` and
 `loc.py`. It no longer has to be recovered from a scratchpad.
+
+**The keeper's name reaches the cloud — save schema v15.** Reported as "renaming does not
+save", and it was two separate faults meeting. Invariant 11c has the argument; what follows
+is what changed.
+
+The merge now dates a preference by **its own stamp** rather than by the file's, and an
+unnamed keeper **stores nothing** rather than storing `Grovekeeper`. Between them those two
+lines are the whole of why a rename used to evaporate: a device that had never been renamed
+looked exactly like one that had chosen the default, and it looked *newer* than every other
+device on earth, because the snapshot the sync merges against is stamped with the moment it
+was taken. So the fresh install won, and pushed. The stamps are `displayNameSetUnix` and
+`avatarSetUnix`; zero means "never chosen", which is unreachable for a real choice, so a v14
+file needs no migration — the one ambiguity it does leave, an *undated* default name, is read
+as never-chosen by `Wallet.ReadChosenName`, which is the safe half (the player still sees
+Grovekeeper, and the device stops outranking one that was renamed).
+
+The second half is **when** a sync runs, which was: after the splash, on backgrounding, and on
+returning. That is fine for progress the player will change again in a minute and wrong for a
+choice they make once. Backgrounding is the *worst* moment to start a network call — the
+process is being frozen and the continuation may not run again for hours — and a sync that
+failed was simply forgotten, so a rename made on a train pushed nothing and pushed nothing
+again when the signal came back. `SyncScheduler` (Domain/Cloud) is a debounce with a backoff
+and a reconnect: 3s coalescing so a rename plus a companion is one write, doubling retries
+from 5s to a 5-minute ceiling, and a sync when reachability returns **whether or not anything
+local is pending**, because the point of reconnecting is as much what the other device did.
+
+Four decisions worth not re-litigating. It holds **no clock and no socket** — it is handed
+elapsed time and told whether the network is up, which is `RunClock`'s bargain and the reason
+the whole policy is pinned by `SyncSchedulerTests` offline; `Boot.Pump` reads
+`Application.internetReachability` and ticks it. The pending mark is consumed **when the
+snapshot is taken**, not when the push returns, so a rename made during a push survives that
+push succeeding — otherwise the fix would still lose a name to one unlucky second. Contention
+is a **first-class outcome** (`CloudFailure.Busy`) rather than an error string, because "a
+sync is already running" must not back the timer off for five minutes. And the trigger is
+`Wallet.ProfileChanged`, wired once in `Boot`, rather than a call in the rename panel: this
+file has already learned twice that a step someone has to remember gets forgotten.
+
+Nothing on the server changed and nothing was redeployed. The rules never constrained the
+wallet map's inner keys and no function reads a name.
 
 Not done, deliberate: **in-app purchases** (the four store secrets hold `UNSET`, so
 receipts are refused — correct until real store products exist), **Play Games Services**

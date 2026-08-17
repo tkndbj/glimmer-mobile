@@ -393,7 +393,18 @@ namespace GlimmerGrove
         public int Gold => Tuning.GoldThreshold;
         public int Silver => Tuning.SilverThreshold;
 
-        public int StarsFor(int moves) => Tuning.StarsFor(moves);
+        /// <summary>
+        /// What a run of this many turns, taking this long, is worth.
+        ///
+        /// <para>
+        /// There is deliberately no moves-only overload. Stars are the worse of the two
+        /// readings (<see cref="Content.LevelTuning.StarsFor"/>), so a caller that could ask
+        /// for the moves half alone would get a number that is right up until a glade is
+        /// timed — and the compiler would never mention it. Pass 0 for an untimed run; the
+        /// clock half then costs nothing, which is what 0 means everywhere else here.
+        /// </para>
+        /// </summary>
+        public int StarsFor(int moves, int millis) => Tuning.StarsFor(moves, millis);
 
         // ---------------------------------------------------------------- budget
         public bool HasBudget => Tuning.HasBudget;
@@ -410,6 +421,10 @@ namespace GlimmerGrove
         /// </summary>
         public bool OutOfMoves => HasBudget && Moves >= MoveBudget && !Won;
 
-        public int LiveStars => StarsFor(Mathf.Max(Moves, 1));
+        // ------------------------------------------------------------------ clock
+        // As with the thresholds above, the board has no opinion on how long a glade is
+        // worth — it only passes the question on to its tuning.
+        public bool HasTimeLimit => Tuning.HasTimeLimit;
+        public int TimeLimitMillis => Tuning.TimeLimitMillis;
     }
 }

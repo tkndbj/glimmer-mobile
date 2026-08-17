@@ -51,6 +51,12 @@ namespace GlimmerGrove
             // it is cheap enough to be worth having ready before anything draws.
             SaveService.Load();
 
+            // Then settle any run the last launch never finished — a force-quit, a crash, a
+            // flat battery. Immediately after the save loads, because the heart has to come
+            // out of a wallet that exists, and before anything can start a new run, because
+            // one marker can only describe one run. See RunGuard.
+            RunGuard.Claim();
+
             ContentConfig.AppVersion = ParseBuildNumber(Application.version);
 
             // Asset delivery is chosen once, here, before anything loads. Everything
@@ -64,6 +70,14 @@ namespace GlimmerGrove
 #if GLIMMER_FIREBASE
             CloudSaveService.UseBackend(new FirebaseCloudSaveBackend());
 #endif
+
+            // A name or a companion the player picked is worth a sync of its own rather
+            // than waiting for the app to be backgrounded — which is the least reliable
+            // moment there is to start a network call, since the process is being frozen
+            // as it goes out. Hung on the event rather than called from the rename panel
+            // so a second way to change either cannot forget it; the request is debounced
+            // and retried, so this is cheap however often it fires. See SyncScheduler.
+            Wallet.ProfileChanged += CloudSaveService.RequestSync;
 
             // Rewarded ads, chosen the same way and inert by the same default. Two gates,
             // not one: the SDK has to be compiled in *and* a real app key has to exist.
@@ -165,12 +179,26 @@ namespace GlimmerGrove
             void Update()
             {
                 if (Input.GetKeyDown(KeyCode.Escape)) Flow.HandleBack();
+
+                // Connectivity is read here rather than inside the sync, because
+                // Application is a Presentation type and the policy it feeds is meant to
+                // be runnable in the test suite without one. Unscaled, since a paused game
+                // is still a device that may have just found a signal.
+                CloudSaveService.Tick(Time.unscaledDeltaTime,
+                                      Application.internetReachability != NetworkReachability.NotReachable);
             }
 
             void OnApplicationPause(bool paused)
             {
                 if (paused) Persist();
-                else CloudSaveService.BeginSync();     // returning: pick up another device's work
+                else
+                {
+                    // Returning: pick up another device's work, and drop any backoff the
+                    // last failure left. A player who reopens the game has quite often
+                    // just done something about the connection.
+                    CloudSaveService.ResetBackoff();
+                    CloudSaveService.BeginSync();
+                }
             }
 
             void OnApplicationFocus(bool focused)

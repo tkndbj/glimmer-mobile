@@ -78,8 +78,14 @@ namespace GlimmerGrove
 
             // The header is index knowledge - chapter name, total stars - so it draws
             // immediately and never waits on a file.
+            //
+            // No nav bar here, and that is deliberate. The map is the one screen you are
+            // *inside* rather than one of the places you can be: every tab on the bar led
+            // away from a chapter the player had just chosen to open, and the bar cost the
+            // bottom 206px of the only screen whose whole job is showing a vertical chain.
+            // The way out is the back key in the top-left corner, where every other
+            // second-level screen in the game already keeps it.
             BuildHeader();
-            NavBar.Build(Content, NavBar.Tab.None);
 
             if (_entry == null) return;
 
@@ -137,8 +143,21 @@ namespace GlimmerGrove
         void BuildScroller()
         {
             _viewport = UIKit.Node("Viewport", Content);
-            // the map stops above the navigation bar, so nothing is ever hidden behind it
-            _viewport.offsetMin = new Vector2(0f, NavBar.Height);
+
+            // Behind the chrome, and this is not cosmetic. The header is built in Build()
+            // because it is index knowledge and must not wait on a file, while the scroller
+            // cannot exist until the chapter body has resolved a layout — so the viewport is
+            // always the *younger* sibling, and uGUI draws younger siblings in front. Left
+            // alone it covered the back key, the chapter banner and the star count with an
+            // opaque map, and its own invisible drag-catcher swallowed every tap meant for
+            // them; the header only became visible at all when an elastic overscroll dragged
+            // the map off the top of it, which is a strange thing to discover about your own
+            // navigation. Anything added to the header from now on lands in front of the map
+            // for the same reason.
+            _viewport.SetAsFirstSibling();
+
+            // Full screen: nothing reserves the bottom any more, so the offsets Node()
+            // already set are what we want and the old NavBar.Height inset is gone.
             var catcher = _viewport.gameObject.AddComponent<Image>();
             catcher.color = new Color(0, 0, 0, 0);         // invisible, but drags land on it
             catcher.raycastTarget = true;
@@ -633,7 +652,7 @@ namespace GlimmerGrove
             frt.anchoredPosition = Vector2.zero;
             frt.localRotation = Quaternion.Euler(0, 0, 180f);
 
-            UIKit.IconButton("Back", Content, "sq_dark", "ic_left", new Vector2(118f, 118f),
+            UIKit.IconButton("Back", Content, Skins.Nav, "ic_left", new Vector2(118f, 118f),
                              new Vector2(0f, 1f), new Vector2(96f, -132f), () => Flow.Go<HomeScreen>());
 
             var banner = UIKit.Img("Banner", Content, Art.S("Ui/banner"), Color.white,
@@ -653,7 +672,7 @@ namespace GlimmerGrove
             var swipe = UIKit.Titled("Swipe", Content, Loc.Get("ui.levels.swipe"), 26,
                                      new Color(1f, .96f, .88f, .5f), TextAnchor.MiddleCenter,
                                      new Vector2(700f, 36f), new Vector2(.5f, 0f),
-                                     new Vector2(0f, NavBar.Height + 52f), 3f, 0f);
+                                     new Vector2(0f, 118f), 3f, 0f);
             Tween.Tint(swipe, new Color(1f, .96f, .88f, 0f), .8f).Delay(4.2f);
         }
 
@@ -666,14 +685,14 @@ namespace GlimmerGrove
             if (previous != null)
             {
                 var target = previous.Id;
-                UIKit.IconButton("PrevChapter", Content, "sq_dark", "ic_left", new Vector2(104f, 104f),
+                UIKit.IconButton("PrevChapter", Content, Skins.Nav, "ic_left", new Vector2(104f, 104f),
                                  new Vector2(0f, .5f), new Vector2(78f, 0f), () => GoToChapter(target));
             }
 
             if (next != null && LevelUnlock.IsChapterUnlocked(_index, next.Id))
             {
                 var target = next.Id;
-                UIKit.IconButton("NextChapter", Content, "sq_dark", "ic_right", new Vector2(104f, 104f),
+                UIKit.IconButton("NextChapter", Content, Skins.Nav, "ic_right", new Vector2(104f, 104f),
                                  new Vector2(1f, .5f), new Vector2(-78f, 0f), () => GoToChapter(target));
             }
         }

@@ -111,7 +111,11 @@ namespace GlimmerGrove
                                  new Vector2(0f, capY - cap * .40f));
             seat.transform.SetAsFirstSibling();
 
-            var capImg = UIKit.Img("Cap", cell.transform, Art.S(active ? "Ui/jelly_teal" : "Ui/sq_dark"),
+            // A resting tab is still a tab you can press, so it carries colour — the live
+            // one is already marked out four other ways (a halo, a bigger cap, a breathing
+            // scale and a brighter label), which is plenty of separation without spending
+            // the disabled grey on five permanent controls. See Skins.
+            var capImg = UIKit.Img("Cap", cell.transform, Art.S(active ? "Ui/jelly_teal" : "Ui/" + Skins.Nav),
                                    Color.white, Vector2.one * cap, new Vector2(.5f, .5f),
                                    new Vector2(0f, capY));
             capImg.preserveAspect = true;

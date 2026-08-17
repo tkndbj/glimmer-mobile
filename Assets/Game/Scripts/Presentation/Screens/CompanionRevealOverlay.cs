@@ -478,7 +478,7 @@ namespace GlimmerGrove
             // Appears with the button rather than at the start. Before the payoff there is
             // nothing to dismiss and a cross would only invite skipping past the reward;
             // tapping the veil already skips, which is the affordance that matters early.
-            var cross = UIKit.IconButton("Dismiss", Content, "sq_dark", "ic_close",
+            var cross = UIKit.IconButton("Dismiss", Content, Skins.Nav, "ic_close",
                                          new Vector2(84f, 84f), new Vector2(1f, 1f),
                                          new Vector2(-72f, -96f), () => Close());
 

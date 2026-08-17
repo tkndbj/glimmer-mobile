@@ -61,7 +61,7 @@ namespace GlimmerGrove
 
             UIKit.TextButton("Save", Panel, "btn_green", Loc.Get("ui.common.done"), 44,
                              new Vector2(500f, 126f), new Vector2(.5f, 0f), new Vector2(0f, 168f), Commit);
-            UIKit.TextButton("Cancel", Panel, "btn_gray", Loc.Get("ui.profile.cancel"), 36,
+            UIKit.TextButton("Cancel", Panel, Skins.Alternate, Loc.Get("ui.profile.cancel"), 36,
                              new Vector2(360f, 100f), new Vector2(.5f, 0f), new Vector2(0f, 54f), () => Close());
 
             // The field is focused rather than waiting for a second tap: this panel has

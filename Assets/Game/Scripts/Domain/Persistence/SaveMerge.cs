@@ -206,6 +206,12 @@ namespace GlimmerGrove.Persistence
 
             var hearts = JoinedHearts(mine, other);
 
+            var name = Chosen(mine.displayName, mine.displayNameSetUnix,
+                              other.displayName, other.displayNameSetUnix);
+
+            var avatar = Chosen(mine.avatarId, mine.avatarSetUnix,
+                                other.avatarId, other.avatarSetUnix);
+
             return new WalletDto
             {
                 // Retired v1 fields. Whichever file is newer holds the better mirror.
@@ -236,11 +242,13 @@ namespace GlimmerGrove.Persistence
                 heartBoostUntilUnix = Hearts.JoinBoost(mine.heartBoostUntilUnix,
                                                        other.heartBoostUntilUnix),
 
-                // Preferences: the newest real value, and never an empty one over a
-                // real one. A device that has never been renamed carries "", and
-                // letting that win would silently undo the rename done on the other.
-                displayName = NewestSet(newer.displayName, mine.displayName, other.displayName),
-                avatarId = NewestSet(newer.avatarId, mine.avatarId, other.avatarId),
+                // Preferences: the value chosen most recently, dated by its own stamp
+                // rather than by the file's. See Chosen for why the file's date was the
+                // wrong clock and what it cost.
+                displayName = name.Value,
+                displayNameSetUnix = name.At,
+                avatarId = avatar.Value,
+                avatarSetUnix = avatar.At,
 
                 currencies = currencies,
             };
@@ -261,19 +269,54 @@ namespace GlimmerGrove.Persistence
         }
 
         /// <summary>
-        /// The newer file's value when it has one, otherwise whichever file actually
-        /// holds a value.
+        /// Picks between two preferences and keeps the date of the one it picked.
         ///
-        /// Order-independent despite reading like a preference: whenever
-        /// <paramref name="newer"/> is empty the only non-empty candidate left is the
-        /// older file, and it is the same file whichever way round the two are passed.
+        /// <para>
+        /// This is the only last-writer-wins rule in the file, and it needs a clock that
+        /// describes the <em>value</em>. It used to use the file's own
+        /// <c>updatedUnix</c>, which reads correctly and is wrong in practice:
+        /// <see cref="SaveService.Snapshot"/> stamps it with the current moment, and the
+        /// cloud sync merges against a snapshot, so the local side was newer in every
+        /// comparison it ever took part in. "The newest choice wins" therefore meant
+        /// "this device wins", and the damage ran the one way that matters — a phone that
+        /// had never been renamed pushed its default over a name chosen on a tablet, and a
+        /// fresh install overwrote the name it had just downloaded. Per-field stamps
+        /// (schema v15) make the comparison mean what it says.
+        /// </para>
+        ///
+        /// <para>
+        /// Still a join. It is a maximum over a total order — a real value beats an absent
+        /// one, then the later stamp wins, then ordinal order settles a tie — so it is
+        /// idempotent and gives the same answer whichever device runs it, which is what
+        /// <see cref="Join"/> promises. The empty test comes first and outranks the stamps
+        /// because empty is never something a player asked for: nothing in the game can
+        /// store it, so it only ever means "this device has no opinion", and an opinion
+        /// beats none however old it is.
+        /// </para>
         /// </summary>
-        static string NewestSet(string newer, string mine, string other)
+        static (string Value, long At) Chosen(string mine, long mineAt, string other, long otherAt)
         {
-            if (!string.IsNullOrEmpty(newer)) return newer;
-            if (!string.IsNullOrEmpty(mine)) return mine;
-            return other;
+            bool haveMine = !string.IsNullOrEmpty(mine);
+            bool haveOther = !string.IsNullOrEmpty(other);
+
+            if (!haveMine && !haveOther) return (string.Empty, 0L);
+            if (!haveOther) return (mine, Stamp(mineAt));
+            if (!haveMine) return (other, Stamp(otherAt));
+
+            if (mineAt != otherAt)
+                return mineAt > otherAt ? (mine, Stamp(mineAt)) : (other, Stamp(otherAt));
+
+            // Same moment, two different values — two devices renamed inside one second,
+            // or, far more likely, both files predate the stamps and carry zero. Ordinal
+            // order is not a better answer, only a *stable* one, and stability is what
+            // keeps the join commutative: an arbitrary choice that depended on argument
+            // order would leave two devices pushing over each other for ever.
+            return string.CompareOrdinal(mine, other) >= 0 ? (mine, Stamp(mineAt))
+                                                           : (other, Stamp(otherAt));
         }
+
+        /// <summary>A negative stamp is a corrupt one; zero already means "undated".</summary>
+        static long Stamp(long at) => at < 0 ? 0L : at;
 
         /// <summary>
         /// Joins two devices' hearts, honouring both "never written" and "written by a

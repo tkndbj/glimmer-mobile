@@ -126,11 +126,25 @@ namespace GlimmerGrove
         /// </summary>
         public readonly int Route;
 
+        /// <summary>
+        /// The glade's whole clock in milliseconds, or 0 when it is untimed.
+        ///
+        /// <para>
+        /// Carried so that anything reacting to the run can put <see cref="Millis"/> in
+        /// proportion without reaching back into a <see cref="Puzzle"/> that has since been
+        /// restarted — which is the hazard this whole type exists to remove, and a real one
+        /// here because the defeat panel offers a retry while the board it describes is still
+        /// on screen.
+        /// </para>
+        /// </summary>
+        public readonly int TimeLimit;
+
         RunOutcome(LevelId level, bool won, int stars, int moves, int target, int previousBest,
                    bool firstClear, int attempt, DefeatReason reason, int turnsToSolution,
                    int lampsLit, int lampCount, int hintsUsed, float seconds, int millis,
-                   int route)
+                   int route, int timeLimit)
         {
+            TimeLimit = timeLimit < 0 ? 0 : timeLimit;
             Level = level;
             Won = won;
             Stars = stars < 0 ? 0 : stars;
@@ -155,7 +169,8 @@ namespace GlimmerGrove
                                      int route)
             => new RunOutcome(board.Id, true, stars, board.Moves, board.Gold, previousBest,
                               firstClear, attempt, DefeatReason.OutOfMoves, 0,
-                              board.LampsLit, board.LampCount, hintsUsed, seconds, millis, route);
+                              board.LampsLit, board.LampCount, hintsUsed, seconds, millis, route,
+                              board.HasTimeLimit ? board.TimeLimitMillis : 0);
 
         /// <summary>
         /// A run lost. No stars, no record and no reward — <c>PlayerProgress</c> never
@@ -167,7 +182,8 @@ namespace GlimmerGrove
                                       int route = 0)
             => new RunOutcome(board.Id, false, 0, board.Moves, board.Gold, previousBest,
                               false, attempt, reason, board.TurnsToSolution,
-                              board.LampsLit, board.LampCount, hintsUsed, seconds, millis, route);
+                              board.LampsLit, board.LampCount, hintsUsed, seconds, millis, route,
+                              board.HasTimeLimit ? board.TimeLimitMillis : 0);
 
         // ------------------------------------------------------------- derived
         /// <summary>
@@ -175,22 +191,47 @@ namespace GlimmerGrove
         /// quoting to them, otherwise -1.
         ///
         /// <para>
-        /// Only ever offered after the turns ran out. That is not squeamishness about the
-        /// other ending — it is that the number is not sound there. A crumbled conduit
-        /// takes its own owed turns out of the board with it, so the count over what
-        /// survives reads <em>lower</em> than the truth, and a defeat screen that tells a
-        /// player they were one turn away when they were four is the exact failure the
-        /// upper bound was chosen to avoid. <see cref="Puzzle.TurnsToSolution"/> already
-        /// refuses to answer in that case; this refuses to ask.
+        /// Refused after a crumbled conduit, and only there. That is not squeamishness about
+        /// that ending — it is that the number is not sound there. A crumbled conduit takes
+        /// its own owed turns out of the board with it, so the count over what survives reads
+        /// <em>lower</em> than the truth, and a defeat screen that tells a player they were
+        /// one turn away when they were four is the exact failure the upper bound was chosen
+        /// to avoid. <see cref="Puzzle.TurnsToSolution"/> already refuses to answer in that
+        /// case; this refuses to ask.
         /// </para>
         /// <para>
-        /// It is also the only ending where the player has no other evidence. They watched
-        /// a conduit give way and know why they lost; running out of turns looks identical
-        /// whether they were one turn short or twenty.
+        /// The other two endings are the ones where the player has no other evidence. They
+        /// watched a conduit give way and know why they lost; running out of turns — or out
+        /// of clock — looks identical whether they were one turn short or twenty. The clock
+        /// was added to this rather than excluded from it deliberately: nothing crumbles when
+        /// time runs out, so the count is exactly as sound as it is on the move budget, and a
+        /// timeout is if anything the ending where "you were one turn away" drives a retry
+        /// hardest.
         /// </para>
         /// </summary>
         public int TurnsShort
-            => Won || Reason != DefeatReason.OutOfMoves ? -1 : TurnsToSolution;
+            => Won || Reason == DefeatReason.ConduitLost ? -1 : TurnsToSolution;
+
+        /// <summary>True when this run ended because the clock reached zero.</summary>
+        public bool TimedOut => !Won && Reason == DefeatReason.OutOfTime;
+
+        /// <summary>Whether this run was played against a clock at all.</summary>
+        public bool HasTimeLimit => TimeLimit > 0;
+
+        /// <summary>
+        /// Milliseconds still on the clock when the run ended, or 0 on an untimed glade.
+        /// Zero on a timeout too, which is the honest reading rather than a special case.
+        /// </summary>
+        public int TimeLeft
+        {
+            get
+            {
+                if (!HasTimeLimit) return 0;
+
+                int left = TimeLimit - Millis;
+                return left < 0 ? 0 : left;
+            }
+        }
 
         /// <summary>
         /// True when the player was close enough that saying so is worth a sentence.

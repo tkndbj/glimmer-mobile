@@ -146,6 +146,16 @@ namespace GlimmerGrove.Persistence
             if (!Same(walletA.displayName, walletB.displayName)) return true;
             if (!Same(walletA.avatarId, walletB.avatarId)) return true;
 
+            // The stamps behind those two, compared in their own right. A device holding
+            // the same name under a later stamp knows something the server does not — that
+            // the name was re-chosen, and so outranks a third device still carrying the
+            // older date — and without this the merge would keep deriving that answer
+            // locally and never send it. It settles rather than oscillates: the push
+            // carries the stamp with the value, so the following sync agrees and writes
+            // nothing.
+            if (walletA.displayNameSetUnix != walletB.displayNameSetUnix) return true;
+            if (walletA.avatarSetUnix != walletB.avatarSetUnix) return true;
+
             // Today's chest counters. Small, and they change several times a session, so
             // they are compared rather than assumed — a day that rolled over on one device
             // has to reach the other or its chests would still look unopened.

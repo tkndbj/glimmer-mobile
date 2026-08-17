@@ -4,7 +4,7 @@ using System.Globalization;
 namespace GlimmerGrove
 {
     /// <summary>
-    /// How long a run actually took, measured from the first conduit turned.
+    /// How long a run actually took, and how much of the glade's clock is left.
     ///
     /// <para>
     /// <b>An accumulator, never two readings of a wall clock.</b> The obvious
@@ -23,11 +23,14 @@ namespace GlimmerGrove
     /// at most a quarter second per stutter and makes the failure impossible.
     /// </para>
     /// <para>
-    /// <b>From the first turn, not from the board appearing.</b> A player who opens a
-    /// glade and studies it is not doing worse than one who spins tiles at random, and a
-    /// clock that starts on entry punishes exactly the behaviour this game is about. It
-    /// also means the number is honest about what it measures, which matters because it is
-    /// shown next to a move count that has always meant "turns you took".
+    /// <b>It does not decide when it starts.</b> <see cref="Start"/> is idempotent and the
+    /// screen calls it on whatever edge that screen considers the beginning of a run — which
+    /// is now the board becoming playable, and used to be the first conduit turned. The
+    /// second was right while this was only a record (a player who studies a glade is not
+    /// doing worse than one who spins tiles at random) and wrong once it became a limit, at
+    /// which point a clock the player can hold at full by not touching anything applies no
+    /// pressure at all. Keeping the edge outside this type is what let that change be one
+    /// line in <c>PlayScreen</c>.
     /// </para>
     /// <para>
     /// <b>Milliseconds, and never zero once started.</b> The save file needs an "absent"
@@ -38,8 +41,19 @@ namespace GlimmerGrove
     /// round to the sentinel.
     /// </para>
     /// <para>
+    /// <b>It counts down, and it still measures up.</b> A glade carries a limit
+    /// (<see cref="Content.LevelTuning.TimeLimitMillis"/>) and the run is lost when the
+    /// clock reaches it. What is <em>stored</em> is still <see cref="Millis"/> — time taken,
+    /// not time left — and that is the whole reason the countdown cost no save migration and
+    /// no change to the population stats: the record, the map badge and
+    /// <c>publishGroveStats</c> were all already reading elapsed play time, and elapsed play
+    /// time is what a countdown produces. Remaining is derived for the HUD and nothing else.
+    /// A limit of zero is an untimed glade, and everything below behaves exactly as it did
+    /// before the limit existed.
+    /// </para>
+    /// <para>
     /// It holds no Unity types and no statics, so it is testable without a frame and a new
-    /// run cannot inherit an old one's time.
+    /// run cannot inherit an old one's time — or an old one's limit.
     /// </para>
     /// </summary>
     public sealed class RunClock
@@ -55,7 +69,20 @@ namespace GlimmerGrove
 
         float _elapsed;
 
-        /// <summary>True once the first turn has been taken.</summary>
+        /// <summary>
+        /// The glade's whole clock in milliseconds, or 0 for an untimed one.
+        ///
+        /// Set through <see cref="Reset"/> rather than a constructor, because the screen owns
+        /// a clock before it knows which glade it is showing — and because every path that
+        /// hands the player a fresh board already has to call Reset, so the limit cannot be
+        /// left behind from the previous level by anyone who remembers the board but forgets
+        /// the clock.
+        /// </summary>
+        public int LimitMillis { get; private set; }
+
+        public bool HasLimit => LimitMillis > 0;
+
+        /// <summary>True once the screen has declared the run under way.</summary>
         public bool HasStarted { get; private set; }
 
         /// <summary>True once the run has resolved. No further time is accepted.</summary>
@@ -81,9 +108,9 @@ namespace GlimmerGrove
         }
 
         /// <summary>
-        /// Begins timing. Idempotent, which is what lets the caller poll the move count
-        /// instead of subscribing to a turn event — one fewer subscription to unwind, and
-        /// a poll cannot miss the edge it is looking for or catch it twice.
+        /// Begins timing. Idempotent, which is what lets the caller poll for its start edge
+        /// instead of subscribing to an event — one fewer subscription to unwind, and a poll
+        /// cannot miss the edge it is looking for or catch it twice.
         /// </summary>
         public void Start()
         {
@@ -102,7 +129,44 @@ namespace GlimmerGrove
             if (float.IsNaN(seconds) || float.IsInfinity(seconds) || seconds <= 0f) return;
 
             _elapsed += seconds > MaxTick ? MaxTick : seconds;
+
+            // Held exactly at the limit rather than allowed past it, so a run that times out
+            // reads 0:00 remaining and not -0:01, and so Millis on an expired clock is a
+            // number the glade could actually produce. Costs nothing on an untimed glade.
+            if (HasLimit)
+            {
+                float limit = LimitMillis / 1000f;
+                if (_elapsed > limit) _elapsed = limit;
+            }
         }
+
+        /// <summary>
+        /// Milliseconds left on the clock, floored at zero. Zero on an untimed glade too —
+        /// ask <see cref="HasLimit"/> before drawing this.
+        /// </summary>
+        public int RemainingMillis
+        {
+            get
+            {
+                if (!HasLimit) return 0;
+
+                int left = LimitMillis - Millis;
+                return left < 0 ? 0 : left;
+            }
+        }
+
+        /// <summary>
+        /// True once the clock has run out on a glade that has one.
+        ///
+        /// <para>
+        /// Gated on <see cref="HasStarted"/>, which is not redundant: the clock does not run
+        /// until the screen says the run is under way, so a board still flying in is not on a
+        /// countdown yet. Without the guard an untouched board with a limit already
+        /// satisfies <c>Millis &gt;= LimitMillis</c> at zero and the run would be lost on the
+        /// frame it appeared.
+        /// </para>
+        /// </summary>
+        public bool Expired => HasLimit && HasStarted && Millis >= LimitMillis;
 
         /// <summary>
         /// Freezes the reading. Called where a run resolves, so nothing that happens
@@ -117,11 +181,17 @@ namespace GlimmerGrove
         /// different glade. A clock that survived one of those would hand the next run the
         /// previous run's time, and a best time only ever goes down — so it would stick.
         /// </summary>
-        public void Reset()
+        /// <param name="limitMillis">
+        /// The new glade's whole clock, or 0 for an untimed one. Passed on every reset rather
+        /// than remembered, so a clock cannot carry the previous level's limit into this one —
+        /// the same hazard the elapsed time has, and the reason both are cleared here.
+        /// </param>
+        public void Reset(int limitMillis = 0)
         {
             _elapsed = 0f;
             HasStarted = false;
             IsStopped = false;
+            LimitMillis = limitMillis > 0 ? limitMillis : 0;
         }
 
         /// <summary>

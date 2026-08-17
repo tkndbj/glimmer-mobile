@@ -207,9 +207,9 @@ namespace GlimmerGrove
             Tween.Run(.7f, Ease.OutCubic, t => { if (xpRT) xpRT.sizeDelta = new Vector2(w * t, 18f); }, xp).Delay(.35f);
 
             // corner buttons
-            UIKit.IconButton("Settings", bar, "sq_dark", "ic_gear", new Vector2(104f, 104f),
+            UIKit.IconButton("Settings", bar, Skins.Aside, "ic_gear", new Vector2(104f, 104f),
                              new Vector2(1f, .5f), new Vector2(-92f, 0f), () => Flow.Modal<SettingsOverlay>());
-            UIKit.IconButton("Info", bar, "sq_dark", "ic_info", new Vector2(104f, 104f),
+            UIKit.IconButton("Info", bar, Skins.Aside, "ic_info", new Vector2(104f, 104f),
                              new Vector2(1f, .5f), new Vector2(-206f, 0f), () => Flow.Modal<HowToOverlay>());
         }
 
@@ -1214,9 +1214,45 @@ namespace GlimmerGrove
             return Loc.Format("ui.home.next_up", Loc.Get(LevelDefinition.DefaultNameKey(next)));
         }
 
+        /// <summary>
+        /// Says so when a heart went on a run the last launch never finished — a force-quit, a
+        /// crash, a flat battery. See <see cref="RunGuard"/>.
+        ///
+        /// <para>
+        /// Reported rather than left to be noticed. A resource that quietly decrements is a
+        /// resource players feel cheated by later, which is the rule the defeat panel's heart
+        /// row is built on, and it applies twice as hard here: this is the one charge in the
+        /// game the player did not watch happen.
+        /// </para>
+        /// <para>
+        /// Here rather than on the splash because a toast over a loading screen is a toast
+        /// nobody reads, and it is <see cref="OnPresented"/> rather than <c>Build</c> so it
+        /// lands after the iris has opened rather than under it. <c>NoteReported</c> makes it
+        /// once per launch, not once per visit to the hub.
+        /// </para>
+        /// </summary>
         public override void OnPresented()
         {
-            // the line under PLAY already says where to go, so no toast is needed here
+            // the line under PLAY already says where to go, so no toast is needed for that
+
+            if (!RunGuard.Unfinished.IsValid) return;
+
+            string glade = Loc.Get(LevelDefinition.DefaultNameKey(RunGuard.Unfinished));
+            bool charged = RunGuard.UnfinishedWasCharged;
+            RunGuard.NoteReported();
+
+            // Only when a heart was actually taken. A player who was already at zero owes
+            // nothing, and telling them about a charge that did not happen is worse than
+            // saying nothing at all.
+            if (!charged) return;
+
+            Tween.After(.5f, () =>
+            {
+                if (!this) return;
+                Audio.Sfx("nope", .5f, .9f);
+                Scenery.Toast(Content, Loc.Format("ui.forfeit.unfinished", glade),
+                              Pal.Ember, 3.2f, new Vector2(.5f, 1f), -300f);
+            }, this);
         }
     }
 }

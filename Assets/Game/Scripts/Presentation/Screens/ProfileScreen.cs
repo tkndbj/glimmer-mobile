@@ -191,7 +191,7 @@ namespace GlimmerGrove
             _nameLabel = UIKit.Titled("Name", card, Profile.Name, 52, Pal.Cream, TextAnchor.MiddleLeft,
                                       new Vector2(500f, 62f), new Vector2(.5f, .5f), new Vector2(140f, 126f), 4f, 4f);
 
-            UIKit.IconButton("Rename", card, "sq_dark", "ic_pencil", new Vector2(96f, 96f),
+            UIKit.IconButton("Rename", card, Skins.Aside, "ic_pencil", new Vector2(96f, 96f),
                              new Vector2(.5f, .5f), new Vector2(436f, 126f),
                              () => Flow.Modal<RenameOverlay>(v => v.OnRenamed = Refresh), .48f);
 
@@ -478,7 +478,7 @@ namespace GlimmerGrove
             frt.anchoredPosition = Vector2.zero;
             frt.localRotation = Quaternion.Euler(0, 0, 180f);
 
-            UIKit.IconButton("Back", Content, "sq_dark", "ic_left", new Vector2(118f, 118f),
+            UIKit.IconButton("Back", Content, Skins.Nav, "ic_left", new Vector2(118f, 118f),
                              new Vector2(0f, 1f), new Vector2(96f, -132f), () => Flow.Go<HomeScreen>());
 
             var banner = UIKit.Img("Banner", Content, Art.S("Ui/banner"), Color.white,
@@ -488,7 +488,7 @@ namespace GlimmerGrove
             banner.transform.localScale = Vector3.zero;
             Tween.Pop(banner.transform, 0f, .6f, .1f);
 
-            UIKit.IconButton("Settings", Content, "sq_dark", "ic_gear", new Vector2(118f, 118f),
+            UIKit.IconButton("Settings", Content, Skins.Aside, "ic_gear", new Vector2(118f, 118f),
                              new Vector2(1f, 1f), new Vector2(-96f, -132f), () => Flow.Modal<SettingsOverlay>());
         }
 

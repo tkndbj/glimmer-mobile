@@ -105,10 +105,10 @@ namespace GlimmerGrove
             {
                 bool on = get();
                 var img = b.GetComponent<Image>();
-                img.sprite = Art.S(on ? "Ui/sq_blue" : "Ui/sq_dark");
+                img.sprite = Art.S("Ui/" + (on ? Skins.Nav : Skins.Resting));
                 if (b.Icon) b.Icon.color = on ? Pal.Cream : new Color(.72f, .78f, .84f, .7f);
             }
-            b = UIKit.IconButton("T_" + icon, parent, "sq_blue", icon, new Vector2(124f, 124f),
+            b = UIKit.IconButton("T_" + icon, parent, Skins.Nav, icon, new Vector2(124f, 124f),
                                  new Vector2(.5f, .5f), pos, () => { set(!get()); Paint(); });
             Paint();
             return b;
@@ -162,10 +162,24 @@ namespace GlimmerGrove
         /// every key. A concatenated key is invisible to the scanner and ships missing.
         /// </summary>
         static string TitleKey(DefeatReason reason)
-            => reason == DefeatReason.ConduitLost ? "ui.defeat.conduit_title" : "ui.defeat.moves_title";
+        {
+            switch (reason)
+            {
+                case DefeatReason.ConduitLost: return "ui.defeat.conduit_title";
+                case DefeatReason.OutOfTime: return "ui.defeat.time_title";
+                default: return "ui.defeat.moves_title";
+            }
+        }
 
         static string ReasonKey(DefeatReason reason)
-            => reason == DefeatReason.ConduitLost ? "ui.defeat.conduit_reason" : "ui.defeat.moves_reason";
+        {
+            switch (reason)
+            {
+                case DefeatReason.ConduitLost: return "ui.defeat.conduit_reason";
+                case DefeatReason.OutOfTime: return "ui.defeat.time_reason";
+                default: return "ui.defeat.moves_reason";
+            }
+        }
 
         /// <summary>
         /// One sentence per distance, written out for the same reason
@@ -265,15 +279,22 @@ namespace GlimmerGrove
         /// How close the run came, in the strongest form the evidence supports.
         ///
         /// <para>
-        /// Three cases, and which one appears is decided entirely by
+        /// One case now, and whether it appears is decided entirely by
         /// <see cref="RunOutcome"/> rather than by anything read off a board that has since
-        /// been restarted. When the turns ran out within one or two of finishing, the panel
+        /// been restarted. When the run ended within one or two turns of finishing, the panel
         /// says so in words and arrives with a flourish — the board has just pulsed the
-        /// conduits in question, so this is the caption to a thing the player watched, not
-        /// a claim they have to take on trust. Otherwise the lamp count stands in, which
-        /// is honest but flat. After a crumble neither is drawn: the player saw the cause,
-        /// and the distance is unknowable anyway because the conduit that broke took its
-        /// own owed turns out of the count with it.
+        /// conduits in question, so this is the caption to a thing the player watched, not a
+        /// claim they have to take on trust. Otherwise nothing is drawn.
+        /// </para>
+        /// <para>
+        /// There used to be a fallback: a bare <c>lit/total</c> critter count when the run was
+        /// not close. It is gone. It was honest but flat, and sitting directly above a row of
+        /// five hearts it read as a <em>heart</em> count — "0/5" on a five-critter glade
+        /// against a five-heart cap — which is the one misreading a defeat panel cannot
+        /// afford, because a player who believes they are out of hearts stops playing. The
+        /// timeout ending did not introduce that, it made it common: a run that runs out of
+        /// clock has usually lit nothing, so the flat case became the usual one and it almost
+        /// always said zero.
         /// </para>
         /// <para>
         /// The near-miss line is the single highest-value sentence on this panel. A defeat
@@ -306,17 +327,7 @@ namespace GlimmerGrove
                         Audio.Sfx("star", .6f, 1.3f);
                         Burst.Sparks(line.transform, Vector2.zero, Pal.Gold, 12, 220f, 20f, .55f);
                     });
-
-                return;
             }
-
-            // No number worth quoting after a crumble — see the summary.
-            if (Run.Reason != DefeatReason.OutOfMoves || Run.LampCount <= 0) return;
-
-            UIKit.Titled("Score", Panel, $"{Run.LampsLit}/{Run.LampCount}", 44,
-                         Run.LampsLit >= Run.LampCount - 1 ? Pal.Gold : Pal.Cream,
-                         TextAnchor.MiddleCenter, new Vector2(400f, 70f),
-                         new Vector2(.5f, 1f), new Vector2(0f, -300f), outline: 3f, shadow: 3f);
         }
 
         /// <summary>Wrapped, unadorned panel prose. Shared so both states line up.</summary>
@@ -496,13 +507,26 @@ namespace GlimmerGrove
                              new Vector2(.5f, 1f), new Vector2(0f, -230f), Resume);
             UIKit.TextButton("Restart", Panel, "btn_orange", Loc.Get("ui.pause.restart"), 48, new Vector2(600f, 130f),
                              new Vector2(.5f, 1f), new Vector2(0f, -390f),
-                             () => Close(() => { Screen?.RestartLevel(); Screen?.Resume(); }));
+                             () => Close(() => Screen?.RestartLevel()));
+
+            // Both exits go through the screen rather than straight at Flow, because leaving a
+            // run that has begun costs a heart and the screen is what knows whether this one
+            // has. Navigating from here directly was the third of five ways to walk away from a
+            // countdown for free — see RunGuard.
             UIKit.TextButton("Glades", Panel, "btn_blue", Loc.Get("ui.pause.glades"), 48, new Vector2(600f, 130f),
                              new Vector2(.5f, 1f), new Vector2(0f, -535f),
-                             () => Close(() => Flow.Go<LevelsScreen>()));
+                             () => Close(() =>
+                             {
+                                 if (Screen) Screen.LeaveToMap();
+                                 else Flow.Go<LevelsScreen>();
+                             }));
             UIKit.TextButton("Home", Panel, "btn_red", Loc.Get("ui.pause.home"), 48, new Vector2(600f, 130f),
                              new Vector2(.5f, 1f), new Vector2(0f, -680f),
-                             () => Close(() => Flow.Go<HomeScreen>()));
+                             () => Close(() =>
+                             {
+                                 if (Screen) Screen.LeaveToHome();
+                                 else Flow.Go<HomeScreen>();
+                             }));
 
             var row = UIKit.Box("Toggles", Panel, new Vector2(600f, 150f), new Vector2(.5f, 0f), new Vector2(0f, 128f));
             Toggle(row, "ic_music", new Vector2(-150f, 0f), () => GameSettings.MusicOn, GameSettings.SetMusic);

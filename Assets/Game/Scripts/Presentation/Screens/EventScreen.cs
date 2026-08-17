@@ -208,10 +208,10 @@ namespace GlimmerGrove
         // --------------------------------------------------------------- header
         void BuildHeader()
         {
-            UIKit.IconButton("Back", Content, "sq_dark", "ic_left", new Vector2(118f, 118f),
+            UIKit.IconButton("Back", Content, Skins.Nav, "ic_left", new Vector2(118f, 118f),
                              new Vector2(0f, 1f), new Vector2(96f, -132f), () => Flow.Go<HomeScreen>());
 
-            UIKit.IconButton("Info", Content, "sq_dark", "ic_info", new Vector2(118f, 118f),
+            UIKit.IconButton("Info", Content, Skins.Aside, "ic_info", new Vector2(118f, 118f),
                              new Vector2(1f, 1f), new Vector2(-96f, -132f), () =>
                              {
                                  if (Flow.HasModal) return;

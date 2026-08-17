@@ -194,6 +194,10 @@
       "text": "NEW BEST"
     },
     {
+      "key": "ui.win.three_stars_timed",
+      "text": "three stars at {0} turns and {1}"
+    },
+    {
       "key": "ui.rank.top10",
       "text": "You are in the top 10%"
     },
@@ -1136,6 +1140,46 @@
     {
       "key": "ui.defeat.watch_for_hearts",
       "text": "No hearts left — but a short video will wake the grove early."
+    },
+    {
+      "key": "ui.defeat.time_title",
+      "text": "Out of Time"
+    },
+    {
+      "key": "ui.defeat.time_reason",
+      "text": "The clock ran out before the last lamp woke. The glade is waiting exactly as you left it."
+    },
+    {
+      "key": "ui.forfeit.leave_title",
+      "text": "Leave the glade?"
+    },
+    {
+      "key": "ui.forfeit.leave_body",
+      "text": "This run has begun, so leaving it costs a heart — the same as running out of time. The glade will be waiting exactly as you found it."
+    },
+    {
+      "key": "ui.forfeit.leave_go",
+      "text": "LEAVE ANYWAY"
+    },
+    {
+      "key": "ui.forfeit.restart_title",
+      "text": "Start again?"
+    },
+    {
+      "key": "ui.forfeit.restart_body",
+      "text": "This run has begun, so starting again costs a heart — the same as running out of time. You will get a fresh board and a full clock."
+    },
+    {
+      "key": "ui.forfeit.restart_go",
+      "text": "START AGAIN"
+    },
+    {
+      "key": "ui.forfeit.stay",
+      "text": "KEEP PLAYING"
+    },
+    {
+      "key": "ui.forfeit.unfinished",
+      "text": "{0} was left unfinished, so it cost a heart."
     },
     {
       "key": "ui.hearts.title",

@@ -177,7 +177,7 @@ namespace GlimmerGrove
             // experience as being trapped by an advert. That is a dark pattern, it is the
             // kind of thing store reviewers flag, and it earns one-star reviews from people
             // who would otherwise have watched the video tomorrow.
-            UIKit.IconButton("Dismiss", Panel, "sq_dark", "ic_close", new Vector2(84f, 84f),
+            UIKit.IconButton("Dismiss", Panel, Skins.Nav, "ic_close", new Vector2(84f, 84f),
                              new Vector2(1f, 1f), new Vector2(-58f, -58f), () => Close());
 
             RewardedAds.Changed += Repaint;

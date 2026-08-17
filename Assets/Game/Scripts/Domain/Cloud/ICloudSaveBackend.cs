@@ -29,6 +29,15 @@ namespace GlimmerGrove.Cloud
         /// </summary>
         AlreadyLinkedElsewhere,
 
+        /// <summary>
+        /// A sync is already in flight, so this one did nothing.
+        ///
+        /// Not a failure of anything, and specifically not one the retry backoff should
+        /// count: the work is still owed and the right response is to ask again in a
+        /// moment, not to wait five minutes on the assumption the network is broken.
+        /// </summary>
+        Busy,
+
         /// <summary>Anything else. Logged, never surfaced to the player as a wall.</summary>
         Error,
     }

@@ -349,12 +349,21 @@ namespace GlimmerGrove
             return true;
         }
 
+        /// <summary>
+        /// The board's own solve: every conduit flares, the screen washes, the fanfare plays.
+        ///
+        /// <para>
+        /// No confetti and no haptic, by request. Both used to fire here and again on the
+        /// victory panel a second later, which a player reads as one celebration stuttering
+        /// rather than as two — so removing them from one place only would have left the effect
+        /// looking half-deleted. The light and the fanfare carry the moment on their own.
+        /// </para>
+        /// </summary>
         void Celebrate()
         {
             if (_celebrating) return;
             _celebrating = true;
             Locked = true;
-            Haptic.Tap();
             Audio.Duck(.3f, 2.2f);
 
             int maxDepth = 0;
@@ -366,7 +375,6 @@ namespace GlimmerGrove
             {
                 Flow.Flash(new Color(1f, .96f, .82f), .55f, .7f);
                 Audio.Sfx("win", .85f);
-                Burst.Confetti(Flow.Effects, 80);
             }, this);
 
             Tween.Punch(_floor.transform, .045f, .8f);

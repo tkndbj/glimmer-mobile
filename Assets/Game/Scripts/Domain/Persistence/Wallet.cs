@@ -35,8 +35,12 @@ namespace GlimmerGrove.Persistence
 
         static Hearts _hearts = Hearts.Full;
         static long _heartBoostUntil;
-        static string _name = DefaultName;
+
+        // Empty until the player chooses, never DefaultName — see WalletDto.displayName.
+        static string _name = string.Empty;
+        static long _nameSetUnix;
         static string _avatarId = string.Empty;
+        static long _avatarSetUnix;
 
         /// <summary>
         /// Raised whenever the heart count changes, so a HUD can follow it without
@@ -44,6 +48,21 @@ namespace GlimmerGrove.Persistence
         /// case a screen cannot predict for itself.
         /// </summary>
         public static event System.Action<Hearts> HeartsChanged;
+
+        /// <summary>
+        /// Raised when the player changes their name or their worn companion.
+        ///
+        /// <para>
+        /// The two preferences in this file, and the only things in it a player edits
+        /// directly rather than earns. They are worth announcing because they want a push
+        /// of their own: everything else here reaches the server on the next background
+        /// sync and nobody notices the delay, whereas a rename is a change the player made
+        /// deliberately and expects to survive the next thing they do — which, on a phone,
+        /// is quite often uninstalling the game. <c>Boot</c> hangs
+        /// <c>CloudSaveService.RequestSync</c> on this, so no call site has to remember.
+        /// </para>
+        /// </summary>
+        public static event System.Action ProfileChanged;
 
         /// <summary>
         /// When faster heart regeneration runs out, or 0 when none is running.
@@ -191,10 +210,47 @@ namespace GlimmerGrove.Persistence
             HeartsChanged?.Invoke(_hearts);
         }
 
+        /// <summary>
+        /// What the keeper is called: the chosen name, or <see cref="DefaultName"/> when
+        /// there is none.
+        ///
+        /// <para>
+        /// The fallback happens on the way out and never on the way in. A device that has
+        /// not been renamed stores nothing, so the merge can tell it apart from one that
+        /// has — which is the whole of why a rename now survives a second device. Setting
+        /// this stamps <see cref="NameSetUnix"/>, because the stamp is what decides the
+        /// merge and a value written without one is a choice nothing can date.
+        /// </para>
+        /// </summary>
         public static string DisplayName
         {
             get => string.IsNullOrEmpty(_name) ? DefaultName : _name;
-            set { _name = value; SaveService.Save(); }
+            set => SetDisplayName(value, GameClock.NowUnix());
+        }
+
+        /// <summary>True once the player has picked a name of their own.</summary>
+        public static bool HasChosenName => !string.IsNullOrEmpty(_name);
+
+        /// <summary>When the name was chosen, or 0 when it never was.</summary>
+        public static long NameSetUnix => _nameSetUnix;
+
+        /// <summary>When the companion was chosen, or 0 when it never was.</summary>
+        public static long AvatarSetUnix => _avatarSetUnix;
+
+        /// <summary>
+        /// Records a chosen name at a given moment. The timestamp is a parameter so the
+        /// tests can drive it; every call site in the game passes now.
+        /// </summary>
+        internal static void SetDisplayName(string name, long atUnix)
+        {
+            string chosen = name ?? string.Empty;
+            if (string.Equals(chosen, _name, System.StringComparison.Ordinal)) return;
+
+            _name = chosen;
+            _nameSetUnix = atUnix;
+
+            SaveService.Save();
+            ProfileChanged?.Invoke();
         }
 
         /// <summary>
@@ -209,7 +265,20 @@ namespace GlimmerGrove.Persistence
         public static string AvatarId
         {
             get => _avatarId ?? string.Empty;
-            set { _avatarId = value ?? string.Empty; SaveService.Save(); }
+            set => SetAvatarId(value, GameClock.NowUnix());
+        }
+
+        /// <summary>Records a worn companion at a given moment. See <see cref="SetDisplayName"/>.</summary>
+        internal static void SetAvatarId(string avatarId, long atUnix)
+        {
+            string chosen = avatarId ?? string.Empty;
+            if (string.Equals(chosen, _avatarId, System.StringComparison.Ordinal)) return;
+
+            _avatarId = chosen;
+            _avatarSetUnix = atUnix;
+
+            SaveService.Save();
+            ProfileChanged?.Invoke();
         }
 
         /// <summary>
@@ -252,8 +321,34 @@ namespace GlimmerGrove.Persistence
 
             _hearts = ReadHearts(w).At(GameClock.NowUnix(), _heartBoostUntil);
 
-            _name = string.IsNullOrEmpty(w.displayName) ? DefaultName : w.displayName;
+            _name = ReadChosenName(w);
+            _nameSetUnix = w.displayNameSetUnix < 0 ? 0L : w.displayNameSetUnix;
             _avatarId = w.avatarId ?? string.Empty;
+            _avatarSetUnix = w.avatarSetUnix < 0 ? 0L : w.avatarSetUnix;
+        }
+
+        /// <summary>
+        /// The chosen name, with the one ambiguity a pre-v15 file leaves resolved.
+        ///
+        /// <para>
+        /// Builds before v15 stored <see cref="DefaultName"/> whenever the player had not
+        /// picked anything, so an unstamped file holding it means either "never chosen" or
+        /// "chosen, and it happened to be the default". They cannot be told apart, and
+        /// reading it as never-chosen is the safe half: the player still sees Grovekeeper,
+        /// and the merge stops treating a device that has never been renamed as one with
+        /// an opinion — which is the bug the version exists to end. A stamped file is
+        /// believed exactly as written, default or not.
+        /// </para>
+        /// </summary>
+        static string ReadChosenName(WalletDto w)
+        {
+            string stored = w.displayName ?? string.Empty;
+            if (stored.Length == 0) return string.Empty;
+
+            if (w.displayNameSetUnix <= 0 && string.Equals(stored, DefaultName, System.StringComparison.Ordinal))
+                return string.Empty;
+
+            return stored;
         }
 
         /// <summary>
@@ -322,8 +417,14 @@ namespace GlimmerGrove.Persistence
                 heartsNextRefillUnix = _hearts.NextRefillUnix,
 
                 heartBoostUntilUnix = _heartBoostUntil,
+
+                // Written raw, so "" survives to the file and to the server. Substituting
+                // DefaultName here is what used to make an unnamed device look like a
+                // renamed one, and it cost players the name they had chosen.
                 displayName = _name,
+                displayNameSetUnix = _nameSetUnix,
                 avatarId = _avatarId,
+                avatarSetUnix = _avatarSetUnix,
                 currencies = currencies,
             };
         }

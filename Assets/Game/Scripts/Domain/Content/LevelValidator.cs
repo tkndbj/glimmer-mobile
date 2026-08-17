@@ -28,6 +28,7 @@ namespace GlimmerGrove.Content
             CheckAuthoredSolution(level, cells, issues);
             CheckFragileConduits(level, cells, issues);
             CheckPar(level, computedPar, issues);
+            CheckClock(level, issues);
             CheckPresentation(level, issues);
 
             return new LevelValidationReport(level.Id, issues, computedPar);
@@ -63,6 +64,71 @@ namespace GlimmerGrove.Content
             if (lamps == 0) Error(issues, "no sleeping critters, the level can never be won");
             if (turnable == 0) Warn(issues, "no tile can be turned, the player has nothing to do");
         }
+
+        /// <summary>
+        /// Whether the clock and the move thresholds are asking for the same run.
+        ///
+        /// <para>
+        /// Stars are the worse of the two readings, so a glade can be tuned into a state where
+        /// three of them are unreachable by anybody: the clock's gold threshold and the move
+        /// gold threshold together imply a sustained tap rate, and past about two a second
+        /// nobody is solving a puzzle, they are drumming. Nothing else in the pipeline can see
+        /// that — each number is individually reasonable — which is exactly the kind of
+        /// combination <c>ValidateHearts</c> exists to warn about.
+        /// </para>
+        /// <para>
+        /// Note the rate is <b>independent of par</b>, and that is by construction rather than
+        /// luck: gold moves are <c>par × GoldFactor</c> and gold seconds are
+        /// <c>par × TimeFactor × TimeGoldFraction</c>, so par cancels and the rate is a fact
+        /// about the three factors alone. A level therefore only reaches this warning by
+        /// overriding one of them.
+        /// </para>
+        /// <para>
+        /// Warnings and never errors, for <c>ValidateHearts</c>' reason: these are judgements
+        /// about players, the build cannot make them, and a content push that had to clear a
+        /// taste check would be a content push nobody could ship on a Friday.
+        /// </para>
+        /// </summary>
+        static void CheckClock(LevelDefinition level, List<LevelIssue> issues)
+        {
+            var tuning = level.Tuning;
+            if (!tuning.HasTimeLimit) return;
+
+            float limitSeconds = tuning.TimeLimitMillis / 1000f;
+            if (limitSeconds <= 0f) return;
+
+            // What merely finishing demands: par turns inside the whole clock. A glade that
+            // fails this is not hard, it is unwinnable.
+            float toFinish = tuning.Par / limitSeconds;
+            if (toFinish > FinishTapRate)
+                Warn(issues, $"the clock allows {limitSeconds:0.#}s for a par of {tuning.Par}, " +
+                             $"which needs {toFinish:0.0} taps a second just to finish — " +
+                             "raise timeFactor or the glade cannot be won");
+
+            // What three stars demands: the gold move count inside the gold slice of the clock.
+            float goldSeconds = tuning.TimeGoldMillis / 1000f;
+            if (goldSeconds <= 0f) return;
+
+            float toStar = tuning.GoldThreshold / goldSeconds;
+            if (toStar > StarTapRate)
+                Warn(issues, $"three stars needs {tuning.GoldThreshold} turns inside " +
+                             $"{goldSeconds:0.#}s — {toStar:0.0} taps a second, which is drumming " +
+                             "rather than solving, so the third star is effectively unreachable");
+        }
+
+        /// <summary>
+        /// Sustained taps a second: the most that can be asked merely to finish, and the most
+        /// that can be asked for three stars.
+        ///
+        /// <para>
+        /// The shipped defaults land at 1.35 for the star rate, which is demanding on a first
+        /// attempt and comfortable on a replay — the shape a three-star threshold should have.
+        /// The ceilings sit above that rather than at it, because this is a warning about
+        /// tuning that cannot work at all, not a second opinion about tuning that is merely
+        /// hard.
+        /// </para>
+        /// </summary>
+        const float FinishTapRate = 1.2f, StarTapRate = 1.8f;
 
         /// <summary>Every arm must point at a neighbour whose arm points back.</summary>
         static void CheckArmsMate(LevelDefinition level, Cell[] cells, List<LevelIssue> issues)

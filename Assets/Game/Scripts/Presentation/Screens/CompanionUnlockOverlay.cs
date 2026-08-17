@@ -122,7 +122,7 @@ namespace GlimmerGrove
             // all — the reasoning is AdOfferOverlay's, and it applies harder here: a modal
             // about spending currency whose only exit is the scrim is what store reviewers
             // flag as a dark pattern.
-            UIKit.IconButton("Dismiss", Panel, "sq_dark", "ic_close", new Vector2(84f, 84f),
+            UIKit.IconButton("Dismiss", Panel, Skins.Nav, "ic_close", new Vector2(84f, 84f),
                              new Vector2(1f, 1f), new Vector2(-58f, -58f), () => Close());
 
             // A balance that moves while the panel is open — the player watched a video from

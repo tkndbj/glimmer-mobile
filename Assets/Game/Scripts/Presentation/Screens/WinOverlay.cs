@@ -351,7 +351,15 @@ namespace GlimmerGrove
             var seal = Run.NewBest ? BuildSeal() : null;
 
             // ---------------------------------------------------------- the readout
-            Text hintLine = hint ? Row("Hint", -hintY, Loc.Format("ui.win.three_stars", Run.Target),
+            // Both halves of the star rule when the glade is timed, because stars are the
+            // worse of the two (LevelTuning.StarsFor) and naming only the turns would tell a
+            // player who made the turn count that they had done everything asked.
+            string hintText = Run.HasTimeLimit
+                ? Loc.Format("ui.win.three_stars_timed", Run.Target,
+                             RunClock.Format(Mathf.CeilToInt(Run.TimeLimit * LevelTuning.TimeGoldFraction)))
+                : Loc.Format("ui.win.three_stars", Run.Target);
+
+            Text hintLine = hint ? Row("Hint", -hintY, hintText,
                                        30, new Color(1f, .95f, .86f, .68f), 640f, 22) : null;
 
             string yours = Run.Millis > 0
@@ -461,11 +469,11 @@ namespace GlimmerGrove
             // gap after the line above rather than a time from the start.
             var cue = new Cue(this);
 
-            cue.With(() =>
-            {
-                if (crown) Tween.Pop(crown.transform, 0f, .5f);
-                Audio.Sfx("win", .8f);
-            });
+            // The crown arrives silently. The fanfare is not missing — BoardView.Celebrate plays
+            // "win" as the board solves, and this panel opens about a second later, so sounding
+            // it again here was the same cue twice with a gap in it. Everything from the banner
+            // down has its own beat.
+            cue.With(() => { if (crown) Tween.Pop(crown.transform, 0f, .5f); });
 
             // The panel arrives under a crown that is still settling, which is what makes the
             // two read as one movement rather than two.
@@ -549,18 +557,17 @@ namespace GlimmerGrove
             // -------------------------------------------------------- the main lane
             cue.Wait(StarGap * stars);
 
-            // The last star is the loudest moment on the panel, and confetti only ever falls
-            // for a full one. Spending it on every win spends it on most of them and marks out
-            // none — the same argument that keeps the map's rays for the top tier alone.
+            // The last star is the loudest moment on the panel, and only a full row earns the
+            // wash. Spending it on every win spends it on most of them and marks out none —
+            // the same argument that keeps the map's rays for the top tier alone.
+            //
+            // Light only: no confetti and no haptic anywhere in this sequence. Both were tried
+            // and both are gone by request. Worth knowing why they were easy to lose — the
+            // board has already thrown confetti and buzzed once when it solved (see
+            // BoardView.Celebrate), so the panel was restating a celebration the player had
+            // just had rather than adding one.
             if (stars >= 3)
-            {
-                cue.Then(.06f, () =>
-                {
-                    Burst.Confetti(Content, 84);
-                    Flow.Flash(new Color(1f, .96f, .84f), .34f, .55f);
-                    Haptic.Tap();
-                });
-            }
+                cue.Then(.06f, () => Flow.Flash(new Color(1f, .96f, .84f), .34f, .55f));
 
             cue.Then(.28f, () =>
             {
@@ -1152,7 +1159,9 @@ namespace GlimmerGrove
                              new Vector2(.5f, 0f), new Vector2(-SideButtonX, ButtonY),
                              () => Close(() => Flow.Go<PlayScreen>(v => v.LevelId = replayId)));
 
-            UIKit.IconButton("Map", Panel, "sq_blue", "ic_list", new Vector2(138f, 138f),
+            // Skins.Nav rather than the literal, so this panel moves with the rule the rest of
+            // the chrome now follows. Replay keeps its own orange: only the greys moved.
+            UIKit.IconButton("Map", Panel, Skins.Nav, "ic_list", new Vector2(138f, 138f),
                              new Vector2(.5f, 0f), new Vector2(SideButtonX, ButtonY),
                              () => Close(() => Flow.Go<LevelsScreen>()));
 

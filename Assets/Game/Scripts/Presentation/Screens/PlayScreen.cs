@@ -1,3 +1,4 @@
+using System;
 using System.Collections;
 using GlimmerGrove.Analytics;
 using GlimmerGrove.AssetPipeline;
@@ -50,6 +51,24 @@ namespace GlimmerGrove
         StarRow _pips;
         Btn _undo, _hint;
         bool _finished;
+
+        /// <summary>
+        /// True once this run has been paid for — that is, once abandoning it costs a heart.
+        ///
+        /// <para>
+        /// Set on the <em>first turn</em>, or after a few seconds of clock, whichever comes
+        /// first. Both halves are needed. Waiting only for a turn lets a player study the board
+        /// for the whole countdown, back out for free and re-enter knowing the answer, which is
+        /// exactly the free planning the countdown's start edge was moved to prevent. Committing
+        /// the instant the board appears would charge somebody who opened the wrong glade and
+        /// left within a second. Three seconds is longer than a misplaced tap and far shorter
+        /// than reading a 6x7 board.
+        /// </para>
+        /// </summary>
+        bool _committed;
+
+        /// <summary>How long the board may be looked at before the run is owed for.</summary>
+        const float CommitGraceSeconds = 3f;
         bool _hasColourKey;
         float _startedAt;
 
@@ -156,6 +175,12 @@ namespace GlimmerGrove
             // Before a single turn is possible, and before the board view exists to allow one.
             _route = _puzzle.TurnsToSolution;
 
+            // The first run of a glade goes through here rather than through RestartLevel, so
+            // it needs arming too — a clock built with the screen has no limit yet, and one
+            // that never learned this glade's would leave the opening attempt untimed while
+            // every retry after it was not.
+            ResetClock();
+
             _startedAt = Time.unscaledTime;
             PlayerProgress.NoteOpened(_def.Id);
             LevelAnalytics.TrackStarted(_def, PlayerProgress.Record(_def.Id).Clears + 1);
@@ -198,9 +223,9 @@ namespace GlimmerGrove
             UIKit.StretchTo((RectTransform)shade.transform, 0, -40, 0, 0);
             ((RectTransform)shade.transform).localRotation = Quaternion.Euler(0, 0, 180f);
 
-            UIKit.IconButton("Back", bar, "sq_dark", "ic_left", new Vector2(118f, 118f),
+            UIKit.IconButton("Back", bar, Skins.Nav, "ic_left", new Vector2(118f, 118f),
                              new Vector2(0f, .5f), new Vector2(102f, -6f), LeaveToMap);
-            UIKit.IconButton("Pause", bar, "sq_dark", "ic_pause", new Vector2(118f, 118f),
+            UIKit.IconButton("Pause", bar, Skins.Nav, "ic_pause", new Vector2(118f, 118f),
                              new Vector2(1f, .5f), new Vector2(-102f, -6f), Pause);
 
             UIKit.Titled("Name", bar, Loc.Get(_def.NameKey).ToUpperInvariant(), 52, Pal.Cream,
@@ -216,11 +241,14 @@ namespace GlimmerGrove
             // aspect ratio nobody tested. This slot is centred, fixed, and clear of both the
             // colour key and the board.
             //
-            // Quiet on purpose. It is a record the player may care about afterwards, not a
-            // countdown they have to race, and nothing in this game is scored on speed.
-            _timer = UIKit.Titled("Timer", bar, RunClock.Format(0), 30,
-                                  new Color(1f, .96f, .86f, .55f), TextAnchor.MiddleCenter,
-                                  new Vector2(320f, 40f), new Vector2(.5f, .5f),
+            // It is a countdown now, so it is no longer quiet — it is the second thing on the
+            // screen that can end the run, and it colours and punches exactly like the move
+            // counter does for the same reason: once it is low the number itself is the
+            // tension. An untimed glade still shows the stopwatch, dimmed, as a record the
+            // player may care about afterwards.
+            _timer = UIKit.Titled("Timer", bar, RunClock.Format(0), 34,
+                                  TimerCalm, TextAnchor.MiddleCenter,
+                                  new Vector2(320f, 44f), new Vector2(.5f, .5f),
                                   new Vector2(0f, -80f), 3f, 2f);
         }
 
@@ -354,15 +382,20 @@ namespace GlimmerGrove
 
         // --------------------------------------------------------------- the clock
         /// <summary>
-        /// Drives the run stopwatch.
+        /// Drives the countdown, and ends the run when it is spent.
         ///
         /// <para>
-        /// The start edge is found by <em>polling the move count</em> rather than by hooking
-        /// the turn. <see cref="BoardView"/> raises <c>OnChanged</c> for undos and refreshes
-        /// as well as turns, so a subscription would have to re-derive "was that the first
-        /// turn" anyway — and it would be one more thing to unsubscribe. A poll cannot miss
-        /// the edge, cannot fire twice (<see cref="RunClock.Start"/> is idempotent), and
-        /// leaves nothing behind when the screen is destroyed.
+        /// The start edge is found by <em>polling the board's lock</em> rather than by hooking
+        /// anything. A poll cannot miss the edge, cannot fire twice
+        /// (<see cref="RunClock.Start"/> is idempotent), and leaves nothing behind when the
+        /// screen is destroyed — which a subscription would.
+        /// </para>
+        /// <para>
+        /// It used to start on the first conduit turned, and that was right while the clock
+        /// was only a record: a player who studies a glade is not doing worse than one who
+        /// spins tiles at random. It is wrong for a limit. A countdown a player can hold at
+        /// full simply by not touching anything lets them plan the whole solution for free
+        /// and then execute it, which removes exactly the pressure the limit exists to apply.
         /// </para>
         /// <para>
         /// Time only accrues while the board can actually be acted on. <c>Locked</c> covers
@@ -375,23 +408,78 @@ namespace GlimmerGrove
         {
             if (_puzzle == null) return;
 
-            if (!_clock.HasStarted && _puzzle.Moves > 0) _clock.Start();
+            // Started when the glade becomes playable, not on the first turn. A countdown a
+            // player can hold at full by not touching anything is not a countdown — they can
+            // plan the entire solution for free and then execute it, which is precisely the
+            // pressure the limit exists to apply. Locked covers the raise animation, so the
+            // clock still does not burn while the board is flying in.
+            if (!_clock.HasStarted && _board != null && !_board.Locked && !_finished) _clock.Start();
 
             if (_clock.HasStarted && !_finished && _board != null && !_board.Locked)
                 _clock.Advance(Time.unscaledDeltaTime);
 
             PaintClock();
+
+            // Polled for the same reasons the clock's own start edge is: it cannot miss the
+            // edge, cannot fire twice, and leaves nothing to unsubscribe.
+            if (!_committed && !_finished && (_puzzle.Moves > 0 || _clock.Elapsed > CommitGraceSeconds))
+                Commit();
+
+            // Checked after the paint, so the player sees 0:00 on the frame the run ends
+            // rather than being taken off a board still reading 0:01. Defeat guards itself
+            // against a second call, but _finished is tested here too so a locked board mid
+            // defeat sequence does not keep asking.
+            if (!_finished && _clock.Expired) Defeat(DefeatReason.OutOfTime);
         }
 
+        /// <summary>
+        /// The countdown's three states, and the thresholds between them.
+        ///
+        /// Seconds rather than a fraction of the limit: ten seconds is ten seconds of dread
+        /// whether the glade allowed sixty or a hundred, while a tenth of the clock is four
+        /// seconds on one board and ten on another. The move counter's amber and red are
+        /// chosen the same way.
+        /// </summary>
+        static readonly Color TimerCalm = new Color(1f, .96f, .86f, .55f);
+        const int TimerWarnSeconds = 15, TimerUrgentSeconds = 5;
+
+        /// <summary>
+        /// Repaints the clock, on the second and only when it changed.
+        ///
+        /// <para>
+        /// A countdown rounds <em>up</em>, which is not a detail: floored, the label shows
+        /// "0:00" for a whole second before the run actually ends, and a player who solves the
+        /// glade in that second is certain the game cheated them. Ceiling means 0:00 appears
+        /// exactly when the clock is spent.
+        /// </para>
+        /// </summary>
         void PaintClock()
         {
             if (!_timer) return;
 
-            int seconds = _clock.Millis / 1000;
-            if (seconds == _paintedSeconds) return;
+            bool timed = _clock.HasLimit;
+            int millis = timed ? _clock.RemainingMillis : _clock.Millis;
+            int seconds = timed ? (millis + 999) / 1000 : millis / 1000;
 
+            if (seconds == _paintedSeconds) return;
             _paintedSeconds = seconds;
-            _timer.text = RunClock.Format(_clock.Millis);
+
+            _timer.text = RunClock.Format(timed ? seconds * 1000 : millis);
+
+            if (!timed) { _timer.color = TimerCalm; return; }
+
+            _timer.color = seconds <= TimerUrgentSeconds ? Pal.Ember
+                         : seconds <= TimerWarnSeconds ? Pal.Gold
+                         : TimerCalm;
+
+            // Only once the clock is genuinely short, and only while it is running: a punch
+            // on every second would be a metronome, and one on a board that has not been
+            // touched yet would advertise a countdown that is not counting.
+            if (_clock.HasStarted && !_finished && seconds <= TimerUrgentSeconds && seconds > 0)
+            {
+                Tween.Punch(_timer.transform, .3f, .3f);
+                Audio.Sfx("tock", .34f, 1f + (TimerUrgentSeconds - seconds) * .06f);
+            }
         }
 
         /// <summary>
@@ -401,7 +489,7 @@ namespace GlimmerGrove
         /// </summary>
         void ResetClock()
         {
-            _clock.Reset();
+            _clock.Reset(_puzzle != null && _puzzle.HasTimeLimit ? _puzzle.TimeLimitMillis : 0);
             _paintedSeconds = -1;
             PaintClock();
         }
@@ -486,30 +574,115 @@ namespace GlimmerGrove
             // not be zeroed in that case either or the two would part company.
             if (_board.Locked && _finished) return;
 
-            _board.Restart();
-            ResetClock();
-            Refresh();
+            // A restart abandons the run in progress and begins another, so it is priced like
+            // any other abandonment and asked about the same way. The board is rewound only
+            // once the player has agreed.
+            ConfirmForfeit(ForfeitOverlay.Kind.Restart, "restart", () =>
+            {
+                if (_board == null) return;
+
+                _board.Restart();
+                ResetClock();
+                Refresh();
+                Resume();
+            });
+        }
+
+        // --------------------------------------------------------------- the stake
+        /// <summary>
+        /// Notes that the run is now owed for, on disk, so that the process dying does not make
+        /// it free. See <see cref="RunGuard"/>.
+        /// </summary>
+        void Commit()
+        {
+            // Guarded rather than assumed. Everything downstream of this takes a heart off a
+            // player, so the one path where the level never resolved is worth a line of
+            // insurance even though Update already refuses to run without a board.
+            if (_def == null) return;
+
+            _committed = true;
+            RunGuard.Begin(_def.Id);
+        }
+
+        /// <summary>
+        /// The run reached an ending and has been accounted for. Every path that finishes one
+        /// calls this — a win, a defeat, or an abandonment the player agreed to.
+        ///
+        /// Missing one costs a player a heart they did not owe on their next launch, so it is
+        /// deliberately cheap and idempotent rather than conditional.
+        /// </summary>
+        void Resolve()
+        {
+            _committed = false;
+            RunGuard.Resolve();
+        }
+
+        /// <summary>
+        /// The player walked away from a run that had begun. It costs exactly what losing it
+        /// costs, because that is what it is.
+        ///
+        /// <para>
+        /// Note what it does <em>not</em> do. A defeat also counts a run towards the daily
+        /// chests and feeds the streak; a forfeit counts towards neither. Those are for runs
+        /// that were <em>finished</em>, won or lost, and a withdrawn run was not — the line is
+        /// easy to explain, and it keeps the restart button from being the fastest way to bank
+        /// three chests.
+        /// </para>
+        /// </summary>
+        void Forfeit(string reason)
+        {
+            if (!_committed) return;
+
+            if (_def != null)
+                LevelAnalytics.TrackAbandoned(_def, _puzzle.Moves,
+                                              Time.unscaledTime - _startedAt, reason);
+
+            Wallet.TrySpendHeart();
+            Resolve();
+        }
+
+        /// <summary>
+        /// Asks before charging, then does the thing. On an uncommitted run there is nothing to
+        /// charge, so it does the thing immediately — a confirmation over a free action is
+        /// friction that teaches players to dismiss the one that is not free.
+        /// </summary>
+        void ConfirmForfeit(ForfeitOverlay.Kind kind, string reason, Action then)
+        {
+            if (!_committed || _finished) { then(); return; }
+
+            if (_board != null) _board.Locked = true;
+
+            Flow.Modal<ForfeitOverlay>(v =>
+            {
+                v.Choice = kind;
+                v.OnConfirm = () => { Forfeit(reason); then(); };
+                v.OnCancel = Resume;
+            });
         }
 
         /// <summary>Leaving without solving is a data point, not just a navigation.</summary>
-        void LeaveToMap()
-        {
-            if (!_finished && _def != null)
-                LevelAnalytics.TrackAbandoned(_def, _puzzle.Moves, Time.unscaledTime - _startedAt, "back");
-            Flow.Go<LevelsScreen>();
-        }
+        public void LeaveToMap()
+            => ConfirmForfeit(ForfeitOverlay.Kind.Leave, "back", () => Flow.Go<LevelsScreen>());
+
+        /// <summary>The pause menu's way out to the hub, guarded like every other.</summary>
+        public void LeaveToHome()
+            => ConfirmForfeit(ForfeitOverlay.Kind.Leave, "home", () => Flow.Go<HomeScreen>());
 
         void Finish()
         {
             if (_finished) return;
             _finished = true;
 
+            // Paid for by winning it. Cleared before anything else, so a crash during the
+            // celebration cannot charge for a run the player actually solved.
+            Resolve();
+
             // Frozen before anything else reads it. A celebration runs for seconds after
             // this, and the value is about to be written to a permanent record.
             _clock.Stop();
 
             int moves = _puzzle.Moves;
-            int stars = _puzzle.StarsFor(Mathf.Max(1, moves));
+            int stars = _puzzle.StarsFor(Mathf.Max(1, moves), _clock.Millis);
 
             var before = PlayerProgress.Record(_def.Id);
             int previousBest = before.BestMoves;
@@ -597,7 +770,17 @@ namespace GlimmerGrove
             if (_finished) return;
             _finished = true;
 
+            // The heart is charged below, so the marker's work is done — and clearing it here
+            // rather than after the charge means a crash mid-defeat cannot charge twice.
+            Resolve();
+
             _clock.Stop();
+
+            // The board's own two endings lock it themselves on their way here; the clock's
+            // does not, because it is raised from Update rather than from the board. Locking
+            // for every reason keeps the board dead behind the panel whichever way the run
+            // ended, rather than depending on the modal's scrim to swallow taps.
+            if (_board != null) _board.Locked = true;
 
             var record = PlayerProgress.Record(_def.Id);
 
@@ -642,7 +825,9 @@ namespace GlimmerGrove
             _board.Restart();
 
             // After the latch comes off, so the clock is armed for the new run rather than
-            // still carrying the stopped reading of the one that just failed.
+            // still carrying the stopped reading of the one that just failed. The stake is
+            // armed with it: this is a fresh run and it has not been paid for yet.
+            _committed = false;
             ResetClock();
             Refresh();
         }

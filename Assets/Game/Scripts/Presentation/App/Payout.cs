@@ -280,9 +280,12 @@ namespace GlimmerGrove
             Settle();
             Burst.Sparks(Glyph.transform, Vector2.zero, _tint, 14, 210f, 20f, .5f);
 
-            // Once, at the end. Handheld.Vibrate is a single fixed buzz on Android, so one
-            // per token would be a rattle rather than a punctuation mark.
-            Haptic.Tap();
+            // No haptic here, and it is a decision rather than an omission. A chip used to buzz
+            // once as its last token landed, which on a two-chip payout is two buzzes inside a
+            // second — and Handheld.Vibrate is one fixed-length buzz on Android, so there is no
+            // way to make the second one lighter than the first. The victory panel is the only
+            // caller, and it is a screen the player sees dozens of times a session; a buzz that
+            // arrives that often stops being punctuation and becomes a tic.
         }
 
         /// <summary>Expanding ring at the point of arrival — the impact, not the prize.</summary>

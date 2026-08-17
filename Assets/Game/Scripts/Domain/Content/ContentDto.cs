@@ -272,6 +272,13 @@ namespace GlimmerGrove.Content
         /// </summary>
         public float budgetFactor;
 
+        /// <summary>
+        /// Seconds of clock per par turn. 0 takes the default; a negative value removes
+        /// the timer entirely, which is the only way to author an untimed glade — a
+        /// tutorial board, say, where a countdown teaches the wrong lesson.
+        /// </summary>
+        public float timeFactor;
+
         // ---- presentation, all optional ------------------------------------
         public float mapX;
         public float mapY;

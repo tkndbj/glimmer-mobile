@@ -27,6 +27,8 @@ namespace GlimmerGrove.Cloud
         static ICloudSaveBackend _backend = new NullCloudBackend();
         static int _syncing;
 
+        static readonly SyncScheduler _schedule = new SyncScheduler();
+
         /// <summary>Raised after a sync changes the local save, so screens can repaint.</summary>
         public static event Action Synced;
 
@@ -116,6 +118,66 @@ namespace GlimmerGrove.Cloud
             _ = SyncAsync(cancellation);
         }
 
+        // -------------------------------------------------------- the scheduler
+        /// <summary>
+        /// Asks for the server to be brought up to date shortly, rather than now.
+        ///
+        /// <para>
+        /// For changes a player makes deliberately and expects to keep — their name,
+        /// their companion. Everything else rides the next background sync, which is
+        /// right for progress that will change again in a minute anyway and wrong for a
+        /// choice made once. Debounced, so a burst is one write, and retried with a
+        /// backoff, so making the change on a train still reaches the server when the
+        /// train leaves the tunnel. See <see cref="SyncScheduler"/>.
+        /// </para>
+        /// <para>
+        /// Cheap and safe to call from anywhere. It sets a flag; nothing here reaches the
+        /// network until <see cref="Tick"/> says so, and a request made while a sync is
+        /// already in flight survives that sync rather than being swallowed by it.
+        /// </para>
+        /// </summary>
+        public static void RequestSync() => _schedule.Request();
+
+        /// <summary>
+        /// Drives the scheduler. Called every frame by <c>Boot.Pump</c>, which is also
+        /// where connectivity is read — <c>Application.internetReachability</c> is a
+        /// Presentation-side concern, and the policy is deliberately testable without it.
+        ///
+        /// <para>
+        /// <paramref name="deltaSeconds"/> is elapsed time handed in a frame at a time,
+        /// never two readings of a wall clock, for the reason <c>RunClock</c> gives: the
+        /// device's clock can jump — a timezone, an NTP correction, a player winding it
+        /// forward for a daily chest — and a retry timer driven by one would either fire
+        /// in a storm or never fire again.
+        /// </para>
+        /// </summary>
+        public static void Tick(float deltaSeconds, bool networkReachable)
+        {
+            if (!IsAvailable) return;
+
+            _schedule.NetworkChanged(networkReachable);
+            if (!_schedule.Tick(deltaSeconds)) return;
+
+            _ = RunScheduledSyncAsync();
+        }
+
+        /// <summary>
+        /// Clears any backoff, because something has happened that plausibly fixes
+        /// whatever the last failure was — the app being foregrounded, or an account
+        /// being linked. Does not itself ask for a sync; the caller is about to.
+        /// </summary>
+        public static void ResetBackoff() => _schedule.Settled();
+
+        static async Task RunScheduledSyncAsync()
+        {
+            var result = await SyncAsync();
+
+            // The sync holding the latch may have taken its snapshot before the change
+            // this attempt was about, so the work is still owed and is asked for again.
+            // That sync reports its own outcome, which is what clears the in-flight mark.
+            if (result.Failure == CloudFailure.Busy) _schedule.Request();
+        }
+
         /// <summary>
         /// Fetches the population's move counts and forgets about it.
         ///
@@ -157,11 +219,32 @@ namespace GlimmerGrove.Cloud
         /// </summary>
         public static async Task<CloudResult> SyncAsync(CancellationToken cancellation = default)
         {
+            var result = await RunOnceAsync(cancellation);
+
+            // Every sync feeds the scheduler, however it was started. A failure is exactly
+            // what the retry exists for — the sync fired when the app was backgrounded is
+            // the one most likely to be interrupted, and before this nothing ever tried it
+            // again — and a success is the only thing that clears a backoff. Contention is
+            // neither, and is the one outcome that must not be counted.
+            if (result.Ok) _schedule.Succeeded();
+            else if (result.Failure != CloudFailure.Busy) _schedule.Failed();
+
+            return result;
+        }
+
+        static async Task<CloudResult> RunOnceAsync(CancellationToken cancellation)
+        {
             if (!IsAvailable) return CloudResult.Failed(CloudFailure.Offline, "no cloud backend");
             if (!SaveService.IsLoaded) return CloudResult.Failed(CloudFailure.Error, "save not loaded");
 
             if (!TryClaim())
-                return CloudResult.Failed(CloudFailure.Error, "a sync is already running");
+                return CloudResult.Failed(CloudFailure.Busy, "a sync is already running");
+
+            // Anything asked for before this point is about to be sent, so the request is
+            // consumed here. One arriving after it — a rename made while the push is in
+            // flight — survives, because it is a fresh request against a snapshot that
+            // never contained it.
+            _schedule.Started();
 
             try
             {

@@ -111,8 +111,22 @@ namespace GlimmerGrove.Persistence
         ///      older file reads as untimed. Unlike a standing it cannot be backfilled,
         ///      because nothing already stored implies how long a past clear took. See
         ///      <see cref="RunClock"/>.
+        /// v15 — when the player last chose their name and their companion
+        ///      (<see cref="WalletDto.displayNameSetUnix"/>, <see cref="WalletDto.avatarSetUnix"/>).
+        ///      The two preferences in this file are the only values merged by recency rather
+        ///      than by a join, and until now the recency they were merged by was the file's
+        ///      own <see cref="SaveFileDto.updatedUnix"/> — which
+        ///      <see cref="SaveService.Snapshot"/> stamps with <em>now</em> every time the
+        ///      cloud sync asks for one. That made "the newer file wins" mean "the local file
+        ///      always wins", so a device that had never been renamed pushed its default name
+        ///      over one chosen on another device, and a reinstall erased the name it had just
+        ///      downloaded. A stamp per field is the fix: it travels with the value it
+        ///      describes, so the answer no longer depends on when the question was asked.
+        ///      Zero means "never chosen", which is unreachable for a real choice, so a v14
+        ///      file needs no migration — see <see cref="Wallet.LoadFrom"/> for the one
+        ///      ambiguity it does have to resolve.
         /// </summary>
-        public const int Version = 14;
+        public const int Version = 15;
 
         /// <summary>Progress that predates this file: index-keyed keys in PlayerPrefs.</summary>
         public const int LegacyPlayerPrefsVersion = 0;
@@ -347,7 +361,34 @@ namespace GlimmerGrove.Persistence
         /// </summary>
         public long heartBoostUntilUnix;
 
+        /// <summary>
+        /// The name the player chose, or empty when they never have.
+        ///
+        /// <para>
+        /// Empty is load-bearing and must stay reachable. <see cref="Wallet.DefaultName"/>
+        /// is what an unnamed keeper is <em>shown</em>, never what is stored: writing it
+        /// down turns "this device has no opinion" into "this device chose Grovekeeper",
+        /// and the merge cannot tell those apart. That is precisely how a rename used to
+        /// be lost — a second device, or the same one after a reinstall, pushed the
+        /// default over a name the player had picked. See <see cref="Wallet.LoadFrom"/>.
+        /// </para>
+        /// </summary>
         public string displayName;
+
+        /// <summary>
+        /// When <see cref="displayName"/> was chosen, as a Unix timestamp; 0 when it never
+        /// was, or when the file predates v15.
+        ///
+        /// <para>
+        /// The one thing in this file merged by recency, so the recency has to be a fact
+        /// about the <em>value</em>. It used to be taken from
+        /// <see cref="SaveFileDto.updatedUnix"/>, which the cloud sync restamps with the
+        /// current moment every time it takes a snapshot — so the local side won every
+        /// comparison it was ever part of, whatever it held and however old the choice
+        /// behind it was. See <see cref="SaveMerge"/> for the rule this feeds.
+        /// </para>
+        /// </summary>
+        public long displayNameSetUnix;
 
         /// <summary>
         /// The companion shown on the profile, by permanent avatar id. Empty means the
@@ -355,6 +396,14 @@ namespace GlimmerGrove.Persistence
         /// the roster's default may change, and a real choice must survive that.
         /// </summary>
         public string avatarId;
+
+        /// <summary>
+        /// When <see cref="avatarId"/> was chosen, as a Unix timestamp; 0 when it never
+        /// was. Exists for the reason <see cref="displayNameSetUnix"/> does, and is merged
+        /// by the same rule — a companion worn on a phone must not be undone by a tablet
+        /// that has simply been opened more recently.
+        /// </summary>
+        public long avatarSetUnix;
 
         /// <summary>One ledger per currency, keyed by a permanent currency id.</summary>
         public CurrencyLedgerDto[] currencies;

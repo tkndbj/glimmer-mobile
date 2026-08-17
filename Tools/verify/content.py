@@ -201,7 +201,13 @@ def check_level(level, chapter_id):
 
     fragile = sum(1 for c in cells if c and c.get('fragile'))
 
-    return dict(id=lid, chapter=chapter_id, w=w, h=h, par=par,
+    # The clock, derived exactly as LevelTuning does: seconds per par turn, with 0 meaning
+    # "not authored" and only a negative value removing the timer. Gold is half the limit.
+    time_factor = level.get('timeFactor', 0) or 200 / 100
+    limit = 0 if time_factor < 0 else -(-int(round(par * time_factor * 1000)) // 1) // 1000
+    star_rate = 0 if not limit else (-(-par * 135 // 100)) / (limit * 0.5)
+
+    return dict(id=lid, chapter=chapter_id, w=w, h=h, par=par, limit=limit, rate=star_rate,
                 gold=-(-par * 135 // 100), silver=-(-par * 200 // 100),
                 lamps=lamps, sources=sources, fragile=fragile)
 
@@ -366,10 +372,14 @@ def main():
                 if k not in keys:
                     errors.append(f"level '{lid}' missing string '{k}'")
 
-    print(f"{'#':<3}{'level id':<22}{'chapter':<16}{'size':<7}{'par':<5}{'gold':<6}{'silver':<7}{'hearts':<7}{'critters':<9}brittle")
+    print(f"{'#':<3}{'level id':<22}{'chapter':<16}{'size':<7}{'par':<5}{'gold':<6}{'silver':<7}"
+          f"{'clock':<7}{'3*taps/s':<10}{'hearts':<7}{'critters':<9}brittle")
     for i, s in enumerate(summaries, 1):
+        clock = "-" if not s['limit'] else f"{s['limit']}s"
+        rate = "-" if not s['rate'] else f"{s['rate']:.2f}"
         print(f"{i:<3}{s['id']:<22}{s['chapter']:<16}{str(s['w'])+'x'+str(s['h']):<7}"
-              f"{s['par']:<5}{s['gold']:<6}{s['silver']:<7}{s['sources']:<7}{s['lamps']:<9}{s['fragile']}")
+              f"{s['par']:<5}{s['gold']:<6}{s['silver']:<7}{clock:<7}{rate:<10}"
+              f"{s['sources']:<7}{s['lamps']:<9}{s['fragile']}")
 
     print()
     for w in warnings:

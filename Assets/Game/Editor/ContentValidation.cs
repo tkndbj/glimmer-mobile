@@ -671,9 +671,21 @@ namespace GlimmerGrove.EditorTools
                     else result.Warnings.Add(line);
                 }
 
-                if (verbose && report.IsClean && byId.TryGetValue(report.Id, out var level))
-                    Debug.Log($"[Glimmer] {report.Id} verified " +
-                              $"({level.Layout.Width}x{level.Layout.Height}, par {level.Tuning.Par})");
+                if (!verbose || !report.IsClean || !byId.TryGetValue(report.Id, out var level)) continue;
+
+                var tuning = level.Tuning;
+
+                // The clock and what three stars asks of it, printed rather than left to be
+                // worked out: stars are the worse of the moves and the clock, so the number
+                // that decides whether a glade is fair is the tap rate the two together imply
+                // — and that is not something anyone can read off the JSON.
+                string clock = tuning.HasTimeLimit
+                    ? $", {tuning.TimeLimitMillis / 1000f:0.#}s clock, " +
+                      $"{tuning.GoldThreshold / (tuning.TimeGoldMillis / 1000f):0.00} taps/s for three stars"
+                    : ", untimed";
+
+                Debug.Log($"[Glimmer] {report.Id} verified " +
+                          $"({level.Layout.Width}x{level.Layout.Height}, par {tuning.Par}{clock})");
             }
         }
 

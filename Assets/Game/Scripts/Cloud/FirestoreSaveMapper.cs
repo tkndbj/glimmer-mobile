@@ -140,8 +140,16 @@ namespace GlimmerGrove.Cloud
                         { "heartsNextRefillUnix", dto.wallet?.heartsNextRefillUnix ?? 0L },
 
                         { "heartBoostUntilUnix", dto.wallet?.heartBoostUntilUnix ?? 0L },
+
+                        // The two preferences, each with the moment it was chosen. The
+                        // stamps are not decoration: they are the whole of how the merge
+                        // decides between two devices, and a name that travelled without
+                        // one would be dated by whichever device asked last — which is the
+                        // bug schema v15 exists to end. See SaveMerge.Chosen.
                         { "displayName", dto.wallet?.displayName ?? string.Empty },
+                        { "displayNameSetUnix", dto.wallet?.displayNameSetUnix ?? 0L },
                         { "avatarId", dto.wallet?.avatarId ?? string.Empty },
+                        { "avatarSetUnix", dto.wallet?.avatarSetUnix ?? 0L },
                     }
                 },
 
@@ -322,6 +330,13 @@ namespace GlimmerGrove.Cloud
                 dto.wallet.heartBoostUntilUnix = Long(wallet, "heartBoostUntilUnix", 0);
                 dto.wallet.displayName = Str(wallet, "displayName");
                 dto.wallet.avatarId = Str(wallet, "avatarId");
+
+                // Absent on a document last written before v15, which reads back as zero —
+                // "chosen, but nobody recorded when". That is exactly what the merge treats
+                // as the oldest possible choice, so a stamped rename from any updated device
+                // wins immediately and nothing has to detect the upgrade.
+                dto.wallet.displayNameSetUnix = Long(wallet, "displayNameSetUnix", 0);
+                dto.wallet.avatarSetUnix = Long(wallet, "avatarSetUnix", 0);
             }
 
             if (Map(doc, "daily") is IDictionary<string, object> daily)

@@ -308,16 +308,24 @@ namespace GlimmerGrove.Tests
             var older = File("a", 1, 10, updatedUnix: 100);
             older.settings = new SettingsDto { music = StoredFlag.From(true) };
             older.wallet.displayName = "Old Name";
+            older.wallet.displayNameSetUnix = 100;
 
             var newer = File("a", 1, 10, updatedUnix: 500);
             newer.settings = new SettingsDto { music = StoredFlag.From(false) };
             newer.wallet.displayName = "New Name";
+            newer.wallet.displayNameSetUnix = 500;
 
             var merged = SaveMerge.Join(older, newer);
 
             Assert.IsFalse(merged.settings.music.Resolve(true),
                            "muting is an instruction, not a value to maximise");
+
+            // Dated by its own stamp, not by the file's. The file's date is stamped with
+            // "now" every time the sync takes a snapshot, so reading recency off it made
+            // the local device win every comparison — see SaveMerge.Chosen.
             Assert.AreEqual("New Name", merged.wallet.displayName);
+            Assert.AreEqual(500, merged.wallet.displayNameSetUnix,
+                            "the stamp has to travel with the value it dates");
         }
 
         [Test]
