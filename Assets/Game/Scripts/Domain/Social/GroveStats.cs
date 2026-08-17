@@ -50,7 +50,37 @@ namespace GlimmerGrove.Social
         /// </summary>
         public const int MinimumSamples = 200;
 
-        public bool IsUsable => Samples >= MinimumSamples && Deciles.Count == 9;
+        /// <summary>
+        /// The narrowest and widest standing this will ever report.
+        ///
+        /// <para>
+        /// Deliberately short of 0 and 100: a line claiming a player beat everybody is a
+        /// line somebody will find a counterexample to. They are consts rather than
+        /// literals inside <see cref="PercentSlower"/> because a stored standing has to be
+        /// clamped to the same range on the way back in — see
+        /// <see cref="Persistence.LevelRecord.TryFromDto"/> — and two copies of a bound
+        /// are how a forged save ends up wearing a band nothing can produce.
+        /// </para>
+        /// <para>
+        /// <see cref="MinRank"/> is also what makes zero unambiguous. No real standing can
+        /// be zero, so a save field left at zero by a build that predates it means "never
+        /// ranked" and nothing else. That is the property invariant 11b asks for before a
+        /// field may join the merge.
+        /// </para>
+        /// </summary>
+        public const int MinRank = 5, MaxRank = 95;
+
+        /// <summary>
+        /// Nine deciles and enough keepers to mean them.
+        ///
+        /// <para>
+        /// The null check guards <c>default(LevelStats)</c>, which no constructor can
+        /// produce — the ctor substitutes an empty list — but which a caller can conjure
+        /// with <c>default</c> or an uninitialised field. It costs nothing and it keeps
+        /// this readable as a struct that is safe at rest.
+        /// </para>
+        /// </summary>
+        public bool IsUsable => Samples >= MinimumSamples && Deciles != null && Deciles.Count == 9;
 
         /// <summary>
         /// What fraction of keepers took <em>more</em> moves than <paramref name="moves"/>,
@@ -70,10 +100,10 @@ namespace GlimmerGrove.Social
             if (!IsUsable || moves <= 0) return -1;
 
             // Better than the fastest tenth: everybody in the table took more.
-            if (moves <= Deciles[0]) return 95;
+            if (moves <= Deciles[0]) return MaxRank;
 
             // Slower than the slowest tenth.
-            if (moves >= Deciles[8]) return 5;
+            if (moves >= Deciles[8]) return MinRank;
 
             for (int i = 0; i < 8; i++)
             {
@@ -87,7 +117,7 @@ namespace GlimmerGrove.Social
 
                 // Slower-than-you is the rest of the population.
                 int slower = (int)(100f - percentile + .5f);
-                return slower < 5 ? 5 : slower > 95 ? 95 : slower;
+                return slower < MinRank ? MinRank : slower > MaxRank ? MaxRank : slower;
             }
 
             return -1;
@@ -105,7 +135,13 @@ namespace GlimmerGrove.Social
         /// decision about which true things are worth saying to somebody who has just won.
         /// </para>
         /// </summary>
-        public bool IsWorthSaying(int moves) => PercentSlower(moves) >= 50;
+        /// <remarks>
+        /// The floor is <see cref="RankTier"/>'s rather than a literal fifty, so the
+        /// victory panel and the map cannot come to disagree about whether a glade went
+        /// well. Retuning the ladder moves both at once, which is the only way a player
+        /// never sees one screen praise a result the other declines to mark.
+        /// </remarks>
+        public bool IsWorthSaying(int moves) => RankTier.IsShown(PercentSlower(moves));
     }
 
     /// <summary>

@@ -94,18 +94,6 @@
       "text": "PERFECT!"
     },
     {
-      "key": "ui.win.new_best",
-      "text": "a new best for this glade"
-    },
-    {
-      "key": "ui.win.best_is",
-      "text": "your best here is {0}"
-    },
-    {
-      "key": "ui.win.moves",
-      "text": "{0} moves  -  {1} for three stars"
-    },
-    {
       "key": "ui.win.xp",
       "text": "+{0} XP"
     },
@@ -186,8 +174,72 @@
       "text": "GOLDEN GLADE!   {0}% coins"
     },
     {
-      "key": "ui.win.faster_than",
-      "text": "faster than {0}% of keepers"
+      "key": "ui.win.route_you",
+      "text": "YOUR RUN"
+    },
+    {
+      "key": "ui.win.route_grove",
+      "text": "THE GROVE'S ROUTE"
+    },
+    {
+      "key": "ui.win.route_info",
+      "text": "The grove's route is how many turns this glade was built around. Winning only needs every lamp lit, so conduits you never touch can stay as they are — which is how a run can come in shorter."
+    },
+    {
+      "key": "ui.win.three_stars",
+      "text": "three stars at {0} turns"
+    },
+    {
+      "key": "ui.win.best_stamp",
+      "text": "NEW BEST"
+    },
+    {
+      "key": "ui.rank.top10",
+      "text": "You are in the top 10%"
+    },
+    {
+      "key": "ui.rank.top25",
+      "text": "You are in the top 25%"
+    },
+    {
+      "key": "ui.rank.top50",
+      "text": "You are in the top 50%"
+    },
+    {
+      "key": "ui.route.under",
+      "text": "{0} turns shorter than the grove knew"
+    },
+    {
+      "key": "ui.route.under_one",
+      "text": "a turn shorter than the grove knew"
+    },
+    {
+      "key": "ui.route.perfect",
+      "text": "not one turn wasted"
+    },
+    {
+      "key": "ui.route.close",
+      "text": "{0} turns from a perfect route"
+    },
+    {
+      "key": "ui.route.close_one",
+      "text": "one turn from a perfect route"
+    },
+    {
+      "key": "ui.rank.record",
+      "text": "{0} turns  ·  {1}"
+    },
+    {
+      "key": "ui.rank.record_one",
+      "text": "{0} turn  ·  {1}"
+    },
+    {
+      "key": "ui.rank.untimed",
+      "text": "{0} turns"
+    },
+    {
+      "key": "ui.rank.untimed_one",
+      "text": "{0} turn"
     },
     {
       "key": "ui.event.first_bloom.name",

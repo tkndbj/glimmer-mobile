@@ -53,6 +53,20 @@ namespace GlimmerGrove.AssetPipeline
             "ic_profile", "ic_pencil", "ic_power", "ic_heart_boost",
             "seal_gold", "crest_gold", "bar_track", "bar_fill",
             "potion1", "potion2", "potion3", "potion4", "potion5", "potion6",
+
+            // The victory crest, drawn by WinOverlay. Declared here rather than left to the
+            // on-demand path for two reasons: the audit is how this project proves no address
+            // is unaccounted for, and a sprite first requested during a celebration is a
+            // synchronous load at the exact moment nothing should stutter.
+            //
+            // Global rather than a named scope, which is the judgement invariant 7b asks for:
+            // four small sprites shared by no chapter and reachable from any win, exactly like
+            // the panel and ribbon art above it. Two of the pack's regions are deliberately
+            // absent from the project entirely: the "VICTORY" lettering, because a word painted
+            // into a texture cannot be translated (invariant 6), and the herald's horn, because
+            // the crest reads better without it and an addressed sprite nothing draws is still
+            // built into the bundle and preloaded at every launch.
+            "Win/crown", "Win/shield", "Win/banner", "Win/window",
         };
 
         /// <summary>Map furniture used by every chapter, unlike the strips themselves.</summary>

@@ -655,15 +655,222 @@ means by "best" and the first version wasted it in fourth place. Everything is *
 then revealed**, never built by the beats, which is what makes `Skip` one pass of assignments
 instead of a second choreography that would drift out of agreement with the first — it is
 skippable from frame one, because this is seen thirty times in the life of an account. And it
-needs **no new art**: the fan, shockwaves, glow and vignette are `Art.Rays`/`Ring`/`Glow`/
-`Vignette`, for the reason `Art.Bloom` is procedural — a reveal that scales with the roster cannot
-wait on a sprite per companion.
+needs **no new art**: the room, fan, shockwaves, glow and vignette are `Art.Gradient`/`Rays`/
+`Ring`/`Glow`/`Vignette`, for the reason `Art.Bloom` is procedural — a reveal that scales with the
+roster cannot wait on a sprite per companion.
+
+**The reveal happens in a coloured room, and one colour was not enough.** It first staged
+everything against near-black, which is precisely what a screen looks like when its art has failed
+to load — so the most expensive thing in the game arrived looking like a loading error with a
+portrait on it. `Chroma` replaces the single tint with **three palette colours per tier** (tint,
+partner across the wheel, warm accent) plus a deep hue of the tint's own family, and every one of
+them comes out of `Pal` so the loudest screen in the game cannot drift away from the game's palette
+by inventing shades of its own. What that buys: a **gradient sky** lit from below by the partner,
+**three slow aurora masses** that flare on the impact, a **second counter-rotating fan** for every
+tier rather than only the top two, shockwaves and collapse rings that **cycle the scheme** instead
+of repeating one colour, a **chroma pulse** the white flash resolves into, a **rim that drifts
+between tint and accent** for ever, and a second confetti fall for tiers 3+.
+
+Three notes for anyone editing it. `Art.Gradient` is the second generated shape carrying its own
+colour (`Gem` is the first) — a full-screen layer costs the same fill rate opaque or nearly
+transparent, so three stops in one draw is a third of the price of three washes. The resting
+brightnesses are **named constants** because `Play` fades up to them and `Skip` assigns them
+directly, and them agreeing is the only reason `Skip` works — they were four pairs of repeated
+literals. And the endless ambient loops (`Drift`, `Spin`, `Counterspin`, `Hue`) are **owned by
+their own object and channelled**, so `Skip`'s `KillAll` cannot stop the room moving and reaching
+the resting state twice replaces a loop rather than running two of them out of step.
 
 Both roster screens repaint on **`CompanionLedger.Changed`** rather than on a callback from the
 panel. The callback was the bug: it only fired from the "wear" button, so a player who bought a
 companion and then dismissed with the corner cross or the scrim saw it still padlocked until they
 left the screen and came back. A panel with three exits reports through none of them reliably; an
 event cannot be forgotten.
+
+**A glade keeps its standing — save schema v13.** The percentile the victory panel quotes used
+to appear once and evaporate; every cleared node on the map now wears the band it earned
+(`ui.rank.top10` / `top25` / `top50`, drawn by `LevelsScreen.RankMark`). One int per level,
+`LevelRecordDto.bestRank`, and it is the first thing in the save file derived from a *population*
+rather than from the player — which is the whole difficulty, because a population moves:
+`publishGroveStats` re-reads 5,000 fresh saves a day, and a game that grows tenfold grows a faster
+field with it.
+
+That makes both obvious rules wrong, and `RankTests` exists to keep them out. **Recomputing for
+display** means a node quietly reading 66% next month where it read 71% today — a score the player
+earned, silently decaying, which reads as the game having lost it. **Freezing whatever was current
+when the record was set** is worse: a player who returns and beats their own move count against a
+bigger field is *demoted for playing better*, and that is the one signal a progress display must
+never send. The rule is therefore **promotion by `max`** — the best standing ever held against any
+population ever published — which is invariant 11b's shape for the sixth time. Three consequences
+follow. The copy says *"TOP 25%"* rather than *"15 moves beat 70% of keepers"*, because a band is a
+standing the player holds and a sentence coupling a rank to a run would be a lie once the rank
+outlived that run. `LevelStats.MinRank` is 5, so zero is unreachable for a real standing and a v12
+file reads as unranked — **this is the first section to need no migration code at all**, since the
+move counts it derives from were already on disk and `PlayerProgress.RefreshRanks` backfills a
+whole account the first time a table lands. And the standing is taken over the *record* after a run
+is folded in, never over the run's own moves, inside `LevelRecord.WithRun` where no call site can
+get the order wrong.
+
+Two smaller decisions. `IsWorthSaying` now reads its floor from `RankTier`, so the map and the
+victory panel cannot come to disagree about whether a glade went well. And the mark sits directly
+*above* the disc rather than in a corner of it: `mapX`/`mapY` are authored and `ChapterMap` proves
+nodes clear each other using the perch's own footprint, so anything growing sideways could validate
+green and still touch its neighbour on somebody's phone.
+
+**A run is timed, and the node reports the record — save schema v14.** The map badge used to
+read `TOP 25%` and nothing else, which is a comparison with no result attached. It now carries
+the player's own record underneath — `31 turns · 2:14` — and the record half is drawn **whenever
+a glade is cleared**, band or no band. That is the fix for the thing that made the standing feel
+hollow: a percentile needs hundreds of players before it can say anything, and until then the
+node had nothing on it at all.
+
+`RunClock` (Domain/Board) is the stopwatch, and three decisions are worth not re-litigating. It
+is an **accumulator handed time a frame at a time**, never two readings of a wall clock — a
+player who takes a call comes back to a forty-minute record on a two-minute glade, and nothing
+about elapsed real time describes what somebody did. **Every tick is clamped** to
+`RunClock.MaxTick`, because a resume, an asset load or a rewarded video each arrive as one
+enormous `deltaTime`, and a best time only ever falls, so one bad reading is a record no honest
+run can ever beat again. And it starts on the **first conduit turned**, not on the board
+appearing: a player who studies a glade is not doing worse than one who spins tiles at random.
+
+It is ticked from `PlayScreen.Update` while `!Locked`, so a pause costs nothing and a
+backgrounded app contributes nothing because no frames run. The start edge is found by
+**polling the move count** rather than hooking the turn — `OnChanged` also fires for undos, so a
+subscription would have to re-derive the edge anyway and would be one more thing to unwind.
+`ResetClock` is on every path that hands over a fresh board, and the bottom bar's restart button
+was rerouted through `RestartLevel` so it and the pause menu cannot disagree about what a
+restart resets.
+
+Stored as `bestMillis`: smaller wins, zero is absent — the join `bestMoves` has always used, for
+the same reason. **Milliseconds rather than seconds** so zero is unreachable for a real run, since
+a one-turn board genuinely resolves inside a second; that is v13's sentinel argument again. Unlike
+a standing it **cannot be backfilled**, because nothing already stored implies how long a past
+clear took. `WithTime` is a separate fold from `WithRun` on purpose: moves and milliseconds are
+both `int`s describing the same run, so adjacent parameters could be swapped, compile, and write
+"31 milliseconds" into a permanent record.
+
+`RunOutcome` now carries both `Seconds` (screen time, for analytics — it includes staring at an
+untouched board) and `Millis` (play time, for the record). Anything shown to a player wants the
+second.
+
+**The mark is a struck medal over two lines, because a caption is not a reward.** A ranked glade
+gets a 392×196 plate: a trophy on a filled disc with a cream rim and a halo, `You are in the top
+10%`, then `31 turns · 2:14`. **A trophy and not a star**, and that is not decoration — the node's
+own disc art *is* the star rating (`node_s1`/`s2`/`s3`), so a gold star 100px above it would be the
+same symbol counting a different thing, and players would read it as a fourth star. One glyph in
+three colours rather than three glyphs, because a medal ladder needs no teaching. The rim is cream
+on every tier: ringing a bronze medal in bronze makes the rim vanish, which is the beacon's old
+gold-out-of-gold mistake. Only the top tier breathes and only it gets rays — motion is the loudest
+thing on a map of bobbing rocks, so spending it on every ranked glade singles out none. An unranked
+glade keeps a single quiet line with a tick, because dressing a median run as a trophy is how a
+trophy stops meaning anything.
+
+Two layout lessons are worth not relearning. `UIKit.Box` **always** pivots at centre, so anchoring
+a child to a container's top or bottom edge puts half its height outside — that is what had both
+lines hanging out of the pill. And `UIKit.Label` defaults to `HorizontalWrapMode.Overflow`, which
+has no clipping at all: an over-long line is not truncated, it simply keeps drawing. Anything
+holding a translated string needs `UIKit.Shrinkable`, which is why both lines have it.
+
+One risk this leaves, deliberately unfixed: **`ChapterMap.MinimumNodeSeparation` is 220px** —
+derived from the 196px disc, and it knows nothing about what rides above it. The shipped maps sit
+756px apart vertically, so the mark (302px of reach) is comfortable there, but a future chapter
+authored near that floor would overlap. Raising the guarantee is a content-authoring decision, not
+a layout one.
+
+**The keeper's route — self-comparison, and no longer a second screen.** The victory panel measures
+the turns a player took against `Puzzle.TurnsToSolution` captured on the untouched board, and it is
+the first thing here that compares a player to *themselves* rather than to a population. It needs no
+backend, no sample floor and no other players: it works on a fresh install, offline, on every glade.
+
+**The route is beatable, and the copy must never call it perfect.** `TurnsToSolution` is the
+distance to the *authored* solution, but a glade is won when every lamp is lit — spare conduits may
+be left pointing anywhere. So a player can finish under it, and the live save that prompted this
+does: 31 moves on a glade whose route is 34. There are therefore **three readings** — over, exact,
+and under — and the third is the rarest and best thing the panel can say. `RouteTests` pins it
+precisely so nobody "fixes" the negative case away on the assumption it cannot happen.
+
+**One panel, because two was a tax — `RouteOverlay` is deleted.** The measurement shipped as its own
+overlay slipped in front of the Next button, which meant the one control labelled "next glade"
+answered a different question the first time it was tapped. That is exactly the mistake the hub's
+`+` buttons made before `AdOfferOverlay` became the single destination for a resource, and it failed
+the same way: a tap for a panel nobody asked for, then a tap for the thing they did. `WinOverlay`
+now owns the comparison, lives in its own file, and the button goes where it says. Nothing was cut.
+
+Three consequences worth not re-litigating. The **bars are drawn on every win that has a route**,
+because merging made them free — no tap, no navigation — while the *sentence* under them stays
+upward-only. So `RouteWorthSaying` **gave up its personal-best clause**: it bought a whole panel
+once, and a rule that hands a new record 90 turns over the route the line "56 turns from a perfect
+route" is a scolding printed beside a stamp calling the same run the player's finest. The stamp keeps
+the recognition. And the whole thing is still **derived, with no save state at all** — the route is a
+fact about the glade and the moves are already in hand, so v14 remains the schema.
+
+**The layout is a stack with a cursor, and the whole block is fitted to the screen.** The panel's
+height depends on what the run earned — a hint, two bars, a verdict, a standing, a payout, a golden
+line — so it is measured before anything is built and each optional row buys its own pitch. That
+replaces a fixed `PanelBase` plus fixed `PaidRoom`/`GoldenRoom` additions and a separately derived
+`rewardY`, which agreed only while nobody edited one of them. The measured block then goes inside a
+`Fit` node scaled to `Flow.Size.y`, because the canvas is **width**-matched at 1080: its height is
+1920 on a 16:9 phone, 2400 on a tall one and **1440 on a 4:3 tablet**, where the old worst case
+already overflowed. The scale lives on a parent and never on `Panel`, because `ModalView.Close`
+scales that one to an absolute 0.82 — a panel resting at 0.94 would visibly *grow* on the way out,
+and every `Tween.Pop`/`Punch` on a child writes absolute local scales too.
+
+**What the panel says, in the order it says it.** Crest (crown over a banner carrying the rank
+word) → three stars in an arc over a shadow seat and a gold shine → a wax seal stamping `NEW BEST`
+over the row's shoulder → `three stars at N turns` when the run took fewer than three → `YOUR RUN`
+with `31 turns · 2:14` and a gold bar → `THE GROVE'S ROUTE`, an **"i"**, a dim bar and a carved
+marker holding its number → the verdict line → the standing medal → the payout chips → the golden
+line → replay, **NEXT GLADE**, map on one row. Both bars share one scale, which is the entire readability of the
+comparison: the shorter bar is the better run and no number is needed to see it. A run *over* the
+route continues in `Pal.Amber` past the gold, which says "these turns were spare" without the panel
+saying it in words. Confetti and a screen flash fire on the third star only — spending them on every
+win marks out none.
+
+Two things the old panel got wrong that are worth naming. The **four dark scorecard slots** are gone:
+a run produces a handful of numbers that mean different things, and set as identical framed rows they
+read as a receipt. And the record was a **sentence** ("a new best for this glade") under a row of
+stars, where it is a footnote; beating your own record is an award, so it is a stamp.
+
+**The route's "i" is a bubble, not a fourth modal.** `StreakInfoOverlay` and `EventInfoOverlay` are
+full panels and they earn it — three questions each about a whole screen. This answers one question
+about one row, so it is a cream popover hanging **below** the row, which is what keeps both bars
+visible while it is read; a panel would cover the thing it describes and make the player close it to
+check. It lives inside the `Fit` node with an oversized tap-catching veil, so it scales with the
+panel on a short screen and no corner of the screen is left where a tap does nothing. The dot's `x`
+is **measured** from the caption's `preferredWidth` and clamped to the caption's own box, because the
+caption is a translated string and a constant `x` either collides with a long one or floats away from
+a short one. Back closes the bubble before it closes the panel. The copy has one hard constraint: it
+must never call the route a minimum.
+
+**The victory art is CraftPix, minus two regions.** `Ui/Win/` holds crown, shield, blank banner and
+window, cut from the win pack's atlas — which turned out to keep every part as a separate region,
+including the `VICTORY` lettering. Two are **deliberately absent from the project**. The lettering,
+because a word painted into a texture can never be localised (invariant 6), so the blank ribbon
+carries a loc key instead and ships in every language. And the **herald's horn**: two of them flanked
+the crest and were cut, because the crest is the one thing here that has to read in a quarter of a
+second and three gold shapes at three angles is not that. The art went with them rather than staying
+addressed — an addressed sprite nothing draws is still built into the bundle and preloaded at every
+launch, which is the `Fx/Victory` mistake and there is no reason to make it twice. The crown then
+moved up 26px to rest on the banner instead of sinking into it; `CrestReach` moved with it, and has
+to, or the fit stops reserving the room the crown needs.
+
+**A ribbon's flat face is not the ribbon's centre.** The rank word was centred on the banner sprite
+and hung off the bottom of the red onto the draped tails. Measured from the art: in the 361×100
+source the face runs y 2–54, so its middle is 22px above the sprite's, and the sprite draws at
+1.568× — hence `RankLift` of 34. The width came out the same way; the face is 231 source pixels of
+red at its own middle, so `RankBox` is 356 rather than the 430 that let a long translation run out
+over the folds. Any art placed inside a painted shape here wants measuring rather than centring —
+`UIKit.PillFaceLift`, `SquareFaceLift` and `NodeFaceLift` are the same lesson already learned three
+times. Taking the parts also made the pack's 80-frame 805×572 flipbook
+unnecessary — the crest is composed and animated with `Cue`/`Tween` the way the companion reveal is,
+for a few KB instead of megabytes.
+
+Three art defects were fixed with it, and the first was doing real damage. **`window.png` had no
+nine-slice border**, so a 900-wide panel over a thousand tall stretched a 720×642 sprite past twice
+its aspect and smeared its corners and its inner hairline — most of why the panel looked cheap. It
+now carries a 48px border and its header tab (which nothing ever drew) is cropped off. **`shield.png`
+used the atlas rectangle verbatim**, which left the plaque on its side *and* bled a sliver of the
+second horn into one edge; re-cut from the rotated region it is a proper shield, and it is what the
+grove's own number rides at the end of its bar. The horn was cut before it shipped (above).
 
 **Verifying is now in the repo.** `Tools/verify/` holds `compile.py` (every assembly
 separately, which is what actually proves the layering), `tests.py` (the EditMode suite via

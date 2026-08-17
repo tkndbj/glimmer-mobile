@@ -85,6 +85,17 @@ namespace GlimmerGrove
 
             ChapterId = _entry.Id;
             StartCoroutine(BuildChapter());
+
+            // The day's population lands once a session, from the cloud, on its own schedule.
+            // Usually that is long before anybody opens a map — but when it is not, this is
+            // the screen the promotion is visible on, so it repaints rather than waiting for
+            // the player to leave the chapter and come back.
+            PlayerProgress.RanksChanged += RepaintRanks;
+        }
+
+        void OnDestroy()
+        {
+            PlayerProgress.RanksChanged -= RepaintRanks;
         }
 
         /// <summary>
@@ -259,6 +270,8 @@ namespace GlimmerGrove
 
             float delay = PopDelay(indexInChapter, _layout.Levels.Count);
 
+            if (stars > 0) RankMark(node, level.Id, delay);
+
             node.localScale = Vector3.zero;
             Tween.Pop(node, 0f, .6f, .18f + delay).OnDone(() => { if (btn) btn.Rehome(); });
             Tween.After(.2f + delay,
@@ -342,6 +355,260 @@ namespace GlimmerGrove
 
             Tween.Bob(node, 8f, 3.1f + (seed % 5) * .27f, seed * 1.1f);
             return node;
+        }
+
+        /// <summary>
+        /// Where the standing mark sits, and how big it is.
+        ///
+        /// <para>
+        /// Directly above the disc rather than pinned to a corner of it, and that is a
+        /// collision decision rather than a taste one. <c>mapX</c>/<c>mapY</c> are authored,
+        /// and <see cref="ChapterMap"/> proves nodes do not overlap using the perch's own
+        /// footprint — so a mark that grew sideways could be validated as clear and still
+        /// touch its neighbour on somebody's phone. This stays inside the 360×420 perch and
+        /// reaches less far up than the pointer already does, so it adds nothing the build
+        /// gate is not already checking.
+        /// </para>
+        /// </summary>
+        /// <summary>
+        /// Where the mark's <em>bottom edge</em> sits above the node's centre, and the pill
+        /// size in each of its two shapes.
+        ///
+        /// <para>
+        /// Pinned by the bottom rather than the middle so the gap above the disc is the same
+        /// whether the pill carries one line or two — anchoring the centre made the shorter
+        /// pill float further away, which read as two different components rather than one in
+        /// two states. It grows upward instead, and the tall shape still finishes inside the
+        /// 420px perch that <see cref="ChapterMap"/> already proves does not collide.
+        /// </para>
+        /// </summary>
+        /// <remarks>
+        /// The sizes are safe against the shipped maps, where consecutive glades sit 756px
+        /// apart vertically and ~370px across — but note that
+        /// <see cref="ChapterMap.MinimumNodeSeparation"/> only <em>guarantees</em> 220px,
+        /// because it is derived from the 196px disc and knows nothing about what rides above
+        /// it. A future chapter authored near that floor would overlap these. Raising the
+        /// guarantee is a content-authoring decision rather than a layout one, so it is not
+        /// made here.
+        /// </remarks>
+        /// <remarks>
+        /// The two-line width is measured, not chosen. "You are in the top 25%" generates
+        /// 358px in <c>GameFont</c> at 32pt, so the inner line box has to clear that or
+        /// <see cref="UIKit.Shrinkable"/> folds it — which is what wrapping means here, since
+        /// best-fit only shrinks text that fails <em>vertically</em>. At 392 the box was 356
+        /// and the standing wrapped by two pixels. 408 leaves 14px, which also covers the
+        /// widest record line ("108 turns · 12:04", 245px at 28pt) with room to spare.
+        /// </remarks>
+        const float RankMarkBottom = 106f;
+        static readonly Vector2 RankMarkTwoLine = new Vector2(408f, 196f);
+        static readonly Vector2 RankMarkOneLine = new Vector2(344f, 74f);
+
+        /// <summary>Medal disc size, and how far above the pill centre it sits.</summary>
+        const float MedalSize = 78f, MedalY = 54f;
+
+        /// <summary>
+        /// Inset from the pill's edge to a line's own box, and how far each line sits from the
+        /// pill centre in the two-line shape.
+        ///
+        /// <para>
+        /// Both lines are anchored at the pill's centre with an explicit offset, never to its
+        /// top or bottom edge. <see cref="UIKit.Box"/> always pivots at the centre, so an
+        /// edge-anchored box reaches half its own height <em>past</em> that edge — which is
+        /// exactly how both of these ended up hanging out of the pill.
+        /// </para>
+        /// </summary>
+        const float RankMarkPad = 18f, RankMarkLineHeight = 44f;
+
+        /// <summary>
+        /// The record line, written out rather than assembled, so the build's loc gate can
+        /// see every key. Four of them because "1 turns" is wrong in English and worse in
+        /// languages with real plural rules, and because a glade cleared before the clock
+        /// existed has a move count and no time — a dash where the time goes would read as
+        /// a broken record rather than an untimed one.
+        /// </summary>
+        static string RecordKey(int moves, int millis)
+            => millis > 0
+                ? (moves == 1 ? "ui.rank.record_one" : "ui.rank.record")
+                : (moves == 1 ? "ui.rank.untimed_one" : "ui.rank.untimed");
+
+        /// <summary>
+        /// The permanent standing on a cleared glade: "TOP 10%".
+        ///
+        /// <para>
+        /// Drawn from the save, never from <see cref="Social.GroveStats"/>, which is what
+        /// makes it instant and available offline — see <see cref="LevelRecord.BestRank"/>
+        /// for why a stored standing is the honest one here. An unranked glade draws nothing
+        /// at all rather than an empty frame: most of a catalog is unranked on any given day,
+        /// and a row of blanks would turn the absence into the message.
+        /// </para>
+        /// <para>
+        /// Colour carries the tier, because three identical pills reading different numbers
+        /// are three things to compare rather than one thing to notice. Gold is reserved for
+        /// the top tier for the reason the companion reveal reserves it — it is what this UI
+        /// already means by "best", so spending it lower devalues every other use of it.
+        /// </para>
+        /// </summary>
+        static void RankMark(Transform parent, LevelId id, float delay)
+        {
+            int moves = PlayerProgress.BestMoves(id);
+            if (moves <= 0) return;
+
+            int millis = PlayerProgress.BestMillis(id);
+            var band = Social.RankTier.Of(PlayerProgress.BestRank(id));
+
+            bool ranked = band != Social.RankBand.None;
+            bool top = band == Social.RankBand.Top10;
+
+            Color ink = band == Social.RankBand.Top10 ? Pal.Gold
+                      : band == Social.RankBand.Top25 ? Pal.Parchment
+                      : new Color(1f, .95f, .86f, .82f);
+
+            var size = ranked ? RankMarkTwoLine : RankMarkOneLine;
+
+            var host = UIKit.Node("Rank", parent);
+            host.anchorMin = host.anchorMax = host.pivot = new Vector2(.5f, .5f);
+            host.sizeDelta = size;
+            host.anchoredPosition = new Vector2(0f, RankMarkBottom + size.y * .5f);
+
+            float lineWidth = size.x - RankMarkPad * 2f;
+
+            // Radiance behind the whole plate for the top tier. A soft gradient rather than
+            // anything with an edge, so it reads as light around an award and can never be
+            // mistaken for a mislaid rectangle — which is the risk with any layer that leaves
+            // the container it belongs to.
+            if (top)
+            {
+                UIKit.Img("Rays", host, Art.Rays(256, 12), new Color(1f, .80f, .32f, .16f),
+                          Vector2.one * (size.x * .96f), new Vector2(.5f, .5f), Vector2.zero);
+                UIKit.Img("Seat", host, Art.Glow(96, 2.2f), new Color(1f, .76f, .24f, .26f),
+                          size + new Vector2(96f, 76f), new Vector2(.5f, .5f), Vector2.zero);
+            }
+
+            var bg = UIKit.Img("Pill", host, Art.Round(22), new Color(.04f, .09f, .13f, .82f),
+                               size, new Vector2(.5f, .5f), Vector2.zero);
+
+            var edge = UIKit.Img("Edge", bg.transform, Art.RoundOutline(22, 3f),
+                                 new Color(ink.r, ink.g, ink.b, ranked ? (top ? .68f : .34f) : .18f));
+            UIKit.StretchTo((RectTransform)edge.transform, 0, 0, 0, 0);
+
+            // The standing, when there is one — a struck medal over two lines of text, which
+            // is the shape a certificate has and the reason this reads as an award rather than
+            // as a caption. Optional, because for most of a catalog on most days there is no
+            // population to compare against.
+            if (ranked)
+            {
+                Medal(bg.transform, ink, top);
+
+                var line = UIKit.Titled("Band", bg.transform, Loc.Get(Social.RankTier.KeyOf(band)),
+                                        32, ink, TextAnchor.MiddleCenter,
+                                        new Vector2(lineWidth, RankMarkLineHeight),
+                                        new Vector2(.5f, .5f), new Vector2(0f, -22f), 3f, 3f);
+                UIKit.Shrinkable(line, 20);
+            }
+
+            // The record always. This is the half that says something on a brand new install
+            // with no backend at all, which is why the mark is no longer conditional on being
+            // ranked — an empty node above a cleared glade was the whole problem. Unranked it
+            // takes a tick rather than a medal: it is a result, and dressing a median run as a
+            // trophy is how a trophy stops meaning anything.
+            if (!ranked)
+            {
+                var tick = UIKit.Img("Cleared", bg.transform, Art.S("Ui/ic_check"),
+                                     new Color(1f, .96f, .88f, .62f), Vector2.one * 34f,
+                                     new Vector2(0f, .5f), new Vector2(38f, 0f));
+                tick.preserveAspect = true;
+            }
+
+            var record = UIKit.Titled("Record", bg.transform,
+                                      Loc.Format(RecordKey(moves, millis), moves, RunClock.Format(millis)),
+                                      ranked ? 28 : 29,
+                                      new Color(1f, .96f, .88f, ranked ? .80f : .92f),
+                                      TextAnchor.MiddleCenter,
+                                      new Vector2(ranked ? lineWidth : lineWidth - 40f, RankMarkLineHeight),
+                                      new Vector2(.5f, .5f),
+                                      new Vector2(ranked ? 0f : 20f, ranked ? -70f : 0f), 3f, 2f);
+
+            // Both lines shrink rather than overflow. Label defaults to
+            // HorizontalWrapMode.Overflow, which has no clipping at all — so an unshrinkable
+            // line does not get truncated, it simply keeps drawing outside the pill. That is
+            // the other half of why these were hanging out of it, and it is the half a
+            // translation would have reintroduced even with the geometry fixed.
+            UIKit.Shrinkable(record, 19);
+
+            // Its own entrance, a beat after the perch it rides. The perch scales from zero
+            // and takes the mark with it on a first build, but a repaint lands on a perch
+            // already at rest — this is the one path that has to animate either way.
+            host.localScale = Vector3.zero;
+            Tween.Pop(host, 0f, .55f, .18f + delay + .16f);
+        }
+
+        /// <summary>
+        /// The struck medal at the top of a ranked mark: a halo, a filled disc, a cream rim
+        /// and a trophy.
+        ///
+        /// <para>
+        /// <b>A trophy and not a star</b>, which matters more than it looks. The node's own
+        /// disc is already <c>node_s1</c>/<c>s2</c>/<c>s3</c> — its art *is* the star rating —
+        /// so a star sitting 100px above it would be the same symbol counting a different
+        /// thing, and a player would reasonably read a gold star on the badge as a fourth
+        /// star on the glade. A trophy is rank vocabulary and collides with nothing. It is
+        /// also why the tiers are one glyph in three colours rather than three glyphs: a
+        /// medal ladder is something everybody already knows how to read, and swapping the
+        /// symbol per tier would mean inventing an ordering nobody has been taught.
+        /// </para>
+        /// <para>
+        /// The rim is cream on every tier. Ringing a bronze medal in bronze makes the rim
+        /// disappear, which is the same mistake the feature beacon made travelling gold out
+        /// of gold — the contrast has to come from somewhere that is not the tier colour.
+        /// </para>
+        /// </summary>
+        static void Medal(Transform parent, Color ink, bool top)
+        {
+            var seat = new Vector2(0f, MedalY);
+
+            UIKit.Img("Halo", parent, Art.Glow(96, 2.2f), new Color(ink.r, ink.g, ink.b, top ? .42f : .24f),
+                      Vector2.one * (MedalSize * 1.7f), new Vector2(.5f, .5f), seat);
+
+            var disc = UIKit.Img("Disc", parent, Art.Disc(128), ink,
+                                 Vector2.one * MedalSize, new Vector2(.5f, .5f), seat);
+
+            UIKit.Img("Rim", parent, Art.Ring(128, 9f), new Color(1f, .98f, .90f, top ? .92f : .70f),
+                      Vector2.one * MedalSize, new Vector2(.5f, .5f), seat);
+
+            var glyph = UIKit.Img("Trophy", parent, Art.S("Ui/ic_trophy"),
+                                  new Color(.20f, .13f, .07f, .92f),
+                                  Vector2.one * (MedalSize * .52f), new Vector2(.5f, .5f), seat);
+            glyph.preserveAspect = true;
+
+            // Only the best tier breathes. Motion is the loudest thing on a map full of
+            // bobbing rocks, so spending it on every ranked glade would spend it on most of
+            // them and single out none.
+            if (top) Tween.Breathe(disc.transform, .055f, 2.4f);
+        }
+
+        /// <summary>
+        /// Redraws every standing mark after a freshly published population promoted some.
+        ///
+        /// <para>
+        /// The table is fetched once a session and normally lands before the player ever
+        /// reaches a map, so this is the uncommon path — but it is the one where a player who
+        /// has just been promoted is looking at the very screen that says so, and a screen
+        /// that draws asynchronous data has to repaint when it arrives.
+        /// </para>
+        /// </summary>
+        void RepaintRanks()
+        {
+            foreach (var pair in _nodes)
+            {
+                var perch = pair.Value;
+                if (!perch) continue;
+
+                var existing = perch.Find("Rank");
+                if (existing) Destroy(existing.gameObject);
+
+                if (PlayerProgress.Stars(pair.Key) > 0)
+                    RankMark(perch, pair.Key, 0f);
+            }
         }
 
         static void Plate(Transform parent, string text, Color colour, float y)

@@ -45,6 +45,14 @@ namespace GlimmerGrove
     /// with the roster cannot depend on a sprite somebody has to draw per companion, and the
     /// spectacle has to be a function of the companion rather than a fixed animation.
     /// </para>
+    /// <para>
+    /// <b>It happens in a coloured room, and that is not decoration.</b> The first version staged
+    /// everything against near-black, which is exactly what a screen looks like when its art has
+    /// failed to load — so the most expensive thing a player can buy arrived looking like a
+    /// loading error with a portrait on it. A single tint over black does not fix it either: one
+    /// colour and nothing else is a monochrome image however bright the colour is. See
+    /// <see cref="Chroma"/> for the three-colour scheme that replaced it.
+    /// </para>
     /// </summary>
     public sealed class CompanionRevealOverlay : ModalView
     {
@@ -61,11 +69,20 @@ namespace GlimmerGrove
         const float StarSize = 62f;
         const float StarGap = 74f;
 
-        Image _veil, _vignette, _fan, _fan2, _glow, _flash, _rim;
+        // Resting brightnesses of the stage. Named because Play fades up to them and Skip
+        // assigns them directly, and the two agreeing is the whole reason Skip works — they
+        // were four pairs of hand-repeated literals before.
+        const float VignetteAlpha = .70f;
+        const float FanAlpha = .34f;
+        const float Fan2Alpha = .24f;
+        const float GlowAlpha = .46f;
+
+        Image _sky, _vignette, _fan, _fan2, _glow, _flash, _rim;
         Image _disc, _face;
         RectTransform _discRt, _fanRt, _fan2Rt;
         Text _name, _sub;
         Image[] _stars;
+        Image[] _aurora;
         Image _underline;
         Btn _done;
         RectTransform _doneRt;
@@ -81,13 +98,18 @@ namespace GlimmerGrove
         CanvasGroup _dismiss;
 
         int _tier;
+        Chroma _c;
         Color _tint;
         bool _settled;
 
         protected override void Build()
         {
             _tier = TierOf(Avatar);
-            _tint = TintOf(_tier);
+            _c = ChromaOf(_tier);
+
+            // The friend's own colour, cached because a dozen places below read it and
+            // `_c.Tint` at every one of them is noise.
+            _tint = _c.Tint;
 
             BuildStage();
             BuildFriend();
@@ -132,46 +154,115 @@ namespace GlimmerGrove
             return 5;
         }
 
+        // -------------------------------------------------------------- chroma
         /// <summary>
-        /// The tier's colour: pale, green, blue, purple, gold.
+        /// A tier's whole colour scheme: the friend's own colour, two more that light the room
+        /// around it, and the deep hue the room is built out of.
         ///
         /// <para>
-        /// Deliberately the rarity ladder every player already knows from every other game
-        /// they have installed — common through to legendary — because this is the one piece of
-        /// the reveal that has to be understood without being taught. The first version ran
-        /// cream → mint → sun → gold → magenta, which put the game's own premium colour in
-        /// fourth place and ended on a pink nobody reads as "the best one". Gold last is worth
-        /// more than gold in the middle, and it agrees with what gold means everywhere else in
-        /// this UI.
+        /// Three colours rather than one, because that is the difference between a light and a
+        /// place. A tint over black gives a bright shape floating on nothing; a partner lighting
+        /// the ground, an accent crossing it and a deep hue underneath give somewhere for the
+        /// friend to arrive into — which is the entire job of this screen.
+        /// </para>
+        /// <para>
+        /// Every colour is one already in <see cref="Pal"/>, so the loudest moment in the game
+        /// cannot drift away from the game's own palette by inventing shades of its own, and
+        /// retuning the palette retunes the reveal. Derived from the tier like everything else
+        /// here, so a companion a content drop adds is dressed without a code change.
         /// </para>
         /// </summary>
-        static Color TintOf(int tier)
+        readonly struct Chroma
+        {
+            public readonly Color Tint, Partner, Accent, Deep;
+
+            public Chroma(Color tint, Color partner, Color accent, Color deep)
+            {
+                Tint = tint; Partner = partner; Accent = accent; Deep = deep;
+            }
+
+            /// <summary>
+            /// The three lights in order, wrapping — for anything spawning a run of them, so a
+            /// row of rings or sparks cycles the scheme instead of repeating one colour.
+            /// </summary>
+            public Color Nth(int i)
+            {
+                switch (((i % 3) + 3) % 3)
+                {
+                    case 0: return Tint;
+                    case 1: return Partner;
+                    default: return Accent;
+                }
+            }
+        }
+
+        /// <summary>
+        /// The tier's scheme: pale, green, blue, purple, gold.
+        ///
+        /// <para>
+        /// The <see cref="Chroma.Tint"/> ladder is deliberately the rarity ladder every player
+        /// already knows from every other game they have installed — common through to
+        /// legendary — because this is the one piece of the reveal that has to be understood
+        /// without being taught. The first version ran cream → mint → sun → gold → magenta,
+        /// which put the game's own premium colour in fourth place and ended on a pink nobody
+        /// reads as "the best one". Gold last is worth more than gold in the middle, and it
+        /// agrees with what gold means everywhere else in this UI.
+        /// </para>
+        /// <para>
+        /// The partner is always across the wheel from the tint and the accent always warm,
+        /// because a scheme built from neighbours is the monochrome problem again wearing three
+        /// names. The deep hue is the tint's own family driven down to about a tenth of its
+        /// value — dark enough for cream text and a lit rim to read against, and still
+        /// unmistakably a colour rather than the absence of one.
+        /// </para>
+        /// </summary>
+        static Chroma ChromaOf(int tier)
         {
             switch (tier)
             {
-                case 1: return Pal.Cream;
-                case 2: return Pal.Mint;
-                case 3: return Pal.Azure;
-                case 4: return Pal.Bloom;
-                default: return Pal.Gold;
+                case 1: return new Chroma(Pal.Cream, Pal.Aqua, Pal.Sun, Pal.Hex("#0B2230"));
+                case 2: return new Chroma(Pal.Mint, Pal.Aqua, Pal.Sun, Pal.Hex("#0A2A22"));
+                case 3: return new Chroma(Pal.Azure, Pal.Bloom, Pal.Aqua, Pal.Hex("#111A46"));
+                case 4: return new Chroma(Pal.Bloom, Pal.Azure, Pal.Sun, Pal.Hex("#2B0E3E"));
+                default: return new Chroma(Pal.Gold, Pal.Ember, Pal.Bloom, Pal.Hex("#331409"));
             }
         }
 
         // --------------------------------------------------------------- stage
         /// <summary>
-        /// The dark room the friend arrives into: a veil, a vignette to pull the eye to the
-        /// middle, a rotating fan of light and a warm core.
+        /// The room the friend arrives into: a coloured sky, drifting light behind it, a
+        /// vignette to pull the eye to the middle, two crossing fans of light and a warm core.
         /// </summary>
         void BuildStage()
         {
-            // The veil is also the skip target. It is the bottom layer and covers the screen,
-            // so a tap anywhere that is not the button lands here.
-            _veil = UIKit.Img("Veil", Content, Art.Pixel, new Color(.02f, .04f, .06f, 0f));
-            UIKit.StretchTo((RectTransform)_veil.transform, 0, 0, 0, 0);
-            _veil.raycastTarget = true;
-            _veil.gameObject.AddComponent<Btn>().Setup(Skip);
+            // The sky is also the skip target. It is the bottom layer and covers the screen, so
+            // a tap anywhere that is not the button lands here.
+            //
+            // Lit from below by the partner colour and falling to night above, because a flat
+            // field of one colour is only marginally better than a flat field of black — a
+            // gradient is what makes it read as depth rather than as a backing plate. One draw:
+            // see Art.Gradient for why it is not three washes.
+            _sky = UIKit.Img("Sky", Content,
+                             Art.Gradient(Color.Lerp(_c.Deep, _c.Partner, .30f),
+                                          _c.Deep,
+                                          Color.Lerp(_c.Deep, Color.black, .40f)),
+                             new Color(1f, 1f, 1f, 0f));
+            UIKit.StretchTo((RectTransform)_sky.transform, 0, 0, 0, 0);
+            _sky.raycastTarget = true;
+            _sky.gameObject.AddComponent<Btn>().Setup(Skip);
 
-            _vignette = UIKit.Img("Vignette", Content, Art.Vignette(256), new Color(.01f, .03f, .05f, 0f));
+            BuildAurora();
+
+            // A quiet field of motes from the first frame, in the partner colour. The bright set
+            // arrives with the friend (see Idle); this one says the room has air in it before
+            // anything has happened, which is what stops the gathering reading as a dead screen.
+            Fireflies.Spawn(Content, 14, Pal.A(_c.Partner, .6f), 4f, 13f);
+
+            // Tinted with the room rather than with ink. A black vignette over a coloured sky
+            // desaturates exactly the part of the frame the aurora is lighting, and the corners
+            // end up the one grey thing on screen.
+            _vignette = UIKit.Img("Vignette", Content, Art.Vignette(256),
+                                  Pal.A(Color.Lerp(_c.Deep, Color.black, .55f), 0f));
             UIKit.StretchTo((RectTransform)_vignette.transform, 0, 0, 0, 0);
             _vignette.raycastTarget = false;
 
@@ -182,29 +273,123 @@ namespace GlimmerGrove
             _fanRt.localScale = Vector3.zero;
             _fan.raycastTarget = false;
 
-            // The top two tiers get a second fan turning the other way. Two counter-rotating
-            // sets read as volume rather than as a faster spin — one fan turning quickly just
-            // looks like a fan turning quickly, however fast it goes — and it costs one more
-            // Image on the two reveals a player sees least often and remembers most.
-            if (_tier >= 4)
-            {
-                _fan2 = UIKit.Img("Fan2", Content, Art.Rays(512, 6 + _tier), Pal.A(_tint, 0f),
-                                  Vector2.one * (FanSize * .74f), new Vector2(.5f, .5f),
-                                  new Vector2(0f, 90f));
-                _fan2Rt = (RectTransform)_fan2.transform;
-                _fan2Rt.localScale = Vector3.zero;
-                _fan2.raycastTarget = false;
-            }
+            // A second fan turning the other way, in the partner colour — two colours of light
+            // crossing, which is what a single fan can never be however fast it spins. It used
+            // to be a top-two-tiers luxury and that was the wrong economy: the cost is one Image
+            // and a 256² mask, and the tiers that needed the help most were the pale ones.
+            //
+            // Generated at 256 rather than 512 because it is behind everything at three quarters
+            // the size; the wedge count still climbs with the tier so the two sets never beat
+            // out a regular pattern against each other.
+            _fan2 = UIKit.Img("Fan2", Content, Art.Rays(256, 6 + _tier), Pal.A(_c.Partner, 0f),
+                              Vector2.one * (FanSize * .74f), new Vector2(.5f, .5f),
+                              new Vector2(0f, 90f));
+            _fan2Rt = (RectTransform)_fan2.transform;
+            _fan2Rt.localScale = Vector3.zero;
+            _fan2.raycastTarget = false;
 
             _glow = UIKit.Img("Glow", Content, Art.Glow(256, 1.7f), Pal.A(_tint, 0f),
                               Vector2.one * 900f, new Vector2(.5f, .5f), new Vector2(0f, 90f));
             _glow.raycastTarget = false;
         }
 
+        // -------------------------------------------------------------- aurora
+        // Where the three blobs sit, how big they are and how bright they rest. Static because
+        // they are a composition rather than a random scatter: the point is one mass of colour
+        // high and left, one across the middle, one low — so the frame is lit unevenly, the way
+        // a place is, instead of evenly, the way a backdrop is.
+        static readonly Vector2[] AuroraHome = { new Vector2(-360f, 560f), new Vector2(400f, 60f), new Vector2(-250f, -650f) };
+        static readonly float[] AuroraSize = { 1180f, 980f, 1240f };
+        static readonly float[] AuroraAlpha = { .20f, .16f, .13f };
+
+        /// <summary>
+        /// Slow masses of coloured light behind everything, one per colour of the scheme.
+        ///
+        /// <para>
+        /// These do most of the work of making the room a room. They are cheap for what they
+        /// buy — three soft blobs reusing the mask the core glow already generated — and they
+        /// are deliberately huge and dim rather than small and bright: a small bright blob is a
+        /// light with an edge, which reads as an object nobody put there.
+        /// </para>
+        /// </summary>
+        void BuildAurora()
+        {
+            _aurora = new Image[3];
+
+            for (int i = 0; i < 3; i++)
+            {
+                _aurora[i] = UIKit.Img("Aurora" + i, Content, Art.Glow(256, 1.7f),
+                                       Pal.A(_c.Nth(i + 1), 0f), Vector2.one * AuroraSize[i],
+                                       new Vector2(.5f, .5f), AuroraHome[i]);
+                _aurora[i].raycastTarget = false;
+                Drift(i);
+            }
+        }
+
+        /// <summary>
+        /// One blob's endless wander.
+        ///
+        /// <para>
+        /// Both axes are whole multiples of the loop, which is not fussiness: a drift whose
+        /// period does not divide the tween's would snap back every time the tween wrapped, and
+        /// on something this slow and this large a snap is the most visible thing on screen.
+        /// </para>
+        /// <para>
+        /// Owned by the blob and channelled, so it survives the <see cref="Skip"/> path's
+        /// <c>KillAll</c> — a fast-forward should land on the resting state, not on a room whose
+        /// lights have stopped moving.
+        /// </para>
+        /// </summary>
+        void Drift(int i)
+        {
+            var img = _aurora[i];
+            var rt = (RectTransform)img.transform;
+            Vector2 home = AuroraHome[i];
+
+            float ax = 90f + i * 34f, ay = 130f - i * 26f;
+            float phase = i * 2.1f;
+
+            Tween.Run(11f + i * 3.7f, Ease.Linear, t =>
+            {
+                if (!rt) return;
+
+                float a = t * Mathf.PI * 2f;
+                rt.anchoredPosition = home + new Vector2(Mathf.Sin(a + phase) * ax,
+                                                         Mathf.Cos(a * 2f + phase) * ay);
+
+                float s = 1f + .12f * Mathf.Sin(a + phase);
+                rt.localScale = new Vector3(s, s, 1f);
+            }, img, "drift").Loop(-1, false);
+        }
+
+        /// <summary>
+        /// The blobs lit by the bang and easing back down. The room reacting to the impact is
+        /// what stops the backdrop reading as a still image with an animation in front of it.
+        /// </summary>
+        void Flare()
+        {
+            if (_aurora == null) return;
+
+            for (int i = 0; i < _aurora.Length; i++)
+            {
+                var blob = _aurora[i];
+                float rest = AuroraAlpha[i];
+
+                Tween.Fade(blob, Mathf.Min(1f, rest * 2.6f), .12f)
+                     .OnDone(() => Tween.Fade(blob, rest, .85f));
+            }
+        }
+
         /// <summary>The portrait, on its plate, with the rim that will breathe once it lands.</summary>
         void BuildFriend()
         {
-            _disc = UIKit.Img("Disc", Content, Art.Disc(300), Pal.A(Pal.Hex("#0A3F49"), .96f),
+            // The plate is the room's own deep hue lifted towards the friend's colour, not a
+            // fixed teal. A fixed one belonged to whichever scheme it was picked against and sat
+            // in every other as a stray colour — a teal disc in a plum room is the one thing on
+            // screen that looks like it came from a different screen. Lifted rather than equal,
+            // because a plate the value of its backdrop is not a plate.
+            _disc = UIKit.Img("Disc", Content, Art.Disc(300),
+                              Pal.A(Color.Lerp(_c.Deep, Pal.Lift(_tint, .10f), .18f), .97f),
                               Vector2.one * DiscSize, new Vector2(.5f, .5f), new Vector2(0f, 90f));
             _discRt = (RectTransform)_disc.transform;
             _discRt.localScale = Vector3.zero;
@@ -317,8 +502,15 @@ namespace GlimmerGrove
             // -- gathering ---------------------------------------------------
             cue.With(() =>
             {
-                Tween.Fade(_veil, .995f, .30f);
-                Tween.Fade(_vignette, .86f, .40f);
+                Tween.Fade(_sky, 1f, .30f);
+                Tween.Fade(_vignette, VignetteAlpha, .40f);
+
+                // The room lights before the rings do, slower than everything else in this beat,
+                // so the colour is established as the place rather than as part of the effect.
+                if (_aurora != null)
+                    for (int i = 0; i < _aurora.Length; i++)
+                        Tween.Fade(_aurora[i], AuroraAlpha[i], .70f);
+
                 Audio.Sfx("whoosh", .55f, .78f);
             });
 
@@ -334,27 +526,31 @@ namespace GlimmerGrove
                 _flash.color = new Color(1f, .99f, .94f, .92f);
                 Tween.Fade(_flash, 0f, .38f, Ease.OutQuad);
 
+                // The colour the white leaves behind, outliving it by a quarter of a second, so
+                // the impact resolves into the friend's own hue instead of back into the room.
+                ChromaPulse();
+
                 Audio.Sfx("unlock", .8f);
                 Audio.Sfx("shatter", .32f, 1.25f);
                 Haptic.Tap();
 
                 Tween.Shake((RectTransform)Content, 26f, .42f);
 
-                // The fan arrives with the bang and then never stops turning. A still sunburst
+                // The fans arrive with the bang and then never stop turning. A still sunburst
                 // reads as a decal; a turning one reads as light.
                 _fanRt.localScale = Vector3.one * .35f;
                 Tween.Scale(_fanRt, 1f, .70f, Ease.OutQuint);
-                Tween.Fade(_fan, .34f, .55f);
-                Tween.Run(64f, Ease.Linear, t =>
-                {
-                    if (_fanRt) _fanRt.localRotation = Quaternion.Euler(0, 0, t * 360f);
-                }, _fanRt).Loop(-1, false);
+                Tween.Fade(_fan, FanAlpha, .55f);
+                Spin();
 
                 if (_fan2Rt != null) Counterspin();
 
-                Tween.Fade(_glow, .46f, .5f);
+                Tween.Fade(_glow, GlowAlpha, .5f);
+                Flare();
 
-                for (int i = 0; i < 2 + _tier; i++) Shockwave(i * .07f);
+                // Each wave a different colour of the scheme rather than all of them the tint:
+                // a stack of rings in one colour reads as one ring drawn badly.
+                for (int i = 0; i < 2 + _tier; i++) Shockwave(i * .07f, _c.Nth(i));
 
                 Burst.Confetti(Content, 40 + _tier * 22);
             });
@@ -376,7 +572,12 @@ namespace GlimmerGrove
                 Audio.Sfx("bell", .45f, 1.05f, .10f);
 
                 Burst.Sparks(_discRt, Vector2.zero, _tint, 22 + _tier * 5, 520f, 34f, .95f);
+
+                // Two haloes, the outer one in the partner colour. Halo puts itself behind its
+                // siblings, so the second call lands behind the first and the plate sits in a
+                // pool of light that changes hue outwards rather than fading to the backdrop.
                 UIKit.Halo(_disc.transform, _tint, DiscSize * 1.5f, .34f);
+                UIKit.Halo(_disc.transform, _c.Partner, DiscSize * 2.3f, .18f);
             });
 
             // -- the name ----------------------------------------------------
@@ -412,8 +613,12 @@ namespace GlimmerGrove
 
                 Tween.Pop(_stars[i].transform, 0f, .46f);
                 Audio.Sfx("star", .5f, .92f + i * .09f);
-                Burst.Sparks((RectTransform)_stars[i].transform, Vector2.zero, Pal.Gold,
-                             7, 130f, 15f, .45f);
+
+                // The stars stay gold — they are the rarity count, and counting in five colours
+                // would read as five kinds of thing — but each one throws its own colour of the
+                // scheme, so a five-star reveal walks the whole palette on the way up.
+                Burst.Sparks((RectTransform)_stars[i].transform, Vector2.zero,
+                             Pal.Lift(_c.Nth(i), .2f), 7, 130f, 15f, .45f);
             });
 
             // -- settling ----------------------------------------------------
@@ -425,6 +630,11 @@ namespace GlimmerGrove
                 Tween.Fade(_dismiss, 1f, .3f);
                 _dismiss.blocksRaycasts = true;
 
+                // A second, smaller fall for the tiers that earned one. Two waves a second and a
+                // half apart read as longer than one wave twice the size, and the top of the
+                // ladder is where length is the point.
+                if (_tier >= 3) Burst.Confetti(Content, 20 + _tier * 8);
+
                 Audio.Sfx("chime2", .5f);
             });
 
@@ -432,26 +642,66 @@ namespace GlimmerGrove
         }
 
         /// <summary>
-        /// The second fan, opening and turning against the first. Its own method because both
-        /// the sequence and the skip path need it, and a rotation defined twice is a rotation
-        /// that will one day disagree with itself.
+        /// The main fan's endless turn. Its own method because both the sequence and the skip
+        /// path need it, and a rotation defined twice is a rotation that will one day disagree
+        /// with itself.
+        ///
+        /// Channelled, so reaching the resting state twice — the sequence, then a skip landing
+        /// after it — replaces the turn rather than running two of them a frame out of step
+        /// against the same rotation.
         /// </summary>
+        void Spin()
+        {
+            Tween.Run(64f, Ease.Linear, t =>
+            {
+                if (_fanRt) _fanRt.localRotation = Quaternion.Euler(0, 0, t * 360f);
+            }, _fanRt, "spin").Loop(-1, false);
+        }
+
+        /// <summary>The second fan, opening and turning against the first. See <see cref="Spin"/>.</summary>
         void Counterspin()
         {
             _fan2Rt.localScale = Vector3.one * .3f;
             Tween.Scale(_fan2Rt, 1f, .82f, Ease.OutQuint);
-            Tween.Fade(_fan2, .26f, .6f);
+            Tween.Fade(_fan2, Fan2Alpha, .6f);
 
             Tween.Run(47f, Ease.Linear, t =>
             {
                 if (_fan2Rt) _fan2Rt.localRotation = Quaternion.Euler(0, 0, -t * 360f);
-            }, _fan2Rt).Loop(-1, false);
+            }, _fan2Rt, "spin").Loop(-1, false);
+        }
+
+        /// <summary>
+        /// A full-screen wash of the friend's own colour, left behind by the white flash.
+        ///
+        /// <para>
+        /// Built here rather than up front and hidden, like the rings and unlike everything
+        /// else, because it is genuinely transient: nothing in the resting state contains it, so
+        /// <see cref="Skip"/> has nothing to set and a skip that lands before this beat simply
+        /// never sees it.
+        /// </para>
+        /// <para>
+        /// Above the whole composition on purpose. A wash underneath tints the backdrop, which
+        /// the backdrop already is; over the top it tints the light, so the portrait arrives out
+        /// of colour and resolves as the wash clears.
+        /// </para>
+        /// </summary>
+        void ChromaPulse()
+        {
+            var wash = UIKit.Img("Pulse", Content, Art.Pixel, Pal.A(_tint, .44f));
+            UIKit.StretchTo((RectTransform)wash.transform, 0, 0, 0, 0);
+            wash.raycastTarget = false;
+
+            // Owned by the wash rather than by this view, so a skip cannot strand a coloured
+            // sheet at half strength over the reveal it was meant to introduce.
+            Tween.Fade(wash, 0f, .62f, Ease.OutQuad)
+                 .OnDone(() => { if (wash) Destroy(wash.gameObject); });
         }
 
         /// <summary>A ring rushing in from off-screen and vanishing at the middle.</summary>
         void Collapse(int index)
         {
-            var ring = UIKit.Img("In" + index, Content, Art.Ring(256, 7f), Pal.A(_tint, 0f),
+            var ring = UIKit.Img("In" + index, Content, Art.Ring(256, 7f), Pal.A(_c.Nth(index), 0f),
                                  Vector2.one * 240f, new Vector2(.5f, .5f), new Vector2(0f, 90f));
             ring.raycastTarget = false;
 
@@ -468,9 +718,9 @@ namespace GlimmerGrove
         }
 
         /// <summary>A shockwave leaving the impact, thinning as it goes.</summary>
-        void Shockwave(float delay)
+        void Shockwave(float delay, Color colour)
         {
-            var ring = UIKit.Img("Wave", Content, Art.Ring(256, 10f), Pal.A(_tint, 0f),
+            var ring = UIKit.Img("Wave", Content, Art.Ring(256, 10f), Pal.A(colour, 0f),
                                  Vector2.one * 360f, new Vector2(.5f, .5f), new Vector2(0f, 90f));
             ring.raycastTarget = false;
 
@@ -498,9 +748,26 @@ namespace GlimmerGrove
             _settled = true;
 
             if (_discRt) Tween.Bob(_discRt, 9f, 3.4f);
-            if (_rim) Tween.Breathe(_rim.transform, .035f, 2.4f);
+            if (_rim) { Tween.Breathe(_rim.transform, .035f, 2.4f); Hue(); }
 
             Fireflies.Spawn(Content, 16, Pal.A(_tint, .9f), 7f, 26f);
+        }
+
+        /// <summary>
+        /// The rim drifting between the friend's colour and the room's accent, for ever.
+        ///
+        /// The cheapest colour in the whole screen: the brightest edge in the frame is already
+        /// the thing the eye rests on once everything has settled, so moving its hue is what
+        /// keeps the resting state alive rather than merely animated. Reached only through
+        /// <see cref="Idle"/>, which both the sequence and the skip path go through, and
+        /// channelled so arriving twice replaces rather than doubles.
+        /// </summary>
+        void Hue()
+        {
+            Tween.Run(4.8f, Ease.InOutSine, t =>
+            {
+                if (_rim) _rim.color = Pal.A(Color.Lerp(_tint, _c.Accent, t), .95f);
+            }, _rim, "hue").Loop(-1, true);
         }
 
         // ----------------------------------------------------------------- skip
@@ -525,32 +792,37 @@ namespace GlimmerGrove
             Tween.KillAll(this);
             _revealing = false;
 
-            if (_veil) _veil.color = new Color(.02f, .04f, .06f, .995f);
-            if (_vignette) SetAlpha(_vignette, .86f);
+            // The sprite carries the colour, so the sky's own tint is white and only its opacity
+            // was ever being animated.
+            if (_sky) _sky.color = Color.white;
+            if (_vignette) SetAlpha(_vignette, VignetteAlpha);
             if (_flash) SetAlpha(_flash, 0f);
+
+            // The blobs keep drifting — Drift is owned by each blob rather than by this view, so
+            // KillAll never touched it — and only their brightness has to be caught up.
+            if (_aurora != null)
+                for (int i = 0; i < _aurora.Length; i++)
+                    SetAlpha(_aurora[i], AuroraAlpha[i]);
 
             if (_fanRt)
             {
                 _fanRt.localScale = Vector3.one;
-                SetAlpha(_fan, .34f);
+                SetAlpha(_fan, FanAlpha);
 
-                // Restarted rather than left dead: KillAll took the endless rotation with the
-                // beats, and a fan frozen mid-turn is the one part of this that would read as
-                // a bug rather than as a fast-forward.
-                Tween.Run(64f, Ease.Linear, t =>
-                {
-                    if (_fanRt) _fanRt.localRotation = Quaternion.Euler(0, 0, t * 360f);
-                }, _fanRt).Loop(-1, false);
+                // Restarted rather than left dead: a skip landing before the impact beat killed
+                // the beat that would have started the turn, and a fan frozen mid-turn is the one
+                // part of this that would read as a bug rather than as a fast-forward.
+                Spin();
             }
 
             if (_fan2Rt != null)
             {
                 _fan2Rt.localScale = Vector3.one;
-                SetAlpha(_fan2, .26f);
+                SetAlpha(_fan2, Fan2Alpha);
                 Counterspin();
             }
 
-            if (_glow) SetAlpha(_glow, .46f);
+            if (_glow) SetAlpha(_glow, GlowAlpha);
 
             if (_discRt) _discRt.localScale = Vector3.one;
             if (_face) { CompanionArt.Paint(_face, Avatar); _face.color = Color.white; }

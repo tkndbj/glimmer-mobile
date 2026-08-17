@@ -153,6 +153,11 @@ MonoBehaviour:
     m_SerializedLabels:
     - Art/Critters/c4
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 1bb05c7d3dbd5914fad6a38458afad53
+    m_Address: Art/Ui/Win/shield
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 1ce5edd24eda1651905a4b5b09e6d802
     m_Address: Art/Critters/c4/f02
     m_ReadOnly: 0
@@ -602,6 +607,11 @@ MonoBehaviour:
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 640831665dad19e30cd5af27e568511d
     m_Address: Art/Ui/ic_info
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 642502e5e0a092541b311dced549ee37
+    m_Address: Art/Ui/Win/window
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
@@ -1379,6 +1389,11 @@ MonoBehaviour:
     m_SerializedLabels:
     - Art/Fx/Victory
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: d83ed75ef0085a149bc5c4947b4a593f
+    m_Address: Art/Ui/Win/crown
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: d867d37a4952121f5a22fd58e8005afe
     m_Address: Art/Map/node_s3
     m_ReadOnly: 0
@@ -1568,6 +1583,11 @@ MonoBehaviour:
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: f9f13a751ddbcf84374069af08b90f7d
     m_Address: Audio/Sfx/click
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: fa94f075bbf7c23429489d4f13d863ac
+    m_Address: Art/Ui/Win/banner
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0

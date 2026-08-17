@@ -44,6 +44,21 @@ namespace GlimmerGrove
         public static readonly Color Rose = Hex("#E8615A");
         public static readonly Color Mint = Hex("#7BD86A");
 
+        /// <summary>
+        /// The orange between <see cref="Gold"/> and <see cref="Rose"/>, for a line that has
+        /// to read as an achievement on the cream panel paper.
+        ///
+        /// <para>
+        /// It exists because neither neighbour does the job. Gold is nearly the value of the
+        /// paper it sits on, so it only holds together under a heavy outline — fine for a
+        /// 40pt shout like the golden-glade line, wrong for a sentence. Rose is already spoken
+        /// for by the star rank directly above, and two warm reds in one column read as one
+        /// thing said twice. Named for the colour rather than for the one line using it, so
+        /// the next warm accent does not invent a second orange a shade away from this one.
+        /// </para>
+        /// </summary>
+        public static readonly Color Amber = Hex("#FF8A2B");
+
         static readonly Color[] Table =
         {
             Dormant,                       // 0

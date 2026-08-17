@@ -96,7 +96,12 @@ namespace GlimmerGrove.Persistence
             || a.bestMoves != b.bestMoves
             || a.clears != b.clears
             || a.firstClearedUnix != b.firstClearedUnix
-            || a.lastPlayedUnix != b.lastPlayedUnix;
+            || a.lastPlayedUnix != b.lastPlayedUnix
+            // A backfilled standing is the one change here that no run produced, so without
+            // this line the first table to land would raise bands on the device and upload
+            // none of them.
+            || a.bestRank != b.bestRank
+            || a.bestMillis != b.bestMillis;
 
         /// <summary>
         /// Everything outside the ledger, compared field by field.

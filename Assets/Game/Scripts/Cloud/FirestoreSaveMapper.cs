@@ -36,6 +36,19 @@ namespace GlimmerGrove.Cloud
                 { "clears", (long)record.clears },
                 { "firstClearedUnix", record.firstClearedUnix },
                 { "lastPlayedUnix", record.lastPlayedUnix },
+
+                // The standing travels because it is the only field here the device cannot
+                // rebuild on its own: it needs the population that was published when the
+                // record was set, and that table is gone by the time a reinstall happens.
+                // The server neither reads nor adjudicates it — a band buys nothing, and the
+                // rules validate the document's top-level keys rather than a glade's, so this
+                // needed no rules change. See LevelRecord.BestRank.
+                { "bestRank", (long)record.bestRank },
+
+                // Travels for the same reason the standing does: a fastest clear cannot be
+                // rebuilt from anything else on the device, so one that never left the phone
+                // is a record lost on reinstall. The server neither reads nor adjudicates it.
+                { "bestMillis", (long)record.bestMillis },
             };
 
         /// <summary>
@@ -428,6 +441,16 @@ namespace GlimmerGrove.Cloud
                     clears = (int)Long(entry, "clears", 0),
                     firstClearedUnix = Long(entry, "firstClearedUnix", 0),
                     lastPlayedUnix = Long(entry, "lastPlayedUnix", 0),
+
+                    // Absent on every document written before v13, and zero is exactly the
+                    // right answer there: no real standing can be zero, so the merge treats
+                    // it as "this side knows nothing" and keeps the other device's band.
+                    bestRank = (int)Long(entry, "bestRank", 0),
+
+                    // Absent on every document written before v14, and zero is the right
+                    // answer there too: it means "never timed", not "instant", so the merge
+                    // keeps whichever device actually has a time.
+                    bestMillis = (int)Long(entry, "bestMillis", 0),
                 });
             }
 

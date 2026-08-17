@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using GlimmerGrove.Localization;
 using GlimmerGrove.Progression;
 using UnityEngine;
@@ -31,8 +32,42 @@ namespace GlimmerGrove
         const float CellW = 320f;
         const float CellH = 380f;
 
+        /// <summary>Corner radius of a cell's plate and of the edge drawn over it.</summary>
+        const int CellRadius = 30;
+
         RectTransform _viewport, _grid;
         Text _summary;
+
+        /// <summary>
+        /// The parts of a built cell whose look depends on which companion is worn, kept so
+        /// that changing the choice can restyle two cells instead of rebuilding the roster.
+        ///
+        /// <para>
+        /// Nothing here is a second copy of the cell's state — it is a handful of references
+        /// into the objects <see cref="Cell"/> already made. <see cref="StyleWorn"/> is the
+        /// only thing that reads them, and it is also what <see cref="Cell"/> calls to paint a
+        /// cell the first time, so there is exactly one description of what "worn" looks like.
+        /// That is the property the old rebuild-everything approach was protecting, and it is
+        /// kept here rather than traded away: the alternative that would have been a mistake
+        /// is patching the ring in one place and the caption in another.
+        /// </para>
+        /// </summary>
+        sealed class CellView
+        {
+            public string Id;
+            public bool Unlocked;
+            public Image Plate, Edge, Halo;
+            public Text Sub;
+        }
+
+        readonly List<CellView> _cells = new List<CellView>();
+
+        /// <summary>
+        /// The companion the cells are currently drawn for. Held so a restyle knows which cell
+        /// is losing the ring as well as which is gaining it, and so the flourish fires only
+        /// when the choice actually moved rather than on every repaint that happens to run.
+        /// </summary>
+        string _worn;
 
         protected override void Build()
         {
@@ -57,8 +92,9 @@ namespace GlimmerGrove
 
             // Which companion is worn is a second fact, moved a step after the held set on a
             // purchase — see Profile.AvatarChanged. Listening to only the ledger left the gold
-            // ring on the previously worn companion after a buy.
-            Profile.AvatarChanged += Paint;
+            // ring on the previously worn companion after a buy. It restyles rather than
+            // rebuilds: nothing about the roster changed, only which cell wears the ring.
+            Profile.AvatarChanged += PaintWorn;
 
             // The roster itself can be republished by a content fetch landing mid-session,
             // which changes what this grid is a picture of.
@@ -68,7 +104,7 @@ namespace GlimmerGrove
         void OnDestroy()
         {
             Progression.CompanionLedger.Changed -= Paint;
-            Profile.AvatarChanged -= Paint;
+            Profile.AvatarChanged -= PaintWorn;
             AvatarCatalog.Changed -= Paint;
 
             // The profile shows a preview row from the same set, so going back does not
@@ -110,8 +146,25 @@ namespace GlimmerGrove
         }
 
         /// <summary>
-        /// Rebuilt whole when a choice changes. Thirty cells is nothing next to keeping
-        /// a selected ring, a caption and a hero portrait in step by hand.
+        /// Rebuilds the grid. The answer to a change in <em>what the roster is</em> — a
+        /// companion becoming held, or a content fetch republishing the catalog.
+        ///
+        /// <para>
+        /// It is deliberately no longer the answer to changing which companion is worn. That
+        /// used to come through here too, and the argument for it — that thirty cells are
+        /// cheaper than keeping a ring, a caption and a plate in step by hand — traded away
+        /// two things it did not have to. Rebuilding replays the staggered entrance in
+        /// <see cref="Cell"/>, so a small confirmation was answered with the animation that
+        /// says "you have just arrived", and for half a second afterwards every cell was
+        /// scaling under the player's finger. And the cost is the roster's size on every tap:
+        /// eight or nine objects per cell, thirty companions today and, by this screen's own
+        /// reckoning, a hundred after a year of drops.
+        /// </para>
+        /// <para>
+        /// <see cref="PaintWorn"/> takes that case instead, and the drift the old comment
+        /// feared is prevented by construction rather than by rebuilding — see
+        /// <see cref="CellView"/>.
+        /// </para>
         /// </summary>
         void Paint()
         {
@@ -124,9 +177,13 @@ namespace GlimmerGrove
                 Destroy(old);
             }
 
+            // Cleared with the cells they point at. A CellView outliving its objects would be
+            // a restyle writing to a destroyed Image on the next wear.
+            _cells.Clear();
+
             var roster = AvatarCatalog.All;
             int level = Profile.Rank;
-            string worn = Profile.Avatar.Id;
+            _worn = Profile.Avatar.Id;
 
             for (int i = 0; i < roster.Count; i++)
             {
@@ -135,8 +192,7 @@ namespace GlimmerGrove
 
                 // The whole rule — reached by level or bought. Asking AvatarCatalog directly
                 // here is what would draw a padlock over a companion the player paid for.
-                Cell(roster[i], new Vector2(x, y), CompanionLedger.IsHeld(roster[i], level),
-                     string.Equals(roster[i].Id, worn, StringComparison.Ordinal), i);
+                Cell(roster[i], new Vector2(x, y), CompanionLedger.IsHeld(roster[i], level), i);
             }
 
             int rows = (roster.Count + Columns - 1) / Columns;
@@ -145,20 +201,101 @@ namespace GlimmerGrove
             if (_summary) _summary.text = SummaryText(level);
         }
 
-        void Cell(AvatarDefinition avatar, Vector2 at, bool unlocked, bool worn, int index)
+        /// <summary>
+        /// Moves the ring to the companion now being worn, and takes it off the one that was.
+        ///
+        /// <para>
+        /// Touches the two cells whose look actually changed and leaves the other twenty-nine
+        /// alone — no destruction, no entrance animation, no scroll to re-find. The flourish
+        /// that used to be the whole grid cascading is now a bump and a spark on the cell that
+        /// was chosen, which is both the thing the player is looking at and the only thing the
+        /// tap was about.
+        /// </para>
+        /// <para>
+        /// Guarded on the choice having moved, because this also runs on the second of the two
+        /// events a purchase raises (see <c>Profile.AvatarChanged</c>) and on a repaint that
+        /// merely follows a rebuild — neither should throw sparks at a cell nothing happened to.
+        /// </para>
+        /// </summary>
+        void PaintWorn()
+        {
+            string worn = Profile.Avatar.Id;
+            bool moved = !string.Equals(worn, _worn, StringComparison.Ordinal);
+            _worn = worn;
+
+            for (int i = 0; i < _cells.Count; i++)
+            {
+                var view = _cells[i];
+
+                // Paint clears the list with the cells it destroys, so this should not happen —
+                // but a restyle writing into a destroyed Image would be a hard error, and the
+                // cost of being sure is one comparison per cell.
+                if (view.Plate == null) continue;
+
+                bool isWorn = string.Equals(view.Id, worn, StringComparison.Ordinal);
+                StyleWorn(view, isWorn);
+
+                if (!moved || !isWorn) continue;
+
+                // Squared up first. Punch remembers the scale it starts from and restores it
+                // when it finishes, but a punch killed part-way through — which is what
+                // starting a second one on the same plate does — never runs its restore, so the
+                // next one would take a mid-bump scale as the size to settle back to. Reachable
+                // by wearing A, then B, then A again inside a third of a second.
+                view.Plate.transform.localScale = Vector3.one;
+
+                Tween.Punch(view.Plate.transform, .13f, .36f);
+                Burst.Sparks(view.Plate.transform, Vector2.zero, Pal.Gold, 12, 200f, 24f, .55f);
+            }
+        }
+
+        /// <summary>
+        /// Everything about a cell that depends on whether its companion is the one being worn,
+        /// in one place. Called by <see cref="Cell"/> to paint it the first time and by
+        /// <see cref="PaintWorn"/> to repaint it, so the two can never describe it differently.
+        /// </summary>
+        void StyleWorn(CellView view, bool worn)
+        {
+            if (view.Plate)
+                view.Plate.color = worn ? Pal.A(Pal.Hex("#0C4A44"), .92f)
+                                        : new Color(.03f, .10f, .13f, .78f);
+
+            if (view.Edge)
+            {
+                view.Edge.sprite = Art.RoundOutline(CellRadius, worn ? 4f : 2f);
+                view.Edge.color = worn ? Pal.A(Pal.Gold, .95f)
+                                       : new Color(1f, 1f, 1f, view.Unlocked ? .14f : .07f);
+            }
+
+            // Made on first wear rather than up front, so the roster does not carry one hidden
+            // Image per companion for a decoration at most one of them shows at a time. Halo
+            // drops itself behind its siblings, which stays true whenever it is created.
+            if (worn && view.Halo == null && view.Plate)
+                view.Halo = UIKit.Halo(view.Plate.transform, Pal.Gold, 300f, .26f);
+
+            if (view.Halo) view.Halo.enabled = worn;
+
+            // A locked cell's caption is its price or its gate, which the choice cannot change,
+            // so it is left where Cell put it rather than given a reading it cannot have.
+            // Shrinkable fits on Unity's own best-fit pass, so a new caption re-fits itself.
+            if (view.Sub && view.Unlocked)
+            {
+                view.Sub.text = worn ? Loc.Get("ui.profile.wearing")
+                                     : Loc.Get("ui.profile.tap_to_wear");
+                view.Sub.color = worn ? Pal.Gold : new Color(1f, .96f, .88f, .5f);
+            }
+        }
+
+        void Cell(AvatarDefinition avatar, Vector2 at, bool unlocked, int index)
         {
             var cell = UIKit.Button("A_" + avatar.Id, _grid, Art.Pixel, new Vector2(CellW - 16f, CellH - 20f),
                                     new Vector2(.5f, 1f), at, () => Choose(avatar, unlocked));
             cell.GetComponent<Image>().color = new Color(1f, 1f, 1f, 0f);
 
-            var plate = UIKit.Img("Plate", cell.transform, Art.Round(30),
-                                  worn ? Pal.A(Pal.Hex("#0C4A44"), .92f) : new Color(.03f, .10f, .13f, .78f),
+            var plate = UIKit.Img("Plate", cell.transform, Art.Round(CellRadius), Color.white,
                                   new Vector2(CellW - 28f, CellH - 34f), new Vector2(.5f, .5f), Vector2.zero);
-            var edge = UIKit.Img("Edge", plate.transform, Art.RoundOutline(30, worn ? 4f : 2f),
-                                 worn ? Pal.A(Pal.Gold, .95f) : new Color(1f, 1f, 1f, unlocked ? .14f : .07f));
+            var edge = UIKit.Img("Edge", plate.transform, Art.RoundOutline(CellRadius, 2f), Color.white);
             UIKit.StretchTo((RectTransform)edge.transform, 0, 0, 0, 0);
-
-            if (worn) UIKit.Halo(plate.transform, Pal.Gold, 300f, .26f);
 
             var face = UIKit.Img("Face", plate.transform, null,
                                  unlocked ? Color.white : new Color(.15f, .21f, .25f, .95f),
@@ -185,16 +322,16 @@ namespace GlimmerGrove
             // of this grid is gated above anything a shipped catalog can reach — so a cell
             // that only ever said "level 40" was telling a player about a wait that does not
             // end, and hiding the answer that does.
-            UIKit.Shrinkable(
+            //
+            // An unlocked cell's caption is StyleWorn's to write, so it is built empty rather
+            // than given a value here that would have to agree with the one over there.
+            var sub = UIKit.Shrinkable(
                 UIKit.Titled("Sub", plate.transform,
-                             worn ? Loc.Get("ui.profile.wearing")
-                                  : unlocked ? Loc.Get("ui.profile.tap_to_wear")
-                                             : avatar.IsForSale
-                                                 ? Loc.Format("ui.profile.cost", avatar.UnlockCost)
-                                                 : Loc.Format("ui.profile.locked_at", avatar.UnlockLevel),
-                             24, worn ? Pal.Gold
-                                      : unlocked ? new Color(1f, .96f, .88f, .5f)
-                                                 : Pal.A(Pal.Sun, .90f),
+                             unlocked ? string.Empty
+                                      : avatar.IsForSale
+                                          ? Loc.Format("ui.profile.cost", avatar.UnlockCost)
+                                          : Loc.Format("ui.profile.locked_at", avatar.UnlockLevel),
+                             24, unlocked ? Color.white : Pal.A(Pal.Sun, .90f),
                              TextAnchor.MiddleCenter, new Vector2(CellW - 60f, 32f), new Vector2(.5f, 0f),
                              new Vector2(0f, 36f), 3f, 0f), 18);
 
@@ -206,6 +343,24 @@ namespace GlimmerGrove
                              new Color(1f, .95f, .88f, .42f), TextAnchor.MiddleCenter,
                              new Vector2(CellW - 60f, 26f), new Vector2(.5f, 0f),
                              new Vector2(0f, 12f), 3f, 0f);
+
+            var view = new CellView
+            {
+                Id = avatar.Id,
+                Unlocked = unlocked,
+                Plate = plate,
+                Edge = edge,
+                Sub = sub
+            };
+
+            // Registered even when locked. A locked cell can never be the worn one, but keeping
+            // one list of every cell means PaintWorn does not have to know which kind it is
+            // holding, and a cell unlocked by a purchase arrives through a rebuild anyway.
+            _cells.Add(view);
+
+            // The first and only place a cell's worn look is decided — the same call PaintWorn
+            // makes later, so a cell built worn and a cell restyled worn cannot differ.
+            StyleWorn(view, string.Equals(avatar.Id, _worn, StringComparison.Ordinal));
 
             cell.transform.localScale = Vector3.zero;
             Tween.Pop(cell.transform, 0f, .5f, .04f * Mathf.Min(index, 12));

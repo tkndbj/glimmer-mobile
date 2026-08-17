@@ -46,12 +46,39 @@ namespace GlimmerGrove
         Puzzle _puzzle;
         LevelDefinition _def;
         ChapterDefinition _chapter;
-        Text _moves, _lamps, _hintCount;
+        Text _moves, _lamps, _hintCount, _timer;
         StarRow _pips;
         Btn _undo, _hint;
         bool _finished;
         bool _hasColourKey;
         float _startedAt;
+
+        /// <summary>
+        /// This run's stopwatch. An instance, never a static, so a second glade cannot
+        /// inherit the first one's time — and an accumulator ticked from
+        /// <see cref="Update"/> rather than a coroutine or a subscription, so there is
+        /// nothing to unwind when the screen dies. See <see cref="RunClock"/>.
+        /// </summary>
+        readonly RunClock _clock = new RunClock();
+
+        /// <summary>
+        /// The authored route, measured on the untouched board.
+        ///
+        /// <para>
+        /// Taken once, here, because <see cref="Puzzle.TurnsToSolution"/> is a live reading
+        /// of the board in front of it — asking at the end of a run returns zero, since the
+        /// board is by then solved. It survives a restart without being retaken:
+        /// <see cref="Puzzle.Reset"/> restores the same start rotations, so the route is a
+        /// fact about the glade rather than about the attempt.
+        /// </para>
+        /// </summary>
+        int _route;
+
+        /// <summary>
+        /// Whole seconds already painted, so the readout builds one string a second instead
+        /// of one a frame. -1 forces the next paint.
+        /// </summary>
+        int _paintedSeconds = -1;
 
         public BoardView Board => _board;
         public LevelDefinition Level => _def;
@@ -126,6 +153,9 @@ namespace GlimmerGrove
             _board.OnSolved = Finish;
             _board.OnDefeated = Defeat;
 
+            // Before a single turn is possible, and before the board view exists to allow one.
+            _route = _puzzle.TurnsToSolution;
+
             _startedAt = Time.unscaledTime;
             PlayerProgress.NoteOpened(_def.Id);
             LevelAnalytics.TrackStarted(_def, PlayerProgress.Record(_def.Id).Clears + 1);
@@ -179,6 +209,19 @@ namespace GlimmerGrove
             UIKit.Titled("Tag", bar, Loc.Get(_def.TaglineKey), 28, new Color(1f, .94f, .80f, .82f),
                          TextAnchor.MiddleCenter, new Vector2(760f, 44f), new Vector2(.5f, .5f),
                          new Vector2(0f, -38f), 3f, 3f);
+
+            // Under the tagline rather than in the counter row, which has no free width that
+            // survives a narrow screen — the two pills are anchored to opposite edges and the
+            // star pips hold the middle, so anything wedged between them collides on some
+            // aspect ratio nobody tested. This slot is centred, fixed, and clear of both the
+            // colour key and the board.
+            //
+            // Quiet on purpose. It is a record the player may care about afterwards, not a
+            // countdown they have to race, and nothing in this game is scored on speed.
+            _timer = UIKit.Titled("Timer", bar, RunClock.Format(0), 30,
+                                  new Color(1f, .96f, .86f, .55f), TextAnchor.MiddleCenter,
+                                  new Vector2(320f, 40f), new Vector2(.5f, .5f),
+                                  new Vector2(0f, -80f), 3f, 2f);
         }
 
         void BuildStatus()
@@ -280,8 +323,11 @@ namespace GlimmerGrove
                                      new Vector2(.5f, .5f), new Vector2(-215f, 10f), () => _board.Undo());
             _hint = UIKit.IconButton("Hint", bar, "sq_orange", "ic_hint", new Vector2(168f, 168f),
                                      new Vector2(.5f, .5f), new Vector2(0f, 10f), UseHint);
+            // Routed through RestartLevel rather than straight at the board, so this button
+            // and the pause menu's cannot disagree about what a restart resets — the clock
+            // was the first thing they would have.
             UIKit.IconButton("Restart", bar, "sq_green", "ic_restart", new Vector2(150f, 150f),
-                             new Vector2(.5f, .5f), new Vector2(215f, 10f), () => _board.Restart());
+                             new Vector2(.5f, .5f), new Vector2(215f, 10f), RestartLevel);
 
             var badge = UIKit.Img("Badge", _hint.transform, Art.Disc(64), Pal.Rose,
                                   new Vector2(58f, 58f), new Vector2(1f, 1f), new Vector2(-16f, -16f));
@@ -305,6 +351,60 @@ namespace GlimmerGrove
             => UIKit.Titled("Cap_" + text, parent, text, 26, new Color(1f, .95f, .84f, .62f),
                             TextAnchor.MiddleCenter, new Vector2(220f, 36f), new Vector2(.5f, .5f),
                             new Vector2(x, -84f), 3f, 0f);
+
+        // --------------------------------------------------------------- the clock
+        /// <summary>
+        /// Drives the run stopwatch.
+        ///
+        /// <para>
+        /// The start edge is found by <em>polling the move count</em> rather than by hooking
+        /// the turn. <see cref="BoardView"/> raises <c>OnChanged</c> for undos and refreshes
+        /// as well as turns, so a subscription would have to re-derive "was that the first
+        /// turn" anyway — and it would be one more thing to unsubscribe. A poll cannot miss
+        /// the edge, cannot fire twice (<see cref="RunClock.Start"/> is idempotent), and
+        /// leaves nothing behind when the screen is destroyed.
+        /// </para>
+        /// <para>
+        /// Time only accrues while the board can actually be acted on. <c>Locked</c> covers
+        /// the pause overlay, the win and defeat sequences and the brief animation locks, so
+        /// a player who pauses to answer the door does not lose their record — and one who
+        /// backgrounds the app contributes nothing at all, because no frames run.
+        /// </para>
+        /// </summary>
+        void Update()
+        {
+            if (_puzzle == null) return;
+
+            if (!_clock.HasStarted && _puzzle.Moves > 0) _clock.Start();
+
+            if (_clock.HasStarted && !_finished && _board != null && !_board.Locked)
+                _clock.Advance(Time.unscaledDeltaTime);
+
+            PaintClock();
+        }
+
+        void PaintClock()
+        {
+            if (!_timer) return;
+
+            int seconds = _clock.Millis / 1000;
+            if (seconds == _paintedSeconds) return;
+
+            _paintedSeconds = seconds;
+            _timer.text = RunClock.Format(_clock.Millis);
+        }
+
+        /// <summary>
+        /// Puts the stopwatch back to zero. Every path that hands the player a fresh board
+        /// goes through here — see <see cref="RunClock.Reset"/> for why missing one would
+        /// stick permanently rather than merely look wrong once.
+        /// </summary>
+        void ResetClock()
+        {
+            _clock.Reset();
+            _paintedSeconds = -1;
+            PaintClock();
+        }
 
         // --------------------------------------------------------------- state
         void Refresh()
@@ -380,7 +480,14 @@ namespace GlimmerGrove
 
         public void RestartLevel()
         {
+            if (_board == null) return;
+
+            // BoardView.Restart refuses while a celebration is playing, and the clock must
+            // not be zeroed in that case either or the two would part company.
+            if (_board.Locked && _finished) return;
+
             _board.Restart();
+            ResetClock();
             Refresh();
         }
 
@@ -397,6 +504,10 @@ namespace GlimmerGrove
             if (_finished) return;
             _finished = true;
 
+            // Frozen before anything else reads it. A celebration runs for seconds after
+            // this, and the value is about to be written to a permanent record.
+            _clock.Stop();
+
             int moves = _puzzle.Moves;
             int stars = _puzzle.StarsFor(Mathf.Max(1, moves));
 
@@ -410,9 +521,9 @@ namespace GlimmerGrove
             // RecordRun folds this run in. See RunOutcome.
             var run = RunOutcome.Win(_puzzle, stars, previousBest, firstClear,
                                      before.Clears + 1, HintsSpent,
-                                     Time.unscaledTime - _startedAt);
+                                     Time.unscaledTime - _startedAt, _clock.Millis, _route);
 
-            PlayerProgress.RecordRun(_def.Id, stars, moves);
+            PlayerProgress.RecordRun(_def.Id, stars, moves, run.Millis);
 
             // Counted here and in Defeat, which are the two places a run actually ends.
             // PlayerProgress hears about wins only — a defeat is not a worse clear, it
@@ -486,6 +597,8 @@ namespace GlimmerGrove
             if (_finished) return;
             _finished = true;
 
+            _clock.Stop();
+
             var record = PlayerProgress.Record(_def.Id);
 
             // Read off the board before anything touches it. The panel this feeds offers
@@ -493,7 +606,7 @@ namespace GlimmerGrove
             // asked afterwards would be describing a run that no longer exists.
             var run = RunOutcome.Loss(_puzzle, reason, record.BestMoves,
                                       record.Clears + 1, HintsSpent,
-                                      Time.unscaledTime - _startedAt);
+                                      Time.unscaledTime - _startedAt, _clock.Millis);
 
             bool charged = Wallet.TrySpendHeart();
             int left = Profile.Hearts;
@@ -527,6 +640,10 @@ namespace GlimmerGrove
             _startedAt = Time.unscaledTime;
 
             _board.Restart();
+
+            // After the latch comes off, so the clock is armed for the new run rather than
+            // still carrying the stopped reading of the one that just failed.
+            ResetClock();
             Refresh();
         }
 

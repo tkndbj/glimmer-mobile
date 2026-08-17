@@ -85,8 +85,34 @@ namespace GlimmerGrove.Persistence
         ///      would have been hearts' old mistake and a per-companion flag could not tell
         ///      "not bought" from "written before this companion existed". See
         ///      <see cref="Progression.CompanionLedger"/>.
+        /// v13 — the best standing ever held on each glade
+        ///      (<see cref="LevelRecordDto.bestRank"/>), so the map can mark a result
+        ///      permanently instead of the victory panel mentioning it once and losing it.
+        ///      A standing is the first thing in this file derived from a <em>population</em>
+        ///      rather than from the player, which is what makes it interesting: the figure
+        ///      moves for reasons the player had no part in. Stored and promoted by
+        ///      <c>max</c>, never recomputed for display — recomputing means a node sagging
+        ///      while its owner is away, and freezing whatever was current when the record
+        ///      was set means a player who beats their own move count against a larger
+        ///      population is demoted for playing better. Zero is unreachable for a real
+        ///      standing (<see cref="Social.LevelStats.MinRank"/> is 5), so a v12 file reads
+        ///      as unranked and this is the first section to need no migration at all — the
+        ///      move counts it is derived from were already on disk, and
+        ///      <see cref="PlayerProgress.RefreshRanks"/> backfills from them the first time
+        ///      a table lands. See <see cref="Social.RankTier"/>.
+        /// v14 — the fastest clear of each glade in milliseconds
+        ///      (<see cref="LevelRecordDto.bestMillis"/>), so a map node can report what the
+        ///      player actually did rather than only how it compared. Smaller wins and zero
+        ///      is absent, which is the join <c>bestMoves</c> has always used: a best only
+        ///      ever falls, so both devices hold real achievements and the lower is the
+        ///      better one. Milliseconds rather than seconds so zero is unreachable for a
+        ///      real run — a one-turn board can be finished inside a second — which is the
+        ///      same sentinel argument v13 made. Needs no migration for the same reason: an
+        ///      older file reads as untimed. Unlike a standing it cannot be backfilled,
+        ///      because nothing already stored implies how long a past clear took. See
+        ///      <see cref="RunClock"/>.
         /// </summary>
-        public const int Version = 12;
+        public const int Version = 14;
 
         /// <summary>Progress that predates this file: index-keyed keys in PlayerPrefs.</summary>
         public const int LegacyPlayerPrefsVersion = 0;
@@ -639,5 +665,18 @@ namespace GlimmerGrove.Persistence
         public int clears;
         public long firstClearedUnix;
         public long lastPlayedUnix;
+
+        /// <summary>
+        /// Best standing ever held on this glade, as percent-of-keepers-slower. 0 = never
+        /// ranked, which is also what an older file reads as. See
+        /// <see cref="LevelRecord.BestRank"/>.
+        /// </summary>
+        public int bestRank;
+
+        /// <summary>
+        /// Fastest clear in milliseconds, from the first turn. 0 = never timed, which is
+        /// also what an older file reads as. See <see cref="LevelRecord.BestMillis"/>.
+        /// </summary>
+        public int bestMillis;
     }
 }

@@ -91,12 +91,45 @@ namespace GlimmerGrove
         /// <summary>Hints spent on this run.</summary>
         public readonly int HintsUsed;
 
-        /// <summary>Wall-clock seconds from the board appearing to the run resolving.</summary>
+        /// <summary>
+        /// Wall-clock seconds from the board appearing to the run resolving.
+        ///
+        /// <b>Not the player's time.</b> This includes staring at an untouched board, and on
+        /// a phone it includes being interrupted — so it describes how long the screen was
+        /// open and nothing else. It exists for analytics, which wants exactly that. Anything
+        /// shown to a player or written to a record wants <see cref="Millis"/>.
+        /// </summary>
         public readonly float Seconds;
+
+        /// <summary>
+        /// Milliseconds of actual play: from the first conduit turned to the run resolving,
+        /// accumulated a frame at a time and never counting a suspended app. Zero when the
+        /// run ended before a single turn. See <see cref="RunClock"/>.
+        /// </summary>
+        public readonly int Millis;
+
+        /// <summary>
+        /// The authored route: how many turns separated the untouched board from the
+        /// solution it was built around, measured before the player touched anything.
+        /// 0 when it could not be taken.
+        ///
+        /// <para>
+        /// <b>It is not a theoretical minimum, and the copy must never call it one.</b> A
+        /// glade is won when every lamp is lit, which can happen with spare conduits left
+        /// pointing anywhere — so a player can and does finish in fewer turns than this by
+        /// finding a shorter path than the one the level was authored with. This is exactly
+        /// what <see cref="Puzzle.TurnsToSolution"/> documents about itself, and it is why
+        /// the reading has three cases rather than two: over it, on it, and under it. The
+        /// third is the interesting one and would be a bug in any design that promised this
+        /// number was unbeatable.
+        /// </para>
+        /// </summary>
+        public readonly int Route;
 
         RunOutcome(LevelId level, bool won, int stars, int moves, int target, int previousBest,
                    bool firstClear, int attempt, DefeatReason reason, int turnsToSolution,
-                   int lampsLit, int lampCount, int hintsUsed, float seconds)
+                   int lampsLit, int lampCount, int hintsUsed, float seconds, int millis,
+                   int route)
         {
             Level = level;
             Won = won;
@@ -112,14 +145,17 @@ namespace GlimmerGrove
             LampCount = lampCount < 0 ? 0 : lampCount;
             HintsUsed = hintsUsed < 0 ? 0 : hintsUsed;
             Seconds = seconds < 0f ? 0f : seconds;
+            Millis = millis < 0 ? 0 : millis;
+            Route = route < 0 ? 0 : route;
         }
 
         /// <summary>A glade finished. <paramref name="attempt"/> counts this run.</summary>
         public static RunOutcome Win(Puzzle board, int stars, int previousBest, bool firstClear,
-                                     int attempt, int hintsUsed, float seconds)
+                                     int attempt, int hintsUsed, float seconds, int millis,
+                                     int route)
             => new RunOutcome(board.Id, true, stars, board.Moves, board.Gold, previousBest,
                               firstClear, attempt, DefeatReason.OutOfMoves, 0,
-                              board.LampsLit, board.LampCount, hintsUsed, seconds);
+                              board.LampsLit, board.LampCount, hintsUsed, seconds, millis, route);
 
         /// <summary>
         /// A run lost. No stars, no record and no reward — <c>PlayerProgress</c> never
@@ -127,10 +163,11 @@ namespace GlimmerGrove
         /// "never" values rather than at anything a reader could mistake for a result.
         /// </summary>
         public static RunOutcome Loss(Puzzle board, DefeatReason reason, int previousBest,
-                                      int attempt, int hintsUsed, float seconds)
+                                      int attempt, int hintsUsed, float seconds, int millis,
+                                      int route = 0)
             => new RunOutcome(board.Id, false, 0, board.Moves, board.Gold, previousBest,
                               false, attempt, reason, board.TurnsToSolution,
-                              board.LampsLit, board.LampCount, hintsUsed, seconds);
+                              board.LampsLit, board.LampCount, hintsUsed, seconds, millis, route);
 
         // ------------------------------------------------------------- derived
         /// <summary>
@@ -185,6 +222,90 @@ namespace GlimmerGrove
 
         /// <summary>Cleared at or under the three-star threshold, unaided.</summary>
         public bool Flawless => Won && Target > 0 && Moves <= Target && HintsUsed == 0;
+
+        // ------------------------------------------------------------- the route
+        /// <summary>True when this run can be measured against the authored route at all.</summary>
+        public bool HasRoute => Won && Route > 0 && Moves > 0;
+
+        /// <summary>
+        /// Turns spent beyond the authored route. Negative when the player found a shorter
+        /// way than the glade was built around, which is a real result and not an error.
+        /// </summary>
+        public int TurnsOverRoute => HasRoute ? Moves - Route : 0;
+
+        /// <summary>Cleared in exactly the authored route's turns — no turn wasted.</summary>
+        public bool MatchedRoute => HasRoute && Moves == Route;
+
+        /// <summary>
+        /// Cleared in fewer turns than the authored route.
+        ///
+        /// <para>
+        /// The rarest thing this panel can say, and the reason <see cref="Route"/> is
+        /// documented as beatable. The player lit every lamp without bothering to straighten
+        /// conduits the author's own solution turned — they did not follow the intended path,
+        /// they found a better one.
+        /// </para>
+        /// </summary>
+        public bool BeatRoute => HasRoute && Moves < Route;
+
+        /// <summary>
+        /// Whether the comparison is worth putting into <em>words</em>.
+        ///
+        /// <para>
+        /// Drawn upward only, exactly as the population percentile is and for the same reason:
+        /// a line that appears after every win to report twenty wasted turns is a scolding on
+        /// a victory screen. Note what it no longer gates. The measurement used to be a panel
+        /// of its own, slipped in front of the Next button, so this decided whether the player
+        /// was made to take a detour; now the bars are simply a section of the victory panel
+        /// and are drawn on every run that has a route, because they cost nothing. What is
+        /// still conditional is the sentence under them.
+        /// </para>
+        /// <para>
+        /// <b>That is why a personal best no longer qualifies on its own.</b> It used to, and
+        /// the argument was sound while this bought a whole panel — a player who has just
+        /// played their own best game deserves to be shown how it measured up, at whatever
+        /// standard they are currently at. But the sentence available to a best that was still
+        /// ninety turns over the route is "56 turns from a perfect route", printed beside a
+        /// stamp already saying the run was their finest. One of those two is a scolding. The
+        /// recognition moved to the stamp, which appears on every new best; this kept the half
+        /// it can actually say something kind about.
+        /// </para>
+        /// <para>
+        /// The band is therefore the only way in. It is proportional rather than flat, and that
+        /// mattered in practice: shipped first at a fixed two turns it excluded three glades
+        /// out of four on the live save, so the line was invisible and looked broken. See
+        /// <see cref="RouteNearBand"/>.
+        /// </para>
+        /// </summary>
+        public bool RouteWorthSaying => HasRoute && TurnsOverRoute <= RouteNearBand;
+
+        /// <summary>
+        /// How far over the route still counts as close, for this glade.
+        ///
+        /// <para>
+        /// <b>Proportional, not flat.</b> A fixed allowance is the wrong shape twice over:
+        /// two turns over a ten-turn route is a fifth of it wasted, and two over a hundred-turn
+        /// route is a level of precision no player will ever reach twice. Scaling with the
+        /// route makes "close" mean the same thing on a tutorial board and on a forty-glade
+        /// monster, which is the only way this survives the catalog growing.
+        /// </para>
+        /// <para>
+        /// The floor matters as much as the fraction: on a very short glade an eighth rounds
+        /// to nothing, and a band of zero would make the panel unreachable on exactly the
+        /// boards where a player is most likely to be near-perfect.
+        /// </para>
+        /// </summary>
+        public int RouteNearBand
+        {
+            get
+            {
+                int eighth = Route / 8;
+                return eighth > RouteNearFloor ? eighth : RouteNearFloor;
+            }
+        }
+
+        /// <summary>The narrowest "close" ever gets, however short the glade.</summary>
+        public const int RouteNearFloor = 2;
 
         public override string ToString()
             => Won

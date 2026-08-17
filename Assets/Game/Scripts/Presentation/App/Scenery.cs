@@ -127,10 +127,21 @@ namespace GlimmerGrove
         Image[] _full, _empty;
         float _size;
 
+        /// <summary>How far the middle star rides above its neighbours, as a fraction of size.</summary>
+        const float ArcLift = .22f;
+
         public static StarRow Create(Transform parent, Vector2 anchor, Vector2 pos, float size,
                                      float spacing, int filled = 0, bool arc = false)
         {
-            var rt = UIKit.Box("Stars", parent, new Vector2(spacing * 3f, size), anchor, pos);
+            // The box has to allow for the arc, and the stars have to be centred inside it.
+            // It used to be exactly `size` tall whether or not the middle star was lifted, so
+            // an arced row's real extent ran from -size/2 to +size/2 + lift — the group sat
+            // half a lift high, and on the victory panel that was enough to push the middle
+            // star into the ribbon above it. Rows without an arc are unaffected: the lift is
+            // zero and every number below is what it always was.
+            float lift = arc ? size * ArcLift : 0f;
+
+            var rt = UIKit.Box("Stars", parent, new Vector2(spacing * 3f, size + lift), anchor, pos);
             var row = rt.gameObject.AddComponent<StarRow>();
             row.Build(size, spacing, filled, arc);
             return row;
@@ -143,8 +154,12 @@ namespace GlimmerGrove
             _empty = new Image[3];
             for (int i = 0; i < 3; i++)
             {
+                float lift = arc ? size * ArcLift : 0f;
                 float x = (i - 1) * spacing;
-                float y = arc ? (i == 1 ? size * .22f : 0f) : 0f;
+
+                // Half a lift down, so the arc straddles the row's centre instead of growing
+                // out of the top of it.
+                float y = (i == 1 ? lift : 0f) - lift * .5f;
                 _empty[i] = UIKit.Img("e" + i, transform, Art.S("Ui/star_empty"), new Color(1, 1, 1, .55f),
                                       Vector2.one * size, new Vector2(.5f, .5f), new Vector2(x, y));
                 _empty[i].preserveAspect = true;

@@ -142,6 +142,21 @@ namespace GlimmerGrove.Persistence
                     clears = Math.Max(existing.clears, record.clears),
                     firstClearedUnix = Earliest(existing.firstClearedUnix, record.firstClearedUnix),
                     lastPlayedUnix = Math.Max(existing.lastPlayedUnix, record.lastPlayedUnix),
+
+                    // Larger wins, and it has to: a standing is measured against a
+                    // population that moves, so two devices that ranked the same move count
+                    // months apart hold different honest answers. The larger is the one that
+                    // knows the player at their best, and it is the only rule that makes
+                    // this a join — see invariant 11b. Absent reads as zero, which no real
+                    // standing can be, so a device on an older build contributes nothing
+                    // rather than clearing a band the other device earned.
+                    bestRank = Math.Max(existing.bestRank, record.bestRank),
+
+                    // Smaller wins, exactly like the move count and for the same reason: a
+                    // best only ever falls, so both sides hold a real achievement and the
+                    // lower one is the better. Zero is absent rather than instant — see
+                    // RunClock — so a device that never timed a glade cannot beat one that did.
+                    bestMillis = RunClock.Better(existing.bestMillis, record.bestMillis),
                 };
             }
         }
@@ -170,6 +185,8 @@ namespace GlimmerGrove.Persistence
             clears = r.clears,
             firstClearedUnix = r.firstClearedUnix,
             lastPlayedUnix = r.lastPlayedUnix,
+            bestRank = r.bestRank,
+            bestMillis = r.bestMillis,
         };
 
         // -------------------------------------------------------------- wallet

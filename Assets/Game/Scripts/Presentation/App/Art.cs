@@ -195,6 +195,38 @@ namespace GlimmerGrove
         public static Sprite FadeUp(int h = 64)
             => Make($"fadeup{h}", 4, h, (x, y) => 1f - (y / (float)h), new Vector4(0, 0, 0, 0));
 
+        /// <summary>
+        /// Vertical three-stop gradient carrying its own colour, for a coloured backdrop.
+        ///
+        /// <para>
+        /// One of the two generated shapes that is not a white mask, for the reason
+        /// <see cref="Gem"/> is the other: <c>Image.color</c> multiplies, so a layer holding
+        /// more than one colour cannot be a mask tinted at the call site — the darkest stop
+        /// would decide the result.
+        /// </para>
+        /// <para>
+        /// A sprite rather than a stack of faded plates because a full-screen layer costs the
+        /// same fill rate whether it is opaque or nearly transparent, and on a phone that is
+        /// the expensive part of a backdrop. Three stops in one draw is a third of the cost of
+        /// three washes, and the only thing a stack bought was being able to tween the stops
+        /// independently, which nothing needs.
+        /// </para>
+        /// </summary>
+        public static Sprite Gradient(Color bottom, Color middle, Color top, int height = 128)
+        {
+            int h = Mathf.Max(2, height);
+            string key = $"grad{h}:{ColorUtility.ToHtmlStringRGBA(bottom)}"
+                       + $":{ColorUtility.ToHtmlStringRGBA(middle)}"
+                       + $":{ColorUtility.ToHtmlStringRGBA(top)}";
+
+            return MakeRGBA(key, 4, h, (x, y) =>
+            {
+                float v = (y - .5f) / (h - 1);
+                return v < .5f ? Color.Lerp(bottom, middle, v * 2f)
+                               : Color.Lerp(middle, top, (v - .5f) * 2f);
+            });
+        }
+
         /// <summary>Capsule aligned to +Y, used for conduit arms.</summary>
         public static Sprite Capsule(int thickness = 24, int length = 96)
         {
