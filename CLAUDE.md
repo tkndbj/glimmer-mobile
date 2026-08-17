@@ -199,11 +199,38 @@ What that means in practice here:
     missing config block leaves the claim *unconfirmed* rather than rejected, so it survives
     until the seeder has run.
 14. **Derived rewards are free of save state, and that is why they are preferred.** The
-    golden glade bonus and the event tracks add nothing to `SaveFileDto` — no counter, no claim,
-    no merge rule — because both are pure functions of things already stored. That is not
-    an economy: it is the reason they were designed that way. Save state is where features
-    here go wrong (see 11b), so a reward that can be expressed as a function of the star
-    ledger should be.
+    golden glade bonus adds nothing to `SaveFileDto` — no counter, no claim, no merge rule —
+    because it is a pure function of things already stored. That is not an economy: it is the
+    reason it was designed that way. Save state is where features here go wrong (see 11b), so
+    a reward that can be expressed as a function of the star ledger should be.
+14a. **Being derived decides where a reward comes *from*, never when it arrives.** The event
+    track cost one field in the end (v11, `EventCollection`) and the field is not the reward —
+    it is a floor saying how much of a track the player has asked for. The arithmetic is
+    untouched: still derived, still recomputed by the server, still bounded below by the
+    earned floor. This is the distinction 14 originally blurred, and the streak had already
+    made the same correction one version earlier. A reward that lands in the balance while a
+    defeat screen is up is an accounting entry; nobody experiences it. If keeping a payout
+    derived means it can only arrive silently, add the floor — one monotonic integer per key,
+    merged by `max` — and keep everything else derived. What must not come back is a *stored
+    amount*.
+15. **An entitlement is stored; everything that pays is derived.** Companion purchases are
+    the first thing in the save file kept because it genuinely *cannot* be derived — nothing
+    observable implies "this player paid 8,000 credits for Coral", and mining it back out of a
+    debit's free-text `reason` would make a support field load-bearing. So `companionsOwned`
+    (v12) is stored, in the only shape invariant 11b permits: a **set of permanent ids joined
+    by union**, because buying is irreversible. A count would be hearts' old mistake and a
+    per-companion flag could not tell "not bought" from "written before this companion
+    existed". Note what makes this safe where a stored *amount* would not be — an entitlement
+    is not money. It is forgeable and that is priced in: a forged entry buys a portrait, no
+    currency and no advantage, and the money half is defended where money always is, by
+    `submitSpends` refusing a debit the server-derived balance cannot cover. Before storing
+    anything new, ask which of the two it is; if it pays, it goes back to 13 and 14a.
+15a. **The unlock rule is "level **or** purchase", and it lives only in `CompanionLedger`.**
+    `AvatarCatalog.ReachedBy` answers the level half and is named for its narrowness on
+    purpose — it used to be `IsUnlocked`, and a call site checking half the rule under a name
+    that promises all of it is exactly how a companion somebody paid for stays behind a
+    padlock. Every screen asks `IsHeld`. The level half stays derived and is never written
+    down: a second answer is a second thing a retune can put out of step with the first.
 
 ## Layout
 
@@ -281,6 +308,51 @@ mirror, for a client rolled back to an older build, and are read only when
 `heartsProduced` is zero or less, which is what identifies a pre-v8 file. Hearts were the
 only merge in the save file that could lose something; the currency ledgers, the
 progression floors, the chest and ad counters and the tip set were all already joins.
+
+**The heart gate is content** (`HeartRuleTable`, the `hearts` block in `progression.json`).
+Refill cap, holding ceiling, refill period, boosted period, max boost hours and what a loss
+costs are all published, on the same channel and in the same file as the ad payouts and the
+chest odds — because the gate decides how many sessions a player gets, so it multiplies every
+other number in that file, and eight hours is a guess made before anybody has a retention
+curve. `HeartRules` is a facade over `ProgressionRules.Table.Hearts`, so every call site reads
+exactly as it did when these were constants.
+
+**Every published field is safe to lower, and one line of code is why.** The ledger's
+structural clamp uses `HeartLimits.HardCeiling` — a permanent `const` — and *never* the
+published ceiling. If it used the published one, lowering it would cut `produced` downward on
+whichever devices had fetched the new table; `produced` only ever rises, and the whole merge
+proof rests on that, so one device would keep restoring what the other kept clamping and the
+two would never converge. Instead the published ceiling is enforced in `Hearts.Grant`, where
+it is a decision taken once: a lower ceiling refuses new hearts and confiscates none.
+`LoweringThePublishedCeilingNeverConfiscatesHeartsAlreadyHeld` pins it. Same shape for the
+refill cap — lowering it stops the clock earlier and drains nobody.
+
+Two things this forced. `Wallet.MaxHearts` and `Profile.MaxHearts` are properties, not
+`const` — a const is baked into every reading assembly at compile time, which is the wrong
+shape for a number a config push may move — and `TrySpendHeart` is an overload rather than a
+default argument, for the same reason. `ContentValidation.ValidateHearts` warns (never errors)
+on the combinations the reader cannot judge: a gate that does not bind, a ceiling too close to
+the cap for collected hearts to survive, a boost nobody can feel, a loss that ends the session.
+
+Where the numbers live now: `HeartRules.RefillCap` is 5 — where the *clock* stops, so the pace
+of free play is exactly what it always was — and `HeartRules.Ceiling` is 50, the most anybody
+may hold. Everything a player *collects* — a
+chest, a streak night, a watched video — stacks into the gap between them instead of
+evaporating at a full bar, which is what it used to do at precisely the moment somebody was
+most engaged. This cost one line of state and no schema bump: the merge's upper invariant is
+now `produced ≤ spent + Ceiling` rather than `+ Max`, and `Hearts.At` already asked only for
+the count before granting, so the join and its proof are untouched. A second counter
+separating waited-for hearts from collected ones was built first and buys nothing — no rule
+here ever needs to know which kind a heart was.
+
+Two consequences worth not rediscovering. `IsFull` is gone, split into `IsRefilled` ("the
+clock has nothing left to do") and `IsAtCeiling` ("another heart would be thrown away") —
+`RewardedAds.WouldBenefit` wants the second, and reading the first there is what used to
+pull the offer off the home screen. And `Spend` restarts the timer by asking
+`NextRefillUnix` rather than by comparing to the cap: while a surplus is held the stored
+deadline idles in the *past*, so the spend that finally drops a player under the cap must
+start a fresh period or the next read pays a heart nobody waited for —
+`SpendingBackThroughTheCapRestartsTheClockRatherThanPayingInstantly` pins it.
 
 The `heart_boost` drop halves heart regeneration (4h instead of 8h) for 24 hours;
 `Hearts.At` takes the boost deadline and asks per refill, so a catch-up spanning the
@@ -375,6 +447,23 @@ work** — `AdOfferState` has six members and each renders a different sentence,
 greyed button with no explanation is how players learn a feature is broken. And the daily cap
 is deliberately **higher than any network will fill** (10/day), so it binds only as a lever
 that can be lowered from a config push.
+
+**The `+` beside a resource opens that resource's panel, always.** It used to pick between
+three destinations depending on whether an ad happened to be loaded — the offer panel, the
+out-of-hearts gate, or a toast — so the one control on the hub that looks like a question
+mark answered a different question each time it was tapped. `AdOfferOverlay` is now the
+panel for hearts and for coins in every state, and it leads with **facts read from the rules
+rather than written into the copy**: how fast hearts come back (and how much faster while a
+boost runs), when the next one lands, that collected hearts stack past five, and how many
+videos today's allowance has left. The offer sits under them. `StreakInfoOverlay` is built
+the same way for the same reason — a panel that explains the game is the first thing to rot
+when the game is retuned. The one refusal that cannot resolve by waiting, a placement the
+content table does not carry, drops the watch button entirely rather than greying it: the
+facts are still worth the trip.
+
+The watch buttons carry a play glyph in front of the label, centred with it as one block by
+`UIKit.FitLabel` — which any path that repaints a caption has to call, because the captions
+here are countdowns.
 
 `AdConfig` holds `UNSET` for the app key and every ad unit, exactly as the store secrets do,
 so `Boot` keeps the null provider until a LevelPlay account exists. Filling those in, plus
@@ -507,9 +596,78 @@ none of the track finished, a full flower at the end of it. The three-star silho
 replaces was wrong twice over, being both the vocabulary of a *glade's* reward and unable to
 say anything about where the player was.
 
+**The event is a vine you climb by hand — save schema v11.** `EventScreen` replaces
+`EventOverlay`, which is deleted. The panel it replaces *reported*, correctly, because until
+v11 an event milestone landed in the balance the instant the glade was cleared and there was
+nothing on it to do. Now a rung opens when it is reached and waits until it is tapped, which
+is the change v10 made to the streak, for the same reason, in the same shape: one monotonic
+floor per event — the largest goal taken — keyed by the event's permanent id, merged by
+`max`. See invariant 14a; the arithmetic stayed derived and only the moment moved.
+
+Four decisions are worth not re-litigating. The floor is **clamped server-side to the glades
+the same derivation counted** (`eventCredits` in `functions/src/progression.ts`), so a
+client-written number that decides a payout is still safe: forging it takes early what play
+had already earned and nothing more. Nothing here **can** pay twice — a balance is
+`max(derived, earnedFloor)` and collecting only raises `derived` — which is why
+`SaveFileDto.eventsSeeded` is a courtesy rather than a safeguard: it marks a pre-v11 file's
+reached rungs as already taken so a returning player is not offered flowers whose credits are
+already banked. A **closed window stops progress and never takes a bloom**, so
+`GroveEvents.Featured` keeps the hub's box while anything is uncollected. And the page **lays
+itself out from the goals**: rungs sit along the curve at `goal / finalGoal`, so a track of
+any shape up to `EventRules.MaxMilestones` draws itself and two rungs placed close together
+are drawn close together.
+
+Visually it is a vine rather than a fourth row of tiles, and the backdrop (`Bg/event_*`) is
+the ground the hub's islands float above at first light — a place, not a third grade of the
+same landscape, because two re-lights of one scene is a mood and three is a filter. Three
+rung states are three flowers: a tight bud on a dry stem, a half-open bloom under the same
+turning gold fan the streak uses, and a full flower with a seal on it. `Art.Bloom` quantises
+its openness to eighths precisely so the middle one can be tweened into the last.
+
+**Companions are bought as well as earned — save schema v12.** The roster used to be
+level-gated only, and the arithmetic said that was a paywall by accident: three-starring a
+hundred-glade catalog reaches about keeper level 15, the gates run to 66, so **18 of 31
+companions were unreachable by any route for over a year**. Coins are now the second route.
+`CompanionLedger` owns the composite rule (invariant 15a); `unlockCost` in `manifest.json`
+owns the price, so a drop retunes the whole ladder with no app update.
+
+Four decisions are worth not re-litigating. The purchased set is **stored** — the first
+non-derivable thing in the save — as a union-joined set of ids, which is invariant 15 and the
+reason it is safe. Only **monarch** is free now: every other gate moved up one so a new player
+starts with exactly one companion and thirty things to want. The ladder is **800 → 30,000
+across 30 companions** (~270,000 credits, about sixteen months of ordinary play), pinned at
+both ends — a gated companion priced under half the 1,250-coin account seed is a build error,
+and `Validate Content` derives the ~540/day income from `progression.json` and reports the
+roster in days, so nobody has to guess again. And a short balance **opens the coin offer
+instead of greying the button**: that is the moment a player has decided they want something,
+which is the best moment in the game to offer a video and the worst to teach them a control is
+dead. `CompanionUnlockOverlay` leads with the free route regardless.
+
+**A companion arrives as a reveal, not as a line on a receipt.** The purchase panel closes and
+`CompanionRevealOverlay` takes the screen: the room blacks out, three rings collapse inward, a
+flash and a shockwave break it open, and the friend lands out of a counter-rotating fan of light
+with stars, a stamped name and confetti. It is a `Cue`, because the timing is the design — the
+pause before the flash is the whole trick. Three decisions are worth not re-litigating. The
+spectacle **scales with the companion**: a tier derived from the unlock gate (1–5) drives the ray
+count, the star count, the confetti and the colour, which runs the rarity ladder every player
+already knows — pale, green, blue, purple, **gold last**, because gold is what this UI already
+means by "best" and the first version wasted it in fourth place. Everything is **built hidden and
+then revealed**, never built by the beats, which is what makes `Skip` one pass of assignments
+instead of a second choreography that would drift out of agreement with the first — it is
+skippable from frame one, because this is seen thirty times in the life of an account. And it
+needs **no new art**: the fan, shockwaves, glow and vignette are `Art.Rays`/`Ring`/`Glow`/
+`Vignette`, for the reason `Art.Bloom` is procedural — a reveal that scales with the roster cannot
+wait on a sprite per companion.
+
+Both roster screens repaint on **`CompanionLedger.Changed`** rather than on a callback from the
+panel. The callback was the bug: it only fired from the "wear" button, so a player who bought a
+companion and then dismissed with the corner cross or the scrim saw it still padlocked until they
+left the screen and came back. A panel with three exits reports through none of them reliably; an
+event cannot be forgotten.
+
 **Verifying is now in the repo.** `Tools/verify/` holds `compile.py` (every assembly
 separately, which is what actually proves the layering), `tests.py` (the EditMode suite via
-a reflection runner — 320 pass offline, 62 need the Editor and say so), `content.py` and
+a reflection runner — 380 pass offline, 62 need the Editor and say so), `content.py` and
 `loc.py`. It no longer has to be recovered from a scratchpad.
 
 Not done, deliberate: **in-app purchases** (the four store secrets hold `UNSET`, so

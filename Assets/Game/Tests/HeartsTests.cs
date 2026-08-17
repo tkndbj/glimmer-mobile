@@ -14,7 +14,7 @@ namespace GlimmerGrove.Tests
     /// </summary>
     public sealed class HeartsTests
     {
-        const long P = HeartRules.RefillSeconds;
+        static readonly long P = HeartRules.RefillSeconds;
         const long T0 = 1_700_000_000;      // an arbitrary fixed "now"
 
         [Test]
@@ -22,7 +22,7 @@ namespace GlimmerGrove.Tests
         {
             var hearts = Hearts.Full;
 
-            Assert.AreEqual(HeartRules.Max, hearts.Count);
+            Assert.AreEqual(HeartRules.RefillCap, hearts.Count);
             Assert.AreEqual(0, hearts.NextRefillUnix, "a full player has no deadline to show");
             Assert.AreEqual(0, hearts.SecondsToNext(T0));
         }
@@ -32,7 +32,7 @@ namespace GlimmerGrove.Tests
         {
             var hearts = Hearts.Full.Spend(1, T0);
 
-            Assert.AreEqual(HeartRules.Max - 1, hearts.Count);
+            Assert.AreEqual(HeartRules.RefillCap - 1, hearts.Count);
             Assert.AreEqual(T0 + P, hearts.NextRefillUnix);
             Assert.AreEqual(P, hearts.SecondsToNext(T0));
         }
@@ -47,7 +47,7 @@ namespace GlimmerGrove.Tests
             var first = Hearts.Full.Spend(1, T0);
             var second = first.Spend(1, T0 + 60);
 
-            Assert.AreEqual(HeartRules.Max - 2, second.Count);
+            Assert.AreEqual(HeartRules.RefillCap - 2, second.Count);
             Assert.AreEqual(first.NextRefillUnix, second.NextRefillUnix,
                             "the pending heart keeps its original deadline");
         }
@@ -58,10 +58,10 @@ namespace GlimmerGrove.Tests
             var spent = Hearts.Full.Spend(2, T0);      // 3/5, next at T0+P
 
             var justBefore = spent.At(T0 + P - 1);
-            Assert.AreEqual(HeartRules.Max - 2, justBefore.Count, "not yet");
+            Assert.AreEqual(HeartRules.RefillCap - 2, justBefore.Count, "not yet");
 
             var onTime = spent.At(T0 + P);
-            Assert.AreEqual(HeartRules.Max - 1, onTime.Count);
+            Assert.AreEqual(HeartRules.RefillCap - 1, onTime.Count);
             Assert.AreEqual(T0 + 2 * P, onTime.NextRefillUnix);
         }
 
@@ -82,7 +82,7 @@ namespace GlimmerGrove.Tests
             var spent = Hearts.Full.Spend(1, T0);
             var back = spent.At(T0 + 10 * P);
 
-            Assert.AreEqual(HeartRules.Max, back.Count);
+            Assert.AreEqual(HeartRules.RefillCap, back.Count);
             Assert.AreEqual(0, back.NextRefillUnix, "no timer once full, however long we waited");
         }
 
@@ -112,7 +112,7 @@ namespace GlimmerGrove.Tests
         [Test]
         public void SpendingAtZeroChangesNothingAndBlocksPlay()
         {
-            var empty = Hearts.Full.Spend(HeartRules.Max, T0);
+            var empty = Hearts.Full.Spend(HeartRules.RefillCap, T0);
             Assert.IsTrue(empty.IsEmpty);
             Assert.IsFalse(empty.CanPlay, "zero hearts is the gate");
 
@@ -122,12 +122,93 @@ namespace GlimmerGrove.Tests
         }
 
         [Test]
-        public void GrantingBeyondTheCapClamps()
+        public void GrantingBeyondTheCeilingClamps()
         {
-            var granted = Hearts.Full.Spend(2, T0).Grant(99, T0);
+            var granted = Hearts.Full.Spend(2, T0).Grant(999, T0);
 
-            Assert.AreEqual(HeartRules.Max, granted.Count);
+            Assert.AreEqual(HeartRules.Ceiling, granted.Count);
             Assert.AreEqual(0, granted.NextRefillUnix);
+
+            Assert.AreEqual(HeartRules.Ceiling, granted.Grant(10, T0).Count,
+                            "a grant into a full ledger is simply dropped");
+        }
+
+        // ------------------------------------------------- stacking past the cap
+        /// <summary>
+        /// The rule the refill cap and the holding ceiling exist to separate: a chest, a
+        /// streak night or a watched video pays a player who is already at five, instead of
+        /// evaporating at exactly the moment they were most engaged.
+        /// </summary>
+        [Test]
+        public void GrantsStackPastTheRefillCap()
+        {
+            var full = Hearts.Full;
+            Assert.IsTrue(full.IsRefilled, "the clock has nothing left to do");
+            Assert.IsFalse(full.IsAtCeiling, "which is not the same as having nowhere to put a reward");
+
+            var richer = full.Grant(3, T0);
+
+            Assert.AreEqual(HeartRules.RefillCap + 3, richer.Count);
+            Assert.IsTrue(richer.IsRefilled);
+            Assert.AreEqual(0, richer.NextRefillUnix, "and still no timer, because none is owed");
+        }
+
+        /// <summary>
+        /// The clock is a floor, not a drain. A surplus has to survive any amount of time
+        /// passing — the failure this guards against is a catch-up loop that "corrects"
+        /// somebody back down to five.
+        /// </summary>
+        [Test]
+        public void TheClockNeitherAddsToNorEatsASurplus()
+        {
+            var rich = Hearts.Full.Grant(4, T0);
+
+            var week = rich.At(T0 + 21 * P);
+
+            Assert.AreEqual(HeartRules.RefillCap + 4, week.Count);
+            Assert.AreEqual(rich, week, "nothing about the ledger moved at all");
+        }
+
+        /// <summary>
+        /// The one case the two-number design had to get right, and the reason
+        /// <see cref="Hearts.Spend"/> asks <c>NextRefillUnix</c> rather than comparing to
+        /// the cap. While a surplus is held the stored deadline idles in the past; if the
+        /// spend that finally drops the player under the cap resumed from that stale value,
+        /// the very next read would pay a heart the player never waited for — and repeating
+        /// it would turn a surplus into an unlimited supply.
+        /// </summary>
+        [Test]
+        public void SpendingBackThroughTheCapRestartsTheClockRatherThanPayingInstantly()
+        {
+            // eight hearts, and a deadline left far behind by the last refill
+            var rich = Hearts.Full.Spend(1, T0).At(T0 + P).Grant(4, T0 + P);
+            Assert.AreEqual(HeartRules.RefillCap + 4, rich.Count);
+
+            long later = T0 + 30 * P;
+            Assert.Less(rich.DueUnix, later, "the stored deadline really is stale");
+
+            // spend down to one under the cap, a long time afterwards
+            var spent = rich.Spend(5, later);
+            Assert.AreEqual(HeartRules.RefillCap - 1, spent.Count);
+            Assert.AreEqual(later + P, spent.NextRefillUnix, "a fresh period, not a stale deadline");
+
+            Assert.AreEqual(HeartRules.RefillCap - 1, spent.At(later).Count,
+                            "and reading it back pays nothing");
+        }
+
+        /// <summary>
+        /// The timer still stops at five however the player got there, which is what keeps
+        /// the pace of free play exactly as it was. A surplus is something you collect, not
+        /// something you can wait for.
+        /// </summary>
+        [Test]
+        public void TheClockNeverCarriesAnybodyPastTheRefillCap()
+        {
+            var empty = Hearts.Full.Spend(HeartRules.RefillCap, T0);
+
+            var forever = empty.At(T0 + 100 * P);
+
+            Assert.AreEqual(HeartRules.RefillCap, forever.Count);
         }
 
         /// <summary>
@@ -162,7 +243,7 @@ namespace GlimmerGrove.Tests
         public void ARefillSurvivesASyncAgainstAStaleCloudSave()
         {
             // the state that reached the server: empty, next heart due in eight hours
-            var cloud = Hearts.Full.Spend(HeartRules.Max, T0);
+            var cloud = Hearts.Full.Spend(HeartRules.RefillCap, T0);
             Assert.AreEqual(0, cloud.Count);
 
             // the device waited out three of them and never got to push
@@ -183,7 +264,7 @@ namespace GlimmerGrove.Tests
         [Test]
         public void AGrantSurvivesASyncAgainstAStaleCloudSave()
         {
-            var cloud = Hearts.Full.Spend(HeartRules.Max, T0);
+            var cloud = Hearts.Full.Spend(HeartRules.RefillCap, T0);
             var local = cloud.Grant(2, T0 + 60);
 
             Assert.AreEqual(2, Hearts.Join(local, cloud).Count);
@@ -199,7 +280,7 @@ namespace GlimmerGrove.Tests
         [Test]
         public void RepeatedSyncsAgainstAStaleSnapshotConverge()
         {
-            var stale = Hearts.Full.Spend(HeartRules.Max, T0);
+            var stale = Hearts.Full.Spend(HeartRules.RefillCap, T0);
             var device = stale;
 
             for (int round = 1; round <= 4; round++)
@@ -256,7 +337,7 @@ namespace GlimmerGrove.Tests
 
             var joined = Hearts.Join(deviceA, deviceB);
 
-            Assert.AreEqual(HeartRules.Max - 2, joined.Count,
+            Assert.AreEqual(HeartRules.RefillCap - 2, joined.Count,
                             "a merge must never hand back a heart somebody spent");
         }
 
@@ -278,7 +359,7 @@ namespace GlimmerGrove.Tests
 
             var joined = Hearts.Join(phone, tablet);
 
-            Assert.AreEqual(HeartRules.Max - 3, joined.Count);
+            Assert.AreEqual(HeartRules.RefillCap - 3, joined.Count);
             Assert.LessOrEqual(joined.Count, tablet.Count, "no device gains from a merge");
         }
 
@@ -293,8 +374,16 @@ namespace GlimmerGrove.Tests
         {
             var states = new System.Collections.Generic.List<Hearts>();
 
-            for (int spent = 0; spent <= HeartRules.Max + 3; spent++)
-                for (int held = 0; held <= HeartRules.Max; held++)
+            // The whole holding range, not a sample of it. Grants stack fifty deep now, so
+            // this is 459 states and ~210k pairs — cheap, because a join is three
+            // comparisons. What is *not* cheap is an assertion message: an interpolated
+            // string is built before the assert runs, whether or not it fails, so passing
+            // one per pair would mean nearly a million Hearts.ToString() calls. The
+            // condition is therefore tested first and the message built only to report a
+            // failure, which is what keeps full coverage affordable rather than trading it
+            // away for a list of boundaries.
+            for (int spent = 0; spent <= HeartRules.RefillCap + 3; spent++)
+                for (int held = 0; held <= HeartRules.Ceiling; held++)
                     states.Add(Hearts.Ledger(spent + held, spent, T0 + spent * 37 + held));
 
             foreach (var a in states)
@@ -302,12 +391,18 @@ namespace GlimmerGrove.Tests
                 {
                     var j = Hearts.Join(a, b);
 
-                    Assert.GreaterOrEqual(j.Count, 0, $"{a} joined {b} went negative");
-                    Assert.LessOrEqual(j.Count, HeartRules.Max, $"{a} joined {b} exceeded the cap");
+                    if (j.Count < 0)
+                        Assert.Fail($"{a} joined {b} went negative");
+
+                    if (j.Count > HeartRules.Ceiling)
+                        Assert.Fail($"{a} joined {b} exceeded the ceiling");
 
                     // the join knows at least as much as either side did
-                    Assert.GreaterOrEqual(j.Produced, System.Math.Max(a.Produced, b.Produced));
-                    Assert.GreaterOrEqual(j.Spent, System.Math.Max(a.Spent, b.Spent));
+                    if (j.Produced < System.Math.Max(a.Produced, b.Produced))
+                        Assert.Fail($"{a} joined {b} forgot a grant");
+
+                    if (j.Spent < System.Math.Max(a.Spent, b.Spent))
+                        Assert.Fail($"{a} joined {b} forgot a spend");
                 }
         }
 
@@ -343,7 +438,7 @@ namespace GlimmerGrove.Tests
             Assert.AreEqual(2, joined.Count, "the old build's smaller count must not mint 38 hearts back");
 
             // and the other way round: the old build holding more is believed, because its
-            // count is the only evidence there is and it is bounded by the cap
+            // count is the only evidence there is and it is bounded by the ceiling
             var richer = Hearts.Observation(count: 5, dueUnix: T0 + 900, spentAnchor: modern.Spent);
             Assert.AreEqual(5, Hearts.Join(modern, richer).Count);
         }
@@ -368,7 +463,7 @@ namespace GlimmerGrove.Tests
                 coins = -1, gems = -1,
                 heartsProduced = produced, heartsSpent = spent, heartsDueUnix = due,
                 hearts = (int)(produced - spent),
-                heartsNextRefillUnix = produced - spent >= HeartRules.Max ? 0 : due,
+                heartsNextRefillUnix = produced - spent >= HeartRules.RefillCap ? 0 : due,
             },
         };
 
@@ -399,6 +494,26 @@ namespace GlimmerGrove.Tests
         }
 
         /// <summary>
+        /// A surplus collected past the refill cap has to survive a sync like anything
+        /// else, and the mirror written for older clients has to carry it. It is the same
+        /// <c>max</c> that protects an ordinary refill — the point of the test is that
+        /// nothing in the file path re-imposes the cap the ledger deliberately does not.
+        /// </summary>
+        [Test]
+        public void ASurplusPastTheRefillCapSurvivesASync()
+        {
+            var local = WithLedger(produced: 12, spent: 4, due: T0 + 400);   // holding 8
+            var cloud = WithLedger(produced: 5, spent: 4, due: T0 + 400);    // holding 1
+
+            Assert.AreEqual(8, HeartsIn(SaveMerge.Join(local, cloud)));
+            Assert.AreEqual(8, HeartsIn(SaveMerge.Join(cloud, local)));
+
+            var merged = SaveMerge.Join(cloud, local).wallet;
+            Assert.AreEqual(0, merged.heartsNextRefillUnix,
+                            "above the cap the mirror shows no timer, because none is running");
+        }
+
+        /// <summary>
         /// The upgrade itself, and the moment the old bug did its damage: a device that
         /// has just installed v8 still holds a v7 file, and the cloud document was last
         /// written by a v7 build too. Neither side has a ledger, so the count is all there
@@ -423,13 +538,13 @@ namespace GlimmerGrove.Tests
         [Test]
         public void AnAbsentLedgerIsNotAnEmptyOne()
         {
-            var upgrading = PreLedger(HeartRules.Max, 0);
+            var upgrading = PreLedger(HeartRules.RefillCap, 0);
 
             Assert.AreEqual(0, upgrading.wallet.heartsProduced,
                             "the field really is zero — that is the case being defended against");
 
-            Assert.AreEqual(HeartRules.Max, HeartsIn(SaveMerge.Join(upgrading, PreLedger(HeartRules.Max, 0))));
-            Assert.AreEqual(HeartRules.Max, HeartsIn(SaveMerge.Join(upgrading, WithLedger(5, 0, 0))));
+            Assert.AreEqual(HeartRules.RefillCap, HeartsIn(SaveMerge.Join(upgrading, PreLedger(HeartRules.RefillCap, 0))));
+            Assert.AreEqual(HeartRules.RefillCap, HeartsIn(SaveMerge.Join(upgrading, WithLedger(5, 0, 0))));
         }
 
         /// <summary>
@@ -464,7 +579,7 @@ namespace GlimmerGrove.Tests
             Assert.AreEqual(2, HeartsIn(SaveMerge.Join(real, fresh)));
 
             var bothFresh = SaveMerge.Join(fresh, fresh);
-            Assert.AreEqual(HeartRules.Max, HeartsIn(bothFresh), "a new account is seeded full");
+            Assert.AreEqual(HeartRules.RefillCap, HeartsIn(bothFresh), "a new account is seeded full");
         }
 
         /// <summary>
@@ -482,7 +597,7 @@ namespace GlimmerGrove.Tests
                             "below the cap the mirror shows the real deadline");
 
             var full = SaveMerge.Join(WithLedger(5, 0, T0 + 100), WithLedger(5, 0, T0 + 900)).wallet;
-            Assert.AreEqual(HeartRules.Max, full.hearts);
+            Assert.AreEqual(HeartRules.RefillCap, full.hearts);
             Assert.AreEqual(0, full.heartsNextRefillUnix, "at the cap the mirror shows no timer");
             Assert.AreEqual(T0 + 900, full.heartsDueUnix, "while the ledger keeps the idling deadline");
         }

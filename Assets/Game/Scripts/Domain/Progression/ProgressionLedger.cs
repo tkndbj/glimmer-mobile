@@ -116,10 +116,16 @@ namespace GlimmerGrove.Progression
         /// Folds every record the player holds into one total, counting only glades the
         /// chapter map recognises.
         /// </summary>
+        /// <param name="collectedEvents">
+        /// Each event's collected floor, keyed by event id — how much of a track the player
+        /// has actually taken. Null pays no event credits at all, which is the safe default
+        /// rather than an oversight: see <c>EventLedger.CreditsFrom</c>.
+        /// </param>
         public static ProgressionTotals Compute(IEnumerable<LevelRecord> records,
                                                 IChapterMap chapters, ProgressionTable table,
                                                 string playerKey = null,
-                                                IReadOnlyList<Events.GroveEvent> events = null)
+                                                IReadOnlyList<Events.GroveEvent> events = null,
+                                                IReadOnlyDictionary<string, int> collectedEvents = null)
         {
             table ??= ProgressionTable.Default;
 
@@ -162,8 +168,14 @@ namespace GlimmerGrove.Progression
 
             // Event tracks are earned, not granted — see EventLedger for why that is the
             // only shape they can safely take. They add to the same derived total, so the
-            // earned floor covers them and nothing has to be claimed, stored or merged.
-            if (wantsEvents) credits += Events.EventLedger.CreditsFrom(events, byId);
+            // earned floor covers them and there is nothing to claim or confirm. What the
+            // floors decide is only *when* a rung lands: a milestone the player has reached
+            // but not yet collected is not in this number, which is what makes collecting
+            // one move a balance rather than replay an arithmetic they were paid for weeks
+            // ago. Since a balance is max(derived, earned floor), a floor that is behind can
+            // never take currency away from anybody — the worst case is a page offering a
+            // flower whose credits are already banked.
+            if (wantsEvents) credits += Events.EventLedger.CreditsFrom(events, byId, collectedEvents);
 
             return new ProgressionTotals(xp, credits, cleared, stars);
         }

@@ -51,7 +51,8 @@ service cloud.firestore {
         return d.keys().hasOnly([
                  'schemaVersion', 'updatedUnix', 'settings', 'wallet', 'levels',
                  'progression', 'cloud', 'lastPlayedLevelId', 'legacyImportDone',
-                 'tipsSeen', 'daily', 'ads', 'streak', 'checksum'
+                 'tipsSeen', 'daily', 'ads', 'streak', 'events', 'eventsSeeded',
+                 'companionsOwned', 'checksum'
                ])
                && d.schemaVersion is int
                && d.schemaVersion >= 1 && d.schemaVersion <= 100
@@ -82,7 +83,24 @@ service cloud.firestore {
                // server grants it from its own record of the last night it paid — a claim
                // may only advance the night as fast as the calendar advances — so editing
                // these buys a differently-shaped lie and no money. See functions/src/streak.ts.
-               && (!('streak' in d) || d.streak is map);
+               && (!('streak' in d) || d.streak is map)
+               // How much of each event's reward track the player has taken. Unlike every
+               // other client-owned block above, this one *does* reach a payment: a
+               // milestone pays only once its floor has reached it, so `eventCredits` reads
+               // it. It is still safe to let the client write, because that function clamps
+               // the floor to the glades the same derivation counted — a forged one takes
+               // early what play had already earned and nothing else. Bounded because the
+               // client controls its length. See invariant 13 and EventCollection.
+               && (!('events' in d) || (d.events is list && d.events.size() <= 256))
+               && (!('eventsSeeded' in d) || d.eventsSeeded is bool)
+               // The companions the player bought. Client-owned and forgeable, and that is
+               // accounted for rather than overlooked: a forged entry buys a portrait and
+               // nothing else — no currency, no progression, no advantage on a board. The
+               // money half is defended where money always is, by `submitSpends` refusing a
+               // debit the server-derived balance cannot cover, so there is nothing here for
+               // the server to adjudicate. Bounded because the client controls its length.
+               && (!('companionsOwned' in d) || (d.companionsOwned is list
+                                                 && d.companionsOwned.size() <= 256));
       }
 
       // The revision only ever moves forward, which gives the sync optimistic

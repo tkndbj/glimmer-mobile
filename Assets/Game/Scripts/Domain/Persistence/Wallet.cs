@@ -15,8 +15,18 @@ namespace GlimmerGrove.Persistence
     /// </summary>
     public static class Wallet
     {
-        /// <summary>Kept as an alias so callers need not learn a second name for it.</summary>
-        public const int MaxHearts = HeartRules.Max;
+        /// <summary>
+        /// Where the refill timer stops — the denominator a HUD draws, and not a maximum.
+        /// Kept as an alias so callers need not learn a second name for it.
+        ///
+        /// A property rather than a constant since the gate became content: a <c>const</c>
+        /// is copied into every assembly that reads it at compile time, which is exactly
+        /// the wrong shape for a number a config push is allowed to move.
+        /// </summary>
+        public static int MaxHearts => HeartRules.RefillCap;
+
+        /// <summary>The most hearts anybody may hold. See <see cref="HeartRules.Ceiling"/>.</summary>
+        public static int HeartCeiling => HeartRules.Ceiling;
 
         public const string DefaultName = "Grovekeeper";
 
@@ -139,7 +149,15 @@ namespace GlimmerGrove.Persistence
         /// Charges the player for a lost run. Returns false when there was nothing to
         /// take, which the caller must treat as "already out" rather than as a refusal.
         /// </summary>
-        public static bool TrySpendHeart(int amount = HeartRules.DefeatCost)
+        /// <summary>
+        /// Charges the player what a lost run costs, which is content now — so this is an
+        /// overload rather than a default argument. A default is baked in at the call site
+        /// at compile time and would have quietly gone on charging one heart forever after
+        /// the published cost changed.
+        /// </summary>
+        public static bool TrySpendHeart() => TrySpendHeart(HeartRules.DefeatCost);
+
+        public static bool TrySpendHeart(int amount)
         {
             long now = GameClock.NowUnix();
 
@@ -151,9 +169,13 @@ namespace GlimmerGrove.Persistence
         }
 
         /// <summary>
-        /// Adds hearts the player did not wait for: a refill purchase, a gift, or a
-        /// server correction. Kept separate from spending so the two can be audited
-        /// apart once hearts cost money.
+        /// Adds hearts the player did not wait for: a chest, a streak night, a watched
+        /// video, a gift, or a server correction. Kept separate from spending so the two
+        /// can be audited apart once hearts cost money.
+        ///
+        /// These stack past <see cref="MaxHearts"/> up to <see cref="HeartCeiling"/> —
+        /// see <see cref="Hearts.Grant"/> for why the timer's cap and the holding ceiling
+        /// are two different numbers.
         /// </summary>
         public static void GrantHearts(int amount)
             => Commit(_hearts.Grant(amount, GameClock.NowUnix(), _heartBoostUntil));

@@ -364,6 +364,12 @@
     },
     {
       "name": "an event pays nothing for clears outside its window",
+      "collected": [
+        {
+          "id": "vector_bloom",
+          "collectedGoal": 3
+        }
+      ],
       "levels": [
         {
           "levelId": "plain_one",
@@ -386,6 +392,12 @@
     },
     {
       "name": "an event pays its first milestone",
+      "collected": [
+        {
+          "id": "vector_bloom",
+          "collectedGoal": 1
+        }
+      ],
       "levels": [
         {
           "levelId": "plain_one",
@@ -403,6 +415,12 @@
     },
     {
       "name": "an event pays the whole track",
+      "collected": [
+        {
+          "id": "vector_bloom",
+          "collectedGoal": 3
+        }
+      ],
       "levels": [
         {
           "levelId": "plain_one",
@@ -425,6 +443,12 @@
     },
     {
       "name": "an event does not know an invented level either",
+      "collected": [
+        {
+          "id": "vector_bloom",
+          "collectedGoal": 1
+        }
+      ],
       "levels": [
         {
           "levelId": "plain_one",
@@ -447,6 +471,12 @@
     },
     {
       "name": "an event and a golden stack on one save",
+      "collected": [
+        {
+          "id": "vector_bloom",
+          "collectedGoal": 3
+        }
+      ],
       "levels": [
         {
           "levelId": "plain_one",
@@ -472,6 +502,74 @@
       "credits": 805,
       "xp": 450,
       "playerKey": "uid_beta"
+    },
+    {
+      "name": "a track nobody has collected pays nothing yet",
+      "levels": [
+        {
+          "levelId": "plain_one",
+          "stars": 3,
+          "firstClearedUnix": 1700005000
+        },
+        {
+          "levelId": "plain_two",
+          "stars": 3,
+          "firstClearedUnix": 1700005000
+        },
+        {
+          "levelId": "generous_one",
+          "stars": 3,
+          "firstClearedUnix": 1700005000
+        }
+      ],
+      "credits": 330,
+      "xp": 450
+    },
+    {
+      "name": "an event pays only the rungs that have been collected",
+      "collected": [
+        {
+          "id": "vector_bloom",
+          "collectedGoal": 1
+        }
+      ],
+      "levels": [
+        {
+          "levelId": "plain_one",
+          "stars": 3,
+          "firstClearedUnix": 1700005000
+        },
+        {
+          "levelId": "plain_two",
+          "stars": 3,
+          "firstClearedUnix": 1700005000
+        },
+        {
+          "levelId": "generous_one",
+          "stars": 3,
+          "firstClearedUnix": 1700005000
+        }
+      ],
+      "credits": 380,
+      "xp": 450
+    },
+    {
+      "name": "a collected floor past the glades finished is clamped to them",
+      "collected": [
+        {
+          "id": "vector_bloom",
+          "collectedGoal": 99
+        }
+      ],
+      "levels": [
+        {
+          "levelId": "plain_one",
+          "stars": 3,
+          "firstClearedUnix": 1700005000
+        }
+      ],
+      "credits": 125,
+      "xp": 100
     }
   ],
   "_dailyComment": [
@@ -2585,7 +2683,13 @@
     "",
     "Two rules the cases pin, because a naive implementation gets them wrong: a clear dated",
     "outside the window counts for nothing however many stars it has, and a level the",
-    "catalog does not know advances no event."
+    "catalog does not know advances no event.",
+    "",
+    "Since save schema v11 a rung is also *collected* by hand, so a case carries the",
+    "player's floor per event — the largest goal they have taken. Reaching a rung is not",
+    "being paid for it. Two more rules follow, and both sides must agree on them: an",
+    "absent floor pays nothing at all, and a floor is clamped to the glades actually",
+    "finished before anything is paid, which is what makes a client-written number safe."
   ],
   "events": [
     {

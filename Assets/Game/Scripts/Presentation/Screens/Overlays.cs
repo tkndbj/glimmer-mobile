@@ -142,7 +142,6 @@ namespace GlimmerGrove
         public bool HeartWasCharged;
 
         Btn _watch;
-        Text _watchLabel;
 
         /// <summary>
         /// Keeps the offer button's countdown live while the panel is open.
@@ -154,7 +153,7 @@ namespace GlimmerGrove
         void Update() => PaintWatch();
 
         void PaintWatch()
-            => AdOfferButton.Paint(_watch, _watchLabel, AdPlacement.HeartRefill, "ui.ads.hearts_cta");
+            => AdOfferButton.Paint(_watch, AdPlacement.HeartRefill, "ui.ads.hearts_cta");
 
 
         /// <summary>
@@ -222,8 +221,7 @@ namespace GlimmerGrove
 
                 _watch = UIKit.TextButton("WatchAd", Panel, "btn_green", Loc.Get("ui.ads.hearts_cta"), 44,
                                           new Vector2(620f, 140f), new Vector2(.5f, 1f), new Vector2(0f, -644f),
-                                          OfferHearts);
-                _watchLabel = _watch.GetComponentInChildren<Text>();
+                                          OfferHearts, "ic_play");
                 PaintWatch();
             }
             else
@@ -331,6 +329,15 @@ namespace GlimmerGrove
         /// The heart row, with the one just lost drawn empty and struck through by a
         /// short animation. Showing the cost is the point — a resource that quietly
         /// decrements is a resource players feel cheated by later.
+        ///
+        /// <para>
+        /// The row is <see cref="HeartRules.RefillCap"/> wide and stays that width however
+        /// many hearts are held, because it is a picture of the gate rather than of the
+        /// balance — fifty icons would be a wall, and the fifth is where the timer stops
+        /// regardless. A surplus collected from chests, streaks or videos is drawn as a
+        /// "+n" beside the row: still visible, still honest, and it does not turn a panel
+        /// about a lost run into a shelf of trophies.
+        /// </para>
         /// </summary>
         void BuildHearts()
         {
@@ -341,12 +348,24 @@ namespace GlimmerGrove
             row.anchoredPosition = new Vector2(0f, -400f);
 
             const float step = 96f;
-            float left = -(HeartRules.Max - 1) * step * .5f;
+            float left = -(HeartRules.RefillCap - 1) * step * .5f;
 
-            for (int k = 0; k < HeartRules.Max; k++)
+            int drawn = HeartsLeft > HeartRules.RefillCap ? HeartRules.RefillCap : HeartsLeft;
+            int surplus = HeartsLeft - drawn;
+
+            if (surplus > 0)
+                UIKit.Titled("Surplus", row, $"+{surplus}", 40, Pal.Rose, TextAnchor.MiddleLeft,
+                             new Vector2(120f, 60f), new Vector2(.5f, .5f),
+                             new Vector2(left + HeartRules.RefillCap * step - 24f, 0f), 3f, 3f);
+
+            for (int k = 0; k < HeartRules.RefillCap; k++)
             {
-                bool held = k < HeartsLeft;
-                bool justLost = HeartWasCharged && k == HeartsLeft;
+                bool held = k < drawn;
+
+                // The struck-through heart is only drawn when the loss actually shows in
+                // the row. A player who was over the cap still paid, but the picture would
+                // be a lie: nothing in the five went out.
+                bool justLost = HeartWasCharged && surplus == 0 && k == drawn;
 
                 var heart = UIKit.Img("H" + k, row, Art.S("Ui/ic_heart"),
                                       held ? Pal.Rose : new Color(.62f, .58f, .60f, .38f),
@@ -386,7 +405,6 @@ namespace GlimmerGrove
         Text _countdown;
         bool _offering;
         Btn _watch;
-        Text _watchLabel;
 
         protected override void Build()
         {
@@ -429,8 +447,7 @@ namespace GlimmerGrove
                                               // panel exists to explain an empty heart bar, and
                                               // once it is no longer empty it has nothing to say.
                                               v.Rewarded = () => Close();
-                                          }));
-                _watchLabel = _watch.GetComponentInChildren<Text>();
+                                          }), "ic_play");
 
                 UIKit.TextButton("Ok", Panel, "btn_blue", Loc.Get("ui.common.got_it"), 44,
                                  new Vector2(560f, 120f), new Vector2(.5f, 1f), new Vector2(0f, -744f),
@@ -450,7 +467,7 @@ namespace GlimmerGrove
         {
             // The offer's own cooldown runs independently of the heart clock, so it is
             // repainted here too rather than only when the panel is built.
-            AdOfferButton.Paint(_watch, _watchLabel, AdPlacement.HeartRefill, "ui.ads.hearts_cta");
+            AdOfferButton.Paint(_watch, AdPlacement.HeartRefill, "ui.ads.hearts_cta");
 
             if (!_countdown) return;
 

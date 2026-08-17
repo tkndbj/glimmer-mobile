@@ -76,8 +76,10 @@ namespace GlimmerGrove.Ads
     /// </para>
     /// <para>
     /// <b>Hearts and boosts are applied locally; currency is only ever claimed.</b> A heart
-    /// is clamped at five and a boost expires, so the worst a forged one buys is a few
-    /// runs somebody would otherwise have waited for — not worth a round trip. Currency is
+    /// is clamped at the holding ceiling and a boost expires, so the worst a forged one buys
+    /// is a few runs somebody would otherwise have waited for — not worth a round trip. That
+    /// stays true now that hearts stack past the refill cap: the bound moved from five to
+    /// fifty, and neither number is worth a server's opinion. Currency is
     /// the thing that can be bought with real money and therefore the thing an attacker
     /// forges, so it goes through <see cref="PlayerProgression.Award"/> under an id derived
     /// from the impression nonce, and is granted by the server only once the ad network's
@@ -202,14 +204,22 @@ namespace GlimmerGrove.Ads
         /// <summary>
         /// Whether the reward would actually land.
         ///
-        /// Only hearts can be wasted — every other kind accumulates. A player at five
-        /// hearts who watches a heart ad gets nothing, and there is no honest way to pay
-        /// them the difference: converting the overflow to credits would make the payout
-        /// depend on how many hearts they happened to hold, which is the exact property
-        /// that would stop the server being able to check it.
+        /// <para>
+        /// Only hearts can be wasted — every other kind accumulates — and since hearts
+        /// stack past the refill cap they are now very nearly in that company too. The test
+        /// is the <em>ceiling</em>, not the five a timer stops at: a player at a full bar
+        /// who watches a video keeps what it paid, which is the whole point of offering it
+        /// to them. Fifty is the one count at which the offer is honestly withheld.
+        /// </para>
+        /// <para>
+        /// This used to read <c>IsFull</c>, and the difference is worth naming because it
+        /// was the largest single cost of the old rule: the offer disappeared from the home
+        /// screen at exactly the moment a player was most engaged, and the ad that would
+        /// have been shown was never shown to anybody.
+        /// </para>
         /// </summary>
         static bool WouldBenefit(AdOffer offer)
-            => offer.Kind != ChestDropKind.Hearts || !Wallet.Hearts.IsFull;
+            => offer.Kind != ChestDropKind.Hearts || !Wallet.Hearts.IsAtCeiling;
 
         /// <summary>
         /// Whether a finished view could actually be paid for.

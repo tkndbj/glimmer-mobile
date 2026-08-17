@@ -14,8 +14,8 @@ namespace GlimmerGrove.Tests
     /// </summary>
     public sealed class HeartBoostTests
     {
-        const long Slow = HeartRules.RefillSeconds;
-        const long Fast = HeartRules.BoostedRefillSeconds;
+        static readonly long Slow = HeartRules.RefillSeconds;
+        static readonly long Fast = HeartRules.BoostedRefillSeconds;
         const long T0 = 1_700_000_000;
 
         [Test]
@@ -33,7 +33,7 @@ namespace GlimmerGrove.Tests
             long until = T0 + 24 * 3600;
             var hearts = Hearts.Full.Spend(1, T0, until);
 
-            Assert.AreEqual(HeartRules.Max - 1, hearts.Count);
+            Assert.AreEqual(HeartRules.RefillCap - 1, hearts.Count);
             Assert.AreEqual(T0 + Fast, hearts.NextRefillUnix);
         }
 
@@ -82,8 +82,8 @@ namespace GlimmerGrove.Tests
             long until = T0 + 24 * 3600;
             var spent = Hearts.Full.Spend(2, T0, until);     // 3/5, next at T0 + 4h
 
-            Assert.AreEqual(HeartRules.Max - 2, spent.At(T0 + Fast - 1, until).Count);
-            Assert.AreEqual(HeartRules.Max - 1, spent.At(T0 + Fast, until).Count);
+            Assert.AreEqual(HeartRules.RefillCap - 2, spent.At(T0 + Fast - 1, until).Count);
+            Assert.AreEqual(HeartRules.RefillCap - 1, spent.At(T0 + Fast, until).Count);
         }
 
         /// <summary>
@@ -101,7 +101,7 @@ namespace GlimmerGrove.Tests
             // the boost has gone, so it costs the full eight hours.
             var after = spent.At(T0 + Fast + Slow, until);
 
-            Assert.AreEqual(HeartRules.Max - 1, after.Count,
+            Assert.AreEqual(HeartRules.RefillCap - 1, after.Count,
                             "two refills would mean the expiry was ignored; none would mean the boost was");
         }
 

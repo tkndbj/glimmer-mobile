@@ -198,6 +198,11 @@ MonoBehaviour:
     m_SerializedLabels:
     - Art/Fx/Victory
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 22a804f8b5d2d254b8d9f2a50a82fb3c
+    m_Address: Art/Bg/event_deco
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 238e7ccd10ca8cc642747796e9e62d0c
     m_Address: Art/Critters/c2/f13
     m_ReadOnly: 0
@@ -288,6 +293,11 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels:
     - Art/Critters/c3
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 3024c1fbfaff71648b72f003ca25d896
+    m_Address: Art/Bg/event_ground
+    m_ReadOnly: 0
+    m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 3026975be17b612851152b4ed40eda0d
     m_Address: Art/Critters/c5/f18
@@ -691,6 +701,11 @@ MonoBehaviour:
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 71581f52350c1834c8a039e57271ae5c
     m_Address: Art/Bg/streak_sky
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 71a6de367f90fdf4c9cfba8bed04cd55
+    m_Address: Art/Bg/event_sky
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0

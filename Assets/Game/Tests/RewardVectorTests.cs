@@ -131,8 +131,24 @@ namespace GlimmerGrove.Tests
             public string playerKey;
 
             public VectorRecord[] levels;
+
+            /// <summary>
+            /// How much of each event's track this player has collected. Absent — which
+            /// JsonUtility reads as null — means nothing has been taken, and therefore that
+            /// no event pays. That is the safe default rather than the convenient one: a
+            /// case that means to be paid says so.
+            /// </summary>
+            public EventFloor[] collected;
+
             public long credits;
             public long xp;
+        }
+
+        [Serializable]
+        public sealed class EventFloor
+        {
+            public string id;
+            public int collectedGoal;
         }
 
         [Serializable]
@@ -243,6 +259,27 @@ namespace GlimmerGrove.Tests
             return index.Events;
         }
 
+        /// <summary>
+        /// A case's collected floors, as the map the derivation wants.
+        ///
+        /// Never null, so a case that names none is asking to be paid nothing rather than
+        /// falling through to some older behaviour — which is exactly the distinction the
+        /// "a track nobody has collected pays nothing yet" case exists to pin.
+        /// </summary>
+        static Dictionary<string, int> FloorsFrom(VectorCase test)
+        {
+            var floors = new Dictionary<string, int>(StringComparer.Ordinal);
+            if (test.collected == null) return floors;
+
+            foreach (var floor in test.collected)
+            {
+                if (floor == null || string.IsNullOrEmpty(floor.id)) continue;
+                floors[floor.id] = floor.collectedGoal;
+            }
+
+            return floors;
+        }
+
         // -------------------------------------------------------------- the test
         [Test]
         public void EveryRewardVectorMatches()
@@ -257,7 +294,7 @@ namespace GlimmerGrove.Tests
             foreach (var test in file.cases)
             {
                 var totals = ProgressionLedger.Compute(RecordsFrom(test), chapters, table,
-                                                       test.playerKey, events);
+                                                       test.playerKey, events, FloorsFrom(test));
 
                 if (totals.EarnedCredits != test.credits)
                     failures.Add($"'{test.name}': credits expected {test.credits}, got {totals.EarnedCredits}");

@@ -50,6 +50,19 @@ namespace GlimmerGrove.Tests
             return map;
         }
 
+        /// <summary>
+        /// The track as seen by a player who has collected everything they have reached.
+        ///
+        /// <c>ProgressOf</c> clamps the floor to the glades actually finished, so
+        /// <see cref="int.MaxValue"/> means "nothing is still waiting" rather than a number
+        /// anything trusts — which is the reading these cases want: they are about what a
+        /// track <em>pays</em>, not about the hand-collection introduced in save schema v11.
+        /// The waiting half is covered by <see cref="ATrackPaysNothingUntilItIsCollected"/>.
+        /// </summary>
+        static EventProgress Collected(GroveEvent groveEvent,
+                                       Dictionary<LevelId, LevelRecord> records)
+            => EventLedger.ProgressOf(groveEvent, records, int.MaxValue);
+
         // ------------------------------------------------------------ the count
         [Test]
         public void AClearInsideTheWindowCounts()
@@ -88,7 +101,7 @@ namespace GlimmerGrove.Tests
         [Test]
         public void TheTrackPaysEveryMilestoneThatHasBeenPassed()
         {
-            var one = EventLedger.ProgressOf(Bloom(), Records(("plain_one", 3, Inside)));
+            var one = Collected(Bloom(), Records(("plain_one", 3, Inside)));
             Assert.AreEqual(1, one.Finished);
             Assert.AreEqual(1, one.Milestones);
             Assert.AreEqual(50, one.Credits);
@@ -96,9 +109,9 @@ namespace GlimmerGrove.Tests
             Assert.AreEqual(2, one.ToNext);
             Assert.IsFalse(one.IsComplete);
 
-            var all = EventLedger.ProgressOf(Bloom(), Records(("plain_one", 2, Inside),
-                                                              ("plain_two", 1, Inside),
-                                                              ("generous_one", 3, Inside)));
+            var all = Collected(Bloom(), Records(("plain_one", 2, Inside),
+                                                 ("plain_two", 1, Inside),
+                                                 ("generous_one", 3, Inside)));
             Assert.AreEqual(3, all.Finished);
             Assert.AreEqual(2, all.Milestones);
             Assert.AreEqual(250, all.Credits);
@@ -114,8 +127,8 @@ namespace GlimmerGrove.Tests
         [Test]
         public void OneStarAdvancesATrackAsMuchAsThree()
         {
-            Assert.AreEqual(EventLedger.ProgressOf(Bloom(), Records(("plain_one", 1, Inside))).Credits,
-                            EventLedger.ProgressOf(Bloom(), Records(("plain_one", 3, Inside))).Credits);
+            Assert.AreEqual(Collected(Bloom(), Records(("plain_one", 1, Inside))).Credits,
+                            Collected(Bloom(), Records(("plain_one", 3, Inside))).Credits);
         }
 
         /// <summary>
@@ -131,7 +144,30 @@ namespace GlimmerGrove.Tests
 
             // The progress is a pure function of the records and the window; nothing about
             // it consults the clock, which is exactly why an ended event cannot un-pay.
-            Assert.AreEqual(250, EventLedger.ProgressOf(Bloom(), finished).Credits);
+            Assert.AreEqual(250, Collected(Bloom(), finished).Credits);
+        }
+
+        /// <summary>
+        /// The v11 half: a milestone the player has reached but not tapped is
+        /// <em>waiting</em>, and pays nothing until it is. Without this the floor could be
+        /// ignored entirely and every case above would still be green.
+        /// </summary>
+        [Test]
+        public void ATrackPaysNothingUntilItIsCollected()
+        {
+            var records = Records(("plain_one", 3, Inside), ("plain_two", 3, Inside),
+                                  ("generous_one", 3, Inside));
+
+            var uncollected = EventLedger.ProgressOf(Bloom(), records, 0);
+            Assert.AreEqual(0, uncollected.Credits, "nothing has been handed over yet");
+            Assert.AreEqual(2, uncollected.Waiting);
+            Assert.AreEqual(250, uncollected.WaitingCredits);
+
+            // Collecting the first rung moves it into the balance and leaves the second.
+            var half = EventLedger.ProgressOf(Bloom(), records, 1);
+            Assert.AreEqual(50, half.Credits);
+            Assert.AreEqual(1, half.Waiting);
+            Assert.AreEqual(200, half.WaitingCredits);
         }
 
         // ------------------------------------------------------------ the reader
@@ -328,8 +364,19 @@ namespace GlimmerGrove.Tests
             var table = ProgressionTable.Default;
 
             long without = ProgressionLedger.Compute(records, map, table).EarnedCredits;
+
+            // The floors have to be handed over as well as the calendar: since v11 a track
+            // pays what has been *collected*, so a caller with no floors gets nothing — the
+            // deliberate default, because understating is recoverable and a giveaway is not.
+            var collected = new Dictionary<string, int> { { "vector_bloom", 3 } };
+
+            long uncollected = ProgressionLedger.Compute(records, map, table, null,
+                                                         new[] { Bloom() }).EarnedCredits;
+            Assert.AreEqual(without, uncollected,
+                            "an uncollected track is worth nothing to the balance");
+
             long with = ProgressionLedger.Compute(records, map, table, null,
-                                                  new[] { Bloom() }).EarnedCredits;
+                                                  new[] { Bloom() }, collected).EarnedCredits;
 
             Assert.AreEqual(250, with - without,
                             "the whole track is 50 + 200, and nothing else may have moved");

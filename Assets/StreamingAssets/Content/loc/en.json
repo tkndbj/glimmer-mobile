@@ -1,310 +1,1217 @@
 {
   "language": "en",
   "entries": [
-    { "key": "chapter.c01_shallows.name", "text": "The Shallows" },
-
-    { "key": "level.c01_first_light.name", "text": "First Light" },
-    { "key": "level.c01_first_light.tagline", "text": "A single heart wakes the glade" },
-    { "key": "level.c01_first_light.lesson", "text": "Tap a conduit to turn it. Light every sleeping critter." },
-
-    { "key": "level.c01_twin_streams.name", "text": "Twin Streams" },
-    { "key": "level.c01_twin_streams.tagline", "text": "Two hearts, two hues, no mixing" },
-    { "key": "level.c01_twin_streams.lesson", "text": "Critters only wake to their own colour. Keep the streams apart." },
-
-    { "key": "level.c01_prism_heart.name", "text": "Prism Heart" },
-    { "key": "level.c01_prism_heart.tagline", "text": "Blend the light, wake the deep grove" },
-    { "key": "level.c01_prism_heart.lesson", "text": "Joined hearts blend: red plus green makes gold. Keep the blue stream to itself." },
-
-    { "key": "level.c01_thorn_hollow.name", "text": "Brittle Hollow" },
-    { "key": "level.c01_thorn_hollow.tagline", "text": "Three streams, and conduits that will not last" },
-    { "key": "level.c01_thorn_hollow.lesson", "text": "Some conduits crumble after a few turns. Plan the route before you spin." },
-
-    { "key": "ui.levels.title", "text": "CHOOSE A GLADE" },
-    { "key": "ui.levels.locked", "text": "locked" },
-    { "key": "ui.levels.locked_hint", "text": "clear the glade before it to open this one" },
-    { "key": "ui.levels.more_soon", "text": "more glades soon" },
-    { "key": "ui.levels.swipe", "text": "swipe to explore the chain" },
-
-    { "key": "ui.play.no_hints", "text": "no whispers left in this glade" },
-    { "key": "ui.play.hint_used", "text": "a whisper turns one conduit  (+2 moves)" },
-
-    { "key": "ui.win.rank1", "text": "SOLVED" },
-    { "key": "ui.win.rank2", "text": "LOVELY!" },
-    { "key": "ui.win.rank3", "text": "PERFECT!" },
-    { "key": "ui.win.new_best", "text": "a new best for this glade" },
-    { "key": "ui.win.best_is", "text": "your best here is {0}" },
-    { "key": "ui.win.moves", "text": "{0} moves  -  {1} for three stars" },
-    { "key": "ui.win.xp", "text": "+{0} XP" },
-    { "key": "ui.win.coins", "text": "+{0}" },
-    { "key": "ui.win.next", "text": "NEXT GLADE" },
-    { "key": "ui.win.glades", "text": "GLADES" },
-    { "key": "ui.win.opened", "text": "{0} has opened" },
-
-    { "key": "ui.home.next_up", "text": "next up  ·  {0}" },
-    { "key": "ui.home.all_awake", "text": "every glade is awake  ·  chase three stars" },
-    { "key": "ui.home.bonuses", "text": "DAILY BONUSES" },
-
-    { "key": "ui.daily.played", "text": "{0} / {1} played" },
-    { "key": "ui.daily.next_chest", "text": "play {0} more to earn the next chest" },
-    { "key": "ui.daily.ready", "text": "a chest is waiting  ·  tap to open" },
-    { "key": "ui.daily.needs_connection", "text": "go online once to unlock your daily bonuses" },
-    { "key": "ui.daily.all_open", "text": "every chest is open  ·  more tomorrow" },
-    { "key": "ui.daily.resets_in", "text": "resets in {0}" },
-    { "key": "ui.daily.chest_title", "text": "DAILY CHEST" },
-    { "key": "ui.daily.collect", "text": "COLLECT" },
-    { "key": "ui.daily.odds", "text": "bonus chances" },
-    { "key": "ui.daily.hearts_full", "text": "your hearts were already full" },
-    { "key": "ui.daily.boost_on", "text": "hearts return twice as fast for {0}" },
-
-    { "key": "ui.win.golden", "text": "GOLDEN GLADE!   {0}% coins" },
-    { "key": "ui.win.faster_than", "text": "faster than {0}% of keepers" },
-
-    { "key": "ui.event.first_bloom.name", "text": "First Bloom" },
-    { "key": "ui.event.first_bloom.blurb", "text": "The shallows are waking early this year. Light them while they last." },
-    { "key": "ui.event.title", "text": "GROVE EVENT" },
-    { "key": "ui.event.ends_in", "text": "ends in {0}" },
-    { "key": "ui.event.ended", "text": "this one has closed" },
-    { "key": "ui.event.progress", "text": "{0} of {1} glades" },
-    { "key": "ui.event.to_next", "text": "{0} more for the next reward" },
-    { "key": "ui.event.complete", "text": "track finished — every reward is yours" },
-    { "key": "ui.event.reward", "text": "+{0}" },
-    { "key": "ui.event.cta", "text": "PLAY" },
-
-    { "key": "ui.streak.none", "text": "no streak" },
-    { "key": "ui.streak.day", "text": "day streak" },
-    { "key": "ui.streak.days", "text": "day streak" },
-    { "key": "ui.streak.at_risk", "text": "{0} left today" },
-    { "key": "ui.streak.explain_none", "text": "Finish a glade today to light your streak." },
-    { "key": "ui.streak.explain_held", "text": "You have kept the grove awake {0} days running." },
-    { "key": "ui.streak.kept", "text": "{0} days running" },
-    { "key": "ui.streak.kept_waiting", "text": "{0} days running — a reward is waiting" },
-
-    { "key": "ui.streak.title", "text": "your streak" },
-    { "key": "ui.streak.subtitle", "text": "the grove after dark" },
-    { "key": "ui.streak.collect", "text": "collect" },
-    { "key": "ui.streak.waiting_one", "text": "a night is waiting — tap it to collect" },
-    { "key": "ui.streak.waiting_many", "text": "{0} nights are waiting — tap one to collect" },
-    { "key": "ui.streak.tonight", "text": "tonight" },
-    { "key": "ui.streak.done_today", "text": "kept tonight" },
-    { "key": "ui.streak.day_n", "text": "day {0}" },
-    { "key": "ui.streak.progress", "text": "{0} of {1} nights" },
-    { "key": "ui.streak.progress_week", "text": "{0} of {1} nights · week {2}" },
-
-    { "key": "ui.streak.info_title", "text": "how the streak works" },
-    { "key": "ui.streak.info_earn_title", "text": "finish a glade" },
-    { "key": "ui.streak.info_earn_body", "text": "Finish a glade on any day and that night is yours — winning is not required, only finishing. The flame goes out only if a whole day passes with nothing finished at all. Come back here and tap a glowing night to take what it holds." },
-    { "key": "ui.streak.info_boost_title", "text": "fast hearts" },
-    { "key": "ui.streak.info_boost_body", "text": "A heart comes back every {0} hours on its own. Fast hearts halve that to {1} hours for as long as it lasts, and two of them add together — up to {2} hours of it at once." },
-    { "key": "ui.streak.info_cycle_title", "text": "past the last night" },
-    { "key": "ui.streak.info_cycle_body", "text": "Nothing stops. Your count keeps climbing and never resets while you keep playing — the board simply begins the same {0} nights over. The night after the {0}th pays {1}, exactly as the very first night did." },
-    { "key": "ui.streak.info_cycle_nothing", "text": "nothing, just as the first night does" },
-    { "key": "ui.streak.rung_none", "text": "the flame lights" },
-    { "key": "ui.streak.beyond", "text": "then the trail begins again — {0}" },
-    { "key": "ui.streak.beyond_plain", "text": "the trail begins again after this" },
-    { "key": "ui.streak.explain_risk_clock", "text": "the flame goes out in {0} — finish one glade to keep it" },
-    { "key": "ui.streak.cta", "text": "PLAY A GLADE" },
-
-    { "key": "ui.home.streak", "text": "streak" },
-    { "key": "ui.home.streak_next", "text": "tomorrow  {0}" },
-    { "key": "ui.home.streak_waiting", "text": "tap to collect" },
-    { "key": "ui.home.streak_keep", "text": "finish a glade to keep it" },
-    { "key": "ui.home.glades", "text": "glades" },
-    { "key": "ui.home.at_rank", "text": "at rank {0}" },
-    { "key": "ui.home.rank_left", "text": "rank to go" },
-    { "key": "ui.home.ranks_left", "text": "ranks to go" },
-    { "key": "ui.home.fraction", "text": "{0}/{1}" },
-
-    { "key": "ui.reward.credits", "text": "coins" },
-    { "key": "ui.reward.gems", "text": "gems" },
-    { "key": "ui.reward.hearts", "text": "hearts" },
-    { "key": "ui.reward.heart_boost", "text": "fast hearts" },
-
-    { "key": "ui.ads.hearts_title", "text": "REFILL HEARTS" },
-    { "key": "ui.ads.coins_title", "text": "BONUS COINS" },
-    { "key": "ui.ads.hearts_cta", "text": "WATCH FOR HEARTS" },
-    { "key": "ui.ads.watch", "text": "WATCH" },
-    { "key": "ui.ads.ready", "text": "watch a short video and it is yours" },
-    { "key": "ui.ads.opening", "text": "opening the video..." },
-    { "key": "ui.ads.loading", "text": "finding a video  ·  one moment" },
-    { "key": "ui.ads.cooling", "text": "another video in {0}" },
-    { "key": "ui.ads.cap_reached", "text": "that is every video for today  ·  more in {0}" },
-    { "key": "ui.ads.hearts_full", "text": "your hearts are already full" },
-    { "key": "ui.ads.needs_account", "text": "go online once to collect coins this way" },
-    { "key": "ui.ads.unavailable", "text": "videos are not available right now" },
-    { "key": "ui.ads.no_fill", "text": "no video to show just now  ·  try again shortly" },
-    { "key": "ui.ads.dismissed", "text": "the video has to finish to earn the reward" },
-    { "key": "ui.ads.failed", "text": "that video did not finish  ·  nothing was taken" },
-    { "key": "ui.ads.thanks", "text": "thank you  ·  it is yours" },
-    { "key": "ui.ads.btn_cooling", "text": "READY IN {0}" },
-    { "key": "ui.ads.btn_cap", "text": "BACK TOMORROW" },
-    { "key": "ui.ads.btn_loading", "text": "FINDING A VIDEO..." },
-
-    { "key": "ui.levels.chapter_locked", "text": "clear this chapter to go on" },
-
-    { "key": "ui.pause.title", "text": "PAUSED" },
-    { "key": "ui.pause.resume", "text": "RESUME" },
-    { "key": "ui.pause.restart", "text": "RESTART" },
-    { "key": "ui.pause.glades", "text": "GLADES" },
-    { "key": "ui.pause.home", "text": "HOME" },
-
-    { "key": "ui.settings.title", "text": "SETTINGS" },
-    { "key": "ui.settings.toggle_row", "text": "music   sound   buzz" },
-    { "key": "ui.settings.music", "text": "music" },
-    { "key": "ui.settings.sound", "text": "sound" },
-    { "key": "ui.settings.buzz", "text": "buzz" },
-    { "key": "ui.settings.version", "text": "Glimmer Grove  v{0}" },
-    { "key": "ui.settings.credit", "text": "art & audio by CraftPix" },
-
-    { "key": "ui.account.title", "text": "ACCOUNT" },
-    { "key": "ui.account.guest", "text": "you are not signed in" },
-    { "key": "ui.account.guest_body", "text": "Your progress is saved only on this phone. If you lose it or reinstall the game, your progress is gone. Sign in to save it online." },
-    { "key": "ui.account.linked", "text": "your progress is saved online" },
-    { "key": "ui.account.linked_body", "text": "You are signed in. Your progress is backed up and you can play on your other devices." },
-    { "key": "ui.account.unavailable", "text": "online saving is not available in this version" },
-    { "key": "ui.account.google", "text": "SIGN IN WITH GOOGLE" },
-    { "key": "ui.account.apple", "text": "SIGN IN WITH APPLE" },
-    { "key": "ui.account.working", "text": "please wait..." },
-    { "key": "ui.account.linked_ok", "text": "done  ·  your progress is now saved online" },
-    { "key": "ui.account.failed", "text": "something went wrong  ·  please try again" },
-    { "key": "ui.account.offline", "text": "no internet connection" },
-    { "key": "ui.account.guest_stakes", "text": "{0} levels finished  ·  level {1}  saved only on this phone" },
-    { "key": "ui.account.taken", "text": "this account is already used by another player" },
-    { "key": "ui.account.switch", "text": "USE THAT ACCOUNT" },
-    { "key": "ui.account.switch_cost", "text": "you will lose {0} finished levels and level {1} from this phone" },
-    { "key": "ui.account.switch_warning", "text": "this cannot be undone" },
-    { "key": "ui.account.switch_confirm", "text": "TAP AGAIN TO CONFIRM" },
-    { "key": "ui.account.switched_found", "text": "signed in  ·  {0} finished levels loaded" },
-    { "key": "ui.account.protect", "text": "SAVE YOUR PROGRESS" },
-    { "key": "ui.account.later", "text": "NOT NOW" },
-
-    { "key": "ui.settings.reset", "text": "RESET PROGRESS" },
-    { "key": "ui.settings.reset_confirm", "text": "TAP AGAIN TO ERASE" },
-
-    { "key": "ui.howto.title", "text": "HOW TO PLAY" },
-    { "key": "ui.howto.line1", "text": "Tap a conduit to turn it a quarter step." },
-    { "key": "ui.howto.line2", "text": "Guide light from every heart-crystal to the sleeping critters." },
-    { "key": "ui.howto.line3", "text": "Hearts joined into one network blend their colours." },
-    { "key": "ui.howto.line4", "text": "A critter only wakes to the exact colour it dreams of." },
-    { "key": "ui.howto.line5", "text": "Rooted tiles wear a padlock and will not turn." },
-    { "key": "ui.howto.line6", "text": "Fewer moves, more stars. There is no timer here." },
-    { "key": "ui.howto.red", "text": "red" },
-    { "key": "ui.howto.blue", "text": "blue" },
-    { "key": "ui.howto.blossom", "text": "blossom" },
-
-    { "key": "ui.nav.shop", "text": "shop" },
-    { "key": "ui.nav.items", "text": "items" },
-    { "key": "ui.nav.home", "text": "home" },
-    { "key": "ui.nav.ranks", "text": "ranks" },
-    { "key": "ui.nav.profile", "text": "profile" },
-
-    { "key": "ui.soon.shop", "text": "Chests, critter skins and conduit styles will live here." },
-    { "key": "ui.soon.items", "text": "Boosters and keepsakes you collect in the glades." },
-    { "key": "ui.soon.ranks", "text": "Weekly leaderboards for the fastest, calmest solvers." },
-
-    { "key": "ui.profile.title", "text": "profile" },
-    { "key": "ui.profile.rename", "text": "your name" },
-    { "key": "ui.profile.name_hint", "text": "Grovekeeper" },
-    { "key": "ui.profile.name_rule", "text": "up to {0} characters" },
-    { "key": "ui.profile.cancel", "text": "CANCEL" },
-    { "key": "ui.profile.xp", "text": "{0} / {1} XP to the next level" },
-    { "key": "ui.profile.xp_max", "text": "every keeper level earned" },
-    { "key": "ui.profile.next_title", "text": "{0} at level {1}" },
-    { "key": "ui.profile.record", "text": "grove record" },
-    { "key": "ui.profile.stars", "text": "stars" },
-    { "key": "ui.profile.chapters", "text": "chapters" },
-    { "key": "ui.profile.perfect", "text": "perfect" },
-    { "key": "ui.profile.glades", "text": "glades" },
-    { "key": "ui.profile.coins", "text": "coins" },
-    { "key": "ui.profile.gems", "text": "gems" },
-    { "key": "ui.profile.companions", "text": "companions" },
-    { "key": "ui.profile.unlocked", "text": "{0} of {1} awake" },
-    { "key": "ui.profile.locked_at", "text": "level {0}" },
-    { "key": "ui.profile.locked_toast", "text": "Reach keeper level {0} to wake this friend." },
-    { "key": "ui.profile.account", "text": "account" },
-    { "key": "ui.profile.guest_hint", "text": "This grove lives only on this device. Link an account and it follows you." },
-    { "key": "ui.profile.linked_hint", "text": "Your grove is backed up and will follow you to a new device." },
-    { "key": "ui.profile.protect", "text": "PROTECT MY GROVE" },
-    { "key": "ui.profile.manage", "text": "MANAGE ACCOUNT" },
-    { "key": "ui.profile.see_all", "text": "SEE ALL" },
-    { "key": "ui.profile.wearing", "text": "wearing" },
-    { "key": "ui.profile.tap_to_wear", "text": "tap to wear" },
-    { "key": "ui.profile.locked", "text": "locked" },
-    { "key": "ui.profile.next_at", "text": "next at level {0}" },
-
-    { "key": "ui.title.seedling", "text": "Seedling" },
-    { "key": "ui.title.sapling", "text": "Sapling" },
-    { "key": "ui.title.keeper", "text": "Grovekeeper" },
-    { "key": "ui.title.warden", "text": "Lightwarden" },
-    { "key": "ui.title.elder", "text": "Grove Elder" },
-
-    { "key": "ui.avatar.puff", "text": "Puff" },
-    { "key": "ui.avatar.timber", "text": "Timber" },
-    { "key": "ui.avatar.sprocket", "text": "Sprocket" },
-    { "key": "ui.avatar.thistle", "text": "Thistle" },
-    { "key": "ui.avatar.monarch", "text": "Monarch" },
-    { "key": "ui.avatar.cinder", "text": "Cinder" },
-    { "key": "ui.avatar.sorrel", "text": "Sorrel" },
-    { "key": "ui.avatar.peep", "text": "Peep" },
-    { "key": "ui.avatar.gourd", "text": "Gourd" },
-    { "key": "ui.avatar.clementine", "text": "Clementine" },
-    { "key": "ui.avatar.plum", "text": "Plum" },
-    { "key": "ui.avatar.frond", "text": "Frond" },
-    { "key": "ui.avatar.button", "text": "Button" },
-    { "key": "ui.avatar.shell", "text": "Shell" },
-    { "key": "ui.avatar.dewdrop", "text": "Dewdrop" },
-    { "key": "ui.avatar.flit", "text": "Flit" },
-    { "key": "ui.avatar.toadstool", "text": "Toadstool" },
-    { "key": "ui.avatar.quill", "text": "Quill" },
-    { "key": "ui.avatar.olive", "text": "Olive" },
-    { "key": "ui.avatar.indigo", "text": "Indigo" },
-    { "key": "ui.avatar.tadpole", "text": "Tadpole" },
-    { "key": "ui.avatar.pebble", "text": "Pebble" },
-    { "key": "ui.avatar.saffron", "text": "Saffron" },
-    { "key": "ui.avatar.coral", "text": "Coral" },
-    { "key": "ui.avatar.rust", "text": "Rust" },
-    { "key": "ui.avatar.fizz", "text": "Fizz" },
-    { "key": "ui.avatar.marrow", "text": "Marrow" },
-    { "key": "ui.avatar.bramble", "text": "Bramble" },
-    { "key": "ui.avatar.wisp", "text": "Wisp" },
-    { "key": "ui.avatar.boulder", "text": "Boulder" },
-    { "key": "ui.avatar.thorn", "text": "Thorn" },
-
-    { "key": "ui.common.got_it", "text": "GOT IT" },
-    { "key": "ui.common.done", "text": "DONE" },
-    { "key": "ui.common.coming_soon", "text": "COMING SOON" },
-
-    { "key": "ui.defeat.title", "text": "THE LIGHT WENT OUT" },
-    { "key": "ui.defeat.reason", "text": "The light touched a thornstone and the glade went dark." },
-    { "key": "ui.defeat.moves_title", "text": "OUT OF TURNS" },
-    { "key": "ui.defeat.moves_reason", "text": "The grove grew tired before the glade woke. Fewer turns, more thinking." },
-    { "key": "ui.defeat.conduit_title", "text": "IT GAVE WAY" },
-    { "key": "ui.defeat.conduit_reason", "text": "That conduit was brittle and could not take another turn. Watch the number on them." },
-    { "key": "ui.defeat.near_one", "text": "One turn from it." },
-    { "key": "ui.defeat.near_two", "text": "Two turns from it." },
-    { "key": "ui.defeat.try_again", "text": "TRY AGAIN" },
-    { "key": "ui.defeat.out_of_hearts", "text": "No hearts left. Rest a while and the grove will wake you." },
-    { "key": "ui.defeat.watch_for_hearts", "text": "No hearts left — but a short video will wake the grove early." },
-
-    { "key": "ui.hearts.title", "text": "HEARTS" },
-    { "key": "ui.hearts.full", "text": "Your hearts are full." },
-    { "key": "ui.hearts.next", "text": "Next heart in {0}" },
-    { "key": "ui.hearts.empty", "text": "Out of hearts" },
-    { "key": "ui.hearts.wait_to_play", "text": "Wait for a heart to return before entering a glade." },
-
-
-
-    { "key": "ui.tip.fragile.title", "text": "BRITTLE CONDUIT" },
-    { "key": "ui.tip.fragile.body", "text": "This one crumbles after a few turns — the number shows how many are left. Undoing does not mend it." },
-
-    { "key": "ui.tip.moves.title", "text": "TURNS" },
-    { "key": "ui.tip.moves.body", "text": "This is how many turns you have left. Run out with the glade still dark and it costs a heart." },
-
-
-
-    { "key": "ui.tip.rooted.title", "text": "ROOTED" },
-    { "key": "ui.tip.rooted.body", "text": "A rooted tile cannot be turned. Treat it as a fixed part of the path and route the rest of the grove around it." },
-
-    { "key": "ui.tip.mixing.title", "text": "BLENDED LIGHT" },
-    { "key": "ui.tip.mixing.body", "text": "This critter dreams of a colour no single heart carries. Join two hearts into one network and their light blends — red and green make gold." }
+    {
+      "key": "chapter.c01_shallows.name",
+      "text": "The Shallows"
+    },
+    {
+      "key": "level.c01_first_light.name",
+      "text": "First Light"
+    },
+    {
+      "key": "level.c01_first_light.tagline",
+      "text": "A single heart wakes the glade"
+    },
+    {
+      "key": "level.c01_first_light.lesson",
+      "text": "Tap a conduit to turn it. Light every sleeping critter."
+    },
+    {
+      "key": "level.c01_twin_streams.name",
+      "text": "Twin Streams"
+    },
+    {
+      "key": "level.c01_twin_streams.tagline",
+      "text": "Two hearts, two hues, no mixing"
+    },
+    {
+      "key": "level.c01_twin_streams.lesson",
+      "text": "Critters only wake to their own colour. Keep the streams apart."
+    },
+    {
+      "key": "level.c01_prism_heart.name",
+      "text": "Prism Heart"
+    },
+    {
+      "key": "level.c01_prism_heart.tagline",
+      "text": "Blend the light, wake the deep grove"
+    },
+    {
+      "key": "level.c01_prism_heart.lesson",
+      "text": "Joined hearts blend: red plus green makes gold. Keep the blue stream to itself."
+    },
+    {
+      "key": "level.c01_thorn_hollow.name",
+      "text": "Brittle Hollow"
+    },
+    {
+      "key": "level.c01_thorn_hollow.tagline",
+      "text": "Three streams, and conduits that will not last"
+    },
+    {
+      "key": "level.c01_thorn_hollow.lesson",
+      "text": "Some conduits crumble after a few turns. Plan the route before you spin."
+    },
+    {
+      "key": "ui.levels.title",
+      "text": "CHOOSE A GLADE"
+    },
+    {
+      "key": "ui.levels.locked",
+      "text": "locked"
+    },
+    {
+      "key": "ui.levels.locked_hint",
+      "text": "clear the glade before it to open this one"
+    },
+    {
+      "key": "ui.levels.more_soon",
+      "text": "more glades soon"
+    },
+    {
+      "key": "ui.levels.swipe",
+      "text": "swipe to explore the chain"
+    },
+    {
+      "key": "ui.play.no_hints",
+      "text": "no whispers left in this glade"
+    },
+    {
+      "key": "ui.play.hint_used",
+      "text": "a whisper turns one conduit  (+2 moves)"
+    },
+    {
+      "key": "ui.win.rank1",
+      "text": "SOLVED"
+    },
+    {
+      "key": "ui.win.rank2",
+      "text": "LOVELY!"
+    },
+    {
+      "key": "ui.win.rank3",
+      "text": "PERFECT!"
+    },
+    {
+      "key": "ui.win.new_best",
+      "text": "a new best for this glade"
+    },
+    {
+      "key": "ui.win.best_is",
+      "text": "your best here is {0}"
+    },
+    {
+      "key": "ui.win.moves",
+      "text": "{0} moves  -  {1} for three stars"
+    },
+    {
+      "key": "ui.win.xp",
+      "text": "+{0} XP"
+    },
+    {
+      "key": "ui.win.coins",
+      "text": "+{0}"
+    },
+    {
+      "key": "ui.win.next",
+      "text": "NEXT GLADE"
+    },
+    {
+      "key": "ui.win.glades",
+      "text": "GLADES"
+    },
+    {
+      "key": "ui.win.opened",
+      "text": "{0} has opened"
+    },
+    {
+      "key": "ui.home.next_up",
+      "text": "next up  ·  {0}"
+    },
+    {
+      "key": "ui.home.all_awake",
+      "text": "every glade is awake  ·  chase three stars"
+    },
+    {
+      "key": "ui.home.bonuses",
+      "text": "DAILY BONUSES"
+    },
+    {
+      "key": "ui.daily.played",
+      "text": "{0} / {1} played"
+    },
+    {
+      "key": "ui.daily.next_chest",
+      "text": "play {0} more to earn the next chest"
+    },
+    {
+      "key": "ui.daily.ready",
+      "text": "a chest is waiting  ·  tap to open"
+    },
+    {
+      "key": "ui.daily.needs_connection",
+      "text": "go online once to unlock your daily bonuses"
+    },
+    {
+      "key": "ui.daily.all_open",
+      "text": "every chest is open  ·  more tomorrow"
+    },
+    {
+      "key": "ui.daily.resets_in",
+      "text": "resets in {0}"
+    },
+    {
+      "key": "ui.daily.chest_title",
+      "text": "DAILY CHEST"
+    },
+    {
+      "key": "ui.daily.collect",
+      "text": "COLLECT"
+    },
+    {
+      "key": "ui.daily.odds",
+      "text": "bonus chances"
+    },
+    {
+      "key": "ui.daily.hearts_ceiling",
+      "text": "you were already holding all {0} hearts"
+    },
+    {
+      "key": "ui.daily.boost_on",
+      "text": "hearts return twice as fast for {0}"
+    },
+    {
+      "key": "ui.win.golden",
+      "text": "GOLDEN GLADE!   {0}% coins"
+    },
+    {
+      "key": "ui.win.faster_than",
+      "text": "faster than {0}% of keepers"
+    },
+    {
+      "key": "ui.event.first_bloom.name",
+      "text": "First Bloom"
+    },
+    {
+      "key": "ui.event.first_bloom.blurb",
+      "text": "The shallows are waking early this year. Light them while they last."
+    },
+    {
+      "key": "ui.event.title",
+      "text": "GROVE EVENT"
+    },
+    {
+      "key": "ui.event.ends_in",
+      "text": "ends in {0}"
+    },
+    {
+      "key": "ui.event.ended",
+      "text": "this one has closed"
+    },
+    {
+      "key": "ui.event.progress",
+      "text": "{0} of {1} glades"
+    },
+    {
+      "key": "ui.event.to_next",
+      "text": "{0} more for the next reward"
+    },
+    {
+      "key": "ui.event.complete",
+      "text": "track finished — every reward is yours"
+    },
+    {
+      "key": "ui.event.reward",
+      "text": "+{0}"
+    },
+    {
+      "key": "ui.event.cta",
+      "text": "PLAY"
+    },
+    {
+      "key": "ui.event.gathered",
+      "text": "gathered so far"
+    },
+    {
+      "key": "ui.event.collect",
+      "text": "tap to take"
+    },
+    {
+      "key": "ui.event.at_goal",
+      "text": "at {0} glades"
+    },
+    {
+      "key": "ui.event.at_goal_one",
+      "text": "at 1 glade"
+    },
+    {
+      "key": "ui.event.rail",
+      "text": "the glades that count"
+    },
+    {
+      "key": "ui.event.waiting_one",
+      "text": "a bloom is open — tap it to take what it holds"
+    },
+    {
+      "key": "ui.event.waiting_many",
+      "text": "{0} blooms are open — tap one to take them"
+    },
+    {
+      "key": "ui.event.all_taken",
+      "text": "every bloom on this vine is yours"
+    },
+    {
+      "key": "ui.event.closed_waiting",
+      "text": "the window has closed — what you grew is still here"
+    },
+    {
+      "key": "ui.event.info_title",
+      "text": "how the bloom works"
+    },
+    {
+      "key": "ui.event.info_count_title",
+      "text": "finish glades, the vine grows"
+    },
+    {
+      "key": "ui.event.info_count_body",
+      "text": "Only the {0} glades below count, and only the first time you finish one inside the window — a glade you cleared before the event opened is one you have already been paid for. There are {1} blooms along the vine, worth {2} credits between them."
+    },
+    {
+      "key": "ui.event.info_collect_title",
+      "text": "nothing is taken for you"
+    },
+    {
+      "key": "ui.event.info_collect_body",
+      "text": "A bloom opens the moment you reach it, and then it waits. Come back and tap it and the credits are yours. Tapping a bloom higher up the vine takes every open one below it at the same time, so nothing can be left behind."
+    },
+    {
+      "key": "ui.event.info_window_title",
+      "text": "when the window shuts"
+    },
+    {
+      "key": "ui.event.info_window_body",
+      "text": "Glades stop counting when the event closes. Blooms do not — anything you grew stays on the vine until you take it, however long that is."
+    },
+    {
+      "key": "ui.streak.none",
+      "text": "no streak"
+    },
+    {
+      "key": "ui.streak.day",
+      "text": "day streak"
+    },
+    {
+      "key": "ui.streak.days",
+      "text": "day streak"
+    },
+    {
+      "key": "ui.streak.at_risk",
+      "text": "{0} left today"
+    },
+    {
+      "key": "ui.streak.explain_none",
+      "text": "Finish a glade today to light your streak."
+    },
+    {
+      "key": "ui.streak.explain_held",
+      "text": "You have kept the grove awake {0} days running."
+    },
+    {
+      "key": "ui.streak.kept",
+      "text": "{0} days running"
+    },
+    {
+      "key": "ui.streak.kept_waiting",
+      "text": "{0} days running — a reward is waiting"
+    },
+    {
+      "key": "ui.streak.title",
+      "text": "your streak"
+    },
+    {
+      "key": "ui.streak.subtitle",
+      "text": "the grove after dark"
+    },
+    {
+      "key": "ui.streak.collect",
+      "text": "collect"
+    },
+    {
+      "key": "ui.streak.waiting_one",
+      "text": "a night is waiting — tap it to collect"
+    },
+    {
+      "key": "ui.streak.waiting_many",
+      "text": "{0} nights are waiting — tap one to collect"
+    },
+    {
+      "key": "ui.streak.tonight",
+      "text": "tonight"
+    },
+    {
+      "key": "ui.streak.done_today",
+      "text": "kept tonight"
+    },
+    {
+      "key": "ui.streak.day_n",
+      "text": "day {0}"
+    },
+    {
+      "key": "ui.streak.progress",
+      "text": "{0} of {1} nights"
+    },
+    {
+      "key": "ui.streak.progress_week",
+      "text": "{0} of {1} nights · week {2}"
+    },
+    {
+      "key": "ui.streak.info_title",
+      "text": "how the streak works"
+    },
+    {
+      "key": "ui.streak.info_earn_title",
+      "text": "finish a glade"
+    },
+    {
+      "key": "ui.streak.info_earn_body",
+      "text": "Finish a glade on any day and that night is yours — winning is not required, only finishing. The flame goes out only if a whole day passes with nothing finished at all. Come back here and tap a glowing night to take what it holds."
+    },
+    {
+      "key": "ui.streak.info_boost_title",
+      "text": "fast hearts"
+    },
+    {
+      "key": "ui.streak.info_boost_body",
+      "text": "A heart comes back every {0} hours on its own. Fast hearts halve that to {1} hours for as long as it lasts, and two of them add together — up to {2} hours of it at once."
+    },
+    {
+      "key": "ui.streak.info_cycle_title",
+      "text": "past the last night"
+    },
+    {
+      "key": "ui.streak.info_cycle_body",
+      "text": "Nothing stops. Your count keeps climbing and never resets while you keep playing — the board simply begins the same {0} nights over. The night after the {0}th pays {1}, exactly as the very first night did."
+    },
+    {
+      "key": "ui.streak.info_cycle_nothing",
+      "text": "nothing, just as the first night does"
+    },
+    {
+      "key": "ui.streak.rung_none",
+      "text": "the flame lights"
+    },
+    {
+      "key": "ui.streak.beyond",
+      "text": "then the trail begins again — {0}"
+    },
+    {
+      "key": "ui.streak.beyond_plain",
+      "text": "the trail begins again after this"
+    },
+    {
+      "key": "ui.streak.explain_risk_clock",
+      "text": "the flame goes out in {0} — finish one glade to keep it"
+    },
+    {
+      "key": "ui.streak.cta",
+      "text": "PLAY A GLADE"
+    },
+    {
+      "key": "ui.home.streak",
+      "text": "streak"
+    },
+    {
+      "key": "ui.home.streak_next",
+      "text": "tomorrow  {0}"
+    },
+    {
+      "key": "ui.home.streak_waiting",
+      "text": "tap to collect"
+    },
+    {
+      "key": "ui.home.event_waiting",
+      "text": "tap to collect"
+    },
+    {
+      "key": "ui.home.streak_keep",
+      "text": "finish a glade to keep it"
+    },
+    {
+      "key": "ui.home.glades",
+      "text": "glades"
+    },
+    {
+      "key": "ui.home.at_rank",
+      "text": "at rank {0}"
+    },
+    {
+      "key": "ui.home.rank_left",
+      "text": "rank to go"
+    },
+    {
+      "key": "ui.home.ranks_left",
+      "text": "ranks to go"
+    },
+    {
+      "key": "ui.home.fraction",
+      "text": "{0}/{1}"
+    },
+    {
+      "key": "ui.reward.credits",
+      "text": "coins"
+    },
+    {
+      "key": "ui.reward.gems",
+      "text": "gems"
+    },
+    {
+      "key": "ui.reward.hearts",
+      "text": "hearts"
+    },
+    {
+      "key": "ui.reward.heart_boost",
+      "text": "fast hearts"
+    },
+    {
+      "key": "ui.ads.hearts_title",
+      "text": "REFILL HEARTS"
+    },
+    {
+      "key": "ui.ads.coins_title",
+      "text": "BONUS COINS"
+    },
+    {
+      "key": "ui.ads.hearts_cta",
+      "text": "WATCH FOR HEARTS"
+    },
+    {
+      "key": "ui.ads.watch",
+      "text": "WATCH"
+    },
+    {
+      "key": "ui.ads.ready",
+      "text": "watch a short video and it is yours"
+    },
+    {
+      "key": "ui.ads.opening",
+      "text": "opening the video..."
+    },
+    {
+      "key": "ui.ads.loading",
+      "text": "finding a video  ·  one moment"
+    },
+    {
+      "key": "ui.ads.cooling",
+      "text": "another video in {0}"
+    },
+    {
+      "key": "ui.ads.cap_reached",
+      "text": "that is every video for today  ·  more in {0}"
+    },
+    {
+      "key": "ui.ads.hearts_ceiling",
+      "text": "you are holding all {0} hearts already"
+    },
+    {
+      "key": "ui.ads.left_today",
+      "text": "Videos left today: {0}"
+    },
+    {
+      "key": "ui.ads.none_left_today",
+      "text": "No videos left today — the count resets at midnight."
+    },
+    {
+      "key": "ui.ads.needs_account",
+      "text": "go online once to collect coins this way"
+    },
+    {
+      "key": "ui.ads.unavailable",
+      "text": "videos are not available right now"
+    },
+    {
+      "key": "ui.ads.no_fill",
+      "text": "no video to show just now  ·  try again shortly"
+    },
+    {
+      "key": "ui.ads.dismissed",
+      "text": "the video has to finish to earn the reward"
+    },
+    {
+      "key": "ui.ads.failed",
+      "text": "that video did not finish  ·  nothing was taken"
+    },
+    {
+      "key": "ui.ads.thanks",
+      "text": "thank you  ·  it is yours"
+    },
+    {
+      "key": "ui.ads.btn_cooling",
+      "text": "READY IN {0}"
+    },
+    {
+      "key": "ui.ads.btn_cap",
+      "text": "BACK TOMORROW"
+    },
+    {
+      "key": "ui.ads.btn_loading",
+      "text": "FINDING A VIDEO..."
+    },
+    {
+      "key": "ui.levels.chapter_locked",
+      "text": "clear this chapter to go on"
+    },
+    {
+      "key": "ui.pause.title",
+      "text": "PAUSED"
+    },
+    {
+      "key": "ui.pause.resume",
+      "text": "RESUME"
+    },
+    {
+      "key": "ui.pause.restart",
+      "text": "RESTART"
+    },
+    {
+      "key": "ui.pause.glades",
+      "text": "GLADES"
+    },
+    {
+      "key": "ui.pause.home",
+      "text": "HOME"
+    },
+    {
+      "key": "ui.settings.title",
+      "text": "SETTINGS"
+    },
+    {
+      "key": "ui.settings.toggle_row",
+      "text": "music   sound   buzz"
+    },
+    {
+      "key": "ui.settings.music",
+      "text": "music"
+    },
+    {
+      "key": "ui.settings.sound",
+      "text": "sound"
+    },
+    {
+      "key": "ui.settings.buzz",
+      "text": "buzz"
+    },
+    {
+      "key": "ui.settings.version",
+      "text": "Glimmer Grove  v{0}"
+    },
+    {
+      "key": "ui.settings.credit",
+      "text": "art & audio by CraftPix"
+    },
+    {
+      "key": "ui.account.title",
+      "text": "ACCOUNT"
+    },
+    {
+      "key": "ui.account.guest",
+      "text": "you are not signed in"
+    },
+    {
+      "key": "ui.account.guest_body",
+      "text": "Your progress is saved only on this phone. If you lose it or reinstall the game, your progress is gone. Sign in to save it online."
+    },
+    {
+      "key": "ui.account.linked",
+      "text": "your progress is saved online"
+    },
+    {
+      "key": "ui.account.linked_body",
+      "text": "You are signed in. Your progress is backed up and you can play on your other devices."
+    },
+    {
+      "key": "ui.account.unavailable",
+      "text": "online saving is not available in this version"
+    },
+    {
+      "key": "ui.account.google",
+      "text": "SIGN IN WITH GOOGLE"
+    },
+    {
+      "key": "ui.account.apple",
+      "text": "SIGN IN WITH APPLE"
+    },
+    {
+      "key": "ui.account.working",
+      "text": "please wait..."
+    },
+    {
+      "key": "ui.account.linked_ok",
+      "text": "done  ·  your progress is now saved online"
+    },
+    {
+      "key": "ui.account.failed",
+      "text": "something went wrong  ·  please try again"
+    },
+    {
+      "key": "ui.account.offline",
+      "text": "no internet connection"
+    },
+    {
+      "key": "ui.account.guest_stakes",
+      "text": "{0} levels finished  ·  level {1}  saved only on this phone"
+    },
+    {
+      "key": "ui.account.taken",
+      "text": "this account is already used by another player"
+    },
+    {
+      "key": "ui.account.switch",
+      "text": "USE THAT ACCOUNT"
+    },
+    {
+      "key": "ui.account.switch_cost",
+      "text": "you will lose {0} finished levels and level {1} from this phone"
+    },
+    {
+      "key": "ui.account.switch_warning",
+      "text": "this cannot be undone"
+    },
+    {
+      "key": "ui.account.switch_confirm",
+      "text": "TAP AGAIN TO CONFIRM"
+    },
+    {
+      "key": "ui.account.switched_found",
+      "text": "signed in  ·  {0} finished levels loaded"
+    },
+    {
+      "key": "ui.account.protect",
+      "text": "SAVE YOUR PROGRESS"
+    },
+    {
+      "key": "ui.account.later",
+      "text": "NOT NOW"
+    },
+    {
+      "key": "ui.settings.reset",
+      "text": "RESET PROGRESS"
+    },
+    {
+      "key": "ui.settings.reset_confirm",
+      "text": "TAP AGAIN TO ERASE"
+    },
+    {
+      "key": "ui.howto.title",
+      "text": "HOW TO PLAY"
+    },
+    {
+      "key": "ui.howto.line1",
+      "text": "Tap a conduit to turn it a quarter step."
+    },
+    {
+      "key": "ui.howto.line2",
+      "text": "Guide light from every heart-crystal to the sleeping critters."
+    },
+    {
+      "key": "ui.howto.line3",
+      "text": "Hearts joined into one network blend their colours."
+    },
+    {
+      "key": "ui.howto.line4",
+      "text": "A critter only wakes to the exact colour it dreams of."
+    },
+    {
+      "key": "ui.howto.line5",
+      "text": "Rooted tiles wear a padlock and will not turn."
+    },
+    {
+      "key": "ui.howto.line6",
+      "text": "Fewer moves, more stars. There is no timer here."
+    },
+    {
+      "key": "ui.howto.red",
+      "text": "red"
+    },
+    {
+      "key": "ui.howto.blue",
+      "text": "blue"
+    },
+    {
+      "key": "ui.howto.blossom",
+      "text": "blossom"
+    },
+    {
+      "key": "ui.nav.shop",
+      "text": "shop"
+    },
+    {
+      "key": "ui.nav.items",
+      "text": "items"
+    },
+    {
+      "key": "ui.nav.home",
+      "text": "home"
+    },
+    {
+      "key": "ui.nav.ranks",
+      "text": "ranks"
+    },
+    {
+      "key": "ui.nav.profile",
+      "text": "profile"
+    },
+    {
+      "key": "ui.soon.shop",
+      "text": "Chests, critter skins and conduit styles will live here."
+    },
+    {
+      "key": "ui.soon.items",
+      "text": "Boosters and keepsakes you collect in the glades."
+    },
+    {
+      "key": "ui.soon.ranks",
+      "text": "Weekly leaderboards for the fastest, calmest solvers."
+    },
+    {
+      "key": "ui.profile.title",
+      "text": "profile"
+    },
+    {
+      "key": "ui.profile.rename",
+      "text": "your name"
+    },
+    {
+      "key": "ui.profile.name_hint",
+      "text": "Grovekeeper"
+    },
+    {
+      "key": "ui.profile.name_rule",
+      "text": "up to {0} characters"
+    },
+    {
+      "key": "ui.profile.cancel",
+      "text": "CANCEL"
+    },
+    {
+      "key": "ui.profile.xp",
+      "text": "{0} / {1} XP to the next level"
+    },
+    {
+      "key": "ui.profile.xp_max",
+      "text": "every keeper level earned"
+    },
+    {
+      "key": "ui.profile.next_title",
+      "text": "{0} at level {1}"
+    },
+    {
+      "key": "ui.profile.record",
+      "text": "grove record"
+    },
+    {
+      "key": "ui.profile.stars",
+      "text": "stars"
+    },
+    {
+      "key": "ui.profile.chapters",
+      "text": "chapters"
+    },
+    {
+      "key": "ui.profile.perfect",
+      "text": "perfect"
+    },
+    {
+      "key": "ui.profile.glades",
+      "text": "glades"
+    },
+    {
+      "key": "ui.profile.coins",
+      "text": "coins"
+    },
+    {
+      "key": "ui.profile.gems",
+      "text": "gems"
+    },
+    {
+      "key": "ui.profile.companions",
+      "text": "companions"
+    },
+    {
+      "key": "ui.profile.unlocked",
+      "text": "{0} of {1} awake"
+    },
+    {
+      "key": "ui.profile.locked_at",
+      "text": "level {0}"
+    },
+    {
+      "key": "ui.profile.account",
+      "text": "account"
+    },
+    {
+      "key": "ui.profile.guest_hint",
+      "text": "This grove lives only on this device. Link an account and it follows you."
+    },
+    {
+      "key": "ui.profile.linked_hint",
+      "text": "Your grove is backed up and will follow you to a new device."
+    },
+    {
+      "key": "ui.profile.protect",
+      "text": "PROTECT MY GROVE"
+    },
+    {
+      "key": "ui.profile.manage",
+      "text": "MANAGE ACCOUNT"
+    },
+    {
+      "key": "ui.profile.see_all",
+      "text": "SEE ALL"
+    },
+    {
+      "key": "ui.profile.wearing",
+      "text": "wearing"
+    },
+    {
+      "key": "ui.profile.tap_to_wear",
+      "text": "tap to wear"
+    },
+    {
+      "key": "ui.profile.locked",
+      "text": "locked"
+    },
+    {
+      "key": "ui.profile.next_at",
+      "text": "next at level {0}"
+    },
+    {
+      "key": "ui.title.seedling",
+      "text": "Seedling"
+    },
+    {
+      "key": "ui.title.sapling",
+      "text": "Sapling"
+    },
+    {
+      "key": "ui.title.keeper",
+      "text": "Grovekeeper"
+    },
+    {
+      "key": "ui.title.warden",
+      "text": "Lightwarden"
+    },
+    {
+      "key": "ui.title.elder",
+      "text": "Grove Elder"
+    },
+    {
+      "key": "ui.avatar.puff",
+      "text": "Puff"
+    },
+    {
+      "key": "ui.avatar.timber",
+      "text": "Timber"
+    },
+    {
+      "key": "ui.avatar.sprocket",
+      "text": "Sprocket"
+    },
+    {
+      "key": "ui.avatar.thistle",
+      "text": "Thistle"
+    },
+    {
+      "key": "ui.avatar.monarch",
+      "text": "Monarch"
+    },
+    {
+      "key": "ui.avatar.cinder",
+      "text": "Cinder"
+    },
+    {
+      "key": "ui.avatar.sorrel",
+      "text": "Sorrel"
+    },
+    {
+      "key": "ui.avatar.peep",
+      "text": "Peep"
+    },
+    {
+      "key": "ui.avatar.gourd",
+      "text": "Gourd"
+    },
+    {
+      "key": "ui.avatar.clementine",
+      "text": "Clementine"
+    },
+    {
+      "key": "ui.avatar.plum",
+      "text": "Plum"
+    },
+    {
+      "key": "ui.avatar.frond",
+      "text": "Frond"
+    },
+    {
+      "key": "ui.avatar.button",
+      "text": "Button"
+    },
+    {
+      "key": "ui.avatar.shell",
+      "text": "Shell"
+    },
+    {
+      "key": "ui.avatar.dewdrop",
+      "text": "Dewdrop"
+    },
+    {
+      "key": "ui.avatar.flit",
+      "text": "Flit"
+    },
+    {
+      "key": "ui.avatar.toadstool",
+      "text": "Toadstool"
+    },
+    {
+      "key": "ui.avatar.quill",
+      "text": "Quill"
+    },
+    {
+      "key": "ui.avatar.olive",
+      "text": "Olive"
+    },
+    {
+      "key": "ui.avatar.indigo",
+      "text": "Indigo"
+    },
+    {
+      "key": "ui.avatar.tadpole",
+      "text": "Tadpole"
+    },
+    {
+      "key": "ui.avatar.pebble",
+      "text": "Pebble"
+    },
+    {
+      "key": "ui.avatar.saffron",
+      "text": "Saffron"
+    },
+    {
+      "key": "ui.avatar.coral",
+      "text": "Coral"
+    },
+    {
+      "key": "ui.avatar.rust",
+      "text": "Rust"
+    },
+    {
+      "key": "ui.avatar.fizz",
+      "text": "Fizz"
+    },
+    {
+      "key": "ui.avatar.marrow",
+      "text": "Marrow"
+    },
+    {
+      "key": "ui.avatar.bramble",
+      "text": "Bramble"
+    },
+    {
+      "key": "ui.avatar.wisp",
+      "text": "Wisp"
+    },
+    {
+      "key": "ui.avatar.boulder",
+      "text": "Boulder"
+    },
+    {
+      "key": "ui.avatar.thorn",
+      "text": "Thorn"
+    },
+    {
+      "key": "ui.common.got_it",
+      "text": "GOT IT"
+    },
+    {
+      "key": "ui.common.done",
+      "text": "DONE"
+    },
+    {
+      "key": "ui.common.coming_soon",
+      "text": "COMING SOON"
+    },
+    {
+      "key": "ui.defeat.title",
+      "text": "THE LIGHT WENT OUT"
+    },
+    {
+      "key": "ui.defeat.reason",
+      "text": "The light touched a thornstone and the glade went dark."
+    },
+    {
+      "key": "ui.defeat.moves_title",
+      "text": "OUT OF TURNS"
+    },
+    {
+      "key": "ui.defeat.moves_reason",
+      "text": "The grove grew tired before the glade woke. Fewer turns, more thinking."
+    },
+    {
+      "key": "ui.defeat.conduit_title",
+      "text": "IT GAVE WAY"
+    },
+    {
+      "key": "ui.defeat.conduit_reason",
+      "text": "That conduit was brittle and could not take another turn. Watch the number on them."
+    },
+    {
+      "key": "ui.defeat.near_one",
+      "text": "One turn from it."
+    },
+    {
+      "key": "ui.defeat.near_two",
+      "text": "Two turns from it."
+    },
+    {
+      "key": "ui.defeat.try_again",
+      "text": "TRY AGAIN"
+    },
+    {
+      "key": "ui.defeat.out_of_hearts",
+      "text": "No hearts left. Rest a while and the grove will wake you."
+    },
+    {
+      "key": "ui.defeat.watch_for_hearts",
+      "text": "No hearts left — but a short video will wake the grove early."
+    },
+    {
+      "key": "ui.hearts.title",
+      "text": "HEARTS"
+    },
+    {
+      "key": "ui.hearts.full",
+      "text": "Your hearts are full."
+    },
+    {
+      "key": "ui.hearts.next",
+      "text": "Next heart in {0}"
+    },
+    {
+      "key": "ui.hearts.empty",
+      "text": "Out of hearts"
+    },
+    {
+      "key": "ui.hearts.wait_to_play",
+      "text": "Wait for a heart to return before entering a glade."
+    },
+    {
+      "key": "ui.hearts.regen",
+      "text": "A heart comes back every {0} hours."
+    },
+    {
+      "key": "ui.hearts.regen_fast",
+      "text": "Fast hearts: one every {0} hours, for {1} more."
+    },
+    {
+      "key": "ui.hearts.stack",
+      "text": "Videos, chests and streak nights stack past {0} — hold up to {1}."
+    },
+    {
+      "key": "ui.coins.from_glades",
+      "text": "Every glade you clear pays coins."
+    },
+    {
+      "key": "ui.coins.shop_soon",
+      "text": "Spend them on new friends in your profile."
+    },
+    {
+      "key": "ui.tip.fragile.title",
+      "text": "BRITTLE CONDUIT"
+    },
+    {
+      "key": "ui.tip.fragile.body",
+      "text": "This one crumbles after a few turns — the number shows how many are left. Undoing does not mend it."
+    },
+    {
+      "key": "ui.tip.moves.title",
+      "text": "TURNS"
+    },
+    {
+      "key": "ui.tip.moves.body",
+      "text": "This is how many turns you have left. Run out with the glade still dark and it costs a heart."
+    },
+    {
+      "key": "ui.tip.rooted.title",
+      "text": "ROOTED"
+    },
+    {
+      "key": "ui.tip.rooted.body",
+      "text": "A rooted tile cannot be turned. Treat it as a fixed part of the path and route the rest of the grove around it."
+    },
+    {
+      "key": "ui.tip.mixing.title",
+      "text": "BLENDED LIGHT"
+    },
+    {
+      "key": "ui.tip.mixing.body",
+      "text": "This critter dreams of a colour no single heart carries. Join two hearts into one network and their light blends — red and green make gold."
+    },
+    {
+      "key": "ui.profile.cost",
+      "text": "{0} coins"
+    },
+    {
+      "key": "ui.companion.title",
+      "text": "new friend"
+    },
+    {
+      "key": "ui.companion.by_level",
+      "text": "Wakes on its own at keeper level {0}."
+    },
+    {
+      "key": "ui.companion.by_level_none",
+      "text": "Yours from the very first glade."
+    },
+    {
+      "key": "ui.companion.by_coins",
+      "text": "Or wake it now for {0} coins."
+    },
+    {
+      "key": "ui.companion.earn_more",
+      "text": "Coins come from clearing glades, daily chests and videos."
+    },
+    {
+      "key": "ui.companion.unlock_for",
+      "text": "WAKE FOR {0}"
+    },
+    {
+      "key": "ui.companion.get_coins",
+      "text": "GET COINS"
+    },
+    {
+      "key": "ui.companion.balance",
+      "text": "You have {0} coins."
+    },
+    {
+      "key": "ui.companion.short",
+      "text": "{0} coins to go — you have {1}."
+    },
+    {
+      "key": "ui.companion.already",
+      "text": "This friend is already awake."
+    },
+    {
+      "key": "ui.companion.not_for_sale",
+      "text": "This friend can only be earned by playing."
+    },
+    {
+      "key": "ui.companion.joined",
+      "text": "joined your grove"
+    },
+    {
+      "key": "ui.companion.continue",
+      "text": "WONDERFUL"
+    }
   ]
 }

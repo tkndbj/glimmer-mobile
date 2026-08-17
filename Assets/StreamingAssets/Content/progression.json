@@ -75,6 +75,15 @@
     ]
   },
 
+  "hearts": {
+    "refillCap": 5,
+    "ceiling": 50,
+    "refillSeconds": 28800,
+    "boostedRefillSeconds": 14400,
+    "maxBoostHours": 72,
+    "defeatCost": 1
+  },
+
   "ads": {
     "cooldownSeconds": 45,
 

@@ -209,23 +209,63 @@ export function applyGolden(credits: number, percent: number): number {
 }
 
 /**
+ * How much of each event's track the player says they have taken, read off their save.
+ *
+ * The wire shape is a list of `{ id, collectedGoal }` rather than a map, because an event
+ * id is content and a Firestore field name is not — see `FirestoreSaveMapper.EventFloors`.
+ * Anything malformed is dropped rather than guessed at, which lands on the safe side: an
+ * absent floor pays nothing, and nothing is recoverable through the earned floor.
+ */
+export function eventFloors(raw: unknown): Record<string, number> {
+  const floors: Record<string, number> = {};
+  if (!Array.isArray(raw)) return floors;
+
+  for (const entry of raw) {
+    if (!entry || typeof entry !== "object") continue;
+
+    const row = entry as { id?: unknown; collectedGoal?: unknown };
+    if (typeof row.id !== "string" || row.id.length === 0) continue;
+    if (row.id.length > MAX_LEVEL_ID_LENGTH) continue;
+
+    const goal = typeof row.collectedGoal === "number" ? Math.floor(row.collectedGoal) : 0;
+    if (!(goal > 0)) continue;
+
+    // Two rows for one event is a malformed save, not two tracks. The larger wins,
+    // because a floor only rises and the bigger number is the one that knows more.
+    if ((floors[row.id] ?? 0) >= goal) continue;
+    floors[row.id] = goal;
+  }
+
+  return floors;
+}
+
+/**
  * What the event calendar has paid this player.
  *
  * The server's copy of `EventLedger`. An event's progress is a count of its glades whose
  * *first* clear falls inside its window, and the reward is the milestones that count has
  * passed — so, like the golden multiplier, it is derived rather than granted and there is
- * nothing to claim, confirm or store. It rides inside `earnedCredits` for that reason: it
- * is part of what the save is worth, not a payment on top of it.
+ * nothing to claim or confirm. It rides inside `earnedCredits` for that reason: it is part
+ * of what the save is worth, not a payment on top of it.
  *
  * Only glades the catalog vouches for count, exactly as they do for stars. An event naming
  * a level this server has not been seeded with contributes nothing rather than being
  * guessed at, which is the same understate-rather-than-invent bargain the rest of this
  * file makes — an understatement is recoverable through the wallet's earned floor, and a
  * giveaway is not.
+ *
+ * **The floor is the one number here the client chooses, and it is why this is still
+ * safe.** Since save schema v11 a milestone is handed over when the player taps it, so a
+ * rung pays only once their floor has reached it. That floor is written by the client and
+ * can therefore be edited — but it is clamped below to the glades this function has just
+ * counted for itself, so the most a forged one can do is take early what play had already
+ * earned. Nothing a save can say produces a coin the event was not going to pay somebody
+ * who played it. Invariant 13's first category, with the client picking only *when*.
  */
 export function eventCredits(
   records: Record<string, { stars: number; firstClearedUnix: number }>,
-  config: ProgressionConfig
+  config: ProgressionConfig,
+  collected: Record<string, number> = {}
 ): number {
   const events = config.events;
   if (!Array.isArray(events) || events.length === 0) return 0;
@@ -251,10 +291,13 @@ export function eventCredits(
       finished++;
     }
 
+    const claimed = collected[groveEvent.id] ?? 0;
+    const floor = Math.min(Math.max(0, claimed), finished);
+
     // Milestones are authored lowest goal first and the reader on both sides refuses a
     // track that is not — sorting one here would pay rewards nobody authored.
     for (const milestone of groveEvent.milestones) {
-      if (!milestone || finished < milestone.goal) break;
+      if (!milestone || floor < milestone.goal) break;
       credits += Math.max(0, Math.floor(milestone.credits));
     }
   }
@@ -278,7 +321,8 @@ export function eventCredits(
 export function earnedCredits(
   levels: unknown,
   config: ProgressionConfig,
-  uid = ""
+  uid = "",
+  collectedEvents: unknown = undefined
 ): { credits: number; counted: number; rejected: number } {
   let credits = 0;
   let counted = 0;
@@ -334,7 +378,7 @@ export function earnedCredits(
     believed[levelId] = { stars, firstClearedUnix: clearedAt };
   }
 
-  credits += eventCredits(believed, config);
+  credits += eventCredits(believed, config, eventFloors(collectedEvents));
 
   if (rejected > 0) {
     logger.info("ledger entries ignored while deriving credits", { rejected, counted });

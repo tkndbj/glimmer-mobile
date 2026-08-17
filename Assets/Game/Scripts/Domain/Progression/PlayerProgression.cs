@@ -38,6 +38,11 @@ namespace GlimmerGrove.Progression
             PlayerProgress.Reloaded += Invalidate;
             GameContent.CatalogChanged += Invalidate;
             ProgressionRules.Changed += Invalidate;
+
+            // Collecting an event rung moves a floor that this total reads. Without this the
+            // credits would not appear until something else happened to invalidate — which
+            // is exactly the silent arrival collecting by hand exists to avoid.
+            Events.EventCollection.Changed += Invalidate;
         }
 
         /// <summary>Forces the next read to recompute. Cheap; safe to call often.</summary>
@@ -175,12 +180,24 @@ namespace GlimmerGrove.Progression
             _dirty = false;
 
             var table = ProgressionRules.Table;
+
+            // Once, on the first derivation that has a catalog to read: a file from a build
+            // which paid event milestones automatically has already been paid for every rung
+            // it reached, so those rungs start collected rather than lighting up the page.
+            // Here rather than in the save migration because a migration cannot see content.
+            if (GameContent.IsLoaded)
+            {
+                Events.EventCollection.SeedIfNeeded(GameContent.Index.Events,
+                                                    PlayerProgress.RecordsById);
+            }
+
             // The seed is read here, at the one place the live totals are derived, rather
             // than inside the ledger — see ProgressionLedger.Value for why that has to stay
             // a pure function. Empty before the first sign-in, which pays the base and can
             // only ever be revised upward afterwards.
             _totals = ProgressionLedger.Compute(PlayerProgress.Records, GameContent.Index, table,
-                                                RewardSeed.PlayerKey, GameContent.Index.Events);
+                                                RewardSeed.PlayerKey, GameContent.Index.Events,
+                                                Events.EventCollection.Floors);
 
             // Three floors, applied as one: whichever demands the most XP wins, and
             // everything downstream — level, progress bar, remaining XP — then stays

@@ -213,14 +213,6 @@ namespace GlimmerGrove
                              new Vector2(1f, .5f), new Vector2(-206f, 0f), () => Flow.Modal<HowToOverlay>());
         }
 
-        /// <summary>Either "full" or how long until the next heart, as m:ss.</summary>
-        static string HeartsLine()
-        {
-            if (Profile.Hearts >= Profile.MaxHearts) return Loc.Get("ui.hearts.full");
-
-            return string.Format(Loc.Get("ui.hearts.next"), Profile.HeartCountdown());
-        }
-
         /// <summary>
         /// Hearts, coins and gems.
         ///
@@ -238,31 +230,21 @@ namespace GlimmerGrove
             _resourceRow = row;
             if (sibling >= 0) row.SetSiblingIndex(sibling);
 
-            // Hearts are real now, so this is no longer a "coming soon" — an empty
-            // player gets the gate with its live countdown, everyone else gets told
-            // when the next one lands.
-            // The plus goes to the best thing available, which is not the same thing every
-            // time. An ad if one is loaded and would help; otherwise the gate's countdown
-            // when the bar is empty; otherwise the honest "you are full" toast. Sending
-            // every tap to the same panel would mean showing a full player a way to get
-            // hearts they cannot hold.
-            ResourcePill(row, -318f, Pal.Rose, "ic_heart", $"{Profile.Hearts}/{Profile.MaxHearts}", false,
-                         () =>
-                         {
-                             if (RewardedAds.ShouldOffer(AdPlacement.HeartRefill))
-                                 Flow.Modal<AdOfferOverlay>(v => v.PlacementId = AdPlacement.HeartRefill);
-                             else if (!Profile.CanPlay) Flow.Modal<OutOfHeartsOverlay>();
-                             else Scenery.Toast(Content, HeartsLine(), Pal.Rose, 2.4f);
-                         });
+            // The plus always opens the same panel, and that is the change worth explaining.
+            // It used to choose between three destinations by asking whether an ad happened
+            // to be loaded — the offer panel, the out-of-hearts gate, or a toast — which
+            // meant the one control on this screen that looks like a question mark answered
+            // a different question depending on the state of an ad network. A player who
+            // tapped it twice got two different screens and learned nothing from either.
+            //
+            // It now opens the resource's own panel, which explains how the resource works
+            // whatever the network is doing and offers the video when there is one. The
+            // states that used to hide it are states the panel renders honestly: at the
+            // ceiling it says so, with nothing loaded it says it is looking.
+            ResourcePill(row, -318f, Pal.Rose, "ic_heart", Profile.HeartsLabel(), false,
+                         () => Flow.Modal<AdOfferOverlay>(v => v.PlacementId = AdPlacement.HeartRefill));
             ResourcePill(row, 0f, Pal.Gold, null, Profile.Short(Profile.Coins), true,
-                         () =>
-                         {
-                             if (RewardedAds.ShouldOffer(AdPlacement.CoinBonus))
-                                 Flow.Modal<AdOfferOverlay>(v => v.PlacementId = AdPlacement.CoinBonus);
-                             else
-                                 Flow.Modal<ComingSoonOverlay>(v => v.Configure("Coins", "ic_chest",
-                                     "Earn coins in the glades and spend them in the shop. Coming soon."));
-                         });
+                         () => Flow.Modal<AdOfferOverlay>(v => v.PlacementId = AdPlacement.CoinBonus));
             ResourcePill(row, 318f, Pal.Bloom, "ic_gem", Profile.Short(Profile.Gems), false,
                          () => Flow.Modal<ComingSoonOverlay>(v => v.Configure("Gems", "ic_gem",
                              "Gems will unlock hints, skins and seasonal glades.")));
@@ -590,7 +572,8 @@ namespace GlimmerGrove
         /// the title is a translated name and the meta is a translated sentence with a clock
         /// in it, so neither width is under our control.
         /// </summary>
-        void FeatureHeader(Transform card, float w, string title, Color tint, string meta)
+        void FeatureHeader(Transform card, float w, string title, Color tint, string meta,
+                           bool badged = false)
         {
             // The meta is 200 wide inset 26 from the right, so the title gets everything left
             // of it less a gap. Worked out from the edges rather than by eye: both strings
@@ -599,8 +582,15 @@ namespace GlimmerGrove
             // A box with no meta still does not get the full width — the top-right corner is
             // where a count badge hangs, and a title long enough to reach it would run under
             // one rather than being clipped by it.
+            //
+            // `badged` moves the meta out of that corner as well. The streak box never needed
+            // it because it carries no meta, so the collision only appeared when the event box
+            // gained a badge and its countdown ran straight under the disc. The corner is 66
+            // wide and hangs 30 out, so 70 of clearance puts the text clear of it whatever the
+            // translation is.
             bool hasMeta = !string.IsNullOrEmpty(meta);
-            float tw = hasMeta ? w - 262f : w - 110f;
+            float inset = badged ? 70f : 0f;
+            float tw = hasMeta ? w - 262f - inset : w - 110f;
 
             UIKit.Shrinkable(
                 UIKit.Titled("Title", card, title.ToUpperInvariant(), 25, tint, TextAnchor.MiddleLeft,
@@ -612,7 +602,7 @@ namespace GlimmerGrove
             UIKit.Shrinkable(
                 UIKit.Titled("Meta", card, meta, 23, new Color(1f, .95f, .84f, .66f),
                              TextAnchor.MiddleRight, new Vector2(200f, 32f), new Vector2(1f, 1f),
-                             new Vector2(-126f, -36f), 0f, 0f), 15);
+                             new Vector2(-126f - inset, -36f), 0f, 0f), 15);
         }
 
         /// <summary>
@@ -953,10 +943,14 @@ namespace GlimmerGrove
         /// </summary>
         bool BuildFocusBox(float w)
         {
-            var live = GroveEvents.Live;
-            if (live == null) return BuildGoalBox(w);
+            // Featured, not Live. Rewards are collected by hand now, so a window closing must
+            // not take a bloom the player grew and never took — and the box is the only way
+            // back to the page holding it. A closed event with nothing waiting stops being
+            // featured, so the goal box gets the slot back the moment the track is settled.
+            var featured = GroveEvents.Featured;
+            if (featured == null) return BuildGoalBox(w);
 
-            BuildEventBox(live, w);
+            BuildEventBox(featured, w);
             return true;
         }
 
@@ -975,11 +969,18 @@ namespace GlimmerGrove
             int goal = Mathf.Max(1, live.FinalGoal);
             float done = Mathf.Clamp01(progress.Finished / (float)goal);
             float gx = -w * .5f + 115f;
+            long left = live.SecondsLeftAt(GameClock.NowUnix());
 
-            var card = FeatureCard(_focusBox, w, Pal.Bloom, .50f, () => Flow.Modal<EventOverlay>());
+            var card = FeatureCard(_focusBox, w, Pal.Bloom, .50f, OpenEvent);
+
+            // Straight after the card, for the reason the streak's is: the lit rim and the
+            // ring live at the border, under everything else the box draws.
+            if (progress.AnyWaiting) FeatureBeacon(card);
+
             FeatureHeader(card, w, Loc.Get(live.NameKey), Pal.Bloom,
-                          Loc.Format("ui.event.ends_in",
-                                     Profile.LongCountdown(GroveEvents.SecondsLeft)));
+                          left > 0 ? Loc.Format("ui.event.ends_in", Profile.LongCountdown(left))
+                                   : Loc.Get("ui.event.ended"),
+                          progress.AnyWaiting);
 
             UIKit.Img("Glow", card, Art.Glow(128, 2f), Pal.A(Pal.Bloom, .28f),
                       new Vector2(200f, 200f), new Vector2(.5f, .5f), new Vector2(gx, 4f));
@@ -989,13 +990,64 @@ namespace GlimmerGrove
             EventMark.Paint(mark, live.Icon, Pal.Bloom, done);
             Tween.Breathe(mark, .055f, 2.6f);
 
+            // The caption gives way to the instruction when there is something to take. The
+            // fraction is still drawn right above it, so nothing is lost — and a box whose
+            // border is lit and whose corner carries a count should say what to do about it.
             FeatureValue(card, w, Loc.Format("ui.home.fraction", progress.Finished, goal),
-                         Pal.Cream, Loc.Get("ui.home.glades"), Pal.Bloom);
+                         Pal.Cream,
+                         progress.AnyWaiting ? Loc.Get("ui.home.event_waiting")
+                                             : Loc.Get("ui.home.glades"),
+                         progress.AnyWaiting ? Pal.Gold : Pal.Bloom);
 
             Milestones(FeatureBar(FeatureStrip(card, w), w, done, Pal.Bloom),
                        w, live, progress.Finished, goal);
 
+            EventBadge(card, progress.Waiting);
+
             Sheen.Attach(card, 4.6f);
+        }
+
+        /// <summary>
+        /// The count of blooms waiting, pinned to the corner.
+        ///
+        /// The same disc the streak wears, and deliberately the same: a gold badge on a
+        /// feature box means one thing across this screen. Not redundant with the beacon
+        /// either, for the reason stated there — the lit border is what is visible from
+        /// across the room, the badge is what says how much once you are looking.
+        /// </summary>
+        void EventBadge(Transform card, int waiting)
+        {
+            if (waiting <= 0) return;
+
+            var badge = UIKit.Img("Waiting", card, Art.Disc(64), Pal.Gold,
+                                  new Vector2(66f, 66f), new Vector2(1f, 1f), new Vector2(-30f, -28f));
+
+            var rim = UIKit.Img("Rim", badge.transform, Art.Ring(64, 7f), new Color(.16f, .12f, .04f, .95f));
+            UIKit.StretchTo((RectTransform)rim.transform, 0, 0, 0, 0);
+
+            UIKit.Shrinkable(
+                UIKit.Titled("N", badge.transform, waiting.ToString(), 36, new Color(.17f, .11f, .02f),
+                             TextAnchor.MiddleCenter, new Vector2(50f, 50f),
+                             new Vector2(.5f, .5f), Vector2.zero, 0f, 0f), 22);
+
+            UIKit.Halo(badge.transform, Pal.Gold, 146f, .45f);
+
+            badge.transform.localScale = Vector3.zero;
+            Tween.Pop(badge.transform, 0f, .5f, .22f)
+                 .OnDone(() => { if (badge) Tween.Breathe(badge.transform, .10f, 1.3f); });
+        }
+
+        /// <summary>
+        /// Opens the event page.
+        ///
+        /// A page rather than the panel this used to raise, and the reason is the same one
+        /// that turned the streak's toast into a screen: the box reports, and there is now
+        /// something on the other side of it to <em>do</em>.
+        /// </summary>
+        void OpenEvent()
+        {
+            if (Flow.HasModal) return;
+            Flow.Go<EventScreen>();
         }
 
         /// <summary>

@@ -79,6 +79,23 @@ namespace GlimmerGrove.Persistence
                 // mergeable at all. See invariant 11b and DailyStreak, which owns the rule
                 // for the reason the two above it do.
                 streak = Daily.DailyStreak.Join(mine.streak, other.streak),
+
+                // A floor per event, unioned by id and taken at its larger value — the
+                // fourth thing in this file shaped that way, and the rule lives with the
+                // feature for the reason the three above it do.
+                events = Events.EventCollection.Join(mine.events, other.events),
+
+                // Having been through a build that collects by hand cannot be undone, so
+                // the union is "either". A device still on the old build joins as false and
+                // takes the true from the other side, which is right: the floors it inherits
+                // came from a pass that has already run.
+                eventsSeeded = mine.eventsSeeded || other.eventsSeeded,
+
+                // A union, for the reason tipsSeen is one: buying cannot be undone, so
+                // between two devices the player owns whatever either of them bought. The
+                // rule lives with the feature for the reason the four above it do.
+                companionsOwned = Progression.CompanionLedger.Join(mine.companionsOwned,
+                                                                   other.companionsOwned),
             };
 
             return merged;

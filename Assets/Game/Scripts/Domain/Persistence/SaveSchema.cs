@@ -65,8 +65,28 @@ namespace GlimmerGrove.Persistence
         ///      third date rather than a count or a set of flags, for the third time and
         ///      the same reason: it only ever rises, so the merge is <c>max</c> like the
         ///      other two and a rung can never be paid twice. See <see cref="Daily.DailyStreak"/>.
+        /// v11 — the goal through which each event's reward track has been collected
+        ///      (<see cref="SaveFileDto.events"/>), and the flag that says this file has
+        ///      been through a build which collects them by hand
+        ///      (<see cref="SaveFileDto.eventsSeeded"/>). An event milestone is now handed
+        ///      over when the player taps it rather than folded into derived earnings the
+        ///      moment the glade is cleared, for the reason v10 changed the streak: a
+        ///      reward that arrives as a number moving behind another screen is not a
+        ///      reward. A floor per event keyed by the event's permanent id, for the
+        ///      fourth time and the same reason — it only ever rises, so the merge is
+        ///      <c>max</c> per key. See <see cref="Events.EventCollection"/>.
+        /// v12 — the companions bought with credits (<see cref="SaveFileDto.companionsOwned"/>).
+        ///      The first thing in this file that is stored because it genuinely <em>cannot</em>
+        ///      be derived: a companion reached by keeper level needs no record, but nothing
+        ///      observable implies "this player paid 8,000 credits for Coral". A set of
+        ///      permanent ids, joined by union, which is the shape invariant 11b permits and
+        ///      the one <see cref="TipLedger"/> already had — buying is irreversible, so
+        ///      between two devices the player owns whatever either of them bought. A count
+        ///      would have been hearts' old mistake and a per-companion flag could not tell
+        ///      "not bought" from "written before this companion existed". See
+        ///      <see cref="Progression.CompanionLedger"/>.
         /// </summary>
-        public const int Version = 10;
+        public const int Version = 12;
 
         /// <summary>Progress that predates this file: index-keyed keys in PlayerPrefs.</summary>
         public const int LegacyPlayerPrefsVersion = 0;
@@ -141,6 +161,61 @@ namespace GlimmerGrove.Persistence
         public StreakStateDto streak;
 
         /// <summary>
+        /// How far each event's reward track has been collected. See <see cref="EventStateDto"/>.
+        ///
+        /// An array on the wire and a map everywhere else, exactly like <see cref="levels"/>
+        /// and for the reason invariant 11a gives: keyed by the event's permanent id, so a
+        /// duplicated row is a malformed file rather than a second payout, and a sync can
+        /// write one event without re-uploading the calendar.
+        /// </summary>
+        public EventStateDto[] events;
+
+        /// <summary>
+        /// Set once this file has been through a build that collects event rewards by hand.
+        ///
+        /// <para>
+        /// False is what <c>JsonUtility</c> writes into a field an older file never had, so
+        /// it means exactly the right thing: "written by a build that folded every reached
+        /// milestone straight into derived earnings". <see cref="Events.EventCollection"/>
+        /// reads that as a cue to mark everything already reached as already collected —
+        /// under the old rule it had been — rather than lighting up a track the player has
+        /// in fact already been paid for.
+        /// </para>
+        /// <para>
+        /// Nothing depends on it for correctness. Event credits are derived and bounded
+        /// below by the wallet's earned floor, so an unseeded file can only ever produce a
+        /// collect that pays nothing visible — never one that pays twice. This exists so
+        /// that does not happen, not because it would be unsafe if it did. A bool that only
+        /// goes one way is a join, so the merge is <c>or</c>.
+        /// </para>
+        /// </summary>
+        public bool eventsSeeded;
+
+        /// <summary>
+        /// Permanent ids of the companions this player <b>bought</b>, sorted.
+        ///
+        /// <para>
+        /// Purchases only. A companion reached by keeper level is never listed, because that
+        /// half of the rule is derived and re-derives correctly on every device — writing it
+        /// down as well would create a second answer that a retune could put out of step with
+        /// the first. See <see cref="Progression.CompanionLedger"/>, which owns the composite
+        /// rule.
+        /// </para>
+        /// <para>
+        /// Unknown ids are carried through untouched, exactly like <see cref="tipsSeen"/>: a
+        /// companion bought on a newer build must not be confiscated by a trip through an
+        /// older one, and an id this build does not recognise costs one short string.
+        /// </para>
+        /// <para>
+        /// Absent is the same fact as "bought nothing", which is what makes this mergeable
+        /// without a sentinel — the problem <see cref="WalletDto.heartsProduced"/> needed a
+        /// paragraph to solve. <c>JsonUtility</c> writes a null array into a field an older
+        /// file never had, and a null set and an empty set say the same true thing.
+        /// </para>
+        /// </summary>
+        public string[] companionsOwned;
+
+        /// <summary>
         /// Integrity check over the rest of the file. Empty on files written before
         /// checksums existed, which are accepted and gain one on the next write.
         /// </summary>
@@ -200,7 +275,7 @@ namespace GlimmerGrove.Persistence
         /// of their hearts on the upgrade, which is a worse version of the bug this
         /// replaces. Zero is safe to spend as the marker because it is unreachable: an
         /// account is seeded at a full set, this only ever rises, and so any genuine
-        /// ledger has produced at least <see cref="HeartRules.Max"/>. Even if one somehow
+        /// ledger has produced at least <see cref="HeartRules.RefillCap"/>. Even if one somehow
         /// did read as zero the fallback is <see cref="hearts"/>, which would also be
         /// zero — the sentinel cannot cost anybody a heart.
         /// </para>
@@ -500,6 +575,33 @@ namespace GlimmerGrove.Persistence
         /// because under the old rule it had been.
         /// </summary>
         public int collectedThroughDay;
+    }
+
+    /// <summary>
+    /// How far one event's reward track has been handed over.
+    ///
+    /// <para>
+    /// A <em>goal</em> rather than a milestone index, and the difference matters when a
+    /// live event is retuned. An index would slide: inserting a rung between two authored
+    /// ones renumbers everything after it, so a floor of "two" would silently come to mean
+    /// a different pair of rewards than the one the player took. A goal is a number of
+    /// glades, which is a fact about what they did — every milestone asking for that many
+    /// glades or fewer has been collected, whatever the track looks like afterwards.
+    /// </para>
+    /// <para>
+    /// Zero is "nothing taken yet", which is safe as a sentinel because
+    /// <see cref="Events.EventMilestone.Goal"/> is clamped to at least one. See
+    /// <see cref="SaveFileDto.eventsSeeded"/> for what an <em>absent</em> row means.
+    /// </para>
+    /// </summary>
+    [Serializable]
+    public sealed class EventStateDto
+    {
+        /// <summary>The event's permanent id, as authored in the manifest.</summary>
+        public string id;
+
+        /// <summary>The largest milestone goal already collected. 0 for none.</summary>
+        public int collectedGoal;
     }
 
     [Serializable]

@@ -144,15 +144,83 @@ namespace GlimmerGrove
         /// </summary>
         public const float NodeFaceLift = 0.165f;
 
-        /// <summary>Pill button with a label. Returns the Btn; label is child "Text".</summary>
+        /// <summary>
+        /// Pill button with a label, and optionally a glyph in front of it. Returns the
+        /// Btn, carrying its label as <see cref="Btn.Label"/> and its glyph as
+        /// <see cref="Btn.Icon"/> — so a disabled button dims both together, and a repaint
+        /// goes through <see cref="Btn.SetCaption"/> rather than hunting for a child.
+        /// </summary>
+        /// <remarks>
+        /// The glyph and the label are centred as one block rather than placed at fixed
+        /// offsets, which is what keeps "▶ WATCH" and "▶ FINDING A VIDEO..." both looking
+        /// deliberate on the same button. A layout group would do the same work, but only
+        /// through a forced rebuild on every frame a countdown ticks; measuring once per
+        /// changed caption is the same result for none of the cost.
+        /// </remarks>
         public static Btn TextButton(string name, Transform parent, string skin, string text, int fontSize,
-                                     Vector2 size, Vector2 anchor, Vector2 pos, Action onClick)
+                                     Vector2 size, Vector2 anchor, Vector2 pos, Action onClick,
+                                     string icon = null)
         {
             var b = Button(name, parent, Art.S("Ui/" + skin), size, anchor, pos, onClick);
-            Titled("Text", b.transform, text, fontSize, Pal.Cream, TextAnchor.MiddleCenter,
-                   new Vector2(size.x - 40f, size.y * .72f), new Vector2(.5f, .5f),
-                   new Vector2(0f, size.y * PillFaceLift));
+
+            float lift = size.y * PillFaceLift;
+
+            b.Label = Titled("Text", b.transform, text, fontSize, Pal.Cream, TextAnchor.MiddleCenter,
+                             new Vector2(size.x - 40f, size.y * .72f), new Vector2(.5f, .5f),
+                             new Vector2(0f, lift));
+            b.LabelWidth = size.x - 40f;
+
+            if (string.IsNullOrEmpty(icon)) return b;
+
+            var glyph = Img("Icon", b.transform, Art.S("Ui/" + icon), Pal.Cream,
+                            Vector2.one * (size.y * .34f), new Vector2(.5f, .5f), new Vector2(0f, lift));
+            glyph.preserveAspect = true;
+            b.Icon = glyph;
+
+            // Best-fit, and only on a button that carries a glyph. The block below is
+            // measured from the label's box, so a caption that overflowed its box would be
+            // drawn wider than the width the glyph was placed against and the pair would
+            // read as off-centre. Shrinking to fit keeps the drawn text inside what was
+            // measured. Short captions reach neither case — best-fit never grows text past
+            // the size it was asked for, so "WATCH" renders exactly as it did.
+            Shrinkable(b.Label, Mathf.Max(1, fontSize / 2));
+
+            FitLabel(b);
             return b;
+        }
+
+        /// <summary>Gap between a pill button's glyph and its label.</summary>
+        const float GlyphGap = 18f;
+
+        /// <summary>
+        /// Re-centres a pill button's glyph and label as one block, after either has
+        /// changed. A no-op on a button with no glyph, so a paint path can call it
+        /// unconditionally — though <see cref="Btn.SetCaption"/> is what should be calling
+        /// it, so that nothing has to remember to.
+        /// </summary>
+        /// <remarks>
+        /// <see cref="Text.preferredWidth"/> is read directly rather than through a layout
+        /// pass: uGUI computes it from the font's cached character info on demand, so it is
+        /// correct in the same frame the caption was assigned. It is then clamped to the
+        /// width the button was built with, so a long translation eats into the gap instead
+        /// of pushing the glyph off the button.
+        /// </remarks>
+        public static void FitLabel(Btn button)
+        {
+            if (button == null || button.Icon == null || button.Label == null) return;
+
+            var glyphRt = (RectTransform)button.Icon.transform;
+            var labelRt = button.Label.rectTransform;
+
+            float glyph = glyphRt.sizeDelta.x;
+            float room = Mathf.Max(0f, button.LabelWidth - glyph - GlyphGap);
+            float text = Mathf.Min(button.Label.preferredWidth, room);
+
+            labelRt.sizeDelta = new Vector2(text, labelRt.sizeDelta.y);
+
+            float block = glyph + GlyphGap + text;
+            glyphRt.anchoredPosition = new Vector2(-block * .5f + glyph * .5f, glyphRt.anchoredPosition.y);
+            labelRt.anchoredPosition = new Vector2(block * .5f - text * .5f, labelRt.anchoredPosition.y);
         }
 
         /// <summary>Square button carrying a white glyph.</summary>

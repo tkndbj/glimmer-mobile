@@ -31,17 +31,42 @@ namespace GlimmerGrove.Progression
         /// <summary>Keeper level this unlocks at. 0 means available from the first launch.</summary>
         public readonly int UnlockLevel;
 
-        public AvatarDefinition(string id, string portrait, string animated, int unlockLevel)
+        /// <summary>
+        /// Credits that buy this companion outright, or 0 when it cannot be bought.
+        ///
+        /// The second path to the same companion, and the only one most of the roster will
+        /// ever be reached by: three-starring an entire hundred-glade catalog lands a player
+        /// around keeper level 15, so a gate above that is unreachable by play for years.
+        /// See <see cref="CompanionLedger"/> for what holding one means and
+        /// <c>ManifestCompanionDto.unlockCost</c> for why zero is "not for sale".
+        /// </summary>
+        public readonly int UnlockCost;
+
+        public AvatarDefinition(string id, string portrait, string animated, int unlockLevel,
+                                int unlockCost = 0)
         {
             Id = id;
             Portrait = string.IsNullOrEmpty(portrait) ? id : portrait;
             Animated = animated ?? string.Empty;
             UnlockLevel = unlockLevel < 0 ? 0 : unlockLevel;
+            UnlockCost = unlockCost < 0 ? 0 : unlockCost;
         }
 
         public bool IsValid => !string.IsNullOrEmpty(Id);
 
         public bool HasAnimation => !string.IsNullOrEmpty(Animated);
+
+        /// <summary>True when credits are a way to get this one. See <see cref="UnlockCost"/>.</summary>
+        public bool IsForSale => IsValid && UnlockCost > 0;
+
+        /// <summary>
+        /// True when nothing gates this companion — the starter every account begins with.
+        ///
+        /// Exactly one companion should answer true, and <c>ContentValidation</c> fails the
+        /// build when none does: a roster where everything is gated leaves a new player with
+        /// nobody to wear.
+        /// </summary>
+        public bool IsStarter => IsValid && UnlockLevel <= 1;
 
         /// <summary>
         /// A companion's name is a pure function of its id, with no override — the same
@@ -69,12 +94,22 @@ namespace GlimmerGrove.Progression
     /// the right answer.
     /// </para>
     /// <para>
-    /// Unlocking is <em>derived</em> from keeper level rather than stored, for the same
-    /// reason XP is: a stored "owned" set cannot be merged across devices without
-    /// deciding what a missing entry means, cannot be retuned for existing players, and
-    /// cannot be recovered when it is lost. A level threshold recomputes, and a retune
-    /// that would take a companion away is caught by <see cref="Resolve"/> keeping the
-    /// player on whatever they are already wearing.
+    /// <b>This type answers questions about content, never about a player.</b> A companion
+    /// is held either because the keeper level reached its gate or because it was bought,
+    /// and the second half is save state — so the composite rule lives in
+    /// <see cref="CompanionLedger"/> and every screen asks there.
+    /// <see cref="ReachedBy"/> is deliberately named for the narrow question it answers,
+    /// because it used to be called <c>IsUnlocked</c> and a call site that reads like the
+    /// whole rule while checking half of it is how a paid companion silently stays locked.
+    /// </para>
+    /// <para>
+    /// The level half is <em>derived</em>, for the same reason XP is: it recomputes, it can
+    /// be retuned for existing players, and it cannot be lost. The purchased half cannot be
+    /// derived from anything — nothing observable implies "this player paid 8,000 credits"
+    /// — so it is stored, and it is stored in the one shape invariant 11b permits: a set of
+    /// permanent ids that only ever grows, joined by union. A retune that moves a gate above
+    /// somebody's level takes nothing away, because <see cref="Resolve"/> keeps a player on
+    /// whatever they are already wearing.
     /// </para>
     /// </summary>
     public static class AvatarCatalog
@@ -92,10 +127,10 @@ namespace GlimmerGrove.Progression
         static readonly AvatarDefinition[] BuiltIn =
         {
             new AvatarDefinition("monarch",  "monarch",  "c5", 0),
-            new AvatarDefinition("timber",   "timber",   "c2", 2),
-            new AvatarDefinition("sprocket", "sprocket", "c3", 4),
-            new AvatarDefinition("thistle",  "thistle",  "c4", 6),
-            new AvatarDefinition("puff",     "puff",     "c1", 8),
+            new AvatarDefinition("timber",   "timber",   "c2", 3, 1000),
+            new AvatarDefinition("sprocket", "sprocket", "c3", 5, 1400),
+            new AvatarDefinition("thistle",  "thistle",  "c4", 7, 1800),
+            new AvatarDefinition("puff",     "puff",     "c1", 9, 2200),
         };
 
         static AvatarDefinition[] _roster = BuiltIn;
@@ -149,10 +184,18 @@ namespace GlimmerGrove.Progression
         public static AvatarDefinition Find(string id)
             => !string.IsNullOrEmpty(id) && _byId.TryGetValue(id, out int i) ? _roster[i] : default;
 
-        public static bool IsUnlocked(AvatarDefinition avatar, int keeperLevel)
+        /// <summary>
+        /// Whether the keeper level alone has reached this companion's gate.
+        ///
+        /// <b>Half of the unlock rule.</b> A player may also have bought it, which this
+        /// cannot see — ask <see cref="CompanionLedger.IsHeld(AvatarDefinition, int)"/> for
+        /// the question a screen actually has. Named for its narrowness on purpose; see the
+        /// type's remarks.
+        /// </summary>
+        public static bool ReachedBy(AvatarDefinition avatar, int keeperLevel)
             => avatar.IsValid && keeperLevel >= avatar.UnlockLevel;
 
-        public static bool IsUnlocked(string id, int keeperLevel) => IsUnlocked(Find(id), keeperLevel);
+        public static bool ReachedBy(string id, int keeperLevel) => ReachedBy(Find(id), keeperLevel);
 
         /// <summary>
         /// The companion to actually draw for a stored id.
@@ -169,28 +212,42 @@ namespace GlimmerGrove.Progression
             return found.IsValid ? found : Default;
         }
 
-        /// <summary>How many are unlocked at a keeper level, for the "3 of 31" caption.</summary>
-        public static int UnlockedCount(int keeperLevel)
+        /// <summary>
+        /// The starter every account begins wearing — the one companion nothing gates.
+        ///
+        /// Falls back to <see cref="Default"/> rather than to nothing, because a roster that
+        /// gates everything is a content mistake that must not cost a player their profile.
+        /// <c>ContentValidation</c> fails the build on it separately.
+        /// </summary>
+        public static AvatarDefinition Starter
         {
-            int count = 0;
-            foreach (var avatar in _roster)
-                if (keeperLevel >= avatar.UnlockLevel) count++;
-            return count;
+            get
+            {
+                foreach (var avatar in _roster)
+                    if (avatar.IsStarter) return avatar;
+
+                return Default;
+            }
         }
 
         /// <summary>
-        /// The next companion a player has not yet reached, or an invalid one when they
-        /// hold the lot. Drives the "next at level 12" line without the screen having to
-        /// know the roster is ordered by unlock level.
+        /// The cheapest companion the player does not hold, or an invalid one when there is
+        /// nothing left to sell. Drives the "next friend" prompt and the shop's default sort.
+        ///
+        /// Takes the held set as a predicate rather than reading it, so this stays a question
+        /// about content that a test can ask without a save file.
         /// </summary>
-        public static AvatarDefinition NextLocked(int keeperLevel)
+        public static AvatarDefinition CheapestUnheld(Func<AvatarDefinition, bool> isHeld)
         {
             var best = default(AvatarDefinition);
+
             foreach (var avatar in _roster)
             {
-                if (avatar.UnlockLevel <= keeperLevel) continue;
-                if (!best.IsValid || avatar.UnlockLevel < best.UnlockLevel) best = avatar;
+                if (!avatar.IsForSale) continue;
+                if (isHeld != null && isHeld(avatar)) continue;
+                if (!best.IsValid || avatar.UnlockCost < best.UnlockCost) best = avatar;
             }
+
             return best;
         }
     }

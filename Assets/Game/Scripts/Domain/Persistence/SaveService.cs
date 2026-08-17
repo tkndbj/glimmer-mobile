@@ -37,8 +37,10 @@ namespace GlimmerGrove.Persistence
             GameSettings.LoadFrom(dto);
             Wallet.LoadFrom(dto);
             TipLedger.LoadFrom(dto);
+            Progression.CompanionLedger.LoadFrom(dto);
             Daily.DailyChests.LoadFrom(dto);
             Daily.DailyStreak.LoadFrom(dto);
+            Events.EventCollection.LoadFrom(dto);
             Ads.RewardedAds.LoadFrom(dto);
             ProgressionStore.LoadFrom(dto);
             CloudState.LoadFrom(dto);
@@ -107,8 +109,10 @@ namespace GlimmerGrove.Persistence
             GameSettings.WriteInto(dto);
             Wallet.WriteInto(dto);
             TipLedger.WriteInto(dto);
+            Progression.CompanionLedger.WriteInto(dto);
             Daily.DailyChests.WriteInto(dto);
             Daily.DailyStreak.WriteInto(dto);
+            Events.EventCollection.WriteInto(dto);
             Ads.RewardedAds.WriteInto(dto);
             ProgressionStore.WriteInto(dto);
             CloudState.WriteInto(dto);
@@ -131,8 +135,10 @@ namespace GlimmerGrove.Persistence
             GameSettings.LoadFrom(dto);
             Wallet.LoadFrom(dto);
             TipLedger.LoadFrom(dto);
+            Progression.CompanionLedger.LoadFrom(dto);
             Daily.DailyChests.LoadFrom(dto);
             Daily.DailyStreak.LoadFrom(dto);
+            Events.EventCollection.LoadFrom(dto);
             Ads.RewardedAds.LoadFrom(dto);
             ProgressionStore.LoadFrom(dto);
             CloudState.LoadFrom(dto);
@@ -161,8 +167,10 @@ namespace GlimmerGrove.Persistence
             PlayerProgress.LoadFrom(fresh);
             Wallet.LoadFrom(fresh);
             TipLedger.LoadFrom(fresh);
+            Progression.CompanionLedger.LoadFrom(fresh);
             Daily.DailyChests.LoadFrom(fresh);
             Daily.DailyStreak.LoadFrom(fresh);
+            Events.EventCollection.LoadFrom(fresh);
             Ads.RewardedAds.LoadFrom(fresh);
             ProgressionStore.LoadFrom(fresh);
             // settings and the cloud identity deliberately survive a progress wipe

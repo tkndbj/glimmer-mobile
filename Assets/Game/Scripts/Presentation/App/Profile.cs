@@ -1,5 +1,6 @@
 using GlimmerGrove.AssetPipeline;
 using GlimmerGrove.Content;
+using GlimmerGrove.Localization;
 using GlimmerGrove.Persistence;
 using GlimmerGrove.Progression;
 
@@ -21,7 +22,33 @@ namespace GlimmerGrove
     /// </summary>
     public static class Profile
     {
-        public const int MaxHearts = Wallet.MaxHearts;
+        /// <summary>
+        /// Raised when the worn companion changes.
+        ///
+        /// <para>
+        /// Separate from <see cref="CompanionLedger.Changed"/> because the two are different
+        /// facts — which companions are <em>held</em>, and which one is being <em>worn</em> —
+        /// and a purchase moves them one after the other rather than together. That order is
+        /// what makes this necessary: <see cref="TryBuyAvatar"/> buys and then wears, and
+        /// <c>TryBuy</c> raises the ledger's event before the wear has happened, so every
+        /// screen listening to it repainted with the *previous* companion still shown as worn
+        /// and nothing told it to look again. A player who bought a friend was left looking at
+        /// a gold ring around the one they used to wear until they left the screen and came
+        /// back — the same bug the ledger's event was added to kill, one field over.
+        /// </para>
+        /// <para>
+        /// So this fires from the one place a choice is recorded, and both roster screens
+        /// listen. That is deliberately the same bargain the ledger makes: an event cannot be
+        /// forgotten by a new call site, and a callback threaded through each of them will be.
+        /// </para>
+        /// </summary>
+        public static event System.Action AvatarChanged;
+
+        /// <summary>Where the refill timer stops. The denominator, not a maximum.</summary>
+        public static int MaxHearts => Wallet.MaxHearts;
+
+        /// <summary>The most hearts anybody may hold, once collected ones are stacked on.</summary>
+        public static int HeartCeiling => Wallet.HeartCeiling;
 
         public static string Name
         {
@@ -43,8 +70,29 @@ namespace GlimmerGrove
         /// <summary>Whether the player may start a run at all. The gate, asked politely.</summary>
         public static bool CanPlay => Wallet.Hearts.CanPlay;
 
-        /// <summary>Seconds until the next heart, for a countdown. 0 when full.</summary>
+        /// <summary>Whether the refill clock is idle, because the player holds enough.</summary>
+        public static bool HeartsRefilled => Wallet.Hearts.IsRefilled;
+
+        /// <summary>Seconds until the next heart, for a countdown. 0 when no timer runs.</summary>
         public static long SecondsToNextHeart => Wallet.Hearts.SecondsToNext(GameClock.NowUnix());
+
+        /// <summary>
+        /// The heart readout, as a pill draws it: <c>3/5</c> below the refill cap, and a
+        /// bare <c>8</c> above it.
+        ///
+        /// <para>
+        /// The denominator is dropped rather than kept, because "8/5" is a fraction that
+        /// reads as a bug — and the number it would be over is not a maximum anyway, it is
+        /// the point the clock stops helping. Below the cap it stays, because that is where
+        /// it means something: it is the distance the timer still has to travel. Written
+        /// once here so the hub, the gate and anything drawn later cannot disagree about it.
+        /// </para>
+        /// </summary>
+        public static string HeartsLabel()
+        {
+            int held = Hearts;
+            return held > MaxHearts ? held.ToString() : Loc.Format("ui.home.fraction", held, MaxHearts);
+        }
 
         /// <summary>
         /// A wait, written the way a person reads one.
@@ -93,9 +141,9 @@ namespace GlimmerGrove
             return $"{days}d {hours}h";
         }
 
-        /// <summary>The wait until the next heart, already formatted. Empty when full.</summary>
+        /// <summary>The wait until the next heart, already formatted. Empty when none runs.</summary>
         public static string HeartCountdown()
-            => Hearts >= MaxHearts ? string.Empty : Countdown(SecondsToNextHeart);
+            => HeartsRefilled ? string.Empty : Countdown(SecondsToNextHeart);
 
         // -- companion ----------------------------------------------------------
         /// <summary>
@@ -115,10 +163,43 @@ namespace GlimmerGrove
         public static bool TryWearAvatar(string avatarId)
         {
             var chosen = AvatarCatalog.Find(avatarId);
-            if (!AvatarCatalog.IsUnlocked(chosen, Rank)) return false;
+
+            // The whole rule — reached by level *or* bought. Asking AvatarCatalog directly
+            // here is what would refuse a companion the player had just paid for.
+            if (!CompanionLedger.IsHeld(chosen, Rank)) return false;
 
             Wallet.AvatarId = chosen.Id;
             WarmWornAvatar();
+
+            // After the art is warm, so a listener repainting on this has something to draw
+            // rather than the white rectangle an Image with no sprite renders as.
+            try { AvatarChanged?.Invoke(); }
+            catch (System.Exception e) { UnityEngine.Debug.LogException(e); }
+
+            return true;
+        }
+
+        /// <summary>Whether the player holds this companion, by either route.</summary>
+        public static bool Holds(AvatarDefinition avatar) => CompanionLedger.IsHeld(avatar, Rank);
+
+        /// <summary>What this companion would cost right now, and why it might not be buyable.</summary>
+        public static CompanionOffer OfferFor(AvatarDefinition avatar)
+            => CompanionLedger.OfferFor(avatar, Rank);
+
+        /// <summary>How many companions the player holds, for the "12 of 31 awake" caption.</summary>
+        public static int CompanionsHeld => CompanionLedger.HeldCount(Rank);
+
+        /// <summary>
+        /// Buys a companion and wears it.
+        ///
+        /// Wearing it is the point of buying it, so the two are one action rather than a
+        /// purchase followed by a second tap on the thing that just cost 9,000 credits.
+        /// </summary>
+        public static bool TryBuyAvatar(AvatarDefinition avatar)
+        {
+            if (!CompanionLedger.TryBuy(avatar, Rank)) return false;
+
+            TryWearAvatar(avatar.Id);
             return true;
         }
 

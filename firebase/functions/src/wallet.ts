@@ -150,12 +150,19 @@ export async function deriveEarned(
   config: ProgressionConfig
 ): Promise<Record<CurrencyId, number>> {
   const save = await transaction.get(getFirestore().doc(PATHS.player(uid)));
-  const levels = save.exists ? (save.data() as { levels?: unknown }).levels : {};
+  const data = save.exists ? (save.data() as { levels?: unknown; events?: unknown }) : undefined;
+  const levels = data?.levels ?? {};
 
   // The uid is passed because it seeds the golden multiplier — a glade's credits are a
   // function of (account, level), not of the level alone. See `goldenPercent`. Omitting
   // it would pay every player the base and quietly disagree with what the game showed them.
-  const derived = earnedCredits(levels, config, uid).credits;
+  //
+  // `events` carries how much of each event track the player has collected. It has to be
+  // read: since save schema v11 a milestone pays only once it has been taken, so a wallet
+  // deriving without it would hold back credits the game has already shown as banked.
+  // Forging it buys nothing — `eventCredits` clamps the floor to the glades this same
+  // derivation counted.
+  const derived = earnedCredits(levels, config, uid, data?.events).credits;
 
   if (derived > wallet.credits.earnedFloor) wallet.credits.earnedFloor = derived;
 

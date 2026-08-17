@@ -86,6 +86,16 @@ namespace GlimmerGrove.Cloud
                 { "lastPlayedLevelId", dto.lastPlayedLevelId ?? string.Empty },
                 { "legacyImportDone", dto.legacyImportDone },
                 { "tipsSeen", new List<object>(dto.tipsSeen ?? new string[0]) },
+
+                // The companions the player bought. This has to travel, and for a stronger
+                // reason than the tip set: it is the only thing in the save that cannot be
+                // re-derived from anything else, so a set that never left the phone is a
+                // companion somebody paid real progress for and loses on reinstall. The
+                // server neither reads nor adjudicates it — a purchase is a cosmetic, and the
+                // money half was already defended by submitSpends refusing a debit the
+                // balance cannot cover. See CompanionLedger.
+                { "companionsOwned", new List<object>(dto.companionsOwned ?? new string[0]) },
+
                 { "checksum", dto.checksum ?? string.Empty },
 
                 { "settings", new Dictionary<string, object>
@@ -165,6 +175,16 @@ namespace GlimmerGrove.Cloud
                     }
                 },
 
+                // How much of each event's track the player has taken. Unlike the streak
+                // dates above, the server *pays* on these: `eventCredits` counts a milestone
+                // only once its floor has reached it, so a floor that stayed on the phone
+                // would be a collect the wallet never heard about. Safe to send for the
+                // usual reason — it is clamped there to the glades the star ledger actually
+                // supports, so an edited one takes early what play had already earned and
+                // nothing more.
+                { "eventsSeeded", dto.eventsSeeded },
+                { "events", EventFloors(dto.events) },
+
                 { "progression", new Dictionary<string, object>
                     {
                         { "xpHighWater", dto.progression?.xpHighWater ?? -1L },
@@ -211,6 +231,33 @@ namespace GlimmerGrove.Cloud
             return list;
         }
 
+        /// <summary>
+        /// Each event's collected floor, as a list of small maps.
+        ///
+        /// A list rather than a map keyed by event id, for the reason <see cref="AdCounts"/>
+        /// gives: an event id is content and a Firestore field name is not, so an id
+        /// carrying a dot would silently become a nested path. Already sorted by
+        /// <c>EventCollection.WriteInto</c>, so the walk back is ordered.
+        /// </summary>
+        static List<object> EventFloors(EventStateDto[] events)
+        {
+            var list = new List<object>();
+            if (events == null) return list;
+
+            foreach (var entry in events)
+            {
+                if (entry == null || string.IsNullOrEmpty(entry.id)) continue;
+
+                list.Add(new Dictionary<string, object>
+                {
+                    { "id", entry.id },
+                    { "collectedGoal", (long)entry.collectedGoal },
+                });
+            }
+
+            return list;
+        }
+
         // ----------------------------------------------------------- from cloud
         /// <summary>
         /// Reads a document back. Treats every field as missing until proven otherwise,
@@ -229,6 +276,7 @@ namespace GlimmerGrove.Cloud
                 lastPlayedLevelId = Str(doc, "lastPlayedLevelId"),
                 legacyImportDone = Bool(doc, "legacyImportDone"),
                 tipsSeen = StrList(doc, "tipsSeen"),
+                companionsOwned = StrList(doc, "companionsOwned"),
                 checksum = Str(doc, "checksum"),
                 settings = new SettingsDto(),
                 wallet = WalletDto.Unwritten(),
@@ -287,6 +335,12 @@ namespace GlimmerGrove.Cloud
                 dto.streak.collectedThroughDay = (int)Long(streak, "collectedThroughDay", 0);
             }
 
+            // Absent on a document written before rungs were collected by hand, which reads
+            // back as no floors and an unseeded flag — and both are what the join treats as
+            // "knows nothing", so the local side wins. Nothing has to detect the upgrade.
+            dto.eventsSeeded = Bool(doc, "eventsSeeded");
+            dto.events = ReadEventFloors(doc);
+
             if (Map(doc, "progression") is IDictionary<string, object> progression)
             {
                 dto.progression.xpHighWater = Long(progression, "xpHighWater", -1);
@@ -328,6 +382,30 @@ namespace GlimmerGrove.Cloud
             }
 
             return counts.ToArray();
+        }
+
+        /// <summary>
+        /// Each event's collected floor, tolerating anything that is not one — the same
+        /// rule <see cref="ReadAdCounts"/> follows and for the same reason.
+        /// </summary>
+        static EventStateDto[] ReadEventFloors(IDictionary<string, object> doc)
+        {
+            if (!doc.TryGetValue("events", out object raw) || !(raw is IEnumerable<object> items))
+                return new EventStateDto[0];
+
+            var floors = new List<EventStateDto>();
+
+            foreach (var item in items)
+            {
+                if (!(item is IDictionary<string, object> entry)) continue;
+
+                string id = Str(entry, "id");
+                if (string.IsNullOrEmpty(id)) continue;
+
+                floors.Add(new EventStateDto { id = id, collectedGoal = (int)Long(entry, "collectedGoal", 0) });
+            }
+
+            return floors.ToArray();
         }
 
         static LevelRecordDto[] ReadLevels(IDictionary<string, object> doc)

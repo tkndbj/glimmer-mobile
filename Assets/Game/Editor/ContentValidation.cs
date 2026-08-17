@@ -211,7 +211,8 @@ namespace GlimmerGrove.EditorTools
             }
 
             ValidateRewardChaptersExist(fetch.Text, index, result);
-            ValidateDailyChests(table.Daily, result, verbose);
+            ValidateHearts(table.Hearts, result, verbose);
+            ValidateDailyChests(table.Daily, table.Hearts, result, verbose);
             ValidateStreak(table.Streak, result, verbose);
             ValidateGolden(table.Golden, table, index, result, verbose);
             ValidateEvents(index, result, verbose);
@@ -225,6 +226,66 @@ namespace GlimmerGrove.EditorTools
             var reachable = table.LevelFor(maximumXp);
             Debug.Log($"[Glimmer] progression verified: {index.Count} glade(s) at three stars " +
                       $"is {maximumXp} XP, reaching level {reachable.Level} of {table.MaxLevel}");
+        }
+
+        /// <summary>
+        /// The heart gate, checked for the things the reader cannot know.
+        ///
+        /// <para>
+        /// The reader clamps every field into a supported range and says so, which stops a
+        /// typo shipping as a broken game. What it cannot judge is whether the numbers make
+        /// sense <em>together</em> — and the ones below are the combinations that would
+        /// validate, build, ship, and then quietly wreck either the economy or the point of
+        /// the feature.
+        /// </para>
+        /// <para>
+        /// Warnings rather than errors, deliberately. Every one of these is a legitimate
+        /// thing a designer might do on purpose for a weekend event, and a gate that
+        /// refuses to build over an aggressive but intentional tuning is a gate people
+        /// learn to route around. They are loud, they are named, and they are printed with
+        /// the numbers that caused them.
+        /// </para>
+        /// </summary>
+        static void ValidateHearts(HeartRuleTable hearts, ContentValidationResult result, bool verbose)
+        {
+            if (hearts == null) { result.Errors.Add("progression.json produced no heart table"); return; }
+
+            // A full set that refills in under an hour is not a gate, and every number
+            // balanced against it — chest values, ad payouts, the streak ladder — was tuned
+            // against a game where sessions are rationed.
+            long toFull = hearts.RefillSeconds * hearts.RefillCap;
+            if (toFull < 3600)
+                result.Warnings.Add($"hearts refill a full set in {toFull / 60} minutes " +
+                                    $"({hearts.RefillCap} × {hearts.RefillSeconds}s); at that rate the " +
+                                    "gate does not bind and everything balanced against it is loose");
+
+            // The ad offer pays two hearts and the chests pay up to three; a ceiling within
+            // touching distance of the cap means those land on a full bar and evaporate,
+            // which is precisely the failure the ceiling was separated from the cap to end.
+            if (hearts.Ceiling < hearts.RefillCap + 5)
+                result.Warnings.Add($"hearts ceiling {hearts.Ceiling} leaves only " +
+                                    $"{hearts.Ceiling - hearts.RefillCap} above the refill cap; " +
+                                    "collected hearts will routinely be thrown away");
+
+            // Half is the smallest multiple a player feels. Anything above 0.8 is a boost
+            // that a player is told about, waits for, and cannot detect.
+            if (hearts.BoostedRefillSeconds > hearts.RefillSeconds * 4 / 5)
+                result.Warnings.Add($"the heart boost saves only " +
+                                    $"{hearts.RefillSeconds - hearts.BoostedRefillSeconds}s of " +
+                                    $"{hearts.RefillSeconds}s; a boost nobody can feel is a reward " +
+                                    "that reads as broken");
+
+            // A loss that costs the whole bar ends the session on the first mistake.
+            if (hearts.DefeatCost >= hearts.RefillCap)
+                result.Warnings.Add($"a lost run costs {hearts.DefeatCost} of {hearts.RefillCap} hearts; " +
+                                    "one mistake would end the session");
+
+            if (!verbose) return;
+
+            Debug.Log($"[Glimmer] hearts: refill to {hearts.RefillCap} every " +
+                      $"{hearts.RefillSeconds / 3600f:0.##}h ({hearts.BoostedRefillSeconds / 3600f:0.##}h " +
+                      $"boosted, up to {hearts.MaxBoostHours}h of boost), hold up to {hearts.Ceiling}, " +
+                      $"a loss costs {hearts.DefeatCost}");
         }
 
         /// <summary>
@@ -242,7 +303,8 @@ namespace GlimmerGrove.EditorTools
         /// from the file the game actually rolls against, so it cannot be out of date.
         /// </para>
         /// </summary>
-        static void ValidateDailyChests(DailyChestTable daily, ContentValidationResult result, bool verbose)
+        static void ValidateDailyChests(DailyChestTable daily, HeartRuleTable hearts,
+                                        ContentValidationResult result, bool verbose)
         {
             if (daily == null) { result.Errors.Add("progression.json produced no daily chest table"); return; }
 
@@ -263,9 +325,9 @@ namespace GlimmerGrove.EditorTools
                 {
                     floor += band.Min;
 
-                    if (band.Kind == ChestDropKind.HeartBoost && band.Max > HeartRules.MaxBoostHours)
+                    if (band.Kind == ChestDropKind.HeartBoost && band.Max > hearts.MaxBoostHours)
                         result.Errors.Add($"daily chest {i} guarantees a {band.Max}h heart boost, " +
-                                          $"more than the {HeartRules.MaxBoostHours}h ceiling");
+                                          $"more than the {hearts.MaxBoostHours}h ceiling");
                 }
 
                 // Later chests cost more play, so they have to be worth more. A table where
@@ -280,9 +342,9 @@ namespace GlimmerGrove.EditorTools
                 foreach (var option in chest.Options)
                 {
                     if (option.Band.Kind == ChestDropKind.HeartBoost &&
-                        option.Band.Max > HeartRules.MaxBoostHours)
+                        option.Band.Max > hearts.MaxBoostHours)
                         result.Errors.Add($"daily chest {i} can drop a {option.Band.Max}h heart boost, " +
-                                          $"more than the {HeartRules.MaxBoostHours}h ceiling");
+                                          $"more than the {hearts.MaxBoostHours}h ceiling");
                 }
 
                 if (chest.Options.Count == 0)
@@ -636,7 +698,11 @@ namespace GlimmerGrove.EditorTools
             bool anyFree = false;
             foreach (var companion in companions)
             {
-                if (companion.UnlockLevel == 0) anyFree = true;
+                // A player stands at keeper level 1 on their first launch, so a gate of 1 is
+                // as free as a gate of 0 — and reading only == 0 would pass a roster whose
+                // starter had been retuned to 1 while still failing to notice one retuned
+                // to 2, which is the case that leaves a new player with nobody to wear.
+                if (companion.IsStarter) anyFree = true;
 
                 string portrait = "Assets/Game/Art/Companions/" + companion.Portrait + ".png";
                 if (AssetDatabase.LoadAssetAtPath<Sprite>(portrait) == null)
@@ -649,7 +715,10 @@ namespace GlimmerGrove.EditorTools
             }
 
             if (!anyFree)
-                result.Errors.Add("no companion unlocks at level 0; a new player would have none to wear");
+                result.Errors.Add("no companion is free at keeper level 1; a new player would " +
+                                  "have none to wear");
+
+            ValidateCompanionPrices(companions, result);
 
             // What the whole shipped catalog is worth, three-starred. Anything above it
             // is unreachable until more glades ship.
@@ -660,21 +729,188 @@ namespace GlimmerGrove.EditorTools
             // that has stopped working.
             int reachable = ReachableKeeperLevel(index);
             int beyond = 0, highest = 0;
+            var stranded = new List<string>();
+
             foreach (var companion in companions)
             {
                 if (companion.UnlockLevel <= reachable) continue;
+
                 beyond++;
                 if (companion.UnlockLevel > highest) highest = companion.UnlockLevel;
+
+                // Gated above what the catalog can reach *and* carrying no price is a
+                // companion no player can ever obtain by any route. Before prices existed
+                // that was a warning, because the only fix was shipping more glades; now
+                // there is a second route, so leaving both closed is an authoring mistake
+                // rather than a schedule.
+                if (!companion.IsForSale) stranded.Add(companion.Id);
             }
 
             if (beyond > 0)
                 result.Warnings.Add($"{beyond} of {companions.Count} companions unlock above keeper level " +
                                     $"{reachable}, which is all the current catalog can reach " +
-                                    $"(highest is {highest}); they are unreachable until more glades ship");
+                                    $"(highest is {highest}); coins are the only route to them " +
+                                    "until more glades ship");
+
+            if (stranded.Count > 0)
+                result.Errors.Add($"companion(s) {string.Join(", ", stranded)} unlock above keeper level " +
+                                  $"{reachable} and carry no unlockCost, so no player can obtain them " +
+                                  "by any route; give them a price or lower the gate");
 
             if (verbose)
                 Debug.Log($"[Glimmer] {companions.Count} companions, " +
                           $"{ReachableCount(companions, reachable)} reachable at keeper level {reachable}");
+        }
+
+        /// <summary>
+        /// The prices, against the income that has to pay them.
+        ///
+        /// <para>
+        /// Every check here warns rather than errors, with one exception, because a price is
+        /// an economy decision and the validator is not entitled to overrule one — what it is
+        /// entitled to do is state the consequence, since none of these are visible by
+        /// reading the manifest. The exception is a price a player can reach before they can
+        /// reach the companion's own gate <em>and</em> before the seed runs out, which is not
+        /// a tuning choice but a companion that is effectively free.
+        /// </para>
+        /// <para>
+        /// The daily figure deliberately excludes rewarded ads. Ads are the accelerator, so
+        /// including them in the baseline would let a price that is only affordable to
+        /// somebody watching six videos a day pass as ordinary.
+        /// </para>
+        /// </summary>
+        static void ValidateCompanionPrices(IReadOnlyList<AvatarDefinition> companions,
+                                            ContentValidationResult result)
+        {
+            var table = ProgressionRules.Table;
+
+            long daily = DailyCreditIncome(table);
+            if (daily <= 0) return;                 // nothing published to judge against
+
+            int forSale = 0;
+            long total = 0;
+            int lastCost = 0, lastLevel = -1;
+            string lastId = null;
+
+            foreach (var companion in companions)
+            {
+                if (!companion.IsForSale)
+                {
+                    // A companion reachable by play and not for sale is fine and deliberate;
+                    // one that is neither is caught by the stranded check above.
+                    continue;
+                }
+
+                forSale++;
+                total += companion.UnlockCost;
+
+                // Free in practice: buyable out of the account seed before the player has
+                // played at all, on something the game meant to gate.
+                if (companion.UnlockLevel > 1 && companion.UnlockCost <= Currency.SeedCredits / 2)
+                    result.Errors.Add($"companion '{companion.Id}' costs {companion.UnlockCost}, " +
+                                      $"under half the {Currency.SeedCredits}-coin account seed, so it " +
+                                      "is gated at level " + companion.UnlockLevel +
+                                      " and free on the first launch; raise the price or drop the gate");
+
+                // A later gate that costs less than an earlier one inverts the ladder: the
+                // grid would show a cheaper price beside a rarer companion, and the roster
+                // stops reading as a progression.
+                if (lastId != null && companion.UnlockLevel > lastLevel && companion.UnlockCost < lastCost)
+                    result.Warnings.Add($"companion '{companion.Id}' unlocks later than '{lastId}' " +
+                                        $"(level {companion.UnlockLevel} vs {lastLevel}) but costs less " +
+                                        $"({companion.UnlockCost} vs {lastCost}); the price ladder is inverted");
+
+                lastCost = companion.UnlockCost;
+                lastLevel = companion.UnlockLevel;
+                lastId = companion.Id;
+            }
+
+            if (forSale == 0)
+            {
+                result.Warnings.Add("no companion carries an unlockCost, so coins buy nothing; " +
+                                    "the roster is level-gated only");
+                return;
+            }
+
+            // What the whole roster is worth in days of ordinary play. Logged rather than
+            // judged: it is the one number that says whether the sink outlasts the content,
+            // and no threshold on it would be anything but a guess.
+            Debug.Log($"[Glimmer] {forSale} companions for sale, {total} coins in total — about " +
+                      $"{total / daily} days of play at roughly {daily} coins a day, " +
+                      "before any rewarded video");
+
+            var cheapest = AvatarCatalog.CheapestUnheld(_ => false);
+            if (cheapest.IsValid)
+            {
+                long days = (cheapest.UnlockCost + daily - 1) / daily;
+                if (days > 7)
+                    result.Warnings.Add($"the cheapest companion ('{cheapest.Id}', " +
+                                        $"{cheapest.UnlockCost}) is about {days} days of play away; " +
+                                        "nothing on the roster teaches a new player that coins buy friends");
+            }
+        }
+
+        /// <summary>
+        /// Credits an engaged player collects in a day without watching a video: every daily
+        /// chest's guaranteed contents plus its expected bonus, and a streak rung amortised
+        /// over the ladder's lap.
+        ///
+        /// Read from the published tables rather than written down, so a retune moves this
+        /// with it — the same rule every explanatory panel in the game follows.
+        /// </summary>
+        static long DailyCreditIncome(ProgressionTable table)
+        {
+            long daily = 0;
+
+            var chests = table.Daily;
+            for (int i = 0; i < chests.ChestCount; i++)
+                daily += ExpectedCredits(chests.Chest(i));
+
+            var streak = table.Streak;
+            if (streak.Length > 0)
+            {
+                long lap = 0;
+                for (int night = 1; night <= streak.Length; night++)
+                {
+                    var rung = streak.Rung(night);
+                    if (rung.Kind == ChestDropKind.Credits) lap += rung.Amount;
+                }
+
+                daily += lap / streak.Length;
+            }
+
+            return daily;
+        }
+
+        /// <summary>
+        /// Credits one chest is worth on average: every guaranteed band's midpoint, plus each
+        /// credit option's midpoint weighted by the chance of drawing it.
+        ///
+        /// An expectation rather than the floor, because the floor understates a chest whose
+        /// bonus is usually credits — and understating income here would let a price that is
+        /// genuinely two weeks away pass as one week.
+        /// </summary>
+        static long ExpectedCredits(ChestDefinition chest)
+        {
+            if (chest == null) return 0;
+
+            double credits = 0;
+
+            for (int i = 0; i < chest.Guaranteed.Count; i++)
+            {
+                var band = chest.Guaranteed[i];
+                if (band.Kind == ChestDropKind.Credits) credits += (band.Min + band.Max) * .5;
+            }
+
+            for (int i = 0; i < chest.Options.Count; i++)
+            {
+                var option = chest.Options[i];
+                if (option.Band.Kind != ChestDropKind.Credits) continue;
+
+                credits += (option.Band.Min + option.Band.Max) * .5 * (chest.ChanceOf(i) / 100.0);
+            }
+
+            return (long)credits;
         }
 
         /// <summary>The keeper level a player reaches by three-starring everything that ships.</summary>

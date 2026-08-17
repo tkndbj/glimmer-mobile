@@ -76,7 +76,11 @@ namespace GlimmerGrove.Progression
         /// </summary>
         public static UnlockGoal Next(PlayerLevel level)
         {
-            var target = AvatarCatalog.NextLocked(level.Level);
+            // Unheld, not merely unreached. A companion the player bought is already theirs,
+            // and aiming this bar at one is worse than showing no goal at all — it tells
+            // somebody who just spent 9,000 credits that they have four ranks to climb for
+            // the friend they are looking at.
+            var target = CompanionLedger.NextUnheld(level.Level);
             if (!target.IsValid) return None;
 
             int from = PreviousUnlockLevel(level.Level);

@@ -30,9 +30,86 @@ namespace GlimmerGrove.Events
         /// <summary>Every event the catalog holds, past and future, in start order.</summary>
         public static IReadOnlyList<GroveEvent> All => GameContent.Index.Events;
 
-        /// <summary>How far through a track this player is.</summary>
+        /// <summary>How far through a track this player is, and how much of it they hold.</summary>
         public static EventProgress ProgressOf(GroveEvent groveEvent)
-            => EventLedger.ProgressOf(groveEvent, PlayerProgress.RecordsById);
+            => EventLedger.ProgressOf(groveEvent, PlayerProgress.RecordsById,
+                                      EventCollection.CollectedGoal(groveEvent?.Id));
+
+        /// <summary>
+        /// Hands over every uncollected rung of this event up to and including
+        /// <paramref name="goal"/>, and returns how many that swept.
+        ///
+        /// The one write in this facade, here rather than on <see cref="EventCollection"/>'s
+        /// own surface for the reason the reads are: this is the type that knows the live
+        /// save, and a screen should not have to fetch the record map to collect a flower.
+        /// </summary>
+        public static int Collect(GroveEvent groveEvent, int goal)
+            => EventCollection.Collect(groveEvent, goal, PlayerProgress.RecordsById);
+
+        /// <summary>True when tapping this rung would hand something over.</summary>
+        public static bool IsCollectable(GroveEvent groveEvent, EventMilestone milestone)
+            => EventCollection.IsCollectable(groveEvent, milestone, PlayerProgress.RecordsById);
+
+        /// <summary>True when this rung's reward is already in the player's balance.</summary>
+        public static bool IsCollected(GroveEvent groveEvent, EventMilestone milestone)
+            => EventCollection.IsCollected(groveEvent, milestone);
+
+        /// <summary>
+        /// The event whose box the hub should show, or null.
+        ///
+        /// The live one, or — when nothing is running — the most recent closed one still
+        /// holding a reward the player has not taken. Rewards are collected by hand now, so
+        /// a window closing must not take an earned flower with it: the glades stop counting
+        /// at the deadline, the reward does not expire, and there has to be a way back to
+        /// the page that holds it. Nothing else changes about a closed event, which is why
+        /// this is a second reader rather than a change to <see cref="Live"/>.
+        /// </summary>
+        public static GroveEvent Featured
+        {
+            get
+            {
+                var live = Live;
+                if (live != null) return live;
+
+                var all = All;
+                if (all == null) return null;
+
+                long now = GameClock.NowUnix();
+                GroveEvent best = null;
+
+                for (int i = 0; i < all.Count; i++)
+                {
+                    var candidate = all[i];
+                    if (candidate == null || !candidate.IsValid) continue;
+                    if (!candidate.HasEndedAt(now)) continue;
+                    if (!ProgressOf(candidate).AnyWaiting) continue;
+
+                    if (best == null || candidate.EndUnix > best.EndUnix) best = candidate;
+                }
+
+                return best;
+            }
+        }
+
+        /// <summary>
+        /// Rungs waiting across the whole calendar. What the hub's badge counts.
+        ///
+        /// Every event rather than the live one, because a closed track can still be
+        /// holding something and a badge that stopped counting it would be advertising a
+        /// smaller number than the page shows.
+        /// </summary>
+        public static int Waiting
+        {
+            get
+            {
+                var all = All;
+                if (all == null) return 0;
+
+                int waiting = 0;
+                for (int i = 0; i < all.Count; i++) waiting += ProgressOf(all[i]).Waiting;
+                return waiting;
+            }
+        }
 
         /// <summary>Seconds until the live event closes, or 0 when there is not one.</summary>
         public static long SecondsLeft

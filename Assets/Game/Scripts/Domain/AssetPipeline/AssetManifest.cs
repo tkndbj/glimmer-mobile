@@ -68,10 +68,13 @@ namespace GlimmerGrove.AssetPipeline
         /// Backdrops that belong to screens rather than to any chapter.
         ///
         /// The <c>streak_*</c> trio is the grove after dark — the same islands the hub
-        /// stands on, lit by a moon. Global rather than scoped like chapter art for the
-        /// reason the flame is: three files is a fixed cost that does not grow with the
-        /// catalog, and the page is one tap off the hub, so a scope would spend a frame
-        /// loading on a navigation players make daily.
+        /// stands on, lit by a moon. The <c>event_*</c> trio is the ground those islands
+        /// float above, at first light: a different place rather than a third grade of the
+        /// same one, because two re-lights of one landscape is a mood and three is a filter.
+        /// Both are global rather than scoped like chapter art, for the reason the flame is:
+        /// a fixed handful of files that does not grow with the catalog, on pages one tap off
+        /// the hub, where a scope would spend a frame loading on a navigation players make
+        /// daily.
         /// </summary>
         static readonly string[] ScreenBackdrops =
         {
@@ -79,6 +82,7 @@ namespace GlimmerGrove.AssetPipeline
             "home_sky", "home_ground", "home_deco",
             "map_sky", "map_ground", "map_deco",
             "streak_sky", "streak_ground", "streak_deco",
+            "event_sky", "event_ground", "event_deco",
         };
 
         static readonly string[] Sfxs =

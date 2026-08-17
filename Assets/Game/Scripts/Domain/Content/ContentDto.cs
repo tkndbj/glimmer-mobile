@@ -155,6 +155,29 @@ namespace GlimmerGrove.Content
         /// <summary>Keeper level this unlocks at. 0 means available from the first launch.</summary>
         public int unlockLevel;
 
+        /// <summary>
+        /// Credits that buy this companion outright, ignoring <see cref="unlockLevel"/>.
+        /// <b>Zero or absent means it cannot be bought at all</b> — level only.
+        ///
+        /// <para>
+        /// That sentinel is the safe direction, and it is chosen rather than inherited.
+        /// <c>JsonUtility</c> writes a zero into every field an older manifest never had, so
+        /// "absent" and "free" would be the same value if free were the meaning — and a
+        /// manifest from before this field existed would put the entire roster on sale for
+        /// nothing. Reading zero as "not for sale" makes a forgotten price cost a purchase
+        /// nobody could make instead of giving away thirty companions, and it leaves
+        /// "earnable only by playing" expressible, which is a legitimate thing to author.
+        /// </para>
+        /// <para>
+        /// A price is a property of the companion rather than a row in
+        /// <c>progression.json</c>, for the reason <see cref="unlockLevel"/> is: adding one
+        /// is a portrait, a manifest row and a loc string, and splitting half a companion
+        /// into a second published file would let a drop ship a roster whose prices had not
+        /// arrived yet.
+        /// </para>
+        /// </summary>
+        public int unlockCost;
+
         /// <summary>Set true to retire a companion without deleting anyone's choice of it.</summary>
         public bool disabled;
     }
@@ -334,6 +357,61 @@ namespace GlimmerGrove.Content
         /// average multiplier and the credits-per-star are one number seen from two sides.
         /// </summary>
         public GoldenDto golden;
+
+        /// <summary>
+        /// The heart gate. Optional: absent means the built-in numbers stand.
+        ///
+        /// Rides here rather than in a file of its own for the reasons every block above it
+        /// does, and one that is sharper than any of them: the gate decides how many
+        /// sessions a player gets, so it multiplies every other number in this file. Tuning
+        /// the reward curve without seeing the refill rate is tuning the pay-per-session of
+        /// a game whose session count you just changed.
+        /// </summary>
+        public HeartsDto hearts;
+    }
+
+    /// <summary>
+    /// How many hearts a player may hold and how fast they come back.
+    ///
+    /// <para>
+    /// Every field is -1 for "not written, inherit", the same tri-state the reward rules
+    /// use, because zero is a meaningful value for none of them and the difference between
+    /// "the author set this to zero" and "the author said nothing" has to survive.
+    /// </para>
+    /// <para>
+    /// Note what is deliberately absent: anything about <em>buying</em> hearts. The refill
+    /// timer and the collect-past-the-cap ceiling are the only two ways hearts arrive
+    /// today, and a price authored here would make the gate a storefront without anybody
+    /// having designed one.
+    /// </para>
+    /// </summary>
+    [Serializable]
+    public sealed class HeartsDto
+    {
+        /// <summary>Where the refill timer stops. This is the number that paces free play.</summary>
+        public int refillCap = -1;
+
+        /// <summary>
+        /// The most a player may hold once collected hearts stack on top. Safe to lower:
+        /// it refuses new grants and never confiscates. See <c>HeartLimits.HardCeiling</c>.
+        /// </summary>
+        public int ceiling = -1;
+
+        /// <summary>Seconds between refills.</summary>
+        public int refillSeconds = -1;
+
+        /// <summary>
+        /// Seconds between refills while a heart boost runs. The reader holds this at
+        /// <see cref="refillSeconds"/> if it is authored longer — a boost that slows hearts
+        /// down is the feature working backwards.
+        /// </summary>
+        public int boostedRefillSeconds = -1;
+
+        /// <summary>Longest boost window any single award may leave running, in hours.</summary>
+        public int maxBoostHours = -1;
+
+        /// <summary>Hearts one lost run costs.</summary>
+        public int defeatCost = -1;
     }
 
     /// <summary>

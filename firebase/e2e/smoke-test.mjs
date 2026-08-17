@@ -151,6 +151,17 @@ const save = {
     streak: { mapValue: { fields: { startDay: { integerValue: "20310" },
                                     lastPlayedDay: { integerValue: "20315" },
                                     collectedThroughDay: { integerValue: "20314" } } } },
+    // How much of each event's reward track has been taken, here for the reason the three
+    // blocks above are and one sharper than any of them: `eventCredits` *pays* on this, so
+    // a PERMISSION_DENIED here would stop the save pushing and the server would go on
+    // deriving a balance without the milestones the game has already shown as collected.
+    // A list of maps rather than a map keyed by event id, because an event id is content
+    // and a Firestore field name is not.
+    eventsSeeded: { booleanValue: true },
+    events: { arrayValue: { values: [
+      { mapValue: { fields: { id: { stringValue: "first_bloom" },
+                              collectedGoal: { integerValue: "2" } } } },
+    ] } },
     progression: { mapValue: { fields: { xpHighWater: { integerValue: "100" },
                                          levelHighWater: { integerValue: "2" } } } },
     cloud: { mapValue: { fields: { userId: { stringValue: uid }, revision: { integerValue: "1" },

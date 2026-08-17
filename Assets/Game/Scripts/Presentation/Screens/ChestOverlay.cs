@@ -127,7 +127,7 @@ namespace GlimmerGrove
         Image _seam;
         RectTransform _rewardRow;
         List<ChestDrop> _drops;
-        bool _wasHeartsFull;
+        bool _heartsWereWasted;
 
         // Beat timings, in seconds from the overlay appearing. Named because the numbers
         // are the design: three thumps under two seconds is a tease, and over three is a
@@ -143,9 +143,14 @@ namespace GlimmerGrove
         {
             UIKit.Scrim(Content, .86f);
 
-            // Hearts are read before the grant so the panel can say the honest thing when
-            // a heart drop lands on a full set. Asking afterwards would always say "full".
-            _wasHeartsFull = Profile.Hearts >= Profile.MaxHearts;
+            // Hearts are read before the grant so the panel can say the honest thing when a
+            // heart drop lands somewhere it cannot go. Asking afterwards would always say
+            // so, because the grant is what put them there.
+            //
+            // The test is the ceiling rather than the refill cap: a chest opened at a full
+            // bar now keeps its hearts, so the old apology would have been a lie told to
+            // most of the players who saw it.
+            _heartsWereWasted = Profile.HeartState.IsAtCeiling;
 
             if (!DailyChests.TryOpen(ChestIndex, out _drops))
             {
@@ -428,8 +433,8 @@ namespace GlimmerGrove
                     return Loc.Format("ui.daily.boost_on",
                                       Profile.Countdown(Wallet.HeartBoostSecondsLeft));
 
-                if (_drops[i].Kind == ChestDropKind.Hearts && _wasHeartsFull)
-                    return Loc.Get("ui.daily.hearts_full");
+                if (_drops[i].Kind == ChestDropKind.Hearts && _heartsWereWasted)
+                    return Loc.Format("ui.daily.hearts_ceiling", Profile.HeartCeiling);
             }
             return string.Empty;
         }

@@ -188,8 +188,10 @@ The profile roster lives in `manifest.json`, beside the chapter list:
 
 ```json
 "companions": [
-  { "id": "puff", "portrait": "puff", "animated": "c1", "unlockLevel": 0, "disabled": false },
-  { "id": "cinder", "portrait": "cinder", "animated": "", "unlockLevel": 1, "disabled": false }
+  { "id": "monarch", "portrait": "monarch", "animated": "c5",
+    "unlockLevel": 0, "unlockCost": 0, "disabled": false },
+  { "id": "cinder", "portrait": "cinder", "animated": "",
+    "unlockLevel": 2, "unlockCost": 800, "disabled": false }
 ]
 ```
 
@@ -206,8 +208,16 @@ loaded companion file would add a read to a screen and save nothing.
 - **`animated`** is optional and names a sprite-set folder under `Art/Critters/`. Only the
   five companions that also appear on a board have one. A still portrait is about 45 KB;
   a flipbook is about 700 KB, which is the whole reason the roster can grow.
-- **`unlockLevel`** is a keeper level. Ownership is *derived* from it and never stored —
-  the same argument as derived XP — so it can be retuned for existing players.
+- **`unlockLevel`** is a keeper level. Reaching it is *derived* and never stored — the same
+  argument as derived XP — so it can be retuned for existing players. **Exactly one
+  companion should be free at level 1** (the starter every account begins wearing);
+  `Validate Content` fails the build if none is.
+- **`unlockCost`** is credits that buy the companion outright, ignoring the level. **Zero or
+  absent means it cannot be bought** — earned by playing or not at all. That sentinel is the
+  safe direction rather than an accident: `JsonUtility` writes a zero into a field an older
+  manifest never had, so reading zero as "free" would put the whole roster on sale for
+  nothing. A purchase *is* stored, because nothing observable implies "this player paid
+  8,000 credits" — see below.
 - **`disabled`** retires a companion without deleting anyone's choice of it.
 
 Adding one is a portrait, a manifest entry and a `ui.avatar.<id>` string. No code changes,
@@ -215,10 +225,39 @@ and no app update once remote delivery is on. A companion's name key is derived 
 id and cannot be overridden, exactly like a level's; `Validate Content` checks each one,
 because the source scan cannot see a key that is never written as a literal.
 
-The field was added **without raising `ContentSchema.Version`**: an older client ignores
-an unknown field and falls back to the roster it shipped with, which is a working game
-rather than a refused manifest. Raise the version only for a change old clients could not
-survive.
+Both `unlockLevel` and `unlockCost` were added **without raising `ContentSchema.Version`**:
+an older client ignores an unknown field and falls back to the roster it shipped with, which
+is a working game rather than a refused manifest. Raise the version only for a change old
+clients could not survive. A client that has not learned about prices simply shows the
+companion as level-gated, which is what it was.
+
+### Pricing a companion
+
+Two facts decide a price, and neither is visible in the manifest, so `Validate Content`
+prints and checks them.
+
+**Most of the roster is unreachable by levelling, for years.** Three-starring an entire
+hundred-glade catalog reaches about keeper level 15, and roughly level 24 after a year of
+drops. Any gate above that is reached by coins or not at all — which is why a gated
+companion with no `unlockCost` is a build **error**, not a warning: no player could ever
+obtain it.
+
+**Ordinary play pays about 540 credits a day** before any rewarded video — three daily
+chests plus a streak rung, all read from `progression.json`. `Validate Content` derives that
+figure and reports the whole roster in days, so a ladder that outlasts the content is a
+number somebody chose rather than one nobody noticed. The shipped ladder runs 800 → 30,000
+across 30 companions (about 270,000 credits, ~16 months of play), rising with the gate.
+Three checks guard it: a price under half the account seed on a gated companion is an error
+(the gate would not bind on a fresh install), a later gate costing less than an earlier one
+warns (the ladder is inverted), and a cheapest companion more than a week away warns
+(nothing teaches a new player that coins buy friends).
+
+Purchases are stored — save schema v12, `companionsOwned`, a set of permanent ids joined by
+**union**, which is the only mergeable shape (see invariant 11b) because buying is
+irreversible. The set is client-written and therefore forgeable; it buys a portrait and
+nothing else, and the money half is defended by `submitSpends` refusing a debit the
+server-derived balance cannot cover. See `CompanionLedger`, which owns the composite
+"level **or** purchase" rule — nothing else composes it.
 
 Portraits live in their own Addressables group and load into
 `AssetLibrary.CompanionScope` when a roster screen opens, then drop when it closes. Only
@@ -271,6 +310,27 @@ its track because of a picture.
 
 Like the roster, `events` was added **without raising `ContentSchema.Version`** — an older
 client ignores it and simply never runs an event.
+
+### A rung is reached by playing and taken by tapping
+
+Since save schema **v11** a milestone is not paid the moment the glade that reached it is
+cleared. It opens, and then it waits on `EventScreen` until the player taps it. Authoring is
+unchanged — this is not a field — but three consequences are worth knowing before you write
+a track:
+
+- **A closed event is still a live page.** Glades stop counting at `endUnix`; blooms do not
+  expire. The hub keeps the event's box while anything is uncollected (`GroveEvents.Featured`),
+  so shipping a new event does not strand a reward the last one grew.
+- **`EventScreen` lays itself out from the goals, not from the rung count.** Rungs sit along
+  the vine at `goal / finalGoal`, so two milestones you place close together are drawn close
+  together, and eight of them scroll rather than squash. Nothing needs a code change; a track
+  of any shape up to `EventRules.MaxMilestones` draws itself.
+- **The floor travels and the server pays on it.** `EventCollection` stores one integer per
+  event — the largest goal taken — which merges by `max`, rides in the save document, and is
+  clamped server-side to the glades actually finished before anything is paid. Retuning a
+  live track is therefore safe in one direction only: *adding* a rung between two existing
+  ones counts as already collected for anyone whose floor is past it, and *raising* a goal
+  re-opens it. Prefer appending.
 
 ## Progression
 
@@ -325,6 +385,55 @@ Three things follow that are easy to get wrong:
   on the server, not through this file. The daily chests below are exactly that case,
   and show the shape it has to take: the *rates* are content here, the *grant* is an
   identified claim the server adjudicates.
+
+### The heart gate
+
+The optional `hearts` block. How many hearts a player holds and how fast they come back.
+
+```json
+"hearts": {
+  "refillCap": 5,
+  "ceiling": 50,
+  "refillSeconds": 28800,
+  "boostedRefillSeconds": 14400,
+  "maxBoostHours": 72,
+  "defeatCost": 1
+}
+```
+
+Every field is optional on its own — omit one and it inherits the built-in value, so a
+push that changes the refill period does not have to restate the other five. Omit the
+whole block and `HeartRuleTable.Default` stands. Not a schema bump, for the reason the
+daily block is not one.
+
+Two numbers, and the difference between them is the feature:
+
+- **`refillCap` is where the clock stops.** This is the gate — the number that paces free
+  play. A player who never collects anything settles here.
+- **`ceiling` is the most anybody may hold.** Hearts from chests, streak nights and
+  watched videos stack past the cap up to this, instead of evaporating at a full bar.
+  Keep a healthy gap: an ad pays 2 and a chest can pay 3, so a ceiling within a few of the
+  cap means collected hearts are routinely thrown away. `Validate Content` warns about it.
+
+**Every field here is safe to lower, and that is a designed property rather than a
+coincidence.** Lowering `refillCap` stops the clock earlier and leaves anybody above it
+holding what they had. Lowering `ceiling` refuses *new* grants and takes nothing away —
+the ledger's own bound is `HeartLimits.HardCeiling`, a constant no file can move, precisely
+so a tuning push can never clamp `produced` downward. If it could, a device that had fetched
+the new table and one that had not would disagree forever, because `produced` only ever
+rises and the merge depends on that. Enforcement lives in `Hearts.Grant`, where it is a
+decision taken once.
+
+`boostedRefillSeconds` is held at `refillSeconds` if authored longer — a boost that slows
+hearts down is the feature inverted, and both numbers are individually legal so nothing else
+would catch it. Everything is clamped into a supported range by `HeartLimits`; a clamped
+file still reports a problem and still fails the build gate.
+
+One thing this block does **not** reach: hearts are applied by the client and never
+adjudicated, so nothing here is published to `config/progression` for the server. It is
+tuned through the content channel like the chest odds, which means it needs
+`ContentConfig.RemoteBaseUrl` set to change without an app update — the same status the ad
+payouts and chest rates already have.
 
 ### Daily chests
 

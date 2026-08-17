@@ -47,10 +47,30 @@ namespace GlimmerGrove
             // repaints immediately; arriving any other way it is the load that fills
             // the screen.
             CompanionArt.OpenAsync(() => { if (this) Paint(); });
+
+            // Repainted on the ledger's own event rather than on a callback from whatever
+            // opened the unlock panel. A callback has to be threaded through every exit that
+            // panel has — the wear button, the corner cross, the scrim — and the two silent
+            // ones are exactly how a companion the player just bought stayed behind a padlock
+            // until the screen was left and re-entered. An event cannot be forgotten.
+            Progression.CompanionLedger.Changed += Paint;
+
+            // Which companion is worn is a second fact, moved a step after the held set on a
+            // purchase — see Profile.AvatarChanged. Listening to only the ledger left the gold
+            // ring on the previously worn companion after a buy.
+            Profile.AvatarChanged += Paint;
+
+            // The roster itself can be republished by a content fetch landing mid-session,
+            // which changes what this grid is a picture of.
+            AvatarCatalog.Changed += Paint;
         }
 
         void OnDestroy()
         {
+            Progression.CompanionLedger.Changed -= Paint;
+            Profile.AvatarChanged -= Paint;
+            AvatarCatalog.Changed -= Paint;
+
             // The profile shows a preview row from the same set, so going back does not
             // free it only to load it again a frame later.
             if (Flow.Current is ProfileScreen) return;
@@ -113,7 +133,9 @@ namespace GlimmerGrove
                 float x = (i % Columns - (Columns - 1) * .5f) * CellW;
                 float y = -(i / Columns) * CellH - CellH * .5f - 12f;
 
-                Cell(roster[i], new Vector2(x, y), AvatarCatalog.IsUnlocked(roster[i], level),
+                // The whole rule — reached by level or bought. Asking AvatarCatalog directly
+                // here is what would draw a padlock over a companion the player paid for.
+                Cell(roster[i], new Vector2(x, y), CompanionLedger.IsHeld(roster[i], level),
                      string.Equals(roster[i].Id, worn, StringComparison.Ordinal), i);
             }
 
@@ -158,33 +180,61 @@ namespace GlimmerGrove
                          TextAnchor.MiddleCenter, new Vector2(CellW - 60f, 40f), new Vector2(.5f, 0f),
                          new Vector2(0f, 76f), 3f, 3f);
 
-            UIKit.Titled("Sub", plate.transform,
-                         worn ? Loc.Get("ui.profile.wearing")
-                              : unlocked ? Loc.Get("ui.profile.tap_to_wear")
-                                         : Loc.Format("ui.profile.locked_at", avatar.UnlockLevel),
-                         24, worn ? Pal.Gold : new Color(1f, .96f, .88f, .5f),
-                         TextAnchor.MiddleCenter, new Vector2(CellW - 60f, 32f), new Vector2(.5f, 0f),
-                         new Vector2(0f, 36f), 3f, 0f);
+            // A locked companion says its price rather than only its level gate. The gate is
+            // still the honest headline for a companion the player will reach soon, but most
+            // of this grid is gated above anything a shipped catalog can reach — so a cell
+            // that only ever said "level 40" was telling a player about a wait that does not
+            // end, and hiding the answer that does.
+            UIKit.Shrinkable(
+                UIKit.Titled("Sub", plate.transform,
+                             worn ? Loc.Get("ui.profile.wearing")
+                                  : unlocked ? Loc.Get("ui.profile.tap_to_wear")
+                                             : avatar.IsForSale
+                                                 ? Loc.Format("ui.profile.cost", avatar.UnlockCost)
+                                                 : Loc.Format("ui.profile.locked_at", avatar.UnlockLevel),
+                             24, worn ? Pal.Gold
+                                      : unlocked ? new Color(1f, .96f, .88f, .5f)
+                                                 : Pal.A(Pal.Sun, .90f),
+                             TextAnchor.MiddleCenter, new Vector2(CellW - 60f, 32f), new Vector2(.5f, 0f),
+                             new Vector2(0f, 36f), 3f, 0f), 18);
+
+            // The gate keeps a line of its own on a priced cell, because the free route is
+            // the one that must not disappear behind the paid one.
+            if (!unlocked && avatar.IsForSale)
+                UIKit.Titled("Gate", plate.transform,
+                             Loc.Format("ui.profile.locked_at", avatar.UnlockLevel), 20,
+                             new Color(1f, .95f, .88f, .42f), TextAnchor.MiddleCenter,
+                             new Vector2(CellW - 60f, 26f), new Vector2(.5f, 0f),
+                             new Vector2(0f, 12f), 3f, 0f);
 
             cell.transform.localScale = Vector3.zero;
             Tween.Pop(cell.transform, 0f, .5f, .04f * Mathf.Min(index, 12));
         }
 
+        /// <summary>
+        /// Wears a held companion, or opens the panel that explains an unheld one.
+        ///
+        /// A locked cell used to answer with a toast naming its level gate. That was true and
+        /// useless for most of this grid — the gates run past anything the shipped catalog can
+        /// reach — so a tap now opens the panel, which gives both routes and a way to take one.
+        /// </summary>
         void Choose(AvatarDefinition avatar, bool unlocked)
         {
             if (!unlocked)
             {
-                Audio.Sfx("nope", .5f);
-                Scenery.Toast(Content, Loc.Format("ui.profile.locked_toast", avatar.UnlockLevel), Pal.Rose,
-                              1.8f, new Vector2(.5f, 0f), NavBar.Height + 150f);
+                Audio.Sfx("chime", .45f);
+                Flow.Modal<CompanionUnlockOverlay>(v => v.Avatar = avatar);
                 return;
             }
 
+            // The repaint is Profile.AvatarChanged's, not this method's. Leaving it here as
+            // well would paint the grid twice on the one path that already had a repaint, and
+            // would leave the purchase path — which never comes through here — as the only
+            // one relying on a call site to remember.
             if (!Profile.TryWearAvatar(avatar.Id)) return;
 
             Audio.Sfx("chime2", .5f);
             Haptic.Tap();
-            Paint();
         }
 
         // --------------------------------------------------------------- chrome
@@ -216,13 +266,16 @@ namespace GlimmerGrove
         /// <summary>
         /// "12 of 31 awake", plus what is next. The second half is the point: a locked
         /// grid with no stated way forward reads as a paywall rather than a goal.
+        ///
+        /// The count is of companions <em>held</em>, by either route — a purchased one that
+        /// did not count here would make the caption disagree with the grid under it.
         /// </summary>
         static string SummaryText(int level)
         {
-            string held = Loc.Format("ui.profile.unlocked", AvatarCatalog.UnlockedCount(level),
+            string held = Loc.Format("ui.profile.unlocked", CompanionLedger.HeldCount(level),
                                      AvatarCatalog.All.Count);
 
-            var next = AvatarCatalog.NextLocked(level);
+            var next = CompanionLedger.NextUnheld(level);
             return next.IsValid
                 ? held + "  ·  " + Loc.Format("ui.profile.next_at", next.UnlockLevel)
                 : held;

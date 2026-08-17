@@ -193,8 +193,19 @@ namespace GlimmerGrove
         }
 
         // ------------------------------------------------------------- shorthands
+        //
+        // Every shorthand answers a null target with a finished tween rather than a throw, and
+        // that is a rule rather than defensiveness. These are called from click handlers, so an
+        // exception here does not merely skip an animation — it abandons whatever the handler
+        // was doing halfway. ModalView.Close() is the case that proved it: it fades the content
+        // out, scales the panel, and dismisses the view in the scale's OnDone, so a throw on the
+        // middle line left an invisible view still eating every touch on the screen. The ones
+        // that could throw were the ones reading their target's current value to interpolate
+        // from — Scale, Move, Rotate and RotateBy; the rest already guarded. The null tween
+        // still completes, so an OnDone chained onto one of them runs and the sequence finishes.
         public static Tw Scale(Transform tr, Vector3 to, float dur, Easing ease = null)
         {
+            if (tr == null) return Run(0.001f, Ease.Linear, null);
             var from = tr.localScale;
             return Run(dur, ease ?? Ease.OutCubic, t => { if (tr) tr.localScale = Vector3.LerpUnclamped(from, to, t); }, tr, "scale");
         }
@@ -204,12 +215,14 @@ namespace GlimmerGrove
 
         public static Tw Move(RectTransform rt, Vector2 to, float dur, Easing ease = null)
         {
+            if (rt == null) return Run(0.001f, Ease.Linear, null);
             var from = rt.anchoredPosition;
             return Run(dur, ease ?? Ease.OutCubic, t => { if (rt) rt.anchoredPosition = Vector2.LerpUnclamped(from, to, t); }, rt, "move");
         }
 
         public static Tw Rotate(RectTransform rt, float toZ, float dur, Easing ease = null)
         {
+            if (rt == null) return Run(0.001f, Ease.Linear, null);
             float from = rt.localEulerAngles.z;
             // shortest signed path
             float delta = Mathf.DeltaAngle(from, toZ);
@@ -218,6 +231,7 @@ namespace GlimmerGrove
 
         public static Tw RotateBy(RectTransform rt, float degrees, float dur, Easing ease = null)
         {
+            if (rt == null) return Run(0.001f, Ease.Linear, null);
             float from = rt.localEulerAngles.z;
             return Run(dur, ease ?? Ease.OutBack, t => { if (rt) rt.localRotation = Quaternion.Euler(0, 0, from + degrees * t); }, rt, "rot");
         }

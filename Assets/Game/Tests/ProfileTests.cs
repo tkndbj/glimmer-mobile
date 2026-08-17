@@ -74,17 +74,19 @@ namespace GlimmerGrove.Tests
             var late = LastLockedCompanion();
             if (!late.IsValid) Assert.Ignore("the roster has no locked companion to test with");
 
-            Assert.IsFalse(AvatarCatalog.IsUnlocked(late, 0));
+            Assert.IsFalse(AvatarCatalog.ReachedBy(late, 0));
             Assert.AreEqual(late.Id, AvatarCatalog.Resolve(late.Id).Id);
         }
 
         [Test]
-        public void UnlockedCountRisesWithLevelAndNeverExceedsTheRoster()
+        public void HeldCountRisesWithLevelAndNeverExceedsTheRoster()
         {
+            CompanionLedger.ResetForTests();
+
             int previous = 0;
             for (int level = 0; level <= 60; level++)
             {
-                int count = AvatarCatalog.UnlockedCount(level);
+                int count = CompanionLedger.HeldCount(level);
                 Assert.GreaterOrEqual(count, previous, "unlocking must never go backwards");
                 Assert.LessOrEqual(count, AvatarCatalog.All.Count);
                 previous = count;
@@ -177,7 +179,7 @@ namespace GlimmerGrove.Tests
         }
 
         [Test]
-        public void NextLockedNamesTheNearestOneAndNothingAtTheEnd()
+        public void NextUnheldNamesTheNearestOneAndNothingAtTheEnd()
         {
             AvatarCatalog.Publish(new List<AvatarDefinition>
             {
@@ -186,9 +188,11 @@ namespace GlimmerGrove.Tests
                 new AvatarDefinition("b", "b", string.Empty, 4),
             });
 
-            Assert.AreEqual("b", AvatarCatalog.NextLocked(0).Id);
-            Assert.AreEqual("c", AvatarCatalog.NextLocked(4).Id);
-            Assert.IsFalse(AvatarCatalog.NextLocked(99).IsValid, "nothing left to chase");
+            CompanionLedger.ResetForTests();
+
+            Assert.AreEqual("b", CompanionLedger.NextUnheld(0).Id);
+            Assert.AreEqual("c", CompanionLedger.NextUnheld(4).Id);
+            Assert.IsFalse(CompanionLedger.NextUnheld(99).IsValid, "nothing left to chase");
         }
 
         // ---------------------------------------------------------- honorific

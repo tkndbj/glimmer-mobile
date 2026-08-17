@@ -24,15 +24,22 @@ namespace GlimmerGrove.Daily
         Gems,
 
         /// <summary>
-        /// Hearts, clamped at <see cref="HeartRules.Max"/> like every other grant.
+        /// Hearts, clamped at <see cref="HeartRules.Ceiling"/> like every other grant.
         ///
-        /// A full player loses the surplus, and that is on purpose. The obvious kindness
-        /// — paying the overflow out as credits instead — would make the reward depend on
-        /// how many hearts the player happened to be holding, and the server has no view
-        /// of that. It would then be unable to recompute what a chest was worth, which is
-        /// the one property the whole design rests on. The table compensates by keeping
-        /// hearts to the early chest, where the guaranteed credits already carry the
-        /// reward, and by making the band generous when it does land.
+        /// <para>
+        /// A chest opened at a full bar now <em>keeps</em> its hearts — they stack past
+        /// <see cref="HeartRules.RefillCap"/>, which is where the timer stops rather than
+        /// where a player's holding ends. That closes the one place a chest could pay
+        /// nothing at all, and it does so without touching the property the whole design
+        /// rests on: the drop is still a pure function of (account, day, chest), because
+        /// what is granted never depends on how many hearts the player happened to hold.
+        /// </para>
+        /// <para>
+        /// A player sitting on fifty still loses the surplus, and the obvious kindness —
+        /// paying it out as credits instead — is still refused, for the original reason:
+        /// the payout would then depend on the player's holding, and the server has no view
+        /// of that, so it could no longer recompute what a chest was worth.
+        /// </para>
         /// </summary>
         Hearts,
 

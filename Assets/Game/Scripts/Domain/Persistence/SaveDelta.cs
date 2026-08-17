@@ -111,6 +111,13 @@ namespace GlimmerGrove.Persistence
             if (remote.schemaVersion != merged.schemaVersion) return true;
             if (remote.legacyImportDone != merged.legacyImportDone) return true;
             if (!SameSet(remote.tipsSeen, merged.tipsSeen)) return true;
+
+            // The companions the player bought. These have to travel, and the reason is
+            // sharper than the tip set's: a purchase is the one thing in this file that
+            // cannot be re-derived, so a set that stayed on one phone is a companion the
+            // player paid for and loses on reinstall. Compared as an ordered walk because
+            // both sides are written sorted — see CompanionLedger.
+            if (!SameSet(remote.companionsOwned, merged.companionsOwned)) return true;
             if (!Same(remote.lastPlayedLevelId, merged.lastPlayedLevelId)) return true;
 
             var a = remote.settings ?? new SettingsDto();
@@ -162,6 +169,14 @@ namespace GlimmerGrove.Persistence
             if (streakA.lastPlayedDay != streakB.lastPlayedDay) return true;
             if (streakA.collectedThroughDay != streakB.collectedThroughDay) return true;
 
+            // The event floors. These have to travel, and for a stronger reason than the
+            // streak's dates do: the server re-derives what a save is worth, and a floor it
+            // has not been told about is a milestone it will not pay for. A collect that
+            // never reached the server would look to the next device exactly like a rung
+            // still waiting.
+            if (remote.eventsSeeded != merged.eventsSeeded) return true;
+            if (!SameEvents(remote.events, merged.events)) return true;
+
             var progressA = remote.progression ?? ProgressionStateDto.Unwritten();
             var progressB = merged.progression ?? ProgressionStateDto.Unwritten();
             if (progressA.xpHighWater != progressB.xpHighWater) return true;
@@ -206,6 +221,28 @@ namespace GlimmerGrove.Persistence
 
                 if (!Same(x.placement, y.placement)) return false;
                 if (x.count != y.count) return false;
+            }
+
+            return true;
+        }
+
+        /// <summary>
+        /// Event collection floors, walked in order for the reason <see cref="SameCounts"/>
+        /// can be: they are written sorted by event id and deduplicated, so equal content is
+        /// byte-equal content.
+        /// </summary>
+        static bool SameEvents(EventStateDto[] a, EventStateDto[] b)
+        {
+            int na = a?.Length ?? 0, nb = b?.Length ?? 0;
+            if (na != nb) return false;
+
+            for (int i = 0; i < na; i++)
+            {
+                var x = a[i] ?? new EventStateDto();
+                var y = b[i] ?? new EventStateDto();
+
+                if (!Same(x.id, y.id)) return false;
+                if (x.collectedGoal != y.collectedGoal) return false;
             }
 
             return true;

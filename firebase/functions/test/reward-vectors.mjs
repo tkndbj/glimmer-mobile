@@ -64,7 +64,10 @@ for (const testCase of vectors.cases) {
     levels[level.levelId] = { stars: level.stars, firstClearedUnix: level.firstClearedUnix ?? 0 };
   }
 
-  const { credits } = earnedCredits(levels, config, testCase.playerKey ?? "");
+  // The floors go in as the wire shape a save document carries, so the harness exercises
+  // `eventFloors` too rather than handing the derivation a tidy map it would never see.
+  const { credits } = earnedCredits(levels, config, testCase.playerKey ?? "",
+                                    testCase.collected ?? []);
 
   if (credits !== testCase.credits) {
     failures++;

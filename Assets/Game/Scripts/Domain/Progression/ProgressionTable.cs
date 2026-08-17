@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using GlimmerGrove.Ads;
 using GlimmerGrove.Content;
 using GlimmerGrove.Daily;
+using GlimmerGrove.Persistence;
 using UnityEngine;
 
 namespace GlimmerGrove.Progression
@@ -80,7 +81,7 @@ namespace GlimmerGrove.Progression
         ProgressionTable(long[] cumulative, RewardRule defaultRule,
                          Dictionary<ChapterId, RewardRule> chapterRules,
                          DailyChestTable daily, AdRewardTable ads, StreakTable streak,
-                         GoldenTable golden)
+                         GoldenTable golden, HeartRuleTable hearts)
         {
             _cumulative = cumulative;
             _defaultRule = defaultRule;
@@ -89,6 +90,7 @@ namespace GlimmerGrove.Progression
             Ads = ads ?? AdRewardTable.Default;
             Streak = streak ?? StreakTable.Default;
             Golden = golden ?? GoldenTable.Default;
+            Hearts = hearts ?? HeartRuleTable.Default;
         }
 
         /// <summary>
@@ -132,6 +134,15 @@ namespace GlimmerGrove.Progression
         public GoldenTable Golden { get; }
 
         /// <summary>
+        /// The heart gate, published with the curve because it multiplies every number in
+        /// it. XP and credits are paid per finished glade; the gate decides how many
+        /// glades a day a player gets to finish. Retuning one without the other changes the
+        /// economy by a factor nobody wrote down — the same argument the golden bands make,
+        /// one level up.
+        /// </summary>
+        public HeartRuleTable Hearts { get; }
+
+        /// <summary>
         /// A usable curve for when no file could be read. The game stays playable and
         /// the validator fails the build, which is the right way round — a content
         /// problem should stop a build, never a player's session.
@@ -146,7 +157,8 @@ namespace GlimmerGrove.Progression
             daily: DailyChestTable.Default,
             ads: AdRewardTable.Default,
             streak: StreakTable.Default,
-            golden: GoldenTable.Default);
+            golden: GoldenTable.Default,
+            hearts: HeartRuleTable.Default);
 
         /// <summary>Highest level this curve defines. Level 1 always exists.</summary>
         public int MaxLevel => _cumulative.Length;
@@ -316,8 +328,15 @@ namespace GlimmerGrove.Progression
             // a working game — so it must be reported loudly and never allowed to be fatal.
             var golden = GoldenTable.Resolve(dto.golden, problems);
 
+            // And once more, for the block with the widest blast radius. An unreadable
+            // hearts block costs the live pacing of the gate and nothing else; it must not
+            // take the curve or any of the four tables above it down with it, and it must
+            // never be able to leave the game unplayable — which is why every field in it
+            // clamps to a built-in rather than rejecting the block.
+            var hearts = HeartRuleTable.Resolve(dto.hearts, problems);
+
             table = Build(dto.xpToNext, dto.tailXpToNext, dto.tailXpIncrement, maxLevel,
-                          defaultRule, chapterRules, daily, ads, streak, golden);
+                          defaultRule, chapterRules, daily, ads, streak, golden, hearts);
             return true;
         }
 
@@ -325,7 +344,8 @@ namespace GlimmerGrove.Progression
                                       int maxLevel, RewardRule defaultRule,
                                       Dictionary<ChapterId, RewardRule> chapterRules,
                                       DailyChestTable daily, AdRewardTable ads,
-                                      StreakTable streak, GoldenTable golden)
+                                      StreakTable streak, GoldenTable golden,
+                                      HeartRuleTable hearts)
         {
             if (maxLevel < 1) maxLevel = 1;
 
@@ -342,7 +362,8 @@ namespace GlimmerGrove.Progression
                 cumulative[level] = cumulative[level - 1] + step;
             }
 
-            return new ProgressionTable(cumulative, defaultRule, chapterRules, daily, ads, streak, golden);
+            return new ProgressionTable(cumulative, defaultRule, chapterRules, daily, ads, streak,
+                                        golden, hearts);
         }
     }
 }

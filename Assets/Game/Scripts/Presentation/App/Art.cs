@@ -419,6 +419,46 @@ namespace GlimmerGrove
             });
         }
 
+        /// <summary>
+        /// A leaf, tip up: two arcs meeting at a point, with the midrib cut out of it.
+        ///
+        /// Generated for the reason <see cref="Bloom"/> is, and it earns it twice over here
+        /// — the event page hangs one of these every few dozen pixels along a vine whose
+        /// length is decided by content, so the alternative is either an address the asset
+        /// audit has to know about or a sprite that is the wrong size at every scale but
+        /// one. A coverage mask takes its colour from <c>Image.color</c>, so the same shape
+        /// is the grown leaf and the dry one.
+        ///
+        /// <para>
+        /// The vein is punched out rather than drawn over, so a leaf laid on a lit stem
+        /// shows the stem through its own midrib instead of a darker stripe that only
+        /// happens to match on one background.
+        /// </para>
+        /// </summary>
+        public static Sprite Leaf(int size = 96, float vein = .07f)
+        {
+            float v = Mathf.Clamp(vein, 0f, .3f);
+
+            return Make($"leaf{size}_{v:0.00}", size, size, (x, y) =>
+            {
+                // Normalised to the sprite, with the leaf running bottom-centre to top-centre.
+                float u = x / size, w = y / size;
+
+                // Widest a third of the way up and pointed at the tip, which is the profile
+                // that reads as a leaf rather than as an eye: w^a (1-w)^b peaks at a/(a+b),
+                // and the exponents are chosen so that lands low with a long taper above.
+                w = Mathf.Clamp01(w);
+                float half = .883f * Mathf.Pow(w, .5f) * Mathf.Pow(1f - w, 1f);
+
+                float body = Cover((Mathf.Abs(u - .5f) - half * .62f) * size);
+
+                float rib = Cover((Mathf.Abs(u - .5f) - v * .5f) * size) *
+                            Cover((Mathf.Abs(w - .5f) - .46f) * size);
+
+                return Mathf.Clamp01(body - rib);
+            });
+        }
+
         /// <summary>Screen vignette; dark at the edges, clear in the middle.</summary>
         public static Sprite Vignette(int size = 256)
         {

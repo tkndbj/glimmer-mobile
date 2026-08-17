@@ -121,7 +121,16 @@ namespace GlimmerGrove.Content
             if (entry.unlockLevel < 0)
                 _problems.Add($"companion '{entry.id}' has a negative unlock level; treated as 0");
 
-            _companions.Add(new AvatarDefinition(entry.id, entry.portrait, entry.animated, entry.unlockLevel));
+            // Reported rather than clamped silently, because a negative price is the one
+            // authoring slip here that could look like a working feature: it reads as "not
+            // for sale", so the companion simply loses its buy button and nothing else
+            // complains. Zero is a legitimate value and says exactly that on purpose.
+            if (entry.unlockCost < 0)
+                _problems.Add($"companion '{entry.id}' has a negative unlock cost " +
+                              $"({entry.unlockCost}); treated as not for sale");
+
+            _companions.Add(new AvatarDefinition(entry.id, entry.portrait, entry.animated,
+                                                 entry.unlockLevel, entry.unlockCost));
             return true;
         }
 

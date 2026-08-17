@@ -43,216 +43,247 @@
       "portrait": "monarch",
       "animated": "c5",
       "unlockLevel": 0,
+      "unlockCost": 0,
       "disabled": false
     },
     {
       "id": "cinder",
       "portrait": "cinder",
       "animated": "",
-      "unlockLevel": 1,
+      "unlockLevel": 2,
+      "unlockCost": 800,
       "disabled": false
     },
     {
       "id": "timber",
       "portrait": "timber",
       "animated": "c2",
-      "unlockLevel": 2,
+      "unlockLevel": 3,
+      "unlockCost": 1000,
       "disabled": false
     },
     {
       "id": "sorrel",
       "portrait": "sorrel",
       "animated": "",
-      "unlockLevel": 3,
+      "unlockLevel": 4,
+      "unlockCost": 1200,
       "disabled": false
     },
     {
       "id": "sprocket",
       "portrait": "sprocket",
       "animated": "c3",
-      "unlockLevel": 4,
+      "unlockLevel": 5,
+      "unlockCost": 1400,
       "disabled": false
     },
     {
       "id": "peep",
       "portrait": "peep",
       "animated": "",
-      "unlockLevel": 5,
+      "unlockLevel": 6,
+      "unlockCost": 1600,
       "disabled": false
     },
     {
       "id": "thistle",
       "portrait": "thistle",
       "animated": "c4",
-      "unlockLevel": 6,
+      "unlockLevel": 7,
+      "unlockCost": 1800,
       "disabled": false
     },
     {
       "id": "gourd",
       "portrait": "gourd",
       "animated": "",
-      "unlockLevel": 7,
+      "unlockLevel": 8,
+      "unlockCost": 2000,
       "disabled": false
     },
     {
       "id": "puff",
       "portrait": "puff",
       "animated": "c1",
-      "unlockLevel": 8,
+      "unlockLevel": 9,
+      "unlockCost": 2200,
       "disabled": false
     },
     {
       "id": "clementine",
       "portrait": "clementine",
       "animated": "",
-      "unlockLevel": 9,
+      "unlockLevel": 10,
+      "unlockCost": 2400,
       "disabled": false
     },
     {
       "id": "plum",
       "portrait": "plum",
       "animated": "",
-      "unlockLevel": 10,
+      "unlockLevel": 11,
+      "unlockCost": 2600,
       "disabled": false
     },
     {
       "id": "frond",
       "portrait": "frond",
       "animated": "",
-      "unlockLevel": 12,
+      "unlockLevel": 13,
+      "unlockCost": 3000,
       "disabled": false
     },
     {
       "id": "button",
       "portrait": "button",
       "animated": "",
-      "unlockLevel": 14,
+      "unlockLevel": 15,
+      "unlockCost": 3500,
       "disabled": false
     },
     {
       "id": "shell",
       "portrait": "shell",
       "animated": "",
-      "unlockLevel": 16,
+      "unlockLevel": 17,
+      "unlockCost": 4000,
       "disabled": false
     },
     {
       "id": "dewdrop",
       "portrait": "dewdrop",
       "animated": "",
-      "unlockLevel": 18,
+      "unlockLevel": 19,
+      "unlockCost": 4500,
       "disabled": false
     },
     {
       "id": "flit",
       "portrait": "flit",
       "animated": "",
-      "unlockLevel": 20,
+      "unlockLevel": 21,
+      "unlockCost": 5000,
       "disabled": false
     },
     {
       "id": "toadstool",
       "portrait": "toadstool",
       "animated": "",
-      "unlockLevel": 22,
+      "unlockLevel": 23,
+      "unlockCost": 6000,
       "disabled": false
     },
     {
       "id": "quill",
       "portrait": "quill",
       "animated": "",
-      "unlockLevel": 24,
+      "unlockLevel": 25,
+      "unlockCost": 7000,
       "disabled": false
     },
     {
       "id": "olive",
       "portrait": "olive",
       "animated": "",
-      "unlockLevel": 26,
+      "unlockLevel": 27,
+      "unlockCost": 8000,
       "disabled": false
     },
     {
       "id": "indigo",
       "portrait": "indigo",
       "animated": "",
-      "unlockLevel": 28,
+      "unlockLevel": 29,
+      "unlockCost": 9000,
       "disabled": false
     },
     {
       "id": "tadpole",
       "portrait": "tadpole",
       "animated": "",
-      "unlockLevel": 30,
+      "unlockLevel": 31,
+      "unlockCost": 10000,
       "disabled": false
     },
     {
       "id": "pebble",
       "portrait": "pebble",
       "animated": "",
-      "unlockLevel": 33,
+      "unlockLevel": 34,
+      "unlockCost": 11500,
       "disabled": false
     },
     {
       "id": "saffron",
       "portrait": "saffron",
       "animated": "",
-      "unlockLevel": 36,
+      "unlockLevel": 37,
+      "unlockCost": 13000,
       "disabled": false
     },
     {
       "id": "coral",
       "portrait": "coral",
       "animated": "",
-      "unlockLevel": 39,
+      "unlockLevel": 40,
+      "unlockCost": 14500,
       "disabled": false
     },
     {
       "id": "rust",
       "portrait": "rust",
       "animated": "",
-      "unlockLevel": 42,
+      "unlockLevel": 43,
+      "unlockCost": 16000,
       "disabled": false
     },
     {
       "id": "fizz",
       "portrait": "fizz",
       "animated": "",
-      "unlockLevel": 45,
+      "unlockLevel": 46,
+      "unlockCost": 17500,
       "disabled": false
     },
     {
       "id": "marrow",
       "portrait": "marrow",
       "animated": "",
-      "unlockLevel": 48,
+      "unlockLevel": 49,
+      "unlockCost": 19000,
       "disabled": false
     },
     {
       "id": "bramble",
       "portrait": "bramble",
       "animated": "",
-      "unlockLevel": 52,
+      "unlockLevel": 53,
+      "unlockCost": 21500,
       "disabled": false
     },
     {
       "id": "wisp",
       "portrait": "wisp",
       "animated": "",
-      "unlockLevel": 56,
+      "unlockLevel": 57,
+      "unlockCost": 24000,
       "disabled": false
     },
     {
       "id": "boulder",
       "portrait": "boulder",
       "animated": "",
-      "unlockLevel": 60,
+      "unlockLevel": 61,
+      "unlockCost": 26500,
       "disabled": false
     },
     {
       "id": "thorn",
       "portrait": "thorn",
       "animated": "",
-      "unlockLevel": 65,
+      "unlockLevel": 66,
+      "unlockCost": 30000,
       "disabled": false
     }
   ]

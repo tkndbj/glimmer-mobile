@@ -63,6 +63,12 @@ namespace GlimmerGrove.Tests
                         firstClearedUnix = 1_650_000_000, lastPlayedUnix = 1_650_000_000,
                     },
                 },
+                eventsSeeded = true,
+                events = new[]
+                {
+                    new EventStateDto { id = "first_bloom", collectedGoal = 2 },
+                    new EventStateDto { id = "second_bloom", collectedGoal = 1 },
+                },
                 streak = new StreakStateDto
                 {
                     startDay = 20_310, lastPlayedDay = 20_315, collectedThroughDay = 20_314,
@@ -197,6 +203,36 @@ namespace GlimmerGrove.Tests
             Assert.AreEqual(20_310, restored.streak.startDay);
             Assert.AreEqual(20_315, restored.streak.lastPlayedDay);
             Assert.AreEqual(20_314, restored.streak.collectedThroughDay);
+
+            // The event floors, which the server pays on: `eventCredits` counts a milestone
+            // only once the floor has reached it, so a floor that did not make the trip is a
+            // collect the wallet never hears about.
+            Assert.IsTrue(restored.eventsSeeded);
+            Assert.AreEqual(2, restored.events.Length);
+            Assert.AreEqual("first_bloom", restored.events[0].id);
+            Assert.AreEqual(2, restored.events[0].collectedGoal);
+            Assert.AreEqual("second_bloom", restored.events[1].id);
+            Assert.AreEqual(1, restored.events[1].collectedGoal);
+        }
+
+        /// <summary>
+        /// A document written before rewards were collected by hand reads back as no floors
+        /// and an unseeded flag. Both are what the join treats as "knows nothing", so the
+        /// local side wins and nothing has to detect the upgrade — the same bargain the
+        /// streak block makes one version earlier.
+        /// </summary>
+        [Test]
+        public void ADocumentWithNoEventFloorsReadsAsHavingTakenNothing()
+        {
+            var doc = FirestoreSaveMapper.ToDocument(Populated());
+            doc.Remove("events");
+            doc.Remove("eventsSeeded");
+
+            var restored = FirestoreSaveMapper.FromDocument(doc);
+
+            Assert.IsFalse(restored.eventsSeeded);
+            Assert.IsNotNull(restored.events);
+            Assert.AreEqual(0, restored.events.Length);
         }
 
         /// <summary>

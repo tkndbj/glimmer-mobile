@@ -42,6 +42,7 @@ namespace GlimmerGrove
         Image _portrait;
         Text _nameLabel;
         Transform _companionRow;
+        Text _companionCount;
 
         protected override void Build()
         {
@@ -56,6 +57,34 @@ namespace GlimmerGrove
             // wanted here too — and released the moment this screen goes away. Requested
             // after the row exists so the repaint has something to paint.
             CompanionArt.OpenAsync(() => { if (this) PaintCompanions(); });
+
+            // See CompanionScreen for why this is an event and not a callback: the unlock
+            // panel has three exits and only one of them used to report a purchase.
+            Progression.CompanionLedger.Changed += RepaintCompanions;
+
+            // And on the worn companion separately, because a purchase records the two one
+            // after the other and the ledger's event arrives before the wear — see
+            // Profile.AvatarChanged. The medallion showed the old friend until this existed.
+            Profile.AvatarChanged += RepaintCompanions;
+
+            AvatarCatalog.Changed += RepaintCompanions;
+        }
+
+        /// <summary>
+        /// The row, the count and the hero portrait, which move together when the held set
+        /// changes — buying a companion also wears it.
+        /// </summary>
+        void RepaintCompanions()
+        {
+            if (!this) return;
+
+            PaintCompanions();
+
+            if (_companionCount)
+                _companionCount.text = Loc.Format("ui.profile.unlocked", Profile.CompanionsHeld,
+                                                  AvatarCatalog.All.Count);
+
+            if (_portrait) CompanionArt.Paint(_portrait, Profile.Avatar, animate: true);
         }
 
         /// <summary>
@@ -64,6 +93,10 @@ namespace GlimmerGrove
         /// </summary>
         void OnDestroy()
         {
+            Progression.CompanionLedger.Changed -= RepaintCompanions;
+            Profile.AvatarChanged -= RepaintCompanions;
+            AvatarCatalog.Changed -= RepaintCompanions;
+
             if (Flow.Current is CompanionScreen) return;
             CompanionArt.Close();
         }
@@ -246,8 +279,9 @@ namespace GlimmerGrove
             int level = Profile.Rank;
 
             CardTitle(card, "ui.profile.companions", CardWidth);
-            UIKit.Titled("Count", card,
-                         Loc.Format("ui.profile.unlocked", AvatarCatalog.UnlockedCount(level), AvatarCatalog.All.Count),
+            _companionCount = UIKit.Titled("Count", card,
+                         Loc.Format("ui.profile.unlocked", CompanionLedger.HeldCount(level),
+                                    AvatarCatalog.All.Count),
                          26, new Color(1f, .96f, .88f, .60f), TextAnchor.MiddleRight,
                          new Vector2(300f, 36f), new Vector2(1f, 1f), new Vector2(-190f, -44f), 3f, 0f);
 
@@ -281,7 +315,8 @@ namespace GlimmerGrove
             float left = -(PreviewCount) * Step * .5f;
 
             for (int i = 0; i < preview.Count; i++)
-                Companion(preview[i], left + i * Step, AvatarCatalog.IsUnlocked(preview[i], level),
+                // The whole rule — reached by level or bought. See CompanionLedger.
+                Companion(preview[i], left + i * Step, CompanionLedger.IsHeld(preview[i], level),
                           string.Equals(preview[i].Id, worn, StringComparison.Ordinal));
 
             SeeAllTile(left + PreviewCount * Step, AvatarCatalog.All.Count - preview.Count);
@@ -360,11 +395,17 @@ namespace GlimmerGrove
                 lockIcon.preserveAspect = true;
             }
 
-            UIKit.Titled("L", cell.transform,
-                         unlocked ? Loc.Get(avatar.NameKey) : Loc.Format("ui.profile.locked_at", avatar.UnlockLevel),
-                         24, unlocked ? (worn ? Pal.Cream : new Color(1f, .96f, .88f, .66f)) : new Color(1f, .8f, .7f, .55f),
-                         TextAnchor.MiddleCenter, new Vector2(180f, 32f), new Vector2(.5f, 0f),
-                         new Vector2(0f, 22f), 3f, 0f);
+            UIKit.Shrinkable(
+                UIKit.Titled("L", cell.transform,
+                             unlocked ? Loc.Get(avatar.NameKey)
+                                      : avatar.IsForSale
+                                          ? Loc.Format("ui.profile.cost", avatar.UnlockCost)
+                                          : Loc.Format("ui.profile.locked_at", avatar.UnlockLevel),
+                             24, unlocked ? (worn ? Pal.Cream : new Color(1f, .96f, .88f, .66f))
+                                          : avatar.IsForSale ? Pal.A(Pal.Sun, .88f)
+                                                             : new Color(1f, .8f, .7f, .55f),
+                             TextAnchor.MiddleCenter, new Vector2(180f, 32f), new Vector2(.5f, 0f),
+                             new Vector2(0f, 22f), 3f, 0f), 18);
 
             if (worn) Tween.Breathe(disc.transform, .03f, 2.6f);
         }
@@ -373,19 +414,21 @@ namespace GlimmerGrove
         {
             if (!unlocked)
             {
-                Audio.Sfx("nope", .5f);
-                Scenery.Toast(Content, Loc.Format("ui.profile.locked_toast", avatar.UnlockLevel), Pal.Rose,
-                              1.8f, new Vector2(.5f, 0f), NavBar.Height + 170f);
+                // The panel, not a toast naming a level the catalog cannot reach. See
+                // CompanionUnlockOverlay.
+                Audio.Sfx("chime", .45f);
+                Flow.Modal<CompanionUnlockOverlay>(v => v.Avatar = avatar);
                 return;
             }
 
+            // The row, the count and the medallion are repainted by Profile.AvatarChanged.
+            // What stays here is only what belongs to the *tap* rather than to the state —
+            // a sound, a bump and the sparks off the medallion.
             if (!Profile.TryWearAvatar(avatar.Id)) return;
 
             Audio.Sfx("chime2", .5f);
             Haptic.Tap();
-            CompanionArt.Paint(_portrait, avatar, animate: true);
             if (_portrait) Burst.Sparks(_portrait.transform, Vector2.zero, Pal.Gold, 12, 190f, 26f, .6f);
-            PaintCompanions();
         }
 
         // ----------------------------------------------------------- the account

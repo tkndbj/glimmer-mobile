@@ -16,6 +16,37 @@ namespace GlimmerGrove
         public string ClickSfx = "click";
         public float PressScale = .93f;
 
+        /// <summary>
+        /// The caption, when this button has one. Held rather than looked up by name, so a
+        /// repaint costs nothing and renaming the child cannot silently break the layout.
+        /// </summary>
+        public Text Label;
+
+        /// <summary>How wide the caption and any glyph beside it may be, together.</summary>
+        public float LabelWidth;
+
+        /// <summary>
+        /// Changes the caption, re-centring the glyph beside it.
+        ///
+        /// <para>
+        /// The pair is what makes this worth a method rather than an assignment: a button
+        /// carrying a glyph has to be re-measured whenever its caption changes, and a
+        /// caller that has to remember a second call is a caller that will eventually
+        /// forget one — these captions are countdowns, so the failure would be a glyph that
+        /// drifts off centre as the clock ticks. Returns whether anything actually changed,
+        /// so a per-frame paint can skip the mesh rebuild on the frames that read the same.
+        /// </para>
+        /// </summary>
+        public bool SetCaption(string caption)
+        {
+            if (Label == null) return false;
+            if (string.Equals(Label.text, caption, StringComparison.Ordinal)) return false;
+
+            Label.text = caption;
+            UIKit.FitLabel(this);
+            return true;
+        }
+
         public bool Interactable
         {
             get => _interactable;
