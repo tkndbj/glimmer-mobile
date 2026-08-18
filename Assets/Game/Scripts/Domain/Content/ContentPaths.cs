@@ -21,6 +21,15 @@ namespace GlimmerGrove.Content
         /// </summary>
         public const string Progression = Root + "/progression.json";
 
+        /// <summary>
+        /// The grove catalog: plots, slots and everything that can stand in one.
+        ///
+        /// A body rather than part of the manifest, and read only when the Grovement is
+        /// opened — see <c>ManifestDto.groveVersion</c> for why a shop is the last thing that
+        /// should live on the boot path.
+        /// </summary>
+        public const string Homestead = Root + "/homestead.json";
+
         public static string Chapter(ChapterId id) => $"{Root}/chapters/{id.Value}.json";
 
         public static string Localisation(string languageCode) => $"{Root}/loc/{languageCode}.json";

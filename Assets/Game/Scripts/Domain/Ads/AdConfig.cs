@@ -14,11 +14,22 @@ namespace GlimmerGrove.Ads
     /// account, which is a considerably worse failure than a mistuned payout.
     /// </para>
     /// <para>
-    /// <b>Every value below is a placeholder</b>, in the same sense and for the same reason
-    /// the four store secrets hold <c>UNSET</c>: no LevelPlay account exists for this game
-    /// yet. <see cref="IsConfigured"/> reads that state and <c>Boot</c> keeps the null
-    /// provider, so the feature ships dark rather than shipping a button that cannot work.
-    /// Filling these in is the entire remaining step on the client side.
+    /// These are live. <see cref="IsConfigured"/> still reads the placeholder state and
+    /// <c>Boot</c> still keeps the null provider when it finds one, so a fork of this
+    /// project with the identifiers stripped ships dark rather than shipping a button that
+    /// cannot work.
+    /// </para>
+    /// <para>
+    /// <b>An ad unit id belongs to one app, and nothing tells you when you have crossed
+    /// them.</b> The dashboard lists ad units per app, so a unit created while the iOS app
+    /// is selected cannot be loaded by an Android build however correctly it is pasted in
+    /// here. The SDK does not error on it — it reports no fill, exactly as it does for a
+    /// market with no demand, so the offer sits at "finding a video" for ever and the only
+    /// visible symptom is a button that never lights. That shipped here: <c>run_continue</c>
+    /// and <c>win_bonus</c> were both created under the iOS app and both were dead on
+    /// Android for a day, while <c>heart_refill</c> and <c>coin_bonus</c> — created earlier,
+    /// under the right app — worked throughout and made it look like a code fault. When a
+    /// single placement never fills, check which app owns its ad unit before anything else.
     /// </para>
     /// </summary>
     public static class AdConfig
@@ -65,8 +76,8 @@ namespace GlimmerGrove.Ads
         /// </summary>
         public const string AndroidHeartRefill = "y58wb3ylhgpti287";
         public const string AndroidCoinBonus = "tqzvj9fd70ec87qi";
-        public const string AndroidRunContinue = "ap8uhb06ypy3uex1";
-        public const string AndroidWinBonus = "n88ndo81rmb8z10n";
+        public const string AndroidRunContinue = "mbhc7pqqhnp5znd8";
+        public const string AndroidWinBonus = "ezx904bb5q89hse4";
 
         public const string IosHeartRefill = "xwe669e56bzrs6wb";
         public const string IosCoinBonus = "h8rmyy4ol8scwpmy";

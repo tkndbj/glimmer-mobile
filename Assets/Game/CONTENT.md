@@ -54,6 +54,7 @@ record of what the original build shipped, not a description of the game.
 Assets/StreamingAssets/Content/
   manifest.json              every chapter and every glade id, in order
   chapters/<chapter_id>.json one chapter's grids, colours and art keys
+  homestead.json             the grove: its plots, their slots, and everything placeable
   loc/<lang>.json            strings, keyed
 ```
 
@@ -323,6 +324,137 @@ Portraits live in their own Addressables group and load into
 `AssetLibrary.CompanionScope` when a roster screen opens, then drop when it closes. Only
 the worn companion stays resident, warmed at boot by `Profile.WarmWornAvatar`. That is
 what keeps launch costing the same at a hundred companions as at five.
+
+## The Grovement
+
+The player's own grove: islands they earn, creatures they rescued, and decor they bought.
+It lives in its own file because it is a **body**, not index knowledge:
+
+```json
+{
+  "schemaVersion": 2,
+  "plots": [
+    {
+      "id": "meadow",
+      "art": "Homestead/plot_meadow",
+      "x": 0.48, "width": 0.62,
+      "requiresChapter": "",
+      "slots": [
+        { "id": "meadow_a", "x": 0.34, "y": 0.88, "scale": 0.82 }
+      ]
+    }
+  ],
+  "pieces": [
+    {
+      "id": "sunmote",
+      "art": "Critters/c1", "animated": true,
+      "kind": "resident",
+      "cost": 0,
+      "requiresLevel": "c01_first_light",
+      "scale": 0.95, "lift": 0.45
+    },
+    {
+      "id": "fence_low",
+      "art": "Homestead/fence_low",
+      "kind": "decor",
+      "cost": 340,
+      "scale": 1.0, "lift": 0.45
+    }
+  ]
+}
+```
+
+`manifest.json` carries only `"groveVersion": 1` for it — bump that when the file changes
+so the refresher pulls it, exactly as `progressionVersion` works for the reward table. It
+is read when the player opens the Grovement and its art is dropped when they leave. That
+is invariant 4a applied to the thing most likely to break it: a shop is the part of a game
+that grows fastest, and two hundred pieces parsed at every launch to answer a question
+nothing on the boot path asks is a cost paid forever by every device.
+
+### What is stored and what is derived
+
+Only two things reach the save file (schema **v16**), and they are joined differently:
+
+| | shape | merge | invariant |
+|---|---|---|---|
+| **Land** | nothing | — | derived from chapters finished |
+| **Residents** | nothing | — | derived from glades cleared |
+| **Purchases** (`homesteadOwned`) | set of ids | union | 15 — an entitlement |
+| **Arrangement** (`homesteadPlaced`) | slot → piece + stamp | recency per slot | 11c — an instruction |
+
+**Owning a piece is permission to draw it, not possession of a copy.** A player holding
+`fence_low` may put it in one slot or in twelve. That is not a simplification: a count of
+copies held is exactly the stored count invariant 11b forbids, and hearts spent a schema
+version proving it. It also makes the better shop — variety rather than quantity is what
+makes two groves look different.
+
+**A slot id is written into save files.** Invariant 1 applies in full: never renamed, never
+reused, never derived from position, and unique across the whole grove rather than per plot.
+Two plots sharing one would put a tree placed on the first island onto the second, and the
+merge would treat two independent choices as one.
+
+### Authoring a piece
+
+1. Drop the sprite in `Assets/Game/Art/Homestead/` (the importer hook addresses it and
+   files it in the `Glimmer Grove Homestead` group; nothing to remember).
+2. Add a row to `pieces`.
+3. Add `ui.piece.<id>` to `loc/en.json`.
+4. Bump `groveVersion` in `manifest.json`.
+5. Run `Glimmer Grove ▸ Validate Content`, or `python Tools/verify/content.py` with the
+   Editor closed.
+
+`kind` is `"decor"` or `"resident"`, and it decides exactly one thing: **a resident is never
+for sale.** A resident is proof of a glade the player finished, and one that can be bought
+turns the grove from a record into a receipt — so the mapper drops such a price and the
+build gate fails on it. `cost` of 0 means "not for sale" (never "free"), because
+`JsonUtility` writes a zero into every field an older file never had.
+
+`art` is a whole path under `Art/`, so a resident can point at the board's own critter
+flipbooks — which are already global art the game has paid for — while decor sits under
+`Art/Homestead/`. `animated` says which of the two it is. `scale` is a multiple of the art
+as authored and `lift` is how far up its slot the piece sits, as a fraction of its own drawn
+height; the shipped art stands on the ground, so most pieces want about `0.45`.
+
+A piece with no requirement and no price is a **starter** — free from the first launch. At
+least one must exist, or a new player opens the picker onto an empty list, and the build
+gate refuses that.
+
+### Authoring a plot
+
+`x` is a fraction of the canvas width and `width` is how wide the island draws. **There is no
+`y`** — vertical position is derived by `HomesteadMap`, which stacks the islands bottom to top in
+file order with a fixed gap and lets the canvas height fall out of the sum.
+
+That is a correction, and the reason is worth keeping. `y` *was* authored, against a fixed 3400px
+canvas, and it shipped with every consecutive pair of islands overlapping and the starter plot
+sitting below the scrollable area where no amount of dragging could reach it. The number an
+authored `y` has to agree with is how tall the island draws — which is a property of a PNG the
+author cannot see from the JSON, and the ten shipped islands total 4,632px before a single gap. So
+it is computed instead: overlap is impossible by construction, a re-cut sprite cannot break the
+layout, and adding a plot needs no numbers re-tuned. `content.py` reads the PNG headers and reports
+the derived height so a drop that quietly adds two screens of scrolling is visible.
+
+`requiresChapter` opens it, and it means **every glade in that chapter cleared** — the only
+condition a player can check by looking at the map. Empty means the plot every account starts with,
+and at least one must be like that.
+
+Plots are deliberately authored **ahead of the chapters that open them**, so the ladder is
+visible before it is walkable. Both validators report those forward references as one
+collected warning rather than one per plot — the same call `ValidateCompanions` makes about
+a roster built to outlast the current content, and for the same reason: a validator nobody
+reads is a validator that has stopped working.
+
+Slot `x`/`y` are fractions of the plot's own box with y up, and `scale` is the composition
+half of a piece's size — front and centre draws bigger than back and left. Slots closer than
+`0.13` warn, which is the grove's `ChapterMap.MinimumNodeSeparation` and a warning rather
+than an error because a slot holds whatever the player chose.
+
+### The one thing the grove must never do
+
+Nothing in it touches a board. No bonus, no buff, no faster hearts. `par` is derived from
+the board, stars from par, the clock from par and the server's earnings from all three, so a
+grove that granted anything would make every glade a different difficulty per player and no
+validator could prove one fair again.
 
 ## Events
 

@@ -39,6 +39,32 @@ namespace GlimmerGrove.AssetPipeline
 
         /// <summary>Companion portraits, held only while a screen is showing them.</summary>
         public const string CompanionScope = "companions";
+
+        /// <summary>
+        /// The grove's plots and decor, held only while the Grovement is open.
+        ///
+        /// The third caller of this mechanism, and the one it was predicted for. It is also
+        /// the one whose set genuinely grows without bound: a chapter's art is fixed by the
+        /// chapter, a roster's by the roster, but a shop gains pieces at every drop for the
+        /// life of the game. Residents cost this scope nothing — they draw the board's own
+        /// critter flipbooks, which are already global, and an address that is global stays
+        /// global.
+        /// </summary>
+        /// <summary>
+        /// The grove screen's art: the islands, the home ladder and whatever is placed.
+        /// Bounded by the size of the player's grove, never by the size of the shop.
+        /// </summary>
+        public const string HomesteadScope = "grove";
+
+        /// <summary>
+        /// One kind of piece at a time — a shop tab, or the picker's list for one slot.
+        ///
+        /// Separate from <see cref="HomesteadScope"/> so browsing cannot cost what the grove
+        /// costs: switching tabs replaces this and leaves the grove's own art alone. That is
+        /// what keeps a catalog of four hundred pieces from being four hundred textures the
+        /// moment somebody opens the shop.
+        /// </summary>
+        public const string HomesteadShopScope = "grove_shop";
         sealed class Scope
         {
             public readonly HashSet<string> Addresses = new HashSet<string>(StringComparer.Ordinal);
@@ -99,6 +125,43 @@ namespace GlimmerGrove.AssetPipeline
             return loaded;
         }
 
+        /// <summary>
+        /// The asset if it is <em>already</em> loaded — never loading, never logging, never
+        /// caching a miss.
+        ///
+        /// <para>
+        /// <b>For art that is legitimately not there yet.</b> A screen inside a scoped feature
+        /// is built in the frame it is asked for and paints before its scope has finished
+        /// loading — that is the bargain <c>EnsureScopeAsync</c> makes, and it is why every
+        /// such screen repaints on the callback. Asking through <see cref="Sprite"/> during
+        /// that window is not a mistake and must not read like one: it printed ten
+        /// "missing Art/Homestead/plot_*" warnings into the corner of the screen every time
+        /// the Grovement was opened, which is how a console stops being worth reading.
+        /// </para>
+        /// <para>
+        /// The genuine mistake — an address the content names and the build does not carry —
+        /// is caught where it should be, by <c>AddressableAudit</c> and <c>Validate Art</c>
+        /// walking the whole catalog at build time. A warning at runtime is a worse version of
+        /// a check that already exists.
+        /// </para>
+        /// </summary>
+        public static T Peek<T>(string address) where T : UnityEngine.Object
+        {
+            if (string.IsNullOrEmpty(address)) return null;
+
+            return OneCacheFor(address).TryGetValue(address, out var cached) ? cached as T : null;
+        }
+
+        /// <summary>Frames if they are already loaded. See <see cref="Peek{T}"/>.</summary>
+        public static Sprite[] PeekFrames(string address)
+        {
+            if (string.IsNullOrEmpty(address)) return Array.Empty<Sprite>();
+
+            return SetCacheFor(address).TryGetValue(address, out var cached)
+                ? cached
+                : Array.Empty<Sprite>();
+        }
+
         /// <summary>Animation frames under a folder-like address, sorted by name.</summary>
         public static Sprite[] Frames(string address)
         {
@@ -155,6 +218,48 @@ namespace GlimmerGrove.AssetPipeline
             }
 
             await PreloadAsync(requests, progress, cancellation);
+        }
+
+        /// <summary>
+        /// Adds to a scope without releasing what it already holds.
+        ///
+        /// <para>
+        /// <b>Why this exists and <see cref="EnsureScopeAsync"/> is not enough.</b> A scope
+        /// that is the answer to "what is on screen" grows while the screen is open: the
+        /// grove holds the art of the pieces the player has placed, and placing one more must
+        /// not tear down and rebuild the other twenty — that is a stall and a visible blink
+        /// for the sake of one sprite. It also has to <em>claim</em> the new address, because
+        /// the panel it was chosen from owns it right now and is about to close.
+        /// </para>
+        /// <para>
+        /// A scope that does not exist yet is created, so a caller never has to check. The
+        /// two ownership rules are the same ones <see cref="EnsureScopeAsync"/> applies, for
+        /// the same reasons: global stays global, and another scope's address is left alone.
+        /// </para>
+        /// </summary>
+        public static async Task AddToScopeAsync(string key,
+                                                 IReadOnlyList<AssetRequest> requests,
+                                                 CancellationToken cancellation = default)
+        {
+            if (string.IsNullOrEmpty(key) || requests == null || requests.Count == 0) return;
+
+            if (!_scopes.TryGetValue(key, out var scope))
+            {
+                scope = new Scope();
+                _scopes[key] = scope;
+            }
+
+            foreach (var request in requests)
+            {
+                if (_globalOne.ContainsKey(request.Address) || _globalSets.ContainsKey(request.Address))
+                    continue;
+
+                if (_owner.ContainsKey(request.Address)) continue;
+
+                if (scope.Addresses.Add(request.Address)) _owner[request.Address] = scope;
+            }
+
+            await PreloadAsync(requests, null, cancellation);
         }
 
         /// <summary>Drops a scope's assets. Safe when it was never loaded.</summary>

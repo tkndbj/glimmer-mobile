@@ -53,7 +53,6 @@
       "key": "level.c01_thorn_hollow.lesson",
       "text": "Some conduits crumble after a few turns. Plan the route before you spin."
     },
-
     {
       "key": "level.c01_bound_roots.name",
       "text": "Bound Roots"
@@ -77,7 +76,7 @@
     {
       "key": "level.c01_duskcap_hollow.lesson",
       "text": "Duskcaps sleep in the shade. Light one and the glade will not settle, so route around them."
-    }, 
+    },
     {
       "key": "level.c01_lantern_ring.name",
       "text": "Lantern Ring"
@@ -125,7 +124,8 @@
     {
       "key": "level.c01_grovekeepers_knot.lesson",
       "text": "One root reaches into all four corners. Nothing here can be solved a corner at a time."
-    },   {
+    },
+    {
       "key": "ui.levels.title",
       "text": "CHOOSE A GLADE"
     },
@@ -866,10 +866,6 @@
       "text": "shop"
     },
     {
-      "key": "ui.nav.items",
-      "text": "items"
-    },
-    {
       "key": "ui.nav.home",
       "text": "home"
     },
@@ -884,10 +880,6 @@
     {
       "key": "ui.soon.shop",
       "text": "Chests, critter skins and conduit styles will live here."
-    },
-    {
-      "key": "ui.soon.items",
-      "text": "Boosters and keepsakes you collect in the glades."
     },
     {
       "key": "ui.soon.ranks",
@@ -1317,7 +1309,6 @@
       "key": "ui.tip.mixing.body",
       "text": "This critter dreams of a colour no single heart carries. Join two hearts into one network and their light blends — red and green make gold."
     },
-
     {
       "key": "ui.tip.duskcap.title",
       "text": "DUSKCAP"
@@ -1333,7 +1324,8 @@
     {
       "key": "ui.tip.bound.body",
       "text": "These conduits grow from one root, marked with the same pips. Turning either one turns them all, however far apart they sit."
-    },    {
+    },
+    {
       "key": "ui.profile.cost",
       "text": "{0} coins"
     },
@@ -1436,6 +1428,854 @@
     {
       "key": "ui.bonus.on_top",
       "text": "Paid on top of what this glade earned."
+    },
+    {
+      "key": "ui.nav.grovement",
+      "text": "grovement"
+    },
+    {
+      "key": "ui.grove.title",
+      "text": "grovement"
+    },
+    {
+      "key": "ui.grove.shop",
+      "text": "shop"
+    },
+    {
+      "key": "ui.grove.shop_more",
+      "text": "FIND MORE"
+    },
+    {
+      "key": "ui.grove.loading",
+      "text": "Waking your grove…"
+    },
+    {
+      "key": "ui.grove.unavailable",
+      "text": "Your grove is not available right now."
+    },
+    {
+      "key": "ui.grove.summary",
+      "text": "{0} placed · {1} of {2} islands · {3} kinds"
+    },
+    {
+      "key": "ui.grove.held",
+      "text": "{0} of {1} in your grove"
+    },
+    {
+      "key": "ui.grove.locked_chapter",
+      "text": "Finish {0}"
+    },
+    {
+      "key": "ui.grove.locked_soon",
+      "text": "Opens with a later chapter"
+    },
+    {
+      "key": "ui.grove.place",
+      "text": "place"
+    },
+    {
+      "key": "ui.grove.clear",
+      "text": "Take away"
+    },
+    {
+      "key": "ui.grove.yours",
+      "text": "Yours"
+    },
+    {
+      "key": "ui.grove.needs_glade",
+      "text": "Clear {0}"
+    },
+    {
+      "key": "ui.grove.needs_chapter",
+      "text": "Finish {0}"
+    },
+    {
+      "key": "ui.grove.price",
+      "text": "{0} coins"
+    },
+    {
+      "key": "ui.grove.not_for_sale",
+      "text": "Earned by playing"
+    },
+    {
+      "key": "ui.grove.soon",
+      "text": "a later chapter"
+    },
+    {
+      "key": "ui.grove.already",
+      "text": "{0} is yours. Tap any spot in your grove to place it."
+    },
+    {
+      "key": "ui.grove.buy_note",
+      "text": "Yours for good — place it in as many spots as you like."
+    },
+    {
+      "key": "ui.grove.bought_note",
+      "text": "Yours. Tap a spot in your grove to place it."
+    },
+    {
+      "key": "ui.grove.buy_for",
+      "text": "BUY FOR {0}"
+    },
+    {
+      "key": "ui.plot.meadow",
+      "text": "The Meadow"
+    },
+    {
+      "key": "ui.plot.perch",
+      "text": "The Perch"
+    },
+    {
+      "key": "ui.plot.hollow",
+      "text": "The Hollow"
+    },
+    {
+      "key": "ui.plot.step",
+      "text": "The Step"
+    },
+    {
+      "key": "ui.plot.ridge",
+      "text": "The Ridge"
+    },
+    {
+      "key": "ui.plot.knoll",
+      "text": "The Knoll"
+    },
+    {
+      "key": "ui.plot.terrace",
+      "text": "The Terrace"
+    },
+    {
+      "key": "ui.plot.crag",
+      "text": "The Crag"
+    },
+    {
+      "key": "ui.plot.haven",
+      "text": "The Haven"
+    },
+    {
+      "key": "ui.plot.shelf",
+      "text": "The Shelf"
+    },
+    {
+      "key": "ui.piece.sunmote",
+      "text": "Sunmote"
+    },
+    {
+      "key": "ui.piece.ripple",
+      "text": "Ripple"
+    },
+    {
+      "key": "ui.piece.prism",
+      "text": "Prism"
+    },
+    {
+      "key": "ui.piece.burr",
+      "text": "Burr"
+    },
+    {
+      "key": "ui.piece.dusk",
+      "text": "Dusk"
+    },
+    {
+      "key": "ui.piece.grass_tuft",
+      "text": "Grass Tuft"
+    },
+    {
+      "key": "ui.piece.pebble",
+      "text": "Pebble"
+    },
+    {
+      "key": "ui.piece.daisies",
+      "text": "Daisies"
+    },
+    {
+      "key": "ui.piece.stone",
+      "text": "Stone"
+    },
+    {
+      "key": "ui.piece.crystal",
+      "text": "Crystal"
+    },
+    {
+      "key": "ui.piece.brambles",
+      "text": "Brambles"
+    },
+    {
+      "key": "ui.piece.log",
+      "text": "Fallen Log"
+    },
+    {
+      "key": "ui.piece.lantern",
+      "text": "Lantern"
+    },
+    {
+      "key": "ui.piece.cave",
+      "text": "Hollow Rock"
+    },
+    {
+      "key": "ui.piece.well",
+      "text": "Old Well"
+    },
+    {
+      "key": "ui.piece.rune_stone",
+      "text": "Rune Stone"
+    },
+    {
+      "key": "ui.piece.oak",
+      "text": "Great Oak"
+    },
+    {
+      "key": "ui.piece.gravel",
+      "text": "Gravel"
+    },
+    {
+      "key": "ui.piece.grass_blades",
+      "text": "Wild Grass"
+    },
+    {
+      "key": "ui.piece.sprout",
+      "text": "Sprout"
+    },
+    {
+      "key": "ui.piece.blossom",
+      "text": "Blossom"
+    },
+    {
+      "key": "ui.piece.bush",
+      "text": "Bush"
+    },
+    {
+      "key": "ui.piece.fence_short",
+      "text": "Short Fence"
+    },
+    {
+      "key": "ui.piece.fence_low",
+      "text": "Low Fence"
+    },
+    {
+      "key": "ui.piece.fence_wide",
+      "text": "Wide Fence"
+    },
+    {
+      "key": "ui.piece.fence_long",
+      "text": "Long Fence"
+    },
+    {
+      "key": "ui.piece.crate",
+      "text": "Crate"
+    },
+    {
+      "key": "ui.piece.stump",
+      "text": "Old Stump"
+    },
+    {
+      "key": "ui.piece.spire",
+      "text": "Stone Spire"
+    },
+    {
+      "key": "ui.piece.arrow_sign",
+      "text": "Waymarker"
+    },
+    {
+      "key": "ui.piece.old_sign",
+      "text": "Warning Sign"
+    },
+    {
+      "key": "ui.piece.signpost",
+      "text": "Signpost"
+    },
+    {
+      "key": "ui.piece.path_curve",
+      "text": "Curved Path"
+    },
+    {
+      "key": "ui.piece.path_bend",
+      "text": "Bending Path"
+    },
+    {
+      "key": "ui.piece.path_snake",
+      "text": "Winding Path"
+    },
+    {
+      "key": "ui.piece.bridge_flat",
+      "text": "Plank Bridge"
+    },
+    {
+      "key": "ui.piece.bridge_ramp",
+      "text": "Ramp Bridge"
+    },
+    {
+      "key": "ui.piece.bridge_arch",
+      "text": "Arched Bridge"
+    },
+    {
+      "key": "ui.piece.bridge_rope",
+      "text": "Rope Bridge"
+    },
+    {
+      "key": "ui.piece.cottage",
+      "text": "Cottage"
+    },
+    {
+      "key": "ui.grove.home",
+      "text": "your home"
+    },
+    {
+      "key": "ui.grove.home_best",
+      "text": "The finest home in the grove."
+    },
+    {
+      "key": "ui.grove.home_next",
+      "text": "Next: {0}"
+    },
+    {
+      "key": "ui.grove.upgrade_for",
+      "text": "UPGRADE FOR {0}"
+    },
+    {
+      "key": "ui.grove.plate",
+      "text": "{0}  ·  {1} of {2}"
+    },
+    {
+      "key": "ui.grove.fits_ground",
+      "text": "Rocks, logs and odds and ends stand here. Have a look in the shop."
+    },
+    {
+      "key": "ui.grove.fits_bed",
+      "text": "Flowers and greenery are planted here. Have a look in the shop."
+    },
+    {
+      "key": "ui.grove.fits_path",
+      "text": "Paths and bridges are laid here. Have a look in the shop."
+    },
+    {
+      "key": "ui.grove.fits_edge",
+      "text": "Fences, signs and lanterns go along the rim. Have a look in the shop."
+    },
+    {
+      "key": "ui.grove.fits_canopy",
+      "text": "Tall things stand here, at the back. Have a look in the shop."
+    },
+    {
+      "key": "ui.grove.fits_structure",
+      "text": "This is the island's big one — a well, a cave, a spire. Most are earned by playing."
+    },
+    {
+      "key": "ui.piece.lodge",
+      "text": "Timber Lodge"
+    },
+    {
+      "key": "ui.piece.hall",
+      "text": "Grove Hall"
+    },
+    {
+      "key": "ui.piece.manor",
+      "text": "Keeper's Manor"
+    },
+    {
+      "key": "ui.piece.sanctum",
+      "text": "The Sanctum"
+    },
+    {
+      "key": "ui.grove.home_short",
+      "text": "Next: {0}  ·  {1} coins to go"
+    },
+    {
+      "key": "ui.piece.tree_amber",
+      "text": "Amber Tree"
+    },
+    {
+      "key": "ui.piece.tree_orange",
+      "text": "Orange Tree"
+    },
+    {
+      "key": "ui.piece.tree_leafy",
+      "text": "Leafy Tree"
+    },
+    {
+      "key": "ui.piece.tree_apple",
+      "text": "Apple Tree"
+    },
+    {
+      "key": "ui.piece.hay_bale",
+      "text": "Hay Bale"
+    },
+    {
+      "key": "ui.piece.berry_bush",
+      "text": "Berry Bush"
+    },
+    {
+      "key": "ui.piece.field_stone",
+      "text": "Field Stone"
+    },
+    {
+      "key": "ui.piece.pumpkins",
+      "text": "Pumpkin Patch"
+    },
+    {
+      "key": "ui.piece.hay_stack",
+      "text": "Hay Stack"
+    },
+    {
+      "key": "ui.piece.fence_rail",
+      "text": "Rail Fence"
+    },
+    {
+      "key": "ui.piece.fence_rail_end",
+      "text": "Rail Fence End"
+    },
+    {
+      "key": "ui.piece.sign_arrow",
+      "text": "Red Arrow Sign"
+    },
+    {
+      "key": "ui.piece.sign_wood",
+      "text": "Wooden Signpost"
+    },
+    {
+      "key": "ui.piece.fence_picket",
+      "text": "Picket Fence"
+    },
+    {
+      "key": "ui.piece.fence_picket_end",
+      "text": "Picket Fence End"
+    },
+    {
+      "key": "ui.piece.fence_timber",
+      "text": "Timber Fence"
+    },
+    {
+      "key": "ui.piece.fence_timber_end",
+      "text": "Timber Fence End"
+    },
+    {
+      "key": "ui.piece.willow",
+      "text": "Willow"
+    },
+    {
+      "key": "ui.piece.willow_isle",
+      "text": "Willow Islet"
+    },
+    {
+      "key": "ui.piece.willow_old",
+      "text": "Old Willow"
+    },
+    {
+      "key": "ui.piece.mushroom_log",
+      "text": "Mushroom Log"
+    },
+    {
+      "key": "ui.piece.lily_pads",
+      "text": "Lily Pads"
+    },
+    {
+      "key": "ui.piece.mossy_rock",
+      "text": "Mossy Rock"
+    },
+    {
+      "key": "ui.piece.bamboo",
+      "text": "Bamboo"
+    },
+    {
+      "key": "ui.piece.dead_trunk",
+      "text": "Dead Trunk"
+    },
+    {
+      "key": "ui.piece.icicles",
+      "text": "Icicles"
+    },
+    {
+      "key": "ui.piece.iceberg",
+      "text": "Iceberg"
+    },
+    {
+      "key": "ui.piece.snow_rock",
+      "text": "Snow Rock"
+    },
+    {
+      "key": "ui.piece.pine_snow",
+      "text": "Snowy Pine"
+    },
+    {
+      "key": "ui.piece.pine_snow_tall",
+      "text": "Tall Snowy Pine"
+    },
+    {
+      "key": "ui.piece.ice_stump",
+      "text": "Frozen Stump"
+    },
+    {
+      "key": "ui.piece.stone_stumps",
+      "text": "Stone Stumps"
+    },
+    {
+      "key": "ui.piece.ruin_block",
+      "text": "Fallen Block"
+    },
+    {
+      "key": "ui.piece.waterfall",
+      "text": "Waterfall"
+    },
+    {
+      "key": "ui.piece.vines",
+      "text": "Hanging Vines"
+    },
+    {
+      "key": "ui.piece.torch_low",
+      "text": "Low Torch"
+    },
+    {
+      "key": "ui.piece.oak_broad",
+      "text": "Broad Oak"
+    },
+    {
+      "key": "ui.piece.broken_pillars",
+      "text": "Broken Pillars"
+    },
+    {
+      "key": "ui.piece.stone_pillars",
+      "text": "Standing Pillars"
+    },
+    {
+      "key": "ui.piece.torch",
+      "text": "Torch"
+    },
+    {
+      "key": "ui.piece.torch_tall",
+      "text": "Tall Torch"
+    },
+    {
+      "key": "ui.piece.rope_fence",
+      "text": "Rope Fence"
+    },
+    {
+      "key": "ui.piece.rope_fence_end",
+      "text": "Rope Fence End"
+    },
+    {
+      "key": "ui.piece.shade_bush",
+      "text": "Shade Bush"
+    },
+    {
+      "key": "ui.piece.idol",
+      "text": "Grove Idol"
+    },
+    {
+      "key": "ui.piece.rope_walk",
+      "text": "Rope Walk"
+    },
+    {
+      "key": "ui.piece.rope_walk_end",
+      "text": "Rope Walk End"
+    },
+    {
+      "key": "ui.piece.rope_walk_turn",
+      "text": "Rope Walk Turn"
+    },
+    {
+      "key": "ui.piece.rope_walk_long",
+      "text": "Long Rope Walk"
+    },
+    {
+      "key": "ui.piece.shore_rock",
+      "text": "Shore Rock"
+    },
+    {
+      "key": "ui.piece.palm",
+      "text": "Palm"
+    },
+    {
+      "key": "ui.piece.fish_trap",
+      "text": "Fish Trap"
+    },
+    {
+      "key": "ui.piece.beached_boat",
+      "text": "Beached Boat"
+    },
+    {
+      "key": "ui.piece.mooring_post",
+      "text": "Mooring Post"
+    },
+    {
+      "key": "ui.piece.little_stump",
+      "text": "Little Stump"
+    },
+    {
+      "key": "ui.piece.pine_bent",
+      "text": "Bent Pine"
+    },
+    {
+      "key": "ui.piece.pine",
+      "text": "Pine"
+    },
+    {
+      "key": "ui.piece.pine_tall",
+      "text": "Tall Pine"
+    },
+    {
+      "key": "ui.piece.pine_leaning",
+      "text": "Leaning Pine"
+    },
+    {
+      "key": "ui.piece.forest_rock",
+      "text": "Forest Rock"
+    },
+    {
+      "key": "ui.piece.great_stump",
+      "text": "Great Stump"
+    },
+    {
+      "key": "ui.piece.obelisk",
+      "text": "Obelisk"
+    },
+    {
+      "key": "ui.piece.sand_block",
+      "text": "Sandstone Block"
+    },
+    {
+      "key": "ui.piece.sand_rock",
+      "text": "Sand Rock"
+    },
+    {
+      "key": "ui.piece.sign_stone",
+      "text": "Stone Marker"
+    },
+    {
+      "key": "ui.piece.sand_pillar",
+      "text": "Sandstone Pillar"
+    },
+    {
+      "key": "ui.piece.pedestal",
+      "text": "Pedestal"
+    },
+    {
+      "key": "ui.piece.sand_steps",
+      "text": "Sandstone Steps"
+    },
+    {
+      "key": "ui.piece.crystal_shards",
+      "text": "Crystal Shards"
+    },
+    {
+      "key": "ui.piece.dry_tuft",
+      "text": "Dry Tuft"
+    },
+    {
+      "key": "ui.piece.sprout_pair",
+      "text": "Two Sprouts"
+    },
+    {
+      "key": "ui.piece.bud_amber",
+      "text": "Amber Bud"
+    },
+    {
+      "key": "ui.piece.shrub_green",
+      "text": "Green Shrub"
+    },
+    {
+      "key": "ui.piece.sprout_teal",
+      "text": "Teal Sprouts"
+    },
+    {
+      "key": "ui.piece.dry_shrub",
+      "text": "Dry Shrub"
+    },
+    {
+      "key": "ui.piece.flower_pink",
+      "text": "Pink Bloom"
+    },
+    {
+      "key": "ui.piece.flower_white",
+      "text": "White Bloom"
+    },
+    {
+      "key": "ui.piece.flower_daisy",
+      "text": "Daisy"
+    },
+    {
+      "key": "ui.piece.sea_grass",
+      "text": "Sea Grass"
+    },
+    {
+      "key": "ui.piece.teal_plant",
+      "text": "Teal Fern"
+    },
+    {
+      "key": "ui.piece.dusk_plant",
+      "text": "Dusk Plant"
+    },
+    {
+      "key": "ui.piece.tree_slim",
+      "text": "Slim Tree"
+    },
+    {
+      "key": "ui.piece.pine_bare",
+      "text": "Bare Pine"
+    },
+    {
+      "key": "ui.piece.pine_round",
+      "text": "Round Pine"
+    },
+    {
+      "key": "ui.piece.dead_tree",
+      "text": "Dead Tree"
+    },
+    {
+      "key": "ui.piece.dead_tree_bare",
+      "text": "Bare Snag"
+    },
+    {
+      "key": "ui.piece.tree_round",
+      "text": "Round Tree"
+    },
+    {
+      "key": "ui.piece.desert_snag",
+      "text": "Desert Snag"
+    },
+    {
+      "key": "ui.piece.pine_frost",
+      "text": "Frosted Pine"
+    },
+    {
+      "key": "ui.piece.pine_night",
+      "text": "Nightpine"
+    },
+    {
+      "key": "ui.piece.pine_crimson",
+      "text": "Crimson Pine"
+    },
+    {
+      "key": "ui.piece.tree_night",
+      "text": "Nightbloom Tree"
+    },
+    {
+      "key": "ui.piece.tree_gold",
+      "text": "Golden Tree"
+    },
+    {
+      "key": "ui.piece.palm_curved",
+      "text": "Curved Palm"
+    },
+    {
+      "key": "ui.piece.palm_pair",
+      "text": "Twin Palms"
+    },
+    {
+      "key": "ui.piece.flag_red",
+      "text": "Red Pennant"
+    },
+    {
+      "key": "ui.piece.sign_up",
+      "text": "Waymark North"
+    },
+    {
+      "key": "ui.piece.sign_right",
+      "text": "Waymark East"
+    },
+    {
+      "key": "ui.piece.sign_left",
+      "text": "Waymark West"
+    },
+    {
+      "key": "ui.piece.candle",
+      "text": "Candle"
+    },
+    {
+      "key": "ui.piece.sign_skull",
+      "text": "Skull Marker"
+    },
+    {
+      "key": "ui.piece.ladder",
+      "text": "Ladder"
+    },
+    {
+      "key": "ui.piece.spear",
+      "text": "Planted Spear"
+    },
+    {
+      "key": "ui.piece.staff_skull",
+      "text": "Bone Staff"
+    },
+    {
+      "key": "ui.piece.banner_gold",
+      "text": "Gold Banner"
+    },
+    {
+      "key": "ui.piece.banner_crimson",
+      "text": "Crimson Banner"
+    },
+    {
+      "key": "ui.piece.small_stone",
+      "text": "Small Stone"
+    },
+    {
+      "key": "ui.piece.flat_stone",
+      "text": "Flat Stone"
+    },
+    {
+      "key": "ui.piece.stone_pair",
+      "text": "Two Stones"
+    },
+    {
+      "key": "ui.piece.rock_shard",
+      "text": "Rock Shard"
+    },
+    {
+      "key": "ui.piece.wood_post",
+      "text": "Wooden Post"
+    },
+    {
+      "key": "ui.piece.stone_teeth",
+      "text": "Stone Teeth"
+    },
+    {
+      "key": "ui.piece.skull",
+      "text": "Old Skull"
+    },
+    {
+      "key": "ui.piece.cairn_stone",
+      "text": "Standing Stone"
+    },
+    {
+      "key": "ui.piece.cairn_snow",
+      "text": "Frosted Stone"
+    },
+    {
+      "key": "ui.piece.snow_boulder",
+      "text": "Snow Boulder"
+    },
+    {
+      "key": "ui.piece.stepping_stones",
+      "text": "Stepping Stones"
+    },
+    {
+      "key": "ui.piece.plank_bridge",
+      "text": "Plank Bridge"
+    },
+    {
+      "key": "ui.piece.timber_platform",
+      "text": "Timber Platform"
+    },
+    {
+      "key": "ui.piece.pier",
+      "text": "Wooden Pier"
+    },
+    {
+      "key": "ui.piece.gravestone",
+      "text": "Gravestone"
+    },
+    {
+      "key": "ui.piece.chest",
+      "text": "Old Chest"
+    },
+    {
+      "key": "ui.piece.tent",
+      "text": "Camp Tent"
+    },
+    {
+      "key": "ui.piece.wreck",
+      "text": "Beached Wreck"
     }
   ]
 }

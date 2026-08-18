@@ -32,6 +32,32 @@ namespace GlimmerGrove
             return rt;
         }
 
+        /// <summary>
+        /// The <c>pos</c> for a box tucked into a corner of its parent with an even margin.
+        ///
+        /// <para>
+        /// <see cref="Box"/> <b>always</b> pivots at centre, so anchoring something to a corner
+        /// and passing the margin directly puts half of it off the screen — the trap the win
+        /// panel's two lines already fell into once, and which shipped again on the Grovement's
+        /// shop button and the shop's own coin pill. Half a control hanging past the right edge
+        /// is not a rounding error; the label is simply cut in two.
+        /// </para>
+        /// <para>
+        /// <paramref name="anchor"/> is the corner the box is anchored to, so (1,1) is top
+        /// right. The returned offset moves it inward by the margin plus half its own size on
+        /// whichever axes that corner pins.
+        /// </para>
+        /// </summary>
+        public static Vector2 Corner(Vector2 size, Vector2 anchor, Vector2 margin)
+        {
+            float x = anchor.x >= .5f ? -(margin.x + size.x * .5f) : (margin.x + size.x * .5f);
+            float y = anchor.y >= .5f ? -(margin.y + size.y * .5f) : (margin.y + size.y * .5f);
+            return new Vector2(x, y);
+        }
+
+        public static Vector2 Corner(Vector2 size, Vector2 anchor, float marginX, float marginY)
+            => Corner(size, anchor, new Vector2(marginX, marginY));
+
         public static Image Img(string name, Transform parent, Sprite sprite, Color colour,
                                 Vector2 size = default, Vector2 anchor = default, Vector2 pos = default)
         {

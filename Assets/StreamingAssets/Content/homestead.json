@@ -1,0 +1,2418 @@
+{
+  "schemaVersion": 2,
+  "plots": [
+    {
+      "id": "meadow",
+      "art": "Homestead/plot_meadow",
+      "x": 0.48,
+      "width": 0.942,
+      "requiresChapter": "",
+      "slots": [
+        {
+          "id": "meadow_hearth",
+          "x": 0.5,
+          "y": 0.73,
+          "scale": 0.78,
+          "kind": "hearth"
+        },
+        {
+          "id": "meadow_a",
+          "x": 0.18,
+          "y": 0.84,
+          "scale": 0.6,
+          "kind": "canopy"
+        },
+        {
+          "id": "meadow_b",
+          "x": 0.82,
+          "y": 0.82,
+          "scale": 0.9,
+          "kind": "structure"
+        },
+        {
+          "id": "meadow_c",
+          "x": 0.29,
+          "y": 0.65,
+          "scale": 0.95,
+          "kind": "bed"
+        },
+        {
+          "id": "meadow_d",
+          "x": 0.71,
+          "y": 0.64,
+          "scale": 0.95,
+          "kind": "bed"
+        },
+        {
+          "id": "meadow_e",
+          "x": 0.5,
+          "y": 0.63,
+          "scale": 0.6,
+          "kind": "path"
+        },
+        {
+          "id": "meadow_f",
+          "x": 0.5,
+          "y": 0.55,
+          "scale": 0.6,
+          "kind": "path"
+        },
+        {
+          "id": "meadow_g",
+          "x": 0.12,
+          "y": 0.7,
+          "scale": 0.85,
+          "kind": "edge"
+        },
+        {
+          "id": "meadow_i",
+          "x": 0.88,
+          "y": 0.67,
+          "scale": 0.85,
+          "kind": "edge"
+        },
+        {
+          "id": "meadow_j",
+          "x": 0.35,
+          "y": 0.9,
+          "scale": 0.8
+        },
+        {
+          "id": "meadow_k",
+          "x": 0.66,
+          "y": 0.9,
+          "scale": 0.8
+        }
+      ]
+    },
+    {
+      "id": "perch",
+      "art": "Homestead/plot_perch",
+      "x": 0.84,
+      "width": 0.376,
+      "requiresChapter": "c01_shallows",
+      "slots": [
+        {
+          "id": "perch_a",
+          "x": 0.5,
+          "y": 0.74,
+          "scale": 0.6,
+          "kind": "structure"
+        },
+        {
+          "id": "perch_b",
+          "x": 0.24,
+          "y": 0.68,
+          "scale": 0.55,
+          "kind": "bed"
+        },
+        {
+          "id": "perch_c",
+          "x": 0.78,
+          "y": 0.66,
+          "scale": 0.55,
+          "kind": "edge"
+        }
+      ]
+    },
+    {
+      "id": "hollow",
+      "art": "Homestead/plot_hollow",
+      "x": 0.54,
+      "width": 0.941,
+      "requiresChapter": "c01_shallows",
+      "slots": [
+        {
+          "id": "hollow_a",
+          "x": 0.5,
+          "y": 0.73,
+          "scale": 1.0,
+          "kind": "structure"
+        },
+        {
+          "id": "hollow_b",
+          "x": 0.18,
+          "y": 0.84,
+          "scale": 0.6,
+          "kind": "canopy"
+        },
+        {
+          "id": "hollow_c",
+          "x": 0.82,
+          "y": 0.82,
+          "scale": 0.9,
+          "kind": "structure"
+        },
+        {
+          "id": "hollow_d",
+          "x": 0.29,
+          "y": 0.65,
+          "scale": 0.95,
+          "kind": "bed"
+        },
+        {
+          "id": "hollow_e",
+          "x": 0.71,
+          "y": 0.64,
+          "scale": 0.95,
+          "kind": "bed"
+        },
+        {
+          "id": "hollow_f",
+          "x": 0.5,
+          "y": 0.63,
+          "scale": 0.6,
+          "kind": "path"
+        },
+        {
+          "id": "hollow_g",
+          "x": 0.5,
+          "y": 0.55,
+          "scale": 0.6,
+          "kind": "path"
+        },
+        {
+          "id": "hollow_h",
+          "x": 0.12,
+          "y": 0.7,
+          "scale": 0.85,
+          "kind": "edge"
+        },
+        {
+          "id": "hollow_i",
+          "x": 0.88,
+          "y": 0.67,
+          "scale": 0.85,
+          "kind": "edge"
+        },
+        {
+          "id": "hollow_j",
+          "x": 0.35,
+          "y": 0.9,
+          "scale": 0.8
+        },
+        {
+          "id": "hollow_k",
+          "x": 0.66,
+          "y": 0.9,
+          "scale": 0.8
+        }
+      ]
+    },
+    {
+      "id": "step",
+      "art": "Homestead/plot_step",
+      "x": 0.15,
+      "width": 0.376,
+      "requiresChapter": "c02_tidewood",
+      "slots": [
+        {
+          "id": "step_a",
+          "x": 0.5,
+          "y": 0.8,
+          "scale": 0.6,
+          "kind": "structure"
+        },
+        {
+          "id": "step_b",
+          "x": 0.26,
+          "y": 0.75,
+          "scale": 0.55,
+          "kind": "bed"
+        },
+        {
+          "id": "step_c",
+          "x": 0.76,
+          "y": 0.73,
+          "scale": 0.55,
+          "kind": "edge"
+        }
+      ]
+    },
+    {
+      "id": "ridge",
+      "art": "Homestead/plot_ridge",
+      "x": 0.45,
+      "width": 0.941,
+      "requiresChapter": "c02_tidewood",
+      "slots": [
+        {
+          "id": "ridge_a",
+          "x": 0.5,
+          "y": 0.73,
+          "scale": 1.0,
+          "kind": "structure"
+        },
+        {
+          "id": "ridge_b",
+          "x": 0.18,
+          "y": 0.84,
+          "scale": 0.6,
+          "kind": "canopy"
+        },
+        {
+          "id": "ridge_c",
+          "x": 0.82,
+          "y": 0.82,
+          "scale": 0.9,
+          "kind": "structure"
+        },
+        {
+          "id": "ridge_d",
+          "x": 0.29,
+          "y": 0.65,
+          "scale": 0.95,
+          "kind": "bed"
+        },
+        {
+          "id": "ridge_e",
+          "x": 0.71,
+          "y": 0.64,
+          "scale": 0.95,
+          "kind": "bed"
+        },
+        {
+          "id": "ridge_f",
+          "x": 0.5,
+          "y": 0.63,
+          "scale": 0.6,
+          "kind": "path"
+        },
+        {
+          "id": "ridge_g",
+          "x": 0.5,
+          "y": 0.55,
+          "scale": 0.6,
+          "kind": "path"
+        },
+        {
+          "id": "ridge_h",
+          "x": 0.12,
+          "y": 0.7,
+          "scale": 0.85,
+          "kind": "edge"
+        },
+        {
+          "id": "ridge_i",
+          "x": 0.88,
+          "y": 0.67,
+          "scale": 0.85,
+          "kind": "edge"
+        },
+        {
+          "id": "ridge_j",
+          "x": 0.35,
+          "y": 0.9,
+          "scale": 0.8
+        },
+        {
+          "id": "ridge_k",
+          "x": 0.66,
+          "y": 0.9,
+          "scale": 0.8
+        }
+      ]
+    },
+    {
+      "id": "knoll",
+      "art": "Homestead/plot_knoll",
+      "x": 0.85,
+      "width": 0.376,
+      "requiresChapter": "c03_emberfen",
+      "slots": [
+        {
+          "id": "knoll_a",
+          "x": 0.5,
+          "y": 0.74,
+          "scale": 0.6,
+          "kind": "structure"
+        },
+        {
+          "id": "knoll_b",
+          "x": 0.24,
+          "y": 0.68,
+          "scale": 0.55,
+          "kind": "bed"
+        },
+        {
+          "id": "knoll_c",
+          "x": 0.78,
+          "y": 0.66,
+          "scale": 0.55,
+          "kind": "edge"
+        }
+      ]
+    },
+    {
+      "id": "terrace",
+      "art": "Homestead/plot_terrace",
+      "x": 0.55,
+      "width": 0.941,
+      "requiresChapter": "c03_emberfen",
+      "slots": [
+        {
+          "id": "terrace_a",
+          "x": 0.5,
+          "y": 0.73,
+          "scale": 1.0,
+          "kind": "structure"
+        },
+        {
+          "id": "terrace_b",
+          "x": 0.18,
+          "y": 0.84,
+          "scale": 0.6,
+          "kind": "canopy"
+        },
+        {
+          "id": "terrace_c",
+          "x": 0.82,
+          "y": 0.82,
+          "scale": 0.9,
+          "kind": "structure"
+        },
+        {
+          "id": "terrace_d",
+          "x": 0.29,
+          "y": 0.65,
+          "scale": 0.95,
+          "kind": "bed"
+        },
+        {
+          "id": "terrace_e",
+          "x": 0.71,
+          "y": 0.64,
+          "scale": 0.95,
+          "kind": "bed"
+        },
+        {
+          "id": "terrace_f",
+          "x": 0.5,
+          "y": 0.63,
+          "scale": 0.6,
+          "kind": "path"
+        },
+        {
+          "id": "terrace_g",
+          "x": 0.5,
+          "y": 0.55,
+          "scale": 0.6,
+          "kind": "path"
+        },
+        {
+          "id": "terrace_h",
+          "x": 0.12,
+          "y": 0.7,
+          "scale": 0.85,
+          "kind": "edge"
+        },
+        {
+          "id": "terrace_i",
+          "x": 0.88,
+          "y": 0.67,
+          "scale": 0.85,
+          "kind": "edge"
+        },
+        {
+          "id": "terrace_j",
+          "x": 0.35,
+          "y": 0.9,
+          "scale": 0.8
+        },
+        {
+          "id": "terrace_k",
+          "x": 0.66,
+          "y": 0.9,
+          "scale": 0.8
+        }
+      ]
+    },
+    {
+      "id": "crag",
+      "art": "Homestead/plot_crag",
+      "x": 0.15,
+      "width": 0.376,
+      "requiresChapter": "c04_stillmere",
+      "slots": [
+        {
+          "id": "crag_a",
+          "x": 0.5,
+          "y": 0.8,
+          "scale": 0.6,
+          "kind": "structure"
+        },
+        {
+          "id": "crag_b",
+          "x": 0.26,
+          "y": 0.75,
+          "scale": 0.55,
+          "kind": "bed"
+        },
+        {
+          "id": "crag_c",
+          "x": 0.76,
+          "y": 0.73,
+          "scale": 0.55,
+          "kind": "edge"
+        }
+      ]
+    },
+    {
+      "id": "haven",
+      "art": "Homestead/plot_haven",
+      "x": 0.47,
+      "width": 0.941,
+      "requiresChapter": "c04_stillmere",
+      "slots": [
+        {
+          "id": "haven_a",
+          "x": 0.5,
+          "y": 0.73,
+          "scale": 1.0,
+          "kind": "structure"
+        },
+        {
+          "id": "haven_b",
+          "x": 0.18,
+          "y": 0.84,
+          "scale": 0.6,
+          "kind": "canopy"
+        },
+        {
+          "id": "haven_c",
+          "x": 0.82,
+          "y": 0.82,
+          "scale": 0.9,
+          "kind": "structure"
+        },
+        {
+          "id": "haven_d",
+          "x": 0.29,
+          "y": 0.65,
+          "scale": 0.95,
+          "kind": "bed"
+        },
+        {
+          "id": "haven_e",
+          "x": 0.71,
+          "y": 0.64,
+          "scale": 0.95,
+          "kind": "bed"
+        },
+        {
+          "id": "haven_f",
+          "x": 0.5,
+          "y": 0.63,
+          "scale": 0.6,
+          "kind": "path"
+        },
+        {
+          "id": "haven_g",
+          "x": 0.5,
+          "y": 0.55,
+          "scale": 0.6,
+          "kind": "path"
+        },
+        {
+          "id": "haven_h",
+          "x": 0.12,
+          "y": 0.7,
+          "scale": 0.85,
+          "kind": "edge"
+        },
+        {
+          "id": "haven_i",
+          "x": 0.88,
+          "y": 0.67,
+          "scale": 0.85,
+          "kind": "edge"
+        },
+        {
+          "id": "haven_j",
+          "x": 0.35,
+          "y": 0.9,
+          "scale": 0.8
+        },
+        {
+          "id": "haven_k",
+          "x": 0.66,
+          "y": 0.9,
+          "scale": 0.8
+        }
+      ]
+    },
+    {
+      "id": "shelf",
+      "art": "Homestead/plot_shelf",
+      "x": 0.53,
+      "width": 0.941,
+      "requiresChapter": "c05_lastlight",
+      "slots": [
+        {
+          "id": "shelf_a",
+          "x": 0.5,
+          "y": 0.73,
+          "scale": 1.0,
+          "kind": "structure"
+        },
+        {
+          "id": "shelf_b",
+          "x": 0.18,
+          "y": 0.84,
+          "scale": 0.6,
+          "kind": "canopy"
+        },
+        {
+          "id": "shelf_c",
+          "x": 0.82,
+          "y": 0.82,
+          "scale": 0.9,
+          "kind": "structure"
+        },
+        {
+          "id": "shelf_d",
+          "x": 0.29,
+          "y": 0.65,
+          "scale": 0.95,
+          "kind": "bed"
+        },
+        {
+          "id": "shelf_e",
+          "x": 0.71,
+          "y": 0.64,
+          "scale": 0.95,
+          "kind": "bed"
+        },
+        {
+          "id": "shelf_f",
+          "x": 0.5,
+          "y": 0.63,
+          "scale": 0.6,
+          "kind": "path"
+        },
+        {
+          "id": "shelf_g",
+          "x": 0.5,
+          "y": 0.55,
+          "scale": 0.6,
+          "kind": "path"
+        },
+        {
+          "id": "shelf_h",
+          "x": 0.12,
+          "y": 0.7,
+          "scale": 0.85,
+          "kind": "edge"
+        },
+        {
+          "id": "shelf_i",
+          "x": 0.88,
+          "y": 0.67,
+          "scale": 0.85,
+          "kind": "edge"
+        },
+        {
+          "id": "shelf_j",
+          "x": 0.35,
+          "y": 0.9,
+          "scale": 0.8
+        },
+        {
+          "id": "shelf_k",
+          "x": 0.66,
+          "y": 0.9,
+          "scale": 0.8
+        }
+      ]
+    }
+  ],
+  "pieces": [
+    {
+      "id": "sunmote",
+      "art": "Critters/c1",
+      "animated": true,
+      "kind": "resident",
+      "cost": 0,
+      "requiresLevel": "c01_first_light",
+      "requiresChapter": "",
+      "scale": 0.95,
+      "lift": 0.45,
+      "disabled": false
+    },
+    {
+      "id": "ripple",
+      "art": "Critters/c2",
+      "animated": true,
+      "kind": "resident",
+      "cost": 0,
+      "requiresLevel": "c01_twin_streams",
+      "requiresChapter": "",
+      "scale": 0.95,
+      "lift": 0.45,
+      "disabled": false
+    },
+    {
+      "id": "prism",
+      "art": "Critters/c3",
+      "animated": true,
+      "kind": "resident",
+      "cost": 0,
+      "requiresLevel": "c01_prism_heart",
+      "requiresChapter": "",
+      "scale": 0.95,
+      "lift": 0.45,
+      "disabled": false
+    },
+    {
+      "id": "burr",
+      "art": "Critters/c4",
+      "animated": true,
+      "kind": "resident",
+      "cost": 0,
+      "requiresLevel": "c01_thorn_hollow",
+      "requiresChapter": "",
+      "scale": 0.95,
+      "lift": 0.45,
+      "disabled": false
+    },
+    {
+      "id": "dusk",
+      "art": "Critters/c5",
+      "animated": true,
+      "kind": "resident",
+      "cost": 0,
+      "requiresLevel": "c01_duskcap_hollow",
+      "requiresChapter": "",
+      "scale": 0.95,
+      "lift": 0.45,
+      "disabled": false
+    },
+    {
+      "id": "cottage",
+      "art": "Homestead/cottage",
+      "kind": "dwelling",
+      "tier": 1,
+      "cost": 0,
+      "scale": 1.0,
+      "lift": 0.45
+    },
+    {
+      "id": "lodge",
+      "art": "Homestead/cottage",
+      "kind": "dwelling",
+      "tier": 2,
+      "cost": 2500,
+      "scale": 1.08,
+      "lift": 0.45
+    },
+    {
+      "id": "hall",
+      "art": "Homestead/cottage",
+      "kind": "dwelling",
+      "tier": 3,
+      "cost": 6000,
+      "scale": 1.17,
+      "lift": 0.45
+    },
+    {
+      "id": "manor",
+      "art": "Homestead/cottage",
+      "kind": "dwelling",
+      "tier": 4,
+      "cost": 13000,
+      "scale": 1.26,
+      "lift": 0.45
+    },
+    {
+      "id": "sanctum",
+      "art": "Homestead/cottage",
+      "kind": "dwelling",
+      "tier": 5,
+      "cost": 28000,
+      "scale": 1.35,
+      "lift": 0.45
+    },
+    {
+      "id": "crystal",
+      "art": "Homestead/crystal",
+      "animated": false,
+      "kind": "decor",
+      "cost": 0,
+      "requiresLevel": "c01_prism_heart",
+      "requiresChapter": "",
+      "scale": 1.0,
+      "lift": 0.45,
+      "disabled": false,
+      "slot": "structure"
+    },
+    {
+      "id": "cave",
+      "art": "Homestead/cave",
+      "animated": false,
+      "kind": "decor",
+      "cost": 0,
+      "requiresLevel": "c01_sleeping_thicket",
+      "requiresChapter": "",
+      "scale": 0.9,
+      "lift": 0.45,
+      "disabled": false,
+      "slot": "structure"
+    },
+    {
+      "id": "well",
+      "art": "Homestead/well",
+      "animated": false,
+      "kind": "decor",
+      "cost": 0,
+      "requiresLevel": "c01_three_springs",
+      "requiresChapter": "",
+      "scale": 0.9,
+      "lift": 0.45,
+      "disabled": false,
+      "slot": "structure"
+    },
+    {
+      "id": "gravestone",
+      "art": "Homestead/gravestone",
+      "kind": "decor",
+      "slot": "structure",
+      "cost": 900,
+      "scale": 0.95,
+      "lift": 0.38,
+      "_imported": true
+    },
+    {
+      "id": "fish_trap",
+      "art": "Homestead/fish_trap",
+      "kind": "decor",
+      "slot": "structure",
+      "cost": 1100,
+      "scale": 0.95,
+      "lift": 0.38,
+      "_imported": true
+    },
+    {
+      "id": "chest",
+      "art": "Homestead/chest",
+      "kind": "decor",
+      "slot": "structure",
+      "cost": 1200,
+      "scale": 0.95,
+      "lift": 0.38,
+      "_imported": true
+    },
+    {
+      "id": "great_stump",
+      "art": "Homestead/great_stump",
+      "kind": "decor",
+      "slot": "structure",
+      "cost": 1300,
+      "scale": 0.95,
+      "lift": 0.38,
+      "_imported": true
+    },
+    {
+      "id": "mushroom_log",
+      "art": "Homestead/mushroom_log",
+      "kind": "decor",
+      "slot": "structure",
+      "cost": 1400,
+      "scale": 0.95,
+      "lift": 0.38,
+      "_imported": true
+    },
+    {
+      "id": "stone_pillars",
+      "art": "Homestead/stone_pillars",
+      "kind": "decor",
+      "slot": "structure",
+      "cost": 1500,
+      "scale": 0.95,
+      "lift": 0.38,
+      "_imported": true
+    },
+    {
+      "id": "tent",
+      "art": "Homestead/tent",
+      "kind": "decor",
+      "slot": "structure",
+      "cost": 1600,
+      "scale": 0.85,
+      "lift": 0.38,
+      "_imported": true
+    },
+    {
+      "id": "sand_pillar",
+      "art": "Homestead/sand_pillar",
+      "kind": "decor",
+      "slot": "structure",
+      "cost": 1900,
+      "scale": 0.8,
+      "lift": 0.38,
+      "_imported": true
+    },
+    {
+      "id": "obelisk",
+      "art": "Homestead/obelisk",
+      "kind": "decor",
+      "slot": "structure",
+      "cost": 2200,
+      "scale": 0.75,
+      "lift": 0.38,
+      "_imported": true
+    },
+    {
+      "id": "iceberg",
+      "art": "Homestead/iceberg",
+      "kind": "decor",
+      "slot": "structure",
+      "cost": 2400,
+      "scale": 0.8,
+      "lift": 0.38,
+      "_imported": true
+    },
+    {
+      "id": "beached_boat",
+      "art": "Homestead/beached_boat",
+      "kind": "decor",
+      "slot": "structure",
+      "cost": 2800,
+      "scale": 0.6,
+      "lift": 0.32,
+      "_imported": true
+    },
+    {
+      "id": "wreck",
+      "art": "Homestead/wreck",
+      "kind": "decor",
+      "slot": "structure",
+      "cost": 3000,
+      "scale": 0.7,
+      "lift": 0.34,
+      "_imported": true
+    },
+    {
+      "id": "willow_isle",
+      "art": "Homestead/willow_isle",
+      "kind": "decor",
+      "slot": "structure",
+      "cost": 3200,
+      "scale": 0.55,
+      "lift": 0.38,
+      "_imported": true
+    },
+    {
+      "id": "idol",
+      "art": "Homestead/idol",
+      "kind": "decor",
+      "slot": "structure",
+      "cost": 3600,
+      "scale": 0.7,
+      "lift": 0.38,
+      "_imported": true
+    },
+    {
+      "id": "waterfall",
+      "art": "Homestead/waterfall",
+      "kind": "decor",
+      "slot": "structure",
+      "cost": 4000,
+      "scale": 0.65,
+      "lift": 0.38,
+      "_imported": true
+    },
+    {
+      "id": "oak",
+      "art": "Homestead/oak",
+      "animated": false,
+      "kind": "decor",
+      "cost": 0,
+      "requiresLevel": "",
+      "requiresChapter": "c01_shallows",
+      "scale": 0.95,
+      "lift": 0.45,
+      "disabled": false,
+      "slot": "canopy"
+    },
+    {
+      "id": "stump",
+      "art": "Homestead/stump",
+      "animated": false,
+      "kind": "decor",
+      "cost": 500,
+      "requiresLevel": "",
+      "requiresChapter": "",
+      "scale": 1.0,
+      "lift": 0.45,
+      "disabled": false,
+      "slot": "canopy"
+    },
+    {
+      "id": "dead_trunk",
+      "art": "Homestead/dead_trunk",
+      "kind": "decor",
+      "slot": "canopy",
+      "cost": 600,
+      "scale": 0.95,
+      "lift": 0.42,
+      "_imported": true
+    },
+    {
+      "id": "tree_slim",
+      "art": "Homestead/tree_slim",
+      "kind": "decor",
+      "slot": "canopy",
+      "cost": 620,
+      "scale": 0.85,
+      "lift": 0.42,
+      "_imported": true
+    },
+    {
+      "id": "pine_bare",
+      "art": "Homestead/pine_bare",
+      "kind": "decor",
+      "slot": "canopy",
+      "cost": 640,
+      "scale": 0.85,
+      "lift": 0.42,
+      "_imported": true
+    },
+    {
+      "id": "tree_leafy",
+      "art": "Homestead/tree_leafy",
+      "kind": "decor",
+      "slot": "canopy",
+      "cost": 700,
+      "scale": 0.85,
+      "lift": 0.42,
+      "_imported": true
+    },
+    {
+      "id": "pine_round",
+      "art": "Homestead/pine_round",
+      "kind": "decor",
+      "slot": "canopy",
+      "cost": 700,
+      "scale": 0.85,
+      "lift": 0.42,
+      "_imported": true
+    },
+    {
+      "id": "dead_tree",
+      "art": "Homestead/dead_tree",
+      "kind": "decor",
+      "slot": "canopy",
+      "cost": 700,
+      "scale": 0.9,
+      "lift": 0.42,
+      "_imported": true
+    },
+    {
+      "id": "dead_tree_bare",
+      "art": "Homestead/dead_tree_bare",
+      "kind": "decor",
+      "slot": "canopy",
+      "cost": 700,
+      "scale": 0.9,
+      "lift": 0.42,
+      "_imported": true
+    },
+    {
+      "id": "spire",
+      "art": "Homestead/spire",
+      "animated": false,
+      "kind": "decor",
+      "cost": 750,
+      "requiresLevel": "",
+      "requiresChapter": "",
+      "scale": 1.0,
+      "lift": 0.45,
+      "disabled": false,
+      "slot": "canopy"
+    },
+    {
+      "id": "tree_round",
+      "art": "Homestead/tree_round",
+      "kind": "decor",
+      "slot": "canopy",
+      "cost": 760,
+      "scale": 0.85,
+      "lift": 0.42,
+      "_imported": true
+    },
+    {
+      "id": "vines",
+      "art": "Homestead/vines",
+      "kind": "decor",
+      "slot": "canopy",
+      "cost": 800,
+      "scale": 0.9,
+      "lift": 0.42,
+      "_imported": true
+    },
+    {
+      "id": "pine",
+      "art": "Homestead/pine",
+      "kind": "decor",
+      "slot": "canopy",
+      "cost": 800,
+      "scale": 0.85,
+      "lift": 0.42,
+      "_imported": true
+    },
+    {
+      "id": "desert_snag",
+      "art": "Homestead/desert_snag",
+      "kind": "decor",
+      "slot": "canopy",
+      "cost": 800,
+      "scale": 0.85,
+      "lift": 0.42,
+      "_imported": true
+    },
+    {
+      "id": "tree_amber",
+      "art": "Homestead/tree_amber",
+      "kind": "decor",
+      "slot": "canopy",
+      "cost": 900,
+      "scale": 0.85,
+      "lift": 0.42,
+      "_imported": true
+    },
+    {
+      "id": "pine_bent",
+      "art": "Homestead/pine_bent",
+      "kind": "decor",
+      "slot": "canopy",
+      "cost": 1000,
+      "scale": 0.75,
+      "lift": 0.42,
+      "_imported": true
+    },
+    {
+      "id": "pine_tall",
+      "art": "Homestead/pine_tall",
+      "kind": "decor",
+      "slot": "canopy",
+      "cost": 1000,
+      "scale": 0.85,
+      "lift": 0.42,
+      "_imported": true
+    },
+    {
+      "id": "tree_orange",
+      "art": "Homestead/tree_orange",
+      "kind": "decor",
+      "slot": "canopy",
+      "cost": 1100,
+      "scale": 0.85,
+      "lift": 0.42,
+      "_imported": true
+    },
+    {
+      "id": "pine_frost",
+      "art": "Homestead/pine_frost",
+      "kind": "decor",
+      "slot": "canopy",
+      "cost": 1150,
+      "scale": 0.8,
+      "lift": 0.42,
+      "_imported": true
+    },
+    {
+      "id": "pine_night",
+      "art": "Homestead/pine_night",
+      "kind": "decor",
+      "slot": "canopy",
+      "cost": 1150,
+      "scale": 0.85,
+      "lift": 0.42,
+      "_imported": true
+    },
+    {
+      "id": "pine_snow",
+      "art": "Homestead/pine_snow",
+      "kind": "decor",
+      "slot": "canopy",
+      "cost": 1200,
+      "scale": 0.8,
+      "lift": 0.42,
+      "_imported": true
+    },
+    {
+      "id": "pine_leaning",
+      "art": "Homestead/pine_leaning",
+      "kind": "decor",
+      "slot": "canopy",
+      "cost": 1200,
+      "scale": 0.7,
+      "lift": 0.42,
+      "_imported": true
+    },
+    {
+      "id": "pine_crimson",
+      "art": "Homestead/pine_crimson",
+      "kind": "decor",
+      "slot": "canopy",
+      "cost": 1250,
+      "scale": 0.85,
+      "lift": 0.42,
+      "_imported": true
+    },
+    {
+      "id": "tree_night",
+      "art": "Homestead/tree_night",
+      "kind": "decor",
+      "slot": "canopy",
+      "cost": 1250,
+      "scale": 0.85,
+      "lift": 0.42,
+      "_imported": true
+    },
+    {
+      "id": "tree_apple",
+      "art": "Homestead/tree_apple",
+      "kind": "decor",
+      "slot": "canopy",
+      "cost": 1300,
+      "scale": 0.85,
+      "lift": 0.42,
+      "_imported": true
+    },
+    {
+      "id": "tree_gold",
+      "art": "Homestead/tree_gold",
+      "kind": "decor",
+      "slot": "canopy",
+      "cost": 1350,
+      "scale": 0.85,
+      "lift": 0.42,
+      "_imported": true
+    },
+    {
+      "id": "palm",
+      "art": "Homestead/palm",
+      "kind": "decor",
+      "slot": "canopy",
+      "cost": 1400,
+      "scale": 0.8,
+      "lift": 0.42,
+      "_imported": true
+    },
+    {
+      "id": "pine_snow_tall",
+      "art": "Homestead/pine_snow_tall",
+      "kind": "decor",
+      "slot": "canopy",
+      "cost": 1500,
+      "scale": 0.8,
+      "lift": 0.42,
+      "_imported": true
+    },
+    {
+      "id": "palm_curved",
+      "art": "Homestead/palm_curved",
+      "kind": "decor",
+      "slot": "canopy",
+      "cost": 1500,
+      "scale": 0.8,
+      "lift": 0.42,
+      "_imported": true
+    },
+    {
+      "id": "willow",
+      "art": "Homestead/willow",
+      "kind": "decor",
+      "slot": "canopy",
+      "cost": 1600,
+      "scale": 0.7,
+      "lift": 0.42,
+      "_imported": true
+    },
+    {
+      "id": "oak_broad",
+      "art": "Homestead/oak_broad",
+      "kind": "decor",
+      "slot": "canopy",
+      "cost": 1700,
+      "scale": 0.7,
+      "lift": 0.42,
+      "_imported": true
+    },
+    {
+      "id": "palm_pair",
+      "art": "Homestead/palm_pair",
+      "kind": "decor",
+      "slot": "canopy",
+      "cost": 1700,
+      "scale": 0.75,
+      "lift": 0.42,
+      "_imported": true
+    },
+    {
+      "id": "willow_old",
+      "art": "Homestead/willow_old",
+      "kind": "decor",
+      "slot": "canopy",
+      "cost": 1900,
+      "scale": 0.7,
+      "lift": 0.42,
+      "_imported": true
+    },
+    {
+      "id": "daisies",
+      "art": "Homestead/daisies",
+      "animated": false,
+      "kind": "decor",
+      "cost": 0,
+      "requiresLevel": "",
+      "requiresChapter": "",
+      "scale": 1.0,
+      "lift": 0.3,
+      "disabled": false,
+      "slot": "bed"
+    },
+    {
+      "id": "grass_blades",
+      "art": "Homestead/grass_blades",
+      "animated": false,
+      "kind": "decor",
+      "cost": 90,
+      "requiresLevel": "",
+      "requiresChapter": "",
+      "scale": 1.0,
+      "lift": 0.3,
+      "disabled": false,
+      "slot": "bed"
+    },
+    {
+      "id": "dry_tuft",
+      "art": "Homestead/dry_tuft",
+      "kind": "decor",
+      "slot": "bed",
+      "cost": 100,
+      "scale": 1.0,
+      "lift": 0.35,
+      "_imported": true
+    },
+    {
+      "id": "sprout_pair",
+      "art": "Homestead/sprout_pair",
+      "kind": "decor",
+      "slot": "bed",
+      "cost": 110,
+      "scale": 1.0,
+      "lift": 0.35,
+      "_imported": true
+    },
+    {
+      "id": "bud_amber",
+      "art": "Homestead/bud_amber",
+      "kind": "decor",
+      "slot": "bed",
+      "cost": 120,
+      "scale": 1.0,
+      "lift": 0.38,
+      "_imported": true
+    },
+    {
+      "id": "shrub_green",
+      "art": "Homestead/shrub_green",
+      "kind": "decor",
+      "slot": "bed",
+      "cost": 130,
+      "scale": 1.0,
+      "lift": 0.35,
+      "_imported": true
+    },
+    {
+      "id": "sprout_teal",
+      "art": "Homestead/sprout_teal",
+      "kind": "decor",
+      "slot": "bed",
+      "cost": 130,
+      "scale": 1.0,
+      "lift": 0.35,
+      "_imported": true
+    },
+    {
+      "id": "sprout",
+      "art": "Homestead/sprout",
+      "animated": false,
+      "kind": "decor",
+      "cost": 140,
+      "requiresLevel": "",
+      "requiresChapter": "",
+      "scale": 1.0,
+      "lift": 0.45,
+      "disabled": false,
+      "slot": "bed"
+    },
+    {
+      "id": "dry_shrub",
+      "art": "Homestead/dry_shrub",
+      "kind": "decor",
+      "slot": "bed",
+      "cost": 140,
+      "scale": 1.0,
+      "lift": 0.35,
+      "_imported": true
+    },
+    {
+      "id": "flower_pink",
+      "art": "Homestead/flower_pink",
+      "kind": "decor",
+      "slot": "bed",
+      "cost": 150,
+      "scale": 1.0,
+      "lift": 0.38,
+      "_imported": true
+    },
+    {
+      "id": "flower_white",
+      "art": "Homestead/flower_white",
+      "kind": "decor",
+      "slot": "bed",
+      "cost": 150,
+      "scale": 1.0,
+      "lift": 0.38,
+      "_imported": true
+    },
+    {
+      "id": "flower_daisy",
+      "art": "Homestead/flower_daisy",
+      "kind": "decor",
+      "slot": "bed",
+      "cost": 160,
+      "scale": 1.0,
+      "lift": 0.38,
+      "_imported": true
+    },
+    {
+      "id": "blossom",
+      "art": "Homestead/blossom",
+      "animated": false,
+      "kind": "decor",
+      "cost": 200,
+      "requiresLevel": "",
+      "requiresChapter": "",
+      "scale": 1.0,
+      "lift": 0.45,
+      "disabled": false,
+      "slot": "bed"
+    },
+    {
+      "id": "sea_grass",
+      "art": "Homestead/sea_grass",
+      "kind": "decor",
+      "slot": "bed",
+      "cost": 200,
+      "scale": 1.0,
+      "lift": 0.35,
+      "_imported": true
+    },
+    {
+      "id": "teal_plant",
+      "art": "Homestead/teal_plant",
+      "kind": "decor",
+      "slot": "bed",
+      "cost": 210,
+      "scale": 1.0,
+      "lift": 0.35,
+      "_imported": true
+    },
+    {
+      "id": "dusk_plant",
+      "art": "Homestead/dusk_plant",
+      "kind": "decor",
+      "slot": "bed",
+      "cost": 220,
+      "scale": 1.0,
+      "lift": 0.35,
+      "_imported": true
+    },
+    {
+      "id": "bush",
+      "art": "Homestead/bush",
+      "animated": false,
+      "kind": "decor",
+      "cost": 260,
+      "requiresLevel": "",
+      "requiresChapter": "",
+      "scale": 1.0,
+      "lift": 0.45,
+      "disabled": false,
+      "slot": "bed"
+    },
+    {
+      "id": "lily_pads",
+      "art": "Homestead/lily_pads",
+      "kind": "decor",
+      "slot": "bed",
+      "cost": 260,
+      "scale": 1.0,
+      "lift": 0.28,
+      "_imported": true
+    },
+    {
+      "id": "shade_bush",
+      "art": "Homestead/shade_bush",
+      "kind": "decor",
+      "slot": "bed",
+      "cost": 300,
+      "scale": 1.0,
+      "lift": 0.35,
+      "_imported": true
+    },
+    {
+      "id": "berry_bush",
+      "art": "Homestead/berry_bush",
+      "kind": "decor",
+      "slot": "bed",
+      "cost": 320,
+      "scale": 1.0,
+      "lift": 0.35,
+      "_imported": true
+    },
+    {
+      "id": "pumpkins",
+      "art": "Homestead/pumpkins",
+      "kind": "decor",
+      "slot": "bed",
+      "cost": 380,
+      "scale": 1.0,
+      "lift": 0.35,
+      "_imported": true
+    },
+    {
+      "id": "bamboo",
+      "art": "Homestead/bamboo",
+      "kind": "decor",
+      "slot": "bed",
+      "cost": 440,
+      "scale": 1.0,
+      "lift": 0.42,
+      "_imported": true
+    },
+    {
+      "id": "lantern",
+      "art": "Homestead/lantern",
+      "animated": false,
+      "kind": "decor",
+      "cost": 0,
+      "requiresLevel": "c01_lantern_ring",
+      "requiresChapter": "",
+      "scale": 1.0,
+      "lift": 0.45,
+      "disabled": false,
+      "slot": "edge"
+    },
+    {
+      "id": "fence_short",
+      "art": "Homestead/fence_short",
+      "animated": false,
+      "kind": "decor",
+      "cost": 180,
+      "requiresLevel": "",
+      "requiresChapter": "",
+      "scale": 1.0,
+      "lift": 0.45,
+      "disabled": false,
+      "slot": "edge"
+    },
+    {
+      "id": "flag_red",
+      "art": "Homestead/flag_red",
+      "kind": "decor",
+      "slot": "edge",
+      "cost": 200,
+      "scale": 0.95,
+      "lift": 0.42,
+      "_imported": true
+    },
+    {
+      "id": "mooring_post",
+      "art": "Homestead/mooring_post",
+      "kind": "decor",
+      "slot": "edge",
+      "cost": 240,
+      "scale": 1.0,
+      "lift": 0.42,
+      "_imported": true
+    },
+    {
+      "id": "fence_low",
+      "art": "Homestead/fence_low",
+      "animated": false,
+      "kind": "decor",
+      "cost": 260,
+      "requiresLevel": "",
+      "requiresChapter": "",
+      "scale": 1.0,
+      "lift": 0.45,
+      "disabled": false,
+      "slot": "edge"
+    },
+    {
+      "id": "sign_up",
+      "art": "Homestead/sign_up",
+      "kind": "decor",
+      "slot": "edge",
+      "cost": 260,
+      "scale": 0.95,
+      "lift": 0.42,
+      "_imported": true
+    },
+    {
+      "id": "sign_right",
+      "art": "Homestead/sign_right",
+      "kind": "decor",
+      "slot": "edge",
+      "cost": 260,
+      "scale": 0.95,
+      "lift": 0.42,
+      "_imported": true
+    },
+    {
+      "id": "sign_left",
+      "art": "Homestead/sign_left",
+      "kind": "decor",
+      "slot": "edge",
+      "cost": 260,
+      "scale": 0.95,
+      "lift": 0.42,
+      "_imported": true
+    },
+    {
+      "id": "candle",
+      "art": "Homestead/candle",
+      "kind": "decor",
+      "slot": "edge",
+      "cost": 260,
+      "scale": 1.0,
+      "lift": 0.42,
+      "_imported": true
+    },
+    {
+      "id": "fence_timber",
+      "art": "Homestead/fence_timber",
+      "kind": "decor",
+      "slot": "edge",
+      "cost": 280,
+      "scale": 0.9,
+      "lift": 0.42,
+      "_imported": true
+    },
+    {
+      "id": "fence_timber_end",
+      "art": "Homestead/fence_timber_end",
+      "kind": "decor",
+      "slot": "edge",
+      "cost": 280,
+      "scale": 0.9,
+      "lift": 0.42,
+      "_imported": true
+    },
+    {
+      "id": "sign_skull",
+      "art": "Homestead/sign_skull",
+      "kind": "decor",
+      "slot": "edge",
+      "cost": 300,
+      "scale": 0.95,
+      "lift": 0.42,
+      "_imported": true
+    },
+    {
+      "id": "fence_wide",
+      "art": "Homestead/fence_wide",
+      "animated": false,
+      "kind": "decor",
+      "cost": 340,
+      "requiresLevel": "",
+      "requiresChapter": "",
+      "scale": 1.0,
+      "lift": 0.45,
+      "disabled": false,
+      "slot": "edge"
+    },
+    {
+      "id": "fence_rail",
+      "art": "Homestead/fence_rail",
+      "kind": "decor",
+      "slot": "edge",
+      "cost": 340,
+      "scale": 0.9,
+      "lift": 0.42,
+      "_imported": true
+    },
+    {
+      "id": "fence_rail_end",
+      "art": "Homestead/fence_rail_end",
+      "kind": "decor",
+      "slot": "edge",
+      "cost": 340,
+      "scale": 0.9,
+      "lift": 0.42,
+      "_imported": true
+    },
+    {
+      "id": "ladder",
+      "art": "Homestead/ladder",
+      "kind": "decor",
+      "slot": "edge",
+      "cost": 340,
+      "scale": 0.95,
+      "lift": 0.42,
+      "_imported": true
+    },
+    {
+      "id": "spear",
+      "art": "Homestead/spear",
+      "kind": "decor",
+      "slot": "edge",
+      "cost": 380,
+      "scale": 0.95,
+      "lift": 0.42,
+      "_imported": true
+    },
+    {
+      "id": "rope_fence",
+      "art": "Homestead/rope_fence",
+      "kind": "decor",
+      "slot": "edge",
+      "cost": 400,
+      "scale": 0.95,
+      "lift": 0.42,
+      "_imported": true
+    },
+    {
+      "id": "rope_fence_end",
+      "art": "Homestead/rope_fence_end",
+      "kind": "decor",
+      "slot": "edge",
+      "cost": 400,
+      "scale": 0.95,
+      "lift": 0.42,
+      "_imported": true
+    },
+    {
+      "id": "fence_long",
+      "art": "Homestead/fence_long",
+      "animated": false,
+      "kind": "decor",
+      "cost": 420,
+      "requiresLevel": "",
+      "requiresChapter": "",
+      "scale": 1.0,
+      "lift": 0.45,
+      "disabled": false,
+      "slot": "edge"
+    },
+    {
+      "id": "fence_picket",
+      "art": "Homestead/fence_picket",
+      "kind": "decor",
+      "slot": "edge",
+      "cost": 420,
+      "scale": 0.9,
+      "lift": 0.42,
+      "_imported": true
+    },
+    {
+      "id": "fence_picket_end",
+      "art": "Homestead/fence_picket_end",
+      "kind": "decor",
+      "slot": "edge",
+      "cost": 420,
+      "scale": 0.9,
+      "lift": 0.42,
+      "_imported": true
+    },
+    {
+      "id": "staff_skull",
+      "art": "Homestead/staff_skull",
+      "kind": "decor",
+      "slot": "edge",
+      "cost": 420,
+      "scale": 0.95,
+      "lift": 0.42,
+      "_imported": true
+    },
+    {
+      "id": "sign_arrow",
+      "art": "Homestead/sign_arrow",
+      "kind": "decor",
+      "slot": "edge",
+      "cost": 500,
+      "scale": 0.9,
+      "lift": 0.42,
+      "_imported": true
+    },
+    {
+      "id": "sign_stone",
+      "art": "Homestead/sign_stone",
+      "kind": "decor",
+      "slot": "edge",
+      "cost": 540,
+      "scale": 0.95,
+      "lift": 0.42,
+      "_imported": true
+    },
+    {
+      "id": "sign_wood",
+      "art": "Homestead/sign_wood",
+      "kind": "decor",
+      "slot": "edge",
+      "cost": 560,
+      "scale": 0.9,
+      "lift": 0.42,
+      "_imported": true
+    },
+    {
+      "id": "torch_low",
+      "art": "Homestead/torch_low",
+      "kind": "decor",
+      "slot": "edge",
+      "cost": 620,
+      "scale": 0.95,
+      "lift": 0.42,
+      "_imported": true
+    },
+    {
+      "id": "arrow_sign",
+      "art": "Homestead/arrow_sign",
+      "animated": false,
+      "kind": "decor",
+      "cost": 700,
+      "requiresLevel": "",
+      "requiresChapter": "",
+      "scale": 1.0,
+      "lift": 0.45,
+      "disabled": false,
+      "slot": "edge"
+    },
+    {
+      "id": "torch",
+      "art": "Homestead/torch",
+      "kind": "decor",
+      "slot": "edge",
+      "cost": 760,
+      "scale": 0.95,
+      "lift": 0.42,
+      "_imported": true
+    },
+    {
+      "id": "old_sign",
+      "art": "Homestead/old_sign",
+      "animated": false,
+      "kind": "decor",
+      "cost": 850,
+      "requiresLevel": "",
+      "requiresChapter": "",
+      "scale": 1.0,
+      "lift": 0.45,
+      "disabled": false,
+      "slot": "edge"
+    },
+    {
+      "id": "banner_gold",
+      "art": "Homestead/banner_gold",
+      "kind": "decor",
+      "slot": "edge",
+      "cost": 900,
+      "scale": 0.9,
+      "lift": 0.42,
+      "_imported": true
+    },
+    {
+      "id": "banner_crimson",
+      "art": "Homestead/banner_crimson",
+      "kind": "decor",
+      "slot": "edge",
+      "cost": 900,
+      "scale": 0.9,
+      "lift": 0.42,
+      "_imported": true
+    },
+    {
+      "id": "torch_tall",
+      "art": "Homestead/torch_tall",
+      "kind": "decor",
+      "slot": "edge",
+      "cost": 980,
+      "scale": 0.9,
+      "lift": 0.42,
+      "_imported": true
+    },
+    {
+      "id": "signpost",
+      "art": "Homestead/signpost",
+      "animated": false,
+      "kind": "decor",
+      "cost": 1100,
+      "requiresLevel": "",
+      "requiresChapter": "",
+      "scale": 1.0,
+      "lift": 0.45,
+      "disabled": false,
+      "slot": "edge"
+    },
+    {
+      "id": "path_curve",
+      "art": "Homestead/path_curve",
+      "animated": false,
+      "kind": "decor",
+      "cost": 240,
+      "requiresLevel": "",
+      "requiresChapter": "",
+      "scale": 0.8,
+      "lift": 0.3,
+      "disabled": false,
+      "slot": "path"
+    },
+    {
+      "id": "stepping_stones",
+      "art": "Homestead/stepping_stones",
+      "kind": "decor",
+      "slot": "path",
+      "cost": 300,
+      "scale": 1.0,
+      "lift": 0.26,
+      "_imported": true
+    },
+    {
+      "id": "path_bend",
+      "art": "Homestead/path_bend",
+      "animated": false,
+      "kind": "decor",
+      "cost": 320,
+      "requiresLevel": "",
+      "requiresChapter": "",
+      "scale": 0.8,
+      "lift": 0.3,
+      "disabled": false,
+      "slot": "path"
+    },
+    {
+      "id": "path_snake",
+      "art": "Homestead/path_snake",
+      "animated": false,
+      "kind": "decor",
+      "cost": 420,
+      "requiresLevel": "",
+      "requiresChapter": "",
+      "scale": 0.7,
+      "lift": 0.3,
+      "disabled": false,
+      "slot": "path"
+    },
+    {
+      "id": "rope_walk",
+      "art": "Homestead/rope_walk",
+      "kind": "decor",
+      "slot": "path",
+      "cost": 520,
+      "scale": 0.95,
+      "lift": 0.28,
+      "_imported": true
+    },
+    {
+      "id": "rope_walk_end",
+      "art": "Homestead/rope_walk_end",
+      "kind": "decor",
+      "slot": "path",
+      "cost": 520,
+      "scale": 0.95,
+      "lift": 0.28,
+      "_imported": true
+    },
+    {
+      "id": "rope_walk_turn",
+      "art": "Homestead/rope_walk_turn",
+      "kind": "decor",
+      "slot": "path",
+      "cost": 580,
+      "scale": 0.95,
+      "lift": 0.28,
+      "_imported": true
+    },
+    {
+      "id": "rope_walk_long",
+      "art": "Homestead/rope_walk_long",
+      "kind": "decor",
+      "slot": "path",
+      "cost": 640,
+      "scale": 0.95,
+      "lift": 0.28,
+      "_imported": true
+    },
+    {
+      "id": "plank_bridge",
+      "art": "Homestead/plank_bridge",
+      "kind": "decor",
+      "slot": "path",
+      "cost": 700,
+      "scale": 0.9,
+      "lift": 0.28,
+      "_imported": true
+    },
+    {
+      "id": "sand_steps",
+      "art": "Homestead/sand_steps",
+      "kind": "decor",
+      "slot": "path",
+      "cost": 760,
+      "scale": 0.9,
+      "lift": 0.28,
+      "_imported": true
+    },
+    {
+      "id": "timber_platform",
+      "art": "Homestead/timber_platform",
+      "kind": "decor",
+      "slot": "path",
+      "cost": 850,
+      "scale": 0.85,
+      "lift": 0.28,
+      "_imported": true
+    },
+    {
+      "id": "bridge_flat",
+      "art": "Homestead/bridge_flat",
+      "animated": false,
+      "kind": "decor",
+      "cost": 900,
+      "requiresLevel": "",
+      "requiresChapter": "",
+      "scale": 0.85,
+      "lift": 0.3,
+      "disabled": false,
+      "slot": "path"
+    },
+    {
+      "id": "bridge_ramp",
+      "art": "Homestead/bridge_ramp",
+      "animated": false,
+      "kind": "decor",
+      "cost": 1100,
+      "requiresLevel": "",
+      "requiresChapter": "",
+      "scale": 0.85,
+      "lift": 0.3,
+      "disabled": false,
+      "slot": "path"
+    },
+    {
+      "id": "bridge_arch",
+      "art": "Homestead/bridge_arch",
+      "animated": false,
+      "kind": "decor",
+      "cost": 1400,
+      "requiresLevel": "",
+      "requiresChapter": "",
+      "scale": 0.8,
+      "lift": 0.3,
+      "disabled": false,
+      "slot": "path"
+    },
+    {
+      "id": "pier",
+      "art": "Homestead/pier",
+      "kind": "decor",
+      "slot": "path",
+      "cost": 1500,
+      "scale": 0.8,
+      "lift": 0.28,
+      "_imported": true
+    },
+    {
+      "id": "bridge_rope",
+      "art": "Homestead/bridge_rope",
+      "animated": false,
+      "kind": "decor",
+      "cost": 1700,
+      "requiresLevel": "",
+      "requiresChapter": "",
+      "scale": 0.8,
+      "lift": 0.3,
+      "disabled": false,
+      "slot": "path"
+    },
+    {
+      "id": "grass_tuft",
+      "art": "Homestead/grass_tuft",
+      "animated": false,
+      "kind": "decor",
+      "cost": 0,
+      "requiresLevel": "",
+      "requiresChapter": "",
+      "scale": 1.0,
+      "lift": 0.3,
+      "disabled": false,
+      "slot": "ground"
+    },
+    {
+      "id": "pebble",
+      "art": "Homestead/pebble",
+      "animated": false,
+      "kind": "decor",
+      "cost": 0,
+      "requiresLevel": "",
+      "requiresChapter": "",
+      "scale": 1.0,
+      "lift": 0.3,
+      "disabled": false,
+      "slot": "ground"
+    },
+    {
+      "id": "stone",
+      "art": "Homestead/stone",
+      "animated": false,
+      "kind": "decor",
+      "cost": 0,
+      "requiresLevel": "",
+      "requiresChapter": "",
+      "scale": 1.0,
+      "lift": 0.3,
+      "disabled": false,
+      "slot": "ground"
+    },
+    {
+      "id": "brambles",
+      "art": "Homestead/brambles",
+      "animated": false,
+      "kind": "decor",
+      "cost": 0,
+      "requiresLevel": "c01_thorn_hollow",
+      "requiresChapter": "",
+      "scale": 1.0,
+      "lift": 0.3,
+      "disabled": false,
+      "slot": "ground"
+    },
+    {
+      "id": "log",
+      "art": "Homestead/log",
+      "animated": false,
+      "kind": "decor",
+      "cost": 0,
+      "requiresLevel": "c01_bound_roots",
+      "requiresChapter": "",
+      "scale": 1.0,
+      "lift": 0.3,
+      "disabled": false,
+      "slot": "ground"
+    },
+    {
+      "id": "rune_stone",
+      "art": "Homestead/rune_stone",
+      "animated": false,
+      "kind": "decor",
+      "cost": 0,
+      "requiresLevel": "c01_grovekeepers_knot",
+      "requiresChapter": "",
+      "scale": 1.0,
+      "lift": 0.45,
+      "disabled": false,
+      "slot": "ground"
+    },
+    {
+      "id": "gravel",
+      "art": "Homestead/gravel",
+      "animated": false,
+      "kind": "decor",
+      "cost": 60,
+      "requiresLevel": "",
+      "requiresChapter": "",
+      "scale": 1.0,
+      "lift": 0.3,
+      "disabled": false,
+      "slot": "ground"
+    },
+    {
+      "id": "small_stone",
+      "art": "Homestead/small_stone",
+      "kind": "decor",
+      "slot": "ground",
+      "cost": 60,
+      "scale": 1.0,
+      "lift": 0.35,
+      "_imported": true
+    },
+    {
+      "id": "flat_stone",
+      "art": "Homestead/flat_stone",
+      "kind": "decor",
+      "slot": "ground",
+      "cost": 70,
+      "scale": 1.0,
+      "lift": 0.35,
+      "_imported": true
+    },
+    {
+      "id": "field_stone",
+      "art": "Homestead/field_stone",
+      "kind": "decor",
+      "slot": "ground",
+      "cost": 80,
+      "scale": 1.0,
+      "lift": 0.35,
+      "_imported": true
+    },
+    {
+      "id": "stone_pair",
+      "art": "Homestead/stone_pair",
+      "kind": "decor",
+      "slot": "ground",
+      "cost": 90,
+      "scale": 1.0,
+      "lift": 0.35,
+      "_imported": true
+    },
+    {
+      "id": "rock_shard",
+      "art": "Homestead/rock_shard",
+      "kind": "decor",
+      "slot": "ground",
+      "cost": 110,
+      "scale": 1.0,
+      "lift": 0.38,
+      "_imported": true
+    },
+    {
+      "id": "little_stump",
+      "art": "Homestead/little_stump",
+      "kind": "decor",
+      "slot": "ground",
+      "cost": 120,
+      "scale": 1.0,
+      "lift": 0.35,
+      "_imported": true
+    },
+    {
+      "id": "wood_post",
+      "art": "Homestead/wood_post",
+      "kind": "decor",
+      "slot": "ground",
+      "cost": 130,
+      "scale": 1.0,
+      "lift": 0.38,
+      "_imported": true
+    },
+    {
+      "id": "sand_rock",
+      "art": "Homestead/sand_rock",
+      "kind": "decor",
+      "slot": "ground",
+      "cost": 160,
+      "scale": 1.0,
+      "lift": 0.35,
+      "_imported": true
+    },
+    {
+      "id": "shore_rock",
+      "art": "Homestead/shore_rock",
+      "kind": "decor",
+      "slot": "ground",
+      "cost": 180,
+      "scale": 1.0,
+      "lift": 0.35,
+      "_imported": true
+    },
+    {
+      "id": "stone_stumps",
+      "art": "Homestead/stone_stumps",
+      "kind": "decor",
+      "slot": "ground",
+      "cost": 200,
+      "scale": 1.0,
+      "lift": 0.35,
+      "_imported": true
+    },
+    {
+      "id": "forest_rock",
+      "art": "Homestead/forest_rock",
+      "kind": "decor",
+      "slot": "ground",
+      "cost": 200,
+      "scale": 1.0,
+      "lift": 0.35,
+      "_imported": true
+    },
+    {
+      "id": "hay_bale",
+      "art": "Homestead/hay_bale",
+      "kind": "decor",
+      "slot": "ground",
+      "cost": 220,
+      "scale": 1.0,
+      "lift": 0.35,
+      "_imported": true
+    },
+    {
+      "id": "ice_stump",
+      "art": "Homestead/ice_stump",
+      "kind": "decor",
+      "slot": "ground",
+      "cost": 240,
+      "scale": 1.0,
+      "lift": 0.35,
+      "_imported": true
+    },
+    {
+      "id": "stone_teeth",
+      "art": "Homestead/stone_teeth",
+      "kind": "decor",
+      "slot": "ground",
+      "cost": 240,
+      "scale": 1.0,
+      "lift": 0.35,
+      "_imported": true
+    },
+    {
+      "id": "snow_rock",
+      "art": "Homestead/snow_rock",
+      "kind": "decor",
+      "slot": "ground",
+      "cost": 260,
+      "scale": 1.0,
+      "lift": 0.35,
+      "_imported": true
+    },
+    {
+      "id": "ruin_block",
+      "art": "Homestead/ruin_block",
+      "kind": "decor",
+      "slot": "ground",
+      "cost": 260,
+      "scale": 1.0,
+      "lift": 0.35,
+      "_imported": true
+    },
+    {
+      "id": "skull",
+      "art": "Homestead/skull",
+      "kind": "decor",
+      "slot": "ground",
+      "cost": 260,
+      "scale": 1.0,
+      "lift": 0.35,
+      "_imported": true
+    },
+    {
+      "id": "hay_stack",
+      "art": "Homestead/hay_stack",
+      "kind": "decor",
+      "slot": "ground",
+      "cost": 280,
+      "scale": 1.0,
+      "lift": 0.35,
+      "_imported": true
+    },
+    {
+      "id": "cairn_stone",
+      "art": "Homestead/cairn_stone",
+      "kind": "decor",
+      "slot": "ground",
+      "cost": 280,
+      "scale": 1.0,
+      "lift": 0.38,
+      "_imported": true
+    },
+    {
+      "id": "mossy_rock",
+      "art": "Homestead/mossy_rock",
+      "kind": "decor",
+      "slot": "ground",
+      "cost": 300,
+      "scale": 1.0,
+      "lift": 0.35,
+      "_imported": true
+    },
+    {
+      "id": "cairn_snow",
+      "art": "Homestead/cairn_snow",
+      "kind": "decor",
+      "slot": "ground",
+      "cost": 300,
+      "scale": 1.0,
+      "lift": 0.38,
+      "_imported": true
+    },
+    {
+      "id": "crate",
+      "art": "Homestead/crate",
+      "animated": false,
+      "kind": "decor",
+      "cost": 320,
+      "requiresLevel": "",
+      "requiresChapter": "",
+      "scale": 1.0,
+      "lift": 0.45,
+      "disabled": false,
+      "slot": "ground"
+    },
+    {
+      "id": "icicles",
+      "art": "Homestead/icicles",
+      "kind": "decor",
+      "slot": "ground",
+      "cost": 340,
+      "scale": 1.0,
+      "lift": 0.35,
+      "_imported": true
+    },
+    {
+      "id": "sand_block",
+      "art": "Homestead/sand_block",
+      "kind": "decor",
+      "slot": "ground",
+      "cost": 340,
+      "scale": 1.0,
+      "lift": 0.35,
+      "_imported": true
+    },
+    {
+      "id": "snow_boulder",
+      "art": "Homestead/snow_boulder",
+      "kind": "decor",
+      "slot": "ground",
+      "cost": 380,
+      "scale": 1.0,
+      "lift": 0.35,
+      "_imported": true
+    },
+    {
+      "id": "pedestal",
+      "art": "Homestead/pedestal",
+      "kind": "decor",
+      "slot": "ground",
+      "cost": 420,
+      "scale": 1.0,
+      "lift": 0.35,
+      "_imported": true
+    },
+    {
+      "id": "broken_pillars",
+      "art": "Homestead/broken_pillars",
+      "kind": "decor",
+      "slot": "ground",
+      "cost": 480,
+      "scale": 1.0,
+      "lift": 0.35,
+      "_imported": true
+    },
+    {
+      "id": "crystal_shards",
+      "art": "Homestead/crystal_shards",
+      "kind": "decor",
+      "slot": "ground",
+      "cost": 500,
+      "scale": 1.0,
+      "lift": 0.35,
+      "_imported": true
+    }
+  ]
+}

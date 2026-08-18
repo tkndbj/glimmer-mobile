@@ -96,6 +96,13 @@ namespace GlimmerGrove.EditorTools
             // audited without anyone editing this.
             expected.AddRange(AssetManifest.CompanionAssets(content.Index.Companions));
 
+            // The grove, for the same reason and with a sharper edge: its art is requested by
+            // a scope on one screen, and it is the set that grows at every content drop. An
+            // audit blind to it would call a new decor piece unused and then say nothing when
+            // somebody shipped a manifest row whose sprite never made it into the project —
+            // which draws a white rectangle, because that is what an Image with no sprite is.
+            expected.AddRange(AssetManifest.AllGroveAssets(content.Homestead));
+
             result.Expected = expected.Count;
 
             foreach (var request in expected)

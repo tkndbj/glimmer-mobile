@@ -123,6 +123,14 @@ namespace GlimmerGrove.Persistence
             // player paid for and loses on reinstall. Compared as an ordered walk because
             // both sides are written sorted — see CompanionLedger.
             if (!SameSet(remote.companionsOwned, merged.companionsOwned)) return true;
+
+            // The grove. Its purchases travel for exactly the companions' reason, and its
+            // arrangement travels because it is the one thing here the player can see on
+            // another device and notice missing — a grove that stayed on one phone is an
+            // evening's work lost on reinstall. Both are written sorted, so both compare as
+            // an ordered walk.
+            if (!SameSet(remote.homesteadOwned, merged.homesteadOwned)) return true;
+            if (!SamePlacements(remote.homesteadPlaced, merged.homesteadPlaced)) return true;
             if (!Same(remote.lastPlayedLevelId, merged.lastPlayedLevelId)) return true;
 
             var a = remote.settings ?? new SettingsDto();
@@ -215,6 +223,35 @@ namespace GlimmerGrove.Persistence
 
             for (int i = 0; i < na; i++)
                 if (!string.Equals(a[i], b[i], StringComparison.Ordinal)) return false;
+
+            return true;
+        }
+
+        /// <summary>
+        /// The grove's arrangement, compared as an ordered walk for <see cref="SameSet"/>'s
+        /// reason: <c>HomesteadLayout</c> writes rows sorted by slot id and deduplicated, so
+        /// equal content is byte-equal content.
+        ///
+        /// The stamp is compared along with the piece, deliberately. Two devices can hold the
+        /// same arrangement having reached it at different moments, and the later stamp is
+        /// what decides the next merge — dropping it here would let the newer decision sit
+        /// unsent until something else changed, and a third device would then take the stale
+        /// one.
+        /// </summary>
+        static bool SamePlacements(HomesteadPlacementDto[] a, HomesteadPlacementDto[] b)
+        {
+            int na = a?.Length ?? 0, nb = b?.Length ?? 0;
+            if (na != nb) return false;
+
+            for (int i = 0; i < na; i++)
+            {
+                var x = a[i] ?? new HomesteadPlacementDto();
+                var y = b[i] ?? new HomesteadPlacementDto();
+
+                if (!Same(x.slot, y.slot)) return false;
+                if (!Same(x.piece, y.piece)) return false;
+                if (x.setUnix != y.setUnix) return false;
+            }
 
             return true;
         }

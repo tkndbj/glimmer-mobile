@@ -52,7 +52,7 @@ service cloud.firestore {
                  'schemaVersion', 'updatedUnix', 'settings', 'wallet', 'levels',
                  'progression', 'cloud', 'lastPlayedLevelId', 'legacyImportDone',
                  'tipsSeen', 'daily', 'ads', 'streak', 'events', 'eventsSeeded',
-                 'companionsOwned', 'checksum'
+                 'companionsOwned', 'homesteadOwned', 'homesteadPlaced', 'checksum'
                ])
                && d.schemaVersion is int
                && d.schemaVersion >= 1 && d.schemaVersion <= 100
@@ -100,7 +100,26 @@ service cloud.firestore {
                // debit the server-derived balance cannot cover, so there is nothing here for
                // the server to adjudicate. Bounded because the client controls its length.
                && (!('companionsOwned' in d) || (d.companionsOwned is list
-                                                 && d.companionsOwned.size() <= 256));
+                                                 && d.companionsOwned.size() <= 256))
+               // The grove: what the player bought for it, and where they put it. Both are
+               // client-owned and forgeable, and both are accounted for the same way the
+               // companion set above is — a forged entry buys a picture on a screen nobody
+               // else sees, with no currency, no progression and no advantage on a board.
+               // The money half is defended where money always is, by `submitSpends`
+               // refusing a debit the server-derived balance cannot cover, so there is
+               // nothing here for the server to adjudicate. Note what is deliberately
+               // absent: any count of how many benches a player owns. Holding a piece is
+               // permission to draw it in as many slots as they like, which is why the
+               // owned list is a set and cannot go down.
+               //
+               // Both are bounded because the client controls their length. The placement
+               // bound is generous against the shipped 52 slots on purpose: it has to hold
+               // for every future content drop as well, and rows naming slots an older
+               // build does not know are carried through rather than dropped.
+               && (!('homesteadOwned' in d) || (d.homesteadOwned is list
+                                                && d.homesteadOwned.size() <= 512))
+               && (!('homesteadPlaced' in d) || (d.homesteadPlaced is list
+                                                 && d.homesteadPlaced.size() <= 1024));
       }
 
       // The revision only ever moves forward, which gives the sync optimistic

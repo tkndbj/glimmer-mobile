@@ -109,6 +109,15 @@ namespace GlimmerGrove.Cloud
                 // balance cannot cover. See CompanionLedger.
                 { "companionsOwned", new List<object>(dto.companionsOwned ?? new string[0]) },
 
+                // The grove. Its purchases travel for exactly the companions' reason; its
+                // arrangement travels because it is the one thing in this file a player would
+                // notice missing on a second device, and an evening spent laying out a grove
+                // that never left the phone is the worst kind of loss — invisible until a
+                // reinstall. Neither is adjudicated: a piece is a cosmetic, and the money half
+                // is already defended by submitSpends. See HomesteadLedger.
+                { "homesteadOwned", new List<object>(dto.homesteadOwned ?? new string[0]) },
+                { "homesteadPlaced", Placements(dto.homesteadPlaced) },
+
                 { "checksum", dto.checksum ?? string.Empty },
 
                 { "settings", new Dictionary<string, object>
@@ -279,6 +288,34 @@ namespace GlimmerGrove.Cloud
             return list;
         }
 
+        /// <summary>
+        /// The grove's arrangement, as a list of small maps.
+        ///
+        /// A list rather than a map keyed by slot id, for <see cref="EventFloors"/>'s reason:
+        /// a slot id is content and a Firestore field name is not, so an id carrying a dot
+        /// would silently become a nested path. Already sorted by
+        /// <c>HomesteadLayout.WriteInto</c>, so the walk back is ordered.
+        /// </summary>
+        static List<object> Placements(HomesteadPlacementDto[] rows)
+        {
+            var list = new List<object>();
+            if (rows == null) return list;
+
+            foreach (var row in rows)
+            {
+                if (row == null || string.IsNullOrEmpty(row.slot)) continue;
+
+                list.Add(new Dictionary<string, object>
+                {
+                    { "slot", row.slot },
+                    { "piece", row.piece ?? string.Empty },
+                    { "setUnix", row.setUnix },
+                });
+            }
+
+            return list;
+        }
+
         // ----------------------------------------------------------- from cloud
         /// <summary>
         /// Reads a document back. Treats every field as missing until proven otherwise,
@@ -298,6 +335,7 @@ namespace GlimmerGrove.Cloud
                 legacyImportDone = Bool(doc, "legacyImportDone"),
                 tipsSeen = StrList(doc, "tipsSeen"),
                 companionsOwned = StrList(doc, "companionsOwned"),
+                homesteadOwned = StrList(doc, "homesteadOwned"),
                 checksum = Str(doc, "checksum"),
                 settings = new SettingsDto(),
                 wallet = WalletDto.Unwritten(),
@@ -369,6 +407,11 @@ namespace GlimmerGrove.Cloud
             dto.eventsSeeded = Bool(doc, "eventsSeeded");
             dto.events = ReadEventFloors(doc);
 
+            // Absent on a document written before the grove existed, which reads back as no
+            // rows — and no rows is "this device has no opinion about any slot", so the join
+            // takes the local side whole. Nothing has to detect the upgrade.
+            dto.homesteadPlaced = ReadPlacements(doc);
+
             if (Map(doc, "progression") is IDictionary<string, object> progression)
             {
                 dto.progression.xpHighWater = Long(progression, "xpHighWater", -1);
@@ -434,6 +477,35 @@ namespace GlimmerGrove.Cloud
             }
 
             return floors.ToArray();
+        }
+
+        /// <summary>
+        /// The grove's arrangement, tolerating anything that is not one — the rule
+        /// <see cref="ReadEventFloors"/> follows and for the same reason.
+        /// </summary>
+        static HomesteadPlacementDto[] ReadPlacements(IDictionary<string, object> doc)
+        {
+            if (!doc.TryGetValue("homesteadPlaced", out object raw) || !(raw is IEnumerable<object> items))
+                return new HomesteadPlacementDto[0];
+
+            var rows = new List<HomesteadPlacementDto>();
+
+            foreach (var item in items)
+            {
+                if (!(item is IDictionary<string, object> entry)) continue;
+
+                string slot = Str(entry, "slot");
+                if (string.IsNullOrEmpty(slot)) continue;
+
+                rows.Add(new HomesteadPlacementDto
+                {
+                    slot = slot,
+                    piece = Str(entry, "piece"),
+                    setUnix = Long(entry, "setUnix", 0),
+                });
+            }
+
+            return rows.ToArray();
         }
 
         static LevelRecordDto[] ReadLevels(IDictionary<string, object> doc)

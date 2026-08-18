@@ -1,0 +1,163 @@
+# The grove's art, and where each piece came from.
+#
+# One row per piece. `import_grove_art.py` copies the source PNG to
+# Assets/Game/Art/Homestead/<id>.png, writes the loc string, and regenerates the
+# `pieces` array of homestead.json from this file.
+#
+# WHY THIS FILE EXISTS. A piece id is written into save files, so it is permanent
+# (invariant 1) — and the art behind it is not, because packs get re-cut and
+# replaced. Keeping the mapping here means the id, the price and the source path
+# are reviewed together in a diff, an import can be re-run without hand-copying
+# anything, and the day a real village pack lands the change is one column.
+#
+# WHAT IS DELIBERATELY NOT HERE. The 17 downloaded packs hold 1,056 files, 936 of
+# them distinct — but they are one series, so the same signpost, skull, ladder and
+# stone ship in nearly all of them. Deduplicated by content and then by *object*,
+# 936 files reduce to roughly 120 distinct things you could stand on an island, and
+# the 124 rows below are those. What is excluded is 249 numbered level tiles and
+# platform chips, the UI furniture (hearts, progress bars, map pins, coin piles,
+# gift boxes, reward stars) and the packs' mascot avatars. Importing those would
+# put 900 sprites in the bundle to sell a player a progress bar.
+#
+# columns: source (relative to the pack root) | id | slot | cost | scale | lift | name
+#
+# ---------------------------------------------------------------- orchard & field
+craftpix-net-158261-isometric-field-tileset-assets/PNG/Elements/01.png	tree_amber	canopy	900	0.85	0.42	Amber Tree
+craftpix-net-158261-isometric-field-tileset-assets/PNG/Elements/02.png	tree_orange	canopy	1100	0.85	0.42	Orange Tree
+craftpix-net-158261-isometric-field-tileset-assets/PNG/Elements/03.png	tree_leafy	canopy	700	0.85	0.42	Leafy Tree
+craftpix-net-158261-isometric-field-tileset-assets/PNG/Elements/04.png	tree_apple	canopy	1300	0.85	0.42	Apple Tree
+craftpix-net-158261-isometric-field-tileset-assets/PNG/Elements/05.png	hay_bale	ground	220	1.0	0.35	Hay Bale
+craftpix-net-158261-isometric-field-tileset-assets/PNG/Elements/06.png	berry_bush	bed	320	1.0	0.35	Berry Bush
+craftpix-net-158261-isometric-field-tileset-assets/PNG/Elements/07.png	field_stone	ground	80	1.0	0.35	Field Stone
+craftpix-net-158261-isometric-field-tileset-assets/PNG/Elements/08.png	pumpkins	bed	380	1.0	0.35	Pumpkin Patch
+craftpix-net-158261-isometric-field-tileset-assets/PNG/Elements/09.png	hay_stack	ground	280	1.0	0.35	Hay Stack
+craftpix-net-158261-isometric-field-tileset-assets/PNG/Elements/10.png	fence_rail	edge	340	0.9	0.42	Rail Fence
+craftpix-net-158261-isometric-field-tileset-assets/PNG/Elements/11.png	fence_rail_end	edge	340	0.9	0.42	Rail Fence End
+craftpix-net-158261-isometric-field-tileset-assets/PNG/Elements/12.png	sign_arrow	edge	500	0.9	0.42	Red Arrow Sign
+craftpix-net-158261-isometric-field-tileset-assets/PNG/Elements/13.png	sign_wood	edge	560	0.9	0.42	Wooden Signpost
+craftpix-net-158261-isometric-field-tileset-assets/PNG/Elements/14.png	fence_picket	edge	420	0.9	0.42	Picket Fence
+craftpix-net-158261-isometric-field-tileset-assets/PNG/Elements/15.png	fence_picket_end	edge	420	0.9	0.42	Picket Fence End
+craftpix-net-158261-isometric-field-tileset-assets/PNG/Elements/16.png	fence_timber	edge	280	0.9	0.42	Timber Fence
+craftpix-net-158261-isometric-field-tileset-assets/PNG/Elements/17.png	fence_timber_end	edge	280	0.9	0.42	Timber Fence End
+# ------------------------------------------------------------------------- wetland
+craftpix-net-182714-isometric-swamp-game-tileset/PNG/Elements/02.png	willow	canopy	1600	0.7	0.42	Willow
+craftpix-net-182714-isometric-swamp-game-tileset/PNG/Elements/03.png	willow_isle	structure	3200	0.55	0.38	Willow Islet
+craftpix-net-182714-isometric-swamp-game-tileset/PNG/Elements/04.png	willow_old	canopy	1900	0.7	0.42	Old Willow
+craftpix-net-182714-isometric-swamp-game-tileset/PNG/Elements/05.png	mushroom_log	structure	1400	0.95	0.38	Mushroom Log
+craftpix-net-182714-isometric-swamp-game-tileset/PNG/Elements/06.png	lily_pads	bed	260	1.0	0.28	Lily Pads
+craftpix-net-182714-isometric-swamp-game-tileset/PNG/Elements/07.png	mossy_rock	ground	300	1.0	0.35	Mossy Rock
+craftpix-net-182714-isometric-swamp-game-tileset/PNG/Elements/08.png	bamboo	bed	440	1.0	0.42	Bamboo
+craftpix-net-182714-isometric-swamp-game-tileset/PNG/Elements/09.png	dead_trunk	canopy	600	0.95	0.42	Dead Trunk
+# --------------------------------------------------------------------------- frost
+craftpix-net-305523-isometric-arctic-game-assets/PNG/Elements/04.png	icicles	ground	340	1.0	0.35	Icicles
+craftpix-net-305523-isometric-arctic-game-assets/PNG/Elements/05.png	iceberg	structure	2400	0.8	0.38	Iceberg
+craftpix-net-305523-isometric-arctic-game-assets/PNG/Elements/06.png	snow_rock	ground	260	1.0	0.35	Snow Rock
+craftpix-net-305523-isometric-arctic-game-assets/PNG/Elements/07.png	pine_snow	canopy	1200	0.8	0.42	Snowy Pine
+craftpix-net-305523-isometric-arctic-game-assets/PNG/Elements/08.png	pine_snow_tall	canopy	1500	0.8	0.42	Tall Snowy Pine
+craftpix-net-305523-isometric-arctic-game-assets/PNG/Elements/09.png	ice_stump	ground	240	1.0	0.35	Frozen Stump
+# --------------------------------------------------------------------------- ruins
+craftpix-net-556799-isometric-ruin-tileset/PNG/Elements/01.png	stone_stumps	ground	200	1.0	0.35	Stone Stumps
+craftpix-net-556799-isometric-ruin-tileset/PNG/Elements/03.png	ruin_block	ground	260	1.0	0.35	Fallen Block
+craftpix-net-556799-isometric-ruin-tileset/PNG/Elements/04.png	waterfall	structure	4000	0.65	0.38	Waterfall
+craftpix-net-556799-isometric-ruin-tileset/PNG/Elements/05.png	vines	canopy	800	0.9	0.42	Hanging Vines
+craftpix-net-556799-isometric-ruin-tileset/PNG/Elements/06.png	torch_low	edge	620	0.95	0.42	Low Torch
+craftpix-net-556799-isometric-ruin-tileset/PNG/Elements/07.png	oak_broad	canopy	1700	0.7	0.42	Broad Oak
+craftpix-net-556799-isometric-ruin-tileset/PNG/Elements/09.png	broken_pillars	ground	480	1.0	0.35	Broken Pillars
+craftpix-net-556799-isometric-ruin-tileset/PNG/Elements/10.png	stone_pillars	structure	1500	0.95	0.38	Standing Pillars
+craftpix-net-556799-isometric-ruin-tileset/PNG/Elements/11.png	torch	edge	760	0.95	0.42	Torch
+craftpix-net-556799-isometric-ruin-tileset/PNG/Elements/12.png	torch_tall	edge	980	0.9	0.42	Tall Torch
+craftpix-net-556799-isometric-ruin-tileset/PNG/Elements/13.png	rope_fence	edge	400	0.95	0.42	Rope Fence
+craftpix-net-556799-isometric-ruin-tileset/PNG/Elements/14.png	rope_fence_end	edge	400	0.95	0.42	Rope Fence End
+craftpix-net-556799-isometric-ruin-tileset/PNG/Elements/15.png	shade_bush	bed	300	1.0	0.35	Shade Bush
+craftpix-net-556799-isometric-ruin-tileset/PNG/Elements/16.png	idol	structure	3600	0.7	0.38	Grove Idol
+# ---------------------------------------------------------------------- the shore
+craftpix-net-744395-isometric-island-tileset/PNG/Elements/02.png	rope_walk	path	520	0.95	0.28	Rope Walk
+craftpix-net-744395-isometric-island-tileset/PNG/Elements/03.png	rope_walk_end	path	520	0.95	0.28	Rope Walk End
+craftpix-net-744395-isometric-island-tileset/PNG/Elements/04.png	rope_walk_turn	path	580	0.95	0.28	Rope Walk Turn
+craftpix-net-744395-isometric-island-tileset/PNG/Elements/05.png	rope_walk_long	path	640	0.95	0.28	Long Rope Walk
+craftpix-net-744395-isometric-island-tileset/PNG/Elements/06.png	shore_rock	ground	180	1.0	0.35	Shore Rock
+craftpix-net-744395-isometric-island-tileset/PNG/Elements/07.png	palm	canopy	1400	0.8	0.42	Palm
+craftpix-net-744395-isometric-island-tileset/PNG/Elements/08.png	fish_trap	structure	1100	0.95	0.38	Fish Trap
+craftpix-net-744395-isometric-island-tileset/PNG/Elements/09.png	beached_boat	structure	2800	0.6	0.32	Beached Boat
+craftpix-net-744395-isometric-island-tileset/PNG/Elements/10.png	mooring_post	edge	240	1.0	0.42	Mooring Post
+# -------------------------------------------------------------------------- pines
+craftpix-net-761235-isometric-forest-tileset/PNG/Elements/01.png	little_stump	ground	120	1.0	0.35	Little Stump
+craftpix-net-761235-isometric-forest-tileset/PNG/Elements/02.png	pine_bent	canopy	1000	0.75	0.42	Bent Pine
+craftpix-net-761235-isometric-forest-tileset/PNG/Elements/04.png	pine	canopy	800	0.85	0.42	Pine
+craftpix-net-761235-isometric-forest-tileset/PNG/Elements/05.png	pine_tall	canopy	1000	0.85	0.42	Tall Pine
+craftpix-net-761235-isometric-forest-tileset/PNG/Elements/06.png	pine_leaning	canopy	1200	0.7	0.42	Leaning Pine
+craftpix-net-761235-isometric-forest-tileset/PNG/Elements/07.png	forest_rock	ground	200	1.0	0.35	Forest Rock
+craftpix-net-761235-isometric-forest-tileset/PNG/Elements/08.png	great_stump	structure	1300	0.95	0.38	Great Stump
+# ------------------------------------------------------------------------- desert
+craftpix-net-898467-isometric-desert-game-assets/PNG/Elements/01.png	obelisk	structure	2200	0.75	0.38	Obelisk
+craftpix-net-898467-isometric-desert-game-assets/PNG/Elements/02.png	sand_block	ground	340	1.0	0.35	Sandstone Block
+craftpix-net-898467-isometric-desert-game-assets/PNG/Elements/03.png	sand_rock	ground	160	1.0	0.35	Sand Rock
+craftpix-net-898467-isometric-desert-game-assets/PNG/Elements/04.png	sign_stone	edge	540	0.95	0.42	Stone Marker
+craftpix-net-898467-isometric-desert-game-assets/PNG/Elements/06.png	sand_pillar	structure	1900	0.8	0.38	Sandstone Pillar
+craftpix-net-898467-isometric-desert-game-assets/PNG/Elements/07.png	pedestal	ground	420	1.0	0.35	Pedestal
+craftpix-net-898467-isometric-desert-game-assets/PNG/Elements/08.png	sand_steps	path	760	0.9	0.28	Sandstone Steps
+craftpix-net-898467-isometric-desert-game-assets/PNG/Elements/10.png	crystal_shards	ground	500	1.0	0.35	Crystal Shards
+
+# ============================================================ second wave
+# The rest of the village drop, after the tint-for-tint repeats were dropped.
+# The seventeen packs are one series, so the same signpost, skull, ladder and
+# stone ship in nearly all of them: 936 distinct files reduce to about 120
+# distinct *objects*, and 124 of those are now here. What is still excluded is
+# level tiles, UI (hearts, bars, map pins, coin piles), reward icons and the
+# packs' mascot avatars — none of which is a thing you could stand on an island.
+
+craftpix-net-103407-fantasy-land-isometric-tileset/png/Recurso 63.png	dry_tuft	bed	100	1.0	0.35	Dry Tuft
+craftpix-net-103407-fantasy-land-isometric-tileset/png/Recurso 68.png	sprout_pair	bed	110	1.0	0.35	Two Sprouts
+craftpix-net-103407-fantasy-land-isometric-tileset/png/Recurso 64.png	bud_amber	bed	120	1.0	0.38	Amber Bud
+craftpix-net-103407-fantasy-land-isometric-tileset/png/Recurso 67.png	shrub_green	bed	130	1.0	0.35	Green Shrub
+craftpix-net-163650-daily-forest-isometric-tileset/png/Recurso 26.png	sprout_teal	bed	130	1.0	0.35	Teal Sprouts
+craftpix-net-103407-fantasy-land-isometric-tileset/png/Recurso 62.png	dry_shrub	bed	140	1.0	0.35	Dry Shrub
+craftpix-net-103407-fantasy-land-isometric-tileset/png/Recurso 65.png	flower_pink	bed	150	1.0	0.38	Pink Bloom
+craftpix-net-103407-fantasy-land-isometric-tileset/png/Recurso 66.png	flower_white	bed	150	1.0	0.38	White Bloom
+craftpix-net-163650-daily-forest-isometric-tileset/png/Recurso 24.png	flower_daisy	bed	160	1.0	0.38	Daisy
+craftpix-net-772828-beach-isometric-game-assets/png/Recurso 8.png	sea_grass	bed	200	1.0	0.35	Sea Grass
+craftpix-net-808145-night-forest-isometric-tileset/png/Recurso 6.png	teal_plant	bed	210	1.0	0.35	Teal Fern
+craftpix-net-612219-westeros-isometric-vector-tileset/1x/Recurso 40.png	dusk_plant	bed	220	1.0	0.35	Dusk Plant
+craftpix-net-103407-fantasy-land-isometric-tileset/png/Recurso 75.png	tree_slim	canopy	620	0.85	0.42	Slim Tree
+craftpix-net-670262-fall-forest-isometric-tileset/png/1x/Recurso 61.png	pine_bare	canopy	640	0.85	0.42	Bare Pine
+craftpix-net-103407-fantasy-land-isometric-tileset/png/Recurso 76.png	pine_round	canopy	700	0.85	0.42	Round Pine
+craftpix-net-693047-ghosts-isometric-tileset/png/Recurso 15.png	dead_tree	canopy	700	0.9	0.42	Dead Tree
+craftpix-net-693047-ghosts-isometric-tileset/png/Recurso 16.png	dead_tree_bare	canopy	700	0.9	0.42	Bare Snag
+craftpix-net-163650-daily-forest-isometric-tileset/png/Recurso 39.png	tree_round	canopy	760	0.85	0.42	Round Tree
+craftpix-net-945217-desert-isometric-tileset/png/Recurso 1.png	desert_snag	canopy	800	0.85	0.42	Desert Snag
+craftpix-net-602945-winter-isometric-2d-tileset/png/Recurso 17.png	pine_frost	canopy	1150	0.8	0.42	Frosted Pine
+craftpix-net-808145-night-forest-isometric-tileset/png/Recurso 20.png	pine_night	canopy	1150	0.85	0.42	Nightpine
+craftpix-net-670262-fall-forest-isometric-tileset/png/1x/Recurso 62.png	pine_crimson	canopy	1250	0.85	0.42	Crimson Pine
+craftpix-net-808145-night-forest-isometric-tileset/png/Recurso 22.png	tree_night	canopy	1250	0.85	0.42	Nightbloom Tree
+craftpix-net-670262-fall-forest-isometric-tileset/png/1x/Recurso 63.png	tree_gold	canopy	1350	0.85	0.42	Golden Tree
+craftpix-net-772828-beach-isometric-game-assets/png/Recurso 16.png	palm_curved	canopy	1500	0.8	0.42	Curved Palm
+craftpix-net-772828-beach-isometric-game-assets/png/Recurso 15.png	palm_pair	canopy	1700	0.75	0.42	Twin Palms
+craftpix-net-103407-fantasy-land-isometric-tileset/png/Recurso 57.png	flag_red	edge	200	0.95	0.42	Red Pennant
+craftpix-net-103407-fantasy-land-isometric-tileset/png/Recurso 54.png	sign_up	edge	260	0.95	0.42	Waymark North
+craftpix-net-103407-fantasy-land-isometric-tileset/png/Recurso 55.png	sign_right	edge	260	0.95	0.42	Waymark East
+craftpix-net-103407-fantasy-land-isometric-tileset/png/Recurso 56.png	sign_left	edge	260	0.95	0.42	Waymark West
+craftpix-net-693047-ghosts-isometric-tileset/png/Recurso 11.png	candle	edge	260	1.0	0.42	Candle
+craftpix-net-103407-fantasy-land-isometric-tileset/png/Recurso 53.png	sign_skull	edge	300	0.95	0.42	Skull Marker
+craftpix-net-103407-fantasy-land-isometric-tileset/png/Recurso 77.png	ladder	edge	340	0.95	0.42	Ladder
+craftpix-net-103407-fantasy-land-isometric-tileset/png/Recurso 59.png	spear	edge	380	0.95	0.42	Planted Spear
+craftpix-net-103407-fantasy-land-isometric-tileset/png/Recurso 58.png	staff_skull	edge	420	0.95	0.42	Bone Staff
+craftpix-net-103407-fantasy-land-isometric-tileset/png/Recurso 60.png	banner_gold	edge	900	0.9	0.42	Gold Banner
+craftpix-net-103407-fantasy-land-isometric-tileset/png/Recurso 61.png	banner_crimson	edge	900	0.9	0.42	Crimson Banner
+craftpix-net-103407-fantasy-land-isometric-tileset/png/Recurso 71.png	small_stone	ground	60	1.0	0.35	Small Stone
+craftpix-net-103407-fantasy-land-isometric-tileset/png/Recurso 69.png	flat_stone	ground	70	1.0	0.35	Flat Stone
+craftpix-net-103407-fantasy-land-isometric-tileset/png/Recurso 70.png	stone_pair	ground	90	1.0	0.35	Two Stones
+craftpix-net-103407-fantasy-land-isometric-tileset/png/Recurso 73.png	rock_shard	ground	110	1.0	0.38	Rock Shard
+craftpix-net-103407-fantasy-land-isometric-tileset/png/Recurso 74.png	wood_post	ground	130	1.0	0.38	Wooden Post
+craftpix-net-556799-isometric-ruin-tileset/PNG/Elements/02.png	stone_teeth	ground	240	1.0	0.35	Stone Teeth
+craftpix-net-103407-fantasy-land-isometric-tileset/png/Recurso 72.png	skull	ground	260	1.0	0.35	Old Skull
+craftpix-net-612219-westeros-isometric-vector-tileset/1x/Recurso 24.png	cairn_stone	ground	280	1.0	0.38	Standing Stone
+craftpix-net-612219-westeros-isometric-vector-tileset/1x/Recurso 25.png	cairn_snow	ground	300	1.0	0.38	Frosted Stone
+craftpix-net-612219-westeros-isometric-vector-tileset/1x/Recurso 31.png	snow_boulder	ground	380	1.0	0.35	Snow Boulder
+craftpix-net-163650-daily-forest-isometric-tileset/png/Recurso 33.png	stepping_stones	path	300	1.0	0.26	Stepping Stones
+craftpix-net-163650-daily-forest-isometric-tileset/png/Recurso 42.png	plank_bridge	path	700	0.9	0.28	Plank Bridge
+craftpix-net-670262-fall-forest-isometric-tileset/png/1x/Recurso 12.png	timber_platform	path	850	0.85	0.28	Timber Platform
+craftpix-net-772828-beach-isometric-game-assets/png/Recurso 32.png	pier	path	1500	0.8	0.28	Wooden Pier
+craftpix-net-693047-ghosts-isometric-tileset/png/Recurso 5.png	gravestone	structure	900	0.95	0.38	Gravestone
+craftpix-net-163650-daily-forest-isometric-tileset/png/Recurso 30.png	chest	structure	1200	0.95	0.38	Old Chest
+craftpix-net-163650-daily-forest-isometric-tileset/png/Recurso 36.png	tent	structure	1600	0.85	0.38	Camp Tent
+craftpix-net-772828-beach-isometric-game-assets/png/Recurso 20.png	wreck	structure	3000	0.7	0.34	Beached Wreck

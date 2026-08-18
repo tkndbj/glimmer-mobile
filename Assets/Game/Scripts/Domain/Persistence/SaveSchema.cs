@@ -125,8 +125,23 @@ namespace GlimmerGrove.Persistence
         ///      Zero means "never chosen", which is unreachable for a real choice, so a v14
         ///      file needs no migration — see <see cref="Wallet.LoadFrom"/> for the one
         ///      ambiguity it does have to resolve.
+        /// v16 — the grove the player builds: the pieces they bought
+        ///      (<see cref="SaveFileDto.homesteadOwned"/>) and where everything stands
+        ///      (<see cref="SaveFileDto.homesteadPlaced"/>). Two fields for a whole screen,
+        ///      because the rest of it is derived: the land from chapters finished, the
+        ///      residents from glades cleared, and neither leaves a trace on disk. What
+        ///      cannot be derived is split by shape rather than by feature. A purchase is an
+        ///      entitlement, so it is a set of permanent ids joined by union — invariant 15,
+        ///      and <see cref="Progression.CompanionLedger"/>'s shape for the second time.
+        ///      An arrangement is an <em>instruction</em>, so it is merged by recency with a
+        ///      stamp per slot — invariant 11c, and the third thing in this file under that
+        ///      rule after the keeper's name and their worn companion. Note what is
+        ///      deliberately absent: any count of how many benches a player owns. Holding a
+        ///      piece is permission to draw it in as many slots as they like, because a
+        ///      stored count is the one shape invariant 11b forbids and hearts already spent
+        ///      a schema version proving it. See <see cref="Homestead.HomesteadLayout"/>.
         /// </summary>
-        public const int Version = 15;
+        public const int Version = 16;
 
         /// <summary>Progress that predates this file: index-keyed keys in PlayerPrefs.</summary>
         public const int LegacyPlayerPrefsVersion = 0;
@@ -254,6 +269,53 @@ namespace GlimmerGrove.Persistence
         /// </para>
         /// </summary>
         public string[] companionsOwned;
+
+        /// <summary>
+        /// Permanent ids of the grove pieces this player <b>bought</b>, sorted.
+        ///
+        /// <para>
+        /// Purchases only, exactly as <see cref="companionsOwned"/> is. A piece earned by
+        /// finishing a glade is never listed, because that half of the rule is derived and
+        /// re-derives correctly on every device — writing it down as well would create a
+        /// second answer for a retune to put out of step with the first. Residents are never
+        /// here at all: they have no price, which is the one rule the two kinds of piece do
+        /// not share, and <c>ContentValidation</c> fails the build on a priced one.
+        /// </para>
+        /// <para>
+        /// <b>A set, and never a count.</b> Owning a piece is permission to draw it anywhere,
+        /// not possession of a copy — so there is nothing here that could go down, and the
+        /// merge is a union. A number of copies held would be hearts' old mistake in a new
+        /// costume: two devices at 3 and 1 are equally consistent with "one bought two more"
+        /// and "one has not heard about a purchase", so every rule over the pair is wrong
+        /// somewhere. See <see cref="Homestead.HomesteadPiece"/>.
+        /// </para>
+        /// <para>
+        /// Unknown ids are carried through untouched, for <see cref="tipsSeen"/>'s reason.
+        /// Absent is the same fact as "bought nothing", which is what makes this mergeable
+        /// with no sentinel at all.
+        /// </para>
+        /// </summary>
+        public string[] homesteadOwned;
+
+        /// <summary>
+        /// What the player has put in each slot of their grove.
+        ///
+        /// <para>
+        /// An array on the wire and a map everywhere else, keyed by the slot's permanent id —
+        /// invariant 11a, for <see cref="levels"/> and <see cref="events"/>'s reason: a
+        /// duplicated row is a malformed file rather than two things in one place, and a sync
+        /// can write one slot without re-uploading the grove.
+        /// </para>
+        /// <para>
+        /// The one section in this file merged by recency rather than joined by value, and
+        /// therefore the one that can lose something. Invariant 11c is what keeps that
+        /// bounded: every row carries <see cref="HomesteadPlacementDto.setUnix"/>, its own
+        /// stamp, so the answer does not depend on when the question was asked; and a slot
+        /// nobody has touched has no row, so a device with no opinion cannot outrank one that
+        /// has. See <see cref="Homestead.HomesteadLayout"/>.
+        /// </para>
+        /// </summary>
+        public HomesteadPlacementDto[] homesteadPlaced;
 
         /// <summary>
         /// Integrity check over the rest of the file. Empty on files written before
@@ -677,6 +739,39 @@ namespace GlimmerGrove.Persistence
 
         /// <summary>The largest milestone goal already collected. 0 for none.</summary>
         public int collectedGoal;
+    }
+
+    /// <summary>
+    /// One slot of the grove, and what the player last decided about it.
+    ///
+    /// <para>
+    /// A row exists only because somebody made a choice. There is no row for a slot nobody
+    /// has touched, which is invariant 11c's second half and the reason a fresh install
+    /// cannot flatten a grove arranged on another device: absence means "no opinion", and a
+    /// device with no opinion never wins a recency comparison. A slot the player deliberately
+    /// <em>emptied</em> keeps its row with an empty <see cref="piece"/>, because taking a
+    /// tree down is a choice too and deleting the row would let a stale device put it back.
+    /// </para>
+    /// </summary>
+    [Serializable]
+    public sealed class HomesteadPlacementDto
+    {
+        /// <summary>The slot's permanent id, as authored in the grove catalog.</summary>
+        public string slot;
+
+        /// <summary>The piece standing here, or empty for a slot cleared on purpose.</summary>
+        public string piece;
+
+        /// <summary>
+        /// When this slot was last set, as a Unix timestamp.
+        ///
+        /// Its own stamp rather than the file's <see cref="SaveFileDto.updatedUnix"/>, which
+        /// <see cref="SaveService.Snapshot"/> writes as <em>now</em> every time a sync asks
+        /// for a snapshot — so merging on it would mean "whichever device is syncing wins",
+        /// which is exactly how the keeper's name was lost for a year. Zero is unreachable
+        /// for a real choice, so it reads as "written by something that did not stamp".
+        /// </summary>
+        public long setUnix;
     }
 
     [Serializable]

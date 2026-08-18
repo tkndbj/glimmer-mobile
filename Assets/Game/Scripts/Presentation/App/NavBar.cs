@@ -43,7 +43,7 @@ namespace GlimmerGrove
         /// </summary>
         public const float Height = 206f;
 
-        public enum Tab { None, Home, Shop, Items, Ranks, Profile }
+        public enum Tab { None, Home, Shop, Grove, Ranks, Profile }
 
         /// <summary>
         /// Tab order, left to right. Home leads because it is the way back: it is the
@@ -51,7 +51,7 @@ namespace GlimmerGrove
         /// the thumb already rests in. Slot width is derived from this, so adding a
         /// sixth tab re-spaces the bar rather than needing new coordinates.
         /// </summary>
-        static readonly Tab[] Order = { Tab.Home, Tab.Shop, Tab.Items, Tab.Ranks, Tab.Profile };
+        static readonly Tab[] Order = { Tab.Home, Tab.Shop, Tab.Grove, Tab.Ranks, Tab.Profile };
 
         const float CellW = 200f;
         const float CellH = 176f;
@@ -63,7 +63,35 @@ namespace GlimmerGrove
         const float CapLive = 152f;
         const float CapRest = 124f;
 
-        public static RectTransform Build(Transform parent, Tab active)
+        /// <summary>
+        /// How much larger the Grovement's cap draws than the rest.
+        ///
+        /// <para>
+        /// The one tab that is bigger, and it is bigger for a reason rather than for
+        /// emphasis' sake: it is the only tab leading somewhere the player <em>made</em>.
+        /// Two of the other four are still promises, and the two that are not — the hub and
+        /// the profile — are places the game takes you anyway. A grove nobody finds is a
+        /// grove nobody builds, and the whole feature rests on somebody tapping this once.
+        /// </para>
+        /// <para>
+        /// Sized so the enlarged live cap still clears its neighbours: the slot is
+        /// <c>RefWidth / 5</c> = 216px and 152 x 1.18 is 179.
+        /// </para>
+        /// </summary>
+        const float GroveCapScale = 1.18f;
+
+        /// <summary>
+        /// Draws the bar with <paramref name="active"/> marked.
+        ///
+        /// <para>
+        /// <paramref name="onSidePage"/> says the caller is a <em>page belonging to</em> that
+        /// tab rather than the tab's own screen — the grove's shop is the first. Without it
+        /// the marked tab is left inert, which is right when you are standing on it and wrong
+        /// one page in: the most natural way back from the shop is the tab it belongs to, and
+        /// a dead control there is the worst place in the UI to put one.
+        /// </para>
+        /// </summary>
+        public static RectTransform Build(Transform parent, Tab active, bool onSidePage = false)
         {
             var bar = UIKit.Box("NavBar", parent, new Vector2(0f, Height), new Vector2(.5f, 0f),
                                 new Vector2(0f, Height * .5f));
@@ -75,26 +103,28 @@ namespace GlimmerGrove
             for (int i = 0; i < Order.Length; i++)
             {
                 float x = (i - (Order.Length - 1) * .5f) * slot;
-                Item(bar, x, Order[i], active == Order[i]);
+                Item(bar, x, Order[i], active == Order[i], onSidePage);
             }
 
             return bar;
         }
 
         // --------------------------------------------------------------- one tab
-        static void Item(Transform bar, float x, Tab tab, bool active)
+        static void Item(Transform bar, float x, Tab tab, bool active, bool onSidePage)
         {
             string labelKey = LabelKey(tab);
 
             // the cell is the button; everything below is decoration inside it, so a
             // press squashes cap, glyph and caption as one object
+            bool standing = active && !onSidePage;
+
             var cell = UIKit.Button("Nav_" + tab, bar, Art.Pixel, new Vector2(CellW, CellH),
-                                    new Vector2(.5f, .5f), new Vector2(x, 4f), Tap(tab, active));
+                                    new Vector2(.5f, .5f), new Vector2(x, 4f), Tap(tab, standing));
             var hit = cell.GetComponent<Image>();
             hit.color = new Color(1f, 1f, 1f, 0f);
-            if (active && Tap(tab, true) == null) { cell.ClickSfx = null; cell.PressScale = .97f; }
+            if (standing && Tap(tab, true) == null) { cell.ClickSfx = null; cell.PressScale = .97f; }
 
-            float cap = active ? CapLive : CapRest;
+            float cap = (active ? CapLive : CapRest) * (tab == Tab.Grove ? GroveCapScale : 1f);
             float capY = active ? 22f : 14f;
 
             // Every tab carries a cap, and the live one differs by size, colour and
@@ -115,7 +145,7 @@ namespace GlimmerGrove
             // one is already marked out four other ways (a halo, a bigger cap, a breathing
             // scale and a brighter label), which is plenty of separation without spending
             // the disabled grey on five permanent controls. See Skins.
-            var capImg = UIKit.Img("Cap", cell.transform, Art.S(active ? "Ui/jelly_teal" : "Ui/" + Skins.Nav),
+            var capImg = UIKit.Img("Cap", cell.transform, Art.S("Ui/" + CapSkin(tab, active)),
                                    Color.white, Vector2.one * cap, new Vector2(.5f, .5f),
                                    new Vector2(0f, capY));
             capImg.preserveAspect = true;
@@ -150,7 +180,7 @@ namespace GlimmerGrove
             {
                 case Tab.Home: return "ui.nav.home";
                 case Tab.Shop: return "ui.nav.shop";
-                case Tab.Items: return "ui.nav.items";
+                case Tab.Grove: return "ui.nav.grovement";
                 case Tab.Ranks: return "ui.nav.ranks";
                 default: return "ui.nav.profile";
             }
@@ -161,9 +191,26 @@ namespace GlimmerGrove
             switch (tab)
             {
                 case Tab.Shop: return "ui.soon.shop";
-                case Tab.Items: return "ui.soon.items";
                 default: return "ui.soon.ranks";
             }
+        }
+
+        /// <summary>
+        /// Which jelly a cap wears.
+        ///
+        /// <para>
+        /// The Grovement keeps its orange whether it is the live tab or not, which is the one
+        /// exception to the teal-means-here rule and deliberate. Selection here was never
+        /// carried by colour alone — see the type's remarks — it is size, height, a halo and a
+        /// breath, and all four still apply. What the orange buys is the thing the other four
+        /// cannot: a tab that stands out when you are standing somewhere else, which is the
+        /// only moment it matters.
+        /// </para>
+        /// </summary>
+        static string CapSkin(Tab tab, bool active)
+        {
+            if (tab == Tab.Grove) return "jelly_orange";
+            return active ? "jelly_teal" : Skins.Nav;
         }
 
         static Sprite Icon(Tab tab)
@@ -172,22 +219,28 @@ namespace GlimmerGrove
             {
                 case Tab.Home: return Art.S("Ui/ic_home");
                 case Tab.Shop: return Art.S("Ui/ic_chest");
-                case Tab.Items: return Art.S("Ui/ic_gift");
+                // The grove's own islands, which is literally what the tab leads to. Map
+                // furniture rather than a Ui glyph, and already in the global preload, so it
+                // costs nothing; it is also full colour where most of this row is, which the
+                // cap's selection markers were designed around — see the type's remarks.
+                case Tab.Grove: return Art.S("Map/rock_grass");
                 case Tab.Ranks: return Art.S("Ui/ic_trophy");
                 default: return Art.S("Ui/ic_profile");
             }
         }
 
         /// <summary>
-        /// Home and Profile are screens; the rest are still promises. A tab already
-        /// standing on its own screen returns null and is left inert rather than
-        /// re-entering it.
+        /// Home, Profile and the Grovement are screens; the rest are still promises. A tab
+        /// whose own screen is the one being drawn returns null and is left inert rather than
+        /// re-entering it — <paramref name="standing"/>, which is not the same as being the
+        /// marked tab. See <see cref="Build"/>.
         /// </summary>
-        static Action Tap(Tab tab, bool active)
+        static Action Tap(Tab tab, bool standing)
         {
-            if (active && (tab == Tab.Home || tab == Tab.Profile)) return null;
+            if (standing && (tab == Tab.Home || tab == Tab.Profile || tab == Tab.Grove)) return null;
             if (tab == Tab.Home) return () => Flow.Go<HomeScreen>();
             if (tab == Tab.Profile) return () => Flow.Go<ProfileScreen>();
+            if (tab == Tab.Grove) return () => Flow.Go<HomesteadScreen>();
 
             string title = LabelKey(tab), body = SoonKey(tab);
             var glyph = Icon(tab);

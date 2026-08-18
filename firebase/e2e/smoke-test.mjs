@@ -162,6 +162,27 @@ const save = {
       { mapValue: { fields: { id: { stringValue: "first_bloom" },
                               collectedGoal: { integerValue: "2" } } } },
     ] } },
+    // The lessons already shown and the companions already bought. Here for the reason
+    // every block above is: the mapper sends them, so this has to, or nothing checks that
+    // the live rules accept them.
+    tipsSeen: { arrayValue: { values: [{ stringValue: "brittle" }] } },
+    companionsOwned: { arrayValue: { values: [{ stringValue: "coral" }] } },
+    // The grove: what was bought for it, and where it stands. Same reason again, and it
+    // is the newest pair — an unlisted field is refused outright by `hasOnly`, so a rules
+    // release that forgot these would not degrade the grove, it would turn every sync in
+    // the game into PERMISSION_DENIED. A list of maps rather than a map keyed by slot id,
+    // because a slot id is content and a Firestore field name is not.
+    homesteadOwned: { arrayValue: { values: [{ stringValue: "fence_low" }] } },
+    homesteadPlaced: { arrayValue: { values: [
+      { mapValue: { fields: { slot: { stringValue: "meadow_a" },
+                              piece: { stringValue: "oak" },
+                              setUnix: { integerValue: "1700000000" } } } },
+      // A slot the player deliberately emptied: a row with no piece. It is a choice and
+      // carries a stamp, which is what stops a stale device putting the tree back.
+      { mapValue: { fields: { slot: { stringValue: "meadow_b" },
+                              piece: { stringValue: "" },
+                              setUnix: { integerValue: "1700000001" } } } },
+    ] } },
     progression: { mapValue: { fields: { xpHighWater: { integerValue: "100" },
                                          levelHighWater: { integerValue: "2" } } } },
     cloud: { mapValue: { fields: { userId: { stringValue: uid }, revision: { integerValue: "1" },
@@ -178,6 +199,17 @@ check((await fetch(`${FS}/players/${uid}`, { headers: bearer })).ok, "own save i
 const smuggled = await fetch(`${FS}/players/${uid}?updateMask.fieldPaths=smuggled`, {
   method: "PATCH", headers: json, body: JSON.stringify({ fields: { smuggled: { stringValue: "x" } } }) });
 check(smuggled.status === 403, "a field the rules do not list is refused", `got ${smuggled.status}`);
+
+// The grove's arrangement is the longest client-controlled list in the document, and the
+// only defence against a device making its own save expensive to read is the bound in the
+// rules. Checked rather than assumed, because a `size()` clause that was written but never
+// released looks exactly like one that works.
+const bloated = await fetch(`${FS}/players/${uid}?updateMask.fieldPaths=homesteadPlaced`, {
+  method: "PATCH", headers: json, body: JSON.stringify({ fields: { homesteadPlaced: {
+    arrayValue: { values: Array.from({ length: 1200 }, (_, i) => (
+      { mapValue: { fields: { slot: { stringValue: "s" + i }, piece: { stringValue: "oak" },
+                              setUnix: { integerValue: "1700000000" } } } })) } } } }) });
+check(bloated.status === 403, "an oversized grove arrangement is refused", `got ${bloated.status}`);
 
 // The point of keying the ledger by level id: one glade can be written on its own
 // rather than re-uploading a ledger that may run to thousands of entries.

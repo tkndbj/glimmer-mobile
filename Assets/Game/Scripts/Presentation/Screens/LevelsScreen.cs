@@ -628,8 +628,15 @@ namespace GlimmerGrove
                 var perch = pair.Value;
                 if (!perch) continue;
 
+                // Hidden before it is destroyed: Destroy lands at the end of the frame, so
+                // the old mark would otherwise be drawn on top of the one replacing it for
+                // the rest of this one. The house rule everywhere a region is rebuilt.
                 var existing = perch.Find("Rank");
-                if (existing) Destroy(existing.gameObject);
+                if (existing)
+                {
+                    existing.gameObject.SetActive(false);
+                    Destroy(existing.gameObject);
+                }
 
                 if (PlayerProgress.Stars(pair.Key) > 0)
                     RankMark(perch, pair.Key, 0f);

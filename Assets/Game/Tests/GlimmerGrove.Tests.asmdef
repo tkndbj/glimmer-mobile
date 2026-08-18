@@ -4,6 +4,7 @@
     "references": [
         "GlimmerGrove.Domain",
         "GlimmerGrove.Cloud",
+        "GlimmerGrove.Presentation",
         "UnityEngine.TestRunner",
         "UnityEditor.TestRunner"
     ],

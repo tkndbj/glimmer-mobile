@@ -49,7 +49,7 @@ namespace GlimmerGrove.EditorTools
             // lands in the global group and the next sweep or audit corrects it.
             var bodies = SafeChapterBodies();
             var ownership = AddressableAddresses.ChapterOwnership(bodies);
-            var frameFolders = AddressableAddresses.FrameFolders(bodies);
+            var frameFolders = AddressableAddresses.FrameFolders(bodies, SafeHomestead());
 
             var summary = new AddressableRegistry.Summary();
 
@@ -97,6 +97,24 @@ namespace GlimmerGrove.EditorTools
             catch
             {
                 return System.Array.Empty<ChapterBody>();
+            }
+        }
+
+        /// <summary>
+        /// The grove catalog, or an empty one if the content cannot be read right now. Never
+        /// throws, for <see cref="SafeChapterBodies"/>'s reason — and it matters more here,
+        /// because the file this reads is the one an author is most likely to be halfway
+        /// through editing when an art asset lands beside it.
+        /// </summary>
+        internal static Homestead.HomesteadCatalog SafeHomestead()
+        {
+            try
+            {
+                return EditorContentLoader.Load().Homestead;
+            }
+            catch
+            {
+                return Homestead.HomesteadCatalog.Empty;
             }
         }
     }

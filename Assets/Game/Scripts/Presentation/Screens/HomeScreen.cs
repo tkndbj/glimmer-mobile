@@ -47,6 +47,7 @@ namespace GlimmerGrove
         Image _hero;
         RectTransform _dailyPanel;
         RectTransform _resourceRow;
+        Text _heartsValue, _coinsValue, _gemsValue;
         RectTransform _streakBox;
         RectTransform _focusBox;
         Text _resetClock;
@@ -95,10 +96,68 @@ namespace GlimmerGrove
 
         void OnHeartsChanged(Hearts hearts) => OnWalletChanged();
 
+        /// <summary>
+        /// Three numbers changed, so three numbers are written. It used to rebuild the row.
+        ///
+        /// <para>
+        /// Nothing about the row is a function of the wallet except the readouts — same
+        /// three pills, same icons, same buttons — so a rebuild was a way of setting a
+        /// string that also replayed the pills' entrance, and the entrance starts at scale
+        /// zero behind a delay. One of those is a flourish; several in a second is the row
+        /// flashing in and out. Returning to the game fires the events several times over
+        /// (a sync applies another device's work, and the first read of the hearts catches
+        /// up whatever refilled while the app was away), which is where a player sees it.
+        /// </para>
+        /// <para>
+        /// It also removes a re-entrancy that was quietly worse than the flashing. Reading
+        /// <c>Wallet.Hearts</c> commits a refill and raises <c>HeartsChanged</c> from inside
+        /// the getter, so <c>BuildResources</c> — which reads it while placing the first
+        /// pill — could be re-entered halfway through itself. The inner call built the row
+        /// the player ends up with; the outer one carried on and registered its own pills
+        /// with <see cref="ResourceSlots"/>, which are on the row destroyed at the end of
+        /// the frame. The chest's prizes then had nowhere to fly to.
+        /// </para>
+        /// <para>
+        /// The row is still rebuilt on navigation, which is the one place its structure can
+        /// actually differ, and <see cref="ResourceSlots"/> registration stays in the
+        /// builder — it is still the one thing that runs exactly once per row.
+        /// </para>
+        /// </summary>
         void OnWalletChanged()
         {
             if (this == null || !_resourceRow) return;
-            BuildResources();
+            PaintResources();
+        }
+
+        /// <summary>
+        /// Takes something off the screen and then destroys it, in that order.
+        ///
+        /// <para>
+        /// <c>Destroy</c> only lands at the end of the frame, so a panel replaced in place is
+        /// drawn <em>over</em> its own replacement for the rest of the frame it was replaced
+        /// in — and since everything here enters from <c>Tween.Pop</c> at scale zero, what
+        /// the player sees is the old panel, then a gap, then the new one springing in. One
+        /// of those reads as a flourish; two in a second reads as a fault.
+        /// </para>
+        /// <para>
+        /// The other five screens that rebuild a region already do this (<c>ProfileScreen</c>,
+        /// <c>EventScreen</c>, <c>StreakScreen</c>, <c>CompanionScreen</c>,
+        /// <c>CompanionUnlockOverlay</c>); this was the screen that did not, which is the
+        /// screen the doubling was reported from.
+        /// </para>
+        /// </summary>
+        static void Hide(GameObject go)
+        {
+            if (!go) return;
+            go.SetActive(false);
+            Destroy(go);
+        }
+
+        void PaintResources()
+        {
+            if (_heartsValue) _heartsValue.text = Profile.HeartsLabel();
+            if (_coinsValue) _coinsValue.text = Profile.Short(Profile.Coins);
+            if (_gemsValue) _gemsValue.text = Profile.Short(Profile.Gems);
         }
 
         /// <summary>
@@ -224,7 +283,7 @@ namespace GlimmerGrove
         void BuildResources()
         {
             int sibling = _resourceRow ? _resourceRow.GetSiblingIndex() : -1;
-            if (_resourceRow) Destroy(_resourceRow.gameObject);
+            if (_resourceRow) Hide(_resourceRow.gameObject);
 
             var row = UIKit.Box("Resources", Content, new Vector2(1000f, 92f), new Vector2(.5f, 1f), new Vector2(0f, -250f));
             _resourceRow = row;
@@ -241,19 +300,22 @@ namespace GlimmerGrove
             // whatever the network is doing and offers the video when there is one. The
             // states that used to hide it are states the panel renders honestly: at the
             // ceiling it says so, with nothing loaded it says it is looking.
-            ResourcePill(row, -318f, Pal.Rose, "ic_heart", Profile.HeartsLabel(), false,
+            _heartsValue = ResourcePill(row, -318f, Pal.Rose, "ic_heart", Profile.HeartsLabel(), false,
                          () => Flow.Modal<AdOfferOverlay>(v => v.PlacementId = AdPlacement.HeartRefill),
                          ResourceSlots.Kind.Hearts, n => Profile.HeartsLabel((int)n));
-            ResourcePill(row, 0f, Pal.Gold, null, Profile.Short(Profile.Coins), true,
+            _coinsValue = ResourcePill(row, 0f, Pal.Gold, null, Profile.Short(Profile.Coins), true,
                          () => Flow.Modal<AdOfferOverlay>(v => v.PlacementId = AdPlacement.CoinBonus),
                          ResourceSlots.Kind.Credits, Profile.Short);
-            ResourcePill(row, 318f, Pal.Bloom, "ic_gem", Profile.Short(Profile.Gems), false,
+            _gemsValue = ResourcePill(row, 318f, Pal.Bloom, "ic_gem", Profile.Short(Profile.Gems), false,
                          () => Flow.Modal<ComingSoonOverlay>(v => v.Configure("Gems", "ic_gem",
                              "Gems will unlock hints, skins and seasonal glades.")),
                          ResourceSlots.Kind.Gems, Profile.Short);
         }
 
-        /// <summary>Resource readout with an add button. Coins use the spinning sprite.</summary>
+        /// <summary>
+        /// Resource readout with an add button. Coins use the spinning sprite.
+        /// Returns the value label, which is what <see cref="PaintResources"/> writes to.
+        /// </summary>
         /// <remarks>
         /// Each pill registers itself with <see cref="ResourceSlots"/> as it is built, which
         /// is what lets the daily chest fly its prizes into this row from an overlay drawn on
@@ -262,7 +324,7 @@ namespace GlimmerGrove
         /// reference from the last build would be pointing at a dead object, and the one place
         /// guaranteed to run on every rebuild is the builder itself.
         /// </remarks>
-        void ResourcePill(Transform parent, float x, Color tint, string icon, string value,
+        Text ResourcePill(Transform parent, float x, Color tint, string icon, string value,
                           bool animatedCoin, Action onAdd,
                           ResourceSlots.Kind kind, Func<long, string> format)
         {
@@ -292,6 +354,8 @@ namespace GlimmerGrove
 
             bg.transform.localScale = Vector3.zero;
             Tween.Pop(bg.transform, 0f, .55f, .18f + Mathf.Abs(x) * .0004f);
+
+            return t;
         }
 
         // -------------------------------------------------------- daily bonuses
@@ -314,7 +378,7 @@ namespace GlimmerGrove
         void BuildDaily()
         {
             int sibling = _dailyPanel ? _dailyPanel.GetSiblingIndex() : -1;
-            if (_dailyPanel) Destroy(_dailyPanel.gameObject);
+            if (_dailyPanel) Hide(_dailyPanel.gameObject);
 
             int runs = DailyChests.Runs, target = DailyChests.RunsForAll;
 
@@ -773,7 +837,7 @@ namespace GlimmerGrove
         {
             if (!_streakBox) return;
             for (int i = _streakBox.childCount - 1; i >= 0; i--)
-                Destroy(_streakBox.GetChild(i).gameObject);
+                Hide(_streakBox.GetChild(i).gameObject);
 
             float w = _streakBox.sizeDelta.x;
             int days = DailyStreak.Days;

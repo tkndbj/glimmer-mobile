@@ -329,6 +329,267 @@ def check_chapter_map(chapter, cid, ordered):
                             f"end-of-chapter marker at ({teaser[0]:.2f}, {teaser[1]:.2f})")
 
 
+SLOT_KINDS = ("ground", "hearth", "structure", "bed", "path", "edge", "canopy")
+
+
+def check_grove(keys, level_ids, chapter_ids):
+    """The grove catalog: its land, its residents and its shop.
+
+    The offline half of ContentValidation.ValidateHomestead. It matters more than the
+    usual parity here, because the shipped-catalog tests in HomesteadTests reach
+    Application.dataPath and are therefore Editor-only - without this, nothing offline
+    would look at homestead.json at all.
+
+    Two things are errors and everything else warns, which is the line the Editor
+    validator draws: a validator may not overrule an economy decision, but it may refuse
+    a rule violation and a grove nobody can use.
+    """
+    path = os.path.join(ROOT, "homestead.json")
+    if not os.path.exists(path):
+        warnings.append("no homestead.json; the Grovement will have nothing to show")
+        return None
+
+    grove = json.load(open(path, encoding="utf-8"))
+
+    if grove.get("schemaVersion") != 2:
+        errors.append(f"homestead.json is schema v{grove.get('schemaVersion')}, this build reads v2")
+
+    plots = grove.get("plots") or []
+    pieces = grove.get("pieces") or []
+    hearths = []
+    slot_kinds = {}
+
+    art_root = os.path.join(os.path.dirname(ROOT), "..", "Game", "Art")
+    art_root = os.path.abspath(art_root)
+
+    def art_exists(key, animated):
+        full = os.path.join(art_root, key.replace("/", os.sep))
+        return os.path.isdir(full) if animated else os.path.exists(full + ".png")
+
+    def png_size(key):
+        """Width and height straight out of the PNG header - no image library needed.
+
+        This is what lets the offline checker see the same thing HomesteadMap sees. A
+        plot's drawn height is its width times the art's aspect, and that number is the
+        one an authored `y` used to have to agree with - which is exactly why `y` is
+        derived now rather than written down.
+        """
+        full = os.path.join(art_root, key.replace("/", os.sep)) + ".png"
+        if not os.path.exists(full):
+            return None
+        with open(full, "rb") as f:
+            head = f.read(24)
+        if len(head) < 24 or head[12:16] != b"IHDR":
+            return None
+        return (int.from_bytes(head[16:20], "big"), int.from_bytes(head[20:24], "big"))
+
+    # Slot ids key a map in the save file, so two plots sharing one would put a tree
+    # placed on the first island onto the second - and the merge would then treat two
+    # independent choices as one. Unique across the whole grove, not per plot.
+    slot_ids = {}
+    starter_plots = 0
+    ahead = []
+
+    for plot in plots:
+        pid = plot.get("id", "")
+        if not pid:
+            errors.append("a grove plot has no id")
+            continue
+
+        if not plot.get("requiresChapter"):
+            starter_plots += 1
+        elif plot["requiresChapter"] not in chapter_ids:
+            # Expected rather than wrong: the plot ladder is authored ahead of the
+            # chapters that open it, so a player can see the grove they are working
+            # towards. Collected into one line rather than reported per plot, because a
+            # ladder deliberately built to outlast the current content would otherwise
+            # emit half a screen of warnings every run - and a validator nobody reads is
+            # a validator that has stopped working. Said at all because it is also what a
+            # typo looks like, and the two are indistinguishable in the file.
+            ahead.append(f"{pid} -> {plot['requiresChapter']}")
+
+        if not art_exists(plot.get("art", ""), False):
+            errors.append(f"grove plot '{pid}' has no sprite at Art/{plot.get('art')}.png")
+
+        if f"ui.plot.{pid}" not in keys:
+            errors.append(f"grove plot '{pid}' missing string 'ui.plot.{pid}'")
+
+        slots = plot.get("slots") or []
+        if not slots:
+            warnings.append(f"grove plot '{pid}' has no slots; nothing can be placed on it")
+
+        for slot in slots:
+            sid = slot.get("id", "")
+            if sid in slot_ids:
+                errors.append(f"grove slot id '{sid}' is used by plots '{slot_ids[sid]}' and "
+                              f"'{pid}'; slot ids key the save file and must be unique")
+            slot_ids[sid] = pid
+
+            if not (0.0 <= slot.get("x", 0) <= 1.0) or not (0.0 <= slot.get("y", 0) <= 1.0):
+                warnings.append(f"grove slot '{sid}' sits outside its plot")
+
+            kind = slot.get("kind") or "ground"
+            if kind not in SLOT_KINDS:
+                errors.append(f"grove slot '{sid}' has kind '{kind}', which the game reads "
+                              "as ground; the catalog and the client disagree")
+            if kind == "hearth":
+                hearths.append(sid)
+            else:
+                slot_kinds[kind] = slot_kinds.get(kind, 0) + 1
+
+        # The grove's ChapterMap.MinimumNodeSeparation, and a warning where that is an
+        # error: a map node's size is fixed, while a slot holds whatever the player chose.
+        for i in range(len(slots)):
+            for k in range(i + 1, len(slots)):
+                # Paths are exempt: a path is a flat texture whose job is to run from one
+                # place to the next, so two path slots a thumb apart are the feature working.
+                if "path" in (slots[i].get("kind"), slots[k].get("kind")):
+                    continue
+                dx = slots[i].get("x", 0) - slots[k].get("x", 0)
+                dy = slots[i].get("y", 0) - slots[k].get("y", 0)
+                d = (dx * dx + dy * dy) ** 0.5
+                if d < 0.13:
+                    warnings.append(f"grove slots '{slots[i]['id']}' and '{slots[k]['id']}' are "
+                                    f"{d:.3f} apart on plot '{pid}'; anything larger than a "
+                                    "pebble in both will overlap")
+
+    if not starter_plots:
+        errors.append("no grove plot is free from the first launch; a new player would open "
+                      "the Grovement onto nothing but padlocks")
+
+    # The derived layout, mirroring HomesteadMap: islands stack bottom to top with a fixed
+    # gap and the canvas height falls out of the sum. Overlap is impossible by construction,
+    # so there is nothing to check - what is worth reporting is how long the grove has got,
+    # because that is the number a drop quietly grows and nobody sees until they scroll.
+    CANVAS_W, GAP, PAD = 1080.0, 190.0, 140.0
+    grove_h = PAD * 2
+    for i, plot in enumerate(plots):
+        size = png_size(plot.get("art", ""))
+        if not size:
+            continue
+        w = CANVAS_W * plot.get("width", 0.5)
+        grove_h += w * (size[1] / size[0])
+        if i:
+            grove_h += GAP
+
+    if ahead:
+        warnings.append(f"{len(ahead)} grove plot(s) open on chapters the catalog does not "
+                        f"carry and stay locked until those ship: {', '.join(ahead)}")
+
+    piece_ids = set()
+    starters = residents = for_sale = earned = 0
+    total = 0
+    dwellings = []
+    decor_kinds = set()
+
+    for piece in pieces:
+        pid = piece.get("id", "")
+        if not pid:
+            errors.append("a grove piece has no id")
+            continue
+        if pid in piece_ids:
+            errors.append(f"grove lists piece '{pid}' twice")
+        piece_ids.add(pid)
+
+        kind = (piece.get("kind") or "decor").lower()
+        cost = piece.get("cost", 0)
+        needs = bool(piece.get("requiresLevel") or piece.get("requiresChapter"))
+
+        # The one rule the two kinds do not share. A resident is proof of a glade the
+        # player finished; one that can be bought turns a record into a receipt.
+        if kind == "resident" and cost > 0:
+            errors.append(f"grove resident '{pid}' carries a price; residents are earned "
+                          "by playing and are never for sale")
+
+        if kind == "dwelling":
+            dwellings.append((piece.get("tier", 0), pid, cost))
+        elif kind != "resident":
+            slot_kind = piece.get("slot") or "ground"
+            if slot_kind not in SLOT_KINDS or slot_kind == "hearth":
+                errors.append(f"grove piece '{pid}' belongs in slot kind '{slot_kind}', "
+                              "which is not a kind anything can be placed in")
+            decor_kinds.add(slot_kind)
+
+        if kind == "resident":
+            residents += 1
+        if cost > 0:
+            for_sale += 1
+            total += cost
+        if needs:
+            earned += 1
+        if not needs and cost <= 0:
+            starters += 1
+
+        art = piece.get("art") or f"Homestead/{pid}"
+        if not art_exists(art, piece.get("animated", False)):
+            errors.append(f"grove piece '{pid}' has no art at Art/{art}"
+                          f"{'/' if piece.get('animated') else '.png'}")
+
+        if f"ui.piece.{pid}" not in keys:
+            errors.append(f"grove piece '{pid}' missing string 'ui.piece.{pid}'")
+
+        lvl = piece.get("requiresLevel")
+        if lvl and lvl not in level_ids:
+            warnings.append(f"grove piece '{pid}' is earned by clearing '{lvl}', which the "
+                            "catalog does not carry")
+
+        chap = piece.get("requiresChapter")
+        if chap and chap not in chapter_ids:
+            warnings.append(f"grove piece '{pid}' is earned by finishing chapter '{chap}', "
+                            "which the catalog does not carry")
+
+    if not starters:
+        errors.append("no grove piece is free from the first launch; a new player would open "
+                      "the picker onto an empty list")
+
+    if not residents:
+        warnings.append("the grove has no residents; the half of the catalog that cannot be "
+                        "bought is what makes it a record rather than a shop")
+
+    # The home ladder. Every failure here is invisible in the game: a catalog with dwellings
+    # and no hearth draws no home and looks exactly like one with no dwellings, and two rungs
+    # on one tier make "the best one owned" depend on the order of the file.
+    if dwellings and not hearths:
+        errors.append(f"the grove has {len(dwellings)} home(s) and no hearth slot to draw one "
+                      "on; they would be bought and never seen")
+    if hearths and not dwellings:
+        errors.append("the grove has a hearth and no home to stand on it")
+    if len(hearths) > 1:
+        warnings.append(f"{len(hearths)} hearth slots ({', '.join(hearths)}); the same home "
+                        "draws on every one of them")
+
+    tiers = {}
+    for tier, pid, _cost in dwellings:
+        if tier <= 0:
+            errors.append(f"grove home '{pid}' has no tier; the ladder cannot be ordered")
+        if tier in tiers:
+            errors.append(f"grove homes '{tiers[tier]}' and '{pid}' are both tier {tier}")
+        tiers[tier] = pid
+
+    if dwellings:
+        first = min(dwellings)
+        rows = [p for p in pieces if p.get("id") == first[1]]
+        if first[2] > 0 or (rows and (rows[0].get("requiresLevel") or rows[0].get("requiresChapter"))):
+            errors.append(f"the first home '{first[1]}' is not free; a new grove would open "
+                          "with nothing on its hearth")
+
+    # Slots nothing but a resident could ever fill. Counted over decor only, since a resident
+    # fits anywhere and would make the check unfireable.
+    for kind, count in sorted(slot_kinds.items()):
+        if kind not in decor_kinds:
+            warnings.append(f"{count} grove slot(s) are for {kind}, and the catalog has no "
+                            "decor of that kind; only a resident could ever stand there")
+
+    return {
+        "homes": len(dwellings), "ladder": sum(c for _t, _p, c in dwellings),
+        "slot_kinds": slot_kinds,
+        "height": int(grove_h), "screens": round(grove_h / 1452.0, 1),
+        "plots": len(plots), "slots": len(slot_ids), "pieces": len(pieces),
+        "starter_plots": starter_plots, "residents": residents,
+        "for_sale": for_sale, "earned": earned, "starters": starters, "total": total,
+    }
+
+
 def main():
     manifest = json.load(open(os.path.join(ROOT, "manifest.json"), encoding="utf-8"))
     loc = json.load(open(os.path.join(ROOT, "loc", "en.json"), encoding="utf-8"))
@@ -450,6 +711,20 @@ def main():
         print(f"{i:<3}{s['id']:<22}{s['chapter']:<16}{str(s['w'])+'x'+str(s['h']):<7}"
               f"{s['par']:<5}{s['gold']:<6}{s['silver']:<7}{clock:<7}{rate:<10}"
               f"{s['sources']:<7}{s['lamps']:<9}{s['fragile']:<8}{s['caps']:<10}{s['bound']}")
+
+    grove = check_grove(keys,
+                        {lv for e in manifest["chapters"] for lv in (e.get("levels") or [])},
+                        {e["id"] for e in manifest["chapters"] if e.get("id")})
+
+    if grove:
+        print(f"\ngrove: {grove['plots']} plot(s) ({grove['starter_plots']} open at once), "
+              f"{grove['slots']} slot(s), {grove['pieces']} piece(s) - "
+              f"{grove['residents']} resident(s), {grove['starters']} free, "
+              f"{grove['earned']} earned, {grove['for_sale']} for sale "
+              f"({grove['total']} credits in all)")
+        print(f"       canvas {grove['height']}px tall - about {grove['screens']} screens of scroll")
+        print(f"       home ladder: {grove['homes']} rung(s), {grove['ladder']} credits to the top")
+        print("       slots: " + ", ".join(f"{k} {n}" for k, n in sorted(grove['slot_kinds'].items())))
 
     print()
     for w in warnings:

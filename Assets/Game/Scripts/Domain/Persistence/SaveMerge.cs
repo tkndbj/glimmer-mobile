@@ -96,6 +96,19 @@ namespace GlimmerGrove.Persistence
                 // rule lives with the feature for the reason the four above it do.
                 companionsOwned = Progression.CompanionLedger.Join(mine.companionsOwned,
                                                                    other.companionsOwned),
+
+                // The grove's two halves, and they are joined differently on purpose. What
+                // was bought is a union, for the reason directly above. Where things stand
+                // is the only part of this file merged by *recency* other than the keeper's
+                // name and their worn companion — an arrangement is an instruction rather
+                // than an achievement, so the most recent one is the one the player meant.
+                // Invariant 11c is what keeps that from losing a grove: the stamp travels
+                // per slot rather than being read off this file's updatedUnix, and an
+                // untouched slot writes nothing at all.
+                homesteadOwned = Homestead.HomesteadLedger.Join(mine.homesteadOwned,
+                                                                other.homesteadOwned),
+                homesteadPlaced = Homestead.HomesteadLayout.Join(mine.homesteadPlaced,
+                                                                 other.homesteadPlaced),
             };
 
             return merged;

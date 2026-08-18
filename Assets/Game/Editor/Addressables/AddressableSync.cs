@@ -47,7 +47,7 @@ namespace GlimmerGrove.EditorTools
 
             var bodies = AddressableAutoRegister.SafeChapterBodies();
             var ownership = AddressableAddresses.ChapterOwnership(bodies);
-            var frameFolders = AddressableAddresses.FrameFolders(bodies);
+            var frameFolders = AddressableAddresses.FrameFolders(bodies, AddressableAutoRegister.SafeHomestead());
 
             // The hook would otherwise see this pass's own writes and redo the work.
             AddressableAutoRegister.Suspended = true;

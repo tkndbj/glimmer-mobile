@@ -260,17 +260,56 @@ What that means in practice here:
     that promises all of it is exactly how a companion somebody paid for stays behind a
     padlock. Every screen asks `IsHeld`. The level half stays derived and is never written
     down: a second answer is a second thing a retune can put out of step with the first.
+16. **A grove is built, and only two facts about it are stored.** The Grovement is the one
+    reward in the game that is a *thing the player made* rather than a number that went up,
+    and the whole feature costs `SaveFileDto` two fields because everything else is derived —
+    the land from chapters finished, the residents from glades cleared. What is left splits by
+    *shape*, not by feature. A purchase is an **entitlement**, so `homesteadOwned` is a
+    union-joined set of ids, which is 15 for the second time. An arrangement is an
+    **instruction**, so `homesteadPlaced` is merged by recency with a stamp per slot, which is
+    11c for the third time — and it is therefore the only part of this feature that can lose
+    something, which is why an untouched slot writes no row at all and a slot the player
+    *emptied* keeps one. Note what is deliberately absent: any count of how many benches
+    somebody owns. **Holding a piece is permission to draw it in as many slots as you like**,
+    because a count of copies is precisely the shape 11b forbids and hearts already spent a
+    schema version proving it — and it makes the better shop, since variety rather than
+    quantity is what makes two groves differ. A slot id is written into the save, so invariant
+    1 applies to it in full and it is unique across the whole grove rather than per plot.
+16b. **Grove geometry lives in `HomesteadMap` (Domain), and a plot's vertical position is
+    derived.** Invariant 8a for the second time, learned the same way `ChapterMap` was. An author
+    writes a plot's `x` and its `width`; where it sits vertically is computed by stacking the
+    islands with a fixed gap, and the canvas height is the sum rather than a constant somebody has
+    to keep in step. It was authored first, as a `y` fraction against a fixed 3400px canvas, and it
+    shipped with **all thirteen consecutive pairs of islands overlapping** and the starter plot
+    below the scrollable area, unreachable — because the number `y` must agree with is how tall the
+    art draws, which lives in a PNG the author cannot see from the JSON. Deriving it makes the
+    collision unrepresentable instead of merely checkable, and a re-cut sprite can no longer break
+    the layout. Two smaller rules came out of the same bug. `UIKit.Box` **always** pivots centre, so
+    anything tucked into a corner goes through `UIKit.Corner` or half of it hangs off the screen —
+    that shipped twice in one screen. And a `ScrollRect`'s `verticalNormalizedPosition` is resolved
+    against content bounds it recomputes in its own `LateUpdate`, so setting it in the frame the
+    canvas was resized is silently interpreted against the old height: it read 0.000 — the bottom —
+    while the bottom island sat 2,785px below the screen. Position the content directly.
+16a. **A resident is never for sale, and that is the whole feature.** Residents and decor are
+    one catalog with a `kind` on it — same slots, same picker, same ledger — and the kind
+    decides exactly one thing. A resident is earned by waking it in a glade, so a grove is
+    proof of what the player did; the moment one can be bought it becomes a receipt.
+    `HomesteadMapper` drops a price it finds on one and `ContentValidation` fails the build,
+    because a rule that matters is a rule the build proves. Equally: **nothing in the grove
+    touches a board.** Par is derived from the board, stars from par, the clock from par and
+    the server's earnings from all three, so a grove that granted anything would make every
+    glade a different difficulty per player and no validator could prove one fair again.
 
 ## Layout
 
 ```
 Assets/Game/Scripts/Domain/        GlimmerGrove.Domain       (no UnityEngine.UI)
-  Board/ Content/ Persistence/ Progression/ Cloud/ Localization/ Analytics/ AssetPipeline/
+  Board/ Content/ Persistence/ Progression/ Homestead/ Cloud/ Localization/ Analytics/ AssetPipeline/
 Assets/Game/Scripts/Presentation/  GlimmerGrove.Presentation (Domain + UnityEngine.UI)
   App/ Board/ Screens/ Dev/
 Assets/Game/Editor/                GlimmerGrove.Editor
-Assets/Game/Tests/                 GlimmerGrove.Tests        (Domain only, EditMode)
-Assets/StreamingAssets/Content/    manifest.json, chapters/, loc/
+Assets/Game/Tests/                 GlimmerGrove.Tests        (EditMode; Domain, Cloud, Presentation)
+Assets/StreamingAssets/Content/    manifest.json, chapters/, homestead.json, loc/
 ```
 
 `Assets/Game/CONTENT.md` is the authoring and pipeline guide. Read it before touching
@@ -1239,6 +1278,278 @@ video at the instant they lost is the worst place in the game to look broken.
 
 No save schema change, no `progression.json` retune of anything that existed, no server
 deploy. `ContinueTests` adds 18 cases; the offline suite is 512.
+
+**The animation clock is arithmetic, and it is tested — `TweenCycle`.** Reported from play
+as "the background theme seems to flicker a little", and it was two faults in `Tween.Update`
+meeting. `Loop(-1, true)` **never ping-ponged**: the wrap subtracted one duration whenever
+`elapsed` reached one, so `elapsed` could never enter the second half of the cycle, the return
+branch was unreachable code, and every ping-pong in the game was a sawtooth that snapped back
+at the end of each period — the hub's backdrop light dropping in one frame every 3.4s, the
+feature card's beacon every 1.5s. And the wrap drained **one** cycle per frame, so a step
+covering many left the surplus to burn off over the frames after it, swinging a whole cycle
+each. That is what a resume delivers: `Time.deltaTime` is capped by `maximumDeltaTime` and
+`Time.unscaledDeltaTime` — which every tween here runs on — is not, so the first frame back
+carries however long the app was away. `RunClock.MaxTick` already existed for exactly this
+fact about exactly this clock.
+
+Both halves live in `TweenCycle` now, which holds no Unity types and no statics, for the reason
+`RunClock` does: **it can be run a thousand simulated frames at a time offline.** That is the
+decision worth not re-litigating. This is the one subsystem here whose failures are invisible in
+a screenshot and obvious only in motion — it compiled, validated and shipped wrong for a year —
+so "prove it, do not assert it" needs the arithmetic reachable without an Editor. `Tween` is now
+the driver and `TweenCycle` is the rule; it is the code that ships, never a copy, because a
+proved copy proves nothing (invariant 9a's lesson, applied where there is no reason to have two).
+`TweenCycleTests` is ten cases and they were checked against the *old* arithmetic first — three
+of them fail on it. A suite that would have passed either way is not a guard.
+
+One thing the fix deliberately did **not** change: a traverse still takes exactly `duration`.
+The climb is the speed it always was; what was a snap is now a fall of equal length. So the
+period of a ping-pong doubles and nothing slows down, and none of the shipped durations wanted
+retuning — `OneTraverseStillTakesExactlyTheDuration` pins it, because "does this need retuning"
+is the first question anyone will ask of this change.
+
+**Two hub faults with one shape, both about `Destroy` landing at the end of the frame.** The
+resource row was **rebuilt** on every wallet event — three pills whose entrance starts at scale
+zero behind a delay — so returning to the game flashed them in and out several times over, once
+per event, and a resume raises several (a sync applies another device's work, and the first read
+of `Wallet.Hearts` commits whatever refilled while the app was away). It repaints now: nothing in
+that row is a function of the wallet except the three readouts. That also removed a re-entrancy
+worth knowing about — **reading `Wallet.Hearts` raises `HeartsChanged` from inside the getter**,
+so `BuildResources` could be re-entered while placing its first pill, and the outer call then
+registered *its* pills with `ResourceSlots` on a row already queued for destruction, leaving the
+chest's prizes nowhere to fly to.
+
+The second is the house rule the hub was the only screen not following: **hide a region before
+destroying it.** `Destroy` lands at the end of the frame, so a panel replaced in place is drawn
+over its own replacement until then — and with everything entering from `Tween.Pop` at scale
+zero, what the player sees is the old panel, a gap, then the new one springing in.
+`ProfileScreen`, `EventScreen`, `StreakScreen`, `CompanionScreen` and `CompanionUnlockOverlay`
+all did it; `HomeScreen` (three places) and `LevelsScreen`'s rank marks did not.
+
+**A pause menu must hand the board back however it was dismissed.** `PlayScreen.Pause` latches
+the board — which also stops the countdown, since the clock only accrues while `!Locked` — and
+the unlatch was wired to the *buttons*. `ModalView.MakePanel` defaults to `dismissOnScrim: true`
+and that path calls `Close()` with no continuation, so a tap outside the panel left the board
+latched with the run unable to end even by timing out, and `PlayScreen.OnBack` returns false on a
+live run so the back key could not rescue it either. The unlatch is on `OnDestroy` now, with a
+flag set only by the three exits that hand the run to `ConfirmForfeit`, which wants it kept
+frozen. Same shape as `AdOfferOverlay.Dismissed` and the same reason: **a panel with five exits
+reports through none of them reliably, so the safe outcome has to be the default and the
+exception has to be the thing somebody declares.** Every other panel raised over a live board was
+checked and is sound — `ForfeitOverlay` and `DefeatOverlay` pass `dismissOnScrim: false`,
+`TipOverlay` and `WinOverlay` build non-dismissable scrims, `AdOfferOverlay` reports from
+`OnDestroy`.
+
+**The Grovement — the player builds something, and it is the only screen two accounts at
+the same progress do not share.** The fifth nav tab was `items`, a promise; it is now the
+grove: floating islands the player earns, creatures they rescued living on them, and decor
+they bought and placed by hand. It is deliberately the loudest tab — orange in both states
+and 18% larger — because a grove nobody finds is a grove nobody builds, and it is the only
+tab leading somewhere the player *made*.
+
+Three things stack, and the split between them is the design rather than an implementation
+detail. **Land** is a plot per chapter finished. **Residents** are the board's own critters,
+each earned by clearing the glade it was woken in. **Decor** is bought with credits — the
+second sink the economy needed, since companions were the only one and they run out.
+Earned things prove what you did; bought things are how you express taste. If residents
+could be bought the grove would stop being a record.
+
+What it cost the save file is two fields (**v16**) and invariant 16 has the argument: land
+and residents are derived and store nothing, a purchase is a union-joined set exactly like
+`companionsOwned`, and an arrangement is the third thing in the file merged by recency —
+so it is the only part that can lose something, and 11c's two rules (a stamp per slot, and
+never storing a default) are what stop it. **Holding a piece is permission to draw it
+anywhere, not one copy**, which is what keeps a count of benches — 11b's forbidden shape —
+out of the file entirely, and makes the shop about variety instead of quantity.
+
+The catalog is a **body**, `Content/homestead.json`, versioned by one integer in the
+manifest and read on entering the screen. That is invariant 4a applied to the thing most
+likely to break it: the companion roster rides the manifest because the hub must draw a
+companion before anything else happens, and nothing draws a fence until somebody taps a
+tab. A shop is also the part of a game that grows fastest.
+
+What shipped: **10 plots, 52 slots, 40 pieces** — 5 residents, 4 free from the first
+launch, 13 earned by playing and 23 for sale across 23,490 credits (about six weeks of
+ordinary play, against the companion ladder's sixteen months). Seven plots are authored
+**ahead of the chapters that open them**, so the ladder is visible before it is walkable;
+both validators collect those forward references into one warning rather than one per
+plot, which is `ValidateCompanions`' call and for its reason. The art is 45 sprites cut
+from the same CraftPix pack the hub background itself was cut from — so the grove is
+literally made of the world it floats in — and the residents need no new art at all,
+because they draw the critter flipbooks the board already loads globally.
+
+Two smaller decisions worth not re-litigating. **There is no edit mode**: a slot is tapped
+and a picker opens whether it is empty or full, because a mode toggle is a control that
+changes what every other control does on a screen whose whole vocabulary is "tap the thing
+you want to change" — empty slots wear a soft breathing ring instead, which is the price of
+having no mode. And the **picker is a modal while the shop is a screen**, which is the
+opposite call from `CompanionScreen` and deliberate: placing is not browsing, and the answer
+to "what goes here" depends on what is beside it, so a screen would take the grove away at
+exactly the moment it is the thing being decided about.
+
+`HomesteadTests` adds 28 cases and the offline suite is 545; `Tools/verify/content.py` now
+checks the grove too, which it has to — the shipped-catalog tests reach `Application.dataPath`
+and are therefore Editor-only. **`firestore.rules` gained the two fields and needs a deploy**
+(`firebase deploy --only firestore:rules`); nothing else on the server changed, because
+nothing there adjudicates a picture.
+
+**Three faults the first build shipped with, and two of them are one lesson.** Reported from
+play as "every island is locked", "the shop previews are black boxes" and "there is an island
+at the bottom I cannot scroll to".
+
+The grove was **drawn half a canvas too low**. `HomesteadMap` measures from the canvas's
+top-left and the islands were anchored to its *centre*, so on a 6,261px grove every island sat
+3,130px below where the `ScrollRect` believed it was — and a `ScrollRect` bounds itself by the
+content **rect**, never by where the children were drawn, so the bottom four islands were
+outside the scrollable range in a way no dragging could reach. What a player saw was the middle
+of the ladder: every island locked, and the one they owned unreachable below the last inch of
+scroll. Two reports, one anchor. `UIKit.Box` pivots centre and anchors where it is told, which
+is the same lesson as `UIKit.Corner` and `PillFaceLift` learned in a third place. The parking
+latch had the same shape of error one level up — an island whose art has not arrived is laid
+out as a square, so the height parked against on the first paint is a guess; it now re-parks
+until every plot's sprite is in hand and latches only then.
+
+The black previews were **the grove screen freeing art the shop had already drawn**. `Destroy`
+lands at the end of the frame, so an outgoing screen's `OnDestroy` runs *after* the incoming
+one has built and painted — releasing there pulled every decor sprite out from under a fully
+drawn shop, and nothing repaints, which is why leaving and coming back "fixed" it. The shop
+carried a guard for exactly this and the grove screen did not, so the pair only worked in one
+direction: the rule now lives in `HomesteadArt.CloseUnlessWanted`, read off an `IDrawsGroveArt`
+marker, because a check each screen has to remember is a check the third screen forgets.
+
+And the copy **claimed a placement that had not happened**. Buying said "Added to your grove"
+and tapping an owned piece said "X is already in your grove", when holding a piece is
+permission to draw it and nothing more — the distinction the whole save format rests on, told
+to the player backwards. Both lines now name the next action: tap a spot in your grove.
+
+**The grove has a home in it — and it cost the save file nothing.** Working but primitive was
+the verdict on the first version, and it was right for four measurable reasons. The buildable
+area was a **stamp**: `plot_meadow` is 801px of art drawn at 669, so the island was *downscaled*
+to 19% of the screen and its grass top to about 8% — and eleven objects were being asked to
+compose on it, which is why every piece came out at 40–95px. There was **no home**: 35 of 40
+pieces were ground cover and the only building was `cottage`, the 40th item, optional, and
+interchangeable with a pebble. **Every slot accepted everything**, so the only decision on offer
+was which of eleven interchangeable dots got which sticker and every grove came out looking
+equally accidental. And **nothing changed because you built it** — a full island and an empty one
+were the same picture with different dots on it, when a before-and-after is the entire mechanism
+the endowment effect runs on.
+
+Four changes, and the thing they have in common is the point: **not one of them adds a field to
+`SaveFileDto`.** Save schema stays at v16.
+
+**The hearth: one dwelling at the centre, and it grows.** `HomesteadPieceKind.Dwelling`, drawn on
+a `hearth` slot the starter island alone carries. The ladder is `cottage → lodge → hall → manor →
+sanctum`, and each rung is **its own permanent id in the union-joined set that already holds
+purchases** — invariant 15 for the second time. A stored "home level" is the shape invariant 11b
+forbids, because two devices reading 3 and 1 are equally consistent with "one upgraded" and "one
+has not heard yet"; a set of ids has no such problem, and "the home" is a maximum over it, which
+is idempotent, order-independent and impossible to lose. The first rung is **free and the build
+gate proves it**, so the hearth is never empty. And the home is **derived rather than placed**:
+buying *is* the moment the house changes, which is the whole feature — a dwelling the player has
+to remember to put down is a dwelling they can buy and not see, the exact confusion the shop's
+copy caused a week earlier. Nothing else may stand on a hearth, which is what makes deriving it
+safe: a slot the player can place into is a slot whose contents live in the save file.
+
+**Slot roles, so placing is composing.** `HomesteadSlotKind` — ground, hearth, structure, bed,
+path, edge, canopy — one field per slot and one per decor piece, and a plain equality between
+them. Fences run along the rim because the rim is what accepts them; paths lead to the door;
+trees stand at the back. Two exceptions, both deliberate: a **resident fits anywhere but the
+hearth** (telling somebody where their own rescued critter may not stand turns a toy into a
+form), and a dwelling fits only the hearth. Both default to ground, so a catalog written before
+the field keeps working. A slot whose kind the player owns nothing for **says so and points at
+the shop** rather than opening an empty grid — the only place in the feature that can explain
+what a slot is for without labelling all eleven of them on the island.
+
+**The island is a screenful now, and its width is derived from its art.** One `plotScale` of
+~1.27 screen pixels per art pixel for the whole grove, so `width` falls out of the sprite rather
+than being authored — which is what makes a piece the same size on a small island as on a big
+one. Main plots went 0.62 → 0.94 and satellites 0.24 → 0.38; the buildable strip is now about
+700×260 and pieces read at 150–500px. The gap between islands went 150 → 190 with them, because
+a rectangle in `HomesteadMap` bounds the *island*, not the oak standing on it.
+
+**The ground reacts, and stores nothing.** `GroveTending` maps fill — occupied over placeable,
+the hearth excluded — onto five stages. The island lifts out of a cool grey as it fills, and a
+finished one is lit from within, wears fireflies and turns its name plate gold. Every island now
+carries **its name and its count** (`The Meadow · 3 of 10`), because a name is what makes
+somewhere a place and a signal a player can see but not read is a signal they cannot aim at.
+Derived, so no counter to merge, no floor to keep monotonic, no migration — invariant 14's
+preferred shape — and it goes *down* if you empty an island, which is right for an arrangement.
+
+Three notes for whoever picks this up. The tiers all draw **one cottage sprite** until real
+building art lands: what tells them apart is scale plus life — smoke from the second rung, a lit
+window, lanterns at the door, a gilded ridge, fireflies at the top — and that life is not a
+placeholder trick to be thrown away, because smoke is the strongest "somebody lives here" signal
+available per byte and it cannot be painted into a sprite. Swapping in real art is a change to
+`art` in the catalog and nothing else. The shop shows the ladder as **one cell**, not five: five
+cells drawing five names over one house read as a bug, and the ladder belongs on the home panel
+where pips can show it. And the catalogue was **re-priced by kind** rather than by position in
+the file — a path used to cost more than a signpost because the list happened to be sorted by
+price — so the cheapest rung of every kind is within a day's play. It now runs 12,250 credits of
+decor and a 49,500-credit home ladder.
+
+**The shop is 168 pieces, and the screen that shows them loads 22.** A drop of seventeen
+CraftPix isometric tilesets — 1,056 files, 936 of them distinct — went in as **124**, and the
+arithmetic of what was left out is the interesting part. The seventeen packs are one series, so
+the same signpost, skull, ladder and stone ship in nearly all of them: deduplicated by content
+and then by *object*, 936 files collapse to roughly 120 distinct things you could stand on an
+island. What is excluded is 249 numbered level tiles and platform chips, the UI furniture
+(hearts, progress bars, map pins, coin piles, gift boxes, reward stars) and the packs' mascot
+avatars. **None of the seventeen contains a building**, so the home ladder still draws one
+cottage; that is a purchase, not a code problem.
+
+Two of the packs' props are shaded and the rest are flat, and both are in. That is a deliberate
+acceptance rather than an oversight — the grove reads as one place because the *islands* are
+consistent, and a decorator wants variety more than it wants one rendering style.
+
+Three things make this sustainable rather than a one-off dump.
+
+**`Tools/grove_art.tsv` is the import, and `import_grove_art.py` runs it.** One row per piece:
+source path, permanent id, slot kind, price, scale, lift, name. The script copies the art,
+writes the loc string, regenerates the catalog's `pieces` array and bumps `groveVersion`.
+Nothing is hand-copied, the mapping and the price are reviewed together in one diff, and the
+next pack is a column rather than an afternoon. It refuses to *remove* an id it imported
+before, because a piece id is written into save files twice over (invariant 1) and deleting
+one empties the slots of everybody who placed it.
+
+**The grove's one asset scope became two, bounded by different things.** It used to load every
+piece that exists whenever the Grovement opened — affordable at forty, absurd at four hundred,
+since the screen shows at most one piece per slot. `GroveAssets` is now the islands, the home
+ladder and whatever is *placed*, so it is bounded by the player's grove (78 slots) and stops
+growing when the catalog does; `GroveKindAssets` is one slot kind, which is what the shop pages
+by and the picker filters to. Measured on the shipped catalog: **174 addresses for the whole
+thing, 22 for the grove screen, 40 for the largest tab** — and the first two of those numbers
+diverge further with every drop, which is the point. Two rules keep it honest — a piece
+just placed is `Claim`ed into the grove's scope (otherwise the next tab switch frees art the
+islands are drawing), and `AssetLibrary.AddToScopeAsync` exists so claiming one sprite does not
+tear down and refetch the other twenty.
+
+**The shop pages by slot kind**, which is a memory decision as much as a browsing one: a single
+grid over the whole catalog must load the whole catalog to show the nine cells that fit on a
+phone. Residents and the home lead every tab, because the top of that page is the part money
+cannot reach and the ladder is the one thing worth saving for. Each tab draws itself with the
+cheapest piece of its own kind, so a drop that adds a kind of thing needs no new icon — and
+`HomesteadCatalog.Emblem` is in Domain because two things must agree about which piece that is:
+the tab that draws it and the scope that has to have loaded it. Getting that wrong is what left
+five blank tabs and a black square where the house goes on the first pass, which is invariant 7b
+in its most ordinary form.
+
+One operational note that cost a round trip: **the importer hook does not address art copied in
+while the Editor is closed or mid-reload**, which is every run of `import_grove_art.py`. The
+cells then draw blank, because an unaddressed sprite loads as nothing.
+`Glimmer Grove ▸ Addressables ▸ Sync All Assets` is the repair and the script now prints it as
+step one; `AddressableAudit` in the build gate is what stops it ever shipping that way.
+
+Two smaller things came out of it. **The texture size cap is per folder now** (`ArtImportRules.Caps`:
+512 for grove props and companions, 256 for critter frames, 1024 for UI, 2048 only for
+backdrops and map strips) — a texture costs its dimensions, not its file size, so a hundred
+props at the old blanket 2048 would have been a bundle nobody could ship. And
+`Glimmer Grove ▸ Reapply Art Import Rules` exists because a preprocessor fires on first import
+only: art that landed before a rule changed keeps whatever it was given, silently. **It must
+batch.** The first version called `SaveAndReimport` per texture in a loop, which is one round
+trip to Unity's import workers each; 335 of them back to back crashed both workers and left the
+Editor wedged in a domain reload it could not finish. It is `StartAssetEditing`/`StopAssetEditing`
+with a `finally` now, and the `finally` is not optional — an exception between the two leaves
+the asset database in editing mode, which looks exactly like the freeze it prevents.
 
 Not done, deliberate: **in-app purchases** (the four store secrets hold `UNSET`, so
 receipts are refused — correct until real store products exist), **Play Games Services**

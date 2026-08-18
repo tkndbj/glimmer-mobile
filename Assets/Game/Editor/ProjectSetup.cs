@@ -70,6 +70,8 @@ namespace GlimmerGrove.EditorTools
 
             var expected = AssetManifest.GlobalAssets();
             expected.AddRange(AssetManifest.AllChapterAssets(content.Bodies));
+            expected.AddRange(AssetManifest.CompanionAssets(content.Index.Companions));
+            expected.AddRange(AssetManifest.AllGroveAssets(content.Homestead));
 
             var present = IndexAssetsByAddress();
             var missing = new List<string>();
@@ -127,21 +129,121 @@ namespace GlimmerGrove.EditorTools
     /// Safety net: every texture under the game's art folders is a UI sprite, whatever
     /// the meta file happens to say. Matches both the pre-migration Resources location
     /// and the Addressables one, so the rule survives the move.
+    ///
+    /// <para>
+    /// <b>The size cap is per folder, and that is the whole point of it.</b> A texture's
+    /// memory is its dimensions, not its file size: one 2048 sprite costs about 16 MB
+    /// uncompressed however few pixels of it are painted, so a catalog of a hundred props
+    /// imported at the default would be a bundle nobody can ship. The grove's art draws at
+    /// most about 500 screen pixels on a 1080-wide phone — see <c>HomesteadMap</c>, where an
+    /// island is drawn at roughly 1.27 art pixels per screen pixel — so 512 is the honest
+    /// ceiling and anything above it is paying for detail the screen cannot show.
+    /// </para>
+    /// <para>
+    /// Re-runnable by hand from <c>Glimmer Grove ▸ Reapply Art Import Rules</c>, because a
+    /// preprocessor only fires on first import: art that landed before a rule changed keeps
+    /// whatever it was given, silently, which is exactly the sort of thing that is invisible
+    /// until a build is too big.
+    /// </para>
     /// </summary>
     public sealed class ArtImportRules : AssetPostprocessor
     {
+        /// <summary>Folder under <c>Art/</c> to the largest texture it may import at.</summary>
+        static readonly (string Folder, int Max)[] Caps =
+        {
+            ("/Art/Homestead/", 512),   // props on an island, ~500px at most
+            ("/Art/Companions/", 512),  // portraits, drawn at 320
+            ("/Art/Critters/", 256),    // flipbook frames, drawn small and there are many
+            ("/Art/Ui/", 1024),
+        };
+
+        internal static int CapFor(string path)
+        {
+            foreach (var cap in Caps)
+                if (path.Contains(cap.Folder)) return cap.Max;
+
+            return 2048;                // backdrops and map strips, which really are large
+        }
+
+        /// <summary>
+        /// Re-imports every art texture whose size cap has drifted from the rule above.
+        ///
+        /// <para>
+        /// A preprocessor fires on first import only, so a cap tightened after the art landed
+        /// changes nothing until somebody touches the file — silently, which is exactly the
+        /// sort of thing nobody notices until a build is too big. This walks the folders and
+        /// re-imports only what actually disagrees, so it is safe to run after any drop and
+        /// costs nothing when there is nothing to do.
+        /// </para>
+        /// <para>
+        /// <b>The batch is one import pass, and that is not a nicety.</b> The first version
+        /// called <c>SaveAndReimport</c> per texture inside the loop, which is a separate
+        /// round trip to Unity's import worker processes each time; three hundred of them back
+        /// to back crashed both workers and left the Editor wedged in a domain reload it could
+        /// never finish. <c>StartAssetEditing</c>/<c>StopAssetEditing</c> queues the whole set
+        /// and imports it once, and the <c>finally</c> is mandatory — an exception between the
+        /// two leaves the asset database permanently in editing mode, which looks exactly like
+        /// the freeze it is meant to prevent.
+        /// </para>
+        /// </summary>
+        [MenuItem("Glimmer Grove/Reapply Art Import Rules", false, 22)]
+        public static void Reapply()
+        {
+            var guids = AssetDatabase.FindAssets("t:Texture2D", new[] { "Assets/Game/Art" });
+            var stale = new List<string>();
+
+            foreach (var guid in guids)
+            {
+                string path = AssetDatabase.GUIDToAssetPath(guid).Replace('\\', '/');
+
+                var importer = AssetImporter.GetAtPath(path) as TextureImporter;
+                if (importer == null) continue;
+
+                if (importer.maxTextureSize != CapFor(path)) stale.Add(path);
+            }
+
+            if (stale.Count == 0)
+            {
+                Debug.Log($"[Glimmer] art import rules: {guids.Length} texture(s) already correct");
+                return;
+            }
+
+            try
+            {
+                AssetDatabase.StartAssetEditing();
+
+                foreach (var path in stale)
+                {
+                    var importer = (TextureImporter)AssetImporter.GetAtPath(path);
+                    importer.maxTextureSize = CapFor(path);
+                    importer.SaveAndReimport();
+                }
+            }
+            finally
+            {
+                AssetDatabase.StopAssetEditing();
+                EditorUtility.ClearProgressBar();
+            }
+
+            Debug.Log($"[Glimmer] art import rules: {stale.Count} of {guids.Length} texture(s) re-imported");
+        }
+
         void OnPreprocessTexture()
         {
             var p = assetPath.Replace('\\', '/');
             if (!p.Contains("/Game/Resources/Art/") && !p.Contains("/Game/Art/")) return;
             var ti = (TextureImporter)assetImporter;
+
+            // The size cap is applied even to a texture already marked as a sprite, because
+            // that is the case this rule exists for: art imported before the cap existed.
+            ti.maxTextureSize = CapFor(p);
+
             if (ti.textureType == TextureImporterType.Sprite) return;
             ti.textureType = TextureImporterType.Sprite;
             ti.spriteImportMode = SpriteImportMode.Single;
             ti.mipmapEnabled = false;
             ti.alphaIsTransparency = true;
             ti.filterMode = FilterMode.Bilinear;
-            ti.maxTextureSize = 2048;
         }
     }
 }

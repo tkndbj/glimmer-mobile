@@ -60,6 +60,28 @@ namespace GlimmerGrove.Content
         /// manifest.
         /// </summary>
         public ManifestEventDto[] events;
+
+        /// <summary>
+        /// Bumped when <c>homestead.json</c> changes, so the refresher knows to pull it.
+        ///
+        /// <para>
+        /// One integer, and the grove catalog itself is a <b>body</b> — read when the player
+        /// opens the Grovement and dropped when they leave, exactly like a chapter. That is
+        /// invariant 4a applied to the thing most likely to break it: a shop is the part of a
+        /// game that grows fastest, and two hundred pieces plus twenty plots of slots is tens
+        /// of kilobytes. Carried in the manifest like the companion roster, it would be
+        /// parsed at every launch on every device forever to answer a question nothing on the
+        /// boot path asks. The roster is in the manifest because the hub has to draw a
+        /// companion before anything else happens; nothing draws a fence until somebody taps
+        /// a tab.
+        /// </para>
+        /// <para>
+        /// Optional, and deliberately so: this was added without raising
+        /// <see cref="ContentSchema.Version"/>, because an older client ignores the field and
+        /// simply has no grove — a working game rather than a refused manifest.
+        /// </para>
+        /// </summary>
+        public int groveVersion;
     }
 
     /// <summary>
@@ -651,6 +673,167 @@ namespace GlimmerGrove.Content
         /// placement off, remove it, rather than leaving an entry that pays nothing.
         /// </summary>
         public int dailyCap;
+    }
+
+    /// <summary>
+    /// The grove catalog: every plot the land can grow to, and everything that can stand
+    /// on one. Read from <c>homestead.json</c>, lazily, on entering the Grovement.
+    /// </summary>
+    [Serializable]
+    public sealed class HomesteadBodyDto
+    {
+        public int schemaVersion;
+
+        public HomesteadPlotDto[] plots;
+        public HomesteadPieceDto[] pieces;
+    }
+
+    /// <summary>One island of the grove, and the slots composed on it.</summary>
+    [Serializable]
+    public sealed class HomesteadPlotDto
+    {
+        /// <summary>Permanent id. Analytics keys on it; the save file does not.</summary>
+        public string id;
+
+        /// <summary>Sprite key relative to <c>Art/</c> — the island this is drawn as.</summary>
+        public string art;
+
+        /// <summary>
+        /// Where it floats horizontally, as a fraction of the grove canvas width.
+        ///
+        /// There is deliberately no <c>y</c>. Vertical position is derived by
+        /// <c>HomesteadMap</c> from each island's real art height and a fixed gap, so overlap
+        /// is impossible by construction and a re-cut sprite cannot break the layout. An
+        /// authored <c>y</c> shipped once and every consecutive pair of islands collided.
+        /// </summary>
+        public float x;
+
+        /// <summary>How wide the island draws, as a fraction of the canvas width.</summary>
+        public float width;
+
+        /// <summary>
+        /// The chapter that must be finished for this plot to open. Empty means the plot
+        /// every account starts with.
+        ///
+        /// A chapter rather than a level, and a whole one: the plot ladder is the most
+        /// visible reward in the game, so it wants the one condition a player can check by
+        /// looking at their map. <c>ContentValidation</c> fails the build when nothing is
+        /// starter — a first visit to a grove with no land is a feature that looks broken.
+        /// </summary>
+        public string requiresChapter;
+
+        public HomesteadSlotDto[] slots;
+    }
+
+    /// <summary>One place on a plot where a piece can stand.</summary>
+    [Serializable]
+    public sealed class HomesteadSlotDto
+    {
+        /// <summary>
+        /// Permanent id, unique across the whole grove. <b>Written into the save file</b>, so
+        /// it is under invariant 1: never renamed, never reused, and never derived from
+        /// position — inserting a slot must not move what stands in the ones after it.
+        /// </summary>
+        public string id;
+
+        /// <summary>Position within the plot, as fractions of the plot's own box.</summary>
+        public float x;
+        public float y;
+
+        /// <summary>
+        /// How large a piece standing here draws, before the piece's own scale. The
+        /// composition half: front and centre is bigger than back and left. 0 means 1.
+        /// </summary>
+        public float scale;
+
+        /// <summary>
+        /// What belongs here: <c>ground</c>, <c>hearth</c>, <c>structure</c>, <c>bed</c>,
+        /// <c>path</c>, <c>edge</c> or <c>canopy</c>. Empty means ground.
+        ///
+        /// This is what turns placing into composing — see <c>HomesteadSlotKind</c>. An
+        /// unknown value is reported and read as ground, for the reason an unknown piece kind
+        /// is read as decor: a slot this build does not fully understand is still a slot, and
+        /// refusing it would punch a hole in somebody's island on a rollback.
+        /// </summary>
+        public string kind;
+    }
+
+    /// <summary>One thing a player can put in their grove.</summary>
+    [Serializable]
+    public sealed class HomesteadPieceDto
+    {
+        /// <summary>
+        /// Permanent id. Written into the save file twice over — into the owned set and into
+        /// every slot holding one — so invariant 1 applies in full.
+        /// </summary>
+        public string id;
+
+        /// <summary>
+        /// Art key relative to <c>Art/</c>. A whole relative path rather than a leaf under
+        /// one folder, because residents draw the board's own critter flipbooks — global art
+        /// the game has already paid for — while decor lives under <c>Art/Homestead/</c>.
+        /// Empty means "same as the id", under <c>Art/Homestead/</c>.
+        /// </summary>
+        public string art;
+
+        /// <summary>True when <see cref="art"/> names a folder of frames rather than a sprite.</summary>
+        public bool animated;
+
+        /// <summary>
+        /// Which slots this piece belongs in — the same vocabulary <c>HomesteadSlotDto.kind</c>
+        /// uses. Empty means ground.
+        ///
+        /// Read for decor only: a resident stands anywhere but the hearth and a dwelling stands
+        /// only on it, neither of which consults this.
+        /// </summary>
+        public string slot;
+
+        /// <summary>
+        /// Where a dwelling sits on the home ladder — 1 is the cabin every grove starts with.
+        /// Ignored for anything that is not a dwelling.
+        ///
+        /// Authored rather than inferred from the order of the file, because inserting a tier
+        /// in the middle must not silently repaint every home in the world.
+        /// </summary>
+        public int tier;
+
+        /// <summary>
+        /// <c>"resident"</c>, <c>"decor"</c> or <c>"dwelling"</c>. Anything else is reported
+        /// and read as decor.
+        ///
+        /// The distinction is not mechanical — both are placed by the same code into the same
+        /// slots. It exists so the build gate can prove a resident is never for sale, which is
+        /// the whole endowment argument for the feature: a resident is proof of a glade the
+        /// player finished, and one that can be bought turns the grove into a receipt.
+        /// </summary>
+        public string kind;
+
+        /// <summary>
+        /// Credits that buy this piece outright. <b>Zero or absent means it cannot be
+        /// bought</b>, for <c>ManifestCompanionDto.unlockCost</c>'s reason: JsonUtility writes
+        /// a zero into every field an older file never had, so reading zero as "free" would
+        /// put a whole shop on sale for nothing.
+        /// </summary>
+        public int cost;
+
+        /// <summary>A glade whose clear earns this piece, or empty.</summary>
+        public string requiresLevel;
+
+        /// <summary>A chapter whose completion earns this piece, or empty.</summary>
+        public string requiresChapter;
+
+        /// <summary>Size relative to the art as authored. 0 means 1.</summary>
+        public float scale;
+
+        /// <summary>
+        /// How far up its slot the piece sits, as a fraction of its own drawn height. The
+        /// shipped art stands on the ground, so most pieces want about 0.5. A property of the
+        /// image rather than of the slot, for <c>UIKit.PillFaceLift</c>'s reason.
+        /// </summary>
+        public float lift;
+
+        /// <summary>Set true to retire a piece without deleting it from anybody's grove.</summary>
+        public bool disabled;
     }
 
     [Serializable]

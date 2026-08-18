@@ -190,6 +190,160 @@ namespace GlimmerGrove.AssetPipeline
             return list;
         }
 
+        // ------------------------------------------------------------- homestead
+        /// <summary>
+        /// Every plot and every piece of decor the grove can draw.
+        ///
+        /// <para>
+        /// Derived from the catalog, never hand-listed — the rule this file exists to state.
+        /// A drop that adds twenty decor pieces is twenty rows in <c>homestead.json</c> and
+        /// no code at all, which is the same bargain <see cref="ChapterAssets"/> makes and
+        /// the reason the splash screen no longer names backdrops.
+        /// </para>
+        /// <para>
+        /// Residents are included and cost nothing: their art keys point at
+        /// <c>Art/Critters/</c>, which <see cref="GlobalAssets"/> already warmed, and
+        /// <see cref="AssetLibrary.EnsureScopeAsync"/> leaves an address that is already
+        /// global exactly where it is. Asking for them anyway is what keeps this method a
+        /// statement about the catalog rather than a statement about which folder a piece's
+        /// art happens to sit in today.
+        /// </para>
+        /// </summary>
+        /// <summary>
+        /// Every address the grove could ever ask for.
+        ///
+        /// <b>For the Editor only.</b> The build gate has to prove that every piece in the
+        /// catalog is addressable and present, which is a question about the catalog rather
+        /// than about any one screen — <c>AddressableAudit</c> and <c>Validate Art</c> both
+        /// ask it. Nothing at runtime should call this: loading the whole catalog to draw one
+        /// screen is the thing the split below exists to stop.
+        /// </summary>
+        public static List<AssetRequest> AllGroveAssets(Homestead.HomesteadCatalog catalog)
+        {
+            var list = new List<AssetRequest>(128);
+            if (catalog == null) return list;
+
+            var seen = new HashSet<string>();
+
+            void Add(AssetRequest request)
+            {
+                if (!string.IsNullOrEmpty(request.Address) && seen.Add(request.Address))
+                    list.Add(request);
+            }
+
+            foreach (var plot in catalog.Plots)
+                if (!string.IsNullOrEmpty(plot.Art)) Add(AssetRequest.Sprite(ArtRoot + plot.Art));
+
+            foreach (var piece in catalog.Pieces) AddPiece(piece, Add);
+
+            return list;
+        }
+
+        /// <summary>
+        /// What the grove <em>screen</em> needs: the islands, the home ladder, and whatever
+        /// the player has actually put down.
+        ///
+        /// <para>
+        /// <b>Bounded by the grove, not by the catalog.</b> This used to be every piece that
+        /// exists, which was fine at forty and is wrong at four hundred: opening the
+        /// Grovement would load the whole shop to draw a screen showing at most one piece per
+        /// slot. The islands and the home ladder are unavoidable — they are always on screen —
+        /// but everything else here is a function of <paramref name="placed"/>, so the cost of
+        /// this screen is the size of the player's grove and stays there however large the
+        /// catalog grows. That is the difference between a feature that scales with content
+        /// and one that scales with the shop.
+        /// </para>
+        /// <para>
+        /// The whole home ladder rather than the rung in use, because it is five sprites and
+        /// buying one has to redraw the house in the same frame — see
+        /// <c>HomesteadLedger.BestDwelling</c>.
+        /// </para>
+        /// </summary>
+        public static List<AssetRequest> GroveAssets(Homestead.HomesteadCatalog catalog,
+                                                     IEnumerable<string> placed)
+        {
+            var list = new List<AssetRequest>(48);
+            if (catalog == null) return list;
+
+            var seen = new HashSet<string>();
+
+            void Add(AssetRequest request)
+            {
+                if (!string.IsNullOrEmpty(request.Address) && seen.Add(request.Address))
+                    list.Add(request);
+            }
+
+            foreach (var plot in catalog.Plots)
+                if (!string.IsNullOrEmpty(plot.Art)) Add(AssetRequest.Sprite(ArtRoot + plot.Art));
+
+            foreach (var piece in catalog.Pieces)
+                if (piece.IsDwelling) AddPiece(piece, Add);
+
+            if (placed != null)
+                foreach (var id in placed)
+                    AddPiece(catalog.Find(id), Add);
+
+            return list;
+        }
+
+        /// <summary>
+        /// One kind of slot's worth of the catalog: a shop tab, or a picker's list.
+        ///
+        /// The unit the shop pages by, and the reason it pages at all — a grid that loads
+        /// every piece in the game to show the first nine is a wall of texture nobody asked
+        /// for. Kinds are what the content is already organised around, so this needs no
+        /// second grouping to keep in step.
+        /// </summary>
+        public static List<AssetRequest> GroveKindAssets(Homestead.HomesteadCatalog catalog,
+                                                         Homestead.HomesteadSlotKind kind)
+        {
+            var list = new List<AssetRequest>(48);
+            if (catalog == null) return list;
+
+            var seen = new HashSet<string>();
+
+            void Add(AssetRequest request)
+            {
+                if (!string.IsNullOrEmpty(request.Address) && seen.Add(request.Address))
+                    list.Add(request);
+            }
+
+            foreach (var piece in catalog.Pieces)
+                if (piece.Fits(kind)) AddPiece(piece, Add);
+
+            // Two things the shop draws on every tab, whichever tab it is: the home, which
+            // leads the grid because it is the one thing worth saving for, and one emblem per
+            // kind, because the tabs label themselves with the cheapest piece of the kind they
+            // switch to. Both were hidden on the first pass — five blank tabs and a black
+            // square where the house goes — for the ordinary reason (invariant 7b): the art
+            // was in a scope this one had just replaced. Six or seven extra sprites is the
+            // right price for a row of tabs that reads.
+            foreach (var piece in catalog.Pieces)
+                if (piece.IsDwelling) AddPiece(piece, Add);
+
+            foreach (Homestead.HomesteadSlotKind other in
+                     System.Enum.GetValues(typeof(Homestead.HomesteadSlotKind)))
+                AddPiece(Homestead.HomesteadCatalog.Emblem(catalog, other), Add);
+
+            return list;
+        }
+
+        /// <summary>One piece's art, for a screen claiming a single thing it has just drawn.</summary>
+        public static List<AssetRequest> PieceAssets(Homestead.HomesteadPiece piece)
+        {
+            var list = new List<AssetRequest>(1);
+            AddPiece(piece, list.Add);
+            return list;
+        }
+
+        static void AddPiece(Homestead.HomesteadPiece piece, System.Action<AssetRequest> add)
+        {
+            if (!piece.IsValid || string.IsNullOrEmpty(piece.Art)) return;
+
+            string address = ArtRoot + piece.Art;
+            add(piece.Animated ? AssetRequest.SpriteSet(address) : AssetRequest.Sprite(address));
+        }
+
         // --------------------------------------------------------------- chapter
         /// <summary>
         /// Art owned by one chapter: its map strips, its backdrop, and any backdrop a

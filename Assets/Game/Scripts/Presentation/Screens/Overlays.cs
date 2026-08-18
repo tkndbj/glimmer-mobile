@@ -497,6 +497,26 @@ namespace GlimmerGrove
     {
         public PlayScreen Screen;
 
+        /// <summary>
+        /// Set by the three exits that hand the run straight to something which latches the
+        /// board again — restarting it and the two ways of walking away from it, all of which
+        /// go through <c>PlayScreen.ConfirmForfeit</c> and want it kept frozen behind the
+        /// question that follows.
+        ///
+        /// <para>
+        /// Everything else lets go of the latch on the way out, and it is
+        /// <see cref="OnDestroy"/> that does the letting go rather than the buttons, because
+        /// this panel has five ways out and only four of them are buttons. The fifth is the
+        /// scrim, which closes through <see cref="ModalView.Close"/> with no continuation of
+        /// its own — so a tap outside the panel dismissed the pause menu and left the board
+        /// latched, the clock stopped and nothing on screen able to release either. Exactly
+        /// the lesson <c>AdOfferOverlay.Dismissed</c> is written from: a panel with five exits
+        /// reports through none of them reliably, so the safe outcome has to be the default
+        /// and the exception has to be the thing somebody declares.
+        /// </para>
+        /// </summary>
+        bool _handedOn;
+
         protected override void Build()
         {
             MakePanel(new Vector2(840f, 1040f), Loc.Get("ui.pause.title"));
@@ -505,7 +525,7 @@ namespace GlimmerGrove
                              new Vector2(.5f, 1f), new Vector2(0f, -230f), Resume);
             UIKit.TextButton("Restart", Panel, "btn_orange", Loc.Get("ui.pause.restart"), 48, new Vector2(600f, 130f),
                              new Vector2(.5f, 1f), new Vector2(0f, -390f),
-                             () => Close(() => Screen?.RestartLevel()));
+                             () => { _handedOn = true; Close(() => Screen?.RestartLevel()); });
 
             // Both exits go through the screen rather than straight at Flow, because leaving a
             // run that has begun costs a heart and the screen is what knows whether this one
@@ -513,18 +533,26 @@ namespace GlimmerGrove
             // countdown for free — see RunGuard.
             UIKit.TextButton("Glades", Panel, "btn_blue", Loc.Get("ui.pause.glades"), 48, new Vector2(600f, 130f),
                              new Vector2(.5f, 1f), new Vector2(0f, -535f),
-                             () => Close(() =>
+                             () =>
                              {
-                                 if (Screen) Screen.LeaveToMap();
-                                 else Flow.Go<LevelsScreen>();
-                             }));
+                                 _handedOn = true;
+                                 Close(() =>
+                                 {
+                                     if (Screen) Screen.LeaveToMap();
+                                     else Flow.Go<LevelsScreen>();
+                                 });
+                             });
             UIKit.TextButton("Home", Panel, "btn_red", Loc.Get("ui.pause.home"), 48, new Vector2(600f, 130f),
                              new Vector2(.5f, 1f), new Vector2(0f, -680f),
-                             () => Close(() =>
+                             () =>
                              {
-                                 if (Screen) Screen.LeaveToHome();
-                                 else Flow.Go<HomeScreen>();
-                             }));
+                                 _handedOn = true;
+                                 Close(() =>
+                                 {
+                                     if (Screen) Screen.LeaveToHome();
+                                     else Flow.Go<HomeScreen>();
+                                 });
+                             });
 
             var row = UIKit.Box("Toggles", Panel, new Vector2(600f, 150f), new Vector2(.5f, 0f), new Vector2(0f, 128f));
             Toggle(row, "ic_music", new Vector2(-150f, 0f), () => GameSettings.MusicOn, GameSettings.SetMusic);
@@ -535,7 +563,24 @@ namespace GlimmerGrove
                          TextAnchor.MiddleCenter, new Vector2(600f, 40f), new Vector2(.5f, 0f), new Vector2(0f, 46f), 0f, 0f);
         }
 
-        void Resume() => Close(() => Screen?.Resume());
+        // Only the way out. Handing the board back is OnDestroy's job, so that every way
+        // out gets it and not just this one.
+        void Resume() => Close();
+
+        /// <summary>
+        /// The board comes off its latch however this panel went away — the resume button, the
+        /// hardware back key, a tap on the scrim, or the screen underneath being torn down with
+        /// the menu still open.
+        ///
+        /// Deliberately unconditional apart from the hand-off flag: forgetting to declare a
+        /// hand-off costs a board that thaws a moment before the question over it is answered,
+        /// while forgetting to unlatch costs the player the run.
+        /// </summary>
+        void OnDestroy()
+        {
+            if (_handedOn) return;
+            if (Screen) Screen.Resume();
+        }
 
         public override bool OnBack() { Resume(); return true; }
     }

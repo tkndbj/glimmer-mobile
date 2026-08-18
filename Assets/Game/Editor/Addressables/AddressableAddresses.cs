@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using GlimmerGrove.AssetPipeline;
 using GlimmerGrove.Content;
+using GlimmerGrove.Homestead;
 
 namespace GlimmerGrove.EditorTools
 {
@@ -34,6 +35,15 @@ namespace GlimmerGrove.EditorTools
         /// sessions never open, and would grow that cost with every content drop.
         /// </summary>
         public const string CompanionGroup = "Glimmer Companions";
+
+        /// <summary>
+        /// The grove's plots and decor. Its own bundle for the companions' reason and one
+        /// more: this is the set that grows fastest, because a shop gains pieces at every
+        /// drop for the life of the game. In the global group it would add a decode at every
+        /// launch for a screen most sessions never open, and that cost would compound with
+        /// the catalog rather than being paid once.
+        /// </summary>
+        public const string HomesteadGroup = "Glimmer Grove Homestead";
 
         /// <summary>
         /// Art that belongs to no chapter in particular. Branding is the clear case: the
@@ -89,7 +99,8 @@ namespace GlimmerGrove.EditorTools
         /// the constant would go up, the manifest would ask for the new folder, and the
         /// label nobody remembered to add would leave it unloadable.
         /// </summary>
-        public static HashSet<string> FrameFolders(IEnumerable<ChapterBody> chapters)
+        public static HashSet<string> FrameFolders(IEnumerable<ChapterBody> chapters,
+                                                   HomesteadCatalog homestead = null)
         {
             var folders = new HashSet<string>();
 
@@ -97,6 +108,13 @@ namespace GlimmerGrove.EditorTools
                 if (request.Kind == AssetKind.SpriteSet) folders.Add(request.Address);
 
             foreach (var request in AssetManifest.AllChapterAssets(chapters))
+                if (request.Kind == AssetKind.SpriteSet) folders.Add(request.Address);
+
+            // The grove, for the same reason. Every resident so far points at a critter set
+            // the global list already named, so this adds nothing today — and that is exactly
+            // when to add it, because the first animated decor piece would otherwise import
+            // as loose sprites with no label and be unloadable with no error anywhere.
+            foreach (var request in AssetManifest.AllGroveAssets(homestead))
                 if (request.Kind == AssetKind.SpriteSet) folders.Add(request.Address);
 
             return folders;
@@ -148,11 +166,27 @@ namespace GlimmerGrove.EditorTools
         /// <summary>Addresses under here are companion portraits, whoever asks for them.</summary>
         public const string CompanionPrefix = "Art/Companions/";
 
+        /// <summary>
+        /// Addresses under here belong to the grove, whoever asks for them.
+        ///
+        /// A folder rule rather than a lookup built from the catalog, exactly as the
+        /// companions' is. That matters for the importer hook: it files an asset as it
+        /// arrives, which can be before <c>homestead.json</c> has been edited to mention it,
+        /// and a rule that needed the catalog would put the first import of every new piece
+        /// in the wrong bundle. Note the consequence — a resident's art is under
+        /// <c>Art/Critters/</c> and therefore stays <em>global</em>, which is correct: the
+        /// board draws it too.
+        /// </summary>
+        public const string HomesteadPrefix = "Art/Homestead/";
+
         /// <summary>The group an address belongs in, given who owns what.</summary>
         public static string GroupFor(string address, Dictionary<string, ChapterId> ownership)
         {
             if (address != null && address.StartsWith(CompanionPrefix, System.StringComparison.Ordinal))
                 return CompanionGroup;
+
+            if (address != null && address.StartsWith(HomesteadPrefix, System.StringComparison.Ordinal))
+                return HomesteadGroup;
 
             return ownership != null && ownership.TryGetValue(address, out var chapter)
                 ? ChapterGroup(chapter)

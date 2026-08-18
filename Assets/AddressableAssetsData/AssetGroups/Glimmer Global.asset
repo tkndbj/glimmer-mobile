@@ -1319,6 +1319,11 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: bf16b7971e5aacf4eb0c216e0ec8bc66
+    m_Address: Art/Homestead
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: bf29569bd73c468079f18f8f5553be0a
     m_Address: Art/Fx/Victory/f31
     m_ReadOnly: 0

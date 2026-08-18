@@ -167,9 +167,13 @@ ASSEMBLIES = [
         out="GlimmerGrove.Tests",
         src=sources("Assets/Game/Tests"),
         # net472, so the netfx shims go alongside netstandard rather than replacing it.
+        # Presentation is referenced for its *pure* logic — TweenCycle is the first, and
+        # the reason is that a rule nothing can run is a rule nothing checks. A test that
+        # needs a GameObject still belongs in Test Runner and the runner will say so.
         refs=ENGINE_EDITOR + PKG_EDITOR + [NETSTANDARD] + SHIMS
              + nunit()
-             + compiled("GlimmerGrove.Domain", "GlimmerGrove.Cloud"),
+             + compiled("GlimmerGrove.Domain", "GlimmerGrove.Cloud",
+                        "GlimmerGrove.Ads", "GlimmerGrove.Presentation"),
         defines=DEFINES + ["UNITY_EDITOR", "UNITY_INCLUDE_TESTS"],
     )),
 ]

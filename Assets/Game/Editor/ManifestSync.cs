@@ -250,6 +250,7 @@ namespace GlimmerGrove.EditorTools
             sb.AppendLine("{");
             sb.AppendLine($"  \"schemaVersion\": {manifest.schemaVersion},");
             sb.AppendLine($"  \"progressionVersion\": {manifest.progressionVersion},");
+            sb.AppendLine($"  \"groveVersion\": {manifest.groveVersion},");
             sb.AppendLine("  \"chapters\": [");
 
             for (int i = 0; i < manifest.chapters.Length; i++)
@@ -375,9 +376,10 @@ namespace GlimmerGrove.EditorTools
             }
 
             if (after.schemaVersion != before.schemaVersion ||
-                after.progressionVersion != before.progressionVersion)
+                after.progressionVersion != before.progressionVersion ||
+                after.groveVersion != before.groveVersion)
             {
-                lost = "the schema or progression version did not survive the write";
+                lost = "the schema, progression or grove version did not survive the write";
                 return false;
             }
 

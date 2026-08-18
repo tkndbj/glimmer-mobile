@@ -6,6 +6,7 @@ using System.Text.RegularExpressions;
 using GlimmerGrove.Content;
 using GlimmerGrove.Content.Sources;
 using GlimmerGrove.Daily;
+using GlimmerGrove.Homestead;
 using GlimmerGrove.Localization;
 using GlimmerGrove.Persistence;
 using GlimmerGrove.Progression;
@@ -82,6 +83,7 @@ namespace GlimmerGrove.EditorTools
 
             ValidateChapterOrder(load.Index, result);
             ValidateCompanions(load.Index, result, verbose);
+            ValidateHomestead(load, result, verbose);
             ValidateLevels(load, result, verbose);
             ValidateChapterMaps(load, result);
             ValidateLocalisation(load, result);
@@ -775,6 +777,360 @@ namespace GlimmerGrove.EditorTools
         }
 
         /// <summary>
+        /// The grove: its land, its residents and its shop.
+        ///
+        /// <para>
+        /// Two things here are errors and everything else warns, which is the same line
+        /// <see cref="ValidateCompanionPrices"/> draws. A validator is not entitled to
+        /// overrule an economy decision; it is entitled to state consequences that cannot be
+        /// seen by reading the file. What it <em>is</em> entitled to refuse is a rule
+        /// violation and a grove nobody can use.
+        /// </para>
+        /// <para>
+        /// The rule is that a resident is never for sale. That is the whole endowment
+        /// argument for the feature - a resident is proof of a glade the player finished, and
+        /// one that can be bought turns a record into a receipt - and a rule that matters is
+        /// a rule the build proves. <c>HomesteadMapper</c> already drops such a price on the
+        /// way in, so the game would ship correct either way; this is what tells whoever
+        /// authored it that their row did not mean what they thought.
+        /// </para>
+        /// </summary>
+        static void ValidateHomestead(EditorContent content, ContentValidationResult result, bool verbose)
+        {
+            var grove = content.Homestead;
+
+            if (grove.PlotCount == 0 && grove.PieceCount == 0)
+            {
+                result.Warnings.Add("no grove catalog at " + ContentPaths.Homestead +
+                                    "; the Grovement will have nothing to show");
+                return;
+            }
+
+            ValidateHomesteadPlots(content, grove, result);
+            ValidateHomesteadPieces(content, grove, result);
+            ValidateHomesteadLayout(grove, result, verbose);
+            ValidateHomesteadHome(grove, result, verbose);
+            ValidateHomesteadFits(grove, result);
+
+            if (verbose)
+                Debug.Log($"[Glimmer] grove: {grove.PlotCount} plot(s), {grove.SlotCount} slot(s), " +
+                          $"{grove.PieceCount} piece(s)");
+        }
+
+        static void ValidateHomesteadPlots(EditorContent content, HomesteadCatalog grove,
+                                           ContentValidationResult result)
+        {
+            bool anyStarter = false;
+            var ahead = new List<string>();
+
+            foreach (var plot in grove.Plots)
+            {
+                if (plot.IsStarter) anyStarter = true;
+
+                RequireGroveArt(plot.Art, $"grove plot '{plot.Id}'", false, result);
+
+                // A forward reference is expected rather than wrong: the plot ladder is
+                // authored ahead of the chapters that open it, so a player can see the grove
+                // they are working towards. Collected into one line rather than reported per
+                // plot, for the reason ValidateCompanions collects its own — a ladder built to
+                // outlast the current content would otherwise emit a screenful every run, and
+                // a validator nobody reads is a validator that has stopped working. Said at
+                // all because it is also exactly what a typo looks like, and the two are
+                // indistinguishable in the file.
+                if (plot.RequiresChapter.IsValid && !content.Index.ContainsChapter(plot.RequiresChapter))
+                    ahead.Add($"{plot.Id} -> {plot.RequiresChapter}");
+
+                foreach (var slot in plot.Slots)
+                {
+                    if (slot.X < 0f || slot.X > 1f || slot.Y < 0f || slot.Y > 1f)
+                        result.Warnings.Add($"grove slot '{slot.Id}' sits at ({slot.X:0.00}, " +
+                                            $"{slot.Y:0.00}), outside its plot; it will draw off the island");
+
+                    if (slot.Scale < .2f || slot.Scale > 3f)
+                        result.Warnings.Add($"grove slot '{slot.Id}' has scale {slot.Scale:0.00}, " +
+                                            "which will draw whatever stands in it very small or very large");
+                }
+
+                ValidateHomesteadSpacing(plot, result);
+            }
+
+            // An error, not a warning. Every plot gated behind a chapter leaves a new player
+            // looking at a screen of padlocks, which is a feature that ships looking broken.
+            if (!anyStarter)
+                result.Errors.Add("no grove plot is free from the first launch; a new player " +
+                                  "would open the Grovement onto nothing but padlocks");
+
+            if (ahead.Count > 0)
+                result.Warnings.Add($"{ahead.Count} grove plot(s) open on chapters the catalog " +
+                                    "does not carry and stay locked until those ship: " +
+                                    string.Join(", ", ahead));
+        }
+
+        /// <summary>
+        /// The derived layout, run against the real art.
+        ///
+        /// <para>
+        /// <see cref="HomesteadMap"/> stacks the islands with a guaranteed gap, so a collision
+        /// is not supposed to be possible — this asserts that rather than trusting it, because
+        /// the version this replaced <em>was</em> trusted and every consecutive pair of islands
+        /// overlapped on a real phone. It costs one pass over ten rectangles.
+        /// </para>
+        /// <para>
+        /// What is genuinely worth reporting is the height, because that is the number a
+        /// content drop grows silently: adding four plots adds about two screens of scrolling,
+        /// and nobody notices until they are looking for the island at the bottom.
+        /// </para>
+        /// </summary>
+        static void ValidateHomesteadLayout(HomesteadCatalog grove, ContentValidationResult result,
+                                            bool verbose)
+        {
+            const float canvasWidth = 1080f;
+
+            var map = HomesteadMap.Build(grove, canvasWidth, AspectOfPlot);
+
+            foreach (var clash in map.Collisions())
+                result.Errors.Add($"grove islands {clash} overlap; HomesteadMap is supposed to " +
+                                  "make that impossible, so this is an engine bug rather than a " +
+                                  "content one");
+
+            if (verbose)
+                Debug.Log($"[Glimmer] grove canvas is {map.CanvasHeight:0}px tall, about " +
+                          $"{map.CanvasHeight / 1452f:0.0} screens of scrolling");
+        }
+
+        /// <summary>A plot's art aspect, read from the asset database. 1 when it is missing.</summary>
+        static float AspectOfPlot(HomesteadPlot plot)
+        {
+            if (plot == null || string.IsNullOrEmpty(plot.Art)) return 1f;
+
+            var sprite = AssetDatabase.LoadAssetAtPath<Sprite>("Assets/Game/Art/" + plot.Art + ".png");
+            return sprite == null ? 1f : sprite.rect.height / sprite.rect.width;
+        }
+
+        /// <summary>
+        /// Slots close enough that whatever stands in them will overlap.
+        ///
+        /// The grove's equivalent of <c>ChapterMap.MinimumNodeSeparation</c>, and a warning
+        /// for the reason that one is an error: a map node's size is fixed, while a slot holds
+        /// whatever the player chose, so two close slots are only a collision for some of the
+        /// catalog. The number is in plot fractions rather than pixels because that is the
+        /// space the content is authored in.
+        /// </summary>
+        static void ValidateHomesteadSpacing(HomesteadPlot plot, ContentValidationResult result)
+        {
+            const float tooClose = .13f;
+
+            var slots = plot.Slots;
+            for (int i = 0; i < slots.Count; i++)
+                for (int k = i + 1; k < slots.Count; k++)
+                {
+                    // Paths are exempt, and not as a fudge: a path is a flat texture on the
+                    // ground whose whole job is to run from one place to the next, so two path
+                    // slots a thumb apart are the feature working. Everything else overlaps.
+                    if (slots[i].Kind == HomesteadSlotKind.Path ||
+                        slots[k].Kind == HomesteadSlotKind.Path) continue;
+
+                    float dx = slots[i].X - slots[k].X;
+                    float dy = slots[i].Y - slots[k].Y;
+                    float d = Mathf.Sqrt(dx * dx + dy * dy);
+
+                    if (d < tooClose)
+                        result.Warnings.Add($"grove slots '{slots[i].Id}' and '{slots[k].Id}' are " +
+                                            $"{d:0.000} apart on plot '{plot.Id}'; anything larger than " +
+                                            "a pebble in both will overlap");
+                }
+        }
+
+        /// <summary>
+        /// The home ladder: one hearth, tiers that do not collide, and a first rung that is free.
+        ///
+        /// <para>
+        /// Every failure here is silent in the game, which is why they are checked. A catalog
+        /// with dwellings and no hearth draws no home anywhere and looks exactly like a catalog
+        /// with no dwellings; two rungs on the same tier make "the best one owned" depend on the
+        /// order of the file; and a priced first rung means a new player opens the Grovement onto
+        /// an island with a ring where the house should be, which is the emptiest possible first
+        /// impression of the feature.
+        /// </para>
+        /// </summary>
+        static void ValidateHomesteadHome(HomesteadCatalog grove, ContentValidationResult result,
+                                          bool verbose)
+        {
+            var dwellings = new List<HomesteadPiece>();
+            foreach (var piece in grove.Pieces)
+                if (piece.IsDwelling) dwellings.Add(piece);
+
+            int hearths = 0;
+            foreach (var plot in grove.Plots)
+                foreach (var slot in plot.Slots)
+                    if (slot.IsHearth) hearths++;
+
+            if (dwellings.Count == 0)
+            {
+                if (hearths > 0)
+                    result.Errors.Add("the grove has a hearth but no home to stand on it; every " +
+                                      "island would draw an empty ring where the house goes");
+                return;
+            }
+
+            if (hearths == 0)
+                result.Errors.Add($"the grove has {dwellings.Count} home(s) and no hearth slot to " +
+                                  "draw one on; they would be bought and never seen");
+
+            if (hearths > 1)
+                result.Warnings.Add($"{hearths} hearth slots: the same home draws on every one of " +
+                                    "them, which is legitimate but is usually a copied template");
+
+            var seen = new Dictionary<int, string>();
+            var first = default(HomesteadPiece);
+
+            foreach (var piece in dwellings)
+            {
+                if (seen.TryGetValue(piece.Tier, out string other))
+                    result.Errors.Add($"grove homes '{other}' and '{piece.Id}' are both tier " +
+                                      $"{piece.Tier}; which one a player lives in would depend on " +
+                                      "the order of the file");
+                else
+                    seen[piece.Tier] = piece.Id;
+
+                if (!first.IsValid || piece.Tier < first.Tier) first = piece;
+            }
+
+            if (first.IsValid && (first.IsForSale || first.HasRequirement))
+                result.Errors.Add($"the first home '{first.Id}' is not free; a new grove would open " +
+                                  "with nothing on its hearth");
+
+            if (verbose && first.IsValid)
+            {
+                long ladder = 0;
+                foreach (var piece in dwellings) ladder += piece.Cost;
+
+                Debug.Log($"[Glimmer] grove home ladder: {dwellings.Count} rung(s), " +
+                          $"{ladder} credits from '{first.Id}' to the top");
+            }
+        }
+
+        /// <summary>
+        /// Slots nothing but a resident can fill.
+        ///
+        /// A warning rather than an error, and deliberately counted over <em>decor</em> only: a
+        /// resident fits anywhere, so every slot is technically fillable and the check would
+        /// never fire. What it is really asking is whether the catalog has anything to sell for
+        /// this kind of slot — an island composed around a bed with no flowers in the shop is a
+        /// hole nobody can fill on purpose.
+        /// </summary>
+        static void ValidateHomesteadFits(HomesteadCatalog grove, ContentValidationResult result)
+        {
+            var offered = new HashSet<HomesteadSlotKind>();
+            foreach (var piece in grove.Pieces)
+                if (!piece.IsResident && !piece.IsDwelling) offered.Add(piece.Slot);
+
+            var wanted = new Dictionary<HomesteadSlotKind, int>();
+            foreach (var plot in grove.Plots)
+                foreach (var slot in plot.Slots)
+                {
+                    if (slot.IsHearth) continue;
+                    wanted.TryGetValue(slot.Kind, out int n);
+                    wanted[slot.Kind] = n + 1;
+                }
+
+            foreach (var pair in wanted)
+                if (!offered.Contains(pair.Key))
+                    result.Warnings.Add($"{pair.Value} grove slot(s) are for {pair.Key}, and the " +
+                                        "catalog has no decor of that kind; only a resident could " +
+                                        "ever stand there");
+        }
+
+        static void ValidateHomesteadPieces(EditorContent content, HomesteadCatalog grove,
+                                            ContentValidationResult result)
+        {
+            int starters = 0, forSale = 0, earned = 0, residents = 0;
+
+            foreach (var piece in grove.Pieces)
+            {
+                if (piece.IsStarter) starters++;
+                if (piece.IsForSale) forSale++;
+                if (piece.HasRequirement) earned++;
+                if (piece.IsResident) residents++;
+
+                RequireGroveArt(piece.Art, $"grove piece '{piece.Id}'", piece.Animated, result);
+
+                // The one rule the two kinds do not share. See the remarks above.
+                if (piece.IsResident && piece.IsForSale)
+                    result.Errors.Add($"grove resident '{piece.Id}' carries a price; residents are " +
+                                      "earned by playing and are never for sale");
+
+                if (piece.RequiresLevel.IsValid && !content.Index.Contains(piece.RequiresLevel))
+                    result.Warnings.Add($"grove piece '{piece.Id}' is earned by clearing " +
+                                        $"'{piece.RequiresLevel}', which the catalog does not carry; " +
+                                        "it can only be bought, if it has a price");
+
+                if (piece.RequiresChapter.IsValid && !content.Index.ContainsChapter(piece.RequiresChapter))
+                    result.Warnings.Add($"grove piece '{piece.Id}' is earned by finishing chapter " +
+                                        $"'{piece.RequiresChapter}', which the catalog does not carry");
+
+                if (piece.Lift < -1f || piece.Lift > 1.5f)
+                    result.Warnings.Add($"grove piece '{piece.Id}' has lift {piece.Lift:0.00}; " +
+                                        "it will draw well away from its slot");
+            }
+
+            // An error for the plots' reason: a picker with nothing in it on a first visit is a
+            // feature that ships looking broken, and every route out of that state takes play.
+            if (starters == 0)
+                result.Errors.Add("no grove piece is free from the first launch; a new player " +
+                                  "would open the picker onto an empty list");
+
+            if (residents == 0)
+                result.Warnings.Add("the grove has no residents; the half of the catalog that " +
+                                    "cannot be bought is what makes it a record rather than a shop");
+
+            // The shop, against the income that has to pay for it. Excludes rewarded ads for
+            // ValidateCompanionPrices' reason: ads are the accelerator, so counting them in the
+            // baseline lets a ladder only a six-video-a-day player can climb pass as ordinary.
+            long daily = DailyCreditIncome(ProgressionRules.Table);
+            if (daily <= 0 || forSale == 0) return;
+
+            long total = 0;
+            foreach (var piece in grove.Pieces) total += piece.Cost;
+
+            result.Warnings.Add($"grove shop: {forSale} for sale, {earned} earned by playing, " +
+                                $"{starters} free - {total} credits in all, about {total / daily} day(s) " +
+                                $"of play at {daily} credits a day");
+        }
+
+        /// <summary>
+        /// That a piece or plot's art is actually in the project.
+        ///
+        /// A missing address draws a solid white rectangle rather than nothing (invariant 7b),
+        /// so this is the difference between a shop cell that is obviously incomplete and one
+        /// that looks like a rendering bug. It checks the asset database directly rather than
+        /// leaning on <c>AddressableAudit</c>, because that runs only where Addressables is
+        /// installed and this has to hold in every project state.
+        /// </summary>
+        static void RequireGroveArt(string art, string owner, bool animated,
+                                    ContentValidationResult result)
+        {
+            if (string.IsNullOrEmpty(art))
+            {
+                result.Errors.Add($"{owner} names no art");
+                return;
+            }
+
+            string folder = "Assets/Game/Art/" + art;
+
+            if (animated)
+            {
+                if (!AssetDatabase.IsValidFolder(folder))
+                    result.Errors.Add($"{owner} names animation set '{art}', " +
+                                      "which is not a folder under Art/");
+                return;
+            }
+
+            if (AssetDatabase.LoadAssetAtPath<Sprite>(folder + ".png") == null)
+                result.Errors.Add($"{owner} has no sprite at {folder}.png");
+        }
+
+        /// <summary>
         /// The prices, against the income that has to pay them.
         ///
         /// <para>
@@ -977,6 +1333,15 @@ namespace GlimmerGrove.EditorTools
             // below cannot see them — only this can.
             foreach (var companion in content.Index.Companions)
                 Require(table, companion.NameKey, $"companion '{companion.Id}'", result);
+
+            // So are a grove plot's and a grove piece's, for the same reason and with the
+            // same consequence - a piece added without its string ships as "ui.piece.oak"
+            // written across a shop cell.
+            foreach (var plot in content.Homestead.Plots)
+                Require(table, plot.NameKey, $"grove plot '{plot.Id}'", result);
+
+            foreach (var piece in content.Homestead.Pieces)
+                Require(table, piece.NameKey, $"grove piece '{piece.Id}'", result);
 
             // So are a tip's, and this is the only place that can prove they exist. A
             // mechanic added without its two strings compiles, validates and ships; the

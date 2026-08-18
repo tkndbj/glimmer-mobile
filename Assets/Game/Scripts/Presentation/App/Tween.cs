@@ -148,8 +148,11 @@ namespace GlimmerGrove
 
         void Update()
         {
-            float dt = Time.unscaledDeltaTime;
-            float sdt = Time.deltaTime;
+            // Clamped before anything reads them, because the phase arithmetic below is
+            // only as sound as the step handed to it — see TweenCycle.MaxStep for why the
+            // frame after a resume is not a frame's worth of time.
+            float dt = TweenCycle.Step(Time.unscaledDeltaTime);
+            float sdt = TweenCycle.Step(Time.deltaTime);
             _iterating = true;
             for (int i = 0; i < _live.Count; i++)
             {
@@ -160,25 +163,19 @@ namespace GlimmerGrove
                 float step = t.unscaled ? dt : sdt;
                 if (t.delay > 0f) { t.delay -= step; if (t.delay > 0f) continue; step = -t.delay; t.delay = 0f; }
 
-                t.elapsed += step;
-                float raw = Mathf.Clamp01(t.elapsed / t.duration);
-                float k = raw;
-                if (t.loops != 0 && raw >= 1f)
-                {
-                    t.elapsed -= t.duration;
-                    if (t.loops > 0) t.loops--;
-                    raw = Mathf.Clamp01(t.elapsed / t.duration);
-                    k = raw;
-                }
-                if (t.pingPong)
-                {
-                    float cycle = (t.elapsed / t.duration) % 2f;
-                    k = cycle <= 1f ? cycle : 2f - cycle;
-                }
+                // The wrap, the loop count and the phase all live in TweenCycle, which is
+                // plain arithmetic over no Unity types and is therefore the one part of the
+                // animation system the test suite can run a thousand frames of offline. It
+                // is the code that ships, not a description of it — this went wrong once
+                // already and nothing but motion could have caught it.
+                var frame = TweenCycle.Advance(t.elapsed, step, t.duration, t.loops, t.pingPong);
 
-                t.apply?.Invoke(t.ease(k));
+                t.elapsed = frame.Elapsed;
+                t.loops = frame.Loops;
 
-                if (t.loops == 0 && raw >= 1f)
+                t.apply?.Invoke(t.ease(frame.Phase));
+
+                if (frame.Finished)
                 {
                     t.alive = false;
                     t.done?.Invoke();

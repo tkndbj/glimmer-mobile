@@ -1,0 +1,873 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: bbb281ee3bf0b054c82ac2347e9e782c, type: 3}
+  m_Name: Glimmer Grove Homestead
+  m_EditorClassIdentifier: Unity.Addressables.Editor::UnityEditor.AddressableAssets.Settings.AddressableAssetGroup
+  m_GroupName: Glimmer Grove Homestead
+  m_GUID: ae0138be2e111994a8962dd11ffa03d1
+  m_SerializeEntries:
+  - m_GUID: 01eba92299a3cbf4db41ad3bf0a8e553
+    m_Address: Art/Homestead/berry_bush
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 03c45b1a1a61ef34f9190dcdb29fdbb7
+    m_Address: Art/Homestead/tree_leafy
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 051050512377429b9f46bb46deb90a9b
+    m_Address: Art/Homestead/stone
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 06165238188d47b4b8491276cf74cd32
+    m_Address: Art/Homestead/sand_steps
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 06d74cc4c1603ed4194b1e56afe4059a
+    m_Address: Art/Homestead/candle
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 06f69e001223427498ab4caa33ed1075
+    m_Address: Art/Homestead/shore_rock
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 0762847846c34c76b090ff513902ec4e
+    m_Address: Art/Homestead/plot_hollow
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 09044253109378540bb92186e6d32a2d
+    m_Address: Art/Homestead/bamboo
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 0953d529376f13c418b41384512770f4
+    m_Address: Art/Homestead/willow_old
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 0955bea13db636944b5f8d0d972207ce
+    m_Address: Art/Homestead/skull
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 099ee6f6042958c4dbbe753c4066e6e1
+    m_Address: Art/Homestead/obelisk
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 0b68c46055db48e6bb224b63ec5df7ea
+    m_Address: Art/Homestead/well
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 0ebef7ab77f716b4dba7020c350bea78
+    m_Address: Art/Homestead/lily_pads
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 0f336953db3f0774cbb22c5a7654aad1
+    m_Address: Art/Homestead/sand_block
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 12338d781c43dec4785548a567afd41a
+    m_Address: Art/Homestead/hay_bale
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 13285f6767d9fa44a89c200709564adf
+    m_Address: Art/Homestead/pine_snow
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 1598906365739dd4e888a08f1d01b839
+    m_Address: Art/Homestead/dry_shrub
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 15a057befcc745c438db84d0ca918e31
+    m_Address: Art/Homestead/torch_tall
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 16669dee97114ac3a7669360ff3dc2db
+    m_Address: Art/Homestead/plot_crag
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 18eeca14b37086c4ab81d70c041cb620
+    m_Address: Art/Homestead/wood_post
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 1bad86f71b6441448f9a1aab1b6b8cf5
+    m_Address: Art/Homestead/old_sign
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 1bb4e1ef24905394cbf2eb0c657f4252
+    m_Address: Art/Homestead/mooring_post
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 1c9678a942964405b923db961dfce40c
+    m_Address: Art/Homestead/oak
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 1d41693bbd2f2d74bb268010b1bca191
+    m_Address: Art/Homestead/tree_round
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 1da19316d1601284f84cda126e4b287f
+    m_Address: Art/Homestead/mushroom_log
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 1ddd1d333a9b5e84fb1ff27833ee0a00
+    m_Address: Art/Homestead/pine_bent
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 1f7bb39e72b2cac4f89c86ab55b1bfa9
+    m_Address: Art/Homestead/sign_right
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 1faf6d7935685914f8ecc6a13bbfc857
+    m_Address: Art/Homestead/staff_skull
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 20746450faaa4a309c9eff049aac3885
+    m_Address: Art/Homestead/path_curve
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 2099cf4c8aab2084b870e0897ae54b7a
+    m_Address: Art/Homestead/shrub_green
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 2107b3922645b3b42953a2ceb40c356e
+    m_Address: Art/Homestead/rope_fence_end
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 24726cb54cad182449c352a7859704c9
+    m_Address: Art/Homestead/fence_timber
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 2631de056c948ba46baf90223f84e664
+    m_Address: Art/Homestead/snow_rock
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 2643fc250ab3f7d4589e40580dd85798
+    m_Address: Art/Homestead/idol
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 2c17ca8dbdb24a34c8e429ad6bf6b5f5
+    m_Address: Art/Homestead/flag_red
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 2e02981b241bfe54c89c34e8d67e04c8
+    m_Address: Art/Homestead/sea_grass
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 315eacb366c682c48b3603cadeca714a
+    m_Address: Art/Homestead/cairn_snow
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 3290ab40799e4973a55a7f853c40d8e5
+    m_Address: Art/Homestead/sprout
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 33258209e7d16144a88aeb765638a9c7
+    m_Address: Art/Homestead/hay_stack
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 3499eb31329645e88f247a4e2c9a46fd
+    m_Address: Art/Homestead/fence_wide
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 3810b8b2e8515d6478a9aed81283d933
+    m_Address: Art/Homestead/stepping_stones
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 3905957a9490a21419c4a69f04b96dd3
+    m_Address: Art/Homestead/sprout_teal
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 393c2c69976868444adebe249378847b
+    m_Address: Art/Homestead/pine_round
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 3bf7bb4f9e2674d429176a4610642eaf
+    m_Address: Art/Homestead/sprout_pair
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 4896d014323d6724286a3e51f5456c5b
+    m_Address: Art/Homestead/willow_isle
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 49e06c5fafc35c642a7299eab71d4360
+    m_Address: Art/Homestead/desert_snag
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 4a77be0fbb954943889663761a116847
+    m_Address: Art/Homestead/bridge_rope
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 4d82376bf8cf23147a69890be39c25c4
+    m_Address: Art/Homestead/little_stump
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 4dd1578fd453477f8910c36d558fec9e
+    m_Address: Art/Homestead/plot_perch
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 4e100e087b30ba04c87fd5337d0d3eb1
+    m_Address: Art/Homestead/sign_up
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 518142b905ff4d88854244bdb9ac349e
+    m_Address: Art/Homestead/daisies
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 5254f19e11514127a656c99b4ca45d46
+    m_Address: Art/Homestead/bridge_ramp
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 54b14ef96bb019d47a7f787c445089a7
+    m_Address: Art/Homestead/shade_bush
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 553efdf6d05a1aa44b1359985e834270
+    m_Address: Art/Homestead/flower_pink
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 55b4c47de8488b04da80649e2d251559
+    m_Address: Art/Homestead/field_stone
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 55ef67df1fe4f3343a80d0424008aa56
+    m_Address: Art/Homestead/sign_stone
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 5883590651a231745adec09e8a7efb56
+    m_Address: Art/Homestead/fence_picket_end
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 589df5e9afb9d4248860bb206cca1912
+    m_Address: Art/Homestead/crystal_shards
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 5a3a126ac1f54fffa73e602367d16397
+    m_Address: Art/Homestead/brambles
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 5ad1caec6b52c00489591df4cd8fe277
+    m_Address: Art/Homestead/gravestone
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 5ae4016a4d61a7d45b513ce9b2aee3a8
+    m_Address: Art/Homestead/pedestal
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 5b24c851e78779d478cf78ee654f742f
+    m_Address: Art/Homestead/tree_gold
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 5c867ae210026814caad7db6604dca59
+    m_Address: Art/Homestead/ruin_block
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 5d418359be0a4c04ba7a9c1e7e4711dd
+    m_Address: Art/Homestead/willow
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 5e089842a1bf4d2592bd9a5f5a156354
+    m_Address: Art/Homestead/plot_knoll
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 65e9802847544bf4b7a1d3c4b513ba09
+    m_Address: Art/Homestead/bridge_flat
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 66c48337350bec0448af50160422d95b
+    m_Address: Art/Homestead/torch
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 6849aaeb402a4f3697ea0d84f0723bec
+    m_Address: Art/Homestead/crate
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 69c47e25cb54c3c4f95b8d5d5f8277e0
+    m_Address: Art/Homestead/broken_pillars
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 6a6eddde3b78471dba05221b182d9225
+    m_Address: Art/Homestead/bush
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 6de45149a0384f50bfacefcc989458ea
+    m_Address: Art/Homestead/grass_tuft
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 7215a3a814924fc4b8838273e5388376
+    m_Address: Art/Homestead/gravel
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 736a953e16334e341ba10ffeea42dbb2
+    m_Address: Art/Homestead/tree_amber
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 73d97d0fc7428444b84075921a323251
+    m_Address: Art/Homestead/flat_stone
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 767a6d2783621f54a9700670b3fb733c
+    m_Address: Art/Homestead/sand_rock
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 79ce895531924e889b35b6972595ebfc
+    m_Address: Art/Homestead/crystal
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 7cf3f159af6dff24e8905721de0b0f6c
+    m_Address: Art/Homestead/dead_tree
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 7cf80d696f2342a1a044c1cb3feaba7d
+    m_Address: Art/Homestead/lantern
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 8057f564359b41b3ad1e2e430a0dbec2
+    m_Address: Art/Homestead/path_snake
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 811fb71d351fbc34ab3e20325e3abcd2
+    m_Address: Art/Homestead/stone_teeth
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 81c2acbe4051c4942aca8afe5e532792
+    m_Address: Art/Homestead/sign_wood
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 8838f3a08806fa44699701160958831f
+    m_Address: Art/Homestead/tree_night
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 8872333c1afe6954ea15e860ec2bdf45
+    m_Address: Art/Homestead/teal_plant
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 89d6e7dbeca7e76428c8077033a4a282
+    m_Address: Art/Homestead/pine_bare
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 8a2a6f33103e4394a70ccdf23cda30ba
+    m_Address: Art/Homestead/plot_ridge
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 8add98670ee313c4ea15e0d0a9939f15
+    m_Address: Art/Homestead/rope_walk_end
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 8f24e521fb254114c968fca637a0057a
+    m_Address: Art/Homestead/ladder
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 8f825648566d4e6c8c0fe1f92ab2cef6
+    m_Address: Art/Homestead/cottage
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 94fa83e4e46346639cd71d731e80466b
+    m_Address: Art/Homestead/plot_meadow
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 95012a5618c8c5e4b9245be473de02b3
+    m_Address: Art/Homestead/pine_leaning
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 96159a4b21dbaf9469bcbe8a5d316f0e
+    m_Address: Art/Homestead/fence_timber_end
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 995727aa7bc0a01489a36e15d2e94e8a
+    m_Address: Art/Homestead/pine_crimson
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 99e4f149d8e6a3f40b41afed8144d9d6
+    m_Address: Art/Homestead/forest_rock
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 9b95a80b1c2cb9a48869fee9f28c37c3
+    m_Address: Art/Homestead/rope_walk_turn
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 9f213ecc093e91d4ca8586311ad90068
+    m_Address: Art/Homestead/pine
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 9fe62c27a0342704a8281afefc1c13c6
+    m_Address: Art/Homestead/rope_walk_long
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: a091c06666710404382b7d9d7be2a36b
+    m_Address: Art/Homestead/pumpkins
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: a182814db411b2e458036365f81c4cb3
+    m_Address: Art/Homestead/icicles
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: a1b58ae8e5bf4492adbedd3dc44a6b62
+    m_Address: Art/Homestead/pebble
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: a2861777b03ccd045bb64ea9f1cc2ca1
+    m_Address: Art/Homestead/palm
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: a3979fc38a111f8479b5e8cbdd399e50
+    m_Address: Art/Homestead/fish_trap
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: a5243e3876f1bf846aee34fa1e192897
+    m_Address: Art/Homestead/sign_arrow
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: a6114d88b13b06c4393acb0f1d168e11
+    m_Address: Art/Homestead/mossy_rock
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: a81fcd965561fb348a18e8d7dfe5892f
+    m_Address: Art/Homestead/palm_curved
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: a844ea869445b7c429deb21ca21c77d6
+    m_Address: Art/Homestead/stone_pillars
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: a9b35ca740e049ac9402d2117acec07c
+    m_Address: Art/Homestead/bridge_arch
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: aa1e2bd9cd29477aa4e1e401150fa70b
+    m_Address: Art/Homestead/plot_terrace
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: aaf6bdb023d744a59aa4827332621e1c
+    m_Address: Art/Homestead/fence_low
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: ab8395e5b6d335446aa7288c04e5265c
+    m_Address: Art/Homestead/pine_frost
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: aea54f352cf395b4a872dc147f05b2e0
+    m_Address: Art/Homestead/flower_daisy
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: aede85be0cb31c54fb4a7d43a6c702cf
+    m_Address: Art/Homestead/tent
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: b04a5022674b4d73b151ac9e8194b0c3
+    m_Address: Art/Homestead/stump
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: b281fd4935434bbdb38017af964987cb
+    m_Address: Art/Homestead/fence_long
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: b409c0342a2eb194280dd05d74944aa3
+    m_Address: Art/Homestead/pine_snow_tall
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: b4b8896e27584b348a7d001c36646410
+    m_Address: Art/Homestead/rope_walk
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: b4c803dffde6b624ca2d7d470da9eb2b
+    m_Address: Art/Homestead/stone_pair
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: b52065787ac80fd4a8dd10fd0c127463
+    m_Address: Art/Homestead/flower_white
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: b5346a18b4038cd43bbd2915f58d5a5f
+    m_Address: Art/Homestead/plank_bridge
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: b64e9954c8f1ee644a5f57ed8e4f8eee
+    m_Address: Art/Homestead/pine_tall
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: b90272c3df1c2744f973c120046821b0
+    m_Address: Art/Homestead/sand_pillar
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: b9b22bf0bb2544d469585cbd5ca61544
+    m_Address: Art/Homestead/sign_left
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: b9b364ce18df41b897bcaa1f9f86e20a
+    m_Address: Art/Homestead/plot_shelf
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: ba37f9781e738314996fe5e2c5698ca1
+    m_Address: Art/Homestead/bud_amber
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: befe4a84305b45daa1fcc7d4ec5a144b
+    m_Address: Art/Homestead/plot_step
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: bf00a6bbb2b9b4749afabd3bfc68f307
+    m_Address: Art/Homestead/small_stone
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: c24d76fe6ed044f992f0176a0a001f43
+    m_Address: Art/Homestead/arrow_sign
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: c2e8df6d62ea2d74bbaa102c1234dfcb
+    m_Address: Art/Homestead/beached_boat
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: c4f045a7cda50c44d8df215f4769a231
+    m_Address: Art/Homestead/dead_tree_bare
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: c53133ae0721bf64b9bd8d112b4aa4db
+    m_Address: Art/Homestead/tree_apple
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: c7c879f29b38f7e42b87fa2ade7e177b
+    m_Address: Art/Homestead/ice_stump
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: c9ed1f8216ef5fb4f831dd4e3b39422a
+    m_Address: Art/Homestead/banner_crimson
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: cc47c5607c7796c458d0e6b55794c2ce
+    m_Address: Art/Homestead/vines
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: cff41491dd8058f418182474c368a054
+    m_Address: Art/Homestead/sign_skull
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: d0389d681a45be543a00416954903f4e
+    m_Address: Art/Homestead/dusk_plant
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: d51bcddeb96228f4bab3656e31aba727
+    m_Address: Art/Homestead/spear
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: d6fe3c00f5d70044598811148f910eba
+    m_Address: Art/Homestead/fence_rail_end
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: d725ee999c42de8418801428a7d557e5
+    m_Address: Art/Homestead/rock_shard
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: d84ace812ee1fa84ab81908b0fcb1a59
+    m_Address: Art/Homestead/snow_boulder
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: d9968a3679d29a049917240f71cd0821
+    m_Address: Art/Homestead/chest
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: dabae12be40a48f198ca017218bd2a14
+    m_Address: Art/Homestead/spire
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: db7c752e8721c3d4fad381f6eacc32ea
+    m_Address: Art/Homestead/waterfall
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: e327df2779a55e14e8f98bb9d4940c1e
+    m_Address: Art/Homestead/cairn_stone
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: e3d6f4a3cb9f2884c80ed774efd21568
+    m_Address: Art/Homestead/fence_rail
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: e6d15f511732f8642b532df55224a1fe
+    m_Address: Art/Homestead/pier
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: e97f6109fb7b492d8f4255b757e158aa
+    m_Address: Art/Homestead/path_bend
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: eaff0e61cf06d334394eb82bb8cc7c5e
+    m_Address: Art/Homestead/dead_trunk
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: eb56340f26b55e1419f719dd217b3a25
+    m_Address: Art/Homestead/great_stump
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: ed5066caa9f66ac498d41033b8c09b46
+    m_Address: Art/Homestead/torch_low
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: ee0f30fd95a19254aa12af0d7e233b66
+    m_Address: Art/Homestead/rope_fence
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: ee3a83106e6e4238a42a3e8a17067590
+    m_Address: Art/Homestead/signpost
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: eeb0b88c78c5426583b495d9635522fa
+    m_Address: Art/Homestead/cave
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: f0cb81a0c15f4575b9d791e926b24bd9
+    m_Address: Art/Homestead/log
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: f1e2bc9b8989a5b47bd1fcce09b72e48
+    m_Address: Art/Homestead/oak_broad
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: f2f17cf41d7f4dfc84ec48a148eaf9b3
+    m_Address: Art/Homestead/rune_stone
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: f336d40cf98bd4d43b103ac97f0a5e14
+    m_Address: Art/Homestead/dry_tuft
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: f374667cdfc144944873539cb682ae89
+    m_Address: Art/Homestead/tree_orange
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: f3fd903a4d4f3b740b68910b2a12f72e
+    m_Address: Art/Homestead/wreck
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: f415b4d49a0f5894999cb7e050cdd46e
+    m_Address: Art/Homestead/timber_platform
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: f83f2528b3914b0586e0ef335cd30a94
+    m_Address: Art/Homestead/blossom
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: f87033442bf2496597a8b8b4c9331fdb
+    m_Address: Art/Homestead/plot_haven
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: f91812e8697cc5b4dad09c07515d0a01
+    m_Address: Art/Homestead/stone_stumps
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: f9484e5a77ca46c0a21d54cf70dda2c8
+    m_Address: Art/Homestead/grass_blades
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: fb5bf8aa7f7ca204da3d8500077f80cb
+    m_Address: Art/Homestead/palm_pair
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: fb6171351dbce2b42b1b5c0a5d2cd4ee
+    m_Address: Art/Homestead/pine_night
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: fc523625c6cb9e046b57978ebe3d5408
+    m_Address: Art/Homestead/iceberg
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: fc63375967819ec4c99ab5293828c951
+    m_Address: Art/Homestead/tree_slim
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: fd4240d3fa35bcd4993e5837c77ffcb4
+    m_Address: Art/Homestead/banner_gold
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: ff360f571f7848b9b56b2e859bba01a9
+    m_Address: Art/Homestead/fence_short
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: ff841d403f1eee4449d20acd62b59c09
+    m_Address: Art/Homestead/fence_picket
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  m_ReadOnly: 0
+  m_Settings: {fileID: 11400000, guid: 6c4c5f6eb57af6542b195d29840b42f2, type: 2}
+  m_SchemaSet:
+    m_Schemas:
+    - {fileID: 11400000, guid: b061e5760a3131d4db672d7238ff1fd6, type: 2}
+    - {fileID: 11400000, guid: 89620052f574a72418634c4f4ee6e195, type: 2}
+    m_SchemaDisplayOrder:
+    - Glimmer Grove Homestead_BundledAssetGroupSchema
+    - Glimmer Grove Homestead_ContentUpdateGroupSchema
+  m_IncludeInBuild: 1
+  m_IncludeInBuildMigrated: 1
