@@ -48,12 +48,40 @@ namespace GlimmerGrove.Tests
             Assert.AreEqual(Energy.Any, result.Cells[0].colour);
         }
 
-        [TestCase("xEW/0", TestName = "unknown head")]
+        [Test]
+        public void DuskcapsParseAsTheirOwnKind()
+        {
+            var result = LevelGridParser.Parse(Layout("xEW/1 -EW/0"));
+            Assert.IsTrue(result.Ok, string.Join("; ", result.Errors));
+
+            var cap = result.Cells[0];
+            Assert.AreEqual(Kind.Duskcap, cap.kind);
+            Assert.AreEqual(Energy.None, cap.colour, "any light at all wakes one");
+            Assert.AreEqual(1, cap.rot);
+        }
+
+        [Test]
+        public void ATaprootRuneParsesToItsLetterOrdinal()
+        {
+            var result = LevelGridParser.Parse(Layout("-EW/0&A -EW/0&C"));
+            Assert.IsTrue(result.Ok, string.Join("; ", result.Errors));
+
+            Assert.AreEqual(1, result.Cells[0].link);
+            Assert.AreEqual(3, result.Cells[1].link);
+        }
+
+        [TestCase("%EW/0", TestName = "unknown head")]
         [TestCase("-/0", TestName = "no arms")]
         [TestCase("-EW#Z/0", TestName = "unknown colour")]
         [TestCase("-EW/9", TestName = "rotation out of range")]
         [TestCase("-EW/0zz", TestName = "trailing junk")]
         [TestCase("*EW/0", TestName = "colourless heart-crystal")]
+        [TestCase("xEW#R/0", TestName = "duskcap with a colour")]
+        [TestCase("-EW/0&a", TestName = "lower-case root rune")]
+        [TestCase("-EW/0&", TestName = "root rune missing")]
+        [TestCase("@W#A/0&A", TestName = "critter on a taproot")]
+        [TestCase("-EW/0!&A", TestName = "rooted and bound")]
+        [TestCase("-EW/0~2&A", TestName = "brittle and bound")]
         public void MalformedTokensAreRejected(string token)
         {
             var result = LevelGridParser.Parse(Layout(token + " -EW/0"));

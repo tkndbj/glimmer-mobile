@@ -873,8 +873,11 @@ namespace GlimmerGrove
 
             GroveEvents.Collect(_event, tapped.Milestone.Goal);
 
-            Haptic.Tap();
-
+            // No haptic. Handheld.Vibrate is a fixed-length pulse on Android, and tapping a
+            // later bloom sweeps every earlier one with it — so one tap can open a run of
+            // rungs and the buzz sits underneath all of them rather than marking any. The
+            // flowers opening one after another is the feedback; see ChestOverlay for the
+            // same call made for the same reason.
             var cue = new Cue(this);
             for (int i = 0; i < taking.Count; i++)
             {
@@ -1198,7 +1201,6 @@ namespace GlimmerGrove
                                        new Vector2(.5f, .5f), Vector2.zero,
                                        () => Flow.Go<PlayScreen>(v => v.LevelId = levelId));
                 tap.GetComponent<Image>().color = new Color(0f, 0f, 0f, 0f);
-                tap.ClickSfx = null;
                 tap.PressScale = .92f;
 
                 node.localScale = Vector3.zero;

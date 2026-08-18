@@ -1,4 +1,5 @@
 using System;
+using GlimmerGrove.Ads;
 using GlimmerGrove.Content;
 using GlimmerGrove.Daily;
 using GlimmerGrove.Localization;
@@ -171,7 +172,7 @@ namespace GlimmerGrove
         /// </para>
         /// </summary>
         const float HintRow = 54f, LaneHeight = 96f, VerdictRow = 66f,
-                    StandRow = 112f, PayoutRow = 148f, GoldenRow = 74f;
+                    StandRow = 112f, PayoutRow = 148f, GoldenRow = 74f, BonusRow = 152f;
 
         /// <summary>Air under the last row, and the block the buttons own at the bottom.</summary>
         const float Tail = 40f, ButtonBlock = 208f;
@@ -291,6 +292,21 @@ namespace GlimmerGrove
             if (ranked) { standY = y + 52f; y += StandRow; }
             if (paid) { payY = y + 70f; y += PayoutRow; }
             if (goldened) { goldY = y + 34f; y += GoldenRow; }
+
+            // Offered only on a run that actually paid, which is the honest reading of "on top
+            // of what this glade earned" — a replay that beat nothing earns nothing, and a
+            // bonus stacked on zero is a coin offer wearing a victory panel's clothes. That is
+            // the same condition the payout chips are built under, deliberately: the offer sits
+            // directly beneath the number it is doubling and disappears with it.
+            //
+            // ShouldOffer, not CanOffer, matching every other surface: a cooldown draws the
+            // button with its own countdown on it rather than vanishing. The refusals that
+            // cannot resolve by waiting — no provider, no account to pay coins into — hide the
+            // row entirely, so a signed-out first launch never sees it.
+            bool bonus = paid && RewardedAds.ShouldOffer(AdPlacement.WinBonus);
+
+            float bonusY = 0f;
+            if (bonus) { bonusY = y + BonusRow * .5f; y += BonusRow; }
 
             float panelH = y + Tail + ButtonBlock;
 
@@ -460,6 +476,9 @@ namespace GlimmerGrove
                 ? Row("Golden", -goldY, Loc.Format("ui.win.golden", GoldenPercent), 40, Pal.Gold, 780f, 26)
                 : null;
             if (goldenLine) goldenLine.transform.localScale = Vector3.zero;
+
+            // ---------------------------------------------------------- the bonus
+            if (bonus) BuildBonus(bonusY);
 
             // ---------------------------------------------------------- the exits
             var nextButton = BuildButtons(index, last, next);
@@ -673,12 +692,78 @@ namespace GlimmerGrove
             cue.Then(.30f, () => StreakToast.Show(this, Streak, 0f));
             if (Streak.WorthSaying) cue.Wait(.45f);
 
+            // Last of the content, and after the streak: it is an offer rather than news, and
+            // nothing on this panel should be asking the player for something while it is still
+            // telling them what they did.
+            if (_bonus) cue.Then(.28f, () => { if (_bonus) Tween.Pop(_bonus.transform, 0f, .46f); });
+
             cue.Then(.35f, () =>
             {
                 if (!nextButton) return;
                 Sheen.Attach((RectTransform)nextButton.transform, 3.2f);
                 Tween.Breathe(nextButton.transform, .025f, 2f);
             });
+        }
+
+        // ================================================================ the bonus
+        Btn _bonus;
+
+        /// <summary>
+        /// Keeps the offer's caption live while the panel is open.
+        ///
+        /// A victory panel is somewhere players sit — reading the comparison, looking at the
+        /// standing — so a cooldown that only updated on reopen would tick down invisibly and
+        /// leave the button stale. The same reason <c>DefeatOverlay</c> has one, and the paint
+        /// is a no-op on any frame the caption did not change.
+        /// </summary>
+        void Update() => AdOfferButton.Paint(_bonus, AdPlacement.WinBonus, "ui.ads.bonus_cta");
+
+        /// <summary>
+        /// One green button under the payout: more credits, for a video.
+        ///
+        /// <para>
+        /// <b>A flat amount, and the caption says which.</b> The obvious framing is "double
+        /// your reward", and it cannot be honoured here: earned credits are derived from the
+        /// star ledger (invariant 9), so there is no accumulated figure to multiply, and
+        /// doubling one run would mean storing which runs had been doubled — a forgeable
+        /// per-level set that pays, which invariant 15 sends straight back to 13. What the
+        /// server can actually attest to is "a view of this placement happened", so the amount
+        /// is content and the button prints it. A multiplier the panel cannot honour is worse
+        /// than a smaller number it can: the player checks, once.
+        /// </para>
+        /// <para>
+        /// It does not compete with <c>Next</c>. The exits keep their own block below this, the
+        /// sheen still lands on <c>Next</c> at the end of the sequence, and this row is drawn
+        /// last of the content rather than first — an offer placed above the thing a player came
+        /// for is the mistake the hub's <c>+</c> buttons made before <c>AdOfferOverlay</c>
+        /// became the single destination for a resource.
+        /// </para>
+        /// </summary>
+        void BuildBonus(float y)
+        {
+            var offer = RewardedAds.Table.Offer(AdPlacement.WinBonus);
+
+            _bonus = UIKit.TextButton("Bonus", Panel, "btn_green",
+                                      Loc.Format("ui.ads.bonus_cta_n", offer.Amount), 40,
+                                      new Vector2(600f, 124f), new Vector2(.5f, 1f),
+                                      new Vector2(0f, -y), OnBonus, "ic_play");
+
+            _bonus.transform.localScale = Vector3.zero;
+            AdOfferButton.Paint(_bonus, AdPlacement.WinBonus, "ui.ads.bonus_cta");
+        }
+
+        /// <summary>
+        /// Opens the offer over the panel rather than closing it.
+        ///
+        /// The win panel is the thing the player is looking at and the reason the offer makes
+        /// sense; closing it to show an advert and then dropping them on the map would be a
+        /// worse version of the two-panel tax that got <c>RouteOverlay</c> deleted. The button
+        /// simply repaints when the offer resolves — the credits themselves arrive on the next
+        /// sync, because an ad grant is the server's to make (invariant 10d).
+        /// </summary>
+        void OnBonus()
+        {
+            Flow.Modal<AdOfferOverlay>(v => v.PlacementId = AdPlacement.WinBonus);
         }
 
         // ================================================================= the fit

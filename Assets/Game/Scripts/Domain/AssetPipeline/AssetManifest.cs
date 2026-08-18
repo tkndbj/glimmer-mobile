@@ -101,9 +101,9 @@ namespace GlimmerGrove.AssetPipeline
 
         static readonly string[] Sfxs =
         {
-            "click", "back", "press", "rotate_a", "rotate_b", "blocked", "unlock", "shatter",
+            "click", "back", "coin", "rotate_a", "rotate_b", "blocked", "unlock", "shatter",
             "pop", "pop2", "whoosh", "chest", "win", "star", "tick", "tock", "bell",
-            "lit", "nope", "chime", "chime2",
+            "lit", "chime", "chime2",
         };
 
         /// <summary>Everything the game needs before the menu appears.</summary>
@@ -113,6 +113,12 @@ namespace GlimmerGrove.AssetPipeline
 
             for (int i = 1; i <= LevelGridParser.CritterVariants; i++)
                 list.Add(AssetRequest.SpriteSet($"{ArtRoot}Critters/c{i}"));
+
+            // The duskcap, the one creature on a board that is not a critter. Global
+            // rather than chapter-scoped for the reason the critters are: it is a fixed
+            // handful of frames that does not grow with the catalog, and every chapter
+            // from here on may use it.
+            list.Add(AssetRequest.SpriteSet($"{ArtRoot}Board/duskcap"));
 
             list.Add(AssetRequest.SpriteSet($"{ArtRoot}Fx/Victory"));
             list.Add(AssetRequest.SpriteSet($"{UiRoot}Coin"));

@@ -14,14 +14,18 @@ namespace GlimmerGrove.Content
     {
         /// <summary>Token grammar, kept next to the data it describes.</summary>
         public const string Grammar =
-            "head + arms [+ #colour] + /startRotation [+ !] [+ ~turns]   " +
-            "head: '-' conduit, '*' heart-crystal, '@' sleeping critter, '.' empty   " +
+            "head + arms [+ #colour] + /startRotation [+ !] [+ ~turns] [+ &rune]   " +
+            "head: '-' conduit, '*' heart-crystal, '@' sleeping critter, 'x' duskcap, '.' empty   " +
             "arms: any of N E S W in the solved orientation   " +
             "colour: R G B, Y=R+G, M=R+B, C=G+B, W=R+G+B, A=any   " +
             "'!' marks a rooted tile the player cannot turn   " +
             "'~1'..'~9' a fragile conduit that crumbles after that many turns and leaves " +
             "a gap. It must be able to reach its solved orientation within its own " +
-            "count, which the validator proves.";
+            "count, which the validator proves.   " +
+            "'&A'..'&Z' a taproot: every conduit carrying the same rune turns as one, and " +
+            "some number of turns must solve all of them at once, which the validator " +
+            "proves. A duskcap must be dark in the authored solution — any light at all " +
+            "wakes it, and a woken duskcap means the glade is not finished.";
 
         public readonly int Width;
         public readonly int Height;

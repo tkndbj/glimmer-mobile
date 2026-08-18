@@ -4,7 +4,7 @@
   "chapters": [
     {
       "id": "c01_shallows",
-      "version": 3,
+      "version": 5,
       "order": 10,
       "disabled": false,
       "minAppVersion": 0,
@@ -12,7 +12,13 @@
         "c01_first_light",
         "c01_twin_streams",
         "c01_prism_heart",
-        "c01_thorn_hollow"
+        "c01_thorn_hollow",
+        "c01_bound_roots",
+        "c01_duskcap_hollow",
+        "c01_lantern_ring",
+        "c01_sleeping_thicket",
+        "c01_three_springs",
+        "c01_grovekeepers_knot"
       ]
     }
   ],
@@ -36,7 +42,6 @@
       ]
     }
   ],
-
   "companions": [
     {
       "id": "monarch",

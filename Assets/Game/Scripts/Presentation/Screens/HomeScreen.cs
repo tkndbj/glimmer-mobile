@@ -242,17 +242,29 @@ namespace GlimmerGrove
             // states that used to hide it are states the panel renders honestly: at the
             // ceiling it says so, with nothing loaded it says it is looking.
             ResourcePill(row, -318f, Pal.Rose, "ic_heart", Profile.HeartsLabel(), false,
-                         () => Flow.Modal<AdOfferOverlay>(v => v.PlacementId = AdPlacement.HeartRefill));
+                         () => Flow.Modal<AdOfferOverlay>(v => v.PlacementId = AdPlacement.HeartRefill),
+                         ResourceSlots.Kind.Hearts, n => Profile.HeartsLabel((int)n));
             ResourcePill(row, 0f, Pal.Gold, null, Profile.Short(Profile.Coins), true,
-                         () => Flow.Modal<AdOfferOverlay>(v => v.PlacementId = AdPlacement.CoinBonus));
+                         () => Flow.Modal<AdOfferOverlay>(v => v.PlacementId = AdPlacement.CoinBonus),
+                         ResourceSlots.Kind.Credits, Profile.Short);
             ResourcePill(row, 318f, Pal.Bloom, "ic_gem", Profile.Short(Profile.Gems), false,
                          () => Flow.Modal<ComingSoonOverlay>(v => v.Configure("Gems", "ic_gem",
-                             "Gems will unlock hints, skins and seasonal glades.")));
+                             "Gems will unlock hints, skins and seasonal glades.")),
+                         ResourceSlots.Kind.Gems, Profile.Short);
         }
 
         /// <summary>Resource readout with an add button. Coins use the spinning sprite.</summary>
+        /// <remarks>
+        /// Each pill registers itself with <see cref="ResourceSlots"/> as it is built, which
+        /// is what lets the daily chest fly its prizes into this row from an overlay drawn on
+        /// top of it. Registration happens here rather than at the call site precisely because
+        /// this row is destroyed and rebuilt whenever the wallet moves — anything holding a
+        /// reference from the last build would be pointing at a dead object, and the one place
+        /// guaranteed to run on every rebuild is the builder itself.
+        /// </remarks>
         void ResourcePill(Transform parent, float x, Color tint, string icon, string value,
-                          bool animatedCoin, Action onAdd)
+                          bool animatedCoin, Action onAdd,
+                          ResourceSlots.Kind kind, Func<long, string> format)
         {
             var bg = UIKit.Img("Pill", parent, Art.Round(24), new Color(.04f, .09f, .12f, .78f),
                                new Vector2(268f, 80f), new Vector2(.5f, .5f), new Vector2(x, 0f));
@@ -275,6 +287,8 @@ namespace GlimmerGrove
             var plus = UIKit.Img("P", add.transform, Art.S("Ui/ic_plus"), Pal.Cream,
                                  new Vector2(28f, 28f), new Vector2(.5f, .5f), new Vector2(0f, 1f));
             plus.preserveAspect = true;
+
+            ResourceSlots.Register(kind, (RectTransform)ic.transform, t, glow, tint, format);
 
             bg.transform.localScale = Vector3.zero;
             Tween.Pop(bg.transform, 0f, .55f, .18f + Mathf.Abs(x) * .0004f);
@@ -465,7 +479,6 @@ namespace GlimmerGrove
             // One connection lifts this permanently — see DailyChests.CanOpen.
             if (!DailyChests.CanOpen)
             {
-                Audio.Sfx("nope", .5f);
                 Scenery.Toast(Content, Loc.Get("ui.daily.needs_connection"), Pal.Rose, 3f);
                 return;
             }
@@ -557,7 +570,6 @@ namespace GlimmerGrove
                                    new Vector2(.5f, .5f), Vector2.zero, onTap);
             btn.GetComponent<Image>().color = new Color(.04f, .09f, .12f, .76f);
             btn.PressScale = .985f;
-            btn.ClickSfx = null;
 
             var rim = UIKit.Img("Edge", btn.transform, Art.RoundOutline(28, 3f), Pal.A(tint, edge));
             UIKit.StretchTo((RectTransform)rim.transform, 0, 0, 0, 0);
@@ -1249,7 +1261,6 @@ namespace GlimmerGrove
             Tween.After(.5f, () =>
             {
                 if (!this) return;
-                Audio.Sfx("nope", .5f, .9f);
                 Scenery.Toast(Content, Loc.Format("ui.forfeit.unfinished", glade),
                               Pal.Ember, 3.2f, new Vector2(.5f, 1f), -300f);
             }, this);

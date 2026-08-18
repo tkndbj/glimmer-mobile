@@ -59,6 +59,28 @@ namespace GlimmerGrove
         /// </summary>
         public static readonly Color Amber = Hex("#FF8A2B");
 
+        /// <summary>
+        /// The binding mark on conduits that share a taproot, and the one colour on the
+        /// board that deliberately says nothing about light.
+        ///
+        /// <para>
+        /// Every other tint a tile can wear is an <see cref="EnergyColour"/>, so a taproot
+        /// drawn in a hue would be claiming to be a colour of light — and the board's whole
+        /// language is that colour means energy. Roots are therefore pale rope, one shade
+        /// for all of them, and two conduits are matched by the pips on their mark rather
+        /// than by tint. Tapping one also pulses its partners, which is the fast answer;
+        /// the pips are for reading the board before touching it.
+        /// </para>
+        /// </summary>
+        public static readonly Color Rope = Hex("#D9C39A");
+
+        /// <summary>
+        /// Where the light must never reach. Deep violet, well off the energy wheel — the
+        /// three channels and their blends are all bright, so a dark cool tint cannot be
+        /// mistaken for any of them, and it is the same night the streak page is graded in.
+        /// </summary>
+        public static readonly Color Dusk = Hex("#6B5BC4");
+
         static readonly Color[] Table =
         {
             Dormant,                       // 0

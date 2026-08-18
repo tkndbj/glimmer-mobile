@@ -1,5 +1,6 @@
 using System;
 using System.Collections;
+using GlimmerGrove.Ads;
 using GlimmerGrove.Analytics;
 using GlimmerGrove.AssetPipeline;
 using GlimmerGrove.Content;
@@ -429,7 +430,109 @@ namespace GlimmerGrove
             // rather than being taken off a board still reading 0:01. Defeat guards itself
             // against a second call, but _finished is tested here too so a locked board mid
             // defeat sequence does not keep asking.
-            if (!_finished && _clock.Expired) Defeat(DefeatReason.OutOfTime);
+            if (!_finished && !_offeringTime && _clock.Expired) TimeUp();
+        }
+
+        // ------------------------------------------------------- the last thirty seconds
+        /// <summary>
+        /// True while the continue offer is up. The run is frozen behind it and is neither
+        /// won, lost, nor running.
+        ///
+        /// <para>
+        /// A field rather than a check on whether the modal exists, because <c>Update</c> runs
+        /// every frame and <see cref="RunClock.Expired"/> stays true for every one of them —
+        /// without a latch the first frame of the offer would open a second offer, and the
+        /// hundredth would open a hundredth.
+        /// </para>
+        /// </summary>
+        bool _offeringTime;
+
+        /// <summary>
+        /// The clock ran out. Sell the player thirty seconds, or lose the run.
+        ///
+        /// <para>
+        /// The one moment in the game with a natural, high-intent offer: the whole run is
+        /// already invested, the loss is one frame away, and what is for sale is the only
+        /// thing that undoes it. It is also the only offer here that pays no currency —
+        /// see <see cref="AdPlacement.RunContinue"/> — so it needs no account and no network
+        /// beyond the video itself, and it works on a first launch that has never signed in.
+        /// </para>
+        /// <para>
+        /// <c>ShouldOffer</c> rather than <c>CanOffer</c>, matching the defeat panel: a
+        /// cooldown or a spent allowance still draws the panel, which then says which of them
+        /// it was. Only the refusals that cannot resolve by waiting — no provider at all, or a
+        /// content table that does not carry the placement — skip straight to the defeat, and
+        /// they are the ones where a panel would be a dead end rather than an explanation.
+        /// </para>
+        /// </summary>
+        void TimeUp()
+        {
+            if (!RewardedAds.ShouldOffer(AdPlacement.RunContinue))
+            {
+                Defeat(DefeatReason.OutOfTime);
+                return;
+            }
+
+            _offeringTime = true;
+
+            // Locked before the modal rather than by it. The clock stops accruing on a locked
+            // board, so this is also what stops the frozen run from being charged for however
+            // long the player spends reading the panel or watching the video.
+            if (_board != null) _board.Locked = true;
+
+            Flow.Modal<AdOfferOverlay>(v =>
+            {
+                v.PlacementId = AdPlacement.RunContinue;
+                v.Rewarded = ContinueRun;
+                v.Dismissed = () => { if (this) { _offeringTime = false; Defeat(DefeatReason.OutOfTime); } };
+            });
+        }
+
+        /// <summary>
+        /// The video paid. Put the seconds on the clock and hand the board back.
+        ///
+        /// <para>
+        /// The amount is read from the live table at the moment it is applied rather than
+        /// captured when the panel opened, for the reason <c>RewardedAds.Redeem</c> re-checks
+        /// the cap: a published table can change while a thirty-second video is playing, and
+        /// what the player is owed is what the placement pays now.
+        /// </para>
+        /// <para>
+        /// If the extension is refused — an untimed glade, a stopped clock, a run that
+        /// resolved underneath the video — the run is lost rather than left frozen. That
+        /// branch should be unreachable (nothing can resolve a run whose board is locked
+        /// behind a modal) and it is written anyway, because the alternative to a wrong
+        /// ending here is no ending at all: a player sitting on a dead board with a spent
+        /// clock and no way forward.
+        /// </para>
+        /// </summary>
+        void ContinueRun()
+        {
+            if (this == null) return;
+
+            _offeringTime = false;
+
+            if (_finished) return;
+
+            int seconds = RewardedAds.Table.Offer(AdPlacement.RunContinue).Amount;
+
+            if (!_clock.Extend(seconds * 1000))
+            {
+                Defeat(DefeatReason.OutOfTime);
+                return;
+            }
+
+            // Repainted before the board is handed back, so the first frame the player can
+            // act on already shows the time they bought. Straight to PaintClock rather than
+            // waiting for Update, because _paintedSeconds is still holding 0 and the label
+            // would otherwise read 0:00 for one frame on the board it just rescued.
+            _paintedSeconds = -1;
+            PaintClock();
+
+            if (_board != null) _board.Locked = false;
+
+            Audio.Sfx("unlock", .7f);
+            Scenery.Toast(Content, Loc.Format("ui.time.granted", seconds), Pal.Radiance, 2.2f);
         }
 
         /// <summary>
@@ -490,6 +593,13 @@ namespace GlimmerGrove
         void ResetClock()
         {
             _clock.Reset(_puzzle != null && _puzzle.HasTimeLimit ? _puzzle.TimeLimitMillis : 0);
+
+            // Cleared here rather than beside each caller, for the reason the summary gives
+            // about the clock itself: this is the one funnel every fresh board goes through,
+            // and a latch left set on a new run would swallow that run's first timeout in
+            // silence — the board would simply stop, with no panel and no defeat.
+            _offeringTime = false;
+
             _paintedSeconds = -1;
             PaintClock();
         }
@@ -545,7 +655,6 @@ namespace GlimmerGrove
             if (_board == null) return;
             if (!_board.Hint())
             {
-                Audio.Sfx("nope", .45f);
                 Scenery.Toast(Content, Loc.Get("ui.play.no_hints"), Pal.Parchment, 1.6f);
                 return;
             }

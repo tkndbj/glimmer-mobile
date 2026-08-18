@@ -27,16 +27,16 @@ def rotl(mask, turns):
 
 
 def parse_token(tok, ctx):
-    """-> dict(kind, solved, rot, locked, colour) or None for empty"""
+    """-> dict(kind, solved, rot, locked, colour, fragile, link) or None for empty"""
     if tok == '.':
         return None
 
 
-    if tok[0] not in '-*@':
+    if tok[0] not in '-*@x':
         errors.append(f"{ctx}: unknown head '{tok[0]}' in '{tok}'")
         return None
 
-    kind = {'-': 'pipe', '*': 'source', '@': 'lamp'}[tok[0]]
+    kind = {'-': 'pipe', '*': 'source', '@': 'lamp', 'x': 'duskcap'}[tok[0]]
     p, mask = 1, 0
     while p < len(tok) and tok[p] in 'NESW':
         mask |= {'N': N, 'E': E, 'S': S, 'W': W}[tok[p]]
@@ -45,7 +45,7 @@ def parse_token(tok, ctx):
         errors.append(f"{ctx}: '{tok}' has no arms")
         return None
 
-    colour, rot, locked, fragile = 0, 0, False, 0
+    colour, rot, locked, fragile, link = 0, 0, False, 0, 0
     if p < len(tok) and tok[p] == '#':
         c = tok[p + 1]
         if c not in COLOURS:
@@ -63,14 +63,30 @@ def parse_token(tok, ctx):
         else:
             fragile = int(n)
         p += 2
+    if p < len(tok) and tok[p] == '&':
+        r = tok[p + 1] if p + 1 < len(tok) else ''
+        if r < 'A' or r > 'Z':
+            errors.append(f"{ctx}: root rune '{r}' out of range in '{tok}', expected A to Z")
+        else:
+            link = ord(r) - ord('A') + 1
+        p += 2
     if p != len(tok):
         errors.append(f"{ctx}: trailing '{tok[p:]}' in '{tok}'")
     if fragile and kind != 'pipe':
         errors.append(f"{ctx}: only a conduit can be fragile ('{tok}')")
+    if link and kind != 'pipe':
+        errors.append(f"{ctx}: only a conduit can share a taproot ('{tok}')")
+    if link and locked:
+        errors.append(f"{ctx}: '{tok}' is both rooted and bound to a taproot")
+    if link and fragile:
+        errors.append(f"{ctx}: '{tok}' is both brittle and bound to a taproot")
     if kind == 'source' and colour == 0:
         errors.append(f"{ctx}: heart-crystal '{tok}' emits no colour")
+    if kind == 'duskcap' and colour:
+        errors.append(f"{ctx}: a duskcap takes no colour ('{tok}')")
 
-    return dict(kind=kind, solved=mask, rot=rot, locked=locked, colour=colour, fragile=fragile)
+    return dict(kind=kind, solved=mask, rot=rot, locked=locked, colour=colour,
+                fragile=fragile, link=link)
 
 
 def check_level(level, chapter_id):
@@ -163,12 +179,46 @@ def check_level(level, chapter_id):
                           f"survives only {c['fragile']}; the level cannot be won")
 
 
-    lamps = lit = 0
+    # A taproot must be able to reach its own solution: one number of turns has to solve
+    # every conduit on it at once. Mirrors LevelValidator.CheckBoundConduits, and the same
+    # class of mistake as a brittle conduit owed more turns than it survives - a level
+    # nobody can finish that looks perfectly authored.
+    roots = {}
     for i, c in enumerate(cells):
-        if not c or c['kind'] != 'lamp':
+        if c and c.get('link'):
+            roots.setdefault(c['link'], []).append(i)
+    for rune, members in sorted(roots.items()):
+        letter = chr(ord('A') + rune - 1)
+        if len(members) < 2:
+            i = members[0]
+            errors.append(f"{ctx}: taproot '{letter}' has only the conduit at {i % w},{i // w} "
+                          "on it; a root of one wears a binding mark and binds nothing")
+            continue
+        if not any(all(rotl(cells[i]['solved'], (cells[i]['rot'] + k) & 3) == cells[i]['solved']
+                       for i in members) for k in range(4)):
+            errors.append(f"{ctx}: the conduits on taproot '{letter}' can never all be right "
+                          "at once, so the glade cannot be finished")
+
+    # Past this the pips stop telling the roots apart. Mirrors Puzzle.MaxReadableRunes.
+    MAX_READABLE_RUNES = 6
+    real_roots = sum(1 for members in roots.values() if len(members) > 1)
+    if real_roots > MAX_READABLE_RUNES:
+        warnings.append(f"{ctx}: carries {real_roots} taproots but a mark can only tell "
+                        f"{MAX_READABLE_RUNES} of them apart")
+
+    lamps = lit = caps = woken = 0
+    for i, c in enumerate(cells):
+        if not c:
+            continue
+        have = comp_colour[comp[i]] if comp[i] >= 0 else 0
+        if c['kind'] == 'duskcap':
+            caps += 1
+            if have:
+                woken += 1
+            continue
+        if c['kind'] != 'lamp':
             continue
         lamps += 1
-        have = comp_colour[comp[i]] if comp[i] >= 0 else 0
         want = c['colour']
         if (have != 0) if want == 0 else (have == want):
             lit += 1
@@ -176,15 +226,33 @@ def check_level(level, chapter_id):
         errors.append(f"{ctx}: no critters, unwinnable")
     elif lit != lamps:
         errors.append(f"{ctx}: authored solution lights only {lit}/{lamps} critters")
+    if woken:
+        errors.append(f"{ctx}: authored solution wakes {woken}/{caps} duskcap(s); a duskcap's "
+                      "conduits must reach no heart-crystal at all")
 
     sources = sum(1 for c in cells if c and c['kind'] == 'source')
     if sources == 0:
         errors.append(f"{ctx}: no heart-crystal")
 
-    # 3. derived par
+    # 3. derived par. A taproot is charged once however many conduits ride on it, because
+    # one tap turns all of them - mirrors PuzzleFactory.MinimumMoves.
     par = 0
+    charged = set()
     for c in cells:
-        if not c or c['locked'] or rotl(c['solved'], 1) == c['solved']:
+        if not c or c['locked']:
+            continue
+        if c.get('link'):
+            if c['link'] in charged:
+                continue
+            charged.add(c['link'])
+            members = roots[c['link']]
+            for k in range(4):
+                if all(rotl(cells[i]['solved'], (cells[i]['rot'] + k) & 3) == cells[i]['solved']
+                       for i in members):
+                    par += k
+                    break
+            continue
+        if rotl(c['solved'], 1) == c['solved']:
             continue
         for k in range(4):
             if rotl(c['solved'], (c['rot'] + k) & 3) == c['solved']:
@@ -200,6 +268,7 @@ def check_level(level, chapter_id):
         warnings.append(f"{ctx}: map position ({mx},{my}) outside 0..1")
 
     fragile = sum(1 for c in cells if c and c.get('fragile'))
+    bound = len(roots)
 
     # The clock, derived exactly as LevelTuning does: seconds per par turn, with 0 meaning
     # "not authored" and only a negative value removing the timer. Gold is half the limit.
@@ -209,7 +278,7 @@ def check_level(level, chapter_id):
 
     return dict(id=lid, chapter=chapter_id, w=w, h=h, par=par, limit=limit, rate=star_rate,
                 gold=-(-par * 135 // 100), silver=-(-par * 200 // 100),
-                lamps=lamps, sources=sources, fragile=fragile)
+                lamps=lamps, sources=sources, fragile=fragile, caps=caps, bound=bound)
 
 
 # Canvas geometry, mirroring ChapterMap.cs. mapX/mapY are fractions of the chapter's
@@ -373,13 +442,14 @@ def main():
                     errors.append(f"level '{lid}' missing string '{k}'")
 
     print(f"{'#':<3}{'level id':<22}{'chapter':<16}{'size':<7}{'par':<5}{'gold':<6}{'silver':<7}"
-          f"{'clock':<7}{'3*taps/s':<10}{'hearts':<7}{'critters':<9}brittle")
+          f"{'clock':<7}{'3*taps/s':<10}{'hearts':<7}{'critters':<9}{'brittle':<8}"
+          f"{'duskcaps':<10}roots")
     for i, s in enumerate(summaries, 1):
         clock = "-" if not s['limit'] else f"{s['limit']}s"
         rate = "-" if not s['rate'] else f"{s['rate']:.2f}"
         print(f"{i:<3}{s['id']:<22}{s['chapter']:<16}{str(s['w'])+'x'+str(s['h']):<7}"
               f"{s['par']:<5}{s['gold']:<6}{s['silver']:<7}{clock:<7}{rate:<10}"
-              f"{s['sources']:<7}{s['lamps']:<9}{s['fragile']}")
+              f"{s['sources']:<7}{s['lamps']:<9}{s['fragile']:<8}{s['caps']:<10}{s['bound']}")
 
     print()
     for w in warnings:

@@ -124,7 +124,6 @@ namespace GlimmerGrove
             if (P.C[i].locked)
             {
                 tile.Refuse();
-                Audio.SfxVaried("nope", .45f, .05f);
                 return;
             }
             if (P.Inert(i))
@@ -143,7 +142,7 @@ namespace GlimmerGrove
             if (!P.Turn(i, dir)) return;
             if (countMove) { P.Moves++; _history.Add(i); }
 
-            _byIndex[i].Spin(dir);
+            SpinRoot(i, dir);
             Audio.SfxVaried(UnityEngine.Random.value < .5f ? "rotate_a" : "rotate_b", .42f, .08f);
 
             CollectDebris();
@@ -155,6 +154,35 @@ namespace GlimmerGrove
             // Checked after Refresh, which owns the win: a last turn that solves the
             // board is a win, so only an unfinished run can run out of turns.
             if (P.OutOfMoves) Exhaust();
+        }
+
+        /// <summary>
+        /// Turns the tapped tile, and every conduit sharing its taproot.
+        ///
+        /// <para>
+        /// The partners get a pulse on top of the spin, and only the partners. That is the
+        /// whole discovery mechanism: nothing else on this board ever answers a tap
+        /// somewhere else, so a player who has not read the tip still learns the rule from
+        /// their first tap rather than from losing a run to it. The model has already
+        /// turned them by the time this runs — <see cref="Puzzle.Turn"/> owns the taproot —
+        /// so this is strictly the view catching up, and a tile the model refused to turn
+        /// is skipped here on the same test.
+        /// </para>
+        /// </summary>
+        void SpinRoot(int i, int dir)
+        {
+            var root = P.Bound(i);
+            if (root == null) { _byIndex[i].Spin(dir); return; }
+
+            for (int k = 0; k < root.Count; k++)
+            {
+                int j = root[k];
+                if (!P.Used(j) || P.C[j].locked) continue;
+                if (!_byIndex.TryGetValue(j, out var tile) || !tile) continue;
+
+                tile.Spin(dir);
+                if (j != i) tile.RootPulse();
+            }
         }
 
         /// <summary>
@@ -231,6 +259,8 @@ namespace GlimmerGrove
                     Audio.Sfx("pop2", .3f, .78f, Mathf.Max(0, P.Depth[t.Index]) * .028f);
             }
 
+            SoundDuskcaps(before);
+
             if (chains) _chain = woken.Count > 0 ? _chain + 1 : 0;
 
             // Whole tones per link, so the lift stays inside the same scale the ladder is
@@ -265,6 +295,41 @@ namespace GlimmerGrove
 
 
         /// <summary>
+        /// Says out loud that the light has spilled somewhere it was not wanted, and that
+        /// it has been taken back.
+        ///
+        /// <para>
+        /// Deliberately not a defeat. Waking a duskcap costs nothing but the turn it took,
+        /// and the board says so by making the sound recoverable: a low refusal on the way
+        /// in, a soft chime on the way out. A flash or a heart here would teach players to
+        /// stop exploring, when exploring is how this mechanic is meant to be learned — the
+        /// price is already paid by the clock and the move budget.
+        /// </para>
+        /// </summary>
+        void SoundDuskcaps(bool[] before)
+        {
+            if (P.DuskcapCount == 0) return;
+
+            bool disturbed = false, settled = false;
+            foreach (var t in _tiles)
+            {
+                if (!t.IsDuskcap) continue;
+                if (P.Lit[t.Index] && !before[t.Index]) disturbed = true;
+                else if (!P.Lit[t.Index] && before[t.Index]) settled = true;
+            }
+
+            if (disturbed)
+            {
+                Audio.Sfx("blocked", .55f, .72f);
+                Tween.Shake((RectTransform)_floor.transform, 4f, .28f);
+            }
+            else if (settled)
+            {
+                Audio.Sfx("chime2", .42f, .82f);
+            }
+        }
+
+        /// <summary>
         /// The turns ran out with the glade still dark.
         ///
         /// Quieter than a detonation on purpose. There is nothing to point at — the
@@ -280,7 +345,6 @@ namespace GlimmerGrove
 
             Haptic.Tap();
             Audio.Duck(.3f, 1.4f);
-            Audio.Sfx("nope", .65f, .78f);
             Audio.Sfx("pop2", .4f, .6f, .12f);
 
             // every lit arm fades back to dormant, slowest first, so the grove visibly
@@ -407,7 +471,7 @@ namespace GlimmerGrove
             // cost of having explored is the whole point of a fragile board.
             P.Turn(i, -1, wear: false);
             P.Moves = Mathf.Max(0, P.Moves - 1);
-            _byIndex[i].Spin(-1);
+            SpinRoot(i, -1);
             Audio.SfxVaried("back", .5f, .05f);
             P.Evaluate();
             Refresh(before);
@@ -442,7 +506,7 @@ namespace GlimmerGrove
                     var before = CaptureLit();
                     P.Turn(i, 1);
                     _history.Add(i);
-                    _byIndex[i].Spin(1);
+                    SpinRoot(i, 1);
                     Audio.SfxVaried("rotate_a", .42f, .06f);
                     P.Evaluate();
                     Refresh(before);

@@ -100,9 +100,10 @@ namespace GlimmerGrove.Content
             {
                 case '*': cell.kind = Kind.Source; break;
                 case '@': cell.kind = Kind.Lamp; break;
+                case 'x': cell.kind = Kind.Duskcap; break;
                 case '-': cell.kind = Kind.Pipe; break;
                 default:
-                    error = $"unknown head '{token[0]}', expected one of - * @ .";
+                    error = $"unknown head '{token[0]}', expected one of - * @ x .";
                     return false;
             }
 
@@ -164,6 +165,23 @@ namespace GlimmerGrove.Content
                 p += 2;
             }
 
+            // '&A'..'&Z' — the taproot this conduit shares. Every conduit carrying the
+            // same rune turns as one.
+            if (p < token.Length && token[p] == '&')
+            {
+                if (p + 1 >= token.Length) { error = "'&' with no root rune after it"; return false; }
+
+                char rune = token[p + 1];
+                if (rune < 'A' || rune > 'Z')
+                {
+                    error = $"root rune '{rune}' out of range, expected A to Z";
+                    return false;
+                }
+
+                cell.link = (byte)(rune - 'A' + 1);
+                p += 2;
+            }
+
             if (p != token.Length) { error = $"trailing characters '{token.Substring(p)}'"; return false; }
 
             if (cell.fragile > 0 && cell.kind != Kind.Pipe)
@@ -173,9 +191,39 @@ namespace GlimmerGrove.Content
                 return false;
             }
 
+            if (cell.link > 0 && cell.kind != Kind.Pipe)
+            {
+                error = "only a conduit can share a taproot; a heart-crystal or creature " +
+                        "turning by remote control is a rule nothing on the board could show";
+                return false;
+            }
+
+            if (cell.link > 0 && cell.locked)
+            {
+                error = "a rooted conduit cannot share a taproot: one of the two says the " +
+                        "player may never turn it and the other says turning its partner does";
+                return false;
+            }
+
+            // A crumbling taproot would break several conduits on one tap, and only one of
+            // them can be reported as the tile that gave way — so the board would lose cells
+            // the view never showed going. Refused here rather than warned about, because
+            // there is no reading of the pair that does something sensible.
+            if (cell.link > 0 && cell.fragile > 0)
+            {
+                error = "a conduit cannot be both brittle and bound to a taproot";
+                return false;
+            }
+
             if (cell.kind == Kind.Source && cell.colour == 0)
             {
                 error = "a heart-crystal must emit a colour";
+                return false;
+            }
+
+            if (cell.kind == Kind.Duskcap && cell.colour != 0)
+            {
+                error = "a duskcap takes no colour; any light at all wakes it";
                 return false;
             }
 

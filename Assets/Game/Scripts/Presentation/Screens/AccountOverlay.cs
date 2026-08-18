@@ -202,7 +202,6 @@ namespace GlimmerGrove
         {
             _contested = credential;
             Say("ui.account.taken", Pal.Rose);
-            Audio.Sfx("nope", .5f);
 
             if (_switchButton != null) return;
 
@@ -251,7 +250,6 @@ namespace GlimmerGrove
             {
                 _armed = true;
                 if (label) label.text = Loc.Get("ui.account.switch_confirm");
-                Audio.Sfx("nope", .5f);
                 Tween.Shake((RectTransform)_switchButton, 9f, .3f);
 
                 Tween.After(3.2f, () =>

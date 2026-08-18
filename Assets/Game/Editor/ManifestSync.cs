@@ -98,7 +98,15 @@ namespace GlimmerGrove.EditorTools
             {
                 // Only ever reordered on a write, so a no-op run cannot produce a diff.
                 Array.Sort(manifest.chapters, CompareEntries);
-                File.WriteAllText(ChapterFiles.ManifestPath, Serialise(manifest));
+
+                string text = Serialise(manifest);
+                if (!SurvivesRoundTrip(manifest, text, out string lost))
+                {
+                    message = "refusing to write the manifest: " + lost;
+                    return false;
+                }
+
+                File.WriteAllText(ChapterFiles.ManifestPath, text);
             }
 
             var sb = new StringBuilder(changed == 0
@@ -264,13 +272,52 @@ namespace GlimmerGrove.EditorTools
                 sb.AppendLine($"    }}{(i < manifest.chapters.Length - 1 ? "," : string.Empty)}");
             }
 
-            // The roster is authored here, not derived, so this writer's job is simply
-            // to give it back unharmed. Anything the manifest carries that this method
-            // forgets to print is deleted by the next sync without a word — which is
-            // why every field belongs in one writer rather than spread across the tool
-            // that happens to touch it.
+            // Everything below is authored here, not derived, so this writer's job is
+            // simply to give it back unharmed. Anything the manifest carries that this
+            // method forgets to print is deleted by the next sync without a word — which
+            // already happened once: the roster's prices and the whole event calendar
+            // were both added later, neither reached this method, and the first sync run
+            // after them silently deleted a live event and thirty companion prices. That
+            // is what <see cref="SurvivesRoundTrip"/> now stands in front of; this method
+            // being complete is no longer something anybody has to remember.
+            var events = manifest.events ?? new ManifestEventDto[0];
             var companions = manifest.companions ?? new ManifestCompanionDto[0];
-            sb.AppendLine(companions.Length > 0 ? "  ]," : "  ]");
+
+            sb.AppendLine(events.Length > 0 || companions.Length > 0 ? "  ]," : "  ]");
+
+            if (events.Length > 0)
+            {
+                sb.AppendLine("  \"events\": [");
+
+                for (int i = 0; i < events.Length; i++)
+                {
+                    var e = events[i];
+                    sb.AppendLine("    {");
+                    sb.AppendLine($"      \"id\": \"{e.id}\",");
+                    sb.AppendLine($"      \"icon\": \"{e.icon}\",");
+                    sb.AppendLine($"      \"startUnix\": {e.startUnix},");
+                    sb.AppendLine($"      \"endUnix\": {e.endUnix},");
+                    sb.AppendLine($"      \"disabled\": {(e.disabled ? "true" : "false")},");
+                    sb.AppendLine("      \"levels\": [");
+
+                    var levels = e.levels ?? new string[0];
+                    for (int k = 0; k < levels.Length; k++)
+                        sb.AppendLine($"        \"{levels[k]}\"{(k < levels.Length - 1 ? "," : string.Empty)}");
+
+                    sb.AppendLine("      ],");
+                    sb.AppendLine("      \"milestones\": [");
+
+                    var rungs = e.milestones ?? new ManifestEventMilestoneDto[0];
+                    for (int k = 0; k < rungs.Length; k++)
+                        sb.AppendLine($"        {{ \"goal\": {rungs[k].goal}, \"credits\": {rungs[k].credits} }}" +
+                                      (k < rungs.Length - 1 ? "," : string.Empty));
+
+                    sb.AppendLine("      ]");
+                    sb.AppendLine($"    }}{(i < events.Length - 1 ? "," : string.Empty)}");
+                }
+
+                sb.AppendLine(companions.Length > 0 ? "  ]," : "  ]");
+            }
 
             if (companions.Length > 0)
             {
@@ -284,6 +331,7 @@ namespace GlimmerGrove.EditorTools
                     sb.AppendLine($"      \"portrait\": \"{c.portrait}\",");
                     sb.AppendLine($"      \"animated\": \"{c.animated}\",");
                     sb.AppendLine($"      \"unlockLevel\": {c.unlockLevel},");
+                    sb.AppendLine($"      \"unlockCost\": {c.unlockCost},");
                     sb.AppendLine($"      \"disabled\": {(c.disabled ? "true" : "false")}");
                     sb.AppendLine($"    }}{(i < companions.Length - 1 ? "," : string.Empty)}");
                 }
@@ -294,5 +342,116 @@ namespace GlimmerGrove.EditorTools
             sb.AppendLine("}");
             return sb.ToString();
         }
+
+        // ------------------------------------------------------------- round trip
+        /// <summary>
+        /// Reads back what <see cref="Serialise"/> just produced and proves nothing was
+        /// dropped on the way out.
+        ///
+        /// <para>
+        /// This exists because the failure it catches is invisible and permanent. The
+        /// writer prints named fields, so a field added to the manifest a year from now —
+        /// exactly as <c>unlockCost</c> and <c>events</c> both were, both deliberately
+        /// without a schema bump — is not a compile error here, is not a validation error
+        /// anywhere, and is not visible in the file until somebody runs the one step
+        /// <c>CONTENT.md</c> tells them to run after <em>every</em> content edit. The first
+        /// author to do that after such a change deletes live content and gets a success
+        /// message.
+        /// </para>
+        /// <para>
+        /// The check is deliberately made against the same reader the game uses, so the
+        /// question it asks is exactly the one that matters: would the game still see
+        /// everything it sees now? A mismatch refuses the write rather than warning about
+        /// it, because a warning in a log that also says "synced" is a warning nobody reads.
+        /// </para>
+        /// </summary>
+        static bool SurvivesRoundTrip(ManifestDto before, string text, out string lost)
+        {
+            var after = ContentMapper.ReadManifest(text, out string error);
+            if (after == null)
+            {
+                lost = $"what it produced cannot be read back ({error})";
+                return false;
+            }
+
+            if (after.schemaVersion != before.schemaVersion ||
+                after.progressionVersion != before.progressionVersion)
+            {
+                lost = "the schema or progression version did not survive the write";
+                return false;
+            }
+
+            if (Count(after.chapters) != Count(before.chapters))
+            {
+                lost = $"{Count(before.chapters)} chapter(s) went in and {Count(after.chapters)} came out";
+                return false;
+            }
+
+            for (int i = 0; i < Count(before.chapters); i++)
+            {
+                var a = before.chapters[i];
+                var b = after.chapters[i];
+                if (a.id != b.id || a.version != b.version || a.order != b.order ||
+                    a.disabled != b.disabled || a.minAppVersion != b.minAppVersion ||
+                    !Same(a.levels, new List<string>(b.levels ?? new string[0])))
+                {
+                    lost = $"chapter '{a.id}' did not survive the write";
+                    return false;
+                }
+            }
+
+            if (Count(after.events) != Count(before.events))
+            {
+                lost = $"{Count(before.events)} event(s) went in and {Count(after.events)} came out";
+                return false;
+            }
+
+            for (int i = 0; i < Count(before.events); i++)
+            {
+                var a = before.events[i];
+                var b = after.events[i];
+                if (a.id != b.id || a.icon != b.icon || a.startUnix != b.startUnix ||
+                    a.endUnix != b.endUnix || a.disabled != b.disabled ||
+                    !Same(a.levels, new List<string>(b.levels ?? new string[0])) ||
+                    Count(a.milestones) != Count(b.milestones))
+                {
+                    lost = $"event '{a.id}' did not survive the write";
+                    return false;
+                }
+
+                for (int k = 0; k < Count(a.milestones); k++)
+                    if (a.milestones[k].goal != b.milestones[k].goal ||
+                        a.milestones[k].credits != b.milestones[k].credits)
+                    {
+                        lost = $"event '{a.id}' lost a milestone on the way out";
+                        return false;
+                    }
+            }
+
+            if (Count(after.companions) != Count(before.companions))
+            {
+                lost = $"{Count(before.companions)} companion(s) went in and " +
+                       $"{Count(after.companions)} came out";
+                return false;
+            }
+
+            for (int i = 0; i < Count(before.companions); i++)
+            {
+                var a = before.companions[i];
+                var b = after.companions[i];
+                if (a.id != b.id || a.portrait != b.portrait || a.animated != b.animated ||
+                    a.unlockLevel != b.unlockLevel || a.unlockCost != b.unlockCost ||
+                    a.disabled != b.disabled)
+                {
+                    lost = $"companion '{a.id}' did not survive the write";
+                    return false;
+                }
+            }
+
+            lost = null;
+            return true;
+        }
+
+        static int Count<T>(T[] array) => array?.Length ?? 0;
     }
 }

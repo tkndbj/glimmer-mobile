@@ -169,6 +169,77 @@ namespace GlimmerGrove
         public bool Expired => HasLimit && HasStarted && Millis >= LimitMillis;
 
         /// <summary>
+        /// Seconds bought back on this run, in milliseconds. Zero on a run nobody extended.
+        ///
+        /// Kept separately from <see cref="LimitMillis"/> rather than derived from it,
+        /// because the level's own limit is a fact about the glade that anything may read,
+        /// while this is a fact about one attempt. Analytics wants the split and so does the
+        /// defeat panel: a run that ran out of ninety-eight seconds and one that ran out of
+        /// ninety-eight plus four extensions are not the same story.
+        /// </summary>
+        public int ExtendedMillis { get; private set; }
+
+        /// <summary>True once this run has been extended at least once.</summary>
+        public bool WasExtended => ExtendedMillis > 0;
+
+        /// <summary>
+        /// Buys more clock. Returns false when there is nothing to buy it on.
+        ///
+        /// <para>
+        /// <b>It raises the limit and never lowers the elapsed time</b>, and that one choice
+        /// is what keeps the whole feature free of consequences. What this class measures and
+        /// what the save file stores is <see cref="Millis"/> — time <em>taken</em> — so a
+        /// continued run reports the truth: the player really did spend that long on the
+        /// glade. Rewinding the elapsed instead would have been the same number of lines and
+        /// would have silently corrupted three things at once — <c>bestMillis</c> would record
+        /// a time nobody played, <c>StarsForTime</c> would hand out gold for a run that took
+        /// three times the limit, and <c>publishGroveStats</c> would fold both into a
+        /// population every other player is ranked against.
+        /// </para>
+        /// <para>
+        /// So the grading is untouched by design rather than by care at each call site:
+        /// <see cref="Content.LevelTuning.StarsFor"/> compares elapsed against thresholds
+        /// derived from <em>par</em>, not against this clock's limit, so every extension pushes
+        /// the run further down the time bands. A player who buys their way through a glade
+        /// keeps the clear and loses the stars, which needs no separate rule to enforce and no
+        /// number anywhere that says so.
+        /// </para>
+        /// <para>
+        /// Refused on an untimed glade (there is no limit to raise), before the run has begun
+        /// (nothing has been spent yet, and a pre-loaded clock would be a strictly better
+        /// glade bought before it was needed) and after it has resolved (the reading is frozen
+        /// and the run is over). Each of those is a caller mistake rather than a player state,
+        /// which is why this reports rather than throws — an ad has already been watched by
+        /// the time anybody asks, and refusing loudly would cost the player the reward.
+        /// </para>
+        /// </summary>
+        /// <param name="millis">How much to add. Non-positive values are refused.</param>
+        public bool Extend(int millis)
+        {
+            if (millis <= 0) return false;
+            if (!HasLimit || !HasStarted || IsStopped) return false;
+
+            // Bounded so a repeated grant cannot overflow the int the HUD, the record and the
+            // remaining-time arithmetic all share. Nothing legitimate comes close — the cap is
+            // days — but LimitMillis is added to on every extension and an int that wraps here
+            // reads as a run that expired the instant it was extended.
+            long raised = (long)LimitMillis + millis;
+            if (raised > MaxLimitMillis) return false;
+
+            LimitMillis = (int)raised;
+            ExtendedMillis += millis;
+            return true;
+        }
+
+        /// <summary>
+        /// The largest clock this type will carry, extensions included.
+        ///
+        /// Twenty-four hours. Far past anything a glade or a player can produce, and present
+        /// only so <see cref="Extend"/> has something to refuse against — see there.
+        /// </summary>
+        public const int MaxLimitMillis = 24 * 60 * 60 * 1000;
+
+        /// <summary>
         /// Freezes the reading. Called where a run resolves, so nothing that happens
         /// afterwards — a celebration, an overlay, a stray frame — can move a number that
         /// is about to be written to the save file.
@@ -191,6 +262,7 @@ namespace GlimmerGrove
             _elapsed = 0f;
             HasStarted = false;
             IsStopped = false;
+            ExtendedMillis = 0;
             LimitMillis = limitMillis > 0 ? limitMillis : 0;
         }
 

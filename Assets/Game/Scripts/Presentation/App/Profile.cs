@@ -88,11 +88,19 @@ namespace GlimmerGrove
         /// once here so the hub, the gate and anything drawn later cannot disagree about it.
         /// </para>
         /// </summary>
-        public static string HeartsLabel()
-        {
-            int held = Hearts;
-            return held > MaxHearts ? held.ToString() : Loc.Format("ui.home.fraction", held, MaxHearts);
-        }
+        public static string HeartsLabel() => HeartsLabel(Hearts);
+
+        /// <summary>
+        /// The same label for a count that is not the current one — what the pill said a
+        /// moment ago, or what it will say once the coin in the air has landed.
+        ///
+        /// An overload rather than a defaulted parameter, for the reason
+        /// <c>TrySpendHeart</c> is one: a default is baked into every calling assembly at
+        /// compile time, and this reads the published refill cap, which a config push can
+        /// move.
+        /// </summary>
+        public static string HeartsLabel(int held)
+            => held > MaxHearts ? held.ToString() : Loc.Format("ui.home.fraction", held, MaxHearts);
 
         /// <summary>
         /// A wait, written the way a person reads one.

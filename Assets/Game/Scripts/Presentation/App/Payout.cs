@@ -190,54 +190,16 @@ namespace GlimmerGrove
             _throwing = Count;
             _landed = 0;
 
-            Vector2 from = LocalIn(space, origin);
-            Vector2 to = LocalIn(space, Glyph.transform);
+            Vector2 from = TokenFlight.LocalIn(space, origin);
+            Vector2 to = TokenFlight.LocalIn(space, Glyph.transform);
 
             for (int i = 0; i < _throwing; i++) Throw(space, from, to, LeadIn + i * LandingGap, Flight, i);
         }
 
         // --------------------------------------------------------------- internals
         void Throw(RectTransform space, Vector2 from, Vector2 to, float delay, float flight, int index)
-        {
-            var img = UIKit.Img("Tok", space, _token, _tokenTint,
-                                Vector2.one * _tokenSize, new Vector2(.5f, .5f), from);
-            img.preserveAspect = true;
-            var rt = (RectTransform)img.transform;
-
-            // Scattered at the source rather than stacked on it, so seven tokens read as a
-            // handful thrown and not as one token drawn seven times.
-            Vector2 start = from + new Vector2(UnityEngine.Random.Range(-90f, 90f),
-                                               UnityEngine.Random.Range(-46f, 46f));
-            rt.anchoredPosition = start;
-            rt.localScale = Vector3.zero;
-
-            // A straight line between two points on a panel reads as a UI element sliding.
-            // The sideways control point is what makes it an arc, and alternating its side
-            // is what stops the handful tracing one rope.
-            Vector2 span = to - start;
-            Vector2 dir = span.sqrMagnitude < 1f ? Vector2.up : span.normalized;
-            Vector2 perp = new Vector2(-dir.y, dir.x) * (index % 2 == 0 ? 1f : -1f);
-            Vector2 ctrl = (start + to) * .5f
-                         + perp * UnityEngine.Random.Range(70f, 200f)
-                         + Vector2.up * UnityEngine.Random.Range(40f, 130f);
-
-            float spin = UnityEngine.Random.Range(-220f, 220f);
-
-            // InQuad, not a symmetric ease: the token hangs as it leaves and accelerates
-            // into the chip. Decelerating on arrival is what makes a magnet look like a lift.
-            Tween.Run(flight, Ease.InQuad, t =>
-            {
-                if (!rt) return;
-                float u = 1f - t;
-                rt.anchoredPosition = u * u * start + 2f * u * t * ctrl + t * t * to;
-                rt.localScale = Vector3.one * Mathf.Lerp(1.2f, .72f, t * t) * Mathf.Min(1f, t * 6f);
-                rt.localRotation = Quaternion.Euler(0f, 0f, spin * t);
-            }, img).Delay(delay).OnDone(() =>
-            {
-                if (img) UnityEngine.Object.Destroy(img.gameObject);
-                Land();
-            });
-        }
+            => TokenFlight.Throw(space, from, to, _token, _tokenTint, _tokenSize,
+                                 index, delay, flight, Land);
 
         /// <summary>
         /// One token has arrived. This is the only place the number moves.
@@ -323,19 +285,5 @@ namespace GlimmerGrove
                                  t => { if (_glow) _glow.color = Pal.A(_tint, Mathf.Lerp(.8f, .38f, t)); }, _glow);
         }
 
-        /// <summary>
-        /// Where <paramref name="target"/> sits in <paramref name="space"/>'s own coordinates
-        /// — the number a child of <paramref name="space"/> anchored at its centre would need.
-        ///
-        /// Measured through world space rather than read off an anchoredPosition, because the
-        /// origin and the chip are anchored to different edges of the panel and their local
-        /// numbers are not in the same frame.
-        /// </summary>
-        static Vector2 LocalIn(RectTransform space, Transform target)
-        {
-            Vector3 local = space.InverseTransformPoint(target.position);
-            Vector2 centre = space.rect.center;
-            return new Vector2(local.x - centre.x, local.y - centre.y);
-        }
     }
 }

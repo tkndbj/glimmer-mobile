@@ -27,6 +27,7 @@ namespace GlimmerGrove.Content
             CheckArmsMate(level, cells, issues);
             CheckAuthoredSolution(level, cells, issues);
             CheckFragileConduits(level, cells, issues);
+            CheckBoundConduits(level, cells, issues);
             CheckPar(level, computedPar, issues);
             CheckClock(level, issues);
             CheckPresentation(level, issues);
@@ -184,8 +185,86 @@ namespace GlimmerGrove.Content
 
             var probe = new Puzzle(level.Id, level.Layout.Width, level.Layout.Height, level.Tuning, solved);
 
-            if (!probe.Won)
+            // Reported separately from the critter count, because they are opposite
+            // mistakes with opposite fixes: one means the light does not reach far enough
+            // and the other means it reaches too far. A single "the solution does not win"
+            // would send the author looking in the wrong direction half the time.
+            if (probe.DuskcapsWoken > 0)
+                Error(issues, $"the authored solution wakes {probe.DuskcapsWoken} of " +
+                              $"{probe.DuskcapCount} duskcap(s); a duskcap must be dark in the " +
+                              "solution, so its conduits have to reach no heart-crystal at all");
+
+            if (probe.LampsLit != probe.LampCount)
                 Error(issues, $"the authored solution lights only {probe.LampsLit} of {probe.LampCount} critters");
+        }
+
+        /// <summary>
+        /// Taproots must be able to reach their own solution, and be worth having.
+        ///
+        /// <para>
+        /// The error is the same shape as the brittle-conduit one and exists for the same
+        /// reason: a root whose conduits can never all be right at once is a level nobody
+        /// can finish, and it looks perfectly authored — every arm mates, the solved board
+        /// lights, par comes out a plausible number. The player would simply lose hearts
+        /// against it for ever. It is cheap to prove, because one tap turns the whole root:
+        /// either some offset in 0..3 solves every member or none does.
+        /// </para>
+        /// <para>
+        /// A rune only one conduit carries is an error rather than a shrug. It draws a
+        /// binding mark on a tile that is bound to nothing, which is a promise the board
+        /// makes to the player and does not keep — and the overwhelmingly likely cause is a
+        /// partner that was mistyped, which is worth stopping a build for.
+        /// </para>
+        /// </summary>
+        static void CheckBoundConduits(LevelDefinition level, Cell[] cells, List<LevelIssue> issues)
+        {
+            int w = level.Layout.Width;
+            var probe = new Puzzle(level.Id, w, level.Layout.Height, level.Tuning, Copy(cells));
+
+            for (int rune = 1; rune <= Puzzle.MaxRunes; rune++)
+            {
+                int members = 0, movable = 0, first = -1;
+                for (int i = 0; i < cells.Length; i++)
+                {
+                    if (cells[i].link != rune) continue;
+                    members++;
+                    if (first < 0) first = i;
+                    if (!probe.InertAlone(i)) movable++;
+                }
+
+                if (members == 0) continue;
+
+                char letter = (char)('A' + rune - 1);
+
+                if (members == 1)
+                {
+                    Error(issues, $"taproot '{letter}' has only the conduit at " +
+                                  $"{first % w},{first / w} on it; a root of one wears a binding " +
+                                  "mark and binds nothing");
+                    continue;
+                }
+
+                if (PuzzleFactory.RootTurnsOwed(cells, rune) < 0)
+                {
+                    Error(issues, $"the conduits on taproot '{letter}' can never all be right at " +
+                                  "once — no number of turns solves every one of them, so the " +
+                                  "glade cannot be finished");
+                    continue;
+                }
+
+                if (movable == 0)
+                    Warn(issues, $"every conduit on taproot '{letter}' looks the same in every " +
+                                 "orientation, so turning the root can never matter");
+            }
+
+            // Past this the marks stop telling the roots apart, and two roots wearing one
+            // identity is worse than no mark at all — the player reads a binding that is not
+            // there. Said out loud rather than clamped quietly; the drawing reads the same
+            // number, so the two cannot drift.
+            if (probe.RootCount > Puzzle.MaxReadableRunes)
+                Warn(issues, $"this board carries {probe.RootCount} taproots but a mark can only " +
+                             $"tell {Puzzle.MaxReadableRunes} of them apart; split the glade in two " +
+                             "or merge some of the roots");
         }
 
 

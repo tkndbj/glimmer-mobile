@@ -32,7 +32,46 @@ namespace GlimmerGrove.Ads
         /// <summary>Offered from the coin pill on the home screen. Player-initiated, always.</summary>
         public const string CoinBonus = "coin_bonus";
 
-        public static readonly string[] All = { HeartRefill, CoinBonus };
+        /// <summary>
+        /// Offered when the glade's clock runs out, and it buys more of that clock.
+        ///
+        /// <para>
+        /// The highest-intent moment in the game: the player has already invested the whole
+        /// run, the loss is one frame away, and what is on offer is the only thing that
+        /// undoes it. It is also the only placement that pays no currency at all — see
+        /// <see cref="Daily.ChestDropKind.RunTime"/> — which is why it needs no account, no
+        /// claim and no server opinion, and why the shared cooldown does not apply to it.
+        /// </para>
+        /// <para>
+        /// Deliberately repeatable within one run. Bounded by the placement's own daily cap
+        /// and nothing else, because the thing repetition costs is not the game's: a
+        /// continued run's elapsed time keeps climbing against thresholds derived from par,
+        /// so the second extension has usually already cost the player their third star and
+        /// the fourth has cost them their second. The clock grades the run whether or not it
+        /// ends it.
+        /// </para>
+        /// </summary>
+        public const string RunContinue = "run_continue";
+
+        /// <summary>
+        /// Offered on the victory panel, for credits on top of what the glade paid.
+        ///
+        /// <para>
+        /// A flat, server-granted amount rather than a literal doubling of what this run
+        /// earned, and that is a constraint rather than a preference. Earned credits are
+        /// <em>derived</em> from the star ledger (invariant 9), so there is no accumulated
+        /// figure to multiply; doubling one run would mean storing which runs had been
+        /// doubled, which is a forgeable per-level set that <em>pays</em> — invariant 15
+        /// sends that straight back to 13, and the honest answer there is that a signed
+        /// callback naming a placement is the only ad evidence this game can get. So the
+        /// amount is content, the server grants its own figure exactly as it does for
+        /// <see cref="CoinBonus"/>, and the panel prints the real number instead of a
+        /// multiplier it cannot honour.
+        /// </para>
+        /// </summary>
+        public const string WinBonus = "win_bonus";
+
+        public static readonly string[] All = { HeartRefill, CoinBonus, RunContinue, WinBonus };
 
         /// <summary>
         /// Whether an id names a placement this build knows.

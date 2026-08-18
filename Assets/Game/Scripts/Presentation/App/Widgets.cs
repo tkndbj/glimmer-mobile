@@ -13,7 +13,23 @@ namespace GlimmerGrove
         bool _down, _silent, _interactable = true;
         Image _self;
         public Image Icon;
+
+        /// <summary>
+        /// The one sound this button makes, or null for a control that has its own voice —
+        /// the streak rung that plays <c>unlock</c>, the companion the player pokes, the
+        /// nav tab you are already standing on.
+        ///
+        /// <para>
+        /// <b>One sound, on the way down.</b> A tap used to make two, a <c>press</c> as the
+        /// finger landed and a <c>click</c> as it lifted, and the pair was never heard as
+        /// tactile depth — it was heard as a button that stutters. Down rather than up
+        /// because that is the frame the squash starts on, so the sound and the movement
+        /// are the same event; firing on release put the audio a reaction-time behind the
+        /// animation and gave the whole interface a lag it did not have.
+        /// </para>
+        /// </summary>
         public string ClickSfx = "click";
+
         public float PressScale = .93f;
 
         /// <summary>
@@ -75,7 +91,7 @@ namespace GlimmerGrove
             if (!_interactable) return;
             _down = true;
             if (PressScale < .999f) Tween.Scale(transform, _home * PressScale, .09f, Ease.OutQuad);
-            if (!_silent && !string.IsNullOrEmpty(ClickSfx)) Audio.SfxVaried("press", .35f, .05f);
+            if (!_silent && !string.IsNullOrEmpty(ClickSfx)) Audio.SfxVaried(ClickSfx, .7f, .04f);
         }
 
         public void OnPointerUp(PointerEventData e)
@@ -88,7 +104,7 @@ namespace GlimmerGrove
         public void OnPointerClick(PointerEventData e)
         {
             if (!_interactable) return;
-            if (!_silent && !string.IsNullOrEmpty(ClickSfx)) Audio.SfxVaried(ClickSfx, .7f, .04f);
+            // Silent: OnPointerDown already spoke for this tap. See ClickSfx.
             _click?.Invoke();
         }
 

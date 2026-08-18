@@ -53,7 +53,79 @@
       "key": "level.c01_thorn_hollow.lesson",
       "text": "Some conduits crumble after a few turns. Plan the route before you spin."
     },
+
     {
+      "key": "level.c01_bound_roots.name",
+      "text": "Bound Roots"
+    },
+    {
+      "key": "level.c01_bound_roots.tagline",
+      "text": "Two streams, and roots that run beneath both"
+    },
+    {
+      "key": "level.c01_bound_roots.lesson",
+      "text": "Conduits wearing the same pips share a root. Turn one and its partners turn with it."
+    },
+    {
+      "key": "level.c01_duskcap_hollow.name",
+      "text": "Duskcap Hollow"
+    },
+    {
+      "key": "level.c01_duskcap_hollow.tagline",
+      "text": "Wake the grove without waking the dark"
+    },
+    {
+      "key": "level.c01_duskcap_hollow.lesson",
+      "text": "Duskcaps sleep in the shade. Light one and the glade will not settle, so route around them."
+    }, 
+    {
+      "key": "level.c01_lantern_ring.name",
+      "text": "Lantern Ring"
+    },
+    {
+      "key": "level.c01_lantern_ring.tagline",
+      "text": "One ring of light around a sleeping dark"
+    },
+    {
+      "key": "level.c01_lantern_ring.lesson",
+      "text": "The ring's four corners share one root. Its edges are what can leak light inward."
+    },
+    {
+      "key": "level.c01_sleeping_thicket.name",
+      "text": "Sleeping Thicket"
+    },
+    {
+      "key": "level.c01_sleeping_thicket.tagline",
+      "text": "Two streams, and a thicket between them"
+    },
+    {
+      "key": "level.c01_sleeping_thicket.lesson",
+      "text": "The thicket is the wall keeping the streams apart. Open it and you lose both at once."
+    },
+    {
+      "key": "level.c01_three_springs.name",
+      "text": "Three Springs"
+    },
+    {
+      "key": "level.c01_three_springs.tagline",
+      "text": "Gold, teal, and a red spring of its own"
+    },
+    {
+      "key": "level.c01_three_springs.lesson",
+      "text": "Gold and teal both carry green. Join those two and both go white together."
+    },
+    {
+      "key": "level.c01_grovekeepers_knot.name",
+      "text": "The Grovekeeper's Knot"
+    },
+    {
+      "key": "level.c01_grovekeepers_knot.tagline",
+      "text": "Everything the grove taught you, at once"
+    },
+    {
+      "key": "level.c01_grovekeepers_knot.lesson",
+      "text": "One root reaches into all four corners. Nothing here can be solved a corner at a time."
+    },   {
       "key": "ui.levels.title",
       "text": "CHOOSE A GLADE"
     },
@@ -750,14 +822,6 @@
       "text": "NOT NOW"
     },
     {
-      "key": "ui.settings.reset",
-      "text": "RESET PROGRESS"
-    },
-    {
-      "key": "ui.settings.reset_confirm",
-      "text": "TAP AGAIN TO ERASE"
-    },
-    {
       "key": "ui.howto.title",
       "text": "HOW TO PLAY"
     },
@@ -1253,7 +1317,23 @@
       "key": "ui.tip.mixing.body",
       "text": "This critter dreams of a colour no single heart carries. Join two hearts into one network and their light blends — red and green make gold."
     },
+
     {
+      "key": "ui.tip.duskcap.title",
+      "text": "DUSKCAP"
+    },
+    {
+      "key": "ui.tip.duskcap.body",
+      "text": "This one sleeps in the shade, and wears a moon to say so. Any light at all wakes it, and the glade will not settle until every duskcap is dark again."
+    },
+    {
+      "key": "ui.tip.bound.title",
+      "text": "SHARED ROOT"
+    },
+    {
+      "key": "ui.tip.bound.body",
+      "text": "These conduits grow from one root, marked with the same pips. Turning either one turns them all, however far apart they sit."
+    },    {
       "key": "ui.profile.cost",
       "text": "{0} coins"
     },
@@ -1308,6 +1388,54 @@
     {
       "key": "ui.companion.continue",
       "text": "WONDERFUL"
+    },
+    {
+      "key": "ui.reward.run_time",
+      "text": "seconds"
+    },
+    {
+      "key": "ui.ads.continue_title",
+      "text": "OUT OF TIME"
+    },
+    {
+      "key": "ui.ads.continue_cta",
+      "text": "KEEP PLAYING"
+    },
+    {
+      "key": "ui.ads.continue_decline",
+      "text": "END THE RUN"
+    },
+    {
+      "key": "ui.ads.bonus_title",
+      "text": "BONUS COINS"
+    },
+    {
+      "key": "ui.ads.bonus_cta",
+      "text": "WATCH FOR COINS"
+    },
+    {
+      "key": "ui.ads.bonus_cta_n",
+      "text": "WATCH FOR +{0} COINS"
+    },
+    {
+      "key": "ui.time.adds",
+      "text": "Adds {0} seconds to this glade's clock."
+    },
+    {
+      "key": "ui.time.stars_still_run",
+      "text": "Your time keeps counting — stars still go by the clock."
+    },
+    {
+      "key": "ui.time.keeps_heart",
+      "text": "Finish the glade and the heart stays yours."
+    },
+    {
+      "key": "ui.time.granted",
+      "text": "+{0} seconds"
+    },
+    {
+      "key": "ui.bonus.on_top",
+      "text": "Paid on top of what this glade earned."
     }
   ]
 }

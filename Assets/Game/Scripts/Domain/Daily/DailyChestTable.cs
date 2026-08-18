@@ -373,6 +373,18 @@ namespace GlimmerGrove.Daily
                 return false;
             }
 
+            // A chest is opened on the home screen, where there is no run to extend, so a
+            // rolled one would pay nothing at all — and being a *guaranteed* slot it would
+            // pay nothing reliably. Refused rather than skipped: an unknown kind is a newer
+            // content pack reaching an older build and degrading is right, but this kind is
+            // one this build knows and knows to be wrong here.
+            if (ChestDropKinds.IsTransient(kind))
+            {
+                problems.Add($"daily chest {chestIndex} {role} pays '{dto.kind}', which is " +
+                             "spent inside a run; a chest is opened where there is no run");
+                return false;
+            }
+
             if (dto.min < 1 || dto.max < dto.min)
             {
                 problems.Add($"daily chest {chestIndex} {role} '{dto.kind}' has band " +

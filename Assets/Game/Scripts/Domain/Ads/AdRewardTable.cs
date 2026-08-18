@@ -156,11 +156,31 @@ namespace GlimmerGrove.Ads
         /// determined farmer would sit on, and the one whose payout competes directly with
         /// playing the game.
         /// </para>
+        /// <para>
+        /// A continue pays <b>thirty seconds</b>, which is a fraction of every shipped
+        /// glade's clock (68s to 98s at the current tuning) rather than a flat rescue. It
+        /// has to be enough to finish from a position the player can already see and not
+        /// enough to re-plan from, or the limit stops meaning anything on the first
+        /// extension rather than the third. Its cap is eight, the loosest here, because it
+        /// pays no currency and a player who wants a ninth has already given the run more
+        /// time than any star threshold will reward.
+        /// </para>
+        /// <para>
+        /// The victory bonus pays <b>200</b>, above the coin pill's 150 and for a reason
+        /// worth writing down: it is offered at the one moment the player is certain the
+        /// game has been fair to them, and it is the placement most likely to be watched
+        /// several times a session, so it is also the one whose payout most directly
+        /// competes with playing the next glade. Two hundred is roughly what a clean
+        /// three-star first clear pays, which is what makes "on top of what you just
+        /// earned" true enough to print.
+        /// </para>
         /// </summary>
         public static readonly AdRewardTable Default = Build(AdRules.DefaultCooldownSeconds, new[]
         {
             new AdOffer(AdPlacement.HeartRefill, ChestDropKind.Hearts, 2, 10),
             new AdOffer(AdPlacement.CoinBonus, ChestDropKind.Credits, 150, 6),
+            new AdOffer(AdPlacement.RunContinue, ChestDropKind.RunTime, 30, 8),
+            new AdOffer(AdPlacement.WinBonus, ChestDropKind.Credits, 200, 6),
         });
 
         static AdRewardTable Build(int cooldownSeconds, AdOffer[] offers)
@@ -251,6 +271,20 @@ namespace GlimmerGrove.Ads
             {
                 problems.Add($"ads placement '{dto.id}' names unknown reward kind " +
                              $"'{dto.kind}'; skipped");
+                return false;
+            }
+
+            // A kind spent inside a run is meaningless anywhere a run is not open, and only
+            // one placement is offered from inside one. Checked here rather than trusted,
+            // because the failure is silent in the worst way: the offer would be drawn on
+            // the home screen, the video would play, and the reward would land on a
+            // RunClock that does not exist.
+            if (ChestDropKinds.IsTransient(kind)
+                && !string.Equals(dto.id, AdPlacement.RunContinue, StringComparison.Ordinal))
+            {
+                problems.Add($"ads placement '{dto.id}' pays '{dto.kind}', which is spent " +
+                             $"inside a run; only '{AdPlacement.RunContinue}' is offered from " +
+                             "inside one");
                 return false;
             }
 

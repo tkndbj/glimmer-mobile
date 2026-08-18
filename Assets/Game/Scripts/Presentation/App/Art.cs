@@ -179,6 +179,127 @@ namespace GlimmerGrove
             });
         }
 
+        /// <summary>
+        /// A clock face: a ring with two hands, generated rather than drawn.
+        ///
+        /// <para>
+        /// Generated for the reason <see cref="Bloom"/> and <see cref="PrismRing"/> are.
+        /// This is the glyph on the continue offer, which is shown at the instant a run is
+        /// lost — an <c>Image</c> whose sprite has not finished loading is a white
+        /// rectangle rather than a blank (invariant 7b), and a white rectangle on the panel
+        /// asking somebody to watch a video is the worst possible moment to look broken. It
+        /// also needs no address, no group and no audit entry, which is the whole argument
+        /// for a shape this simple.
+        /// </para>
+        /// <para>
+        /// The hands are fixed at ten past ten. That is the position every watch in every
+        /// advertisement has worn for a century, and the reason is the same here: it frames
+        /// the face symmetrically and reads as a clock at 48px, where a vertical pair reads
+        /// as a line. Nothing about this dial tracks a real time — it is a noun, not a
+        /// readout, and a hand that moved would imply the offer was itself on a countdown.
+        /// </para>
+        /// </summary>
+        public static Sprite Dial(int size = 128, float thickness = 9f)
+        {
+            float h = size * .5f;
+            float r = h - thickness * .5f - 1f;
+
+            // Ten past ten, as angles from twelve o'clock, plus the length of each hand as a
+            // fraction of the face. The hour hand is stubbier than the minute hand by more
+            // than a real watch's, because at icon size a small difference reads as a
+            // drawing error rather than as two hands.
+            const float HourTurn = -60f, MinuteTurn = 50f;
+            const float HourLen = .46f, MinuteLen = .68f;
+
+            return Make($"dial{size}_{thickness}", size, size, (x, y) =>
+            {
+                float dx = x - h, dy = y - h;
+
+                float ring = Cover(Mathf.Abs(Mathf.Sqrt(dx * dx + dy * dy) - r) - thickness * .5f);
+
+                float hour = Cover(Hand(dx, dy, HourTurn, r * HourLen, thickness * .42f));
+                float minute = Cover(Hand(dx, dy, MinuteTurn, r * MinuteLen, thickness * .34f));
+
+                return Mathf.Max(ring, Mathf.Max(hour, minute));
+            });
+        }
+
+        /// <summary>
+        /// Distance from a point to a hand: a capsule from the centre out along
+        /// <paramref name="degrees"/>, measured clockwise from twelve o'clock.
+        ///
+        /// Split out of <see cref="Dial"/> only because doing it inline twice put the same
+        /// six lines of trigonometry in one lambda, where a sign error in the second copy
+        /// would be a hand pointing somewhere nobody meant.
+        /// </summary>
+        static float Hand(float dx, float dy, float degrees, float length, float halfWidth)
+        {
+            float a = degrees * Mathf.Deg2Rad;
+            float ux = Mathf.Sin(a), uy = Mathf.Cos(a);
+
+            // Projection onto the hand, clamped to its length, which is what turns an
+            // infinite line into a rounded capsule rooted at the centre.
+            float t = Mathf.Clamp(dx * ux + dy * uy, 0f, length);
+            float px = dx - ux * t, py = dy - uy * t;
+
+            return Mathf.Sqrt(px * px + py * py) - halfWidth;
+        }
+
+        /// <summary>
+        /// A ring painted in the three light channels at once: the mark of a critter that
+        /// has no favourite colour.
+        ///
+        /// <para>
+        /// It exists because a flat cream ring was doing two jobs. Every other halo on a
+        /// board is an <see cref="Pal.EnergyColour"/>, so cream read as a fifth colour
+        /// rather than as "no colour required" — and that only became ambiguous on the first
+        /// board where an unfussy critter sat beside a fussy one, which is exactly the board
+        /// where it matters. Three arcs say "any of these" in a way no translation has to
+        /// carry (invariant 6), and the arcs are the actual channels rather than a rainbow,
+        /// so the ring is a statement about this game's rules and not decoration.
+        /// </para>
+        /// <para>
+        /// The third generated shape carrying its own colour, after <see cref="Gem"/> and
+        /// <see cref="Gradient"/>, and for their reason: a tint multiplies, so a
+        /// three-coloured mask painted white and tinted would come out as one colour.
+        /// </para>
+        /// </summary>
+        public static Sprite PrismRing(int size = 128, float thickness = 10f)
+        {
+            float h = size * .5f;
+            float r = h - thickness * .5f - 1f;
+
+            return MakeRGBA($"prismring{size}_{thickness}", size, size, (x, y) =>
+            {
+                float dx = x - h, dy = y - h;
+                float d = Mathf.Sqrt(dx * dx + dy * dy) - r;
+                float a = Cover(Mathf.Abs(d) - thickness * .5f);
+                if (a <= 0f) return new Color(0, 0, 0, 0);
+
+                // Turn clockwise from the top, so the first arc sits where the eye lands.
+                float turn = Mathf.Repeat(Mathf.Atan2(dx, dy) / (Mathf.PI * 2f), 1f) * 3f;
+                int arc = Mathf.FloorToInt(turn);
+                float t = turn - arc;
+
+                var here = Arcs[arc % 3];
+                var next = Arcs[(arc + 1) % 3];
+
+                // Blended across a slice of each arc rather than butted together: a hard
+                // seam at this size reads as three separate marks instead of one ring.
+                const float Blend = .18f;
+                var c = t > 1f - Blend
+                    ? Color.Lerp(here, next, (t - (1f - Blend)) / (Blend * 2f) + .5f)
+                    : t < Blend
+                        ? Color.Lerp(Arcs[(arc + 2) % 3], here, t / (Blend * 2f) + .5f)
+                        : here;
+
+                return new Color(c.r, c.g, c.b, a);
+            });
+        }
+
+        /// <summary>The three channels, in the order <see cref="PrismRing"/> walks them.</summary>
+        static readonly Color[] Arcs = { Pal.Ember, Pal.Verdant, Pal.Azure };
+
         /// <summary>Soft radial falloff. Higher power = tighter core.</summary>
         public static Sprite Glow(int size = 128, float power = 2.2f)
         {

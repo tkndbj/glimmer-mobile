@@ -28,7 +28,12 @@
 import { createHash, timingSafeEqual } from "node:crypto";
 
 /** The permanent placement ids, mirroring `AdPlacement` on the client. */
-export const AD_PLACEMENTS = ["heart_refill", "coin_bonus"] as const;
+export const AD_PLACEMENTS = [
+  "heart_refill",
+  "coin_bonus",
+  "run_continue",
+  "win_bonus",
+] as const;
 export type AdPlacementId = (typeof AD_PLACEMENTS)[number];
 
 /**
@@ -134,6 +139,14 @@ export function adCurrencyValue(
  *
  * Read from the config rather than from the claim, because the claim only carries a
  * placement id — the client does not get to name which ledger it is paid out of.
+ *
+ * <p>
+ * `run_continue` always answers null here, and is listed in {@link AD_PLACEMENTS} anyway.
+ * It pays `run_time` — seconds on the run in progress — which is spent before the callback
+ * for it has finished arriving, cannot be banked and cannot be moved anywhere else. Listing
+ * it keeps the published config a complete description of what the client offers, so a
+ * placement missing from this list stays a real signal rather than a question.
+ * </p>
  */
 export function adCurrencyOf(ads: AdsConfig, placement: string): string | null {
   const entry = ads.placements[placement];

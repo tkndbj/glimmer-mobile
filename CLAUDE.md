@@ -55,6 +55,17 @@ What that means in practice here:
    it. `ChapterFiles` is the one place allowed to list the folder; `Sync Manifest` adopts
    what it finds and `ContentValidation` fails the build on anything left over. Do not
    make the boot path read the directory to "fix" this — on Android it cannot.
+4c. **Anything that rewrites `manifest.json` must prove it lost nothing.** `Sync Manifest`
+   *derives* the chapter list but *rewrites the whole file*, so every field it does not
+   know about is deleted the next time somebody runs the step `CONTENT.md` tells them to
+   run after every content edit — silently, with a success message. That is not
+   hypothetical: `unlockCost` and the whole `events` array were both added later without a
+   schema bump (correctly), neither reached the writer, and the first sync after them
+   deleted a live event and thirty companion prices. `ManifestSync.SurvivesRoundTrip` reads
+   its own output back through the reader **the game uses** and refuses the write on any
+   difference. Add a field to `ManifestDto`, forget the writer, and you get a refusal naming
+   it. Never relax this into a warning: a warning printed beside the word "synced" is a
+   warning nobody reads.
 5. **Omit `par` when authoring.** It is derived from the board. A typed one can drift.
 5a. **A level's loc keys are derived from its id and cannot be overridden.** That is
    what lets anything holding a `LevelId` name a glade without reading a chapter body.
@@ -1010,7 +1021,7 @@ grove's own number rides at the end of its bar. The horn was cut before it shipp
 
 **Verifying is now in the repo.** `Tools/verify/` holds `compile.py` (every assembly
 separately, which is what actually proves the layering), `tests.py` (the EditMode suite via
-a reflection runner — 467 pass offline, 71 need the Editor and say so), `content.py` and
+a reflection runner — 491 pass offline, 71 need the Editor and say so), `content.py` and
 `loc.py`. It no longer has to be recovered from a scratchpad.
 
 **The keeper's name reaches the cloud — save schema v15.** Reported as "renaming does not
@@ -1051,6 +1062,183 @@ file has already learned twice that a step someone has to remember gets forgotte
 
 Nothing on the server changed and nothing was redeployed. The rules never constrained the
 wallet map's inner keys and no function reads a name.
+
+**Six glades, and two new ways to think — no second game type.** The chapter was four
+glades of one verb: turn a conduit, light a critter. The answer to "this will get boring"
+is not a second mode — a second mode means a second solver, a second par derivation, a
+second star rule and a second thing the build gate has to prove, forever, per mode, and the
+games that ship five hundred levels off one verb never did it. It is **modifiers to the one
+verb**, which is what `~` (brittle) and `!` (rooted) already were. Two more, and both bend
+the existing shape rather than adding to it.
+
+**Taproots (`&A`) make a tap stop being local.** Every conduit carrying a rune turns as
+one, however far apart they sit. Nothing about how light travels changes — it is
+`Puzzle.Turn` and `TurnsOwed` and nothing else. Three decisions are worth not
+re-litigating. A root is **charged once** in par, because one tap moves them all, so a
+bound board's par is *lower* than its tile count suggests and the move budget and the clock
+(both multiples of par) follow with no authoring — bindings are a resource the player learns
+to want, not only an obstacle. The root's turn count is **not the largest of its members'**:
+a straight conduit reads the same every half turn, so it is solved at two of the four offsets
+and simply follows whatever the elbows demand, which is where every interesting board lives
+and is the thing a naive implementation gets wrong (`AStraightConduitOnARootFollowsTheElbow`
+pins it). And a root that can **never agree** is a build error, the same class of trap as a
+brittle conduit owed more turns than it survives: unwinnable, and it looks perfectly authored.
+
+The mark is **pale rope, one shade for every root, with pips for identity** — never a hue.
+Every other tint a tile can wear is an `EnergyColour`, so a coloured root would be claiming
+to be a colour of light, and the board's whole language is that colour means energy. The
+fast answer is tapping it: the partners pulse, and nothing else on a board answers a tap
+somewhere else, so the rule teaches itself on the first tap rather than on a lost run.
+
+**Duskcaps (`x`) are the first thing on a board you are trying not to reach.** Any light at
+all wakes one, and a glade with a woken duskcap is not finished however many critters are
+awake. That is **one term in `Won`** — no second graph, no second traversal, no save field.
+Waking one is recoverable and deliberately cheap (a sound, a shake, no heart), because
+exploring is how the mechanic is meant to be learned and the clock already charges for time.
+
+Authoring them is mostly a consequence of a rule that was already there: every arm mates in
+the solution, so a lit cell's neighbours are lit, so a duskcap and its conduits must be
+**their own island of dark**. Which means the danger is never the duskcap — it is every
+turnable tile where the dark island runs alongside the live network, and **rooting a duskcap
+makes it safer, not more dangerous**. The design work is winding the dark island through the
+live one. Visually it is a critter played backwards: asleep it breathes, greyed, under a
+violet moon; woken it snaps to full colour, stops moving, and a rose ring closes on it.
+
+The two glades: **Bound Roots** (6×7, par 45) braids a red river and a blue one so every red
+branch has a blue one within a tile, then lays three taproots across the braid — one pair
+touching (the lesson), one pair in opposite corners (the consequence), one pair either side
+of the middle at three turns (the cost). **Duskcap Hollow** (7×7, par 57, the biggest board
+yet) winds an eleven-conduit dark root through the middle of the live network, and its one
+taproot binds a live tile to a tile *on that dark root* — the two turns that put the live one
+right pass through an orientation where the dark root's arm swings up to meet it. The trap is
+on the way to the answer, and it is recoverable, which is what makes it a lesson.
+
+Both tips are authored the way every tip here is: **nothing**. `MechanicScan` reads the
+board, so any chapter shipped in three years that uses either one is covered. The duskcap is
+taught before the taproot when a glade brings both, because a duskcap changes what winning
+*is* and no board can demonstrate that, while a taproot announces itself on the first tap.
+
+**A cream halo was a colour, and it should never have been one.** Reported from play on
+glade 5: "are the white-ringed critters a bonus?" They are `#A` critters, which accept any
+light — and every *other* halo on a board is an `EnergyColour`, so cream read as a fifth
+colour rather than as the absence of a demand. It had been invisible for four glades by luck:
+glade 1 is entirely `#A` so there is nothing to compare against, and glades 2–4 have none at
+all. **Glades 5 and 6 are the first boards where an unfussy critter sits beside a fussy one**,
+which is precisely where the distinction starts to matter.
+
+Fixed in art rather than in words, so no translation carries it. An unfussy critter sleeps
+under `Art.PrismRing` — the three channels as three blended arcs, saying "any of these" — and
+when it wakes it takes **the colour that actually reached it**. That second half is the part
+that teaches: the rule is demonstrated by the first conduit the player turns. A fussy critter
+is untouched, wearing its demand lit or not. `PrismRing` is the third generated shape carrying
+its own colour after `Gem` and `Gradient`, for their reason — a tint multiplies, so three
+colours painted white and tinted come out as one. The halo now tracks *energy* rather than
+only lit-ness, because blending a second heart into an unfussy critter's network changes its
+colour without waking it twice.
+
+**The Shallows is finished: ten glades, and four of them are combinations rather than new
+rules.** That was the whole bet — that one verb sustains a chapter if each board has a
+distinct *idea*, not just more tiles. What the last four are for:
+
+- **Lantern Ring** (7×7, par 43) is a *shape*: one closed ring of light with the crystal set
+  into it, eight critters spurring outward and a dark star asleep inside. The ring's four
+  corners share one taproot, so its outline is a single control — and the tiles that can leak
+  light inward are the straight edges, never the corners. So the control you have most of is
+  the one that cannot wake anything. Deliberately open and iconic after two dense boards, and
+  deliberately the lowest par since glade 3.
+- **Sleeping Thicket** (7×7, par 53) puts colour and darkness on the same tile: a red river,
+  a blue one, and a five-duskcap thicket wound between them that for most of the board *is*
+  the wall keeping them apart. The tile that would let red reach a blue critter is usually the
+  same tile that would wake something.
+- **Three Springs** (7×7, par 48) has no duskcaps and no brittle conduits at all — five
+  crystals, three networks, and the trap is that two of them already share a channel. Gold is
+  red+green, teal is green+blue; join those and both go white at once, so the mistake costs two
+  networks rather than one. The chapter's oldest idea taken as far as it goes.
+- **The Grovekeeper's Knot** (8×7, par 61, the widest board) is the finale and holds
+  everything, with one taproot reaching into all four quarters so nothing can be solved a
+  corner at a time.
+
+Two notes for whoever authors chapter 2. The pars run 34, 49, 38, 46, 45, 57, 43, 53, 48, 61 —
+**not monotonic on purpose**, because par is length rather than difficulty and ten rising
+numbers read as a treadmill. And the finale's clock lands at 122s, which is the ceiling: the
+limit is `par × TimeFactor`, so past about par 70 a glade needs a `timeFactor` override or it
+becomes a three-minute run on a phone. Nothing warns about that yet — `CheckClock` has an
+opinion about tap *rate*, not about duration.
+
+Chapter length was decided by the map art, not by taste: `Art/Map/strip0..5` are exact 1200px
+slices of one CraftPix island map walking upward from its bottom edge, and the source holds
+six. `strip5` is the top of it and 10px short, so its first row is repeated — that lands above
+the highest glade under the end-of-chapter marker, where the sky is flat colour, and it keeps
+every strip exactly `ChapterMap.StripHeight` so the map's arithmetic stays integral.
+
+What this cost: no save schema change, no `progression.json` retune, no server work, and no
+new concept in the reward path — the glades pay exactly what any glade pays. The duskcap is
+the only new art (18 frames, global, ~40 KB); the root mark, the moon and the pips are
+generated. `TaprootTests` and `DuskcapTests` add 21 cases and the offline suite is 491.
+
+**Two more places to watch a video, and neither of them is forced.** The game shipped
+playable start to finish without ever seeing an ad: there are no interstitials, hearts are
+spent only on *losing*, and the coin offer was entirely opt-in from the hub — so a competent
+player met the ad system approximately never. The answer is not a forced break between
+glades. It is putting the offer at the two moments a player already wants something.
+
+**`run_continue` — thirty seconds, when the clock runs out.** The highest-intent moment in
+the game: the run is already invested, the loss is one frame away, and the offer is the only
+thing that undoes it. `PlayScreen.TimeUp` intercepts the expiry, freezes the board and puts
+`AdOfferOverlay` up; declining loses the run exactly as before. It is repeatable, bounded by
+its daily cap alone.
+
+Four decisions carry it. It pays **`run_time`**, a new `ChestDropKind` and the only unbanked
+reward in the game — seconds on a `RunClock` that stops existing when the run resolves. That
+one property decides everything else: it is not currency, so no account, no claim and no
+server opinion (the callback grants nothing and needed no deploy); it is exempt from the
+shared cooldown, keyed on `ChestDropKinds.IsTransient` rather than on a list of placement
+ids, because a cooldown paces a faucet and this is not one; and a chest may not roll it,
+because a chest is opened where there is no run.
+
+**`RunClock.Extend` raises the limit and never lowers the elapsed**, and that is the whole
+reason the feature touched nothing. What is stored is still time *taken*, so `bestMillis`
+keeps its meaning, the map badge keeps reading `31 turns · 2:14`, `SaveMerge` is untouched
+and `publishGroveStats` needed no change — the same property `CountdownTests` was written to
+protect, tested against the first change since that could have broken it. Rewinding the
+elapsed instead would have been the same number of lines and would have corrupted all three
+at once, silently, because both readings are milliseconds and both look plausible in a save
+file.
+
+**Repetition needs no balancing rule.** `StarsForTime` grades against thresholds derived
+from par, not against the clock's own limit, so every extension pushes the run further down
+the time bands — the second has usually already cost the third star. A player who buys their
+way through a glade keeps the clear and loses the stars, enforced by arithmetic that was
+already there rather than by a cap somebody has to tune. That is what made "over and over if
+they want to" safe to grant.
+
+**`win_bonus` — credits on the victory panel**, under the payout and above the exits, only
+on a run that actually paid. It is a **flat amount and the button prints it**, not a
+doubling, and that is a constraint rather than a preference: earned credits are derived from
+the star ledger (invariant 9), so there is no accumulated figure to multiply, and doubling
+one run would mean storing which runs had been doubled — a forgeable per-level set that
+*pays*, which invariant 15 sends straight back to 13. What a signed callback can attest to is
+that a view happened, so the amount is keyed on that. A multiplier the panel cannot honour is
+worse than a smaller number it can; the player checks, once.
+
+**One panel still, not three.** `AdOfferOverlay` absorbed both, because it already renders
+the six honest refusals and two more copies would be two more chances to get "no fill" wrong
+— the argument that deleted `RouteOverlay`. It grew one thing: **`Dismissed`, raised from
+`OnDestroy`**, so exactly one of it and `Rewarded` fires for every one of the panel's six
+exits — watch, decline, the corner cross, the scrim, the back key, and the screen dying
+underneath it. The continue needs that absolutely: the run behind the panel is frozen
+mid-defeat, so an exit that reported nothing would strand a player on a dead board. Two
+smaller consequences: the continue is the one placement with a **spelled-out decline**
+(a cross that ends a run is the ambiguity `ForfeitOverlay` exists to remove) and the one that
+**lets itself out** rather than growing a COLLECT button, because what it bought is being back
+in the run.
+
+The clock face is `Art.Dial` — generated, for `Art.Bloom`'s reason: an `Image` whose sprite
+has not arrived is a white rectangle (invariant 7b), and the panel asking somebody to watch a
+video at the instant they lost is the worst place in the game to look broken.
+
+No save schema change, no `progression.json` retune of anything that existed, no server
+deploy. `ContinueTests` adds 18 cases; the offline suite is 512.
 
 Not done, deliberate: **in-app purchases** (the four store secrets hold `UNSET`, so
 receipts are refused — correct until real store products exist), **Play Games Services**

@@ -156,7 +156,7 @@ namespace GlimmerGrove.Ads
                 return new AdOfferStatus(AdOfferState.CapReached, offer,
                                          DailyRules.SecondsUntilReset(GameClock.NowUnix()));
 
-            long cooling = CooldownRemaining();
+            long cooling = Paced(offer) ? CooldownRemaining() : 0;
             if (cooling > 0) return new AdOfferStatus(AdOfferState.CoolingDown, offer, cooling);
 
             if (!_provider.IsReady(placementId))
@@ -248,6 +248,34 @@ namespace GlimmerGrove.Ads
         static bool CanAdjudicate(AdOffer offer)
             => !offer.IsCurrency || CloudState.IsSignedIn || !CloudSaveService.IsAvailable;
 
+        /// <summary>
+        /// Whether the shared cooldown applies to this offer.
+        ///
+        /// <para>
+        /// It applies to everything that is <em>banked</em>, which is every placement but
+        /// one. The cooldown is there to pace a faucet: hearts, credits and boosts all
+        /// outlive the moment they were granted, so watching six videos back to back leaves
+        /// a player six videos better off for the rest of the day, and forty-five seconds
+        /// between them is what keeps that a trickle rather than a tap.
+        /// </para>
+        /// <para>
+        /// A continue banks nothing. Its thirty seconds are spent inside the run that
+        /// granted them and are gone when that run resolves, so there is no faucet to pace —
+        /// the only thing repetition accumulates is elapsed time on a clock that is grading
+        /// the player against par. Pacing it would also be actively wrong at the one moment
+        /// it is offered: the run is frozen on a lost board while the panel is up, so a
+        /// cooldown would not slow anybody down, it would make them sit and watch a
+        /// countdown before being allowed to save a run they had already decided to save.
+        /// </para>
+        /// <para>
+        /// Note what this is <b>not</b> keyed on. Not the placement id, which would make the
+        /// rule a list somebody has to remember to extend, and not "is it currency", which
+        /// would exempt hearts as well. It is keyed on the one property that actually
+        /// justifies the exemption — see <see cref="ChestDropKinds.IsTransient"/>.
+        /// </para>
+        /// </summary>
+        static bool Paced(AdOffer offer) => !ChestDropKinds.IsTransient(offer.Kind);
+
         /// <summary>Seconds left before another ad may be offered. 0 when none.</summary>
         public static long CooldownRemaining()
         {
@@ -315,7 +343,12 @@ namespace GlimmerGrove.Ads
             long now = GameClock.NowUnix();
 
             _watched[impression.PlacementId] = WatchedToday(impression.PlacementId) + 1;
-            _lastWatchedUnix = now;
+
+            // An unpaced offer does not start the shared cooldown either. Counting the view
+            // but stamping the clock would let a continue silently pace the *other*
+            // placements — a player who saved a run would come out of it to find the home
+            // screen's coin offer counting down at them for no reason they could see.
+            if (Paced(offer)) _lastWatchedUnix = now;
 
             var drop = offer.AsDrop();
             Apply(drop, impression, now);
@@ -372,6 +405,15 @@ namespace GlimmerGrove.Ads
 
                 case ChestDropKind.HeartBoost:
                     Wallet.GrantHeartBoost(drop.Amount);
+                    break;
+
+                case ChestDropKind.RunTime:
+                    // Deliberately nothing. The reward is seconds on a RunClock that belongs
+                    // to one screen and one run, and this is a static with no view of either.
+                    // Redeem returns the drop and the caller applies it — see
+                    // ChestDropKind.RunTime. An empty case rather than a default, so adding
+                    // a kind and forgetting it here still fails the switch review rather
+                    // than falling into this one.
                     break;
             }
         }

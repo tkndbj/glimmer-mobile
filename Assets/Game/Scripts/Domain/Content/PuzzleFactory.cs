@@ -26,19 +26,47 @@ namespace GlimmerGrove.Content
         /// <summary>
         /// The fewest taps that can solve a board.
         ///
-        /// Tiles rotate independently, so the true minimum is just the sum of the
-        /// quarter turns each tile still owes. Par is therefore derivable, which is
-        /// why the content format lets authors omit it — a hand-typed par is one
-        /// more thing that can silently be wrong.
+        /// <para>
+        /// Tiles rotate independently, so the minimum is the sum of the quarter turns each
+        /// tile still owes. Par is therefore derivable, which is why the content format
+        /// lets authors omit it — a hand-typed par is one more thing that can silently be
+        /// wrong.
+        /// </para>
+        /// <para>
+        /// A taproot is the one thing that breaks the independence, and it breaks it in the
+        /// player's favour: every conduit carrying a rune turns on one tap, so the root is
+        /// charged once. A bound board's par is therefore lower than its tile count
+        /// suggests, and since the move budget and the clock are both multiples of par, the
+        /// glade is tuned by the same arithmetic without anybody authoring a number for it.
+        /// </para>
         /// </summary>
         public static int MinimumMoves(Cell[] cells)
         {
             int total = 0;
+            int counted = 0;                    // runes already charged, one bit each
+
             for (int i = 0; i < cells.Length; i++)
             {
                 if (cells[i].kind == Kind.Empty || cells[i].locked) continue;
+
+                int rune = cells[i].link;
+                if (rune > 0 && rune <= Puzzle.MaxRunes)
+                {
+                    int bit = 1 << (rune - 1);
+                    if ((counted & bit) != 0) continue;
+                    counted |= bit;
+
+                    // A root whose members cannot agree has no honest cost; the validator
+                    // refuses the level, and charging a negative par here would hide that
+                    // behind a number that merely looks odd.
+                    int root = RootTurnsOwed(cells, rune);
+                    if (root > 0) total += root;
+                    continue;
+                }
+
                 total += TurnsOwed(cells[i]);
             }
+
             return total;
         }
 
@@ -49,6 +77,28 @@ namespace GlimmerGrove.Content
             for (int k = 0; k < 4; k++)
                 if (Puzzle.Rotl(solved, (cell.rot + k) & 3) == solved) return k;
             return 0;
+        }
+
+        /// <summary>
+        /// Taps that solve every conduit on one taproot at once, or -1 when no number
+        /// does. <c>LevelValidator.CheckBoundConduits</c> is what turns that -1 into a
+        /// refused build; the same answer is computed here so par and the validator cannot
+        /// come to disagree about what a root costs.
+        /// </summary>
+        public static int RootTurnsOwed(Cell[] cells, int rune)
+        {
+            for (int k = 0; k < 4; k++)
+            {
+                bool all = true;
+                for (int i = 0; i < cells.Length && all; i++)
+                {
+                    if (cells[i].link != rune) continue;
+                    int solved = cells[i].solved;
+                    if (Puzzle.Rotl(solved, (cells[i].rot + k) & 3) != solved) all = false;
+                }
+                if (all) return k;
+            }
+            return -1;
         }
     }
 }

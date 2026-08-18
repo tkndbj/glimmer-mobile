@@ -105,6 +105,28 @@ namespace GlimmerGrove
         /// <summary>Raised after a reward actually lands, so the screen behind can repaint.</summary>
         public Action Rewarded;
 
+        /// <summary>
+        /// Raised when the panel goes away having paid nothing.
+        ///
+        /// <para>
+        /// Exactly one of this and <see cref="Rewarded"/> fires, always, for every way this
+        /// panel can end — the watch button, the decline button, the corner cross, a tap on
+        /// the scrim, the hardware back key, and the screen underneath being destroyed while
+        /// the panel is open. That completeness is the whole point of it, and it is why it is
+        /// raised from <c>OnDestroy</c> rather than from the three or four exits: this panel
+        /// has more ways out than any other in the game, and <c>CompanionRevealOverlay</c>
+        /// already learned here that a callback wired to the buttons is a callback that does
+        /// not fire when somebody dismisses with the cross.
+        /// </para>
+        /// <para>
+        /// Most callers do not need it. <see cref="AdPlacement.RunContinue"/> does, and needs
+        /// it absolutely: the run behind the panel is frozen mid-defeat, so a dismissal that
+        /// reported nothing would leave a player on a dead board with a spent clock and no
+        /// way forward.
+        /// </para>
+        /// </summary>
+        public Action Dismissed;
+
         // ------------------------------------------------------------- geometry
         // Laid out by a cursor walking down the panel rather than by absolute offsets,
         // because the fact list is not a fixed length: a placement the content table does
@@ -121,6 +143,7 @@ namespace GlimmerGrove
         const float FactGap = 18f;
         const float StatusH = 92f;
         const float ButtonH = 148f;
+        const float DeclineH = 108f;
         const float FootRoom = 44f;
 
         Btn _watch;
@@ -142,9 +165,25 @@ namespace GlimmerGrove
             float cardY = y + CardSize * .5f;   y += CardSize + 30f;
             float factsY = y;                   y += _facts.Length * FactStep + 14f;
             float statusY = y + StatusH * .5f;  y += StatusH + 12f;
-            float buttonY = y + ButtonH * .5f;  y += ButtonH + FootRoom;
+            float buttonY = y + ButtonH * .5f;  y += ButtonH;
 
-            MakePanel(new Vector2(PanelW, y), Loc.Get(TitleKey(PlacementId)));
+            // A spelled-out way to decline, on the one placement where declining is not
+            // "not now". Everywhere else the corner cross is right and a whole button spent
+            // on refusing reads as a panel that expects to be refused — but here the cross
+            // ends a run, and an unlabelled cross that ends a run is exactly the ambiguity
+            // ForfeitOverlay exists to remove. So the continue says what closing costs.
+            bool decline = PlacementId == AdPlacement.RunContinue;
+
+            float declineY = 0f;
+            if (decline) { y += 14f; declineY = y + DeclineH * .5f; y += DeclineH; }
+
+            y += FootRoom;
+
+            // Never dismissed by a stray tap on the scrim when the run behind it is frozen
+            // and closing forfeits it. The same judgement DefeatOverlay makes, for the same
+            // reason: an accidental dismissal here costs the player the run.
+            MakePanel(new Vector2(PanelW, y), Loc.Get(TitleKey(PlacementId)),
+                      dismissOnScrim: !decline);
 
             BuildRewardCard(offer, cardY);
             BuildFacts(factsY);
@@ -160,13 +199,18 @@ namespace GlimmerGrove
             // green button that can never work is worse than no button — the facts above
             // are still worth the player's trip, so the panel closes rather than teasing.
             if (offer.IsValid)
-                _watch = UIKit.TextButton("Watch", Panel, "btn_green", Loc.Get("ui.ads.watch"), 46,
+                _watch = UIKit.TextButton("Watch", Panel, "btn_green", Loc.Get(WatchKey(PlacementId)), 46,
                                           new Vector2(600f, ButtonH), new Vector2(.5f, 1f),
                                           new Vector2(0f, -buttonY), OnWatch, "ic_play");
             else
                 UIKit.TextButton("Ok", Panel, "btn_blue", Loc.Get("ui.common.got_it"), 46,
                                  new Vector2(600f, ButtonH), new Vector2(.5f, 1f),
                                  new Vector2(0f, -buttonY), () => Close());
+
+            if (decline)
+                UIKit.TextButton("Decline", Panel, "btn_gray", Loc.Get("ui.ads.continue_decline"), 38,
+                                 new Vector2(600f, DeclineH), new Vector2(.5f, 1f),
+                                 new Vector2(0f, -declineY), () => Close());
 
             // A corner cross rather than a second full-width button. Nobody taps "not now",
             // and a whole button spent on the option to decline reads as a panel that
@@ -184,14 +228,74 @@ namespace GlimmerGrove
             Repaint();
         }
 
-        void OnDestroy() => RewardedAds.Changed -= Repaint;
+        void OnDestroy()
+        {
+            RewardedAds.Changed -= Repaint;
+
+            // The backstop, not the normal path. Reporting from here as well as from the
+            // close means the caller hears exactly once however the panel ended — including
+            // the two endings no button knows about: the hardware back key pressed during the
+            // reward beat, and the screen underneath being torn down with this still open.
+            Report(_paid);
+        }
+
+        bool _reported;
+
+        /// <summary>
+        /// Tells the caller how this ended, exactly once.
+        ///
+        /// <para>
+        /// The latch is the substance. This panel has six exits — watch, decline, the corner
+        /// cross, the scrim, the back key and the screen dying underneath it — and a caller
+        /// that hears twice is as broken as one that never hears: <c>PlayScreen</c> would
+        /// extend a clock it had already lost the run on. Reporting through one method with
+        /// one guard is what makes "exactly one of Rewarded and Dismissed fires, always"
+        /// something the type enforces rather than something six call sites agree about.
+        /// </para>
+        /// <para>
+        /// <paramref name="paid"/> is read from <see cref="_paid"/> rather than from how the
+        /// panel closed, so a player who backs out during the reward beat still gets what the
+        /// video bought them. <c>RewardedAds.Redeem</c> has already banked it by then; the
+        /// callback is only how the screen finds out.
+        /// </para>
+        /// </summary>
+        void Report(bool paid)
+        {
+            if (_reported) return;
+            _reported = true;
+
+            var callback = paid ? Rewarded : Dismissed;
+            Rewarded = null;
+            Dismissed = null;
+
+            // Swallowed, because this can run during teardown: a caller that throws would
+            // leave the rest of the destroy chain unrun, and one of the things it unruns is
+            // the event unsubscription above.
+            try { callback?.Invoke(); }
+            catch (Exception e) { Debug.LogException(e); }
+        }
 
         /// <summary>
         /// Written out rather than built from the placement id, so the loc gate can see
         /// every key. A concatenated key is invisible to the scanner and ships missing.
         /// </summary>
         static string TitleKey(string placementId)
-            => placementId == AdPlacement.CoinBonus ? "ui.ads.coins_title" : "ui.ads.hearts_title";
+            => placementId == AdPlacement.CoinBonus ? "ui.ads.coins_title"
+             : placementId == AdPlacement.RunContinue ? "ui.ads.continue_title"
+             : placementId == AdPlacement.WinBonus ? "ui.ads.bonus_title"
+             : "ui.ads.hearts_title";
+
+        /// <summary>
+        /// What the watch button says when it can be pressed, written out for
+        /// <see cref="TitleKey"/>'s reason.
+        ///
+        /// The continue gets its own verb because the transaction is not the same one. Every
+        /// other placement here adds to a balance the player will spend later; this one
+        /// decides whether the run they are in the middle of is over, and a button reading
+        /// "watch" beside a lost board does not say that.
+        /// </summary>
+        static string WatchKey(string placementId)
+            => placementId == AdPlacement.RunContinue ? "ui.ads.continue_cta" : "ui.ads.watch";
 
         /// <summary>
         /// What this placement pays into, when the table has no offer to describe. The card
@@ -199,7 +303,10 @@ namespace GlimmerGrove
         /// hearts panel, which would be a small lie told at the worst moment.
         /// </summary>
         static ChestDropKind ResourceOf(string placementId)
-            => placementId == AdPlacement.CoinBonus ? ChestDropKind.Credits : ChestDropKind.Hearts;
+            => placementId == AdPlacement.CoinBonus || placementId == AdPlacement.WinBonus
+                 ? ChestDropKind.Credits
+             : placementId == AdPlacement.RunContinue ? ChestDropKind.RunTime
+             : ChestDropKind.Hearts;
 
         // ------------------------------------------------------------- the prize
         /// <summary>
@@ -226,8 +333,10 @@ namespace GlimmerGrove
             RewardArt.Glyph(icon, kind, 11f);
             Tween.Breathe(icon.transform, .05f, 2.2f);
 
+            // Through RewardArt so the units come from the same place the chest and the
+            // streak board read them from: "+30" beside a clock face promises minutes.
             _reward = UIKit.Titled("Amount", card.transform,
-                                   offer.IsValid ? $"+{offer.Amount}" : string.Empty, 52, Pal.Cream,
+                                   offer.IsValid ? RewardArt.Amount(offer.AsDrop()) : string.Empty, 52, Pal.Cream,
                                    TextAnchor.MiddleCenter, new Vector2(230f, 62f),
                                    new Vector2(.5f, 1f), new Vector2(0f, -166f), outline: 3f, shadow: 3f);
 
@@ -255,7 +364,24 @@ namespace GlimmerGrove
         {
             var facts = new List<AdFact>(4);
 
-            if (placementId == AdPlacement.CoinBonus)
+            if (placementId == AdPlacement.RunContinue)
+            {
+                // The second line is the one that has to be here, and it is the line a panel
+                // selling something would leave out. A player deciding whether thirty seconds
+                // is worth a video is entitled to know that the seconds they have already
+                // spent still count against their stars — otherwise the first continued run
+                // teaches them the offer was a trick, and they never take the second.
+                facts.Add(new AdFact("ic_play", Pal.Radiance,
+                                     () => Loc.Format("ui.time.adds", offer.IsValid ? offer.Amount : 0)));
+                facts.Add(new AdFact("ic_star", Pal.Gold, () => Loc.Get("ui.time.stars_still_run")));
+                facts.Add(new AdFact("ic_heart", Pal.Rose, () => Loc.Get("ui.time.keeps_heart")));
+            }
+            else if (placementId == AdPlacement.WinBonus)
+            {
+                facts.Add(new AdFact("ic_star", Pal.Gold, () => Loc.Get("ui.bonus.on_top")));
+                facts.Add(new AdFact("ic_chest", Pal.Gold, () => Loc.Get("ui.coins.shop_soon")));
+            }
+            else if (placementId == AdPlacement.CoinBonus)
             {
                 facts.Add(new AdFact("ic_star", Pal.Gold, () => Loc.Get("ui.coins.from_glades")));
                 facts.Add(new AdFact("ic_chest", Pal.Gold, () => Loc.Get("ui.coins.shop_soon")));
@@ -512,15 +638,33 @@ namespace GlimmerGrove
             _paid = true;
             _watching = false;
 
-            if (_reward) _reward.text = $"+{drop.Amount}";
+            if (_reward) _reward.text = RewardArt.Amount(drop);
             if (_card) Tween.Pop(_card, 0f, .34f);
 
             if (_status) _status.text = Loc.Get("ui.ads.thanks");
 
+            // A continue lets itself out. Every other placement here pays into a balance the
+            // player will spend later, so a collect button is a fine last beat; this one pays
+            // seconds into a run that is frozen on the other side of the panel, and the thing
+            // the player agreed to watch a video for is *being back in it*. Making them find
+            // one more button first is a tax on exactly the action we just persuaded them to
+            // take — the argument DefeatOverlay.OfferHearts already makes about going straight
+            // back into the run rather than back to a panel that has grown a retry button.
+            if (PlacementId == AdPlacement.RunContinue)
+            {
+                if (_watch) _watch.Interactable = false;
+
+                Tween.After(PaidBeat, () => { if (this) Close(() => Report(true)); }, this);
+
+                Audio.Sfx("win", .6f);
+                Burst.Sparks(_card, Vector2.zero, RewardArt.Tint(drop.Kind), 20, 420f, 30f, .8f);
+                return;
+            }
+
             if (_watch)
             {
                 _watch.Interactable = true;
-                _watch.Setup(() => Close(() => Rewarded?.Invoke()));
+                _watch.Setup(() => Close(() => Report(true)));
 
                 // The play glyph goes with the offer it belonged to. Leaving it in front of
                 // "COLLECT" would advertise a second video on a button that closes a panel.
@@ -546,5 +690,15 @@ namespace GlimmerGrove
             Haptic.Tap();
             Burst.Sparks(_card, Vector2.zero, RewardArt.Tint(drop.Kind), 20, 420f, 30f, .8f);
         }
+
+        /// <summary>
+        /// How long a self-closing offer holds on the reward before letting go.
+        ///
+        /// Long enough that the card's pop and its sparks are seen rather than glimpsed, and
+        /// short enough that it never feels like a wait — this is on the path back into a run
+        /// the player is in the middle of, and they have already watched thirty seconds of
+        /// video to get here.
+        /// </summary>
+        const float PaidBeat = .85f;
     }
 }

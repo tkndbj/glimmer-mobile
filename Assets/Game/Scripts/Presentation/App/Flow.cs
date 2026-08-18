@@ -94,7 +94,13 @@ namespace GlimmerGrove
                 return;
             }
 
-            Audio.SfxVaried("whoosh", .45f);
+            // No sound of its own. A screen change is always something the player just
+            // tapped, and the button they tapped has already made a noise — laying a
+            // whoosh over it turned every navigation into two overlapping sounds, which
+            // is what made the hub's feature boxes and its buttons seem to disagree about
+            // how loud a tap is. The iris carries the transition; the tap carries the
+            // moment. Whoosh is still the right sound where nothing was tapped — a board
+            // resetting, a panel dealing out its rows.
             IrisClose(() =>
             {
                 Swap();
@@ -160,9 +166,17 @@ namespace GlimmerGrove
         internal static void HandleBack()
         {
             if (Busy) return;
+
+            // A modal speaks for itself: every OnBack here routes through ModalView.Close,
+            // which plays `back` already.
             for (int i = _modals.Count - 1; i >= 0; i--)
                 if (_modals[i] && _modals[i].OnBack()) return;
-            if (Current != null && Current.OnBack()) return;
+
+            // A screen does not. Its OnBack navigates through Go, which no longer makes a
+            // sound of its own, and there is no button here to have made one — this is the
+            // hardware key. Without this line, five screens would retreat in silence while
+            // the back key drawn in their own corner clicked.
+            if (Current != null && Current.OnBack()) Audio.SfxVaried("back", .5f);
         }
     }
 }

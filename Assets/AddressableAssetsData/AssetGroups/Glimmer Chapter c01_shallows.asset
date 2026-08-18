@@ -15,8 +15,23 @@ MonoBehaviour:
   m_GroupName: Glimmer Chapter c01_shallows
   m_GUID: 7469331059072c14fb2e4248e6447459
   m_SerializeEntries:
+  - m_GUID: 09587533d6c26d048861d3ef63976d79
+    m_Address: Art/Bg/play_3
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 0dac8cf6e677f054b834f6cd0d265665
+    m_Address: Art/Bg/play_6
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 0f62723584f54f8011a04dde90efc13b
     m_Address: Art/Map/strip0
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 1a158e089440f7146b1a8f742abf4b84
+    m_Address: Art/Map/strip4
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
@@ -25,8 +40,38 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 519453f73f0d6cd4aa843d5c2edcad6d
+    m_Address: Art/Map/strip5
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 60e3ecbc56f10fc4bac8bd882641110a
+    m_Address: Art/Bg/play_8
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 6bd1e279517059ffd82412677d275239
     m_Address: Art/Map/strip2
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 6e7e03dee61e9144aadc984e9e7b122a
+    m_Address: Art/Bg/play_7
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 7fc5189e2f69cd54093ad02d00014469
+    m_Address: Art/Bg/play_4
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: c55d3f8c3c5f84c458c6fc4f600155d0
+    m_Address: Art/Map/strip3
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: c616d31ab2384ca419929be4dd188688
+    m_Address: Art/Bg/play_5
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0

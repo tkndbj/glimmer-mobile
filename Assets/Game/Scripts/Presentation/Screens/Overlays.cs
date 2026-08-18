@@ -251,8 +251,6 @@ namespace GlimmerGrove
                              new Vector2(0f, canRetry ? -722f : offering ? -816f : -700f),
                              () => Close(() => Flow.Go<LevelsScreen>()));
 
-            Audio.Sfx("nope", .5f, .8f, .05f);
-
             // Last, and after the near-miss line has had its moment: a lost run still fed
             // the streak, which is the one piece of good news this panel has.
             StreakToast.Show(this, Streak, 1.05f);
@@ -601,7 +599,11 @@ namespace GlimmerGrove
     {
         protected override void Build()
         {
-            MakePanel(new Vector2(860f, 800f), Loc.Get("ui.settings.title"));
+            // 700 rather than 800: the reset button and the gap above it were 146px of the
+            // old height. Everything else here hangs off the top edge and only Close hangs
+            // off the bottom, so shrinking the panel is what closes the hole — moving Close
+            // up instead would have left the panel the same size with dead space in it.
+            MakePanel(new Vector2(860f, 700f), Loc.Get("ui.settings.title"));
 
             var row = UIKit.Box("Toggles", Panel, new Vector2(700f, 200f), new Vector2(.5f, 1f), new Vector2(0f, -260f));
             Toggle(row, "ic_music", new Vector2(-190f, 0f), () => GameSettings.MusicOn, GameSettings.SetMusic);
@@ -624,35 +626,22 @@ namespace GlimmerGrove
             // settings that is about *who the player is* rather than how the game
             // behaves, and burying the thing that protects a grove three taps deep in
             // a preferences panel is how it stayed unfound.
-            UIKit.TextButton("Wipe", Panel, "btn_red", Loc.Get("ui.settings.reset"), 38, new Vector2(560f, 120f),
-                             new Vector2(.5f, 0f), new Vector2(0f, 250f), ConfirmWipe);
+            //
+            // There is deliberately no "reset progress" here, and the reason is stronger
+            // than distaste for the button. It called SaveService.Wipe, which keeps the
+            // cloud identity on purpose — so on a signed-in device the next sync pulled the
+            // old save straight back, because SaveMerge.Join is monotonic and the cloud copy
+            // knows more than a freshly zeroed one about every field it joins. The control
+            // therefore promised something it could no longer deliver: the grove vanished,
+            // the player believed it, and then it came back. That is worse than not offering
+            // it. Wiping a device is `adb shell pm clear` or a reinstall, and starting a
+            // genuinely new grove is what linking a different account already does.
+            //
+            // Wipe itself stays. CloudSaveService.AdoptLinkedAccountAsync needs it, and it
+            // is safe there for exactly the reason it was unsafe here: it is followed by a
+            // sign-in to a *different* uid, so there is no old cloud document to merge back.
             UIKit.TextButton("Close", Panel, "btn_green", Loc.Get("ui.common.done"), 46, new Vector2(560f, 132f),
                              new Vector2(.5f, 0f), new Vector2(0f, 108f), () => Close());
-        }
-
-        bool _armed;
-
-        void ConfirmWipe()
-        {
-            var btn = Panel.Find("Wipe");
-            var label = btn != null ? btn.Find("Text").GetComponent<Text>() : null;
-            if (!_armed)
-            {
-                _armed = true;
-                if (label) label.text = Loc.Get("ui.settings.reset_confirm");
-                Audio.Sfx("nope", .5f);
-                Tween.Shake((RectTransform)btn, 9f, .3f);
-                Tween.After(3.2f, () =>
-                {
-                    if (this == null) return;
-                    _armed = false;
-                    if (label) label.text = Loc.Get("ui.settings.reset");
-                }, this);
-                return;
-            }
-            SaveService.Wipe();
-            Audio.Sfx("shatter", .55f);
-            Close(() => Flow.Go<HomeScreen>());
         }
 
         static void Caption(Transform parent, string key, float x)

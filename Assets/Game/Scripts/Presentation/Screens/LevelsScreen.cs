@@ -279,6 +279,12 @@ namespace GlimmerGrove
                                    new Vector2(.5f, .5f), new Vector2(0f, 2f), () => Open(id, unlocked));
             btn.GetComponent<Image>().preserveAspect = true;
 
+            // A glade has its own voice: Open() plays `unlock` when it lets you in, and
+            // deliberately nothing when it does not — a refusal here is carried by the
+            // node's shake and its toast, because the game has no rejection sound. Either
+            // way the generic click would be a second sound saying less than the first.
+            btn.ClickSfx = null;
+
             if (unlocked)
                 UIKit.Titled("Num", btn.transform, displayNumber.ToString(), 62, new Color(.30f, .21f, .13f),
                              TextAnchor.MiddleCenter, new Vector2(190f, 110f), new Vector2(.5f, .5f),
@@ -699,7 +705,9 @@ namespace GlimmerGrove
 
         void GoToChapter(ChapterId id)
         {
-            Audio.SfxVaried("whoosh", .4f);
+            // No sound here either: the arrow that was tapped has already made one, and
+            // this used to add a whoosh on top of the one Flow.Go played, so stepping
+            // between chapters was three sounds at once.
             Flow.Go<LevelsScreen>(v => v.ChapterId = id);
         }
 
@@ -741,7 +749,6 @@ namespace GlimmerGrove
         {
             if (!unlocked)
             {
-                Audio.Sfx("nope", .55f);
                 if (_nodes.TryGetValue(id, out var node)) Tween.Shake(node, 12f, .35f);
                 Scenery.Toast(Content, Loc.Get("ui.levels.locked_hint"), Pal.Parchment, 1.8f);
                 return;
@@ -751,7 +758,6 @@ namespace GlimmerGrove
             // being told at the door is a wait, being told at the blast is a wasted run.
             if (!Profile.CanPlay)
             {
-                Audio.Sfx("nope", .55f);
                 if (_nodes.TryGetValue(id, out var barred)) Tween.Shake(barred, 10f, .35f);
                 Flow.Modal<OutOfHeartsOverlay>();
                 return;

@@ -101,7 +101,7 @@ class Voice:
     """
 
     def __init__(self, hz, amp, tau, detune_cents=0.0, at=0.0, harmonics=1, attack=None,
-                 glide_to=None, glide=0.030, rolloff=2.0):
+                 glide_to=None, glide=0.030, rolloff=2.0, hold=None):
         self.hz = hz
         self.amp = amp
         self.tau = tau
@@ -112,6 +112,7 @@ class Voice:
         self.glide_to = glide_to
         self.glide = glide
         self.rolloff = rolloff
+        self.hold = hold
 
 
 class Swish:
@@ -142,7 +143,13 @@ class Swish:
 # point is that the partials fuse into a single note. An equal-tempered fifth is
 # two cents flat of 3/2, which over a decay this long is audible as a slow waver.
 SOUNDS = {
-    # Finger-down. A soft low "bup" that falls a fifth. Quiet, brief, out of the way.
+    # CURRENTLY UNUSED — kept so it can be brought back with one line.
+    #
+    # A button used to make two sounds, this one as the finger landed and `click` as it
+    # lifted. The idea was tactile depth; what it actually produced was a stutter, and
+    # the second sound always arrived a reaction-time after the squash it was meant to
+    # belong to. Btn now plays one sound on the way down and nothing on release. If a
+    # two-stage press is ever wanted again, this is what it sounded like.
     "press": dict(
         seconds=0.110,
         attack=0.010,
@@ -169,6 +176,85 @@ SOUNDS = {
             # bends up to 785 Hz, which every phone speaker reproduces happily, so it
             # needs no help from an octave the way the press does.
             Voice(523.25, 1.00, 0.0, glide_to=784.88, glide=0.030),    # C5 → G5
+        ],
+    ),
+    # THE GAME HAS NO REFUSAL SOUND, ON PURPOSE. Do not add one back here.
+    #
+    # `nope` was the universal "no" — twelve call sites: a conduit that will not turn, a
+    # padlocked glade, no hearts left, no hints left, a defeat, a link that hit an account
+    # somebody already owns, both twice-to-confirm buttons. It was measurably an alarm:
+    # 1249 ms long, above half level for 90% of that (it did not decay, it *sustained*),
+    # 72 re-onsets, a centroid of 4282 Hz, and a full harmonic stack — 66, 131, 196, 262,
+    # 327, 392 Hz, a perfect 1:2:3:4:5:6, which is what a buzzer is made of.
+    #
+    # Worth separating from the metallic problem the button sounds had: being harmonic is
+    # why this one was never metallic, and being long, bright and sustained is why it was
+    # alarming. Two different faults with opposite fixes.
+    #
+    # A gentle replacement was built and measured (two dots falling a fifth, G4 → C4, in
+    # under 300 ms) and then cut anyway, because the owner's answer to "what should the
+    # refusal sound like" was that there should not be one. Every refusal in the game is
+    # already carried visually — a shake, a toast, a relabelled button — so the sound was
+    # adding volume rather than information. If it is ever wanted back, the shape above is
+    # the one to rebuild: the exact inverse of `click`, which rises a fifth C5 → G5.
+    #
+    # One coin landing in the bank. Never heard alone — the chest pays out five or six of
+    # these in under a second, each a step higher than the last, and the tune they make
+    # together is the reward. So the design brief is the opposite of the fanfare's: it has
+    # to be short enough to leave a gap before the next one (a tail would smear the run
+    # into a chord), plain enough that transposing it a fifth does not change what it is,
+    # and quiet enough to be heard six times in a row without becoming an alarm.
+    #
+    # Bare sine plus an eighth of an octave, 80 ms, no tail. The melody is the pitch the
+    # caller passes in; this only has to be a clean dot.
+    "coin": dict(
+        seconds=0.080,
+        attack=0.006,
+        shape="blob",
+        cutoff=(3000.0, 1500.0),
+        voices=[
+            Voice(523.25, 1.00, 0.0, harmonics=2, rolloff=3.0),        # C5
+        ],
+    ),
+    # Recognition: the percentile medal on the victory panel, the streak toast, the
+    # companion landing. Two notes rising a fourth, G5 → C6, and then it stops.
+    #
+    # What it replaces was the brightest thing in the game and read as breaking glass:
+    # 2085 ms, a spectral centroid of 9265 Hz, 56 re-onsets, and — the giveaway — its
+    # partials were a *cluster* rather than a series, 1639 / 1684 / 1727 / 1768 / 1808 Hz,
+    # spaced about 42 Hz apart at ratios of 1.03, 1.05, 1.08. Densely-packed inharmonic
+    # partials up in the top two octaves is exactly what a shard of glass sounds like;
+    # nothing else in nature makes that shape.
+    "bell": dict(
+        seconds=0.340,
+        attack=0.010,
+        shape="blob",
+        cutoff=(3200.0, 1600.0),
+        voices=[
+            Voice(783.99, 0.75, 0.0, harmonics=2, rolloff=3.0, hold=0.130),             # G5
+            Voice(1046.50, 1.00, 0.0, at=0.075, harmonics=2, rolloff=3.0, hold=0.245),  # C6
+        ],
+    ),
+    # Something opened: a glade unlocked, a streak rung taken, an event bloom collected,
+    # a companion arriving. Three notes climbing a C major triad in under half a second.
+    #
+    # Also inharmonic before this — 1 : 1.28 : 1.69 : 2.38 : 4.0, with 26 re-onsets over
+    # 720 ms — and it is the *last* thing the victory panel says, which is why it and the
+    # medal above it were the pair worth fixing together. A triad climbing to the octave
+    # says "opened" without needing to be bright to do it.
+    #
+    # Deliberately a compact echo of `win` rather than a different idea: same key, same
+    # shape, a fifth of the length and no pad. The fanfare is the event; this is the
+    # footnote that says the event had a consequence.
+    "unlock": dict(
+        seconds=0.420,
+        attack=0.009,
+        shape="blob",
+        cutoff=(3400.0, 1700.0),
+        voices=[
+            Voice(523.25, 0.80, 0.0, harmonics=2, rolloff=3.0, hold=0.115),             # C5
+            Voice(784.88, 0.85, 0.0, at=0.075, harmonics=2, rolloff=3.0, hold=0.120),   # G5 (3/2)
+            Voice(1046.50, 1.00, 0.0, at=0.150, harmonics=2, rolloff=3.0, hold=0.265),  # C6 (2/1)
         ],
     ),
     # The fanfare. A rise that arrives somewhere, over a pad that gives it weight.
@@ -258,7 +344,12 @@ def render(spec, spread=1.0):
             # Rounded, and reaching exactly zero at the end of the note. An
             # exponential decay never actually arrives, so it always leaves a ring —
             # and a ringing tone is a bell whatever its partials are. This one stops.
-            decay = np.clip(1.0 - t / t[-1], 0.0, 1.0) ** 1.8
+            #
+            # `hold` is how long *this note* lasts, as opposed to how much file is left
+            # after it starts. Without it a two-note phrase can only ever be written one
+            # way round — the first note runs to the end of the file and rings under the
+            # second, so a short-then-long figure is unwriteable.
+            decay = np.clip(1.0 - t / (v.hold if v.hold else t[-1]), 0.0, 1.0) ** 1.8
         else:
             decay = np.exp(-t / v.tau)
 

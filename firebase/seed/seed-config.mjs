@@ -262,8 +262,14 @@ function readAds(progression) {
   const ads = progression.ads;
   if (!ads || !Array.isArray(ads.placements) || ads.placements.length === 0) return null;
 
-  const known = ["heart_refill", "coin_bonus"];
-  const kinds = ["credits", "gems", "hearts", "heart_boost"];
+  const known = ["heart_refill", "coin_bonus", "run_continue", "win_bonus"];
+  const kinds = ["credits", "gems", "hearts", "heart_boost", "run_time"];
+
+  // Mirrors the same rule on the client (`AdRewardTable.TryReadOffer`). A kind spent inside
+  // a run only makes sense on the one placement offered from inside one, and the failure it
+  // prevents is silent on both sides: an offer drawn where no run exists, a video watched,
+  // and a reward applied to nothing.
+  const transient = ["run_time"];
   const placements = {};
 
   for (const placement of ads.placements) {
@@ -280,6 +286,13 @@ function readAds(progression) {
 
     if (!kinds.includes(placement.kind)) {
       throw new Error(`ads placement '${id}' names unknown reward kind '${placement.kind}'`);
+    }
+
+    if (transient.includes(placement.kind) && id !== "run_continue") {
+      throw new Error(
+        `ads placement '${id}' pays '${placement.kind}', which is spent inside a run; ` +
+        `only 'run_continue' is offered from inside one`
+      );
     }
 
     const amount = Math.floor(placement.amount ?? 0);

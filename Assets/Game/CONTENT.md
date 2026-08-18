@@ -111,7 +111,10 @@ Two consequences worth holding on to:
    them upward — each above the one before — and keep them apart; validation
    measures the gap in canvas units against the chapter's strip count and warns
    about collisions, backwards trails and anything crowding the end-of-chapter
-   marker. More levels means more `mapStrips`, not tighter packing.
+   marker. More levels means more `mapStrips`, not tighter packing — which in
+   practice means **the strip art decides how long a chapter is**. The Shallows
+   runs to ten glades because its source image held six 1200px slices; work that
+   out before authoring boards, not after.
 4. Add `chapter.<id>.name` and, per level, `level.<id>.name` / `.tagline` /
    `.lesson` to `loc/en.json`. Missing keys fail validation, which names each one.
 5. `Glimmer Grove ▸ Content ▸ Sync Manifest` — adopts the new chapter into
@@ -127,6 +130,16 @@ wrong. **`order` lives only in the manifest**: a chapter body that states its ow
 rejected, because where the game goes next must be readable from one file and
 changeable by pushing that one file.
 
+**Sync rewrites the whole manifest, and it proves it lost nothing before it saves.**
+It only *derives* the chapter list; the roster and the event calendar are authored
+there and it hands them back untouched. It did not always: `unlockCost` and the whole
+`events` array were both added later without a schema bump, neither reached the
+writer, and the first sync run after them deleted a live event and thirty companion
+prices while logging success. `ManifestSync.SurvivesRoundTrip` now reads back what it
+is about to write, using the same reader the game uses, and **refuses the write** if
+anything differs. Add a field to `ManifestDto` and forget the writer and you get a
+refusal with the field named, not a silent deletion.
+
 A chapter file that never reaches the manifest is the one content mistake nothing
 used to catch. Every reader walks the manifest, so an unlisted file is not rejected —
 it is never opened, and the drop ships without it behind a green build. Sync adopts
@@ -138,14 +151,16 @@ filed into the right bundle group on import. Nothing to remember, nothing to run
 ## Token grammar
 
 ```
-head + arms [+ #colour] + /startRotation [+ !] [+ ~turns]
+head + arms [+ #colour] + /startRotation [+ !] [+ ~turns] [+ &rune]
 
-head   -  conduit    *  heart-crystal    @  sleeping critter    .  empty
+head   -  conduit    *  heart-crystal    @  sleeping critter
+       x  duskcap    .  empty
 arms   any of N E S W, written in the SOLVED orientation
 colour R G B, Y=R+G, M=R+B, C=G+B, W=R+G+B, A=any
 /0..3  quarter turns clockwise the tile starts away from its solution
 !      rooted: the player cannot turn this tile
 ~1..9  fragile: this conduit crumbles after that many turns
+&A..Z  taproot: every conduit carrying this rune turns as one
 ```
 
 Every arm must be mated by its neighbour, and the board with every rotation at 0
@@ -158,9 +173,54 @@ proves each one can still reach its own solved orientation within its count —
 a conduit needing three turns but surviving two is an unwinnable level that
 otherwise looks perfect.
 
+**Taproots (`&A`)** make several conduits turn together, so a tap stops being a
+local act. Two things follow, and both are the validator's business:
+
+- **A root is charged once.** Par is the sum of the turns each *root* owes, not
+  each tile, because one tap moves them all — so a bound board's par is lower
+  than its tile count suggests, and the move budget and the clock (both multiples
+  of par) follow it automatically. Nothing is authored for this.
+- **A root must be able to reach its own solution.** Some single number of turns
+  has to solve every conduit on it. If none does, the glade cannot be finished
+  and looks perfectly authored — the same trap a brittle conduit owed more turns
+  than it survives sets, and refused for the same reason. Note that a straight
+  conduit reads the same every half turn, so it is solved at *two* of the four
+  offsets and simply follows whatever the elbows on its root demand; that is
+  where the interesting boards are.
+
+A rune only one conduit carries is an error, not a shrug: it draws a binding mark
+on a tile bound to nothing. A bound conduit may not also be rooted (`!`) or
+brittle (`~`) — the first is a contradiction, and the second would break several
+conduits on one tap when only one can be reported as the tile that gave way.
+
+**Duskcaps (`x`)** are creatures the light must never reach. Any light at all
+wakes one, and a glade with a woken duskcap is not finished however many critters
+are awake — it is one extra term in the win condition and nothing else. They take
+no colour, for the obvious reason.
+
+Authoring them is mostly a consequence of the arms-mate rule. In the solved board
+every arm points at a neighbour pointing back, so a lit cell's neighbours are lit
+too: a duskcap and its conduits have to be **their own island of dark**, reaching
+no heart-crystal at all. The validator says so in those words if you get it wrong,
+separately from the critter count, because the two are opposite mistakes with
+opposite fixes.
+
+Which means the danger is never the duskcap itself — it is every *turnable* tile
+where the dark island runs alongside the live network, since that is the rotation
+that joins them. Rooting a duskcap makes it safer, not more dangerous. The design
+work is winding the dark island through the live one.
+
 **Move budget.** Every glade gets one automatically: `ceil(par × 2.6)`, always at
 least one turn above the one-star line. Override with `budgetFactor` on a level,
 or set it negative to remove the budget entirely. Running out costs a heart.
+
+**Par is length, not difficulty, and the clock is derived from it.** A chapter's
+pars should *not* rise monotonically — ten rising numbers read as a treadmill, and
+a low-par board that is hard to think about is a better change of pace than a long
+one. Watch the ceiling though: the time limit is `par × timeFactor`, so past about
+par 70 a glade becomes a three-minute run on a phone and wants a `timeFactor`
+override. Nothing warns about that — `CheckClock` has an opinion about the tap
+*rate* three stars demands, not about how long a run lasts.
 
 **Tips teach themselves.** A glade that contains a mechanic the player has never
 met shows a one-off spotlight tip on entry — no authoring, no list to maintain.
@@ -457,7 +517,10 @@ from the home screen.
 ```
 
 `kind` is a permanent id: `credits`, `gems`, `hearts`, `heart_boost` — and a boost's
-band is measured in **hours**. Omit the whole block and the built-in table in
+band is measured in **hours**. There is a fifth, `run_time`, which a chest may **not**
+hold: it pays seconds onto the run in progress, and a chest is opened on the home screen
+where there is no run. The reader refuses it here and `Validate Content` says so, rather
+than letting a guaranteed slot pay nothing reliably. See *Rewarded ads* below. Omit the whole block and the built-in table in
 `DailyChestTable.Default` stands; it is deliberately not a schema bump, because a
 daily-chest retune must not invalidate the XP curve for clients that have not updated.
 
@@ -510,6 +573,77 @@ The one that bites: a chest whose floor and whose bonus are both credits must aw
 summed amount. Both would otherwise carry the id `daily:{day}:{chest}:credits`, the second
 would be refused as a duplicate, and the player would be paid half of what the server
 grants.
+
+### Rewarded ads
+
+The optional `ads` block. Four placements, each paying a fixed amount for one finished
+video, capped per UTC day.
+
+```json
+"ads": {
+  "cooldownSeconds": 45,
+  "placements": [
+    { "id": "heart_refill", "kind": "hearts",   "amount": 2,   "dailyCap": 10 },
+    { "id": "coin_bonus",   "kind": "credits",  "amount": 150, "dailyCap": 6 },
+    { "id": "run_continue", "kind": "run_time", "amount": 30,  "dailyCap": 8 },
+    { "id": "win_bonus",    "kind": "credits",  "amount": 200, "dailyCap": 6 }
+  ]
+}
+```
+
+Placement ids are permanent, for the reason a `LevelId` is: one is written into every
+award id the server adjudicates, into the save file's cap counters, into the mediation
+dashboard and into analytics — three of those outside this repository. A placement with
+no entry is **switched off** everywhere it is drawn, with no build and no dead code path,
+so removing an offer is a content change. An id this build does not know is skipped, which
+is how a newer content pack reaches an older client.
+
+Omit the whole block and `AdRewardTable.Default` stands. Like the daily block it is
+deliberately not a schema bump.
+
+Where each one is offered, and why there:
+
+| id | offered | pays |
+|---|---|---|
+| `heart_refill` | the defeat panel, out of hearts | hearts |
+| `coin_bonus` | the hub's coin `+` | credits |
+| `run_continue` | the clock running out, mid-run | seconds |
+| `win_bonus` | the victory panel, under the payout | credits |
+
+**`run_time` is the odd one and it is the only unbanked reward in the game.** Its seconds
+go onto the `RunClock` of the run that is happening and are gone when that run resolves.
+Three consequences follow, and none of them is a special case written by hand:
+
+- **The server has no opinion.** It is not currency, so `adCurrencyOf` answers null and the
+  signed callback grants nothing. That means no account is needed and no claim is written,
+  which is why a continue works on a first launch that has never been online — the launch
+  where a player is most likely to meet a timeout.
+- **The shared cooldown does not apply.** `RewardedAds.Paced` keys that on
+  `ChestDropKinds.IsTransient` rather than on the placement id, so the rule is a property
+  and not a list somebody has to remember to extend. The cooldown paces a faucet; a reward
+  that cannot leave the run it was granted in is not one.
+- **Only `run_continue` may pay it.** Both the client reader and the seeder refuse it
+  anywhere else, because the failure is silent in the worst way: the offer is drawn where
+  no run is open, the video plays, and the reward lands on nothing.
+
+A continue is deliberately **repeatable within one run**, bounded by its daily cap alone,
+and it needs no balancing rule to stay honest. `Extend` raises the *limit* and never lowers
+the *elapsed*, while `StarsForTime` grades against thresholds derived from **par** — so the
+second extension has usually already cost the third star and the fourth has cost the
+second. A player who buys their way through a glade keeps the clear and loses the stars.
+That is also what keeps `bestMillis`, the map badge and `publishGroveStats` correct without
+a migration: what is stored is still time *taken*. `ContinueTests` pins all of it.
+
+`win_bonus` pays a **flat amount and the button prints it**, rather than doubling what the
+run earned. Earned credits are derived from the star ledger (invariant 9), so there is no
+accumulated figure to multiply, and doubling one run would mean storing which runs had been
+doubled — a forgeable per-level set that pays, which invariant 15 sends straight back to 13.
+What a signed callback can attest to is that a view of a placement happened, so that is what
+the amount is keyed on. A multiplier the panel cannot honour is worse than a smaller number
+it can.
+
+Re-seed after any change here (`npm run seed`), or the client offers one number and the
+wallet receives another.
 
 ### The rule exists twice
 

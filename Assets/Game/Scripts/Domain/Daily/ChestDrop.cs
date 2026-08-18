@@ -48,6 +48,32 @@ namespace GlimmerGrove.Daily
         /// Amount is the duration in hours, so the band is authored the way it reads.
         /// </summary>
         HeartBoost,
+
+        /// <summary>
+        /// More time on the run that is happening right now. Amount is seconds.
+        ///
+        /// <para>
+        /// The odd one out, and the difference is worth stating because it changes where the
+        /// reward is applied. Every other kind lands in the <see cref="Persistence.Wallet"/>
+        /// and outlives the moment it was granted; this one lands on a
+        /// <see cref="RunClock"/> that belongs to a single screen and stops existing when
+        /// that run resolves. So <c>RewardedAds.Apply</c> deliberately does nothing with it
+        /// and the caller applies it — Domain statics have no view of a live board, and
+        /// giving them one would be a far worse trade than the empty case.
+        /// </para>
+        /// <para>
+        /// It is <b>not a chest drop</b>, and <c>DailyChestTable</c> refuses it. A chest is
+        /// opened on the home screen where there is no run to extend, and a chest that could
+        /// roll one would pay a third of its players nothing — the exact failure the
+        /// <see cref="Hearts"/> ceiling note is careful to avoid.
+        /// </para>
+        /// <para>
+        /// Nothing about it reaches the server. It is not currency, so
+        /// <c>adCurrencyOf</c> returns null for the placement that pays it and the signed
+        /// callback grants nothing — correct, and it needed no server change to be true.
+        /// </para>
+        /// </summary>
+        RunTime,
     }
 
     /// <summary>
@@ -63,6 +89,7 @@ namespace GlimmerGrove.Daily
         public const string Gems = "gems";
         public const string Hearts = "hearts";
         public const string HeartBoost = "heart_boost";
+        public const string RunTime = "run_time";
 
         public static ChestDropKind Parse(string id)
         {
@@ -70,6 +97,7 @@ namespace GlimmerGrove.Daily
             if (string.Equals(id, Gems, StringComparison.Ordinal)) return ChestDropKind.Gems;
             if (string.Equals(id, Hearts, StringComparison.Ordinal)) return ChestDropKind.Hearts;
             if (string.Equals(id, HeartBoost, StringComparison.Ordinal)) return ChestDropKind.HeartBoost;
+            if (string.Equals(id, RunTime, StringComparison.Ordinal)) return ChestDropKind.RunTime;
             return ChestDropKind.None;
         }
 
@@ -81,6 +109,7 @@ namespace GlimmerGrove.Daily
                 case ChestDropKind.Gems: return Gems;
                 case ChestDropKind.Hearts: return Hearts;
                 case ChestDropKind.HeartBoost: return HeartBoost;
+                case ChestDropKind.RunTime: return RunTime;
                 default: return string.Empty;
             }
         }
@@ -92,6 +121,18 @@ namespace GlimmerGrove.Daily
         /// </summary>
         public static bool IsCurrency(ChestDropKind kind)
             => kind == ChestDropKind.Credits || kind == ChestDropKind.Gems;
+
+        /// <summary>
+        /// Whether a kind is spent inside the run that granted it, rather than banked.
+        ///
+        /// <para>
+        /// Asked in two places that would otherwise each have to know the list. A chest may
+        /// not roll one of these (there is no run open when a chest is opened), and the
+        /// shared ad cooldown does not apply to one (the cooldown exists to pace a faucet,
+        /// and a reward that cannot leave the run it was granted in is not one).
+        /// </para>
+        /// </summary>
+        public static bool IsTransient(ChestDropKind kind) => kind == ChestDropKind.RunTime;
 
         /// <summary>The currency ledger a drop belongs to, or empty when it is not currency.</summary>
         public static string CurrencyOf(ChestDropKind kind)
