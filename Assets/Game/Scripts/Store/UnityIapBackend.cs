@@ -180,6 +180,17 @@ namespace GlimmerGrove.Iap
                 }
             }
 
+            // The count, on every fetch, including zero. A fetch that succeeds and returns
+            // nothing is the commonest way this feature fails on a real device, and it is
+            // silent by nature: the SDK reports success, the shop draws its empty state, and
+            // nothing anywhere says the list was empty.
+            Debug.Log($"[IAP] the store priced {_info.Count} product(s)" +
+                      (_info.Count == 0
+                          ? " — nothing is buyable. This is a store-side state, not a build " +
+                            "problem: check the paid-apps agreement is active and that every " +
+                            "product has reached 'Ready to Submit'."
+                          : string.Empty));
+
             _fetch?.TrySetResult(true);
             Raise();
         }

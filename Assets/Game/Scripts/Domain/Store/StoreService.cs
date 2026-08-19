@@ -261,8 +261,73 @@ namespace GlimmerGrove.Store
         /// </summary>
         public static void BeginConnect(CancellationToken cancellation = default)
         {
-            if (!IsAvailable || _backend.IsConnected || _connecting) return;
-            _ = ConnectAsync(cancellation);
+            if (!IsAvailable)
+            {
+                // Said out loud, because this is indistinguishable on screen from a store
+                // that could not be reached, and the causes are nothing alike: this one is a
+                // build that has no store SDK compiled into it at all.
+                Debug.Log("[Store] no store backend; the shop will show its unavailable state");
+                return;
+            }
+
+            if (_backend.IsConnected || _connecting) return;
+
+            _ = ReportConnectAsync(cancellation);
+        }
+
+        /// <summary>
+        /// Connects, and says what happened.
+        ///
+        /// <para>
+        /// Its own method because <see cref="BeginConnect"/> is fire-and-forget, and an
+        /// awaited task whose result is discarded reports nothing anywhere — which is
+        /// exactly what happened the first time this shipped to a device: the shop drew its
+        /// empty state, and the device log carried not one line explaining why. The one call
+        /// that decides whether the shop works at all has to leave a trace of its outcome.
+        /// </para>
+        /// </summary>
+        static async Task ReportConnectAsync(CancellationToken cancellation)
+        {
+            var result = await ConnectAsync(cancellation);
+
+            if (!result.Ok)
+            {
+                Debug.LogWarning($"[Store] could not connect ({result.Failure}: {result.Message}). " +
+                                 "The shop will offer nothing until this succeeds.");
+                return;
+            }
+
+            // The count is the useful half. A connection that succeeds and returns nothing is
+            // the commonest failure by far, and it means the store — not this code — has no
+            // products to give: an agreement not yet active, products still short of their
+            // metadata, or a catalog that has not propagated yet.
+            var catalog = StoreRules.Catalog;
+            int priced = 0;
+            foreach (var product in catalog.Products)
+            {
+                var info = _backend.Info(product.Id);
+                if (info != null && info.HasPrice) priced++;
+            }
+
+            if (priced == 0)
+            {
+                Debug.LogWarning($"[Store] connected, but the store priced 0 of " +
+                                 $"{catalog.Products.Count} product(s). Nothing is buyable. " +
+                                 "Check the store agreement is active and every product is at " +
+                                 "least 'Ready to Submit'.");
+                return;
+            }
+
+            Debug.Log($"[Store] connected: {priced} of {catalog.Products.Count} product(s) priced");
+
+            // Named individually, because a product missing from one storefront while the
+            // rest work is a per-product configuration mistake and the id is the whole clue.
+            foreach (var product in catalog.Products)
+            {
+                var info = _backend.Info(product.Id);
+                if (info == null || !info.HasPrice)
+                    Debug.LogWarning($"[Store] '{product.Id}' has no price; its card is hidden");
+            }
         }
 
         public static async Task<StoreResult> ConnectAsync(CancellationToken cancellation = default)
