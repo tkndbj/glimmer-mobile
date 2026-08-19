@@ -93,5 +93,33 @@
       { "id": "run_continue", "kind": "run_time", "amount": 30,  "dailyCap": 8 },
       { "id": "win_bonus",    "kind": "credits",  "amount": 200, "dailyCap": 6 }
     ]
+  },
+
+  "store": {
+    "products": [
+      { "id": "gg_gems_1", "kind": "consumable", "shelf": "gems", "gems": 100,  "referenceUsdCents": 99 },
+      { "id": "gg_gems_2", "kind": "consumable", "shelf": "gems", "gems": 340,  "referenceUsdCents": 299 },
+      { "id": "gg_gems_3", "kind": "consumable", "shelf": "gems", "gems": 750,  "referenceUsdCents": 599, "badge": "popular" },
+      { "id": "gg_gems_4", "kind": "consumable", "shelf": "gems", "gems": 1700, "referenceUsdCents": 1299 },
+      { "id": "gg_gems_5", "kind": "consumable", "shelf": "gems", "gems": 3900, "referenceUsdCents": 2499 },
+      { "id": "gg_gems_6", "kind": "consumable", "shelf": "gems", "gems": 8500, "referenceUsdCents": 4999, "badge": "best_value" },
+
+      { "id": "gg_coins_1", "kind": "consumable", "shelf": "coins", "credits": 2500,  "referenceUsdCents": 199 },
+      { "id": "gg_coins_2", "kind": "consumable", "shelf": "coins", "credits": 9000,  "referenceUsdCents": 599, "badge": "popular" },
+      { "id": "gg_coins_3", "kind": "consumable", "shelf": "coins", "credits": 26000, "referenceUsdCents": 1499 },
+      { "id": "gg_coins_4", "kind": "consumable", "shelf": "coins", "credits": 75000, "referenceUsdCents": 3999, "badge": "best_value" },
+
+      { "id": "gg_bundle_starter", "kind": "nonconsumable", "shelf": "bundles", "credits": 7500,  "gems": 500,  "referenceUsdCents": 299, "badge": "starter" },
+      { "id": "gg_bundle_keeper",  "kind": "consumable",    "shelf": "bundles", "credits": 12000, "gems": 700,  "referenceUsdCents": 999 },
+      { "id": "gg_bundle_grove",   "kind": "consumable",    "shelf": "bundles", "credits": 42000, "gems": 2200, "referenceUsdCents": 2999, "badge": "best_value" }
+    ],
+
+    "goods": [
+      { "id": "hearts_five",     "kind": "hearts",      "amount": 5,  "gems": 50 },
+      { "id": "hearts_fifteen",  "kind": "hearts",      "amount": 15, "gems": 125 },
+      { "id": "hearts_forty",    "kind": "hearts",      "amount": 40, "gems": 280 },
+      { "id": "boost_day",       "kind": "heart_boost", "amount": 24, "gems": 30 },
+      { "id": "boost_three_day", "kind": "heart_boost", "amount": 72, "gems": 75 }
+    ]
   }
 }

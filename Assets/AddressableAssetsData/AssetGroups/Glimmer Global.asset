@@ -367,6 +367,11 @@ MonoBehaviour:
     m_SerializedLabels:
     - Art/Fx/Victory
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 3a55c2e9657c49c418d3506f0f1a5bb4
+    m_Address: Art/Ui/Shop/chest_iron
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 3c63daa158c23d2abde10b19973574a4
     m_Address: Art/Map/rock_plain
     m_ReadOnly: 0
@@ -451,6 +456,11 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels:
     - Art/Board/duskcap
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 4bb7b2bd706739345b7145a849831bfa
+    m_Address: Art/Ui/Shop/chest_wood
+    m_ReadOnly: 0
+    m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 4cb9aba4dfe6add50cf9ff66044f79c6
     m_Address: Audio/Sfx/lit
@@ -619,6 +629,11 @@ MonoBehaviour:
     m_SerializedLabels:
     - Art/Fx/Victory
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 617465e68d2758248961a94180b41b5e
+    m_Address: Art/Ui/Shop/pouch
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 61f777bec3be0cc2bece226b52dabcf9
     m_Address: Art/Ui/Coin/f1
     m_ReadOnly: 0
@@ -728,6 +743,11 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels:
     - Art/Critters/c1
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 6e96508edee0c364abfaba4e58673717
+    m_Address: Art/Ui/Shop/chest_silver
+    m_ReadOnly: 0
+    m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 6ee0b7ae20401f945aaa0f5c80eefcfc
     m_Address: Art/Board/duskcap/f12
@@ -1235,6 +1255,11 @@ MonoBehaviour:
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: b1fe8fb449778158cfbaa02704c3dedd
     m_Address: Art/Ui/sq_green
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: b32aae2cbf0ba9f4ca09d2c28bf2b179
+    m_Address: Art/Ui/Shop/chest_gold
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0

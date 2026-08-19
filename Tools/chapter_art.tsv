@@ -1,0 +1,23 @@
+# A chapter's art, and where it came from.
+#
+# One row per chapter. `make_chapter_art.py` reads the chapter's own JSON for the
+# names — its `mapStrips`, its backdrop and every backdrop a level overrides — and
+# for the palette each backdrop is graded to. This file only says which source
+# images those names are cut from, because that is the one thing the content
+# cannot state: a chapter names art, it does not name the pack it was cut from.
+#
+# Re-running is safe and is the point. A retune of a level's `accent`/`slate`
+# regrades its backdrop with no second place to edit, which is why the palette
+# lives in the chapter file and not here.
+#
+# columns
+#   chapter    the chapter id, matching Content/chapters/<id>.json
+#   map        one tall image, sliced bottom-upward into `mapStrips`
+#   backdrops  comma-separated sources for the board backdrops; windows are taken
+#              across them in turn, so two wide images comfortably feed ten glades
+#
+# Sources are outside the repo (they are licensed packs, not project files). Pass
+# the folder they were extracted into with --source; paths below are relative to it.
+#
+# chapter	map	backdrops
+c02_millvale	craftpix-net-567563-the-top-down-level-map-asset-pack/Png/LevelSelect.png	craftpix-net-720546-forest-platformer-level-assets/PNG/Background01.png,craftpix-net-720546-forest-platformer-level-assets/PNG/Background02.png

@@ -186,14 +186,13 @@ namespace GlimmerGrove
             }
         }
 
-        static string SoonKey(Tab tab)
-        {
-            switch (tab)
-            {
-                case Tab.Shop: return "ui.soon.shop";
-                default: return "ui.soon.ranks";
-            }
-        }
+        /// <summary>
+        /// What a tab that is still a promise says. Ranks is the last of them — the shop
+        /// stopped being one when it became a screen, and its key is left in the string
+        /// file rather than deleted, because a key removed from a shipped language file is
+        /// a warning in every translation that still carries it.
+        /// </summary>
+        static string SoonKey(Tab tab) => "ui.soon.ranks";
 
         /// <summary>
         /// Which jelly a cap wears.
@@ -237,10 +236,18 @@ namespace GlimmerGrove
         /// </summary>
         static Action Tap(Tab tab, bool standing)
         {
-            if (standing && (tab == Tab.Home || tab == Tab.Profile || tab == Tab.Grove)) return null;
+            if (standing && (tab == Tab.Home || tab == Tab.Profile || tab == Tab.Grove ||
+                             tab == Tab.Shop)) return null;
             if (tab == Tab.Home) return () => Flow.Go<HomeScreen>();
             if (tab == Tab.Profile) return () => Flow.Go<ProfileScreen>();
             if (tab == Tab.Grove) return () => Flow.Go<HomesteadScreen>();
+
+            // The shop is a screen now. It stays a tab rather than becoming a button on the
+            // hub because it is one of the two places a player goes deliberately rather than
+            // being taken — the Grovement is the other — and because a shop reached only
+            // from an out-of-hearts prompt is a shop that is only ever seen at the worst
+            // moment to be sold anything.
+            if (tab == Tab.Shop) return () => Flow.Go<ShopScreen>();
 
             string title = LabelKey(tab), body = SoonKey(tab);
             var glyph = Icon(tab);

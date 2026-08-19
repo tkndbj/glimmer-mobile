@@ -34,7 +34,7 @@ export class ReceiptRejected extends Error {
 
 // ---------------------------------------------------------------------- Apple
 
-interface AppleSecrets {
+export interface AppleSecrets {
   keyId: string;
   issuerId: string;
   privateKey: string;
@@ -51,14 +51,66 @@ interface AppleSecrets {
  *
  * The response body is a JWS. Because we fetched it ourselves from an authenticated
  * Apple endpoint, the transport is what establishes authenticity and the payload is
- * decoded rather than signature-checked. That reasoning does NOT extend to App Store
- * Server Notifications, which arrive unsolicited: if you add those, verify the x5c
- * certificate chain against Apple's root before believing a word of it.
+ * decoded rather than signature-checked.
+ *
+ * That reasoning does NOT extend to App Store Server Notifications, which arrive
+ * unsolicited — so `appleNotification` does not extend it. It believes nothing in the
+ * pushed payload; it scrapes transaction ids out of it and asks
+ * `lookupAppleTransaction` about each one, which comes back here, over this same
+ * authenticated channel. Anything that ever acts on a notification's own word instead
+ * must verify its x5c chain against Apple's root first.
  */
 async function validateApple(
   transactionId: string,
   secrets: AppleSecrets
 ): Promise<ValidatedPurchase> {
+  const decoded = await lookupAppleTransaction(transactionId, secrets);
+
+  if (decoded.bundleId !== secrets.bundleId) {
+    // A real transaction, from somebody else's app. Refusing this is what stops a
+    // receipt bought in another product being spent here.
+    throw new ReceiptRejected(
+      `transaction belongs to bundle ${decoded.bundleId}, not ${secrets.bundleId}`
+    );
+  }
+
+  if (decoded.revocationDate) {
+    throw new ReceiptRejected("transaction has been revoked or refunded");
+  }
+
+  return {
+    store: "apple",
+    transactionId: decoded.transactionId!,
+    productId: decoded.productId!,
+    purchasedAtMillis: decoded.purchaseDate ?? Date.now(),
+    sandbox: (decoded.environment ?? "").toLowerCase() === "sandbox",
+  };
+}
+
+export interface AppleTransaction {
+  transactionId?: string;
+  productId?: string;
+  bundleId?: string;
+  purchaseDate?: number;
+  environment?: string;
+  revocationDate?: number;
+  revocationReason?: number;
+}
+
+/**
+ * Asks Apple what it holds for one transaction id.
+ *
+ * <p>Split out of validation because two callers need it and they want different halves.
+ * A purchase being redeemed wants "is this real, is it ours, is it still good"; a refund
+ * notification wants only the last of those. Both get the answer from the same
+ * authenticated round trip, which is the property the notification handler leans on
+ * entirely — see `appleNotification`, where nothing in the pushed payload is believed and
+ * this call is what decides.</p>
+ */
+export async function lookupAppleTransaction(
+  transactionId: string,
+  secrets: AppleSecrets
+): Promise<AppleTransaction> {
   const now = Math.floor(Date.now() / 1000);
 
   const token = jwt.sign(
@@ -104,42 +156,17 @@ async function validateApple(
       throw new ReceiptRejected("Apple returned no signedTransactionInfo");
     }
 
-    const decoded = jwt.decode(body.signedTransactionInfo) as {
-      transactionId?: string;
-      productId?: string;
-      bundleId?: string;
-      purchaseDate?: number;
-      environment?: string;
-      revocationDate?: number;
-    } | null;
+    const decoded = jwt.decode(body.signedTransactionInfo) as AppleTransaction | null;
 
     if (!decoded || !decoded.transactionId || !decoded.productId) {
       throw new ReceiptRejected("Apple transaction payload was not readable");
-    }
-
-    if (decoded.bundleId !== secrets.bundleId) {
-      // A real transaction, from somebody else's app. Refusing this is what stops a
-      // receipt bought in another product being spent here.
-      throw new ReceiptRejected(
-        `transaction belongs to bundle ${decoded.bundleId}, not ${secrets.bundleId}`
-      );
     }
 
     if (decoded.transactionId !== transactionId) {
       throw new ReceiptRejected("Apple returned a different transaction id than was asked for");
     }
 
-    if (decoded.revocationDate) {
-      throw new ReceiptRejected("transaction has been revoked or refunded");
-    }
-
-    return {
-      store: "apple",
-      transactionId: decoded.transactionId,
-      productId: decoded.productId,
-      purchasedAtMillis: decoded.purchaseDate ?? Date.now(),
-      sandbox: (decoded.environment ?? "").toLowerCase() === "sandbox",
-    };
+    return decoded;
   }
 
   throw new ReceiptRejected(`Apple does not recognise transaction ${transactionId} (last status ${lastStatus})`);

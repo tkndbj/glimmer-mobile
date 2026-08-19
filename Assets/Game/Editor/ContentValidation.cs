@@ -10,6 +10,7 @@ using GlimmerGrove.Homestead;
 using GlimmerGrove.Localization;
 using GlimmerGrove.Persistence;
 using GlimmerGrove.Progression;
+using GlimmerGrove.Store;
 using UnityEditor;
 using UnityEditor.Build;
 using UnityEditor.Build.Reporting;
@@ -218,6 +219,7 @@ namespace GlimmerGrove.EditorTools
             ValidateStreak(table.Streak, result, verbose);
             ValidateGolden(table.Golden, table, index, result, verbose);
             ValidateEvents(index, result, verbose);
+            ValidateStore(table, result, verbose);
 
             if (!verbose) return;
 
@@ -228,6 +230,234 @@ namespace GlimmerGrove.EditorTools
             var reachable = table.LevelFor(maximumXp);
             Debug.Log($"[Glimmer] progression verified: {index.Count} glade(s) at three stars " +
                       $"is {maximumXp} XP, reaching level {reachable.Level} of {table.MaxLevel}");
+        }
+
+        /// <summary>
+        /// The shop, checked harder than anything else in this file.
+        ///
+        /// <para>
+        /// <b>Errors here, not warnings.</b> Every other block in <c>progression.json</c>
+        /// describes what play pays, and an aggressive tuning is a legitimate weekend
+        /// decision — which is why the heart gate and the chest odds are checked with
+        /// warnings and a build still goes out. This block describes what somebody is
+        /// <em>charged</em>, and there is no version of "a bit wrong" that is acceptable: a
+        /// product granting the wrong amount is a real payment honoured for a figure nobody
+        /// meant, and the only way to put it right afterwards is one refund at a time.
+        /// </para>
+        /// <para>
+        /// The two checks that matter are the ones no reader can make on its own. A ladder
+        /// that gets worse as it gets bigger is invisible in the file and obvious to the
+        /// first player who does the arithmetic. And a good that cannot be bought at any
+        /// moment — hearts above the ceiling, a boost longer than the cap — is a card that
+        /// is permanently refused, which reads exactly like a bug and is one.
+        /// </para>
+        /// <para>
+        /// The seeder re-checks all of this before publishing <c>config/products</c>. Two
+        /// implementations of one rule is what invariant 9a normally forbids — but these run
+        /// on different sides of a wire, in different languages, and the failure they guard
+        /// is a card promising what the server will not honour. A disagreement between them
+        /// is exactly the thing worth catching, so it is checked twice on purpose.
+        /// </para>
+        /// </summary>
+        static void ValidateStore(ProgressionTable table, ContentValidationResult result, bool verbose)
+        {
+            var catalog = table.Store;
+            if (catalog == null) { result.Errors.Add("progression.json produced no store catalog"); return; }
+
+            if (!catalog.HasAnything)
+            {
+                if (verbose) Debug.Log("[Glimmer] store: nothing for sale");
+                return;
+            }
+
+            foreach (var product in catalog.Products)
+            {
+                // Both stores accept longer ids than this and both refuse some characters
+                // this allows; the narrow set is what works on both without surprises. Worth
+                // saying out loud because a product id can never be changed after it ships —
+                // neither console lets one be reused, so a rename is a new product and a
+                // migration for anybody mid-purchase.
+                if (product.Id.Length > 40)
+                    result.Warnings.Add($"store product id '{product.Id}' is {product.Id.Length} " +
+                                        "characters; it works, but a product id can never be " +
+                                        "changed once it has shipped");
+            }
+
+            foreach (var good in catalog.Goods)
+            {
+                // A card that can never be tapped. `StoreService.OfferForGood` refuses a
+                // purchase that would push a player past the ceiling, so a good bigger than
+                // the whole ceiling is refused for everybody, for ever.
+                if (good.Kind == StoreGoodKind.Hearts && good.Amount > table.Hearts.Ceiling)
+                    result.Errors.Add($"store good '{good.Id}' hands over {good.Amount} hearts, above " +
+                                      $"the ceiling of {table.Hearts.Ceiling}; it can never be bought");
+
+                if (good.Kind == StoreGoodKind.HeartBoost && good.Amount > table.Hearts.MaxBoostHours)
+                    result.Errors.Add($"store good '{good.Id}' hands over {good.Amount}h of boost, above " +
+                                      $"the {table.Hearts.MaxBoostHours}h cap; it can never be bought");
+
+                // A good nobody can afford in a month of play is a card that only exists to
+                // be looked at. Warning rather than error: it is a legitimate top rung, and
+                // the figure it is measured against is itself an estimate.
+                long gemsPerDay = DailyGemIncome(table);
+                if (gemsPerDay > 0 && good.Gems > gemsPerDay * 60)
+                    result.Warnings.Add($"store good '{good.Id}' costs {good.Gems} gems, about " +
+                                        $"{good.Gems / gemsPerDay} days of collecting; nothing else on " +
+                                        "the shelf is that far away");
+            }
+
+            ValidateStoreLadder(catalog, result);
+
+            if (!verbose) return;
+
+            ReportStoreEconomy(catalog, table);
+        }
+
+        /// <summary>
+        /// Every shelf gets better as it gets bigger.
+        ///
+        /// <para>
+        /// One-time offers are exempt, and that is the point of them rather than a loophole:
+        /// a starter pack is deliberately worth several times the ladder, and it cannot
+        /// undercut it because the store refuses to sell it twice. Ranking it alongside the
+        /// repeatable rungs would either fail this check or force it to be a worse offer
+        /// than it should be.
+        /// </para>
+        /// </summary>
+        static void ValidateStoreLadder(StoreCatalog catalog, ContentValidationResult result)
+        {
+            foreach (StoreShelf shelf in System.Enum.GetValues(typeof(StoreShelf)))
+            {
+                var rungs = new List<StoreProduct>();
+                foreach (var product in catalog.Shelf(shelf))
+                    if (!product.IsOneTime) rungs.Add(product);
+
+                rungs.Sort((a, b) => a.ReferenceUsdCents.CompareTo(b.ReferenceUsdCents));
+
+                for (int i = 1; i < rungs.Count; i++)
+                {
+                    if (rungs[i].ReferenceUsdCents == rungs[i - 1].ReferenceUsdCents)
+                    {
+                        // Two cards at one price point make a player compare contents rather
+                        // than sizes, which is a shop asking somebody to do arithmetic.
+                        result.Warnings.Add(
+                            $"store shelf '{shelf}': '{rungs[i].Id}' and '{rungs[i - 1].Id}' are the " +
+                            "same price; two cards at one price point make a player do arithmetic");
+                        continue;
+                    }
+
+                    long before = rungs[i - 1].ValuePerCent(catalog.CreditsPerGem);
+                    long after = rungs[i].ValuePerCent(catalog.CreditsPerGem);
+
+                    if (after >= before) continue;
+
+                    result.Errors.Add(
+                        $"store shelf '{shelf}': '{rungs[i].Id}' costs more than '{rungs[i - 1].Id}' " +
+                        "and gives less per unit of money. A ladder that gets worse as it gets " +
+                        "bigger is a shop nobody buys the large size in");
+                }
+            }
+        }
+
+        /// <summary>
+        /// The shop in the terms it was priced in, printed so nobody has to derive it again.
+        ///
+        /// <para>
+        /// Two figures are worth reading: what a coin pack is worth against what a day of
+        /// play earns, and how long a gem-priced good takes to collect for free. Both come
+        /// from the same published tables the game reads, so a retune moves them — the rule
+        /// every explanatory panel in this game follows, applied to the console.
+        /// </para>
+        /// </summary>
+        static void ReportStoreEconomy(StoreCatalog catalog, ProgressionTable table)
+        {
+            long daily = DailyCreditIncome(table);
+            long gemsPerDay = DailyGemIncome(table);
+
+            foreach (StoreShelf shelf in System.Enum.GetValues(typeof(StoreShelf)))
+            {
+                foreach (var product in catalog.Shelf(shelf))
+                {
+                    string worth = product.Credits > 0 && daily > 0
+                        ? $", {product.Credits / daily} day(s) of play"
+                        : string.Empty;
+
+                    Debug.Log($"[Glimmer] store {shelf} #{product.Tier}: '{product.Id}' " +
+                              $"{product.Gems} gems + {product.Credits} credits at " +
+                              $"${product.ReferenceUsdCents / 100f:0.00} " +
+                              $"(+{product.BonusPercent}%{worth})");
+                }
+            }
+
+            foreach (var good in catalog.Goods)
+            {
+                string wait = gemsPerDay > 0 ? $", about {good.Gems / gemsPerDay} day(s) of collecting"
+                                             : string.Empty;
+
+                Debug.Log($"[Glimmer] store good '{good.Id}': {good.Amount} " +
+                          $"{StoreGoodKinds.Id(good.Kind)} for {good.Gems} gems{wait}");
+            }
+
+            Debug.Log($"[Glimmer] store: {catalog.Products.Count} product(s), " +
+                      $"{catalog.Goods.Count} good(s); one gem is worth about " +
+                      $"{catalog.CreditsPerGem} credits across the two ladders, and free play " +
+                      $"collects about {gemsPerDay} gem(s) a day");
+        }
+
+        /// <summary>
+        /// Gems an engaged player collects in a day: every chest's expected gems plus a
+        /// streak rung amortised over the ladder's lap.
+        ///
+        /// The gem half of <see cref="DailyCreditIncome"/>, and it exists for the same
+        /// reason — a price is only meaningful beside the income that has to pay it, and
+        /// gems are the currency the whole supplies shelf is priced in.
+        /// </summary>
+        static long DailyGemIncome(ProgressionTable table)
+        {
+            long daily = 0;
+
+            var chests = table.Daily;
+            for (int i = 0; i < chests.ChestCount; i++)
+                daily += ExpectedGems(chests.Chest(i));
+
+            var streak = table.Streak;
+            if (streak.Length > 0)
+            {
+                long lap = 0;
+                for (int night = 1; night <= streak.Length; night++)
+                {
+                    var rung = streak.Rung(night);
+                    if (rung.Kind == ChestDropKind.Gems) lap += rung.Amount;
+                }
+
+                daily += lap / streak.Length;
+            }
+
+            return daily;
+        }
+
+        /// <summary>Gems one chest is worth on average. See <see cref="ExpectedCredits"/>.</summary>
+        static long ExpectedGems(ChestDefinition chest)
+        {
+            if (chest == null) return 0;
+
+            double gems = 0;
+
+            for (int i = 0; i < chest.Guaranteed.Count; i++)
+            {
+                var band = chest.Guaranteed[i];
+                if (band.Kind == ChestDropKind.Gems) gems += (band.Min + band.Max) * .5;
+            }
+
+            for (int i = 0; i < chest.Options.Count; i++)
+            {
+                var option = chest.Options[i];
+                if (option.Band.Kind != ChestDropKind.Gems) continue;
+
+                gems += (option.Band.Min + option.Band.Max) * .5 * (chest.ChanceOf(i) / 100.0);
+            }
+
+            return (long)gems;
         }
 
         /// <summary>
@@ -1428,6 +1658,17 @@ namespace GlimmerGrove.EditorTools
 
             foreach (var piece in content.Homestead.Pieces)
                 Require(table, piece.NameKey, $"grove piece '{piece.Id}'", result);
+
+            // And a shop product's and a good's, for the same reason and with a sharper
+            // consequence than any of the above: a product with no string is a card selling
+            // "store.product.gg_gems_3" for real money.
+            var store = ProgressionRules.Table.Store;
+
+            foreach (var product in store.Products)
+                Require(table, product.NameKey, $"store product '{product.Id}'", result);
+
+            foreach (var good in store.Goods)
+                Require(table, good.NameKey, $"store good '{good.Id}'", result);
 
             // So are a tip's, and this is the only place that can prove they exist. A
             // mechanic added without its two strings compiles, validates and ships; the

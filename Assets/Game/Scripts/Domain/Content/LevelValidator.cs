@@ -28,6 +28,7 @@ namespace GlimmerGrove.Content
             CheckAuthoredSolution(level, cells, issues);
             CheckFragileConduits(level, cells, issues);
             CheckBoundConduits(level, cells, issues);
+            CheckCrossings(level, cells, issues);
             CheckPar(level, computedPar, issues);
             CheckClock(level, issues);
             CheckPresentation(level, issues);
@@ -58,12 +59,62 @@ namespace GlimmerGrove.Content
             {
                 if (c.kind == Kind.Source) sources++;
                 else if (c.kind == Kind.Lamp) lamps++;
-                if (c.kind != Kind.Empty && !c.locked && Puzzle.Rotl(c.solved, 1) != c.solved) turnable++;
+                if (c.kind != Kind.Empty && !c.locked && !Puzzle.Alike(c, 1)) turnable++;
             }
 
             if (sources == 0) Error(issues, "no heart-crystal, nothing can ever light up");
             if (lamps == 0) Error(issues, "no sleeping critters, the level can never be won");
             if (turnable == 0) Warn(issues, "no tile can be turned, the player has nothing to do");
+        }
+
+        /// <summary>
+        /// A crossing has to actually cross something.
+        ///
+        /// <para>
+        /// The mechanic's whole promise is that the two flows through a tile are different
+        /// flows. When the authored solution joins them somewhere else on the board the tile
+        /// is telling the player a lie in the one place the game asks them to trust their
+        /// eyes — and it is a lie that costs turns, because they will route around a
+        /// separation that was never there. Invisible everywhere else: the arms mate, the
+        /// solution lights, par comes out a sensible number, and the board draws beautifully.
+        /// </para>
+        /// <para>
+        /// A warning rather than an error, and the distinction is real. Two strands meeting
+        /// elsewhere is sometimes exactly the shape a finale wants — a loop that leaves by one
+        /// arm and comes back by another has to close somewhere. So this is a question about
+        /// intent, which is what warnings are for here.
+        /// </para>
+        /// </summary>
+        static void CheckCrossings(LevelDefinition level, Cell[] cells, List<LevelIssue> issues)
+        {
+            int w = level.Layout.Width;
+
+            var solved = Copy(cells);
+            for (int i = 0; i < solved.Length; i++) solved[i].rot = 0;
+
+            Puzzle probe = null;
+
+            for (int i = 0; i < cells.Length; i++)
+            {
+                if (cells[i].kind != Kind.Crossing) continue;
+
+                probe ??= new Puzzle(level.Id, w, level.Layout.Height, level.Tuning, solved);
+
+                if (probe.EnergyOn(i, 0) == 0 && probe.EnergyOn(i, 1) == 0)
+                {
+                    Warn(issues, $"neither strand of the crossing at {i % w},{i / w} carries any " +
+                                 "light in the authored solution, so nothing on the board ever " +
+                                 "demonstrates that it keeps two flows apart");
+                    continue;
+                }
+
+                // Joined elsewhere: the two strands end up in one network anyway, so the tile
+                // looks like it is separating something it is not.
+                if (probe.Comp(i, 0) == probe.Comp(i, 1))
+                    Warn(issues, $"the two strands of the crossing at {i % w},{i / w} are joined " +
+                                 "elsewhere in the authored solution, so it crosses nothing; " +
+                                 "the player will route around a separation that is not there");
+            }
         }
 
         /// <summary>

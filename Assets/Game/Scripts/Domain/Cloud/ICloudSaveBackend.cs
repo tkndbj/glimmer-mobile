@@ -207,6 +207,47 @@ namespace GlimmerGrove.Cloud
         public static LinkCredential ForApple() => new LinkCredential(Apple);
     }
 
+    /// <summary>
+    /// What one redemption actually granted, as the server reports it.
+    ///
+    /// <para>
+    /// Carried back rather than inferred from the balance moving, and the difference is not
+    /// theoretical: a background sync can land between the two readings a subtraction would
+    /// need, and the number it would corrupt is the one on a panel that says "thank you"
+    /// after somebody has paid. A figure about money that is occasionally wrong is worse
+    /// than no figure at all.
+    /// </para>
+    /// <para>
+    /// <see cref="AlreadyGranted"/> is the other half. A retry of a receipt the server has
+    /// already honoured succeeds and grants nothing — which is exactly right, and is also
+    /// what happens on every launch after a purchase the store re-delivers until it is
+    /// confirmed. Congratulating somebody for reopening the app is how a celebration stops
+    /// meaning anything.
+    /// </para>
+    /// </summary>
+    public sealed class CloudRedemption
+    {
+        /// <summary>Currency id to amount. Empty on a retry.</summary>
+        public readonly Dictionary<string, long> Granted = new Dictionary<string, long>();
+
+        /// <summary>True when this transaction had already been honoured.</summary>
+        public bool AlreadyGranted;
+
+        public long AmountOf(string currency)
+            => currency != null && Granted.TryGetValue(currency, out long amount) ? amount : 0L;
+
+        public bool GrantedAnything
+        {
+            get
+            {
+                foreach (var pair in Granted) if (pair.Value > 0) return true;
+                return false;
+            }
+        }
+
+        public static readonly CloudRedemption Nothing = new CloudRedemption { AlreadyGranted = true };
+    }
+
     /// <summary>A store receipt to be validated server-side and turned into a grant.</summary>
     public sealed class PurchaseReceipt
     {
@@ -373,9 +414,16 @@ namespace GlimmerGrove.Cloud
             string userId, IReadOnlyList<GrantEntryDto> awards,
             CancellationToken cancellation = default);
 
-        /// <summary>Hands a store receipt to the server, which validates and grants.</summary>
-        Task<(CloudResult result, List<CloudWalletState> wallets)> RedeemPurchaseAsync(
-            string userId, PurchaseReceipt receipt, CancellationToken cancellation = default);
+        /// <summary>
+        /// Hands a store receipt to the server, which validates it and grants what its own
+        /// catalog says the product is worth.
+        ///
+        /// The amount is <b>reported back</b> rather than left to be inferred — see
+        /// <see cref="CloudRedemption"/>.
+        /// </summary>
+        Task<(CloudResult result, List<CloudWalletState> wallets, CloudRedemption redemption)>
+            RedeemPurchaseAsync(string userId, PurchaseReceipt receipt,
+                                CancellationToken cancellation = default);
 
         /// <summary>
         /// Reads the published move-count deciles for every glade.

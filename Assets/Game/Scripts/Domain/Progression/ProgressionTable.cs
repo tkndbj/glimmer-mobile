@@ -4,6 +4,7 @@ using GlimmerGrove.Ads;
 using GlimmerGrove.Content;
 using GlimmerGrove.Daily;
 using GlimmerGrove.Persistence;
+using GlimmerGrove.Store;
 using UnityEngine;
 
 namespace GlimmerGrove.Progression
@@ -81,7 +82,7 @@ namespace GlimmerGrove.Progression
         ProgressionTable(long[] cumulative, RewardRule defaultRule,
                          Dictionary<ChapterId, RewardRule> chapterRules,
                          DailyChestTable daily, AdRewardTable ads, StreakTable streak,
-                         GoldenTable golden, HeartRuleTable hearts)
+                         GoldenTable golden, HeartRuleTable hearts, StoreCatalog store)
         {
             _cumulative = cumulative;
             _defaultRule = defaultRule;
@@ -91,6 +92,7 @@ namespace GlimmerGrove.Progression
             Streak = streak ?? StreakTable.Default;
             Golden = golden ?? GoldenTable.Default;
             Hearts = hearts ?? HeartRuleTable.Default;
+            Store = store ?? StoreCatalog.Default;
         }
 
         /// <summary>
@@ -143,6 +145,22 @@ namespace GlimmerGrove.Progression
         public HeartRuleTable Hearts { get; }
 
         /// <summary>
+        /// What the shop sells, published with the curve because it is the curve's exit.
+        ///
+        /// <para>
+        /// Every other table here decides what play <em>pays</em>; this one decides what
+        /// money buys, and the only way to know whether a coin pack is generous or insulting
+        /// is to hold it against how much a day of play earns. A shop tuned without the
+        /// reward rates in front of you is a shop priced against a game you are guessing at.
+        /// </para>
+        /// <para>
+        /// It rides here for a second reason the others do not have: the server reads the
+        /// same block. See <c>StoreCatalog</c>.
+        /// </para>
+        /// </summary>
+        public StoreCatalog Store { get; }
+
+        /// <summary>
         /// A usable curve for when no file could be read. The game stays playable and
         /// the validator fails the build, which is the right way round — a content
         /// problem should stop a build, never a player's session.
@@ -158,7 +176,8 @@ namespace GlimmerGrove.Progression
             ads: AdRewardTable.Default,
             streak: StreakTable.Default,
             golden: GoldenTable.Default,
-            hearts: HeartRuleTable.Default);
+            hearts: HeartRuleTable.Default,
+            store: StoreCatalog.Default);
 
         /// <summary>Highest level this curve defines. Level 1 always exists.</summary>
         public int MaxLevel => _cumulative.Length;
@@ -335,8 +354,15 @@ namespace GlimmerGrove.Progression
             // clamps to a built-in rather than rejecting the block.
             var hearts = HeartRuleTable.Resolve(dto.hearts, problems);
 
+            // And once more, for the only block whose failure costs real money rather than
+            // live tuning. An unreadable product is dropped by name rather than clamped —
+            // see StoreCatalog.Resolve — so the worst case is a shelf with a card missing
+            // from it, which is visible at a glance, instead of a card promising an amount
+            // the server would refuse to honour.
+            var store = StoreCatalog.Resolve(dto.store, problems);
+
             table = Build(dto.xpToNext, dto.tailXpToNext, dto.tailXpIncrement, maxLevel,
-                          defaultRule, chapterRules, daily, ads, streak, golden, hearts);
+                          defaultRule, chapterRules, daily, ads, streak, golden, hearts, store);
             return true;
         }
 
@@ -345,7 +371,7 @@ namespace GlimmerGrove.Progression
                                       Dictionary<ChapterId, RewardRule> chapterRules,
                                       DailyChestTable daily, AdRewardTable ads,
                                       StreakTable streak, GoldenTable golden,
-                                      HeartRuleTable hearts)
+                                      HeartRuleTable hearts, StoreCatalog store)
         {
             if (maxLevel < 1) maxLevel = 1;
 
@@ -363,7 +389,7 @@ namespace GlimmerGrove.Progression
             }
 
             return new ProgressionTable(cumulative, defaultRule, chapterRules, daily, ads, streak,
-                                        golden, hearts);
+                                        golden, hearts, store);
         }
     }
 }

@@ -82,6 +82,29 @@ namespace GlimmerGrove.Content
             return tokens;
         }
 
+        /// <summary>Reads a run of N E S W, leaving the cursor on the first character that is not one.</summary>
+        static int ReadArms(string token, ref int p)
+        {
+            int mask = 0;
+            for (; p < token.Length; p++)
+            {
+                char c = token[p];
+                if (c == 'N') mask |= Puzzle.N;
+                else if (c == 'E') mask |= Puzzle.E;
+                else if (c == 'S') mask |= Puzzle.S;
+                else if (c == 'W') mask |= Puzzle.W;
+                else break;
+            }
+            return mask;
+        }
+
+        static int CountArms(int mask)
+        {
+            int n = 0;
+            for (int d = 0; d < 4; d++) if ((mask & Puzzle.Bits[d]) != 0) n++;
+            return n;
+        }
+
         static bool TryParseCell(string token, ref int critterCursor, out Cell cell, out string error)
         {
             cell = default;
@@ -102,24 +125,61 @@ namespace GlimmerGrove.Content
                 case '@': cell.kind = Kind.Lamp; break;
                 case 'x': cell.kind = Kind.Duskcap; break;
                 case '-': cell.kind = Kind.Pipe; break;
+                case '=': cell.kind = Kind.Crossing; break;
                 default:
-                    error = $"unknown head '{token[0]}', expected one of - * @ x .";
+                    error = $"unknown head '{token[0]}', expected one of - = * @ x .";
                     return false;
             }
 
             int p = 1;
-            int mask = 0;
-            for (; p < token.Length; p++)
-            {
-                char c = token[p];
-                if (c == 'N') mask |= Puzzle.N;
-                else if (c == 'E') mask |= Puzzle.E;
-                else if (c == 'S') mask |= Puzzle.S;
-                else if (c == 'W') mask |= Puzzle.W;
-                else break;
-            }
+            int mask = ReadArms(token, ref p);
 
             if (mask == 0) { error = "no arms, every filled cell needs at least one of N E S W"; return false; }
+
+            // '+' separates a crossing's two strands: the arms that carry one flow, then the
+            // arms that carry the other. Written out rather than implied, because which pair
+            // is which is the whole of what a crossing is and a reader of the grid has to be
+            // able to see it without deriving anything.
+            if (p < token.Length && token[p] == '+')
+            {
+                if (cell.kind != Kind.Crossing)
+                {
+                    error = "'+' separates the two strands of a crossing, which is written '='";
+                    return false;
+                }
+
+                p++;
+                int second = ReadArms(token, ref p);
+                if (second == 0) { error = "'+' with no arms after it"; return false; }
+                if ((mask & second) != 0)
+                {
+                    error = "the two strands of a crossing cannot share an arm; light entering " +
+                            "one would leave by the other, which is a crossroads rather than a crossing";
+                    return false;
+                }
+
+                cell.cross = (byte)mask;
+                mask |= second;
+            }
+
+            if (cell.kind == Kind.Crossing)
+            {
+                if (cell.cross == 0)
+                {
+                    error = "a crossing must say which arms belong to which strand, as '=NS+EW'";
+                    return false;
+                }
+
+                int other = mask & ~cell.cross & 15;
+                if (CountArms(cell.cross) != 2 || CountArms(other) != 2)
+                {
+                    error = "a crossing carries exactly two arms on each of its two strands; " +
+                            "a strand of one is a flow that arrives and stops, and a strand of " +
+                            "three is a junction wearing a crossing's mark";
+                    return false;
+                }
+            }
+
             cell.solved = (byte)mask;
 
             if (p < token.Length && token[p] == '#')
@@ -184,14 +244,14 @@ namespace GlimmerGrove.Content
 
             if (p != token.Length) { error = $"trailing characters '{token.Substring(p)}'"; return false; }
 
-            if (cell.fragile > 0 && cell.kind != Kind.Pipe)
+            if (cell.fragile > 0 && !cell.IsConduit)
             {
                 error = "only a conduit can be fragile; a heart-crystal or critter that " +
                         "crumbled would make the level unwinnable rather than harder";
                 return false;
             }
 
-            if (cell.link > 0 && cell.kind != Kind.Pipe)
+            if (cell.link > 0 && !cell.IsConduit)
             {
                 error = "only a conduit can share a taproot; a heart-crystal or creature " +
                         "turning by remote control is a rule nothing on the board could show";
@@ -224,6 +284,15 @@ namespace GlimmerGrove.Content
             if (cell.kind == Kind.Duskcap && cell.colour != 0)
             {
                 error = "a duskcap takes no colour; any light at all wakes it";
+                return false;
+            }
+
+            // A crossing carries whatever each strand is given and asks for nothing. Colouring
+            // one would be claiming a crossing is a kind of light rather than a kind of tile.
+            if (cell.kind == Kind.Crossing && cell.colour != 0)
+            {
+                error = "a crossing takes no colour; each of its strands simply carries " +
+                        "whatever reaches it";
                 return false;
             }
 

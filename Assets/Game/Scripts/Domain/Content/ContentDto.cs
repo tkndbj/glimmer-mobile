@@ -397,6 +397,113 @@ namespace GlimmerGrove.Content
         /// a game whose session count you just changed.
         /// </summary>
         public HeartsDto hearts;
+
+        /// <summary>
+        /// What the shop sells. Optional: absent means the built-in ladder stands.
+        ///
+        /// <para>
+        /// Rides here for the reasons every block above it does, and one that is sharper
+        /// than any of them: this is the block the <em>server</em> also reads. The seeder
+        /// derives <c>config/products</c> from it, so what a card promises and what a
+        /// receipt is honoured for are one authored list rather than two — invariant 9a
+        /// applied to money. A shop tuned in a file the seeder does not read would show one
+        /// number and pay another, against a real payment, which is the one class of
+        /// mistake in this project that cannot be quietly fixed later.
+        /// </para>
+        /// <para>
+        /// It is also the block most obviously tuned against the ones above it: what a heart
+        /// costs in gems is only meaningful beside how fast hearts come back, and what a
+        /// coin pack is worth is only meaningful beside what a day of play earns.
+        /// </para>
+        /// </summary>
+        public StoreDto store;
+    }
+
+    /// <summary>
+    /// The shop: products bought with money, goods bought with gems.
+    ///
+    /// <para>
+    /// Note what is deliberately absent. There is <b>no price field</b> on a product — a
+    /// price lives in App Store Connect and the Play Console and is read back from the
+    /// store SDK at runtime, because it differs per storefront and per tax regime, and
+    /// drawing a hardcoded one is a review rejection on both stores. And there is <b>no
+    /// currency field</b> on a good, because a good is bought with gems and paid for out of
+    /// a ledger the server already governs; a good that paid out currency would need the
+    /// server to mint it, which is what products are for.
+    /// </para>
+    /// </summary>
+    [Serializable]
+    public sealed class StoreDto
+    {
+        /// <summary>Bought with money. Order within a shelf is the order they are drawn.</summary>
+        public StoreProductDto[] products;
+
+        /// <summary>Bought with gems.</summary>
+        public StoreGoodDto[] goods;
+    }
+
+    /// <summary>
+    /// One product, exactly as both stores know it, plus what this game grants for it.
+    ///
+    /// <para>
+    /// Fields are <b>not</b> tri-stated with -1 the way the reward rules are, and that is
+    /// the point rather than an oversight. A reward rule inherits from a fallback, so
+    /// "unwritten" has to be distinguishable from zero; a product does not inherit from
+    /// anything, so an unwritten grant is simply a product that grants nothing, and the
+    /// reader drops it by name instead of guessing what was meant. Guessing is exactly the
+    /// wrong instinct here — this is the one table in the project where a wrong number is
+    /// charged to somebody's card.
+    /// </para>
+    /// </summary>
+    [Serializable]
+    public sealed class StoreProductDto
+    {
+        /// <summary>Permanent, and identical in App Store Connect and the Play Console.</summary>
+        public string id;
+
+        /// <summary>
+        /// <c>consumable</c> or <c>nonconsumable</c>. Not interchangeable, and not ours to
+        /// choose freely: the store enforces that a nonconsumable is sold once per account,
+        /// which is how a one-time starter offer is made one-time without a flag in a save
+        /// file that two devices would have to agree about.
+        /// </summary>
+        public string kind;
+
+        /// <summary><c>gems</c>, <c>coins</c> or <c>bundles</c>.</summary>
+        public string shelf;
+
+        /// <summary>Credits the server grants against a validated receipt.</summary>
+        public long credits;
+
+        /// <summary>Gems the server grants against a validated receipt.</summary>
+        public long gems;
+
+        /// <summary>
+        /// What this is expected to cost, in US cents. <b>Never displayed.</b> It is what
+        /// <c>Validate Content</c> proves the value ladder against, and what the "+40%
+        /// extra" badge is derived from. The player is always shown the store's own
+        /// localised price string.
+        /// </summary>
+        public int referenceUsdCents;
+
+        /// <summary><c>popular</c>, <c>best_value</c>, <c>starter</c>, or absent.</summary>
+        public string badge;
+    }
+
+    /// <summary>One thing gems buy. See <c>StoreGood</c> for why the list is this short.</summary>
+    [Serializable]
+    public sealed class StoreGoodDto
+    {
+        public string id;
+
+        /// <summary><c>hearts</c> or <c>heart_boost</c>. Currency is deliberately not an option.</summary>
+        public string kind;
+
+        /// <summary>Hearts, or hours of boost.</summary>
+        public int amount;
+
+        /// <summary>What it costs in gems.</summary>
+        public long gems;
     }
 
     /// <summary>

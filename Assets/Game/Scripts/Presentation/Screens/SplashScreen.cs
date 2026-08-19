@@ -6,6 +6,7 @@ using GlimmerGrove.Cloud;
 using GlimmerGrove.Content;
 using GlimmerGrove.Localization;
 using GlimmerGrove.Progression;
+using GlimmerGrove.Store;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -183,15 +184,26 @@ namespace GlimmerGrove
             _target = 1f;
             ContentBootstrap.BeginBackgroundRefresh();
 
-            // All three of these are fire-and-forget for the same reason: nothing between
+            // All four of these are fire-and-forget for the same reason: nothing between
             // tapping the icon and playing a glade is allowed to wait on a network.
             CloudSaveService.BeginSync();
+
+            // Prices. Deliberately fetched now rather than when somebody opens the shop:
+            // asking the store for product metadata is a round trip that takes a second or
+            // more on a cold cellular connection, and a shop whose cards are blank for that
+            // second is a shop players back out of. It also picks up anything bought on a
+            // previous launch and never credited, which is the recovery path for a purchase
+            // interrupted by a crash — the one thing here worth starting early even if
+            // nobody ever opens the tab. Started after the content has loaded, because the
+            // list of products to ask about comes out of it.
 
             // The population's move counts, for the one line on the victory panel that
             // compares a player to everybody else. It is the most disposable request the
             // game makes — no sign-in, no writes, and an outcome nothing waits on — which
             // is why it is started here and never checked again.
             CloudSaveService.BeginStatsRefresh();
+
+            StoreService.BeginConnect();
 
             while (Time.unscaledTime - started < MinimumShow || _shown < .999f) yield return null;
 

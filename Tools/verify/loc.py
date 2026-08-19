@@ -34,7 +34,12 @@ KEY = re.compile(r'"((?:ui|err|mech)\.[a-z0-9_]+(?:\.[a-z0-9_]+)+)"')
 # name, a companion's, a mechanic tip's. They are checked by the content
 # validator, which knows the ids; here they would look like unused entries.
 DERIVED_PREFIXES = ("level.", "chapter.", "ui.companion.", "ui.avatar.", "ui.tip.",
-                    "ui.piece.", "ui.land.", "ui.shelf.")
+                    "ui.piece.", "ui.land.", "ui.shelf.",
+                    # A product and a good are named from their permanent id for the reason
+                    # a glade is (invariant 5a): anything holding the id can name the thing
+                    # without reading the catalog, which is what lets a purchase say what
+                    # was bought long after the shop screen has gone.
+                    "store.product.", "store.good.")
 
 # Keys whose middle segment is a content id: `ui.event.<id>.name`. The prefix alone would
 # also hide the event panel's own generic keys, which are written out and worth checking.

@@ -70,6 +70,19 @@ What that means in practice here:
 5a. **A level's loc keys are derived from its id and cannot be overridden.** That is
    what lets anything holding a `LevelId` name a glade without reading a chapter body.
    An overridable key makes the index insufficient and drags a file read into the map.
+5b. **"Is this tile solved" is `Puzzle.Alike`, and it exists exactly once.** It was
+   `Rotl(solved, k) == solved`, written out five times across `Puzzle` and `PuzzleFactory`,
+   and every copy was correct until a tile appeared whose arm mask is not the whole of its
+   orientation. A **crossing** wears all four arms at every angle, so the mask comparison
+   calls every one of them already solved: par comes out short by one per twisted crossing,
+   and par multiplies into the move budget *and* the clock, so a board validates, derives
+   plausible numbers and cannot be finished. Everything now asks the one predicate — par,
+   the budget, the clock, the hint, the near-miss reading and the taproot agreement check —
+   and it is the code that ships rather than a copy, for invariant 9a's reason in the file
+   that had no reason to have two. `content.py` and `author.py` mirror it because they run
+   with no Unity anywhere; if you add a tile whose orientation is more than its arms, there
+   are three places and the tests name them.
+
 6. **All player-facing text is a loc key.** The build gate scans the source for
    key-shaped literals and fails on any that is missing. Do not build keys by
    concatenation — write them out (see `WinOverlay.RankKeys`).
@@ -404,6 +417,62 @@ What that means in practice here:
     this state *is* signed in, so anything reading `IsLinked` alone will tell somebody their
     progress is safe while nothing at all is being written.
 
+18. **A real-money product grants currency, and nothing else.** This is invariant 13's
+    second clause — *adjudicated* — taken to its conclusion, and it is what makes the whole
+    shop cost the save file zero fields. Currency is server-owned (invariant 10), so a
+    validated receipt turns into a grant with no client involvement whatever; hearts and
+    boosts live in the save and are applied by the phone. A product granting both would need
+    the client to apply half a purchase after the server applied the other half — which means
+    a record of *"did I already apply this transaction's hearts"*, in the save, merged across
+    devices, whose failure mode is somebody paying and receiving nothing. So hearts and
+    boosts are bought with **gems**, and a gem debit is an ordinary `CurrencyLedger.TrySpend`:
+    idempotent, offline-capable, refused on the next sync if the derived balance could not
+    cover it. It is the same two lines that buy a companion. The mirror rule is that a
+    gem-priced good may never pay currency — `hearts` and `heart_boost` are the whole list,
+    and `StoreCatalog` refuses anything else by name rather than clamping it.
+18a. **A transaction is confirmed only after the grant lands, and never before.** The
+    ordering is the entire safety property. A purchase arrives as an *unfinished* transaction;
+    it goes to our server, which asks Apple or Google whether it really happened, records it
+    against `receipts/{store}__{txn}` — **globally**, because replaying one real receipt across
+    thousands of accounts is the industrialised attack and a per-player key would validate
+    every one of them — and grants. Only then is it confirmed. Everything that can go wrong is
+    therefore "still unfinished", and both stores re-deliver an unfinished transaction on every
+    launch for ever, so a crash, a tunnel, a flat battery and a server outage are all one bug
+    with one fix. That is why **no per-purchase state exists anywhere in the save**: the store
+    already keeps the record, far better than a client could. Google's three-day auto-refund
+    on an unacknowledged purchase is the one real deadline, and confirming is what
+    acknowledges — hence a retry that is aggressive rather than polite. A refused receipt is
+    **never** confirmed, however tempting it is to clear the queue: "the server refused" covers
+    a product missing from `config/products` as well as a bad receipt, and confirming the first
+    charges a player for a configuration mistake and destroys the evidence.
+18b. **The shop is one authored list, and the server derives its half from it.** The `store`
+    block of `progression.json` is what the game draws *and* what `seed-config.mjs` turns into
+    `config/products`. A card promising 750 gems against a server granting 700 is not a bug
+    anybody finds by reading either file — it is two files edited on different days, and the
+    difference is charged to a real card. Invariant 9a, for money. Two consequences follow.
+    There is **no price field and there must never be one**: a price lives in the two consoles,
+    differs per storefront, and comes back from the SDK already formatted, so
+    `referenceUsdCents` is never shown and exists only so the build gate can prove the ladder
+    improves with size and so the "+40%" ribbon is *derived* rather than typed. And a **product
+    id is permanent** in invariant 1's full sense — neither store lets one be reused after
+    deletion, and a receipt redeemed next year is looked up against whatever the table says
+    then, so retune by adding a product and never by repointing one.
+18c. **A refund is money leaving, so something has to watch for it.** Buy, spend, refund,
+    repeat needs no exploit and no tooling, which is why it is the commonest way a mobile
+    economy leaks. `CurrencyLedger.ApplyServerState` had always taken the server's baselines
+    rather than the larger of the two — with a comment saying a refund legitimately lowers what
+    was granted — so all that was missing was something to lower it. Apple pushes
+    (`appleNotification`) and Google is polled (`sweepVoidedPurchases`, hourly). The Apple
+    handler deliberately does **not** verify the notification's JWS chain, and that is a
+    stronger position rather than a weaker one: it scrapes transaction ids out of an untrusted
+    body, keeps only ones this server actually granted, and then asks the App Store Server API
+    about each over the authenticated channel `receipts.ts` already uses. Apple's own answer
+    moves the money, so a forged POST can at most make us look something up. That reasoning
+    holds **only** because every id is re-checked; anything that ever acts on a notification's
+    own word must verify the chain first. Balances clamp at zero rather than going negative —
+    a player whose credits silently stop rising for a month uninstalls, and repeat abuse is a
+    job for the stores' account bans.
+
 ## Layout
 
 ```
@@ -559,7 +628,7 @@ long since completed and its step 1 having quietly become a no-op.
 
 **Cloud save: the server is live, the client waits on one SDK install.**
 Firebase project `glimmer-groove-1cd60` — Firestore in `eur3`, security rules released,
-anonymous auth on, both apps registered, and **six functions** on Node 22 in
+anonymous auth on, both apps registered, and **six deployed functions** on Node 22 in
 `europe-west1`: `getWallet`, `submitSpends`, `claimAwards`, `redeemPurchase`, `adReward`
 and the `publishGroveStats` schedule. `firebase/README.md` is the guide;
 `firebase/e2e/smoke-test.mjs` proves the rules hold and passes **28/28 live**, the last
@@ -1851,8 +1920,151 @@ offline**; the other 7 reach `Debug.Log`, `PlayerPrefs` or `RunGuard`, which are
 offline runner cannot execute. Those stay Editor-only rather than having the logging
 stripped out of production code to move a number. Offline suite 613.
 
-Not done, deliberate: **in-app purchases** (the four store secrets hold `UNSET`, so
-receipts are refused — correct until real store products exist), **Play Games Services**
+**Chapter two: The Mill Vale, and light that crosses itself.** Ten glades, and one new
+mechanic — the **crossing** (`=NS+EW`), a conduit carrying two flows through one tile
+that never meet. It is the third rule to bend the board's shape rather than add to it,
+and the only one so far that touches the light graph: the traversal now walks *strands*,
+of which every tile has one and a crossing has two. Everything above the walk — colour,
+lighting, winning, par, the near-miss reading, the duskcap rule — is untouched, which is
+the whole reason a mechanic whose entire point is "two networks share a tile" cost no
+second graph and no second pass.
+
+Four decisions carry it, and the first is the one that would have shipped a broken
+chapter. **A crossing wears all four arms at every angle**, so the mask comparison that
+served as "is this tile solved" — written out five times across `Puzzle` and
+`PuzzleFactory` — calls every crossing already solved. That derives a par short by one
+per twisted crossing, and par multiplies into the move budget and the clock. It is now
+`Puzzle.Alike`, once, and every owed-turn count in the game asks it; the five copies are
+gone. Same lesson as invariant 9a in the file that had no reason to have two.
+
+**A straight crossing (`=NS+EW`) is inert and a twisted one (`=NE+SW`) is worth exactly
+one tap**, and neither is a special case: rotating a crossing swaps which strand is
+called which, and nothing on the board can tell, so `Alike` treats the two strands as
+interchangeable labels and both facts fall out. The straight one is architecture — a
+bridge somebody built — and Stonebridge is the glade that roots four of them.
+
+**A crossing has no hub.** The hub disc is what this board already means by "these arms
+are joined", so leaving it off is the rule stated in the vocabulary the player reads
+rather than a decoration missing, and the strand drawn over the other wears a shadow.
+That matters because a tile with four arms is a crossroads everywhere else in this game:
+the failure mode is not a player who does not know the rule, it is one who concludes the
+board is broken — which is why `Mechanic.Crossing` sits between the duskcap and the
+taproot in `TeachingOrder` rather than at the end.
+
+And **a crossing whose two strands are joined elsewhere crosses nothing**, which
+`LevelValidator.CheckCrossings` says out loud. It is invisible everywhere else — the arms
+mate, the solution lights, par is a sensible number, the board draws beautifully — and it
+costs the player turns routing around a separation that is not there. A warning rather
+than an error, because a loop that leaves by one arm and returns by another has to close
+somewhere.
+
+What it unlocks is worth more than what it is. **A duskcap's island of dark can now run
+through the light instead of only around it** — chapter one had to state flatly that a
+duskcap and its conduits are their own island, because in the solution a lit cell's
+neighbours are lit. Across a crossing they are not. *Under the Boughs*, *Hollow Ford* and
+the finale are all built on that, and the misrotation that joins the shadow to the grove
+is a real trap that a restart forgives.
+
+The ten glades run **36, 48, 41, 52, 43, 58, 49, 55, 51, 63** — deliberately not
+monotonic, because par is length rather than difficulty. Each has one idea: the first
+crossing; a rope of two runs braided through three of them; the dark running through;
+brittle stone on both approaches with the crossing itself brittle (one wrong guess
+allowed, and no more); two crossings on one taproot at opposite corners; three networks
+where two stay pure and the third holds a heart of each; three fords of one shadow; four
+rooted bridges; a cascade handing the grove from yellow to red to green to blue; and a
+knot with all of it.
+
+The map is four strips rather than the Shallows' six, because the source image is shorter
+and `Tools/make_chapter_art.py` **scales to whole strips rather than stretching to them**.
+That tool is the other half of the drop: `Tools/chapter_art.tsv` is one row per chapter
+naming only the source packs, and every name and every colour is read out of the chapter's
+own JSON — so retuning a glade's `accent` regrades its backdrop with nothing else to edit,
+and an eleventh glade gets an eleventh backdrop by being authored. The backdrops are
+**graded rather than darkened**: real painted structure reduced to luminance and mapped
+onto a three-stop ramp built from the level's own slate and accent, which is what lets ten
+glades share two source paintings.
+
+What this cost: **no save schema change, no `progression.json` retune, no server work and
+no new concept in the reward path** — the glades pay exactly what any glade pays.
+`CrossingTests` adds 23 cases (offline suite 641), `content.py` and `author.py` mirror the
+rule, and `author.py` gained `cross`, `root` and `path` — `root` derives every member's
+start rotation from the number of taps the root should cost, rather than leaving four
+numbers that have to agree to be typed by hand.
+
+**The shop — real money, and the first thing in this game that takes any.** The second nav
+tab was `ui.soon.shop`; it is now `ShopScreen`. Four shelves: gems, coins and bundles for
+money, and **supplies** — hearts and heart boosts — for gems. Invariant 18 has the argument
+for that split and it is the reason the whole feature adds **no field to the save file**, no
+schema bump, and no new concept to the reward path.
+
+**Gems had no sink at all before this**, which is worth stating plainly because it was the
+real gap: they were earned from chests and streak nights, displayed on two screens, and spent
+on nothing. They are now what hearts, faster hearts and time are bought with — so the money
+ladder feeds a currency that feeds the gate, which is the shape every match-3 economy
+converges on and the reason it is worth converging on.
+
+**Thirteen products and five sprites.** A card is a *container* plus a *pile*, both chosen
+from where the product sits on its shelf — and the tier is derived from the reference price,
+so a rung inserted in the middle re-draws everything above it with no art order. The coin and
+the gem in the pile are the game's own, which is not a saving but the readability of the whole
+screen: the pile is made of the same coin the hub's pill spins. `ShopArt` is
+`CompanionRevealOverlay`'s argument in a quieter place. The only new art is a pouch and four
+chests, cut from the same CraftPix pack the rest of the UI came from and global for `Win/*`'s
+reason — five 160px sprites, on the one screen where a frame of white rectangles costs money.
+
+**The prices, and the arithmetic behind them.** Free play collects about **543 credits and 6
+gems a day** (`content.py` derives both from the published tables and prints them), and every
+credit sink in the game — companions, grove pieces, land, the home ladder — comes to **272,770
+credits, about 500 days**. Against that: gems run **100 → 8,500 for $0.99 → $49.99**, a 1.68×
+value spread bottom to top; coins run **2,500 → 75,000 for $1.99 → $39.99**, so buying out the
+entire catalog is about **$146**; a five-heart refill is **50 gems**, which is eight days of
+free gem income or roughly $0.50; a day of fast hearts is **30 gems**. The starter bundle is a
+**non-consumable at $2.99** worth about 3× the ladder — one-time offers are exempt from the
+monotonic-value check for exactly that reason, and they are safe because the store refuses to
+sell one twice.
+
+**Four decisions worth not re-litigating.** Tapping a card opens the store's own payment sheet
+and *nothing in between* — the sheet names the product, states the price in the player's
+currency and asks for a fingerprint, so a panel of ours in front of it is a tap for a question
+about to be asked properly. A **gem** purchase does get a confirmation, because it has no sheet
+and no authentication and a mistap on a 280-gem card is two months of free gems. A good that
+would overflow the heart ceiling or the boost cap is **refused rather than clamped** — a chest
+losing its surplus is fine because nobody paid for it, and this is not that. And short of gems
+**opens the gem shelf** rather than greying the cell, which is `CompanionUnlockOverlay`'s rule.
+
+`ShopScreen` never draws a price it made up: every figure with a currency symbol is the store's
+own formatted string, and a card whose price has not arrived says so. Six card states, one
+sentence each, which is `AdOfferState`'s rule — and `AdOfferOverlay` gained a quiet route to
+the shop on the two placements a player can safely walk away from, which is *not* the run
+continue (its board is frozen mid-defeat) and *not* the win bonus.
+
+**Unity IAP 5.4.2, behind `GLIMMER_IAP`.** `Assets/Game/Scripts/Store/UnityIapBackend.cs` is
+the only file in the project that compiles against the SDK, and the define comes from asmdef
+`versionDefines` for the reason `GLIMMER_ADDRESSABLES` does. Version 5 rather than 4 because
+Play requires Billing Library 7+ of every update since August 2025, and because 5's model *is*
+this design: a purchase arrives as an explicit `PendingOrder` that stays pending until
+`ConfirmPurchase`. Two things it deliberately does not do — no local receipt validation
+(`CrossPlatformValidator` runs on the one machine an attacker owns), and
+`ProcessPendingOrdersOnPurchasesFetched(false)`, because *processing* is the SDK's word and
+confirming is ours.
+
+Server: `redeemPurchase` grants multiple currencies and reports what it granted, so the thank-you
+panel shows the server's figure rather than a subtraction of two balance readings a background
+sync can land between. `products.ts` reads `config/products` and **refuses rather than clamps**.
+`refunds.ts` plus `appleNotification` and the hourly `sweepVoidedPurchases` reverse a purchase a
+store took back. `seed-config.mjs` now derives `config/products` from the content and refuses to
+publish a ladder that gets worse as it gets bigger; `products.example.json` is gone.
+
+`StoreTests` adds 17 cases (offline suite **657**), `firebase/functions/test/store.mjs` adds 18,
+and `Validate Content` errors — not warns — on the three shop mistakes no reader can catch.
+
+**What is still needed before a penny moves:** the thirteen products created in App Store
+Connect and the Play Console with exactly these ids and kinds, the four store secrets filled in
+(they still hold `UNSET`, so every receipt is refused, which is correct), **View financial data**
+on the Play service account for the refund sweep, the `appleNotification` URL set for both the
+production and sandbox environments, and a redeploy of the functions.
+
+Not done, deliberate: **Play Games Services**
 (better Android sign-in and the natural home for the "ranks" leaderboards, but
 Android-only so it cannot be the identity), and a **visual level editor** (tooling — the
 thing most likely to matter next for shipping cadence). Remote content delivery is built

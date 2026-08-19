@@ -83,3 +83,10 @@ firebase-debug.*.log
 # but service-account keys and the Apple .p8 absolutely are, and they land nearby.
 *-service-account*.json
 *.p8
+
+# Signing keys. Never in the repository, and never in ProjectSettings either — Unity
+# writes a keystore password into ProjectSettings.asset in plain text the moment it is
+# typed into Publishing Settings, and that file is committed. The store build reads its
+# credentials from the environment instead; see DevBuild.KeystoreEnv.
+*.keystore
+*.jks

@@ -19,6 +19,19 @@ namespace GlimmerGrove
         readonly List<Image> _armBase = new List<Image>(4);
         readonly List<Image> _armLit = new List<Image>(4);
         readonly List<Image> _armGlow = new List<Image>(4);
+
+        /// <summary>
+        /// Which of the cell's strands each arm belongs to, in the order the arms were built.
+        ///
+        /// Always 0 off a crossing, which is what lets one painting routine serve both kinds
+        /// of tile — a crossing is the only tile that can be answering two colours at once,
+        /// and it answers them along arms that were already being tinted one at a time.
+        /// </summary>
+        readonly List<int> _armStrand = new List<int>(4);
+
+        /// <summary>The dark backing under a crossing's over-strand. Empty on every other tile.</summary>
+        readonly List<Image> _armShade = new List<Image>(2);
+
         Image _hubBase, _hubLit, _hubGlow;
 
         Image _crystal, _crystalGlow;
@@ -68,28 +81,50 @@ namespace GlimmerGrove
             float glowThick = thick * 3.0f;
             float reach = size * .5f + 1f;
 
-            // arms are authored against the solved mask; the rotor maps them to play space
-            for (int d = 0; d < 4; d++)
+            // Arms are authored against the solved mask; the rotor maps them to play space.
+            //
+            // On a crossing they are built under-strand first, so the other pair draws across
+            // it — and the tile deliberately gets no hub. The hub disc is what this board means
+            // by "these arms are joined", so leaving it off is not a decoration missing, it is
+            // the rule stated in the vocabulary the player already reads.
+            float hub = thick * 1.72f;
+            bool crossing = cell.kind == Kind.Crossing;
+
+            foreach (int d in ArmOrder(cell))
             {
-                if ((cell.solved & Puzzle.Bits[d]) == 0) continue;
                 float z = -90f * d;
+                int strand = crossing && (cell.cross & Puzzle.Bits[d]) == 0 ? 1 : 0;
+
+                // The strand that crosses on top is drawn a little thicker and rimmed in
+                // shadow along its whole length. A dark patch at the junction alone is not
+                // enough: it says "not a junction", which the missing hub already says, and
+                // leaves the two pairs looking equal. A rim that runs the length of the arm
+                // is what makes one of them read as being in front, and it is the only part
+                // of this tile that survives being glanced at.
+                if (crossing && strand == 0)
+                    _armShade.Add(MakeArm("ArmShade", Art.Capsule(24, 96), thick * 1.62f, reach, z,
+                                          ShadeTint));
+
+                float armThick = crossing && strand == 0 ? thick * 1.1f : thick;
 
                 var glow = MakeArm("ArmGlow", Art.SoftCapsule(40, 120), glowThick, reach * 1.02f, z,
                                    Pal.A(Pal.Dormant, 0f));
-                var base_ = MakeArm("ArmBase", Art.Capsule(24, 96), thick, reach, z, _theme.ArmBase);
-                var lit = MakeArm("ArmLit", Art.Capsule(24, 96), thick * .74f, reach, z,
+                var base_ = MakeArm("ArmBase", Art.Capsule(24, 96), armThick, reach, z, _theme.ArmBase);
+                var lit = MakeArm("ArmLit", Art.Capsule(24, 96), armThick * .74f, reach, z,
                                   Pal.A(Pal.Dormant, 0f));
 
-                _armGlow.Add(glow); _armBase.Add(base_); _armLit.Add(lit);
+                _armGlow.Add(glow); _armBase.Add(base_); _armLit.Add(lit); _armStrand.Add(strand);
             }
 
-            float hub = thick * 1.72f;
-            _hubGlow = UIKit.Img("HubGlow", _rotor, Art.Glow(96, 1.9f), Pal.A(Pal.Dormant, 0f),
-                                 Vector2.one * hub * 3.1f, new Vector2(.5f, .5f), Vector2.zero);
-            _hubBase = UIKit.Img("Hub", _rotor, Art.Disc(96), _theme.Hub,
-                                 Vector2.one * hub, new Vector2(.5f, .5f), Vector2.zero);
-            _hubLit = UIKit.Img("HubLit", _rotor, Art.Disc(96), Pal.A(Pal.Dormant, 0f),
-                                Vector2.one * hub * .62f, new Vector2(.5f, .5f), Vector2.zero);
+            if (!crossing)
+            {
+                _hubGlow = UIKit.Img("HubGlow", _rotor, Art.Glow(96, 1.9f), Pal.A(Pal.Dormant, 0f),
+                                     Vector2.one * hub * 3.1f, new Vector2(.5f, .5f), Vector2.zero);
+                _hubBase = UIKit.Img("Hub", _rotor, Art.Disc(96), _theme.Hub,
+                                     Vector2.one * hub, new Vector2(.5f, .5f), Vector2.zero);
+                _hubLit = UIKit.Img("HubLit", _rotor, Art.Disc(96), Pal.A(Pal.Dormant, 0f),
+                                    Vector2.one * hub * .62f, new Vector2(.5f, .5f), Vector2.zero);
+            }
 
             if (cell.kind == Kind.Source) BuildCrystal(cell);
             else if (cell.kind == Kind.Lamp) BuildCritter(cell);
@@ -109,6 +144,34 @@ namespace GlimmerGrove
             _rotor.localRotation = Quaternion.Euler(0, 0, _angle);
             ApplyEnergy(false);
         }
+
+        /// <summary>
+        /// The directions this tile carries an arm in, in the order they should be drawn.
+        ///
+        /// Only a crossing has an opinion: its under-strand goes down first so the other pair
+        /// draws over the top of it. Everything else is simply north to west, exactly as it
+        /// always was — the ordering is a fact about one tile, so it lives in one method
+        /// rather than as a branch inside the build loop.
+        /// </summary>
+        static IEnumerable<int> ArmOrder(Cell cell)
+        {
+            if (cell.kind == Kind.Crossing)
+            {
+                for (int d = 0; d < 4; d++)
+                    if ((cell.solved & Puzzle.Bits[d]) != 0 && (cell.cross & Puzzle.Bits[d]) == 0) yield return d;
+
+                for (int d = 0; d < 4; d++)
+                    if ((cell.cross & Puzzle.Bits[d]) != 0) yield return d;
+
+                yield break;
+            }
+
+            for (int d = 0; d < 4; d++)
+                if ((cell.solved & Puzzle.Bits[d]) != 0) yield return d;
+        }
+
+        /// <summary>The overpass shadow: dark enough to read as depth, not as a second colour.</summary>
+        static readonly Color ShadeTint = new Color(.04f, .06f, .09f, .72f);
 
         Image MakeArm(string name, Sprite sprite, float thickness, float length, float z, Color colour)
         {
@@ -348,6 +411,7 @@ namespace GlimmerGrove
             if (_wearRing) { Tween.Tint(_wearRing, Pal.A(dust, 0f), .25f); }
             if (_wearCount) { Tween.Tint(_wearCount, Pal.A(dust, 0f), .2f); }
 
+            foreach (var shade in _armShade) Tween.Tint(shade, Pal.A(dust, 0f), .3f, Ease.InQuad);
             foreach (var arm in _armBase) Tween.Tint(arm, Pal.A(dust, 0f), .34f, Ease.InQuad);
             foreach (var arm in _armLit) Tween.Tint(arm, Pal.A(dust, 0f), .22f, Ease.InQuad);
             foreach (var arm in _armGlow) Tween.Tint(arm, Pal.A(dust, 0f), .22f, Ease.InQuad);
@@ -376,6 +440,7 @@ namespace GlimmerGrove
             if (_slot) _slot.color = _theme.Slot;
             if (_slotEdge) _slotEdge.color = new Color(1, 1, 1, .075f);
 
+            foreach (var shade in _armShade) shade.color = ShadeTint;
             foreach (var arm in _armBase) arm.color = _theme.ArmBase;
             if (_hubBase) _hubBase.color = _theme.Hub;
         }
@@ -487,10 +552,14 @@ namespace GlimmerGrove
         // --------------------------------------------------------------- energy
         public void ApplyEnergy(bool animate, float extraDelay = 0f)
         {
-            int energy = _p.Energy(_i);
+            // Per strand, because a crossing can be carrying two different colours through one
+            // tile and the whole mechanic is invisible if both pairs of arms are painted the
+            // same. Packed into one number so the "has anything changed" guard still holds:
+            // repainting a board on every evaluation is what the shown-value cache exists to
+            // stop, and two fields would need two of them.
+            int onStrand0 = _p.EnergyOn(_i, 0), onStrand1 = _p.EnergyOn(_i, 1);
+            int energy = onStrand0 | (onStrand1 << 3);
             int depth = Mathf.Max(0, _p.Depth[_i]);
-            bool lit = energy != 0;
-            var col = Pal.EnergyColour(energy);
 
             float delay = animate ? extraDelay + depth * .028f : 0f;
             float dur = animate ? .3f : .001f;
@@ -500,12 +569,23 @@ namespace GlimmerGrove
                 _shownEnergy = energy;
                 for (int k = 0; k < _armLit.Count; k++)
                 {
+                    int flow = _armStrand[k] == 0 ? onStrand0 : onStrand1;
+                    bool armLit = flow != 0;
+                    var armCol = Pal.EnergyColour(flow);
+
                     var lay = _armLit[k]; var glow = _armGlow[k];
-                    Tween.Tint(lay, lit ? Pal.A(Pal.Lift(col, .35f), 1f) : Pal.A(col, 0f), dur, Ease.OutQuad).Delay(delay);
-                    Tween.Tint(glow, lit ? Pal.A(col, .5f) : Pal.A(col, 0f), dur * 1.4f, Ease.OutQuad).Delay(delay);
+                    Tween.Tint(lay, armLit ? Pal.A(Pal.Lift(armCol, .35f), 1f) : Pal.A(armCol, 0f), dur, Ease.OutQuad).Delay(delay);
+                    Tween.Tint(glow, armLit ? Pal.A(armCol, .5f) : Pal.A(armCol, 0f), dur * 1.4f, Ease.OutQuad).Delay(delay);
                 }
-                Tween.Tint(_hubLit, lit ? Pal.A(Pal.Lift(col, .55f), 1f) : Pal.A(col, 0f), dur, Ease.OutQuad).Delay(delay);
-                Tween.Tint(_hubGlow, lit ? Pal.A(col, .62f) : Pal.A(col, 0f), dur * 1.4f, Ease.OutQuad).Delay(delay);
+
+                // A crossing has no hub, because a hub is this board's word for a junction.
+                if (_hubLit)
+                {
+                    bool lit = onStrand0 != 0;
+                    var col = Pal.EnergyColour(onStrand0);
+                    Tween.Tint(_hubLit, lit ? Pal.A(Pal.Lift(col, .55f), 1f) : Pal.A(col, 0f), dur, Ease.OutQuad).Delay(delay);
+                    Tween.Tint(_hubGlow, lit ? Pal.A(col, .62f) : Pal.A(col, 0f), dur * 1.4f, Ease.OutQuad).Delay(delay);
+                }
             }
 
             if (_p.C[_i].kind == Kind.Lamp) ApplyLamp(animate, delay);

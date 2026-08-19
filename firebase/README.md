@@ -71,14 +71,17 @@ which is most syncs, since the common trigger is the app being backgrounded.
 firestore.rules          the security boundary. Read this first.
 firebase.json            deploy config
 functions/src/
-  index.ts               getWallet, submitSpends, claimAwards, redeemPurchase
+  index.ts               getWallet, submitSpends, claimAwards, redeemPurchase,
+                         adReward, appleNotification, sweepVoidedPurchases, publishGroveStats
   progression.ts         server-side derivation — mirrors ProgressionLedger.cs
   daily.ts               daily chest generator — mirrors DailyChestTable.cs
   streak.ts              streak ladder and the rule that bounds a night — mirrors StreakTable.cs
   receipts.ts            Apple and Google validation, fails closed
+  products.ts            what a product grants — read from config/products, never from the client
+  refunds.ts             reversing a purchase a store took back
   wallet.ts              balance arithmetic over the private wallet document
-seed/seed-config.mjs     publishes the reward table from the shipped content
-seed/products.example.json
+seed/seed-config.mjs     publishes the reward table AND the product catalog, both from
+                         the shipped content
 ```
 
 ## Status
@@ -88,8 +91,11 @@ Deployed and verified live on 2026-08-15:
 - Firestore database in `eur3`, security rules released — including the `streak` key on
   the save document, which had to go out **before** any client that writes it, or every
   push fails `hasOnly` with permission-denied
-- All six functions on Node 22 in `europe-west1`: `getWallet`, `submitSpends`,
-  `claimAwards`, `redeemPurchase`, `adReward`, and the `publishGroveStats` schedule
+- Six functions on Node 22 in `europe-west1` as of that date: `getWallet`, `submitSpends`,
+  `claimAwards`, `redeemPurchase`, `adReward`, and the `publishGroveStats` schedule.
+  **Two more are written and not yet deployed** — `appleNotification` and the hourly
+  `sweepVoidedPurchases` — along with a `redeemPurchase` that grants more than one
+  currency and reports what it granted. `firebase deploy --only functions`
 - `claimAwards` grants daily chests *and* streak nights
 - Anonymous authentication enabled
 - Android and iOS apps registered for `com.digikeygames.glimmergrove`
@@ -230,15 +236,81 @@ grant on `receipts/{store}__{transactionId}` — globally, not per player. Recei
 across accounts is an industrialised attack; a per-player key would validate every one
 of them. If the same player retries, it reports success and grants nothing.
 
+**A refunded purchase is taken back.** Apple and Google both let a purchase be undone
+weeks later, and without something watching for it the loop is buy → spend → refund →
+repeat. It needs no exploit and no tooling, which is why it is the most common way a
+mobile economy leaks money. `refunds.ts` reverses the grant on both sides; balances
+clamp at zero rather than going negative, because a player whose credits silently stop
+rising for a month is a player who uninstalls, and repeat abuse is a job for the stores'
+own account bans.
+
 ## Adding a product
 
-1. Create it in App Store Connect and the Play Console.
-2. Copy `seed/products.example.json` to `seed/products.json`, using **exactly** those
-   product ids.
-3. `node seed/seed-config.mjs`
+The catalog lives in **one place**: the `store` block of
+`Assets/StreamingAssets/Content/progression.json`. The game draws its shop from it and
+the seeder derives `config/products` from it, so the amount on a card and the amount a
+receipt is honoured for cannot disagree.
 
-The amount lives here and not in the app on purpose. A client that names its own reward
-names any number it likes.
+1. Add the product to the `store.products` array. `id`, `kind`
+   (`consumable`/`nonconsumable`), `shelf`, what it grants, and `referenceUsdCents`.
+2. Add a name string: `store.product.<id>` in `Content/loc/en.json`.
+3. Create the product in **App Store Connect** and the **Play Console**, using exactly
+   that id and a price tier near the reference cents. The kind must match: a
+   `nonconsumable` here has to be a non-consumable there, because the store is what
+   makes a one-time offer one-time.
+4. `npm --prefix firebase/functions run build && node firebase/seed/seed-config.mjs`
+5. `Glimmer Grove ▸ Validate Content` — it fails the build on a ladder that gets worse
+   as it gets bigger, and on a product with no name string.
+
+The amount lives in content and not in the app on purpose: a client that names its own
+reward names any number it likes. **A product id is permanent.** Neither store lets one
+be reused after deletion, and a receipt redeemed a year from now is looked up against
+whatever the table says then — so retune by *adding* a product, never by repointing one.
+
+### What a product may grant
+
+Currency, and nothing else. Hearts and boosts live in the player's save file and are
+applied by the phone, so a product that promised them would need the client to apply
+half a purchase after the server applied the other half — which means a record in the
+save of what has already been applied, merged across devices, whose failure mode is
+somebody paying and receiving nothing. Hearts are bought with **gems** instead, through
+the ordinary spend path. See `StoreProduct` on the client for the argument in full.
+
+## Store credentials
+
+Four secrets, all fail-closed — an absent one refuses every receipt rather than granting
+against a key that cannot validate anything.
+
+```
+firebase functions:secrets:set APPLE_KEY_ID              # App Store Connect ▸ Integrations ▸ Keys
+firebase functions:secrets:set APPLE_ISSUER_ID           # the issuer id on that same page
+firebase functions:secrets:set APPLE_PRIVATE_KEY         # the .p8 contents
+firebase functions:secrets:set GOOGLE_PLAY_SERVICE_ACCOUNT   # the service-account JSON
+```
+
+The Play service account needs **View financial data** as well as the usual publishing
+permission — the voided-purchases sweep is a financial API, and a sweep that returns
+nothing for ever is exactly what a missing permission looks like. That is why its count
+is logged on every run, including zero.
+
+## Refunds
+
+Two mechanisms, because the stores are genuinely different.
+
+**Apple pushes.** Set the `appleNotification` URL in App Store Connect ▸ App Information
+▸ App Store Server Notifications, for **both** the production and the sandbox
+environment. The handler deliberately does not verify the notification's JWS chain: it
+scrapes transaction ids out of the body, keeps only ones this server has actually
+granted, and then asks the App Store Server API about each of them over the same
+authenticated channel receipt validation uses. Apple's own answer is what moves money,
+so a forged POST can at most make us look something up and be told it is fine.
+
+**Google is polled.** `sweepVoidedPurchases` runs hourly and reads the Voided Purchases
+API. A real-time channel exists, but it needs a Pub/Sub topic and a subscription to keep
+alive, and a subscription that silently stops delivering would cost a month of refunds
+before anyone noticed. The sweep keeps a cursor in `ops/refundSweep` and rewinds it an
+hour on every read, so a boundary record cannot be lost to clock skew — `revokeReceipt`
+is idempotent, so re-reading costs nothing.
 
 ## Worth doing before real money moves
 
@@ -248,6 +320,7 @@ names any number it likes.
   clients that have not shipped the attestation yet.
 - **Budget alert** on the billing account. Functions scale, and so does the bill.
 - **A Firestore backup schedule.** `gcloud firestore backups schedules create`.
-- **Verify the JWS chain** if you ever add App Store Server Notifications. The
-  reasoning in `receipts.ts` — that TLS to Apple establishes authenticity — holds for
-  responses we fetch ourselves and does *not* hold for notifications pushed to us.
+- **Watch the sandbox flag.** Every receipt document records whether the store called it
+  a sandbox or a test purchase. It is deliberately still granted — app review has to be
+  able to buy things — but a live economy should know the difference, and nothing
+  currently reports on it.

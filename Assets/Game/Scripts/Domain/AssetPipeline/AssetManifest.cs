@@ -67,6 +67,21 @@ namespace GlimmerGrove.AssetPipeline
             // the crest reads better without it and an addressed sprite nothing draws is still
             // built into the bundle and preloaded at every launch.
             "Win/crown", "Win/shield", "Win/banner", "Win/window",
+
+            // The shop's containers, and the only art the whole storefront needs. Every
+            // product's picture is *composed* from these plus the game's own coin and gem
+            // — see `ShopArt` — for the reason the companion reveal is procedural: a
+            // storefront that grew a sprite per product would need an art order every time
+            // a price was retuned, and thirteen near-identical piles of coins is a texture
+            // budget spent on nothing.
+            //
+            // Global rather than a named scope, which is the same judgement `Win/*` above
+            // asked for and is deliberate here rather than lazy. Five 160px sprites is less
+            // than the potions already on this list, the shop is one tap from every screen
+            // in the game, and it is the one screen where a frame of white rectangles while
+            // a scope loads (invariant 7b) costs actual money.
+            "Shop/pouch", "Shop/chest_wood", "Shop/chest_iron", "Shop/chest_silver",
+            "Shop/chest_gold",
         };
 
         /// <summary>Map furniture used by every chapter, unlike the strips themselves.</summary>

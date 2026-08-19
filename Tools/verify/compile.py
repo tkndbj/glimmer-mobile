@@ -149,6 +149,16 @@ ASSEMBLIES = [
         src=sources("Assets/Game/Scripts/Ads"),
         refs=ENGINE_RUNTIME + PKG_RUNTIME + [NETSTANDARD] + SHIMS + compiled("GlimmerGrove.Domain"),
     )),
+    ("iap", dict(
+        out="GlimmerGrove.Iap",
+        src=sources("Assets/Game/Scripts/Store"),
+        # No GLIMMER_IAP here, deliberately: Unity IAP is a UPM package with no DLL on
+        # disk until the Editor resolves it, so this proves only that the assembly is
+        # empty without it — which is the property that matters, since it is what keeps
+        # a clone of this repository compiling before anybody installs the SDK. The
+        # contents are compiled by the Editor, and by nothing else.
+        refs=ENGINE_RUNTIME + PKG_RUNTIME + [NETSTANDARD] + SHIMS + compiled("GlimmerGrove.Domain"),
+    )),
     ("pres", dict(
         out="GlimmerGrove.Presentation",
         src=sources("Assets/Game/Scripts/Presentation"),

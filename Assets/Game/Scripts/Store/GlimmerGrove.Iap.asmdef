@@ -1,0 +1,23 @@
+{
+    "name": "GlimmerGrove.Iap",
+    "rootNamespace": "GlimmerGrove.Iap",
+    "references": [
+        "GlimmerGrove.Domain",
+        "Unity.Purchasing"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [
+        {
+            "name": "com.unity.purchasing",
+            "expression": "5.0",
+            "define": "GLIMMER_IAP"
+        }
+    ],
+    "noEngineReferences": false
+}

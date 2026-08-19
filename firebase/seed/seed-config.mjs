@@ -120,8 +120,167 @@ function buildProgressionConfig() {
       golden: readGolden(progression),
       events: readEvents(manifest, levelChapters),
     },
+    products: readStore(progression),
     levelCount,
   };
+}
+
+/**
+ * The product catalog, derived from the same block the game draws its shop from.
+ *
+ * This is the whole reason `config/products` is no longer hand-maintained. A shop card
+ * promising 750 gems and a server granting 700 is not a bug anybody would find by looking
+ * at either file — it is two files edited on different days — and the difference is
+ * charged to a real card. Invariant 9a says a rule that must exist twice is generated into
+ * the second place rather than typed there; this is that, for money.
+ *
+ * Everything the client's reader enforces is enforced again here, because a catalog the
+ * client would have dropped is a card that is not drawn against a receipt the server would
+ * still honour. A refusal at seed time is a message on a terminal; the same disagreement in
+ * production is a chargeback.
+ */
+function readStore(progression) {
+  const store = progression.store;
+
+  // Absent is legitimate and means exactly one thing: no shop. `redeemPurchase` then
+  // refuses every receipt with "product is not configured", which is correct — a purchase
+  // that cannot be priced must not be granted a guess.
+  if (!store || !Array.isArray(store.products) || store.products.length === 0) {
+    console.log("  note: progression.json has no store block, so no product can be redeemed");
+    return null;
+  }
+
+  const MAX_GRANT = 5000000;                  // mirrors StoreLimits.MaxGrant and products.ts
+  const SHELVES = new Set(["gems", "coins", "bundles"]);
+  const KINDS = new Set(["consumable", "nonconsumable"]);
+
+  const products = {};
+  const shelves = new Map();
+
+  for (const entry of store.products) {
+    const id = String(entry?.id ?? "");
+
+    if (!/^[a-z0-9_]{1,64}$/.test(id)) {
+      throw new Error(
+        `store product id '${entry?.id}' is unusable; ids are lower case letters, digits and ` +
+        "underscores, because a receipt is looked up by this string for the life of the account"
+      );
+    }
+
+    if (products[id]) throw new Error(`store lists product '${id}' twice`);
+
+    if (!KINDS.has(entry.kind)) {
+      throw new Error(
+        `store product '${id}' has kind '${entry.kind}'; it must be consumable or nonconsumable, ` +
+        "and the two are not interchangeable — the store itself enforces that a nonconsumable " +
+        "is sold once per account"
+      );
+    }
+
+    if (!SHELVES.has(entry.shelf)) {
+      throw new Error(`store product '${id}' names unknown shelf '${entry.shelf}'`);
+    }
+
+    const credits = Math.floor(entry.credits ?? 0);
+    const gems = Math.floor(entry.gems ?? 0);
+
+    if (!Number.isFinite(credits) || !Number.isFinite(gems) || credits < 0 || gems < 0) {
+      throw new Error(`store product '${id}' grants ${entry.credits} credits and ${entry.gems} gems`);
+    }
+
+    if (credits === 0 && gems === 0) throw new Error(`store product '${id}' grants nothing`);
+
+    if (credits > MAX_GRANT || gems > MAX_GRANT) {
+      throw new Error(
+        `store product '${id}' grants more than the supported ${MAX_GRANT}. The server refuses ` +
+        "rather than clamping, so publishing this would make every purchase of it fail"
+      );
+    }
+
+    const cents = Math.floor(entry.referenceUsdCents ?? 0);
+    if (!Number.isFinite(cents) || cents < 49 || cents > 100000) {
+      throw new Error(
+        `store product '${id}' has referenceUsdCents ${entry.referenceUsdCents}, outside ` +
+        "49..100000. It is never shown to a player, but the value ladder is proved against it"
+      );
+    }
+
+    // One-time offers are left out of the ladder check below, and that is the whole
+    // point of them rather than a loophole: a starter pack is deliberately better value
+    // than anything else on its shelf, and it cannot cannibalise the ladder because the
+    // store will not sell it twice. Ranking it alongside the repeatable rungs would either
+    // fail the build or force it to be a worse offer than it should be.
+    if (entry.kind !== "nonconsumable") {
+      if (!shelves.has(entry.shelf)) shelves.set(entry.shelf, []);
+      shelves.get(entry.shelf).push({ id, credits, gems, cents });
+    }
+
+    // Only what the server needs in order to honour a receipt. The shelf, the badge and
+    // the reference price are display and validation; publishing them would invite
+    // somebody to think the server had an opinion about them.
+    products[id] = { credits, gems, kind: entry.kind };
+  }
+
+  // The ladder has to get better as it gets bigger. A middle rung worth less per unit of
+  // money than the one below it is invisible in the file and obvious to the first player
+  // who does the arithmetic — and it makes the derived "+40% extra" badge print a smaller
+  // number on a dearer product.
+  const perGem = creditsPerGem(shelves);
+
+  for (const [shelf, entries] of shelves) {
+    const ranked = [...entries].sort((a, b) => a.cents - b.cents);
+
+    for (let i = 1; i < ranked.length; i++) {
+      if (shelfValue(ranked[i], perGem) < shelfValue(ranked[i - 1], perGem)) {
+        throw new Error(
+          `store shelf '${shelf}': '${ranked[i].id}' costs more than '${ranked[i - 1].id}' and ` +
+          "gives less per unit of money. A ladder that gets worse as it gets bigger is a shop " +
+          "nobody buys the large size in"
+        );
+      }
+    }
+  }
+
+  // Goods are bought with gems and applied on the phone, so the server has no opinion
+  // about them and they are deliberately not published. They are checked here anyway,
+  // because this is the one place both halves of the shop are read together.
+  for (const good of Array.isArray(store.goods) ? store.goods : []) {
+    if (!/^[a-z0-9_]{1,64}$/.test(String(good?.id ?? ""))) {
+      throw new Error(`store good id '${good?.id}' is unusable`);
+    }
+    if (good.kind !== "hearts" && good.kind !== "heart_boost") {
+      throw new Error(
+        `store good '${good.id}' names kind '${good.kind}'. Only hearts and heart_boost can be ` +
+        "bought with gems — currency cannot, because only the server may grant it"
+      );
+    }
+    if (!(good.amount > 0) || !(good.gems > 0)) {
+      throw new Error(`store good '${good.id}' hands over ${good.amount} for ${good.gems} gems`);
+    }
+  }
+
+  return products;
+}
+
+/** Credits per gem, from the cheapest rung of each money shelf. Mirrors `StoreCatalog`. */
+function creditsPerGem(shelves) {
+  const cheapest = (shelf, pick) => {
+    const entries = (shelves.get(shelf) ?? []).filter(pick);
+    if (entries.length === 0) return null;
+    return entries.reduce((a, b) => (b.cents < a.cents ? b : a));
+  };
+
+  const gemBase = cheapest("gems", (e) => e.gems > 0);
+  const coinBase = cheapest("coins", (e) => e.credits > 0);
+
+  if (!gemBase || !coinBase) return 1;
+
+  const rate = Math.floor((coinBase.credits * gemBase.cents) / (gemBase.gems * coinBase.cents));
+  return rate < 1 ? 1 : rate;
+}
+
+function shelfValue(entry, perGem) {
+  return Math.floor(((entry.credits + entry.gems * perGem) * 10000) / entry.cents);
 }
 
 /**
@@ -474,13 +633,27 @@ function accessToken() {
   }
 }
 
-async function writeDoc(token, path, data) {
+/**
+ * Writes one document.
+ *
+ * By default only the named fields are touched, which is right for `config/progression`:
+ * it is assembled from several readers, and a field one of them declined to produce must
+ * not delete what is already published. With `replace`, the update mask is dropped and the
+ * document becomes exactly what is passed, which is right for `config/products` — a
+ * product deleted from the content file has to stop being sellable, and a merge would
+ * leave the server honouring receipts for something the shop no longer offers.
+ */
+async function writeDoc(token, path, data, options = {}) {
   const fields = {};
   for (const [k, v] of Object.entries(data)) fields[k] = encode(v);
 
+  const mask = options.replace
+    ? ""
+    : `?${Object.keys(data).map((k) => `updateMask.fieldPaths=${encodeURIComponent(k)}`).join("&")}`;
+
   const url =
     `https://firestore.googleapis.com/v1/projects/${PROJECT}/databases/(default)/documents/${path}` +
-    `?${Object.keys(data).map((k) => `updateMask.fieldPaths=${encodeURIComponent(k)}`).join("&")}`;
+    mask;
 
   const response = await fetch(url, {
     method: "PATCH",
@@ -494,7 +667,7 @@ async function writeDoc(token, path, data) {
 }
 
 // ------------------------------------------------------------------------- main
-const { config, levelCount } = buildProgressionConfig();
+const { config, levelCount, products } = buildProgressionConfig();
 const token = accessToken();
 
 await writeDoc(token, "config/progression", config);
@@ -506,13 +679,23 @@ console.log(
   `seeds ${config.seeds.credits} credits / ${config.seeds.gems} gems`
 );
 
-const productsPath = join(HERE, "products.json");
-if (existsSync(productsPath)) {
-  const products = readJson(productsPath);
-  await writeDoc(token, "config/products", products);
-  console.log(`config/products: ${Object.keys(products).length} product(s)`);
+// The shop, derived from progression.json rather than hand-maintained beside it. See
+// `readStore`. Written as a full replacement rather than a merge, deliberately: a product
+// removed from the content file must stop being sellable, and a merge would leave the
+// server honouring receipts for something the shop no longer offers.
+if (products) {
+  await writeDoc(token, "config/products", products, { replace: true });
+
+  const ids = Object.keys(products);
+  const gemPacks = ids.filter((id) => products[id].gems > 0 && products[id].credits === 0).length;
+  const coinPacks = ids.filter((id) => products[id].credits > 0 && products[id].gems === 0).length;
+
+  console.log(
+    `config/products: ${ids.length} product(s) — ${gemPacks} gem, ${coinPacks} coin, ` +
+    `${ids.length - gemPacks - coinPacks} bundle`
+  );
 } else {
-  console.log("config/products: skipped, no firebase/seed/products.json — in-app purchases stay inert");
+  console.log("config/products: skipped, progression.json has no store block — purchases stay inert");
 }
 
 // Sanity: a chapter file on disk that nobody lists is usually a mistake worth naming.

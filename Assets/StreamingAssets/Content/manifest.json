@@ -21,6 +21,25 @@
         "c01_three_springs",
         "c01_grovekeepers_knot"
       ]
+    },
+    {
+      "id": "c02_millvale",
+      "version": 1,
+      "order": 20,
+      "disabled": false,
+      "minAppVersion": 0,
+      "levels": [
+        "c02_two_ways_over",
+        "c02_the_millrace",
+        "c02_under_the_boughs",
+        "c02_the_old_weir",
+        "c02_braided_water",
+        "c02_the_wheelhouse",
+        "c02_hollow_ford",
+        "c02_stonebridge",
+        "c02_three_bridges",
+        "c02_the_millers_knot"
+      ]
     }
   ],
   "events": [
@@ -43,30 +62,12 @@
         "c01_grovekeepers_knot"
       ],
       "milestones": [
-        {
-          "goal": 1,
-          "credits": 60
-        },
-        {
-          "goal": 2,
-          "credits": 90
-        },
-        {
-          "goal": 4,
-          "credits": 250
-        },
-        {
-          "goal": 6,
-          "credits": 400
-        },
-        {
-          "goal": 8,
-          "credits": 600
-        },
-        {
-          "goal": 10,
-          "credits": 1000
-        }
+        { "goal": 1, "credits": 60 },
+        { "goal": 2, "credits": 90 },
+        { "goal": 4, "credits": 250 },
+        { "goal": 6, "credits": 400 },
+        { "goal": 8, "credits": 600 },
+        { "goal": 10, "credits": 1000 }
       ]
     }
   ],

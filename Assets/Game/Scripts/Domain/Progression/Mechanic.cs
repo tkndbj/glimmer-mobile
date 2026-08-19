@@ -36,6 +36,9 @@ namespace GlimmerGrove.Progression
         /// <summary>Conduits sharing a taproot, which turn as one however far apart they are.</summary>
         public static readonly Mechanic BoundConduit = new Mechanic("bound");
 
+        /// <summary>A conduit carrying two flows that pass through one another and never meet.</summary>
+        public static readonly Mechanic Crossing = new Mechanic("crossing");
+
         /// <summary>
         /// Teaching order, most disruptive first.
         ///
@@ -49,15 +52,24 @@ namespace GlimmerGrove.Progression
         /// to repeat them.
         /// </summary>
         /// <remarks>
-        /// The two newest sit where they do for one reason. A duskcap changes what winning
-        /// <em>is</em>, and a player who has not been told cannot work it out — the glade
-        /// simply refuses to settle with every critter awake. A taproot announces itself the
-        /// first time it is tapped, because two tiles visibly move. So the rule nothing on
+        /// <para>
+        /// The two duskcap-era entries sit where they do for one reason. A duskcap changes what
+        /// winning <em>is</em>, and a player who has not been told cannot work it out — the
+        /// glade simply refuses to settle with every critter awake. A taproot announces itself
+        /// the first time it is tapped, because two tiles visibly move. So the rule nothing on
         /// screen can explain goes first.
+        /// </para>
+        /// <para>
+        /// A crossing sits between them by the same measure. It cannot be worked out but it
+        /// can be <em>misread</em>, which is worse than not knowing: a tile with four arms is a
+        /// crossroads everywhere else in this game, so a player who has not been told does not
+        /// discover a new rule, they conclude the board is broken. It goes after the duskcap
+        /// because a duskcap can lose a run and a misread crossing only costs turns.
+        /// </para>
         /// </remarks>
         public static readonly Mechanic[] TeachingOrder =
         {
-            FragileConduit, MoveBudget, RootedTile, ColourMixing, Duskcap, BoundConduit,
+            FragileConduit, MoveBudget, RootedTile, ColourMixing, Duskcap, Crossing, BoundConduit,
         };
 
         public bool IsValid => !string.IsNullOrEmpty(Id);
@@ -106,7 +118,7 @@ namespace GlimmerGrove.Progression
             var found = new List<MechanicSighting>();
             if (board == null) return found;
 
-            int fragile = -1, rooted = -1, blended = -1, duskcap = -1, bound = -1;
+            int fragile = -1, rooted = -1, blended = -1, duskcap = -1, bound = -1, crossing = -1;
 
             for (int i = 0; i < board.C.Length; i++)
             {
@@ -115,6 +127,7 @@ namespace GlimmerGrove.Progression
                 if (cell.fragile > 0 && fragile < 0) fragile = i;
                 if (cell.locked && rooted < 0) rooted = i;
                 if (cell.kind == Kind.Duskcap && duskcap < 0) duskcap = i;
+                if (cell.kind == Kind.Crossing && crossing < 0) crossing = i;
 
                 // Asked of the board rather than of the cell, because a rune only one
                 // conduit carries binds nothing — the validator refuses that level, and
@@ -136,6 +149,7 @@ namespace GlimmerGrove.Progression
             if (rooted >= 0) found.Add(new MechanicSighting(Mechanic.RootedTile, rooted));
             if (blended >= 0) found.Add(new MechanicSighting(Mechanic.ColourMixing, blended));
             if (duskcap >= 0) found.Add(new MechanicSighting(Mechanic.Duskcap, duskcap));
+            if (crossing >= 0) found.Add(new MechanicSighting(Mechanic.Crossing, crossing));
             if (bound >= 0) found.Add(new MechanicSighting(Mechanic.BoundConduit, bound));
 
             return found;

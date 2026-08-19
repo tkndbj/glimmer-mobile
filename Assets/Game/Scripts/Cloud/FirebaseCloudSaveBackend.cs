@@ -577,14 +577,17 @@ namespace GlimmerGrove.Cloud
             }
         }
 
-        public async Task<(CloudResult result, List<CloudWalletState> wallets)> RedeemPurchaseAsync(
-            string userId, PurchaseReceipt receipt, CancellationToken cancellation = default)
+        public async Task<(CloudResult result, List<CloudWalletState> wallets, CloudRedemption redemption)>
+            RedeemPurchaseAsync(string userId, PurchaseReceipt receipt,
+                                CancellationToken cancellation = default)
         {
             if (!await EnsureReadyAsync())
-                return (CloudResult.Failed(CloudFailure.Offline, "Firebase unavailable"), Empty());
+                return (CloudResult.Failed(CloudFailure.Offline, "Firebase unavailable"),
+                        Empty(), CloudRedemption.Nothing);
 
             if (receipt == null || string.IsNullOrEmpty(receipt.TransactionId))
-                return (CloudResult.Failed(CloudFailure.Rejected, "receipt has no transaction id"), Empty());
+                return (CloudResult.Failed(CloudFailure.Rejected, "receipt has no transaction id"),
+                        Empty(), CloudRedemption.Nothing);
 
             try
             {
@@ -600,12 +603,43 @@ namespace GlimmerGrove.Cloud
                     },
                 });
 
-                return (CloudResult.Success, ReadWalletStates(reply));
+                return (CloudResult.Success, ReadWalletStates(reply), ReadRedemption(reply));
             }
             catch (Exception e)
             {
-                return (Classify(e, "redeem purchase"), Empty());
+                return (Classify(e, "redeem purchase"), Empty(), CloudRedemption.Nothing);
             }
+        }
+
+        /// <summary>
+        /// What the server says this call granted.
+        ///
+        /// <para>
+        /// A missing <c>granted</c> map reads as "nothing was granted" rather than as an
+        /// error, which is the safe direction in both cases it can happen: a retry the
+        /// server declined to pay twice, and a server that predates the field. Both should
+        /// leave the balances adopted and no celebration shown, and both do.
+        /// </para>
+        /// </summary>
+        static CloudRedemption ReadRedemption(IDictionary<string, object> reply)
+        {
+            var redemption = new CloudRedemption();
+            if (reply == null) return redemption;
+
+            if (reply.TryGetValue("alreadyGranted", out object already) && already is bool flag)
+                redemption.AlreadyGranted = flag;
+
+            if (!reply.TryGetValue("granted", out object raw) ||
+                !(raw is IDictionary<string, object> granted))
+                return redemption;
+
+            foreach (var pair in granted)
+            {
+                if (string.IsNullOrEmpty(pair.Key)) continue;
+                redemption.Granted[pair.Key] = ReadLong(granted, pair.Key);
+            }
+
+            return redemption;
         }
 
         // ------------------------------------------------------------- plumbing

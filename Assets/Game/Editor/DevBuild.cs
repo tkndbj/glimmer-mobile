@@ -12,6 +12,27 @@ namespace GlimmerGrove.EditorTools
 
         public const string ApkPath = "Builds/Android/GlimmerGrove.apk";
 
+        /// <summary>Where the store build lands. Gitignored along with the rest of Builds/.</summary>
+        public const string AabPath = "Builds/Android/GlimmerGrove.aab";
+
+        /// <summary>
+        /// Environment variables the store build reads its signing credentials from.
+        ///
+        /// <para>
+        /// <b>Never Player Settings, and never a file in the repository.</b> Unity stores a
+        /// keystore password in <c>ProjectSettings.asset</c> in plain text the moment you
+        /// type it into the Publishing Settings panel, and that file is committed — so the
+        /// key that identifies this app to Google would be in the history for ever, and
+        /// removing it later does not remove it from the history. Reading them from the
+        /// environment keeps the credential on the machine doing the build, which is the
+        /// only place it belongs.
+        /// </para>
+        /// </summary>
+        public const string KeystoreEnv = "GLIMMER_KEYSTORE";
+        public const string KeystorePassEnv = "GLIMMER_KEYSTORE_PASS";
+        public const string KeyAliasEnv = "GLIMMER_KEY_ALIAS";
+        public const string KeyAliasPassEnv = "GLIMMER_KEY_ALIAS_PASS";
+
         [MenuItem("Glimmer Grove/Build Windows Player", false, 40)]
         public static void BuildWindows() => Build(false);
 
@@ -35,6 +56,146 @@ namespace GlimmerGrove.EditorTools
         /// </summary>
         [MenuItem("Glimmer Grove/Build Android APK and Run", false, 42)]
         public static void BuildAndroidApkAndRun() => BuildAndroid(andRun: true);
+
+        /// <summary>
+        /// The Android App Bundle Google Play actually accepts.
+        ///
+        /// <para>
+        /// Deliberately a separate entry point from <see cref="BuildAndroidApk"/> rather
+        /// than a flag on it, because almost every setting differs and the two failure modes
+        /// are opposites. The APK is a development build, debug-signed, ARM64 only, for
+        /// sideloading onto the phone on your desk. This is a release build, signed with a
+        /// key only you hold, carrying every architecture, which Play will reject outright
+        /// if any one of those is wrong. A single method with a boolean would have to get
+        /// six things right in two directions.
+        /// </para>
+        /// <para>
+        /// <b>Both architectures, and it costs players nothing.</b> An App Bundle is split by
+        /// Play into per-device downloads, so shipping ARMv7 as well as ARM64 makes the
+        /// <em>upload</em> bigger and the build slower and leaves what any individual player
+        /// downloads exactly the same. For a game that is meant to be distributed globally
+        /// that is a trade with no downside — ARM64-only would silently exclude the cheaper
+        /// devices that still make up real markets.
+        /// </para>
+        /// <para>
+        /// <b>The version code is bumped here, on purpose.</b> Play refuses an upload whose
+        /// <c>versionCode</c> it has seen before, and forgetting to raise it is the single
+        /// commonest rejection there is. Raising it in the build script means it cannot be
+        /// forgotten, and because it lives in a tracked file the change is visible in the
+        /// diff rather than happening invisibly.
+        /// </para>
+        /// </summary>
+        [MenuItem("Glimmer Grove/Build Android App Bundle (store)", false, 43)]
+        public static void BuildAndroidAppBundle()
+        {
+            string keystore = System.Environment.GetEnvironmentVariable(KeystoreEnv);
+            string keystorePass = System.Environment.GetEnvironmentVariable(KeystorePassEnv);
+            string alias = System.Environment.GetEnvironmentVariable(KeyAliasEnv);
+            string aliasPass = System.Environment.GetEnvironmentVariable(KeyAliasPassEnv);
+
+            if (string.IsNullOrEmpty(keystore) || string.IsNullOrEmpty(keystorePass) ||
+                string.IsNullOrEmpty(alias) || string.IsNullOrEmpty(aliasPass))
+            {
+                // Refused rather than falling back to the debug keystore. A debug-signed
+                // bundle is rejected by Play on upload with a message that does not say
+                // "debug", so the twenty minutes spent building it are wasted twice.
+                Debug.LogError(
+                    $"[Glimmer] no signing key. Set {KeystoreEnv}, {KeystorePassEnv}, " +
+                    $"{KeyAliasEnv} and {KeyAliasPassEnv} before building, and restart the " +
+                    "Editor so it picks them up. Play rejects a debug-signed bundle, so this " +
+                    "refuses rather than building one you cannot upload.");
+                return;
+            }
+
+            if (!File.Exists(keystore))
+            {
+                Debug.LogError($"[Glimmer] {KeystoreEnv} points at '{keystore}', which is not there");
+                return;
+            }
+
+            if (EditorUserBuildSettings.activeBuildTarget != BuildTarget.Android)
+            {
+                Debug.Log("[Glimmer] switching to Android; the first switch reimports all assets");
+                if (!EditorUserBuildSettings.SwitchActiveBuildTargetAsync(
+                        BuildTargetGroup.Android, BuildTarget.Android))
+                {
+                    Debug.LogError("[Glimmer] could not switch to Android - is Android Build Support installed?");
+                    return;
+                }
+            }
+
+            ProjectSetup.Setup();
+
+            EditorUserBuildSettings.buildAppBundle = true;
+
+            // Native symbols, so a crash in Play Console reads as a stack trace instead of
+            // a column of hex. Uploaded with the bundle automatically.
+            EditorUserBuildSettings.androidCreateSymbols = AndroidCreateSymbols.Public;
+
+            PlayerSettings.Android.useCustomKeystore = true;
+            PlayerSettings.Android.keystoreName = keystore;
+            PlayerSettings.Android.keystorePass = keystorePass;
+            PlayerSettings.Android.keyaliasName = alias;
+            PlayerSettings.Android.keyaliasPass = aliasPass;
+
+            PlayerSettings.Android.targetArchitectures = AndroidArchitecture.ARMv7 | AndroidArchitecture.ARM64;
+            PlayerSettings.SetScriptingBackend(NamedBuildTarget.Android, ScriptingImplementation.IL2CPP);
+
+            // Both of these are the same requirement the APK path documents at length: the
+            // engine stripper removes MonoScript, which Firebase needs to exist at runtime,
+            // and without it cloud save is silently dead while everything else looks fine.
+            PlayerSettings.stripEngineCode = false;
+            PlayerSettings.SetManagedStrippingLevel(NamedBuildTarget.Android,
+                                                    ManagedStrippingLevel.Minimal);
+
+            PlayerSettings.Android.bundleVersionCode++;
+
+            var dir = Path.GetDirectoryName(AabPath);
+            if (!Directory.Exists(dir)) Directory.CreateDirectory(dir);
+
+            var opts = new BuildPlayerOptions
+            {
+                scenes = new[] { ProjectSetup.ScenePath },
+                locationPathName = AabPath,
+                target = BuildTarget.Android,
+                targetGroup = BuildTargetGroup.Android,
+
+                // No Development and no AllowDebugging. Play rejects a bundle marked
+                // debuggable, and a development build ships the profiler and slower code.
+                options = BuildOptions.None,
+            };
+
+            var report = BuildPipeline.BuildPlayer(opts);
+            var s = report.summary;
+
+            // The file on disk, not `summary.totalSize`. For an App Bundle that property
+            // counts the staged intermediates — it reported 983 MB for a 97 MB bundle — and
+            // this is the one build where the size decides whether it can be uploaded at all.
+            long bytes = File.Exists(AabPath) ? new FileInfo(AabPath).Length : 0L;
+
+            Debug.Log($"[Glimmer] aab {s.result} - {bytes / 1048576} MB on disk, " +
+                      $"version {PlayerSettings.bundleVersion} " +
+                      $"(versionCode {PlayerSettings.Android.bundleVersionCode}), " +
+                      $"{s.totalErrors} error(s), {s.totalWarnings} warning(s) -> {AabPath}");
+
+            if (s.result != BuildResult.Succeeded)
+            {
+                Debug.LogError("[Glimmer] App Bundle build failed; if it mentions Google Play " +
+                               "Services, run Assets > External Dependency Manager > Android " +
+                               "Resolver > Force Resolve");
+                return;
+            }
+
+            // Said on every successful store build rather than written in a document
+            // somebody has to remember to open. Play App Signing re-signs the bundle with a
+            // key Google holds, so the fingerprint the app actually ships with is *not* the
+            // one in the keystore above — and Google Sign-In checks the shipped one.
+            Debug.LogWarning(
+                "[Glimmer] before this build can sign anybody in: copy the SHA-1 from Play " +
+                "Console > Setup > App integrity > App signing key certificate, and add it to " +
+                "the Firebase Android app. Play re-signs the bundle with its own key, so the " +
+                "debug fingerprint that works for sideloaded APKs does not apply here.");
+        }
 
         static void BuildAndroid(bool andRun)
         {

@@ -15,8 +15,13 @@ namespace GlimmerGrove.Content
         /// <summary>Token grammar, kept next to the data it describes.</summary>
         public const string Grammar =
             "head + arms [+ #colour] + /startRotation [+ !] [+ ~turns] [+ &rune]   " +
-            "head: '-' conduit, '*' heart-crystal, '@' sleeping critter, 'x' duskcap, '.' empty   " +
+            "head: '-' conduit, '=' crossing, '*' heart-crystal, '@' sleeping critter, " +
+            "'x' duskcap, '.' empty   " +
             "arms: any of N E S W in the solved orientation   " +
+            "'=' a crossing, written '=NS+EW': two strands of two arms that pass through " +
+            "one another and never meet, so the light entering by one pair leaves only by " +
+            "that pair. A crossing whose strands are joined elsewhere on the board crosses " +
+            "nothing, which the validator says out loud.   " +
             "colour: R G B, Y=R+G, M=R+B, C=G+B, W=R+G+B, A=any   " +
             "'!' marks a rooted tile the player cannot turn   " +
             "'~1'..'~9' a fragile conduit that crumbles after that many turns and leaves " +

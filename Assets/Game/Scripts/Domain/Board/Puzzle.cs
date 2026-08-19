@@ -11,7 +11,7 @@ namespace GlimmerGrove
     /// every load, but analytics and save records travel with level ids that were
     /// authored against a particular meaning of these numbers.
     /// </summary>
-    public enum Kind : byte { Empty = 0, Pipe = 1, Source = 2, Lamp = 3, Duskcap = 4 }
+    public enum Kind : byte { Empty = 0, Pipe = 1, Source = 2, Lamp = 3, Duskcap = 4, Crossing = 5 }
 
     public struct Cell
     {
@@ -40,6 +40,29 @@ namespace GlimmerGrove
         /// ever at stake, only the counter.
         /// </summary>
         public byte fragile;
+
+        /// <summary>
+        /// On a <see cref="Kind.Crossing"/>, the arms of one of its two strands. 0 everywhere else.
+        ///
+        /// <para>
+        /// A crossing carries all four arms in two pairs that never meet, so one mask says
+        /// everything: the other strand is <c>solved &amp; ~cross</c>. Which of the two is
+        /// written down does not matter — the strands are interchangeable labels, and
+        /// <see cref="Puzzle.Alike"/> treats a rotation that swaps them as no rotation at all.
+        /// That is what makes a straight crossing inert and a twisted one worth exactly one
+        /// tap, with no second rule anywhere.
+        /// </para>
+        /// </summary>
+        public byte cross;
+
+        /// <summary>
+        /// A conduit, plain or crossed — the tiles fragility and taproots are allowed to modify.
+        ///
+        /// A crossing is still a length of conduit; it only happens to carry two flows. Asking
+        /// this rather than comparing to <see cref="Kind.Pipe"/> is what stopped the two
+        /// modifiers silently refusing the newest tile on the board.
+        /// </summary>
+        public bool IsConduit => kind == Kind.Pipe || kind == Kind.Crossing;
     }
 
     /// <summary>
@@ -48,12 +71,21 @@ namespace GlimmerGrove
     /// every source inside it, so keeping networks apart is the real puzzle.
     ///
     /// <para>
-    /// Two rules bend that shape rather than adding to it, which is why neither needed a
-    /// second graph or a second pass. A <b>taproot</b> (<see cref="Cell.link"/>) makes
-    /// several conduits turn as one, so a tap stops being a local act; nothing about how
-    /// light travels changes. A <b>duskcap</b> (<see cref="Kind.Duskcap"/>) is an ordinary
-    /// cell in that same graph whose being reached is a failure rather than a success, so
-    /// it costs one term in <see cref="Won"/> and no new traversal at all.
+    /// Three rules bend that shape rather than adding to it, which is why none of them
+    /// needed a second graph or a second pass. A <b>taproot</b> (<see cref="Cell.link"/>)
+    /// makes several conduits turn as one, so a tap stops being a local act; nothing about
+    /// how light travels changes. A <b>duskcap</b> (<see cref="Kind.Duskcap"/>) is an
+    /// ordinary cell in that same graph whose being reached is a failure rather than a
+    /// success, so it costs one term in <see cref="Won"/> and no new traversal at all.
+    /// </para>
+    /// <para>
+    /// A <b>crossing</b> (<see cref="Kind.Crossing"/>) is the third and the only one that
+    /// touches the graph itself, and it does so by splitting a cell rather than by changing
+    /// what a join means: the traversal walks <em>strands</em>, of which an ordinary cell has
+    /// one and a crossing has two. Everything above the walk — colour, lighting, winning,
+    /// par, the near-miss reading — is unchanged, because to all of them a strand is simply
+    /// what a cell always was. That is the whole reason the light model survived a mechanic
+    /// whose entire point is that two networks can occupy one tile.
     /// </para>
     /// </summary>
     public sealed class Puzzle
@@ -75,9 +107,33 @@ namespace GlimmerGrove
         public int Moves;
         public int HintsUsed;
 
-        public readonly int[] Comp;         // group id per cell, -1 for empty
-        public readonly int[] CompColour;   // additive mix per group
-        public readonly int[] Depth;        // steps from the nearest source, -1 if dark
+        /// <summary>
+        /// How many independent flows one cell can carry: one for every tile on the board
+        /// except a <see cref="Kind.Crossing"/>, which carries two.
+        ///
+        /// <para>
+        /// The light graph is indexed by <em>strand</em> rather than by cell, and this is the
+        /// only number that says so. Two rather than "however many" because a crossing is two
+        /// pairs of arms and four arms cannot be split three ways — a fixed two keeps the
+        /// walk's arrays a flat multiple of the board instead of a jagged one, which is what
+        /// makes the whole mechanic cost an index rather than a data structure.
+        /// </para>
+        /// </summary>
+        public const int Strands = 2;
+
+        readonly int[] _comp;         // group id per strand, -1 where no strand exists
+        readonly int[] _compColour;   // additive mix per group
+        readonly int[] _strandDepth;  // steps from the nearest source, per strand, -1 if dark
+
+        /// <summary>
+        /// Steps from the nearest source, per cell, or -1 when no light reaches it.
+        ///
+        /// The nearer of a crossing's two strands, because every caller is staggering an
+        /// animation outward from the light and a tile is drawn once however many flows run
+        /// through it.
+        /// </summary>
+        public readonly int[] Depth;
+
         public readonly bool[] Lit;         // per lamp cell
         public readonly int[] SolutionDepth;
         public bool Won;
@@ -85,6 +141,9 @@ namespace GlimmerGrove
 
         /// <summary>Duskcaps on this board, and how many of them the light has woken.</summary>
         public int DuskcapCount, DuskcapsWoken;
+
+        /// <summary>Crossings on this board: conduits carrying two flows that never meet.</summary>
+        public int CrossingCount;
 
 
         int _groups;
@@ -140,8 +199,9 @@ namespace GlimmerGrove
         {
             Id = id; W_ = w; H_ = h; Tuning = tuning; C = cells;
             Wear = new int[cells.Length];
-            Comp = new int[cells.Length];
-            CompColour = new int[cells.Length];
+            _comp = new int[cells.Length * Strands];
+            _compColour = new int[cells.Length * Strands];
+            _strandDepth = new int[cells.Length * Strands];
             Depth = new int[cells.Length];
             Lit = new bool[cells.Length];
             SolutionDepth = new int[cells.Length];
@@ -149,6 +209,7 @@ namespace GlimmerGrove
             {
                 if (cells[i].kind == Kind.Lamp) LampCount++;
                 else if (cells[i].kind == Kind.Duskcap) DuskcapCount++;
+                else if (cells[i].kind == Kind.Crossing) CrossingCount++;
 
                 int rune = cells[i].link;
                 if (rune == 0 || rune > MaxRunes) continue;
@@ -223,6 +284,53 @@ namespace GlimmerGrove
         public int Mask(int i) => Rotl(C[i].solved, C[i].rot);
 
         /// <summary>
+        /// Whether a cell turned this many quarter turns away from its authored solution is
+        /// indistinguishable from it.
+        ///
+        /// <para>
+        /// <b>Every owed-turn count in the game is this predicate.</b> Par, the move budget,
+        /// the clock, the hint, the near-miss reading and the taproot agreement check all
+        /// reduce to "what is the smallest k for which this is true", and they used to say so
+        /// five times over as <c>Rotl(solved, k) == solved</c>. That copy was correct until a
+        /// tile appeared whose arm mask is not the whole of its orientation: a crossing wears
+        /// all four arms at every angle, so the old test called every crossing solved and every
+        /// twisted one free — a board that validates, derives a plausible par and cannot be
+        /// finished. One rule, in one place, because a proved copy proves nothing.
+        /// </para>
+        /// <para>
+        /// A crossing's two strands are interchangeable labels rather than two different
+        /// things, so a rotation that swaps them has changed nothing the player can see. That
+        /// is the whole reason a straight crossing is inert and a twisted one is worth exactly
+        /// one tap, and it is stated here rather than anywhere else.
+        /// </para>
+        /// </summary>
+        public static bool Alike(in Cell cell, int turns)
+        {
+            int solved = cell.solved;
+            if (Rotl(solved, turns) != solved) return false;
+            if (cell.cross == 0) return true;
+
+            int strand = Rotl(cell.cross, turns);
+            return strand == cell.cross || strand == (solved & ~cell.cross & 15);
+        }
+
+        /// <summary>
+        /// Which of a cell's strands the arm pointing in direction <paramref name="d"/>
+        /// belongs to. Always 0 anywhere but a crossing, which is what lets one walk serve
+        /// both kinds of tile.
+        /// </summary>
+        public int StrandAt(int i, int d)
+        {
+            if (C[i].cross == 0) return 0;
+            return (Rotl(C[i].cross, C[i].rot) & Bits[d]) != 0 ? 0 : 1;
+        }
+
+        /// <summary>How many strands a cell actually has: two on a crossing, one otherwise.</summary>
+        public int StrandCount(int i) => C[i].cross != 0 ? Strands : 1;
+
+        int Node(int cell, int strand) => cell * Strands + strand;
+
+        /// <summary>
         /// How many quarter turns are still owed on this tile, on its own.
         ///
         /// Rarely the number a caller wants — see <see cref="TurnsOwed"/>, which asks the
@@ -231,9 +339,8 @@ namespace GlimmerGrove
         /// </summary>
         public int TurnsOwedAlone(int i)
         {
-            int m = C[i].solved;
             for (int k = 0; k < 4; k++)
-                if (Rotl(m, (C[i].rot + k) & 3) == m) return k;
+                if (Alike(C[i], C[i].rot + k)) return k;
             return 0;
         }
 
@@ -273,8 +380,7 @@ namespace GlimmerGrove
                 {
                     int j = group[m];
                     if (Shattered(j)) continue;
-                    int mask = C[j].solved;
-                    if (Rotl(mask, (C[j].rot + k) & 3) != mask) { all = false; break; }
+                    if (!Alike(C[j], C[j].rot + k)) { all = false; break; }
                 }
                 if (all) return k;
             }
@@ -349,11 +455,7 @@ namespace GlimmerGrove
         }
 
         /// <summary>Whether this tile alone reads the same at every angle.</summary>
-        public bool InertAlone(int i)
-        {
-            int m = C[i].solved;
-            return Rotl(m, 1) == m;
-        }
+        public bool InertAlone(int i) => Alike(C[i], 1);
 
         /// <summary>
         /// Tiles whose four orientations are identical never need a turn.
@@ -420,52 +522,85 @@ namespace GlimmerGrove
         public void Evaluate()
         {
             int n = C.Length;
-            for (int i = 0; i < n; i++) { Comp[i] = -1; Depth[i] = -1; Lit[i] = false; }
+            int nodes = n * Strands;
+            for (int k = 0; k < nodes; k++) { _comp[k] = -1; _strandDepth[k] = -1; }
+            for (int i = 0; i < n; i++) { Depth[i] = -1; Lit[i] = false; }
             _groups = 0;
 
-            for (int i = 0; i < n; i++)
+            for (int start = 0; start < nodes; start++)
             {
-                if (!Used(i) || Comp[i] != -1) continue;
+                int cell = start / Strands, strand = start % Strands;
+                if (!Used(cell) || _comp[start] != -1) continue;
+                if (strand >= StrandCount(cell)) continue;
+
                 int g = _groups++;
                 int colour = 0;
                 _q.Clear();
-                _q.Enqueue(i);
-                Comp[i] = g;
+                _q.Enqueue(start);
+                _comp[start] = g;
                 while (_q.Count > 0)
                 {
-                    int a = _q.Dequeue();
+                    int node = _q.Dequeue();
+                    int a = node / Strands, onA = node % Strands;
                     if (C[a].kind == Kind.Source) colour |= C[a].colour;
                     int ma = Mask(a);
                     for (int d = 0; d < 4; d++)
                     {
                         if ((ma & Bits[d]) == 0) continue;
+
+                        // An arm belongs to exactly one of its cell's strands, so a crossing's
+                        // two flows never meet however tangled the board around them is.
+                        if (StrandAt(a, d) != onA) continue;
+
                         int b = Neighbour(a, d);
-                        if (b < 0 || Comp[b] != -1) continue;
-                        if ((Mask(b) & Bits[(d + 2) & 3]) == 0) continue;
-                        Comp[b] = g;
-                        _q.Enqueue(b);
+                        if (b < 0) continue;
+                        int back = (d + 2) & 3;
+                        if ((Mask(b) & Bits[back]) == 0) continue;
+
+                        int into = Node(b, StrandAt(b, back));
+                        if (_comp[into] != -1) continue;
+                        _comp[into] = g;
+                        _q.Enqueue(into);
                     }
                 }
-                CompColour[g] = colour;
+                _compColour[g] = colour;
             }
 
             // light travel distance, so the glow can ripple outward from the sources
             _q.Clear();
             for (int i = 0; i < n; i++)
-                if (Used(i) && C[i].kind == Kind.Source) { Depth[i] = 0; _q.Enqueue(i); }
+                if (Used(i) && C[i].kind == Kind.Source) { _strandDepth[Node(i, 0)] = 0; _q.Enqueue(Node(i, 0)); }
             while (_q.Count > 0)
             {
-                int a = _q.Dequeue();
+                int node = _q.Dequeue();
+                int a = node / Strands, onA = node % Strands;
                 int ma = Mask(a);
                 for (int d = 0; d < 4; d++)
                 {
                     if ((ma & Bits[d]) == 0) continue;
+                    if (StrandAt(a, d) != onA) continue;
+
                     int b = Neighbour(a, d);
-                    if (b < 0 || Depth[b] >= 0) continue;
-                    if ((Mask(b) & Bits[(d + 2) & 3]) == 0) continue;
-                    Depth[b] = Depth[a] + 1;
-                    _q.Enqueue(b);
+                    if (b < 0) continue;
+                    int back = (d + 2) & 3;
+                    if ((Mask(b) & Bits[back]) == 0) continue;
+
+                    int into = Node(b, StrandAt(b, back));
+                    if (_strandDepth[into] >= 0) continue;
+                    _strandDepth[into] = _strandDepth[node] + 1;
+                    _q.Enqueue(into);
                 }
+            }
+
+            for (int i = 0; i < n; i++)
+            {
+                int near = _strandDepth[Node(i, 0)];
+                if (StrandCount(i) > 1)
+                {
+                    int other = _strandDepth[Node(i, 1)];
+                    if (near < 0 || (other >= 0 && other < near)) near = other;
+                }
+                Depth[i] = near;
             }
 
             LampsLit = 0;
@@ -501,8 +636,41 @@ namespace GlimmerGrove
         public bool Woken(int i) => C[i].kind == Kind.Duskcap && Lit[i];
 
 
-        /// <summary>Energy currently reaching a cell.</summary>
-        public int Energy(int i) => Comp[i] < 0 ? 0 : CompColour[Comp[i]];
+        /// <summary>
+        /// Energy currently reaching a cell, on every strand it has.
+        ///
+        /// A crossing is the only tile that can be answering two different colours at once,
+        /// and it is never a critter, a heart-crystal or a duskcap — so the union is only ever
+        /// read by the drawing, and the rules that care about an exact colour ask a cell that
+        /// has one strand.
+        /// </summary>
+        public int Energy(int i)
+        {
+            int mix = EnergyOn(i, 0);
+            if (StrandCount(i) > 1) mix |= EnergyOn(i, 1);
+            return mix;
+        }
+
+        /// <summary>Energy reaching one strand of a cell. Strand 0 is the whole of an ordinary tile.</summary>
+        public int EnergyOn(int i, int strand)
+        {
+            if (strand >= StrandCount(i)) return 0;
+            int g = _comp[Node(i, strand)];
+            return g < 0 ? 0 : _compColour[g];
+        }
+
+        /// <summary>Whether two of a cell's arms carry the same flow — false across a crossing.</summary>
+        public bool SameStrand(int i, int a, int b) => StrandAt(i, a) == StrandAt(i, b);
+
+        /// <summary>
+        /// Which network a strand belongs to, or -1 where there is no strand.
+        ///
+        /// Exposed for the validator alone, which has to be able to ask whether a crossing's
+        /// two flows are the same flow joined up somewhere else on the board — the one thing
+        /// about the mechanic that cannot be seen from a single tile.
+        /// </summary>
+        public int Comp(int i, int strand)
+            => strand >= StrandCount(i) ? -1 : _comp[Node(i, strand)];
 
         public int Neighbour(int i, int d)
         {
@@ -512,24 +680,58 @@ namespace GlimmerGrove
             return Used(j) ? j : -1;
         }
 
+        /// <summary>
+        /// Which strand an arm belongs to in the <em>authored solution</em>, ignoring however
+        /// the tile happens to be turned right now.
+        ///
+        /// The solution walk has to ask this rather than <see cref="StrandAt"/>, because it is
+        /// measuring the board the level was authored as — a crossing turned away from its
+        /// solution would otherwise route the walk down the wrong pair and call half the
+        /// board decoration.
+        /// </summary>
+        int SolvedStrandAt(int i, int d)
+        {
+            if (C[i].cross == 0) return 0;
+            return (C[i].cross & Bits[d]) != 0 ? 0 : 1;
+        }
+
         void ComputeSolutionDepth()
         {
+            int nodes = C.Length * Strands;
+            var reach = new int[nodes];
+            for (int k = 0; k < nodes; k++) reach[k] = int.MaxValue;
             for (int i = 0; i < C.Length; i++) SolutionDepth[i] = int.MaxValue;
+
             var q = new Queue<int>();
             for (int i = 0; i < C.Length; i++)
-                if (Used(i) && C[i].kind == Kind.Source) { SolutionDepth[i] = 0; q.Enqueue(i); }
+                if (Used(i) && C[i].kind == Kind.Source) { reach[Node(i, 0)] = 0; q.Enqueue(Node(i, 0)); }
+
             while (q.Count > 0)
             {
-                int a = q.Dequeue();
+                int node = q.Dequeue();
+                int a = node / Strands, onA = node % Strands;
                 for (int d = 0; d < 4; d++)
                 {
                     if ((C[a].solved & Bits[d]) == 0) continue;
+                    if (SolvedStrandAt(a, d) != onA) continue;
+
                     int b = Neighbour(a, d);
-                    if (b < 0 || SolutionDepth[b] != int.MaxValue) continue;
-                    if ((C[b].solved & Bits[(d + 2) & 3]) == 0) continue;
-                    SolutionDepth[b] = SolutionDepth[a] + 1;
-                    q.Enqueue(b);
+                    if (b < 0) continue;
+                    int back = (d + 2) & 3;
+                    if ((C[b].solved & Bits[back]) == 0) continue;
+
+                    int into = Node(b, SolvedStrandAt(b, back));
+                    if (reach[into] != int.MaxValue) continue;
+                    reach[into] = reach[node] + 1;
+                    q.Enqueue(into);
                 }
+            }
+
+            for (int i = 0; i < C.Length; i++)
+            {
+                int near = reach[Node(i, 0)];
+                if (StrandCount(i) > 1) near = Mathf.Min(near, reach[Node(i, 1)]);
+                SolutionDepth[i] = near;
             }
         }
 

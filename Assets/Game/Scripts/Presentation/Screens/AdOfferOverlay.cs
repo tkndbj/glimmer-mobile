@@ -4,6 +4,7 @@ using GlimmerGrove.Ads;
 using GlimmerGrove.Daily;
 using GlimmerGrove.Localization;
 using GlimmerGrove.Persistence;
+using GlimmerGrove.Store;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -144,6 +145,7 @@ namespace GlimmerGrove
         const float StatusH = 92f;
         const float ButtonH = 148f;
         const float DeclineH = 108f;
+        const float ShopH = 96f;
         const float FootRoom = 44f;
 
         Btn _watch;
@@ -154,6 +156,26 @@ namespace GlimmerGrove
         Text[] _factLines;
         bool _watching;
         bool _paid;
+
+        /// <summary>
+        /// Whether this panel offers a way through to the shop.
+        ///
+        /// <para>
+        /// Only the two placements a player can safely walk away from. The run continue's
+        /// board is frozen mid-defeat, so leaving forfeits the run; the win bonus sits inside
+        /// the victory sequence, and a shop button there would take somebody off the panel
+        /// that is still telling them how the run went.
+        /// </para>
+        /// <para>
+        /// It also needs the shop to actually work. <c>StoreService.IsAvailable</c> is false
+        /// in a build with no store SDK and in every Editor session, and a button leading to
+        /// a screen with nothing on it is worse than no button — the same judgement the watch
+        /// button makes about a placement the content table does not carry.
+        /// </para>
+        /// </summary>
+        bool ShowsShop
+            => StoreService.IsAvailable &&
+               (PlacementId == AdPlacement.HeartRefill || PlacementId == AdPlacement.CoinBonus);
 
         protected override void Build()
         {
@@ -176,6 +198,20 @@ namespace GlimmerGrove
 
             float declineY = 0f;
             if (decline) { y += 14f; declineY = y + DeclineH * .5f; y += DeclineH; }
+
+            // A quiet way through to the shop, on the two placements opened from somewhere
+            // a player can leave. Not on the run continue — the board behind it is frozen
+            // mid-defeat and navigating away would forfeit the run — and not on the win
+            // bonus, which sits inside the victory sequence.
+            //
+            // It is here rather than on the hub because this panel is already the answer to
+            // "how do I get more of this", and a resource panel that lists every way except
+            // the one that works instantly is a panel being coy. A slim button under the
+            // watch button, in the gem colour, so it reads as the other kind of answer.
+            bool shop = ShowsShop;
+
+            float shopY = 0f;
+            if (shop) { y += 12f; shopY = y + ShopH * .5f; y += ShopH; }
 
             y += FootRoom;
 
@@ -211,6 +247,16 @@ namespace GlimmerGrove
                 UIKit.TextButton("Decline", Panel, "btn_gray", Loc.Get("ui.ads.continue_decline"), 38,
                                  new Vector2(600f, DeclineH), new Vector2(.5f, 1f),
                                  new Vector2(0f, -declineY), () => Close());
+
+            if (shop)
+            {
+                var button = UIKit.TextButton("Shop", Panel, "btn_violet", Loc.Get("ui.ads.to_shop"), 32,
+                                              new Vector2(600f, ShopH), new Vector2(.5f, 1f),
+                                              new Vector2(0f, -shopY),
+                                              () => Close(() => Flow.Go<ShopScreen>()), "ic_gem");
+                UIKit.Shrinkable(button.Label, 18);
+                UIKit.FitLabel(button);
+            }
 
             // A corner cross rather than a second full-width button. Nobody taps "not now",
             // and a whole button spent on the option to decline reads as a panel that

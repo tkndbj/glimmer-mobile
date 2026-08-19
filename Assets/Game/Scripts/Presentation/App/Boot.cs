@@ -4,6 +4,7 @@ using GlimmerGrove.AssetPipeline;
 using GlimmerGrove.Cloud;
 using GlimmerGrove.Content;
 using GlimmerGrove.Persistence;
+using GlimmerGrove.Store;
 using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.UI;
@@ -96,6 +97,30 @@ namespace GlimmerGrove
             }
 #endif
 
+            // The shop, chosen the same way and inert by the same default. One gate here
+            // rather than two, unlike the ads above: a store product costs nothing to ask
+            // about and a store that has never heard of one simply leaves its card out, so
+            // there is no equivalent of an ad unit that fails silently for ever. The
+            // connection itself is started from the splash, not here — see SplashScreen —
+            // because it is a network round trip and the boot path may not wait on one.
+#if GLIMMER_IAP
+            StoreService.UseBackend(new Iap.UnityIapBackend());
+#endif
+
+            // What a purchase bought, wherever the player happens to be standing.
+            //
+            // Hung on the event here rather than raised by the shop, for the reason the
+            // rename sync is: a grant does not arrive while somebody is looking at the shop.
+            // The payment sheet outlives the screen that opened it — on Android it outlives
+            // the process — and a purchase interrupted by a crash is credited on the *next*
+            // launch, from the splash, with the hub on screen. Both of those are the moments
+            // a player most needs telling, and a shop screen listening for itself would miss
+            // exactly them.
+            StoreService.Granted += grant =>
+            {
+                if (grant.IsValid) Flow.Modal<ShopGrantOverlay>(v => v.Grant = grant);
+            };
+
 #if UNITY_EDITOR || DEVELOPMENT_BUILD
             Telemetry.AddSink(new DebugAnalyticsSink());
 #endif
@@ -184,8 +209,15 @@ namespace GlimmerGrove
                 // Application is a Presentation type and the policy it feeds is meant to
                 // be runnable in the test suite without one. Unscaled, since a paused game
                 // is still a device that may have just found a signal.
-                CloudSaveService.Tick(Time.unscaledDeltaTime,
-                                      Application.internetReachability != NetworkReachability.NotReachable);
+                bool online = Application.internetReachability != NetworkReachability.NotReachable;
+
+                CloudSaveService.Tick(Time.unscaledDeltaTime, online);
+
+                // A purchase that has been paid for and not yet credited is retried on the
+                // same clock. It has to be driven from here rather than from the shop: the
+                // player who is owed gems is quite often not standing in the shop, and on
+                // Google an unacknowledged purchase is refunded after three days.
+                StoreService.Tick(Time.unscaledDeltaTime, online);
             }
 
             void OnApplicationPause(bool paused)
@@ -198,6 +230,12 @@ namespace GlimmerGrove
                     // just done something about the connection.
                     CloudSaveService.ResetBackoff();
                     CloudSaveService.BeginSync();
+
+                    // Same reasoning, and it matters more here: a device that has been
+                    // asleep overnight is sitting at the retry backoff's ceiling, and the
+                    // one thing worse than a purchase that has not landed is one that has
+                    // not landed and is five minutes from being looked at again.
+                    StoreService.Resumed();
                 }
             }
 

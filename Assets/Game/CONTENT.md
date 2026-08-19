@@ -114,8 +114,10 @@ Two consequences worth holding on to:
    about collisions, backwards trails and anything crowding the end-of-chapter
    marker. More levels means more `mapStrips`, not tighter packing — which in
    practice means **the strip art decides how long a chapter is**. The Shallows
-   runs to ten glades because its source image held six 1200px slices; work that
-   out before authoring boards, not after.
+   runs to ten glades because its source image held six 1200px slices; the Mill Vale
+   runs to ten over four, because its source is shorter and `make_chapter_art.py`
+   scales to whole strips rather than stretching to them. Work that out before
+   authoring boards, not after.
 4. Add `chapter.<id>.name` and, per level, `level.<id>.name` / `.tagline` /
    `.lesson` to `loc/en.json`. Missing keys fail validation, which names each one.
 5. `Glimmer Grove ▸ Content ▸ Sync Manifest` — adopts the new chapter into
@@ -147,16 +149,44 @@ it is never opened, and the drop ships without it behind a green build. Sync ado
 it, and the build gate fails on one that slipped through anyway.
 
 Drop new art into `Assets/Game/Art/…` at any point; it is given an address and
-filed into the right bundle group on import. Nothing to remember, nothing to run.
+filed into the right bundle group on import. Nothing to remember, nothing to run —
+*while the Editor is open*. Art copied in by a script with Unity closed arrives
+unaddressed and draws as nothing, so anything that writes art while the Editor is
+shut ends by telling you to run `Glimmer Grove ▸ Addressables ▸ Sync All Assets`.
+The build gate's audit is what stops that ever shipping.
+
+### Cutting a chapter's art
+
+`python Tools/make_chapter_art.py <chapter_id> --source <pack folder>` writes both
+halves of a chapter's art: the map strips named in `mapStrips`, sliced **bottom
+upward** out of one tall image, and one graded 720×1280 backdrop for the chapter and
+every backdrop a level overrides.
+
+`Tools/chapter_art.tsv` is one row per chapter and says only which source images to
+cut from — the names and the palette are read out of the chapter's own JSON. So
+retuning a glade's `accent`/`slate` regrades its backdrop with nothing else to edit,
+and an eleventh glade gets an eleventh backdrop by being authored. It is
+`AssetManifest.ChapterAssets`' rule from the other end of the pipeline: art is
+derived from the catalog, never hand-listed.
+
+Two things it will not do. It **scales the map to whole strips and never stretches
+it**, trimming the surplus width from the centre — a 3% vertical stretch makes every
+tree on the map the wrong shape, which reads as cheapness rather than as an error.
+And it **grades a backdrop rather than merely darkening it**: the source is reduced
+to luminance, softened and mapped onto a three-stop ramp built from the level's own
+slate and accent, which is what lets ten glades share two source paintings without
+looking like ten crops of two paintings.
 
 ## Token grammar
 
 ```
 head + arms [+ #colour] + /startRotation [+ !] [+ ~turns] [+ &rune]
+crossings: = armsA + armsB + /startRotation [+ !] [+ ~turns] [+ &rune]
 
-head   -  conduit    *  heart-crystal    @  sleeping critter
-       x  duskcap    .  empty
+head   -  conduit    =  crossing    *  heart-crystal
+       @  sleeping critter    x  duskcap    .  empty
 arms   any of N E S W, written in the SOLVED orientation
+A+B    on a crossing only: the arms of one strand, then the arms of the other
 colour R G B, Y=R+G, M=R+B, C=G+B, W=R+G+B, A=any
 /0..3  quarter turns clockwise the tile starts away from its solution
 !      rooted: the player cannot turn this tile
@@ -193,6 +223,40 @@ A rune only one conduit carries is an error, not a shrug: it draws a binding mar
 on a tile bound to nothing. A bound conduit may not also be rooted (`!`) or
 brittle (`~`) — the first is a contradiction, and the second would break several
 conduits on one tap when only one can be reported as the tile that gave way.
+
+**Crossings (`=`)** carry two flows through one tile and never let them meet.
+Written `=NS+EW` or `=NE+SW`: four arms in two pairs of two, one pair either side of
+the `+`, and which pair you write first does not matter — the strands are
+interchangeable labels. Light entering by one arm can only leave by the arm that
+shares its strand.
+
+This is the only rule so far that touches the light graph itself, and it does so by
+splitting a cell rather than by changing what a join means. Four things follow, and
+three of them are the validator's business:
+
+- **A straight crossing (`=NS+EW`) can never be turned.** Rotating it swaps which
+  strand is called which and nothing on the board can tell, so it is inert, owes no
+  turns and costs nothing in par. It is architecture — a bridge somebody built.
+- **A twisted crossing (`=NE+SW`) is worth exactly one tap, however far out it is
+  authored**, because two turns is the same tile again. That is the whole of what
+  `Puzzle.Alike` exists to say, and it is why every owed-turn count in the game asks
+  it rather than comparing arm masks: a crossing wears all four arms at every angle,
+  so a mask comparison calls every one of them solved and derives a par short by one
+  per twisted crossing.
+- **A crossing whose two strands are joined elsewhere crosses nothing**, and the
+  validator says so. The player will spend turns routing around a separation that is
+  not there. A warning rather than an error — a loop that leaves by one arm and comes
+  back by another has to close somewhere, so it is a question about intent.
+- **A crossing takes no colour and has no hub.** The hub disc is what this board means
+  by "these arms are joined", so a crossing simply does not draw one, and the strand
+  that passes over wears a shadow. That is the whole of how it is told from a
+  crossroads, in any language.
+
+What it unlocks is worth knowing before authoring with it, because it changes a rule
+the last chapter stated flatly. **A duskcap's island of dark can now run *through* the
+light rather than only around it.** In the solution every arm mates, so a lit cell's
+neighbours are lit — which used to force the dark to detour. Across a crossing it does
+not, and the misrotation that joins the two is a real and recoverable trap.
 
 **Duskcaps (`x`)** are creatures the light must never reach. Any light at all
 wakes one, and a glade with a woken duskcap is not finished however many critters
@@ -860,6 +924,109 @@ it can.
 
 Re-seed after any change here (`npm run seed`), or the client offers one number and the
 wallet receives another.
+
+### The shop
+
+The `store` block of `progression.json` is what the shop sells, and it is the only block
+in this file the **server also reads**: `seed-config.mjs` derives `config/products` from
+it, so the amount printed on a card and the amount a receipt is honoured for are one
+authored list rather than two. That is invariant 9a applied to money, and it is why there
+is no longer a hand-maintained `products.json`.
+
+```json
+"store": {
+  "products": [
+    { "id": "gg_gems_3", "kind": "consumable", "shelf": "gems",
+      "gems": 750, "referenceUsdCents": 599, "badge": "popular" },
+
+    { "id": "gg_bundle_starter", "kind": "nonconsumable", "shelf": "bundles",
+      "credits": 7500, "gems": 500, "referenceUsdCents": 299, "badge": "starter" }
+  ],
+  "goods": [
+    { "id": "hearts_five", "kind": "hearts",      "amount": 5,  "gems": 50 },
+    { "id": "boost_day",   "kind": "heart_boost", "amount": 24, "gems": 30 }
+  ]
+}
+```
+
+A **product** is bought with money. A **good** is bought with gems. The split is not a
+presentation choice — see below.
+
+**There is no price field, and there must never be one.** A price lives in App Store
+Connect and the Play Console, is set per storefront, moves with tax and exchange rates,
+and comes back from the store SDK already formatted for the player's own locale. Drawing
+anything else is wrong in most of the world and a review risk in all of it.
+`referenceUsdCents` is **never shown**: it exists so the build gate can prove the ladder
+gets better as it gets bigger, and so the "+40% EXTRA" ribbon can be *derived* from the
+prices rather than typed beside them.
+
+**A product id is permanent**, in invariant 1's full sense. It keys a receipt document
+that lives for ever, neither store lets one be reused after deletion, and a receipt
+redeemed a year from now is looked up against whatever the table says then. Retune by
+adding a product, never by repointing one.
+
+**`kind` is the store's word, not ours.** A `nonconsumable` is sold once per store
+account and both stores enforce that themselves, before any money moves — which is how
+the starter offer is made one-time without a flag in the save file that two devices would
+have to agree about. It is also why one-time offers are exempt from the ladder check: a
+starter pack is deliberately worth several times the ladder and cannot undercut it,
+because it cannot be bought twice.
+
+#### A product may only ever grant currency
+
+This is the load-bearing decision of the whole feature. Currency is the one thing the
+server owns (invariant 10), so it can be granted against a validated receipt with no
+client involvement at all. Hearts and boosts live in the save file and are applied by the
+phone — so a product granting both would need the client to apply half a purchase after
+the server applied the other half, which means a record in the save of "did I already
+apply this transaction's hearts": a new field, merged across devices, whose failure mode
+is somebody paying and receiving nothing.
+
+So hearts and boosts are bought with **gems** instead, and a gem debit is an ordinary
+`CurrencyLedger.TrySpend` — idempotent, offline-capable, and refused by the server on the
+next sync if the derived balance could not cover it. It is the same two lines that buy a
+companion. Selling hearts for money directly would mean a permanent store product per
+bundle, priced in every storefront, undeletable, and re-priced by hand every time the
+heart gate is retuned, in exchange for nothing a player can tell apart.
+
+The corollary: **a good may not pay currency.** `hearts` and `heart_boost` are the whole
+list, and `StoreCatalog` refuses anything else by name rather than clamping it.
+
+#### The ordering that makes a purchase safe
+
+A purchase arrives from the store as an **unfinished** transaction. It is handed to our
+own server, which asks Apple or Google whether it really happened, records it against a
+globally unique key, and grants the currency. *Only then* is the transaction confirmed
+with the store.
+
+Everything that can go wrong is therefore some flavour of "still unfinished", and both
+stores re-deliver an unfinished transaction on every launch until it is confirmed — a
+crash, a flat battery, a tunnel, a force-quit, a server outage. That is why there is no
+per-purchase state anywhere in the save file: the store is already keeping the record,
+far more reliably than a client could.
+
+Google's three-day rule is the one real deadline: an unacknowledged Play purchase is
+refunded automatically, and confirming is what acknowledges it. Hence a retry that is
+aggressive rather than polite — immediately, then on a doubling backoff, then on every
+reconnection and every foreground.
+
+#### After editing the block
+
+```
+npm --prefix firebase/functions run build
+node firebase/seed/seed-config.mjs
+```
+
+Then `Glimmer Grove ▸ Validate Content`. It **errors** — not warns, unlike every other
+block in this file — on a ladder that gets worse as it gets bigger, on a good that can
+never be bought (hearts above the ceiling, a boost past the cap), and on a product with
+no `store.product.<id>` string. Every other block here describes what play pays and an
+aggressive tuning is a legitimate weekend decision; this one describes what somebody is
+charged, and the only way to put a wrong figure right afterwards is one refund at a time.
+
+`python Tools/verify/content.py` checks the same things from a terminal and prints the
+shop against the income that has to pay for it — what a day of free play collects, and
+how many days the whole catalog of credit sinks comes to.
 
 ### The rule exists twice
 

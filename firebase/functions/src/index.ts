@@ -36,7 +36,11 @@ import {
   parseStreakClaim, raise, readSavedStreak, saveSupports, StreakClaim,
   streakCurrencyValue, usableStreakConfig,
 } from "./streak";
-import { ReceiptRejected, validateReceipt } from "./receipts";
+import { grantEntries, readProduct } from "./products";
+import { ReceiptRejected, lookupAppleTransaction, validateReceipt } from "./receipts";
+import {
+  listVoidedPurchases, recordSweep, revokeReceipt, sweepWindow, transactionIdsIn,
+} from "./refunds";
 import { rebuildStats } from "./stats";
 import {
   deriveEarned,
@@ -80,7 +84,18 @@ const callOptions = { region: REGION, cors: false, enforceAppCheck: false } as c
 const UNSET = "UNSET";
 
 function configured(secret: { value: () => string }): string | undefined {
-  const value = secret.value();
+  // Trimmed, and the byte-order mark is stripped by name. Secret Manager stores exactly
+  // the bytes it is given, and the two ordinary ways of setting one — a file written by a
+  // Windows editor, or a shell that appends a newline — both produce a value that is not
+  // equal to the sentinel. That turns "not configured" into "configured with garbage":
+  // the placeholder would be handed to JSON.parse as if it were a service account, and the
+  // clear "validation is not configured on this deployment" refusal would be replaced by an
+  // unexplained parse failure. Observed live on GOOGLE_PLAY_SERVICE_ACCOUNT, which was
+  // holding a BOM followed by UNSET.
+  //
+  // Trimming is safe for all four: two are opaque identifiers, one is a JSON document, and
+  // a PEM is unaffected by surrounding whitespace.
+  const value = secret.value()?.replace(/^﻿/, "").trim();
   return !value || value === UNSET ? undefined : value;
 }
 
@@ -639,21 +654,40 @@ export const adReward = onRequest(
 /**
  * Validates a store receipt and grants what the product catalog says it is worth.
  *
- * Two properties are doing the work here.
+ * Three properties are doing the work here, and each closes a different attack.
  *
- * The amount comes from `config/products` on the server, never from the request. A
- * client that names its own reward names any number it likes.
+ * **The amount comes from `config/products` on the server, never from the request.** A
+ * client that names its own reward names any number it likes, and this is the one place
+ * where the number is backed by a real payment and therefore impossible to argue with
+ * after the fact.
  *
- * The grant is keyed on a global receipt document, not a per-player one. Receipt
+ * **The grant is keyed on a global receipt document, not a per-player one.** Receipt
  * replay across accounts is an automated, industrialised attack: one genuine purchase
  * funding thousands of accounts. Keying per player would validate every one of them.
+ *
+ * **A retry reports success and grants nothing.** The client cannot finish a transaction
+ * with the store until this returns, so a lost reply is redeemed again on the next
+ * launch — every time, for as long as it takes. That is only safe because the second
+ * attempt collides with a document that already exists.
+ *
+ * A product may grant more than one currency, because a bundle does. What it may never
+ * grant is anything that is not currency: hearts and boosts live in the player's save
+ * file and are applied by the phone, so a product that promised them would need the
+ * client to apply half a purchase after the server applied the other half — and a record
+ * of "did I already apply this transaction's hearts" is a new field in the save whose
+ * failure mode is somebody paying and receiving nothing. Hearts are bought with gems
+ * instead. See `StoreProduct` on the client for the argument in full.
  */
 export const redeemPurchase = onCall(
   {
     ...callOptions,
     secrets: [APPLE_KEY_ID, APPLE_ISSUER_ID, APPLE_PRIVATE_KEY, GOOGLE_PLAY_SERVICE_ACCOUNT],
   },
-  async (request): Promise<{ wallets: WalletReply[]; granted: number; currency: string }> => {
+  async (request): Promise<{
+    wallets: WalletReply[];
+    granted: Record<string, number>;
+    alreadyGranted: boolean;
+  }> => {
     const uid = requireUid(request);
     const db = getFirestore();
 
@@ -677,24 +711,27 @@ export const redeemPurchase = onCall(
       throw new HttpsError("unavailable", "could not reach the store to validate this purchase");
     }
 
-    const products = (await db.doc(PATHS.productsConfig).get()).data() as
-      | Record<string, { currency?: string; amount?: number }>
-      | undefined;
+    const products = (await db.doc(PATHS.productsConfig).get()).data();
 
-    const product = products?.[purchase.productId];
-    if (!product || typeof product.amount !== "number" || product.amount <= 0) {
+    let grant;
+    try {
+      grant = readProduct(products, purchase.productId);
+    } catch (error) {
+      // Loud, and deliberately so. This is a real payment the game cannot honour, and
+      // the client will not finish the transaction — so on Google it is refunded
+      // automatically in three days. Adding the product to config/products and re-seeding
+      // before then turns it back into an ordinary purchase with no support case at all.
       logger.error("a valid purchase names a product this server does not sell", {
-        uid, productId: purchase.productId,
+        uid, productId: purchase.productId, store: purchase.store,
+        message: error instanceof Error ? error.message : String(error),
       });
-      throw new HttpsError("failed-precondition", `product ${purchase.productId} is not configured`);
+      throw new HttpsError(
+        "failed-precondition",
+        `product ${purchase.productId} is not configured`
+      );
     }
 
-    const currency = (product.currency ?? "credits") as CurrencyId;
-    if (!CURRENCIES.includes(currency)) {
-      throw new HttpsError("failed-precondition", `product ${purchase.productId} names an unknown currency`);
-    }
-
-    const amount = Math.floor(product.amount);
+    const entries = grantEntries(grant);
     const receiptRef = db.doc(PATHS.receipt(purchase.store, purchase.transactionId));
 
     const result = await db.runTransaction(async (transaction) => {
@@ -717,35 +754,192 @@ export const redeemPurchase = onCall(
           throw new HttpsError("permission-denied", "this purchase has already been redeemed");
         }
 
-        // Same player, same transaction: a retry. Report success without granting
-        // again, so a lost response cannot cost the player their purchase or hand
-        // them a second one.
-        return { state, granted: 0 };
+        // Same player, same transaction: a retry. Report success without granting again,
+        // so a lost response cannot cost the player their purchase or hand them a second
+        // one. The client reads `alreadyGranted` and skips the celebration rather than
+        // congratulating somebody for reopening the app.
+        return { state, granted: {} as Record<string, number>, already: true };
+      }
+
+      const granted: Record<string, number> = {};
+
+      for (const [currency, amount] of entries) {
+        state[currency].granted += amount;
+        granted[currency] = amount;
       }
 
       transaction.set(receiptRef, {
         uid,
         store: purchase.store,
         productId: purchase.productId,
-        currency,
-        amount,
+        kind: grant.kind,
+        granted,
         sandbox: purchase.sandbox,
         purchasedAt: Timestamp.fromMillis(purchase.purchasedAtMillis),
         grantedAt: FieldValue.serverTimestamp(),
+
+        // Written now so a later revocation can find the wallet to reverse without a
+        // second lookup, and so a refunded receipt is distinguishable from one that was
+        // never granted. See `revokeReceipt`.
+        revokedAt: null,
       });
 
-      state[currency].granted += amount;
       transaction.set(walletRef, { ...state, updatedAt: FieldValue.serverTimestamp() });
 
-      return { state, granted: amount };
+      return { state, granted, already: false };
     });
 
     logger.info("purchase redeemed", {
       uid, store: purchase.store, productId: purchase.productId,
-      granted: result.granted, sandbox: purchase.sandbox,
+      granted: result.granted, already: result.already, sandbox: purchase.sandbox,
     });
 
-    return { wallets: toReply(result.state, {}), granted: result.granted, currency };
+    return {
+      wallets: toReply(result.state, {}),
+      granted: result.granted,
+      alreadyGranted: result.already,
+    };
+  }
+);
+
+// ------------------------------------------------------------------- refunds
+/**
+ * App Store Server Notifications V2. Apple tells us a transaction changed.
+ *
+ * <p><b>Nothing in the request is trusted.</b> The body is scraped for transaction ids,
+ * each one is matched against a receipt this server actually granted, and only then is
+ * Apple asked — over TLS, with a key only we hold — whether that transaction has been
+ * revoked. Apple's own answer is what moves the money. So the worst a forged POST can do
+ * is make this server look up a handful of transactions and be told they are fine.</p>
+ *
+ * <p>That is why there is no JWS chain verification here, and it is a deliberate position
+ * rather than a shortcut: verifying the x5c chain would mean shipping and rotating
+ * Apple's root certificate, or taking a dependency that does, inside the one code path
+ * that reverses money — for a guarantee already obtained from the lookup. See
+ * `transactionIdsIn`, which states the condition this rests on.</p>
+ *
+ * <p>Always answers 200. Apple retries a non-200 for hours and then gives up; since this
+ * function decides for itself what is true, a body it could not read is nothing to retry.
+ * A lookup that genuinely failed is caught by the next notification for the same
+ * transaction, and by nothing else — which is acceptable because Apple sends several over
+ * the life of a refund.</p>
+ *
+ * <p>Set the URL in App Store Connect ▸ App Information ▸ App Store Server Notifications,
+ * for both the production and the sandbox environment.</p>
+ */
+export const appleNotification = onRequest(
+  {
+    region: REGION,
+    secrets: [APPLE_KEY_ID, APPLE_ISSUER_ID, APPLE_PRIVATE_KEY],
+    // Apple does not need one and this endpoint is not a browser destination.
+    cors: false,
+  },
+  async (request, response) => {
+    const keyId = configured(APPLE_KEY_ID);
+    const issuerId = configured(APPLE_ISSUER_ID);
+    const privateKey = configured(APPLE_PRIVATE_KEY);
+
+    if (!keyId || !issuerId || !privateKey) {
+      logger.warn("an App Store notification arrived before Apple validation was configured");
+      response.status(200).send("ok");
+      return;
+    }
+
+    const body = typeof request.rawBody?.toString === "function"
+      ? request.rawBody.toString("utf8")
+      : JSON.stringify(request.body ?? {});
+
+    const ids = transactionIdsIn(body);
+
+    if (ids.length === 0) {
+      logger.info("an App Store notification named no transaction");
+      response.status(200).send("ok");
+      return;
+    }
+
+    const db = getFirestore();
+    const secrets = { keyId, issuerId, privateKey, bundleId: BUNDLE_ID };
+    let revoked = 0;
+
+    for (const transactionId of ids) {
+      // Only ids this server has actually granted are worth a round trip. That bound is
+      // what stops an unauthenticated endpoint being a way to make us call Apple all day.
+      const receipt = await db.doc(PATHS.receipt("apple", transactionId)).get();
+      if (!receipt.exists) continue;
+      if ((receipt.data() as { revokedAt?: unknown })?.revokedAt) continue;
+
+      try {
+        const transaction = await lookupAppleTransaction(transactionId, secrets);
+        if (!transaction.revocationDate) continue;
+
+        if (await revokeReceipt("apple", transactionId, `apple_revocation_${transaction.revocationReason ?? 0}`)) {
+          revoked++;
+        }
+      } catch (error) {
+        logger.error("could not check an Apple transaction named by a notification", {
+          transactionId, error: String(error),
+        });
+      }
+    }
+
+    if (revoked > 0) logger.warn("App Store notification reversed purchases", { revoked });
+
+    response.status(200).send("ok");
+  }
+);
+
+/**
+ * Everything Google has voided since the last sweep, reversed.
+ *
+ * <p>A poll rather than a Pub/Sub subscription, and hourly rather than instant. Refunds
+ * are not urgent — an hour of a refunded balance is not an exploit anybody can run at
+ * scale — and the trade is worth naming: a subscription is a second piece of
+ * infrastructure that can silently stop delivering, and nothing would notice until a
+ * month of refunds had gone unreversed. A poll that stops running shows up in this
+ * function's own logs, and its cursor means the first run after an outage catches up
+ * rather than losing the gap.</p>
+ *
+ * <p>The Play service account needs the "View financial data" permission for this API. It
+ * is a different permission from the one receipt validation uses, and a sweep returning
+ * nothing for ever is exactly what a missing permission looks like — which is why the
+ * count is logged on every run, including zero.</p>
+ */
+export const sweepVoidedPurchases = onSchedule(
+  {
+    region: REGION,
+    schedule: "17 * * * *",
+    timeZone: "Etc/UTC",
+    timeoutSeconds: 300,
+    secrets: [GOOGLE_PLAY_SERVICE_ACCOUNT],
+  },
+  async () => {
+    const serviceAccount = configured(GOOGLE_PLAY_SERVICE_ACCOUNT);
+    if (!serviceAccount) {
+      logger.info("voided purchase sweep skipped: Google Play validation is not configured");
+      return;
+    }
+
+    const now = Date.now();
+    const since = await sweepWindow(now);
+
+    let voided;
+    try {
+      voided = await listVoidedPurchases(serviceAccount, BUNDLE_ID, since);
+    } catch (error) {
+      // Not recorded as progress. The cursor stays where it was, so the next run reads
+      // the same window again rather than skipping over whatever was voided during it.
+      logger.error("could not list voided purchases", { error: String(error) });
+      return;
+    }
+
+    let revoked = 0;
+    for (const entry of voided) {
+      if (await revokeReceipt("google", entry.orderId, `play_voided_${entry.reason}`)) revoked++;
+    }
+
+    await recordSweep(now, revoked, voided.length);
+
+    logger.info("voided purchase sweep", { seen: voided.length, revoked, sinceMillis: since });
   }
 );
 

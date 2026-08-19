@@ -1,6 +1,7 @@
 """End-to-end check of the shipped content, mirroring LevelValidator.cs
 and ChapterMapValidator.cs."""
-import json, math, os, sys
+import json
+import re, math, os, sys
 from collections import deque
 
 ROOT = os.path.join(os.path.dirname(os.path.abspath(__file__)),
@@ -26,24 +27,64 @@ def rotl(mask, turns):
     return out
 
 
+def alike(solved, cross, turns):
+    """Whether a tile turned this far from its solution is indistinguishable from it.
+
+    Mirrors Puzzle.Alike, and it is the whole of "is this tile solved" everywhere here.
+    A crossing wears all four arms at every angle, so the bare mask comparison this
+    replaced calls every one of them solved - deriving a par short by one per twisted
+    crossing, on a board that cannot be finished.
+    """
+    if rotl(solved, turns) != solved:
+        return False
+    if not cross:
+        return True
+    strand = rotl(cross, turns)
+    return strand == cross or strand == (solved & ~cross & 15)
+
+
+def read_arms(tok, p):
+    mask = 0
+    while p < len(tok) and tok[p] in 'NESW':
+        mask |= {'N': N, 'E': E, 'S': S, 'W': W}[tok[p]]
+        p += 1
+    return mask, p
+
+
 def parse_token(tok, ctx):
-    """-> dict(kind, solved, rot, locked, colour, fragile, link) or None for empty"""
+    """-> dict(kind, solved, rot, locked, colour, fragile, link, cross) or None for empty"""
     if tok == '.':
         return None
 
 
-    if tok[0] not in '-*@x':
+    if tok[0] not in '-=*@x':
         errors.append(f"{ctx}: unknown head '{tok[0]}' in '{tok}'")
         return None
 
-    kind = {'-': 'pipe', '*': 'source', '@': 'lamp', 'x': 'duskcap'}[tok[0]]
-    p, mask = 1, 0
-    while p < len(tok) and tok[p] in 'NESW':
-        mask |= {'N': N, 'E': E, 'S': S, 'W': W}[tok[p]]
-        p += 1
+    kind = {'-': 'pipe', '=': 'cross', '*': 'source', '@': 'lamp', 'x': 'duskcap'}[tok[0]]
+    mask, p = read_arms(tok, 1)
     if mask == 0:
         errors.append(f"{ctx}: '{tok}' has no arms")
         return None
+
+    cross = 0
+    if p < len(tok) and tok[p] == '+':
+        if kind != 'cross':
+            errors.append(f"{ctx}: '+' separates the two strands of a crossing, written '=' ('{tok}')")
+        second, p = read_arms(tok, p + 1)
+        if second == 0:
+            errors.append(f"{ctx}: '+' with no arms after it in '{tok}'")
+        elif mask & second:
+            errors.append(f"{ctx}: the two strands of '{tok}' share an arm")
+        cross = mask
+        mask |= second
+
+    if kind == 'cross':
+        other = mask & ~cross & 15
+        if not cross:
+            errors.append(f"{ctx}: '{tok}' must say which arms belong to which strand, as '=NS+EW'")
+        elif bin(cross).count('1') != 2 or bin(other).count('1') != 2:
+            errors.append(f"{ctx}: a crossing carries exactly two arms on each strand ('{tok}')")
 
     colour, rot, locked, fragile, link = 0, 0, False, 0, 0
     if p < len(tok) and tok[p] == '#':
@@ -72,9 +113,9 @@ def parse_token(tok, ctx):
         p += 2
     if p != len(tok):
         errors.append(f"{ctx}: trailing '{tok[p:]}' in '{tok}'")
-    if fragile and kind != 'pipe':
+    if fragile and kind not in ('pipe', 'cross'):
         errors.append(f"{ctx}: only a conduit can be fragile ('{tok}')")
-    if link and kind != 'pipe':
+    if link and kind not in ('pipe', 'cross'):
         errors.append(f"{ctx}: only a conduit can share a taproot ('{tok}')")
     if link and locked:
         errors.append(f"{ctx}: '{tok}' is both rooted and bound to a taproot")
@@ -84,9 +125,11 @@ def parse_token(tok, ctx):
         errors.append(f"{ctx}: heart-crystal '{tok}' emits no colour")
     if kind == 'duskcap' and colour:
         errors.append(f"{ctx}: a duskcap takes no colour ('{tok}')")
+    if kind == 'cross' and colour:
+        errors.append(f"{ctx}: a crossing takes no colour ('{tok}')")
 
     return dict(kind=kind, solved=mask, rot=rot, locked=locked, colour=colour,
-                fragile=fragile, link=link)
+                fragile=fragile, link=link, cross=cross)
 
 
 def check_level(level, chapter_id):
@@ -127,17 +170,32 @@ def check_level(level, chapter_id):
                 elif not (nb['solved'] & BITS[(d + 2) % 4]):
                     errors.append(f"{ctx}: arm at {x},{y} unmated by neighbour")
 
-    # 2. the authored solution (all rot = 0) must light every critter
-    comp = [-1] * len(cells)
+    # 2. the authored solution (all rot = 0) must light every critter.
+    #
+    # Walked over strands rather than cells: an ordinary tile has one, and a crossing has
+    # two that pass through one another and never meet. Mirrors Puzzle.Evaluate, which is
+    # what lets a dark island run *through* a live network instead of only beside it.
+    def strands(c):
+        return 2 if c and c['cross'] else 1
+
+    def strand_at(c, d):
+        if not c['cross']:
+            return 0
+        return 0 if c['cross'] & BITS[d] else 1
+
+    comp = [-1] * (len(cells) * 2)
     comp_colour = []
-    for i, c in enumerate(cells):
-        if not c or comp[i] != -1:
+    for start in range(len(cells) * 2):
+        i, st = start // 2, start % 2
+        c = cells[i]
+        if not c or st >= strands(c) or comp[start] != -1:
             continue
         g = len(comp_colour)
         colour = 0
-        q = deque([i]); comp[i] = g
+        q = deque([start]); comp[start] = g
         while q:
-            a = q.popleft()
+            node = q.popleft()
+            a, sa = node // 2, node % 2
             ca = cells[a]
             if ca['kind'] == 'source':
                 colour |= ca['colour']
@@ -145,16 +203,30 @@ def check_level(level, chapter_id):
             for d in range(4):
                 if not (ca['solved'] & BITS[d]):
                     continue
+                if strand_at(ca, d) != sa:
+                    continue
                 bx, by = ax + STEP[d][0], ay + STEP[d][1]
                 nb = at(bx, by)
                 if nb is None:
                     continue
-                b = by * w + bx
-                if comp[b] != -1 or not (nb['solved'] & BITS[(d + 2) % 4]):
+                back = (d + 2) % 4
+                if not (nb['solved'] & BITS[back]):
                     continue
-                comp[b] = g
-                q.append(b)
+                into = (by * w + bx) * 2 + strand_at(nb, back)
+                if comp[into] != -1:
+                    continue
+                comp[into] = g
+                q.append(into)
         comp_colour.append(colour)
+
+    def energy(i):
+        """Every colour reaching a cell, across all of its strands."""
+        mix = 0
+        for st in range(strands(cells[i])):
+            g = comp[i * 2 + st]
+            if g >= 0:
+                mix |= comp_colour[g]
+        return mix
 
     # a fragile conduit must survive long enough to reach its own solution, or the
     # level is unwinnable while looking perfectly fine. Mirrors CheckFragileConduits.
@@ -165,13 +237,13 @@ def check_level(level, chapter_id):
         if c['locked']:
             warnings.append(f"{ctx}: the fragile conduit at {fx},{fy} is also rooted, so it never wears")
             continue
-        if rotl(c['solved'], 1) == c['solved']:
+        if alike(c['solved'], c['cross'], 1):
             warnings.append(f"{ctx}: the conduit at {fx},{fy} is the same in every orientation, "
                             "so its fragility can never matter")
             continue
         owed = 0
         for k in range(4):
-            if rotl(c['solved'], (c['rot'] + k) & 3) == c['solved']:
+            if alike(c['solved'], c['cross'], (c['rot'] + k) & 3):
                 owed = k
                 break
         if owed > c['fragile']:
@@ -194,7 +266,7 @@ def check_level(level, chapter_id):
             errors.append(f"{ctx}: taproot '{letter}' has only the conduit at {i % w},{i // w} "
                           "on it; a root of one wears a binding mark and binds nothing")
             continue
-        if not any(all(rotl(cells[i]['solved'], (cells[i]['rot'] + k) & 3) == cells[i]['solved']
+        if not any(all(alike(cells[i]['solved'], cells[i]['cross'], (cells[i]['rot'] + k) & 3)
                        for i in members) for k in range(4)):
             errors.append(f"{ctx}: the conduits on taproot '{letter}' can never all be right "
                           "at once, so the glade cannot be finished")
@@ -206,11 +278,21 @@ def check_level(level, chapter_id):
         warnings.append(f"{ctx}: carries {real_roots} taproots but a mark can only tell "
                         f"{MAX_READABLE_RUNES} of them apart")
 
-    lamps = lit = caps = woken = 0
+    lamps = lit = caps = woken = crossings = 0
     for i, c in enumerate(cells):
         if not c:
             continue
-        have = comp_colour[comp[i]] if comp[i] >= 0 else 0
+        have = energy(i)
+        if c['kind'] == 'cross':
+            crossings += 1
+            cx, cy = i % w, i // w
+            if comp[i * 2] == comp[i * 2 + 1]:
+                warnings.append(f"{ctx}: the two strands of the crossing at {cx},{cy} are joined "
+                                "elsewhere in the authored solution, so it crosses nothing")
+            elif not have:
+                warnings.append(f"{ctx}: neither strand of the crossing at {cx},{cy} carries any "
+                                "light in the authored solution")
+            continue
         if c['kind'] == 'duskcap':
             caps += 1
             if have:
@@ -247,15 +329,15 @@ def check_level(level, chapter_id):
             charged.add(c['link'])
             members = roots[c['link']]
             for k in range(4):
-                if all(rotl(cells[i]['solved'], (cells[i]['rot'] + k) & 3) == cells[i]['solved']
+                if all(alike(cells[i]['solved'], cells[i]['cross'], (cells[i]['rot'] + k) & 3)
                        for i in members):
                     par += k
                     break
             continue
-        if rotl(c['solved'], 1) == c['solved']:
+        if alike(c['solved'], c['cross'], 1):
             continue
         for k in range(4):
-            if rotl(c['solved'], (c['rot'] + k) & 3) == c['solved']:
+            if alike(c['solved'], c['cross'], (c['rot'] + k) & 3):
                 par += k
                 break
 
@@ -278,7 +360,8 @@ def check_level(level, chapter_id):
 
     return dict(id=lid, chapter=chapter_id, w=w, h=h, par=par, limit=limit, rate=star_rate,
                 gold=-(-par * 135 // 100), silver=-(-par * 200 // 100),
-                lamps=lamps, sources=sources, fragile=fragile, caps=caps, bound=bound)
+                lamps=lamps, sources=sources, fragile=fragile, caps=caps, bound=bound,
+                crossings=crossings)
 
 
 # Canvas geometry, mirroring ChapterMap.cs. mapX/mapY are fractions of the chapter's
@@ -596,6 +679,198 @@ def check_grove(keys, level_ids, chapter_ids, companions):
     }
 
 
+# ---------------------------------------------------------------------------- the shop
+# What a card may promise, mirrored from StoreLimits so a content push cannot exceed what
+# the reader and the server will both accept.
+MAX_GRANT = 5_000_000
+STORE_SHELVES = {"gems", "coins", "bundles"}
+STORE_KINDS = {"consumable", "nonconsumable"}
+GOOD_KINDS = {"hearts", "heart_boost"}
+
+
+def check_store(progression, keys):
+    """The shop: what money buys, and what gems buy.
+
+    Checked offline as well as in the Editor, and for a sharper reason than the grove is.
+    The Editor's own check reaches `Application.dataPath` and therefore only runs with a
+    Unity session open, and the seeder's check only runs when somebody publishes — so
+    without this, the one table in the project where a mistake is charged to a card would
+    be the table nobody could check from a terminal.
+
+    Errors rather than warnings throughout, unlike every other block in this file. A
+    mistuned chest is a weekend decision; a mispriced product is a payment honoured for a
+    figure nobody meant, and the only repair is one refund at a time.
+    """
+    store = progression.get("store")
+    if not store:
+        warnings.append("progression.json has no 'store' block, so nothing can be bought")
+        return None
+
+    products = store.get("products") or []
+    goods = store.get("goods") or []
+
+    if not products:
+        errors.append("the store block lists no products; remove the block entirely to close "
+                      "the shop deliberately")
+        return None
+
+    hearts = progression.get("hearts") or {}
+    ceiling = hearts.get("ceiling", 50)
+    max_boost = hearts.get("maxBoostHours", 72)
+
+    seen = set()
+    shelves = {}
+
+    for entry in products:
+        pid = entry.get("id") or ""
+
+        if not re.fullmatch(r"[a-z0-9_]{1,64}", pid):
+            errors.append(f"store product id '{pid}' is unusable; ids are lower case letters, "
+                          "digits and underscores, because a receipt is looked up by this "
+                          "string for the life of the account")
+            continue
+
+        if pid in seen:
+            errors.append(f"store lists '{pid}' twice")
+            continue
+        seen.add(pid)
+
+        if entry.get("kind") not in STORE_KINDS:
+            errors.append(f"store product '{pid}' has kind '{entry.get('kind')}'; it must be "
+                          "consumable or nonconsumable, and the store itself enforces that a "
+                          "nonconsumable is sold once per account")
+
+        if entry.get("shelf") not in STORE_SHELVES:
+            errors.append(f"store product '{pid}' names unknown shelf '{entry.get('shelf')}'")
+
+        credits = int(entry.get("credits") or 0)
+        gems = int(entry.get("gems") or 0)
+
+        if credits <= 0 and gems <= 0:
+            errors.append(f"store product '{pid}' grants nothing")
+        if credits > MAX_GRANT or gems > MAX_GRANT:
+            errors.append(f"store product '{pid}' grants more than {MAX_GRANT}; the server "
+                          "refuses rather than clamping, so every purchase of it would fail")
+
+        cents = int(entry.get("referenceUsdCents") or 0)
+        if not 49 <= cents <= 100000:
+            errors.append(f"store product '{pid}' has referenceUsdCents {cents}, outside "
+                          "49..100000. It is never shown to a player, but the value ladder "
+                          "is proved against it")
+
+        key = f"store.product.{pid}"
+        if key not in keys:
+            errors.append(f"store product '{pid}' missing string '{key}'")
+
+        # One-time offers are deliberately better value than the ladder and cannot undercut
+        # it, because the store will not sell one twice. See ValidateStoreLadder.
+        if entry.get("kind") != "nonconsumable" and cents:
+            shelves.setdefault(entry["shelf"], []).append((cents, pid, credits, gems))
+
+    # Credits per gem, from the cheapest rung of each money shelf. Mirrors StoreCatalog.
+    per_gem = 1
+    gem_base = min(shelves.get("gems", []), default=None)
+    coin_base = min(shelves.get("coins", []), default=None)
+    if gem_base and coin_base and gem_base[3] and coin_base[0]:
+        per_gem = max(1, (coin_base[2] * gem_base[0]) // (gem_base[3] * coin_base[0]))
+
+    for shelf, rungs in shelves.items():
+        rungs.sort()
+        for (c0, id0, cr0, gm0), (c1, id1, cr1, gm1) in zip(rungs, rungs[1:]):
+            if c0 == c1:
+                warnings.append(f"store shelf '{shelf}': '{id0}' and '{id1}' are the same price; "
+                                "two cards at one price point make a player do arithmetic")
+                continue
+
+            before = ((cr0 + gm0 * per_gem) * 10000) // c0
+            after = ((cr1 + gm1 * per_gem) * 10000) // c1
+
+            if after < before:
+                errors.append(f"store shelf '{shelf}': '{id1}' costs more than '{id0}' and gives "
+                              "less per unit of money. A ladder that gets worse as it gets "
+                              "bigger is a shop nobody buys the large size in")
+
+    for good in goods:
+        gid = good.get("id") or ""
+
+        if not re.fullmatch(r"[a-z0-9_]{1,64}", gid):
+            errors.append(f"store good id '{gid}' is unusable")
+            continue
+
+        if gid in seen:
+            errors.append(f"store lists '{gid}' twice")
+        seen.add(gid)
+
+        kind = good.get("kind")
+        if kind not in GOOD_KINDS:
+            errors.append(f"store good '{gid}' names kind '{kind}'. Only hearts and heart_boost "
+                          "can be bought with gems - currency cannot, because only the server "
+                          "may grant it")
+            continue
+
+        amount = int(good.get("amount") or 0)
+        gems = int(good.get("gems") or 0)
+
+        if amount < 1 or gems < 1:
+            errors.append(f"store good '{gid}' hands over {amount} for {gems} gems")
+
+        if kind == "hearts" and amount > ceiling:
+            errors.append(f"store good '{gid}' hands over {amount} hearts, above the ceiling of "
+                          f"{ceiling}; it can never be bought")
+
+        if kind == "heart_boost" and amount > max_boost:
+            errors.append(f"store good '{gid}' hands over {amount}h of boost, above the "
+                          f"{max_boost}h cap; it can never be bought")
+
+        key = f"store.good.{gid}"
+        if key not in keys:
+            errors.append(f"store good '{gid}' missing string '{key}'")
+
+    return {
+        "products": len(products),
+        "goods": len(goods),
+        "per_gem": per_gem,
+        "shelves": {shelf: len(rungs) for shelf, rungs in shelves.items()},
+    }
+
+
+def daily_income(progression):
+    """Credits and gems an engaged player collects in a day, from the published tables.
+
+    The same derivation ContentValidation makes, and it exists here for the same reason it
+    exists there: a price only means something beside the income that has to pay it, and
+    nobody should have to work that out by hand twice.
+    """
+    credits = gems = 0.0
+
+    daily = progression.get("daily") or {}
+    for chest in daily.get("chests") or []:
+        for band in chest.get("guaranteed") or []:
+            mid = (band.get("min", 0) + band.get("max", 0)) * 0.5
+            if band.get("kind") == "credits":
+                credits += mid
+            elif band.get("kind") == "gems":
+                gems += mid
+
+        options = chest.get("options") or []
+        total = sum(max(1, o.get("weight", 1)) for o in options) or 1
+
+        for option in options:
+            mid = (option.get("min", 0) + option.get("max", 0)) * 0.5
+            share = max(1, option.get("weight", 1)) / total
+            if option.get("kind") == "credits":
+                credits += mid * share
+            elif option.get("kind") == "gems":
+                gems += mid * share
+
+    rungs = ((progression.get("streak") or {}).get("rungs")) or []
+    if rungs:
+        credits += sum(r.get("amount", 0) for r in rungs if r.get("kind") == "credits") / len(rungs)
+        gems += sum(r.get("amount", 0) for r in rungs if r.get("kind") == "gems") / len(rungs)
+
+    return int(credits), int(gems)
+
+
 def main():
     manifest = json.load(open(os.path.join(ROOT, "manifest.json"), encoding="utf-8"))
     loc = json.load(open(os.path.join(ROOT, "loc", "en.json"), encoding="utf-8"))
@@ -710,13 +985,14 @@ def main():
 
     print(f"{'#':<3}{'level id':<22}{'chapter':<16}{'size':<7}{'par':<5}{'gold':<6}{'silver':<7}"
           f"{'clock':<7}{'3*taps/s':<10}{'hearts':<7}{'critters':<9}{'brittle':<8}"
-          f"{'duskcaps':<10}roots")
+          f"{'duskcaps':<10}{'roots':<7}crossings")
     for i, s in enumerate(summaries, 1):
         clock = "-" if not s['limit'] else f"{s['limit']}s"
         rate = "-" if not s['rate'] else f"{s['rate']:.2f}"
         print(f"{i:<3}{s['id']:<22}{s['chapter']:<16}{str(s['w'])+'x'+str(s['h']):<7}"
               f"{s['par']:<5}{s['gold']:<6}{s['silver']:<7}{clock:<7}{rate:<10}"
-              f"{s['sources']:<7}{s['lamps']:<9}{s['fragile']:<8}{s['caps']:<10}{s['bound']}")
+              f"{s['sources']:<7}{s['lamps']:<9}{s['fragile']:<8}{s['caps']:<10}"
+              f"{s['bound']:<7}{s['crossings']}")
 
     grove = check_grove(keys,
                         {lv for e in manifest["chapters"] for lv in (e.get("levels") or [])},
@@ -732,6 +1008,25 @@ def main():
         print(f"       land: {grove['regions']} region(s), {grove['free_regions']} free, "
               f"{grove['owned_tiles']} tile(s) sellable - {grove['land']} credits to own it all")
         print(f"       home ladder: {grove['homes']} rung(s), {grove['ladder']} credits to the top")
+
+    progression_path = os.path.join(ROOT, "progression.json")
+    progression = json.load(open(progression_path, encoding="utf-8")) \
+        if os.path.exists(progression_path) else {}
+
+    shop = check_store(progression, keys)
+    per_day_credits, per_day_gems = daily_income(progression)
+
+    if shop:
+        shelves = ", ".join(f"{n} {shelf}" for shelf, n in sorted(shop["shelves"].items()))
+        print(f"\nshop: {shop['products']} product(s) ({shelves}), {shop['goods']} good(s) "
+              f"- one gem is worth about {shop['per_gem']} credits across the two ladders")
+        print(f"      free play collects about {per_day_credits} credit(s) and "
+              f"{per_day_gems} gem(s) a day")
+
+        if grove and per_day_credits:
+            sinks = grove["total"] + grove["land"] + grove["ladder"]
+            print(f"      every credit sink in the game is {sinks} credits, "
+                  f"about {sinks // per_day_credits} day(s) of play")
 
     print()
     for w in warnings:

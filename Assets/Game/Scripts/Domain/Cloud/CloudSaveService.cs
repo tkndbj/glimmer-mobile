@@ -813,29 +813,33 @@ namespace GlimmerGrove.Cloud
         /// paid out, and taking currency back from a player who believes they bought it
         /// is a support case that cannot be won.
         /// </summary>
-        public static async Task<CloudResult> RedeemPurchaseAsync(
+        public static async Task<(CloudResult result, CloudRedemption redemption)> RedeemPurchaseAsync(
             PurchaseReceipt receipt, CancellationToken cancellation = default)
         {
-            if (!IsAvailable) return CloudResult.Failed(CloudFailure.Offline, "no cloud backend");
+            if (!IsAvailable)
+                return (CloudResult.Failed(CloudFailure.Offline, "no cloud backend"),
+                        CloudRedemption.Nothing);
+
             if (receipt == null || string.IsNullOrEmpty(receipt.TransactionId))
-                return CloudResult.Failed(CloudFailure.Rejected, "receipt has no transaction id");
+                return (CloudResult.Failed(CloudFailure.Rejected, "receipt has no transaction id"),
+                        CloudRedemption.Nothing);
 
             // The same gate as a sync, and if anything it matters more here: this is the one
             // call that turns real money into currency, and crediting it to whichever account
             // happened to be signed in is a support case with a receipt attached.
             var authorised = await AuthoriseAsync(cancellation);
-            if (!authorised.Ok) return authorised;
+            if (!authorised.Ok) return (authorised, CloudRedemption.Nothing);
 
-            var (result, wallets) = await _backend.RedeemPurchaseAsync(
+            var (result, wallets, redemption) = await _backend.RedeemPurchaseAsync(
                 CloudState.UserId, receipt, cancellation);
 
-            if (!result.Ok) return result;
+            if (!result.Ok) return (result, CloudRedemption.Nothing);
 
             ApplyWalletStates(wallets);
             SaveService.Save();
             Raise(Synced);
 
-            return CloudResult.Success;
+            return (CloudResult.Success, redemption ?? CloudRedemption.Nothing);
         }
 
         static void ApplyWalletStates(List<CloudWalletState> wallets)

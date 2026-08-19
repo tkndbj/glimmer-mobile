@@ -70,12 +70,18 @@ namespace GlimmerGrove.Content
             return total;
         }
 
-        /// <summary>Quarter turns from this cell's start rotation back to its solution.</summary>
+        /// <summary>
+        /// Quarter turns from this cell's start rotation back to its solution.
+        ///
+        /// Asks <see cref="Puzzle.Alike"/> rather than comparing arm masks, which is not a
+        /// tidying: a crossing wears all four arms at every angle, so a mask comparison calls
+        /// every one of them already solved and derives a par that is short by however many
+        /// crossings the board carries.
+        /// </summary>
         public static int TurnsOwed(Cell cell)
         {
-            int solved = cell.solved;
             for (int k = 0; k < 4; k++)
-                if (Puzzle.Rotl(solved, (cell.rot + k) & 3) == solved) return k;
+                if (Puzzle.Alike(cell, cell.rot + k)) return k;
             return 0;
         }
 
@@ -93,8 +99,7 @@ namespace GlimmerGrove.Content
                 for (int i = 0; i < cells.Length && all; i++)
                 {
                     if (cells[i].link != rune) continue;
-                    int solved = cells[i].solved;
-                    if (Puzzle.Rotl(solved, (cells[i].rot + k) & 3) != solved) all = false;
+                    if (!Puzzle.Alike(cells[i], cells[i].rot + k)) all = false;
                 }
                 if (all) return k;
             }

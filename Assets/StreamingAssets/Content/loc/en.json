@@ -2356,6 +2356,394 @@
     {
       "key": "ui.piece.wreck",
       "text": "Beached Wreck"
+    },
+    {
+      "key": "chapter.c02_millvale.name",
+      "text": "The Mill Vale"
+    },
+    {
+      "key": "ui.tip.crossing.title",
+      "text": "CROSSING"
+    },
+    {
+      "key": "ui.tip.crossing.body",
+      "text": "Two flows pass through this tile and never meet. It wears no hub, and that is how you tell it from a junction: follow each strand with your eye, because light that enters by one arm can only leave by the arm that shares its strand."
+    },
+    {
+      "key": "level.c02_two_ways_over.name",
+      "text": "Two Ways Over"
+    },
+    {
+      "key": "level.c02_two_ways_over.tagline",
+      "text": "One tile, and two streams that never meet"
+    },
+    {
+      "key": "level.c02_two_ways_over.lesson",
+      "text": "A crossing carries two flows past each other. Turn it the other way and both hearts pour into one channel."
+    },
+    {
+      "key": "level.c02_the_millrace.name",
+      "text": "The Millrace"
+    },
+    {
+      "key": "level.c02_the_millrace.tagline",
+      "text": "A rope of light, twisted three times"
+    },
+    {
+      "key": "level.c02_the_millrace.lesson",
+      "text": "The two runs change lanes at every crossing. One left the wrong way round hands a heart's light to the other's critters."
+    },
+    {
+      "key": "level.c02_under_the_boughs.name",
+      "text": "Under the Boughs"
+    },
+    {
+      "key": "level.c02_under_the_boughs.tagline",
+      "text": "The shadow runs straight through the grove"
+    },
+    {
+      "key": "level.c02_under_the_boughs.lesson",
+      "text": "A duskcap's path used to have to go around the light. Across a crossing it can go under it instead."
+    },
+    {
+      "key": "level.c02_the_old_weir.name",
+      "text": "The Old Weir"
+    },
+    {
+      "key": "level.c02_the_old_weir.tagline",
+      "text": "Brittle stone on both approaches"
+    },
+    {
+      "key": "level.c02_the_old_weir.lesson",
+      "text": "The upper crossing crumbles after two turns and needs one. You are allowed exactly one wrong guess about which way it goes."
+    },
+    {
+      "key": "level.c02_braided_water.name",
+      "text": "Braided Water"
+    },
+    {
+      "key": "level.c02_braided_water.tagline",
+      "text": "Two crossings, one root, opposite corners"
+    },
+    {
+      "key": "level.c02_braided_water.lesson",
+      "text": "Bound conduits turn as one, crossings included. The tap that settles the near braid settles the far one with it."
+    },
+    {
+      "key": "level.c02_the_wheelhouse.name",
+      "text": "The Wheelhouse"
+    },
+    {
+      "key": "level.c02_the_wheelhouse.tagline",
+      "text": "Kept apart here, blended there"
+    },
+    {
+      "key": "level.c02_the_wheelhouse.lesson",
+      "text": "Three networks share this ground. Two stay pure and the third holds a heart of each, and the crossings are what let all three pass."
+    },
+    {
+      "key": "level.c02_hollow_ford.name",
+      "text": "Hollow Ford"
+    },
+    {
+      "key": "level.c02_hollow_ford.tagline",
+      "text": "The dark fords the light three times"
+    },
+    {
+      "key": "level.c02_hollow_ford.lesson",
+      "text": "Every crossing here is a place the shadow and the grove could be joined by mistake. Read which arm belongs to which strand before you turn."
+    },
+    {
+      "key": "level.c02_stonebridge.name",
+      "text": "Stonebridge"
+    },
+    {
+      "key": "level.c02_stonebridge.tagline",
+      "text": "Four bridges nobody can turn"
+    },
+    {
+      "key": "level.c02_stonebridge.lesson",
+      "text": "These crossings are rooted where they stand. The grove is not asking which way they face — it is asking what still fits through them."
+    },
+    {
+      "key": "level.c02_three_bridges.name",
+      "text": "Three Bridges"
+    },
+    {
+      "key": "level.c02_three_bridges.tagline",
+      "text": "A cascade, handed on at every span"
+    },
+    {
+      "key": "level.c02_three_bridges.lesson",
+      "text": "Yellow gives the grove to red, red to green and green to blue, and every hand-over happens inside one tile."
+    },
+    {
+      "key": "level.c02_the_millers_knot.name",
+      "text": "The Miller's Knot"
+    },
+    {
+      "key": "level.c02_the_millers_knot.tagline",
+      "text": "Everything the vale has taught, tied once"
+    },
+    {
+      "key": "level.c02_the_millers_knot.lesson",
+      "text": "Three networks, a shadow through all of them, two crossings on one root and brittle stone on the only ways in."
+    },
+    {
+      "key": "ui.shop.shelf_gems",
+      "text": "Gems buy hearts, boosts and time"
+    },
+    {
+      "key": "ui.shop.shelf_coins",
+      "text": "Coins buy companions, land and everything in your grove"
+    },
+    {
+      "key": "ui.shop.shelf_bundles",
+      "text": "Everything at once, for less than the parts"
+    },
+    {
+      "key": "ui.shop.shelf_supplies",
+      "text": "Spend gems on hearts and faster hearts"
+    },
+    {
+      "key": "ui.shop.supplies_note",
+      "text": "Bought with gems. Nothing here costs real money."
+    },
+    {
+      "key": "ui.shop.connecting",
+      "text": "Fetching prices..."
+    },
+    {
+      "key": "ui.shop.offline",
+      "text": "The store cannot be reached right now"
+    },
+    {
+      "key": "ui.shop.unavailable",
+      "text": "Purchases are not available in this build"
+    },
+    {
+      "key": "ui.shop.awaiting",
+      "text": "A purchase is on its way. It will arrive as soon as you are online."
+    },
+    {
+      "key": "ui.shop.awaiting_short",
+      "text": "ARRIVING"
+    },
+    {
+      "key": "ui.shop.purchasing",
+      "text": "WAITING..."
+    },
+    {
+      "key": "ui.shop.price_pending",
+      "text": "..."
+    },
+    {
+      "key": "ui.shop.owned",
+      "text": "YOURS"
+    },
+    {
+      "key": "ui.shop.already_owned",
+      "text": "You already have this one"
+    },
+    {
+      "key": "ui.shop.unknown_product",
+      "text": "This offer is not available in your store"
+    },
+    {
+      "key": "ui.shop.payment_failed",
+      "text": "The payment did not go through. Nothing was charged."
+    },
+    {
+      "key": "ui.shop.deferred",
+      "text": "Waiting for approval. It will arrive once it is approved."
+    },
+    {
+      "key": "ui.shop.failed",
+      "text": "Something went wrong. Nothing was charged."
+    },
+    {
+      "key": "ui.shop.need_gems",
+      "text": "Not enough gems yet"
+    },
+    {
+      "key": "ui.shop.hearts_full",
+      "text": "Your hearts are nearly full"
+    },
+    {
+      "key": "ui.shop.boost_full",
+      "text": "Your boost is already nearly at its limit"
+    },
+    {
+      "key": "ui.shop.bonus",
+      "text": "+{0}% EXTRA"
+    },
+    {
+      "key": "ui.shop.badge_popular",
+      "text": "Most popular"
+    },
+    {
+      "key": "ui.shop.badge_best",
+      "text": "Best value"
+    },
+    {
+      "key": "ui.shop.badge_starter",
+      "text": "One time only"
+    },
+    {
+      "key": "ui.shop.plus_coins",
+      "text": "+ {0} coins"
+    },
+    {
+      "key": "ui.shop.gems",
+      "text": "Gems"
+    },
+    {
+      "key": "ui.shop.coins",
+      "text": "Coins"
+    },
+    {
+      "key": "ui.shop.hearts",
+      "text": "Hearts"
+    },
+    {
+      "key": "ui.shop.boost_hours",
+      "text": "{0}h"
+    },
+    {
+      "key": "ui.shop.boost_note",
+      "text": "Faster hearts"
+    },
+    {
+      "key": "ui.shop.gem_price",
+      "text": "{0}"
+    },
+    {
+      "key": "ui.shop.restore",
+      "text": "Restore purchases"
+    },
+    {
+      "key": "ui.shop.restore_started",
+      "text": "Checking for anything not yet delivered..."
+    },
+    {
+      "key": "ui.shop.hearts_count",
+      "text": "{0} hearts"
+    },
+    {
+      "key": "ui.shop.hearts_explain",
+      "text": "Hearts refill on their own up to {0}. Hearts you collect stack on top, up to {1}."
+    },
+    {
+      "key": "ui.shop.boost_explain",
+      "text": "Hearts come back every {0} hours instead of {1} while this is running."
+    },
+    {
+      "key": "ui.shop.hearts_held",
+      "text": "You are holding {0}"
+    },
+    {
+      "key": "ui.shop.boost_left",
+      "text": "Boost running: {0} left"
+    },
+    {
+      "key": "ui.shop.hearts_added",
+      "text": "{0} hearts added"
+    },
+    {
+      "key": "ui.shop.boost_added",
+      "text": "Faster hearts for {0} more hours"
+    },
+    {
+      "key": "ui.shop.thanks",
+      "text": "Thank you"
+    },
+    {
+      "key": "ui.shop.granted_note",
+      "text": "Added to your grove. Enjoy!"
+    },
+    {
+      "key": "ui.common.cancel",
+      "text": "Not now"
+    },
+    {
+      "key": "ui.common.ok",
+      "text": "Lovely"
+    },
+    {
+      "key": "store.product.gg_gems_1",
+      "text": "A Handful"
+    },
+    {
+      "key": "store.product.gg_gems_2",
+      "text": "A Pouchful"
+    },
+    {
+      "key": "store.product.gg_gems_3",
+      "text": "A Satchel"
+    },
+    {
+      "key": "store.product.gg_gems_4",
+      "text": "A Casket"
+    },
+    {
+      "key": "store.product.gg_gems_5",
+      "text": "A Hoard"
+    },
+    {
+      "key": "store.product.gg_gems_6",
+      "text": "A Trove"
+    },
+    {
+      "key": "store.product.gg_coins_1",
+      "text": "Coin Purse"
+    },
+    {
+      "key": "store.product.gg_coins_2",
+      "text": "Coin Sack"
+    },
+    {
+      "key": "store.product.gg_coins_3",
+      "text": "Coin Coffer"
+    },
+    {
+      "key": "store.product.gg_coins_4",
+      "text": "Coin Vault"
+    },
+    {
+      "key": "store.product.gg_bundle_starter",
+      "text": "Grovekeeper's Welcome"
+    },
+    {
+      "key": "store.product.gg_bundle_keeper",
+      "text": "Keeper's Cache"
+    },
+    {
+      "key": "store.product.gg_bundle_grove",
+      "text": "Grove Bounty"
+    },
+    {
+      "key": "store.good.hearts_five",
+      "text": "Five Hearts"
+    },
+    {
+      "key": "store.good.hearts_fifteen",
+      "text": "Fifteen Hearts"
+    },
+    {
+      "key": "store.good.hearts_forty",
+      "text": "Forty Hearts"
+    },
+    {
+      "key": "store.good.boost_day",
+      "text": "A Day of Fast Hearts"
+    },
+    {
+      "key": "store.good.boost_three_day",
+      "text": "Three Days of Fast Hearts"
+    },
+    {
+      "key": "ui.ads.to_shop",
+      "text": "Or visit the shop"
     }
   ]
 }

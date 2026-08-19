@@ -1,0 +1,197 @@
+{
+  "schemaVersion": 2,
+  "id": "c02_millvale",
+  "accent": "#9BD84A",
+  "slate": "#17301E",
+  "backdrop": "c02_play_0",
+  "mapStrips": ["c02_strip0", "c02_strip1", "c02_strip2", "c02_strip3"],
+
+  "levels": [
+    {
+      "id": "c02_two_ways_over",
+      "width": 6,
+      "height": 6,
+      "mapX": 0.3,
+      "mapY": 0.05,
+      "accent": "#7ED957",
+      "slate": "#16301C",
+      "rows": [
+        ". . *S#B/3 . @S#B/2 .",
+        "@E#B/3 -EW/1 -NSW/2 . -NS/1 .",
+        "*E#R/3 -EW/1 =SW+NE/1 -EW/1 -NEW/3 -SW/1",
+        ". . -NS/1 @E#B/1 -EW/1 -NSW/3",
+        "@E#R/3 -EW/1 -NSW/3 . . -NS/1",
+        "@E#R/2 -EW/1 -NEW/1 @W#R/3 . @N#B/1"
+      ]
+    },
+    {
+      "id": "c02_the_millrace",
+      "width": 6,
+      "height": 7,
+      "mapX": 0.66,
+      "mapY": 0.13,
+      "accent": "#4FC1FF",
+      "slate": "#0E2A3A",
+      "backdrop": "c02_play_1",
+      "rows": [
+        "*E#R/3 -EW/1 -SW/2 -ES/1 -EW/1 *W#B/3",
+        ". -ES/3 =NW+ES/1 -NW/2 . .",
+        "@E#R/2 -NSW/1 -NE/3 -ESW/3 -EW/0 @W#B/1",
+        ". -NES/2 -EW/1 =SW+NE/1 -SW/3 .",
+        "@E#R/2 -NW/3 . -NS/1 -NES/3 @W#B/3",
+        ". . -ES/3 =NW+ES/1 -NW/1 .",
+        "@E#R/2 -EW/1 -NW/2 -NE/3 -EW/0 @W#B/1"
+      ]
+    },
+    {
+      "id": "c02_under_the_boughs",
+      "width": 7,
+      "height": 6,
+      "mapX": 0.34,
+      "mapY": 0.22,
+      "accent": "#A98BFF",
+      "slate": "#1E1A38",
+      "backdrop": "c02_play_2",
+      "rows": [
+        ". . @S#A/2 . @S#R/3 . @S#A/2",
+        ". -ES/2 -NW/3 -ES/2 =NS+EW/0 xW/3 -NS/1",
+        "*E#R/2 -NEW/1 -EW/1 =EW+NS/0 -NESW/0 -EW/1 -NSW/3",
+        ". . . -NS/1 -NE/3 -SW/2 -NS/1",
+        ". xE/3 -EW/0 =NW+ES/1 -ESW/2 -NEW/3 -NSW/2",
+        ". . @E#R/3 -NW/2 @N#A/1 @E#R/2 -NW/3"
+      ]
+    },
+    {
+      "id": "c02_the_old_weir",
+      "width": 7,
+      "height": 6,
+      "mapX": 0.7,
+      "mapY": 0.3,
+      "accent": "#FFB347",
+      "slate": "#33220F",
+      "backdrop": "c02_play_3",
+      "rows": [
+        "@S#R/2 @S#R/1 @E#G/3 -SW/3 . . @S#G/1",
+        "-NS/1 -NE/2 -EW/1~2 =SW+NE/1 -EW/1 -SW/2 -NS/1",
+        "-NS/1 . . -NS/1 . -NS/1~2 -NS/0",
+        "-NES/1 -EW/1 -ESW/3~2 =NW+ES/1~2 -EW/1 -NEW/3 -NSW/3",
+        "-NS/0 @E#R/1 -NW/2 -NES/3 -SW/2~3 . -NS/1",
+        "*N#R/3 @E#G/2 -EW/1 -NW/2 -NE/3 @W#G/2 *N#G/1"
+      ]
+    },
+    {
+      "id": "c02_braided_water",
+      "width": 7,
+      "height": 7,
+      "mapX": 0.28,
+      "mapY": 0.39,
+      "accent": "#63C7C0",
+      "slate": "#10262B",
+      "backdrop": "c02_play_4",
+      "rows": [
+        "*E#R/3 -SW/1 . @S#B/0 . -ES/2 *W#B/1",
+        ". -NS/1 -ES/1 -NEW/1 -EW/0 -NW/3&A .",
+        "@E#R/1 -NEW/0 =SW+NE/1&A -EW/1 -ESW/1 -EW/0 @W#B/3",
+        ". . -NES/0 -SW/3 -NS/1 . .",
+        "@E#R/3 -EW/1 -NSW/1 -NE/0 =SW+NE/1&A -EW/1 -SW/1",
+        ". . -NS/1 . -NS/0 . -NS/1",
+        ". . @N#R/3 . @N#R/1 . @N#B/3"
+      ]
+    },
+    {
+      "id": "c02_the_wheelhouse",
+      "width": 7,
+      "height": 7,
+      "mapX": 0.62,
+      "mapY": 0.47,
+      "accent": "#FF74D4",
+      "slate": "#2B1436",
+      "backdrop": "c02_play_5",
+      "rows": [
+        "@E#R/3 -SW/2 @S#R/1 . @S#M/3 -ES/3 *W#B/1",
+        ". -NE/3 -NSW/2 . -NES/0 -NW/3 .",
+        ". . -NS/1 . -NES/1 -EW/0 @W#M/3",
+        "*E#R/1 -ESW/1 =NW+ES/1 -ESW/3 =ES+NW/1 -ESW/1 *W#B/0",
+        "@E#R/3 -NW/1 -NS/1 -NS/0 -NS/1 -NE/2 @W#B/1",
+        "-ES/0 -EW/1 -NW/1 @N#M/1 -NES/0 -SW/3 .",
+        "*N#R/1 . . . @N#B/1 -NE/0 @W#B/3"
+      ]
+    },
+    {
+      "id": "c02_hollow_ford",
+      "width": 7,
+      "height": 7,
+      "mapX": 0.36,
+      "mapY": 0.56,
+      "accent": "#8FD694",
+      "slate": "#14251A",
+      "backdrop": "c02_play_6",
+      "rows": [
+        "*ES#R/2 -SW/1 @S#R/0 xS/3 . -ES/1 *W#B/0",
+        "-NS/1 -NE/2 =ES+NW/1 -NEW/0 -EW/1 =EW+NS/0 xW/1",
+        "-NES/0 -SW/3 -NS/0 @S#B/1 @S#B/0 -NS/1 .",
+        "@N#R/1 @N#R/0 -NS/1 -NS/0 -NS/1 -NES/0 @W#B/3",
+        "xE/2 -EW/1 =NW+ES/1 -NEW/3 -NW/2 -NS/1 .",
+        ". . -NES/1 -EW/0 -ESW/3 -NEW/2 @W#B/1",
+        ". @E#B/3 -NEW/2 -EW/1 -NW/0 . ."
+      ]
+    },
+    {
+      "id": "c02_stonebridge",
+      "width": 7,
+      "height": 7,
+      "mapX": 0.72,
+      "mapY": 0.65,
+      "accent": "#D8CBA6",
+      "slate": "#2A2A24",
+      "backdrop": "c02_play_7",
+      "rows": [
+        "*ES#R/1 -ESW/1 @W#R/3 @S#W/1 . . .",
+        "-NS/1 -NES/1 -EW/1 =NS+EW/0! @W#R/1 @S#G/2 .",
+        "@N#R/2 -NS/1 . -NS/1 . -NS/1 .",
+        "@E#W/1 =EW+NS/0! -EW/1 *NESW#W/0 -EW/1 =EW+NS/0! @W#W/1",
+        ". -NS/1 . -NS/1 . -NS/1 @S#G/3",
+        ". @N#R/3 @E#G/1 =NS+EW/0! -EW/1 -NSW/1 -NS/1",
+        ". . . @N#W/1 @E#G/2 -NEW/3 *NW#G/1"
+      ]
+    },
+    {
+      "id": "c02_three_bridges",
+      "width": 8,
+      "height": 7,
+      "mapX": 0.3,
+      "mapY": 0.74,
+      "accent": "#FFD75E",
+      "slate": "#332812",
+      "backdrop": "c02_play_8",
+      "rows": [
+        ". . *S#R/3 @S#G/0 *S#G/3 . *S#B/1 @S#B/0",
+        "@E#R/0 -EW/1 -NSW/2 -NE/3 -NSW/0 . -NES/3 -NW/1",
+        "@E#Y/2 -SW/0 -NS/1 . -NS/1 . -NS/1 .",
+        "*E#R/1 -NEW/2 =NE+SW/1 -EW/1 =SW+NE/1 -EW/1 =SW+NE/1 -SW/3",
+        ". . -NES/2 @W#Y/0 -NS/1 @E#G/2 -NSW/3 -NS/0",
+        ". @E#Y/3 -NSW/1 . -NES/0 @W#R/3 -NS/1 -NS/1",
+        "*E#G/1 -EW/0 -NW/3 . @N#R/2 . @N#G/3 @N#B/2"
+      ]
+    },
+    {
+      "id": "c02_the_millers_knot",
+      "width": 8,
+      "height": 7,
+      "mapX": 0.64,
+      "mapY": 0.83,
+      "accent": "#E86A5A",
+      "slate": "#3A1A18",
+      "backdrop": "c02_play_9",
+      "rows": [
+        "*E#R/2 -EW/1 -SW/3 . *S#B/2 @S#B/1 -ES/1 *W#R/2",
+        "@E#R/3 -EW/1&A -NSW/1 . -NES/1 -NW/2 -NS/1&A .",
+        ". . -NS/0~2 . -NS/1~2 . -NES/2~3 @W#M/1",
+        "xE/1 -EW/1 =EW+NS/0 -EW/0! =EW+NS/0 -EW/1! =EW+NS/0 xW/2",
+        ". . -NS/1 @E#B/3 -NSW/2 @E#M/1 -NEW/3 -SW/1",
+        "@E#R/2 -EW/0 -NESW/0 -EW/1 =NE+SW/1&A -EW/0 -SW/1 -NS/1",
+        ". . @N#R/2 . @N#R/2 . @N#B/2 *N#B/1"
+      ]
+    }
+  ]
+}
