@@ -5,7 +5,7 @@ using GlimmerGrove.Persistence;
 
 namespace GlimmerGrove.Homestead
 {
-    /// <summary>How far along an island is, from bare rock to a place somebody lives.</summary>
+    /// <summary>How far along a stretch of the floor is, from bare ground to somewhere lived-in.</summary>
     public enum TendedStage
     {
         /// <summary>Nothing placed. Owned land, and that is all.</summary>
@@ -20,30 +20,30 @@ namespace GlimmerGrove.Homestead
         /// <summary>Nearly finished.</summary>
         Lush,
 
-        /// <summary>Every slot filled. The island earns its plaque and its fireflies.</summary>
+        /// <summary>Every tile filled. The region earns its plaque and its fireflies.</summary>
         Bloomed,
     }
 
     /// <summary>
-    /// The island's own answer to "did I build this", derived from how full it is.
+    /// A region's own answer to "did I build this", derived from how full it is.
     ///
     /// <para>
-    /// <b>Why this exists at all.</b> A full island and an empty one used to be the same
-    /// picture with different dots on it, so nothing about the grove ever said <em>you
-    /// changed this</em> — and a before-and-after is the entire mechanism the feature runs
-    /// on. The island now brightens, warms and finally blooms as it fills.
+    /// <b>Why this exists at all.</b> Full ground and empty ground would otherwise be the
+    /// same picture with different things on it, so nothing about the grove would ever say
+    /// <em>you changed this</em> — and a before-and-after is the entire mechanism the feature
+    /// runs on. A region brightens, warms and finally blooms as it fills.
     /// </para>
     /// <para>
     /// <b>It stores nothing.</b> Fill is a pure function of the arrangement already in the
     /// save file, which is invariant 14's preferred shape: no counter to merge, no floor to
-    /// keep monotonic, no migration, and a retune that adds a slot to an island simply moves
-    /// everybody's stage down a notch and back up as they fill it.
+    /// keep monotonic, no migration, and a retune that widens a region simply moves everybody's
+    /// stage down a notch and back up as they fill it.
     /// </para>
     /// <para>
     /// The thresholds are deliberately generous at the bottom and exact at the top. The first
-    /// thing a player ever places should visibly change the island — that is the moment the
+    /// thing a player ever places should visibly change the ground — that is the moment the
     /// habit forms — while <see cref="TendedStage.Bloomed"/> has to mean <em>finished</em>, so
-    /// it is the only one that asks for every slot.
+    /// it is the only one that asks for every tile.
     /// </para>
     /// </summary>
     public static class GroveTending
@@ -59,7 +59,8 @@ namespace GlimmerGrove.Homestead
             return fill > 0f ? TendedStage.Started : TendedStage.Bare;
         }
 
-        public static TendedStage Of(HomesteadPlot plot) => Of(HomesteadLayout.FillOf(plot));
+        public static TendedStage Of(GroveFloor floor, GroveRegion region)
+            => Of(HomesteadLayout.FillOf(floor, region));
     }
 
     /// <summary>What stands in one slot, and when the player decided it.</summary>
@@ -137,6 +138,30 @@ namespace GlimmerGrove.Homestead
         public static bool IsOccupied(string slotId) => !string.IsNullOrEmpty(At(slotId));
 
         /// <summary>
+        /// What a tile actually <em>shows</em>: whatever the player put there, or the starter
+        /// companion on the one tile that has one and has never been touched.
+        ///
+        /// <para>
+        /// <b>The distinction between stored and shown is the whole point of this method.</b> A
+        /// new grove is meant to open with one friend already standing next to the hall, and the
+        /// obvious way to do that — write the placement at first launch — is exactly what
+        /// invariant 11c forbids. A fresh install would stamp that row with <em>now</em>,
+        /// outrank a device where the player had moved or cleared that tile, and put the
+        /// companion back; a stored default is indistinguishable from a choice. So nothing is
+        /// written, the tile simply draws the starter while it has no row, and clearing it is a
+        /// real instruction that does get one. <c>Wallet</c> shows the default keeper name the
+        /// same way and for the same reason.
+        /// </para>
+        /// </summary>
+        public static string Shown(HomesteadCatalog catalog, string slotId)
+        {
+            if (catalog == null) return At(slotId);
+            if (_placed.ContainsKey(slotId ?? string.Empty)) return At(slotId);
+
+            return catalog.Floor.StarterPieceOn(slotId);
+        }
+
+        /// <summary>
         /// The piece standing in a slot, resolved against a catalog.
         ///
         /// An id the catalog does not know answers invalid rather than throwing, and the row
@@ -147,47 +172,58 @@ namespace GlimmerGrove.Homestead
         public static HomesteadPiece PieceAt(HomesteadCatalog catalog, string slotId)
             => catalog == null ? default : catalog.Find(At(slotId));
 
-        /// <summary>How many slots of this catalog currently hold something.</summary>
+        /// <summary>
+        /// How many tiles anywhere on the floor hold something.
+        ///
+        /// Counted over the stored rows rather than by walking the field, because the field is
+        /// hundreds of tiles and almost all of them are empty — the save only ever holds a row
+        /// for a tile somebody touched, which is the whole reason a big floor costs nothing.
+        /// </summary>
         public static int OccupiedCount(HomesteadCatalog catalog)
         {
             if (catalog == null) return 0;
 
             int count = 0;
-            foreach (var plot in catalog.Plots)
-                foreach (var slot in plot.Slots)
-                    if (slot.IsValid && IsOccupied(slot.Id)) count++;
+            foreach (var pair in _placed)
+                if (pair.Value.IsOccupied && catalog.Floor.Contains(pair.Key)) count++;
 
             return count;
         }
 
         /// <summary>
-        /// How many of one island's placeable slots hold something.
+        /// How many of one region's buildable tiles hold something.
         ///
-        /// The hearth is excluded, because it is drawn from what the player owns rather than
-        /// placed — counting it would make an island that can never read as finished.
+        /// The hall's tile is excluded, because it is drawn from what the player owns rather
+        /// than placed — counting it would make a region that can never read as finished.
         /// </summary>
-        public static int OccupiedCount(HomesteadPlot plot)
+        public static int OccupiedCount(GroveFloor floor, GroveRegion region)
         {
-            if (plot == null) return 0;
+            if (floor == null || region == null || !region.IsValid) return 0;
 
             int count = 0;
-            foreach (var slot in plot.Slots)
-                if (slot.IsValid && !slot.IsHearth && IsOccupied(slot.Id)) count++;
+            for (int c = region.Col; c < region.Col + region.Cols; c++)
+                for (int r = region.Row; r < region.Row + region.Rows; r++)
+                {
+                    string id = GroveFloor.TileId(c, r);
+                    if (!floor.IsHall(id) && IsOccupied(id)) count++;
+                }
 
             return count;
         }
 
         /// <summary>
-        /// How full an island is, 0 to 1. An island with nowhere to place answers 0.
+        /// How full a region is, 0 to 1. One with nowhere to place answers 0.
         ///
         /// <b>This is the whole "I built this" signal</b> — see <see cref="GroveTending"/>.
         /// </summary>
-        public static float FillOf(HomesteadPlot plot)
+        public static float FillOf(GroveFloor floor, GroveRegion region)
         {
-            if (plot == null) return 0f;
+            if (floor == null || region == null || !region.IsValid) return 0f;
 
-            int total = plot.PlaceableCount;
-            return total <= 0 ? 0f : (float)OccupiedCount(plot) / total;
+            int total = region.TileCount;
+            if (floor.HallIsIn(region)) total--;
+
+            return total <= 0 ? 0f : (float)OccupiedCount(floor, region) / total;
         }
 
         /// <summary>
@@ -201,13 +237,9 @@ namespace GlimmerGrove.Homestead
             if (catalog == null) return 0;
 
             var seen = new HashSet<string>(StringComparer.Ordinal);
-            foreach (var plot in catalog.Plots)
-                foreach (var slot in plot.Slots)
-                {
-                    if (!slot.IsValid) continue;
-                    string id = At(slot.Id);
-                    if (!string.IsNullOrEmpty(id)) seen.Add(id);
-                }
+            foreach (var pair in _placed)
+                if (pair.Value.IsOccupied && catalog.Floor.Contains(pair.Key))
+                    seen.Add(pair.Value.PieceId);
 
             return seen.Count;
         }
@@ -226,6 +258,13 @@ namespace GlimmerGrove.Homestead
 
             foreach (var placed in _placed.Values)
                 if (placed.IsOccupied) ids.Add(placed.PieceId);
+
+            // The starter companion is shown rather than stored (see Shown), so it has no row
+            // to be found here — and art nobody asked for is art that draws as nothing.
+            string starter = HomesteadCatalog.Current.Floor.StarterPiece;
+            if (!string.IsNullOrEmpty(starter)
+                && !_placed.ContainsKey(HomesteadCatalog.Current.Floor.StarterTile))
+                ids.Add(starter);
 
             return ids;
         }
@@ -285,7 +324,14 @@ namespace GlimmerGrove.Homestead
                     // invariant 11a's whole point. The later row wins, which is arbitrary but
                     // stable, and the row that lost is dropped rather than kept as a second
                     // answer.
-                    _placed[row.slot] = new Placement(row.piece, row.setUnix);
+                    //
+                    // The piece id is read through GroveResidents.Rename, which is where the
+                    // five creatures the grove used to author of its own become the companions
+                    // they now are. It happens here, at the one door every save comes through —
+                    // a local file, a cloud document, a merge of the two — rather than at each
+                    // reader, so nothing downstream ever sees a retired id and the rewrite is
+                    // written back the next time the file is saved.
+                    _placed[row.slot] = new Placement(GroveResidents.Rename(row.piece), row.setUnix);
                 }
 
             Raise();

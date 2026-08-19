@@ -25,12 +25,17 @@ namespace GlimmerGrove
     /// player's place. The one door between them is the button at the foot.
     /// </para>
     /// <para>
-    /// <b>And it lists only what fits.</b> A slot has a kind — see <c>HomesteadSlotKind</c> —
-    /// so the rim offers fences and the flower bed offers flowers. That is what turns placing
-    /// into composing: before it, every slot accepted everything, so the only decision on offer
-    /// was which of eleven interchangeable dots got which sticker and every grove came out
-    /// looking equally accidental. A slot whose kind the player owns nothing for says so and
-    /// points at the shop, rather than opening an empty grid.
+    /// <b>It lists everything held, because every tile takes everything.</b> On the islands a
+    /// slot had a role and this panel showed only what suited it — the rim offered fences, the
+    /// flower bed offered flowers. That rule existed to stop a sprinkle of pre-placed dots
+    /// looking accidental; the floor has no dots, so where a thing goes is the player's
+    /// decision and narrowing the list would be taking the feature back out. See
+    /// <c>GroveFloor</c>.
+    /// </para>
+    /// <para>
+    /// Which means the panel now loads every shelf's browse atlas rather than two. That is the
+    /// one real cost of the change and it is bounded by the number of shelves rather than by
+    /// the catalog — eight small thumbnail pages, not eight shelves of real art.
     /// </para>
     /// <para>
     /// <b>A piece already standing somewhere else is still offered.</b> Holding a piece is
@@ -60,7 +65,26 @@ namespace GlimmerGrove
         const float CellH = 214f;
         const int CellRadius = 26;
 
-        RectTransform _viewport, _grid;
+        /// <summary>
+        /// The middle of the space the caption leaves. See <c>HomesteadShopScreen</c>'s note —
+        /// this one was worse: the box was pinned 22 pixels below the plate's top edge with a
+        /// centre pivot, so its upper half hung 39 pixels off the plate entirely.
+        /// </summary>
+        const float PlateH = CellH - 26f;
+        const float CaptionTop = 34f + 54f * .5f;
+        static readonly float ArtCentre = -(PlateH - (CaptionTop + PlateH) * .5f);
+        const float ArtBox = 112f;
+
+        RectTransform _viewport;
+        GridView _grid;
+        Text _hint;
+
+        /// <summary>
+        /// What the grid is showing. An invalid entry is the "take it away" cell, which is why
+        /// this is a list of pieces rather than a list of ids: the clear option has no id and
+        /// inventing one would put an empty string through the same paths a real piece takes.
+        /// </summary>
+        readonly List<HomesteadPiece> _items = new List<HomesteadPiece>();
 
         protected override void Build()
         {
@@ -76,26 +100,33 @@ namespace GlimmerGrove
                                         () => Close(() => Flow.Go<HomesteadShopScreen>()));
             UIKit.Shrinkable(shop.Label, 18);
 
-            Paint();
+            // Brown, not cream: this is the only text in the panel that sits on the paper
+            // rather than on one of the dark plates, and cream on cream is the mistake the
+            // beacon's gold-out-of-gold ring already made once.
+            _hint = UIKit.Shrinkable(
+                UIKit.Titled("Hint", Panel, Loc.Get("ui.grove.fits_ground"), 28,
+                             new Color(.36f, .24f, .16f, .85f), TextAnchor.UpperCenter,
+                             new Vector2(PanelW - 180f, 120f), new Vector2(.5f, 1f),
+                             new Vector2(0f, -HeadRoom - 40f), 0f, 0f, true), 19);
 
-            // Only this slot's kind, which is all this panel can show — and it is the same
-            // scope the shop pages by, so opening a picker over a shop tab of the same kind
-            // costs nothing. The art may still be arriving either way: this panel can be
-            // opened in the same second the screen behind it was, and an Image with no sprite
-            // is a white rectangle.
-            HomesteadArt.OpenKindAsync(Slot.Kind, () => { if (this) Paint(); });
+            Reload();
+
+            // Every shelf, because every tile takes everything. The art may still be arriving:
+            // this panel can be opened in the same second the screen behind it was, and an
+            // Image with no sprite is a white rectangle.
+            HomesteadArt.OpenPickerAsync(() => { if (this) Repaint(); });
 
             // A purchase made through the shop cannot reach here (the shop is a screen and
             // this closes first), but a piece earned by a run finishing elsewhere can, and a
             // content refresh can republish the catalog under an open panel.
-            HomesteadLedger.Changed += Paint;
-            HomesteadCatalog.Changed += Paint;
+            HomesteadLedger.Changed += Reload;
+            HomesteadCatalog.Changed += Reload;
         }
 
         void OnDestroy()
         {
-            HomesteadLedger.Changed -= Paint;
-            HomesteadCatalog.Changed -= Paint;
+            HomesteadLedger.Changed -= Reload;
+            HomesteadCatalog.Changed -= Reload;
         }
 
         public override bool OnBack() { Close(); return true; }
@@ -107,178 +138,145 @@ namespace GlimmerGrove
             _viewport.offsetMin = new Vector2(40f, FootRoom);
             _viewport.offsetMax = new Vector2(-40f, -HeadRoom);
 
-            var catcher = _viewport.gameObject.AddComponent<Image>();
-            catcher.color = new Color(0, 0, 0, 0);
-            catcher.raycastTarget = true;
-            _viewport.gameObject.AddComponent<RectMask2D>();
-
-            _grid = UIKit.Node("Grid", _viewport);
-            _grid.anchorMin = new Vector2(0f, 1f);
-            _grid.anchorMax = new Vector2(1f, 1f);
-            _grid.pivot = new Vector2(.5f, 1f);
-            _grid.anchoredPosition = Vector2.zero;
-
-            var scroll = _viewport.gameObject.AddComponent<ScrollRect>();
-            scroll.content = _grid;
-            scroll.viewport = _viewport;
-            scroll.horizontal = false;
-            scroll.vertical = true;
-            scroll.movementType = ScrollRect.MovementType.Elastic;
-            scroll.elasticity = .14f;
-            scroll.inertia = true;
-            scroll.decelerationRate = .04f;
-            scroll.scrollSensitivity = 55f;
+            _grid = GridView.Attach(_viewport, Columns, CellW, CellH,
+                                    parent => new PickerCell(this, parent), 8f, 30f);
         }
 
-        void Paint()
+        /// <summary>Rebuilds what is on offer. See <see cref="Repaint"/> for the cheaper half.</summary>
+        void Reload()
         {
             if (_grid == null) return;
-
-            for (int i = _grid.childCount - 1; i >= 0; i--)
-            {
-                var old = _grid.GetChild(i).gameObject;
-                old.SetActive(false);
-                Destroy(old);
-            }
 
             var catalog = HomesteadCatalog.Current;
             string standing = HomesteadLayout.At(Slot.Id);
 
-            var held = new List<HomesteadPiece>();
-            foreach (var piece in catalog.Pieces)
-                if (piece.Fits(Slot.Kind) && HomesteadLedger.IsHeld(piece)) held.Add(piece);
-
-            // Residents first, because they are the half of the catalog the player earned and
-            // the half nobody can buy. Decor then follows in catalog order, which is the
-            // author's order — cheap and small to large and expensive.
-            //
-            // The position map is built once rather than searched inside the comparator: the
-            // catalog is unbounded by design, and a linear scan per comparison is the shape
-            // that is free at forty pieces and a visible stall at four hundred.
-            var order = new Dictionary<string, int>(catalog.PieceCount, StringComparer.Ordinal);
-            for (int i = 0; i < catalog.Pieces.Count; i++) order[catalog.Pieces[i].Id] = i;
-
-            held.Sort((a, b) => a.IsResident != b.IsResident
-                                    ? (a.IsResident ? -1 : 1)
-                                    : order[a.Id].CompareTo(order[b.Id]));
-
-            int index = 0;
+            _items.Clear();
 
             // "Take it away" leads, and only when there is something to take. A clear button
             // sitting first on an empty slot would be the panel's most prominent control doing
             // nothing, which is how a player learns to stop reading the first row.
-            if (!string.IsNullOrEmpty(standing))
-                Cell(index++, default, false, Loc.Get("ui.grove.clear"), () => Choose(string.Empty));
+            if (!string.IsNullOrEmpty(standing)) _items.Add(default);
 
-            foreach (var piece in held)
-            {
-                var chosen = piece;
-                Cell(index++, piece, string.Equals(piece.Id, standing, StringComparison.Ordinal),
-                     Loc.Get(piece.NameKey), () => Choose(chosen.Id));
-            }
+            // Residents first, because they are the half of the catalog nobody can be sold
+            // outright and the half a player is proudest of. Decor then follows in catalog
+            // order, which is the author's order — cheap and small to large and expensive.
+            // Two passes rather than a sort: the catalog is already in the order both halves
+            // want, so sorting would be a second opinion about it that a drop could break.
+            foreach (var piece in catalog.Pieces)
+                if (piece.IsResident && piece.CanBePlaced && HomesteadLedger.IsHeld(piece))
+                    _items.Add(piece);
+
+            foreach (var piece in catalog.Pieces)
+                if (!piece.IsResident && piece.CanBePlaced && HomesteadLedger.IsHeld(piece))
+                    _items.Add(piece);
 
             // Nothing the player owns belongs here. Said plainly, with the kind named, because
             // an empty grid is indistinguishable from a broken one — and this is the only place
             // in the feature that can explain what a slot is for without labelling all eleven
             // of them on the island itself.
-            if (held.Count == 0)
-            {
-                // Brown, not cream: this is the only text in the panel that sits on the paper
-                // rather than on one of the dark plates, and cream on cream is the mistake the
-                // beacon's gold-out-of-gold ring already made once.
-                UIKit.Shrinkable(
-                    UIKit.Titled("Hint", _grid, Loc.Get(FitsKey(Slot.Kind)), 28,
-                                 new Color(.36f, .24f, .16f, .85f), TextAnchor.UpperCenter,
-                                 new Vector2(PanelW - 180f, 120f), new Vector2(.5f, 1f),
-                                 new Vector2(0f, -70f), 0f, 0f, true), 19);
-            }
+            if (_hint) _hint.gameObject.SetActive(_items.Count == 0);
 
-            int rows = Mathf.Max(1, (index + Columns - 1) / Columns);
-            _grid.sizeDelta = new Vector2(0f, rows * CellH + 30f);
+            _grid.Show(_items.Count);
         }
 
-        void Cell(int index, HomesteadPiece piece, bool standing, string label, Action onTap)
+        /// <summary>Redraws the cells in place: for art arriving, and nothing else.</summary>
+        void Repaint()
         {
-            float x = (index % Columns - (Columns - 1) * .5f) * CellW;
-            float y = -(index / Columns) * CellH - CellH * .5f - 8f;
-
-            var cell = UIKit.Button("C" + index, _grid, Art.Pixel, new Vector2(CellW - 12f, CellH - 12f),
-                                    new Vector2(.5f, 1f), new Vector2(x, y), onTap);
-            cell.GetComponent<Image>().color = new Color(1f, 1f, 1f, 0f);
-
-            // Lifted off near-black for HomesteadShopScreen's reason: a fallen log or a bramble
-            // drawn on a very dark plate is a dark rectangle, and this panel is where somebody
-            // picks between forty of them.
-            var plate = UIKit.Img("Plate", cell.transform, Art.Round(CellRadius),
-                                  standing ? new Color(.10f, .24f, .26f, .96f)
-                                           : new Color(.12f, .19f, .25f, .88f),
-                                  new Vector2(CellW - 26f, CellH - 26f), new Vector2(.5f, .5f), Vector2.zero);
-
-            var edge = UIKit.Img("Edge", plate.transform, Art.RoundOutline(CellRadius, standing ? 4f : 2f),
-                                 standing ? Pal.Gold : new Color(1f, .97f, .90f, .16f));
-            UIKit.StretchTo((RectTransform)edge.transform, 0, 0, 0, 0);
-
-            if (piece.IsValid)
-            {
-                var art = UIKit.Img("A", plate.transform, null, Color.white,
-                                    new Vector2(122f, 122f), new Vector2(.5f, 1f), new Vector2(0f, -22f));
-                art.preserveAspect = true;
-                art.raycastTarget = false;
-                HomesteadArt.Paint(art, piece);
-            }
-            else
-            {
-                // The clear cell. A cross rather than an empty plate, because "nothing" needs a
-                // shape or it reads as a cell whose art has not loaded.
-                var cross = UIKit.Img("X", plate.transform, Art.S("Ui/ic_close"),
-                                      new Color(1f, .96f, .88f, .70f),
-                                      new Vector2(74f, 74f), new Vector2(.5f, 1f), new Vector2(0f, -44f));
-                cross.preserveAspect = true;
-                cross.raycastTarget = false;
-            }
-
-            UIKit.Shrinkable(
-                UIKit.Titled("N", plate.transform, label, 24,
-                             standing ? Pal.Cream : new Color(1f, .96f, .88f, .82f),
-                             TextAnchor.MiddleCenter, new Vector2(CellW - 44f, 54f), new Vector2(.5f, 0f),
-                             new Vector2(0f, 34f), 3f, 2f), 15);
-
-            cell.transform.localScale = Vector3.zero;
-            Tween.Pop(cell.transform, 0f, .42f, .02f * Mathf.Min(index, 14));
+            if (_grid != null) _grid.Refresh();
         }
 
         /// <summary>
-        /// The sentence for a slot whose kind the player owns nothing for.
-        ///
-        /// Written out per kind rather than composed from a noun, for invariant 6's reason —
-        /// a key built by concatenation is a key the build gate cannot scan for.
+        /// One cell, built once and rebound as it is recycled — <see cref="GridView"/>'s
+        /// bargain. The clear option is a cell like any other, drawn from an invalid piece.
         /// </summary>
-        static string FitsKey(HomesteadSlotKind kind)
+        sealed class PickerCell : IGridCell
         {
-            switch (kind)
+            readonly HomesteadPickerOverlay _panel;
+            readonly Image _plate, _edge, _art, _cross;
+            readonly Text _name;
+
+            HomesteadPiece _piece;
+
+            public RectTransform Root { get; }
+
+            public PickerCell(HomesteadPickerOverlay panel, RectTransform parent)
             {
-                case HomesteadSlotKind.Structure: return "ui.grove.fits_structure";
-                case HomesteadSlotKind.Canopy: return "ui.grove.fits_canopy";
-                case HomesteadSlotKind.Bed: return "ui.grove.fits_bed";
-                case HomesteadSlotKind.Path: return "ui.grove.fits_path";
-                case HomesteadSlotKind.Edge: return "ui.grove.fits_edge";
-                default: return "ui.grove.fits_ground";
+                _panel = panel;
+
+                var cell = UIKit.Button("Cell", parent, Art.Pixel,
+                                        new Vector2(CellW - 12f, CellH - 12f), new Vector2(.5f, 1f),
+                                        Vector2.zero, () => _panel.Choose(_piece));
+                cell.GetComponent<Image>().color = new Color(1f, 1f, 1f, 0f);
+                Root = (RectTransform)cell.transform;
+
+                // Lifted off near-black for HomesteadShopScreen's reason: a fallen log or a
+                // bramble on a very dark plate is a dark rectangle, and this panel is where
+                // somebody picks between forty of them.
+                _plate = UIKit.Img("Plate", Root, Art.Round(CellRadius), Color.white,
+                                   new Vector2(CellW - 26f, CellH - 26f), new Vector2(.5f, .5f),
+                                   Vector2.zero);
+
+                _edge = UIKit.Img("Edge", _plate.transform, Art.RoundOutline(CellRadius, 2f), Color.white);
+                UIKit.StretchTo((RectTransform)_edge.transform, 0, 0, 0, 0);
+
+                _art = UIKit.Img("A", _plate.transform, null, Color.white,
+                                 new Vector2(ArtBox, ArtBox), new Vector2(.5f, 1f),
+                                 new Vector2(0f, ArtCentre));
+                _art.preserveAspect = true;
+                _art.raycastTarget = false;
+
+                // A cross rather than an empty plate, because "nothing" needs a shape or it
+                // reads as a cell whose art has not loaded.
+                _cross = UIKit.Img("X", _plate.transform, Art.S("Ui/ic_close"),
+                                   new Color(1f, .96f, .88f, .70f),
+                                   new Vector2(74f, 74f), new Vector2(.5f, 1f),
+                                   new Vector2(0f, ArtCentre));
+                _cross.preserveAspect = true;
+                _cross.raycastTarget = false;
+
+                _name = UIKit.Shrinkable(
+                    UIKit.Titled("N", _plate.transform, string.Empty, 24, Pal.Cream,
+                                 TextAnchor.MiddleCenter, new Vector2(CellW - 44f, 54f),
+                                 new Vector2(.5f, 0f), new Vector2(0f, 34f), 3f, 2f), 15);
+            }
+
+            public void Bind(int index)
+            {
+                _piece = index >= 0 && index < _panel._items.Count ? _panel._items[index] : default;
+
+                bool standing = _piece.IsValid
+                    && string.Equals(_piece.Id, HomesteadLayout.At(_panel.Slot.Id), StringComparison.Ordinal);
+
+                _plate.color = standing ? new Color(.10f, .24f, .26f, .96f)
+                                        : new Color(.12f, .19f, .25f, .88f);
+
+                _edge.sprite = Art.RoundOutline(CellRadius, standing ? 4f : 2f);
+                _edge.color = standing ? Pal.Gold : new Color(1f, .97f, .90f, .16f);
+
+                _art.gameObject.SetActive(_piece.IsValid);
+                _cross.gameObject.SetActive(!_piece.IsValid);
+
+                if (_piece.IsValid) HomesteadArt.PaintThumb(_art, _piece);
+
+                _name.text = _piece.IsValid ? Loc.Get(_piece.NameKey) : Loc.Get("ui.grove.clear");
+                _name.color = standing ? Pal.Cream : new Color(1f, .96f, .88f, .82f);
             }
         }
 
-        void Choose(string pieceId)
+        void Choose(HomesteadPiece piece)
         {
             // Place first, close second. The screen behind repaints on HomesteadLayout.Changed,
             // so by the time the panel has faded the slot is already showing what was chosen —
             // which is the whole feedback for the tap.
-            if (HomesteadLayout.Place(Slot.Id, pieceId))
+            if (HomesteadLayout.Place(Slot.Id, piece.IsValid ? piece.Id : string.Empty))
             {
                 Audio.Sfx("pop", .6f);
 
-                // The piece is being drawn from *this* panel's scope, which the next tab
-                // switch or the walk back to the hub will release. Claiming moves it into the
-                // grove's own scope, where it belongs now that it is standing on an island.
-                HomesteadArt.Claim(HomesteadCatalog.Current.Find(pieceId));
+                // This panel draws thumbnails; an island draws the real thing. Claiming loads
+                // the piece's own art into the grove's scope, where it belongs now that it is
+                // standing on an island — without it the slot would be empty until the whole
+                // grove was reloaded.
+                HomesteadArt.Claim(piece);
             }
 
             Close();

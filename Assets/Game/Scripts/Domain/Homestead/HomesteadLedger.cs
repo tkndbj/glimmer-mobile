@@ -95,15 +95,56 @@ namespace GlimmerGrove.Homestead
         /// <summary>Raised on a completed purchase, for the panel doing the ceremony.</summary>
         public static event Action<HomesteadPiece> Bought;
 
+        /// <summary>
+        /// Residents are companions, so a companion bought on the profile changes what this
+        /// ledger answers without anything here being told.
+        ///
+        /// <para>
+        /// Hooked once, from the type initialiser, rather than left to each screen. Both
+        /// grove screens already subscribe to <see cref="Changed"/>, so re-raising here is what
+        /// makes "buy on the profile, see it in the grove" true for every present and future
+        /// reader — and this project has twice paid for the alternative, where the rule was a
+        /// subscription each new call site had to remember and the third one forgot.
+        /// </para>
+        /// <para>
+        /// The initialiser runs on first touch, which is <see cref="LoadFrom"/> during the save
+        /// load — before any screen exists, and therefore before anybody could miss an event.
+        /// </para>
+        /// </summary>
+        static HomesteadLedger()
+        {
+            CompanionLedger.Changed += Raise;
+        }
+
+        /// <summary>
+        /// The keeper level the resident half is judged against.
+        ///
+        /// Read here rather than passed in, unlike <c>CompanionLedger.IsHeld</c>, because every
+        /// caller of this file is a grove screen asking about the player in front of it — and
+        /// threading a level through <see cref="IsHeld(HomesteadPiece)"/> would put it in the
+        /// signature of every question the grove asks, to be got wrong once.
+        /// </summary>
+        static int KeeperLevel => PlayerProgression.Level.Level;
+
         // ------------------------------------------------------------- reading
         /// <summary>
         /// Whether the player holds this piece: its requirement met, or bought, or free.
         ///
         /// <b>The whole unlock rule.</b> Nothing else composes it.
+        ///
+        /// <para>
+        /// A resident is <b>delegated whole</b> to <see cref="CompanionLedger"/> rather than
+        /// answered here. That is invariant 15a taken literally: the composite rule for a
+        /// companion lives in one place, and a grove that re-derived half of it — reading
+        /// <c>AvatarCatalog.ReachedBy</c>, or keeping its own copy of the purchased set — is
+        /// exactly how somebody who paid for Coral finds her padlocked in the village.
+        /// </para>
         /// </summary>
         public static bool IsHeld(HomesteadPiece piece)
         {
             if (!piece.IsValid) return false;
+            if (piece.IsResident) return CompanionLedger.IsHeld(GroveResidents.CompanionOf(piece), KeeperLevel);
+
             if (_bought.Contains(piece.Id)) return true;
             return IsEarned(piece);
         }
@@ -121,6 +162,10 @@ namespace GlimmerGrove.Homestead
         public static bool IsEarned(HomesteadPiece piece)
         {
             if (!piece.IsValid) return false;
+
+            // A resident's free route is the keeper ladder, which is the companion roster's
+            // half of its own rule — asked there so the two screens cannot come to disagree.
+            if (piece.IsResident) return AvatarCatalog.ReachedBy(GroveResidents.CompanionOf(piece), KeeperLevel);
 
             // Nothing asked of it and no price: the starter furniture a new grove opens with.
             if (!piece.HasRequirement) return !piece.IsForSale;
@@ -140,12 +185,14 @@ namespace GlimmerGrove.Homestead
         /// bought, so gating anything on this locks the grove.
         /// </summary>
         public static bool WasBought(HomesteadPiece piece)
-            => piece.IsValid && _bought.Contains(piece.Id);
+            => piece.IsValid
+            && (piece.IsResident
+                    ? CompanionLedger.WasBought(GroveResidents.CompanionOf(piece))
+                    : _bought.Contains(piece.Id));
 
-        /// <summary>Whether this plot's land has been earned. Derived; there is nothing stored.</summary>
-        public static bool IsPlotHeld(HomesteadPlot plot)
-            => plot != null && plot.IsValid
-            && (plot.IsStarter || HomesteadProgress.IsChapterFinished(plot.RequiresChapter));
+        // Land moved out of this file entirely when the islands became a floor: it is bought
+        // with credits now rather than earned by finishing a chapter, so it is an entitlement
+        // rather than something derived. See GroveLand.
 
         /// <summary>How many pieces the player holds, for the "18 of 46" caption.</summary>
         public static int HeldCount(HomesteadCatalog catalog)
@@ -155,18 +202,6 @@ namespace GlimmerGrove.Homestead
             int count = 0;
             foreach (var piece in catalog.Pieces)
                 if (IsHeld(piece)) count++;
-
-            return count;
-        }
-
-        /// <summary>How many plots are open, for the same reason.</summary>
-        public static int HeldPlotCount(HomesteadCatalog catalog)
-        {
-            if (catalog == null) return 0;
-
-            int count = 0;
-            foreach (var plot in catalog.Plots)
-                if (IsPlotHeld(plot)) count++;
 
             return count;
         }
@@ -271,6 +306,12 @@ namespace GlimmerGrove.Homestead
             if (!piece.IsValid)
                 return new HomesteadOffer(HomesteadPurchaseState.NotForSale, 0L, balance);
 
+            // A resident is priced by the roster and sold by the companion ledger, so the
+            // answer is translated rather than recomputed — one price, quoted identically on
+            // the profile and in the village.
+            if (piece.IsResident) return Translate(CompanionLedger.OfferFor(GroveResidents.CompanionOf(piece),
+                                                                           KeeperLevel));
+
             if (IsHeld(piece))
                 return new HomesteadOffer(HomesteadPurchaseState.AlreadyHeld, piece.Cost, balance);
 
@@ -282,6 +323,25 @@ namespace GlimmerGrove.Homestead
                 : HomesteadPurchaseState.TooExpensive;
 
             return new HomesteadOffer(state, piece.Cost, balance);
+        }
+
+        /// <summary>
+        /// A companion's offer as a grove offer. The two enums are the same four states under
+        /// two names, which is deliberate — a screen showing a shelf of residents beside a
+        /// shelf of fences must render one refusal, not two nearly identical ones.
+        /// </summary>
+        static HomesteadOffer Translate(CompanionOffer offer)
+        {
+            HomesteadPurchaseState state;
+            switch (offer.State)
+            {
+                case CompanionPurchaseState.Ready: state = HomesteadPurchaseState.Ready; break;
+                case CompanionPurchaseState.AlreadyHeld: state = HomesteadPurchaseState.AlreadyHeld; break;
+                case CompanionPurchaseState.TooExpensive: state = HomesteadPurchaseState.TooExpensive; break;
+                default: state = HomesteadPurchaseState.NotForSale; break;
+            }
+
+            return new HomesteadOffer(state, offer.Cost, offer.Balance);
         }
 
         // ------------------------------------------------------------- writing
@@ -303,6 +363,12 @@ namespace GlimmerGrove.Homestead
         /// </summary>
         public static bool TryBuy(HomesteadPiece piece)
         {
+            // A resident is bought as a companion, in one transaction with one spend reason and
+            // one entitlement set. Never mirrored into `homesteadOwned`: two records of one
+            // purchase is two things a merge can disagree about, and the second one would be
+            // the forgeable half of a pair whose other half is already safe.
+            if (piece.IsResident) return TryBuyResident(piece);
+
             var offer = OfferFor(piece);
             if (!offer.CanBuy) return false;
 
@@ -319,6 +385,31 @@ namespace GlimmerGrove.Homestead
             SaveService.Save();
             Raise();
 
+            try { Bought?.Invoke(piece); }
+            catch (Exception e) { UnityEngine.Debug.LogException(e); }
+
+            return true;
+        }
+
+        /// <summary>
+        /// Buys a resident, which is buying a companion.
+        ///
+        /// <para>
+        /// It deliberately does <b>not</b> go through <c>Profile.TryBuyAvatar</c>, which buys
+        /// and then wears. Wearing is a profile preference and housing is a grove arrangement;
+        /// somebody who bought a friend to stand by their pond has said nothing about who they
+        /// want on their own nameplate, and quietly changing it is the kind of surprise that
+        /// makes a player distrust a shop.
+        /// </para>
+        /// </summary>
+        static bool TryBuyResident(HomesteadPiece piece)
+        {
+            var companion = GroveResidents.CompanionOf(piece);
+            if (!CompanionLedger.TryBuy(companion, KeeperLevel)) return false;
+
+            // CompanionLedger saved, and raised its own Changed — which this file re-raises.
+            // What is left is the grove's own ceremony hook, so a resident bought in the
+            // village celebrates exactly as a fence does.
             try { Bought?.Invoke(piece); }
             catch (Exception e) { UnityEngine.Debug.LogException(e); }
 

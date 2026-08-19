@@ -73,8 +73,8 @@ namespace GlimmerGrove.Tests
             => new HomesteadPiece(id, "Homestead/" + id, false, HomesteadPieceKind.Decor,
                                   cost, LevelId.None, ChapterId.None, 1f, .5f);
 
-        static HomesteadPiece Resident(string id, string level)
-            => new HomesteadPiece(id, "Critters/c1", true, HomesteadPieceKind.Resident,
+        static HomesteadPiece EarnedByLevel(string id, string level)
+            => new HomesteadPiece(id, "Homestead/" + id, false, HomesteadPieceKind.Decor,
                                   0, LevelId.Parse(level), ChapterId.None, 1f, .5f);
 
         static HomesteadPiece EarnedByChapter(string id, string chapter, int cost = 0)
@@ -112,17 +112,20 @@ namespace GlimmerGrove.Tests
         }
 
         [Test]
-        public void AResidentIsHeldOnceItsGladeIsCleared()
+        public void ADecorPieceIsHeldOnceItsGladeIsCleared()
         {
-            var sunmote = Resident("sunmote", "c01_first_light");
+            // The earned half of the rule for decor. Residents no longer take this route at
+            // all — they are the companion roster, gated by keeper level or bought — which is
+            // what GroveResidentTests pins.
+            var arch = EarnedByLevel("stone_arch", "c01_first_light");
 
-            Assert.IsFalse(HomesteadLedger.IsHeld(sunmote));
+            Assert.IsFalse(HomesteadLedger.IsHeld(arch));
 
             _progress.Cleared.Add("c01_first_light");
 
-            Assert.IsTrue(HomesteadLedger.IsHeld(sunmote));
-            Assert.IsTrue(HomesteadLedger.IsEarned(sunmote));
-            Assert.IsFalse(HomesteadLedger.WasBought(sunmote),
+            Assert.IsTrue(HomesteadLedger.IsHeld(arch));
+            Assert.IsTrue(HomesteadLedger.IsEarned(arch));
+            Assert.IsFalse(HomesteadLedger.WasBought(arch),
                            "earned is not bought; a panel that says 'you paid for this' must be able to tell");
         }
 
@@ -159,21 +162,6 @@ namespace GlimmerGrove.Tests
 
             Assert.IsFalse(live.IsChapterFinished(ChapterId.Parse("c99_nowhere")));
             Assert.IsFalse(live.IsChapterFinished(ChapterId.None));
-        }
-
-        [Test]
-        public void AStarterPlotIsHeldAndAGatedOneIsNot()
-        {
-            var starter = new HomesteadPlot("meadow", "Homestead/plot_meadow", .5f, .6f,
-                                            ChapterId.None, new[] { new HomesteadSlot("meadow_a", .5f, .8f, 1f) });
-            var gated = new HomesteadPlot("ridge", "Homestead/plot_ridge", .5f, .6f,
-                                          ChapterId.Parse("c02_tidewood"), Array.Empty<HomesteadSlot>());
-
-            Assert.IsTrue(HomesteadLedger.IsPlotHeld(starter));
-            Assert.IsFalse(HomesteadLedger.IsPlotHeld(gated));
-
-            _progress.Finished.Add("c02_tidewood");
-            Assert.IsTrue(HomesteadLedger.IsPlotHeld(gated));
         }
 
         // ================================================ purchases: a union
@@ -364,7 +352,7 @@ namespace GlimmerGrove.Tests
         {
             // A save from a newer build naming a piece this one has never heard of. Drawing an
             // empty slot is right; deleting the row is not.
-            var catalog = new HomesteadCatalog(Array.Empty<HomesteadPlot>(), new[] { Free("bench") });
+            var catalog = new HomesteadCatalog(GroveFloor.Empty, new[] { Free("bench") });
 
             HomesteadLayout.LoadFrom(new SaveFileDto
             {
@@ -395,46 +383,44 @@ namespace GlimmerGrove.Tests
         static void RequiresJsonUtility() => JsonUtility.FromJson<HomesteadBodyDto>("{}");
 
         [Test]
-        public void APricedResidentLosesItsPriceRatherThanTheCatalogLosingTheResident()
+        public void AnAuthoredResidentIsRefusedRatherThanReadAsDecor()
         {
             RequiresJsonUtility();
 
-            // The one rule the two kinds do not share. Dropping the price is the safe half —
-            // the piece stays earnable and nothing anybody bought is affected — and the build
-            // gate turns the same mistake into a failed build so it is not merely survived.
+            // Residents are the companion roster, projected in — so a row claiming to be one
+            // is a second creature list with its own price and its own unlock rule, which is
+            // exactly the duplication projection removed. Refused rather than salvaged: read
+            // as decor it would stand a critter on the fences shelf and sell it, and the whole
+            // point is that there is one answer to "who lives here".
             var problems = new List<string>();
-            string json = "{\"schemaVersion\":2,\"plots\":[],\"pieces\":[" +
+            string json = "{\"schemaVersion\":3,\"floor\":{\"cols\":4,\"rows\":4,\"hallTile\":\"t_000_000\",\"regions\":[{\"id\":\"home\",\"col\":0,\"row\":0,\"cols\":4,\"rows\":4}]},\"pieces\":[" +
                           "{\"id\":\"sunmote\",\"art\":\"Critters/c1\",\"animated\":true," +
-                          "\"kind\":\"resident\",\"cost\":900,\"requiresLevel\":\"c01_first_light\"}]}";
+                          "\"kind\":\"resident\",\"cost\":900}]}";
 
             Assert.IsTrue(HomesteadMapper.TryRead(json, problems, out var catalog));
 
-            var piece = catalog.Find("sunmote");
-            Assert.IsTrue(piece.IsResident);
-            Assert.AreEqual(0, piece.Cost);
-            Assert.IsFalse(piece.IsForSale);
+            Assert.IsFalse(catalog.Find("sunmote").IsValid, "the row is dropped");
             Assert.IsTrue(problems.Count > 0, "and it is reported, not swallowed");
         }
 
         [Test]
-        public void ASlotIdUsedTwiceIsRefusedAcrossTheWholeGrove()
+        public void TwoTilesCanNeverShareAnId()
         {
-            RequiresJsonUtility();
+            // A slot id keys a map in the save file, so two of them sharing one would put a tree
+            // placed in one spot into another and the merge would treat two independent choices
+            // as one. On the islands that was a rule the mapper had to *enforce*, because slots
+            // were hand-authored and an author could type the same id twice. A tile id is a pure
+            // function of its coordinates, so the collision is now unrepresentable rather than
+            // merely refused — which is the stronger version of the same guarantee and the reason
+            // the check that used to live in HomesteadMapper is gone.
+            var seen = new HashSet<string>(StringComparer.Ordinal);
 
-            // A slot id keys a map in the save file. Two plots sharing one would put a tree
-            // placed on the first island onto the second, and the merge would treat two
-            // independent choices as one.
-            var problems = new List<string>();
-            string json = "{\"schemaVersion\":2,\"pieces\":[],\"plots\":[" +
-                          "{\"id\":\"one\",\"art\":\"Homestead/plot_meadow\",\"width\":.5," +
-                          "\"slots\":[{\"id\":\"shared\",\"x\":.5,\"y\":.8,\"scale\":1}]}," +
-                          "{\"id\":\"two\",\"art\":\"Homestead/plot_ridge\",\"width\":.5," +
-                          "\"slots\":[{\"id\":\"shared\",\"x\":.5,\"y\":.8,\"scale\":1}]}]}";
+            for (int col = 0; col < 40; col++)
+                for (int row = 0; row < 40; row++)
+                    Assert.IsTrue(seen.Add(GroveFloor.TileId(col, row)),
+                                  $"({col},{row}) produced an id another tile already had");
 
-            Assert.IsTrue(HomesteadMapper.TryRead(json, problems, out var catalog));
-
-            Assert.AreEqual(1, catalog.SlotCount, "the duplicate is dropped, not indexed twice");
-            Assert.IsTrue(problems.Count > 0);
+            Assert.AreEqual(1600, seen.Count);
         }
 
         [Test]
@@ -443,7 +429,7 @@ namespace GlimmerGrove.Tests
             RequiresJsonUtility();
 
             var problems = new List<string>();
-            string json = "{\"schemaVersion\":2,\"plots\":[],\"pieces\":[" +
+            string json = "{\"schemaVersion\":3,\"floor\":{\"cols\":4,\"rows\":4,\"hallTile\":\"t_000_000\",\"regions\":[{\"id\":\"home\",\"col\":0,\"row\":0,\"cols\":4,\"rows\":4}]},\"pieces\":[" +
                           "{\"id\":\"Bad Id!\",\"kind\":\"decor\",\"cost\":10}]}";
 
             Assert.IsTrue(HomesteadMapper.TryRead(json, problems, out var catalog));
@@ -452,107 +438,140 @@ namespace GlimmerGrove.Tests
             Assert.IsTrue(problems.Count > 0);
         }
 
-        // ========================================================= the layout
-        static HomesteadPlot Plot(string id, float x, float width, string chapter = "")
-            => new HomesteadPlot(id, "Homestead/plot_" + id, x, width,
-                                 string.IsNullOrEmpty(chapter) ? ChapterId.None : ChapterId.Parse(chapter),
-                                 new[] { new HomesteadSlot(id + "_a", .5f, .8f, 1f) });
+        // ========================================================= the floor
+        static GroveFloor Field(int cols, int rows, params GroveRegion[] regions)
+            => new GroveFloor(cols, rows, string.Empty, GroveFloor.TileId(0, 0),
+                              GroveFloor.TileId(1, 0), regions);
 
         [Test]
-        public void IslandsNeverOverlapWhateverShapeTheirArtIs()
+        public void ATileIdRoundTripsAndIsFixedWidth()
         {
-            // The bug this type exists to make unrepresentable. The first version had an author
-            // write a `y` fraction against a fixed canvas, and every consecutive pair of the ten
-            // shipped islands collided — because the number `y` had to agree with lives in a PNG
-            // the author cannot see from the JSON.
-            var catalog = new HomesteadCatalog(new[]
+            // It is a key in the save file, so it is permanent (invariant 1) and it is walked in
+            // order by SaveDelta - which is why it is zero-padded. An ordering that changed with
+            // the size of a number would make an unchanged save look changed on every launch.
+            Assert.AreEqual("t_007_003", GroveFloor.TileId(7, 3));
+            Assert.AreEqual("t_012_140", GroveFloor.TileId(12, 140));
+
+            Assert.IsTrue(GroveFloor.TryParse("t_007_003", out int col, out int row));
+            Assert.AreEqual(7, col);
+            Assert.AreEqual(3, row);
+
+            Assert.IsFalse(GroveFloor.TryParse("meadow_a", out _, out _),
+                           "an island's old slot id is not a tile");
+            Assert.IsFalse(GroveFloor.TryParse(null, out _, out _));
+        }
+
+        [Test]
+        public void TheIsometricTransformInverts()
+        {
+            // A tap has to land on the tile the finger is over, and the only way that holds for
+            // every tile is if the inverse really is one.
+            for (int col = 0; col < 6; col++)
+                for (int row = 0; row < 6; row++)
+                {
+                    GroveFloor.TileAt(GroveFloor.TileX(col, row), GroveFloor.TileY(col, row),
+                                      out int c, out int r);
+
+                    Assert.AreEqual(col, c, $"column of ({col},{row})");
+                    Assert.AreEqual(row, r, $"row of ({col},{row})");
+                }
+        }
+
+        [Test]
+        public void DrawOrderPutsNearerTilesLater()
+        {
+            // The one thing a field needs that the islands did not: what stands in front is a
+            // consequence of where the player put things, so it has to be computed.
+            Assert.Less(GroveFloor.DrawOrder(0, 0), GroveFloor.DrawOrder(1, 0));
+            Assert.Less(GroveFloor.DrawOrder(0, 0), GroveFloor.DrawOrder(0, 1));
+            Assert.Less(GroveFloor.DrawOrder(3, 1), GroveFloor.DrawOrder(2, 3));
+
+            // Total, so two tiles at the same depth still have a stable order - a tie that
+            // resolved differently between frames would flicker.
+            Assert.AreNotEqual(GroveFloor.DrawOrder(2, 1), GroveFloor.DrawOrder(1, 2));
+        }
+
+        [Test]
+        public void DepthOrderIsTotalSoAWholeWindowCanBeSorted()
+        {
+            // The field is drawn by sorting the visible tiles once and applying sibling indices
+            // in order. That only works if the ordering is a strict total order — the first
+            // version assigned an index per tile as it was realised, and SetSiblingIndex
+            // *inserts*, so every tile behind the one just placed shifted and the field came out
+            // looking sorted while the hall drew in front of the companion one tile nearer.
+            var tiles = new List<(int c, int r)>();
+            for (int c = 0; c < 8; c++)
+                for (int r = 0; r < 8; r++) tiles.Add((c, r));
+
+            var order = new HashSet<int>();
+            foreach (var t in tiles)
+                Assert.IsTrue(order.Add(GroveFloor.DrawOrder(t.c, t.r)),
+                              $"({t.c},{t.r}) shares a depth with another tile");
+
+            // And it agrees with the eye: further down the screen is later.
+            foreach (var a in tiles)
+                foreach (var b in tiles)
+                    if (a.c + a.r < b.c + b.r)
+                        Assert.Less(GroveFloor.DrawOrder(a.c, a.r), GroveFloor.DrawOrder(b.c, b.r),
+                                    $"({a.c},{a.r}) must draw behind ({b.c},{b.r})");
+        }
+
+        [Test]
+        public void StarterLandIsOwnedAndPricedLandIsNot()
+        {
+            var floor = Field(4, 4,
+                              new GroveRegion("home", 0, 0, 2, 4, 0),
+                              new GroveRegion("east", 2, 0, 2, 4, 3000));
+
+            Assert.IsTrue(GroveLand.IsOwned(floor, 0, 0), "the ground a new grove starts on");
+            Assert.IsFalse(GroveLand.IsOwned(floor, 3, 0), "and the ground it does not");
+
+            GroveLand.LoadFrom(new SaveFileDto
             {
-                Plot("a", .5f, .62f), Plot("b", .85f, .24f), Plot("c", .5f, .62f),
-                Plot("d", .15f, .24f), Plot("e", .5f, .70f),
-            }, System.Array.Empty<HomesteadPiece>());
+                schemaVersion = SaveSchema.Version,
+                groveLandOwned = new[] { "east" },
+            });
 
-            // Deliberately extreme and uneven: a very tall island next to a very flat one is
-            // precisely what a re-cut sprite looks like.
-            float[] aspects = { .7f, 2.4f, 1.0f, 1.6f, .45f };
-            int i = 0;
-            var map = HomesteadMap.Build(catalog, 1080f, _ => aspects[i++ % aspects.Length]);
-
-            CollectionAssert.IsEmpty(map.Collisions());
+            Assert.IsTrue(GroveLand.IsOwned(floor, 3, 0));
+            Assert.IsTrue(GroveLand.WasBought(floor.Region("east")));
+            Assert.IsFalse(GroveLand.WasBought(floor.Region("home")), "free is not bought");
         }
 
         [Test]
-        public void TheCanvasIsAlwaysTallEnoughToHoldEveryIsland()
+        public void StarterLandIsNeverWrittenDown()
         {
-            // The other half of the same bug: the starter plot fell *below* the content rect,
-            // so the ScrollRect could not reach it and "I cannot scroll down" meant "the only
-            // island I own does not exist as far as the scroll is concerned".
-            var catalog = new HomesteadCatalog(new[]
-            {
-                Plot("a", .5f, .62f), Plot("b", .5f, .62f), Plot("c", .5f, .62f),
-            }, System.Array.Empty<HomesteadPiece>());
+            // A region with no price is owned by everyone, so writing it into the save would be
+            // a stored default that says nothing - and "absent" and "bought nothing" have to
+            // stay the same fact for the union merge to need no sentinel.
+            GroveLand.LoadFrom(new SaveFileDto { schemaVersion = SaveSchema.Version });
 
-            var map = HomesteadMap.Build(catalog, 1080f, _ => 1.4f);
+            var file = new SaveFileDto();
+            GroveLand.WriteInto(file);
 
-            foreach (var p in map.Placements)
-            {
-                Assert.GreaterOrEqual(p.Top, 0f, $"{p.Plot.Id} starts above the canvas");
-                Assert.LessOrEqual(p.Bottom, map.CanvasHeight, $"{p.Plot.Id} runs past the canvas");
-            }
+            CollectionAssert.IsEmpty(file.groveLandOwned);
         }
 
         [Test]
-        public void CatalogOrderRunsBottomToTop()
+        public void LandIsJoinedByUnionAndSorted()
         {
-            // The first plot in the file is the one a new player owns, and it must be the one
-            // under their thumb when the screen opens — the scroll parks at the bottom.
-            var catalog = new HomesteadCatalog(new[]
-            {
-                Plot("first", .5f, .62f), Plot("second", .5f, .62f), Plot("third", .5f, .62f),
-            }, System.Array.Empty<HomesteadPiece>());
+            var joined = GroveLand.Join(new[] { "east", "north" }, new[] { "north", "west" });
 
-            var map = HomesteadMap.Build(catalog, 1080f, _ => 1f);
+            CollectionAssert.AreEqual(new[] { "east", "north", "west" }, joined,
+                                      "buying cannot be undone, so between two devices the " +
+                                      "player owns whatever either bought");
 
-            // CentreY is measured down from the canvas top, so lower on screen is a larger Y.
-            Assert.Greater(map.Placements[0].CentreY, map.Placements[1].CentreY);
-            Assert.Greater(map.Placements[1].CentreY, map.Placements[2].CentreY);
+            CollectionAssert.AreEqual(joined, GroveLand.Join(joined, joined), "idempotent");
+            CollectionAssert.AreEqual(joined, GroveLand.Join(new[] { "west", "east", "north" }, null),
+                                      "and sorted, or an unchanged save reads as changed for ever");
         }
 
         [Test]
-        public void AnEmptyCatalogLaysOutWithoutThrowing()
+        public void NothingCanBePlacedOnTheHallsTile()
         {
-            var map = HomesteadMap.Build(HomesteadCatalog.Empty, 1080f, _ => 1f);
+            var floor = Field(4, 4, new GroveRegion("home", 0, 0, 4, 4, 0));
 
-            CollectionAssert.IsEmpty(map.Placements);
-            Assert.Greater(map.CanvasHeight, 0f);
-        }
-
-        [Test]
-        public void TheShippedGroveLaysOutWithoutCollisions()
-        {
-            // Aspects taken from the real art, so this is the shipped grove rather than a
-            // synthetic one. Editor-only, because reading the PNGs needs Application.dataPath.
-            var catalog = Shipped(out _);
-
-            var map = HomesteadMap.Build(catalog, 1080f, PlotAspect);
-
-            CollectionAssert.IsEmpty(map.Collisions());
-            Assert.Greater(map.CanvasHeight, 0f);
-        }
-
-        /// <summary>A plot's art aspect, read straight out of the PNG header.</summary>
-        static float PlotAspect(HomesteadPlot plot)
-        {
-            string path = Path.GetFullPath(Path.Combine(Application.dataPath, "Game", "Art",
-                                                        plot.Art.Replace('/', Path.DirectorySeparatorChar)))
-                          + ".png";
-            if (!File.Exists(path)) return 1f;
-
-            var head = new byte[24];
-            using (var f = File.OpenRead(path)) f.Read(head, 0, 24);
-
-            int w = (head[16] << 24) | (head[17] << 16) | (head[18] << 8) | head[19];
-            int h = (head[20] << 24) | (head[21] << 16) | (head[22] << 8) | head[23];
-            return w > 0 ? (float)h / w : 1f;
+            Assert.IsFalse(GroveLand.IsBuildable(floor, 0, 0), "the hall draws itself there");
+            Assert.IsTrue(GroveLand.IsBuildable(floor, 2, 2));
         }
 
         // ================================================== the shipped catalog
@@ -574,7 +593,7 @@ namespace GlimmerGrove.Tests
             var catalog = Shipped(out var problems);
 
             CollectionAssert.IsEmpty(problems);
-            Assert.Greater(catalog.PlotCount, 0);
+            Assert.Greater(catalog.Floor.Regions.Count, 0);
             Assert.Greater(catalog.PieceCount, 0);
             Assert.Greater(catalog.SlotCount, 0);
         }
@@ -587,30 +606,34 @@ namespace GlimmerGrove.Tests
             // the half that runs without an Editor.
             var catalog = Shipped(out _);
 
-            bool anyPlot = false;
-            foreach (var plot in catalog.Plots) if (plot.IsStarter) anyPlot = true;
+            bool anyLand = false;
+            foreach (var region in catalog.Floor.Regions) if (region.IsStarter) anyLand = true;
 
             bool anyPiece = false;
             foreach (var piece in catalog.Pieces) if (piece.IsStarter) anyPiece = true;
 
-            Assert.IsTrue(anyPlot, "no plot is free from the first launch");
+            Assert.IsTrue(anyLand, "no ground is free from the first launch");
             Assert.IsTrue(anyPiece, "no piece is free from the first launch");
+
+            // And the hall has to stand on ground a new player already owns, or the feature
+            // opens onto a padlock where the house should be.
+            var hall = catalog.Floor.RegionOf(catalog.Floor.HallTile);
+            Assert.IsNotNull(hall, "the hall stands on no region at all");
+            Assert.IsTrue(hall.IsStarter, "the hall stands on ground a new player must buy");
         }
 
         [Test]
-        public void NothingInTheShippedCatalogSellsAResident()
+        public void TheShippedCatalogAuthorsNoResidents()
         {
+            // The file is decor and the home ladder; the creatures come from the manifest's
+            // companion roster. Asserted against the shipped body rather than only against the
+            // mapper, because the failure this catches is somebody re-adding the rows by hand
+            // after reading an old comment.
             var catalog = Shipped(out _);
 
-            int residents = 0;
-            foreach (var piece in catalog.Pieces)
-            {
-                if (!piece.IsResident) continue;
-                residents++;
-                Assert.AreEqual(0, piece.Cost, $"resident '{piece.Id}' has a price");
-            }
-
-            Assert.Greater(residents, 0, "a grove with no residents is a shop");
+            foreach (var piece in catalog.Authored)
+                Assert.IsFalse(piece.IsResident,
+                               $"'{piece.Id}' is authored as a resident; residents are the roster");
         }
 
         [Test]
@@ -622,16 +645,16 @@ namespace GlimmerGrove.Tests
             var catalog = Shipped(out _);
 
             var seen = new HashSet<string>(StringComparer.Ordinal);
-            int counted = 0;
 
-            foreach (var plot in catalog.Plots)
-                foreach (var slot in plot.Slots)
-                {
-                    counted++;
-                    Assert.IsTrue(seen.Add(slot.Id), $"slot '{slot.Id}' appears twice");
-                }
+            foreach (var region in catalog.Floor.Regions)
+                for (int c = region.Col; c < region.Col + region.Cols; c++)
+                    for (int r = region.Row; r < region.Row + region.Rows; r++)
+                        Assert.IsTrue(seen.Add(GroveFloor.TileId(c, r)),
+                                      $"tile {GroveFloor.TileId(c, r)} is in two regions, so who " +
+                                      "owns it would depend on the order of the file");
 
-            Assert.AreEqual(catalog.SlotCount, counted);
+            Assert.LessOrEqual(seen.Count, catalog.SlotCount,
+                               "a region runs off the field");
         }
     }
 }

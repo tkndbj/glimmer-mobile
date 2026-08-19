@@ -192,10 +192,38 @@ namespace GlimmerGrove.Tests
 
             Assert.IsTrue(ProgressionTable.TryRead(json, out var table, problems),
                           string.Join("; ", problems));
-            Assert.IsEmpty(problems, string.Join("; ", problems));
+
+            // The vector file's progression block carries the reward curve and the golden
+            // bands, and deliberately not the daily chests, the ad payouts or the streak
+            // ladder — those have vector sets of their own (dailyChestConfig, streakLadder)
+            // read through their own resolvers a few methods below, so duplicating them here
+            // would be a second copy for a drop to put out of step with the first. The reader
+            // notes each absent block and falls back, which is correct behaviour and not a
+            // problem with these vectors — so the three notes are expected and everything else
+            // is still a failure.
+            //
+            // Filtered rather than asserted-empty because asserting empty is what this did,
+            // and it had been failing ever since the daily, ads and streak blocks were added
+            // to the reader: two red tests on the one guard that stops the client and the
+            // server paying different amounts (invariant 9a), which is exactly the guard
+            // nobody can afford to be in the habit of ignoring.
+            var unexpected = problems.FindAll(p => !IsAbsentBlockNote(p));
+            Assert.IsEmpty(unexpected, string.Join("; ", unexpected));
 
             return table;
         }
+
+        /// <summary>
+        /// True for the reader's note that a block this vector file does not carry was absent.
+        ///
+        /// Matched on the exact sentences rather than on a substring of one of them, so a
+        /// <em>malformed</em> block — which produces a different sentence about the same
+        /// section — still fails. See <see cref="TableFrom"/>.
+        /// </summary>
+        static bool IsAbsentBlockNote(string problem)
+            => problem == "daily block lists no chests; using the built-in table"
+            || problem == "ads block lists no placements; using the built-in table"
+            || problem == "streak block lists no rungs; using the built-in ladder";
 
         static IChapterMap ChaptersFrom(VectorFile file)
         {

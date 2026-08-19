@@ -1,692 +1,87 @@
 {
-  "schemaVersion": 2,
-  "plots": [
-    {
-      "id": "meadow",
-      "art": "Homestead/plot_meadow",
-      "x": 0.48,
-      "width": 0.942,
-      "requiresChapter": "",
-      "slots": [
-        {
-          "id": "meadow_hearth",
-          "x": 0.5,
-          "y": 0.73,
-          "scale": 0.78,
-          "kind": "hearth"
-        },
-        {
-          "id": "meadow_a",
-          "x": 0.18,
-          "y": 0.84,
-          "scale": 0.6,
-          "kind": "canopy"
-        },
-        {
-          "id": "meadow_b",
-          "x": 0.82,
-          "y": 0.82,
-          "scale": 0.9,
-          "kind": "structure"
-        },
-        {
-          "id": "meadow_c",
-          "x": 0.29,
-          "y": 0.65,
-          "scale": 0.95,
-          "kind": "bed"
-        },
-        {
-          "id": "meadow_d",
-          "x": 0.71,
-          "y": 0.64,
-          "scale": 0.95,
-          "kind": "bed"
-        },
-        {
-          "id": "meadow_e",
-          "x": 0.5,
-          "y": 0.63,
-          "scale": 0.6,
-          "kind": "path"
-        },
-        {
-          "id": "meadow_f",
-          "x": 0.5,
-          "y": 0.55,
-          "scale": 0.6,
-          "kind": "path"
-        },
-        {
-          "id": "meadow_g",
-          "x": 0.12,
-          "y": 0.7,
-          "scale": 0.85,
-          "kind": "edge"
-        },
-        {
-          "id": "meadow_i",
-          "x": 0.88,
-          "y": 0.67,
-          "scale": 0.85,
-          "kind": "edge"
-        },
-        {
-          "id": "meadow_j",
-          "x": 0.35,
-          "y": 0.9,
-          "scale": 0.8
-        },
-        {
-          "id": "meadow_k",
-          "x": 0.66,
-          "y": 0.9,
-          "scale": 0.8
-        }
-      ]
-    },
-    {
-      "id": "perch",
-      "art": "Homestead/plot_perch",
-      "x": 0.84,
-      "width": 0.376,
-      "requiresChapter": "c01_shallows",
-      "slots": [
-        {
-          "id": "perch_a",
-          "x": 0.5,
-          "y": 0.74,
-          "scale": 0.6,
-          "kind": "structure"
-        },
-        {
-          "id": "perch_b",
-          "x": 0.24,
-          "y": 0.68,
-          "scale": 0.55,
-          "kind": "bed"
-        },
-        {
-          "id": "perch_c",
-          "x": 0.78,
-          "y": 0.66,
-          "scale": 0.55,
-          "kind": "edge"
-        }
-      ]
-    },
-    {
-      "id": "hollow",
-      "art": "Homestead/plot_hollow",
-      "x": 0.54,
-      "width": 0.941,
-      "requiresChapter": "c01_shallows",
-      "slots": [
-        {
-          "id": "hollow_a",
-          "x": 0.5,
-          "y": 0.73,
-          "scale": 1.0,
-          "kind": "structure"
-        },
-        {
-          "id": "hollow_b",
-          "x": 0.18,
-          "y": 0.84,
-          "scale": 0.6,
-          "kind": "canopy"
-        },
-        {
-          "id": "hollow_c",
-          "x": 0.82,
-          "y": 0.82,
-          "scale": 0.9,
-          "kind": "structure"
-        },
-        {
-          "id": "hollow_d",
-          "x": 0.29,
-          "y": 0.65,
-          "scale": 0.95,
-          "kind": "bed"
-        },
-        {
-          "id": "hollow_e",
-          "x": 0.71,
-          "y": 0.64,
-          "scale": 0.95,
-          "kind": "bed"
-        },
-        {
-          "id": "hollow_f",
-          "x": 0.5,
-          "y": 0.63,
-          "scale": 0.6,
-          "kind": "path"
-        },
-        {
-          "id": "hollow_g",
-          "x": 0.5,
-          "y": 0.55,
-          "scale": 0.6,
-          "kind": "path"
-        },
-        {
-          "id": "hollow_h",
-          "x": 0.12,
-          "y": 0.7,
-          "scale": 0.85,
-          "kind": "edge"
-        },
-        {
-          "id": "hollow_i",
-          "x": 0.88,
-          "y": 0.67,
-          "scale": 0.85,
-          "kind": "edge"
-        },
-        {
-          "id": "hollow_j",
-          "x": 0.35,
-          "y": 0.9,
-          "scale": 0.8
-        },
-        {
-          "id": "hollow_k",
-          "x": 0.66,
-          "y": 0.9,
-          "scale": 0.8
-        }
-      ]
-    },
-    {
-      "id": "step",
-      "art": "Homestead/plot_step",
-      "x": 0.15,
-      "width": 0.376,
-      "requiresChapter": "c02_tidewood",
-      "slots": [
-        {
-          "id": "step_a",
-          "x": 0.5,
-          "y": 0.8,
-          "scale": 0.6,
-          "kind": "structure"
-        },
-        {
-          "id": "step_b",
-          "x": 0.26,
-          "y": 0.75,
-          "scale": 0.55,
-          "kind": "bed"
-        },
-        {
-          "id": "step_c",
-          "x": 0.76,
-          "y": 0.73,
-          "scale": 0.55,
-          "kind": "edge"
-        }
-      ]
-    },
-    {
-      "id": "ridge",
-      "art": "Homestead/plot_ridge",
-      "x": 0.45,
-      "width": 0.941,
-      "requiresChapter": "c02_tidewood",
-      "slots": [
-        {
-          "id": "ridge_a",
-          "x": 0.5,
-          "y": 0.73,
-          "scale": 1.0,
-          "kind": "structure"
-        },
-        {
-          "id": "ridge_b",
-          "x": 0.18,
-          "y": 0.84,
-          "scale": 0.6,
-          "kind": "canopy"
-        },
-        {
-          "id": "ridge_c",
-          "x": 0.82,
-          "y": 0.82,
-          "scale": 0.9,
-          "kind": "structure"
-        },
-        {
-          "id": "ridge_d",
-          "x": 0.29,
-          "y": 0.65,
-          "scale": 0.95,
-          "kind": "bed"
-        },
-        {
-          "id": "ridge_e",
-          "x": 0.71,
-          "y": 0.64,
-          "scale": 0.95,
-          "kind": "bed"
-        },
-        {
-          "id": "ridge_f",
-          "x": 0.5,
-          "y": 0.63,
-          "scale": 0.6,
-          "kind": "path"
-        },
-        {
-          "id": "ridge_g",
-          "x": 0.5,
-          "y": 0.55,
-          "scale": 0.6,
-          "kind": "path"
-        },
-        {
-          "id": "ridge_h",
-          "x": 0.12,
-          "y": 0.7,
-          "scale": 0.85,
-          "kind": "edge"
-        },
-        {
-          "id": "ridge_i",
-          "x": 0.88,
-          "y": 0.67,
-          "scale": 0.85,
-          "kind": "edge"
-        },
-        {
-          "id": "ridge_j",
-          "x": 0.35,
-          "y": 0.9,
-          "scale": 0.8
-        },
-        {
-          "id": "ridge_k",
-          "x": 0.66,
-          "y": 0.9,
-          "scale": 0.8
-        }
-      ]
-    },
-    {
-      "id": "knoll",
-      "art": "Homestead/plot_knoll",
-      "x": 0.85,
-      "width": 0.376,
-      "requiresChapter": "c03_emberfen",
-      "slots": [
-        {
-          "id": "knoll_a",
-          "x": 0.5,
-          "y": 0.74,
-          "scale": 0.6,
-          "kind": "structure"
-        },
-        {
-          "id": "knoll_b",
-          "x": 0.24,
-          "y": 0.68,
-          "scale": 0.55,
-          "kind": "bed"
-        },
-        {
-          "id": "knoll_c",
-          "x": 0.78,
-          "y": 0.66,
-          "scale": 0.55,
-          "kind": "edge"
-        }
-      ]
-    },
-    {
-      "id": "terrace",
-      "art": "Homestead/plot_terrace",
-      "x": 0.55,
-      "width": 0.941,
-      "requiresChapter": "c03_emberfen",
-      "slots": [
-        {
-          "id": "terrace_a",
-          "x": 0.5,
-          "y": 0.73,
-          "scale": 1.0,
-          "kind": "structure"
-        },
-        {
-          "id": "terrace_b",
-          "x": 0.18,
-          "y": 0.84,
-          "scale": 0.6,
-          "kind": "canopy"
-        },
-        {
-          "id": "terrace_c",
-          "x": 0.82,
-          "y": 0.82,
-          "scale": 0.9,
-          "kind": "structure"
-        },
-        {
-          "id": "terrace_d",
-          "x": 0.29,
-          "y": 0.65,
-          "scale": 0.95,
-          "kind": "bed"
-        },
-        {
-          "id": "terrace_e",
-          "x": 0.71,
-          "y": 0.64,
-          "scale": 0.95,
-          "kind": "bed"
-        },
-        {
-          "id": "terrace_f",
-          "x": 0.5,
-          "y": 0.63,
-          "scale": 0.6,
-          "kind": "path"
-        },
-        {
-          "id": "terrace_g",
-          "x": 0.5,
-          "y": 0.55,
-          "scale": 0.6,
-          "kind": "path"
-        },
-        {
-          "id": "terrace_h",
-          "x": 0.12,
-          "y": 0.7,
-          "scale": 0.85,
-          "kind": "edge"
-        },
-        {
-          "id": "terrace_i",
-          "x": 0.88,
-          "y": 0.67,
-          "scale": 0.85,
-          "kind": "edge"
-        },
-        {
-          "id": "terrace_j",
-          "x": 0.35,
-          "y": 0.9,
-          "scale": 0.8
-        },
-        {
-          "id": "terrace_k",
-          "x": 0.66,
-          "y": 0.9,
-          "scale": 0.8
-        }
-      ]
-    },
-    {
-      "id": "crag",
-      "art": "Homestead/plot_crag",
-      "x": 0.15,
-      "width": 0.376,
-      "requiresChapter": "c04_stillmere",
-      "slots": [
-        {
-          "id": "crag_a",
-          "x": 0.5,
-          "y": 0.8,
-          "scale": 0.6,
-          "kind": "structure"
-        },
-        {
-          "id": "crag_b",
-          "x": 0.26,
-          "y": 0.75,
-          "scale": 0.55,
-          "kind": "bed"
-        },
-        {
-          "id": "crag_c",
-          "x": 0.76,
-          "y": 0.73,
-          "scale": 0.55,
-          "kind": "edge"
-        }
-      ]
-    },
-    {
-      "id": "haven",
-      "art": "Homestead/plot_haven",
-      "x": 0.47,
-      "width": 0.941,
-      "requiresChapter": "c04_stillmere",
-      "slots": [
-        {
-          "id": "haven_a",
-          "x": 0.5,
-          "y": 0.73,
-          "scale": 1.0,
-          "kind": "structure"
-        },
-        {
-          "id": "haven_b",
-          "x": 0.18,
-          "y": 0.84,
-          "scale": 0.6,
-          "kind": "canopy"
-        },
-        {
-          "id": "haven_c",
-          "x": 0.82,
-          "y": 0.82,
-          "scale": 0.9,
-          "kind": "structure"
-        },
-        {
-          "id": "haven_d",
-          "x": 0.29,
-          "y": 0.65,
-          "scale": 0.95,
-          "kind": "bed"
-        },
-        {
-          "id": "haven_e",
-          "x": 0.71,
-          "y": 0.64,
-          "scale": 0.95,
-          "kind": "bed"
-        },
-        {
-          "id": "haven_f",
-          "x": 0.5,
-          "y": 0.63,
-          "scale": 0.6,
-          "kind": "path"
-        },
-        {
-          "id": "haven_g",
-          "x": 0.5,
-          "y": 0.55,
-          "scale": 0.6,
-          "kind": "path"
-        },
-        {
-          "id": "haven_h",
-          "x": 0.12,
-          "y": 0.7,
-          "scale": 0.85,
-          "kind": "edge"
-        },
-        {
-          "id": "haven_i",
-          "x": 0.88,
-          "y": 0.67,
-          "scale": 0.85,
-          "kind": "edge"
-        },
-        {
-          "id": "haven_j",
-          "x": 0.35,
-          "y": 0.9,
-          "scale": 0.8
-        },
-        {
-          "id": "haven_k",
-          "x": 0.66,
-          "y": 0.9,
-          "scale": 0.8
-        }
-      ]
-    },
-    {
-      "id": "shelf",
-      "art": "Homestead/plot_shelf",
-      "x": 0.53,
-      "width": 0.941,
-      "requiresChapter": "c05_lastlight",
-      "slots": [
-        {
-          "id": "shelf_a",
-          "x": 0.5,
-          "y": 0.73,
-          "scale": 1.0,
-          "kind": "structure"
-        },
-        {
-          "id": "shelf_b",
-          "x": 0.18,
-          "y": 0.84,
-          "scale": 0.6,
-          "kind": "canopy"
-        },
-        {
-          "id": "shelf_c",
-          "x": 0.82,
-          "y": 0.82,
-          "scale": 0.9,
-          "kind": "structure"
-        },
-        {
-          "id": "shelf_d",
-          "x": 0.29,
-          "y": 0.65,
-          "scale": 0.95,
-          "kind": "bed"
-        },
-        {
-          "id": "shelf_e",
-          "x": 0.71,
-          "y": 0.64,
-          "scale": 0.95,
-          "kind": "bed"
-        },
-        {
-          "id": "shelf_f",
-          "x": 0.5,
-          "y": 0.63,
-          "scale": 0.6,
-          "kind": "path"
-        },
-        {
-          "id": "shelf_g",
-          "x": 0.5,
-          "y": 0.55,
-          "scale": 0.6,
-          "kind": "path"
-        },
-        {
-          "id": "shelf_h",
-          "x": 0.12,
-          "y": 0.7,
-          "scale": 0.85,
-          "kind": "edge"
-        },
-        {
-          "id": "shelf_i",
-          "x": 0.88,
-          "y": 0.67,
-          "scale": 0.85,
-          "kind": "edge"
-        },
-        {
-          "id": "shelf_j",
-          "x": 0.35,
-          "y": 0.9,
-          "scale": 0.8
-        },
-        {
-          "id": "shelf_k",
-          "x": 0.66,
-          "y": 0.9,
-          "scale": 0.8
-        }
-      ]
-    }
-  ],
+  "schemaVersion": 3,
+  "floor": {
+    "cols": 14,
+    "rows": 14,
+    "tileArt": "Homestead/floor_grass",
+    "hallTile": "t_006_006",
+    "starterTile": "t_007_006",
+    "regions": [
+      {
+        "id": "dusk_field",
+        "col": 0,
+        "row": 0,
+        "cols": 4,
+        "rows": 4,
+        "cost": 11000
+      },
+      {
+        "id": "north_reach",
+        "col": 4,
+        "row": 0,
+        "cols": 6,
+        "rows": 4,
+        "cost": 5000
+      },
+      {
+        "id": "far_terrace",
+        "col": 10,
+        "row": 0,
+        "cols": 4,
+        "rows": 4,
+        "cost": 14000
+      },
+      {
+        "id": "west_hollow",
+        "col": 0,
+        "row": 4,
+        "cols": 4,
+        "rows": 6,
+        "cost": 3500
+      },
+      {
+        "id": "hearthstead",
+        "col": 4,
+        "row": 4,
+        "cols": 6,
+        "rows": 6,
+        "cost": 0
+      },
+      {
+        "id": "east_meadow",
+        "col": 10,
+        "row": 4,
+        "cols": 4,
+        "rows": 6,
+        "cost": 2500
+      },
+      {
+        "id": "still_shore",
+        "col": 0,
+        "row": 10,
+        "cols": 4,
+        "rows": 4,
+        "cost": 17000
+      },
+      {
+        "id": "south_bank",
+        "col": 4,
+        "row": 10,
+        "cols": 6,
+        "rows": 4,
+        "cost": 6500
+      },
+      {
+        "id": "sunrise_field",
+        "col": 10,
+        "row": 10,
+        "cols": 4,
+        "rows": 4,
+        "cost": 9000
+      }
+    ]
+  },
   "pieces": [
-    {
-      "id": "sunmote",
-      "art": "Critters/c1",
-      "animated": true,
-      "kind": "resident",
-      "cost": 0,
-      "requiresLevel": "c01_first_light",
-      "requiresChapter": "",
-      "scale": 0.95,
-      "lift": 0.45,
-      "disabled": false
-    },
-    {
-      "id": "ripple",
-      "art": "Critters/c2",
-      "animated": true,
-      "kind": "resident",
-      "cost": 0,
-      "requiresLevel": "c01_twin_streams",
-      "requiresChapter": "",
-      "scale": 0.95,
-      "lift": 0.45,
-      "disabled": false
-    },
-    {
-      "id": "prism",
-      "art": "Critters/c3",
-      "animated": true,
-      "kind": "resident",
-      "cost": 0,
-      "requiresLevel": "c01_prism_heart",
-      "requiresChapter": "",
-      "scale": 0.95,
-      "lift": 0.45,
-      "disabled": false
-    },
-    {
-      "id": "burr",
-      "art": "Critters/c4",
-      "animated": true,
-      "kind": "resident",
-      "cost": 0,
-      "requiresLevel": "c01_thorn_hollow",
-      "requiresChapter": "",
-      "scale": 0.95,
-      "lift": 0.45,
-      "disabled": false
-    },
-    {
-      "id": "dusk",
-      "art": "Critters/c5",
-      "animated": true,
-      "kind": "resident",
-      "cost": 0,
-      "requiresLevel": "c01_duskcap_hollow",
-      "requiresChapter": "",
-      "scale": 0.95,
-      "lift": 0.45,
-      "disabled": false
-    },
     {
       "id": "cottage",
       "art": "Homestead/cottage",

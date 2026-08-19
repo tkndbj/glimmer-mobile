@@ -140,8 +140,21 @@ namespace GlimmerGrove.Persistence
         ///      piece is permission to draw it in as many slots as they like, because a
         ///      stored count is the one shape invariant 11b forbids and hearts already spent
         ///      a schema version proving it. See <see cref="Homestead.HomesteadLayout"/>.
+        /// v17 — the grove stands on a floor rather than on floating islands, and the floor
+        ///      is bought (<see cref="SaveFileDto.groveLandOwned"/>). This is the one thing
+        ///      the change cost: land used to be <em>derived</em> from chapters finished, so
+        ///      it recomputed everywhere, survived every merge and left nothing on disk
+        ///      (invariant 14). Land paid for with credits cannot be derived from anything
+        ///      observable, so it is stored — as a set of permanent ids joined by union,
+        ///      invariant 15 for the third time after companions and grove pieces. It is a
+        ///      set of <em>regions</em> rather than of tiles on purpose: both are legal
+        ///      shapes and only one stays small, since a filled floor is several hundred
+        ///      tiles and a set that size is merged and checksummed on every sync for ever.
+        ///      Note what did <em>not</em> change: <see cref="SaveFileDto.homesteadPlaced"/>
+        ///      is untouched, because a tile is a slot and its id is permanent, so an empty
+        ///      floor still costs nothing and a floor with two things on it costs two rows.
         /// </summary>
-        public const int Version = 16;
+        public const int Version = 17;
 
         /// <summary>Progress that predates this file: index-keyed keys in PlayerPrefs.</summary>
         public const int LegacyPlayerPrefsVersion = 0;
@@ -316,6 +329,29 @@ namespace GlimmerGrove.Persistence
         /// </para>
         /// </summary>
         public HomesteadPlacementDto[] homesteadPlaced;
+
+        /// <summary>
+        /// Which regions of the grove floor the player has bought.
+        ///
+        /// <para>
+        /// An entitlement, so a set of permanent ids joined by union — invariant 15, and the
+        /// same shape as <see cref="homesteadOwned"/> and <see cref="companionsOwned"/>.
+        /// Buying is irreversible, so between two devices the player owns whatever either
+        /// bought, and the join is idempotent and order-independent without trying.
+        /// </para>
+        /// <para>
+        /// Regions rather than tiles, and starter land is <b>absent rather than listed</b>:
+        /// a region with no price is owned by everyone from the first launch, so writing it
+        /// down would be a stored default that says nothing. Absent and "bought nothing" are
+        /// the same fact, which is what makes this mergeable with no sentinel.
+        /// </para>
+        /// <para>
+        /// Unknown ids are carried through untouched, for <see cref="tipsSeen"/>'s reason —
+        /// land bought on a newer build must not be confiscated by a trip through an older
+        /// one. See <see cref="Homestead.GroveLand"/>.
+        /// </para>
+        /// </summary>
+        public string[] groveLandOwned;
 
         /// <summary>
         /// Integrity check over the rest of the file. Empty on files written before

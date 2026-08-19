@@ -107,6 +107,8 @@ namespace GlimmerGrove.Persistence
                 // untouched slot writes nothing at all.
                 homesteadOwned = Homestead.HomesteadLedger.Join(mine.homesteadOwned,
                                                                 other.homesteadOwned),
+                groveLandOwned = Homestead.GroveLand.Join(mine.groveLandOwned,
+                                                          other.groveLandOwned),
                 homesteadPlaced = Homestead.HomesteadLayout.Join(mine.homesteadPlaced,
                                                                  other.homesteadPlaced),
             };

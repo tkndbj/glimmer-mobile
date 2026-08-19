@@ -167,6 +167,38 @@ namespace GlimmerGrove
             });
         }
 
+        /// <summary>
+        /// One isometric floor tile: a 2:1 diamond with a soft inner edge.
+        ///
+        /// <para>
+        /// Generated for <see cref="Bloom"/> and <c>Art.Dial</c>'s reason, and with the
+        /// strongest case of any of them: the floor is the first thing the Grovement draws and
+        /// it draws hundreds of it, so an <c>Image</c> with no sprite would not be one white
+        /// rectangle but a screenful (invariant 7b). It also means the feature works before the
+        /// tile art exists, and a content file that names real art simply overrides it.
+        /// </para>
+        /// <para>
+        /// The <paramref name="inset"/> is the gap between one tile and the next: a hairline of
+        /// transparency is what makes a field of them read as a grid rather than as one flat
+        /// wash of colour, and it costs nothing to draw.
+        /// </para>
+        /// </summary>
+        public static Sprite IsoTile(int width = 128, float inset = 1.5f)
+        {
+            float hw = width * .5f, hh = width * .25f;
+            int height = Mathf.Max(2, Mathf.RoundToInt(width * .5f));
+
+            return Make($"isotile{width}_{inset}", width, height, (x, y) =>
+            {
+                // A diamond is |dx|/hw + |dy|/hh <= 1, scaled back to pixels so the feather is
+                // the same width on every edge however wide the tile is.
+                float dx = Mathf.Abs(x - hw) / hw;
+                float dy = Mathf.Abs(y - hh) / hh;
+                float d = (dx + dy - 1f) * Mathf.Min(hw, hh);
+                return Cover(d + inset);
+            });
+        }
+
         public static Sprite Ring(int size = 128, float thickness = 10f)
         {
             float h = size * .5f;

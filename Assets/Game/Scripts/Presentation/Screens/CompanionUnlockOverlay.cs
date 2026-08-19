@@ -44,6 +44,21 @@ namespace GlimmerGrove
         /// </summary>
         public AvatarDefinition Avatar { get; set; }
 
+        /// <summary>
+        /// Whether buying also puts this companion on the player's nameplate. True from the
+        /// profile, false from the grove.
+        ///
+        /// <para>
+        /// The profile's roster is a picker: the tap that buys somebody there is the same tap
+        /// that chooses them, and making the player choose twice would be friction over a
+        /// decision they have already made. The grove's shelf is not — a resident is bought to
+        /// <em>stand</em> somewhere, and quietly changing who the player is called after is the
+        /// kind of surprise that makes somebody distrust a shop. One panel, one flag, because
+        /// two panels would be two places to get the six honest refusals right.
+        /// </para>
+        /// </summary>
+        public bool WearOnBuy { get; set; } = true;
+
         // ------------------------------------------------------------- geometry
         // A cursor walking down the panel rather than absolute offsets, for the reason
         // AdOfferOverlay's does: the fact list is not a fixed length. A companion with no
@@ -372,7 +387,9 @@ namespace GlimmerGrove
                 // Re-checked here rather than trusted from the button, because the balance can
                 // have moved since it was painted — a spend on another screen, or a sync that
                 // replaced a claim with the server's smaller figure.
-                bought = Profile.TryBuyAvatar(Avatar);
+                bought = WearOnBuy
+                    ? Profile.TryBuyAvatar(Avatar)
+                    : Progression.CompanionLedger.TryBuy(Avatar, Profile.Rank);
             }
             finally
             {

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 using GlimmerGrove.Content;
+using GlimmerGrove.Progression;
 using UnityEngine;
 
 namespace GlimmerGrove.Homestead
@@ -29,6 +30,34 @@ namespace GlimmerGrove.Homestead
     {
         static Task<HomesteadLoadResult> _running;
 
+        /// <summary>
+        /// Keeps the projected residents in step with the roster they come from.
+        ///
+        /// <para>
+        /// The roster rides the manifest and the grove body is its own file, so the two are
+        /// published on separate paths and either can arrive second — and a content refresh can
+        /// replace the roster while the Grovement is open. Recomposing is a swap of one
+        /// immutable object built from the catalog's own authored half, so it costs no I/O and
+        /// no screen can observe a half-updated grove.
+        /// </para>
+        /// <para>
+        /// Hooked from the type initialiser, which runs on the first <see cref="EnsureAsync"/>
+        /// — that is, before any grove screen has drawn. A subscription each screen had to
+        /// remember is the shape this project has already had to unlearn twice.
+        /// </para>
+        /// </summary>
+        static HomesteadService()
+        {
+            AvatarCatalog.Changed += OnRosterChanged;
+        }
+
+        static void OnRosterChanged()
+        {
+            if (!HomesteadCatalog.IsLoaded) return;
+
+            HomesteadCatalog.Publish(HomesteadCatalog.Current.WithResidents(AvatarCatalog.All));
+        }
+
         /// <summary>The last read's problems, for the Editor and for diagnostics.</summary>
         public static IReadOnlyList<string> Problems { get; private set; } = Array.Empty<string>();
 
@@ -40,7 +69,7 @@ namespace GlimmerGrove.Homestead
         /// is a sentence explaining that the grove is not available. A screen that shows the
         /// spinner for a failure spins forever.
         /// </summary>
-        public static bool IsUnavailable => HomesteadCatalog.IsLoaded && HomesteadCatalog.Current.PlotCount == 0;
+        public static bool IsUnavailable => HomesteadCatalog.IsLoaded && HomesteadCatalog.Current.Floor.IsEmpty;
 
         /// <summary>
         /// Loads and publishes the catalog if it has not been already. Returns immediately

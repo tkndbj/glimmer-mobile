@@ -1094,6 +1094,11 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 9c6c8e33beb87a04c880ee83ddc90a8a
+    m_Address: Art/Grove
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 9c9c7ade1261a4f326ad707e07c31f13
     m_Address: Art/Bg/grove_near
     m_ReadOnly: 0

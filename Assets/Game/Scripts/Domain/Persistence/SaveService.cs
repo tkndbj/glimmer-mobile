@@ -39,6 +39,7 @@ namespace GlimmerGrove.Persistence
             TipLedger.LoadFrom(dto);
             Progression.CompanionLedger.LoadFrom(dto);
             Homestead.HomesteadLedger.LoadFrom(dto);
+            Homestead.GroveLand.LoadFrom(dto);
             Homestead.HomesteadLayout.LoadFrom(dto);
             Daily.DailyChests.LoadFrom(dto);
             Daily.DailyStreak.LoadFrom(dto);
@@ -113,6 +114,7 @@ namespace GlimmerGrove.Persistence
             TipLedger.WriteInto(dto);
             Progression.CompanionLedger.WriteInto(dto);
             Homestead.HomesteadLedger.WriteInto(dto);
+            Homestead.GroveLand.WriteInto(dto);
             Homestead.HomesteadLayout.WriteInto(dto);
             Daily.DailyChests.WriteInto(dto);
             Daily.DailyStreak.WriteInto(dto);
@@ -141,6 +143,7 @@ namespace GlimmerGrove.Persistence
             TipLedger.LoadFrom(dto);
             Progression.CompanionLedger.LoadFrom(dto);
             Homestead.HomesteadLedger.LoadFrom(dto);
+            Homestead.GroveLand.LoadFrom(dto);
             Homestead.HomesteadLayout.LoadFrom(dto);
             Daily.DailyChests.LoadFrom(dto);
             Daily.DailyStreak.LoadFrom(dto);
@@ -175,6 +178,7 @@ namespace GlimmerGrove.Persistence
             TipLedger.LoadFrom(fresh);
             Progression.CompanionLedger.LoadFrom(fresh);
             Homestead.HomesteadLedger.LoadFrom(fresh);
+            Homestead.GroveLand.LoadFrom(fresh);
             Homestead.HomesteadLayout.LoadFrom(fresh);
             Daily.DailyChests.LoadFrom(fresh);
             Daily.DailyStreak.LoadFrom(fresh);

@@ -51,14 +51,18 @@ namespace GlimmerGrove.Homestead
                 return false;
             }
 
-            var slotIds = new HashSet<string>(StringComparer.Ordinal);
-            var plotIds = new HashSet<string>(StringComparer.Ordinal);
-            var plots = new List<HomesteadPlot>();
+            // The grove body has its own floor beneath the shared schema gate. A v2 body
+            // describes floating islands with hand-authored slots, which this build has no way
+            // to draw - and reading it would produce a grove with no ground rather than a clear
+            // refusal, which is the failure ContentSchema exists to prevent.
+            if (dto.schemaVersion < FloorSchema)
+            {
+                problems.Add($"grove catalog is schema v{dto.schemaVersion}; the grove is a tile " +
+                             $"floor from v{FloorSchema} and the islands it describes cannot be drawn");
+                return false;
+            }
 
-            if (dto.plots != null)
-                foreach (var entry in dto.plots)
-                    if (TryReadPlot(entry, plotIds, slotIds, problems, out var plot))
-                        plots.Add(plot);
+            var floor = ReadFloor(dto.floor, problems);
 
             var pieceIds = new HashSet<string>(StringComparer.Ordinal);
             var pieces = new List<HomesteadPiece>();
@@ -68,80 +72,152 @@ namespace GlimmerGrove.Homestead
                     if (TryReadPiece(entry, pieceIds, problems, out var piece))
                         pieces.Add(piece);
 
-            catalog = new HomesteadCatalog(plots, pieces);
+            catalog = new HomesteadCatalog(floor, pieces);
             return true;
         }
 
-        // ----------------------------------------------------------------- plots
-        static bool TryReadPlot(HomesteadPlotDto dto, HashSet<string> plotIds,
-                                HashSet<string> slotIds, ICollection<string> problems,
-                                out HomesteadPlot plot)
+        // ----------------------------------------------------------------- floor
+        /// <summary>
+        /// The first grove schema that describes a floor. A body below this is refused rather
+        /// than half-read - see <see cref="TryRead"/>.
+        /// </summary>
+        public const int FloorSchema = 3;
+
+        /// <summary>Largest field this build will draw, in tiles on a side.</summary>
+        public const int MaxFloorSide = 200;
+
+        /// <summary>
+        /// The ground, and the regions it is sold in.
+        ///
+        /// Every rejection is reported and survivable: a malformed region is dropped and the
+        /// rest of the floor still loads, because content can arrive from a CDN and one bad row
+        /// must not cost the player their whole grove. The one thing that cannot be salvaged is
+        /// a field with no size, which produces <see cref="GroveFloor.Empty"/> and a screen that
+        /// says so.
+        /// </summary>
+        static GroveFloor ReadFloor(GroveFloorDto dto, ICollection<string> problems)
         {
-            plot = null;
+            if (dto == null)
+            {
+                problems.Add("grove catalog has no floor; there is nowhere to build");
+                return GroveFloor.Empty;
+            }
+
+            if (dto.cols <= 0 || dto.rows <= 0)
+            {
+                problems.Add($"grove floor is {dto.cols}x{dto.rows}; a field needs both sides");
+                return GroveFloor.Empty;
+            }
+
+            int cols = dto.cols, rows = dto.rows;
+
+            // Clamped rather than refused: an oversized field is a content mistake that would
+            // otherwise be a memory failure on a phone, and the safe half is a smaller grove.
+            if (cols > MaxFloorSide || rows > MaxFloorSide)
+            {
+                problems.Add($"grove floor is {cols}x{rows}, larger than the {MaxFloorSide} " +
+                             "tile limit; it is clamped");
+                cols = Math.Min(cols, MaxFloorSide);
+                rows = Math.Min(rows, MaxFloorSide);
+            }
+
+            var regionIds = new HashSet<string>(StringComparer.Ordinal);
+            var regions = new List<GroveRegion>();
+
+            if (dto.regions != null)
+                foreach (var entry in dto.regions)
+                    if (TryReadRegion(entry, cols, rows, regionIds, problems, out var region))
+                        regions.Add(region);
+
+            if (regions.Count == 0)
+                problems.Add("grove floor has no regions; no tile belongs to anything, so none " +
+                             "of it can be owned");
+
+            string tileArt = dto.tileArt ?? string.Empty;
+
+            string hall = CheckTile(dto.hallTile, cols, rows, "hallTile", problems);
+            string starter = CheckTile(dto.starterTile, cols, rows, "starterTile", problems);
+
+            if (!string.IsNullOrEmpty(hall) && string.Equals(hall, starter, StringComparison.Ordinal))
+            {
+                problems.Add("the grove's hall and its starter companion are on the same tile; " +
+                             "the companion is dropped");
+                starter = string.Empty;
+            }
+
+            return new GroveFloor(cols, rows, tileArt, hall, starter, regions);
+        }
+
+        /// <summary>
+        /// A named tile that has to be on the field, or empty.
+        ///
+        /// Reported and dropped rather than clamped, because a hall moved silently to a tile
+        /// nobody authored is worse than a grove with no hall: one is visibly wrong and the
+        /// other is wrong somewhere the author will not look.
+        /// </summary>
+        static string CheckTile(string tileId, int cols, int rows, string field,
+                                ICollection<string> problems)
+        {
+            if (string.IsNullOrEmpty(tileId)) return string.Empty;
+
+            if (!GroveFloor.TryParse(tileId, out int col, out int row))
+            {
+                problems.Add($"grove floor's {field} is '{tileId}', which is not a tile id");
+                return string.Empty;
+            }
+
+            if (col < 0 || row < 0 || col >= cols || row >= rows)
+            {
+                problems.Add($"grove floor's {field} '{tileId}' is off a {cols}x{rows} field");
+                return string.Empty;
+            }
+
+            return GroveFloor.TileId(col, row);
+        }
+
+        static bool TryReadRegion(GroveRegionDto dto, int cols, int rows,
+                                  HashSet<string> ids, ICollection<string> problems,
+                                  out GroveRegion region)
+        {
+            region = null;
             if (dto == null) return false;
 
             if (!IsCleanId(dto.id))
             {
-                problems.Add($"grove plot id '{dto.id}' is rejected: ids are lower case letters, " +
-                             "digits and underscores, and no longer than " + MaxIdLength);
+                problems.Add($"grove region id '{dto.id}' is rejected: ids are written into save " +
+                             "files, so they are lower case letters, digits and underscores, and " +
+                             "no longer than " + MaxIdLength);
                 return false;
             }
 
-            if (!plotIds.Add(dto.id))
+            if (!ids.Add(dto.id))
             {
-                problems.Add($"grove lists plot '{dto.id}' twice; the later entry is ignored");
+                problems.Add($"grove lists region '{dto.id}' twice; the later entry is ignored");
                 return false;
             }
 
-            var requires = ChapterId.None;
-            if (!string.IsNullOrEmpty(dto.requiresChapter))
+            if (dto.cols <= 0 || dto.rows <= 0)
             {
-                if (!ChapterId.TryParse(dto.requiresChapter, out requires, out string error))
-                {
-                    problems.Add($"grove plot '{dto.id}' requires chapter '{dto.requiresChapter}', " +
-                                 $"which is rejected: {error}");
-                    return false;
-                }
+                problems.Add($"grove region '{dto.id}' is {dto.cols}x{dto.rows}; it holds no tiles");
+                return false;
             }
 
-            if (string.IsNullOrEmpty(dto.art))
-                problems.Add($"grove plot '{dto.id}' names no art; it will draw as nothing");
-
-            var slots = new List<HomesteadSlot>();
-            if (dto.slots != null)
+            if (dto.col < 0 || dto.row < 0
+                || dto.col + dto.cols > cols || dto.row + dto.rows > rows)
             {
-                foreach (var slotDto in dto.slots)
-                {
-                    if (slotDto == null) continue;
-
-                    if (!IsCleanId(slotDto.id))
-                    {
-                        problems.Add($"grove plot '{dto.id}' has a slot with an unusable id " +
-                                     $"'{slotDto.id}'; ids are written into save files, so they " +
-                                     "are lower case letters, digits and underscores");
-                        continue;
-                    }
-
-                    // Across the whole grove, not just this plot. A slot id is the key of a
-                    // map in the save file, so two plots sharing one would make a tree placed
-                    // on the first island appear on the second — and the merge would then
-                    // treat two independent choices as one.
-                    if (!slotIds.Add(slotDto.id))
-                    {
-                        problems.Add($"grove slot id '{slotDto.id}' is used twice; slot ids key " +
-                                     "the save file and must be unique across every plot");
-                        continue;
-                    }
-
-                    slots.Add(new HomesteadSlot(slotDto.id, slotDto.x, slotDto.y, slotDto.scale,
-                                                ReadSlotKind(slotDto.kind, slotDto.id, problems)));
-                }
+                problems.Add($"grove region '{dto.id}' runs off a {cols}x{rows} field");
+                return false;
             }
 
-            if (slots.Count == 0)
-                problems.Add($"grove plot '{dto.id}' has no slots; nothing can be placed on it");
+            int cost = dto.cost;
+            if (cost < 0)
+            {
+                problems.Add($"grove region '{dto.id}' has a negative cost ({cost}); " +
+                             "treated as free");
+                cost = 0;
+            }
 
-            plot = new HomesteadPlot(dto.id, dto.art, dto.x, dto.width, requires, slots);
+            region = new GroveRegion(dto.id, dto.col, dto.row, dto.cols, dto.rows, cost);
             return true;
         }
 
@@ -168,6 +244,19 @@ namespace GlimmerGrove.Homestead
             }
 
             var kind = ReadKind(dto, problems);
+
+            // A resident is not authorable here any more: residents are the companion roster,
+            // projected in by GroveResidents, so a row claiming to be one would be a second
+            // creature list with its own price and its own unlock rule — which is the exact
+            // duplication that projection removed. Dropped and named rather than read as decor,
+            // because reading it as decor would put a critter on the fences tab and sell it.
+            if (kind == HomesteadPieceKind.Resident)
+            {
+                problems.Add($"grove piece '{dto.id}' is authored as a resident; residents are " +
+                             "the companion roster now and are projected in from the manifest, " +
+                             "so this row is ignored — delete it, and see GroveResidents");
+                return false;
+            }
 
             var requiresLevel = LevelId.None;
             if (!string.IsNullOrEmpty(dto.requiresLevel) &&
@@ -196,18 +285,6 @@ namespace GlimmerGrove.Homestead
             {
                 problems.Add($"grove piece '{dto.id}' has a negative cost ({cost}); " +
                              "treated as not for sale");
-                cost = 0;
-            }
-
-            // The one rule the two kinds do not share, enforced here as well as in the build
-            // gate. A resident is proof of a glade the player finished; a priced one turns the
-            // grove from a record of what they did into a receipt, which is the whole reason
-            // this feature exists. Dropping the price is the safe half — the piece stays
-            // earnable and nothing anybody bought is affected.
-            if (kind == HomesteadPieceKind.Resident && cost > 0)
-            {
-                problems.Add($"grove resident '{dto.id}' has a price ({cost}); residents are " +
-                             "earned by playing and are never for sale, so the price is ignored");
                 cost = 0;
             }
 

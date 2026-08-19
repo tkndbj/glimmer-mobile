@@ -179,13 +179,25 @@ namespace GlimmerGrove.EditorTools
         /// </summary>
         public const string HomesteadPrefix = "Art/Homestead/";
 
+        /// <summary>
+        /// The grove's <em>generated</em> art: the browse atlases, one per shop shelf.
+        ///
+        /// A folder of its own rather than a rule about file type, for the same reason the two
+        /// above are folder rules — the importer hook files an asset as it arrives, before any
+        /// catalog has been consulted. It sits in the grove's bundle because that is who asks
+        /// for it, even though one of the atlases is packed from companion portraits: what
+        /// decides a bundle is which screen opens it, not which folder the source came from.
+        /// </summary>
+        public const string GrovePrefix = "Art/Grove/";
+
         /// <summary>The group an address belongs in, given who owns what.</summary>
         public static string GroupFor(string address, Dictionary<string, ChapterId> ownership)
         {
             if (address != null && address.StartsWith(CompanionPrefix, System.StringComparison.Ordinal))
                 return CompanionGroup;
 
-            if (address != null && address.StartsWith(HomesteadPrefix, System.StringComparison.Ordinal))
+            if (address != null && (address.StartsWith(HomesteadPrefix, System.StringComparison.Ordinal)
+                                 || address.StartsWith(GrovePrefix, System.StringComparison.Ordinal)))
                 return HomesteadGroup;
 
             return ownership != null && ownership.TryGetValue(address, out var chapter)

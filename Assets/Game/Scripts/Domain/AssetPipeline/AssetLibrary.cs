@@ -152,6 +152,67 @@ namespace GlimmerGrove.AssetPipeline
             return OneCacheFor(address).TryGetValue(address, out var cached) ? cached as T : null;
         }
 
+        // ---------------------------------------------------------------- atlases
+        /// <summary>
+        /// A named sprite out of an atlas that is <em>already</em> loaded, or null.
+        ///
+        /// <para>
+        /// <b>Why this is not just <see cref="Peek{T}"/> plus a call.</b>
+        /// <c>SpriteAtlas.GetSprite</c> builds a <em>new</em> <c>Sprite</c> object on every
+        /// call and hands ownership to the caller — a documented allocation that a grid
+        /// rebinding on every scroll frame would leak by the thousand. So each one is made once
+        /// and kept, and every one an atlas produced is destroyed when that atlas is released.
+        /// That bookkeeping has to live here, beside the release, because a screen cannot know
+        /// when its atlas is dropped.
+        /// </para>
+        /// <para>
+        /// Peeked rather than loaded, for <see cref="Peek{T}"/>'s reason: a browse screen paints
+        /// in the frame it is built and repaints when its atlas lands, so a null here is the
+        /// ordinary first answer rather than a fault worth logging.
+        /// </para>
+        /// </summary>
+        public static Sprite AtlasSprite(string atlasAddress, string name)
+        {
+            if (string.IsNullOrEmpty(atlasAddress) || string.IsNullOrEmpty(name)) return null;
+
+            if (_atlasSprites.TryGetValue(atlasAddress, out var made) &&
+                made.TryGetValue(name, out var cached))
+                return cached;
+
+            var atlas = Peek<UnityEngine.U2D.SpriteAtlas>(atlasAddress);
+            if (atlas == null) return null;
+
+            var sprite = atlas.GetSprite(name);
+            if (sprite == null) return null;
+
+            // Unity appends "(Clone)" to whatever GetSprite hands back, which would then reach
+            // anything reading sprite.name — including this project's own frame sorting.
+            sprite.name = name;
+
+            if (made == null) _atlasSprites[atlasAddress] = made = new Dictionary<string, Sprite>(StringComparer.Ordinal);
+            made[name] = sprite;
+            return sprite;
+        }
+
+        /// <summary>True once an atlas is in hand, so a screen can tell "empty" from "not yet".</summary>
+        public static bool IsAtlasLoaded(string atlasAddress)
+            => Peek<UnityEngine.U2D.SpriteAtlas>(atlasAddress) != null;
+
+        /// <summary>Sprites handed out by each atlas, so they can be destroyed with it.</summary>
+        static readonly Dictionary<string, Dictionary<string, Sprite>> _atlasSprites =
+            new Dictionary<string, Dictionary<string, Sprite>>(StringComparer.Ordinal);
+
+        static void DropAtlasSprites(string address)
+        {
+            if (!_atlasSprites.TryGetValue(address, out var made)) return;
+
+            foreach (var sprite in made.Values)
+                if (sprite != null) UnityEngine.Object.Destroy(sprite);
+
+            made.Clear();
+            _atlasSprites.Remove(address);
+        }
+
         /// <summary>Frames if they are already loaded. See <see cref="Peek{T}"/>.</summary>
         public static Sprite[] PeekFrames(string address)
         {
@@ -268,7 +329,13 @@ namespace GlimmerGrove.AssetPipeline
             if (string.IsNullOrEmpty(key) || !_scopes.TryGetValue(key, out var scope)) return;
 
             _scopes.Remove(key);
-            foreach (var address in scope.Addresses) _owner.Remove(address);
+            foreach (var address in scope.Addresses)
+            {
+                // Before the owner mapping goes, because that is what tells a sprite which
+                // cache it came out of. An atlas leaves behind every sprite it was asked for.
+                DropAtlasSprites(address);
+                _owner.Remove(address);
+            }
 
             scope.One.Clear();
             scope.Sets.Clear();
@@ -404,6 +471,10 @@ namespace GlimmerGrove.AssetPipeline
 
                 case AssetKind.Font:
                     await WarmOneAsync<Font>(request.Address, cancellation);
+                    return;
+
+                case AssetKind.Atlas:
+                    await WarmOneAsync<UnityEngine.U2D.SpriteAtlas>(request.Address, cancellation);
                     return;
 
                 default:

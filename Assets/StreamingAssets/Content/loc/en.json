@@ -1455,19 +1455,7 @@
     },
     {
       "key": "ui.grove.summary",
-      "text": "{0} placed · {1} of {2} islands · {3} kinds"
-    },
-    {
-      "key": "ui.grove.held",
-      "text": "{0} of {1} in your grove"
-    },
-    {
-      "key": "ui.grove.locked_chapter",
-      "text": "Finish {0}"
-    },
-    {
-      "key": "ui.grove.locked_soon",
-      "text": "Opens with a later chapter"
+      "text": "{0} placed · {1} tiles · {2} kinds"
     },
     {
       "key": "ui.grove.place",
@@ -1516,66 +1504,6 @@
     {
       "key": "ui.grove.buy_for",
       "text": "BUY FOR {0}"
-    },
-    {
-      "key": "ui.plot.meadow",
-      "text": "The Meadow"
-    },
-    {
-      "key": "ui.plot.perch",
-      "text": "The Perch"
-    },
-    {
-      "key": "ui.plot.hollow",
-      "text": "The Hollow"
-    },
-    {
-      "key": "ui.plot.step",
-      "text": "The Step"
-    },
-    {
-      "key": "ui.plot.ridge",
-      "text": "The Ridge"
-    },
-    {
-      "key": "ui.plot.knoll",
-      "text": "The Knoll"
-    },
-    {
-      "key": "ui.plot.terrace",
-      "text": "The Terrace"
-    },
-    {
-      "key": "ui.plot.crag",
-      "text": "The Crag"
-    },
-    {
-      "key": "ui.plot.haven",
-      "text": "The Haven"
-    },
-    {
-      "key": "ui.plot.shelf",
-      "text": "The Shelf"
-    },
-    {
-      "key": "ui.piece.sunmote",
-      "text": "Sunmote"
-    },
-    {
-      "key": "ui.piece.ripple",
-      "text": "Ripple"
-    },
-    {
-      "key": "ui.piece.prism",
-      "text": "Prism"
-    },
-    {
-      "key": "ui.piece.burr",
-      "text": "Burr"
-    },
-    {
-      "key": "ui.piece.dusk",
-      "text": "Dusk"
     },
     {
       "key": "ui.piece.grass_tuft",
@@ -1734,32 +1662,8 @@
       "text": "UPGRADE FOR {0}"
     },
     {
-      "key": "ui.grove.plate",
-      "text": "{0}  ·  {1} of {2}"
-    },
-    {
       "key": "ui.grove.fits_ground",
       "text": "Rocks, logs and odds and ends stand here. Have a look in the shop."
-    },
-    {
-      "key": "ui.grove.fits_bed",
-      "text": "Flowers and greenery are planted here. Have a look in the shop."
-    },
-    {
-      "key": "ui.grove.fits_path",
-      "text": "Paths and bridges are laid here. Have a look in the shop."
-    },
-    {
-      "key": "ui.grove.fits_edge",
-      "text": "Fences, signs and lanterns go along the rim. Have a look in the shop."
-    },
-    {
-      "key": "ui.grove.fits_canopy",
-      "text": "Tall things stand here, at the back. Have a look in the shop."
-    },
-    {
-      "key": "ui.grove.fits_structure",
-      "text": "This is the island's big one — a well, a cave, a spire. Most are earned by playing."
     },
     {
       "key": "ui.piece.lodge",
@@ -1780,6 +1684,106 @@
     {
       "key": "ui.grove.home_short",
       "text": "Next: {0}  ·  {1} coins to go"
+    },
+    {
+      "key": "ui.shelf.residents",
+      "text": "friends"
+    },
+    {
+      "key": "ui.shelf.structure",
+      "text": "landmarks"
+    },
+    {
+      "key": "ui.shelf.canopy",
+      "text": "trees"
+    },
+    {
+      "key": "ui.shelf.bed",
+      "text": "plants"
+    },
+    {
+      "key": "ui.shelf.edge",
+      "text": "the rim"
+    },
+    {
+      "key": "ui.shelf.path",
+      "text": "paths"
+    },
+    {
+      "key": "ui.shelf.ground",
+      "text": "ground"
+    },
+    {
+      "key": "ui.shelf.home",
+      "text": "home"
+    },
+    {
+      "key": "ui.grove.shelf",
+      "text": "{0}  ·  {1} of {2} yours"
+    },
+    {
+      "key": "ui.grove.needs_level",
+      "text": "Reach keeper level {0}"
+    },
+    {
+      "key": "ui.land.hearthstead",
+      "text": "Hearthstead"
+    },
+    {
+      "key": "ui.land.east_meadow",
+      "text": "East Meadow"
+    },
+    {
+      "key": "ui.land.west_hollow",
+      "text": "West Hollow"
+    },
+    {
+      "key": "ui.land.north_reach",
+      "text": "North Reach"
+    },
+    {
+      "key": "ui.land.south_bank",
+      "text": "South Bank"
+    },
+    {
+      "key": "ui.land.sunrise_field",
+      "text": "Sunrise Field"
+    },
+    {
+      "key": "ui.land.dusk_field",
+      "text": "Dusk Field"
+    },
+    {
+      "key": "ui.land.far_terrace",
+      "text": "Far Terrace"
+    },
+    {
+      "key": "ui.land.still_shore",
+      "text": "Still Shore"
+    },
+    {
+      "key": "ui.land.title",
+      "text": "open ground"
+    },
+    {
+      "key": "ui.land.size",
+      "text": "{0} x {1} tiles"
+    },
+    {
+      "key": "ui.land.note",
+      "text": "Yours for good — room for anything you like."
+    },
+    {
+      "key": "ui.land.balance",
+      "text": "You have {0}"
+    },
+    {
+      "key": "ui.shelf.land",
+      "text": "ground"
+    },
+    {
+      "key": "ui.land.owned",
+      "text": "{0} is already yours."
     },
     {
       "key": "ui.piece.tree_amber",

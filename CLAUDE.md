@@ -260,45 +260,115 @@ What that means in practice here:
     that promises all of it is exactly how a companion somebody paid for stays behind a
     padlock. Every screen asks `IsHeld`. The level half stays derived and is never written
     down: a second answer is a second thing a retune can put out of step with the first.
-16. **A grove is built, and only two facts about it are stored.** The Grovement is the one
+16. **A grove is built, and only three facts about it are stored.** The Grovement is the one
     reward in the game that is a *thing the player made* rather than a number that went up,
-    and the whole feature costs `SaveFileDto` two fields because everything else is derived —
-    the land from chapters finished, the residents from glades cleared. What is left splits by
-    *shape*, not by feature. A purchase is an **entitlement**, so `homesteadOwned` is a
-    union-joined set of ids, which is 15 for the second time. An arrangement is an
+    and the whole feature costs `SaveFileDto` three fields because everything else is derived —
+    the residents from the companion roster, the home from what was bought. What is left splits
+    by *shape*, not by feature. A purchase is an **entitlement**, so `homesteadOwned` and
+    `groveLandOwned` are union-joined sets of ids, which is 15 twice over. An arrangement is an
     **instruction**, so `homesteadPlaced` is merged by recency with a stamp per slot, which is
     11c for the third time — and it is therefore the only part of this feature that can lose
     something, which is why an untouched slot writes no row at all and a slot the player
     *emptied* keeps one. Note what is deliberately absent: any count of how many benches
-    somebody owns. **Holding a piece is permission to draw it in as many slots as you like**,
-    because a count of copies is precisely the shape 11b forbids and hearts already spent a
-    schema version proving it — and it makes the better shop, since variety rather than
-    quantity is what makes two groves differ. A slot id is written into the save, so invariant
-    1 applies to it in full and it is unique across the whole grove rather than per plot.
-16b. **Grove geometry lives in `HomesteadMap` (Domain), and a plot's vertical position is
-    derived.** Invariant 8a for the second time, learned the same way `ChapterMap` was. An author
-    writes a plot's `x` and its `width`; where it sits vertically is computed by stacking the
-    islands with a fixed gap, and the canvas height is the sum rather than a constant somebody has
-    to keep in step. It was authored first, as a `y` fraction against a fixed 3400px canvas, and it
-    shipped with **all thirteen consecutive pairs of islands overlapping** and the starter plot
-    below the scrollable area, unreachable — because the number `y` must agree with is how tall the
-    art draws, which lives in a PNG the author cannot see from the JSON. Deriving it makes the
-    collision unrepresentable instead of merely checkable, and a re-cut sprite can no longer break
-    the layout. Two smaller rules came out of the same bug. `UIKit.Box` **always** pivots centre, so
-    anything tucked into a corner goes through `UIKit.Corner` or half of it hangs off the screen —
-    that shipped twice in one screen. And a `ScrollRect`'s `verticalNormalizedPosition` is resolved
-    against content bounds it recomputes in its own `LateUpdate`, so setting it in the frame the
-    canvas was resized is silently interpreted against the old height: it read 0.000 — the bottom —
-    while the bottom island sat 2,785px below the screen. Position the content directly.
-16a. **A resident is never for sale, and that is the whole feature.** Residents and decor are
-    one catalog with a `kind` on it — same slots, same picker, same ledger — and the kind
-    decides exactly one thing. A resident is earned by waking it in a glade, so a grove is
-    proof of what the player did; the moment one can be bought it becomes a receipt.
-    `HomesteadMapper` drops a price it finds on one and `ContentValidation` fails the build,
-    because a rule that matters is a rule the build proves. Equally: **nothing in the grove
-    touches a board.** Par is derived from the board, stars from par, the clock from par and
-    the server's earnings from all three, so a grove that granted anything would make every
-    glade a different difficulty per player and no validator could prove one fair again.
+    somebody owns, and any count of tiles. **Holding a piece is permission to draw it in as many
+    slots as you like**, because a count of copies is precisely the shape 11b forbids and hearts
+    already spent a schema version proving it — and it makes the better shop, since variety
+    rather than quantity is what makes two groves differ. A slot id is written into the save, so
+    invariant 1 applies to it in full and it is unique across the whole floor.
+16b. **The grove is a tile floor, and a tile is a slot.** It was ten floating islands with
+    hand-authored slots — each with a position, a size and a role — so the player's decision was
+    which of eleven pre-placed dots got which sticker, and every grove came out with the same
+    composition and different stickers on it. A field of identical tiles moves the composition to
+    the player: *where* a thing goes is now as much their choice as *what* it is. That is why the
+    slot-kind rule went with the islands; it existed to stop a sprinkle of dots looking
+    accidental, and there are no dots. The kind survives as a **shop shelf** (16c) — a way of
+    finding things rather than a rule anyone can hit. What made the change cheap is that
+    `HomesteadLayout` did not move: a tile *is* a slot, its id is permanent, and an untouched
+    tile writes no row, so a 196-tile floor with two things on it costs two rows exactly as ten
+    islands did. Three rules keep the tile ids safe. They are **absolute floor coordinates**
+    (`t_006_006`), so re-drawing which region a tile is *sold* in never changes what is *standing*
+    on it; they are **zero-padded**, because `SaveDelta` walks them in order and an ordering that
+    changed with the size of a number would make an unchanged save look changed for ever; and the
+    floor may **only ever grow right and down**, because a column inserted at the left would
+    renumber every tile in the world. `GroveFloor` owns the geometry, in Domain, for the reason
+    `ChapterMap` does — the build gate has to be able to prove regions do not overlap, and a
+    validator cannot reach into Presentation.
+
+16e. **Land is the one thing here that stopped being derived, and it cost a schema version.**
+    An island was held when its chapter was finished — a question about the star ledger, so it
+    recomputed everywhere, survived every merge and left nothing on disk (invariant 14). Land
+    bought with credits cannot be any of that, so `groveLandOwned` is stored (save **v17**) in the
+    only shape invariant 11b permits: a set of permanent ids joined by union, which is invariant
+    15 for the third time after companions and grove pieces. It is a set of **regions** rather
+    than of tiles, and that is not a detail — both are legal shapes and only one stays small,
+    since a filled floor is a couple of hundred tiles and a set that size is merged and
+    checksummed on every sync for ever. Two smaller consequences worth keeping. Starter land has
+    **no price and is never written down**, so "absent" and "bought nothing" stay the same fact
+    and the union needs no sentinel. And the hall must stand on starter land — `ContentValidation`
+    fails the build otherwise, because a home a new player can see and not reach is the emptiest
+    possible first impression of the feature.
+
+16f. **The starter companion is shown, never stored.** A new grove opens with one friend beside
+    the hall, and the obvious way to do that — write the placement at first launch — is exactly
+    what invariant 11c forbids: a fresh install would stamp that row with *now*, outrank a device
+    where the player had already moved them, and put them back. So the tile draws the starter
+    while it has no row of its own, and clearing it is a real instruction that does get one. Which
+    starter is **derived from the roster** (`AvatarCatalog.Starter`, the one companion nothing
+    gates), so a drop that changes who a new player begins with moves them without a second place
+    naming anybody. `Wallet` shows the default keeper name the same way and for the same reason.
+
+16a. **A resident is a companion, and the roster is written down once.** This replaces the
+    rule that a resident is never for sale, which was right about the endowment and wrong about
+    where creatures come from. The grove used to author five of its own, earned by clearing five
+    named glades — a second roster of creatures beside the thirty-one companions a player levels
+    towards and pays for, with its own unlock rule, its own prices and two screens that could
+    disagree about what somebody owned. `GroveResidents` projects the roster in instead, so a
+    drop that adds a companion adds a resident with nothing to remember, one price, one gate and
+    one purchased set (`companionsOwned` — never mirrored into `homesteadOwned`, because two
+    records of one purchase is two things a merge can disagree about). The endowment argument
+    survives where it belongs: **wearing and housing are separate**, so buying in the village
+    never changes the nameplate, and the free route is still the keeper ladder and is still what
+    a cell leads with. Two ids follow from it. A resident's piece id is the companion's id
+    **prefixed** (`friend_coral`), because the two id spaces were minted independently and
+    already collided — `pebble` is a decor rock *and* a companion, both in save files, neither
+    renameable — so the prefix makes the collision unrepresentable and the build gate reserves
+    it. And the five retired ids are **rewritten on every load, for ever** (`sunmote →
+    friend_puff`, and four more, each to the companion drawing the same critter flipbook),
+    because a retired id resolves to nothing and would leave a hole that still counted as
+    occupied. Equally, and unchanged: **nothing in the grove touches a board.** Par is derived
+    from the board, stars from par, the clock from par and the server's earnings from all three,
+    so a grove that granted anything would make every glade a different difficulty per player and
+    no validator could prove one fair again.
+
+16c. **A shop shelf is one idea used three times, and browsing never loads the real art.**
+    `GroveShelf` is the shop's tab, the browse atlas and the asset scope — three mechanisms that
+    have to agree about how the catalog divides, so the division is expressed once. For decor a
+    shelf is its slot kind; the two exceptions are the two kinds that are not decor, and they are
+    exactly why the concept exists — a resident fits every slot but sells on one shelf, which is
+    what used to put the whole roster on every tab and in every tab's scope. A grid cell draws at
+    about 170 points against art cut at 512 for an island, so a browse screen reads **generated
+    thumbnails out of one atlas per shelf**: one draw call for the grid however many cells are on
+    it, and a memory cost bounded by the largest shelf rather than by the catalog. It packs
+    *copies*, and that is load-bearing — a sprite may belong to exactly one atlas, and a sprite
+    that belongs to one stops having a texture of its own, so packing the shipped pieces would
+    mean the grove screen could not draw a single island without loading its whole shelf, which
+    is precisely the bound invariant 7b exists to hold. `Validate Art` proves every atlas holds a
+    picture for everything on its shelf, because a stale atlas is invisible everywhere else: the
+    Editor still has the old one and every other check passes.
+
+16d. **Anything unbounded keeps only what you can see.** `GridView` builds a cell
+    once and rebinds it as it scrolls, so a four-hundred-piece catalog costs the same objects as a
+    forty-piece one. That is a correctness rule as much as a performance one, and the flicker
+    players reported is why: every grid here used to destroy and rebuild itself on any event, and
+    every cell entered with a pop from scale zero — so a screen that repainted twice (once when
+    the shelf changed, once when its art arrived) played that entrance twice. `Show` is a new
+    list and animates; `Refresh` is the same list redrawn and does not. Anything raised by an
+    event is a `Refresh`. `GroveFieldView` is the same bargain in two dimensions — a floor is a
+    couple of hundred tiles and a phone shows a few dozen — with one rule a list does not need:
+    **depth is applied to the whole visible window in one pass, never per tile as it is
+    realised.** `SetSiblingIndex` *inserts*, so every tile behind the one just placed shifts and
+    the next intended index no longer means what it meant; the field came out looking sorted
+    while the hall drew in front of the companion standing one tile nearer the viewer.
 
 ## Layout
 
@@ -1550,6 +1620,118 @@ trip to Unity's import workers each; 335 of them back to back crashed both worke
 Editor wedged in a domain reload it could not finish. It is `StartAssetEditing`/`StopAssetEditing`
 with a `finally` now, and the `finally` is not optional — an exception between the two leaves
 the asset database in editing mode, which looks exactly like the freeze it prevents.
+
+**The Grovement's second pass: one roster, eight shelves, and a grid that stops growing.**
+Four faults were reported together and three of them turned out to be the same shape — a screen
+whose cost was tied to how much content exists rather than to what is on it.
+
+**Residents are companions now**, which is invariant 16a rewritten rather than extended. The
+grove authored five creatures of its own, earned by clearing five named glades; the profile had
+thirty-one companions with prices and keeper gates. Two rosters, two unlock rules, and a player
+who bought Coral could not stand her in their village. `GroveResidents` projects the manifest's
+roster into the catalog, `HomesteadLedger` delegates the resident half whole to `CompanionLedger`
+(invariant 15a, taken literally) and re-raises its `Changed`, so buying in either place is visible
+in both with no callback anybody can forget. Wearing stays a profile preference — the grove's
+purchase path deliberately does not go through `Profile.TryBuyAvatar`, which buys and then wears.
+Two ids came out of it and both are permanent: the `friend_` prefix, because `pebble` was already
+a decor rock *and* a companion, and a retirement table rewriting the five old ids on every load,
+because a retired id leaves a hole that still counts as occupied.
+
+**The shop pages by shelf and browses through atlases.** Residents used to be pinned to the top of
+every tab — a resident fits every slot, so `Fits` put the whole roster on all six tabs and in all
+six asset scopes. `GroveShelf` separates *where may this stand* from *where is this sold*; there
+are eight, they are the tabs, the atlases and the scopes, and the shelf's name is spelled out under
+the tab row rather than under each glyph. `Glimmer Grove ▸ Addressables ▸ Rebuild Grove Atlases`
+generates a 256-max copy of every piece and packs one atlas per shelf — measured on the shipped
+catalog, the whole shop is nine pages and about 11 MB, of which a tab holds **two**: its own shelf
+and the tiny tab-emblem atlas. Ground is one 1024×512 page for 35 pieces. `Validate Art` proves all
+202 pictures are present, because a stale atlas is invisible in the Editor.
+
+**`GridView` keeps the rows you can see.** Measured in play mode on the residents shelf: 31 pieces,
+11 rows, 4,276px of content — and **three** live cells. Switching to the ground shelf rebound the
+same three objects. That is also the flicker fix: the shop repainted twice on every tab change
+(once for the shelf, once when its art landed) and every cell entered from scale zero both times.
+`Show` is a new list and animates; `Refresh` is the same list redrawn and does not. `HomesteadArt`
+now coalesces browse loads properly too — the old guard asked `IsScopeLoaded`, which goes true the
+instant a load *starts*, so a first visit loaded an empty set, got no scope, and loaded again.
+
+One trap worth not rediscovering: **the atlas file extension selects the importer.** A
+`.spriteatlas` written in the V2 format imports as editor data with a plain `AssetImporter` and
+produces no `SpriteAtlas` at all — every address resolves, every check passes, and the shop draws
+an empty grid. It must be `.spriteatlasv2`, and `EditorSettings.spritePackerMode` must be
+`SpriteAtlasV2`; `Set Up Project` sets it and it ships in `ProjectSettings/EditorSettings.asset`
+for `m_BuildAddressablesWithPlayerBuild`'s reason.
+
+Save schema is **unchanged at v16** — a projected resident is derived, its purchase lives in
+`companionsOwned`, and the retirement rewrite happens at the one door every save comes through.
+`GroveResidentTests` adds 15 cases; the offline suite is 572 and the Editor suite is 673, all
+green. Two pre-existing failures were fixed on the way: `RewardVectorTests` had been red since the
+daily, ads and streak blocks were added to the reader (it asserted no problems, and the vector
+file deliberately omits those three sections), and one `HomesteadTests` fixture wrote its JSON
+numbers as `.5`, which `JsonUtility` refuses — so it had been failing at the parse and never
+reaching the rule it is about.
+
+**The Grovement is a floor now, not islands — save schema v17.** The ten floating islands are
+gone and the grove is one 14×14 isometric tile field, panned and pinch-zoomed, on which anything
+can be placed anywhere. The islands were a ladder of fixed compositions: an author placed every
+slot, gave it a role, and the player chose which of eleven pre-placed dots got which sticker, so
+every grove came out with the same shape and different stickers on it. A field of identical tiles
+moves the composition to the player, which is the whole point of the feature.
+
+**What it cost the save file is one field, and what it did not cost is the interesting half.**
+`HomesteadLayout` is untouched — a tile *is* a slot, so an empty floor still costs nothing and a
+floor with two things on it costs two rows. The one addition is `groveLandOwned`: land used to be
+derived from chapters finished, and land bought with credits cannot be, so it is stored as a
+union-joined set of **region** ids. Regions rather than tiles because both are legal shapes and
+only one stays small — see invariant 16e. The shipped field is nine regions tiling it exactly, a
+free 6×6 in the middle and eight around it from 2,500 to 17,000 credits (68,500 for the lot, about
+126 days of ordinary play).
+
+**Unowned ground is not drawn, and land is sold in the shop.** The first build did the obvious
+thing — drew the whole field and put a padlock on everything unbought, with expansion sold by
+tapping a locked square. That made the grove a wall of padlocks around a small lit patch, which is
+the opposite of what a screen about the place you built is for. The floor is now exactly the land
+you own, so buying a region is visibly *the ground growing* rather than a padlock going away, and
+expansion moved to a `GroveShelf.Land` tab in the shop where the other things you buy are. It is
+the only shelf with no browse atlas: a region is a rectangle rather than an object, and a
+thumbnail of a patch of grass is a picture of nothing, so its cells and its tab draw
+`Art.IsoTile`.
+
+**The ground is a block, not a lozenge, and the offset is derived.** `Homestead/floor_grass` is
+418×287: a 418×209 top surface with 78 pixels of side wall painted under it. Centring the image on
+the tile point sits every tile 39 pixels high and the grid stops lining up with itself, so the
+sprite hangs by half its skirt — and the skirt is *computed*, because the top face of an isometric
+tile is 2:1 by definition and whatever is left below it is wall. A re-cut tile with a deeper side
+needs no number changed. That is `UIKit.PillFaceLift`'s lesson for the fourth time. It only works
+because the tiles are drawn back to front, which `Restack` already had to do.
+
+**A new grove opens with exactly two things on it: the hall and one friend.** Both are *shown*
+rather than stored. The hall is drawn from the best dwelling owned, which is the hearth's old rule
+on a fixed tile; the companion is `AvatarCatalog.Starter` on the tile beside it, and writing that
+placement at first launch is exactly what invariant 11c forbids — a fresh install would stamp it
+with *now* and put the friend back on a device where the player had moved them. Invariant 16f.
+
+**Three pieces of new machinery.** `GroveFloor` (Domain) owns the geometry — the 2:1 transform,
+its inverse for turning a tap into a tile, and `DrawOrder` — in Domain for `ChapterMap`'s reason:
+the build gate proves regions do not overlap and a validator cannot reach into Presentation.
+`GroveFieldView` is the camera: drag to pan, pinch to zoom, and only the visible tiles exist,
+which is `GridView`'s bargain in two dimensions. And `View.WantsMultiTouch` exists because pinch
+needs two fingers and `Boot` turns multi-touch off for the whole game — a board that accepted two
+fingers would let a player turn two conduits in one tap. The grove *declares* it and `Flow` applies
+it on every screen change, so a board can never inherit it however the player left the grove.
+
+**The one bug worth not rediscovering: depth cannot be assigned per tile.** `SetSiblingIndex`
+*inserts*, so placing a tile at index 12 shifts the eleven behind it and the next tile's intended
+index no longer means what it meant. The field looked sorted and was not — caught in play mode with
+the hall drawing in front of the companion standing one tile nearer the viewer. `Restack` sorts the
+whole visible window in one pass when the window changes, which is a few times a second while
+panning and never while still.
+
+Content is grove schema **v3** (`ContentSchema.Version` 3, `MinimumSupported` still 2, so the
+manifest and chapter bodies are untouched at v2). A v2 grove body is *refused* rather than
+half-read, because it describes islands this build cannot draw and the alternative is opening the
+Grovement onto no ground at all. Existing arrangements do not migrate: the old slot ids
+(`meadow_a`) are not tile ids, everything bought stays owned, and the game has not launched.
 
 Not done, deliberate: **in-app purchases** (the four store secrets hold `UNSET`, so
 receipts are refused — correct until real store products exist), **Play Games Services**

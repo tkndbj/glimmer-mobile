@@ -10,6 +10,17 @@ namespace GlimmerGrove.AssetPipeline
 
         AudioClip = 2,
         Font = 3,
+
+        /// <summary>
+        /// A <c>SpriteAtlas</c>: one texture holding many named sprites, asked for by name
+        /// through <see cref="AssetLibrary.AtlasSprite"/>.
+        ///
+        /// Its own kind rather than a sprite, because what loads is neither a Texture2D nor a
+        /// Sprite and asking for either would hand back null — the same trap the kind field
+        /// exists for. See <c>AssetManifest.BrowseAtlas</c> for why the grove browses through
+        /// one.
+        /// </summary>
+        Atlas = 4,
     }
 
     /// <summary>
@@ -35,6 +46,7 @@ namespace GlimmerGrove.AssetPipeline
         public static AssetRequest SpriteSet(string address) => new AssetRequest(address, AssetKind.SpriteSet);
         public static AssetRequest Clip(string address) => new AssetRequest(address, AssetKind.AudioClip);
         public static AssetRequest Font(string address) => new AssetRequest(address, AssetKind.Font);
+        public static AssetRequest Atlas(string address) => new AssetRequest(address, AssetKind.Atlas);
 
         public override string ToString() => $"{Kind}:{Address}";
     }

@@ -21,9 +21,44 @@ namespace GlimmerGrove.EditorTools
         {
             EnsureScene();
             EnsureBuildSettings();
+            EnsureSpritePacking();
             ContentValidation.ValidateMenu();
             ValidateArt();
             Debug.Log("[Glimmer] project setup complete");
+        }
+
+        /// <summary>
+        /// Turns Sprite Atlas V2 on, because the grove's shop is drawn out of atlases.
+        ///
+        /// <para>
+        /// A project setting rather than something the atlas generator turns on for itself,
+        /// for <c>m_BuildAddressablesWithPlayerBuild</c>'s reason: it has to be the same on CI
+        /// and on every teammate's machine, and a per-machine preference is how two people get
+        /// different builds out of the same commit. It ships in
+        /// <c>ProjectSettings/EditorSettings.asset</c>.
+        /// </para>
+        /// <para>
+        /// <b>Enabled, not "Enabled for Builds".</b> The build-only mode leaves sprites
+        /// resolving from their source textures in the Editor, so <c>SpriteAtlas.GetSprite</c>
+        /// returns nothing in play mode — the shop would be an empty grid in the Editor and
+        /// correct on the device, which is the worst possible way round. It was
+        /// <see cref="SpritePackerMode.Disabled"/> here, which produces no
+        /// <c>SpriteAtlas</c> artifact at all: the <c>.spriteatlas</c> files import as editor
+        /// data and nothing can load them.
+        /// </para>
+        /// </summary>
+        static void EnsureSpritePacking()
+        {
+            if (EditorSettings.spritePackerMode == SpritePackerMode.SpriteAtlasV2)
+            {
+                Debug.Log("[Glimmer] sprite packing is already Sprite Atlas V2");
+                return;
+            }
+
+            EditorSettings.spritePackerMode = SpritePackerMode.SpriteAtlasV2;
+            AssetDatabase.SaveAssets();
+            Debug.Log("[Glimmer] sprite packing switched to Sprite Atlas V2; the grove's shop " +
+                      "atlases cannot be loaded without it");
         }
 
         static void EnsureScene()
@@ -90,6 +125,8 @@ namespace GlimmerGrove.EditorTools
             Debug.Log(missing.Count == 0
                 ? $"[Glimmer] all {expected.Count} expected asset(s) present"
                 : $"[Glimmer] {missing.Count} of {expected.Count} expected asset(s) missing");
+
+            GroveBrowseAtlases.Audit(content.Homestead);
         }
 
         /// <summary>
@@ -135,8 +172,8 @@ namespace GlimmerGrove.EditorTools
     /// memory is its dimensions, not its file size: one 2048 sprite costs about 16 MB
     /// uncompressed however few pixels of it are painted, so a catalog of a hundred props
     /// imported at the default would be a bundle nobody can ship. The grove's art draws at
-    /// most about 500 screen pixels on a 1080-wide phone — see <c>HomesteadMap</c>, where an
-    /// island is drawn at roughly 1.27 art pixels per screen pixel — so 512 is the honest
+    /// most about 500 screen pixels on a 1080-wide phone — a floor tile is 220 wide and a
+    /// piece is drawn at about 1.15 art pixels per screen pixel — so 512 is the honest
     /// ceiling and anything above it is paying for detail the screen cannot show.
     /// </para>
     /// <para>

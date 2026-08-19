@@ -3,6 +3,7 @@ using System.Threading;
 using GlimmerGrove.Content;
 using GlimmerGrove.Content.Sources;
 using GlimmerGrove.Homestead;
+using GlimmerGrove.Progression;
 
 namespace GlimmerGrove.EditorTools
 {
@@ -80,6 +81,13 @@ namespace GlimmerGrove.EditorTools
             var result = repository.LoadEverythingAsync(CancellationToken.None).GetAwaiter().GetResult();
 
             var problems = new List<string>(result.Problems);
+
+            // The roster, published exactly as GameContent.Publish does at boot — and it has to
+            // happen before the grove is read, because the grove's residents are projected from
+            // it. Without this the Editor would validate and pack the *built-in fallback* five
+            // companions rather than the thirty-one the manifest ships, and every check would
+            // pass while the shop's residents shelf came out nearly empty on the device.
+            AvatarCatalog.Publish(result.Catalog.Index.Companions);
 
             // The grove, read here and only here in one go. The game loads it when the
             // Grovement is opened; validation has to see it whether or not anybody opens

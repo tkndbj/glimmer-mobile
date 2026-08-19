@@ -103,6 +103,12 @@ namespace GlimmerGrove.EditorTools
             // which draws a white rectangle, because that is what an Image with no sprite is.
             expected.AddRange(AssetManifest.AllGroveAssets(content.Homestead));
 
+            // The browse atlases, which are generated rather than authored — so the failure
+            // they guard against is not a missing file but a step nobody ran. A shop whose
+            // atlas was never rebuilt draws a grid of nothing, and it draws it only on the
+            // device, because in the Editor the previous atlas is still sitting there.
+            expected.AddRange(AssetManifest.AllBrowseAtlases());
+
             result.Expected = expected.Count;
 
             foreach (var request in expected)

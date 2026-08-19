@@ -168,6 +168,24 @@ namespace GlimmerGrove.Homestead
         public readonly ChapterId RequiresChapter;
 
         /// <summary>
+        /// Keeper level that earns this piece, or 0 for none.
+        ///
+        /// <para>
+        /// The third earned half, and the only one a resident uses — because a resident is a
+        /// companion (see <see cref="GroveResidents"/>) and a companion's free route has always
+        /// been the keeper ladder. It is not authorable in <c>homestead.json</c> and never will
+        /// be: decor is earned by clearing a named thing, which a player can go and do, while a
+        /// level gate on a bench would be a wait with nothing to aim at.
+        /// </para>
+        /// <para>
+        /// Derived like the other two — it is a question about the star ledger by way of
+        /// <c>PlayerProgression</c>, so it recomputes everywhere, survives every merge and can
+        /// be retuned for players who already hold the piece.
+        /// </para>
+        /// </summary>
+        public readonly int RequiresKeeperLevel;
+
+        /// <summary>
         /// How big this piece draws, as a multiple of its slot's own scale. 1 is the
         /// authored size of the art.
         ///
@@ -197,7 +215,8 @@ namespace GlimmerGrove.Homestead
         public HomesteadPiece(string id, string art, bool animated, HomesteadPieceKind kind,
                               int cost, LevelId requiresLevel, ChapterId requiresChapter,
                               float scale, float lift,
-                              HomesteadSlotKind slot = HomesteadSlotKind.Ground, int tier = 0)
+                              HomesteadSlotKind slot = HomesteadSlotKind.Ground, int tier = 0,
+                              int requiresKeeperLevel = 0)
         {
             Id = id;
             Art = string.IsNullOrEmpty(art) ? id : art;
@@ -208,6 +227,7 @@ namespace GlimmerGrove.Homestead
             Cost = cost < 0 ? 0 : cost;
             RequiresLevel = requiresLevel;
             RequiresChapter = requiresChapter;
+            RequiresKeeperLevel = requiresKeeperLevel < 0 ? 0 : requiresKeeperLevel;
             Scale = scale > 0f ? scale : 1f;
             Lift = lift;
         }
@@ -220,33 +240,32 @@ namespace GlimmerGrove.Homestead
         public bool IsDwelling => Kind == HomesteadPieceKind.Dwelling;
 
         /// <summary>
-        /// Whether this piece may stand in a slot of this kind.
+        /// Whether this piece can be placed by hand at all.
         ///
         /// <para>
-        /// Three rules and no more. A <b>dwelling</b> belongs to the hearth and nothing else
-        /// may go there, because the hearth is drawn from what the player owns rather than
-        /// from what they placed. A <b>resident</b> fits anywhere but the hearth — a creature
-        /// standing on a path, in a flower bed or under a tree is right in every case, and
-        /// telling somebody their own rescued critter may not stand somewhere is the kind of
-        /// rule that makes a toy feel like a form. Everything else fits its own kind exactly.
+        /// <b>One rule now, where there were three.</b> On the islands a slot had a role and a
+        /// piece fitted only its own — the rim took fences, the back took trees — and that rule
+        /// was what stopped a sprinkle of pre-placed dots looking accidental. The floor has no
+        /// dots: every tile is identical and empty, and where a thing goes is as much the
+        /// player's decision as what it is. Constraining that would be taking the feature back
+        /// out. See <c>GroveFloor</c>.
+        /// </para>
+        /// <para>
+        /// What survives is the one exception that was never about composition: a
+        /// <b>dwelling</b> is drawn from what the player owns rather than placed, so it cannot
+        /// be put anywhere and nothing else may stand on the hall's tile. The kind is still
+        /// carried, because the shop pages by it (see <c>GroveShelf</c>) — it went from a rule
+        /// a player could hit to a way of finding things.
         /// </para>
         /// </summary>
-        public bool Fits(HomesteadSlotKind slot)
-        {
-            if (!IsValid) return false;
-
-            if (IsDwelling) return slot == HomesteadSlotKind.Hearth;
-            if (slot == HomesteadSlotKind.Hearth) return false;
-            if (IsResident) return true;
-
-            return Slot == slot;
-        }
+        public bool CanBePlaced => IsValid && !IsDwelling;
 
         /// <summary>True when credits are a way to get this one. See <see cref="Cost"/>.</summary>
         public bool IsForSale => IsValid && Cost > 0;
 
         /// <summary>True when something in the game has to happen before this is held.</summary>
-        public bool HasRequirement => RequiresLevel.IsValid || RequiresChapter.IsValid;
+        public bool HasRequirement
+            => RequiresLevel.IsValid || RequiresChapter.IsValid || RequiresKeeperLevel > 0;
 
         /// <summary>
         /// True when nothing gates this piece at all: no requirement and no price.
@@ -258,12 +277,23 @@ namespace GlimmerGrove.Homestead
         public bool IsStarter => IsValid && !HasRequirement && !IsForSale;
 
         /// <summary>
-        /// A piece's name is a pure function of its id, with no override — the same rule a
-        /// level's and a companion's names are under (invariant 5a), and for the same
-        /// reason: anything holding an id can label it without reading the catalog, which is
-        /// what lets the save file alone tell a support tool what is standing in a slot.
+        /// A piece's name is a pure function of its id and its kind, with no override — the
+        /// same rule a level's and a companion's names are under (invariant 5a), and for the
+        /// same reason: anything holding an id can label it without reading the catalog, which
+        /// is what lets the save file alone tell a support tool what is standing in a slot.
+        ///
+        /// <para>
+        /// A resident answers with the <em>companion's</em> key, because a resident is a
+        /// companion (see <see cref="GroveResidents"/>) and the two screens must call somebody
+        /// by one name. Still derived and still unoverridable — the function simply takes the
+        /// kind as well as the id, and the kind is knowable from the catalog the id came out
+        /// of. Duplicating thirty-one names under a second prefix was the alternative, and a
+        /// translated string that exists twice is a translated string that will one day differ.
+        /// </para>
         /// </summary>
-        public string NameKey => DefaultNameKey(Id);
+        public string NameKey => IsResident
+            ? Progression.AvatarDefinition.DefaultNameKey(GroveResidents.CompanionIdOf(Id))
+            : DefaultNameKey(Id);
 
         public static string DefaultNameKey(string id) => "ui.piece." + id;
 

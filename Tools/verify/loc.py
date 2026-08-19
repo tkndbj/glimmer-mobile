@@ -34,7 +34,7 @@ KEY = re.compile(r'"((?:ui|err|mech)\.[a-z0-9_]+(?:\.[a-z0-9_]+)+)"')
 # name, a companion's, a mechanic tip's. They are checked by the content
 # validator, which knows the ids; here they would look like unused entries.
 DERIVED_PREFIXES = ("level.", "chapter.", "ui.companion.", "ui.avatar.", "ui.tip.",
-                    "ui.piece.", "ui.plot.")
+                    "ui.piece.", "ui.land.", "ui.shelf.")
 
 # Keys whose middle segment is a content id: `ui.event.<id>.name`. The prefix alone would
 # also hide the event panel's own generic keys, which are written out and worth checking.

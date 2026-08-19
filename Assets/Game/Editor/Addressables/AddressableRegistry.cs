@@ -148,7 +148,10 @@ namespace GlimmerGrove.EditorTools
         /// <summary>Every asset under the managed folders, whether registered yet or not.</summary>
         public static IEnumerable<string> EnumerateManagedAssets()
         {
-            var guids = AssetDatabase.FindAssets("t:Texture2D t:AudioClip t:Font",
+            // SpriteAtlas is in the list because the grove's browse atlases are addressed
+            // like any other asset — a sweep blind to them would leave the shop's art
+            // unregistered and the audit would then be the only thing that noticed.
+            var guids = AssetDatabase.FindAssets("t:Texture2D t:AudioClip t:Font t:SpriteAtlas",
                                                  new[] { "Assets/Game" });
             var seen = new HashSet<string>();
 

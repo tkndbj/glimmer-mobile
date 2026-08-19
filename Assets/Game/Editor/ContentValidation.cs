@@ -799,146 +799,204 @@ namespace GlimmerGrove.EditorTools
         {
             var grove = content.Homestead;
 
-            if (grove.PlotCount == 0 && grove.PieceCount == 0)
+            if (grove.Floor.IsEmpty && grove.PieceCount == 0)
             {
                 result.Warnings.Add("no grove catalog at " + ContentPaths.Homestead +
                                     "; the Grovement will have nothing to show");
                 return;
             }
 
-            ValidateHomesteadPlots(content, grove, result);
+            ValidateGroveFloor(grove, result, verbose);
             ValidateHomesteadPieces(content, grove, result);
-            ValidateHomesteadLayout(grove, result, verbose);
             ValidateHomesteadHome(grove, result, verbose);
-            ValidateHomesteadFits(grove, result);
 
             if (verbose)
-                Debug.Log($"[Glimmer] grove: {grove.PlotCount} plot(s), {grove.SlotCount} slot(s), " +
+                Debug.Log($"[Glimmer] grove: {grove.Floor.Cols}x{grove.Floor.Rows} floor, " +
+                          $"{grove.SlotCount} tile(s), {grove.Floor.Regions.Count} region(s), " +
                           $"{grove.PieceCount} piece(s)");
         }
 
-        static void ValidateHomesteadPlots(EditorContent content, HomesteadCatalog grove,
-                                           ContentValidationResult result)
+        /// <summary>
+        /// The ground: that there is some, that a new player has a share of it, and that the
+        /// regions divide it without overlapping or leaving holes.
+        ///
+        /// <para>
+        /// <b>Two of these are errors and they are the two that ship a broken first launch.</b>
+        /// A floor with no free region opens the Grovement onto a screen the player owns nothing
+        /// on, and a hall standing on ground they have not bought is a home they can see and
+        /// never reach. Both look perfectly authored in the file — the numbers are all present
+        /// and all plausible — which is exactly the class of mistake a build gate is for.
+        /// </para>
+        /// <para>
+        /// Overlapping regions are an error for a different reason: a tile in two regions is a
+        /// tile whose owner depends on which one the reader happened to check first, and a
+        /// player who bought one of them would see the ground unlock or not depending on the
+        /// order of a file.
+        /// </para>
+        /// </summary>
+        static void ValidateGroveFloor(HomesteadCatalog grove, ContentValidationResult result,
+                                       bool verbose)
         {
-            bool anyStarter = false;
-            var ahead = new List<string>();
+            var floor = grove.Floor;
 
-            foreach (var plot in grove.Plots)
+            if (floor.IsEmpty)
             {
-                if (plot.IsStarter) anyStarter = true;
-
-                RequireGroveArt(plot.Art, $"grove plot '{plot.Id}'", false, result);
-
-                // A forward reference is expected rather than wrong: the plot ladder is
-                // authored ahead of the chapters that open it, so a player can see the grove
-                // they are working towards. Collected into one line rather than reported per
-                // plot, for the reason ValidateCompanions collects its own — a ladder built to
-                // outlast the current content would otherwise emit a screenful every run, and
-                // a validator nobody reads is a validator that has stopped working. Said at
-                // all because it is also exactly what a typo looks like, and the two are
-                // indistinguishable in the file.
-                if (plot.RequiresChapter.IsValid && !content.Index.ContainsChapter(plot.RequiresChapter))
-                    ahead.Add($"{plot.Id} -> {plot.RequiresChapter}");
-
-                foreach (var slot in plot.Slots)
-                {
-                    if (slot.X < 0f || slot.X > 1f || slot.Y < 0f || slot.Y > 1f)
-                        result.Warnings.Add($"grove slot '{slot.Id}' sits at ({slot.X:0.00}, " +
-                                            $"{slot.Y:0.00}), outside its plot; it will draw off the island");
-
-                    if (slot.Scale < .2f || slot.Scale > 3f)
-                        result.Warnings.Add($"grove slot '{slot.Id}' has scale {slot.Scale:0.00}, " +
-                                            "which will draw whatever stands in it very small or very large");
-                }
-
-                ValidateHomesteadSpacing(plot, result);
+                result.Errors.Add("the grove has no floor; there is nowhere to build");
+                return;
             }
 
-            // An error, not a warning. Every plot gated behind a chapter leaves a new player
-            // looking at a screen of padlocks, which is a feature that ships looking broken.
-            if (!anyStarter)
-                result.Errors.Add("no grove plot is free from the first launch; a new player " +
-                                  "would open the Grovement onto nothing but padlocks");
+            RequireGroveArt(floor.TileArt, "grove floor", false, result, optional: true);
+            CheckTileProjection(floor, result);
 
-            if (ahead.Count > 0)
-                result.Warnings.Add($"{ahead.Count} grove plot(s) open on chapters the catalog " +
-                                    "does not carry and stay locked until those ship: " +
-                                    string.Join(", ", ahead));
+            // Which region owns each tile, built once — the same map answers overlap, holes and
+            // the two named tiles, and walking the regions per question would be four passes
+            // over a field that can be forty thousand tiles.
+            var owner = new Dictionary<string, GroveRegion>(StringComparer.Ordinal);
+            int overlaps = 0;
+
+            foreach (var region in floor.Regions)
+            {
+                for (int c = region.Col; c < region.Col + region.Cols; c++)
+                    for (int r = region.Row; r < region.Row + region.Rows; r++)
+                    {
+                        string id = GroveFloor.TileId(c, r);
+                        if (owner.TryGetValue(id, out var already))
+                        {
+                            if (overlaps++ == 0)
+                                result.Errors.Add($"grove regions '{already.Id}' and '{region.Id}' " +
+                                                  $"both hold tile {id}; who owns it would depend " +
+                                                  "on the order of the file");
+                            continue;
+                        }
+
+                        owner[id] = region;
+                    }
+            }
+
+            if (overlaps > 1)
+                result.Errors.Add($"{overlaps} grove tiles are in more than one region");
+
+            int loose = floor.TileCount - owner.Count;
+            if (loose > 0)
+                result.Warnings.Add($"{loose} grove tile(s) belong to no region, so nobody can " +
+                                    "ever own them; they are drawn locked for ever");
+
+            int starters = 0;
+            foreach (var region in floor.Regions)
+                if (region.IsStarter) starters++;
+
+            if (starters == 0)
+                result.Errors.Add("no grove region is free from the first launch; a new player " +
+                                  "would open the Grovement owning none of it");
+
+            RequireStarterTile(floor, owner, floor.HallTile, "hall", true, result);
+            RequireStarterTile(floor, owner, floor.StarterTile, "starter companion", false, result);
+
+            long land = 0;
+            foreach (var region in floor.Regions) land += region.Cost;
+
+            long daily = DailyCreditIncome(ProgressionRules.Table);
+            if (verbose && daily > 0)
+                Debug.Log($"[Glimmer] grove land: {starters} free region(s), " +
+                          $"{floor.Regions.Count - starters} for sale - {land} credits in all, " +
+                          $"about {land / daily} day(s) of play at {daily} credits a day");
         }
 
         /// <summary>
-        /// The derived layout, run against the real art.
+        /// That the floor's art is drawn at the projection the grid steps by.
         ///
         /// <para>
-        /// <see cref="HomesteadMap"/> stacks the islands with a guaranteed gap, so a collision
-        /// is not supposed to be possible — this asserts that rather than trusting it, because
-        /// the version this replaced <em>was</em> trusted and every consecutive pair of islands
-        /// overlapped on a real phone. It costs one pass over ten rectangles.
+        /// <b>This is the check that would have caught the floor not lining up.</b>
+        /// <c>GroveFloor.TileFaceRatio</c> is a constant describing a picture, and a constant
+        /// describing a picture is only true until somebody swaps the picture. It shipped as 0.5
+        /// on the assumption that "isometric" meant a 2:1 grid; the pack is drawn at 0.5628, so
+        /// every tile overlapped its neighbour by six pixels vertically and the floor could not
+        /// be made to tessellate by any amount of nudging.
         /// </para>
         /// <para>
-        /// What is genuinely worth reporting is the height, because that is the number a
-        /// content drop grows silently: adding four plots adds about two screens of scrolling,
-        /// and nobody notices until they are looking for the island at the bottom.
+        /// Measured off the alpha rather than trusted: the widest opaque row is the tile's
+        /// horizontal axis, and the distance from the top of the image to that row is half the
+        /// top face. That is the same thing <c>HomesteadMap</c> had to learn about a plot's
+        /// height — the number the layout must agree with lives in a PNG nobody can see from the
+        /// code, so the code has to go and look.
         /// </para>
         /// </summary>
-        static void ValidateHomesteadLayout(HomesteadCatalog grove, ContentValidationResult result,
-                                            bool verbose)
+        static void CheckTileProjection(GroveFloor floor, ContentValidationResult result)
         {
-            const float canvasWidth = 1080f;
+            if (string.IsNullOrEmpty(floor.TileArt)) return;
 
-            var map = HomesteadMap.Build(grove, canvasWidth, AspectOfPlot);
+            string path = "Assets/Game/Art/" + floor.TileArt + ".png";
+            var texture = AssetDatabase.LoadAssetAtPath<Texture2D>(path);
+            if (texture == null) return;
 
-            foreach (var clash in map.Collisions())
-                result.Errors.Add($"grove islands {clash} overlap; HomesteadMap is supposed to " +
-                                  "make that impossible, so this is an engine bug rather than a " +
-                                  "content one");
+            if (!texture.isReadable)
+            {
+                // Not a fault: art is imported without CPU read access on purpose. The check
+                // simply cannot run, and saying so is better than passing silently.
+                result.Warnings.Add($"the grove floor's tile at {path} is not readable, so its " +
+                                    "projection could not be checked against " +
+                                    $"GroveFloor.TileFaceRatio ({GroveFloor.TileFaceRatio:0.0000})");
+                return;
+            }
 
-            if (verbose)
-                Debug.Log($"[Glimmer] grove canvas is {map.CanvasHeight:0}px tall, about " +
-                          $"{map.CanvasHeight / 1452f:0.0} screens of scrolling");
-        }
+            int w = texture.width, h = texture.height;
+            int widestRow = -1, widest = 0, top = -1;
 
-        /// <summary>A plot's art aspect, read from the asset database. 1 when it is missing.</summary>
-        static float AspectOfPlot(HomesteadPlot plot)
-        {
-            if (plot == null || string.IsNullOrEmpty(plot.Art)) return 1f;
+            for (int y = h - 1; y >= 0; y--)
+            {
+                int count = 0;
+                for (int x = 0; x < w; x++)
+                    if (texture.GetPixel(x, y).a > .06f) count++;
 
-            var sprite = AssetDatabase.LoadAssetAtPath<Sprite>("Assets/Game/Art/" + plot.Art + ".png");
-            return sprite == null ? 1f : sprite.rect.height / sprite.rect.width;
+                if (count > 0 && top < 0) top = y;
+                if (count > widest) { widest = count; widestRow = y; }
+            }
+
+            if (top < 0 || widestRow < 0) return;
+
+            // Unity's texture origin is bottom-left, so "down from the top" counts backwards.
+            float face = (top - widestRow) * 2f;
+            float ratio = face / w;
+
+            if (Mathf.Abs(ratio - GroveFloor.TileFaceRatio) <= .01f) return;
+
+            result.Errors.Add($"the grove floor's tile is drawn at a face ratio of {ratio:0.0000} " +
+                              $"({w}x{(int)face}) and the grid steps by " +
+                              $"{GroveFloor.TileFaceRatio:0.0000}; the floor will not tessellate. " +
+                              "Change GroveFloor.TileFaceRatio to match the art, or re-cut the art");
         }
 
         /// <summary>
-        /// Slots close enough that whatever stands in them will overlap.
+        /// That a named tile is on the field and, when it must be, on ground a new player owns.
         ///
-        /// The grove's equivalent of <c>ChapterMap.MinimumNodeSeparation</c>, and a warning
-        /// for the reason that one is an error: a map node's size is fixed, while a slot holds
-        /// whatever the player chose, so two close slots are only a collision for some of the
-        /// catalog. The number is in plot fractions rather than pixels because that is the
-        /// space the content is authored in.
+        /// The hall has to be reachable on the first launch or the feature opens onto a padlock
+        /// where the house should be. The starter companion is only a warning: a grove that
+        /// begins with nobody standing in it is a poorer first impression, not a broken one.
         /// </summary>
-        static void ValidateHomesteadSpacing(HomesteadPlot plot, ContentValidationResult result)
+        static void RequireStarterTile(GroveFloor floor, Dictionary<string, GroveRegion> owner,
+                                       string tileId, string what, bool required,
+                                       ContentValidationResult result)
         {
-            const float tooClose = .13f;
+            if (string.IsNullOrEmpty(tileId))
+            {
+                if (required)
+                    result.Errors.Add($"the grove floor names no tile for the {what}");
+                else
+                    result.Warnings.Add($"the grove floor names no tile for the {what}");
+                return;
+            }
 
-            var slots = plot.Slots;
-            for (int i = 0; i < slots.Count; i++)
-                for (int k = i + 1; k < slots.Count; k++)
-                {
-                    // Paths are exempt, and not as a fudge: a path is a flat texture on the
-                    // ground whose whole job is to run from one place to the next, so two path
-                    // slots a thumb apart are the feature working. Everything else overlaps.
-                    if (slots[i].Kind == HomesteadSlotKind.Path ||
-                        slots[k].Kind == HomesteadSlotKind.Path) continue;
+            if (!owner.TryGetValue(tileId, out var region))
+            {
+                result.Errors.Add($"the grove's {what} stands on {tileId}, which belongs to no " +
+                                  "region and can never be owned");
+                return;
+            }
 
-                    float dx = slots[i].X - slots[k].X;
-                    float dy = slots[i].Y - slots[k].Y;
-                    float d = Mathf.Sqrt(dx * dx + dy * dy);
-
-                    if (d < tooClose)
-                        result.Warnings.Add($"grove slots '{slots[i].Id}' and '{slots[k].Id}' are " +
-                                            $"{d:0.000} apart on plot '{plot.Id}'; anything larger than " +
-                                            "a pebble in both will overlap");
-                }
+            if (!region.IsStarter)
+                result.Errors.Add($"the grove's {what} stands on {tileId}, in region " +
+                                  $"'{region.Id}', which costs {region.Cost}; a new player would " +
+                                  "see it behind a padlock");
         }
 
         /// <summary>
@@ -960,10 +1018,11 @@ namespace GlimmerGrove.EditorTools
             foreach (var piece in grove.Pieces)
                 if (piece.IsDwelling) dwellings.Add(piece);
 
-            int hearths = 0;
-            foreach (var plot in grove.Plots)
-                foreach (var slot in plot.Slots)
-                    if (slot.IsHearth) hearths++;
+            // The floor has exactly one hall tile or none, so this is a fact about the floor
+            // rather than a count over slots — but the checks below still read as a count,
+            // because "a home with nowhere to stand" and "somewhere to stand with no home" are
+            // still the two ways this goes wrong.
+            int hearths = string.IsNullOrEmpty(grove.Floor.HallTile) ? 0 : 1;
 
             if (dwellings.Count == 0)
             {
@@ -1010,37 +1069,6 @@ namespace GlimmerGrove.EditorTools
             }
         }
 
-        /// <summary>
-        /// Slots nothing but a resident can fill.
-        ///
-        /// A warning rather than an error, and deliberately counted over <em>decor</em> only: a
-        /// resident fits anywhere, so every slot is technically fillable and the check would
-        /// never fire. What it is really asking is whether the catalog has anything to sell for
-        /// this kind of slot — an island composed around a bed with no flowers in the shop is a
-        /// hole nobody can fill on purpose.
-        /// </summary>
-        static void ValidateHomesteadFits(HomesteadCatalog grove, ContentValidationResult result)
-        {
-            var offered = new HashSet<HomesteadSlotKind>();
-            foreach (var piece in grove.Pieces)
-                if (!piece.IsResident && !piece.IsDwelling) offered.Add(piece.Slot);
-
-            var wanted = new Dictionary<HomesteadSlotKind, int>();
-            foreach (var plot in grove.Plots)
-                foreach (var slot in plot.Slots)
-                {
-                    if (slot.IsHearth) continue;
-                    wanted.TryGetValue(slot.Kind, out int n);
-                    wanted[slot.Kind] = n + 1;
-                }
-
-            foreach (var pair in wanted)
-                if (!offered.Contains(pair.Key))
-                    result.Warnings.Add($"{pair.Value} grove slot(s) are for {pair.Key}, and the " +
-                                        "catalog has no decor of that kind; only a resident could " +
-                                        "ever stand there");
-        }
-
         static void ValidateHomesteadPieces(EditorContent content, HomesteadCatalog grove,
                                             ContentValidationResult result)
         {
@@ -1054,11 +1082,6 @@ namespace GlimmerGrove.EditorTools
                 if (piece.IsResident) residents++;
 
                 RequireGroveArt(piece.Art, $"grove piece '{piece.Id}'", piece.Animated, result);
-
-                // The one rule the two kinds do not share. See the remarks above.
-                if (piece.IsResident && piece.IsForSale)
-                    result.Errors.Add($"grove resident '{piece.Id}' carries a price; residents are " +
-                                      "earned by playing and are never for sale");
 
                 if (piece.RequiresLevel.IsValid && !content.Index.Contains(piece.RequiresLevel))
                     result.Warnings.Add($"grove piece '{piece.Id}' is earned by clearing " +
@@ -1081,8 +1104,11 @@ namespace GlimmerGrove.EditorTools
                                   "would open the picker onto an empty list");
 
             if (residents == 0)
-                result.Warnings.Add("the grove has no residents; the half of the catalog that " +
-                                    "cannot be bought is what makes it a record rather than a shop");
+                result.Warnings.Add("the grove has no residents; the companion roster is where " +
+                                    "they come from, so an empty roster empties a whole shelf");
+
+            ValidateGroveResidents(grove, result);
+            ValidateGroveShelves(grove, result);
 
             // The shop, against the income that has to pay for it. Excludes rewarded ads for
             // ValidateCompanionPrices' reason: ads are the accelerator, so counting them in the
@@ -1099,6 +1125,63 @@ namespace GlimmerGrove.EditorTools
         }
 
         /// <summary>
+        /// The residents, which are the companion roster wearing a second hat.
+        ///
+        /// <para>
+        /// Two things can go wrong and neither is visible in either file on its own. An
+        /// authored piece wearing the <b>reserved prefix</b> would put two permanent id spaces
+        /// back together — they were minted independently and already collided once, which is
+        /// why a resident's id is a companion's id prefixed. And a <b>retired resident</b>
+        /// whose replacement has left the roster would
+        /// leave the rewrite in <c>GroveResidents</c> pointing at nothing, which quietly empties
+        /// a slot somebody arranged. Both are errors: they cost save data, and both are exactly
+        /// the class of mistake that only shows up on a device.
+        /// </para>
+        /// </summary>
+        static void ValidateGroveResidents(HomesteadCatalog grove, ContentValidationResult result)
+        {
+            var companions = new HashSet<string>(StringComparer.Ordinal);
+            foreach (var companion in AvatarCatalog.All)
+                if (companion.IsValid) companions.Add(companion.Id);
+
+            foreach (var piece in grove.Authored)
+            {
+                if (!piece.IsValid) continue;
+
+                if (GroveResidents.IsResidentId(piece.Id))
+                    result.Errors.Add($"grove piece '{piece.Id}' uses the reserved prefix " +
+                                      $"'{GroveResidents.Prefix}', which belongs to residents " +
+                                      "projected from the companion roster");
+            }
+
+            foreach (string retired in GroveResidents.RetiredIds)
+            {
+                GroveResidents.TryRename(retired, out string became);
+
+                if (!companions.Contains(GroveResidents.CompanionIdOf(became)))
+                    result.Errors.Add($"the retired grove resident '{retired}' is rewritten to " +
+                                      $"'{became}', which the roster no longer carries; every " +
+                                      "slot holding it would empty");
+            }
+        }
+
+        /// <summary>
+        /// That every shop shelf has something to draw its tab with.
+        ///
+        /// A tab wears the cheapest thing on its shelf, so an empty shelf is a blank plate in a
+        /// row a player navigates by — and it is generated art, so the blank would appear on a
+        /// device and not in the Editor. A warning rather than an error: a catalog legitimately
+        /// grows one shelf at a time, and the shop draws an empty grid perfectly well.
+        /// </summary>
+        static void ValidateGroveShelves(HomesteadCatalog grove, ContentValidationResult result)
+        {
+            foreach (var shelf in GroveShelves.All)
+                if (GroveShelves.HasAtlas(shelf) && !HomesteadCatalog.Emblem(grove, shelf).IsValid)
+                    result.Warnings.Add($"the grove shop's '{GroveShelves.Key(shelf)}' shelf is " +
+                                        "empty; its tab will have no emblem");
+        }
+
+        /// <summary>
         /// That a piece or plot's art is actually in the project.
         ///
         /// A missing address draws a solid white rectangle rather than nothing (invariant 7b),
@@ -1108,11 +1191,14 @@ namespace GlimmerGrove.EditorTools
         /// installed and this has to hold in every project state.
         /// </summary>
         static void RequireGroveArt(string art, string owner, bool animated,
-                                    ContentValidationResult result)
+                                    ContentValidationResult result, bool optional = false)
         {
             if (string.IsNullOrEmpty(art))
             {
-                result.Errors.Add($"{owner} names no art");
+                // The floor may name no tile art at all, which draws a generated diamond — that
+                // is how the feature works before the ground has been cut, and it is a choice
+                // rather than an omission.
+                if (!optional) result.Errors.Add($"{owner} names no art");
                 return;
             }
 
@@ -1334,11 +1420,11 @@ namespace GlimmerGrove.EditorTools
             foreach (var companion in content.Index.Companions)
                 Require(table, companion.NameKey, $"companion '{companion.Id}'", result);
 
-            // So are a grove plot's and a grove piece's, for the same reason and with the
+            // So are a grove region's and a grove piece's, for the same reason and with the
             // same consequence - a piece added without its string ships as "ui.piece.oak"
             // written across a shop cell.
-            foreach (var plot in content.Homestead.Plots)
-                Require(table, plot.NameKey, $"grove plot '{plot.Id}'", result);
+            foreach (var region in content.Homestead.Floor.Regions)
+                Require(table, region.NameKey, $"grove region '{region.Id}'", result);
 
             foreach (var piece in content.Homestead.Pieces)
                 Require(table, piece.NameKey, $"grove piece '{piece.Id}'", result);

@@ -25,7 +25,7 @@ namespace GlimmerGrove
     /// without anything here being migrated.
     /// </para>
     /// </summary>
-    public sealed class ProfileScreen : View
+    public sealed class ProfileScreen : View, IDrawsCompanionArt
     {
         public override string Track => "mus_menu";
 
@@ -98,7 +98,7 @@ namespace GlimmerGrove
             AvatarCatalog.Changed -= RepaintCompanions;
 
             if (Flow.Current is CompanionScreen) return;
-            CompanionArt.Close();
+            CompanionArt.CloseUnlessWanted();
         }
 
         // -------------------------------------------------------------- scroller

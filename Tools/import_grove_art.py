@@ -22,7 +22,7 @@ made once somewhere:
   * **Nothing is hand-copied.** The import is re-runnable and the diff shows the
     mapping, the price and the source path together. The next pack is a column.
   * **Existing pieces are preserved.** The rows already in homestead.json that this
-    file does not mention — the residents, the home ladder, the original decor —
+    file does not mention — the home ladder, the original decor —
     are carried through untouched. This file owns what it lists and nothing else.
 """
 import argparse, io, json, collections, os, shutil, struct, sys
@@ -129,9 +129,11 @@ def main():
             ("_imported", True),
         ]))
 
-    # Residents, then the home ladder, then decor by kind and price — the order the
-    # shop draws them in, so the file reads the way the screen does.
-    order = {"resident": 0, "dwelling": 1, "decor": 2}
+    # The home ladder, then decor by kind and price — the order the shop draws them in,
+    # so the file reads the way the screen does. Residents are not in this file at all:
+    # they are the companion roster, projected in from the manifest by GroveResidents, so
+    # a row claiming to be one is refused by HomesteadMapper.
+    order = {"dwelling": 1, "decor": 2}
     kind_order = {k: i for i, k in enumerate(("structure", "canopy", "bed", "edge", "path", "ground"))}
     pieces = kept + fresh
     pieces.sort(key=lambda p: (order.get(p.get("kind", "decor"), 2),
@@ -180,8 +182,13 @@ def main():
     print("     files copied in while the Editor was closed or mid-reload, which is")
     print("     every run of this script. Unaddressed art loads as nothing and the")
     print("     cell draws blank. The build gate would catch it; the Editor will not.")
-    print("  2. Glimmer Grove > Validate Content")
-    print("  3. python Tools/verify/content.py")
+    print("  2. Glimmer Grove > Addressables > Rebuild Grove Atlases")
+    print("     The shop browses through one atlas per shelf, generated from the")
+    print("     catalog. A new piece with no thumbnail in its shelf's atlas draws a")
+    print("     blank plate — on the device, because the Editor still has the old one.")
+    print("  3. Glimmer Grove > Validate Content")
+    print("  4. Glimmer Grove > Validate Art   (proves every atlas has every picture)")
+    print("  5. python Tools/verify/content.py")
 
 
 if __name__ == "__main__":

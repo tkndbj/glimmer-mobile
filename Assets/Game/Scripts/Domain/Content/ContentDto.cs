@@ -684,79 +684,81 @@ namespace GlimmerGrove.Content
     {
         public int schemaVersion;
 
-        public HomesteadPlotDto[] plots;
+        public GroveFloorDto floor;
         public HomesteadPieceDto[] pieces;
     }
 
-    /// <summary>One island of the grove, and the slots composed on it.</summary>
+    /// <summary>
+    /// The ground the grove is built on: one isometric tile field, and the regions it is sold
+    /// in.
+    ///
+    /// Replaces the island list from v2. See <c>GroveFloor</c> for why a field of identical
+    /// tiles is a different design from a ladder of authored compositions rather than a
+    /// simplification of one.
+    /// </summary>
     [Serializable]
-    public sealed class HomesteadPlotDto
-    {
-        /// <summary>Permanent id. Analytics keys on it; the save file does not.</summary>
-        public string id;
-
-        /// <summary>Sprite key relative to <c>Art/</c> — the island this is drawn as.</summary>
-        public string art;
-
-        /// <summary>
-        /// Where it floats horizontally, as a fraction of the grove canvas width.
-        ///
-        /// There is deliberately no <c>y</c>. Vertical position is derived by
-        /// <c>HomesteadMap</c> from each island's real art height and a fixed gap, so overlap
-        /// is impossible by construction and a re-cut sprite cannot break the layout. An
-        /// authored <c>y</c> shipped once and every consecutive pair of islands collided.
-        /// </summary>
-        public float x;
-
-        /// <summary>How wide the island draws, as a fraction of the canvas width.</summary>
-        public float width;
-
-        /// <summary>
-        /// The chapter that must be finished for this plot to open. Empty means the plot
-        /// every account starts with.
-        ///
-        /// A chapter rather than a level, and a whole one: the plot ladder is the most
-        /// visible reward in the game, so it wants the one condition a player can check by
-        /// looking at their map. <c>ContentValidation</c> fails the build when nothing is
-        /// starter — a first visit to a grove with no land is a feature that looks broken.
-        /// </summary>
-        public string requiresChapter;
-
-        public HomesteadSlotDto[] slots;
-    }
-
-    /// <summary>One place on a plot where a piece can stand.</summary>
-    [Serializable]
-    public sealed class HomesteadSlotDto
+    public sealed class GroveFloorDto
     {
         /// <summary>
-        /// Permanent id, unique across the whole grove. <b>Written into the save file</b>, so
-        /// it is under invariant 1: never renamed, never reused, and never derived from
-        /// position — inserting a slot must not move what stands in the ones after it.
+        /// How many tiles the field is across and deep.
+        ///
+        /// <b>It may only ever grow.</b> Tile ids are absolute coordinates and they are keys in
+        /// the save file, so shrinking the field strands whatever stands beyond the new edge and
+        /// a field that grew at the left would renumber every tile in the world.
+        /// </summary>
+        public int cols;
+        public int rows;
+
+        /// <summary>Sprite key relative to <c>Art/</c> for one floor tile. Empty draws a generated one.</summary>
+        public string tileArt;
+
+        /// <summary>
+        /// The tile the grove hall stands on, as a tile id — the one square nothing can be
+        /// placed into, because the hall is drawn from the best home the player owns.
+        /// </summary>
+        public string hallTile;
+
+        /// <summary>
+        /// Where the starter companion stands until the player moves them.
+        ///
+        /// Nothing is written to the save for it: the tile shows the starter while it has no
+        /// row of its own. A stored default is what invariant 11c forbids, and a fresh install
+        /// stamping one would outrank a device where the player had already moved them.
+        /// </summary>
+        public string starterTile;
+
+        public GroveRegionDto[] regions;
+    }
+
+    /// <summary>One rectangle of the floor, sold as a unit.</summary>
+    [Serializable]
+    public sealed class GroveRegionDto
+    {
+        /// <summary>
+        /// Permanent id. <b>Written into the save file</b> as an entitlement, so it is under
+        /// invariant 1: never renamed, never reused, never derived from position.
         /// </summary>
         public string id;
 
-        /// <summary>Position within the plot, as fractions of the plot's own box.</summary>
-        public float x;
-        public float y;
+        /// <summary>Top-left tile of the region, in absolute floor coordinates.</summary>
+        public int col;
+        public int row;
+
+        public int cols;
+        public int rows;
 
         /// <summary>
-        /// How large a piece standing here draws, before the piece's own scale. The
-        /// composition half: front and centre is bigger than back and left. 0 means 1.
-        /// </summary>
-        public float scale;
-
-        /// <summary>
-        /// What belongs here: <c>ground</c>, <c>hearth</c>, <c>structure</c>, <c>bed</c>,
-        /// <c>path</c>, <c>edge</c> or <c>canopy</c>. Empty means ground.
+        /// Credits that buy this region. <b>Zero means open from the first launch.</b>
         ///
-        /// This is what turns placing into composing — see <c>HomesteadSlotKind</c>. An
-        /// unknown value is reported and read as ground, for the reason an unknown piece kind
-        /// is read as decor: a slot this build does not fully understand is still a slot, and
-        /// refusing it would punch a hole in somebody's island on a rollback.
+        /// Zero rather than a flag, because <c>JsonUtility</c> writes a zero into every field an
+        /// older file never had — so "absent" and "free" have to be the same fact.
+        /// <c>ContentValidation</c> fails the build when nothing is free, since a first visit to
+        /// a grove with no ground is a feature that looks broken.
         /// </summary>
-        public string kind;
+        public int cost;
     }
+
+
 
     /// <summary>One thing a player can put in their grove.</summary>
     [Serializable]

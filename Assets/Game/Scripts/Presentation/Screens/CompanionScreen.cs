@@ -23,7 +23,7 @@ namespace GlimmerGrove
     /// have decoded a hundred flipbooks to show a hundred faces.
     /// </para>
     /// </summary>
-    public sealed class CompanionScreen : View
+    public sealed class CompanionScreen : View, IDrawsCompanionArt
     {
         public override string Track => "mus_menu";
 
@@ -110,7 +110,7 @@ namespace GlimmerGrove
             // The profile shows a preview row from the same set, so going back does not
             // free it only to load it again a frame later.
             if (Flow.Current is ProfileScreen) return;
-            CompanionArt.Close();
+            CompanionArt.CloseUnlessWanted();
         }
 
         // ----------------------------------------------------------------- grid

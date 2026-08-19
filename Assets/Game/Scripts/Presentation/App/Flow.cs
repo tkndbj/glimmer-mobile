@@ -30,6 +30,27 @@ namespace GlimmerGrove
 
         /// <summary>Return true to swallow the hardware back button.</summary>
         public virtual bool OnBack() => false;
+
+        /// <summary>
+        /// Whether this screen needs more than one finger at a time.
+        ///
+        /// <para>
+        /// Multi-touch is <b>off for the whole game</b> — <c>Boot</c> turns it off before the
+        /// first frame — because a board that accepted two fingers would let a player turn two
+        /// conduits in one tap, and a move counter that can be beaten by having two thumbs is
+        /// not a move counter. Exactly one screen needs it back: the grove, whose field is
+        /// pinch-zoomed.
+        /// </para>
+        /// <para>
+        /// <b>Declared rather than set.</b> A screen that switched the flag on in <c>Build</c>
+        /// would have to switch it off again on every way out, and this project has twice paid
+        /// for a rule shaped like that — the pause menu that only unlatched from its buttons,
+        /// and the art scope only one of two screens remembered to release. <see cref="Flow"/>
+        /// applies this on every screen change, so the board cannot inherit the grove's setting
+        /// however the player left it.
+        /// </para>
+        /// </summary>
+        public virtual bool WantsMultiTouch => false;
     }
 
     /// <summary>Screen stack plus the iris transition that hides the swap.</summary>
@@ -84,6 +105,10 @@ namespace GlimmerGrove
                 view.Init();
                 Current = view;
                 if (view.Track != null) Audio.Music(view.Track);
+
+                // Applied on every swap rather than only when it changes, so the answer is
+                // always the incoming screen's own — see View.WantsMultiTouch.
+                Input.multiTouchEnabled = view.WantsMultiTouch;
             }
 
             if (instant)

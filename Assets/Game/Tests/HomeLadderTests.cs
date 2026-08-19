@@ -60,16 +60,14 @@ namespace GlimmerGrove.Tests
             => new HomesteadPiece(id, "Critters/c1", true, HomesteadPieceKind.Resident,
                                   0, LevelId.None, ChapterId.None, 1f, .45f);
 
-        static HomesteadSlot Slot(string id, HomesteadSlotKind kind)
-            => new HomesteadSlot(id, .5f, .7f, 1f, kind);
+        /// <summary>A 2x2 field owned outright, with the hall on its first tile.</summary>
+        static GroveFloor Field()
+            => new GroveFloor(2, 2, string.Empty, GroveFloor.TileId(0, 0), string.Empty,
+                              new[] { new GroveRegion("home", 0, 0, 2, 2, 0) });
 
         static HomesteadCatalog Ladder()
             => new HomesteadCatalog(
-                new[] { new HomesteadPlot("meadow", "Homestead/plot_meadow", .5f, .9f, ChapterId.None,
-                                          new[] { Slot("meadow_hearth", HomesteadSlotKind.Hearth),
-                                                  Slot("meadow_a", HomesteadSlotKind.Bed),
-                                                  Slot("meadow_b", HomesteadSlotKind.Edge),
-                                                  Slot("meadow_c", HomesteadSlotKind.Ground) }) },
+                Field(),
                 new[] { Home("cottage", 1, 0), Home("lodge", 2, 2500), Home("hall", 3, 6000) });
 
         static void Own(params string[] ids)
@@ -145,128 +143,76 @@ namespace GlimmerGrove.Tests
         }
 
         [Test]
-        public void ADwellingBelongsToTheHearthAndNothingElseDoes()
+        public void ADwellingIsNeverPlacedByHandAndEverythingElseIs()
         {
-            var home = Home("cottage", 1, 0);
+            // What makes the hall safe to derive: a tile the player can place into is a tile
+            // whose contents live in the save file, and the home deliberately does not.
+            Assert.IsFalse(Home("cottage", 1, 0).CanBePlaced);
 
-            Assert.IsTrue(home.Fits(HomesteadSlotKind.Hearth));
-            Assert.IsFalse(home.Fits(HomesteadSlotKind.Ground));
-
-            // Nothing else may stand there, which is what makes the hearth safe to derive: a
-            // slot the player can place into is a slot whose contents live in the save file,
-            // and the home deliberately does not.
-            Assert.IsFalse(Decor("fence", HomesteadSlotKind.Edge).Fits(HomesteadSlotKind.Hearth));
-            Assert.IsFalse(Resident("sunmote").Fits(HomesteadSlotKind.Hearth));
+            Assert.IsTrue(Decor("fence", HomesteadSlotKind.Edge).CanBePlaced);
+            Assert.IsTrue(Resident("sunmote").CanBePlaced);
         }
 
-        // ============================================================= the fits
         [Test]
-        public void DecorFitsItsOwnKindOfSlotAndNoOther()
+        public void EveryPieceFitsEveryTileNow()
         {
+            // The slot-kind rule went with the islands. It existed to stop a sprinkle of
+            // pre-placed dots looking accidental; a field has no dots, so where a thing goes is
+            // the player's decision and narrowing it would take the feature back out. The kind
+            // survives as a shop shelf - see GroveShelf.
             var fence = Decor("fence_low", HomesteadSlotKind.Edge);
 
-            Assert.IsTrue(fence.Fits(HomesteadSlotKind.Edge));
-            Assert.IsFalse(fence.Fits(HomesteadSlotKind.Bed));
-            Assert.IsFalse(fence.Fits(HomesteadSlotKind.Ground));
-        }
-
-        [Test]
-        public void AResidentStandsAnywhereButTheHearth()
-        {
-            // The one exception, and it is a design decision rather than a shortcut: a creature
-            // on a path, in a flower bed or under a tree is right in every case, and telling
-            // somebody where their own rescued critter may not stand turns a toy into a form.
-            var sunmote = Resident("sunmote");
-
-            Assert.IsTrue(sunmote.Fits(HomesteadSlotKind.Ground));
-            Assert.IsTrue(sunmote.Fits(HomesteadSlotKind.Bed));
-            Assert.IsTrue(sunmote.Fits(HomesteadSlotKind.Path));
-            Assert.IsTrue(sunmote.Fits(HomesteadSlotKind.Canopy));
-            Assert.IsFalse(sunmote.Fits(HomesteadSlotKind.Hearth));
+            Assert.IsTrue(fence.CanBePlaced);
+            Assert.AreEqual(HomesteadSlotKind.Edge, fence.Slot, "still a shelf, just not a rule");
+            Assert.AreEqual(GroveShelf.Edge, GroveShelves.Of(fence));
         }
 
         [Test]
         public void APieceFromACatalogThatPredatesSlotKindsIsGround()
         {
             // Every optional content field here has to keep an older catalog working, because
-            // remote delivery means a client can be a drop behind. A piece with no `slot` is
-            // ground, which is what every piece was before the field existed.
+            // remote delivery means a client can be a drop behind.
             var old = new HomesteadPiece("pebble", "Homestead/pebble", false, HomesteadPieceKind.Decor,
                                          0, LevelId.None, ChapterId.None, 1f, .5f);
 
             Assert.AreEqual(HomesteadSlotKind.Ground, old.Slot);
-            Assert.IsTrue(old.Fits(HomesteadSlotKind.Ground));
-
-            var slot = new HomesteadSlot("meadow_a", .5f, .7f, 1f);
-            Assert.AreEqual(HomesteadSlotKind.Ground, slot.Kind);
+            Assert.IsTrue(old.CanBePlaced);
         }
 
         // ========================================================== the tending
         [Test]
-        public void TheHearthIsNotCountedTowardsAnIslandBeingFinished()
+        public void TheHallsTileIsNotCountedTowardsARegionBeingFinished()
         {
-            // Three placeable slots and a hearth. Counting the hearth would make an island that
-            // can never read as finished, because nothing is ever placed on it.
-            var plot = Ladder().Plots[0];
+            // Four tiles and one of them is the hall. Counting it would make a region that can
+            // never read as finished, because nothing is ever placed there.
+            var floor = Field();
+            var region = floor.Region("home");
 
-            Assert.AreEqual(3, plot.PlaceableCount);
-            Assert.AreEqual(0f, HomesteadLayout.FillOf(plot));
+            Assert.AreEqual(0f, HomesteadLayout.FillOf(floor, region));
 
-            HomesteadLayout.Place("meadow_a", "daisies");
-            HomesteadLayout.Place("meadow_b", "fence_low");
-            HomesteadLayout.Place("meadow_c", "pebble");
+            HomesteadLayout.Place(GroveFloor.TileId(1, 0), "daisies");
+            HomesteadLayout.Place(GroveFloor.TileId(0, 1), "fence_low");
 
-            Assert.AreEqual(1f, HomesteadLayout.FillOf(plot));
-            Assert.AreEqual(TendedStage.Bloomed, GroveTending.Of(plot));
+            Assert.AreEqual(2f / 3f, HomesteadLayout.FillOf(floor, region), .001f,
+                            "three placeable tiles, not four");
+
+            HomesteadLayout.Place(GroveFloor.TileId(1, 1), "pebble");
+
+            Assert.AreEqual(1f, HomesteadLayout.FillOf(floor, region), .001f);
+            Assert.AreEqual(TendedStage.Bloomed, GroveTending.Of(floor, region));
         }
 
         [Test]
-        public void TheFirstThingPlacedMovesTheIslandOffBare()
+        public void ARegionWithNowhereToPlaceIsNeverFinished()
         {
-            // The moment the habit forms, so it is deliberately the cheapest threshold in the
-            // rule: one piece out of eleven is enough to stop an island looking untouched.
-            Assert.AreEqual(TendedStage.Bare, GroveTending.Of(0f));
-            Assert.AreEqual(TendedStage.Started, GroveTending.Of(.05f));
-            Assert.AreEqual(TendedStage.Growing, GroveTending.Of(GroveTending.GrowingAt));
-            Assert.AreEqual(TendedStage.Lush, GroveTending.Of(GroveTending.LushAt));
-            Assert.AreEqual(TendedStage.Bloomed, GroveTending.Of(1f));
-        }
+            // A hall-only region, which the catalog should not contain but a drop could produce.
+            // Zero over zero is 0 rather than 1: ground nobody can furnish must not award the
+            // finished state for free.
+            var floor = new GroveFloor(1, 1, string.Empty, GroveFloor.TileId(0, 0), string.Empty,
+                                       new[] { new GroveRegion("perch", 0, 0, 1, 1, 0) });
 
-        [Test]
-        public void AnIslandOneSlotShortIsNotBloomed()
-        {
-            // Bloomed has to mean finished — it is the only stage that lights the island and
-            // spawns fireflies, and a stage that arrives early is a reward for nothing.
-            var plot = Ladder().Plots[0];
-
-            HomesteadLayout.Place("meadow_a", "daisies");
-            HomesteadLayout.Place("meadow_b", "fence_low");
-
-            Assert.AreEqual(TendedStage.Growing, GroveTending.Of(plot),
-                            "two of three is .67, which is under the .75 the top-but-one stage asks for");
-
-            HomesteadLayout.Place("meadow_c", "pebble");
-            Assert.AreEqual(TendedStage.Bloomed, GroveTending.Of(plot));
-
-            // And taking something away takes the island back down, because the stage is
-            // derived rather than a floor. That is the right way round for an arrangement: a
-            // player who empties an island has emptied it.
-            HomesteadLayout.Clear("meadow_c");
-            Assert.AreNotEqual(TendedStage.Bloomed, GroveTending.Of(plot));
-        }
-
-        [Test]
-        public void AnIslandWithNowhereToPlaceIsNeverFinished()
-        {
-            // A hearth-only island, which the catalog should not contain but a drop could
-            // produce. Zero over zero is 0 rather than 1: an island nobody can furnish must not
-            // award the finished state for free.
-            var plot = new HomesteadPlot("perch", "Homestead/plot_perch", .8f, .3f, ChapterId.None,
-                                         new[] { Slot("perch_hearth", HomesteadSlotKind.Hearth) });
-
-            Assert.AreEqual(0, plot.PlaceableCount);
-            Assert.AreEqual(0f, HomesteadLayout.FillOf(plot));
-            Assert.AreEqual(TendedStage.Bare, GroveTending.Of(plot));
+            Assert.AreEqual(0f, HomesteadLayout.FillOf(floor, floor.Region("perch")));
+            Assert.AreEqual(TendedStage.Bare, GroveTending.Of(floor, floor.Region("perch")));
         }
     }
 }

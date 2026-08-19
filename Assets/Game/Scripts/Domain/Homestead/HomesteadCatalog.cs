@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using GlimmerGrove.Content;
+using GlimmerGrove.Progression;
 
 namespace GlimmerGrove.Homestead
 {
@@ -30,33 +31,48 @@ namespace GlimmerGrove.Homestead
     public sealed class HomesteadCatalog
     {
         public static readonly HomesteadCatalog Empty =
-            new HomesteadCatalog(Array.Empty<HomesteadPlot>(), Array.Empty<HomesteadPiece>());
+            new HomesteadCatalog(GroveFloor.Empty, Array.Empty<HomesteadPiece>());
 
-        readonly HomesteadPlot[] _plots;
+        readonly GroveFloor _floor;
+        readonly HomesteadPiece[] _authored;
         readonly HomesteadPiece[] _pieces;
         readonly Dictionary<string, int> _pieceById;
-        readonly Dictionary<string, HomesteadSlot> _slotById;
-        readonly Dictionary<string, HomesteadPlot> _plotOfSlot;
 
-        public HomesteadCatalog(IReadOnlyList<HomesteadPlot> plots, IReadOnlyList<HomesteadPiece> pieces)
+        /// <summary>
+        /// A catalog of what the file authored, plus the residents the roster projects.
+        ///
+        /// <para>
+        /// The two halves are kept apart in <see cref="Authored"/> so the roster can be
+        /// swapped without re-reading the file — see <see cref="WithResidents"/>. Residents
+        /// come last, which is the order the shop and the picker sort against, and they are
+        /// dropped rather than merged when an id collides with an authored piece: the file's
+        /// row wins, because that is the one written into <c>homesteadOwned</c> as an
+        /// entitlement, and the build gate fails on the collision so it never reaches a player.
+        /// </para>
+        /// </summary>
+        public HomesteadCatalog(GroveFloor floor,
+                                IReadOnlyList<HomesteadPiece> pieces,
+                                IReadOnlyList<AvatarDefinition> residents)
+            : this(floor, Compose(pieces, residents), pieces)
         {
-            _plots = Copy(plots, Array.Empty<HomesteadPlot>());
+        }
+
+        public HomesteadCatalog(GroveFloor floor, IReadOnlyList<HomesteadPiece> pieces)
+            : this(floor, pieces, pieces)
+        {
+        }
+
+        HomesteadCatalog(GroveFloor floor,
+                         IReadOnlyList<HomesteadPiece> pieces,
+                         IReadOnlyList<HomesteadPiece> authored)
+        {
+            _floor = floor ?? GroveFloor.Empty;
             _pieces = Copy(pieces, Array.Empty<HomesteadPiece>());
+            _authored = ReferenceEquals(authored, pieces) ? _pieces : Copy(authored, Array.Empty<HomesteadPiece>());
 
             _pieceById = new Dictionary<string, int>(_pieces.Length, StringComparer.Ordinal);
             for (int i = 0; i < _pieces.Length; i++)
                 if (_pieces[i].IsValid) _pieceById[_pieces[i].Id] = i;
-
-            _slotById = new Dictionary<string, HomesteadSlot>(StringComparer.Ordinal);
-            _plotOfSlot = new Dictionary<string, HomesteadPlot>(StringComparer.Ordinal);
-
-            foreach (var plot in _plots)
-                foreach (var slot in plot.Slots)
-                {
-                    if (!slot.IsValid) continue;
-                    _slotById[slot.Id] = slot;
-                    _plotOfSlot[slot.Id] = plot;
-                }
         }
 
         static T[] Copy<T>(IReadOnlyList<T> source, T[] fallback)
@@ -68,31 +84,71 @@ namespace GlimmerGrove.Homestead
             return copy;
         }
 
-        public bool IsEmpty => _plots.Length == 0 && _pieces.Length == 0;
-
-        // ----------------------------------------------------------------- plots
-        /// <summary>Every plot, in the order the file authored them — which is draw order.</summary>
-        public IReadOnlyList<HomesteadPlot> Plots => _plots;
-
-        public int PlotCount => _plots.Length;
-
-        /// <summary>Every slot in the grove, across every plot.</summary>
-        public int SlotCount
+        static List<HomesteadPiece> Compose(IReadOnlyList<HomesteadPiece> authored,
+                                            IReadOnlyList<AvatarDefinition> residents)
         {
-            get
-            {
-                int total = 0;
-                foreach (var plot in _plots) total += plot.SlotCount;
-                return total;
-            }
+            var composed = new List<HomesteadPiece>((authored?.Count ?? 0) + (residents?.Count ?? 0));
+            var taken = new HashSet<string>(StringComparer.Ordinal);
+
+            if (authored != null)
+                foreach (var piece in authored)
+                {
+                    if (!piece.IsValid) continue;
+                    if (taken.Add(piece.Id)) composed.Add(piece);
+                }
+
+            foreach (var resident in GroveResidents.From(residents))
+                if (taken.Add(resident.Id)) composed.Add(resident);
+
+            return composed;
         }
 
-        public bool TryFindSlot(string slotId, out HomesteadSlot slot)
-            => _slotById.TryGetValue(slotId ?? string.Empty, out slot);
+        /// <summary>
+        /// The same catalog with a different roster projected into it.
+        ///
+        /// Content publishes the roster and the grove body on separate paths — the roster
+        /// rides the manifest and is in hand at boot, the body is read when the Grovement is
+        /// opened — so either can arrive second, and a content refresh can replace the roster
+        /// under an open screen. Rebuilding from <see cref="Authored"/> rather than re-reading
+        /// the file is what makes that a swap of one immutable object rather than an I/O
+        /// round trip in front of a screen the player is already looking at.
+        /// </summary>
+        public HomesteadCatalog WithResidents(IReadOnlyList<AvatarDefinition> residents)
+            => new HomesteadCatalog(_floor, _authored, residents);
 
-        /// <summary>The plot a slot belongs to, or null for a slot this catalog does not know.</summary>
-        public HomesteadPlot PlotOf(string slotId)
-            => _plotOfSlot.TryGetValue(slotId ?? string.Empty, out var plot) ? plot : null;
+        /// <summary>What the file said, before any resident was projected in.</summary>
+        public IReadOnlyList<HomesteadPiece> Authored => _authored;
+
+        public bool IsEmpty => _floor.IsEmpty && _pieces.Length == 0;
+
+        // ----------------------------------------------------------------- floor
+        /// <summary>The ground everything stands on. See <see cref="GroveFloor"/>.</summary>
+        public GroveFloor Floor => _floor;
+
+        /// <summary>Every tile of the field, whether or not the player owns it yet.</summary>
+        public int SlotCount => _floor.TileCount;
+
+        /// <summary>
+        /// The tile an id names, or an invalid slot for an id off the floor.
+        ///
+        /// Derived rather than looked up: a floor has a slot at every tile, so there is no
+        /// table to consult and nothing to keep in step. An id the floor does not contain
+        /// answers invalid, which is what a save written by a newer build with a bigger floor
+        /// produces — and the right response there is to draw nothing and leave the row alone,
+        /// never to erase somebody's arrangement on a rollback.
+        /// </summary>
+        public bool TryFindSlot(string slotId, out HomesteadSlot slot)
+        {
+            slot = default;
+            if (!GroveFloor.TryParse(slotId, out int col, out int row)) return false;
+            if (!_floor.Contains(col, row)) return false;
+
+            slot = new HomesteadSlot(slotId, col, row);
+            return true;
+        }
+
+        /// <summary>The region a tile is sold in, or null for ground nobody sells.</summary>
+        public GroveRegion RegionOf(string slotId) => _floor.RegionOf(slotId);
 
         // ---------------------------------------------------------------- pieces
         /// <summary>Every piece, in authored order.</summary>
@@ -125,14 +181,36 @@ namespace GlimmerGrove.Homestead
         /// </para>
         /// </summary>
         public static HomesteadPiece Emblem(HomesteadCatalog catalog, HomesteadSlotKind kind)
+            => Emblem(catalog, GroveShelves.Of(kind));
+
+        /// <summary>
+        /// The piece a shelf labels itself with: the cheapest thing on it.
+        ///
+        /// <para>
+        /// One rule for all eight shelves rather than a special case for the two that are not
+        /// decor. The residents' tab wears whichever companion is cheapest — which is the one
+        /// a new player is closest to, and therefore the right face for the shelf — and the
+        /// home's wears the first rung of the ladder. Ties go to catalog order, which is
+        /// arbitrary and <em>stable</em>, and stability is the property that matters: two
+        /// devices must draw the same row of tabs.
+        /// </para>
+        /// </summary>
+        public static HomesteadPiece Emblem(HomesteadCatalog catalog, GroveShelf shelf)
         {
             var best = default(HomesteadPiece);
             if (catalog == null) return best;
 
             foreach (var piece in catalog.Pieces)
             {
-                if (piece.IsResident || piece.IsDwelling || piece.Slot != kind) continue;
-                if (!best.IsValid || piece.Cost < best.Cost) best = piece;
+                if (GroveShelves.Of(piece) != shelf) continue;
+
+                // The home ladder orders by tier, not by price — the cheapest rung is the
+                // first one, and it is the only one that is free.
+                bool better = shelf == GroveShelf.Home
+                    ? piece.Tier < best.Tier
+                    : piece.Cost < best.Cost;
+
+                if (!best.IsValid || better) best = piece;
             }
 
             return best;

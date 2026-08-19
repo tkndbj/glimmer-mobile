@@ -54,7 +54,7 @@ record of what the original build shipped, not a description of the game.
 Assets/StreamingAssets/Content/
   manifest.json              every chapter and every glade id, in order
   chapters/<chapter_id>.json one chapter's grids, colours and art keys
-  homestead.json             the grove: its plots, their slots, and everything placeable
+  homestead.json             the grove: its floor, the land for sale, everything placeable
   loc/<lang>.json            strings, keyed
 ```
 
@@ -327,32 +327,24 @@ what keeps launch costing the same at a hundred companions as at five.
 
 ## The Grovement
 
-The player's own grove: islands they earn, creatures they rescued, and decor they bought.
-It lives in its own file because it is a **body**, not index knowledge:
+The player's own grove: a floor they own and expand, creatures they earned, and decor they
+bought. It lives in its own file because it is a **body**, not index knowledge:
 
 ```json
 {
-  "schemaVersion": 2,
-  "plots": [
-    {
-      "id": "meadow",
-      "art": "Homestead/plot_meadow",
-      "x": 0.48, "width": 0.62,
-      "requiresChapter": "",
-      "slots": [
-        { "id": "meadow_a", "x": 0.34, "y": 0.88, "scale": 0.82 }
-      ]
-    }
-  ],
+  "schemaVersion": 3,
+  "floor": {
+    "cols": 14,
+    "rows": 14,
+    "tileArt": "",
+    "hallTile": "t_006_006",
+    "starterTile": "t_007_006",
+    "regions": [
+      { "id": "hearthstead", "col": 4, "row": 4, "cols": 6, "rows": 6, "cost": 0 },
+      { "id": "east_meadow", "col": 10, "row": 4, "cols": 4, "rows": 6, "cost": 2500 }
+    ]
+  },
   "pieces": [
-    {
-      "id": "sunmote",
-      "art": "Critters/c1", "animated": true,
-      "kind": "resident",
-      "cost": 0,
-      "requiresLevel": "c01_first_light",
-      "scale": 0.95, "lift": 0.45
-    },
     {
       "id": "fence_low",
       "art": "Homestead/fence_low",
@@ -364,23 +356,34 @@ It lives in its own file because it is a **body**, not index knowledge:
 }
 ```
 
-`manifest.json` carries only `"groveVersion": 1` for it — bump that when the file changes
-so the refresher pulls it, exactly as `progressionVersion` works for the reward table. It
-is read when the player opens the Grovement and its art is dropped when they leave. That
-is invariant 4a applied to the thing most likely to break it: a shop is the part of a game
-that grows fastest, and two hundred pieces parsed at every launch to answer a question
-nothing on the boot path asks is a cost paid forever by every device.
+`manifest.json` carries only `"groveVersion": 5` for it — bump that when the file changes so
+the refresher pulls it, exactly as `progressionVersion` works for the reward table. It is read
+when the player opens the Grovement and its art is dropped when they leave. That is invariant 4a
+applied to the thing most likely to break it: a shop is the part of a game that grows fastest,
+and hundreds of pieces parsed at every launch to answer a question nothing on the boot path asks
+is a cost paid forever by every device.
 
 ### What is stored and what is derived
 
-Only two things reach the save file (schema **v16**), and they are joined differently:
+Three things reach the save file (schema **v17**), and they are joined differently:
 
 | | shape | merge | invariant |
 |---|---|---|---|
-| **Land** | nothing | — | derived from chapters finished |
-| **Residents** | nothing | — | derived from glades cleared |
+| **Residents** | nothing here | — | they *are* companions; see below |
+| **The home** | nothing extra | — | derived from `homesteadOwned` |
 | **Purchases** (`homesteadOwned`) | set of ids | union | 15 — an entitlement |
-| **Arrangement** (`homesteadPlaced`) | slot → piece + stamp | recency per slot | 11c — an instruction |
+| **Land** (`groveLandOwned`) | set of region ids | union | 15 — an entitlement |
+| **Arrangement** (`homesteadPlaced`) | tile → piece + stamp | recency per tile | 11c — an instruction |
+
+**Land is the one thing that stopped being derived.** An island used to be held when its chapter
+was finished — a question about the star ledger, so it recomputed everywhere and left nothing on
+disk. Land bought with credits cannot be, so it is stored, and it is stored per **region** rather
+than per tile: both are legal shapes and only one stays small, since a filled floor is a couple of
+hundred tiles and a set that size is merged and checksummed on every sync for ever.
+
+**Starter land has no price and is never written down.** A region with `cost: 0` is owned by
+everyone, so recording it would be a stored default that says nothing — and "absent" and "bought
+nothing" have to stay the same fact for the union to need no sentinel.
 
 **Owning a piece is permission to draw it, not possession of a copy.** A player holding
 `fence_low` may put it in one slot or in twelve. That is not a simplification: a count of
@@ -388,10 +391,17 @@ copies held is exactly the stored count invariant 11b forbids, and hearts spent 
 version proving it. It also makes the better shop — variety rather than quantity is what
 makes two groves look different.
 
-**A slot id is written into save files.** Invariant 1 applies in full: never renamed, never
-reused, never derived from position, and unique across the whole grove rather than per plot.
-Two plots sharing one would put a tree placed on the first island onto the second, and the
-merge would treat two independent choices as one.
+**A tile id is written into save files.** Invariant 1 applies in full. Three rules follow and
+none of them is optional:
+
+* Tile ids are **absolute floor coordinates** (`t_006_006`), never region-relative. So re-drawing
+  which region a tile is *sold* in changes what you must buy to reach it and never changes what is
+  *standing* on it.
+* They are **zero-padded to three digits**, because `SaveDelta` walks the placement rows in order
+  and an ordering that changed with the size of a number would make an unchanged save read as
+  changed on every launch.
+* The floor may **only ever grow right and down**. A column inserted at the left would renumber
+  every tile in the world.
 
 ### Authoring a piece
 
@@ -400,18 +410,18 @@ merge would treat two independent choices as one.
 2. Add a row to `pieces`.
 3. Add `ui.piece.<id>` to `loc/en.json`.
 4. Bump `groveVersion` in `manifest.json`.
-5. Run `Glimmer Grove ▸ Validate Content`, or `python Tools/verify/content.py` with the
-   Editor closed.
+5. `Glimmer Grove ▸ Addressables ▸ Rebuild Grove Atlases` — the shop browses through them,
+   and a piece with no thumbnail draws a blank plate on the device.
+6. Run `Glimmer Grove ▸ Validate Content` and `▸ Validate Art`, or
+   `python Tools/verify/content.py` with the Editor closed.
 
-`kind` is `"decor"` or `"resident"`, and it decides exactly one thing: **a resident is never
-for sale.** A resident is proof of a glade the player finished, and one that can be bought
-turns the grove from a record into a receipt — so the mapper drops such a price and the
-build gate fails on it. `cost` of 0 means "not for sale" (never "free"), because
-`JsonUtility` writes a zero into every field an older file never had.
+`kind` is `"decor"` or `"dwelling"`. **`"resident"` is not authorable** — see *Residents are
+companions* below; a row claiming to be one is refused and named. `cost` of 0 means "not for
+sale" (never "free"), because `JsonUtility` writes a zero into every field an older file
+never had.
 
-`art` is a whole path under `Art/`, so a resident can point at the board's own critter
-flipbooks — which are already global art the game has paid for — while decor sits under
-`Art/Homestead/`. `animated` says which of the two it is. `scale` is a multiple of the art
+`art` is a whole path under `Art/`; decor sits under `Art/Homestead/`. `animated` says
+whether it names a folder of frames rather than one sprite. `scale` is a multiple of the art
 as authored and `lift` is how far up its slot the piece sits, as a fraction of its own drawn
 height; the shipped art stands on the ground, so most pieces want about `0.45`.
 
@@ -419,35 +429,109 @@ A piece with no requirement and no price is a **starter** — free from the firs
 least one must exist, or a new player opens the picker onto an empty list, and the build
 gate refuses that.
 
-### Authoring a plot
+### Authoring the floor
 
-`x` is a fraction of the canvas width and `width` is how wide the island draws. **There is no
-`y`** — vertical position is derived by `HomesteadMap`, which stacks the islands bottom to top in
-file order with a fixed gap and lets the canvas height fall out of the sum.
+`cols` and `rows` are the size of the field in tiles; everything else about its geometry is
+derived by `GroveFloor`, which owns the 2:1 isometric transform, its inverse (that is what turns a
+tap into a tile) and the draw order. None of it is authored, for the reason a plot's vertical
+position stopped being authored before it: the numbers a hand-written layout has to agree with
+live in art the author cannot see from the JSON.
 
-That is a correction, and the reason is worth keeping. `y` *was* authored, against a fixed 3400px
-canvas, and it shipped with every consecutive pair of islands overlapping and the starter plot
-sitting below the scrollable area where no amount of dragging could reach it. The number an
-authored `y` has to agree with is how tall the island draws — which is a property of a PNG the
-author cannot see from the JSON, and the ten shipped islands total 4,632px before a single gap. So
-it is computed instead: overlap is impossible by construction, a re-cut sprite cannot break the
-layout, and adding a plot needs no numbers re-tuned. `content.py` reads the PNG headers and reports
-the derived height so a drop that quietly adds two screens of scrolling is visible.
+`tileArt` names the ground. It ships as `Homestead/floor_grass`, cut from the same field tileset
+most of the decor came from. **The sprite is a block, not a flat diamond** — a 418×209 top surface
+with 78 pixels of side wall under it — and the game hangs it by half that skirt so the *surface*
+lands on the tile's point. The skirt is derived, not authored: the top face of an isometric tile is
+2:1 by definition, so anything below it is wall, and a re-cut tile with a deeper side needs no
+number changed. A replacement tile only has to keep that proportion.
 
-`requiresChapter` opens it, and it means **every glade in that chapter cleared** — the only
-condition a player can check by looking at the map. Empty means the plot every account starts with,
-and at least one must be like that.
+It may also be left empty, which is a choice rather than an omission — the floor then draws
+`Art.IsoTile`, a generated diamond, which is how the feature works before the ground has been cut
+and why the Grovement is never a screenful of white rectangles (invariant 7b).
 
-Plots are deliberately authored **ahead of the chapters that open them**, so the ladder is
-visible before it is walkable. Both validators report those forward references as one
-collected warning rather than one per plot — the same call `ValidateCompanions` makes about
-a roster built to outlast the current content, and for the same reason: a validator nobody
-reads is a validator that has stopped working.
+`hallTile` and `starterTile` are tile ids. The hall is the one square nothing can be placed on,
+because it is *drawn* from the best home the player owns rather than put down by hand. The starter
+tile shows whichever companion nothing gates until the player moves them — **shown, never
+stored**, because writing that placement at first launch is exactly the stored default invariant
+11c forbids.
 
-Slot `x`/`y` are fractions of the plot's own box with y up, and `scale` is the composition
-half of a piece's size — front and centre draws bigger than back and left. Slots closer than
-`0.13` warn, which is the grove's `ChapterMap.MinimumNodeSeparation` and a warning rather
-than an error because a slot holds whatever the player chose.
+A **region** is a rectangle of the floor sold as a unit: `col`/`row` is its top-left tile,
+`cols`/`rows` its size, and `cost` the credits that buy it. `cost: 0` means open from the first
+launch.
+
+**Ground the player does not own is not drawn at all**, so a region's tiles simply appear when it
+is bought. Expansion is sold on the shop's `land` shelf rather than by tapping the grove, because
+a floor that had to show what you cannot use is a wall of padlocks around a small lit patch.
+
+Four things the build gate refuses, and each one looks perfectly authored in the file:
+
+* **No free region.** A new player would open the Grovement owning none of it.
+* **The hall on priced land.** A home they can see and never reach is the emptiest possible first
+  impression of the feature.
+* **Two regions holding the same tile.** Who owns it would depend on the order of the file.
+* **A region running off the field.**
+
+Tiles belonging to no region are a warning rather than an error — they are drawn locked for ever,
+which is a legitimate way to leave room for a later drop, but it is worth being told about.
+
+### Residents are companions
+
+A resident is not a thing this file authors. It is a **companion**, projected in from the
+manifest's roster by `GroveResidents` — same creature, same price, same keeper-level gate,
+same purchased set. Buy Coral on the profile and she can stand in the village; buy her in the
+village and she is on the profile. Nothing about a companion is written down twice.
+
+It used to be otherwise: five creatures lived here, earned by clearing five named glades, and
+had nothing to do with the thirty-one companions a player levels towards and pays for. Two
+rosters of creatures, two unlock rules, two prices, two screens that could disagree about
+what somebody owned.
+
+Three consequences worth knowing before you touch it:
+
+* **A resident's piece id is the companion's id prefixed with `friend_`.** Companion ids and
+  grove piece ids were minted independently and already collided — `pebble` is a decor rock
+  *and* a companion — and both are in save files, so neither could be renamed. The prefix is
+  reserved and the build gate fails on an authored piece that uses it.
+* **The five retired ids are rewritten on load, for ever.** `sunmote → friend_puff`,
+  `ripple → friend_timber`, `prism → friend_sprocket`, `burr → friend_thistle`,
+  `dusk → friend_monarch` — each maps to the companion drawing the same critter flipbook, so a
+  grove somebody arranged still looks like the grove they arranged. Never delete that table.
+* **A resident is for sale now.** That reverses what this file used to say. It is the same
+  price the profile has always charged, and the free route — the keeper ladder — is still
+  there and is still what the cell leads with.
+
+### The shop's shelves
+
+The shop pages by **shelf** (`GroveShelf`), which is one idea used three times: a tab, an
+asset scope, and a browse atlas. Nine of them — residents, structure, canopy, bed, edge,
+path, ground, home, land — and for decor a shelf is just its slot kind. **Land is the one shelf
+with no atlas** (`GroveShelves.HasAtlas`): it sells rectangles of floor rather than objects, so
+there is nothing to photograph and its cells draw a generated tile. The two that are not decor
+are the two exceptions: residents fit every slot but sell on one shelf, and the home is a
+ladder rather than a browse.
+
+Three mechanisms have to agree about that division, so it is expressed once. Adding a kind of
+thing is a member on the enum, a key, a loc string and a re-run of the atlas step.
+
+**The shop draws from atlases, never from the real art.** A grid cell is about 170 points and
+the art behind it is cut at 512 for the floor, so browsing through the real thing pays sixteen
+times the pixels it can show — and pays again in draw calls, because a texture each is a batch
+each. `Glimmer Grove ▸ Addressables ▸ Rebuild Grove Atlases` generates a downscaled copy of
+every piece under `Assets/Game/Generated/GroveThumbs/` and packs one atlas per shelf into
+`Assets/Game/Art/Grove/`. Both are committed; both are derived, and neither is edited by hand.
+
+It packs **copies** rather than the shipped sprites, and that is the load-bearing part: a
+sprite may belong to exactly one atlas, and a sprite that belongs to one stops having a
+texture of its own — so packing the real pieces would mean the grove screen could not draw one
+screenful without loading its whole shelf. Browsing costs one shelf; the floor costs the
+pieces standing on it.
+
+**Run the atlas step after every content drop.** `Validate Art` proves every shelf's atlas
+holds a picture for everything on it, and the build gate runs it — a stale atlas is otherwise
+invisible, because the Editor still has the old one and every other check passes.
+
+It needs `Sprite Atlas V2 (Enabled)`, which `Glimmer Grove ▸ Set Up Project` sets and ships in
+`ProjectSettings/EditorSettings.asset`. With packing off, a `.spriteatlasv2` imports as editor
+data and produces no atlas at all.
 
 ### The one thing the grove must never do
 
@@ -848,11 +932,13 @@ repair tool that silently did nothing in a project whose art pipeline depended o
 it. New chapter art would have imported fine, validated fine, built fine, and
 shipped with no backdrop.
 
-Two menu items remain, and neither is required in normal work:
+Three menu items remain. The first two are not required in normal work; the third is,
+after every content drop that touches the grove:
 
 ```
-Glimmer Grove ▸ Addressables ▸ Sync All Assets     re-file everything from scratch
-Glimmer Grove ▸ Addressables ▸ Audit Addresses     prove every request resolves
+Glimmer Grove ▸ Addressables ▸ Sync All Assets        re-file everything from scratch
+Glimmer Grove ▸ Addressables ▸ Audit Addresses        prove every request resolves
+Glimmer Grove ▸ Addressables ▸ Rebuild Grove Atlases  regenerate the shop's browse atlases
 ```
 
 Use **Sync** after a merge that touched the Addressables settings, or after moving

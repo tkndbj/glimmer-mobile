@@ -65,7 +65,7 @@ namespace GlimmerGrove
                              new Vector2(.5f, .5f), new Vector2(0f, 86f));
             _art.preserveAspect = true;
             _art.raycastTarget = false;
-            HomesteadArt.Paint(_art, Piece);
+            HomesteadArt.PaintThumb(_art, Piece);
 
             // The one sentence about what a purchase actually buys. Read from the rules rather
             // than written into the copy is the house style here, but this is a property of the
@@ -81,10 +81,16 @@ namespace GlimmerGrove
 
             BuildAction();
 
-            // This piece's own kind, which the shop behind is almost certainly already
+            // This piece's own shelf, which the shop behind is almost certainly already
             // showing — so this is a no-op that calls back, rather than a second load. The art
             // may still be arriving either way: an Image with no sprite is a white rectangle.
-            HomesteadArt.OpenKindAsync(Piece.Slot, () => { if (this) HomesteadArt.Paint(_art, Piece); });
+            //
+            // Drawn from the shelf's browse atlas, like the cell that opened this panel. A
+            // thumbnail is cut at 256 and this frame is 280, so the difference is a hair of
+            // softness — against loading a 512-pixel texture, and its whole bundle, for one
+            // picture on a panel that is dismissed in two seconds.
+            HomesteadArt.OpenShelfAsync(GroveShelves.Of(Piece),
+                                        () => { if (this) HomesteadArt.PaintThumb(_art, Piece); });
 
             // A balance can move under an open panel: a chest opened elsewhere, a sync landing
             // the server's figure, an ad paying out through the offer this panel opened.

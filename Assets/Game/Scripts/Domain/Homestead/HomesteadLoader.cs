@@ -3,6 +3,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using GlimmerGrove.Content;
 using GlimmerGrove.Content.Sources;
+using GlimmerGrove.Progression;
 
 namespace GlimmerGrove.Homestead
 {
@@ -53,7 +54,12 @@ namespace GlimmerGrove.Homestead
             if (!HomesteadMapper.TryRead(fetch.Text, problems, out var catalog))
                 return new HomesteadLoadResult(null, problems);
 
-            return new HomesteadLoadResult(catalog, problems);
+            // The residents are the companion roster, which arrives on the manifest rather than
+            // in this file — so the catalog the mapper produces is the authored half and this
+            // is where the two are joined. Composed here rather than inside the mapper so the
+            // mapper stays a statement about one file, which is what lets the Editor validate
+            // the body against a roster it chooses.
+            return new HomesteadLoadResult(catalog.WithResidents(AvatarCatalog.All), problems);
         }
     }
 }

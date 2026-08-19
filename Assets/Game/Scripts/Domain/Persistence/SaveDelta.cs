@@ -130,6 +130,7 @@ namespace GlimmerGrove.Persistence
             // evening's work lost on reinstall. Both are written sorted, so both compare as
             // an ordered walk.
             if (!SameSet(remote.homesteadOwned, merged.homesteadOwned)) return true;
+            if (!SameSet(remote.groveLandOwned, merged.groveLandOwned)) return true;
             if (!SamePlacements(remote.homesteadPlaced, merged.homesteadPlaced)) return true;
             if (!Same(remote.lastPlayedLevelId, merged.lastPlayedLevelId)) return true;
 

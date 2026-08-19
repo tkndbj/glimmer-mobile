@@ -97,5 +97,34 @@ namespace GlimmerGrove
 
         /// <summary>Drops the roster's portraits. The worn one is global and survives.</summary>
         public static void Close() => AssetLibrary.ReleaseScope(AssetLibrary.CompanionScope);
+
+        /// <summary>
+        /// Drops the roster's portraits unless the screen that just took over draws them too.
+        ///
+        /// <para>
+        /// <c>HomesteadArt.CloseUnlessWanted</c>'s rule, brought here because the roster
+        /// stopped belonging to one part of the game: the grove's shop sells companions now, so
+        /// the panel that offers one can be raised from the profile or from the village and
+        /// must not free portraits either of them is still drawing. <c>Destroy</c> lands at the
+        /// end of the frame, so a leaving screen's <c>OnDestroy</c> runs <em>after</em> the
+        /// incoming one has painted — which is why an unconditional close leaves a fully drawn
+        /// screen with no art and nothing to repaint it.
+        /// </para>
+        /// </summary>
+        public static void CloseUnlessWanted()
+        {
+            if (Flow.Current is IDrawsCompanionArt) return;
+
+            Close();
+        }
     }
+
+    /// <summary>
+    /// Declared by any screen that draws companion portraits from the roster's scope.
+    ///
+    /// Read by <see cref="CompanionArt.CloseUnlessWanted"/>. Adding a fourth such screen means
+    /// adding this and nothing else — which is the point, because the alternative is a check
+    /// each screen has to remember and this project has watched the third one forget twice.
+    /// </summary>
+    public interface IDrawsCompanionArt { }
 }
