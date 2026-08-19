@@ -1,10 +1,14 @@
 using System.Collections.Generic;
 using System.Linq;
 using UnityEditor;
-using UnityEditor.Android;
 using UnityEditor.Build;
-using UnityEditor.iOS;
 using UnityEngine;
+#if UNITY_ANDROID
+using UnityEditor.Android;
+#endif
+#if UNITY_IOS
+using UnityEditor.iOS;
+#endif
 
 namespace GlimmerGrove.EditorTools
 {
@@ -24,8 +28,21 @@ namespace GlimmerGrove.EditorTools
     /// The icon kinds are named rather than discovered, because Android's Round and
     /// Legacy kinds are indistinguishable at runtime — same slot sizes, same layer count —
     /// and guessing between them would put a circle where a rounded square belongs.
-    /// Naming them costs a reference to the Android and iOS module assemblies, which
-    /// every machine that can build this game already has.
+    ///
+    /// Naming them costs a reference to the Android and iOS module assemblies, and those
+    /// are <b>not</b> present on every machine that can build this game — which this file
+    /// used to claim. A Mac set up to build only iOS has no Android module, and
+    /// <c>AndroidPlatformIconKind</c> then does not exist as a type, so the whole file
+    /// fails to compile and takes the Editor into safe mode on a fresh clone. Each half is
+    /// therefore compiled only when its platform's module is present.
+    ///
+    /// <c>UNITY_ANDROID</c> and <c>UNITY_IOS</c> are the right guards for that despite
+    /// being <em>build target</em> defines rather than module ones, because the target
+    /// cannot be selected without the module: if the define is set the assembly is there.
+    /// The cost is that icons are applied for the active platform only, which is why
+    /// <see cref="Apply"/> says so out loud rather than quietly doing half the job — an
+    /// unset icon becomes a default Unity logo on a store listing, and that is exactly the
+    /// failure this file exists to prevent.
     ///
     /// Icons deliberately live outside <c>Assets/Game/Art</c>. Everything under that
     /// folder is forced to a UI sprite by <c>ArtImportRules</c> and swept into an
@@ -54,11 +71,14 @@ namespace GlimmerGrove.EditorTools
             if (master == null || background == null || foreground == null
                 || round == null || legacy == null) return;
 
+#if UNITY_IOS
             // iOS wants one square, opaque image per slot and masks the corners itself.
             // The same master feeds every kind; Unity resamples per slot at build time.
             foreach (var kind in IosKinds)
                 Assign(NamedBuildTarget.iOS, kind, new[] { master });
+#endif
 
+#if UNITY_ANDROID
             // Android 8 and up — every device this game supports, AndroidMinSdkVersion is
             // 26 — draws the adaptive pair and ignores the other two kinds. Layer order is
             // background first, foreground second; swapping them hides the character.
@@ -73,6 +93,21 @@ namespace GlimmerGrove.EditorTools
             Assign(NamedBuildTarget.Android, AndroidPlatformIconKind.Round, new[] { round });
             Assign(NamedBuildTarget.Android, AndroidPlatformIconKind.Legacy, new[] { legacy });
 #pragma warning restore 618
+#endif
+
+            // Said plainly, because the half that was skipped is invisible otherwise and
+            // the symptom — a default Unity logo on one store's listing — turns up weeks
+            // later in a review queue. Switch platform and run this again.
+#if !UNITY_ANDROID
+            Debug.LogWarning("[Glimmer] Android launcher icons were NOT applied: this Editor " +
+                             "is not on the Android build target (or has no Android module). " +
+                             "Switch to Android and run this again before shipping an AAB.");
+#endif
+#if !UNITY_IOS
+            Debug.LogWarning("[Glimmer] iOS launcher icons were NOT applied: this Editor is " +
+                             "not on the iOS build target (or has no iOS module). Switch to " +
+                             "iOS and run this again before archiving in Xcode.");
+#endif
 
             // The default icon is what the Editor, and any desktop build made while
             // debugging, shows. It is not shipped, but an unset one is confusing.
@@ -88,6 +123,13 @@ namespace GlimmerGrove.EditorTools
         {
             var unset = new List<string>();
             var total = 0;
+
+            if (Slots.Length == 0)
+            {
+                Debug.LogWarning("[Glimmer] no platform module is active, so there are no " +
+                                 "launcher icon slots to check. Switch to Android or iOS.");
+                return;
+            }
 
             foreach (var (target, kinds) in Slots)
             {
@@ -111,13 +153,16 @@ namespace GlimmerGrove.EditorTools
                 : $"[Glimmer] {unset.Count} of {total} launcher icon slot(s) unassigned");
         }
 
+#if UNITY_IOS
         static readonly PlatformIconKind[] IosKinds =
         {
             iOSPlatformIconKind.Application, iOSPlatformIconKind.Settings,
             iOSPlatformIconKind.Notification, iOSPlatformIconKind.Spotlight,
             iOSPlatformIconKind.Marketing,
         };
+#endif
 
+#if UNITY_ANDROID
 #pragma warning disable 618 // see Apply: the deprecated kinds still back android:icon
         static readonly PlatformIconKind[] AndroidKinds =
         {
@@ -125,9 +170,29 @@ namespace GlimmerGrove.EditorTools
             AndroidPlatformIconKind.Legacy,
         };
 #pragma warning restore 618
+#endif
 
-        static (NamedBuildTarget, PlatformIconKind[])[] Slots =>
-            new[] { (NamedBuildTarget.iOS, IosKinds), (NamedBuildTarget.Android, AndroidKinds) };
+        /// <summary>
+        /// The platforms this Editor can actually be asked about.
+        ///
+        /// Built rather than declared, because <see cref="Validate"/> must not report an
+        /// unset icon for a platform whose module is not installed — that would be an error
+        /// about something the machine cannot fix, on every fresh clone.
+        /// </summary>
+        static (NamedBuildTarget, PlatformIconKind[])[] Slots
+        {
+            get
+            {
+                var slots = new List<(NamedBuildTarget, PlatformIconKind[])>(2);
+#if UNITY_IOS
+                slots.Add((NamedBuildTarget.iOS, IosKinds));
+#endif
+#if UNITY_ANDROID
+                slots.Add((NamedBuildTarget.Android, AndroidKinds));
+#endif
+                return slots.ToArray();
+            }
+        }
 
         static void Assign(NamedBuildTarget target, PlatformIconKind kind, Texture2D[] layers)
         {

@@ -130,7 +130,17 @@ namespace GlimmerGrove.EditorTools
 
             // Native symbols, so a crash in Play Console reads as a stack trace instead of
             // a column of hex. Uploaded with the bundle automatically.
+            //
+            // The deprecated API is used deliberately. Unity's replacement lives in
+            // `UnityEditor.Android.UserBuildSettings`, which only exists when the Android
+            // module is installed — and this file has to compile on a Mac set up to build
+            // iOS only, which is exactly the mistake `LauncherIcons` had to be repaired for.
+            // The old property is in UnityEditor core, works, and costs two warnings. If it
+            // is ever actually removed, guard the new one with `#if UNITY_ANDROID` rather
+            // than reaching for it unguarded.
+#pragma warning disable 618
             EditorUserBuildSettings.androidCreateSymbols = AndroidCreateSymbols.Public;
+#pragma warning restore 618
 
             PlayerSettings.Android.useCustomKeystore = true;
             PlayerSettings.Android.keystoreName = keystore;
