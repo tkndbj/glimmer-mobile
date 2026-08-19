@@ -48,7 +48,7 @@ namespace GlimmerGrove
             long total = _event == null ? 0 : _event.TotalCredits;
 
             Section(-208f, "ic_star", "ui.event.info_count_title",
-                    Loc.Format("ui.event.info_count_body", goal, rungs, Profile.Short(total)));
+                    Loc.Format("ui.event.info_count_body", goal, rungs, Compact.Number(total)));
 
             Section(-544f, "ic_gift", "ui.event.info_collect_title",
                     Loc.Get("ui.event.info_collect_body"));

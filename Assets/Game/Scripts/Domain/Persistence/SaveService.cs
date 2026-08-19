@@ -16,17 +16,31 @@ namespace GlimmerGrove.Persistence
     /// </summary>
     public static class SaveService
     {
-        static SaveStore _store;
+        static ISaveStore _store;
         static bool _loaded;
         static bool _dirty;
 
         public static bool IsLoaded => _loaded;
 
-        public static void Load()
+        public static void Load() => LoadWith(new SaveStore());
+
+        /// <summary>
+        /// Loads through a store the caller supplies.
+        ///
+        /// <para>
+        /// Internal, and for the tests around the cloud sync — which have to prove things about
+        /// a save being replaced and could not do it against the live one without erasing
+        /// whoever ran them. The production path is <see cref="Load"/> and there is no second
+        /// way in: this is the same method with the store named, so a test exercises the code
+        /// that ships rather than a copy of it. See <see cref="ISaveStore"/> for why the
+        /// parameter is an interface.
+        /// </para>
+        /// </summary>
+        internal static void LoadWith(ISaveStore store)
         {
             if (_loaded) return;
 
-            _store = new SaveStore();
+            _store = store;
             var dto = _store.Load();
 
             bool imported = LegacyPlayerPrefsImport.Apply(dto);
@@ -56,6 +70,15 @@ namespace GlimmerGrove.Persistence
                 // so an interrupted upgrade retries cleanly instead of losing data.
                 if (Write()) LegacyPlayerPrefsImport.ClearLegacyKeys();
             }
+        }
+
+        /// <summary>Forgets everything, so a test can load a different file. Tests only.</summary>
+        internal static void Unload()
+        {
+            _loaded = false;
+            _dirty = false;
+            _store = null;
+            CloudState.Reset();
         }
 
         /// <summary>Marks the file as needing a write and performs it now.</summary>
@@ -156,8 +179,28 @@ namespace GlimmerGrove.Persistence
             return Write();
         }
 
-        /// <summary>Erases everything and starts again. Used by the settings screen.</summary>
-        public static void Wipe()
+        /// <summary>
+        /// Erases the grove and starts again.
+        ///
+        /// <para>
+        /// <paramref name="forgetAccount"/> decides whether the file that is left behind still
+        /// belongs to anybody, and getting it wrong is the difference between a clean start and
+        /// a promise the next sync breaks. Keeping the identity is right for
+        /// <c>CloudSaveService</c>'s adopt path, which is about to sign in as a different
+        /// account and overwrite it a line later. It is wrong — and was the whole reason the
+        /// settings screen's reset button was deleted — for anything that leaves the device
+        /// signed in as the same player: <c>SaveMerge.Join</c> is monotonic, so the next sync
+        /// pulls the emptied grove straight back and the erasure undoes itself in front of
+        /// somebody who watched it happen.
+        /// </para>
+        /// <para>
+        /// Forgetting it leaves a file owned by nobody, which is the honest description of a
+        /// device between two accounts and the state <see cref="Cloud.AccountGate"/> can safely
+        /// resolve from: it names no account, so it can adopt whichever one signs in without
+        /// ever having to decide between two.
+        /// </para>
+        /// </summary>
+        public static void Wipe(bool forgetAccount = false)
         {
             _store?.Delete();
             LegacyPlayerPrefsImport.ClearLegacyKeys();
@@ -185,12 +228,16 @@ namespace GlimmerGrove.Persistence
             Events.EventCollection.LoadFrom(fresh);
             Ads.RewardedAds.LoadFrom(fresh);
             ProgressionStore.LoadFrom(fresh);
-            // settings and the cloud identity deliberately survive a progress wipe
+
+            // Settings survive either way: they describe the handset and the person holding
+            // it, not the grove. The identity survives only when the caller says so.
+            if (forgetAccount) CloudState.ForgetAccount();
 
             _dirty = true;
             Flush();
 
-            Debug.Log("[Save] progress erased");
+            Debug.Log(forgetAccount ? "[Save] progress erased and account forgotten"
+                                    : "[Save] progress erased");
         }
     }
 }

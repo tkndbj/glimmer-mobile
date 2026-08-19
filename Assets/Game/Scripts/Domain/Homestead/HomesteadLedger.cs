@@ -184,6 +184,9 @@ namespace GlimmerGrove.Homestead
         /// <see cref="IsHeld(HomesteadPiece)"/>: most of the roster is earned and was never
         /// bought, so gating anything on this locks the grove.
         /// </summary>
+        /// <summary>How many pieces were paid for. See <c>CompanionLedger.BoughtCount</c>.</summary>
+        public static int BoughtCount => _bought.Count;
+
         public static bool WasBought(HomesteadPiece piece)
             => piece.IsValid
             && (piece.IsResident

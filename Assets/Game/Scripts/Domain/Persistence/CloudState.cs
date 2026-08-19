@@ -42,8 +42,33 @@ namespace GlimmerGrove.Persistence
         public static void SignOut()
         {
             if (!IsSignedIn) return;
-            UserId = string.Empty;
+            ForgetAccount();
             SaveService.Save();
+        }
+
+        /// <summary>
+        /// Drops the identity and everything scoped to it, in memory, without writing.
+        ///
+        /// <para>
+        /// <b>The revision and the sync mark go with the user id, and that is the point.</b>
+        /// Both describe a conversation with one account's document — how many times this save
+        /// has been written since that document was last seen, and when. Carried into a
+        /// different account they are worse than meaningless: a revision invented against
+        /// somebody else's history is exactly the input a backend using it for optimistic
+        /// concurrency must not be given. The device id survives, because it identifies the
+        /// handset and the handset has not changed.
+        /// </para>
+        /// <para>
+        /// Deliberately silent about disk. <c>SaveService.Wipe</c> calls it between building
+        /// the fresh file and flushing it, and a write from in here would be a second one
+        /// against a half-replaced state.
+        /// </para>
+        /// </summary>
+        internal static void ForgetAccount()
+        {
+            UserId = string.Empty;
+            Revision = 0;
+            LastSyncedUnix = 0;
         }
 
         public static void MarkSynced(long unix)

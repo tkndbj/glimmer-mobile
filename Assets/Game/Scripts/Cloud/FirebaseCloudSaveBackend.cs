@@ -128,6 +128,27 @@ namespace GlimmerGrove.Cloud
         }
 
         /// <summary>
+        /// Brings the SDK up and reports whoever Firebase restored, creating nobody.
+        ///
+        /// <para>
+        /// Firebase persists the signed-in user and restores it during
+        /// <see cref="EnsureReadyAsync"/>, so for the overwhelmingly common case — a launch by
+        /// somebody who signed in months ago — this returns their account without a network
+        /// round trip. An empty answer means the session is genuinely gone, which is a fact
+        /// worth reporting rather than papering over with a new anonymous account; see the
+        /// interface for what that used to cost.
+        /// </para>
+        /// </summary>
+        public async Task<(CloudResult result, CloudIdentity identity)> ResumeAsync(
+            CancellationToken cancellation = default)
+        {
+            if (!await EnsureReadyAsync())
+                return (CloudResult.Failed(CloudFailure.Offline, "Firebase unavailable"), CloudIdentity.None);
+
+            return (CloudResult.Success, CurrentIdentity);
+        }
+
+        /// <summary>
         /// Attaches a permanent provider to the anonymous account, keeping its uid.
         ///
         /// Linking rather than signing in is the whole point: the uid is what
@@ -177,10 +198,23 @@ namespace GlimmerGrove.Cloud
 
             try
             {
-                // Signing out first so the abandoned anonymous account cannot linger as
-                // the current user if the new sign-in fails halfway.
-                _auth.SignOut();
-
+                // Deliberately NOT signed out first, and this is the one line in the file
+                // most worth leaving alone.
+                //
+                // It used to sign out here, so that an abandoned anonymous account could not
+                // linger as the current user if the new sign-in failed halfway. That reasoning
+                // only holds while this is reached from the one flow that has already decided
+                // to abandon the current account. It is now also how a player *switches*
+                // accounts and how a device recovers from an interrupted switch — and there,
+                // signing out first means the single most ordinary outcome in the whole flow,
+                // a player closing the Google sheet without choosing, permanently ends the
+                // session they were happily in. The save then names an account nothing can
+                // sign back into without another consent screen, and every sync is refused by
+                // AccountGate until they work that out for themselves.
+                //
+                // Firebase replaces the current user atomically on success and leaves it alone
+                // on failure, which is the behaviour that is actually wanted: cancelling costs
+                // nothing at all.
                 if (credential.HasToken)
                     await _auth.SignInAndRetrieveDataWithCredentialAsync(ToCredential(credential));
                 else

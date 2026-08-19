@@ -100,7 +100,7 @@ namespace GlimmerGrove
             else
             {
                 _action = UIKit.TextButton("Buy", Panel, "btn_green",
-                                           Loc.Format("ui.grove.buy_for", offer.Cost), 40,
+                                           Loc.Format("ui.grove.buy_for", Compact.Number(offer.Cost)), 40,
                                            size, anchor, at, OnBuy);
                 _action.Interactable = offer.CanBuy;
             }
@@ -129,8 +129,8 @@ namespace GlimmerGrove
             if (_status)
             {
                 _status.text = offer.State == HomesteadPurchaseState.TooExpensive
-                    ? Loc.Format("ui.grove.price", offer.Cost)
-                    : Loc.Format("ui.land.balance", Profile.Short(offer.Balance));
+                    ? Loc.Format("ui.grove.price", Compact.Number(offer.Cost))
+                    : Loc.Format("ui.land.balance", Compact.Number(offer.Balance));
 
                 _status.color = offer.State == HomesteadPurchaseState.TooExpensive
                     ? Pal.A(Pal.Sun, .90f)

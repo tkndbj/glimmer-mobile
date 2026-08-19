@@ -128,7 +128,7 @@ namespace GlimmerGrove
                     // "short by N" line on its own does not do. A player saving for something
                     // should be able to see what it is called.
                     _status.text = Loc.Format("ui.grove.home_short", Loc.Get(next.NameKey),
-                                              offer.Shortfall);
+                                              Compact.Number(offer.Shortfall));
                     _status.color = Pal.A(Pal.Sun, .95f);
                 }
                 else
@@ -209,7 +209,7 @@ namespace GlimmerGrove
 
                 default:
                     _action = UIKit.TextButton("Buy", Panel, "btn_green",
-                                               Loc.Format("ui.grove.upgrade_for", offer.Cost), 40,
+                                               Loc.Format("ui.grove.upgrade_for", Compact.Number(offer.Cost)), 40,
                                                size, anchor, at, () => OnBuy(next));
                     _action.Interactable = offer.CanBuy;
                     break;

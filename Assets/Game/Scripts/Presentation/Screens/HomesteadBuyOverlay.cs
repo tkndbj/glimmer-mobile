@@ -118,7 +118,7 @@ namespace GlimmerGrove
             else
             {
                 _action = UIKit.TextButton("Buy", Panel, "btn_green",
-                                           Loc.Format("ui.grove.buy_for", offer.Cost), 40,
+                                           Loc.Format("ui.grove.buy_for", Compact.Number(offer.Cost)), 40,
                                            size, anchor, at, OnBuy);
                 _action.Interactable = offer.CanBuy;
             }
@@ -163,7 +163,7 @@ namespace GlimmerGrove
             switch (offer.State)
             {
                 case HomesteadPurchaseState.TooExpensive:
-                    _status.text = Loc.Format("ui.companion.short", offer.Shortfall, offer.Balance);
+                    _status.text = Loc.Format("ui.companion.short", Compact.Number(offer.Shortfall), Compact.Number(offer.Balance));
                     _status.color = Pal.A(Pal.Sun, .95f);
                     break;
 
@@ -173,7 +173,7 @@ namespace GlimmerGrove
                     break;
 
                 default:
-                    _status.text = Loc.Format("ui.companion.balance", offer.Balance);
+                    _status.text = Loc.Format("ui.companion.balance", Compact.Number(offer.Balance));
                     _status.color = new Color(1f, .96f, .88f, .78f);
                     break;
             }

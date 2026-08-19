@@ -204,7 +204,7 @@ namespace GlimmerGrove
             coin.preserveAspect = true;
             Flipbook.Attach(coin, "Ui/Coin", 11f);
 
-            _coins = UIKit.Titled("V", pill.transform, Profile.Short(Profile.Coins), 32, Pal.Cream,
+            _coins = UIKit.Titled("V", pill.transform, Compact.Number(Profile.Coins), 32, Pal.Cream,
                                   TextAnchor.MiddleCenter, new Vector2(112f, 46f), new Vector2(.5f, .5f),
                                   new Vector2(14f, 0f), 3f, 3f);
 
@@ -352,7 +352,7 @@ namespace GlimmerGrove
             PaintTabs();
             PaintSummary();
 
-            if (_coins) _coins.text = Profile.Short(Profile.Coins);
+            if (_coins) _coins.text = Compact.Number(Profile.Coins);
         }
 
         void PaintSummary()
@@ -598,7 +598,7 @@ namespace GlimmerGrove
 
                 _status.text = owned
                     ? Loc.Format("ui.land.size", _region.Cols, _region.Rows)
-                    : Loc.Format("ui.grove.price", _region.Cost);
+                    : Loc.Format("ui.grove.price", Compact.Number(_region.Cost));
 
                 _status.color = owned
                     ? Pal.A(Pal.Mint, .95f)
@@ -623,7 +623,7 @@ namespace GlimmerGrove
             if (piece.IsDwelling)
                 return held
                     ? (Loc.Get("ui.grove.home_best"), Pal.A(Pal.Gold, .95f))
-                    : (Loc.Format("ui.grove.price", piece.Cost),
+                    : (Loc.Format("ui.grove.price", Compact.Number(piece.Cost)),
                        Profile.CanAfford(piece.Cost) ? Pal.A(Pal.Sun, .95f) : Pal.A(Pal.Sun, .58f));
 
             if (held) return (Loc.Get("ui.grove.yours"), Pal.A(Pal.Mint, .95f));
@@ -644,7 +644,7 @@ namespace GlimmerGrove
                         Pal.A(Pal.Aqua, .95f));
 
             if (piece.IsForSale)
-                return (Loc.Format("ui.grove.price", piece.Cost),
+                return (Loc.Format("ui.grove.price", Compact.Number(piece.Cost)),
                         Profile.CanAfford(piece.Cost) ? Pal.A(Pal.Sun, .95f) : Pal.A(Pal.Sun, .58f));
 
             // Left over: no requirement, no price, and not held — which the catalog cannot

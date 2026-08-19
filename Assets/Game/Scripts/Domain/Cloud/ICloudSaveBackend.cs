@@ -38,6 +38,19 @@ namespace GlimmerGrove.Cloud
         /// </summary>
         Busy,
 
+        /// <summary>
+        /// The session is authenticated as one account and the local save belongs to another.
+        ///
+        /// <para>
+        /// Never retried and never resolved on its own. It means an identity change was
+        /// interrupted — a cancelled consent screen, a process death during a switch — and the
+        /// only safe response is to touch nothing until the player signs in as one of the two.
+        /// A retry would push somebody's grove into somebody else's account; see
+        /// <see cref="AccountGate"/> for why that is unrecoverable.
+        /// </para>
+        /// </summary>
+        AccountMismatch,
+
         /// <summary>Anything else. Logged, never surfaced to the player as a wall.</summary>
         Error,
     }
@@ -255,6 +268,27 @@ namespace GlimmerGrove.Cloud
         /// on the boot path — a first launch cannot be allowed to wait on a network.
         /// </summary>
         Task<(CloudResult result, CloudIdentity identity)> SignInAsync(
+            CancellationToken cancellation = default);
+
+        /// <summary>
+        /// Brings the SDK up and reports who is already signed in, <b>creating nobody</b>.
+        ///
+        /// <para>
+        /// The distinction from <see cref="SignInAsync"/> is the entire point and it is not a
+        /// convenience. Once a save names an account, minting a fresh anonymous one is the
+        /// worst available answer: the new account can never match the save, so every
+        /// subsequent sync is refused by <see cref="AccountGate"/> and the device quietly
+        /// stops backing up a grove the player believes is safe. That is what a cancelled
+        /// sign-in sheet used to cost. This asks the only question that is safe to ask on
+        /// behalf of a save that already has an owner — "is that owner still signed in?" — and
+        /// an honest "no" is a retry rather than a new identity.
+        /// </para>
+        /// <para>
+        /// Returns <see cref="CloudIdentity.None"/> with a successful result when the SDK is
+        /// up and nobody is signed in; that is an answer, not a failure.
+        /// </para>
+        /// </summary>
+        Task<(CloudResult result, CloudIdentity identity)> ResumeAsync(
             CancellationToken cancellation = default);
 
         /// <summary>

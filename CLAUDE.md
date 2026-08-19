@@ -197,6 +197,22 @@ What that means in practice here:
     record unrepresentable rather than something the server has to filter, and lets a
     sync write `levels.<id>` alone instead of re-uploading thousands of entries.
     `SaveDelta.Between` decides what to send; an unchanged save sends nothing at all.
+12a. **A field is not added to the save until it is on the wire, and the wire is four
+    places.** `SaveFileDto`, `SaveDelta` (what a sync bothers to send), `FirestoreSaveMapper`
+    — *both* directions — and the `hasOnly` list in `firestore.rules`. `groveLandOwned` shipped
+    in v17 having reached the first two and neither of the last two, so land bought with credits
+    never left the phone that bought it, and **nothing showed it**: a device only discovers what
+    it failed to upload when something replaces its local save, and until account switching
+    existed nothing ever did. The first player to switch got their grove back as the free starter
+    square with everything outside it invisible — the placements had survived, the ground under
+    them had not. The rules entry is the one with teeth in the other direction too: `hasOnly` is
+    an allow-list over the whole document, so a client that writes an unlisted key does not lose
+    that key, it **loses every save write**. Deploy the rules before shipping the client, never
+    the other way round. `EveryFieldOfTheSaveIsCarriedByTheRoundTripFixture` is the guard, and it
+    checks the *fixture* rather than the mapper — the round trip could only ever be as complete
+    as what is fed into it, which is why every wire test passed for a whole schema version. Same
+    lesson as invariant 4c, in the other file that silently drops what it was not told about.
+
 12. **Adding a field to `SaveFileDto` interacts with the checksum.** `SaveChecksum` hashes
     the serialised object, so a file written by an older schema can never match a newer
     build's hash. `Verify` therefore skips across versions. Bump `SaveSchema.Version`
@@ -369,6 +385,24 @@ What that means in practice here:
     realised.** `SetSiblingIndex` *inserts*, so every tile behind the one just placed shifts and
     the next intended index no longer means what it meant; the field came out looking sorted
     while the hall drew in front of the companion standing one tile nearer the viewer.
+
+17. **A save may only ever be pushed to the account it says it belongs to.** `AccountGate`,
+    five lines, and the only rule in this file whose failure has no undo. A sync is pull →
+    join → push and `SaveMerge.Join` is monotonic, so aimed at the wrong account it takes the
+    better half of two strangers' groves and writes it over one of them. The window is
+    entirely ordinary: switching accounts moves the session before the file on disk, and the
+    OAuth consent screen backgrounds the app in the middle of it. It is an economy rule as
+    much as a data one — earned credits are derived from the star ledger and a glade's golden
+    multiplier is a function of the account id, so the same ledger under a fresh uid is a
+    fresh, differently-rolled, **fully funded** wallet, which makes copying a save into any
+    account that did not earn it a faucet rather than a mix-up (invariant 13, from the other
+    direction). Two corollaries are easy to get wrong and both cost a grove. **A save that
+    names an account may never have a new one minted for it** — `ResumeAsync` exists next to
+    `SignInAsync` for exactly this, because an anonymous account created on behalf of a save
+    that already has an owner can never match it, so the device is refused for ever while the
+    player believes they are backed up. And **the refusal has to be visible**: a device in
+    this state *is* signed in, so anything reading `IsLinked` alone will tell somebody their
+    progress is safe while nothing at all is being written.
 
 ## Layout
 
@@ -1732,6 +1766,90 @@ manifest and chapter bodies are untouched at v2). A v2 grove body is *refused* r
 half-read, because it describes islands this build cannot draw and the alternative is opening the
 Grovement onto no ground at all. Existing arrangements do not migrate: the old slot ids
 (`meadow_a`) are not tile ids, everything bought stays owned, and the game has not launched.
+
+**Switching accounts — and why there is no sign-out.** The profile's account panel could
+link a provider and nothing else: once linked it showed two buttons that could not be used
+and no way to reach another grove. The obvious fix is a logout button and it is the wrong
+one. Signing out of a game with no login screen leaves a device holding a grove nothing
+owns, and both honest resolutions are worse than the button — keep the save and the next
+sync clones a paid-for account into a fresh anonymous one (invariant 17), or erase it and
+somebody who only wanted to stop syncing has lost everything. Nobody in the market ships
+that either: the big F2P titles offer "connect account" and, at most, a switch that returns
+the device to a *separate* local save, which this game does not have and does not need.
+
+So it is a switch. `CloudSaveService.SwitchAccountAsync` and the order **is** the design:
+**secure, authenticate, fetch, replace.** The outgoing grove is pushed to the server first
+and a failure there abandons the whole thing with nothing touched — that step is the only
+reason the act is reversible, and without it "switch account" means "discard whatever this
+device has played since its last sync". Then nothing local is destroyed until the
+replacement is in hand, so a network drop between two calls costs a retry instead of a
+grove. Every step is its own `SwitchOutcome`, because three of the six are not failures and
+two more leave the device exactly as it was — telling a player "something went wrong" for
+any of those is how somebody decides their grove is gone while it sits safely on a server.
+
+Four things are worth not re-litigating. **`AccountGate` is a pure function** (invariant 17),
+in Domain, with no Unity types, for `TweenCycle`'s reason: it guards an unrecoverable failure
+that is invisible in the Editor, which never authenticates, so it has to be provable offline
+rather than reasoned about. **Arriving at the account already held is a no-op, not a
+refresh** — that branch is what makes an interrupted switch recoverable in one tap, so it
+sits before anything destructive. **Recovery may not become a third account**: a device
+caught between two cannot save its grove anywhere, so `ResumeAccountAsync` proceeds only if
+the credential names the account already held and otherwise hands over to the destructive
+adopt prompt, which asks twice. And **the destructive prompt is skipped when there is
+nothing to destroy** (`HoldsAGrove`) — a player who just installed the game to get their
+account back meets it with an empty grove, and a warning that cries wolf there is one nobody
+reads on the grove that has everything.
+
+Three fixes fell out of it, all pre-existing and all silent. `SignInWithCredentialAsync`
+**signed out before attempting the provider flow**, so closing the Google sheet without
+choosing permanently ended the session the player was happily in — fine while that call was
+only reachable after somebody had agreed to abandon their account, and not fine once it is
+how you switch. `RedeemPurchaseAsync` had its own ad-hoc sign-in; it goes through the gate
+now, because crediting a receipt to whichever account happened to be signed in is a support
+case with a proof of purchase attached.
+
+And **`LinkAsync` was the leak wearing a friendly name.** Linking attaches a provider to
+whichever account the session happens to be, and the backend will *create* an anonymous one
+to attach it to if the session has gone — after which the local grove was re-owned by that
+account and pushed into it. It is reachable, not theoretical: `IsLinked` asks the SDK, so a
+linked player whose session is lost reads as a guest and the panel offers exactly that
+button. The authorisation now happens **before** the provider is touched, and the ordering
+is the fix rather than a tidiness — refusing afterwards would be too late in a way nothing
+here can undo, because the player's Apple ID would already belong to an empty grove for
+ever. `AccountGate`'s answer for (owned save, no session) is Resume, which creates nobody.
+
+**What switching exposed on its first real test.** The switch worked; the grove did not come
+back. `groveLandOwned` had never been on the wire — invariant 12a, which this is the story
+behind — so the land was not in the cloud to return. Two more of the same shape went with the
+fix: `flipped` had just been added to a placement and reached neither the mapper nor
+`SaveDelta.SamePlacements`, so a piece would have come back facing the other way and a flip on
+its own would never have been pushed at all. Worth stating plainly, because it is the general
+form: **a switch is the first feature in this game that reads the cloud copy back over a
+working local one.** Everything that was never uploaded had been invisible until something
+replaced the file that was hiding it, and every one of those bugs predates the switch.
+
+The switch itself adds no save field, needs no `progression.json` retune and no server work.
+`firestore.rules` does need a deploy, but for the grove-land fix rather than for the switch —
+and **it must go out before any client build that writes `groveLandOwned`**, or `hasOnly`
+refuses every save write.
+`SaveService.Wipe` grew a `forgetAccount` argument for it, and `ModalView.Rebuild` exists so
+the account panel can be sized to the state it is in rather than to the tallest one it could
+reach.
+
+**`ISaveStore` was worth the seam.** `SaveService` held a concrete `SaveStore`, so nothing
+above it could be tested without `JsonUtility` and a real directory — which put the account
+switch, the merge adoption and every ordering they depend on behind somebody remembering to
+open the Editor, for the subsystem whose failures are the only unrecoverable ones in the
+game. Three members, and it deliberately does **not** abstract what makes `SaveStore` worth
+having: the atomic write, the backup rotation and the corrupt-file recovery stay one
+implementation, tested against a real filesystem in `SaveStoreTests`, because a second
+version of that is a second thing to get wrong. `SaveService.LoadWith` is the only other
+door and it is internal.
+
+`AccountGateTests` is 8 offline cases and `AccountSwitchTests` is 13, of which **6 run
+offline**; the other 7 reach `Debug.Log`, `PlayerPrefs` or `RunGuard`, which are ECalls the
+offline runner cannot execute. Those stay Editor-only rather than having the logging
+stripped out of production code to move a number. Offline suite 613.
 
 Not done, deliberate: **in-app purchases** (the four store secrets hold `UNSET`, so
 receipts are refused — correct until real store products exist), **Play Games Services**

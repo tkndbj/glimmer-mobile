@@ -26,6 +26,15 @@ namespace GlimmerGrove.Cloud
             => Task.FromResult((CloudResult.Failed(CloudFailure.Unauthenticated, "no cloud backend configured"),
                                 CloudIdentity.None));
 
+        /// <summary>
+        /// Successful, and nobody is signed in. That is the honest answer with no backend and
+        /// it is the one <see cref="AccountGate"/> wants: a save that names an account keeps
+        /// naming it, and nothing is ever created behind the player's back.
+        /// </summary>
+        public Task<(CloudResult result, CloudIdentity identity)> ResumeAsync(
+            CancellationToken cancellation = default)
+            => Task.FromResult((CloudResult.Success, CloudIdentity.None));
+
         public Task<(CloudResult result, CloudIdentity identity)> LinkAsync(
             LinkCredential credential, CancellationToken cancellation = default)
             => Task.FromResult((CloudResult.Failed(CloudFailure.Unauthenticated, "no cloud backend configured"),

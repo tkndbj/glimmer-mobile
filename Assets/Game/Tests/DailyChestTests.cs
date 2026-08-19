@@ -442,6 +442,10 @@ namespace GlimmerGrove.Tests
             public Task<(Cloud.CloudResult result, Cloud.CloudIdentity identity)> SignInAsync(
                 CancellationToken c = default) => NoIdentity();
 
+            public Task<(Cloud.CloudResult result, Cloud.CloudIdentity identity)> ResumeAsync(
+                CancellationToken c = default)
+                => Task.FromResult((Cloud.CloudResult.Success, Cloud.CloudIdentity.None));
+
             public Task<(Cloud.CloudResult result, Cloud.CloudIdentity identity)> LinkAsync(
                 Cloud.LinkCredential cr, CancellationToken c = default) => NoIdentity();
 

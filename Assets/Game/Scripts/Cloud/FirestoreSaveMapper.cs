@@ -118,6 +118,18 @@ namespace GlimmerGrove.Cloud
                 { "homesteadOwned", new List<object>(dto.homesteadOwned ?? new string[0]) },
                 { "homesteadPlaced", Placements(dto.homesteadPlaced) },
 
+                // Land, and it is the reason the two lines above are not enough. It arrived a
+                // schema version after them and reached SaveFileDto and SaveDelta but not this
+                // map, so a floor bought with credits stayed on the phone that bought it — and
+                // nothing showed it, because a device that never replaces its local save never
+                // reads back what it failed to write. Switching accounts is what replaces it,
+                // and the grove came back as the free starter square with everything standing
+                // outside it invisible: the placements had survived, the ground under them had
+                // not. Adding a field to the save is not done until it is on this map, in the
+                // reader below, and in firestore.rules — where an unlisted key does not fail
+                // the field, it fails the whole write.
+                { "groveLandOwned", new List<object>(dto.groveLandOwned ?? new string[0]) },
+
                 { "checksum", dto.checksum ?? string.Empty },
 
                 { "settings", new Dictionary<string, object>
@@ -310,6 +322,11 @@ namespace GlimmerGrove.Cloud
                     { "slot", row.slot },
                     { "piece", row.piece ?? string.Empty },
                     { "setUnix", row.setUnix },
+
+                    // Part of the arrangement, so it travels with it. A piece that comes back
+                    // facing the other way is the same loss as one that comes back missing,
+                    // only quieter.
+                    { "flipped", row.flipped },
                 });
             }
 
@@ -336,6 +353,7 @@ namespace GlimmerGrove.Cloud
                 tipsSeen = StrList(doc, "tipsSeen"),
                 companionsOwned = StrList(doc, "companionsOwned"),
                 homesteadOwned = StrList(doc, "homesteadOwned"),
+                groveLandOwned = StrList(doc, "groveLandOwned"),
                 checksum = Str(doc, "checksum"),
                 settings = new SettingsDto(),
                 wallet = WalletDto.Unwritten(),
@@ -502,6 +520,10 @@ namespace GlimmerGrove.Cloud
                     slot = slot,
                     piece = Str(entry, "piece"),
                     setUnix = Long(entry, "setUnix", 0),
+
+                    // Absent on a document written before pieces could be flipped, which reads
+                    // back as false — the value a piece that was never flipped already holds.
+                    flipped = Bool(entry, "flipped"),
                 });
             }
 

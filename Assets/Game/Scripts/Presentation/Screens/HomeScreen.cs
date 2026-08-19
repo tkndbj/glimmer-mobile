@@ -156,8 +156,8 @@ namespace GlimmerGrove
         void PaintResources()
         {
             if (_heartsValue) _heartsValue.text = Profile.HeartsLabel();
-            if (_coinsValue) _coinsValue.text = Profile.Short(Profile.Coins);
-            if (_gemsValue) _gemsValue.text = Profile.Short(Profile.Gems);
+            if (_coinsValue) _coinsValue.text = Compact.Number(Profile.Coins);
+            if (_gemsValue) _gemsValue.text = Compact.Number(Profile.Gems);
         }
 
         /// <summary>
@@ -303,13 +303,13 @@ namespace GlimmerGrove
             _heartsValue = ResourcePill(row, -318f, Pal.Rose, "ic_heart", Profile.HeartsLabel(), false,
                          () => Flow.Modal<AdOfferOverlay>(v => v.PlacementId = AdPlacement.HeartRefill),
                          ResourceSlots.Kind.Hearts, n => Profile.HeartsLabel((int)n));
-            _coinsValue = ResourcePill(row, 0f, Pal.Gold, null, Profile.Short(Profile.Coins), true,
+            _coinsValue = ResourcePill(row, 0f, Pal.Gold, null, Compact.Number(Profile.Coins), true,
                          () => Flow.Modal<AdOfferOverlay>(v => v.PlacementId = AdPlacement.CoinBonus),
-                         ResourceSlots.Kind.Credits, Profile.Short);
-            _gemsValue = ResourcePill(row, 318f, Pal.Bloom, "ic_gem", Profile.Short(Profile.Gems), false,
+                         ResourceSlots.Kind.Credits, Compact.Number);
+            _gemsValue = ResourcePill(row, 318f, Pal.Bloom, "ic_gem", Compact.Number(Profile.Gems), false,
                          () => Flow.Modal<ComingSoonOverlay>(v => v.Configure("Gems", "ic_gem",
                              "Gems will unlock hints, skins and seasonal glades.")),
-                         ResourceSlots.Kind.Gems, Profile.Short);
+                         ResourceSlots.Kind.Gems, Compact.Number);
         }
 
         /// <summary>

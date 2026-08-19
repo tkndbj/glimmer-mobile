@@ -329,7 +329,7 @@ namespace GlimmerGrove
                 UIKit.Titled("Sub", plate.transform,
                              unlocked ? string.Empty
                                       : avatar.IsForSale
-                                          ? Loc.Format("ui.profile.cost", avatar.UnlockCost)
+                                          ? Loc.Format("ui.profile.cost", Compact.Number(avatar.UnlockCost))
                                           : Loc.Format("ui.profile.locked_at", avatar.UnlockLevel),
                              24, unlocked ? Color.white : Pal.A(Pal.Sun, .90f),
                              TextAnchor.MiddleCenter, new Vector2(CellW - 60f, 32f), new Vector2(.5f, 0f),

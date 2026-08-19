@@ -153,8 +153,24 @@ namespace GlimmerGrove.Persistence
         ///      Note what did <em>not</em> change: <see cref="SaveFileDto.homesteadPlaced"/>
         ///      is untouched, because a tile is a slot and its id is permanent, so an empty
         ///      floor still costs nothing and a floor with two things on it costs two rows.
+        /// v18 — which way a placed piece faces
+        ///      (<see cref="HomesteadPlacementDto.flipped"/>), so the grove can be edited
+        ///      rather than only filled. It is a <em>mirror</em> and not a rotation because the
+        ///      art cannot be rotated: every one of the catalog's pieces is a single drawing
+        ///      from one fixed isometric angle, and the packs they were cut from ship no
+        ///      directional variants, so there is no second sprite to turn to — see
+        ///      <see cref="Homestead.Placement.Flipped"/>. It costs a bool on a row that
+        ///      already exists rather than a section of its own, and it needs no stamp of its
+        ///      own because the facing and the piece are one decision about one slot, dated by
+        ///      the stamp the row already carries (invariant 11c). It needs no migration
+        ///      either: <see cref="JsonUtility"/> writes false into a field a v17 file never
+        ///      had, and false is what every v17 row meant. What did change is
+        ///      <c>HomesteadLayout.Later</c> — a tie on stamp <em>and</em> piece used to fall
+        ///      through to "return the first argument", which is argument order rather than a
+        ///      tie-break, and with a second field able to differ that would have left two
+        ///      devices pushing facings at each other for ever.
         /// </summary>
-        public const int Version = 17;
+        public const int Version = 18;
 
         /// <summary>Progress that predates this file: index-keyed keys in PlayerPrefs.</summary>
         public const int LegacyPlayerPrefsVersion = 0;
@@ -808,6 +824,22 @@ namespace GlimmerGrove.Persistence
         /// for a real choice, so it reads as "written by something that did not stamp".
         /// </summary>
         public long setUnix;
+
+        /// <summary>
+        /// Drawn mirrored. Added in v18; see <see cref="Homestead.Placement.Flipped"/> for why
+        /// the grove offers a flip rather than a rotation.
+        ///
+        /// <para>
+        /// This is the one field in the save file whose "absent" state is a value a real one
+        /// can also hold, and it is the one case where that is harmless rather than the mistake
+        /// invariant 11b warns about. <see cref="JsonUtility"/> writes false into a field an
+        /// older file never had — and false is exactly what every v17 row meant, because
+        /// nothing could be mirrored before this existed. There is no third state to confuse it
+        /// with: the row's own <see cref="setUnix"/> already carries the "has the player
+        /// decided" question, so this never has to answer it.
+        /// </para>
+        /// </summary>
+        public bool flipped;
     }
 
     [Serializable]

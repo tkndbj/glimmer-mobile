@@ -220,7 +220,7 @@ namespace GlimmerGrove
                 var coin = CoinFace();
                 Fact(top, i++, coin, ChestDropKind.None,
                      coin == null ? RewardArt.Tint(ChestDropKind.Credits) : Color.white,
-                     Loc.Format("ui.companion.by_coins", offer.Cost));
+                     Loc.Format("ui.companion.by_coins", Compact.Number(offer.Cost)));
             }
 
             // Only when they are short. A player who can afford it does not need to be told
@@ -299,7 +299,7 @@ namespace GlimmerGrove
                     // flipbook, which a pill button builds from a sprite name it cannot be
                     // given — and the caption already names the price.
                     _buy = UIKit.TextButton("Buy", Panel, "btn_green",
-                                            Loc.Format("ui.companion.unlock_for", offer.Cost), 44,
+                                            Loc.Format("ui.companion.unlock_for", Compact.Number(offer.Cost)), 44,
                                             size, anchor, at, OnBuy);
                     break;
 
@@ -361,10 +361,10 @@ namespace GlimmerGrove
             switch (offer.State)
             {
                 case CompanionPurchaseState.Ready:
-                    return Loc.Format("ui.companion.balance", offer.Balance);
+                    return Loc.Format("ui.companion.balance", Compact.Number(offer.Balance));
 
                 case CompanionPurchaseState.TooExpensive:
-                    return Loc.Format("ui.companion.short", offer.Shortfall, offer.Balance);
+                    return Loc.Format("ui.companion.short", Compact.Number(offer.Shortfall), Compact.Number(offer.Balance));
 
                 case CompanionPurchaseState.AlreadyHeld:
                     return Loc.Get("ui.companion.already");

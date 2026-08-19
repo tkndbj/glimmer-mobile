@@ -293,7 +293,7 @@ namespace GlimmerGrove
             float textX = 126f + (CellW - 138f) * .5f;
             var textBox = new Vector2(CellW - 138f, 58f);
 
-            _purseNumber = UIKit.Titled("Number", _purse, Profile.Short(_gathered), 48, Pal.Gold,
+            _purseNumber = UIKit.Titled("Number", _purse, Compact.Number(_gathered), 48, Pal.Gold,
                                         TextAnchor.MiddleLeft, textBox,
                                         new Vector2(0f, .5f), new Vector2(textX, 18f), 4f, 4f);
             UIKit.Shrinkable(_purseNumber, 26);
@@ -761,7 +761,7 @@ namespace GlimmerGrove
 
             rung.Reward = UIKit.Shrinkable(
                 UIKit.Titled("Amount", plate.transform,
-                             Loc.Format("ui.event.reward", milestone.Credits), 34,
+                             Loc.Format("ui.event.reward", Compact.Number(milestone.Credits)), 34,
                              taken ? Pal.Gold : ready ? Pal.Sun : Pal.A(Pal.Cream, .55f),
                              TextAnchor.MiddleLeft, new Vector2(textWide, 44f),
                              new Vector2(0f, .5f),
@@ -1072,11 +1072,11 @@ namespace GlimmerGrove
             if (_purseNumber)
             {
                 Tween.Punch(_purseNumber.transform, .22f, .34f);
-                Roll.Number(_purseNumber, from, _gathered, .5f, Profile.Short, this);
+                Roll.Number(_purseNumber, from, _gathered, .5f, Compact.Number, this);
             }
 
             var rise = UIKit.Shrinkable(
-                UIKit.Titled("Won", Content, Loc.Format("ui.event.reward", paid), 44, Pal.Gold,
+                UIKit.Titled("Won", Content, Loc.Format("ui.event.reward", Compact.Number(paid)), 44, Pal.Gold,
                              TextAnchor.MiddleCenter, new Vector2(320f, 56f), new Vector2(.5f, .5f),
                              at + new Vector2(0f, 40f), 4f, 4f), 26);
 

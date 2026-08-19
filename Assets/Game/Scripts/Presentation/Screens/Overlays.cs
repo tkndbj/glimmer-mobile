@@ -77,10 +77,59 @@ namespace GlimmerGrove
                 ribbon.transform.localRotation = Quaternion.Euler(0, 0, -1.6f);
             }
 
-            Panel.localScale = Vector3.zero;
-            Tween.Scale(Panel, 1f, .5f, Ease.OutBack);
-            Audio.Sfx("chime", .45f, 1.1f);
+            // A rebuild is the same panel in a new state, not a new panel: replaying the
+            // entrance would pop and chime at a player who tapped a button on the panel that
+            // is already in front of them. Same distinction the grove's grids draw between
+            // Show and Refresh, and for the same reason.
+            if (!Rebuilding)
+            {
+                Panel.localScale = Vector3.zero;
+                Tween.Scale(Panel, 1f, .5f, Ease.OutBack);
+                Audio.Sfx("chime", .45f, 1.1f);
+            }
+
             return Panel;
+        }
+
+        /// <summary>True while <see cref="Rebuild"/> is replacing the panel.</summary>
+        protected bool Rebuilding { get; private set; }
+
+        /// <summary>
+        /// Throws the panel away and builds it again for whatever state the overlay is now in.
+        ///
+        /// <para>
+        /// For a panel whose height depends on what it is saying — an account screen that grows
+        /// two provider buttons, say. The alternative is reserving room for the tallest state
+        /// and living with a hole in the others, or writing a second set of coordinates for the
+        /// expanded layout, and this file has already recorded what the second one costs: the
+        /// two layouts drift and a line of text ends up printed through a button.
+        /// </para>
+        /// <para>
+        /// Hides each child before destroying it. <c>Destroy</c> lands at the end of the frame,
+        /// so without that the outgoing panel is drawn over its replacement for one frame — the
+        /// house rule five screens had to learn one at a time.
+        /// </para>
+        /// </summary>
+        protected void Rebuild()
+        {
+            if (_closing) return;
+
+            Rebuilding = true;
+            try
+            {
+                for (int i = Content.childCount - 1; i >= 0; i--)
+                {
+                    var child = Content.GetChild(i).gameObject;
+                    child.SetActive(false);
+                    Destroy(child);
+                }
+
+                Build();
+            }
+            finally
+            {
+                Rebuilding = false;
+            }
         }
 
         protected void Close(Action after = null)

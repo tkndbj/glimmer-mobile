@@ -49,6 +49,42 @@ namespace GlimmerGrove.Cloud
 
         public static long LastSyncedUnix => CloudState.LastSyncedUnix;
 
+        /// <summary>
+        /// True while this device is authenticated as one account and holding another's save.
+        ///
+        /// <para>
+        /// Nothing syncs in this state and nothing may — see <see cref="AccountGate"/> — so it
+        /// has to be visible rather than logged. A player here is signed in, so every screen
+        /// that reads <see cref="IsLinked"/> would otherwise tell them their grove is backed
+        /// up while it is not being backed up at all, which is the one lie this game's account
+        /// screens exist to avoid. It clears the moment the two agree again, which is one tap
+        /// of whichever provider they use.
+        /// </para>
+        /// </summary>
+        public static bool AccountMismatched { get; private set; }
+
+        /// <summary>
+        /// Whether this device holds a grove somebody would mind losing.
+        ///
+        /// <para>
+        /// Asked before a destructive prompt, so that the one place in the game that shows one
+        /// does not show it over an empty grove. That is not politeness: a player who has just
+        /// signed out, or who has just installed the game to get their account back, meets that
+        /// prompt at exactly the moment it is least true, and a warning that cries wolf on a
+        /// grove with nothing in it is a warning nobody reads on the grove that has everything.
+        /// </para>
+        /// <para>
+        /// Cleared glades are the headline, and the three purchased sets are here because they
+        /// are the parts that are <em>not</em> recoverable by playing again — everything else in
+        /// the save is derived from the star ledger and comes back with it.
+        /// </para>
+        /// </summary>
+        public static bool HoldsAGrove
+            => PlayerProgression.ClearedGlades > 0
+            || Progression.CompanionLedger.BoughtCount > 0
+            || Homestead.HomesteadLedger.BoughtCount > 0
+            || Homestead.GroveLand.BoughtCount > 0;
+
         /// <summary>Chosen once, in <c>Boot</c>, before anything asks for a sync.</summary>
         public static void UseBackend(ICloudSaveBackend backend)
             => _backend = backend ?? new NullCloudBackend();
@@ -232,6 +268,86 @@ namespace GlimmerGrove.Cloud
             return result;
         }
 
+        // ---------------------------------------------------------- the identity
+        /// <summary>
+        /// Establishes that the session and the save agree about who this player is, and
+        /// refuses everything if they do not.
+        ///
+        /// <para>
+        /// The decision is <see cref="AccountGate.Decide"/> — a pure function, tested offline,
+        /// deliberately not inlined here. What this adds is only the plumbing: which call to
+        /// make for each verdict, and the rule that the answer is re-decided against whatever
+        /// that call returns rather than assumed.
+        /// </para>
+        /// <para>
+        /// Note which sign-in is used where. A save that names nobody may
+        /// <see cref="ICloudSaveBackend.SignInAsync"/>, which will create an anonymous account
+        /// — that is a first launch, and it is the only moment in the life of an account when
+        /// creating one is right. A save that already names somebody may only
+        /// <see cref="ICloudSaveBackend.ResumeAsync"/>, which creates nobody. The two used to
+        /// be one call, and the difference is a player's grove.
+        /// </para>
+        /// </summary>
+        static async Task<CloudResult> AuthoriseAsync(CancellationToken cancellation)
+        {
+            switch (AccountGate.Decide(CloudState.UserId, _backend.CurrentIdentity.UserId))
+            {
+                case AccountGateVerdict.Proceed:
+                    return Agreed();
+
+                case AccountGateVerdict.Adopt:
+                    CloudState.SignIn(_backend.CurrentIdentity.UserId);
+                    return Agreed();
+
+                case AccountGateVerdict.Refuse:
+                    return Disagreed(_backend.CurrentIdentity.UserId);
+            }
+
+            bool owned = CloudState.IsSignedIn;
+
+            var (result, identity) = owned ? await _backend.ResumeAsync(cancellation)
+                                           : await _backend.SignInAsync(cancellation);
+            if (!result.Ok) return result;
+
+            // An empty answer from Resume is not a failure of the call — the SDK is up and
+            // nobody is signed in — but it is a refusal of this sync, because the account the
+            // save belongs to is not available to push to. Retryable, and the account screen's
+            // provider buttons are the way a player fixes it deliberately.
+            if (!identity.IsValid)
+                return CloudResult.Failed(CloudFailure.Unauthenticated,
+                                          owned ? "the save's account is not signed in" : "no user id");
+
+            if (AccountGate.Decide(CloudState.UserId, identity.UserId) == AccountGateVerdict.Refuse)
+                return Disagreed(identity.UserId);
+
+            CloudState.SignIn(identity.UserId);      // a no-op when they already agree
+            return Agreed();
+        }
+
+        static CloudResult Agreed()
+        {
+            AccountMismatched = false;
+            return CloudResult.Success;
+        }
+
+        /// <summary>
+        /// Records that this device is between two accounts, and says so once.
+        ///
+        /// Logged as a warning rather than an error, and once rather than per attempt: it is a
+        /// state the player can be in for hours without anything being wrong with the code, and
+        /// a sync fires on every foreground.
+        /// </summary>
+        static CloudResult Disagreed(string sessionUserId)
+        {
+            if (!AccountMismatched)
+                Debug.LogWarning("[Cloud] this device is signed in as a different account than " +
+                                 "the save belongs to; syncing is stopped until they agree");
+
+            AccountMismatched = true;
+            return CloudResult.Failed(CloudFailure.AccountMismatch,
+                                      "save belongs to another account than the session");
+        }
+
         static async Task<CloudResult> RunOnceAsync(CancellationToken cancellation)
         {
             if (!IsAvailable) return CloudResult.Failed(CloudFailure.Offline, "no cloud backend");
@@ -267,14 +383,12 @@ namespace GlimmerGrove.Cloud
 
         static async Task<CloudResult> RunSyncAsync(CancellationToken cancellation)
         {
-            if (!CloudState.IsSignedIn)
-            {
-                var (signIn, identity) = await _backend.SignInAsync(cancellation);
-                if (!signIn.Ok) return signIn;
-                if (!identity.IsValid) return CloudResult.Failed(CloudFailure.Unauthenticated, "no user id");
-
-                CloudState.SignIn(identity.UserId);
-            }
+            // Before anything is read and long before anything is written. Every path into
+            // this file goes through here for the reason AccountGate gives: a pull followed by
+            // a monotonic join followed by a push is, addressed to the wrong account, a way to
+            // merge two strangers' groves and overwrite one of them.
+            var authorised = await AuthoriseAsync(cancellation);
+            if (!authorised.Ok) return authorised;
 
             string userId = CloudState.UserId;
 
@@ -348,6 +462,28 @@ namespace GlimmerGrove.Cloud
 
             try
             {
+                // Before the provider is touched, not after, and the ordering is the whole
+                // fix.
+                //
+                // Linking attaches a provider to *whichever account the session happens to
+                // be*, and the backend will happily create an anonymous one to attach it to
+                // if the session has gone. On a save that already names an account that is
+                // the leak this file exists to prevent, wearing a friendly name: the grove
+                // would be re-owned by the new account and pushed into it on the next sync.
+                // It is reachable — a linked player whose session is lost reads as a guest
+                // (IsLinked asks the SDK, which has nobody), so the panel offers exactly
+                // this button.
+                //
+                // Refusing after the call would be too late in a way that cannot be undone
+                // from here: the provider would already be attached to the junk account, so
+                // the player's Apple ID would belong to an empty grove for ever. Authorising
+                // first means the junk account is never created and the provider is never
+                // moved. AccountGate's answer for (owned save, no session) is Resume, which
+                // creates nobody and reports honestly, and the player's route back is the
+                // account panel — which is where they already are.
+                var authorised = await AuthoriseAsync(cancellation);
+                if (!authorised.Ok) return authorised;
+
                 var (result, identity) = await _backend.LinkAsync(credential, cancellation);
 
                 // Not a fault: the player linked this provider on another device. The
@@ -356,7 +492,19 @@ namespace GlimmerGrove.Cloud
                 if (result.Failure == CloudFailure.AlreadyLinkedElsewhere) return result;
                 if (!result.Ok) return result;
 
-                if (identity.IsValid) CloudState.SignIn(identity.UserId);
+                // Linking keeps the uid — that is the entire difference between linking and
+                // signing in — so this agrees with the save in every case that is working
+                // properly, and CloudState.SignIn is a no-op. It is checked anyway because
+                // the one case where it would not agree is the one that costs a grove, and
+                // a belt here is one line.
+                if (identity.IsValid)
+                {
+                    if (AccountGate.Decide(CloudState.UserId, identity.UserId) == AccountGateVerdict.Refuse)
+                        return Disagreed(identity.UserId);
+
+                    CloudState.SignIn(identity.UserId);
+                }
+
                 SaveService.Save();
             }
             finally
@@ -370,6 +518,55 @@ namespace GlimmerGrove.Cloud
             await SyncAsync(cancellation);
             return CloudResult.Success;
         }
+
+        /// <summary>
+        /// Makes this device a different account, keeping the grove it is leaving.
+        ///
+        /// <para>
+        /// <b>The one thing this does that adopting does not is the first thing it does:</b> it
+        /// pushes the outgoing grove to the server and refuses to go any further if that push
+        /// does not land. A switch is a reversible act — the player signs back in and their
+        /// grove is there — and it is only reversible because of that step. Without it, "switch
+        /// account" is "discard whatever this device has played since its last sync", which is
+        /// a very different button wearing the same word.
+        /// </para>
+        /// <para>
+        /// Offered from a linked account. A guest has no way back into what they are leaving,
+        /// so for them this is <see cref="AdoptLinkedAccountAsync"/>, which asks first.
+        /// </para>
+        /// <para>
+        /// Signing in with the account already on this device is not an error and not a no-op
+        /// worth hiding: it reports <see cref="SwitchOutcome.SameAccount"/> and is exactly how
+        /// a device recovers from a switch that was interrupted — see
+        /// <see cref="SwitchOutcome.Interrupted"/>.
+        /// </para>
+        /// </summary>
+        public static Task<SwitchResult> SwitchAccountAsync(
+            LinkCredential credential, CancellationToken cancellation = default)
+            => BecomeAsync(credential, BecomeMode.Switch, cancellation);
+
+        /// <summary>
+        /// Lets a device that is between two accounts back in to the one its save belongs to.
+        ///
+        /// <para>
+        /// The recovery from <see cref="SwitchOutcome.Interrupted"/>, and the reason it is a
+        /// third entry point rather than a flag is that both of the others would be wrong here.
+        /// Switching cannot secure the outgoing grove — the server will not accept a write for
+        /// an account the session is not, which is the very state being recovered from — so it
+        /// would report a failure the player cannot act on. Adopting would take the credential
+        /// at face value and replace the local grove, which is fine when somebody has been told
+        /// what it costs and catastrophic as the response to a button that says "sign in".
+        /// </para>
+        /// <para>
+        /// So this becomes the account only if it is <em>already</em> this device's account,
+        /// and otherwise reports <see cref="SwitchOutcome.DifferentAccount"/> having touched
+        /// nothing. Succeeding restores syncing, which secures everything played meanwhile;
+        /// only then is switching to a different account a lossless thing to offer.
+        /// </para>
+        /// </summary>
+        public static Task<SwitchResult> ResumeAccountAsync(
+            LinkCredential credential, CancellationToken cancellation = default)
+            => BecomeAsync(credential, BecomeMode.Resume, cancellation);
 
         /// <summary>
         /// Abandons this device's account and adopts the one the provider already owns.
@@ -389,39 +586,150 @@ namespace GlimmerGrove.Cloud
         /// stored progression floors would carry across with it and inflate a level the
         /// adopted account's records do not justify.
         /// </para>
+        /// <para>
+        /// Nothing is secured on the way out, unlike <see cref="SwitchAccountAsync"/>, and that
+        /// is not an oversight. The account being left here is an anonymous one; pushing its
+        /// grove would file it under a uid that is about to become unreachable for ever, which
+        /// costs a round trip to achieve nothing. The player was told what it costs and said
+        /// yes — that is the whole difference between this and a switch.
+        /// </para>
         /// </summary>
-        public static async Task<CloudResult> AdoptLinkedAccountAsync(
+        public static Task<SwitchResult> AdoptLinkedAccountAsync(
             LinkCredential credential, CancellationToken cancellation = default)
+            => BecomeAsync(credential, BecomeMode.Adopt, cancellation);
+
+        /// <summary>
+        /// Which of the three reasons a device has for becoming a different account. They
+        /// differ only in what is owed to the grove being left behind, which is exactly the
+        /// decision worth naming rather than passing as a bare flag.
+        /// </summary>
+        enum BecomeMode
         {
-            if (!IsAvailable) return CloudResult.Failed(CloudFailure.Offline, "no cloud backend");
-            if (!SaveService.IsLoaded) return CloudResult.Failed(CloudFailure.Error, "save not loaded");
+            /// <summary>Deliberate, from a linked account. The outgoing grove is saved first.</summary>
+            Switch,
+
+            /// <summary>Consented, from a guest. The outgoing grove is abandoned; see the caller.</summary>
+            Adopt,
+
+            /// <summary>Recovery. Proceeds only if the credential names the account already held.</summary>
+            Resume,
+        }
+
+        /// <summary>
+        /// Becomes the account a credential names.
+        ///
+        /// <para>
+        /// One method for both routes in, because they differ in exactly one decision — whether
+        /// the outgoing grove is saved first — and everything after that decision is the part
+        /// where a mistake loses somebody's account. Two copies of it would be two chances to
+        /// get the order below wrong.
+        /// </para>
+        /// <para>
+        /// <b>The order is the design: secure, authenticate, fetch, replace.</b> Nothing local
+        /// is destroyed until the replacement is in hand. Every earlier arrangement fails
+        /// somewhere real — wiping before the pull leaves a player staring at an empty grove
+        /// whenever the network drops between two calls, and replacing before authenticating
+        /// gives that away to a consent screen they simply closed. Each step is also its own
+        /// answer in <see cref="SwitchOutcome"/>, so the screen can say which one stopped and
+        /// whether anything moved.
+        /// </para>
+        /// <para>
+        /// The latch is held across the identity change rather than only across a sync, so a
+        /// background sync cannot run against a half-switched device. It is taken <em>after</em>
+        /// the securing sync, because that sync claims it itself.
+        /// </para>
+        /// </summary>
+        static async Task<SwitchResult> BecomeAsync(
+            LinkCredential credential, BecomeMode mode, CancellationToken cancellation)
+        {
+            if (!IsAvailable)
+                return SwitchResult.Failed(SwitchOutcome.Refused, CloudFailure.Offline, "no cloud backend");
+            if (!SaveService.IsLoaded)
+                return SwitchResult.Failed(SwitchOutcome.Refused, CloudFailure.Error, "save not loaded");
+            if (!credential.IsValid)
+                return SwitchResult.Failed(SwitchOutcome.Refused, CloudFailure.Rejected, "no provider named");
+
+            // ------------------------------------------------------------------- secure
+            // A grove that is already on the server needs nothing; SyncAsync says so cheaply,
+            // pushing only what SaveDelta finds changed and often nothing at all.
+            if (mode == BecomeMode.Switch && CloudState.IsSignedIn)
+            {
+                var secured = await SyncAsync(cancellation);
+                if (!secured.Ok)
+                    return SwitchResult.Failed(SwitchOutcome.NotSecured, secured);
+            }
 
             if (!await ClaimAsync(cancellation))
-                return CloudResult.Failed(CloudFailure.Error, "a sync is already running");
+                return SwitchResult.Failed(SwitchOutcome.Refused, CloudFailure.Busy, "a sync is already running");
+
+            SwitchOutcome outcome;
 
             try
             {
-                var (signIn, identity) = await _backend.SignInWithCredentialAsync(credential, cancellation);
-                if (!signIn.Ok) return signIn;
-                if (!identity.IsValid) return CloudResult.Failed(CloudFailure.Unauthenticated, "no user id");
+                string outgoing = CloudState.UserId;
 
-                // Local state is dropped before the pull, so a failure here leaves the
-                // device on a clean signed-in account rather than on the old one wearing
-                // a new name.
-                SaveService.Wipe();
+                // ------------------------------------------------------------ authenticate
+                var (signIn, identity) = await _backend.SignInWithCredentialAsync(credential, cancellation);
+                if (!signIn.Ok) return SwitchResult.Failed(SwitchOutcome.Refused, signIn);
+                if (!identity.IsValid)
+                    return SwitchResult.Failed(SwitchOutcome.Refused, CloudFailure.Unauthenticated, "no user id");
+
+                // Already here. Nothing is touched — and this is the branch that makes an
+                // interrupted switch recoverable, so it must come before anything destructive
+                // and must never be "helpfully" turned into a refresh.
+                if (string.Equals(identity.UserId, outgoing, StringComparison.Ordinal))
+                {
+                    AccountMismatched = false;
+                    return SwitchResult.Done(SwitchOutcome.SameAccount);
+                }
+
+                // Recovery asked to be let back in, and this is somebody else. Stop here with
+                // the save untouched — see SwitchOutcome.DifferentAccount for why that is the
+                // only safe answer and what the player is offered instead.
+                if (mode == BecomeMode.Resume)
+                {
+                    AccountMismatched = true;
+                    return SwitchResult.Failed(SwitchOutcome.DifferentAccount,
+                                               CloudFailure.AccountMismatch,
+                                               "the credential names a different account");
+                }
+
+                // ------------------------------------------------------------------ fetch
+                // Read before write. From here the session is somebody else while the file on
+                // disk is still the old account, which is precisely the state AccountGate
+                // refuses — so a failure now costs a retry and cannot cost a grove.
+                var (pull, snapshot) = await _backend.PullAsync(identity.UserId, cancellation);
+                if (!pull.Ok)
+                {
+                    AccountMismatched = true;
+                    return SwitchResult.Failed(SwitchOutcome.Interrupted, pull);
+                }
+
+                bool exists = snapshot != null && snapshot.Exists && snapshot.Save != null;
+
+                // ---------------------------------------------------------------- replace
+                // The marker for a run this device left in flight belongs to the player who
+                // was playing it. Charging the incoming account a heart for a run it never
+                // started is small, silent and impossible to explain afterwards.
+                RunGuard.Resolve();
+
+                // Forgetting the account matters even though the next line names a new one: a
+                // process death in the gap leaves a file owned by nobody, which the gate can
+                // adopt safely, rather than an empty grove wearing the outgoing player's uid.
+                SaveService.Wipe(forgetAccount: true);
                 CloudState.SignIn(identity.UserId);
 
-                var (pull, snapshot) = await _backend.PullAsync(identity.UserId, cancellation);
-                if (!pull.Ok) return pull;
-
-                if (snapshot != null && snapshot.Exists && snapshot.Save != null)
+                if (exists)
                 {
                     SaveService.Adopt(snapshot.Save);
-                    CloudState.SignIn(identity.UserId);  // the document may predate the link
+                    CloudState.SignIn(identity.UserId);   // the document may predate the link
                 }
 
                 PlayerProgression.Invalidate();
                 SaveService.Flush();
+
+                AccountMismatched = false;
+                outcome = exists ? SwitchOutcome.Adopted : SwitchOutcome.Started;
             }
             finally
             {
@@ -431,7 +739,12 @@ namespace GlimmerGrove.Cloud
             // Both outside the latch. Raising Synced under it would deadlock any handler
             // that repaints by asking for a sync, and SyncAsync claims the latch itself.
             Raise(Synced);
-            return await SyncAsync(cancellation);
+
+            // The grove is already on this device, so this is housekeeping — it creates the
+            // document for an account that has never played, and reconciles the wallet for one
+            // that has. Its failure does not undo the switch and must not be reported as one.
+            await SyncAsync(cancellation);
+            return SwitchResult.Done(outcome);
         }
 
         // ------------------------------------------------------------ spending
@@ -507,12 +820,11 @@ namespace GlimmerGrove.Cloud
             if (receipt == null || string.IsNullOrEmpty(receipt.TransactionId))
                 return CloudResult.Failed(CloudFailure.Rejected, "receipt has no transaction id");
 
-            if (!CloudState.IsSignedIn)
-            {
-                var (signIn, identity) = await _backend.SignInAsync(cancellation);
-                if (!signIn.Ok) return signIn;
-                CloudState.SignIn(identity.UserId);
-            }
+            // The same gate as a sync, and if anything it matters more here: this is the one
+            // call that turns real money into currency, and crediting it to whichever account
+            // happened to be signed in is a support case with a receipt attached.
+            var authorised = await AuthoriseAsync(cancellation);
+            if (!authorised.Ok) return authorised;
 
             var (result, wallets) = await _backend.RedeemPurchaseAsync(
                 CloudState.UserId, receipt, cancellation);

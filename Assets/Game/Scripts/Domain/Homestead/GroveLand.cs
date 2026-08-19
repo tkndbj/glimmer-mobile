@@ -71,6 +71,9 @@ namespace GlimmerGrove.Homestead
         public static bool IsBuildable(GroveFloor floor, int col, int row)
             => IsOwned(floor, col, row) && !floor.IsHall(GroveFloor.TileId(col, row));
 
+        /// <summary>How many regions were paid for. See <c>CompanionLedger.BoughtCount</c>.</summary>
+        public static int BoughtCount => _bought.Count;
+
         /// <summary>Whether this region was paid for, for a panel that wants to say so.</summary>
         public static bool WasBought(GroveRegion region)
             => region != null && region.IsValid && _bought.Contains(region.Id);

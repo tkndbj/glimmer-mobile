@@ -153,7 +153,7 @@ namespace GlimmerGrove
         public static string Amount(ChestDrop drop)
             => drop.Kind == ChestDropKind.HeartBoost ? drop.Amount + "h"
              : drop.Kind == ChestDropKind.RunTime ? "+" + drop.Amount + "s"
-             : "+" + drop.Amount;
+             : "+" + Compact.Number(drop.Amount);
 
         /// <summary>
         /// Finishes a reward glyph that <see cref="Icon"/> could not supply on its own.

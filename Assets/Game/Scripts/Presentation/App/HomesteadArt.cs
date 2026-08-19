@@ -460,6 +460,24 @@ namespace GlimmerGrove
         /// stall and a visible blink for nothing.
         /// </para>
         /// </summary>
+        /// <summary>
+        /// Raised when art the grove draws has arrived and something on screen may now be
+        /// drawable that was not a moment ago.
+        ///
+        /// <para>
+        /// <b>An event rather than a callback on <see cref="Claim"/>, and that is the whole
+        /// fix.</b> Loading is asynchronous (invariant 7b), so a screen drawing a scope's art
+        /// has to repaint when it lands — and the version of this that took an <c>onReady</c>
+        /// argument put that obligation on whoever called it. The picker called it and did not
+        /// repaint anything, because the picker is not what draws the grove: it placed the
+        /// piece, the grove repainted on <c>HomesteadLayout.Changed</c> a frame later with the
+        /// sprite still missing, and the tile stayed empty until some unrelated edit repainted
+        /// it again. Reported from play as pieces appearing one operation late. A caller cannot
+        /// forget to raise an event, and a screen that draws this art subscribes once.
+        /// </para>
+        /// </summary>
+        public static event Action Changed;
+
         public static async void Claim(HomesteadPiece piece)
         {
             if (!piece.IsValid) return;
@@ -472,7 +490,20 @@ namespace GlimmerGrove
             catch (Exception e)
             {
                 Debug.LogException(e);
+                return;
             }
+
+            Raise();
+        }
+
+        /// <summary>
+        /// Never lets one bad subscriber stop the others hearing about art that has landed —
+        /// the guard <c>HomesteadLayout.Raise</c> uses, for its reason.
+        /// </summary>
+        static void Raise()
+        {
+            try { Changed?.Invoke(); }
+            catch (Exception e) { Debug.LogException(e); }
         }
 
         /// <summary>

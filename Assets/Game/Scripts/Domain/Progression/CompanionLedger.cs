@@ -128,6 +128,13 @@ namespace GlimmerGrove.Progression
         public static bool WasBought(AvatarDefinition avatar)
             => avatar.IsValid && _bought.Contains(avatar.Id);
 
+        /// <summary>
+        /// How many companions were paid for. Asked by the account screen, which has to decide
+        /// whether this device is holding anything a player would mind losing — and a purchase
+        /// is the one thing here that is neither derivable nor recoverable by playing again.
+        /// </summary>
+        public static int BoughtCount => _bought.Count;
+
         /// <summary>How many the player holds, for the "12 of 31 awake" caption.</summary>
         public static int HeldCount(int keeperLevel)
         {

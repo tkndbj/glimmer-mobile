@@ -182,6 +182,22 @@ const save = {
       { mapValue: { fields: { slot: { stringValue: "meadow_b" },
                               piece: { stringValue: "" },
                               setUnix: { integerValue: "1700000001" } } } },
+      // Facing the other way. Part of the arrangement, so it has to survive the trip —
+      // a piece that comes back mirrored is the same loss as one that comes back missing.
+      { mapValue: { fields: { slot: { stringValue: "t_007_006" },
+                              piece: { stringValue: "lantern_post" },
+                              setUnix: { integerValue: "1700000002" },
+                              flipped: { booleanValue: true } } } },
+    ] } },
+
+    // The ground the grove stands on. It shipped in save schema v17 and reached neither
+    // this document nor the rules for a whole version, so land bought with credits stayed
+    // on the phone that bought it — invisible until account switching became the first
+    // feature that ever reads the cloud copy back over a working local save, at which
+    // point a player's grove came back as the free starter square. It is here now so that
+    // "the rules accept what the client actually writes" is checked rather than assumed.
+    groveLandOwned: { arrayValue: { values: [
+      { stringValue: "r_north" }, { stringValue: "r_east" },
     ] } },
     progression: { mapValue: { fields: { xpHighWater: { integerValue: "100" },
                                          levelHighWater: { integerValue: "2" } } } },
@@ -210,6 +226,14 @@ const bloated = await fetch(`${FS}/players/${uid}?updateMask.fieldPaths=homestea
       { mapValue: { fields: { slot: { stringValue: "s" + i }, piece: { stringValue: "oak" },
                               setUnix: { integerValue: "1700000000" } } } })) } } } }) });
 check(bloated.status === 403, "an oversized grove arrangement is refused", `got ${bloated.status}`);
+
+// Land is a set of regions rather than of tiles precisely so it stays small (invariant
+// 16e), and the cap is what keeps it that way. Same reasoning as the arrangement above: a
+// size() clause that was written but never released looks exactly like one that works.
+const tooMuchLand = await fetch(`${FS}/players/${uid}?updateMask.fieldPaths=groveLandOwned`, {
+  method: "PATCH", headers: json, body: JSON.stringify({ fields: { groveLandOwned: {
+    arrayValue: { values: Array.from({ length: 200 }, (_, i) => ({ stringValue: "r" + i })) } } } }) });
+check(tooMuchLand.status === 403, "an oversized land set is refused", `got ${tooMuchLand.status}`);
 
 // The point of keying the ledger by level id: one glade can be written on its own
 // rather than re-uploading a ledger that may run to thousands of entries.

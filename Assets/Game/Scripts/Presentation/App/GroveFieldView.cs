@@ -31,8 +31,30 @@ namespace GlimmerGrove
     /// it, so no screen has to remember to put it back.
     /// </para>
     /// </summary>
-    public sealed class GroveFieldView : MonoBehaviour, IDragHandler, IBeginDragHandler, IPointerClickHandler
+    public sealed class GroveFieldView : MonoBehaviour, IDragHandler, IBeginDragHandler,
+                                         IPointerClickHandler, IPointerDownHandler, IPointerUpHandler
     {
+        /// <summary>
+        /// How long a finger has to rest on a tile before it counts as a long press.
+        ///
+        /// <para>
+        /// Long enough that it cannot be reached by a tap somebody meant as a tap — the floor's
+        /// ordinary gesture is a tap, and the cost of firing this by accident is a panel
+        /// appearing over the thing the player was looking at. Short enough that it is
+        /// discoverable by holding, which is the only way anybody finds a long press.
+        /// </para>
+        /// </summary>
+        public const float HoldSeconds = .45f;
+
+        /// <summary>
+        /// How far the finger may travel and still be resting rather than panning.
+        ///
+        /// The same threshold that separates a pan from a tap, and deliberately the same
+        /// number: a press that has moved far enough not to be a tap has not moved far enough
+        /// to be something else as well.
+        /// </summary>
+        const float PressSlop = 12f;
+
         /// <summary>
         /// How far out and in the player may zoom.
         ///
@@ -63,8 +85,28 @@ namespace GlimmerGrove
         float _pinchStart;
         float _zoomStart;
 
-        /// <summary>Raised when a tile is tapped. Never fires for a drag.</summary>
+        /// <summary>Raised when a tile is tapped. Never fires for a drag, or after a hold.</summary>
         public Action<int, int> TileTapped;
+
+        /// <summary>
+        /// Raised when a finger rests on a tile. Fires once per press, while the finger is
+        /// still down, and cancels the tap that press would otherwise have produced.
+        /// </summary>
+        public Action<int, int> TileHeld;
+
+        /// <summary>
+        /// Raised when a tap landed on the field but on no tile — the sky around the floor, or
+        /// ground the player does not own.
+        ///
+        /// <para>
+        /// A tap that resolves to nothing is still a tap, and anything the player has opened
+        /// over the floor has to be able to hear it. Without this the sky was the one place on
+        /// the screen where tapping did nothing at all, so a panel raised by a long press could
+        /// only be dismissed by tapping something else — which is the opposite of what tapping
+        /// away from a thing means everywhere else in the game.
+        /// </para>
+        /// </summary>
+        public Action TappedNothing;
 
         /// <summary>One tile of the field, built once and rebound as it is recycled.</summary>
         public interface ITileCell
@@ -209,28 +251,165 @@ namespace GlimmerGrove
         }
 
         float _dragged;
+        bool _pressing, _held;
+        float _pressAt;
+        Vector2 _pressPos;
+        Camera _pressCam;
+
+        public void OnPointerDown(PointerEventData e)
+        {
+            _pressing = true;
+            _held = false;
+            _dragged = 0f;
+            _pressAt = Time.unscaledTime;
+            _pressPos = e.position;
+            _pressCam = e.pressEventCamera;
+        }
+
+        public void OnPointerUp(PointerEventData e) => _pressing = false;
 
         public void OnPointerClick(PointerEventData e)
         {
             // A pan that ends over a tile is not a tap on it. The threshold is in screen points
             // rather than tiles because it is about the finger, not the floor.
-            if (_dragged > 12f) { _dragged = 0f; return; }
+            if (_dragged > PressSlop) { _dragged = 0f; return; }
             _dragged = 0f;
 
-            if (!RectTransformUtility.ScreenPointToLocalPointInRectangle(
-                    _field, e.position, e.pressEventCamera, out var local)) return;
+            // A press that already became a hold has been answered. Without this the player
+            // gets the hold's panel and then, on lifting the finger, whatever a tap does — two
+            // responses to one gesture, the second of them unasked for.
+            if (_held) return;
 
-            GroveFloor.TileAt(local.x, -local.y, out int col, out int row);
-            if (!_floor.Contains(col, row)) return;
-            if (_visible != null && !_visible(col, row)) return;
+            if (!TryTileAt(e.position, e.pressEventCamera, out int col, out int row))
+            {
+                TappedNothing?.Invoke();
+                return;
+            }
 
             TileTapped?.Invoke(col, row);
         }
 
+        /// <summary>
+        /// The box a tile's art covers, in this field's own space, or a zero-width rect for a
+        /// tile with nothing standing on it.
+        ///
+        /// <para>
+        /// Supplied by the screen rather than worked out here, because what stands on a tile
+        /// and how big it draws are the screen's business — and it must be the <em>same</em>
+        /// answer the screen paints with, or the player would be picking pieces that are not
+        /// where the picture says they are.
+        /// </para>
+        /// </summary>
+        public Func<int, int, Rect> Footprint;
+
+        /// <summary>
+        /// Which visible tile a screen point is over. False for a point off the floor, or over
+        /// ground the player does not own.
+        ///
+        /// <para>
+        /// What is <em>drawn</em> over the point beats what the ground under it says — see
+        /// <see cref="GrovePick"/>. Without that, only a tile's bare diamond is touchable and
+        /// every piece standing on one is scenery.
+        /// </para>
+        /// </summary>
+        public bool TryTileAt(Vector2 screenPos, Camera cam, out int col, out int row)
+        {
+            col = row = 0;
+
+            if (_field == null) return false;
+            if (!RectTransformUtility.ScreenPointToLocalPointInRectangle(
+                    _field, screenPos, cam, out var local)) return false;
+
+            if (TryDrawnAt(local, out col, out row)) return true;
+
+            GroveFloor.TileAt(local.x, -local.y, out col, out row);
+
+            if (!_floor.Contains(col, row)) return false;
+            return _visible == null || _visible(col, row);
+        }
+
+        /// <summary>
+        /// The frontmost piece drawn over a point in field space.
+        ///
+        /// <para>
+        /// Only the live tiles are considered, which is the same set the field is painting and
+        /// therefore the same set the player can see. The list is held rather than allocated,
+        /// because this runs on every frame of a move drag as well as on every tap.
+        /// </para>
+        /// </summary>
+        bool TryDrawnAt(Vector2 local, out int col, out int row)
+        {
+            col = row = 0;
+            if (Footprint == null) return false;
+
+            _hits.Clear();
+
+            foreach (var pair in _live)
+            {
+                int c = Col(pair.Key), r = Row(pair.Key);
+
+                var box = Footprint(c, r);
+                if (box.width <= 0f || box.height <= 0f) continue;
+
+                _hits.Add(new GroveHit(c, r, box.center.x, box.center.y,
+                                       box.width * .5f, box.height * .5f));
+            }
+
+            return GrovePick.Topmost(_hits, local.x, local.y, out col, out row)
+                && (_visible == null || _visible(col, row));
+        }
+
+        readonly System.Collections.Generic.List<GroveHit> _hits =
+            new System.Collections.Generic.List<GroveHit>();
+
+        /// <summary>
+        /// Where a tile is on the screen right now, in world space.
+        ///
+        /// <para>
+        /// Asked of the view rather than read off the tile's own object because a tile that has
+        /// been panned out of view does not have one — culling is the feature here — and
+        /// anything anchored to a tile has to keep answering while the tile is off screen, if
+        /// only to know that it should hide.
+        /// </para>
+        /// </summary>
+        public Vector3 TileWorld(int col, int row)
+            => _field == null
+                ? Vector3.zero
+                : _field.TransformPoint(new Vector3(GroveFloor.TileX(col, row),
+                                                    -GroveFloor.TileY(col, row), 0f));
+
         void Update()
         {
             Pinch();
+            Hold();
             Cull();
+        }
+
+        /// <summary>
+        /// Turns a finger resting on the floor into <see cref="TileHeld"/>.
+        ///
+        /// <para>
+        /// Polled rather than scheduled on the press, for <c>RunClock</c>'s reason: a timer
+        /// started in <c>OnPointerDown</c> would have to be unwound by every way a press can
+        /// end — a lift, a drag, a second finger, the screen being torn down underneath it —
+        /// and the one that gets forgotten is the one that fires a panel over the next screen.
+        /// Here the press either still satisfies the conditions this frame or it does not.
+        /// </para>
+        /// </summary>
+        void Hold()
+        {
+            if (!_pressing || _held) return;
+
+            // A second finger is a pinch. Left running, the hold would fire in the middle of a
+            // zoom, on whichever tile the first finger happened to have started over.
+            if (Input.touchCount >= 2) { _pressing = false; return; }
+
+            if (_dragged > PressSlop) { _pressing = false; return; }
+            if (Time.unscaledTime - _pressAt < HoldSeconds) return;
+
+            _held = true;
+            if (TryTileAt(_pressPos, _pressCam, out int col, out int row))
+                TileHeld?.Invoke(col, row);
         }
 
         /// <summary>

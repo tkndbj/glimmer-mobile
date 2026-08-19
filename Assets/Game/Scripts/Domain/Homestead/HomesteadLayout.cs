@@ -72,10 +72,33 @@ namespace GlimmerGrove.Homestead
         /// <summary>When this slot was last set, as a Unix timestamp. 0 is unreachable for a real choice.</summary>
         public readonly long SetUnix;
 
-        public Placement(string pieceId, long setUnix)
+        /// <summary>
+        /// Drawn mirrored, which is the only facing an isometric prop can have.
+        ///
+        /// <para>
+        /// <b>Why this is a flip and not a rotation.</b> Every piece in the catalog is one
+        /// drawing from one fixed camera angle — the seventeen packs the art came from ship no
+        /// directional variants at all — so there is no second sprite to rotate to. Turning the
+        /// transform would rotate the <em>painting</em> rather than the object: a tree leans
+        /// over, and a fence's painted side wall goes on facing the old way while its footprint
+        /// runs diagonally across the ground plane. A mirror is the one transform that leaves an
+        /// isometric drawing still standing on its own tile, so it is the one offered.
+        /// </para>
+        /// <para>
+        /// It rides the row it belongs to rather than getting a stamp of its own, and that is
+        /// what keeps invariant 11c satisfied for free: the facing and the piece are one
+        /// decision about one slot, so the stamp that dates the placement dates the facing too.
+        /// A cleared slot is never flipped — see the constructor — because a facing on nothing
+        /// is a bit the merge would have to break a tie on and no player could ever see.
+        /// </para>
+        /// </summary>
+        public readonly bool Flipped;
+
+        public Placement(string pieceId, long setUnix, bool flipped)
         {
             PieceId = pieceId ?? string.Empty;
             SetUnix = setUnix < 0 ? 0 : setUnix;
+            Flipped = flipped && PieceId.Length > 0;
         }
 
         public bool IsOccupied => !string.IsNullOrEmpty(PieceId);
@@ -136,6 +159,14 @@ namespace GlimmerGrove.Homestead
                 : string.Empty;
 
         public static bool IsOccupied(string slotId) => !string.IsNullOrEmpty(At(slotId));
+
+        /// <summary>
+        /// Whether what stands in a slot is drawn mirrored. An untouched slot answers false,
+        /// which is what a slot showing the starter companion wants and what every row written
+        /// before this existed meant.
+        /// </summary>
+        public static bool FlippedAt(string slotId)
+            => !string.IsNullOrEmpty(slotId) && _placed.TryGetValue(slotId, out var p) && p.Flipped;
 
         /// <summary>
         /// What a tile actually <em>shows</em>: whatever the player put there, or the starter
@@ -290,7 +321,9 @@ namespace GlimmerGrove.Homestead
             string wanted = pieceId ?? string.Empty;
             if (string.Equals(At(slotId), wanted, StringComparison.Ordinal)) return false;
 
-            _placed[slotId] = new Placement(wanted, GameClock.NowUnix());
+            // A new piece faces the way it was drawn. Carrying the old facing over would make
+            // the slot remember a decision about something that is no longer standing in it.
+            _placed[slotId] = new Placement(wanted, GameClock.NowUnix(), false);
 
             Telemetry.Track("grove_placed", "slot", slotId,
                             "piece", string.IsNullOrEmpty(wanted) ? "(cleared)" : wanted);
@@ -302,6 +335,89 @@ namespace GlimmerGrove.Homestead
 
         /// <summary>Takes whatever is in a slot away. A choice, and stamped as one.</summary>
         public static bool Clear(string slotId) => Place(slotId, string.Empty);
+
+        /// <summary>
+        /// Mirrors whatever a tile is showing, and writes the row that says so.
+        ///
+        /// <para>
+        /// It reads <see cref="Shown"/> rather than <see cref="At"/>, which matters on exactly
+        /// one tile: the starter companion is shown while its slot has no row (invariant 16f),
+        /// so flipping it has to write the piece down as well as the facing — otherwise the row
+        /// would say "this tile is mirrored and empty" and the friend would vanish.
+        /// </para>
+        /// </summary>
+        public static bool Flip(HomesteadCatalog catalog, string slotId)
+        {
+            if (string.IsNullOrEmpty(slotId)) return false;
+
+            string piece = Shown(catalog, slotId);
+            if (string.IsNullOrEmpty(piece)) return false;
+
+            _placed[slotId] = new Placement(piece, GameClock.NowUnix(), !FlippedAt(slotId));
+
+            Telemetry.Track("grove_flipped", "slot", slotId, "piece", piece);
+
+            SaveService.Save();
+            Raise();
+            return true;
+        }
+
+        /// <summary>
+        /// Moves what stands on one tile to another, swapping with whatever was already there.
+        ///
+        /// <para>
+        /// <b>A move and a swap are deliberately the same operation.</b> The destination's
+        /// contents — which may be nothing — are written back to the source, so a drop onto an
+        /// occupied tile exchanges the two and a drop onto bare ground clears the tile behind
+        /// it. One path rather than two means there is no state in which a drag can be refused
+        /// for a reason the player has to discover, and every move is undone by making it again.
+        /// </para>
+        /// <para>
+        /// <b>The facing travels with the piece</b>, because it is a fact about the thing rather
+        /// than about the ground under it — a mirrored fence dragged two tiles left is still the
+        /// same mirrored fence, and having to flip it again after every move would make the two
+        /// controls fight each other.
+        /// </para>
+        /// <para>
+        /// Both rows are stamped with the same instant, which is what makes the pair survive a
+        /// merge together: a device that sees only one of them would show the piece twice or
+        /// not at all, and a shared stamp means the join takes both or neither from whichever
+        /// side is newer. The hall is refused at both ends — it is drawn from what the player
+        /// owns rather than placed (invariant 16), so it has nothing to give and no room to
+        /// take. Like <see cref="Place"/>, this does not re-derive whether the land is owned:
+        /// the field only draws tiles the player has, and a second copy of that rule here is a
+        /// second answer for a retune to put out of step with the first.
+        /// </para>
+        /// </summary>
+        public static bool Move(HomesteadCatalog catalog, string fromSlot, string toSlot)
+        {
+            if (catalog == null) return false;
+            if (string.IsNullOrEmpty(fromSlot) || string.IsNullOrEmpty(toSlot)) return false;
+            if (string.Equals(fromSlot, toSlot, StringComparison.Ordinal)) return false;
+
+            var floor = catalog.Floor;
+            if (floor == null) return false;
+            if (!floor.Contains(fromSlot) || !floor.Contains(toSlot)) return false;
+            if (floor.IsHall(fromSlot) || floor.IsHall(toSlot)) return false;
+
+            string moving = Shown(catalog, fromSlot);
+            if (string.IsNullOrEmpty(moving)) return false;
+
+            bool movingFlipped = FlippedAt(fromSlot);
+            string displaced = Shown(catalog, toSlot);
+            bool displacedFlipped = FlippedAt(toSlot);
+
+            long now = GameClock.NowUnix();
+            _placed[toSlot] = new Placement(moving, now, movingFlipped);
+            _placed[fromSlot] = new Placement(displaced, now, displacedFlipped);
+
+            Telemetry.Track("grove_moved", "from", fromSlot, "to", toSlot, "piece", moving,
+                            "swapped", string.IsNullOrEmpty(displaced) ? "no" : "yes");
+
+            SaveService.Save();
+            Raise();
+            return true;
+        }
 
         static void Raise()
         {
@@ -331,7 +447,8 @@ namespace GlimmerGrove.Homestead
                     // a local file, a cloud document, a merge of the two — rather than at each
                     // reader, so nothing downstream ever sees a retired id and the rewrite is
                     // written back the next time the file is saved.
-                    _placed[row.slot] = new Placement(GroveResidents.Rename(row.piece), row.setUnix);
+                    _placed[row.slot] = new Placement(GroveResidents.Rename(row.piece), row.setUnix,
+                                                      row.flipped);
                 }
 
             Raise();
@@ -377,7 +494,7 @@ namespace GlimmerGrove.Homestead
             {
                 if (row == null || string.IsNullOrEmpty(row.slot)) continue;
 
-                var incoming = new Placement(row.piece, row.setUnix);
+                var incoming = new Placement(row.piece, row.setUnix, row.flipped);
 
                 into[row.slot] = into.TryGetValue(row.slot, out var held)
                     ? Later(held, incoming)
@@ -400,7 +517,15 @@ namespace GlimmerGrove.Homestead
         {
             if (a.SetUnix != b.SetUnix) return a.SetUnix > b.SetUnix ? a : b;
 
-            return string.CompareOrdinal(a.PieceId, b.PieceId) >= 0 ? a : b;
+            int byPiece = string.CompareOrdinal(a.PieceId, b.PieceId);
+            if (byPiece != 0) return byPiece > 0 ? a : b;
+
+            // Same instant and the same piece, differing only in which way it faces. Falling
+            // through to "return a" here is the whole trap: it is not a tie-break at all, it is
+            // argument order, so the two devices would each keep their own facing and push it
+            // back at the other for ever. Preferring the mirrored one is arbitrary — being
+            // arbitrary is fine and depending on who asked is not.
+            return a.Flipped ? a : b;
         }
 
         /// <summary>
@@ -427,6 +552,7 @@ namespace GlimmerGrove.Homestead
                     slot = keys[i],
                     piece = placed.PieceId,
                     setUnix = placed.SetUnix,
+                    flipped = placed.Flipped,
                 };
             }
 

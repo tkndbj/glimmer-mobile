@@ -78,6 +78,25 @@ namespace GlimmerGrove.Tests
                 {
                     userId = "uid-abc", revision = 17, lastSyncedUnix = 1_699_999_000, deviceId = "dev1",
                 },
+                tipsSeen = new[] { "duskcap", "taproot" },
+                daily = new DailyStateDto { dayKey = 20_315, runs = 4, claimed = 2 },
+                ads = new AdStateDto
+                {
+                    dayKey = 20_315,
+                    lastWatchedUnix = 1_699_990_000,
+                    watched = new[] { new AdViewCountDto { placement = "coin_bonus", count = 2 } },
+                },
+                companionsOwned = new[] { "coral", "puff" },
+                homesteadOwned = new[] { "bench_oak", "lantern_post" },
+                groveLandOwned = new[] { "r_north", "r_east" },
+                homesteadPlaced = new[]
+                {
+                    new HomesteadPlacementDto { slot = "t_006_006", piece = "bench_oak", setUnix = 1_699_000_000 },
+                    new HomesteadPlacementDto
+                    {
+                        slot = "t_007_006", piece = "lantern_post", setUnix = 1_699_000_500, flipped = true,
+                    },
+                },
             };
         }
 
@@ -213,6 +232,77 @@ namespace GlimmerGrove.Tests
             Assert.AreEqual(2, restored.events[0].collectedGoal);
             Assert.AreEqual("second_bloom", restored.events[1].id);
             Assert.AreEqual(1, restored.events[1].collectedGoal);
+
+            // The grove. Land is the one that was missing, and the failure it caused is the
+            // reason the guard below this test exists: it reached SaveFileDto and SaveDelta
+            // and never reached the wire, so a floor bought with credits stayed on one phone
+            // and the first thing that replaced a local save — switching accounts — brought
+            // the grove back as the free starter square, with everything standing outside it
+            // invisible because the ground under it was gone.
+            CollectionAssert.AreEqual(new[] { "coral", "puff" }, restored.companionsOwned);
+            CollectionAssert.AreEqual(new[] { "bench_oak", "lantern_post" }, restored.homesteadOwned);
+            CollectionAssert.AreEqual(new[] { "r_north", "r_east" }, restored.groveLandOwned);
+
+            Assert.AreEqual(2, restored.homesteadPlaced.Length);
+            Assert.AreEqual("t_006_006", restored.homesteadPlaced[0].slot);
+            Assert.AreEqual("bench_oak", restored.homesteadPlaced[0].piece);
+            Assert.AreEqual(1_699_000_000, restored.homesteadPlaced[0].setUnix);
+            Assert.IsFalse(restored.homesteadPlaced[0].flipped);
+
+            // A piece that comes back facing the other way is the same loss as one that comes
+            // back missing, only quieter.
+            Assert.IsTrue(restored.homesteadPlaced[1].flipped);
+
+            CollectionAssert.AreEqual(new[] { "duskcap", "taproot" }, restored.tipsSeen);
+        }
+
+        /// <summary>
+        /// Every field of the save is carried by the fixture above, so that adding one to
+        /// <see cref="SaveFileDto"/> and forgetting the wire fails here instead of in a
+        /// player's grove.
+        ///
+        /// <para>
+        /// This is the test that was missing. <c>groveLandOwned</c> shipped in save schema v17,
+        /// reached <c>SaveDelta</c> — which is the half everybody remembers, because it decides
+        /// what a sync sends — and never reached <see cref="FirestoreSaveMapper"/> or
+        /// <c>firestore.rules</c>. Every existing wire test passed, because a field the fixture
+        /// does not carry is a field no assertion mentions. The round trip could only ever be
+        /// as complete as what is fed into it, so the completeness has to be checked rather
+        /// than trusted — exactly the argument invariant 4c makes about the manifest writer,
+        /// which lost a live event and thirty prices the same way.
+        /// </para>
+        /// <para>
+        /// It deliberately checks the <em>fixture</em> rather than the mapper. A test that read
+        /// the mapper's output and demanded a key per field would have to know which fields are
+        /// deliberately absent — the currency ledgers are not uploaded at all — and would grow a
+        /// list of exceptions that is itself a thing to forget to update. Making the fixture
+        /// complete makes the round trip complete, and the round trip already knows what
+        /// "survived" means.
+        /// </para>
+        /// </summary>
+        [Test]
+        public void EveryFieldOfTheSaveIsCarriedByTheRoundTripFixture()
+        {
+            var populated = Populated();
+            var missing = new List<string>();
+
+            foreach (var field in typeof(SaveFileDto).GetFields())
+            {
+                object value = field.GetValue(populated);
+
+                bool unset = value == null
+                          || (value is string text && text.Length == 0)
+                          || (value is System.Array array && array.Length == 0)
+                          || (value is bool flag && !flag)
+                          || (value is int i && i == 0)
+                          || (value is long l && l == 0L);
+
+                if (unset) missing.Add(field.Name);
+            }
+
+            CollectionAssert.IsEmpty(missing,
+                "these save fields carry nothing in Populated(), so nothing proves they survive "
+                + "the wire: " + string.Join(", ", missing));
         }
 
         /// <summary>

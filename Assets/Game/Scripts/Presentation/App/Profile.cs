@@ -311,13 +311,5 @@ namespace GlimmerGrove
         }
 
         public static int ChapterCount => Index.ChapterCount;
-
-        /// <summary>Format 1250 as "1.2k" so pills stay narrow.</summary>
-        public static string Short(long value)
-        {
-            if (value >= 1000000) return (value / 1000000f).ToString("0.#") + "M";
-            if (value >= 10000) return (value / 1000f).ToString("0") + "k";
-            return value.ToString();
-        }
     }
 }

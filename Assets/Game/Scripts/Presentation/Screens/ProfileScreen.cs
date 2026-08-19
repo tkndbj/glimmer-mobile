@@ -248,8 +248,8 @@ namespace GlimmerGrove
             Tile(card, 310f, 40f, "ic_star3d", $"{Profile.PerfectGlades}", "ui.profile.perfect", Pal.Sun);
 
             Tile(card, -310f, -128f, "ic_check", $"{PlayerProgression.ClearedGlades}", "ui.profile.glades", Pal.Mint);
-            Tile(card, 0f, -128f, "ic_chest", Profile.Short(Profile.Coins), "ui.profile.coins", Pal.Gold);
-            Tile(card, 310f, -128f, "ic_gem", Profile.Short(Profile.Gems), "ui.profile.gems", Pal.Bloom);
+            Tile(card, 0f, -128f, "ic_chest", Compact.Number(Profile.Coins), "ui.profile.coins", Pal.Gold);
+            Tile(card, 310f, -128f, "ic_gem", Compact.Number(Profile.Gems), "ui.profile.gems", Pal.Bloom);
         }
 
         static void Tile(Transform card, float x, float y, string icon, string value, string labelKey, Color tint)
@@ -399,7 +399,7 @@ namespace GlimmerGrove
                 UIKit.Titled("L", cell.transform,
                              unlocked ? Loc.Get(avatar.NameKey)
                                       : avatar.IsForSale
-                                          ? Loc.Format("ui.profile.cost", avatar.UnlockCost)
+                                          ? Loc.Format("ui.profile.cost", Compact.Number(avatar.UnlockCost))
                                           : Loc.Format("ui.profile.locked_at", avatar.UnlockLevel),
                              24, unlocked ? (worn ? Pal.Cream : new Color(1f, .96f, .88f, .66f))
                                           : avatar.IsForSale ? Pal.A(Pal.Sun, .88f)
@@ -438,9 +438,17 @@ namespace GlimmerGrove
             CardTitle(card, "ui.profile.account", CardWidth);
 
             bool available = CloudSaveService.IsAvailable;
-            bool linked = CloudSaveService.IsLinked;
+
+            // Asked before IsLinked, and it has to be. A device caught between two accounts
+            // *is* signed in, so reading only IsLinked here would put "your progress is saved
+            // online" on the one screen a player checks when they suspect it is not — and
+            // nothing is being saved at all in that state. It is the only lie this card can
+            // tell, so it is the first thing it rules out.
+            bool mismatched = available && CloudSaveService.AccountMismatched;
+            bool linked = available && !mismatched && CloudSaveService.IsLinked;
 
             string statusKey = !available ? "ui.account.unavailable"
+                             : mismatched ? "ui.account.mismatch"
                              : linked ? "ui.account.linked"
                              : "ui.account.guest";
 
@@ -454,15 +462,17 @@ namespace GlimmerGrove
                          TextAnchor.MiddleLeft, new Vector2(560f, 44f), new Vector2(0f, .5f),
                          new Vector2(440f, 58f), 3f, 3f);
 
-            UIKit.Titled("Why", card, Loc.Get(linked ? "ui.profile.linked_hint" : "ui.profile.guest_hint"),
+            UIKit.Titled("Why", card, Loc.Get(mismatched ? "ui.profile.mismatch_hint"
+                                             : linked ? "ui.profile.linked_hint" : "ui.profile.guest_hint"),
                          25, new Color(1f, .96f, .88f, .58f), TextAnchor.UpperCenter,
                          new Vector2(800f, 70f), new Vector2(.5f, .5f), new Vector2(0f, 6f), 3f, 0f,
                          wrap: true);
 
             if (!available) return;
 
-            UIKit.TextButton("Manage", card, linked ? "btn_blue" : "btn_green",
-                             Loc.Get(linked ? "ui.profile.manage" : "ui.profile.protect"), 34,
+            UIKit.TextButton("Manage", card, mismatched ? "btn_red" : linked ? "btn_blue" : "btn_green",
+                             Loc.Get(mismatched ? "ui.profile.fix"
+                                   : linked ? "ui.profile.manage" : "ui.profile.protect"), 34,
                              new Vector2(460f, 110f), new Vector2(.5f, 0f), new Vector2(0f, 64f),
                              () => Flow.Modal<AccountOverlay>());
         }

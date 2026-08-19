@@ -460,7 +460,7 @@ namespace GlimmerGrove
                     bool minted = frames != null && frames.Length > 0;
 
                     coinChip = Payout.Chip("Coins", Panel, new Vector2(.5f, 1f), new Vector2(spread, -payY),
-                                           null, Pal.Gold, n => Loc.Format("ui.win.coins", n), CreditsGained,
+                                           null, Pal.Gold, n => Loc.Format("ui.win.coins", Compact.Number(n)), CreditsGained,
                                            minted ? frames[0] : Art.Disc(128),
                                            minted ? Color.white : Pal.Gold, "pop");
                     RewardArt.Glyph(coinChip.Glyph, ChestDropKind.Credits, 14f);
@@ -744,7 +744,7 @@ namespace GlimmerGrove
             var offer = RewardedAds.Table.Offer(AdPlacement.WinBonus);
 
             _bonus = UIKit.TextButton("Bonus", Panel, "btn_green",
-                                      Loc.Format("ui.ads.bonus_cta_n", offer.Amount), 40,
+                                      Loc.Format("ui.ads.bonus_cta_n", Compact.Number(offer.Amount)), 40,
                                       new Vector2(600f, 124f), new Vector2(.5f, 1f),
                                       new Vector2(0f, -y), OnBonus, "ic_play");
 

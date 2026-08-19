@@ -52,7 +52,8 @@ service cloud.firestore {
                  'schemaVersion', 'updatedUnix', 'settings', 'wallet', 'levels',
                  'progression', 'cloud', 'lastPlayedLevelId', 'legacyImportDone',
                  'tipsSeen', 'daily', 'ads', 'streak', 'events', 'eventsSeeded',
-                 'companionsOwned', 'homesteadOwned', 'homesteadPlaced', 'checksum'
+                 'companionsOwned', 'homesteadOwned', 'homesteadPlaced', 'groveLandOwned',
+                 'checksum'
                ])
                && d.schemaVersion is int
                && d.schemaVersion >= 1 && d.schemaVersion <= 100
@@ -119,7 +120,13 @@ service cloud.firestore {
                && (!('homesteadOwned' in d) || (d.homesteadOwned is list
                                                 && d.homesteadOwned.size() <= 512))
                && (!('homesteadPlaced' in d) || (d.homesteadPlaced is list
-                                                 && d.homesteadPlaced.size() <= 1024));
+                                                 && d.homesteadPlaced.size() <= 1024))
+
+               // Regions, not tiles — a filled floor is a couple of hundred tiles and a set
+               // that size is merged and checksummed on every sync for ever, which is why
+               // invariant 16e stores the coarser thing. The cap is generous against that.
+               && (!('groveLandOwned' in d) || (d.groveLandOwned is list
+                                                && d.groveLandOwned.size() <= 128));
       }
 
       // The revision only ever moves forward, which gives the sync optimistic

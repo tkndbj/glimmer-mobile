@@ -794,23 +794,23 @@
       "text": "this account is already used by another player"
     },
     {
-      "key": "ui.account.switch",
+      "key": "ui.account.adopt",
       "text": "USE THAT ACCOUNT"
     },
     {
-      "key": "ui.account.switch_cost",
+      "key": "ui.account.adopt_cost",
       "text": "you will lose {0} finished levels and level {1} from this phone"
     },
     {
-      "key": "ui.account.switch_warning",
+      "key": "ui.account.adopt_warning",
       "text": "this cannot be undone"
     },
     {
-      "key": "ui.account.switch_confirm",
+      "key": "ui.account.adopt_confirm",
       "text": "TAP AGAIN TO CONFIRM"
     },
     {
-      "key": "ui.account.switched_found",
+      "key": "ui.account.adopted_found",
       "text": "signed in  ·  {0} finished levels loaded"
     },
     {
@@ -820,6 +820,62 @@
     {
       "key": "ui.account.later",
       "text": "NOT NOW"
+    },
+    {
+      "key": "ui.account.taken_body",
+      "text": "That account already has its own grove, and the two cannot be joined. You can play it on this phone, but whatever is on this phone now will be replaced."
+    },
+    {
+      "key": "ui.account.switch",
+      "text": "SWITCH ACCOUNT"
+    },
+    {
+      "key": "ui.account.switch_body",
+      "text": "Choose the account you want to play on this phone. Your grove is saved online first, so you can sign back in any time to get it back."
+    },
+    {
+      "key": "ui.account.switch_safe",
+      "text": "nothing is lost  ·  sign back in to return"
+    },
+    {
+      "key": "ui.account.securing",
+      "text": "saving your grove..."
+    },
+    {
+      "key": "ui.account.not_secured",
+      "text": "we could not save your grove, so nothing was changed  ·  please try again"
+    },
+    {
+      "key": "ui.account.same_account",
+      "text": "you are already playing this account"
+    },
+    {
+      "key": "ui.account.resumed",
+      "text": "welcome back  ·  your progress is being saved again"
+    },
+    {
+      "key": "ui.account.switched_new",
+      "text": "signed in  ·  starting a new grove"
+    },
+    {
+      "key": "ui.account.interrupted",
+      "text": "signed in, but that grove could not be loaded  ·  please try again"
+    },
+    {
+      "key": "ui.account.mismatch",
+      "text": "this phone is signed in as someone else"
+    },
+    {
+      "key": "ui.account.mismatch_body",
+      "text": "Your progress is not being saved online right now. Sign in with the account you play to carry on where you left off."
+    },
+    {
+      "key": "ui.profile.mismatch_hint",
+      "text": "Your progress is not being saved online. Tap to fix it."
+    },
+    {
+      "key": "ui.profile.fix",
+      "text": "FIX THIS"
     },
     {
       "key": "ui.howto.title",
@@ -1276,6 +1332,26 @@
     {
       "key": "ui.coins.shop_soon",
       "text": "Spend them on new friends in your profile."
+    },
+    {
+      "key": "ui.num.thousand",
+      "text": "K"
+    },
+    {
+      "key": "ui.num.million",
+      "text": "M"
+    },
+    {
+      "key": "ui.grove.move",
+      "text": "MOVE"
+    },
+    {
+      "key": "ui.grove.flip",
+      "text": "FLIP"
+    },
+    {
+      "key": "ui.grove.move_hint",
+      "text": "Hold MOVE and drag it to another tile."
     },
     {
       "key": "ui.tip.fragile.title",

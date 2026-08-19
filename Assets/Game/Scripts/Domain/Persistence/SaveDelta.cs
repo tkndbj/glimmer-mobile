@@ -252,6 +252,10 @@ namespace GlimmerGrove.Persistence
                 if (!Same(x.slot, y.slot)) return false;
                 if (!Same(x.piece, y.piece)) return false;
                 if (x.setUnix != y.setUnix) return false;
+
+                // Without this a flip on its own reads as "nothing changed" and is never
+                // pushed, so it survives until something else on the row moves.
+                if (x.flipped != y.flipped) return false;
             }
 
             return true;
