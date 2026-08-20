@@ -371,7 +371,7 @@ def check_level(level, chapter_id):
 MAP_WIDTH, STRIP_HEIGHT = 1080.0, 1200.0
 NODE_DIAMETER, NODE_CLEARANCE = 196.0, 24.0
 MIN_SEPARATION = NODE_DIAMETER + NODE_CLEARANCE
-TEASER_GAP, TEASER_CEILING, TEASER_X = 0.22, 0.95, 0.66
+TEASER_GAP, TEASER_HEADROOM, TEASER_X = 0.22, 500.0, 0.66
 
 
 def check_chapter_map(chapter, cid, ordered):
@@ -403,7 +403,10 @@ def check_chapter_map(chapter, cid, ordered):
                             "between them runs back down the map")
 
     highest = max([p[1][1] for p in pts], default=0.0)
-    teaser = (TEASER_X, min(TEASER_CEILING, highest + TEASER_GAP))
+    # Mirrors ChapterMap.TeaserPosition: the gap above the last glade is a fraction of
+    # the map, the room kept clear at the top is a distance in canvas units.
+    ceiling = max(0.0, min(1.0, 1.0 - TEASER_HEADROOM / height))
+    teaser = (TEASER_X, min(ceiling, highest + TEASER_GAP))
 
     for lid, p in pts:
         gap = sep(p, teaser)
@@ -429,7 +432,7 @@ RETIRED_RESIDENTS = {
 }
 
 
-def check_grove(keys, level_ids, chapter_ids, companions):
+def check_grove(keys, level_ids, chapter_ids, companions, companion_costs=None):
     """The grove catalog: its land, its residents and its shop.
 
     The offline half of ContentValidation.ValidateHomestead. It matters more than the
@@ -669,6 +672,54 @@ def check_grove(keys, level_ids, chapter_ids, companions):
             errors.append(f"the first home '{first[1]}' is not free; a new grove would open "
                           "with nothing on its hearth")
 
+    # ---------------------------------------------------------------- star ladder
+    # What a grove has to be worth to earn each star. Content rather than constants
+    # because the catalog grows with every drop, so a rung that reads as "you have built
+    # nearly everything" today reads as "you have made a start" in a year - see
+    # GroveScoreTable. Mirrored here because the Editor's own check needs a Unity session.
+    MAX_STARS = 8
+
+    ladder = ((grove.get("score") or {}).get("stars"))
+    if ladder is None:
+        ladder = [10000, 20000, 50000, 100000, 200000]
+        warnings.append("the grove names no star ladder, so the built-in one stands; author "
+                        "one in homestead.json so a drop can retune it")
+
+    if not ladder:
+        errors.append("the grove's star ladder has no rungs; the score would show no stars "
+                      "at any value")
+    if len(ladder) > MAX_STARS:
+        errors.append(f"the grove's star ladder has {len(ladder)} rungs, more than the "
+                      f"{MAX_STARS} the readout can draw")
+
+    previous = 0
+    for at in ladder:
+        if not isinstance(at, int) or at <= 0:
+            errors.append(f"the grove's star ladder holds {at!r}; no score is below it, so the "
+                          "star is awarded to an empty grove")
+        elif at <= previous:
+            errors.append(f"the grove's star ladder does not rise: {at} comes after {previous}, "
+                          "so two stars land at once")
+        else:
+            previous = at
+
+    # Everything with a price, which is what a complete grove is worth. A rung above it is
+    # a star nobody in the world can ever win, and nothing about reading the file says so.
+    #
+    # The companions are in it because a resident *is* a companion (invariant 16a) and the
+    # grove's own shop sells them on a shelf of their own - GroveScore walks the composed
+    # catalog, which is the authored pieces with the roster projected in, so leaving them
+    # out here would make this disagree with both the game and the build gate.
+    roster = sum((companion_costs or {}).values())
+    everything = total + land_total + roster
+
+    if everything <= 0:
+        warnings.append("nothing in the grove has a price, so its score can never leave zero "
+                        "and no star is reachable")
+    elif ladder and isinstance(ladder[-1], int) and ladder[-1] > everything:
+        warnings.append(f"the grove's last star asks for {ladder[-1]} credits and the whole "
+                        f"catalog is worth {everything}; nobody can ever win it")
+
     return {
         "homes": len(dwellings), "ladder": sum(c for _t, _p, c in dwellings),
         "cols": cols, "rows": rows, "regions": len(regions), "free_regions": starters,
@@ -676,6 +727,7 @@ def check_grove(keys, level_ids, chapter_ids, companions):
         "slots": cols * rows, "pieces": len(pieces),
         "residents": len(companions),
         "for_sale": for_sale, "earned": earned, "starters": piece_starters, "total": total,
+        "stars": ladder, "worth": everything, "roster": roster,
     }
 
 
@@ -994,11 +1046,14 @@ def main():
               f"{s['sources']:<7}{s['lamps']:<9}{s['fragile']:<8}{s['caps']:<10}"
               f"{s['bound']:<7}{s['crossings']}")
 
+    live_companions = [c for c in (manifest.get("companions") or [])
+                       if c.get("id") and not c.get("disabled")]
+
     grove = check_grove(keys,
                         {lv for e in manifest["chapters"] for lv in (e.get("levels") or [])},
                         {e["id"] for e in manifest["chapters"] if e.get("id")},
-                        {c["id"] for c in (manifest.get("companions") or [])
-                         if c.get("id") and not c.get("disabled")})
+                        {c["id"] for c in live_companions},
+                        {c["id"]: int(c.get("unlockCost") or 0) for c in live_companions})
 
     if grove:
         print(f"\ngrove: {grove['cols']}x{grove['rows']} floor, {grove['slots']} tile(s), "
@@ -1008,6 +1063,12 @@ def main():
         print(f"       land: {grove['regions']} region(s), {grove['free_regions']} free, "
               f"{grove['owned_tiles']} tile(s) sellable - {grove['land']} credits to own it all")
         print(f"       home ladder: {grove['homes']} rung(s), {grove['ladder']} credits to the top")
+        if grove["worth"] > 0:
+            rungs = ", ".join(f"{n + 1}@{at} ({round(at * 100 / grove['worth'])}%)"
+                              for n, at in enumerate(grove["stars"]))
+            print(f"       score: {grove['worth']} credits for everything "
+                  f"({grove['total']} decor and homes, {grove['land']} land, "
+                  f"{grove['roster']} residents) - stars at {rungs}")
 
     progression_path = os.path.join(ROOT, "progression.json")
     progression = json.load(open(progression_path, encoding="utf-8")) \
@@ -1024,7 +1085,10 @@ def main():
               f"{per_day_gems} gem(s) a day")
 
         if grove and per_day_credits:
-            sinks = grove["total"] + grove["land"] + grove["ladder"]
+            # `worth` rather than a sum written out here: the home ladder is already inside
+            # the pieces total, so adding it again double-counted 49,500 credits, and the
+            # companion roster - the largest sink in the game - was missing altogether.
+            sinks = grove["worth"]
             print(f"      every credit sink in the game is {sinks} credits, "
                   f"about {sinks // per_day_credits} day(s) of play")
 

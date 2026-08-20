@@ -242,15 +242,17 @@ namespace GlimmerGrove
             // aspect ratio nobody tested. This slot is centred, fixed, and clear of both the
             // colour key and the board.
             //
-            // It is a countdown now, so it is no longer quiet — it is the second thing on the
-            // screen that can end the run, and it colours and punches exactly like the move
-            // counter does for the same reason: once it is low the number itself is the
-            // tension. An untimed glade still shows the stopwatch, dimmed, as a record the
-            // player may care about afterwards.
-            _timer = UIKit.Titled("Timer", bar, RunClock.Format(0), 34,
-                                  TimerCalm, TextAnchor.MiddleCenter,
-                                  new Vector2(320f, 44f), new Vector2(.5f, .5f),
-                                  new Vector2(0f, -80f), 3f, 2f);
+            // Set at 54 rather than the 34 it shipped at, which is the size of the *tagline*
+            // it sits under — so the one number on the screen that can end the run without
+            // the player doing anything was drawn smaller than the glade's flavour text and
+            // dimmer than everything around it. It reads at the level name's weight now, and
+            // that is the point: it is a rule, not a caption. Sixty-five pixels sit between
+            // the tagline and the counter row and the readout is sized to them, so it grew
+            // without anything else on the screen moving. See PaintClock for the colour.
+            _timer = UIKit.Titled("Timer", bar, RunClock.Format(0), 54,
+                                  TimerLive, TextAnchor.MiddleCenter,
+                                  new Vector2(360f, 64f), new Vector2(.5f, .5f),
+                                  new Vector2(0f, -86f), 4f, 3f);
         }
 
         void BuildStatus()
@@ -536,15 +538,33 @@ namespace GlimmerGrove
         }
 
         /// <summary>
-        /// The countdown's three states, and the thresholds between them.
-        ///
-        /// Seconds rather than a fraction of the limit: ten seconds is ten seconds of dread
-        /// whether the glade allowed sixty or a hundred, while a tenth of the clock is four
-        /// seconds on one board and ten on another. The move counter's amber and red are
-        /// chosen the same way.
+        /// What the clock is painted in, and where it turns.
         /// </summary>
-        static readonly Color TimerCalm = new Color(1f, .96f, .86f, .55f);
-        const int TimerWarnSeconds = 15, TimerUrgentSeconds = 5;
+        /// <remarks>
+        /// <para>
+        /// <b>Two states, not three.</b> It ran calm, then amber at 15s, then red at 5s,
+        /// mirroring the move counter — and it was reported as too small to notice, which an
+        /// amber stage does nothing about: a three-step ramp is only legible to somebody
+        /// already watching the thing that is ramping. Solid white until twenty seconds and
+        /// red after it is a change a player catches out of the corner of their eye, which is
+        /// the whole job. The move counter keeps its three, because turns tick down at the
+        /// player's own pace and a countdown does not.
+        /// </para>
+        /// <para>
+        /// Seconds rather than a fraction of the limit: twenty seconds is twenty seconds of
+        /// dread whether the glade allowed sixty or a hundred, while a fifth of the clock is
+        /// thirteen seconds on one board and twenty-five on another.
+        /// </para>
+        /// <para>
+        /// <see cref="TimerIdle"/> is the other half of making the countdown loud. An untimed
+        /// glade shows the same readout as a stopwatch — a record the player may care about
+        /// afterwards — and a number that cannot end the run must not shout like one that
+        /// can. So the size is shared and the weight is not.
+        /// </para>
+        /// </remarks>
+        static readonly Color TimerLive = Color.white;
+        static readonly Color TimerIdle = new Color(1f, .96f, .86f, .55f);
+        const int TimerRedSeconds = 20, TimerUrgentSeconds = 5;
 
         /// <summary>
         /// Repaints the clock, on the second and only when it changed.
@@ -569,11 +589,9 @@ namespace GlimmerGrove
 
             _timer.text = RunClock.Format(timed ? seconds * 1000 : millis);
 
-            if (!timed) { _timer.color = TimerCalm; return; }
+            if (!timed) { _timer.color = TimerIdle; return; }
 
-            _timer.color = seconds <= TimerUrgentSeconds ? Pal.Ember
-                         : seconds <= TimerWarnSeconds ? Pal.Gold
-                         : TimerCalm;
+            _timer.color = seconds <= TimerRedSeconds ? Pal.Ember : TimerLive;
 
             // Only once the clock is genuinely short, and only while it is running: a punch
             // on every second would be a metronome, and one on a board that has not been

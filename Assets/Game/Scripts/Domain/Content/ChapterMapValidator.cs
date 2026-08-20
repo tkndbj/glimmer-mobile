@@ -107,7 +107,7 @@ namespace GlimmerGrove.Content
                 if (y > highest) highest = y;
             }
 
-            var teaser = ChapterMap.TeaserPosition(highest);
+            var teaser = ChapterMap.TeaserPosition(highest, strips);
 
             foreach (var level in levels)
             {

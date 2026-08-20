@@ -346,6 +346,24 @@ What that means in practice here:
     gates), so a drop that changes who a new player begins with moves them without a second place
     naming anybody. `Wallet` shows the default keeper name the same way and for the same reason.
 
+16g. **A grove's score is what it is worth, and worth is what is *held*.** The Grovement's
+    star readout is the credits' worth of catalog the player holds — decor, the home rung, land
+    and residents — and it stores **nothing**: every input is already a union-joined id set in
+    the save (`homesteadOwned`, `groveLandOwned`, `companionsOwned`), so the score is derived,
+    cloud-safe for free and monotonic for free, which is why there is no high-water floor beside
+    it. Invariant 14's preferred shape, and there are two ways to break it. Counting
+    **placements** instead would be won by standing one expensive piece on two hundred tiles —
+    holding a piece is permission to draw it anywhere (invariant 16), so a placement count
+    rewards exactly the monotony the floor exists to remove, and rearranging a grove would
+    change its score. And **storing** the number would be a stored count in the shape invariant
+    11b forbids, forgeable in the one direction that would matter if a leaderboard ever reads
+    it. A free piece adds nothing because it is worth nothing; an *earned* companion adds its
+    full price because it is worth that much — the reading is market value, not spend, which is
+    the only version of the rule with no special case in it. The ladder is **content**
+    (`score.stars` in `homestead.json`, `GroveScoreTable`), because the catalog grows every drop
+    and a rung that means "nearly everything" today means "a start" in a year; the build gate
+    refuses one that does not rise and warns on a top rung above the value of the whole catalog.
+
 16a. **A resident is a companion, and the roster is written down once.** This replaces the
     rule that a resident is never for sale, which was right about the endowment and wrong about
     where creatures come from. The grove used to author five of its own, earned by clearing five
@@ -2063,6 +2081,155 @@ Connect and the Play Console with exactly these ids and kinds, the four store se
 (they still hold `UNSET`, so every receipt is refused, which is correct), **View financial data**
 on the Play service account for the refund sweep, the `appleNotification` URL set for both the
 production and sandbox environments, and a redeploy of the functions.
+
+**The Grovement keeps its own score, and the display stopped hiding under the camera.**
+Three changes to one screen, and the first is the one that was not only about that screen.
+
+**Safe areas exist now, and they are a layer rather than a margin.** Nothing in the project had
+ever read `Screen.safeArea`, so on an iPhone 13 Pro Max the Grovement's back arrow, banner and
+shop button all sat under the camera cutout — and so did the hub's gear, the shop's shelf label
+and three other screens' chrome. `SafeArea` converts the system's device-pixel inset into canvas
+units (the canvas is width-matched at 1080, so the scale factor is the whole conversion, and a
+hand-tuned margin is wrong on every phone but the one it was tuned on), and `View.Safe` is a
+lazily-built layer a screen puts its **controls** into. Art stays on `Content` and stays
+full-bleed: letterboxing a backdrop to avoid a camera is a worse picture than the camera. Two
+properties make it safe to adopt a screen at a time — an inset of zero is the ordinary answer, so
+every device without a cutout is pixel-identical to before; and the node **re-fits itself**,
+because iOS reports its inset a frame or two after a cold start and a value read once in `Build`
+is right most of the time and wrong exactly when somebody is watching. The Grovement's field is
+inside it too, since a tile under the cutout is a tile that cannot be tapped, and its top fade
+grows by the inset rather than moving with the chrome — a gradient that stopped at the safe edge
+would draw a seam across the sky.
+
+**The grove has a worth, and it cost the save file nothing.** A readout in the bottom-right
+corner: the credits' worth of grove the player holds, and stars at 10K / 20K / 50K / 100K / 200K.
+Invariant 16g has the argument for the shape. Three notes beyond it. The whole reading is taken
+in **one call** (`GroveScore.Of`) so the number and the stars can never come from two different
+moments. The box is **a readout and not a control** — every graphic in it leaves `raycastTarget`
+off — because this screen is panned and pinched and the corner it sits in is where a right thumb
+rests. And a star won while the screen is open **re-runs the row's fanfare**, which is the point
+of drawing it here: land and companions are bought in the shop, so without it the reward for a
+purchase would be a number that had quietly changed by the time the player came back. The
+baseline for that is only taken once the catalog has actually loaded, or every visit would open
+with a celebration for stars won weeks ago. `StarRow` grew a count (still three by default), so
+there is one star row in the game rather than a second one that pops differently.
+
+Where the numbers land: the whole catalog is **493,770 credits** — 154,770 of decor and homes,
+68,500 of land, 270,500 of residents — so the ladder runs 2% / 4% / 10% / 20% / 41% of
+everything, and at ~543 credits a day the first star is about 18 days and the fifth about a year.
+Both validators print that table, which is the point of it being content: retuning the ladder is
+an edit to `homestead.json` and a `groveVersion` bump, with no app update. (`content.py`'s "every
+credit sink in the game" line was wrong on the way past — it double-counted the home ladder,
+which is already inside the pieces total, and left the companion roster out entirely. It reads
+493,770 now, not 272,770.)
+
+**The two first-visit tips are ordinary lessons.** A welcome and a ring around the shop button,
+shown once in a player's life and chained on dismissal, exactly as a glade's are. They are
+`Mechanic` values on the existing `TipLedger`, which is what makes "once in a life" true rather
+than "once per install" — the ledger is a union-joined set already on the wire, so a second
+device does not re-teach what the first one taught, and it cost no new field to say so. They are
+deliberately **not** in `Mechanic.TeachingOrder`, which is the board scan's queue; the split is
+why `Mechanic.All` now exists, and why the build gate walks that instead — the two lists were the
+same until a lesson appeared that no board can bring, after which the loc-key check would have
+silently stopped covering all of them. Nothing is taught over an empty screen: the grove body can
+land after the transition finishes, and a welcome spent on a blank floor is spent for good.
+
+No save schema change (v17 stands), no `progression.json` retune, no server work and no deploy —
+the score's three inputs were already on the wire and already in `firestore.rules`.
+`GroveScoreTests` adds 20 cases, all offline; the suite is 681.
+
+**The waterfall moves, and it is the first animated thing in the shop.** Reported as "it is
+just water without a mountain, and it is not animated", and both halves were right.
+`Elements/04.png` is an *overlay* in its source pack — two translucent vertical stripes meant
+to be draped down the face of a stacked platform — so cut on its own it was a pale smear on a
+grove tile with nothing behind it and nothing at the bottom. There is no waterfall and no
+cliff in any of the seventeen packs, and no animated water anywhere in either asset folder, so
+the piece had to be **composed** and the animation had to be **generated**.
+
+`Tools/make_waterfall.py` is the third art pipeline beside `import_grove_art.py` and
+`make_chapter_art.py`, and it is separate for the reason they are separate from each other:
+that importer copies one source PNG per row, which is the right shape for the hundred and
+sixty pieces that are a picture somebody drew, and the wrong shape for a composition. The
+cliff is the ruin pack's own `Platforms/19` — a pond on a grass top over a red rock body, in
+the same palette as the grove's floor tiles, so the piece reads as ground rather than as a
+visitor. The water is drawn in the pond's own colours: a spillway across the grass, a sheet in
+three vertical bands (a flat one reads as a pane of glass; a shaded side and a lit one read as
+a body of water), streaks, a foam crest and a churning splash.
+
+Three decisions are worth not re-litigating. The composition **measures the sprite** — where
+the grass slab ends, where the pond's near edge is and where the rock's silhouette stops, all
+read per column — so the water pours over the actual sheared edge rather than over hand-typed
+coordinates; that is `UIKit.PillFaceLift`'s lesson for the fifth time. Every cycle in the loop
+runs at a **whole number of cycles per loop**, because a streak travelling 1.3 sheet-lengths
+would jump on the wrap — `TweenCycle`'s bug in a different clock. And the frames are authored
+at **384 wide rather than the source's 418**, because `GroveFieldView.MaxZoom` is 1.0 and the
+piece therefore never draws wider than about 265 canvas units; `SCALE` in the tool is derived
+from that width, so changing one changes the other.
+
+**It cost one line of engine code, and the seam it needed was already there.**
+`HomesteadPiece.Animated` was built for exactly this — "a still resident and a flickering
+lantern are both obviously reasonable" — and `AddressableAddresses.FrameFolders` had already
+been extended to the grove against "the first animated decor piece would otherwise import as
+loose sprites with no label and be unloadable with no error anywhere". Both held. The one gap
+was `GroveBrowseAtlases.SourceOf`, which turned an address into `Art/<address>.png` and so
+could not find a picture for a piece whose address is a *folder*; it resolves a folder to its
+first frame now, which is what `HomesteadArt.SizeOf` already did when it wanted a still one. A
+browse grid wants a still picture anyway.
+
+Eight frames at 12fps — a two-thirds-of-a-second loop, and a third of the texture memory of a
+twelve-frame one; 673 KB of PNG, loaded only into the grove's scope and only when somebody has
+actually placed one. The catalog row is marked `_generated` rather than `_imported`, which is
+how the two tools say which rows are theirs — without it the next `import_grove_art.py` run
+would warn for ever about a row it no longer owns. Content is grove version 7; no save schema
+change, no code change outside that one method, and the offline suite is unchanged at 681.
+
+**Twelve props move now, and they move in the shop too.** The waterfall proved the flipbook
+path for decor; `Tools/make_grove_animation.py` is the tool that uses it. Three torches, a
+candle and a lantern flicker, two crystals breathe, three banners' streamers ripple, and the
+well has water in it. None of the seventeen packs ships an animated asset, so all of it is
+generated from the still art the pieces already had.
+
+**One rule holds every recipe together: never draw outside what was already drawn.** Two
+torches sit inside a glass globe, so a flame allowed to swell past its own silhouette is drawn
+*over* the glass and the prop stops being a lantern — the first attempt did exactly that. So
+each recipe either **clips** its work to a mask taken from the source (fire, gems, the
+lantern's glass), **paints into** a region that was flat colour to begin with (the well's
+shaft, which the still art leaves as grey), or **erases and redraws** a region that stood in
+free space (a banner's streamers, which is why they can genuinely deform rather than merely
+re-tint). Nothing is inpainted. The banner's own cloth is deliberately left still: it hangs
+over the pole, so erasing it would leave a hole where the pole should be.
+
+**And no soft glows, which is the second thing the first attempt got wrong.** The pack is flat
+vector — not one gradient in it — so a blurred halo reads as a smudge, and worse, it clips at
+the sprite's edge into a visible box. What carries the effect instead is a **brightness
+swing**, which is in the idiom *and* is the cue that survives being shrunk to a 170-point shop
+cell. That mattered more than usual here, because these had to read in the shop.
+
+**The shop animates, and that reversed a rule.** `HomesteadArt.PaintThumb` used to say
+outright that "nothing in a grid ever animates: thirty moving things is a grid nobody can
+read" — which was true of the version where they all move in step. `PhaseOf` is what made it
+safe: a cell starts at a frame derived from its piece id (FNV-1a, for the chest roll's reason —
+stable across devices and visits), so eight torches on the edge shelf read as eight separate
+fires rather than as a strobe. A tab's emblem stays still; a header flickering over a moving
+grid is a header nobody can read.
+
+**What it cost the atlases, which is the real price of animating a browse screen.** A shelf's
+atlas holds a small copy of everything on it, so an animated piece now contributes one
+thumbnail per frame — `GroveThumbs.Frame` names them, and **frame zero keeps the bare id**,
+which is the whole compatibility decision: `Audit`, the picker and the buy panel go on asking
+for the id and go on getting a sensible answer. Measured on the shipped catalog the shop went
+**5.91 to 7.59 Mpx of thumbnails (+28%)**, concentrated where the animated pieces are — edge
+0.58 → 1.51, structure 0.71 → 1.61 — so the largest single tab a player loads is about 1.6 Mpx.
+The frame art itself is 1.8 MB on disk for all twelve, and it only reaches the grove's scope
+when a piece is actually placed. Six frames at 12fps (eight for the waterfall) is half a second
+a loop; a twelve-frame loop would have doubled both numbers for motion nobody would read as
+smoother.
+
+`GroveThumbs` lives in Domain because two assemblies have to agree about those names — the
+Editor tool that packs the atlas and the screen that reads it — and a mismatch is invisible:
+the atlas is generated, so a wrong name is not a missing file but a cell that quietly stops
+moving. `Flipbook` gained an overload taking sprites already in hand, so the shop and the grove
+run the same component rather than two that could drift.
 
 Not done, deliberate: **Play Games Services**
 (better Android sign-in and the natural home for the "ranks" leaderboards, but

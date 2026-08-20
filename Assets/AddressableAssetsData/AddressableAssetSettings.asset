@@ -122,6 +122,19 @@ MonoBehaviour:
     - Art/Ui/Coin
     - Art/Ui/Flame
     - Art/Board/duskcap
+    - Art/Homestead/Waterfall
+    - Art/Homestead/Anim/banner_crimson
+    - Art/Homestead/Anim/banner_gold
+    - Art/Homestead/Anim/candle
+    - Art/Homestead/Anim/crystal
+    - Art/Homestead/Anim/crystal_shards
+    - Art/Homestead/Anim/flag_red
+    - Art/Homestead/Anim/lantern
+    - Art/Homestead/Anim/torch
+    - Art/Homestead/Anim/torch_low
+    - Art/Homestead/Anim/torch_tall
+    - Art/Homestead/Anim/waterfall
+    - Art/Homestead/Anim/well
   m_SchemaTemplates: []
   m_GroupTemplateObjects:
   - {fileID: 11400000, guid: 1c550e3b8c7244948b0ae7d2fbce14c6, type: 2}

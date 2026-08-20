@@ -342,10 +342,23 @@ namespace GlimmerGrove
         public Action OnFinished;
 
         public static Flipbook Attach(Image img, string folder, float fps = 24f, bool loop = true)
+            => Attach(img, Art.Frames(folder), fps, loop);
+
+        /// <summary>
+        /// Runs frames already in hand, rather than an address to load them from.
+        ///
+        /// <para>
+        /// For frames that are not a folder of sprites: a browse atlas holds one small copy of
+        /// each frame under its own name, so the caller has assembled the array itself. Keeping
+        /// one <see cref="Flipbook"/> rather than a second component for that case is what
+        /// makes a piece animate the same way in the shop as it does in the grove.
+        /// </para>
+        /// </summary>
+        public static Flipbook Attach(Image img, Sprite[] frames, float fps = 24f, bool loop = true)
         {
             var f = img.gameObject.AddComponent<Flipbook>();
             f._img = img;
-            f._frames = Art.Frames(folder);
+            f._frames = frames;
             f._fps = fps;
             f._loop = loop;
             if (f._frames != null && f._frames.Length > 0) img.sprite = f._frames[0];

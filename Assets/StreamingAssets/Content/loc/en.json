@@ -2366,6 +2366,34 @@
       "text": "CROSSING"
     },
     {
+      "key": "ui.tip.grove.title",
+      "text": "YOUR GROVEMENT"
+    },
+    {
+      "key": "ui.tip.grove.body",
+      "text": "This is the corner of the grove that is yours. Every friend you rescue and every piece you buy can stand here, wherever you decide. Tap a tile to put something on it, and hold what you have placed to move or turn it."
+    },
+    {
+      "key": "ui.tip.grove_shop.title",
+      "text": "THE SHOP"
+    },
+    {
+      "key": "ui.tip.grove_shop.body",
+      "text": "Everything a grove is made of is in here: friends to live in it, decor to fill it and more ground to build on. Credits come from clearing glades, and nothing you buy is ever used up."
+    },
+    {
+      "key": "ui.grove.score",
+      "text": "grove worth"
+    },
+    {
+      "key": "ui.grove.score_next",
+      "text": "{0} to the next star"
+    },
+    {
+      "key": "ui.grove.score_top",
+      "text": "the finest grove in the vale"
+    },
+    {
       "key": "ui.tip.crossing.body",
       "text": "Two flows pass through this tile and never meet. It wears no hub, and that is how you tell it from a junction: follow each strand with your eye, because light that enters by one arm can only leave by the arm that shares its strand."
     },

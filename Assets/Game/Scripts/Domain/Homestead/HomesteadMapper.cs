@@ -72,8 +72,64 @@ namespace GlimmerGrove.Homestead
                     if (TryReadPiece(entry, pieceIds, problems, out var piece))
                         pieces.Add(piece);
 
-            catalog = new HomesteadCatalog(floor, pieces);
+            catalog = new HomesteadCatalog(floor, pieces, ReadScores(dto.score, problems));
             return true;
+        }
+
+        // ----------------------------------------------------------------- score
+        /// <summary>
+        /// The star ladder, or null for a body that does not carry one — which is what a body
+        /// written before the field existed produces, and is not an error.
+        ///
+        /// <para>
+        /// Every rejection is reported and survivable, for this file's usual reason: a
+        /// malformed rung is dropped and the rest of the ladder still stands, because the
+        /// alternative is a grove screen with no score on it because one number was typed
+        /// wrong. A ladder that ends up empty falls back to the built-in one rather than
+        /// awarding no stars at all. <c>ContentValidation</c> refuses all of this before it
+        /// can ship; this is what stops a bad drop reaching a player as a blank readout.
+        /// </para>
+        /// </summary>
+        static GroveScoreTable ReadScores(GroveScoreDto dto, ICollection<string> problems)
+        {
+            if (dto == null || dto.stars == null || dto.stars.Length == 0) return null;
+
+            var kept = new List<long>(dto.stars.Length);
+            long previous = 0L;
+
+            foreach (int at in dto.stars)
+            {
+                if (at <= 0)
+                {
+                    problems.Add($"the grove's star ladder holds {at}, which no score can be " +
+                                 "below; the rung is dropped");
+                    continue;
+                }
+
+                if (at <= previous)
+                {
+                    problems.Add($"the grove's star ladder does not rise: {at} comes after " +
+                                 $"{previous}; the rung is dropped");
+                    continue;
+                }
+
+                previous = at;
+                kept.Add(at);
+            }
+
+            if (kept.Count == 0)
+            {
+                problems.Add("the grove's star ladder has no usable rung; the built-in one stands");
+                return null;
+            }
+
+            if (kept.Count > GroveScoreTable.MaxStars)
+            {
+                problems.Add($"the grove's star ladder has {kept.Count} rungs, more than the " +
+                             $"{GroveScoreTable.MaxStars} the readout can draw; the rest are dropped");
+            }
+
+            return new GroveScoreTable(kept);
         }
 
         // ----------------------------------------------------------------- floor

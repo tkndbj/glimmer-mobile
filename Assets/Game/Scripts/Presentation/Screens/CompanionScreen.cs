@@ -116,7 +116,7 @@ namespace GlimmerGrove
         // ----------------------------------------------------------------- grid
         void BuildGrid()
         {
-            _viewport = UIKit.Node("Viewport", Content);
+            _viewport = UIKit.Node("Viewport", Safe);
             _viewport.offsetMin = new Vector2(0f, NavBar.Height);
             _viewport.offsetMax = new Vector2(0f, -HeaderHeight);
 
@@ -403,17 +403,17 @@ namespace GlimmerGrove
             frt.anchoredPosition = Vector2.zero;
             frt.localRotation = Quaternion.Euler(0, 0, 180f);
 
-            UIKit.IconButton("Back", Content, Skins.Nav, "ic_left", new Vector2(118f, 118f),
+            UIKit.IconButton("Back", Safe, Skins.Nav, "ic_left", new Vector2(118f, 118f),
                              new Vector2(0f, 1f), new Vector2(96f, -132f), () => Flow.Go<ProfileScreen>());
 
-            var banner = UIKit.Img("Banner", Content, Art.S("Ui/banner"), Color.white,
+            var banner = UIKit.Img("Banner", Safe, Art.S("Ui/banner"), Color.white,
                                    new Vector2(560f, 148f), new Vector2(.5f, 1f), new Vector2(0f, -142f));
             UIKit.Titled("Title", banner.transform, Loc.Get("ui.profile.companions").ToUpperInvariant(), 40,
                          new Color(.36f, .24f, .16f), TextAnchor.MiddleCenter, outline: 0f, shadow: 2f);
             banner.transform.localScale = Vector3.zero;
             Tween.Pop(banner.transform, 0f, .6f, .1f);
 
-            _summary = UIKit.Titled("Summary", Content, SummaryText(Profile.Rank), 26,
+            _summary = UIKit.Titled("Summary", Safe, SummaryText(Profile.Rank), 26,
                                     new Color(1f, .96f, .88f, .70f), TextAnchor.MiddleCenter,
                                     new Vector2(900f, 34f), new Vector2(.5f, 1f), new Vector2(0f, -222f), 3f, 0f);
         }

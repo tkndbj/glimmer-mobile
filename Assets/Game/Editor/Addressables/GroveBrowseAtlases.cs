@@ -248,13 +248,22 @@ namespace GlimmerGrove.EditorTools
         /// <summary>One thumbnail to make: what to copy, and what to call it.</summary>
         public readonly struct Thumb
         {
-            /// <summary>The name the atlas will answer to. A piece id, or a shelf key.</summary>
+            /// <summary>
+            /// The name the atlas will answer to: a piece id, one of its frames, or a shelf
+            /// key. See <see cref="GroveThumbs"/>.
+            /// </summary>
             public readonly string Name;
 
-            /// <summary>The art key, relative to <c>Art/</c>, this is a copy of.</summary>
-            public readonly string Art;
+            /// <summary>
+            /// The project path of the file this is a copy of.
+            ///
+            /// A path rather than an art key, because an animated piece's address names a
+            /// <em>folder</em> and each of its frames is a different file — so what varies per
+            /// thumbnail is the file, not the address.
+            /// </summary>
+            public readonly string Source;
 
-            public Thumb(string name, string art) { Name = name; Art = art; }
+            public Thumb(string name, string source) { Name = name; Source = source; }
         }
 
         /// <summary>The bucket holding the tab row's emblems. Not a shelf: see <see cref="Plan"/>.</summary>
@@ -292,7 +301,14 @@ namespace GlimmerGrove.EditorTools
                 string art = BrowseArtOf(piece);
                 if (string.IsNullOrEmpty(art)) continue;
 
-                plan[GroveShelves.Key(GroveShelves.Of(piece))].Add(new Thumb(piece.Id, art));
+                var shelf = plan[GroveShelves.Key(GroveShelves.Of(piece))];
+                var sources = Sources(art);
+
+                // One thumbnail per frame, so a piece that moves in the grove moves in the
+                // shop. Frame zero keeps the bare id (see GroveThumbs), so every reader that
+                // wants one still picture is unaffected by a piece becoming animated.
+                for (int i = 0; i < sources.Count; i++)
+                    shelf.Add(new Thumb(GroveThumbs.Frame(piece.Id, i), sources[i]));
             }
 
             foreach (var shelf in GroveShelves.All)
@@ -302,9 +318,11 @@ namespace GlimmerGrove.EditorTools
                 var emblem = HomesteadCatalog.Emblem(catalog, shelf);
                 if (!emblem.IsValid) continue;
 
-                string art = BrowseArtOf(emblem);
-                if (!string.IsNullOrEmpty(art))
-                    plan[TabBucket].Add(new Thumb(GroveShelves.Key(shelf), art));
+                // A tab wears one still picture whatever the piece does: eight flickering
+                // emblems over a grid that is already moving is a header nobody can read.
+                var sources = Sources(BrowseArtOf(emblem));
+                if (sources.Count > 0)
+                    plan[TabBucket].Add(new Thumb(GroveShelves.Key(shelf), sources[0]));
             }
 
             return plan;
@@ -326,7 +344,48 @@ namespace GlimmerGrove.EditorTools
 
         static string PathOf(string bucket, string name) => FolderOf(bucket) + name + ".png";
 
-        static string SourceOf(string art) => "Assets/Game/Art/" + art + ".png";
+        /// <summary>
+        /// The file a browse thumbnail is copied from.
+        ///
+        /// <para>
+        /// An address is usually one sprite, and then this is the whole of it. An
+        /// <em>animated</em> piece addresses a folder of frames instead, which has no single
+        /// picture to pack — so its first frame stands in, which is what
+        /// <c>HomesteadArt.SizeOf</c> already does when it needs a still one. A grid wants a
+        /// still picture anyway.
+        /// </para>
+        /// <para>
+        /// Resolved here rather than at the call site because this is the one place that turns
+        /// an address into a path. Until the waterfall there was no animated decor and the
+        /// question could not come up; a piece whose folder went unresolved would have logged
+        /// "which is not at ..." and shipped a shelf with a hole in it.
+        /// </para>
+        /// </summary>
+        static List<string> Sources(string art)
+        {
+            var found = new List<string>(1);
+            if (string.IsNullOrEmpty(art)) return found;
+
+            string single = "Assets/Game/Art/" + art + ".png";
+            if (File.Exists(single)) { found.Add(single); return found; }
+
+            string folder = "Assets/Game/Art/" + art;
+            if (!Directory.Exists(folder))
+            {
+                // Reported by Copy, which names the thumbnail as well as the path.
+                found.Add(single);
+                return found;
+            }
+
+            var frames = Directory.GetFiles(folder, "*.png");
+            System.Array.Sort(frames, System.StringComparer.Ordinal);
+
+            for (int i = 0; i < frames.Length && i < GroveThumbs.MaxFrames; i++)
+                found.Add(frames[i].Replace('\\', '/'));
+
+            if (found.Count == 0) found.Add(single);
+            return found;
+        }
 
         /// <summary>
         /// Copies one source into the thumbnail folder, if it is not already there and current.
@@ -337,13 +396,12 @@ namespace GlimmerGrove.EditorTools
         /// </summary>
         static bool Copy(Thumb thumb, string bucket)
         {
-            string source = SourceOf(thumb.Art);
+            string source = thumb.Source;
             string destination = PathOf(bucket, thumb.Name);
 
             if (!File.Exists(source))
             {
-                Debug.LogError($"[Glimmer] grove atlas: '{thumb.Name}' names art '{thumb.Art}', " +
-                               $"which is not at {source}");
+                Debug.LogError($"[Glimmer] grove atlas: '{thumb.Name}' has no picture at {source}");
                 return false;
             }
 

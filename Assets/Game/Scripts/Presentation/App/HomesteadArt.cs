@@ -423,6 +423,65 @@ namespace GlimmerGrove
                 ? AssetLibrary.AtlasSprite(AssetManifest.BrowseAtlas(GroveShelves.Of(piece)), piece.Id)
                 : null;
 
+        /// <summary>
+        /// Every thumbnail frame a piece has in its shelf's atlas, in order.
+        ///
+        /// <para>
+        /// <b>Counted by asking rather than by being told.</b> The catalog says a piece is
+        /// animated; it does not say how long the loop is, and a second number saying so would
+        /// be a number for a re-generated flipbook to put out of step with the atlas. So this
+        /// walks upwards until the atlas stops answering, bounded by
+        /// <see cref="GroveThumbs.MaxFrames"/>.
+        /// </para>
+        /// <para>
+        /// A still piece answers with one sprite, which is the same thing <see cref="Thumb"/>
+        /// returns — frame zero is the bare id. So a caller needs no branch on whether the
+        /// piece moves.
+        /// </para>
+        /// </summary>
+        public static Sprite[] ThumbFrames(HomesteadPiece piece)
+        {
+            if (!piece.IsValid) return Array.Empty<Sprite>();
+
+            string atlas = AssetManifest.BrowseAtlas(GroveShelves.Of(piece));
+            var found = new List<Sprite>(piece.Animated ? 8 : 1);
+
+            for (int i = 0; i < GroveThumbs.MaxFrames; i++)
+            {
+                var sprite = AssetLibrary.AtlasSprite(atlas, GroveThumbs.Frame(piece.Id, i));
+                if (sprite == null) break;
+
+                found.Add(sprite);
+            }
+
+            return found.ToArray();
+        }
+
+        /// <summary>
+        /// Where in its loop a cell starts, so a grid of lit things does not beat as one.
+        ///
+        /// <para>
+        /// <b>This is what makes an animated grid readable</b>, and it is the reason the rule
+        /// against it could be lifted. Eight torches flickering in lockstep is a strobe; the
+        /// same eight out of phase is a row of separate fires. Derived from the id rather than
+        /// randomised, so two devices — and two visits to the same shelf — draw the same thing.
+        /// </para>
+        /// </summary>
+        static float PhaseOf(string id, int frames)
+        {
+            if (frames <= 1 || string.IsNullOrEmpty(id)) return 0f;
+
+            unchecked
+            {
+                // FNV-1a, for the reason the chest roll uses it: a stable, well-spread answer
+                // from a short string, with no dependence on the runtime's string hashing.
+                uint h = 2166136261u;
+                foreach (char c in id) h = (h ^ c) * 16777619u;
+
+                return h % (uint)frames;
+            }
+        }
+
         /// <summary>The emblem a shelf's tab wears, out of the tab row's own small atlas.</summary>
         public static Sprite ShelfMark(GroveShelf shelf)
             => AssetLibrary.AtlasSprite(AssetManifest.TabAtlas, GroveShelves.Key(shelf));
@@ -439,12 +498,27 @@ namespace GlimmerGrove
             if (target == null) return;
 
             // A browse cell is recycled, so it can arrive carrying a flipbook a previous
-            // binding left on it. Nothing in a grid ever animates: thirty moving things is a
-            // grid nobody can read.
+            // binding left on it. Destroyed rather than re-pointed, because Destroy lands at
+            // the end of the frame and an old one would spend that frame fighting the new
+            // sprite for the same Image.
             var running = target.GetComponent<Flipbook>();
             if (running) { running.enabled = false; UnityEngine.Object.Destroy(running); }
 
-            var sprite = Thumb(piece);
+            // A piece that moves in the grove moves here too, which is the only way a player
+            // browsing the shop can know that it does. This reverses a rule this file used to
+            // state outright — "nothing in a grid ever animates" — and the reason it was safe
+            // to reverse is PhaseOf: what made a moving grid unreadable was everything on it
+            // moving in step.
+            var frames = ThumbFrames(piece);
+
+            if (frames.Length > 1)
+            {
+                target.color = Fade(target.color, 1f);
+                Flipbook.Attach(target, frames, 12f).Offset = PhaseOf(piece.Id, frames.Length);
+                return;
+            }
+
+            var sprite = frames.Length == 1 ? frames[0] : null;
             target.sprite = sprite;
             target.color = Fade(target.color, sprite == null ? 0f : 1f);
         }

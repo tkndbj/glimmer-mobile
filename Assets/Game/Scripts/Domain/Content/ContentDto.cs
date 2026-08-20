@@ -793,6 +793,34 @@ namespace GlimmerGrove.Content
 
         public GroveFloorDto floor;
         public HomesteadPieceDto[] pieces;
+
+        /// <summary>
+        /// The star ladder the grove's score is read against. Optional: a body without one
+        /// falls back to the built-in ladder, which is what a body written before this field
+        /// existed produces and what <c>GroveScoreTable.Default</c> is for.
+        /// </summary>
+        public GroveScoreDto score;
+    }
+
+    /// <summary>
+    /// What a grove has to be worth to earn each star.
+    ///
+    /// <para>
+    /// Content rather than constants because the catalog grows with every drop, so the score
+    /// a finished grove reaches climbs for the life of the game — see <c>GroveScoreTable</c>.
+    /// A nested object rather than a bare array on the body so a later reading of the same
+    /// idea (a name per tier, say) is a field here rather than a second top-level key.
+    /// </para>
+    /// </summary>
+    [Serializable]
+    public sealed class GroveScoreDto
+    {
+        /// <summary>
+        /// Ascending credit thresholds, one per star. Must rise strictly; the build gate
+        /// refuses a ladder that does not, because a repeated or falling rung awards a star
+        /// nobody can distinguish from the one below it.
+        /// </summary>
+        public int[] stars;
     }
 
     /// <summary>

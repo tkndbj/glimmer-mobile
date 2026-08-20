@@ -1,7 +1,7 @@
 {
   "schemaVersion": 2,
   "progressionVersion": 3,
-  "groveVersion": 5,
+  "groveVersion": 9,
   "chapters": [
     {
       "id": "c01_shallows",
@@ -24,7 +24,7 @@
     },
     {
       "id": "c02_millvale",
-      "version": 1,
+      "version": 3,
       "order": 20,
       "disabled": false,
       "minAppVersion": 0,

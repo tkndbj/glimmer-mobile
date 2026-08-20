@@ -129,10 +129,54 @@ namespace GlimmerGrove
         /// there is not, so a tip about a tile near the bottom of the board is not drawn
         /// off the screen.
         /// </summary>
+        /// <remarks>
+        /// <para>
+        /// <b>Its height is measured, never declared.</b> It used to be a constant, with the
+        /// body given a fixed box and <c>resizeTextForBestFit</c> between 22 and 32 to keep
+        /// it inside — and it did not shrink. At 22 the crossing's 231 characters fit that
+        /// box with room to spare, so best fit plainly was not testing the height: a wrapped
+        /// label never fails the width test, and <see cref="UIKit.Label"/> sets
+        /// <c>verticalOverflow = Overflow</c>, which <c>Text.GetGenerationSettings</c> hands
+        /// to the generator as "the height is not a constraint". <c>Fit</c> was therefore a
+        /// no-op on the body: every tip drew at its full size and ran past the bottom of its
+        /// box. That stayed invisible for six mechanics because they are 99–149 characters
+        /// and fitted anyway; the crossing printed straight through the OK button, and a long
+        /// translation would have done the same to any of them.
+        /// </para>
+        /// <para>
+        /// Measuring is the bargain the win panel's route bubble already makes, for the same
+        /// reason — sizing the paper first means guessing at a wrapped translation. The body
+        /// is built before the bubble exists so its height can be read, then reparented into
+        /// it; nothing is drawn in between, because this is all one pass of <see cref="Build"/>.
+        /// Every row is then placed against a cursor, so the gap above the button is a gap
+        /// whatever the string turns out to be.
+        /// </para>
+        /// </remarks>
         void BuildBubble(Rect? spot)
         {
             const float Width = 780f;
-            const float Height = 470f;
+
+            // The stack, top to bottom: title, gap, body, gap, button, bottom margin.
+            // Everything but the body is a fixed pitch; the body is whatever it measures.
+            const float TitleTop = 28f, TitleHeight = 62f;
+            const float Gap = 18f;
+            const float BodyGap = 34f;
+            const float ButtonHeight = 124f, ButtonBottom = 40f;
+
+            const int BodyMin = 22, BodySize = 32;
+            const float BodyWidth = Width - 120f;
+
+            const float Chrome = TitleTop + TitleHeight + Gap + BodyGap + ButtonHeight + ButtonBottom;
+
+            // Near-black on white, not the warm brown the wooden panels use — on a plain
+            // white bubble that brown reads as washed out rather than as ink.
+            var body = UIKit.Titled("Body", Content, Loc.Get(Mechanic.BodyKey), BodySize,
+                                    new Color(.29f, .33f, .38f), TextAnchor.UpperCenter,
+                                    new Vector2(BodyWidth, 10f), new Vector2(.5f, 1f), Vector2.zero,
+                                    outline: 0f, shadow: 0f, wrap: true);
+
+            float bodyHeight = FitBody(body, Mathf.Max(140f, MaxHeight() - Chrome), BodyMin);
+            float height = Chrome + bodyHeight;
 
             float y = 0f;
             bool above = false;
@@ -140,11 +184,11 @@ namespace GlimmerGrove
             if (spot.HasValue)
             {
                 var hole = spot.Value;
-                float below = hole.yMin - Height * .5f - 60f;
-                float over = hole.yMax + Height * .5f + 60f;
+                float below = hole.yMin - height * .5f - 60f;
+                float over = hole.yMax + height * .5f + 60f;
 
                 // Content is centred, so half the canvas height is the edge.
-                float limit = Content.rect.height * .5f - Height * .5f - 40f;
+                float limit = Content.rect.height * .5f - height * .5f - 40f;
 
                 above = below < -limit;
                 y = Mathf.Clamp(above ? over : below, -limit, limit);
@@ -154,7 +198,7 @@ namespace GlimmerGrove
             // overlays use. Those are furniture the player is meant to look at; this is
             // a note about something else on screen, and it should get out of the way.
             var panel = UIKit.Img("Bubble", Content, Art.Round(28), Color.white,
-                                  new Vector2(Width, Height), new Vector2(.5f, .5f), new Vector2(0f, y));
+                                  new Vector2(Width, height), new Vector2(.5f, .5f), new Vector2(0f, y));
             var rt = (RectTransform)panel.transform;
 
             var edge = UIKit.Img("Edge", rt, Art.RoundOutline(28, 3f), new Color(.10f, .13f, .17f, .16f));
@@ -177,53 +221,77 @@ namespace GlimmerGrove
                 beak.raycastTarget = false;
             }
 
-            // Laid out by stacking from the top edge downwards. UIKit.Box pivots every
-            // box at its centre whatever the anchor, so a position is the middle of the
-            // box and not its top — getting that backwards is what had the body text
-            // starting level with the title and printing straight through it.
-            const float TitleTop = 28f, TitleHeight = 62f;
-            const float Gap = 18f, BodyHeight = 196f;
+            // Stacked from the top edge downwards. UIKit.Box pivots every box at its centre
+            // whatever the anchor, so a position is the middle of the box and not its top —
+            // getting that backwards is what had the body starting level with the title and
+            // printing straight through it. The cursor therefore always names an *edge*, and
+            // half a row's height is added where it is turned into a position.
+            float cursor = TitleTop;
 
-            float bodyTop = TitleTop + TitleHeight + Gap;
-
-            // Near-black on white, not the warm brown the wooden panels use — on a plain
-            // white bubble that brown reads as washed out rather than as ink.
             var title = UIKit.Titled("Title", rt, Loc.Get(Mechanic.TitleKey), 46,
                                      new Color(.13f, .16f, .20f), TextAnchor.UpperCenter,
                                      new Vector2(Width - 100f, TitleHeight), new Vector2(.5f, 1f),
-                                     new Vector2(0f, -(TitleTop + TitleHeight * .5f)),
+                                     new Vector2(0f, -(cursor + TitleHeight * .5f)),
                                      outline: 0f, shadow: 0f);
 
-            var body = UIKit.Titled("Body", rt, Loc.Get(Mechanic.BodyKey), 32,
-                                    new Color(.29f, .33f, .38f), TextAnchor.UpperCenter,
-                                    new Vector2(Width - 120f, BodyHeight), new Vector2(.5f, 1f),
-                                    new Vector2(0f, -(bodyTop + BodyHeight * .5f)),
-                                    outline: 0f, shadow: 0f, wrap: true);
+            // Shrunk to fit rather than trusted to be short enough. Every one of these is
+            // translated, and German or Turkish will run half as long again — a tip that
+            // overflows its bubble in one market and not another is the kind of bug nobody
+            // sees until a review mentions it. Measured rather than left to best fit for
+            // the reason in the remarks above: this is the axis best fit is *supposed* to
+            // handle, and the body proved it cannot be relied on to handle the other one,
+            // so there is no reason to keep two mechanisms where one is known to work.
+            Squeeze(title, Width - 100f, 30);
 
-            // Shrink to fit rather than trusting the English string to be short enough.
-            // Every one of these is translated, and German or Turkish will run half as
-            // long again — a tip that overflows its bubble in one market and not another
-            // is the kind of bug nobody sees until a review mentions it.
-            Fit(title, 30, 46);
-            Fit(body, 22, 32);
+            cursor += TitleHeight + Gap;
+
+            var brt = body.rectTransform;
+            brt.SetParent(rt, false);
+            brt.anchorMin = brt.anchorMax = new Vector2(.5f, 1f);
+            brt.sizeDelta = new Vector2(BodyWidth, bodyHeight);
+            brt.anchoredPosition = new Vector2(0f, -(cursor + bodyHeight * .5f));
 
             UIKit.TextButton("Ok", rt, "btn_green", Loc.Get("ui.common.got_it"), 46,
-                             new Vector2(420f, 124f), new Vector2(.5f, 0f), new Vector2(0f, 74f),
-                             Accept);
+                             new Vector2(420f, ButtonHeight), new Vector2(.5f, 0f),
+                             new Vector2(0f, ButtonBottom + ButtonHeight * .5f), Accept);
 
             rt.localScale = Vector3.zero;
             Tween.Scale(rt, 1f, .5f, Ease.OutBack).Delay(.12f);
             Audio.Sfx("chime2", .5f, 1.05f);
         }
 
-        /// <summary>Lets a label shrink inside its box instead of spilling out of it.</summary>
-        static void Fit(Text label, int min, int max)
-        {
-            if (!label) return;
+        /// <summary>
+        /// How tall the bubble may grow before the body is shrunk instead. Read off the
+        /// canvas rather than fixed, because it is width-matched at 1080 — its height is
+        /// 1920 on a 16:9 phone and 1440 on a 4:3 tablet, and what is left over has to
+        /// keep the ring this is pointing at visible on both.
+        /// </summary>
+        float MaxHeight() => Mathf.Min(780f, Content.rect.height - 460f);
 
-            label.resizeTextForBestFit = true;
-            label.resizeTextMinSize = min;
-            label.resizeTextMaxSize = max;
+        /// <summary>
+        /// Picks the largest size at which the body fits <paramref name="room"/> and
+        /// returns the height it wants there.
+        /// </summary>
+        /// <remarks>
+        /// A step at a time rather than a search: eleven sizes at most, each one a
+        /// measurement uGUI answers from cached glyph metrics in the same frame, run once
+        /// in the life of a tip. If even the smallest does not fit, the bubble grows rather
+        /// than the text overlapping — which is the whole point of measuring, and needs a
+        /// tip several times longer than any that exists.
+        /// </remarks>
+        static float FitBody(Text body, float room, int min)
+        {
+            while (body.fontSize > min && body.preferredHeight > room)
+                body.fontSize--;
+
+            return Mathf.Ceil(body.preferredHeight);
+        }
+
+        /// <summary>Narrows an unwrapped line until it fits <paramref name="room"/> across.</summary>
+        static void Squeeze(Text line, float room, int min)
+        {
+            while (line.fontSize > min && line.preferredWidth > room)
+                line.fontSize--;
         }
 
         void Accept()

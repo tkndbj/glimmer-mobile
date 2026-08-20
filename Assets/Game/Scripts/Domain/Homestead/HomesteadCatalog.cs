@@ -37,6 +37,7 @@ namespace GlimmerGrove.Homestead
         readonly HomesteadPiece[] _authored;
         readonly HomesteadPiece[] _pieces;
         readonly Dictionary<string, int> _pieceById;
+        readonly GroveScoreTable _scores;
 
         /// <summary>
         /// A catalog of what the file authored, plus the residents the roster projects.
@@ -52,21 +53,25 @@ namespace GlimmerGrove.Homestead
         /// </summary>
         public HomesteadCatalog(GroveFloor floor,
                                 IReadOnlyList<HomesteadPiece> pieces,
-                                IReadOnlyList<AvatarDefinition> residents)
-            : this(floor, Compose(pieces, residents), pieces)
+                                IReadOnlyList<AvatarDefinition> residents,
+                                GroveScoreTable scores = null)
+            : this(floor, Compose(pieces, residents), pieces, scores)
         {
         }
 
-        public HomesteadCatalog(GroveFloor floor, IReadOnlyList<HomesteadPiece> pieces)
-            : this(floor, pieces, pieces)
+        public HomesteadCatalog(GroveFloor floor, IReadOnlyList<HomesteadPiece> pieces,
+                                GroveScoreTable scores = null)
+            : this(floor, pieces, pieces, scores)
         {
         }
 
         HomesteadCatalog(GroveFloor floor,
                          IReadOnlyList<HomesteadPiece> pieces,
-                         IReadOnlyList<HomesteadPiece> authored)
+                         IReadOnlyList<HomesteadPiece> authored,
+                         GroveScoreTable scores)
         {
             _floor = floor ?? GroveFloor.Empty;
+            _scores = scores ?? GroveScoreTable.Default;
             _pieces = Copy(pieces, Array.Empty<HomesteadPiece>());
             _authored = ReferenceEquals(authored, pieces) ? _pieces : Copy(authored, Array.Empty<HomesteadPiece>());
 
@@ -114,7 +119,16 @@ namespace GlimmerGrove.Homestead
         /// round trip in front of a screen the player is already looking at.
         /// </summary>
         public HomesteadCatalog WithResidents(IReadOnlyList<AvatarDefinition> residents)
-            => new HomesteadCatalog(_floor, _authored, residents);
+            => new HomesteadCatalog(_floor, _authored, residents, _scores);
+
+        /// <summary>
+        /// The star ladder this grove's score is read against. See <see cref="GroveScoreTable"/>.
+        ///
+        /// Never null: a body that does not carry one — or predates the field — falls back to
+        /// the built-in ladder, because a grove a version behind must still be able to draw
+        /// its own standing.
+        /// </summary>
+        public GroveScoreTable Scores => _scores ?? GroveScoreTable.Default;
 
         /// <summary>What the file said, before any resident was projected in.</summary>
         public IReadOnlyList<HomesteadPiece> Authored => _authored;

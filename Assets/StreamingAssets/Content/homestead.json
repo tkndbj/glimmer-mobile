@@ -81,6 +81,15 @@
       }
     ]
   },
+  "score": {
+    "stars": [
+      10000,
+      20000,
+      50000,
+      100000,
+      200000
+    ]
+  },
   "pieces": [
     {
       "id": "cottage",
@@ -129,8 +138,8 @@
     },
     {
       "id": "crystal",
-      "art": "Homestead/crystal",
-      "animated": false,
+      "art": "Homestead/Anim/crystal",
+      "animated": true,
       "kind": "decor",
       "cost": 0,
       "requiresLevel": "c01_prism_heart",
@@ -138,7 +147,8 @@
       "scale": 1.0,
       "lift": 0.45,
       "disabled": false,
-      "slot": "structure"
+      "slot": "structure",
+      "_generated": true
     },
     {
       "id": "cave",
@@ -155,8 +165,8 @@
     },
     {
       "id": "well",
-      "art": "Homestead/well",
-      "animated": false,
+      "art": "Homestead/Anim/well",
+      "animated": true,
       "kind": "decor",
       "cost": 0,
       "requiresLevel": "c01_three_springs",
@@ -164,7 +174,8 @@
       "scale": 0.9,
       "lift": 0.45,
       "disabled": false,
-      "slot": "structure"
+      "slot": "structure",
+      "_generated": true
     },
     {
       "id": "gravestone",
@@ -308,13 +319,14 @@
     },
     {
       "id": "waterfall",
-      "art": "Homestead/waterfall",
+      "art": "Homestead/Anim/waterfall",
       "kind": "decor",
       "slot": "structure",
       "cost": 4000,
-      "scale": 0.65,
-      "lift": 0.38,
-      "_imported": true
+      "scale": 0.6,
+      "lift": 0.46,
+      "animated": true,
+      "_generated": true
     },
     {
       "id": "oak",
@@ -892,8 +904,8 @@
     },
     {
       "id": "lantern",
-      "art": "Homestead/lantern",
-      "animated": false,
+      "art": "Homestead/Anim/lantern",
+      "animated": true,
       "kind": "decor",
       "cost": 0,
       "requiresLevel": "c01_lantern_ring",
@@ -901,7 +913,8 @@
       "scale": 1.0,
       "lift": 0.45,
       "disabled": false,
-      "slot": "edge"
+      "slot": "edge",
+      "_generated": true
     },
     {
       "id": "fence_short",
@@ -918,13 +931,14 @@
     },
     {
       "id": "flag_red",
-      "art": "Homestead/flag_red",
+      "art": "Homestead/Anim/flag_red",
       "kind": "decor",
       "slot": "edge",
       "cost": 200,
       "scale": 0.95,
       "lift": 0.42,
-      "_imported": true
+      "animated": true,
+      "_generated": true
     },
     {
       "id": "mooring_post",
@@ -981,13 +995,14 @@
     },
     {
       "id": "candle",
-      "art": "Homestead/candle",
+      "art": "Homestead/Anim/candle",
       "kind": "decor",
       "slot": "edge",
       "cost": 260,
       "scale": 1.0,
       "lift": 0.42,
-      "_imported": true
+      "animated": true,
+      "_generated": true
     },
     {
       "id": "fence_timber",
@@ -1167,13 +1182,14 @@
     },
     {
       "id": "torch_low",
-      "art": "Homestead/torch_low",
+      "art": "Homestead/Anim/torch_low",
       "kind": "decor",
       "slot": "edge",
       "cost": 620,
       "scale": 0.95,
       "lift": 0.42,
-      "_imported": true
+      "animated": true,
+      "_generated": true
     },
     {
       "id": "arrow_sign",
@@ -1190,13 +1206,14 @@
     },
     {
       "id": "torch",
-      "art": "Homestead/torch",
+      "art": "Homestead/Anim/torch",
       "kind": "decor",
       "slot": "edge",
       "cost": 760,
       "scale": 0.95,
       "lift": 0.42,
-      "_imported": true
+      "animated": true,
+      "_generated": true
     },
     {
       "id": "old_sign",
@@ -1213,33 +1230,36 @@
     },
     {
       "id": "banner_gold",
-      "art": "Homestead/banner_gold",
+      "art": "Homestead/Anim/banner_gold",
       "kind": "decor",
       "slot": "edge",
       "cost": 900,
       "scale": 0.9,
       "lift": 0.42,
-      "_imported": true
+      "animated": true,
+      "_generated": true
     },
     {
       "id": "banner_crimson",
-      "art": "Homestead/banner_crimson",
+      "art": "Homestead/Anim/banner_crimson",
       "kind": "decor",
       "slot": "edge",
       "cost": 900,
       "scale": 0.9,
       "lift": 0.42,
-      "_imported": true
+      "animated": true,
+      "_generated": true
     },
     {
       "id": "torch_tall",
-      "art": "Homestead/torch_tall",
+      "art": "Homestead/Anim/torch_tall",
       "kind": "decor",
       "slot": "edge",
       "cost": 980,
       "scale": 0.9,
       "lift": 0.42,
-      "_imported": true
+      "animated": true,
+      "_generated": true
     },
     {
       "id": "signpost",
@@ -1801,13 +1821,14 @@
     },
     {
       "id": "crystal_shards",
-      "art": "Homestead/crystal_shards",
+      "art": "Homestead/Anim/crystal_shards",
       "kind": "decor",
       "slot": "ground",
       "cost": 500,
       "scale": 1.0,
       "lift": 0.35,
-      "_imported": true
+      "animated": true,
+      "_generated": true
     }
   ]
 }

@@ -58,7 +58,11 @@ craftpix-net-305523-isometric-arctic-game-assets/PNG/Elements/09.png	ice_stump	g
 # --------------------------------------------------------------------------- ruins
 craftpix-net-556799-isometric-ruin-tileset/PNG/Elements/01.png	stone_stumps	ground	200	1.0	0.35	Stone Stumps
 craftpix-net-556799-isometric-ruin-tileset/PNG/Elements/03.png	ruin_block	ground	260	1.0	0.35	Fallen Block
-craftpix-net-556799-isometric-ruin-tileset/PNG/Elements/04.png	waterfall	structure	4000	0.65	0.38	Waterfall
+# 'waterfall' is built by Tools/make_waterfall.py, not copied by this file. Elements/04
+# is an overlay meant to be draped down a stacked platform - two translucent stripes with
+# no rock behind them - so the piece is composed from a cliff plus generated water and
+# ships as a flipbook. Its catalog row is marked _generated, which is how the two tools
+# say which rows are theirs.
 craftpix-net-556799-isometric-ruin-tileset/PNG/Elements/05.png	vines	canopy	800	0.9	0.42	Hanging Vines
 craftpix-net-556799-isometric-ruin-tileset/PNG/Elements/06.png	torch_low	edge	620	0.95	0.42	Low Torch
 craftpix-net-556799-isometric-ruin-tileset/PNG/Elements/07.png	oak_broad	canopy	1700	0.7	0.42	Broad Oak

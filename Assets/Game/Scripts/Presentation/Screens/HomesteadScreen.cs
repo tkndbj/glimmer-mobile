@@ -72,6 +72,24 @@ namespace GlimmerGrove
         GroveFieldView _field;
         Text _summary;
 
+        RectTransform _shop;
+        Text _scoreValue, _scoreNext;
+        StarRow _scoreStars;
+
+        /// <summary>
+        /// Stars drawn last, so a star won while the player is standing here arrives as
+        /// something rather than as a number that was already different.
+        ///
+        /// Session-local and deliberately not stored: the save already knows everything the
+        /// score is derived from, and a "stars last seen" field would be a stored count of
+        /// exactly the shape invariant 11b forbids — merged across devices it could only ever
+        /// re-celebrate or silently swallow. -1 means nothing has been drawn yet, which is
+        /// what makes the first paint of a screen quiet.
+        /// </summary>
+        int _starsShown = -1;
+
+        bool _presented, _teaching, _taught;
+
         protected override void Build()
         {
             // The hub's own sky and nothing else from it. The grove here is the content, so
@@ -155,7 +173,16 @@ namespace GlimmerGrove
         // ----------------------------------------------------------------- field
         void BuildField()
         {
-            _viewport = UIKit.Node("Viewport", Content);
+            // Laid inside the display's safe area rather than across the whole panel. A field
+            // that runs under a camera cutout is a field with tiles the player cannot see and
+            // cannot reliably tap, and the corner where a home indicator sits is exactly where
+            // a thumb rests to pan. The node re-fits itself (see SafeArea), so a late reading —
+            // iOS reports its inset a frame or two after a cold start — moves the field rather
+            // than leaving it where a stale number put it. On a display with nothing in the way
+            // every inset is zero and this is the layout it always was.
+            var stage = SafeArea.Node("Stage", Content);
+
+            _viewport = UIKit.Node("Viewport", stage);
             // No nav bar on this screen. It is the one page in the game that wants the whole
             // display: a floor is panned and zoomed, and a strip of chrome across the bottom is
             // both a slice of grove nobody can see and a row of buttons a dragging thumb keeps
@@ -204,6 +231,12 @@ namespace GlimmerGrove
                 _field.CentreOn(floor.Cols / 2, floor.Rows / 2);
 
             Repaint();
+
+            // The body usually arrives before the transition finishes and sometimes after it.
+            // Teaching is attempted from both ends rather than from whichever happens to be
+            // second, because a lesson shown once in a player's life must not be spent on a
+            // screen that had nothing on it yet — see Teach.
+            Teach();
         }
 
         /// <summary>
@@ -240,6 +273,7 @@ namespace GlimmerGrove
 
             _field.Refresh();
             PaintSummary();
+            PaintScore();
         }
 
         // ---------------------------------------------------------------- header
@@ -249,11 +283,22 @@ namespace GlimmerGrove
             var frt = (RectTransform)fade.transform;
             frt.anchorMin = new Vector2(0f, 1f); frt.anchorMax = new Vector2(1f, 1f);
             frt.pivot = new Vector2(.5f, 1f);
-            frt.sizeDelta = new Vector2(0f, 268f);
+            // Grown by whatever the system has taken from the top, because the fade is what
+            // the banner and the summary are read against and both have just moved down by
+            // that much. It is the one piece of the header that stays full-bleed — a gradient
+            // that stopped at the safe edge would draw a visible horizontal seam across the
+            // sky, which is worse than the cutout it was avoiding. Zero on a plain display.
+            frt.sizeDelta = new Vector2(0f, 268f + SafeArea.Top);
             frt.anchoredPosition = Vector2.zero;
             frt.localRotation = Quaternion.Euler(0, 0, 180f);
 
-            var banner = UIKit.Img("Banner", Content, Art.S("Ui/banner"), Color.white,
+            // Everything from here down is chrome, so it lives in the safe layer: on a phone
+            // with a camera cutout the back arrow, the banner and the shop button all sat
+            // under it, which is what this screen was reported for. Content stays full-bleed
+            // and keeps the sky and the fade above — see View.Safe.
+            var chrome = Safe;
+
+            var banner = UIKit.Img("Banner", chrome, Art.S("Ui/banner"), Color.white,
                                    new Vector2(430f, 114f), new Vector2(.5f, 1f), new Vector2(0f, -102f));
             UIKit.Shrinkable(
                 UIKit.Titled("Title", banner.transform, Loc.Get("ui.grove.title").ToUpperInvariant(), 32,
@@ -267,12 +312,12 @@ namespace GlimmerGrove
             // (see BuildField), so the corner needs an exit rather than a readout — and the
             // balance was the wrong thing to put here anyway: nothing on this screen is bought.
             // Land and decor are both bought in the shop, which shows the balance itself.
-            UIKit.IconButton("Back", Content, Skins.Nav, "ic_left", new Vector2(112f, 112f),
+            UIKit.IconButton("Back", chrome, Skins.Nav, "ic_left", new Vector2(112f, 112f),
                              new Vector2(0f, 1f), new Vector2(92f, -104f),
                              () => Flow.Go<HomeScreen>());
 
             _summary = UIKit.Shrinkable(
-                UIKit.Titled("Summary", Content, string.Empty, 26,
+                UIKit.Titled("Summary", chrome, string.Empty, 26,
                              new Color(1f, .96f, .88f, .72f), TextAnchor.MiddleCenter,
                              new Vector2(720f, 34f), new Vector2(.5f, 1f), new Vector2(0f, -172f), 3f, 0f), 18);
 
@@ -283,12 +328,17 @@ namespace GlimmerGrove
             // straight in put half the button past the right edge of the screen.
             var shopSize = new Vector2(230f, 96f);
             var shopAnchor = new Vector2(1f, 1f);
-            var shop = UIKit.TextButton("Shop", Content, "btn_orange", Loc.Get("ui.grove.shop"), 28,
+            var shop = UIKit.TextButton("Shop", chrome, "btn_orange", Loc.Get("ui.grove.shop"), 28,
                                         shopSize, shopAnchor,
                                         UIKit.Corner(shopSize, shopAnchor, 28f, 62f),
                                         () => Flow.Go<HomesteadShopScreen>());
             UIKit.Shrinkable(shop.Label, 18);
             UIKit.FitLabel(shop);
+
+            // Kept so the shop lesson can ring the real button rather than describe where it is.
+            _shop = (RectTransform)shop.transform;
+
+            BuildScore(chrome);
         }
 
         void PaintSummary()
@@ -313,6 +363,119 @@ namespace GlimmerGrove
                                        HomesteadLayout.OccupiedCount(catalog),
                                        GroveLand.OwnedTileCount(catalog.Floor),
                                        HomesteadLayout.VarietyCount(catalog));
+        }
+
+        // ----------------------------------------------------------------- score
+        /// <summary>Widest the star row may grow before it is packed tighter.</summary>
+        const float StarsWidth = 292f;
+
+        /// <summary>
+        /// What this grove is worth, and the stars that has earned.
+        ///
+        /// <para>
+        /// <b>It is a readout and not a control, and every graphic in it is non-interactive.</b>
+        /// This screen is panned and pinched, so a box in the corner that swallowed a drag
+        /// would break the one gesture the whole page is built on — and the corner it sits in
+        /// is where a right thumb rests. <see cref="UIKit.Img"/> and <see cref="UIKit.Label"/>
+        /// both leave <c>raycastTarget</c> off, so a drag begun on top of this reaches the
+        /// field exactly as if the box were not there.
+        /// </para>
+        /// <para>
+        /// The star row's size comes from the ladder's length rather than from a constant,
+        /// because the ladder is content (<c>GroveScoreTable</c>) and a drop may lengthen it.
+        /// Five stars at the shipped spacing, eight packed a little tighter, and neither draws
+        /// off the side of the box.
+        /// </para>
+        /// </summary>
+        void BuildScore(Transform parent)
+        {
+            var size = new Vector2(340f, 196f);
+            var anchor = new Vector2(1f, 0f);
+
+            var box = UIKit.Img("Score", parent, Art.Round(28), new Color(.06f, .12f, .17f, .74f),
+                                size, anchor, UIKit.Corner(size, anchor, 28f, 28f));
+            var rt = (RectTransform)box.transform;
+
+            var edge = UIKit.Img("Edge", rt, Art.RoundOutline(28, 3f), new Color(1f, 1f, 1f, .13f));
+            UIKit.StretchTo((RectTransform)edge.transform, 0, 0, 0, 0);
+
+            UIKit.Shrinkable(
+                UIKit.Titled("Label", rt, Loc.Get("ui.grove.score").ToUpperInvariant(), 22,
+                             new Color(1f, .96f, .88f, .70f), TextAnchor.MiddleCenter,
+                             new Vector2(300f, 30f), new Vector2(.5f, 1f), new Vector2(0f, -26f),
+                             outline: 3f, shadow: 0f), 16);
+
+            _scoreValue = UIKit.Shrinkable(
+                UIKit.Titled("Value", rt, string.Empty, 44, Pal.Gold, TextAnchor.MiddleCenter,
+                             new Vector2(300f, 56f), new Vector2(.5f, 1f), new Vector2(0f, -74f),
+                             outline: 4f, shadow: 4f), 26);
+
+            int rungs = Mathf.Max(1, HomesteadCatalog.Current.Scores.StarCount);
+            float spacing = Mathf.Min(40f, StarsWidth / rungs);
+
+            _scoreStars = StarRow.Create(rt, new Vector2(.5f, 1f), new Vector2(0f, -128f),
+                                         spacing * .82f, spacing, 0, false, rungs);
+
+            _scoreNext = UIKit.Shrinkable(
+                UIKit.Titled("Next", rt, string.Empty, 22, new Color(1f, .96f, .88f, .58f),
+                             TextAnchor.MiddleCenter, new Vector2(310f, 28f), new Vector2(.5f, 1f),
+                             new Vector2(0f, -168f), outline: 3f, shadow: 0f), 15);
+
+            rt.localScale = Vector3.zero;
+            Tween.Pop(rt, 0f, .5f, .18f);
+
+            // Drawn once here so the box never appears blank. The catalog is a body and may
+            // not have arrived, in which case this is an honest zero that the first Repaint
+            // replaces — see PaintScore for why that first real reading does not celebrate.
+            PaintScore();
+        }
+
+        /// <summary>
+        /// Redraws the standing, and celebrates a star that was not there a moment ago.
+        ///
+        /// <para>
+        /// The whole reading is taken in one call (<see cref="GroveScore.Of"/>) so the number
+        /// and the stars can never come from two different moments — the mistake the victory
+        /// panel's separately derived reward row spent a version proving is real.
+        /// </para>
+        /// <para>
+        /// A star gained while this screen is open re-runs the row's fanfare rather than
+        /// appearing. That is the point of drawing this here at all: buying land or a companion
+        /// happens in the shop, so without it the reward for a purchase would be a number that
+        /// had quietly changed by the time the player came back.
+        /// </para>
+        /// </summary>
+        void PaintScore()
+        {
+            if (!_scoreValue) return;
+
+            var standing = GroveScore.Of(HomesteadCatalog.Current);
+
+            _scoreValue.text = Compact.Number(standing.Score);
+
+            if (_scoreNext)
+                _scoreNext.text = standing.IsTopped
+                    ? Loc.Get("ui.grove.score_top")
+                    : Loc.Format("ui.grove.score_next", Compact.Number(standing.ToNext));
+
+            if (!_scoreStars) return;
+
+            // A ladder can be re-published under an open screen — the catalog is a body and a
+            // content refresh swaps it whole — so a row built for five rungs may be looking at
+            // six. Rebuilding it is not worth a frame's work; drawing what it can hold is
+            // honest, and the next visit builds the right row.
+            int stars = Mathf.Min(standing.Stars, _scoreStars.Count);
+
+            // The baseline is only taken once there is a real catalog to compare against.
+            // Without that the empty grove drawn before the body arrives would be the
+            // baseline, and every visit would open with a fanfare for stars the player won
+            // weeks ago — which is the fastest way to make a celebration mean nothing.
+            bool settled = HomesteadCatalog.IsLoaded;
+
+            if (settled && _starsShown >= 0 && stars > _starsShown) _scoreStars.Reveal(stars, .1f, .3f);
+            else _scoreStars.SetInstant(stars);
+
+            if (settled) _starsShown = stars;
         }
 
         // ------------------------------------------------------------------ tile
@@ -801,6 +964,87 @@ namespace GlimmerGrove
             if (floor.IsHall(id)) { Flow.Modal<HomesteadHomeOverlay>(); return; }
 
             Flow.Modal<HomesteadPickerOverlay>(v => v.Slot = new HomesteadSlot(col, row));
+        }
+
+        // ------------------------------------------------------------------ tips
+        public override void OnPresented()
+        {
+            _presented = true;
+            Teach();
+        }
+
+        /// <summary>
+        /// The two things a first visit has to be told: what this place is, and where the
+        /// things it is built from come from.
+        ///
+        /// <para>
+        /// <b>They are ordinary lessons, on the ordinary ledger.</b> A grove tip is a
+        /// <c>Mechanic</c> like a duskcap is — a permanent id, strings derived from it, and
+        /// <c>TipLedger</c> recording that this player has met it. That is what makes them
+        /// shown once in a lifetime rather than once per install: the ledger is a union-joined
+        /// set in the save file, so a second device does not re-teach what the first one
+        /// taught, and it cost no new field to say so. They are deliberately not in
+        /// <c>Mechanic.TeachingOrder</c>, which is the board scan's queue — nothing about a
+        /// glade implies the player has opened the Grovement.
+        /// </para>
+        /// <para>
+        /// <b>Nothing is taught over an empty screen.</b> The catalog is a body read on
+        /// entering the feature, so on a cold start it can land after the transition has
+        /// finished — and a welcome tip spent while the grove behind it is still blank is
+        /// spent for good. So this is attempted from both <see cref="OnPresented"/> and
+        /// <see cref="Reload"/>, does nothing until there is a grove to point at, and does
+        /// nothing twice.
+        /// </para>
+        /// </summary>
+        void Teach()
+        {
+            if (_taught || _teaching || !_presented) return;
+            if (!HomesteadCatalog.IsLoaded || HomesteadCatalog.Current.Floor.IsEmpty) return;
+
+            var queue = new List<Mechanic>(2);
+
+            if (!TipLedger.HasSeen(Mechanic.Grove)) queue.Add(Mechanic.Grove);
+            if (!TipLedger.HasSeen(Mechanic.GroveShop)) queue.Add(Mechanic.GroveShop);
+
+            _taught = true;
+            if (queue.Count == 0) return;
+
+            _teaching = true;
+
+            // A beat after the iris, so the first thing the player sees is their own grove
+            // and the second is somebody explaining it.
+            Tween.After(.45f, () => ShowTip(queue, 0), this);
+        }
+
+        /// <summary>
+        /// Shows one tip and, when it is dismissed, the next.
+        ///
+        /// Chained on dismissal rather than raised together, which is <c>PlayScreen</c>'s rule
+        /// and for its reason: two modals at once means meeting the second before reading the
+        /// first. The editing controls are put away first because the second tip cuts a hole
+        /// around the shop button, and a bar floating over the field inside that hole would be
+        /// lit by a lesson that is not about it.
+        /// </summary>
+        void ShowTip(List<Mechanic> queue, int index)
+        {
+            if (!this) return;
+
+            if (index >= queue.Count) { _teaching = false; return; }
+
+            CloseEditor();
+
+            var mechanic = queue[index];
+
+            Flow.Modal<TipOverlay>(v =>
+            {
+                v.Mechanic = mechanic;
+
+                // The welcome has nothing to ring: it is about the whole screen, and a hole
+                // cut around one tile would say it is about that tile.
+                v.Target = mechanic.Equals(Mechanic.GroveShop) ? _shop : null;
+
+                v.Dismissed = () => Tween.After(.18f, () => ShowTip(queue, index + 1), this);
+            });
         }
     }
 }

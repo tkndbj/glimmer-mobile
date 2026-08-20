@@ -16,8 +16,10 @@ namespace GlimmerGrove
     /// One chapter at a time is the load-bearing decision. It bounds the node count
     /// and the loaded texture count by a chapter's size rather than by the size of
     /// the catalog, so the map costs the same at chapter fifty as at chapter one —
-    /// no virtualisation, no pooling, no cleverness required. Arrows at the edges
-    /// move between chapters, and the screen opens on wherever the player is up to.
+    /// no virtualisation, no pooling, no cleverness required. Arrows either side of
+    /// the name plaque step between chapters — forward even into a locked one, which
+    /// is how the ladder stays visible — and the screen opens on wherever the player
+    /// is up to.
     /// </summary>
     public sealed class LevelsScreen : View
     {
@@ -39,6 +41,23 @@ namespace GlimmerGrove
 
         MapLayout _layout;
         readonly Dictionary<LevelId, RectTransform> _nodes = new Dictionary<LevelId, RectTransform>();
+
+        /// <summary>
+        /// The map is the one screen that cannot finish building inside <c>Build</c>: it needs
+        /// its chapter's body read and that chapter's art resident, and on a chapter the player
+        /// has not opened before neither is in hand. So it tells the transition to stay shut —
+        /// see <see cref="View.Ready"/>.
+        ///
+        /// <para>
+        /// Set on <b>every</b> way out of <see cref="BuildChapter"/>, including the two that
+        /// give up, because a screen that never says it is ready holds a slate disc over the
+        /// game until <c>Flow</c>'s timeout rescues it. A chapter that failed to load should
+        /// show whatever it managed, immediately.
+        /// </para>
+        /// </summary>
+        bool _built;
+
+        public override bool Ready => _built;
 
         static readonly string[] Rocks = { "rock_grass", "rock_wide", "rock_tall", "rock_chip", "rock_plain" };
 
@@ -87,7 +106,7 @@ namespace GlimmerGrove
             // second-level screen in the game already keeps it.
             BuildHeader();
 
-            if (_entry == null) return;
+            if (_entry == null) { _built = true; return; }
 
             ChapterId = _entry.Id;
             StartCoroutine(BuildChapter());
@@ -118,23 +137,49 @@ namespace GlimmerGrove
             var bodyTask = _catalog.ChapterAsync(_entry.Id);
             while (!bodyTask.IsCompleted) yield return null;
 
-            if (bodyTask.IsFaulted) { Debug.LogException(bodyTask.Exception); yield break; }
+            if (bodyTask.IsFaulted) { Debug.LogException(bodyTask.Exception); _built = true; yield break; }
 
             _body = bodyTask.Result;
-            if (_body == null || !this) yield break;
+            if (_body == null || !this) { _built = true; yield break; }
 
             _layout = MapLayout.Build(_body, _entry.LevelIds);
 
-            // Swapping chapters swaps their art; this is where the previous
-            // chapter's backdrops and strips are actually released.
-            _ = AssetLibrary.EnsureChapterAsync(_body);
+            // Swapping chapters swaps their art; this is where the previous chapter's
+            // backdrops and strips are actually released.
+            //
+            // *Awaited*, and that is the whole of it. This used to be started and dropped
+            // on the floor, so the map was drawn on the same frame the load began — and
+            // the map strips live in this scope, so Art.S returned null for every one of
+            // them and BuildMapArt skipped them all. The chapter opened onto nothing but
+            // the shade layer. It was invisible for as long as there was one chapter: the
+            // splash preloads the opening one, so the only map anybody could reach was
+            // already resident and the race never ran. Stepping into a second chapter is
+            // the first thing in the game that asks for art it does not already hold.
+            //
+            // Awaiting rather than repainting on arrival because *everything* below needs
+            // it — strips, scenery, and the backdrop each glade will want. A repaint would
+            // be four subscriptions to cover one wait that is normally already over.
+            var art = AssetLibrary.EnsureChapterAsync(_body);
+            while (!art.IsCompleted) yield return null;
+            if (!this) { _built = true; yield break; }
+
+            // A chapter whose art failed still draws: the nodes, the trails and the names
+            // are all catalog knowledge, and a map with no backdrop is worth more to a
+            // player than a screen with nothing on it at all.
+            if (art.IsFaulted) Debug.LogException(art.Exception);
 
             BuildScroller();
             BuildMapArt();
             BuildTrails();
             BuildNodes();
             BuildChapterEnd();
-            BuildChapterArrows();
+
+            // Ready the moment the map exists, not once it has finished arriving. The nodes
+            // pop in over about a second and that entrance is the point — it should play
+            // while the iris opens, the way it always did on a chapter whose art was already
+            // resident. Waiting for it would replace one abrupt cut with a long stare at a
+            // slate disc.
+            _built = true;
 
             yield return FocusCurrent();
         }
@@ -665,49 +710,189 @@ namespace GlimmerGrove
             frt.anchoredPosition = Vector2.zero;
             frt.localRotation = Quaternion.Euler(0, 0, 180f);
 
-            UIKit.IconButton("Back", Content, Skins.Nav, "ic_left", new Vector2(118f, 118f),
+            UIKit.IconButton("Back", Safe, Skins.Nav, "ic_left", new Vector2(118f, 118f),
                              new Vector2(0f, 1f), new Vector2(96f, -132f), () => Flow.Go<HomeScreen>());
 
-            var banner = UIKit.Img("Banner", Content, Art.S("Ui/banner"), Color.white,
-                                   new Vector2(520f, 148f), new Vector2(.5f, 1f), new Vector2(0f, -142f));
+            _banner = UIKit.Img("Banner", Safe, Art.S("Ui/banner"), Color.white,
+                                new Vector2(BannerWidth, 148f), new Vector2(.5f, 1f),
+                                new Vector2(0f, BannerY));
             string title = _entry != null ? Loc.Get(_entry.NameKey) : Loc.Get("ui.levels.title");
-            UIKit.Titled("Title", banner.transform, title.ToUpperInvariant(), 40, new Color(.36f, .24f, .16f),
-                         TextAnchor.MiddleCenter, outline: 0f, shadow: 2f);
-            banner.transform.localScale = Vector3.zero;
-            Tween.Pop(banner.transform, 0f, .6f, .1f);
+            var name = UIKit.Titled("Title", _banner.transform, title.ToUpperInvariant(), 40,
+                                    BannerInk, TextAnchor.MiddleCenter,
+                                    new Vector2(NameWidth, 96f), new Vector2(.5f, .5f),
+                                    Vector2.zero, outline: 0f, shadow: 2f);
 
-            Scenery.Pill(Content,
+            // One unwrapped line, narrowed until it fits between the chevrons rather than
+            // trusted to be short. A chapter name is authored per drop and translated after
+            // that, so it is the string on this screen most likely to arrive longer than
+            // the space it was measured against.
+            while (name.fontSize > 26 && name.preferredWidth > NameWidth) name.fontSize--;
+
+            _name = name;
+
+            _banner.transform.localScale = Vector3.zero;
+            Tween.Pop(_banner.transform, 0f, .6f, .1f);
+
+            Scenery.Pill(Safe,
                          $"{PlayerProgress.TotalStars(_index)} / {PlayerProgress.MaxStars(_index)}",
                          36, new Vector2(196f, 78f), new Vector2(1f, 1f), new Vector2(-106f, -132f), null, "ic_star");
 
             if (_entry == null) return;
 
-            var swipe = UIKit.Titled("Swipe", Content, Loc.Get("ui.levels.swipe"), 26,
+            BuildChapterArrows();
+
+            var swipe = UIKit.Titled("Swipe", Safe, Loc.Get("ui.levels.swipe"), 26,
                                      new Color(1f, .96f, .88f, .5f), TextAnchor.MiddleCenter,
                                      new Vector2(700f, 36f), new Vector2(.5f, 0f),
                                      new Vector2(0f, 118f), 3f, 0f);
             Tween.Tint(swipe, new Color(1f, .96f, .88f, 0f), .8f).Delay(4.2f);
         }
 
-        /// <summary>Left and right arrows for stepping between chapters.</summary>
+        /// <summary>
+        /// Left and right arrows for stepping between chapters, one either side of the
+        /// name plaque.
+        /// </summary>
+        /// <remarks>
+        /// <para>
+        /// They used to sit at the vertical middle of the two screen edges, where they were
+        /// two floating controls with nothing to say what they stepped through — a map is
+        /// dragged vertically, so an arrow halfway up its side reads as being about the map
+        /// rather than about the chapter. On the plaque they are what the name is
+        /// <em>for</em>: <c>&lt; THE SHALLOWS &gt;</c> needs no label and no lesson.
+        /// </para>
+        /// <para>
+        /// <b>Inside the plaque, not beside it.</b> Two square nav buttons flanking it were
+        /// tried first and read as chrome — a third and fourth control on a header row that
+        /// already has a back key and a star count, competing with the plaque instead of
+        /// belonging to it. A chevron cut in the same ink as the name, inside the same piece
+        /// of wood, is one object that says "there is more of this either way". It also
+        /// costs the row nothing: the plaque is the width it always was, so neither corner
+        /// had to give up space and there is no arrangement of them that can collide.
+        /// </para>
+        /// <para>
+        /// <b>Forward is offered whether or not the chapter is unlocked.</b> Looking ahead is
+        /// not the same as playing ahead, and it costs nothing: every glade in a locked
+        /// chapter draws padlocked and <see cref="Open"/> already refuses one, so the worst a
+        /// browsing player can do is see what they are working towards. Hiding it made the
+        /// last chapter of the catalog look like the last chapter of the game, which is the
+        /// opposite of what a ladder is for. The lock badge is what keeps that honest — the
+        /// arrow works, so it is not drawn as a dead control, but it says where it goes.
+        /// </para>
+        /// <para>
+        /// Built from <see cref="BuildHeader"/> rather than after the body loads, because
+        /// which chapters exist either side of this one is index knowledge — the same reason
+        /// the name and the star count do not wait on a file.
+        /// </para>
+        /// </remarks>
         void BuildChapterArrows()
         {
             var previous = LevelUnlock.ChapterBefore(_index, _entry.Id);
             var next = LevelUnlock.ChapterAfter(_index, _entry.Id);
 
-            if (previous != null)
+            if (previous != null) Chevron("PrevChapter", "<", -1f, previous, true);
+
+            if (next != null)
+                Chevron("NextChapter", ">", 1f, next, LevelUnlock.IsChapterUnlocked(_index, next.Id));
+        }
+
+        /// <summary>
+        /// The plaque carrying the chapter name: its size, where it sits under the fade, the
+        /// ink everything carved into it is written in, and how much of it the name may use.
+        /// </summary>
+        const float BannerWidth = 520f, BannerY = -142f;
+        const float ChevronX = 196f, NameWidth = 268f;
+        static readonly Color BannerInk = new Color(.36f, .24f, .16f);
+
+        /// <summary>The plaque, kept so the chevrons can be carved into it.</summary>
+        Image _banner;
+
+        /// <summary>The name, kept so the chevrons can be set level with its lettering.</summary>
+        Text _name;
+
+        /// <summary>
+        /// A chapter chevron, cut into the plaque itself.
+        /// </summary>
+        /// <remarks>
+        /// The glyph is drawn by a <see cref="Text"/> and the tap is taken by an invisible
+        /// box around it, rather than the glyph being a label on a button. A chevron on a
+        /// button skin would be a control sitting on the plaque; this is a mark carved into
+        /// it. The box is 84×112 because the mark is small and a target has to be reachable
+        /// with a thumb — the two sizes are unrelated on purpose.
+        /// </remarks>
+        void Chevron(string name, string glyph, float side, ChapterIndexEntry chapter, bool unlocked)
+        {
+            var box = UIKit.Box(name, _banner.transform, new Vector2(84f, 112f),
+                                new Vector2(.5f, .5f), new Vector2(side * ChevronX, 0f));
+
+            var hit = box.gameObject.AddComponent<Image>();
+            hit.color = new Color(0f, 0f, 0f, 0f);
+            hit.raycastTarget = true;
+
+            var target = chapter.Id;
+            box.gameObject.AddComponent<Btn>().Setup(() => GoToChapter(target));
+
+            // Bold, and the same shadow the name carries, because it is lettering on the
+            // same plaque rather than a symbol placed on top of one — at the book weight it
+            // read as a stray punctuation mark beside a heavy title.
+            //
+            // Dimmed when it leads somewhere still locked, and that is the whole marking it
+            // gets. A padlock badge was tried and is wrong here: the plaque is 148px tall
+            // and already carries a name, so a second glyph beside the chevron is clutter —
+            // and the chevron is not disabled, it genuinely goes there. Dimmed only to .68,
+            // because on the first chapter this is the *only* thing offering the rest of the
+            // game, and fading the one invitation to look ahead defeats the point of it.
+            // What the player finds on arrival is a chapter of padlocked glades, which says
+            // "not yet" better than anything that would fit in this space.
+            var mark = UIKit.Titled("Glyph", box, glyph, 64, Pal.A(BannerInk, unlocked ? 1f : .68f),
+                                    TextAnchor.MiddleCenter, new Vector2(84f, 112f),
+                                    new Vector2(.5f, .5f), Vector2.zero, outline: 0f, shadow: 2f);
+            mark.fontStyle = FontStyle.Bold;
+
+            // Level with the *lettering*, not with the plaque. Both boxes are centred on the
+            // banner, which lines up their line boxes and still reads wrong: a chevron's ink
+            // sits about the font's maths axis while capitals run from the baseline to the
+            // cap height, so the mark drew 6.5px low beside the name. Measured rather than
+            // nudged, because the name shrinks to fit — THE SHALLOWS renders at 34, not the
+            // 40 it asks for, and a longer translation lands smaller still, so any constant
+            // here would be right for one chapter and wrong for the next.
+            box.anchoredPosition = new Vector2(box.anchoredPosition.x, InkMid(_name) - InkMid(mark));
+        }
+
+        /// <summary>
+        /// The middle of a label's drawn ink, in the label's own local space.
+        /// </summary>
+        /// <remarks>
+        /// Not the middle of its box. A line box belongs to the font and every glyph sits
+        /// somewhere different inside it, so two labels centred on the same point are only
+        /// level when they happen to be the same size and shape. Reading the generated
+        /// vertices is the one way to set a 64pt chevron level with a 34pt word, and it is
+        /// measured for the reason <see cref="UIKit.PillFaceLift"/> is a fraction of the art
+        /// rather than a number somebody liked.
+        ///
+        /// <para>
+        /// The layout generator is used rather than the render one — the same one
+        /// <c>preferredWidth</c> and <c>preferredHeight</c> read — so measuring never
+        /// disturbs what is on screen.
+        /// </para>
+        /// </remarks>
+        static float InkMid(Text label)
+        {
+            if (label == null) return 0f;
+
+            var gen = label.cachedTextGeneratorForLayout;
+            gen.Populate(label.text, label.GetGenerationSettings(label.rectTransform.rect.size));
+
+            var verts = gen.verts;
+            float lo = float.MaxValue, hi = float.MinValue;
+
+            for (int i = 0; i < verts.Count; i++)
             {
-                var target = previous.Id;
-                UIKit.IconButton("PrevChapter", Content, Skins.Nav, "ic_left", new Vector2(104f, 104f),
-                                 new Vector2(0f, .5f), new Vector2(78f, 0f), () => GoToChapter(target));
+                float y = verts[i].position.y;
+                if (y < lo) lo = y;
+                if (y > hi) hi = y;
             }
 
-            if (next != null && LevelUnlock.IsChapterUnlocked(_index, next.Id))
-            {
-                var target = next.Id;
-                UIKit.IconButton("NextChapter", Content, Skins.Nav, "ic_right", new Vector2(104f, 104f),
-                                 new Vector2(1f, .5f), new Vector2(-78f, 0f), () => GoToChapter(target));
-            }
+            return lo > hi ? 0f : (lo + hi) * .5f / label.pixelsPerUnit;
         }
 
         void GoToChapter(ChapterId id)

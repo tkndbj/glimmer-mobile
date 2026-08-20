@@ -143,10 +143,10 @@ namespace GlimmerGrove
             frt.anchoredPosition = Vector2.zero;
             frt.localRotation = Quaternion.Euler(0, 0, 180f);
 
-            UIKit.IconButton("Back", Content, Skins.Nav, "ic_left", new Vector2(118f, 118f),
+            UIKit.IconButton("Back", Safe, Skins.Nav, "ic_left", new Vector2(118f, 118f),
                              new Vector2(0f, 1f), new Vector2(96f, -120f), () => Flow.Go<HomeScreen>());
 
-            var banner = UIKit.Img("Banner", Content, Art.S("Ui/banner"), Color.white,
+            var banner = UIKit.Img("Banner", Safe, Art.S("Ui/banner"), Color.white,
                                    new Vector2(520f, 140f), new Vector2(.5f, 1f), new Vector2(0f, -116f));
             UIKit.Shrinkable(
                 UIKit.Titled("Title", banner.transform, Loc.Get("ui.nav.shop").ToUpperInvariant(), 40,
@@ -178,7 +178,7 @@ namespace GlimmerGrove
         /// </summary>
         void BuildBalances()
         {
-            var row = UIKit.Row("Balances", Content, new Vector2(1000f, 76f), new Vector2(.5f, 1f),
+            var row = UIKit.Row("Balances", Safe, new Vector2(1000f, 76f), new Vector2(.5f, 1f),
                                 new Vector2(0f, -214f), 14f);
 
             _coins = BalancePill(row, Pal.Gold, null, Compact.Number(Profile.Coins));
@@ -216,7 +216,7 @@ namespace GlimmerGrove
         /// </summary>
         void BuildTabs()
         {
-            _tabs = UIKit.Node("Tabs", Content);
+            _tabs = UIKit.Node("Tabs", Safe);
             _tabs.anchorMin = new Vector2(0f, 1f);
             _tabs.anchorMax = new Vector2(1f, 1f);
             _tabs.pivot = new Vector2(.5f, 1f);
@@ -234,7 +234,7 @@ namespace GlimmerGrove
             }
 
             _summary = UIKit.Shrinkable(
-                UIKit.Titled("Summary", Content, string.Empty, 26,
+                UIKit.Titled("Summary", Safe, string.Empty, 26,
                              new Color(1f, .96f, .88f, .74f), TextAnchor.MiddleCenter,
                              new Vector2(880f, 34f), new Vector2(.5f, 1f),
                              new Vector2(0f, -HeaderHeight - TabRow + 4f), 3f, 0f), 17);
@@ -252,7 +252,7 @@ namespace GlimmerGrove
         // ------------------------------------------------------------------ grid
         void BuildGrid()
         {
-            _viewport = UIKit.Node("Viewport", Content);
+            _viewport = UIKit.Node("Viewport", Safe);
             _viewport.offsetMin = new Vector2(0f, NavBar.Height + RestoreRow);
             _viewport.offsetMax = new Vector2(0f, -HeaderHeight - TabRow - 44f);
 

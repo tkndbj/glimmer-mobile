@@ -1,4 +1,5 @@
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
@@ -11,6 +12,29 @@ namespace GlimmerGrove
         public RectTransform Root { get; private set; }
         public RectTransform Content { get; private set; }
         protected CanvasGroup Group;
+
+        RectTransform _safe;
+
+        /// <summary>
+        /// A layer inset to the display's safe area, for chrome a cutout or a home indicator
+        /// must not sit on top of.
+        ///
+        /// <para>
+        /// <b>Only controls belong here.</b> <see cref="Content"/> stays full-bleed and is
+        /// where backdrops, fades and playfields go: letterboxing a painting to avoid a
+        /// camera is a worse picture than the camera. What goes in here is what the player
+        /// has to read or press — a back arrow, a banner, a readout, a button.
+        /// </para>
+        /// <para>
+        /// Created on first use rather than always, so a screen that never asks for it costs
+        /// nothing, and created <em>inside</em> <see cref="Content"/> so the order a screen
+        /// builds in still decides what draws over what. On any display with nothing in the
+        /// way — every device without a cutout, and the Editor — its insets are zero and the
+        /// layout is exactly what it was. See <see cref="SafeArea"/>.
+        /// </para>
+        /// </summary>
+        protected RectTransform Safe
+            => _safe != null ? _safe : (_safe = SafeArea.Node("Safe", Content));
 
         internal void Init()
         {
@@ -27,6 +51,29 @@ namespace GlimmerGrove
 
         /// <summary>Called once the incoming transition has finished.</summary>
         public virtual void OnPresented() { }
+
+        /// <summary>
+        /// False while this screen is still assembling something the player must not watch
+        /// arrive. <see cref="Flow"/> holds the iris shut until it turns true.
+        /// </summary>
+        /// <remarks>
+        /// <para>
+        /// Almost every screen here builds itself inside <see cref="Init"/> and is finished
+        /// before the transition starts, which is why this defaults to true and why nothing
+        /// needed it for a long time. The map is the exception: it cannot draw until its
+        /// chapter's body has been read and that chapter's art is resident, and neither is
+        /// guaranteed to be in hand. Without a gate the iris opened on a bare screen and the
+        /// chapter arrived a moment later — the swap the transition exists to hide, happening
+        /// in full view.
+        /// </para>
+        /// <para>
+        /// This is a <em>declaration</em> rather than a call into <see cref="Flow"/>, for the
+        /// reason <see cref="WantsMultiTouch"/> is: a screen that told the transition when to
+        /// continue would have to tell it on every path out of its own loading, including the
+        /// ones that fail, and this project has paid for that shape more than once.
+        /// </para>
+        /// </remarks>
+        public virtual bool Ready => true;
 
         /// <summary>Return true to swallow the hardware back button.</summary>
         public virtual bool OnBack() => false;
@@ -129,8 +176,43 @@ namespace GlimmerGrove
             IrisClose(() =>
             {
                 Swap();
-                IrisOpen(() => { Busy = false; Current.OnPresented(); });
+                WhenReady(Current, () => IrisOpen(() => { Busy = false; Current.OnPresented(); }));
             });
+        }
+
+        /// <summary>
+        /// Longest the iris will stay shut waiting on a screen that is not
+        /// <see cref="View.Ready"/>.
+        /// </summary>
+        /// <remarks>
+        /// A ceiling rather than a promise. Whatever a screen is waiting for can fail in a way
+        /// it does not notice — a file that never arrives, a task that never completes — and
+        /// the alternative to giving up is a slate disc over the whole game with no way out of
+        /// it. A half-drawn map the player can leave beats a screen they have to kill the app
+        /// to escape. Generous because it should never be reached: the wait it exists for is a
+        /// local file read, and one long enough to hit this is a bug rather than a slow phone.
+        /// </remarks>
+        const float ReadyTimeout = 5f;
+
+        static void WhenReady(View view, Action done)
+        {
+            if (view == null || view.Ready) { done(); return; }
+            Tween.Inst.StartCoroutine(Waiting(view, done));
+        }
+
+        static IEnumerator Waiting(View view, Action done)
+        {
+            float waited = 0f;
+
+            // Unscaled, like every other clock driving the chrome — a transition must not
+            // stretch because something paused the game underneath it.
+            while (view && !view.Ready && waited < ReadyTimeout)
+            {
+                waited += Time.unscaledDeltaTime;
+                yield return null;
+            }
+
+            done();
         }
 
         static void IrisClose(Action done)

@@ -133,16 +133,26 @@ namespace GlimmerGrove.Tests
 
         /// <summary>
         /// The end-of-chapter marker is placed for the author rather than by them, so a
-        /// chapter that runs its last glade up to the ceiling collides with a node whose
-        /// coordinates appear nowhere in the content file.
+        /// chapter that runs its last glade up to where the marker lands collides with a node
+        /// whose coordinates appear nowhere in the content file.
         /// </summary>
+        /// <remarks>
+        /// The offending glade is placed by <em>asking the rule</em> rather than at a typed
+        /// fraction. It used to sit at a literal 0.95, which was the ceiling at the time; when
+        /// the ceiling became a distance from the top of the map (<see cref="ChapterMap.TeaserHeadroom"/>)
+        /// the marker moved and this fixture quietly stopped crowding anything — the test went
+        /// green-adjacent by testing nothing. Passing a highest of 1 forces the clamp, so this
+        /// is wherever the marker actually is for a chapter this tall, for ever.
+        /// </remarks>
         [Test]
         public void AGladeCrowdingTheEndOfChapterMarkerWarns()
         {
+            float onTopOfTheMarker = ChapterMap.TeaserPosition(1f, 3).y;
+
             var levels = new List<LevelDefinition>
             {
                 Level("t_a", .5f, .30f),
-                Level("t_b", ChapterMap.TeaserX, .95f),
+                Level("t_b", ChapterMap.TeaserX, onTopOfTheMarker),
             };
 
             var issues = ChapterMapValidator.Validate(Chapter(3), levels);

@@ -121,7 +121,17 @@ namespace GlimmerGrove
         }
     }
 
-    /// <summary>Row of three stars that can be filled with a rising fanfare.</summary>
+    /// <summary>
+    /// Row of stars that can be filled with a rising fanfare.
+    ///
+    /// <para>
+    /// Three of them for a glade's rating, which is what it was built for and still the
+    /// default; the count is a parameter because the grove's worth is read against a ladder
+    /// whose length is content (see <c>GroveScoreTable</c>) and could be four rungs or six
+    /// after any drop. One row rather than a second one beside it, so a star pops, chimes and
+    /// sparkles the same way wherever the game shows one.
+    /// </para>
+    /// </summary>
     public sealed class StarRow : MonoBehaviour
     {
         Image[] _full, _empty;
@@ -131,8 +141,10 @@ namespace GlimmerGrove
         const float ArcLift = .22f;
 
         public static StarRow Create(Transform parent, Vector2 anchor, Vector2 pos, float size,
-                                     float spacing, int filled = 0, bool arc = false)
+                                     float spacing, int filled = 0, bool arc = false, int count = 3)
         {
+            count = Mathf.Max(1, count);
+
             // The box has to allow for the arc, and the stars have to be centred inside it.
             // It used to be exactly `size` tall whether or not the middle star was lifted, so
             // an arced row's real extent ran from -size/2 to +size/2 + lift — the group sat
@@ -141,25 +153,29 @@ namespace GlimmerGrove
             // zero and every number below is what it always was.
             float lift = arc ? size * ArcLift : 0f;
 
-            var rt = UIKit.Box("Stars", parent, new Vector2(spacing * 3f, size + lift), anchor, pos);
+            var rt = UIKit.Box("Stars", parent, new Vector2(spacing * count, size + lift), anchor, pos);
             var row = rt.gameObject.AddComponent<StarRow>();
-            row.Build(size, spacing, filled, arc);
+            row.Build(size, spacing, filled, arc, count);
             return row;
         }
 
-        void Build(float size, float spacing, int filled, bool arc)
+        void Build(float size, float spacing, int filled, bool arc, int count)
         {
             _size = size;
-            _full = new Image[3];
-            _empty = new Image[3];
-            for (int i = 0; i < 3; i++)
+            _full = new Image[count];
+            _empty = new Image[count];
+            for (int i = 0; i < count; i++)
             {
                 float lift = arc ? size * ArcLift : 0f;
-                float x = (i - 1) * spacing;
+
+                // Centred on the row whatever the count: three stars step -1, 0, 1 exactly as
+                // they always did, and an even row straddles the middle rather than leaning.
+                float x = (i - (count - 1) * .5f) * spacing;
 
                 // Half a lift down, so the arc straddles the row's centre instead of growing
-                // out of the top of it.
-                float y = (i == 1 ? lift : 0f) - lift * .5f;
+                // out of the top of it. Only a row with a true middle has one to lift.
+                bool middle = count % 2 == 1 && i == count / 2;
+                float y = (middle ? lift : 0f) - lift * .5f;
                 _empty[i] = UIKit.Img("e" + i, transform, Art.S("Ui/star_empty"), new Color(1, 1, 1, .55f),
                                       Vector2.one * size, new Vector2(.5f, .5f), new Vector2(x, y));
                 _empty[i].preserveAspect = true;
@@ -170,9 +186,12 @@ namespace GlimmerGrove
             }
         }
 
+        /// <summary>How many stars this row draws, filled or not.</summary>
+        public int Count => _full == null ? 0 : _full.Length;
+
         public void SetInstant(int filled)
         {
-            for (int i = 0; i < 3; i++)
+            for (int i = 0; i < _full.Length; i++)
             {
                 _full[i].gameObject.SetActive(i < filled);
                 _full[i].transform.localScale = Vector3.one;
@@ -182,8 +201,8 @@ namespace GlimmerGrove
         /// <summary>Pop stars in one by one with a rising chime.</summary>
         public void Reveal(int filled, float startDelay = .25f, float gap = .38f, Action onDone = null)
         {
-            for (int i = 0; i < 3; i++) _full[i].gameObject.SetActive(false);
-            for (int i = 0; i < filled; i++)
+            for (int i = 0; i < _full.Length; i++) _full[i].gameObject.SetActive(false);
+            for (int i = 0; i < Mathf.Min(filled, _full.Length); i++)
             {
                 int k = i;
                 Tween.After(startDelay + gap * i, () =>

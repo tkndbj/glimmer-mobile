@@ -218,7 +218,7 @@ namespace GlimmerGrove
         // -------------------------------------------------------------- top bar
         void BuildTopBar()
         {
-            var bar = UIKit.Box("TopBar", Content, new Vector2(0f, 168f), new Vector2(.5f, 1f), new Vector2(0f, -116f));
+            var bar = UIKit.Box("TopBar", Safe, new Vector2(0f, 168f), new Vector2(.5f, 1f), new Vector2(0f, -116f));
             bar.anchorMin = new Vector2(0f, 1f); bar.anchorMax = new Vector2(1f, 1f);
             bar.sizeDelta = new Vector2(0f, 168f);
 
@@ -285,7 +285,7 @@ namespace GlimmerGrove
             int sibling = _resourceRow ? _resourceRow.GetSiblingIndex() : -1;
             if (_resourceRow) Hide(_resourceRow.gameObject);
 
-            var row = UIKit.Box("Resources", Content, new Vector2(1000f, 92f), new Vector2(.5f, 1f), new Vector2(0f, -250f));
+            var row = UIKit.Box("Resources", Safe, new Vector2(1000f, 92f), new Vector2(.5f, 1f), new Vector2(0f, -250f));
             _resourceRow = row;
             if (sibling >= 0) row.SetSiblingIndex(sibling);
 
@@ -387,7 +387,7 @@ namespace GlimmerGrove
             // that space rather than leaving it, because everything under it is now taller.
             // Moved rather than shrunk: the panel's internals are laid out from its own
             // edges, so its height is load-bearing and its position is not.
-            var panel = UIKit.Img("Daily", Content, Art.Round(28), new Color(.04f, .09f, .12f, .72f),
+            var panel = UIKit.Img("Daily", Safe, Art.Round(28), new Color(.04f, .09f, .12f, .72f),
                                   new Vector2(900f, 208f), new Vector2(.5f, 1f), new Vector2(0f, -424f));
             _dailyPanel = (RectTransform)panel.transform;
             if (sibling >= 0) _dailyPanel.SetSiblingIndex(sibling);
@@ -591,7 +591,7 @@ namespace GlimmerGrove
             float y = -(RowTop + RowHeight * .5f);
             float x = (RowWidth - half) * .5f;
 
-            _focusBox = UIKit.Box("Focus", Content, new Vector2(half, RowHeight),
+            _focusBox = UIKit.Box("Focus", Safe, new Vector2(half, RowHeight),
                                   new Vector2(.5f, 1f), new Vector2(x, y));
 
             if (!BuildFocusBox(half))
@@ -602,7 +602,7 @@ namespace GlimmerGrove
 
             bool paired = _focusBox != null;
 
-            _streakBox = UIKit.Box("Streak", Content,
+            _streakBox = UIKit.Box("Streak", Safe,
                                    new Vector2(paired ? half : RowWidth, RowHeight),
                                    new Vector2(.5f, 1f), new Vector2(paired ? -x : 0f, y));
             BuildStreakBox();

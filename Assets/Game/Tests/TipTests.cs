@@ -190,21 +190,67 @@ namespace GlimmerGrove.Tests
 
 
 
+        static bool InOrder(Mechanic m)
+        {
+            foreach (var o in Mechanic.TeachingOrder) if (o.Equals(m)) return true;
+            return false;
+        }
+
         [Test]
-        public void EveryMechanicHasAPlaceInTheTeachingOrder()
+        public void EveryBoardMechanicHasAPlaceInTheTeachingOrder()
         {
             // A mechanic missing from the order can be detected but never taught, which
             // is the kind of gap that only shows up as "why did nobody see this tip".
-            var all = new[] { Mechanic.FragileConduit, Mechanic.MoveBudget,
-                              Mechanic.RootedTile, Mechanic.ColourMixing,
-                              Mechanic.Duskcap, Mechanic.BoundConduit };
+            // Everything MechanicScan can report belongs here; the crossing was added to
+            // the scan a chapter after this list was written and went unlisted for it.
+            var board = new[] { Mechanic.FragileConduit, Mechanic.MoveBudget,
+                                Mechanic.RootedTile, Mechanic.ColourMixing,
+                                Mechanic.Duskcap, Mechanic.Crossing, Mechanic.BoundConduit };
 
-            foreach (var m in all)
+            foreach (var m in board)
+                Assert.IsTrue(InOrder(m), $"'{m}' is not in TeachingOrder and can never be shown");
+
+            Assert.AreEqual(board.Length, Mechanic.TeachingOrder.Length,
+                            "the teaching order is the board's queue and holds nothing else");
+        }
+
+        /// <summary>
+        /// A lesson about a screen must never be queued by a board.
+        ///
+        /// Both live on <see cref="Mechanic"/> because everything about a lesson is already
+        /// there — a permanent id, strings derived from it, and a union-joined ledger that
+        /// reaches the cloud with no new save field. What separates them is the queue:
+        /// <see cref="Mechanic.TeachingOrder"/> is what a glade walks, and a grove tip
+        /// appearing on a board would be a modal about a shop over a puzzle.
+        /// </summary>
+        [Test]
+        public void AScreensLessonIsNeverQueuedByAGlade()
+        {
+            Assert.IsFalse(InOrder(Mechanic.Grove));
+            Assert.IsFalse(InOrder(Mechanic.GroveShop));
+        }
+
+        /// <summary>
+        /// <c>Mechanic.All</c> is what the build gate walks to prove every lesson has its two
+        /// strings, so a mechanic missing from it ships with its loc keys printed on screen.
+        /// </summary>
+        [Test]
+        public void EveryLessonIsListedOnceInAll()
+        {
+            var ids = new HashSet<string>(System.StringComparer.Ordinal);
+
+            foreach (var m in Mechanic.All)
             {
-                bool listed = false;
-                foreach (var o in Mechanic.TeachingOrder) if (o.Equals(m)) listed = true;
-                Assert.IsTrue(listed, $"'{m}' is not in TeachingOrder and can never be shown");
+                Assert.IsTrue(m.IsValid, "a mechanic with no id can never be recorded as seen");
+                Assert.IsTrue(ids.Add(m.Id), $"'{m}' is listed in All twice");
             }
+
+            foreach (var m in Mechanic.TeachingOrder)
+                Assert.IsTrue(ids.Contains(m.Id), $"'{m}' is taught and is not in All, so nothing " +
+                                                  "proves it has strings");
+
+            Assert.IsTrue(ids.Contains(Mechanic.Grove.Id));
+            Assert.IsTrue(ids.Contains(Mechanic.GroveShop.Id));
         }
 
         // ------------------------------------------------------------ the ledger

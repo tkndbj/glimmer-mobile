@@ -179,10 +179,10 @@ namespace GlimmerGrove
             frt.anchoredPosition = Vector2.zero;
             frt.localRotation = Quaternion.Euler(0, 0, 180f);
 
-            UIKit.IconButton("Back", Content, Skins.Nav, "ic_left", new Vector2(118f, 118f),
+            UIKit.IconButton("Back", Safe, Skins.Nav, "ic_left", new Vector2(118f, 118f),
                              new Vector2(0f, 1f), new Vector2(96f, -132f), () => Flow.Go<HomesteadScreen>());
 
-            var banner = UIKit.Img("Banner", Content, Art.S("Ui/banner"), Color.white,
+            var banner = UIKit.Img("Banner", Safe, Art.S("Ui/banner"), Color.white,
                                    new Vector2(520f, 140f), new Vector2(.5f, 1f), new Vector2(0f, -128f));
             UIKit.Shrinkable(
                 UIKit.Titled("Title", banner.transform, Loc.Get("ui.grove.shop").ToUpperInvariant(), 40,
@@ -194,7 +194,7 @@ namespace GlimmerGrove
             // player deciding between two pieces should not have to leave to find out.
             var pillSize = new Vector2(212f, 76f);
             var pillAnchor = new Vector2(1f, 1f);
-            var pill = UIKit.Img("Coins", Content, Art.Round(22), new Color(.04f, .09f, .12f, .80f),
+            var pill = UIKit.Img("Coins", Safe, Art.Round(22), new Color(.04f, .09f, .12f, .80f),
                                  pillSize, pillAnchor, UIKit.Corner(pillSize, pillAnchor, 28f, 94f));
             var edge = UIKit.Img("Edge", pill.transform, Art.RoundOutline(22, 3f), Pal.A(Pal.Gold, .45f));
             UIKit.StretchTo((RectTransform)edge.transform, 0, 0, 0, 0);
@@ -213,7 +213,7 @@ namespace GlimmerGrove
             // that says which shelf you are looking at — and it is the only place the count of
             // what you hold on it can go without turning every cell into a receipt.
             _summary = UIKit.Shrinkable(
-                UIKit.Titled("Summary", Content, string.Empty, 26,
+                UIKit.Titled("Summary", Safe, string.Empty, 26,
                              new Color(1f, .96f, .88f, .72f), TextAnchor.MiddleCenter,
                              new Vector2(760f, 34f), new Vector2(.5f, 1f), new Vector2(0f, -216f), 3f, 0f), 18);
 
@@ -239,7 +239,7 @@ namespace GlimmerGrove
         /// </summary>
         void BuildTabs()
         {
-            _tabs = UIKit.Node("Tabs", Content);
+            _tabs = UIKit.Node("Tabs", Safe);
             _tabs.anchorMin = new Vector2(0f, 1f);
             _tabs.anchorMax = new Vector2(1f, 1f);
             _tabs.pivot = new Vector2(.5f, 1f);
@@ -276,7 +276,7 @@ namespace GlimmerGrove
         // ------------------------------------------------------------------ grid
         void BuildGrid()
         {
-            _viewport = UIKit.Node("Viewport", Content);
+            _viewport = UIKit.Node("Viewport", Safe);
             _viewport.offsetMin = new Vector2(0f, NavBar.Height);
             _viewport.offsetMax = new Vector2(0f, -HeaderHeight - TabRow);
 

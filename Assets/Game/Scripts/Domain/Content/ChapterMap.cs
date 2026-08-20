@@ -44,8 +44,27 @@ namespace GlimmerGrove.Content
         /// <summary>How far above the highest glade the end-of-chapter marker floats.</summary>
         public const float TeaserGap = 0.22f;
 
-        /// <summary>The marker never climbs past this, or it would leave the map.</summary>
-        public const float TeaserCeiling = 0.95f;
+        /// <summary>
+        /// How much of the top of the map the end-of-chapter marker must leave clear, in
+        /// canvas units.
+        ///
+        /// <para>
+        /// A distance rather than a fraction, and that is the whole of it. What the marker
+        /// has to clear is the header — a fixed number of canvas units however long the
+        /// chapter is — while a fraction of a four-strip map is a different distance from
+        /// the same fraction of a six-strip one. As a ceiling of 0.95 it sat 240 units from
+        /// the top of the Mill Vale and 360 from the top of the Shallows, so one constant
+        /// put the marker completely behind the banner in one chapter and clipped it in the
+        /// other, and no authored coordinate was wrong in either.
+        /// </para>
+        /// <para>
+        /// Sized for the worst case rather than the ordinary one: the banner's underside on
+        /// a display whose safe area pushes the whole header down, plus the marker's own
+        /// radius. A display with nothing in the way simply gets more room than it needs,
+        /// which is invisible; the other way round is a control the player cannot see.
+        /// </para>
+        /// </summary>
+        public const float TeaserHeadroom = 500f;
 
         public const float TeaserX = 0.66f;
 
@@ -57,9 +76,16 @@ namespace GlimmerGrove.Content
         public static Vector2 Place(Vector2 authored)
             => new Vector2(Mathf.Clamp01(authored.x), Mathf.Clamp01(authored.y));
 
-        /// <summary>Where the end-of-chapter marker sits, given the highest glade below it.</summary>
-        public static Vector2 TeaserPosition(float highestY)
-            => new Vector2(TeaserX, Mathf.Min(TeaserCeiling, highestY + TeaserGap));
+        /// <summary>
+        /// Where the end-of-chapter marker sits, given the highest glade below it and how
+        /// many strips the chapter is. Both are needed: the gap above the last glade is a
+        /// fraction of the map, and the room kept clear at the top is a distance.
+        /// </summary>
+        public static Vector2 TeaserPosition(float highestY, int stripCount)
+        {
+            float ceiling = Mathf.Clamp01(1f - TeaserHeadroom / Height(stripCount));
+            return new Vector2(TeaserX, Mathf.Min(ceiling, highestY + TeaserGap));
+        }
 
         /// <summary>
         /// The distance between two authored positions, in canvas units.

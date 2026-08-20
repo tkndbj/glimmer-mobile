@@ -1039,11 +1039,94 @@ namespace GlimmerGrove.EditorTools
             ValidateGroveFloor(grove, result, verbose);
             ValidateHomesteadPieces(content, grove, result);
             ValidateHomesteadHome(grove, result, verbose);
+            ValidateGroveScore(grove, result, verbose);
 
             if (verbose)
                 Debug.Log($"[Glimmer] grove: {grove.Floor.Cols}x{grove.Floor.Rows} floor, " +
                           $"{grove.SlotCount} tile(s), {grove.Floor.Regions.Count} region(s), " +
                           $"{grove.PieceCount} piece(s)");
+        }
+
+        /// <summary>
+        /// The star ladder the grove's score is read against.
+        ///
+        /// <para>
+        /// <b>The reachability check is the one worth having.</b> A grove's score is the
+        /// credits' worth of catalog a player holds, and the catalog grows with every drop —
+        /// so a top rung that was 90% of everything when it was authored is 40% of everything
+        /// a year later, and a rung authored above the total is a star nobody in the world can
+        /// ever win. Neither is visible by reading the file: the numbers are all plausible and
+        /// the mistake is a relationship between two files. It warns rather than errors,
+        /// because where a star should sit is an economy decision and a validator is not
+        /// entitled to overrule one — except at the top, where a ladder nobody can finish is
+        /// not a decision but an oversight.
+        /// </para>
+        /// <para>
+        /// The rising check <em>is</em> an error. A rung that repeats or falls awards a star
+        /// at a score indistinguishable from the one below it, so two stars land together and
+        /// the readout skips a number in front of the player. <c>HomesteadMapper</c> already
+        /// drops such a rung on the way in, so the game would ship coherent either way; this
+        /// is what tells whoever authored it that their row did nothing.
+        /// </para>
+        /// </summary>
+        static void ValidateGroveScore(HomesteadCatalog grove, ContentValidationResult result,
+                                       bool verbose)
+        {
+            var ladder = grove.Scores;
+
+            if (ladder.StarCount == 0)
+            {
+                result.Errors.Add("the grove's star ladder has no rungs; the score would show " +
+                                  "no stars at any value");
+                return;
+            }
+
+            if (ladder.StarCount > GroveScoreTable.MaxStars)
+                result.Errors.Add($"the grove's star ladder has {ladder.StarCount} rungs, more " +
+                                  $"than the {GroveScoreTable.MaxStars} the readout can draw");
+
+            long previous = 0L;
+            foreach (long at in ladder.Thresholds)
+            {
+                if (at <= 0L)
+                    result.Errors.Add($"the grove's star ladder holds {at}; no score is below it, " +
+                                      "so the star is awarded to an empty grove");
+                else if (at <= previous)
+                    result.Errors.Add($"the grove's star ladder does not rise: {at} comes after " +
+                                      $"{previous}, so two stars land at once");
+
+                previous = at;
+            }
+
+            long everything = GroveScore.MaximumValue(grove);
+
+            if (everything <= 0L)
+            {
+                result.Warnings.Add("nothing in the grove has a price, so its score can never " +
+                                    "leave zero and no star is reachable");
+                return;
+            }
+
+            if (ladder.Top > everything)
+                result.Warnings.Add($"the grove's last star asks for {ladder.Top} credits and the " +
+                                    $"whole catalog is worth {everything}; nobody can ever win it");
+
+            if (verbose)
+            {
+                var line = new System.Text.StringBuilder();
+                line.Append("[Glimmer] grove score: ").Append(everything)
+                    .Append(" credits for everything - ");
+
+                for (int star = 1; star <= ladder.StarCount; star++)
+                {
+                    if (star > 1) line.Append(", ");
+                    long at = ladder.At(star);
+                    line.Append(star).Append(star == 1 ? " star at " : " stars at ").Append(at)
+                        .Append(" (").Append(Mathf.RoundToInt(at * 100f / everything)).Append("%)");
+                }
+
+                Debug.Log(line.ToString());
+            }
         }
 
         /// <summary>
@@ -1673,7 +1756,10 @@ namespace GlimmerGrove.EditorTools
             // So are a tip's, and this is the only place that can prove they exist. A
             // mechanic added without its two strings compiles, validates and ships; the
             // first player to reach the glade that teaches it reads "ui.tip.<id>.title".
-            foreach (var mechanic in Mechanic.TeachingOrder)
+            // Walked over every mechanic rather than over the teaching order: the two were the
+            // same list until a lesson appeared that no board can bring (the Grovement's), and
+            // a check over the order would have silently stopped covering all of them.
+            foreach (var mechanic in Mechanic.All)
             {
                 Require(table, mechanic.TitleKey, $"mechanic '{mechanic.Id}'", result);
                 Require(table, mechanic.BodyKey, $"mechanic '{mechanic.Id}'", result);

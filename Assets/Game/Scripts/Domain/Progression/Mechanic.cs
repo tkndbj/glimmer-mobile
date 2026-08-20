@@ -39,6 +39,24 @@ namespace GlimmerGrove.Progression
         /// <summary>A conduit carrying two flows that pass through one another and never meet.</summary>
         public static readonly Mechanic Crossing = new Mechanic("crossing");
 
+        // ------------------------------------------------------------- screens
+        // Two things a board cannot teach, because they are not on one. They ride this type
+        // rather than a parallel one because everything about a lesson is already here and
+        // already stored: the id is permanent, the strings derive from it, and TipLedger is a
+        // union-joined set that reaches the cloud with no new field. A second "thing to teach
+        // once" type would be a second ledger, a second merge rule and a second save field,
+        // for two strings and a ring.
+        //
+        // They are deliberately absent from TeachingOrder, which is the *board* scan's queue —
+        // see the remarks there. A screen tip is raised by the screen that owns it, because
+        // nothing about a board implies the player has opened the Grovement.
+
+        /// <summary>What the Grovement is, shown once on the player's first visit.</summary>
+        public static readonly Mechanic Grove = new Mechanic("grove");
+
+        /// <summary>Where the things a grove is built from are bought.</summary>
+        public static readonly Mechanic GroveShop = new Mechanic("grove_shop");
+
         /// <summary>
         /// Teaching order, most disruptive first.
         ///
@@ -70,6 +88,25 @@ namespace GlimmerGrove.Progression
         public static readonly Mechanic[] TeachingOrder =
         {
             FragileConduit, MoveBudget, RootedTile, ColourMixing, Duskcap, Crossing, BoundConduit,
+        };
+
+        /// <summary>
+        /// Every lesson that exists, board and screen alike.
+        ///
+        /// <para>
+        /// It is what the build gate walks to prove each one has its two strings, and that is
+        /// the whole reason it exists separately from <see cref="TeachingOrder"/>: a mechanic
+        /// added without them compiles, validates and ships, and the first player to reach it
+        /// reads <c>ui.tip.grove.title</c> off the screen. That check used to walk the
+        /// teaching order, which was the same list until a lesson appeared that no board can
+        /// bring — after which the order would have quietly stopped being the set of
+        /// everything, and the check with it.
+        /// </para>
+        /// </summary>
+        public static readonly Mechanic[] All =
+        {
+            FragileConduit, MoveBudget, RootedTile, ColourMixing, Duskcap, Crossing, BoundConduit,
+            Grove, GroveShop,
         };
 
         public bool IsValid => !string.IsNullOrEmpty(Id);
