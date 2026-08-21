@@ -1,4 +1,5 @@
 #if GLIMMER_UMP
+using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 using GoogleMobileAds.Ump.Api;
@@ -61,13 +62,57 @@ namespace GlimmerGrove.Privacy
                 TagForUnderAgeOfConsent = AdPrivacy.ChildDirected,
             };
 
-            if (!await Update(request, cancellation).ConfigureAwait(false)) return AdPrivacySignals.Restricted;
+            // Only ever set in a development build, and only when a test device is listed —
+            // ConsentDebug is compiled out entirely otherwise, so a store build has no debug
+            // settings to attach. Without this the form cannot be seen from outside the EEA,
+            // which means it cannot be tested at all from here. See ConsentDebug.
+            if (ConsentDebug.IsActive)
+            {
+                var devices = new List<string>(ConsentDebug.Devices);
+
+                request.ConsentDebugSettings = new ConsentDebugSettings
+                {
+                    DebugGeography = DebugGeography.EEA,
+                    TestDeviceHashedIds = devices,
+                };
+
+                Debug.LogWarning($"[Privacy] consent debug is ON — forcing EEA for " +
+                                 $"{devices.Count} test device(s). This cannot ship: the whole " +
+                                 "block is compiled out of a release build.");
+
+                // Cached state beats a forced geography, every time. UMP stores its decision on
+                // the device, so the first launch on a Turkish network writes NotRequired and
+                // every later run is answered from that — the override is applied, ignored, and
+                // nothing in any log says why. Clearing it is what makes the debug geography
+                // mean anything. Debug-only: resetting a real player would re-prompt somebody
+                // who had already answered.
+                if (ConsentDebug.ResetEachRun)
+                {
+                    ConsentInformation.Reset();
+                    Debug.LogWarning("[Privacy] UMP consent state reset for testing");
+                }
+            }
+
+            if (!await Update(request, cancellation)) return AdPrivacySignals.Restricted;
 
             // Loads and shows the form only where one is owed — outside the EEA and the UK
             // this returns immediately having drawn nothing, which is why no geography check
             // of ours appears anywhere in this file. A failure here is not fatal: the player
             // simply has not consented, which is the state they were already in.
-            await ShowIfRequired(cancellation).ConfigureAwait(false);
+            // Logged raw, before Read() folds them together. The two states that matter here
+            // are indistinguishable afterwards: NotRequired means UMP placed this player
+            // outside the EEA, while Required-but-no-form means it placed them inside and had
+            // nothing published to show them. One is a geography problem and the other is a
+            // console problem, and guessing which cost an evening once.
+            Debug.Log($"[Privacy] UMP says status={ConsentInformation.ConsentStatus}, " +
+                      $"canRequestAds={ConsentInformation.CanRequestAds()}, " +
+                      $"privacyOptions={ConsentInformation.PrivacyOptionsRequirementStatus}");
+
+            await ShowIfRequired(cancellation);
+
+            Debug.Log($"[Privacy] after the form: status={ConsentInformation.ConsentStatus}, " +
+                      $"canRequestAds={ConsentInformation.CanRequestAds()}, " +
+                      $"privacyOptions={ConsentInformation.PrivacyOptionsRequirementStatus}");
 
             return Read();
         }
@@ -84,7 +129,7 @@ namespace GlimmerGrove.Privacy
                 opened.TrySetResult(error == null);
             });
 
-            await Wait(opened.Task, cancellation).ConfigureAwait(false);
+            await Wait(opened.Task, cancellation);
 
             return Read();
         }
@@ -102,7 +147,7 @@ namespace GlimmerGrove.Privacy
                 updated.TrySetResult(error == null);
             });
 
-            return await Wait(updated.Task, cancellation).ConfigureAwait(false);
+            return await Wait(updated.Task, cancellation);
         }
 
         static async Task ShowIfRequired(CancellationToken cancellation)
@@ -115,7 +160,7 @@ namespace GlimmerGrove.Privacy
                 shown.TrySetResult(error == null);
             });
 
-            await Wait(shown.Task, cancellation).ConfigureAwait(false);
+            await Wait(shown.Task, cancellation);
         }
 
         /// <summary>
@@ -128,7 +173,7 @@ namespace GlimmerGrove.Privacy
         static async Task<bool> Wait(Task<bool> work, CancellationToken cancellation)
         {
             var timeout = Task.Delay(TimeoutMilliseconds, cancellation);
-            var finished = await Task.WhenAny(work, timeout).ConfigureAwait(false);
+            var finished = await Task.WhenAny(work, timeout);
 
             if (finished != work)
             {
@@ -136,7 +181,7 @@ namespace GlimmerGrove.Privacy
                 return false;
             }
 
-            return await work.ConfigureAwait(false);
+            return await work;
         }
 
         /// <summary>

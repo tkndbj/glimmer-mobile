@@ -8,6 +8,7 @@ using GlimmerGrove.Daily;
 using GlimmerGrove.Persistence;
 using GlimmerGrove.Privacy;
 using GlimmerGrove.Progression;
+using UnityEngine;
 
 namespace GlimmerGrove.Ads
 {
@@ -174,7 +175,15 @@ namespace GlimmerGrove.Ads
             if (_started || !_installed) return;
             _started = true;
 
-            var signals = await AdPrivacy.ResolveAsync(cancellation).ConfigureAwait(false);
+            // No ConfigureAwait(false) anywhere on this path, and it is not an oversight.
+            // Unity's main thread carries a SynchronizationContext, so a plain await resumes
+            // on it; ConfigureAwait(false) resumes on the thread pool instead, and everything
+            // below this line ends up calling into JNI — SetMetaData, SetGDPRConsent, Init.
+            // JNI from an unattached background thread throws, and because BeginStart fires
+            // this off as `_ = StartAsync()` the exception lands in a task nobody observes
+            // and disappears. Mediation then simply never starts, with nothing in the log.
+            // That shipped once; see the try/catch below, which is the other half of the fix.
+            var signals = await AdPrivacy.ResolveAsync(cancellation);
 
             var provider = _provider;
             provider.ApplyPrivacy(signals);
@@ -188,11 +197,39 @@ namespace GlimmerGrove.Ads
             // which is a player changing their mind.
             AdPrivacy.Changed += OnPrivacyChanged;
 
-            await provider.InitializeAsync(cancellation).ConfigureAwait(false);
+            await provider.InitializeAsync(cancellation);
         }
 
-        /// <summary>Fire-and-forget <see cref="StartAsync"/>, for a caller in a coroutine.</summary>
-        public static void BeginStart() => _ = StartAsync();
+        /// <summary>
+        /// Fire-and-forget <see cref="StartAsync"/>, for a caller in a coroutine.
+        ///
+        /// <para>
+        /// The continuation is <b>observed</b> rather than discarded, which matters more than
+        /// it looks: an unobserved faulted task is how a failure here becomes invisible. The
+        /// first version wrote <c>_ = StartAsync()</c>, an exception on the first JNI call went
+        /// nowhere, and the symptom was an ad system that quietly did not exist — no offers, no
+        /// error, nothing in the log to search for.
+        /// </para>
+        /// </summary>
+        public static void BeginStart()
+        {
+            _ = Started();
+
+            static async Task Started()
+            {
+                try
+                {
+                    await StartAsync();
+                }
+                catch (Exception e)
+                {
+                    // Logged and swallowed. Ads failing to start must never take the game with
+                    // them — every offer already renders an honest refusal when the provider is
+                    // not ready, which is exactly the state this leaves behind.
+                    Debug.LogError($"[Ads] mediation failed to start: {e}");
+                }
+            }
+        }
 
         /// <summary>
         /// A withdrawal, or a change of mind, reaching the SDK.

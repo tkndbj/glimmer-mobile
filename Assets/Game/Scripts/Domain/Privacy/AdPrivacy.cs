@@ -119,13 +119,21 @@ namespace GlimmerGrove.Privacy
         /// that runs and shows unpersonalised ads rather than a splash screen that never ends.
         /// </para>
         /// </summary>
+        /// <remarks>
+        /// Deliberately no <c>ConfigureAwait(false)</c> on any await here. Everything downstream
+        /// of this eventually calls into a native SDK — the CMP, Apple's prompt, then mediation
+        /// — and those must be reached from Unity's main thread. A plain await resumes there
+        /// because the main thread carries a SynchronizationContext; ConfigureAwait(false)
+        /// resumes on the thread pool, where the first JNI call throws into a task nobody is
+        /// watching. See <see cref="Ads.RewardedAds.BeginStart"/>.
+        /// </remarks>
         public static async Task<AdPrivacySignals> ResolveAsync(CancellationToken cancellation = default)
         {
             AdPrivacySignals resolved;
 
             try
             {
-                resolved = await _consent.ResolveAsync(cancellation).ConfigureAwait(false);
+                resolved = await _consent.ResolveAsync(cancellation);
             }
             catch (Exception)
             {
@@ -139,7 +147,7 @@ namespace GlimmerGrove.Privacy
 
             try
             {
-                tracking = await _tracking.RequestAsync(cancellation).ConfigureAwait(false);
+                tracking = await _tracking.RequestAsync(cancellation);
             }
             catch (Exception)
             {
@@ -166,7 +174,7 @@ namespace GlimmerGrove.Privacy
 
             try
             {
-                var resolved = await _consent.RevisitAsync(cancellation).ConfigureAwait(false);
+                var resolved = await _consent.RevisitAsync(cancellation);
                 Commit(With(resolved, _tracking.Status));
             }
             catch (Exception)
