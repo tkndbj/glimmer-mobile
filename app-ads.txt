@@ -36,13 +36,17 @@
 # ---------------------------------------------------------------- ironSource / Unity LevelPlay
 # The mediation platform itself. Required even though it is not a demand source of its own,
 # because it sells on behalf of the networks below it.
-# TODO: replace with the exact lines from LevelPlay ▸ Setup ▸ app-ads.txt
-unityads.unity3d.com, PLACEHOLDER_PUBLISHER_ID, DIRECT, 96cabb5fbdde3c78
+# TODO. Commented out rather than left as a fake id, deliberately: a line naming a
+# publisher that is not us authorises a stranger to sell this app's inventory, which is
+# the one failure here that is worse than an absent line. The dashboards appear to expose
+# the real line only once an app has a store listing, so this waits for publication.
+# unityads.unity3d.com, <publisher id>, DIRECT, 96cabb5fbdde3c78
 
 # ---------------------------------------------------------------- Unity Ads
 # The one adapter currently installed in the project (ISUnityAdsAdapterDependencies.xml).
-# TODO: replace with the exact lines from the Unity Ads dashboard
-unityads.unity3d.com, PLACEHOLDER_PUBLISHER_ID, DIRECT, 96cabb5fbdde3c78
+# TODO, same as above. ironSource and Unity Ads are one company now, so this is likely
+# the same single line rather than two.
+# unityads.unity3d.com, <publisher id>, DIRECT, 96cabb5fbdde3c78
 
 # ---------------------------------------------------------------- Google AdMob
 # Publisher id taken from the Cyprus AdMob account (pub-4604184534032643, confirmed against

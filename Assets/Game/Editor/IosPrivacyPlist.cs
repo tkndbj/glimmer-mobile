@@ -88,6 +88,54 @@ namespace GlimmerGrove.EditorTools
             plist.WriteToFile(plistPath);
 
             Debug.Log("[Privacy] NSUserTrackingUsageDescription written into Info.plist");
+
+            LinkTrackingFramework(pathToBuiltProject);
+        }
+
+        /// <summary>
+        /// Links <c>AppTrackingTransparency.framework</c>, which nothing else does.
+        ///
+        /// <para>
+        /// Unity copies a native plugin into the generated project but does not link the system
+        /// frameworks it calls into, and <c>ATTrackingManager</c> lives in one that is not linked
+        /// by default. Without this the build fails at the very end, in the linker, with
+        /// undefined symbols for <c>_OBJC_CLASS_$_ATTrackingManager</c> — after twenty minutes of
+        /// compiling, and with an error that names Apple's class rather than our file.
+        /// </para>
+        /// <para>
+        /// <b>Weakly linked</b>, deliberately. The framework arrived in iOS 14 and the plugin
+        /// guards every call behind an availability check, so a weak link lets the app launch on
+        /// anything older with the symbol simply absent. A strong link would refuse to load the
+        /// binary at all on those devices — a crash on start rather than a feature that is
+        /// quietly unavailable.
+        /// </para>
+        /// <para>
+        /// Added to the <c>UnityFramework</c> target rather than the app target, because that is
+        /// where Unity puts native plugins in a modern generated project — the app target is a
+        /// thin shell that loads it.
+        /// </para>
+        /// </summary>
+        static void LinkTrackingFramework(string pathToBuiltProject)
+        {
+            string projectPath = PBXProject.GetPBXProjectPath(pathToBuiltProject);
+
+            if (!File.Exists(projectPath))
+            {
+                Debug.LogError($"[Privacy] no Xcode project at '{projectPath}'; " +
+                               "AppTrackingTransparency will not be linked and the build will " +
+                               "fail in the linker");
+                return;
+            }
+
+            var project = new PBXProject();
+            project.ReadFromFile(projectPath);
+
+            project.AddFrameworkToProject(project.GetUnityFrameworkTargetGuid(),
+                                          "AppTrackingTransparency.framework", weak: true);
+
+            project.WriteToFile(projectPath);
+
+            Debug.Log("[Privacy] AppTrackingTransparency.framework linked (weak) into UnityFramework");
         }
     }
 }

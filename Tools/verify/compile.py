@@ -130,6 +130,12 @@ DEFINES = ["GLIMMER_ADDRESSABLES", "GLIMMER_HAS_ADDRESSABLES", "GLIMMER_FIREBASE
 # them the first type that crosses into a plugin signature fails with CS0012.
 SHIMS = [os.path.join(NETFX_SHIMS, "mscorlib.dll"), os.path.join(NETFX_SHIMS, "System.dll")]
 
+# Unity's iOS build-support module. Present only when that module is installed, which is why the
+# pass that needs it is skipped rather than failed when it is missing — a Windows machine without
+# iOS support is a legitimate way to work on this project.
+IOS_XCODE = os.path.join(
+    DATA, "PlaybackEngines", "iOSSupport", "UnityEditor.iOS.Extensions.Xcode.dll")
+
 # Order matters: each entry may reference the outputs of the ones above it.
 ASSEMBLIES = [
     ("domain", dict(
@@ -183,6 +189,22 @@ ASSEMBLIES = [
                         "GlimmerGrove.Privacy", "GlimmerGrove.Presentation"),
         defines=DEFINES + ["UNITY_EDITOR"],
     )),
+    ("editor-ios", dict(
+        out="GlimmerGrove.Editor.iOS",
+        src=sources("Assets/Game/Editor"),
+        # The same assembly again with UNITY_IOS defined, and it is not redundant: every iOS
+        # build step in this project lives behind `#if UNITY_IOS`, so the ordinary editor pass
+        # compiles *none* of it. IosPrivacyPlist writes the tracking usage description and links
+        # AppTrackingTransparency.framework, and without this pass the first thing to compile it
+        # would be a Mac, twenty minutes into an Xcode build, with the error naming Apple's
+        # linker rather than our file.
+        refs=ENGINE_EDITOR + PKG_EDITOR + [NETSTANDARD, IOS_XCODE] + SHIMS
+             + compiled("GlimmerGrove.Domain", "GlimmerGrove.Cloud", "GlimmerGrove.Ads",
+                        "GlimmerGrove.Privacy", "GlimmerGrove.Presentation"),
+        defines=DEFINES + ["UNITY_EDITOR", "UNITY_IOS"],
+        # Skipped, not failed, when the iOS module is not installed.
+        needs=IOS_XCODE,
+    )),
     ("tests", dict(
         out="GlimmerGrove.Tests",
         src=sources("Assets/Game/Tests"),
@@ -216,6 +238,11 @@ def build(key, spec):
             continue
         seen.add(name)
         refs.append(r)
+
+    needs = spec.get("needs")
+    if needs and not os.path.exists(needs):
+        print("  %-7s skipped (needs %s)" % (key, os.path.basename(needs)))
+        return True
 
     lines = ["-nostdlib+", "-noconfig", "-langversion:9", "-target:library", "-nowarn:CS0169,CS0414,CS0649",
              '-out:"%s"' % out_dll.replace("\\", "/")]
