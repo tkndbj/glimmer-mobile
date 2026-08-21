@@ -1,7 +1,10 @@
 using System;
 using System.Collections.Generic;
 using GlimmerGrove.Cloud;
+using GlimmerGrove.Homestead;
 using GlimmerGrove.Localization;
+using GlimmerGrove.Persistence;
+using GlimmerGrove.Social;
 using GlimmerGrove.Progression;
 using UnityEngine;
 using UnityEngine.UI;
@@ -39,6 +42,19 @@ namespace GlimmerGrove
         RectTransform _viewport, _stack;
         float _cursor;                       // top of the next card, negative and falling
 
+        /// <summary>
+        /// False until the body has been built once, which is what tells a card whether it is
+        /// <em>arriving</em> or being <em>redrawn</em>.
+        ///
+        /// <para>
+        /// The same split <c>GridView</c> makes between <c>Show</c> and <c>Refresh</c>, and for
+        /// its reason: the staggered pop is this screen's entrance, and replaying it because a
+        /// toggle was tapped or an account was linked is a page that flinches at the player.
+        /// Anything raised by an event is a redraw.
+        /// </para>
+        /// </summary>
+        bool _entered;
+
         Image _portrait;
         Text _nameLabel;
         Transform _companionRow;
@@ -68,6 +84,13 @@ namespace GlimmerGrove
             Profile.AvatarChanged += RepaintCompanions;
 
             AvatarCatalog.Changed += RepaintCompanions;
+
+            // The account card is the one place in the game that says "your progress is saved
+            // online", so it has to follow the account rather than whatever was true when the
+            // screen opened. AccountOverlay is a modal raised over this screen and has four
+            // exits, so a callback from it reports through some of them and not others — the
+            // companion screens' bug exactly. An event cannot be forgotten.
+            CloudSaveService.IdentityChanged += BuildBody;
         }
 
         /// <summary>
@@ -96,14 +119,51 @@ namespace GlimmerGrove
             Progression.CompanionLedger.Changed -= RepaintCompanions;
             Profile.AvatarChanged -= RepaintCompanions;
             AvatarCatalog.Changed -= RepaintCompanions;
+            CloudSaveService.IdentityChanged -= BuildBody;
 
             if (Flow.Current is CompanionScreen) return;
             CompanionArt.CloseUnlessWanted();
         }
 
         // -------------------------------------------------------------- scroller
+        /// <summary>
+        /// Builds the scrolling body, and rebuilds it in place when something changes that
+        /// reaches more than one card.
+        ///
+        /// <para>
+        /// <b>Rebuilt wholesale rather than patched</b>, which is <c>PaintCompanions</c>' call
+        /// one level up: a card's position is the running cursor rather than a number written
+        /// down, so a card that changes height moves every card below it. Redrawing five cards
+        /// is far cheaper than the bugs of keeping their offsets in step by hand.
+        /// </para>
+        /// <para>
+        /// <b>The outgoing body is hidden before it is destroyed.</b> <c>Destroy</c> lands at
+        /// the end of the frame, so a region replaced in place is drawn over its replacement
+        /// until then. This screen already followed that rule in <c>PaintCompanions</c> and did
+        /// not follow it here — and here it was worse than a flicker, because the old viewport
+        /// was neither hidden nor destroyed: every rebuild left one behind, stacked over the
+        /// live one, still carrying its invisible drag catcher. So the toggle leaked a whole
+        /// page each time it was tapped and the page underneath stopped scrolling properly.
+        /// </para>
+        /// <para>
+        /// <b>The scroll position survives.</b> A rebuild that returns somebody to the top of
+        /// the page has lost their place for a reason they did not cause — <c>GridView</c>'s
+        /// lesson, and it costs two lines here.
+        /// </para>
+        /// </summary>
         void BuildBody()
         {
+            if (!this) return;
+
+            // Read before anything is torn down, and restored after the new stack is measured.
+            float scrolled = _stack ? _stack.anchoredPosition.y : 0f;
+
+            if (_viewport)
+            {
+                _viewport.gameObject.SetActive(false);
+                Destroy(_viewport.gameObject);
+            }
+
             _viewport = UIKit.Node("Viewport", Safe);
             _viewport.offsetMin = new Vector2(0f, NavBar.Height);
             _viewport.offsetMax = new Vector2(0f, -HeaderHeight);
@@ -123,8 +183,20 @@ namespace GlimmerGrove
             BuildKeeperCard();
             BuildRecordCard();
             BuildCompanionCard();
+            BuildBoardCard();
             BuildAccountCard();
             _stack.sizeDelta = new Vector2(0f, -_cursor + Gap);
+
+            // Straight to the content rather than through verticalNormalizedPosition, which a
+            // ScrollRect resolves against bounds it recomputes in its own LateUpdate — so in
+            // the frame the content is built it is read against nothing. GridView.Show carries
+            // the same note for the same reason.
+            //
+            // Clamped, because the rebuild may be shorter than what it replaced: the account
+            // card grows a line when the provider gives the account a name, and the board card
+            // changes height with the opt-in.
+            float reach = Mathf.Max(0f, _stack.sizeDelta.y - _viewport.rect.height);
+            _stack.anchoredPosition = new Vector2(0f, Mathf.Clamp(scrolled, 0f, reach));
 
             var scroll = _viewport.gameObject.AddComponent<ScrollRect>();
             scroll.content = _stack;
@@ -136,6 +208,11 @@ namespace GlimmerGrove
             scroll.inertia = true;
             scroll.decelerationRate = .04f;
             scroll.scrollSensitivity = 55f;
+
+            // Last, so that every card built above has seen the value from the build before
+            // this one. Set here rather than by the caller because there are three callers and
+            // this is the only place that can be sure the body exists.
+            _entered = true;
         }
 
         /// <summary>
@@ -153,8 +230,13 @@ namespace GlimmerGrove
 
             _cursor -= height + Gap;
 
-            card.transform.localScale = Vector3.zero;
-            Tween.Pop(card.transform, 0f, .55f, .08f + order * .07f);
+            // Only on the way in. A redraw leaves the card at full size — see _entered.
+            if (!_entered)
+            {
+                card.transform.localScale = Vector3.zero;
+                Tween.Pop(card.transform, 0f, .55f, .08f + order * .07f);
+            }
+
             return (RectTransform)card.transform;
         }
 
@@ -432,11 +514,82 @@ namespace GlimmerGrove
         }
 
         // ----------------------------------------------------------- the account
+        // ------------------------------------------------------------- the boards
+        /// <summary>
+        /// Where this grove stands among everybody else's, and whether it appears at all.
+        ///
+        /// <para>
+        /// <b>The opt-out lives here rather than in Settings, and for the reason the account
+        /// section moved here.</b> Appearing on a public list under a name is a question about
+        /// <em>who the player is</em>, and burying it in a preferences panel beside the music
+        /// volume is how it stays unfound — by the people who most want it, who are exactly
+        /// the people it exists for. It sits directly above the account card because the two
+        /// are one subject.
+        /// </para>
+        /// <para>
+        /// Turning it off is not a preference that takes effect later: it takes the published
+        /// card down. See <c>GroveBoard</c> and <c>GrovePublishPolicy.RequestWithdrawal</c>.
+        /// </para>
+        /// </summary>
+        void BuildBoardCard()
+        {
+            var card = Section("Boards", 330f, 3);
+            CardTitle(card, "ui.board.title", CardWidth);
+
+            var standing = GroveScore.Of(HomesteadCatalog.Current);
+
+            var glyph = UIKit.Img("Glyph", card, Art.S("Ui/ic_trophy"), Color.white,
+                                  new Vector2(76f, 76f), new Vector2(0f, .5f), new Vector2(104f, 54f));
+            glyph.preserveAspect = true;
+            UIKit.Halo(glyph.transform, Pal.Gold, 150f, .26f);
+
+            int top = GroveRanks.Table.TopPercent(standing.Score);
+
+            string line = !GroveBoard.IsAvailable ? Loc.Get("ui.board.offline")
+                        : !GroveBoard.OptedIn ? Loc.Get("ui.board.opted_out")
+                        : standing.Score < GrovePublishPolicy.Worth ? Loc.Get("ui.board.unranked")
+                        : top > 0 ? Loc.Format("ui.board.top_percent", top)
+                        : Loc.Get("ui.board.building");
+
+            UIKit.Shrinkable(
+                UIKit.Titled("Standing", card, line, 30, Pal.Cream, TextAnchor.MiddleLeft,
+                             new Vector2(560f, 60f), new Vector2(0f, .5f), new Vector2(440f, 54f),
+                             3f, 3f), 18);
+
+            UIKit.TextButton("Open", card, "btn_blue", Loc.Get("ui.board.open"), 32,
+                             new Vector2(420f, 104f), new Vector2(0f, 0f), new Vector2(280f, 62f),
+                             () => Flow.Go<LeaderboardScreen>());
+
+            // A toggle rather than a line in a menu somewhere else, and it says which state it
+            // is in rather than which state it would move to — the ambiguity that makes every
+            // "Disable notifications?" button in the world a coin flip.
+            var toggle = UIKit.TextButton("Visibility", card,
+                                          GroveBoard.OptedIn ? Skins.Alternate : "btn_green",
+                                          Loc.Get(GroveBoard.OptedIn ? "ui.board.leave"
+                                                                     : "ui.board.join"), 28,
+                                          new Vector2(380f, 92f), new Vector2(1f, 0f),
+                                          new Vector2(-260f, 68f),
+                                          ToggleBoardVisibility);
+            UIKit.Shrinkable(toggle.Label, 17);
+            UIKit.FitLabel(toggle);
+        }
+
+        /// <summary>
+        /// Joins or leaves the boards, and rebuilds the card so it describes the new state.
+        ///
+        /// <c>GameSettings</c> raises its own event and <c>GroveBoard</c> is subscribed to it,
+        /// so the withdrawal or the republish happens without this method knowing anything
+        /// about either — the wiring rule this project has paid for three times.
+        /// </summary>
+        void ToggleBoardVisibility()
+        {
+            GameSettings.SetBoardOptIn(!GameSettings.BoardOptIn);
+            Audio.Sfx("chime2", .5f);
+            BuildBody();
+        }
+
         void BuildAccountCard()
         {
-            var card = Section("Account", 360f, 3);
-            CardTitle(card, "ui.profile.account", CardWidth);
-
             bool available = CloudSaveService.IsAvailable;
 
             // Asked before IsLinked, and it has to be. A device caught between two accounts
@@ -452,21 +605,47 @@ namespace GlimmerGrove
                              : linked ? "ui.account.linked"
                              : "ui.account.guest";
 
+            // What the account is called, when the provider gave one. Display only — see
+            // CloudIdentity.Label — and absent for a guest, who has no account to name.
+            //
+            // The card grows a line to hold it rather than squeezing one in, and everything
+            // above the hint moves up by exactly that line. Reserving the room unconditionally
+            // would leave a hole on the guest card, which is what most players see first; the
+            // hint and the button keep their distance from the bottom either way, because the
+            // button is the one thing anchored to it.
+            string account = linked ? CloudSaveService.AccountLabel : string.Empty;
+            bool showAccount = !string.IsNullOrEmpty(account);
+
+            var card = Section("Account", showAccount ? 400f : 360f, 4);
+            CardTitle(card, "ui.profile.account", CardWidth);
+
+            float lift = showAccount ? 20f : 0f;
+
             var glyph = UIKit.Img("Glyph", card, Art.S("Ui/ic_key"), Color.white,
-                                  new Vector2(76f, 76f), new Vector2(0f, .5f), new Vector2(104f, 58f));
+                                  new Vector2(76f, 76f), new Vector2(0f, .5f),
+                                  new Vector2(104f, 58f + lift + (showAccount ? 22f : 0f)));
             glyph.preserveAspect = true;
             UIKit.Halo(glyph.transform, linked ? Pal.Mint : Pal.Rose, 150f, .28f);
 
             UIKit.Titled("Status", card, Loc.Get(statusKey), 34,
                          !available ? new Color(1f, .95f, .86f, .6f) : linked ? Pal.Mint : Pal.Rose,
                          TextAnchor.MiddleLeft, new Vector2(560f, 44f), new Vector2(0f, .5f),
-                         new Vector2(440f, 58f), 3f, 3f);
+                         new Vector2(440f, 96f), 3f, 3f);
+
+            // Shrinkable rather than wrapping: an address is one token, and a second line of it
+            // reads as a second fact rather than as the same one continued.
+            if (showAccount)
+                UIKit.Shrinkable(
+                    UIKit.Titled("Account", card, account, 26, new Color(1f, .96f, .88f, .62f),
+                                 TextAnchor.MiddleLeft, new Vector2(560f, 34f), new Vector2(0f, .5f),
+                                 new Vector2(440f, 56f), 3f, 0f),
+                    18);
 
             UIKit.Titled("Why", card, Loc.Get(mismatched ? "ui.profile.mismatch_hint"
                                              : linked ? "ui.profile.linked_hint" : "ui.profile.guest_hint"),
                          25, new Color(1f, .96f, .88f, .58f), TextAnchor.UpperCenter,
-                         new Vector2(800f, 70f), new Vector2(.5f, .5f), new Vector2(0f, 6f), 3f, 0f,
-                         wrap: true);
+                         new Vector2(800f, 62f), new Vector2(.5f, .5f), new Vector2(0f, showAccount ? 2f : 6f),
+                         3f, 0f, wrap: true);
 
             if (!available) return;
 

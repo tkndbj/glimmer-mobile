@@ -48,6 +48,7 @@ namespace GlimmerGrove.Tests
                 wallet = new WalletDto
                 {
                     coins = -1, gems = -1, hearts = 4, displayName = "Fern",
+                    hintsProduced = 9, hintsSpent = 7, hintsDueUnix = 1_700_003_600,
                     currencies = new[] { ledger.ToDto() },
                 },
                 levels = new[]
@@ -216,6 +217,14 @@ namespace GlimmerGrove.Tests
             Assert.AreEqual(4, restored.wallet.hearts);
             Assert.AreEqual("Fern", restored.wallet.displayName);
 
+            // The hint ledger, whole. All three or none: the count is derived from the first
+            // two, and the deadline moves without the count moving — a device that received
+            // only what is on screen would have nothing to join against, which is the fault
+            // the heart ledger cost a schema version to fix.
+            Assert.AreEqual(9, restored.wallet.hintsProduced);
+            Assert.AreEqual(7, restored.wallet.hintsSpent);
+            Assert.AreEqual(1_700_003_600, restored.wallet.hintsDueUnix);
+
             // The streak used to stay on the phone, so a player's flame quietly restarted
             // on their second device. All three dates have to make the round trip or the
             // merge on the other side has nothing to join against.
@@ -342,6 +351,32 @@ namespace GlimmerGrove.Tests
             Assert.AreEqual(0, restored.streak.startDay);
             Assert.AreEqual(0, restored.streak.lastPlayedDay);
             Assert.AreEqual(0, restored.streak.collectedThroughDay);
+        }
+
+        /// <summary>
+        /// A document written before the hint pool existed reads back as "no opinion" rather
+        /// than as a player who has spent every hint they ever had.
+        ///
+        /// The distinction is the whole migration: -1 is what <c>SaveMerge</c> answers with a
+        /// full pool, and 0 would be a real ledger reading empty. Nothing has to detect the
+        /// upgrade, which is why v19 needed no migration code.
+        /// </summary>
+        [Test]
+        public void ADocumentWithNoHintLedgerReadsAsHoldingNoOpinion()
+        {
+            var document = FirestoreSaveMapper.ToDocument(Populated());
+            var wallet = document["wallet"] as Dictionary<string, object>;
+            Assert.IsNotNull(wallet);
+
+            wallet.Remove("hintsProduced");
+            wallet.Remove("hintsSpent");
+            wallet.Remove("hintsDueUnix");
+
+            var restored = FirestoreSaveMapper.FromDocument(document);
+
+            Assert.AreEqual(-1, restored.wallet.hintsProduced);
+            Assert.AreEqual(-1, restored.wallet.hintsSpent);
+            Assert.AreEqual(0, restored.wallet.hintsDueUnix);
         }
 
         /// <summary>

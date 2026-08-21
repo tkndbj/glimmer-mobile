@@ -329,6 +329,7 @@ namespace GlimmerGrove
             => placementId == AdPlacement.CoinBonus ? "ui.ads.coins_title"
              : placementId == AdPlacement.RunContinue ? "ui.ads.continue_title"
              : placementId == AdPlacement.WinBonus ? "ui.ads.bonus_title"
+             : placementId == AdPlacement.HintRefill ? "ui.ads.hints_title"
              : "ui.ads.hearts_title";
 
         /// <summary>
@@ -352,6 +353,7 @@ namespace GlimmerGrove
             => placementId == AdPlacement.CoinBonus || placementId == AdPlacement.WinBonus
                  ? ChestDropKind.Credits
              : placementId == AdPlacement.RunContinue ? ChestDropKind.RunTime
+             : placementId == AdPlacement.HintRefill ? ChestDropKind.Hints
              : ChestDropKind.Hearts;
 
         // ------------------------------------------------------------- the prize
@@ -432,6 +434,21 @@ namespace GlimmerGrove
                 facts.Add(new AdFact("ic_star", Pal.Gold, () => Loc.Get("ui.coins.from_glades")));
                 facts.Add(new AdFact("ic_chest", Pal.Gold, () => Loc.Get("ui.coins.shop_soon")));
             }
+            else if (placementId == AdPlacement.HintRefill)
+            {
+                // Read from HintRules rather than written into the copy, for the reason the
+                // heart facts are. Nothing here says "collected hints stack", which the heart
+                // panel's third line does, because they do not — the pool has no headroom
+                // above its cap. That is not a fact worth printing, because a player can
+                // never meet it: WouldBenefit hides the whole offer at a full pool rather
+                // than letting somebody watch a video for a grant that would be refused.
+                facts.Add(new AdFact("ic_hint", Pal.Amber,
+                                     () => Loc.Format("ui.hints.regen",
+                                                      HintRules.RefillSeconds / 3600L,
+                                                      HintRules.RefillCap)));
+                facts.Add(new AdFact("ic_plus", Pal.Cream, NextHintLine));
+                facts.Add(new AdFact("ic_hint", Pal.Gold, () => Loc.Get("ui.hints.one_conduit")));
+            }
             else
             {
                 facts.Add(new AdFact("ic_heart_boost", Pal.Mint, RegenLine));
@@ -447,6 +464,12 @@ namespace GlimmerGrove
 
             return facts.ToArray();
         }
+
+        /// <summary>When the next hint lands, or that the pool is already full.</summary>
+        static string NextHintLine()
+            => Profile.HintsRefilled
+                ? Loc.Format("ui.hints.full", Profile.MaxHints)
+                : Loc.Format("ui.hints.next", Profile.HintCountdown());
 
         /// <summary>How fast hearts come back, and for how much longer if that is boosted.</summary>
         static string RegenLine()

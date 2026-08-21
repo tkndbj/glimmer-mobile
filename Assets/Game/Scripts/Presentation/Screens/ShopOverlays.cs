@@ -156,6 +156,27 @@ namespace GlimmerGrove
         /// <summary>Set before <c>Init</c>. See <see cref="ShopSupplyOverlay.Good"/>.</summary>
         public StoreGrant Grant { get; set; }
 
+        /// <summary>
+        /// Raised once, whatever closed the panel, so something can be chained behind it.
+        ///
+        /// <para>
+        /// From <c>OnDestroy</c> and never from the button, which is the rule
+        /// <c>AdOfferOverlay.Dismissed</c> and <c>PauseOverlay</c> both arrived at the hard
+        /// way: this panel has four exits — the button, the scrim, the back key, and the
+        /// screen dying underneath it — so anything wired to one of them fires from one of
+        /// them. The safe outcome has to be the default and the exception has to be the thing
+        /// somebody declares.
+        /// </para>
+        /// </summary>
+        public System.Action Dismissed;
+
+        void OnDestroy()
+        {
+            var dismissed = Dismissed;
+            Dismissed = null;
+            dismissed?.Invoke();
+        }
+
         protected override void Build()
         {
             if (!Grant.IsValid) { Flow.Dismiss(this); return; }

@@ -72,6 +72,7 @@ MonoBehaviour:
   - {fileID: 11400000, guid: 82cde781aeb2b8c47a1f377b73392623, type: 2}
   - {fileID: 11400000, guid: fbeb593d8614b4a409c20b319fb6aef9, type: 2}
   - {fileID: 11400000, guid: 2bb73146c9a6a24419798f0aff0dc793, type: 2}
+  - {fileID: 11400000, guid: c5c63abbe06743542a8fa1b52c9ed154, type: 2}
   - {fileID: 11400000, guid: eb66a2de3aecee54b8958759c2eff7bc, type: 2}
   - {fileID: 11400000, guid: d66337f20f2bdd44d867926ead515cc3, type: 2}
   m_BuildSettings:

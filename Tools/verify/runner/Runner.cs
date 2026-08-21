@@ -46,8 +46,10 @@ static class Runner
         _probe = rest.ToArray();
 
         AssemblyLoadContext.Default.Resolving += (_, name) => Probe(name.Name);
+        MuteUnityLogging();
 
         Assembly assembly;
+
         try
         {
             assembly = Assembly.LoadFrom(Path.GetFullPath(args[0]));
@@ -108,7 +110,14 @@ static class Runner
                     // failures would train everyone to ignore the number, which is worse
                     // than not running them.
                     engineOnly++;
-                    Console.WriteLine("    ~ " + test.Name + "  (needs the Editor)");
+
+                    // GLIMMER_WHY=1 prints the native call that stopped it. Worth having,
+                    // because "needs the Editor" is sometimes a fact about the code under test
+                    // and sometimes a fact about this runner — and only the message tells them
+                    // apart. It is how the Debug.Log limit below was found.
+                    Console.WriteLine("    ~ " + test.Name + "  (needs the Editor)"
+                        + (Environment.GetEnvironmentVariable("GLIMMER_WHY") == null
+                               ? "" : "  [" + First(Root(e)) + "]"));
                 }
                 catch (Exception e)
                 {
@@ -167,6 +176,44 @@ static class Runner
             if (current is DllNotFoundException || current is EntryPointNotFoundException) return true;
         }
         return false;
+    }
+
+    /// <summary>
+    /// Turns Unity's logger off, so that ordinary <c>Debug.Log</c> calls do not end a test.
+    ///
+    /// <para>
+    /// <c>Debug.Log</c> reaches <c>DebugLogHandler</c>, which is extern and bound to the
+    /// native player, so outside the Editor the first log line in a code path throws
+    /// "ECall methods must be packaged into a system module" before any assertion in the
+    /// test has been evaluated. That is a harness limit rather than a fact about the code,
+    /// and it was quietly deciding which rules could be proved offline: anything that
+    /// warned on the path being tested — which is most of the cloud and save layer, because
+    /// warning is what those files do when something is wrong — could only be run with the
+    /// Editor open.
+    /// </para>
+    /// <para>
+    /// <c>Logger.logEnabled</c> is a managed flag checked before the handler is reached, on
+    /// every route in (<c>Log</c>, <c>LogWarning</c>, <c>LogError</c>, <c>LogException</c>),
+    /// so clearing it removes the extern from the path entirely. The cost is that a test
+    /// asserting on log output cannot run here — those use <c>LogAssert</c>, which needs the
+    /// Editor anyway. Wrapped, because a Unity version that reorganises this should cost the
+    /// runner nothing more than the coverage it had before.
+    /// </para>
+    /// </summary>
+    static void MuteUnityLogging()
+    {
+        try
+        {
+            var debug = Probe("UnityEngine.CoreModule")?.GetType("UnityEngine.Debug");
+            var logger = debug?.GetProperty("unityLogger", BindingFlags.Public | BindingFlags.Static)
+                               ?.GetValue(null);
+
+            logger?.GetType().GetProperty("logEnabled")?.SetValue(logger, false);
+        }
+        catch
+        {
+            // Then tests that log stay Editor-only, exactly as they were.
+        }
     }
 
     static string First(string s)

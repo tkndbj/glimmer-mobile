@@ -1,9 +1,12 @@
 using System;
 using System.Collections.Generic;
+using System.Threading;
+using System.Threading.Tasks;
 using GlimmerGrove.Analytics;
 using GlimmerGrove.Cloud;
 using GlimmerGrove.Daily;
 using GlimmerGrove.Persistence;
+using GlimmerGrove.Privacy;
 using GlimmerGrove.Progression;
 
 namespace GlimmerGrove.Ads
@@ -97,6 +100,8 @@ namespace GlimmerGrove.Ads
         static readonly Dictionary<string, int> _watched = new Dictionary<string, int>(StringComparer.Ordinal);
 
         static IAdProvider _provider = new NullAdProvider();
+        static bool _installed;
+        static bool _started;
         static int _dayKey;
         static long _lastWatchedUnix;
 
@@ -115,6 +120,16 @@ namespace GlimmerGrove.Ads
         {
             if (_provider != null) _provider.ReadinessChanged -= OnReadinessChanged;
 
+            // Whether anything was ever installed, which is not the same question as whether
+            // the provider is null-shaped: it is what tells StartAsync there is a reason to
+            // ask the player anything at all. See the note there.
+            _installed = provider != null;
+
+            // A new provider is a new start. Without this a second Install — a test, and one
+            // day a runtime swap to another mediation SDK — would inherit the first one's
+            // latch and never be initialised at all.
+            _started = false;
+
             _provider = provider ?? new NullAdProvider();
             _provider.ReadinessChanged += OnReadinessChanged;
 
@@ -122,6 +137,71 @@ namespace GlimmerGrove.Ads
         }
 
         public static IAdProvider Provider => _provider;
+
+        /// <summary>
+        /// Resolves consent, tells the SDK what it may collect, and only then starts it.
+        ///
+        /// <para>
+        /// <b>The ordering is the entire reason this method exists</b> rather than <c>Boot</c>
+        /// calling three things in a row. A mediation SDK started before it has been told what
+        /// it may collect has already decided, and has already run an auction on that decision;
+        /// a signal applied afterwards changes the next request and cannot undo the first. Put
+        /// somewhere a caller can get the order wrong, it eventually is wrong — so the order
+        /// lives here, once, and the caller has one thing to call.
+        /// </para>
+        /// <para>
+        /// It also subscribes to <see cref="AdPrivacy.Changed"/>, which is what carries a
+        /// withdrawal to the SDK without restarting the app: a player who reopens the consent
+        /// form and revokes it has that reach mediation before the next ad is requested, and
+        /// no screen has to remember to say so.
+        /// </para>
+        /// <para>
+        /// Started from the splash rather than from <c>Boot</c>, for the reason the store
+        /// connection is: this is a network round trip, and it may also put a native dialog on
+        /// screen — neither belongs before the first scene has loaded. Nothing waits on it.
+        /// </para>
+        /// </summary>
+        public static async Task StartAsync(CancellationToken cancellation = default)
+        {
+            // Both conditions before the latch, and the order is the point. Nothing installed
+            // means nothing to consent to and therefore nobody to ask — a consent form and
+            // Apple's prompt in front of a player on a build that cannot show a single ad is
+            // the most annoying possible way to collect an answer nothing will ever use. But
+            // latching *before* that check would make the refusal permanent: one call with no
+            // provider would leave `_started` set, and a provider installed a moment later
+            // could never start. `_started` has to mean "the work was done", not "somebody
+            // asked once".
+            if (_started || !_installed) return;
+            _started = true;
+
+            var signals = await AdPrivacy.ResolveAsync(cancellation).ConfigureAwait(false);
+
+            var provider = _provider;
+            provider.ApplyPrivacy(signals);
+
+            // Subscribed *after* the first application, deliberately. Resolving raises
+            // Changed, so subscribing first means the opening consent reaches the SDK twice —
+            // once through the event and once through the line above it. Harmless in effect
+            // and wrong in fact: it is three redundant native calls on every launch, and it
+            // makes the one sequence worth being able to read — privacy, then init — say
+            // something else. From here on the subscription carries only what its name says,
+            // which is a player changing their mind.
+            AdPrivacy.Changed += OnPrivacyChanged;
+
+            await provider.InitializeAsync(cancellation).ConfigureAwait(false);
+        }
+
+        /// <summary>Fire-and-forget <see cref="StartAsync"/>, for a caller in a coroutine.</summary>
+        public static void BeginStart() => _ = StartAsync();
+
+        /// <summary>
+        /// A withdrawal, or a change of mind, reaching the SDK.
+        ///
+        /// Applied to whichever provider is installed <em>now</em> rather than to one captured
+        /// when the subscription was made, because a test — and, one day, a runtime swap to a
+        /// second mediation SDK — replaces it underneath.
+        /// </summary>
+        static void OnPrivacyChanged(Privacy.AdPrivacySignals signals) => _provider.ApplyPrivacy(signals);
 
         /// <summary>The live table, which content may have retuned since launch.</summary>
         public static AdRewardTable Table => ProgressionRules.Table.Ads;
@@ -219,7 +299,19 @@ namespace GlimmerGrove.Ads
         /// </para>
         /// </summary>
         static bool WouldBenefit(AdOffer offer)
-            => offer.Kind != ChestDropKind.Hearts || !Wallet.Hearts.IsAtCeiling;
+        {
+            // Hearts stack well past the refill cap, so this only bites at the holding
+            // ceiling — a rare state, and one where another heart really would evaporate.
+            if (offer.Kind == ChestDropKind.Hearts) return !Wallet.Hearts.IsAtCeiling;
+
+            // Hints have no headroom at all: the shipped ceiling equals the refill cap, so
+            // this bites at a merely *full* pool rather than at some distant maximum, and it
+            // is the difference between an honest offer and thirty seconds of somebody's
+            // life in exchange for a grant that is refused. See HintLimits.DefaultCeiling.
+            if (offer.Kind == ChestDropKind.Hints) return !Wallet.Hints.IsAtCeiling;
+
+            return true;
+        }
 
         /// <summary>
         /// Whether a finished view could actually be paid for.
@@ -405,6 +497,14 @@ namespace GlimmerGrove.Ads
 
                 case ChestDropKind.HeartBoost:
                     Wallet.GrantHeartBoost(drop.Amount);
+                    break;
+
+                case ChestDropKind.Hints:
+                    // Banked and applied here, exactly as hearts are: not currency, so
+                    // nothing to adjudicate and nothing for the callback to grant. Refused
+                    // rather than clamped at a full pool, which is why the offer was never
+                    // made there — see WouldBenefit.
+                    Wallet.GrantHints(drop.Amount);
                     break;
 
                 case ChestDropKind.RunTime:

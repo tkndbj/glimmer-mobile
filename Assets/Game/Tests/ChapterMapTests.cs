@@ -21,13 +21,13 @@ namespace GlimmerGrove.Tests
         /// <summary>A heart and a critter facing each other. Valid, so only placement is in play.</summary>
         static readonly string[] Rows = { "*E#R/1 @W#R/0" };
 
-        static ChapterDefinition Chapter(int strips)
+        static ChapterDefinition Chapter(int strips, float teaserX = 0f)
         {
             var mapStrips = new string[strips];
             for (int i = 0; i < strips; i++) mapStrips[i] = "strip" + i;
 
             return new ChapterDefinition(ChapterId.Parse("t_chapter"), null,
-                                         Color.white, Color.black, "play_0", mapStrips);
+                                         Color.white, Color.black, "play_0", mapStrips, teaserX);
         }
 
         static LevelDefinition Level(string id, float x, float y)
@@ -157,6 +157,50 @@ namespace GlimmerGrove.Tests
 
             var issues = ChapterMapValidator.Validate(Chapter(3), levels);
             Assert.IsTrue(Mentions(issues, "end-of-chapter marker"), Describe(issues));
+        }
+
+        /// <summary>
+        /// A chapter may say which side the marker caps its trail on, and the check has to
+        /// follow it there. Reading the default instead would be invisible in the ordinary
+        /// direction — it would simply stop noticing a glade the marker now sits on — which
+        /// is the one thing this check exists for.
+        /// </summary>
+        [Test]
+        public void AnAuthoredTeaserMovesTheMarkerAndTheClearanceCheckWithIt()
+        {
+            float onTopOfTheMarker = ChapterMap.TeaserPosition(1f, 3).y;
+
+            var levels = new List<LevelDefinition>
+            {
+                Level("t_a", .5f, .30f),
+                Level("t_b", .30f, onTopOfTheMarker),
+            };
+
+            Assert.AreEqual(0, ChapterMapValidator.Validate(Chapter(3), levels).Count,
+                            "the default marker is on the other side of the map");
+
+            var moved = ChapterMapValidator.Validate(Chapter(3, .30f), levels);
+            Assert.IsTrue(Mentions(moved, "end-of-chapter marker"), Describe(moved));
+        }
+
+        /// <summary>
+        /// Zero is what <c>JsonUtility</c> writes into a field a chapter authored before this
+        /// existed, so it has to keep meaning "the default" rather than "the left edge" — the
+        /// convention <c>par</c> and <c>budgetFactor</c> already use.
+        /// </summary>
+        [Test]
+        public void AnUnauthoredTeaserKeepsTheDefaultSide()
+        {
+            Assert.AreEqual(ChapterMap.TeaserX, ChapterMap.TeaserAcross(0f));
+            Assert.AreEqual(ChapterMap.TeaserX, ChapterMap.TeaserAcross(-1f));
+            Assert.AreEqual(ChapterMap.TeaserX, ChapterMap.TeaserAcross(1.4f));
+            Assert.AreEqual(.30f, ChapterMap.TeaserAcross(.30f));
+
+            Assert.AreEqual(ChapterMap.TeaserX, Chapter(3).TeaserX);
+            Assert.AreEqual(.30f, Chapter(3, .30f).TeaserX);
+            Assert.AreEqual(.30f, ChapterMap.TeaserPosition(.5f, 3, .30f).x);
+            Assert.AreEqual(ChapterMap.TeaserPosition(.5f, 3).y, ChapterMap.TeaserPosition(.5f, 3, .30f).y,
+                            "only the across-axis is authorable");
         }
 
         [Test]

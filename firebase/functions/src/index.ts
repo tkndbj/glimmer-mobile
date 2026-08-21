@@ -43,6 +43,16 @@ import {
 } from "./refunds";
 import { rebuildStats } from "./stats";
 import {
+  DEFAULT_KEEPER_CURVE, GROVE_PATHS, GroveCardDoc, KeeperCurve,
+  assertUsableGroveConfig, buildCard, derivedXp, groveWorth, keeperLevel,
+  optedIn, rebuildGroveRanks, withdrawCard,
+} from "./grove";
+import {
+  ClaimOutcome, NameHolding, RENAME_COOLDOWN_SECONDS,
+  claimName as claimName_, heldName, nameKey,
+} from "./names";
+import { earnedCredits } from "./progression";
+import {
   deriveEarned,
   loadProgressionConfig,
   readWallet,
@@ -51,6 +61,7 @@ import {
   WalletDoc,
   WalletReply,
 } from "./wallet";
+
 
 initializeApp();
 
@@ -964,5 +975,219 @@ export const publishGroveStats = onSchedule(
   async () => {
     const { levels, saves } = await rebuildStats();
     logger.info("grove stats rebuilt", { levels, saves });
+  }
+);
+
+// ------------------------------------------------------------- the grove board
+/**
+ * Rebuilds this account's public grove card.
+ *
+ * <b>The request is empty and must stay empty.</b> Everything written here is recomputed
+ * from the save this function opens with its own credentials — the worth, the stars, the
+ * league, the keeper level and the name. A client that could hand any of those in would be
+ * a client that could put any number it liked on a public leaderboard, which is the whole
+ * of what `grove.ts` exists to prevent.
+ *
+ * Called by the client when the part of the grove a visitor can see has actually changed —
+ * see `GrovePublishPolicy` for why that is a client decision and why it is safe to be one.
+ * A player who never calls it is simply not on the board.
+ */
+export const publishGrove = onCall(callOptions, async (request): Promise<{
+  card: GroveCardDoc | null;
+  withdrawn?: boolean;
+}> => {
+  const uid = requireUid(request);
+  const db = getFirestore();
+
+  const [saveSnapshot, groveSnapshot, walletSnapshot] = await Promise.all([
+    db.doc(PATHS.player(uid)).get(),
+    db.doc(GROVE_PATHS.groveConfig).get(),
+    db.doc(PATHS.wallet(uid)).get(),
+  ]);
+
+  if (!saveSnapshot.exists) {
+    // Nothing to publish and nothing to fix by trying again. Refused rather than failed, so
+    // the client drops it instead of retrying for the life of the account (invariant 13a).
+    throw new HttpsError("failed-precondition", "no save to publish");
+  }
+
+  const save = saveSnapshot.data() as Record<string, unknown>;
+
+  // The opt-out is read off the save rather than taken from the request, so it is enforced
+  // where a modified client cannot talk its way past it. Turning it off here also takes down
+  // whatever is already published rather than merely declining to refresh it.
+  if (!optedIn(save)) {
+    await withdrawCard(uid);
+    return { card: null, withdrawn: true };
+  }
+
+  const groveConfig = groveSnapshot.data();
+  assertUsableGroveConfig(groveConfig);
+
+  const config = await loadProgressionConfig();
+  const curve = (config as { keeper?: KeeperCurve }).keeper ?? DEFAULT_KEEPER_CURVE;
+
+  const level = keeperLevel(derivedXp(save.levels, config), curve);
+
+  // The ceiling on the bought half: everything this account has ever legitimately had to
+  // spend. Derived earnings plus whatever the server itself granted — never a number out of
+  // the save. See the header of grove.ts for why it is generous rather than exact.
+  //
+  // `credits.granted` is the *stored* field. `grantedBaseline` is the name it is given on
+  // the way out to a client (`toReply`), and reading that name here silently yielded zero —
+  // so the ceiling was derived earnings alone, and every account seed, daily chest, streak
+  // night, rewarded video and **real-money coin purchase** was left out of what a player
+  // could be said to afford. Somebody who bought forty dollars of coins and spent them on
+  // their grove would have been clamped to near nothing and ranked at the bottom. Nothing
+  // could catch it but a live run: the unit vectors take `affordable` as a parameter, and a
+  // clamp that is too tight looks exactly like a clamp that is working.
+  const derived = earnedCredits(save.levels, config, uid, save.events);
+  //
+  // Typed rather than read off `DocumentData`, so the next person to reach for the reply's
+  // name gets a compile error instead of a zero.
+  const walletDoc = walletSnapshot.data() as Partial<WalletDoc> | undefined;
+  const granted = Math.floor(Number(walletDoc?.credits?.granted ?? 0));
+  const affordable = derived.credits + Math.max(0, granted);
+
+  const nowUnix = Math.floor(Date.now() / 1000);
+
+  // ------------------------------------------------------------------ the name
+  //
+  // The card's name comes from the reservation on the wallet, never from the save — see
+  // `boardName` in grove.ts for why that is a security improvement and not merely plumbing.
+  //
+  // This is also where a rename made offline finally lands, and doing it here is what let the
+  // whole feature ship with no new client-side retry state. `claimName` is called with the
+  // interactive path's exact arguments; re-claiming the name already held is free and writes
+  // nothing, so the common case — a settled name — costs one comparison of two strings and no
+  // database work at all. A claim that fails leaves the previous name standing, which is the
+  // right outcome for something nobody is watching.
+  let holding: NameHolding | null = heldName(walletDoc as Record<string, unknown> | undefined);
+  const stored = (save.wallet as Record<string, unknown> | undefined)?.displayName;
+  const wanted = nameKey(stored);
+
+  if (wanted.length > 0 && holding?.key !== wanted) {
+    try {
+      const claim = await claimName_(db, uid, stored, nowUnix);
+      holding = claim.holding;
+
+      if (claim.outcome !== "claimed" && claim.outcome !== "unchanged") {
+        // Not an error and not worth failing the publish over: the player keeps their name on
+        // their own screens and the board shows whatever they last confirmed.
+        logger.info("name not claimed on publish", { uid, outcome: claim.outcome });
+      }
+    } catch (e) {
+      // A contended transaction or a transient fault. The card is still worth writing, and
+      // the next publish tries again.
+      logger.warn("name claim failed on publish", { uid, error: String(e) });
+    }
+  }
+
+  const worth = groveWorth(save, groveConfig, level, affordable);
+  const card = buildCard(uid, save, groveConfig, worth, level, nowUnix, holding?.public ?? null);
+
+  await db.doc(GROVE_PATHS.card(uid)).set(card);
+
+  if (worth.clamped) {
+    // Not an accusation and not an error: a stale seed produces it too, and so does a
+    // player mid-refund. It is logged because a sudden run of them is the signal that
+    // either the catalog or the economy has moved and nobody re-seeded.
+    logger.warn("grove worth clamped to what the account could afford", {
+      uid, bought: worth.bought, affordable: worth.affordable, earned: worth.earned,
+    });
+  }
+
+  return { card };
+});
+
+/**
+ * Reserves a keeper name, so that no two groves stand on a board under the same one.
+ *
+ * <b>Uniqueness is held by a document id, not by a query.</b> `names/{nameKey}` is created
+ * inside a transaction, so the check and the take are one indivisible act at any concurrency
+ * — where reading a query and then writing lets two players a second apart both be told the
+ * name is free. See `names.ts` for the full argument and for why the client's "is this taken"
+ * hint is a direct document read rather than a call to this.
+ *
+ * <b>The save has to exist.</b> Not a data dependency — nothing here reads it — but the only
+ * cheap bound on the one abuse this design leaves open. A reservation is one per account and
+ * accounts are free, so squatting means minting accounts; requiring a synced save makes each
+ * squatted name cost a real session rather than an anonymous token.
+ *
+ * <b>Every outcome is reported plainly, and only two of the five are failures.</b> "This name
+ * is taken" and "wait a moment" are answers a player acts on; collapsing them into an error
+ * is how somebody concludes renaming is broken. `refused` is permanent by design and the
+ * client stops asking (invariant 13a); `taken` is not, because a name can be released.
+ */
+export const claimName = onCall(callOptions, async (request): Promise<{
+  outcome: ClaimOutcome;
+  name: string;
+  key: string;
+  cooldownSeconds: number;
+}> => {
+  const uid = requireUid(request);
+  const db = getFirestore();
+
+  const requested = (request.data ?? {}) as { name?: unknown };
+
+  // Bounded before anything is read, so an oversized body cannot be used to make the
+  // function do work. `sanitiseName` caps it again; this is only about what crosses the wire.
+  const raw = typeof requested.name === "string" ? requested.name.slice(0, 256) : "";
+
+  const saveSnapshot = await db.doc(PATHS.player(uid)).get();
+  if (!saveSnapshot.exists) {
+    throw new HttpsError("failed-precondition", "sync a save before claiming a name");
+  }
+
+  const nowUnix = Math.floor(Date.now() / 1000);
+  const claim = await claimName_(db, uid, raw, nowUnix);
+
+  const cooldownSeconds = claim.outcome === "cooldown" && claim.holding
+    ? Math.max(0, RENAME_COOLDOWN_SECONDS - (nowUnix - claim.holding.atUnix))
+    : 0;
+
+  if (claim.outcome === "claimed") {
+    logger.info("keeper name claimed", { uid, key: claim.holding?.key });
+  }
+
+  return {
+    outcome: claim.outcome,
+
+    // What the account holds *after* the call, whatever happened — so a client refused a name
+    // can show what it is still called rather than guessing.
+    name: claim.holding?.public ?? "",
+    key: claim.holding?.key ?? "",
+    cooldownSeconds,
+  };
+});
+
+/**
+ * Takes this account's card down.
+ *
+ * Separate from publishing an empty one, because they are different acts and only one of
+ * them is what somebody asked for when they turned the boards off. Deleting a card that is
+ * already absent is a success — a withdrawal that could fail permanently is a device
+ * retrying it for ever.
+ */
+export const withdrawGrove = onCall(callOptions, async (request): Promise<{ withdrawn: boolean }> => {
+  const uid = requireUid(request);
+  await withdrawCard(uid);
+  return { withdrawn: true };
+});
+
+/**
+ * Rebuilds the boards and the published distribution of grove worth.
+ *
+ * Four in the morning UTC, an hour after `publishGroveStats`, so the two heaviest reads in
+ * the deployment never overlap — and late enough that a card published anywhere in the
+ * world during the previous day is in the sample. Like the stats job it has no retry policy
+ * and no alerting: a day with no run leaves yesterday's boards standing, every client reads
+ * them exactly as it read them yesterday, and nothing in the game behaves differently.
+ */
+export const publishGroveRanks = onSchedule(
+  { region: REGION, schedule: "0 4 * * *", timeZone: "Etc/UTC", timeoutSeconds: 540 },
+  async () => {
+    const { ranked, boards } = await rebuildGroveRanks();
+    logger.info("grove ranks rebuilt", { ranked, boards });
   }
 );

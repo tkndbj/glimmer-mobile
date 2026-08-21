@@ -19,14 +19,23 @@ namespace GlimmerGrove.Tests
     /// </summary>
     public sealed class CountdownTests
     {
-        /// <summary>Par 30 at the shipped 2s/turn: a 60 second glade, gold at 30, silver at 45.</summary>
-        static LevelTuning Timed(int par = 30, float timeFactor = 0f)
-            => new LevelTuning(par, LevelTuning.DefaultGoldFactor, LevelTuning.DefaultSilverFactor,
-                               LevelTuning.DefaultHintAllowance, 0f, timeFactor);
+        [TearDown]
+        public void Restore() => Progression.ProgressionRules.Reset();
+
+        /// <summary>
+        /// Par 30 at 2s/turn: a 60 second glade, gold at 30, silver at 45.
+        ///
+        /// The factor is stated rather than left to <see cref="LevelTuning.DefaultTimeFactor"/>,
+        /// which it used to be. These cases are about the <em>rule</em>, and a fixture reading
+        /// the shipped default made every one of them fail the first time the game was retuned
+        /// — a suite that has to be edited to re-tune is a suite people learn to edit rather
+        /// than read. The default is pinned once, on its own, below.
+        /// </summary>
+        static LevelTuning Timed(int par = 30, float timeFactor = 2f)
+            => new LevelTuning(par, LevelTuning.DefaultGoldFactor, LevelTuning.DefaultSilverFactor, 0f, timeFactor);
 
         static LevelTuning Untimed(int par = 30)
-            => new LevelTuning(par, LevelTuning.DefaultGoldFactor, LevelTuning.DefaultSilverFactor,
-                               LevelTuning.DefaultHintAllowance, 0f, LevelTuning.Unlimited);
+            => new LevelTuning(par, LevelTuning.DefaultGoldFactor, LevelTuning.DefaultSilverFactor, 0f, LevelTuning.Unlimited);
 
         // ------------------------------------------------------------ the limit
         /// <summary>
@@ -57,21 +66,50 @@ namespace GlimmerGrove.Tests
         }
 
         /// <summary>
-        /// The two star thresholds are fractions of the limit, so retuning
-        /// <see cref="LevelTuning.TimeFactor"/> moves all three together and they cannot
-        /// drift apart.
+        /// The shipped tuning, pinned on its own so moving it is a deliberate edit with a
+        /// diff rather than a number that drifts under twenty other cases.
         /// </summary>
         [Test]
-        public void TheClockThresholdsFollowTheLimit()
+        public void TheShippedClockIsTheOneTheContentWasAuthoredAgainst()
         {
-            var tight = Timed(30, 1f);      // 30s
+            Assert.AreEqual(1.70f, LevelTuning.DefaultTimeFactor, "seconds of clock per par turn");
+            Assert.AreEqual(1.00f, LevelTuning.TimeGoldFactor, "three-star seconds per par turn");
+            Assert.AreEqual(1.50f, LevelTuning.TimeSilverFactor, "two-star seconds per par turn");
+
+            Assert.Less(LevelTuning.TimeSilverFactor, LevelTuning.DefaultTimeFactor,
+                        "a two-star line at or past the limit is a band no run can land in");
+        }
+
+        /// <summary>
+        /// <b>The star thresholds are held against par, so retuning the clock cannot move
+        /// them.</b> This is a reversal — they used to be fractions of the limit — and it is
+        /// the property the whole difficulty lever rests on.
+        ///
+        /// <para>
+        /// The reason is economic rather than aesthetic. Earned credits are derived from the
+        /// star ledger, so a retune that dragged the star line with it would deflate every
+        /// reward in the game by a factor nobody wrote down, and it would do it silently: the
+        /// glades would still be cleared, the panel would still show stars, and only the
+        /// credits-per-day would quietly fall. Difficulty and the economy are meant to be two
+        /// levers, and this is what keeps them two.
+        /// </para>
+        /// </summary>
+        [Test]
+        public void TheStarThresholdsAreHeldAgainstParSoARetunedClockCannotMoveThem()
+        {
+            var tight = Timed(30, 1.2f);    // 36s
             var loose = Timed(30, 4f);      // 120s
 
-            Assert.AreEqual(15_000, tight.TimeGoldMillis);
-            Assert.AreEqual(22_500, tight.TimeSilverMillis);
+            Assert.AreEqual(30_000, tight.TimeGoldMillis, "three stars is 30 par turns at 1s each");
+            Assert.AreEqual(30_000, loose.TimeGoldMillis, "and it is the same 30s on a long clock");
 
-            Assert.AreEqual(60_000, loose.TimeGoldMillis);
-            Assert.AreEqual(90_000, loose.TimeSilverMillis);
+            Assert.AreEqual(36_000, tight.TimeSilverMillis,
+                            "clamped to the limit: past the point the run is lost, a threshold " +
+                            "is something nothing can be measured against");
+            Assert.AreEqual(45_000, loose.TimeSilverMillis);
+
+            Assert.AreEqual(3, tight.StarsForTime(29_999));
+            Assert.AreEqual(3, loose.StarsForTime(29_999));
         }
 
         // ------------------------------------------------------------- the stars

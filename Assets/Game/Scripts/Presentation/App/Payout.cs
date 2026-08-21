@@ -210,6 +210,14 @@ namespace GlimmerGrove
         /// </summary>
         void Land()
         {
+            // The chip can be gone before its last token arrives. The flight belongs to the
+            // token, not to the chip, and the panel under both can be dismissed mid-payout —
+            // a player who taps NEXT GLADE while the coins are still in the air. Nothing is
+            // lost by stopping: the number this would have moved went with the chip. Guarded
+            // here as well as in Tween.Orphaned because Land is a *callback*, and the rule
+            // for a callback in this UI is that it checks rather than assumes.
+            if (Glyph == null) return;
+
             _landed++;
             bool last = _landed >= _throwing;
 

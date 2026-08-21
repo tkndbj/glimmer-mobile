@@ -1,0 +1,2096 @@
+{
+  "_comment": [
+    "The public boards' shared contract.",
+    "",
+    "Four rules in this feature exist in both C# and TypeScript, and every one of them",
+    "fails silently when the two drift:",
+    "",
+    "  - the grove's worth. The client draws it over the player's own grove and the server",
+    "    puts it beside their name on a board. Disagree, and a player sees two different",
+    "    numbers for one grove and has no way to tell which is real.",
+    "  - the keeper level. It decides which companions count as earned rather than bought,",
+    "    so a curve that disagrees moves value between the two halves of a score and past",
+    "    the clamp.",
+    "  - the public name. The client previews it in the rename panel; the server decides it.",
+    "    Disagree, and a player is shown one name and published under another.",
+    "  - the league, which is the star rating. It picks which board somebody is ranked on.",
+    "",
+    "Assets/Game/Tests/GroveBoardTests.cs is the C# half; firebase/functions/test/grove.mjs",
+    "is the server half. Both read this file. Invariant 9a, for the boards.",
+    "",
+    "The catalog below is written in homestead.json's own schema so the C# half can feed it",
+    "through HomesteadMapper — the mapper that ships — rather than through a second reader",
+    "written for the test."
+  ],
+  "_companionComment": [
+    "The roster the worth cases are scored against, in the manifest's own shape.",
+    "",
+    "A companion with no price is given away and is worth nothing, which is why monarch",
+    "never appears in an expected total however it is held. Everything else is worth its",
+    "price whether it was earned or bought — the reading is market value rather than spend",
+    "(invariant 16g) — and which half of the score it lands in is decided by the keeper",
+    "gate, because that is the half the server can vouch for without believing the save."
+  ],
+  "companions": [
+    {
+      "id": "monarch",
+      "unlockLevel": 0,
+      "unlockCost": 0
+    },
+    {
+      "id": "cinder",
+      "unlockLevel": 2,
+      "unlockCost": 800
+    },
+    {
+      "id": "timber",
+      "unlockLevel": 5,
+      "unlockCost": 1000
+    },
+    {
+      "id": "coral",
+      "unlockLevel": 20,
+      "unlockCost": 8000
+    },
+    {
+      "id": "vesper",
+      "unlockLevel": 40,
+      "unlockCost": 30000
+    }
+  ],
+  "_worthComment": [
+    "score = earned + min(bought, affordable).",
+    "",
+    "`affordable` is the ceiling on the bought half: everything the account could ever have",
+    "had to spend, derived by the server from the star ledger plus what it granted itself.",
+    "The client has no ceiling — it is scoring its own true holdings — so the C# half runs",
+    "only the cases whose clamp does not bite, and the server half runs all of them. A case",
+    "with `clamped: true` is therefore server-only by construction, and that asymmetry is",
+    "the point: the clamp is the one part of the rule that exists to disbelieve a client."
+  ],
+  "worthCases": [
+    {
+      "name": "an untouched grove is worth nothing",
+      "keeperLevel": 1,
+      "pieces": [],
+      "land": [],
+      "companions": [],
+      "affordable": 1250,
+      "earned": 0,
+      "bought": 0,
+      "score": 0,
+      "stars": 0,
+      "clamped": false
+    },
+    {
+      "name": "free pieces and starter land add nothing",
+      "keeperLevel": 1,
+      "pieces": [
+        "cottage",
+        "starter_rock"
+      ],
+      "land": [
+        "home_field"
+      ],
+      "companions": [
+        "monarch"
+      ],
+      "affordable": 1250,
+      "earned": 0,
+      "bought": 0,
+      "score": 0,
+      "stars": 0,
+      "clamped": false
+    },
+    {
+      "name": "a bought bench is worth its price",
+      "keeperLevel": 1,
+      "pieces": [
+        "bench"
+      ],
+      "land": [],
+      "companions": [],
+      "affordable": 5000,
+      "earned": 0,
+      "bought": 500,
+      "score": 500,
+      "stars": 0,
+      "clamped": false
+    },
+    {
+      "name": "land counts, and the first star is reachable",
+      "keeperLevel": 1,
+      "pieces": [
+        "bench",
+        "lantern"
+      ],
+      "land": [
+        "east_strip"
+      ],
+      "companions": [],
+      "affordable": 20000,
+      "earned": 0,
+      "bought": 4200,
+      "score": 4200,
+      "stars": 1,
+      "clamped": false
+    },
+    {
+      "name": "a companion reached by the keeper ladder is earned, not bought",
+      "keeperLevel": 5,
+      "pieces": [],
+      "land": [],
+      "companions": [],
+      "affordable": 0,
+      "earned": 1800,
+      "bought": 0,
+      "score": 1800,
+      "stars": 1,
+      "clamped": false
+    },
+    {
+      "name": "a companion bought above the gate is bought",
+      "keeperLevel": 5,
+      "pieces": [],
+      "land": [],
+      "companions": [
+        "coral"
+      ],
+      "affordable": 20000,
+      "earned": 1800,
+      "bought": 8000,
+      "score": 9800,
+      "stars": 2,
+      "clamped": false
+    },
+    {
+      "name": "buying one the ladder already reached does not pay twice",
+      "keeperLevel": 5,
+      "pieces": [],
+      "land": [],
+      "companions": [
+        "cinder",
+        "timber"
+      ],
+      "affordable": 20000,
+      "earned": 1800,
+      "bought": 0,
+      "score": 1800,
+      "stars": 1,
+      "clamped": false
+    },
+    {
+      "name": "the whole catalog, honestly afforded",
+      "keeperLevel": 40,
+      "pieces": [
+        "cottage",
+        "lodge",
+        "hall",
+        "starter_rock",
+        "bench",
+        "lantern",
+        "oak"
+      ],
+      "land": [
+        "home_field",
+        "east_strip",
+        "south_strip"
+      ],
+      "companions": [],
+      "affordable": 100000,
+      "earned": 39800,
+      "bought": 26700,
+      "score": 66500,
+      "stars": 3,
+      "clamped": false
+    },
+    {
+      "name": "a forged grove is clamped to what the account could afford",
+      "keeperLevel": 1,
+      "pieces": [
+        "lodge",
+        "hall",
+        "bench",
+        "lantern",
+        "oak"
+      ],
+      "land": [
+        "east_strip",
+        "south_strip"
+      ],
+      "companions": [
+        "coral",
+        "vesper"
+      ],
+      "affordable": 1250,
+      "earned": 0,
+      "bought": 64700,
+      "score": 1250,
+      "stars": 1,
+      "clamped": true
+    },
+    {
+      "name": "the clamp never touches the earned half",
+      "keeperLevel": 40,
+      "pieces": [
+        "oak"
+      ],
+      "land": [],
+      "companions": [],
+      "affordable": 0,
+      "earned": 39800,
+      "bought": 4000,
+      "score": 39800,
+      "stars": 3,
+      "clamped": true
+    }
+  ],
+  "_starComment": [
+    "Stars from a score, against the ladder in `catalog.score.stars`. The league a grove is",
+    "ranked on is its star count, so these cases pin both."
+  ],
+  "starCases": [
+    {
+      "score": 0,
+      "stars": 0,
+      "league": "l0"
+    },
+    {
+      "score": 999,
+      "stars": 0,
+      "league": "l0"
+    },
+    {
+      "score": 1000,
+      "stars": 1,
+      "league": "l1"
+    },
+    {
+      "score": 4999,
+      "stars": 1,
+      "league": "l1"
+    },
+    {
+      "score": 5000,
+      "stars": 2,
+      "league": "l2"
+    },
+    {
+      "score": 19999,
+      "stars": 2,
+      "league": "l2"
+    },
+    {
+      "score": 20000,
+      "stars": 3,
+      "league": "l3"
+    },
+    {
+      "score": 900000,
+      "stars": 3,
+      "league": "l3"
+    }
+  ],
+  "_keeperComment": [
+    "The keeper-level curve, in progression.json's own shape.",
+    "",
+    "The client derives a level from XP to decide which companions are unlocked; since the",
+    "boards, the server derives one to decide which companions count as earned. The two",
+    "walks have to agree exactly — a level out by one moves a companion's whole price from",
+    "the earned half of a score to the bought half, where the clamp can then take it away.",
+    "",
+    "Band boundaries are what these cases are for: 120 is the first level-2 XP and 119 is",
+    "the last level-1 XP, and the tail cases exercise the arithmetic past the authored",
+    "bands where the step grows by tailXpIncrement each level."
+  ],
+  "keeperCurve": {
+    "maxLevel": 8,
+    "xpToNext": [
+      100,
+      200,
+      300
+    ],
+    "tailXpToNext": 1000,
+    "tailXpIncrement": 500
+  },
+  "keeperCases": [
+    {
+      "xp": 0,
+      "level": 1
+    },
+    {
+      "xp": 99,
+      "level": 1
+    },
+    {
+      "xp": 100,
+      "level": 2
+    },
+    {
+      "xp": 299,
+      "level": 2
+    },
+    {
+      "xp": 300,
+      "level": 3
+    },
+    {
+      "xp": 599,
+      "level": 3
+    },
+    {
+      "xp": 600,
+      "level": 4
+    },
+    {
+      "xp": 1599,
+      "level": 4
+    },
+    {
+      "xp": 1600,
+      "level": 5
+    },
+    {
+      "xp": 3099,
+      "level": 5
+    },
+    {
+      "xp": 3100,
+      "level": 6
+    },
+    {
+      "xp": 5099,
+      "level": 6
+    },
+    {
+      "xp": 5100,
+      "level": 7
+    },
+    {
+      "xp": 7599,
+      "level": 7
+    },
+    {
+      "xp": 7600,
+      "level": 8
+    },
+    {
+      "xp": 99999999,
+      "level": 8
+    }
+  ],
+  "_nameComment": [
+    "The public form of a stored name.",
+    "",
+    "`public` is what both sides must produce from `stored`. `allowed` is server-only: the",
+    "word filter is not shipped in a client, because a list in a client is a list an attacker",
+    "reads out of the client. A name that is not allowed is not refused — the player keeps it",
+    "on their own screens and is published under a generated handle.",
+    "",
+    "The bidi cases are the ones that matter most. U+202E re-orders the text that follows it,",
+    "so a name carrying one misdraws the rest of the row and sometimes the rows under it — a",
+    "defect a length cap and a word list both sail straight past, and the likeliest way a",
+    "public list of user-supplied strings gets broken.",
+    "",
+    "`storedCodes` and `publicCodes` are the same two strings as UTF-16 code points, and they",
+    "are what the C# half reads. Unity's JsonUtility does not survive these strings: it",
+    "truncated `Fern‮Willow` at the escape, which silently shifted every expectation in",
+    "the array by one field and produced a failure that looked like a bug in the sanitiser.",
+    "The server half reads the strings and asserts the codes agree with them, so the two",
+    "encodings cannot drift — a vector file that disagreed with itself would be worse than",
+    "either encoding alone.",
+    "",
+    "`key` is the collision key: what two names must share to be the same name, and the id",
+    "of the document that holds the reservation (functions/src/names.ts). Both sides must",
+    "produce it from `stored`, because the client folds to read the right document for its",
+    "'is this taken' hint and the server folds to decide the claim. A divergence there is a",
+    "wrong hint rather than a duplicate name — the transaction is still the authority — but",
+    "it is invisible from either side alone, which is what these vectors are for.",
+    "",
+    "`claimable` is the pair of measurements together, and the cases that earn it are `!!`",
+    "and the middle dots: two visible characters, so the old rule published them, and an",
+    "empty fold, so nothing could ever reserve them. Two keepers would have stood on one",
+    "board under one name with nothing able to tell them apart.",
+    "",
+    "`keyCodes` is `key` as UTF-16 code points, and it is there for `storedCodes`' reason:",
+    "Unity's JsonUtility cannot be trusted with these strings."
+  ],
+  "nameCases": [
+    {
+      "stored": "Fern",
+      "public": "Fern",
+      "allowed": true,
+      "storedCodes": [
+        70,
+        101,
+        114,
+        110
+      ],
+      "publicCodes": [
+        70,
+        101,
+        114,
+        110
+      ],
+      "key": "fern",
+      "keyCodes": [
+        102,
+        101,
+        114,
+        110
+      ],
+      "claimable": true
+    },
+    {
+      "stored": "",
+      "public": "",
+      "allowed": false,
+      "storedCodes": [],
+      "publicCodes": [],
+      "key": "",
+      "keyCodes": [],
+      "claimable": false
+    },
+    {
+      "stored": "   ",
+      "public": "",
+      "allowed": false,
+      "storedCodes": [
+        32,
+        32,
+        32
+      ],
+      "publicCodes": [],
+      "key": "",
+      "keyCodes": [],
+      "claimable": false
+    },
+    {
+      "stored": "  Fern  ",
+      "public": "Fern",
+      "allowed": true,
+      "storedCodes": [
+        32,
+        32,
+        70,
+        101,
+        114,
+        110,
+        32,
+        32
+      ],
+      "publicCodes": [
+        70,
+        101,
+        114,
+        110
+      ],
+      "key": "fern",
+      "keyCodes": [
+        102,
+        101,
+        114,
+        110
+      ],
+      "claimable": true
+    },
+    {
+      "stored": "Fern   Willow",
+      "public": "Fern Willow",
+      "allowed": true,
+      "storedCodes": [
+        70,
+        101,
+        114,
+        110,
+        32,
+        32,
+        32,
+        87,
+        105,
+        108,
+        108,
+        111,
+        119
+      ],
+      "publicCodes": [
+        70,
+        101,
+        114,
+        110,
+        32,
+        87,
+        105,
+        108,
+        108,
+        111,
+        119
+      ],
+      "key": "fernwillow",
+      "keyCodes": [
+        102,
+        101,
+        114,
+        110,
+        119,
+        105,
+        108,
+        108,
+        111,
+        119
+      ],
+      "claimable": true
+    },
+    {
+      "stored": "Fern\tWillow",
+      "public": "Fern Willow",
+      "allowed": true,
+      "storedCodes": [
+        70,
+        101,
+        114,
+        110,
+        9,
+        87,
+        105,
+        108,
+        108,
+        111,
+        119
+      ],
+      "publicCodes": [
+        70,
+        101,
+        114,
+        110,
+        32,
+        87,
+        105,
+        108,
+        108,
+        111,
+        119
+      ],
+      "key": "fernwillow",
+      "keyCodes": [
+        102,
+        101,
+        114,
+        110,
+        119,
+        105,
+        108,
+        108,
+        111,
+        119
+      ],
+      "claimable": true
+    },
+    {
+      "stored": "A",
+      "public": "A",
+      "allowed": false,
+      "storedCodes": [
+        65
+      ],
+      "publicCodes": [
+        65
+      ],
+      "key": "a",
+      "keyCodes": [
+        97
+      ],
+      "claimable": false
+    },
+    {
+      "stored": "Ab",
+      "public": "Ab",
+      "allowed": true,
+      "storedCodes": [
+        65,
+        98
+      ],
+      "publicCodes": [
+        65,
+        98
+      ],
+      "key": "ab",
+      "keyCodes": [
+        97,
+        98
+      ],
+      "claimable": true
+    },
+    {
+      "stored": "Mossfoot the Elder",
+      "public": "Mossfoot the Eld",
+      "allowed": true,
+      "storedCodes": [
+        77,
+        111,
+        115,
+        115,
+        102,
+        111,
+        111,
+        116,
+        32,
+        116,
+        104,
+        101,
+        32,
+        69,
+        108,
+        100,
+        101,
+        114
+      ],
+      "publicCodes": [
+        77,
+        111,
+        115,
+        115,
+        102,
+        111,
+        111,
+        116,
+        32,
+        116,
+        104,
+        101,
+        32,
+        69,
+        108,
+        100
+      ],
+      "key": "mossfoottheeld",
+      "keyCodes": [
+        109,
+        111,
+        115,
+        115,
+        102,
+        111,
+        111,
+        116,
+        116,
+        104,
+        101,
+        101,
+        108,
+        100
+      ],
+      "claimable": true
+    },
+    {
+      "stored": "Fern‮Willow",
+      "public": "FernWillow",
+      "allowed": true,
+      "storedCodes": [
+        70,
+        101,
+        114,
+        110,
+        8238,
+        87,
+        105,
+        108,
+        108,
+        111,
+        119
+      ],
+      "publicCodes": [
+        70,
+        101,
+        114,
+        110,
+        87,
+        105,
+        108,
+        108,
+        111,
+        119
+      ],
+      "key": "fernwillow",
+      "keyCodes": [
+        102,
+        101,
+        114,
+        110,
+        119,
+        105,
+        108,
+        108,
+        111,
+        119
+      ],
+      "claimable": true
+    },
+    {
+      "stored": "‮Fern",
+      "public": "Fern",
+      "allowed": true,
+      "storedCodes": [
+        8238,
+        70,
+        101,
+        114,
+        110
+      ],
+      "publicCodes": [
+        70,
+        101,
+        114,
+        110
+      ],
+      "key": "fern",
+      "keyCodes": [
+        102,
+        101,
+        114,
+        110
+      ],
+      "claimable": true
+    },
+    {
+      "stored": "​​​​",
+      "public": "",
+      "allowed": false,
+      "storedCodes": [
+        8203,
+        8203,
+        8203,
+        8203
+      ],
+      "publicCodes": [],
+      "key": "",
+      "keyCodes": [],
+      "claimable": false
+    },
+    {
+      "stored": "Fern​Willow",
+      "public": "FernWillow",
+      "allowed": true,
+      "storedCodes": [
+        70,
+        101,
+        114,
+        110,
+        8203,
+        87,
+        105,
+        108,
+        108,
+        111,
+        119
+      ],
+      "publicCodes": [
+        70,
+        101,
+        114,
+        110,
+        87,
+        105,
+        108,
+        108,
+        111,
+        119
+      ],
+      "key": "fernwillow",
+      "keyCodes": [
+        102,
+        101,
+        114,
+        110,
+        119,
+        105,
+        108,
+        108,
+        111,
+        119
+      ],
+      "claimable": true
+    },
+    {
+      "stored": "Fern\u0000\u0007Willow",
+      "public": "FernWillow",
+      "allowed": true,
+      "storedCodes": [
+        70,
+        101,
+        114,
+        110,
+        0,
+        7,
+        87,
+        105,
+        108,
+        108,
+        111,
+        119
+      ],
+      "publicCodes": [
+        70,
+        101,
+        114,
+        110,
+        87,
+        105,
+        108,
+        108,
+        111,
+        119
+      ],
+      "key": "fernwillow",
+      "keyCodes": [
+        102,
+        101,
+        114,
+        110,
+        119,
+        105,
+        108,
+        108,
+        111,
+        119
+      ],
+      "claimable": true
+    },
+    {
+      "stored": "Fern­Willow",
+      "public": "FernWillow",
+      "allowed": true,
+      "storedCodes": [
+        70,
+        101,
+        114,
+        110,
+        173,
+        87,
+        105,
+        108,
+        108,
+        111,
+        119
+      ],
+      "publicCodes": [
+        70,
+        101,
+        114,
+        110,
+        87,
+        105,
+        108,
+        108,
+        111,
+        119
+      ],
+      "key": "fernwillow",
+      "keyCodes": [
+        102,
+        101,
+        114,
+        110,
+        119,
+        105,
+        108,
+        108,
+        111,
+        119
+      ],
+      "claimable": true
+    },
+    {
+      "stored": "Willowmere Grove",
+      "public": "Willowmere Grove",
+      "allowed": true,
+      "storedCodes": [
+        87,
+        105,
+        108,
+        108,
+        111,
+        119,
+        109,
+        101,
+        114,
+        101,
+        32,
+        71,
+        114,
+        111,
+        118,
+        101
+      ],
+      "publicCodes": [
+        87,
+        105,
+        108,
+        108,
+        111,
+        119,
+        109,
+        101,
+        114,
+        101,
+        32,
+        71,
+        114,
+        111,
+        118,
+        101
+      ],
+      "key": "willowmeregrove",
+      "keyCodes": [
+        119,
+        105,
+        108,
+        108,
+        111,
+        119,
+        109,
+        101,
+        114,
+        101,
+        103,
+        114,
+        111,
+        118,
+        101
+      ],
+      "claimable": true
+    },
+    {
+      "stored": "Ærien",
+      "public": "Ærien",
+      "allowed": true,
+      "storedCodes": [
+        198,
+        114,
+        105,
+        101,
+        110
+      ],
+      "publicCodes": [
+        198,
+        114,
+        105,
+        101,
+        110
+      ],
+      "key": "ærien",
+      "keyCodes": [
+        230,
+        114,
+        105,
+        101,
+        110
+      ],
+      "claimable": true
+    },
+    {
+      "stored": "こけもも",
+      "public": "こけもも",
+      "allowed": true,
+      "storedCodes": [
+        12371,
+        12369,
+        12418,
+        12418
+      ],
+      "publicCodes": [
+        12371,
+        12369,
+        12418,
+        12418
+      ],
+      "key": "こけもも",
+      "keyCodes": [
+        12371,
+        12369,
+        12418,
+        12418
+      ],
+      "claimable": true
+    },
+    {
+      "stored": "f u c k",
+      "public": "f u c k",
+      "allowed": false,
+      "storedCodes": [
+        102,
+        32,
+        117,
+        32,
+        99,
+        32,
+        107
+      ],
+      "publicCodes": [
+        102,
+        32,
+        117,
+        32,
+        99,
+        32,
+        107
+      ],
+      "key": "fuck",
+      "keyCodes": [
+        102,
+        117,
+        99,
+        107
+      ],
+      "claimable": false
+    },
+    {
+      "stored": "ADMIN",
+      "public": "ADMIN",
+      "allowed": false,
+      "storedCodes": [
+        65,
+        68,
+        77,
+        73,
+        78
+      ],
+      "publicCodes": [
+        65,
+        68,
+        77,
+        73,
+        78
+      ],
+      "key": "admin",
+      "keyCodes": [
+        97,
+        100,
+        109,
+        105,
+        110
+      ],
+      "claimable": false
+    },
+    {
+      "stored": "Fernadminmoss",
+      "public": "Fernadminmoss",
+      "allowed": false,
+      "storedCodes": [
+        70,
+        101,
+        114,
+        110,
+        97,
+        100,
+        109,
+        105,
+        110,
+        109,
+        111,
+        115,
+        115
+      ],
+      "publicCodes": [
+        70,
+        101,
+        114,
+        110,
+        97,
+        100,
+        109,
+        105,
+        110,
+        109,
+        111,
+        115,
+        115
+      ],
+      "key": "fernadminmoss",
+      "keyCodes": [
+        102,
+        101,
+        114,
+        110,
+        97,
+        100,
+        109,
+        105,
+        110,
+        109,
+        111,
+        115,
+        115
+      ],
+      "claimable": false
+    },
+    {
+      "stored": "fern",
+      "public": "fern",
+      "allowed": true,
+      "key": "fern",
+      "storedCodes": [
+        102,
+        101,
+        114,
+        110
+      ],
+      "publicCodes": [
+        102,
+        101,
+        114,
+        110
+      ],
+      "keyCodes": [
+        102,
+        101,
+        114,
+        110
+      ],
+      "claimable": true
+    },
+    {
+      "stored": "FERN",
+      "public": "FERN",
+      "allowed": true,
+      "key": "fern",
+      "storedCodes": [
+        70,
+        69,
+        82,
+        78
+      ],
+      "publicCodes": [
+        70,
+        69,
+        82,
+        78
+      ],
+      "keyCodes": [
+        102,
+        101,
+        114,
+        110
+      ],
+      "claimable": true
+    },
+    {
+      "stored": "F e r n",
+      "public": "F e r n",
+      "allowed": true,
+      "key": "fern",
+      "storedCodes": [
+        70,
+        32,
+        101,
+        32,
+        114,
+        32,
+        110
+      ],
+      "publicCodes": [
+        70,
+        32,
+        101,
+        32,
+        114,
+        32,
+        110
+      ],
+      "keyCodes": [
+        102,
+        101,
+        114,
+        110
+      ],
+      "claimable": true
+    },
+    {
+      "stored": "Ｆｅｒｎ",
+      "public": "Ｆｅｒｎ",
+      "allowed": true,
+      "key": "fern",
+      "storedCodes": [
+        65318,
+        65349,
+        65362,
+        65358
+      ],
+      "publicCodes": [
+        65318,
+        65349,
+        65362,
+        65358
+      ],
+      "keyCodes": [
+        102,
+        101,
+        114,
+        110
+      ],
+      "claimable": true
+    },
+    {
+      "stored": "Fern-Willow",
+      "public": "Fern-Willow",
+      "allowed": true,
+      "key": "fernwillow",
+      "storedCodes": [
+        70,
+        101,
+        114,
+        110,
+        45,
+        87,
+        105,
+        108,
+        108,
+        111,
+        119
+      ],
+      "publicCodes": [
+        70,
+        101,
+        114,
+        110,
+        45,
+        87,
+        105,
+        108,
+        108,
+        111,
+        119
+      ],
+      "keyCodes": [
+        102,
+        101,
+        114,
+        110,
+        119,
+        105,
+        108,
+        108,
+        111,
+        119
+      ],
+      "claimable": true
+    },
+    {
+      "stored": "Fern_Willow",
+      "public": "Fern_Willow",
+      "allowed": true,
+      "key": "fernwillow",
+      "storedCodes": [
+        70,
+        101,
+        114,
+        110,
+        95,
+        87,
+        105,
+        108,
+        108,
+        111,
+        119
+      ],
+      "publicCodes": [
+        70,
+        101,
+        114,
+        110,
+        95,
+        87,
+        105,
+        108,
+        108,
+        111,
+        119
+      ],
+      "keyCodes": [
+        102,
+        101,
+        114,
+        110,
+        119,
+        105,
+        108,
+        108,
+        111,
+        119
+      ],
+      "claimable": true
+    },
+    {
+      "stored": "  fern  ",
+      "public": "fern",
+      "allowed": true,
+      "key": "fern",
+      "storedCodes": [
+        32,
+        32,
+        102,
+        101,
+        114,
+        110,
+        32,
+        32
+      ],
+      "publicCodes": [
+        102,
+        101,
+        114,
+        110
+      ],
+      "keyCodes": [
+        102,
+        101,
+        114,
+        110
+      ],
+      "claimable": true
+    },
+    {
+      "stored": "Фёдор",
+      "public": "Фёдор",
+      "allowed": true,
+      "key": "фёдор",
+      "storedCodes": [
+        1060,
+        1105,
+        1076,
+        1086,
+        1088
+      ],
+      "publicCodes": [
+        1060,
+        1105,
+        1076,
+        1086,
+        1088
+      ],
+      "keyCodes": [
+        1092,
+        1105,
+        1076,
+        1086,
+        1088
+      ],
+      "claimable": true
+    },
+    {
+      "stored": "Ｍｏｓｓ 7",
+      "public": "Ｍｏｓｓ 7",
+      "allowed": true,
+      "key": "moss7",
+      "storedCodes": [
+        65325,
+        65359,
+        65363,
+        65363,
+        32,
+        55
+      ],
+      "publicCodes": [
+        65325,
+        65359,
+        65363,
+        65363,
+        32,
+        55
+      ],
+      "keyCodes": [
+        109,
+        111,
+        115,
+        115,
+        55
+      ],
+      "claimable": true
+    },
+    {
+      "stored": "!!",
+      "public": "!!",
+      "allowed": true,
+      "key": "",
+      "storedCodes": [
+        33,
+        33
+      ],
+      "publicCodes": [
+        33,
+        33
+      ],
+      "keyCodes": [],
+      "claimable": false
+    },
+    {
+      "stored": "···",
+      "public": "···",
+      "allowed": true,
+      "key": "",
+      "storedCodes": [
+        183,
+        183,
+        183
+      ],
+      "publicCodes": [
+        183,
+        183,
+        183
+      ],
+      "keyCodes": [],
+      "claimable": false
+    },
+    {
+      "stored": "İzmir",
+      "public": "İzmir",
+      "allowed": true,
+      "key": "izmir",
+      "storedCodes": [
+        304,
+        122,
+        109,
+        105,
+        114
+      ],
+      "publicCodes": [
+        304,
+        122,
+        109,
+        105,
+        114
+      ],
+      "keyCodes": [
+        105,
+        122,
+        109,
+        105,
+        114
+      ],
+      "claimable": true
+    },
+    {
+      "stored": "ﬁre",
+      "public": "ﬁre",
+      "allowed": true,
+      "key": "fire",
+      "storedCodes": [
+        64257,
+        114,
+        101
+      ],
+      "publicCodes": [
+        64257,
+        114,
+        101
+      ],
+      "keyCodes": [
+        102,
+        105,
+        114,
+        101
+      ],
+      "claimable": true
+    },
+    {
+      "stored": "Fern2",
+      "public": "Fern2",
+      "allowed": true,
+      "key": "fern2",
+      "storedCodes": [
+        70,
+        101,
+        114,
+        110,
+        50
+      ],
+      "publicCodes": [
+        70,
+        101,
+        114,
+        110,
+        50
+      ],
+      "keyCodes": [
+        102,
+        101,
+        114,
+        110,
+        50
+      ],
+      "claimable": true
+    },
+    {
+      "stored": "ＭＯＳＳ",
+      "public": "ＭＯＳＳ",
+      "allowed": true,
+      "key": "moss",
+      "storedCodes": [
+        65325,
+        65327,
+        65331,
+        65331
+      ],
+      "publicCodes": [
+        65325,
+        65327,
+        65331,
+        65331
+      ],
+      "keyCodes": [
+        109,
+        111,
+        115,
+        115
+      ],
+      "claimable": true
+    },
+    {
+      "stored": "moss",
+      "public": "moss",
+      "allowed": true,
+      "key": "moss",
+      "storedCodes": [
+        109,
+        111,
+        115,
+        115
+      ],
+      "publicCodes": [
+        109,
+        111,
+        115,
+        115
+      ],
+      "keyCodes": [
+        109,
+        111,
+        115,
+        115
+      ],
+      "claimable": true
+    },
+    {
+      "stored": "ΑΣ",
+      "public": "ΑΣ",
+      "allowed": true,
+      "key": "ασ",
+      "claimable": true,
+      "storedCodes": [
+        913,
+        931
+      ],
+      "publicCodes": [
+        913,
+        931
+      ],
+      "keyCodes": [
+        945,
+        963
+      ]
+    },
+    {
+      "stored": "ΟΔΥΣΣΕΥΣ",
+      "public": "ΟΔΥΣΣΕΥΣ",
+      "allowed": true,
+      "key": "οδυσσευσ",
+      "claimable": true,
+      "storedCodes": [
+        927,
+        916,
+        933,
+        931,
+        931,
+        917,
+        933,
+        931
+      ],
+      "publicCodes": [
+        927,
+        916,
+        933,
+        931,
+        931,
+        917,
+        933,
+        931
+      ],
+      "keyCodes": [
+        959,
+        948,
+        965,
+        963,
+        963,
+        949,
+        965,
+        963
+      ]
+    },
+    {
+      "stored": "Σοφία",
+      "public": "Σοφία",
+      "allowed": true,
+      "key": "σοφία",
+      "claimable": true,
+      "storedCodes": [
+        931,
+        959,
+        966,
+        943,
+        945
+      ],
+      "publicCodes": [
+        931,
+        959,
+        966,
+        943,
+        945
+      ],
+      "keyCodes": [
+        963,
+        959,
+        966,
+        943,
+        945
+      ]
+    },
+    {
+      "stored": "ẞrenn",
+      "public": "ẞrenn",
+      "allowed": true,
+      "key": "ßrenn",
+      "claimable": true,
+      "storedCodes": [
+        7838,
+        114,
+        101,
+        110,
+        110
+      ],
+      "publicCodes": [
+        7838,
+        114,
+        101,
+        110,
+        110
+      ],
+      "keyCodes": [
+        223,
+        114,
+        101,
+        110,
+        110
+      ]
+    },
+    {
+      "stored": "Ǆuro",
+      "public": "Ǆuro",
+      "allowed": true,
+      "key": "džuro",
+      "claimable": true,
+      "storedCodes": [
+        452,
+        117,
+        114,
+        111
+      ],
+      "publicCodes": [
+        452,
+        117,
+        114,
+        111
+      ],
+      "keyCodes": [
+        100,
+        382,
+        117,
+        114,
+        111
+      ]
+    },
+    {
+      "stored": "ᏣᎳᎩ",
+      "public": "ᏣᎳᎩ",
+      "allowed": true,
+      "key": "ꮳꮃꭹ",
+      "claimable": true,
+      "storedCodes": [
+        5091,
+        5043,
+        5033
+      ],
+      "publicCodes": [
+        5091,
+        5043,
+        5033
+      ],
+      "keyCodes": [
+        43955,
+        43907,
+        43897
+      ]
+    },
+    {
+      "stored": "ႧႾႨ",
+      "public": "ႧႾႨ",
+      "allowed": true,
+      "key": "ⴇⴞⴈ",
+      "claimable": true,
+      "storedCodes": [
+        4263,
+        4286,
+        4264
+      ],
+      "publicCodes": [
+        4263,
+        4286,
+        4264
+      ],
+      "keyCodes": [
+        11527,
+        11550,
+        11528
+      ]
+    },
+    {
+      "stored": "ⅠⅤ",
+      "public": "ⅠⅤ",
+      "allowed": true,
+      "key": "iv",
+      "claimable": true,
+      "storedCodes": [
+        8544,
+        8548
+      ],
+      "publicCodes": [
+        8544,
+        8548
+      ],
+      "keyCodes": [
+        105,
+        118
+      ]
+    },
+    {
+      "stored": "ｉｉ",
+      "public": "ｉｉ",
+      "allowed": true,
+      "key": "ii",
+      "claimable": true,
+      "storedCodes": [
+        65353,
+        65353
+      ],
+      "publicCodes": [
+        65353,
+        65353
+      ],
+      "keyCodes": [
+        105,
+        105
+      ]
+    },
+    {
+      "stored": "Ǌorden",
+      "public": "Ǌorden",
+      "allowed": true,
+      "key": "njorden",
+      "claimable": true,
+      "storedCodes": [
+        458,
+        111,
+        114,
+        100,
+        101,
+        110
+      ],
+      "publicCodes": [
+        458,
+        111,
+        114,
+        100,
+        101,
+        110
+      ],
+      "keyCodes": [
+        110,
+        106,
+        111,
+        114,
+        100,
+        101,
+        110
+      ]
+    },
+    {
+      "stored": "ﬀat",
+      "public": "ﬀat",
+      "allowed": true,
+      "key": "ffat",
+      "claimable": true,
+      "storedCodes": [
+        64256,
+        97,
+        116
+      ],
+      "publicCodes": [
+        64256,
+        97,
+        116
+      ],
+      "keyCodes": [
+        102,
+        102,
+        97,
+        116
+      ]
+    },
+    {
+      "stored": "ﬂame",
+      "public": "ﬂame",
+      "allowed": true,
+      "key": "flame",
+      "claimable": true,
+      "storedCodes": [
+        64258,
+        97,
+        109,
+        101
+      ],
+      "publicCodes": [
+        64258,
+        97,
+        109,
+        101
+      ],
+      "keyCodes": [
+        102,
+        108,
+        97,
+        109,
+        101
+      ]
+    },
+    {
+      "stored": "ﬃn",
+      "public": "ﬃn",
+      "allowed": true,
+      "key": "ffin",
+      "claimable": true,
+      "storedCodes": [
+        64259,
+        110
+      ],
+      "publicCodes": [
+        64259,
+        110
+      ],
+      "keyCodes": [
+        102,
+        102,
+        105,
+        110
+      ]
+    },
+    {
+      "stored": "ᲗᲑᲘᲚᲘᲡᲘ",
+      "public": "ᲗᲑᲘᲚᲘᲡᲘ",
+      "allowed": true,
+      "key": "თბილისი",
+      "claimable": true,
+      "storedCodes": [
+        7319,
+        7313,
+        7320,
+        7322,
+        7320,
+        7329,
+        7320
+      ],
+      "publicCodes": [
+        7319,
+        7313,
+        7320,
+        7322,
+        7320,
+        7329,
+        7320
+      ],
+      "keyCodes": [
+        4311,
+        4305,
+        4312,
+        4314,
+        4312,
+        4321,
+        4312
+      ]
+    },
+    {
+      "stored": "Ελλάδα",
+      "public": "Ελλάδα",
+      "allowed": true,
+      "key": "ελλάδα",
+      "claimable": true,
+      "storedCodes": [
+        917,
+        955,
+        955,
+        940,
+        948,
+        945
+      ],
+      "publicCodes": [
+        917,
+        955,
+        955,
+        940,
+        948,
+        945
+      ],
+      "keyCodes": [
+        949,
+        955,
+        955,
+        940,
+        948,
+        945
+      ]
+    },
+    {
+      "stored": "עברית",
+      "public": "עברית",
+      "allowed": true,
+      "key": "עברית",
+      "claimable": true,
+      "storedCodes": [
+        1506,
+        1489,
+        1512,
+        1497,
+        1514
+      ],
+      "publicCodes": [
+        1506,
+        1489,
+        1512,
+        1497,
+        1514
+      ],
+      "keyCodes": [
+        1506,
+        1489,
+        1512,
+        1497,
+        1514
+      ]
+    },
+    {
+      "stored": "ไทย",
+      "public": "ไทย",
+      "allowed": true,
+      "key": "ไทย",
+      "claimable": true,
+      "storedCodes": [
+        3652,
+        3607,
+        3618
+      ],
+      "publicCodes": [
+        3652,
+        3607,
+        3618
+      ],
+      "keyCodes": [
+        3652,
+        3607,
+        3618
+      ]
+    },
+    {
+      "stored": "한국",
+      "public": "한국",
+      "allowed": true,
+      "key": "한국",
+      "claimable": true,
+      "storedCodes": [
+        54620,
+        44397
+      ],
+      "publicCodes": [
+        54620,
+        44397
+      ],
+      "keyCodes": [
+        54620,
+        44397
+      ]
+    },
+    {
+      "stored": "Ünal",
+      "public": "Ünal",
+      "allowed": true,
+      "key": "ünal",
+      "claimable": true,
+      "storedCodes": [
+        220,
+        110,
+        97,
+        108
+      ],
+      "publicCodes": [
+        220,
+        110,
+        97,
+        108
+      ],
+      "keyCodes": [
+        252,
+        110,
+        97,
+        108
+      ]
+    },
+    {
+      "stored": "Čapek",
+      "public": "Čapek",
+      "allowed": true,
+      "key": "čapek",
+      "claimable": true,
+      "storedCodes": [
+        268,
+        97,
+        112,
+        101,
+        107
+      ],
+      "publicCodes": [
+        268,
+        97,
+        112,
+        101,
+        107
+      ],
+      "keyCodes": [
+        269,
+        97,
+        112,
+        101,
+        107
+      ]
+    }
+  ],
+  "_catalogComment": [
+    "The catalog the worth cases are scored against lives in grove-catalog.json beside this",
+    "file, in homestead.json's own schema and nothing else.",
+    "",
+    "A file of its own rather than a block in here, so the C# half can hand it straight to",
+    "HomesteadMapper.TryRead — the reader that ships — instead of to a second reader written",
+    "for the test. A vector proved against a parser nobody uses proves nothing about the game."
+  ],
+  "starLadder": [
+    1000,
+    5000,
+    20000
+  ]
+}

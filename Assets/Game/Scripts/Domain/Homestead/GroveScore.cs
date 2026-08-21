@@ -185,19 +185,41 @@ namespace GlimmerGrove.Homestead
         /// <c>HomesteadLedger.HeldCount</c> does: every caller is a grove screen asking about
         /// the player in front of it.
         /// </summary>
-        public static long Value(HomesteadCatalog catalog)
+        public static long Value(HomesteadCatalog catalog) => Value(catalog, LedgerHoldings.Instance);
+
+        /// <summary>
+        /// The same reading, against holdings supplied rather than read from the ledgers.
+        ///
+        /// <para>
+        /// <b>This overload exists because the rule is now written twice.</b> Since the public
+        /// boards, <c>functions/src/grove.ts</c> recomputes a grove's worth from the save so a
+        /// forged one cannot rank — and two implementations of one summation drift, which
+        /// here surfaces as a player seeing one number over their own grove and a different
+        /// one beside their name on a board. That is invariant 9a's failure mode exactly, so
+        /// the summation is pinned by shared vectors and this is the seam that lets the
+        /// <em>shipped</em> code be the code under test rather than a copy of it.
+        /// </para>
+        /// <para>
+        /// Note what is deliberately not abstracted: which pieces count and which are free.
+        /// Those are facts about the catalog and stay here, because they are the half that
+        /// must not differ. Only "does this player hold it" is supplied, because that is the
+        /// half the two sides answer with different evidence — the client asks its ledgers,
+        /// and the server asks a save document it does not believe.
+        /// </para>
+        /// </summary>
+        public static long Value(HomesteadCatalog catalog, IGroveHoldings held)
         {
-            if (catalog == null) return 0L;
+            if (catalog == null || held == null) return 0L;
 
             long total = 0L;
 
             foreach (var piece in catalog.Pieces)
-                if (piece.Cost > 0 && HomesteadLedger.IsHeld(piece)) total += piece.Cost;
+                if (piece.Cost > 0 && held.Holds(piece)) total += piece.Cost;
 
             // Starter land is free and is never written down (invariant 16e), so it adds
             // nothing here without needing to be excluded — its cost is zero.
             foreach (var region in catalog.Floor.Regions)
-                if (region.Cost > 0 && GroveLand.IsOwned(region)) total += region.Cost;
+                if (region.Cost > 0 && held.Owns(region)) total += region.Cost;
 
             return total;
         }
@@ -205,6 +227,10 @@ namespace GlimmerGrove.Homestead
         /// <summary>The whole reading: the score, the stars it earns and the next rung.</summary>
         public static GroveStanding Of(HomesteadCatalog catalog)
             => Standing(Value(catalog), catalog?.Scores);
+
+        /// <summary>The whole reading, against supplied holdings. See <see cref="Value(HomesteadCatalog, IGroveHoldings)"/>.</summary>
+        public static GroveStanding Of(HomesteadCatalog catalog, IGroveHoldings held)
+            => Standing(Value(catalog, held), catalog?.Scores);
 
         /// <summary>The reading for a score already in hand. Split out so it can be tested without a ledger.</summary>
         public static GroveStanding Standing(long score, GroveScoreTable table)
@@ -238,5 +264,34 @@ namespace GlimmerGrove.Homestead
 
             return total;
         }
+    }
+
+    /// <summary>
+    /// Who holds what, for <see cref="GroveScore"/>.
+    ///
+    /// Two predicates and nothing else, which is the whole of what the score needs to know
+    /// about a player. See <see cref="GroveScore.Value(HomesteadCatalog, IGroveHoldings)"/>
+    /// for why this is a seam at all.
+    /// </summary>
+    public interface IGroveHoldings
+    {
+        bool Holds(HomesteadPiece piece);
+        bool Owns(GroveRegion region);
+    }
+
+    /// <summary>
+    /// The player in front of this device, answered by the live ledgers.
+    ///
+    /// A singleton rather than an allocation per reading, because the grove screen takes this
+    /// reading on every repaint and it holds no state of its own.
+    /// </summary>
+    public sealed class LedgerHoldings : IGroveHoldings
+    {
+        public static readonly LedgerHoldings Instance = new LedgerHoldings();
+
+        LedgerHoldings() { }
+
+        public bool Holds(HomesteadPiece piece) => HomesteadLedger.IsHeld(piece);
+        public bool Owns(GroveRegion region) => GroveLand.IsOwned(region);
     }
 }

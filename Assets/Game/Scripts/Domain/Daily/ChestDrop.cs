@@ -74,6 +74,25 @@ namespace GlimmerGrove.Daily
         /// </para>
         /// </summary>
         RunTime,
+
+        /// <summary>
+        /// One hint for the account-wide pool. Banked, and applied by this client.
+        ///
+        /// <para>
+        /// Shaped like <see cref="Hearts"/> rather than like <see cref="RunTime"/>: it
+        /// outlives the run that earned it, it is not currency, and nothing about it reaches
+        /// the server — <c>adCurrencyOf</c> returns null for the placement that pays it and
+        /// the signed callback grants nothing, which needed no server change to be true.
+        /// </para>
+        /// <para>
+        /// The one thing it does not share with hearts is headroom. The shipped hint ceiling
+        /// equals the refill cap, so a hint granted at a full pool is <em>refused</em> rather
+        /// than clamped — which makes asking <see cref="Persistence.Hints.IsAtCeiling"/>
+        /// before offering one mandatory rather than polite. <c>RewardedAds.WouldBenefit</c>
+        /// is where that is enforced.
+        /// </para>
+        /// </summary>
+        Hints,
     }
 
     /// <summary>
@@ -90,6 +109,7 @@ namespace GlimmerGrove.Daily
         public const string Hearts = "hearts";
         public const string HeartBoost = "heart_boost";
         public const string RunTime = "run_time";
+        public const string Hints = "hints";
 
         public static ChestDropKind Parse(string id)
         {
@@ -98,6 +118,7 @@ namespace GlimmerGrove.Daily
             if (string.Equals(id, Hearts, StringComparison.Ordinal)) return ChestDropKind.Hearts;
             if (string.Equals(id, HeartBoost, StringComparison.Ordinal)) return ChestDropKind.HeartBoost;
             if (string.Equals(id, RunTime, StringComparison.Ordinal)) return ChestDropKind.RunTime;
+            if (string.Equals(id, Hints, StringComparison.Ordinal)) return ChestDropKind.Hints;
             return ChestDropKind.None;
         }
 
@@ -110,6 +131,7 @@ namespace GlimmerGrove.Daily
                 case ChestDropKind.Hearts: return Hearts;
                 case ChestDropKind.HeartBoost: return HeartBoost;
                 case ChestDropKind.RunTime: return RunTime;
+                case ChestDropKind.Hints: return Hints;
                 default: return string.Empty;
             }
         }

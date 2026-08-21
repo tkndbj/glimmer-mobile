@@ -24,7 +24,7 @@
     },
     {
       "id": "c02_millvale",
-      "version": 3,
+      "version": 4,
       "order": 20,
       "disabled": false,
       "minAppVersion": 0,
@@ -39,6 +39,25 @@
         "c02_stonebridge",
         "c02_three_bridges",
         "c02_the_millers_knot"
+      ]
+    },
+    {
+      "id": "c03_amberwood",
+      "version": 1,
+      "order": 30,
+      "disabled": false,
+      "minAppVersion": 0,
+      "levels": [
+        "c03_amberlight",
+        "c03_two_lights",
+        "c03_the_verdigris",
+        "c03_foxfire",
+        "c03_the_quiet_hollow",
+        "c03_rootbound",
+        "c03_three_springs",
+        "c03_under_the_lanterns",
+        "c03_the_ashen_path",
+        "c03_the_amberwood_knot"
       ]
     }
   ],

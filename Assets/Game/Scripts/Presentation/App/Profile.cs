@@ -153,6 +153,34 @@ namespace GlimmerGrove
         public static string HeartCountdown()
             => HeartsRefilled ? string.Empty : Countdown(SecondsToNextHeart);
 
+        // -- hints --------------------------------------------------------------
+        /// <summary>
+        /// The hint pool, already caught up on any refills that fell due.
+        ///
+        /// No setter, for <see cref="HeartState"/>'s reason: a hint is spent on a board,
+        /// returned by the clock or granted by a video, and assigning a number is none of
+        /// those.
+        /// </summary>
+        public static Hints HintState => Wallet.Hints;
+
+        public static int HintCount => Wallet.Hints.Count;
+
+        /// <summary>Where the hint timer stops — the denominator, and not a maximum.</summary>
+        public static int MaxHints => Wallet.MaxHints;
+
+        /// <summary>Whether the player has a hint to spend.</summary>
+        public static bool CanHint => Wallet.Hints.CanSpend;
+
+        /// <summary>Whether the refill clock is idle, because the player holds enough.</summary>
+        public static bool HintsRefilled => Wallet.Hints.IsRefilled;
+
+        /// <summary>Seconds until the next hint, for a countdown. 0 when no timer runs.</summary>
+        public static long SecondsToNextHint => Wallet.Hints.SecondsToNext(GameClock.NowUnix());
+
+        /// <summary>The wait until the next hint, already formatted. Empty when none runs.</summary>
+        public static string HintCountdown()
+            => HintsRefilled ? string.Empty : Countdown(SecondsToNextHint);
+
         // -- companion ----------------------------------------------------------
         /// <summary>
         /// The companion on the profile, resolved against the roster — so a save

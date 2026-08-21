@@ -68,6 +68,17 @@ namespace GlimmerGrove
         /// </summary>
         const float PieceScale = 1.15f;
 
+        /// <summary>
+        /// The top-left pair — the way out and the way to the boards.
+        ///
+        /// Declared once because they are only a pair while they agree about size and
+        /// baseline: held as literals at their two call sites, a change to one is a change
+        /// somebody has to remember to make twice, and the failure is a row that is subtly
+        /// not a row.
+        /// </summary>
+        static readonly Vector2 NavSize = new Vector2(112f, 112f);
+        const float NavX = 92f, NavY = -104f, NavGap = 16f;
+
         RectTransform _viewport;
         GroveFieldView _field;
         Text _summary;
@@ -312,8 +323,8 @@ namespace GlimmerGrove
             // (see BuildField), so the corner needs an exit rather than a readout — and the
             // balance was the wrong thing to put here anyway: nothing on this screen is bought.
             // Land and decor are both bought in the shop, which shows the balance itself.
-            UIKit.IconButton("Back", chrome, Skins.Nav, "ic_left", new Vector2(112f, 112f),
-                             new Vector2(0f, 1f), new Vector2(92f, -104f),
+            UIKit.IconButton("Back", chrome, Skins.Nav, "ic_left", NavSize,
+                             new Vector2(0f, 1f), new Vector2(NavX, NavY),
                              () => Flow.Go<HomeScreen>());
 
             _summary = UIKit.Shrinkable(
@@ -337,6 +348,18 @@ namespace GlimmerGrove
 
             // Kept so the shop lesson can ring the real button rather than describe where it is.
             _shop = (RectTransform)shop.transform;
+
+            // The way to the boards, beside the way out and the same size as it. The two are a
+            // pair — both are "leave this screen" — so they read as a row rather than as a
+            // control and a smaller afterthought stacked under it.
+            //
+            // It is deliberately *not* the score box in the corner: that box is a readout with
+            // every raycast target switched off, because this screen is panned and pinched and
+            // a control there would swallow a drag begun where a right thumb rests. A separate
+            // button costs one glyph and leaves the gesture alone.
+            UIKit.IconButton("Boards", chrome, Skins.Nav, "ic_trophy", NavSize,
+                             new Vector2(0f, 1f), new Vector2(NavX + NavSize.x + NavGap, NavY),
+                             () => Flow.Go<LeaderboardScreen>());
 
             BuildScore(chrome);
         }

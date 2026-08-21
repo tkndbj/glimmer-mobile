@@ -1,0 +1,91 @@
+{
+  "schemaVersion": 3,
+  "floor": {
+    "cols": 6,
+    "rows": 6,
+    "tileArt": "Homestead/floor_grass",
+    "hallTile": "t_002_002",
+    "starterTile": "t_003_002",
+    "regions": [
+      {
+        "id": "home_field",
+        "col": 0,
+        "row": 0,
+        "cols": 4,
+        "rows": 4,
+        "cost": 0
+      },
+      {
+        "id": "east_strip",
+        "col": 4,
+        "row": 0,
+        "cols": 2,
+        "rows": 4,
+        "cost": 2500
+      },
+      {
+        "id": "south_strip",
+        "col": 0,
+        "row": 4,
+        "cols": 6,
+        "rows": 2,
+        "cost": 7000
+      }
+    ]
+  },
+  "score": {
+    "stars": [
+      1000,
+      5000,
+      20000
+    ]
+  },
+  "pieces": [
+    {
+      "id": "cottage",
+      "art": "Homestead/cottage",
+      "kind": "dwelling",
+      "tier": 1,
+      "cost": 0
+    },
+    {
+      "id": "lodge",
+      "art": "Homestead/cottage",
+      "kind": "dwelling",
+      "tier": 2,
+      "cost": 2500
+    },
+    {
+      "id": "hall",
+      "art": "Homestead/cottage",
+      "kind": "dwelling",
+      "tier": 3,
+      "cost": 9000
+    },
+    {
+      "id": "starter_rock",
+      "art": "Homestead/pebble",
+      "kind": "decor",
+      "cost": 0
+    },
+    {
+      "id": "bench",
+      "art": "Homestead/bench",
+      "kind": "decor",
+      "cost": 500
+    },
+    {
+      "id": "lantern",
+      "art": "Homestead/lantern",
+      "kind": "decor",
+      "cost": 1200
+    },
+    {
+      "id": "oak",
+      "art": "Homestead/oak",
+      "kind": "decor",
+      "slot": "canopy",
+      "cost": 4000
+    }
+  ]
+}

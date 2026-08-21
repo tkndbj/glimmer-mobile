@@ -90,7 +90,8 @@ namespace GlimmerGrove.Content
                 ParseColour(dto.accent, ParseColour(DefaultAccentHex, Color.white)),
                 ParseColour(dto.slate, ParseColour(DefaultSlateHex, Color.black)),
                 string.IsNullOrEmpty(dto.backdrop) ? LastResortBackdrop : dto.backdrop,
-                dto.mapStrips);
+                dto.mapStrips,
+                dto.teaserX);
 
             body = new ChapterBody(definition, levels);
             return true;
@@ -146,7 +147,6 @@ namespace GlimmerGrove.Content
                 par,
                 dto.goldFactor > 0f ? dto.goldFactor : LevelTuning.DefaultGoldFactor,
                 dto.silverFactor > 0f ? dto.silverFactor : LevelTuning.DefaultSilverFactor,
-                dto.hintAllowance > 0 ? dto.hintAllowance : LevelTuning.DefaultHintAllowance,
                 dto.budgetFactor,
                 dto.timeFactor);
 

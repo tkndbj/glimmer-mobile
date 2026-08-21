@@ -149,6 +149,15 @@ ASSEMBLIES = [
         src=sources("Assets/Game/Scripts/Ads"),
         refs=ENGINE_RUNTIME + PKG_RUNTIME + [NETSTANDARD] + SHIMS + compiled("GlimmerGrove.Domain"),
     )),
+    ("privacy", dict(
+        out="GlimmerGrove.Privacy",
+        src=sources("Assets/Game/Scripts/Privacy"),
+        # No GLIMMER_UMP here, for the reason the iap entry gives about GLIMMER_IAP: the
+        # Google Mobile Ads package has no DLL on disk until the Editor resolves it, so
+        # this proves the assembly is sound *without* the CMP - which is the property that
+        # keeps a fresh clone compiling. UmpConsentGateway is compiled by the Editor.
+        refs=ENGINE_RUNTIME + PKG_RUNTIME + [NETSTANDARD] + SHIMS + compiled("GlimmerGrove.Domain"),
+    )),
     ("iap", dict(
         out="GlimmerGrove.Iap",
         src=sources("Assets/Game/Scripts/Store"),
@@ -163,14 +172,15 @@ ASSEMBLIES = [
         out="GlimmerGrove.Presentation",
         src=sources("Assets/Game/Scripts/Presentation"),
         refs=ENGINE_RUNTIME + PKG_RUNTIME + [NETSTANDARD] + SHIMS
-             + compiled("GlimmerGrove.Domain", "GlimmerGrove.Cloud", "GlimmerGrove.Ads"),
+             + compiled("GlimmerGrove.Domain", "GlimmerGrove.Cloud", "GlimmerGrove.Ads",
+                        "GlimmerGrove.Privacy"),
     )),
     ("editor", dict(
         out="GlimmerGrove.Editor",
         src=sources("Assets/Game/Editor"),
         refs=ENGINE_EDITOR + PKG_EDITOR + [NETSTANDARD] + SHIMS
              + compiled("GlimmerGrove.Domain", "GlimmerGrove.Cloud", "GlimmerGrove.Ads",
-                        "GlimmerGrove.Presentation"),
+                        "GlimmerGrove.Privacy", "GlimmerGrove.Presentation"),
         defines=DEFINES + ["UNITY_EDITOR"],
     )),
     ("tests", dict(
@@ -183,7 +193,8 @@ ASSEMBLIES = [
         refs=ENGINE_EDITOR + PKG_EDITOR + [NETSTANDARD] + SHIMS
              + nunit()
              + compiled("GlimmerGrove.Domain", "GlimmerGrove.Cloud",
-                        "GlimmerGrove.Ads", "GlimmerGrove.Presentation"),
+                        "GlimmerGrove.Ads", "GlimmerGrove.Privacy",
+                        "GlimmerGrove.Presentation"),
         defines=DEFINES + ["UNITY_EDITOR", "UNITY_INCLUDE_TESTS"],
     )),
 ]

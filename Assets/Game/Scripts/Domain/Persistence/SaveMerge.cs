@@ -220,6 +220,7 @@ namespace GlimmerGrove.Persistence
             foreach (var ledger in ledgers.Values) currencies[i++] = ledger.ToDto();
 
             var hearts = JoinedHearts(mine, other);
+            var hints = JoinedHints(mine, other);
 
             var name = Chosen(mine.displayName, mine.displayNameSetUnix,
                               other.displayName, other.displayNameSetUnix);
@@ -256,6 +257,14 @@ namespace GlimmerGrove.Persistence
                 // the conservative rule would only ever cut short a boost the player has.
                 heartBoostUntilUnix = Hearts.JoinBoost(mine.heartBoostUntilUnix,
                                                        other.heartBoostUntilUnix),
+
+                // Hints join exactly as hearts do, and through the same arithmetic — see
+                // RegenLedger.Join. There is no legacy shape to rebase from here, because a
+                // hint allowance was never written to a save file at all: it was three per
+                // glade, handed back at every board.
+                hintsProduced = hints.Produced,
+                hintsSpent = hints.Spent,
+                hintsDueUnix = hints.DueUnix,
 
                 // Preferences: the value chosen most recently, dated by its own stamp
                 // rather than by the file's. See Chosen for why the file's date was the
@@ -385,6 +394,42 @@ namespace GlimmerGrove.Persistence
 
         static Hearts LedgerOf(WalletDto w)
             => Hearts.Ledger(w.heartsProduced, w.heartsSpent, w.heartsDueUnix);
+
+        /// <summary>
+        /// Joins two devices' hints.
+        ///
+        /// <para>
+        /// Simpler than the heart join by exactly one case, and the missing case is the
+        /// point: hints have no pre-ledger shape to rebase from, because an allowance was
+        /// never stored — it was three per glade, handed back at every board, so a file
+        /// written before this feature holds no opinion about hints rather than a stale one.
+        /// </para>
+        /// <para>
+        /// So a side with no ledger contributes <see cref="Hints.Full"/>, which is what that
+        /// device is about to seed itself with anyway (see <c>Wallet.ReadHints</c>). Both
+        /// sides absent is the ordinary case on the first sync after this ships, and the
+        /// answer is a full pool — generous, bounded by the cap, and worth nothing to forge,
+        /// since a hint pays no currency and buys no advantage a restart does not.
+        /// </para>
+        /// </summary>
+        static Hints JoinedHints(WalletDto mine, WalletDto other)
+        {
+            // > 0, never >= 0. An absent field deserialises as zero, so a ledger has to be
+            // recognisable by a value no absent one can hold — see WalletDto.hintsProduced.
+            bool mineHasLedger = mine.hintsProduced > 0;
+            bool otherHasLedger = other.hintsProduced > 0;
+
+            if (mineHasLedger && otherHasLedger)
+                return Hints.Join(HintsOf(mine), HintsOf(other));
+
+            if (mineHasLedger) return Hints.Join(HintsOf(mine), Hints.Full);
+            if (otherHasLedger) return Hints.Join(HintsOf(other), Hints.Full);
+
+            return Hints.Full;
+        }
+
+        static Hints HintsOf(WalletDto w)
+            => Hints.Ledger(w.hintsProduced, w.hintsSpent, w.hintsDueUnix);
 
         /// <summary>
         /// A pre-v8 side's count, expressed against the ledger it is being joined with.

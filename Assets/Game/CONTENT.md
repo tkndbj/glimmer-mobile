@@ -104,7 +104,18 @@ Two consequences worth holding on to:
 ## Adding a chapter
 
 1. `Glimmer Grove ▸ Content ▸ Create Chapter Template` — scaffolds the JSON.
-2. Author the grids (grammar below). **Leave `par` out** — it is derived from the
+2. Author the grids (grammar below). `Tools/verify/author.py` is the aid: you say which
+   cells exist and which are joined, and it derives every arm mask, refuses a board that
+   cannot be finished, dials par to a target with `fit`, and reports what the board
+   actually asks of a player — see *What makes a glade hard* below, and read it before
+   authoring anything, because the first cut of two whole chapters got that wrong in a
+   way nobody could see by looking. The Mill Vale and the Amberwood keep their boards
+   that way in `Tools/chapters/c02_millvale.py` and `c03_amberwood.py`, which regenerate
+   the shipped JSON and can check themselves against it (`--check`) — worth copying for
+   any chapter whose boards will be retuned, and deliberately outside the build gate,
+   since the Shallows has no such source and a gate demanding one would make it
+   unbuildable.
+   **Leave `par` out** — it is derived from the
    board, so an omitted par can never be wrong while a typed one can. **Do set
    `backdrop`**: a chapter that does not name its own art inherits another
    chapter's, which puts it in another chapter's asset bundle.
@@ -115,9 +126,19 @@ Two consequences worth holding on to:
    marker. More levels means more `mapStrips`, not tighter packing — which in
    practice means **the strip art decides how long a chapter is**. The Shallows
    runs to ten glades because its source image held six 1200px slices; the Mill Vale
-   runs to ten over four, because its source is shorter and `make_chapter_art.py`
-   scales to whole strips rather than stretching to them. Work that out before
-   authoring boards, not after.
+   runs to ten over four, and the Amberwood to ten over five, because their sources are
+   shorter and `make_chapter_art.py` scales to whole strips rather than stretching to
+   them. Pick the strip count that leaves the scaled source *wider* than 1080 — the tool
+   then trims the surplus from the centre, which is invisible, where a count that leaves
+   it narrower forces the width up to 1080 and stretches the map sideways, which is not.
+   The Amberwood's source is 892x4745, so five strips scale it to 1128 wide and four
+   would have stretched it by a fifth. Work that out before
+   authoring boards, not after. The end-of-chapter marker caps the trail and places
+   itself: how far *up* it floats is derived, but which side it sits on is
+   `teaserX` — a fraction across the map, 0.66 if omitted, which is above a chapter
+   whose last glade is on the right. A chapter ending on the right side wants a left
+   `teaserX` and the other way round, or the trail's last step is a redundant
+   vertical one. The Mill Vale ends at 0.71 and sets 0.3.
 4. Add `chapter.<id>.name` and, per level, `level.<id>.name` / `.tagline` /
    `.lesson` to `loc/en.json`. Missing keys fail validation, which names each one.
 5. `Glimmer Grove ▸ Content ▸ Sync Manifest` — adopts the new chapter into
@@ -197,6 +218,19 @@ colour R G B, Y=R+G, M=R+B, C=G+B, W=R+G+B, A=any
 Every arm must be mated by its neighbour, and the board with every rotation at 0
 must light every critter. The validator proves both.
 
+
+**Rooted tiles (`!`) must be authored at `/0`.** Everything the validator proves is
+proved against a copy of the board with every rotation zeroed, because that is the
+authored solution — and a rooted tile can never be turned, so one authored away from
+its solution is a tile the player is stuck with at an angle the proof never sees. What
+gets proved is then a different board from the one that ships, and nothing else notices:
+every arm mates, the solved probe lights, the glade draws, and par is unaffected because
+`MinimumMoves` skips rooted tiles. It also makes `Puzzle.TurnsToSolution` count turns
+that can never be paid, so a player who *has* reached the solution is told they were one
+turn away — the near-miss line being generous, which is the single thing it exists not to
+be. `CheckRootedTiles` refuses it, and asks `Puzzle.Alike` rather than `rot == 0`: a
+straight conduit and a straight crossing genuinely read the same half a turn round, and
+every rooted straight in the Mill Vale is one.
 
 **Fragile conduits (`~N`)** crumble after N turns and leave a gap. Undo rewinds
 the rotation but never mends them, so exploring costs something. The validator
@@ -279,6 +313,15 @@ work is winding the dark island through the live one.
 least one turn above the one-star line. Override with `budgetFactor` on a level,
 or set it negative to remove the budget entirely. Running out costs a heart.
 
+**In practice it never fires, and that is worth knowing before you tune it.** The
+budget is `2.6 × par` taps while the clock is `timeFactor × par` seconds, so
+running out of turns first needs a sustained `2.6 / timeFactor` taps a second —
+above the rate three stars asks for, for the whole run, without solving. `Undo`
+also refunds a move while the clock keeps going, so exploring is free in turns and
+paid in seconds. And `MoveBudget` is floored at one turn past the one-star line, so
+a `budgetFactor` under `silverFactor` does nothing at all. **The clock is the fail
+state; the budget is the backstop under someone who is drumming.**
+
 **Par is length, not difficulty, and the clock is derived from it.** A chapter's
 pars should *not* rise monotonically — ten rising numbers read as a treadmill, and
 a low-par board that is hard to think about is a better change of pace than a long
@@ -286,6 +329,101 @@ one. Watch the ceiling though: the time limit is `par × timeFactor`, so past ab
 par 70 a glade becomes a three-minute run on a phone and wants a `timeFactor`
 override. Nothing warns about that — `CheckClock` has an opinion about the tap
 *rate* three stars demands, not about how long a run lasts.
+
+**Author `timeFactor` per glade; it is the difficulty ramp.** The default is 1.70
+seconds per par turn, and every shipped glade overrides it. The shape to keep: the
+first few glades of the game *looser* than the default (nothing about a player's
+first ten minutes should end in a lost heart), then a slow tighten, a chapter
+finale at about 1.5, and a fresh mechanic given slack on the glade that teaches it.
+The shipped ramp runs 2.20 → 1.50 across the Shallows and 1.90 → 1.50 across the
+Mill Vale. Aim the ramp at a *clear rate*, not at a feeling — around 85% of first
+attempts early, around 60% late, with finales lower. You will not know the real
+numbers until the game is live; that is what `clockScale` below is for.
+
+**The star thresholds do not move with it.** Three stars is `par × 1.00` seconds
+and two is `par × 1.50`, held against par rather than taken as fractions of the
+limit, and clamped to the limit. So tightening a glade's clock changes where the
+run is *lost* and never what a clear is *worth* — which matters because earned
+credits are derived from the star ledger, so a star line that drifted with the
+difficulty would deflate every reward in the game by a factor nobody wrote down.
+
+**`difficulty.clockScale` in `progression.json` is the live lever.** It multiplies
+every glade's limit, bounded to 0.6–2.0 by `DifficultyLimits` (a bad push must not
+be able to make the game unfinishable). Reach for it rather than for twenty
+`timeFactor` edits when the whole game is out by a bit; reach for `timeFactor` when
+one glade is wrong. Two things to know. It reaches the limit and nothing that is
+stored — a run records elapsed play time, never time left, so `bestMillis`, the map
+badge and the published move deciles all keep their meaning. And the build gate
+warns when a glade could not survive being pushed to the 0.6 floor, because that
+retune never passes back through the validator.
+
+## What makes a glade hard
+
+`Tools/verify/difficulty.py` answers this in numbers rather than in opinions, and it is
+worth reading before authoring a board, because the first cut of two whole chapters got
+it wrong in a way nobody could see by looking:
+
+```
+python Tools/verify/difficulty.py                       # every chapter
+python Tools/verify/difficulty.py c02_millvale --detail # one, per tile
+```
+
+It enumerates every arrangement in which **every arm mates and none dangles** — the tidy
+boards a player might plausibly arrive at — and then asks which of them actually win.
+
+```
+glance   tiles a player cannot place by looking at that tile and the ground around it
+arms     tidy arrangements the board admits
+wins     those of them that also light every critter and wake no duskcap
+decided  tiles whose orientation only colour or the dark can settle
+```
+
+Two findings drove the rebuild of chapters two and three, and both are general.
+
+**Open ground is what makes a board easy.** A tile with four neighbours has four candidate
+orientations; a tile with one has one. The first cut of both chapters was corridors a tile
+or two wide with empty cells either side, so almost every tile read at a glance and the
+glade was a dot-to-dot. **Fill the ground.** Two things then matter: avoid four-armed
+conduits, which are inert and so read as nothing; and hang whatever is left over on short
+chains ending in critters rather than running a spine along the board's edge, because a
+straight or a tee on an edge is forced by the edge and a critter or an elbow is not.
+Measured on the shipped 7x7s, that is the difference between `glance 21/49` and `40/49`.
+
+**When `arms` is 1, every mechanic except the arms is decoration.** Twenty-two of the
+game's first thirty glades had exactly one tidy arrangement, which is the same as saying
+their brittle stone, taproots and duskcaps rejected nothing and could all have been
+deleted without changing a single solution. The player fits pipes, the lights come on, and
+the duskcap they never thought about was never reachable.
+
+**A twisted crossing is the cheapest honest decision a board can carry**, and everything
+else rides on it. It wears all four arms at every angle, so nothing about the arms can
+settle it — only colour or the dark can. Three of them is eight tidy arrangements with one
+winner. That is where the rest of the vocabulary gets its teeth:
+
+- **Brittle stone belongs on a tile the player cannot simply try**, which in practice means
+  a crossing. `~2` on a conduit owed one turn is exactly one wrong guess; `~1` is none, and
+  a crumble ends the run, so save it for a finale. Brittle on a tile the arms already force
+  asks nothing of anybody.
+- **A taproot's members should all be tiles the arms cannot settle**, for the same reason -
+  bind two crossings in opposite corners and one tap answers both. Bind tiles the arms
+  already force and the root is a hint, not a decision. The reading prints what the binding
+  removes.
+- **A duskcap's ford must sit on a *cycle* of the live network.** This is the one that is
+  easy to get wrong and impossible to see afterwards. Turning that ford has to join the
+  shadow to the grove *while every critter stays lit* — one arrangement that looks finished
+  and will not settle. If the wrong turn also puts a critter out, the critter tells the
+  player and the shadow taught them nothing; `dark` in the reading counts exactly the
+  arrangements the duskcaps alone reject, and it was **zero on every duskcap board that had
+  ever shipped**.
+
+**`hazards` is the metric this replaces, and it is worth knowing why it was wrong**, because
+a whole chapter was authored to it. It counts places where *some* rotation would mate two
+networks — but a rotation that does that usually leaves an arm dangling somewhere else, so
+it is not an arrangement a player ever plausibly reaches. A board can score twenty-nine
+hazards and admit exactly one tidy arrangement.
+
+Nothing here fails a build. `Validate Content` remains the authority on whether a glade is
+*sound*; this says whether it is *worth playing*.
 
 **Tips teach themselves.** A glade that contains a mechanic the player has never
 met shows a one-off spotlight tip on entry — no authoring, no list to maintain.
@@ -775,6 +913,83 @@ tuned through the content channel like the chest odds, which means it needs
 `ContentConfig.RemoteBaseUrl` set to change without an app update — the same status the ad
 payouts and chest rates already have.
 
+### The hint pool
+
+The optional `hints` block. How many hints a player holds and how fast they come back.
+
+```json
+"hints": {
+  "refillCap": 3,
+  "ceiling": 3,
+  "refillSeconds": 28800
+}
+```
+
+**A hint is account-wide.** It used to be an allowance of three per glade, handed back in
+full at every board — which meant it cost nothing, meant nothing, and the only players who
+never used one were the ones who had not found the button. There is no per-level
+`hintAllowance` any more and there must not be one again: a glade has no opinion about how
+much of a player's own pool they may spend on it.
+
+Same shape as the heart gate above, minus the two fields hearts need and hints do not.
+Every field is optional on its own, the whole block is optional, and it is not a schema
+bump. Everything is clamped into a supported range by `HintLimits`.
+
+The one difference worth knowing is that **`ceiling` equals `refillCap` as shipped**, where
+hearts keep a wide gap. That is a deliberate choice, not an oversight, and it has exactly
+one consequence: a hint granted to somebody already holding three is **refused**, not
+clamped — so nothing may offer one there. `RewardedAds.WouldBenefit` is where that is
+enforced and `HintsTests` is what pins it; raise the ceiling above the cap and hints start
+banking like hearts, with no other change. Both validators print the fact so nobody has to
+remember it.
+
+Nothing boosts a hint's clock. The heart boost is named for hearts, sold and dropped as
+such, and quietly speeding up a second resource with it would make one published number
+mean two things.
+
+Same channel caveat as the heart gate: hints are applied by the client and never
+adjudicated, so nothing here is published to `config/progression`.
+
+### Difficulty
+
+The optional `difficulty` block. One number, and it is the one most likely to be wrong on
+launch day.
+
+```json
+"difficulty": {
+  "clockScale": 1.00
+}
+```
+
+It multiplies every glade's time limit. `1.00` plays the content exactly as authored;
+`0.85` makes the whole game 15% tighter; `1.20` gives everybody more room. Omit it and
+nothing is scaled. `DifficultyLimits` bounds it to **0.6–2.0** and a file outside that is
+clamped *and* reported — this is the one block whose bad push is not a worse deal but an
+unfinishable game, so the bound is a compile-time constant a file cannot move, exactly as
+`HeartLimits.HardCeiling` is.
+
+Why it exists at all: every other number in this file was tuned against something
+observable, and difficulty was tuned by people who already knew every solution — which is
+the one thing no player will ever be. The real value comes from first-attempt clear rates
+in the first fortnight, and a value that needs a store review to change is a value that
+stays at the launch-day guess for a month.
+
+**What it reaches.** The limit, and nothing else:
+
+- **Not the stars.** They are held against par (`LevelTuning.TimeGoldFactor`), so a retune
+  moves where a run is lost and never what a clear pays. Earned credits are derived from
+  the star ledger, so the alternative is a difficulty push that silently retunes the
+  economy alongside it.
+- **Not anything stored.** A run records elapsed play time, never time left, so
+  `bestMillis`, the map badge and `publishGroveStats` all keep working with no migration
+  and no deploy. `CountdownTests` and `DifficultyRuleTableTests` are what stop that
+  property being traded away.
+- **Not the move budget.** See *Move budget* above — it is the backstop, not the fail state.
+
+The same channel caveat the hearts block carries applies here: nothing about the clock is
+adjudicated, so this is never published to `config/progression`, and changing it without an
+app update needs `ContentConfig.RemoteBaseUrl` set.
+
 ### Daily chests
 
 The optional `daily` block. Three chests, earned by finishing runs and opened by hand
@@ -800,7 +1015,10 @@ from the home screen.
 band is measured in **hours**. There is a fifth, `run_time`, which a chest may **not**
 hold: it pays seconds onto the run in progress, and a chest is opened on the home screen
 where there is no run. The reader refuses it here and `Validate Content` says so, rather
-than letting a guaranteed slot pay nothing reliably. See *Rewarded ads* below. Omit the whole block and the built-in table in
+than letting a guaranteed slot pay nothing reliably. See *Rewarded ads* below. There is a
+sixth, `hints`, which a chest *may* hold but should not while the hint ceiling equals the
+cap — a chest that rolls one for a player already holding three pays them nothing, which is
+the same failure in a slower costume. Omit the whole block and the built-in table in
 `DailyChestTable.Default` stands; it is deliberately not a schema bump, because a
 daily-chest retune must not invalidate the XP curve for clients that have not updated.
 
@@ -889,6 +1107,7 @@ Where each one is offered, and why there:
 | `coin_bonus` | the hub's coin `+` | credits |
 | `run_continue` | the clock running out, mid-run | seconds |
 | `win_bonus` | the victory panel, under the payout | credits |
+| `hint_refill` | the hint button, pool empty | hints |
 
 **`run_time` is the odd one and it is the only unbanked reward in the game.** Its seconds
 go onto the `RunClock` of the run that is happening and are gone when that run resolves.
@@ -1212,3 +1431,57 @@ refusal beats a silent empty catalog. It cost nothing to do: remote delivery was
 still off and one chapter had shipped, so there was no content anywhere to
 migrate. The same change made after a CDN goes live is a migration under live
 players, which is the whole argument for doing this kind of thing early.
+
+## Privacy and consent
+
+Not content, and deliberately in this file anyway: it is the only pipeline document, and the
+three parts below are all things that go wrong at build or release time rather than at runtime.
+
+**Nothing here is stored in the save file, and nothing is published in `progression.json`.** A
+consent answer is per-device, revocable and therefore not monotonic — the shape invariant 11b
+forbids — and the CMP already keeps the authoritative record in the form the ad networks read.
+`AdPrivacy` holds it in memory for the session and asks again on the next launch.
+
+### The order
+
+`RewardedAds.StartAsync` is the whole rule: resolve consent, apply it to the provider, then
+initialise. Never the other way round — an SDK that starts first has already decided what it may
+collect and has already auctioned on that decision, and a signal applied afterwards changes only
+the next request. `Boot` installs the gateway; the **splash** starts it, for the reason the store
+connection starts there: it is a network round trip and it may put a native dialog on screen,
+and neither belongs before the first scene has loaded.
+
+### The consent platform
+
+Google UMP, behind `GLIMMER_UMP`, which comes from `GlimmerGrove.Privacy.asmdef`'s
+`versionDefines` on `com.google.ads.mobile` — never a Player Settings define, for the
+per-build-target reason `GLIMMER_ADDRESSABLES` documents. Without the package installed,
+`NullConsentGateway` answers "no consent, assume the GDPR applies", so ads run unpersonalised
+rather than assuming a yes nobody gave.
+
+A CMP rather than a dialog of our own, for three reasons any one of which decides it: only a CMP
+knows whether this player is in the EEA or the UK, only a CMP writes the IAB TCF string that
+mediation adapters actually read, and Google's EU User Consent Policy requires a certified one
+once AdMob is in the waterfall.
+
+### iOS tracking
+
+`AppTrackingPrompt` plus `Assets/Game/Plugins/iOS/GlimmerAppTracking.mm`. The prompt is shown
+once per install — iOS enforces that, not us — so it is safe to call every launch, and a player
+who changes their mind does it in iOS Settings.
+
+`IosPrivacyPlist` writes `NSUserTrackingUsageDescription` into the built Xcode project.
+**Without the key iOS silently refuses to show the prompt at all**: no dialog, every player
+non-consented, and a build that passes review with iOS ad revenue near zero. The sentence
+matters — Apple rejects copy that merely restates the dialog — and it needs an
+`InfoPlist.strings` per store language, which is deliberately not generated, because a string
+invented at build time would slip past the loc gate.
+
+### app-ads.txt
+
+In the repository root. It must be served as plain text at `https://<developer-website>/app-ads.txt`
+on the exact domain named in **both** store listings, and every line in it is currently a
+placeholder taken from no dashboard. A missing or unreachable file produces no error anywhere —
+only lower fill and lower prices, for ever.
+
+Change the waterfall, change that file, in the same commit.

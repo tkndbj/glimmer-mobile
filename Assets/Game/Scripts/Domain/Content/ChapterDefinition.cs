@@ -33,8 +33,20 @@ namespace GlimmerGrove.Content
         /// </summary>
         public readonly string[] MapStrips;
 
+        /// <summary>
+        /// Where the end-of-chapter marker sits across the map, 0..1.
+        ///
+        /// Authored rather than derived because the trail zigzags and the marker caps it:
+        /// which side it belongs on is a fact about where this chapter's last glades were
+        /// put, and one constant is right for a chapter that ends on the left and wrong
+        /// for one that ends on the right. An unauthored chapter takes
+        /// <see cref="ChapterMap.TeaserX"/>, so nothing already shipped moves.
+        /// </summary>
+        public readonly float TeaserX;
+
         public ChapterDefinition(ChapterId id, string nameKey,
-                                 Color accent, Color slate, string backdrop, string[] mapStrips)
+                                 Color accent, Color slate, string backdrop, string[] mapStrips,
+                                 float teaserX = 0f)
         {
             if (!id.IsValid) throw new ArgumentException("chapter needs a valid id", nameof(id));
 
@@ -44,6 +56,7 @@ namespace GlimmerGrove.Content
             Slate = slate;
             Backdrop = backdrop;
             MapStrips = mapStrips != null && mapStrips.Length > 0 ? mapStrips : new[] { "strip0" };
+            TeaserX = ChapterMap.TeaserAcross(teaserX);
         }
 
         public int StripCount => MapStrips.Length;

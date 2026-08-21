@@ -291,6 +291,45 @@ namespace GlimmerGrove
             }
         }
 
+        // --------------------------------------------------------------- visiting
+        /// <summary>
+        /// Loads a grove that is not the player's: the ground, the home ladder, and whatever
+        /// is standing in <em>that</em> grove.
+        ///
+        /// <para>
+        /// Into its own scope, for invariant 7b's reason — see
+        /// <see cref="AssetLibrary.GroveVisitScope"/>. It is bounded by the visited grove
+        /// rather than by the catalog, exactly as <see cref="OpenAsync"/> is, so walking a
+        /// leaderboard costs one grove at a time however long the list is.
+        /// </para>
+        /// <para>
+        /// Unlike <see cref="OpenAsync"/> this always loads: consecutive visits are different
+        /// groves, so a "already loaded" check keyed on the scope would draw the second
+        /// keeper's floor with the first keeper's furniture on it. <c>EnsureScopeAsync</c>
+        /// replaces the scope, which is what makes that safe rather than merely wasteful.
+        /// </para>
+        /// </summary>
+        public static async void OpenVisitAsync(IEnumerable<string> pieceIds, Action onReady = null)
+        {
+            try
+            {
+                await AssetLibrary.EnsureScopeAsync(
+                    AssetLibrary.GroveVisitScope,
+                    AssetManifest.GroveAssets(HomesteadCatalog.Current, pieceIds));
+
+                onReady?.Invoke();
+            }
+            catch (Exception e)
+            {
+                // async void swallows exceptions; a visit that failed to load must not vanish
+                // in silence.
+                Debug.LogException(e);
+            }
+        }
+
+        /// <summary>Drops a visited grove's art. Always safe: a scope nobody opened is a no-op.</summary>
+        public static void CloseVisit() => AssetLibrary.ReleaseScope(AssetLibrary.GroveVisitScope);
+
         // -------------------------------------------------------------- browsing
         /// <summary>
         /// Loads one shelf of the shop: the tab row's emblems and that shelf's thumbnails.

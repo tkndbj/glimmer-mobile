@@ -36,6 +36,7 @@ namespace GlimmerGrove
             "ui.reward.hearts",
             "ui.reward.heart_boost",
             "ui.reward.run_time",
+            "ui.reward.hints",
         };
 
         public static string Name(ChestDropKind kind)
@@ -58,6 +59,11 @@ namespace GlimmerGrove
                 // a sixth entry in a vocabulary the player has learned has five — and cream-
                 // white is what this UI already means by "not one of the coloured things".
                 case ChestDropKind.RunTime: return Pal.Radiance;
+
+                // The hint button's own orange, so the prize and the control it fills read as
+                // one thing. It is not a sixth hue: sq_orange is already what this UI means by
+                // "the hint".
+                case ChestDropKind.Hints: return Pal.Amber;
 
                 default: return Pal.Cream;
             }
@@ -84,11 +90,12 @@ namespace GlimmerGrove
                 case ChestDropKind.Hearts:
                 case ChestDropKind.HeartBoost: slot = ResourceSlots.Kind.Hearts; return true;
 
-                // RunTime falls through to false deliberately, and unlike a heart boost it is
-                // not a near miss. A boost answers Hearts because it is a thing that happened
-                // to the hearts; seconds on the run in progress are not a balance at all and
-                // there is no pill on the hub for them to fly to. The panel that pays it does
-                // not use the collect animation, so nothing is left looking ungiven.
+                // RunTime and Hints fall through to false deliberately, and unlike a heart
+                // boost neither is a near miss. A boost answers Hearts because it is a thing
+                // that happened to the hearts; seconds on the run in progress are not a balance
+                // at all, and a hint — though it is banked — has no pill on the hub either,
+                // only a badge on a button that lives on the play screen. Neither panel that
+                // pays one uses the collect animation, so nothing is left looking ungiven.
                 default: slot = ResourceSlots.Kind.Credits; return false;
             }
         }
@@ -137,6 +144,8 @@ namespace GlimmerGrove
                 // run is lost, which is the worst moment in the game to show a white square
                 // because a sprite had not finished loading.
                 case ChestDropKind.RunTime: return Art.Dial(128);
+
+                case ChestDropKind.Hints: return Art.S("Ui/ic_hint");
 
                 default: return null;
             }

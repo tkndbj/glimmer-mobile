@@ -82,7 +82,8 @@ namespace GlimmerGrove.Progression
         ProgressionTable(long[] cumulative, RewardRule defaultRule,
                          Dictionary<ChapterId, RewardRule> chapterRules,
                          DailyChestTable daily, AdRewardTable ads, StreakTable streak,
-                         GoldenTable golden, HeartRuleTable hearts, StoreCatalog store)
+                         GoldenTable golden, HeartRuleTable hearts, HintRuleTable hints,
+                         StoreCatalog store, DifficultyRuleTable difficulty)
         {
             _cumulative = cumulative;
             _defaultRule = defaultRule;
@@ -92,7 +93,9 @@ namespace GlimmerGrove.Progression
             Streak = streak ?? StreakTable.Default;
             Golden = golden ?? GoldenTable.Default;
             Hearts = hearts ?? HeartRuleTable.Default;
+            Hints = hints ?? HintRuleTable.Default;
             Store = store ?? StoreCatalog.Default;
+            Difficulty = difficulty ?? DifficultyRuleTable.Default;
         }
 
         /// <summary>
@@ -145,6 +148,18 @@ namespace GlimmerGrove.Progression
         public HeartRuleTable Hearts { get; }
 
         /// <summary>
+        /// The hint pool, published with the curve because it is the gate's other half.
+        ///
+        /// The heart table decides how many attempts a day a player gets; this decides how
+        /// many of those attempts they can buy their way out of. Both multiply the number of
+        /// glades finished per day, which is what every credit figure above them is paid per,
+        /// so tuning one without the other in front of you moves the economy by a factor
+        /// nobody wrote down — the argument <see cref="Hearts"/> already makes, for the
+        /// resource sitting on the other side of the same decision.
+        /// </summary>
+        public HintRuleTable Hints { get; }
+
+        /// <summary>
         /// What the shop sells, published with the curve because it is the curve's exit.
         ///
         /// <para>
@@ -159,6 +174,15 @@ namespace GlimmerGrove.Progression
         /// </para>
         /// </summary>
         public StoreCatalog Store { get; }
+
+        /// <summary>
+        /// How hard the glades are, published with the curve because it is the gate seen from
+        /// the other side. The heart table decides what a loss costs; this decides how often
+        /// one happens. Tuning either without the other in front of you changes how many
+        /// sessions a day a player gets by a factor nobody wrote down — the same argument the
+        /// gate itself makes against being tuned apart from the reward curve.
+        /// </summary>
+        public DifficultyRuleTable Difficulty { get; }
 
         /// <summary>
         /// A usable curve for when no file could be read. The game stays playable and
@@ -177,7 +201,9 @@ namespace GlimmerGrove.Progression
             streak: StreakTable.Default,
             golden: GoldenTable.Default,
             hearts: HeartRuleTable.Default,
-            store: StoreCatalog.Default);
+            hints: HintRuleTable.Default,
+            store: StoreCatalog.Default,
+            difficulty: DifficultyRuleTable.Default);
 
         /// <summary>Highest level this curve defines. Level 1 always exists.</summary>
         public int MaxLevel => _cumulative.Length;
@@ -354,6 +380,12 @@ namespace GlimmerGrove.Progression
             // clamps to a built-in rather than rejecting the block.
             var hearts = HeartRuleTable.Resolve(dto.hearts, problems);
 
+            // And once more, for the gate's other half. An unreadable hints block costs the
+            // live pacing of the hint pool and nothing else — every field clamps to a
+            // built-in rather than rejecting the block, so the worst case is a pool that
+            // refills at the shipped rate instead of the published one.
+            var hints = HintRuleTable.Resolve(dto.hints, problems);
+
             // And once more, for the only block whose failure costs real money rather than
             // live tuning. An unreadable product is dropped by name rather than clamped —
             // see StoreCatalog.Resolve — so the worst case is a shelf with a card missing
@@ -361,8 +393,14 @@ namespace GlimmerGrove.Progression
             // the server would refuse to honour.
             var store = StoreCatalog.Resolve(dto.store, problems);
 
+            // And once more, for the only block that is not about money at all. An unreadable
+            // difficulty block costs the live tuning of the clock and nothing else — the
+            // content is played exactly as authored, which is a working game.
+            var difficulty = DifficultyRuleTable.Resolve(dto.difficulty, problems);
+
             table = Build(dto.xpToNext, dto.tailXpToNext, dto.tailXpIncrement, maxLevel,
-                          defaultRule, chapterRules, daily, ads, streak, golden, hearts, store);
+                          defaultRule, chapterRules, daily, ads, streak, golden, hearts, hints,
+                          store, difficulty);
             return true;
         }
 
@@ -371,7 +409,8 @@ namespace GlimmerGrove.Progression
                                       Dictionary<ChapterId, RewardRule> chapterRules,
                                       DailyChestTable daily, AdRewardTable ads,
                                       StreakTable streak, GoldenTable golden,
-                                      HeartRuleTable hearts, StoreCatalog store)
+                                      HeartRuleTable hearts, HintRuleTable hints,
+                                      StoreCatalog store, DifficultyRuleTable difficulty)
         {
             if (maxLevel < 1) maxLevel = 1;
 
@@ -389,7 +428,7 @@ namespace GlimmerGrove.Progression
             }
 
             return new ProgressionTable(cumulative, defaultRule, chapterRules, daily, ads, streak,
-                                        golden, hearts, store);
+                                        golden, hearts, hints, store, difficulty);
         }
     }
 }

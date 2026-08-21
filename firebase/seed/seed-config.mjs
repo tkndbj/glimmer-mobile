@@ -78,6 +78,111 @@ if (!existsSync(compiled)) {
 }
 const { resolveRule, buildChapterRules, DEFAULT_RULE } = await import(pathToFileURL(compiled).href);
 
+/**
+ * The keeper-level curve, exactly as the client reads it.
+ *
+ * Published because the boards need it: the earned half of a grove's worth is decided by
+ * which companion gates the star ledger has passed, so the server has to be able to derive
+ * a keeper level. Nothing else on the server has ever needed one, which is why this block
+ * did not exist until the boards did.
+ *
+ * It rides `config/progression` rather than `config/grove` because it is a fact about
+ * progression, and because `ProgressionSchema` versions on its own cadence (invariant 9b) —
+ * a catalog bump must not invalidate the curve.
+ */
+function readKeeperCurve(progression) {
+  const bands = Array.isArray(progression.xpToNext) ? progression.xpToNext.map(Math.floor) : [];
+
+  if (bands.length === 0 || bands.some((step) => !(step > 0))) {
+    throw new Error("progression.json has no usable xpToNext band; the keeper curve would be undefined");
+  }
+
+  const tailXpToNext = Math.floor(progression.tailXpToNext ?? 0);
+  const tailXpIncrement = Math.floor(progression.tailXpIncrement ?? 0);
+
+  if (!(tailXpToNext > 0)) throw new Error("progression.json tailXpToNext must be positive");
+  if (tailXpIncrement < 0) throw new Error("progression.json tailXpIncrement must not be negative");
+
+  return {
+    maxLevel: Math.floor(progression.maxLevel ?? 60),
+    xpToNext: bands,
+    tailXpToNext,
+    tailXpIncrement,
+  };
+}
+
+/**
+ * The grove catalog, derived from `homestead.json` and the manifest's roster.
+ *
+ * This is `readStore`'s argument for a second feature. The server has to be able to answer
+ * "what is this grove worth" without believing the client, which means it needs every
+ * price the client uses — and a price list maintained beside the content file is two files
+ * edited on different days, which is how a leaderboard ends up ranking people against a
+ * catalog that no longer exists. Invariant 9a: derived into the second place, never typed
+ * there.
+ *
+ * Only *priced* things are published. A free piece is worth nothing (invariant 16g), so it
+ * has no entry and needs no exclusion rule on the far side — the same reason starter land
+ * is absent rather than zero.
+ */
+function buildGroveConfig() {
+  const homestead = readJson(join(CONTENT, "homestead.json"));
+  const manifest = readJson(join(CONTENT, "manifest.json"));
+
+  const pieces = {};
+  const dwellings = {};
+
+  for (const piece of homestead.pieces ?? []) {
+    if (!piece?.id) continue;
+
+    const cost = Math.floor(piece.cost ?? 0);
+    if (cost > 0) pieces[piece.id] = cost;
+
+    // Every rung, priced or not: the first is free and still has to be findable, because
+    // the hall draws the best rung *held* and a free one is held by everybody.
+    if (piece.kind === "dwelling") dwellings[piece.id] = Math.floor(piece.tier ?? 0);
+  }
+
+  const regions = {};
+  for (const region of homestead.floor?.regions ?? []) {
+    if (!region?.id) continue;
+    const cost = Math.floor(region.cost ?? 0);
+    if (cost > 0) regions[region.id] = cost;
+  }
+
+  const companions = {};
+  for (const companion of manifest.companions ?? []) {
+    if (!companion?.id || companion.disabled) continue;
+
+    const cost = Math.floor(companion.unlockCost ?? 0);
+    if (cost <= 0) continue;                      // the starter, and anything else given away
+
+    companions[companion.id] = { cost, level: Math.floor(companion.unlockLevel ?? 0) };
+  }
+
+  const stars = (homestead.score?.stars ?? [])
+    .map(Math.floor)
+    .filter((at) => at > 0)
+    .sort((a, b) => a - b);
+
+  if (stars.length === 0) {
+    throw new Error("homestead.json has no score ladder; every grove would rank in the bottom league");
+  }
+
+  if (Object.keys(dwellings).length === 0) {
+    throw new Error("homestead.json has no dwelling; a published card could name no home");
+  }
+
+  return {
+    version: Math.floor(manifest.groveVersion ?? 1),
+    pieces,
+    regions,
+    companions,
+    dwellings,
+    stars,
+  };
+}
+
 function buildProgressionConfig() {
   const progression = readJson(join(CONTENT, "progression.json"));
   const manifest = readJson(join(CONTENT, "manifest.json"));
@@ -119,6 +224,7 @@ function buildProgressionConfig() {
       streak: readStreak(progression),
       golden: readGolden(progression),
       events: readEvents(manifest, levelChapters),
+      keeper: readKeeperCurve(progression),
     },
     products: readStore(progression),
     levelCount,
@@ -421,8 +527,8 @@ function readAds(progression) {
   const ads = progression.ads;
   if (!ads || !Array.isArray(ads.placements) || ads.placements.length === 0) return null;
 
-  const known = ["heart_refill", "coin_bonus", "run_continue", "win_bonus"];
-  const kinds = ["credits", "gems", "hearts", "heart_boost", "run_time"];
+  const known = ["heart_refill", "coin_bonus", "run_continue", "win_bonus", "hint_refill"];
+  const kinds = ["credits", "gems", "hearts", "heart_boost", "run_time", "hints"];
 
   // Mirrors the same rule on the client (`AdRewardTable.TryReadOffer`). A kind spent inside
   // a run only makes sense on the one placement offered from inside one, and the failure it
@@ -696,6 +802,31 @@ if (products) {
   );
 } else {
   console.log("config/products: skipped, progression.json has no store block — purchases stay inert");
+}
+
+// The grove catalog, so the boards can be scored without believing any client. Written as
+// a full replacement rather than a merge, for `config/products`' reason: a piece removed
+// from the content file must stop being worth anything, and a merge would leave the server
+// valuing groves against a catalog nobody ships.
+const grove = buildGroveConfig();
+await writeDoc(token, "config/grove", grove, { replace: true });
+
+const groveTotal =
+  Object.values(grove.pieces).reduce((sum, cost) => sum + cost, 0) +
+  Object.values(grove.regions).reduce((sum, cost) => sum + cost, 0) +
+  Object.values(grove.companions).reduce((sum, entry) => sum + entry.cost, 0);
+
+console.log(
+  `config/grove: v${grove.version} — ${Object.keys(grove.pieces).length} priced piece(s), ` +
+  `${Object.keys(grove.regions).length} region(s), ` +
+  `${Object.keys(grove.companions).length} companion(s), ` +
+  `${Object.keys(grove.dwellings).length} home rung(s), ` +
+  `${grove.stars.length} star(s) up to ${grove.stars[grove.stars.length - 1].toLocaleString()}, ` +
+  `a complete grove worth ${groveTotal.toLocaleString()}`
+);
+
+if (grove.stars[grove.stars.length - 1] > groveTotal) {
+  console.log("warning: the top star asks for more than the whole catalog is worth — nobody can reach it");
 }
 
 // Sanity: a chapter file on disk that nobody lists is usually a mistake worth naming.

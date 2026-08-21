@@ -28,6 +28,12 @@ namespace GlimmerGrove.Persistence
         /// <summary>The most hearts anybody may hold. See <see cref="HeartRules.Ceiling"/>.</summary>
         public static int HeartCeiling => HeartRules.Ceiling;
 
+        /// <summary>
+        /// Where the hint timer stops — the denominator a HUD draws. A property rather than
+        /// a constant for <see cref="MaxHearts"/>'s reason: it is content.
+        /// </summary>
+        public static int MaxHints => HintRules.RefillCap;
+
         public const string DefaultName = "Grovekeeper";
 
         static readonly Dictionary<string, CurrencyLedger> _ledgers = new Dictionary<string, CurrencyLedger>();
@@ -35,6 +41,8 @@ namespace GlimmerGrove.Persistence
 
         static Hearts _hearts = Hearts.Full;
         static long _heartBoostUntil;
+
+        static Hints _hints = Hints.Full;
 
         // Empty until the player chooses, never DefaultName — see WalletDto.displayName.
         static string _name = string.Empty;
@@ -48,6 +56,14 @@ namespace GlimmerGrove.Persistence
         /// case a screen cannot predict for itself.
         /// </summary>
         public static event System.Action<Hearts> HeartsChanged;
+
+        /// <summary>
+        /// Raised whenever the hint pool changes, for <see cref="HeartsChanged"/>'s reason:
+        /// hints arrive on a clock as well as being spent, which is exactly the case a
+        /// screen cannot predict for itself. The play screen's badge follows this rather
+        /// than re-reading on a timer.
+        /// </summary>
+        public static event System.Action<Hints> HintsChanged;
 
         /// <summary>
         /// Raised when the player changes their name or their worn companion.
@@ -211,6 +227,71 @@ namespace GlimmerGrove.Persistence
         }
 
         /// <summary>
+        /// The player's hints, brought up to date before you see them.
+        ///
+        /// <see cref="Hearts"/>'s property exactly, and for its reasons: hints arrive on a
+        /// clock, so a read that skipped the catch-up would be stale the moment a timer
+        /// elapsed while a screen was open; the state is written back only when the
+        /// <em>ledger</em> changed, so reading in an update loop does not spin the save file;
+        /// and there is deliberately no setter, because assigning a pool is the same mistake
+        /// as assigning a balance.
+        /// </summary>
+        public static Hints Hints
+        {
+            get
+            {
+                var refreshed = _hints.At(GameClock.NowUnix());
+                if (refreshed == _hints) return _hints;
+
+                _hints = refreshed;
+                SaveService.Save();
+                HintsChanged?.Invoke(_hints);
+                return _hints;
+            }
+        }
+
+        /// <summary>
+        /// Charges the player one hint. Returns false when there was none to take, which
+        /// the caller must treat as "the pool is empty" rather than as a refusal.
+        /// </summary>
+        public static bool TrySpendHint() => TrySpendHint(1);
+
+        public static bool TrySpendHint(int amount)
+        {
+            long now = GameClock.NowUnix();
+
+            var before = _hints.At(now);
+            if (!before.CanSpend) { Commit(before); return false; }
+
+            Commit(before.Spend(amount, now));
+            return true;
+        }
+
+        /// <summary>
+        /// Adds hints the player did not wait for — a watched video today, whatever earns
+        /// one later.
+        ///
+        /// Refused outright at the ceiling rather than partly paid, because the shipped
+        /// ceiling equals the refill cap (see <see cref="HintLimits.DefaultCeiling"/>).
+        /// Anything about to make an offer has to ask <see cref="Persistence.Hints.IsAtCeiling"/>
+        /// first, or it is asking for thirty seconds of somebody's life in exchange for
+        /// nothing.
+        /// </summary>
+        public static void GrantHints(int amount)
+            => Commit(_hints.Grant(amount, GameClock.NowUnix()));
+
+        static void Commit(Hints next)
+        {
+            bool changed = next != _hints;
+            _hints = next;
+
+            if (!changed) return;
+
+            SaveService.Save();
+            HintsChanged?.Invoke(_hints);
+        }
+
+        /// <summary>
         /// What the keeper is called: the chosen name, or <see cref="DefaultName"/> when
         /// there is none.
         ///
@@ -320,6 +401,7 @@ namespace GlimmerGrove.Persistence
             _heartBoostUntil = w.heartBoostUntilUnix < 0 ? 0L : w.heartBoostUntilUnix;
 
             _hearts = ReadHearts(w).At(GameClock.NowUnix(), _heartBoostUntil);
+            _hints = ReadHints(w).At(GameClock.NowUnix());
 
             _name = ReadChosenName(w);
             _nameSetUnix = w.displayNameSetUnix < 0 ? 0L : w.displayNameSetUnix;
@@ -377,6 +459,26 @@ namespace GlimmerGrove.Persistence
         }
 
         /// <summary>
+        /// Reads the hint pool, seeding a file written before it existed.
+        ///
+        /// <para>
+        /// Simpler than <see cref="ReadHearts"/> by exactly one branch, and the missing
+        /// branch is the whole migration: hints were never stored, so there is no older
+        /// shape to recover — a pre-v19 file holds no opinion about hints rather than a
+        /// stale one, and the answer is a fresh full pool.
+        /// </para>
+        /// <para>
+        /// The sentinel is the same one, and it is safe for the same reason: an account is
+        /// seeded at the refill cap and <c>produced</c> only ever rises, so zero is
+        /// unreachable for a genuine ledger. See <see cref="WalletDto.hintsProduced"/>.
+        /// </para>
+        /// </summary>
+        static Hints ReadHints(WalletDto w)
+            => w.hintsProduced > 0
+                ? Hints.Ledger(w.hintsProduced, w.hintsSpent, w.hintsDueUnix)
+                : Hints.Full;
+
+        /// <summary>
         /// Turns a v1 flat balance into a granted baseline, exactly once.
         ///
         /// Whatever a player was holding becomes something they were <em>given</em>,
@@ -417,6 +519,13 @@ namespace GlimmerGrove.Persistence
                 heartsNextRefillUnix = _hearts.NextRefillUnix,
 
                 heartBoostUntilUnix = _heartBoostUntil,
+
+                // The hint ledger. No derived mirror beside it, unlike hearts: a build that
+                // predates this one had nothing to read a hint count into, so there is
+                // nothing for a rolled-back client to be shown.
+                hintsProduced = _hints.Produced,
+                hintsSpent = _hints.Spent,
+                hintsDueUnix = _hints.DueUnix,
 
                 // Written raw, so "" survives to the file and to the server. Substituting
                 // DefaultName here is what used to make an unnamed device look like a

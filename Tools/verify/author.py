@@ -96,6 +96,20 @@ class Board:
         self.cells[(x, y)] = dict(kind='cross', colour=0, rot=rot, locked=locked,
                                   fragile=fragile, link=link, cross=mask)
 
+    def fill(self, x0, y0, w, h, skip=()):
+        """Make every cell of a rectangle a conduit, leaving anything already placed.
+
+        Open ground is what makes a board read at a glance: an arm has almost nowhere to
+        go when three of its four neighbours are not there, so a sparse glade is a
+        connect-the-dots however many mechanics are painted on it. Filling first and
+        wiring afterwards is the way round that keeps that from happening by accident.
+        """
+        for y in range(y0, y0 + h):
+            for x in range(x0, x0 + w):
+                if (x, y) not in self.cells and (x, y) not in skip:
+                    self.pipe(x, y)
+        return self
+
     def path(self, *pts):
         """Join a run of cells and return it, so a board reads as the runs it is made of."""
         self.link(*pts)
@@ -287,6 +301,15 @@ class Board:
                 errs.append(f"bound rune '{rune}' has no shared turn count: "
                             f"{[(p, owed(self.mask(p), self.cells[p]['rot'])) for p in members]}")
 
+        # A rooted tile must already read as solved: it can never be turned, and every
+        # check above ran against the board with every rotation at zero, so one authored
+        # off its solution means what was proved is not what ships. Mirrors
+        # LevelValidator.CheckRootedTiles.
+        for p, c in self.cells.items():
+            if c['locked'] and not alike(self.mask(p), c['cross'], c['rot']):
+                errs.append(f"rooted {p} starts {owed(self.mask(p), c['rot'], c['cross'])} "
+                            "turn(s) from its solution and can never be turned")
+
         # fragile conduits must survive their own group's turn count
         for p, c in self.cells.items():
             if not c['fragile']:
@@ -322,6 +345,113 @@ class Board:
             total += self.group_turns(p)
         return total
 
+    # ------------------------------------------------------------- authoring aids
+    def spin(self, seed=1, bias=70, skip=()):
+        """Give every free tile a start rotation, and dial par with `bias`.
+
+        Rotations are arbitrary by design - what they must not be is *accidental*, so
+        they are derived from each tile's own coordinates and a seed rather than typed
+        one board at a time. `bias` leans the spread: positive avoids leaving a tile
+        already solved, negative prefers it. That is the only knob par has, and par is
+        the clock and the move budget, so it is worth being able to aim - see `fit`.
+
+        Bound and rooted tiles are left alone. A root's rotations come from `root()`,
+        and a rooted tile must already read as solved or the board the validator proves
+        is not the board that ships (LevelValidator.CheckRootedTiles).
+        """
+        import hashlib
+        for p in sorted(self.cells):
+            c = self.cells[p]
+            if c['link'] or c['locked'] or p in skip:
+                continue
+            period = self.period(p)
+            if period == 1:
+                continue
+            h = int(hashlib.md5(f"{seed}:{p[0]}:{p[1]}".encode()).hexdigest(), 16)
+            turns = h % period
+            if bias >= 0:
+                if turns == 0 and (h >> 9) % 100 < bias:
+                    turns = 1 + (h >> 17) % (period - 1)
+            elif turns != 0 and (h >> 9) % 100 < -bias:
+                turns = 0
+            c['rot'] = (-turns) % period
+
+    def owe(self, p, turns):
+        """Pin one tile's owed turns. For brittle conduits, which must survive theirs."""
+        self.cells[p]['rot'] = (-turns) % self.period(p)
+
+    def hazards(self):
+        """Every place on this board where a wrong turn actually costs something.
+
+        A board can be *about* keeping two lights apart and still have nowhere the
+        player can get it wrong - the networks simply never come within a turn of each
+        other, and the glade is a rotation exercise with a theme painted on. That is a
+        property of the geometry, so it can be counted rather than argued about, and it
+        is worth counting: the first cut of one Amberwood glade scored zero and read
+        perfectly.
+
+        Two shapes, because there are two ways to join what should stay apart:
+
+        * two neighbours in different networks that some reachable pair of rotations
+          would mate;
+        * a twisted crossing carrying two networks, since turning one swaps which arm
+          belongs to which strand and no rotation of it does otherwise. A *straight*
+          crossing cannot - its two strands are interchangeable labels, which is exactly
+          what `alike` says - so it is architecture and never a hazard.
+        """
+        comp, colour = self.solve_state()
+
+        def dark(g):
+            return any(self.cells[q]['kind'] == 'duskcap'
+                       for q, st in comp if comp[(q, st)] == g)
+
+        def why(ga, gb):
+            if dark(ga) or dark(gb):
+                return 'wakes the dark'
+            a, b = colour[ga], colour[gb]
+            if a and b and a != b:
+                return f'{LETTER[a]} meets {LETTER[b]}'
+            return 'blends nothing'
+
+        out = []
+        for p, c in self.cells.items():
+            for d in range(4):
+                q = (p[0] + STEP[d][0], p[1] + STEP[d][1])
+                if q not in self.cells or q < p:
+                    continue
+                if any(comp[(p, sp)] == comp[(q, sq)]
+                       for sp in range(self.strands(p)) for sq in range(self.strands(q))):
+                    continue
+                turns_p = range(1) if c['locked'] else range(4)
+                turns_q = range(1) if self.cells[q]['locked'] else range(4)
+                if not any(rotl(self.mask(p), k) & BITS[d] for k in turns_p):
+                    continue
+                if not any(rotl(self.mask(q), k) & BITS[OPP[d]] for k in turns_q):
+                    continue
+                out.append((p, q, why(comp[(p, 0)], comp[(q, 0)])))
+
+            if (c['kind'] == 'cross' and not c['locked']
+                    and not alike(self.mask(p), c['cross'], 1)
+                    and comp[(p, 0)] != comp[(p, 1)]):
+                out.append((p, p, why(comp[(p, 0)], comp[(p, 1)]) + ' (crossing)'))
+        return out
+
+    def reading(self):
+        """What this board asks of a player, from `difficulty.py`.
+
+        Hazards count the places a wrong turn *could* cost something. That turned out to
+        be the wrong question and it is worth saying why, because a whole chapter was
+        authored to it: a rotation that mates two networks usually leaves an arm dangling
+        somewhere else, so it is not an arrangement a player ever plausibly reaches. What
+        matters is how much of the board they can place by looking at it, and whether any
+        mechanic ever rejects an arrangement the arms allow.
+
+        Imported here rather than at the top: `difficulty` reads boards through this
+        module, so the two would not both load.
+        """
+        import difficulty
+        return difficulty.Reading(self).report()
+
     # -------------------------------------------------------------- print
     def picture(self, rots=None):
         """Three text rows per board row, so the wiring is readable."""
@@ -349,11 +479,17 @@ class Board:
             out += [top, mid, bot]
         return '\n'.join(out)
 
-    def report(self, name):
+    def report(self, name, deep=True):
         errs, warns = self.check()
         print(f"=== {name}  {self.w}x{self.h}  par={self.par()} "
               f"gold={-(-self.par()*135//100)} silver={-(-self.par()*200//100)} "
-              f"clock={self.par()*2}s")
+              f"clock={self.par()*2}s  hazards={len(self.hazards())}")
+        if deep and not errs:
+            r = self.reading()
+            print(f"    glance {len(r['glance'])}/{r['tiles']}  arms {r['solutions']}"
+                  f"{'+' if r['capped'] else ''}  wins {r['wins']}  open {len(r['open'])}  "
+                  f"decided {len(r['decided'])}  rejected by colour {r['colour_only']}, "
+                  f"by the dark {r['dark_only']}")
         print(self.picture())
         for r in self.rows():
             print(f'        "{r}",')
@@ -365,3 +501,27 @@ class Board:
             print("ok")
         print()
         return not errs
+
+
+def fit(make, target, seeds=range(1, 60), biases=range(-90, 100, 10)):
+    """The (seed, bias) whose par lands nearest `target`, and the board it makes.
+
+    `make` takes (seed, bias) and returns a finished Board. Par decides the clock and
+    the move budget, so a chapter's ramp is a set of numbers somebody chose - this is
+    how they get chosen rather than discovered. Boards that do not check are skipped,
+    so a fit can never hand back one that is unwinnable.
+    """
+    best = None
+    for bias in biases:
+        for seed in seeds:
+            board = make(seed, bias)
+            if board.check()[0]:
+                continue
+            gap = abs(board.par() - target)
+            if best is None or gap < best[0]:
+                best = (gap, seed, bias, board)
+            if gap == 0:
+                return best[1], best[2], best[3]
+    if best is None:
+        raise ValueError("no (seed, bias) produced a board that checks")
+    return best[1], best[2], best[3]

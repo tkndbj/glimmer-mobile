@@ -1,0 +1,57 @@
+# app-ads.txt — Glimmer Grove
+#
+# WHAT THIS IS. An IAB Tech Lab authorised-sellers file. Programmatic buyers fetch it from
+# the developer website named in the app's store listing and refuse inventory sold by anyone
+# it does not list. A missing or unreachable file does not produce an error anywhere — it
+# produces lower fill and lower prices, silently, for ever. That is why it is in the
+# repository rather than pasted onto a server once: it has to be reviewed in a diff beside
+# the mediation change that made it wrong.
+#
+# WHERE IT MUST GO. Served as plain text at:
+#
+#     https://<developer-website>/app-ads.txt
+#
+# on the exact domain in the "Developer website" field of BOTH store listings — Google Play
+# and App Store Connect. The crawlers read the listing to find the domain, so a file on the
+# right server behind the wrong listing is invisible. It must return 200 with
+# Content-Type: text/plain, follow at most one redirect, and not be behind Cloudflare's bot
+# protection, which is the commonest reason a correctly written file is never read.
+#
+# HOW TO FILL IT IN. Every line below is a placeholder. Each mediation network publishes its
+# own required lines and they are not guessable — take them from each network's dashboard
+# (usually "app-ads.txt" or "Authorised sellers" in the account or monetisation settings) and
+# paste them verbatim. Do not edit the numbers: the middle field is that network's publisher
+# id for THIS account, and a wrong one authorises somebody else to sell your inventory.
+#
+# The format is:  <domain>, <publisher id>, DIRECT|RESELLER, <certification authority id>
+#
+# VERIFY after deploying, before believing it: Google's app-ads.txt validator in AdMob, and
+# LevelPlay's own checker under Setup ▸ app-ads.txt. Both fetch it the way a buyer does.
+#
+# KEEP IT IN STEP. Every network added to the waterfall adds lines here, and a network
+# removed leaves its lines behind harmlessly. The failure mode is always the same shape and
+# always silent — inventory that cannot be bought — so the rule is: change the waterfall,
+# change this file, in the same commit.
+
+# ---------------------------------------------------------------- ironSource / Unity LevelPlay
+# The mediation platform itself. Required even though it is not a demand source of its own,
+# because it sells on behalf of the networks below it.
+# TODO: replace with the exact lines from LevelPlay ▸ Setup ▸ app-ads.txt
+unityads.unity3d.com, PLACEHOLDER_PUBLISHER_ID, DIRECT, 96cabb5fbdde3c78
+
+# ---------------------------------------------------------------- Unity Ads
+# The one adapter currently installed in the project (ISUnityAdsAdapterDependencies.xml).
+# TODO: replace with the exact lines from the Unity Ads dashboard
+unityads.unity3d.com, PLACEHOLDER_PUBLISHER_ID, DIRECT, 96cabb5fbdde3c78
+
+# ---------------------------------------------------------------- not yet installed
+# Nothing below is in the project yet. Each one needs an adapter added to Unity, keys entered
+# in LevelPlay, AND its lines added here — all three, or the network cannot buy. Left in as a
+# checklist rather than deleted, because the list of what is missing is the useful part.
+#
+# Google AdMob         google.com, pub-PLACEHOLDER, DIRECT, f08c47fec0942fa0
+# AppLovin             applovin.com, PLACEHOLDER, DIRECT
+# Meta Audience Network facebook.com, PLACEHOLDER, DIRECT, c3e20eee3f780d68
+# Liftoff / Vungle     vungle.com, PLACEHOLDER, DIRECT, 7d5b2e4bb0d0b8bc
+# Mintegral            mintegral.com, PLACEHOLDER, DIRECT
+# Pangle               pangleglobal.com, PLACEHOLDER, DIRECT

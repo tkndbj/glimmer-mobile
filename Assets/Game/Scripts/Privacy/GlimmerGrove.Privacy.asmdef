@@ -1,0 +1,22 @@
+{
+    "name": "GlimmerGrove.Privacy",
+    "rootNamespace": "GlimmerGrove.Privacy",
+    "references": [
+        "GlimmerGrove.Domain"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [
+        {
+            "name": "com.google.ads.mobile",
+            "expression": "9.0",
+            "define": "GLIMMER_UMP"
+        }
+    ],
+    "noEngineReferences": false
+}

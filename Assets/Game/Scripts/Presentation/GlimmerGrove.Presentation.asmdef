@@ -5,7 +5,8 @@
         "GlimmerGrove.Domain",
         "GlimmerGrove.Cloud",
         "GlimmerGrove.Ads",
-        "UnityEngine.UI"
+        "UnityEngine.UI",
+        "GlimmerGrove.Privacy"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],

@@ -132,6 +132,15 @@ def parse_token(tok, ctx):
                 fragile=fragile, link=link, cross=cross)
 
 
+# Difficulty, mirroring LevelTuning.cs and DifficultyRuleTable.cs. The star thresholds are
+# factors over par rather than fractions of the limit, which is what lets the published
+# clockScale move where a run is lost without moving what a clear is worth.
+DEFAULT_TIME_FACTOR = 1.70
+TIME_GOLD_FACTOR, TIME_SILVER_FACTOR = 1.00, 1.50
+MIN_CLOCK_SCALE, MAX_CLOCK_SCALE = 0.60, 2.00
+FINISH_TAP_RATE, STAR_TAP_RATE = 1.2, 1.8
+
+
 def check_level(level, chapter_id):
     lid = level.get('id', '<no id>')
     ctx = lid
@@ -227,6 +236,23 @@ def check_level(level, chapter_id):
             if g >= 0:
                 mix |= comp_colour[g]
         return mix
+
+    # A rooted tile must already read as solved, because every proof above ran against
+    # a copy of the board with every rotation zeroed - and a rooted tile can never be
+    # turned, so one authored away from its solution means what was proved is not what
+    # ships. Mirrors LevelValidator.CheckRootedTiles.
+    for i, c in enumerate(cells):
+        if not c or not c['locked']:
+            continue
+        if alike(c['solved'], c['cross'], c['rot']):
+            continue
+        owed = 0
+        for k in range(4):
+            if alike(c['solved'], c['cross'], (c['rot'] + k) & 3):
+                owed = k
+                break
+        errors.append(f"{ctx}: the rooted tile at {i % w},{i // w} starts {owed} turn(s) from "
+                      "its solution and can never be turned; author it at /0")
 
     # a fragile conduit must survive long enough to reach its own solution, or the
     # level is unwinnable while looking perfectly fine. Mirrors CheckFragileConduits.
@@ -353,10 +379,25 @@ def check_level(level, chapter_id):
     bound = len(roots)
 
     # The clock, derived exactly as LevelTuning does: seconds per par turn, with 0 meaning
-    # "not authored" and only a negative value removing the timer. Gold is half the limit.
-    time_factor = level.get('timeFactor', 0) or 200 / 100
+    # "not authored" and only a negative value removing the timer.
+    time_factor = level.get('timeFactor', 0) or DEFAULT_TIME_FACTOR
     limit = 0 if time_factor < 0 else -(-int(round(par * time_factor * 1000)) // 1) // 1000
-    star_rate = 0 if not limit else (-(-par * 135 // 100)) / (limit * 0.5)
+
+    # Gold is held against par, never against the limit, so a retuned clock cannot move it -
+    # LevelTuning.TimeGoldFactor. Clamped to the limit for the same reason it is there.
+    gold_seconds = 0 if not limit else min(limit, par * TIME_GOLD_FACTOR)
+    star_rate = 0 if not gold_seconds else (-(-par * 135 // 100)) / gold_seconds
+
+    # The tightest clock a published clockScale could cut this to - DifficultyLimits. A glade
+    # merely demanding as authored can be unwinnable as retuned, and the retune never passes
+    # back through this file.
+    if limit:
+        at_floor = par / (limit * MIN_CLOCK_SCALE)
+        if par / limit <= FINISH_TAP_RATE < at_floor:
+            warnings.append(f"{ctx}: the clock allows {limit}s as authored, but a published "
+                            f"clockScale of {MIN_CLOCK_SCALE:g} would cut it to "
+                            f"{limit * MIN_CLOCK_SCALE:.0f}s and need {at_floor:.1f} taps a "
+                            "second just to finish")
 
     return dict(id=lid, chapter=chapter_id, w=w, h=h, par=par, limit=limit, rate=star_rate,
                 gold=-(-par * 135 // 100), silver=-(-par * 200 // 100),
@@ -404,9 +445,13 @@ def check_chapter_map(chapter, cid, ordered):
 
     highest = max([p[1][1] for p in pts], default=0.0)
     # Mirrors ChapterMap.TeaserPosition: the gap above the last glade is a fraction of
-    # the map, the room kept clear at the top is a distance in canvas units.
+    # the map, the room kept clear at the top is a distance in canvas units. Only the
+    # across-axis is authorable, and 0 there means "not authored" - ChapterMap.TeaserAcross.
+    across = chapter.get("teaserX") or 0.0
+    if not (0.0 < across <= 1.0):
+        across = TEASER_X
     ceiling = max(0.0, min(1.0, 1.0 - TEASER_HEADROOM / height))
-    teaser = (TEASER_X, min(ceiling, highest + TEASER_GAP))
+    teaser = (across, min(ceiling, highest + TEASER_GAP))
 
     for lid, p in pts:
         gap = sep(p, teaser)
@@ -737,6 +782,58 @@ def check_grove(keys, level_ids, chapter_ids, companions, companion_costs=None):
 MAX_GRANT = 5_000_000
 STORE_SHELVES = {"gems", "coins", "bundles"}
 STORE_KINDS = {"consumable", "nonconsumable"}
+HINT_DEFAULTS = {"refillCap": 3, "ceiling": 3, "refillSeconds": 8 * 60 * 60}
+
+
+def hint_pool(progression):
+    """The published hint pool, with the built-in numbers where a field is unwritten.
+
+    Mirrors HintRuleTable.Resolve, including the one repair it makes: a ceiling under the
+    cap is a contradiction rather than a smaller ceiling, so it is raised to the cap.
+    """
+    block = progression.get("hints") or {}
+
+    def read(name):
+        value = block.get(name, -1)
+        return HINT_DEFAULTS[name] if not isinstance(value, int) or value < 0 else value
+
+    cap = read("refillCap")
+    ceiling = max(read("ceiling"), cap)
+
+    offer_id, offer, offer_cap = "hint_refill", 0, 0
+    for placement in (progression.get("ads") or {}).get("placements") or []:
+        if placement.get("id") == offer_id and placement.get("kind") == "hints":
+            offer = placement.get("amount", 0)
+            offer_cap = placement.get("dailyCap", 0)
+
+    return {"cap": cap, "ceiling": ceiling, "seconds": read("refillSeconds"),
+            "offer_id": offer_id, "offer": offer, "offer_cap": offer_cap}
+
+
+def check_hints(progression, warnings):
+    """The two things the reader cannot know. ContentValidation.ValidateHints, offline."""
+    hints = hint_pool(progression)
+    errors = []
+
+    to_full = hints["cap"] * hints["seconds"]
+    if to_full < 3600:
+        warnings.append(f"hints refill a full pool in {to_full // 60} minutes; at that rate a "
+                        "hint costs nothing and the pool is decoration")
+
+    # Note what is deliberately *not* warned about: a ceiling equal to the cap. That is the
+    # shipped shape, so a warning would fire on every run for ever, and a warning that always
+    # fires is one nobody reads. It is printed as a fact in the report instead, and the thing
+    # that has to be true because of it - that no offer is made at a full pool - is held by
+    # RewardedAds.WouldBenefit and pinned by HintsTests rather than by a reminder here.
+
+    # A payout larger than the whole pool can never land in full, whatever the player holds.
+    if hints["offer"] > hints["ceiling"]:
+        errors.append(f"'{hints['offer_id']}' pays {hints['offer']} hint(s) into a pool that "
+                      f"holds {hints['ceiling']}; the surplus is refused, not banked")
+
+    return errors
+
+
 GOOD_KINDS = {"hearts", "heart_boost"}
 
 
@@ -1077,6 +1174,8 @@ def main():
     shop = check_store(progression, keys)
     per_day_credits, per_day_gems = daily_income(progression)
 
+    errors.extend(check_hints(progression, warnings))
+
     if shop:
         shelves = ", ".join(f"{n} {shelf}" for shelf, n in sorted(shop["shelves"].items()))
         print(f"\nshop: {shop['products']} product(s) ({shelves}), {shop['goods']} good(s) "
@@ -1091,6 +1190,17 @@ def main():
             sinks = grove["worth"]
             print(f"      every credit sink in the game is {sinks} credits, "
                   f"about {sinks // per_day_credits} day(s) of play")
+
+    hints = hint_pool(progression)
+    print()
+    print(f"hints: refill to {hints['cap']} every {hints['seconds'] / 3600:g}h, "
+          f"hold up to {hints['ceiling']} "
+          f"({hints['cap'] * hints['seconds'] / 3600:g}h from empty to full)"
+          + (f" - '{hints['offer_id']}' pays {hints['offer']} per video, "
+             f"{hints['offer_cap']}/day" if hints["offer"] else ""))
+    if hints["ceiling"] <= hints["cap"]:
+        print("       the ceiling is the cap, so a granted hint at a full pool is refused "
+              "rather than banked - nothing may offer one there")
 
     print()
     for w in warnings:

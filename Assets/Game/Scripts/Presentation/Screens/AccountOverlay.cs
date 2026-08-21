@@ -26,9 +26,9 @@ namespace GlimmerGrove
     /// </para>
     ///
     /// <para>
-    /// <b>One panel, four states.</b> Guest, linked, choosing an account to switch to, and
-    /// the destructive prompt for a provider that belongs to somebody else's grove — plus a
-    /// fifth the player should never see, a device caught between two accounts. They are all
+    /// <b>One panel, four states.</b> Guest, signed in, choosing an account to switch to, and
+    /// the prompt for a provider that already belongs to another grove — plus a fifth nobody
+    /// should ever see, a device whose last account change did not finish. They are all
     /// answers to one question, "which grove is this phone", so they are one panel that
     /// rebuilds rather than four overlays: this project has already paid for the alternative
     /// twice, once when a second panel slipped in front of the victory screen's Next button
@@ -42,7 +42,20 @@ namespace GlimmerGrove
     /// mix-up), or erase it and a player who only wanted to stop syncing has lost everything.
     /// What people actually want from that button is this: to play as somebody else on this
     /// phone, and to be able to come back. So it is a switch, it saves the outgoing grove
-    /// before it does anything at all, and it is reversible by signing in again.
+    /// before it does anything at all, it keeps a copy of that grove on the device, and
+    /// coming back is one tap and no download.
+    /// </para>
+    /// <para>
+    /// <b>What this panel is not allowed to say.</b> Every sentence here is read by somebody
+    /// who is, at that moment, worried about losing years of play — so a warning that is not
+    /// literally true is worse than no warning at all. It used to break that badly: a switch
+    /// whose one network read failed reported "signed in, but that grove could not be loaded",
+    /// then "this phone is signed in as someone else", and then offered the destructive prompt
+    /// with "this account is already used by another player · you will lose 26 finished
+    /// levels". None of it was true — both accounts belonged to the same person, the twenty-six
+    /// glades were on the server and on the phone, and the only thing that had gone wrong was
+    /// one document read. The states that produced those sentences are gone (see
+    /// <c>SaveService.SwitchTo</c>); what remains says only what it can stand behind.
     /// </para>
     /// </summary>
     public sealed class AccountOverlay : ModalView
@@ -50,15 +63,15 @@ namespace GlimmerGrove
         /// <summary>What the panel is currently asking.</summary>
         enum Stage
         {
-            /// <summary>Whatever the account is: guest, linked, or between two accounts.</summary>
+            /// <summary>Whatever the account is: guest, signed in, or unfinished.</summary>
             Resting,
 
-            /// <summary>A linked player has asked to switch and is choosing a provider.</summary>
+            /// <summary>A signed-in player has asked to switch and is choosing a provider.</summary>
             Choosing,
 
             /// <summary>
-            /// A provider was offered and belongs to another grove. The one destructive
-            /// prompt in the game.
+            /// A provider was offered and already carries a grove of its own. The one prompt
+            /// in the game that leaves something behind.
             /// </summary>
             Contested,
         }
@@ -72,33 +85,15 @@ namespace GlimmerGrove
         LinkCredential _contested;
         bool _armed;
 
-        /// <summary>
-        /// The credential the running flow is about.
-        ///
-        /// Held because one outcome has to re-ask with it: a device recovering from an
-        /// interrupted switch that is offered a third account gets the destructive prompt, and
-        /// that prompt has to be about the account they just chose.
-        /// </summary>
-        LinkCredential _pending;
-
-        /// <summary>
-        /// Whether this attempt began from a device caught between two accounts.
-        ///
-        /// Held because the same outcome means two different things: landing on the account
-        /// this device already holds is "nothing to do" after tapping switch, and "you are
-        /// back, and your progress is saving again" after tapping the same button on a panel
-        /// that just told somebody their grove was not being saved.
-        /// </summary>
-        bool _recovering;
-
         // Laid out by stacking downward from the top edge. Everything here is anchored
         // to the panel top and positioned by its own centre — UIKit.Box pivots every box
         // centrally whatever its anchor — so a row's position is computed rather than
         // guessed. Mixing top-anchored text with bottom-anchored buttons is what let the
         // stakes line and the sign-in buttons occupy the same forty pixels.
         const float TopMargin = 100f, BottomMargin = 56f;
-        const float StatusH = 52f, WhyH = 150f, LineH = 60f, ButtonH = 118f, WarnH = 44f, CloseH = 124f;
-        const float AfterStatus = 18f, AfterWhy = 16f, AfterLine = 20f;
+        const float StatusH = 52f, LabelH = 40f, WhyH = 150f, LineH = 60f;
+        const float ButtonH = 118f, WarnH = 44f, CloseH = 124f;
+        const float AfterStatus = 12f, AfterLabel = 16f, AfterWhy = 16f, AfterLine = 20f;
         const float BetweenButtons = 14f, AfterButtons = 22f, BeforeClose = 12f;
 
         /// <summary>
@@ -109,7 +104,7 @@ namespace GlimmerGrove
         /// Measured before anything is built, the way <c>WinOverlay</c> measures a victory:
         /// the height of this panel depends on what it is saying, and the alternative —
         /// reserving room for the tallest state — leaves a visible hole in the three states
-        /// that are shorter, of which the linked one is what most players see most often.
+        /// that are shorter, of which the signed-in one is what most players see most often.
         /// </para>
         /// </summary>
         readonly List<float> _gaps = new List<float>();
@@ -130,16 +125,28 @@ namespace GlimmerGrove
             bool contested = _stage == Stage.Contested;
             bool choosing = _stage == Stage.Choosing;
 
-            // The destructive prompt is only destructive when there is something to destroy.
-            // A player who has just installed the game to get their account back meets it with
-            // an empty grove, and a warning that cries wolf there is one nobody reads on the
-            // grove that has everything.
-            bool costly = contested && CloudSaveService.HoldsAGrove;
+            // Not a warning and not a decision — the one fact a player switching between two of
+            // their own accounts actually needs, and the one the panel used to withhold. Both
+            // sides of a switch said "your progress is saved online" and neither said which
+            // grove was on the phone.
+            string account = linked || choosing ? CloudSaveService.AccountLabel : string.Empty;
+            bool showAccount = !contested && !string.IsNullOrEmpty(account);
 
+            // PlayerProgress rather than PlayerProgression, here and in the two lines below.
+            // The derived total drops any glade the catalog has not loaded, which is right for
+            // the reward arithmetic and wrong for a sentence: a panel that told somebody they
+            // had nothing to lose because the content index was a moment late would be wrong in
+            // the one direction this screen must never be wrong in.
             bool showStakes = !linked && !contested && !choosing && !mismatched
-                              && PlayerProgression.ClearedGlades > 0;
+                              && PlayerProgress.ClearedCount > 0;
             bool showSwitch = linked && !choosing;
             bool showProviders = available && !contested && (choosing || mismatched || !linked);
+
+            // The adopt prompt only costs something when there is something on this phone that
+            // cannot travel. A player who has just installed the game to get their account back
+            // meets it with an empty grove, and a warning that cries wolf there is one nobody
+            // reads on the grove that has everything.
+            bool costly = contested && CloudSaveService.HoldsAGrove;
 
             // ------------------------------------------------------------------ measure
             _gaps.Clear();
@@ -155,6 +162,7 @@ namespace GlimmerGrove
             }
 
             Row(StatusH, AfterStatus);
+            if (showAccount) Row(LabelH, AfterLabel);
             Row(WhyH, AfterWhy);
             if (showStakes || costly) Row(LineH, AfterLine);
             if (choosing) Row(LineH, AfterLine);
@@ -169,26 +177,40 @@ namespace GlimmerGrove
             _row = 0;
 
             // ------------------------------------------------------------------- status
-            // Contested outranks mismatched, and the order is the point: this prompt is
-            // reachable from a device that is already between two accounts, and "signed in as
-            // someone else" is true there but useless. The player is being asked one question
-            // and it is the one the prompt is about.
+            // Contested outranks unfinished, and the order is the point: this prompt can be
+            // reached from a device whose last change did not finish, and saying so there is
+            // true and useless. The player is being asked one question and it is this one.
             string statusKey = !available ? "ui.account.unavailable"
                              : contested ? "ui.account.taken"
                              : mismatched ? "ui.account.mismatch"
+                             : choosing ? "ui.account.choose"
                              : linked ? "ui.account.linked"
                              : "ui.account.guest";
 
             _status = Line("Status", Loc.Get(statusKey), 34,
-                           linked ? Pal.Mint : available ? Pal.Rose : new Color(.52f, .40f, .31f, .9f),
+                           linked || choosing ? Pal.Mint : available ? Pal.Rose
+                                              : new Color(.52f, .40f, .31f, .9f),
                            StatusH, TextAnchor.MiddleCenter, 2f);
             Fit(_status, 26, 34);
 
+            // An address, so it is dimmer and smaller than everything else here and never
+            // wraps — a long one is elided by the fitter rather than pushed onto a line that
+            // would read as a second sentence.
+            if (showAccount)
+                Fit(Line("Account", account, 26, new Color(.44f, .32f, .24f, .78f),
+                         LabelH, TextAnchor.MiddleCenter, 0f), 18, 26);
+
             // --------------------------------------------------------------------- body
+            // Written out rather than composed from the reason, because a key built by
+            // concatenation is invisible to the build gate's string scanner and ships missing
+            // in whichever language nobody tested — WinOverlay.RankKeys' rule.
+            bool afterPurchase = Reason == AccountPromptTrigger.Purchase;
+
             string bodyKey = contested ? "ui.account.taken_body"
                            : mismatched ? "ui.account.mismatch_body"
                            : choosing ? "ui.account.switch_body"
                            : linked ? "ui.account.linked_body"
+                           : afterPurchase ? "ui.account.guest_body_purchase"
                            : "ui.account.guest_body";
 
             Fit(Line("Why", Loc.Get(bodyKey), 26, new Color(.44f, .32f, .24f, .95f),
@@ -200,7 +222,7 @@ namespace GlimmerGrove
             if (showStakes)
                 Fit(Line("Stakes",
                          Loc.Format("ui.account.guest_stakes",
-                                    PlayerProgression.ClearedGlades, PlayerProgression.Level.Level),
+                                    PlayerProgress.ClearedCount, PlayerProgression.Level.Level),
                          28, Pal.Rose, LineH, TextAnchor.MiddleCenter, 2f), 22, 28);
 
             // Named concretely rather than as "your progress". Somebody three weeks in
@@ -210,12 +232,13 @@ namespace GlimmerGrove
             if (costly)
                 Fit(Line("AdoptCost",
                          Loc.Format("ui.account.adopt_cost",
-                                    PlayerProgression.ClearedGlades, PlayerProgression.Level.Level),
+                                    PlayerProgress.ClearedCount, PlayerProgression.Level.Level),
                          26, new Color(.62f, .26f, .24f), LineH, TextAnchor.UpperCenter, 0f), 20, 26);
 
             // The one thing a player needs to believe before tapping a provider on this
             // panel, and the one thing that distinguishes this from signing out: the grove
-            // they are leaving is kept, and comes back.
+            // they are leaving is kept — on the server and on this phone — and coming back
+            // to it is one tap.
             if (choosing)
                 Fit(Line("Safe", Loc.Get("ui.account.switch_safe"), 26, Pal.Mint,
                          LineH, TextAnchor.MiddleCenter, 0f), 20, 26);
@@ -318,9 +341,19 @@ namespace GlimmerGrove
         }
 
         /// <summary>
-        /// A provider was tapped. Which of the three things that means is decided here, once,
+        /// A provider was tapped. Which of the two things that means is decided here, once,
         /// from the state the panel is in — never by the button, because the same two buttons
         /// appear in three states and a handler per state is three places to get it wrong.
+        ///
+        /// <para>
+        /// A device whose last account change did not finish takes the switch route too, and
+        /// deliberately. It used to have a third one, which asked to be let back in to the
+        /// account the save named and refused anything else — and refusing was how a player
+        /// choosing their own second account was shown a prompt about losing twenty-six
+        /// glades. There is nothing to be let back in to any more: the sync repairs that state
+        /// by itself now, and whichever account is tapped here is simply the account this
+        /// phone becomes.
+        /// </para>
         /// </summary>
         void Begin(LinkCredential credential)
         {
@@ -328,17 +361,8 @@ namespace GlimmerGrove
 
             _busy = true;
             _armed = false;
-            _pending = credential;
-            _recovering = CloudSaveService.AccountMismatched;
 
-            if (_recovering)
-            {
-                Say("ui.account.working", Pal.Cream);
-                StartCoroutine(RunBecome(CloudSaveService.ResumeAccountAsync(credential)));
-                return;
-            }
-
-            if (_stage == Stage.Choosing)
+            if (_stage == Stage.Choosing || CloudSaveService.AccountMismatched)
             {
                 // Says what is happening first, because this is the step that takes the time
                 // and the one the player is trusting: their grove is being put somewhere safe
@@ -382,18 +406,33 @@ namespace GlimmerGrove
                 yield break;
             }
 
-            Say(result.Failure == CloudFailure.Offline ? "ui.account.offline" : "ui.account.failed",
-                Pal.Rose);
+            Report(result.Failure);
+        }
+
+        /// <summary>
+        /// One sentence per way a sign-in did not happen, and the reason it is a method rather
+        /// than a conditional at each site: closing the provider's sheet is by a wide margin
+        /// the commonest of them, it is not a failure at all, and it used to be reported as
+        /// "no internet connection" because the backend classified it as offline.
+        /// </summary>
+        void Report(CloudFailure failure)
+        {
+            switch (failure)
+            {
+                case CloudFailure.Cancelled: Say("ui.account.cancelled", Pal.Cream); break;
+                case CloudFailure.Offline:   Say("ui.account.offline", Pal.Rose); break;
+                default:                     Say("ui.account.failed", Pal.Rose); break;
+            }
         }
 
         /// <summary>
         /// Reports one attempt to make this device a different account.
         ///
         /// <para>
-        /// Every branch here is a different sentence on purpose. Three of the outcomes are not
-        /// failures at all, two of them leave the device exactly as it was, and one leaves it
-        /// signed in but not syncing — telling a player "something went wrong" for any of those
-        /// is how somebody decides their grove is gone when it is sitting safely on a server.
+        /// Every branch here is a different sentence on purpose. Four of the outcomes are not
+        /// failures at all and two of them leave the device exactly as it was — telling a
+        /// player "something went wrong" for any of those is how somebody decides their grove
+        /// is gone when it is sitting safely on a server.
         /// </para>
         /// </summary>
         IEnumerator RunBecome(Task<SwitchResult> task)
@@ -414,12 +453,12 @@ namespace GlimmerGrove
             switch (result.Outcome)
             {
                 case SwitchOutcome.SameAccount:
+                    // Picking the wrong entry out of a provider's account chooser is an
+                    // ordinary mistake and this is what it looks like. Said rather than
+                    // hidden: a switch that appears to do nothing reads as broken.
                     Audio.Sfx("chime2", .55f);
-                    Say(_recovering ? "ui.account.resumed" : "ui.account.same_account", Pal.Mint);
-
-                    // Recovery changed something real — this device is saving again — so the
-                    // panel goes back to the resting state rather than closing on a message.
-                    if (_recovering) Tween.After(1.4f, () => { if (this != null) Settle(); }, this);
+                    Say("ui.account.same_account", Pal.Mint);
+                    Tween.After(1.4f, () => { if (this != null) Settle(); }, this);
                     break;
 
                 case SwitchOutcome.Adopted:
@@ -428,7 +467,7 @@ namespace GlimmerGrove
                     // What they actually got. Without this the screen just says "welcome back"
                     // and the player has no way to tell whether they arrived at the grove they
                     // meant to until they have already left the other one.
-                    _status.text = Loc.Format("ui.account.adopted_found", PlayerProgression.ClearedGlades);
+                    _status.text = Loc.Format("ui.account.adopted_found", result.ClearedGlades);
                     _status.color = Pal.Mint;
                     Leave();
                     break;
@@ -436,6 +475,15 @@ namespace GlimmerGrove
                 case SwitchOutcome.Started:
                     Audio.Sfx("chime2", .55f);
                     Say("ui.account.switched_new", Pal.Mint);
+                    Leave();
+                    break;
+
+                case SwitchOutcome.Pending:
+                    // The account changed and the server has not been reached, so this is the
+                    // one thing the panel must not say: that they are starting fresh. It may
+                    // be a grove of three chapters that simply has not arrived yet.
+                    Audio.Sfx("chime2", .55f);
+                    Say("ui.account.switched_pending", Pal.Mint);
                     Leave();
                     break;
 
@@ -447,20 +495,8 @@ namespace GlimmerGrove
                             ? "ui.account.offline" : "ui.account.not_secured", Pal.Rose);
                     break;
 
-                case SwitchOutcome.DifferentAccount:
-                    // They asked to be let back in and offered somebody else's account. The
-                    // destructive prompt is the honest place for that, so it is what they get —
-                    // priced, and asking twice.
-                    Contest(_pending);
-                    break;
-
-                case SwitchOutcome.Interrupted:
-                    Say("ui.account.interrupted", Pal.Rose);
-                    break;
-
                 default:
-                    Say(result.Failure == CloudFailure.Offline
-                            ? "ui.account.offline" : "ui.account.failed", Pal.Rose);
+                    Report(result.Failure);
                     break;
             }
         }
@@ -469,7 +505,6 @@ namespace GlimmerGrove
         void Settle()
         {
             _stage = Stage.Resting;
-            _recovering = false;
             Rebuild();
         }
 
@@ -478,19 +513,26 @@ namespace GlimmerGrove
         /// screen underneath is still describing the truth.
         /// </summary>
         void Leave()
-            => Tween.After(1.4f, () => { if (this != null) Close(() => Flow.Go<HomeScreen>()); }, this);
+            => Tween.After(1.8f, () => { if (this != null) Close(() => Flow.Go<HomeScreen>()); }, this);
 
         // ------------------------------------------------------- the one hard prompt
         /// <summary>
-        /// The player's provider belongs to a grove that is not this one, so the two cannot
-        /// both survive.
+        /// A guest offered a provider that already carries a grove of its own.
         ///
         /// <para>
-        /// This is the one place in the game that shows a destructive prompt, and it is
-        /// unavoidable: the two accounts cannot be merged, because currency was granted and
-        /// spent separately against each and no join can reconcile that without inventing or
-        /// destroying money. So it says exactly what it will cost and makes the player tap
-        /// twice, the same way erasing progress does.
+        /// This is the only place left in the game that leaves something behind, and it is
+        /// unavoidable — but it is far narrower than it used to be. It is reachable from
+        /// <em>linking</em> and from nothing else, which means the account being left is
+        /// always an anonymous one: a uid that exists on this handset alone, that has never
+        /// been signed into anywhere, and that no provider can ever sign into again. That is
+        /// why the two groves cannot be joined and why nothing about this can be undone.
+        /// </para>
+        /// <para>
+        /// It used to be reachable from a <em>switch</em> as well, and that was the bug behind
+        /// this file's rewrite: a player choosing their own second account, after a failed
+        /// document read, was shown this prompt telling them another player owned it and
+        /// twenty-six glades were about to go. Both halves were false. A switch cannot reach
+        /// here now, because a signed-in player switching accounts never links anything.
         /// </para>
         /// <para>
         /// Note what is <em>not</em> here any more. It used to hide the sign-in buttons and
@@ -543,8 +585,6 @@ namespace GlimmerGrove
         void RunAdopt()
         {
             _busy = true;
-            _recovering = false;
-            _pending = _contested;
             Say("ui.account.working", Pal.Cream);
             StartCoroutine(RunBecome(CloudSaveService.AdoptLinkedAccountAsync(_contested)));
         }
@@ -575,29 +615,26 @@ namespace GlimmerGrove
 
         // ---------------------------------------------------------- the nudge
         /// <summary>
-        /// Whether it is worth asking the player to protect their grove.
-        ///
-        /// Asked at most twice, ever. The count lives in PlayerPrefs rather than the save
-        /// file on purpose: it is a record of what this installation has shown a person,
-        /// not something about their progress, and it must not travel to another device
-        /// through the cloud or survive a progress wipe as a reason to stay silent.
+        /// Why the panel came up on its own, when it did.
         ///
         /// <para>
-        /// Silent while the device is caught between two accounts. The player is signed in,
-        /// so the nudge would be wrong, and they have a more urgent thing to be told — which
-        /// the profile card is already saying.
+        /// Null when the player opened it themselves from the profile, which is the ordinary
+        /// case and the one the general copy is written for. A purchase swaps the guest
+        /// paragraph for one about purchases, because somebody who has just paid is not
+        /// thinking about glades and keeper levels — and the sentence they need is true only of
+        /// money: currency is granted to an account rather than to a phone, and a receipt is
+        /// recorded against the transaction globally, so it can never be redeemed a second time
+        /// under a new anonymous account. Unlike everything else in the save, that is the part
+        /// no amount of playing can earn back. The generic copy is not wrong there; it is about
+        /// the wrong loss.
+        /// </para>
+        /// <para>
+        /// Deciding <em>whether</em> to raise this is no longer the panel's job — that is
+        /// <c>AccountPrompts</c> over <c>AccountPromptPolicy</c>. It moved out because the rule
+        /// grew a second trigger and a quiet period the two share, and a policy living inside
+        /// the screen it renders is one that cannot be tested and has two places to forget.
         /// </para>
         /// </summary>
-        const string NagKey = "account_prompt_count";
-        const int MaxNags = 2;
-
-        public static bool ShouldOffer()
-            => CloudSaveService.IsAvailable
-               && !CloudSaveService.IsLinked
-               && !CloudSaveService.AccountMismatched
-               && PlayerPrefs.GetInt(NagKey, 0) < MaxNags;
-
-        public static void NoteOffered()
-            => PlayerPrefs.SetInt(NagKey, PlayerPrefs.GetInt(NagKey, 0) + 1);
+        public AccountPromptTrigger? Reason { get; set; }
     }
 }

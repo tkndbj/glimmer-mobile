@@ -39,14 +39,28 @@ namespace GlimmerGrove.Cloud
         Busy,
 
         /// <summary>
+        /// The player closed the provider's sheet without choosing. Not an error at all.
+        ///
+        /// <para>
+        /// Separated from <see cref="Offline"/> because it used to be reported as one, and the
+        /// screen then said "no internet connection" to somebody who had simply changed their
+        /// mind — which is the exact class of wrong sentence this account flow was rewritten to
+        /// remove. Reachable only from an interactive sign-in, so nothing that retries on a
+        /// backoff ever sees it.
+        /// </para>
+        /// </summary>
+        Cancelled,
+
+        /// <summary>
         /// The session is authenticated as one account and the local save belongs to another.
         ///
         /// <para>
-        /// Never retried and never resolved on its own. It means an identity change was
-        /// interrupted — a cancelled consent screen, a process death during a switch — and the
-        /// only safe response is to touch nothing until the player signs in as one of the two.
-        /// A retry would push somebody's grove into somebody else's account; see
-        /// <see cref="AccountGate"/> for why that is unrecoverable.
+        /// A transient now rather than a dead end: a sync completes the account change on this
+        /// device and carries on — see <c>CloudSaveService.Reconcile</c>, and
+        /// <see cref="AccountGate"/> for why finishing forward is the only safe direction. It
+        /// survives as an answer for the two places that must still refuse: redeeming a receipt,
+        /// which would otherwise credit a purchase to the wrong account, and a device that
+        /// cannot file the grove it is holding anywhere.
         /// </para>
         /// </summary>
         AccountMismatch,
@@ -90,10 +104,31 @@ namespace GlimmerGrove.Cloud
         /// </summary>
         public readonly bool IsLinked;
 
-        public CloudIdentity(string userId, bool isLinked)
+        /// <summary>
+        /// What to call this account on screen — the provider's email or display name, empty
+        /// when there is none.
+        ///
+        /// <para>
+        /// For display and for nothing else: never compared, never stored, never keyed on. The
+        /// uid is the identity (invariant 1 applies to it in full); this is a label a provider
+        /// may change, may localise, and may withhold entirely — Apple's relay address is only
+        /// offered on the first authorisation, so a returning player has a name and no email.
+        /// </para>
+        /// <para>
+        /// It exists because switching between two of one person's own accounts is the case
+        /// this whole flow is for, and without it the panel says "your progress is saved
+        /// online" about an account it cannot name. Two Google accounts belonging to the same
+        /// person frequently share a display name, which is why the email is preferred when
+        /// the provider gives one.
+        /// </para>
+        /// </summary>
+        public readonly string Label;
+
+        public CloudIdentity(string userId, bool isLinked, string label = null)
         {
             UserId = userId;
             IsLinked = isLinked;
+            Label = label ?? string.Empty;
         }
 
         public bool IsValid => !string.IsNullOrEmpty(UserId);

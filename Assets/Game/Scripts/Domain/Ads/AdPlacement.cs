@@ -71,7 +71,27 @@ namespace GlimmerGrove.Ads
         /// </summary>
         public const string WinBonus = "win_bonus";
 
-        public static readonly string[] All = { HeartRefill, CoinBonus, RunContinue, WinBonus };
+        /// <summary>
+        /// Offered from the hint button when the pool is empty, and it buys one hint.
+        ///
+        /// <para>
+        /// The second placement with a natural trigger, and it sits at the same kind of
+        /// moment <see cref="RunContinue"/> does: the player has decided they want something
+        /// and found that they cannot have it. That is the best moment in the game to offer
+        /// a video and the worst to teach somebody a control is dead — the argument
+        /// <c>CompanionUnlockOverlay</c> already makes about a short balance.
+        /// </para>
+        /// <para>
+        /// It pays no currency, so no account, no claim and no server opinion. What it does
+        /// need, and no other placement does, is a check that the reward has anywhere to go:
+        /// the shipped hint ceiling equals the refill cap, so this must never be offered to
+        /// somebody already holding a full pool. See <c>RewardedAds.WouldBenefit</c>.
+        /// </para>
+        /// </summary>
+        public const string HintRefill = "hint_refill";
+
+        public static readonly string[] All =
+            { HeartRefill, CoinBonus, RunContinue, WinBonus, HintRefill };
 
         /// <summary>
         /// Whether an id names a placement this build knows.

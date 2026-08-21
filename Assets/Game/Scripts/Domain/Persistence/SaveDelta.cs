@@ -139,6 +139,7 @@ namespace GlimmerGrove.Persistence
             if (a.music.state != b.music.state) return true;
             if (a.sfx.state != b.sfx.state) return true;
             if (a.haptics.state != b.haptics.state) return true;
+            if (a.board.state != b.board.state) return true;
             if (!Same(a.language, b.language)) return true;
 
             var walletA = remote.wallet ?? WalletDto.Unwritten();
@@ -152,6 +153,13 @@ namespace GlimmerGrove.Persistence
             if (walletA.heartsSpent != walletB.heartsSpent) return true;
             if (walletA.heartsDueUnix != walletB.heartsDueUnix) return true;
             if (walletA.heartBoostUntilUnix != walletB.heartBoostUntilUnix) return true;
+
+            // The hint ledger, for the reason above it: three counters and no derived count,
+            // because the refill deadline moves without the count moving and that is exactly
+            // what the other device needs in order to merge correctly.
+            if (walletA.hintsProduced != walletB.hintsProduced) return true;
+            if (walletA.hintsSpent != walletB.hintsSpent) return true;
+            if (walletA.hintsDueUnix != walletB.hintsDueUnix) return true;
             if (!Same(walletA.displayName, walletB.displayName)) return true;
             if (!Same(walletA.avatarId, walletB.avatarId)) return true;
 

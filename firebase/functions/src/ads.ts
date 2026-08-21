@@ -33,6 +33,7 @@ export const AD_PLACEMENTS = [
   "coin_bonus",
   "run_continue",
   "win_bonus",
+  "hint_refill",
 ] as const;
 export type AdPlacementId = (typeof AD_PLACEMENTS)[number];
 
@@ -146,6 +147,12 @@ export function adCurrencyValue(
  * for it has finished arriving, cannot be banked and cannot be moved anywhere else. Listing
  * it keeps the published config a complete description of what the client offers, so a
  * placement missing from this list stays a real signal rather than a question.
+ * </p>
+ * <p>
+ * `hint_refill` is the second of those, and for a plainer reason: a hint is not currency,
+ * so there is nothing for this server to adjudicate and the callback grants nothing. It is
+ * listed for the same reason the continue is — the published config describes what the
+ * client offers, and a gap in it is a question rather than an answer.
  * </p>
  */
 export function adCurrencyOf(ads: AdsConfig, placement: string): string | null {

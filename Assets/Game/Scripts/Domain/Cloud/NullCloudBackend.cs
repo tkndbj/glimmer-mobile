@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 using GlimmerGrove.Persistence;
+using GlimmerGrove.Social;
 
 namespace GlimmerGrove.Cloud
 {
@@ -15,7 +16,7 @@ namespace GlimmerGrove.Cloud
     /// refactor. Everything that would otherwise be written twice — the merge, the
     /// ledger arithmetic, the retry policy — is already exercised against this.
     /// </summary>
-    public sealed class NullCloudBackend : ICloudSaveBackend
+    public sealed class NullCloudBackend : ICloudSaveBackend, Social.IGroveBoardBackend
     {
         public bool IsAvailable => false;
 
@@ -83,5 +84,54 @@ namespace GlimmerGrove.Cloud
             ReadGroveStatsAsync(CancellationToken cancellation = default)
             => Task.FromResult((CloudResult.Failed(CloudFailure.Offline, "no cloud backend configured"),
                                new Dictionary<Content.LevelId, Social.LevelStats>()));
+
+        /// <summary>
+        /// With no backend there is no board, and that is the correct behaviour rather than a
+        /// degraded one: the leaderboard tab reads every one of these as "not available here"
+        /// and says so, exactly as the account panel does. Nothing in the game becomes
+        /// unplayable, and nothing pretends to have ranked anybody.
+        /// </summary>
+        public Task<(CloudResult result, GroveCard card)> PublishGroveAsync(
+            string userId, CancellationToken cancellation = default)
+            => Task.FromResult((CloudResult.Failed(CloudFailure.Offline, "no cloud backend configured"),
+                                GroveCard.Empty));
+
+        public Task<CloudResult> WithdrawGroveAsync(
+            string userId, CancellationToken cancellation = default)
+            => Task.FromResult(CloudResult.Failed(CloudFailure.Offline, "no cloud backend configured"));
+
+        /// <summary>
+        /// With nothing to adjudicate against there is no such thing as a name somebody else
+        /// holds, so this is an offline failure rather than "free" — and the difference matters
+        /// at the one call site. <c>KeeperNames</c> reads a failure as "nothing was decided" and
+        /// the rename goes through untouched; answering "free" would be this backend asserting
+        /// a fact about a population it cannot see.
+        /// </summary>
+        public Task<(CloudResult result, string holderId)> ReadNameHolderAsync(
+            string nameKey, CancellationToken cancellation = default)
+            => Task.FromResult((CloudResult.Failed(CloudFailure.Offline, "no cloud backend configured"),
+                                string.Empty));
+
+        public Task<(CloudResult result, NameClaim claim)> ClaimNameAsync(
+            string storedName, CancellationToken cancellation = default)
+            => Task.FromResult((CloudResult.Failed(CloudFailure.Offline, "no cloud backend configured"),
+                                NameClaim.Unavailable));
+
+        public Task<(CloudResult result, GroveCard card)> ReadGroveCardAsync(
+            string ownerId, CancellationToken cancellation = default)
+            => Task.FromResult((CloudResult.Failed(CloudFailure.Offline, "no cloud backend configured"),
+                                GroveCard.Empty));
+
+        public Task<(CloudResult result, LeaderboardBoard board)> ReadLeaderboardAsync(
+            string boardId, CancellationToken cancellation = default)
+            => Task.FromResult((CloudResult.Failed(CloudFailure.Offline, "no cloud backend configured"),
+                                LeaderboardBoard.None));
+
+        public Task<(CloudResult result, GroveRankTable table,
+                     Dictionary<string, int> population, long builtUnix)> ReadGroveRanksAsync(
+            CancellationToken cancellation = default)
+            => Task.FromResult((CloudResult.Failed(CloudFailure.Offline, "no cloud backend configured"),
+                                GroveRankTable.None,
+                                new Dictionary<string, int>(), 0L));
     }
 }

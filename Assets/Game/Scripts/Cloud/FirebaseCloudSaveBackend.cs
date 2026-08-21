@@ -36,7 +36,7 @@ namespace GlimmerGrove.Cloud
     /// than an exception.
     /// </para>
     /// </summary>
-    public sealed class FirebaseCloudSaveBackend : ICloudSaveBackend
+    public sealed class FirebaseCloudSaveBackend : ICloudSaveBackend, Social.IGroveBoardBackend
     {
         /// <summary>Must match <c>REGION</c> in the functions' config.ts.</summary>
         public const string FunctionsRegion = "europe-west1";
@@ -61,8 +61,38 @@ namespace GlimmerGrove.Cloud
             {
                 var user = _ready ? _auth?.CurrentUser : null;
                 return user == null ? CloudIdentity.None
-                                    : new CloudIdentity(user.UserId, IsLinked(user));
+                                    : new CloudIdentity(user.UserId, IsLinked(user), Label(user));
             }
+        }
+
+        /// <summary>
+        /// What to show a player who is deciding which of their accounts this phone is on.
+        ///
+        /// <para>
+        /// Email first, and that ordering is the whole value of it: two Google accounts
+        /// belonging to one person routinely carry the same display name, so a panel labelled
+        /// with the name would say the same thing on both sides of a switch. Apple only hands
+        /// over an address on the first authorisation, so a returning Apple player falls
+        /// through to the name, and an anonymous account has neither and gets nothing — which
+        /// the screen reads as "no account to name" rather than as an empty field.
+        /// </para>
+        /// </summary>
+        static string Label(FirebaseUser user)
+        {
+            if (user == null || user.IsAnonymous) return string.Empty;
+
+            if (!string.IsNullOrEmpty(user.Email)) return user.Email;
+            if (!string.IsNullOrEmpty(user.DisplayName)) return user.DisplayName;
+
+            // The provider's own record, for the case where the account carries neither.
+            foreach (var provider in user.ProviderData)
+            {
+                if (provider == null) continue;
+                if (!string.IsNullOrEmpty(provider.Email)) return provider.Email;
+                if (!string.IsNullOrEmpty(provider.DisplayName)) return provider.DisplayName;
+            }
+
+            return string.Empty;
         }
 
         // ------------------------------------------------------------ lifecycle
@@ -119,7 +149,7 @@ namespace GlimmerGrove.Cloud
                     return (CloudResult.Failed(CloudFailure.Unauthenticated, "no user after sign in"),
                             CloudIdentity.None);
 
-                return (CloudResult.Success, new CloudIdentity(user.UserId, IsLinked(user)));
+                return (CloudResult.Success, new CloudIdentity(user.UserId, IsLinked(user), Label(user)));
             }
             catch (Exception e)
             {
@@ -175,7 +205,7 @@ namespace GlimmerGrove.Cloud
                     await _auth.CurrentUser.LinkWithProviderAsync(Provider(credential.ProviderId));
 
                 var user = _auth.CurrentUser;
-                return (CloudResult.Success, new CloudIdentity(user.UserId, IsLinked(user)));
+                return (CloudResult.Success, new CloudIdentity(user.UserId, IsLinked(user), Label(user)));
             }
             catch (Exception e)
             {
@@ -225,7 +255,7 @@ namespace GlimmerGrove.Cloud
                     return (CloudResult.Failed(CloudFailure.Unauthenticated, "no user after sign in"),
                             CloudIdentity.None);
 
-                return (CloudResult.Success, new CloudIdentity(user.UserId, IsLinked(user)));
+                return (CloudResult.Success, new CloudIdentity(user.UserId, IsLinked(user), Label(user)));
             }
             catch (Exception e)
             {
@@ -241,12 +271,15 @@ namespace GlimmerGrove.Cloud
         {
             var data = new FederatedOAuthProviderData { ProviderId = providerId };
 
-            // Only what the account actually needs. Asking for more than a display name
-            // makes the consent screen longer and gives the game data it does not want
-            // to be responsible for.
+            // Only what the account actually needs, and the address is now part of that.
+            // Nothing is stored and nothing is sent anywhere — see CloudIdentity.Label — but
+            // switching between two of one person's own accounts is what this flow is for, and
+            // two Google accounts belonging to the same person routinely carry the same display
+            // name. Without the address the panel cannot tell them apart, which is the whole
+            // difficulty a player reported. Both consent screens list it in one line.
             data.Scopes = providerId == LinkCredential.Apple
                 ? new List<string> { "name", "email" }
-                : new List<string> { "profile" };
+                : new List<string> { "profile", "email" };
 
             return new FederatedOAuthProvider(data);
         }
@@ -642,6 +675,406 @@ namespace GlimmerGrove.Cloud
             return redemption;
         }
 
+        // ---------------------------------------------------------- the grove board
+        /// <summary>Where a published grove lives. Client-readable, server-written.</summary>
+        const string GrovesCollection = "groves";
+
+        /// <summary>Reserved keeper names, keyed by the fold. See functions/src/names.ts.</summary>
+        const string NamesCollection = "names";
+
+        /// <summary>Where the published boards live, one document each.</summary>
+        const string BoardsCollection = "leaderboards";
+
+        /// <summary>
+        /// Asks the server to rebuild this account's card.
+        ///
+        /// <para>
+        /// The request body is empty and stays empty. Everything on a card is recomputed by
+        /// the function from the save document it reads with its own credentials — see
+        /// <c>functions/src/grove.ts</c> — so there is nothing here for a modified client to
+        /// put its thumb on. The reply carries the card that was actually written, which is
+        /// what the profile draws afterwards rather than its own prediction.
+        /// </para>
+        /// </summary>
+        public async Task<(CloudResult result, Social.GroveCard card)> PublishGroveAsync(
+            string userId, CancellationToken cancellation = default)
+        {
+            if (!await EnsureReadyAsync())
+                return (CloudResult.Failed(CloudFailure.Offline, "Firebase unavailable"), Social.GroveCard.Empty);
+
+            if (string.IsNullOrEmpty(userId))
+                return (CloudResult.Failed(CloudFailure.Unauthenticated, "no user id"), Social.GroveCard.Empty);
+
+            try
+            {
+                var reply = await CallAsync("publishGrove", new Dictionary<string, object>());
+                return (CloudResult.Success, ReadCard(userId, ReadMap(reply, "card")));
+            }
+            catch (Exception e)
+            {
+                return (Classify(e, "publish grove"), Social.GroveCard.Empty);
+            }
+        }
+
+        /// <summary>
+        /// Takes this account's card down.
+        ///
+        /// An account that has no card is a success rather than an error — the function says
+        /// so and this passes it through, because a withdrawal that can never succeed is a
+        /// device retrying for the life of the account (invariant 13a).
+        /// </summary>
+        public async Task<CloudResult> WithdrawGroveAsync(
+            string userId, CancellationToken cancellation = default)
+        {
+            if (!await EnsureReadyAsync())
+                return CloudResult.Failed(CloudFailure.Offline, "Firebase unavailable");
+
+            if (string.IsNullOrEmpty(userId))
+                return CloudResult.Failed(CloudFailure.Unauthenticated, "no user id");
+
+            try
+            {
+                await CallAsync("withdrawGrove", new Dictionary<string, object>());
+                return CloudResult.Success;
+            }
+            catch (Exception e)
+            {
+                return Classify(e, "withdraw grove");
+            }
+        }
+
+        /// <summary>
+        /// Reads who holds a reserved name.
+        ///
+        /// <para>
+        /// A direct document read by id, deliberately — this runs while somebody is typing, so
+        /// it is the one call in the whole feature whose cost could ever matter, and a callable
+        /// here would add a function invocation and a cold start to every pause in a text
+        /// field. One read, no index, and the same price at any player count.
+        /// </para>
+        /// <para>
+        /// An absent document is a success with nobody holding it, which is the ordinary answer
+        /// and must never be an error: the overwhelming majority of names anybody types are
+        /// free, and a "free" that arrived as an exception would be a free name reported as a
+        /// fault.
+        /// </para>
+        /// </summary>
+        public async Task<(CloudResult result, string holderId)> ReadNameHolderAsync(
+            string nameKey, CancellationToken cancellation = default)
+        {
+            if (!await EnsureReadyAsync())
+                return (CloudResult.Failed(CloudFailure.Offline, "Firebase unavailable"), string.Empty);
+
+            if (string.IsNullOrEmpty(nameKey))
+                return (CloudResult.Failed(CloudFailure.Rejected, "no name key"), string.Empty);
+
+            try
+            {
+                var snapshot = await _db.Collection(NamesCollection).Document(nameKey).GetSnapshotAsync();
+                if (!snapshot.Exists) return (CloudResult.Success, string.Empty);
+
+                var data = snapshot.ToDictionary();
+                string holder = data != null && data.TryGetValue("uid", out object uid) ? uid as string : null;
+
+                return (CloudResult.Success, holder ?? string.Empty);
+            }
+            catch (Exception e)
+            {
+                return (Classify(e, "read name holder"), string.Empty);
+            }
+        }
+
+        /// <summary>
+        /// Takes a name for this account.
+        ///
+        /// The one call here that is a function rather than a document operation, because it is
+        /// the only one that has to be adjudicated: the reservation is created and the previous
+        /// one released in a single transaction, which no client write could ever be.
+        /// </summary>
+        public async Task<(CloudResult result, Social.NameClaim claim)> ClaimNameAsync(
+            string storedName, CancellationToken cancellation = default)
+        {
+            if (!await EnsureReadyAsync())
+                return (CloudResult.Failed(CloudFailure.Offline, "Firebase unavailable"), Social.NameClaim.Unavailable);
+
+            try
+            {
+                var reply = await CallAsync("claimName", new Dictionary<string, object>
+                {
+                    { "name", storedName ?? string.Empty },
+                });
+
+                return (CloudResult.Success, ReadClaim(reply));
+            }
+            catch (Exception e)
+            {
+                return (Classify(e, "claim name"), Social.NameClaim.Unavailable);
+            }
+        }
+
+        /// <summary>
+        /// Reads a claim reply.
+        ///
+        /// An outcome this build does not recognise is read as
+        /// <see cref="Social.NameClaimOutcome.Unavailable"/> rather than as a refusal — an
+        /// older client meeting a newer server must fall back to "nothing was decided here",
+        /// which leaves the rename local and lets the next publish settle it, rather than
+        /// telling somebody their name was rejected for a reason it cannot name.
+        /// </summary>
+        static Social.NameClaim ReadClaim(IDictionary<string, object> reply)
+        {
+            if (reply == null) return Social.NameClaim.Unavailable;
+
+            string outcome = reply.TryGetValue("outcome", out object o) ? o as string : null;
+
+            var parsed = Social.NameClaimOutcome.Unavailable;
+            switch (outcome)
+            {
+                case "claimed":   parsed = Social.NameClaimOutcome.Claimed; break;
+                case "unchanged": parsed = Social.NameClaimOutcome.Unchanged; break;
+                case "taken":     parsed = Social.NameClaimOutcome.Taken; break;
+                case "refused":   parsed = Social.NameClaimOutcome.Refused; break;
+                case "cooldown":  parsed = Social.NameClaimOutcome.Cooldown; break;
+            }
+
+            return new Social.NameClaim
+            {
+                Outcome = parsed,
+                Name = (reply.TryGetValue("name", out object n) ? n as string : null) ?? string.Empty,
+                Key = (reply.TryGetValue("key", out object k) ? k as string : null) ?? string.Empty,
+                CooldownSeconds = (int)ReadLong(reply, "cooldownSeconds"),
+            };
+        }
+
+        /// <summary>
+        /// Reads one keeper's published grove.
+        ///
+        /// A direct document read rather than a callable: it is a public document by design,
+        /// the rules already say who may read it, and routing it through a function would add
+        /// an invocation and a cold start to the one interaction on the board that has to feel
+        /// immediate. An absent card is success with an empty answer — the owner may have
+        /// opted out between the board being built and the row being tapped, which is ordinary
+        /// rather than a fault.
+        /// </summary>
+        public async Task<(CloudResult result, Social.GroveCard card)> ReadGroveCardAsync(
+            string ownerId, CancellationToken cancellation = default)
+        {
+            if (!await EnsureReadyAsync())
+                return (CloudResult.Failed(CloudFailure.Offline, "Firebase unavailable"), Social.GroveCard.Empty);
+
+            if (string.IsNullOrEmpty(ownerId))
+                return (CloudResult.Failed(CloudFailure.Rejected, "no owner id"), Social.GroveCard.Empty);
+
+            try
+            {
+                var snapshot = await _db.Collection(GrovesCollection).Document(ownerId).GetSnapshotAsync();
+                if (!snapshot.Exists) return (CloudResult.Success, Social.GroveCard.Empty);
+
+                return (CloudResult.Success, ReadCard(ownerId, snapshot.ToDictionary()));
+            }
+            catch (Exception e)
+            {
+                return (Classify(e, "read grove card"), Social.GroveCard.Empty);
+            }
+        }
+
+        /// <summary>Reads one published board. One document, whole.</summary>
+        public async Task<(CloudResult result, Social.LeaderboardBoard board)> ReadLeaderboardAsync(
+            string boardId, CancellationToken cancellation = default)
+        {
+            if (!await EnsureReadyAsync())
+                return (CloudResult.Failed(CloudFailure.Offline, "Firebase unavailable"),
+                        Social.LeaderboardBoard.None);
+
+            if (!Social.LeaderboardBoard.IsKnown(boardId))
+                return (CloudResult.Failed(CloudFailure.Rejected, "unknown board"),
+                        Social.LeaderboardBoard.None);
+
+            try
+            {
+                var snapshot = await _db.Collection(BoardsCollection).Document(boardId).GetSnapshotAsync();
+                if (!snapshot.Exists)
+                    return (CloudResult.Success, new Social.LeaderboardBoard(boardId, null, 0L, 0));
+
+                var document = snapshot.ToDictionary();
+                var rows = new List<Social.LeaderboardEntry>();
+
+                if (document.TryGetValue("entries", out object raw) && raw is IEnumerable<object> list)
+                {
+                    int rank = 0;
+                    foreach (var element in list)
+                    {
+                        if (!(element is IDictionary<string, object> entry)) continue;
+                        rank++;
+
+                        string ownerId = Text(entry, "uid");
+                        if (ownerId.Length == 0) continue;
+
+                        // The rank is the row's position rather than a field, so a board
+                        // written with a gap cannot draw two keepers at the same place.
+                        rows.Add(new Social.LeaderboardEntry(
+                            rank, ownerId, Text(entry, "name"), Text(entry, "avatar"),
+                            (int)ReadLong(entry, "level"), ReadLong(entry, "score"),
+                            (int)ReadLong(entry, "stars")));
+
+                        if (rows.Count >= Social.LeaderboardBoard.MaxRows) break;
+                    }
+                }
+
+                return (CloudResult.Success,
+                        new Social.LeaderboardBoard(boardId, rows,
+                                                    ReadLong(document, "builtUnix"),
+                                                    (int)ReadLong(document, "population")));
+            }
+            catch (Exception e)
+            {
+                return (Classify(e, "read leaderboard"), Social.LeaderboardBoard.None);
+            }
+        }
+
+        /// <summary>
+        /// Reads the published distribution of grove worth.
+        ///
+        /// <see cref="ReadGroveStatsAsync"/>'s twin in every respect that matters: one public
+        /// document, no sign-in, and every failure an empty answer rather than a propagated
+        /// exception, because nothing anywhere waits on it.
+        /// </summary>
+        public async Task<(CloudResult result, Social.GroveRankTable table,
+                           Dictionary<string, int> population, long builtUnix)> ReadGroveRanksAsync(
+            CancellationToken cancellation = default)
+        {
+            var noPopulation = new Dictionary<string, int>();
+
+            if (!await EnsureReadyAsync())
+                return (CloudResult.Failed(CloudFailure.Offline, "Firebase unavailable"),
+                        Social.GroveRankTable.None, noPopulation, 0L);
+
+            try
+            {
+                var snapshot = await _db.Collection("config").Document("groveRanks").GetSnapshotAsync();
+                if (!snapshot.Exists)
+                    return (CloudResult.Success, Social.GroveRankTable.None, noPopulation, 0L);
+
+                var document = snapshot.ToDictionary();
+                var table = Social.GroveRankTable.None;
+
+                if (document.TryGetValue("deciles", out object raw) && raw is IEnumerable<object> list)
+                {
+                    var deciles = new List<long>(9);
+                    foreach (var value in list) deciles.Add(ToLong(value));
+
+                    // A table that is not ascending is not a decile table, and interpolating
+                    // through one produces percentages at random. ReadGroveStatsAsync refuses
+                    // the same way, for the same reason.
+                    bool ascending = deciles.Count == 9;
+                    for (int i = 0; ascending && i < deciles.Count; i++)
+                        if (deciles[i] < 1L || (i > 0 && deciles[i] < deciles[i - 1])) ascending = false;
+
+                    if (ascending)
+                        table = new Social.GroveRankTable((int)ReadLong(document, "samples"), deciles);
+                }
+
+                var population = new Dictionary<string, int>();
+                if (document.TryGetValue("population", out object rawPop) &&
+                    rawPop is IDictionary<string, object> counts)
+                {
+                    foreach (var pair in counts)
+                        if (Social.GroveLeague.IsKnown(pair.Key))
+                            population[pair.Key] = (int)ToLong(pair.Value);
+                }
+
+                return (CloudResult.Success, table, population, ReadLong(document, "builtUnix"));
+            }
+            catch (Exception e)
+            {
+                return (Classify(e, "read grove ranks"), Social.GroveRankTable.None, noPopulation, 0L);
+            }
+        }
+
+        /// <summary>
+        /// Turns a card document into a <see cref="Social.GroveCard"/>.
+        ///
+        /// <para>
+        /// Sanitising rather than trusting, which is <c>HomesteadMapper</c>'s stance and is
+        /// wanted twice over here: this document was built from another player's save, and a
+        /// visitor may be a content drop behind the keeper they are visiting. A malformed row
+        /// is skipped rather than poisoning the card, and an id this build has never heard of
+        /// is carried through — <see cref="Social.GroveCard.PieceAt"/> resolves it to an
+        /// invalid piece, which every drawing path already skips.
+        /// </para>
+        /// </summary>
+        static Social.GroveCard ReadCard(string ownerId, IDictionary<string, object> document)
+        {
+            if (document == null) return Social.GroveCard.Empty;
+
+            var land = new List<string>();
+            if (document.TryGetValue("land", out object rawLand) && rawLand is IEnumerable<object> landList)
+                foreach (var id in landList)
+                    if (id is string text && text.Length > 0) land.Add(text);
+
+            var placed = new Dictionary<string, Homestead.Placement>(StringComparer.Ordinal);
+            if (document.TryGetValue("placed", out object rawPlaced) &&
+                rawPlaced is IDictionary<string, object> rows)
+            {
+                foreach (var pair in rows)
+                {
+                    if (string.IsNullOrEmpty(pair.Key)) continue;
+
+                    // Two shapes, because a flipped piece is the exception: a bare string is
+                    // the piece id, and a map carries the facing with it. That keeps the
+                    // common row to a single value and the document to about a third of what
+                    // a uniform map would cost across a full floor.
+                    switch (pair.Value)
+                    {
+                        case string pieceId when pieceId.Length > 0:
+                            placed[pair.Key] = new Homestead.Placement(pieceId, 0L, false);
+                            break;
+
+                        case IDictionary<string, object> entry:
+                            string id = Text(entry, "piece");
+                            if (id.Length == 0) break;
+                            placed[pair.Key] = new Homestead.Placement(id, 0L, ReadLong(entry, "flip") != 0L);
+                            break;
+                    }
+                }
+            }
+
+            return new Social.GroveCard(
+                ownerId,
+                Text(document, "name"),
+                Text(document, "avatar"),
+                (int)ReadLong(document, "level"),
+                ReadLong(document, "score"),
+                (int)ReadLong(document, "stars"),
+                Text(document, "league"),
+                ReadLong(document, "builtUnix"),
+                Text(document, "dwelling"),
+                land,
+                placed);
+        }
+
+        static IDictionary<string, object> ReadMap(IDictionary<string, object> reply, string key)
+            => reply != null && reply.TryGetValue(key, out object raw)
+                ? raw as IDictionary<string, object>
+                : null;
+
+        static string Text(IDictionary<string, object> map, string key)
+            => map != null && map.TryGetValue(key, out object value) && value is string text
+                ? text
+                : string.Empty;
+
+        static long ToLong(object value)
+        {
+            switch (value)
+            {
+                case long l: return l;
+                case int i: return i;
+                case double d: return (long)d;
+                case float f: return (long)f;
+                default: return 0L;
+            }
+        }
+
         // ------------------------------------------------------------- plumbing
         async Task<IDictionary<string, object>> CallAsync(string name, Dictionary<string, object> data)
         {
@@ -741,11 +1174,12 @@ namespace GlimmerGrove.Cloud
                     case AuthError.EmailAlreadyInUse:
                         return CloudResult.Failed(CloudFailure.AlreadyLinkedElsewhere, inner.Message);
 
-                    // Backing out of the consent screen is a choice, not an error, so it
-                    // is reported as retryable and logged quietly.
+                    // Backing out of the consent screen is a choice, not an error. It used to
+                    // be reported as Offline, which put "no internet connection" on screen in
+                    // front of somebody who had simply changed their mind.
                     case AuthError.Cancelled:
                     case AuthError.WebContextCancelled:
-                        return CloudResult.Failed(CloudFailure.Offline, "cancelled by the player");
+                        return CloudResult.Failed(CloudFailure.Cancelled, "cancelled by the player");
 
                     case AuthError.NetworkRequestFailed:
                         return CloudResult.Failed(CloudFailure.Offline, inner.Message);

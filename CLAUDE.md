@@ -83,6 +83,41 @@ What that means in practice here:
    with no Unity anywhere; if you add a tile whose orientation is more than its arms, there
    are three places and the tests name them.
 
+5c. **A rooted tile is authored at `/0`, and that rule guards every other rule.** Every
+   proof `LevelValidator` makes runs against a copy of the board with every rotation
+   zeroed, because that is the authored solution — so a tile the player can *never turn*,
+   authored away from its solution, means the board that was proved is not the board that
+   ships. Nothing else can notice: every arm mates, the solved probe lights, the glade
+   draws, and par is unmoved because `MinimumMoves` skips rooted tiles. `c02_the_millers_knot`
+   carried one for two chapters (`-EW/1!`, a vertical stub in a horizontal row) and was
+   winnable only by luck — the stub happened to connect to nothing. What it did break is
+   `Puzzle.TurnsToSolution`, which counts rooted tiles: one stuck off-solution adds turns
+   that can never be paid, so a player who *had* reached the solution was told they were
+   one turn from it. That is the near-miss line being generous, which is the one thing
+   invariant-by-design it must never be. `CheckRootedTiles` asks `Puzzle.Alike`, not
+   `rot == 0` — a straight conduit and a straight crossing read the same half a turn round,
+   and Stonebridge's four bridges are all of them.
+
+5d. **A mechanic that rejects no arrangement is decoration, and that is countable.**
+    `Tools/verify/difficulty.py` enumerates every arrangement in which every arm mates and
+    none dangles — the tidy boards a player plausibly reaches — and asks which of them win.
+    When that count is **one**, the arms alone decide the glade and every other rule on it
+    could be deleted without changing a single solution. Twenty-two of the first thirty
+    glades were in that state, which is why brittle stone, taproots and duskcaps all read as
+    absent: they were. The arms are rigid — even a filled 7x7 spanning tree usually admits
+    one arrangement — so the free decisions have to be **put** there, and a twisted crossing
+    is the cheapest one, because it wears all four arms at every angle and only colour or the
+    dark can settle it. Three rules follow and each was broken everywhere before it was
+    written down: brittle stone belongs on a tile the player cannot simply try (so, a
+    crossing); a taproot's members must all be tiles the arms cannot settle, or the root is a
+    hint rather than a decision; and a duskcap's ford must sit on a **cycle** of the live
+    network, so the wrong turn wakes the shadow *while every critter stays lit*. That last
+    one is the whole mechanic: if the wrong turn also puts a critter out, the critter tells
+    the player and the shadow taught them nothing. `hazards` is the metric this replaces and
+    it is worth knowing why it was wrong — it counts rotations that *would* mate two
+    networks, but such a rotation leaves an arm dangling elsewhere, so it is not a board
+    anybody reaches. A chapter was authored to it and came out reading like a dot-to-dot.
+
 6. **All player-facing text is a loc key.** The build gate scans the source for
    key-shaped literals and fails on any that is missing. Do not build keys by
    concatenation — write them out (see `WinOverlay.RankKeys`).
@@ -433,7 +468,33 @@ What that means in practice here:
     that already has an owner can never match it, so the device is refused for ever while the
     player believes they are backed up. And **the refusal has to be visible**: a device in
     this state *is* signed in, so anything reading `IsLinked` alone will tell somebody their
-    progress is safe while nothing at all is being written.
+    progress is safe while nothing at all is being written. That last corollary is now a
+    backstop rather than the ordinary path — see 17a, which gives the refusal a repair.
+17a. **A switch is finished on the device before the network is asked for anything.** The
+    original order was secure → authenticate → **fetch** → replace, and the fetch is what made
+    it breakable: reading the incoming grove decided whether the switch happened at all, and it
+    ran in the frame after an OAuth browser handed control back — the process just foregrounded,
+    the Firestore stream just re-authenticated, by some distance the most fragile moment in the
+    app's life. One unlucky read left the device authenticated as one player and holding
+    another's save, and it was reported live as three sentences in a row, none of which was
+    true: "that grove could not be loaded", then "this phone is signed in as someone else", then
+    a destructive prompt offering to discard twenty-six glades belonging to the same person.
+    `SaveService.SwitchTo` makes the swap **local** — the outgoing grove is copied into
+    `IAccountArchive` under its own account, the incoming one restored from there if this device
+    has played it — so once the credential is in hand the switch cannot stop halfway, switching
+    back is instant and offline, and whatever the server holds is folded in afterwards by an
+    ordinary sync that retries on the scheduler's backoff. Three rules keep it honest. The
+    archive is **a cache and never a backup** — a slot is evicted when six are held, which loses
+    a copy and not a grove, because the securing push still runs first and is still the only
+    step allowed to refuse a switch. A slot **names its owner inside the file**, so the folder
+    hash is safe: one that does not name the account being asked for is discarded rather than
+    adopted. And `AccountGate`'s refusal now has a repair — a session ahead of the save is
+    completed *forward*, silently, because Firebase persists its user before this code sees it
+    and the session only ever moves because a player chose an account, so forward is the only
+    direction that can be right. The one path that must still refuse is `redeemPurchase`
+    (`AuthoriseAsync(repair: false)`): a receipt redeemed against whichever account is
+    authorised would move a purchase between two of them, and refusing costs nothing because
+    both stores re-deliver an unfinished transaction for ever.
 
 18. **A real-money product grants currency, and nothing else.** This is invariant 13's
     second clause — *adjudicated* — taken to its conclusion, and it is what makes the whole
@@ -491,6 +552,91 @@ What that means in practice here:
     a player whose credits silently stop rising for a month uninstalls, and repeat abuse is a
     job for the stores' account bans.
 
+19. **Anything a stranger can see is a separate, server-written document.** The save is
+    `isOwner(uid)` and stays that way for ever. `players/{uid}` carries the level ledger, the
+    streak's dates, the event floors, the chest counters and the ad allowance; a leaderboard
+    row needs a name, a number and where the benches are, so it gets `groves/{uid}` — built by
+    `publishGrove` from the save it reads with its own credentials, and never writable by a
+    client. Widening the save's read rule instead would publish everything else along with it
+    and freeze the save's *shape* into a public API that could never change again, which is
+    the more expensive half of the mistake.
+19a. **A number that goes public stops being derived-and-trusted and becomes adjudicated.**
+    Invariant 16g built the grove's worth as a pure function of three client-written id sets
+    and said so plainly: safe while private, "forgeable in the one direction that would matter
+    if a leaderboard ever reads it". The boards are that leaderboard, so the score is now
+    invariant 13's fourth clause — bounded so tightly that forging buys nothing. It splits in
+    two: the **earned** half (companions the keeper ladder reached) is derived from records the
+    server already validates for currency and so is unforgeable by construction, and the
+    **bought** half is clamped to `earnedCredits + grantedBaseline`, because everything in it
+    was paid for in currency the server derives. The client's figure stays a prediction and is
+    still what its own screens draw; they agree for every honest player. Before making
+    anything else public, ask what a forged version of it would buy, and clamp to something the
+    server owns.
+19b. **The public name is a second rule on top of the stored one, and the server's answer
+    governs.** `RenameOverlay.Clean` asks what a text field owes a database; `GroveNames` asks
+    what a string owes the row beneath it. The bidirectional controls are why that is not a
+    length check — U+202E re-orders the text that *follows* it, so one name misdraws the whole
+    list, and a length cap and a word filter both miss it. Whitespace is tested before the
+    forbidden set, because a tab is a control character *and* a word break and deleting it
+    joins two words. The word list lives only on the server (a list in a client is a list read
+    out of the client), a refused name is never rejected — the player keeps it and is published
+    under a handle derived from their uid — and the opt-out (`settings.board`) raises a
+    **withdrawal**, because a card still standing after somebody opted out is a
+    data-protection failure rather than a stale cache.
+19c. **A standing is read off a published distribution; nothing maintains a global ordering.**
+    `stats.ts`' bargain for the second time. Nine score deciles and a hundred-row board,
+    rebuilt daily, read as one document at O(1) at any player count — against a query that
+    costs a hundred document reads per screen open, on a collection that grows for the life of
+    the game. A league is not a second ladder either: it *is* `GroveScoreTable.StarsFor`, so it
+    needs no tuning, no explaining and no keeping in step. Do not add a "keepers near you"
+    board; it needs the exact ordering this design refuses to keep, and the percentile already
+    answers the question it would.
+
+19d. **A name is unique because a document id is unique, never because a query said so.**
+    A keeper name is reserved by creating `names/{fold}` — so uniqueness is enforced by the
+    database's own primary key, at any concurrency, with no index and no scan behind it. The
+    obvious alternative is wrong twice: `where("name","==",x)` returns empty for two players a
+    second apart and lets both write, and the duplicate that produces is undetectable
+    afterwards and repairable only by hand. It is also the shape that does not grow: asking
+    whether a name is free is one document read by id at ten players and at ten million, where
+    a query is an index over a collection that lives as long as the game. The cost split
+    follows from that and is the whole design — the **hint** while somebody types is a direct
+    read (`get` granted, `list` refused, so a name can be asked about and the collection cannot
+    be walked), and only the **claim** is a function, because only the claim has to be
+    adjudicated. `NameCheckScheduler` is what keeps the hint from being a read per keystroke,
+    which is roughly a tenfold difference in the bill and is therefore tested rather than
+    assumed. Uniqueness can never live in the save: `wallet.displayName` is merged by recency
+    (invariant 11c) and no rule over two devices can decide a global fact, so the name is
+    invariant 13's fourth clause — the client's copy is what its own screens draw and the
+    reservation is what a stranger sees.
+19e. **The two folds are one rule, and the runtimes do not agree about Unicode.** A fold is
+    what makes `Fern`, `fern`, `FERN`, `F e r n` and the fullwidth spelling one name rather
+    than five documents, so it exists in `GroveNames.Key` and `functions/src/names.ts` and the
+    vectors run both (invariant 9a, for the sixth time). What is worth not rediscovering is
+    that Unity's Mono and Node's ICU **disagree**, and the shared vectors are the only thing
+    that can see it: `İzmir` folded to `izmir` on one side and `İzmir` on the other, because
+    U+0130 is the one character in Unicode whose lowercase is longer than itself and only the
+    full mapping expands it; a Greek name ending in Σ diverged on Final_Sigma; the Latin
+    ligature block is not decomposed by Mono at all; and Cherokee and Georgian Mtavruli were
+    given lowercase by Unicode after Mono's tables froze. `Agree` closes those by hand, and
+    **stops there deliberately** — 27 of the BMP's 256 blocks still disagree somewhere, and
+    closing them would mean shipping normalisation tables in a client to make a *hint* exact.
+    That is safe only because of how the split is built: a divergence costs a wrong hint,
+    corrected by the claim a moment later, and can never produce a duplicate, because a
+    reservation is decided by the server's fold and only ever by the server's fold. Before
+    changing the fold, note that it may only ever be **loosened** — a tighter one collapses two
+    names already held onto one key, which needs a repair job rather than a deploy.
+19f. **A published name comes from the reservation, never from the save.** `boardName` reads
+    `players/{uid}/private/wallet`, which no client may write, so a modified save changes its
+    owner's screens and leaves the board untouched — invariant 19b's "the server's answer
+    governs", taken one step past sanitising. Two consequences. The word filter runs **again**
+    at publish time on a name that already passed it, so adding a word takes it off every board
+    on the next rebuild instead of needing a sweep. And `publishGrove` **claims** whatever the
+    save asks for when it differs from what is held, which is what makes a rename made offline
+    land with no client-side retry state at all — re-claiming a name already held writes
+    nothing, so the settled case is two strings compared and no database work.
+
+
 ## Layout
 
 ```
@@ -517,6 +663,20 @@ scripts fail to compile. Do not guess — verify offline:
   get right.
 - **Content check:** parse the StreamingAssets JSON, prove every level solvable,
   derive par, confirm every loc key resolves.
+- **Difficulty check:** `python Tools/verify/difficulty.py` — what each glade actually asks
+  of a player, counted rather than argued about. Not a gate; see invariant 5d and
+  *What makes a glade hard* in `CONTENT.md`.
+- **Name fold check:** `Tools/verify/names.py` runs `GroveNames` against the shared vectors
+  **on Unity's own Mono** (`MonoBleedingEdge/bin/mono.exe`), not on the bundled .NET. That is
+  the whole point of it: the first version ran on .NET 8, whose ICU agrees with Node about
+  everything, and it passed happily with the Cherokee mapping deleted. A check that cannot fail
+  is not a check — see invariant 19e.
+- **Why a test says "needs the Editor":** `GLIMMER_WHY=1 python Tools/verify/tests.py` prints
+  the native call that stopped it. Sometimes that is a fact about the code under test and
+  sometimes it is a limit of the runner, and only the message tells them apart — it is how the
+  `Debug.Log` one was found. The runner clears `Debug.unityLogger.logEnabled` for exactly that
+  reason, so an ordinary log line on the path being tested no longer decides whether the rule
+  can be proved offline.
 - **In the Editor:** `Glimmer Grove ▸ Validate Content`, `▸ Validate Art`, and
   Test Runner (EditMode).
 
@@ -1251,8 +1411,9 @@ grove's own number rides at the end of its bar. The horn was cut before it shipp
 
 **Verifying is now in the repo.** `Tools/verify/` holds `compile.py` (every assembly
 separately, which is what actually proves the layering), `tests.py` (the EditMode suite via
-a reflection runner — 491 pass offline, 71 need the Editor and say so), `content.py` and
-`loc.py`. It no longer has to be recovered from a scratchpad.
+a reflection runner — 749 pass offline, 97 need the Editor and say so), `content.py`,
+`loc.py` and `names.py` (the keeper-name fold, run on Unity's own Mono so a divergence from the
+server's copy reproduces offline). It no longer has to be recovered from a scratchpad.
 
 **The keeper's name reaches the cloud — save schema v15.** Reported as "renaming does not
 save", and it was two separate faults meeting. Invariant 11c has the argument; what follows
@@ -2230,6 +2391,753 @@ Editor tool that packs the atlas and the screen that reads it — and a mismatch
 the atlas is generated, so a wrong name is not a missing file but a cell that quietly stops
 moving. `Flipbook` gained an overload taking sprites already in hand, so the shop and the grove
 run the same component rather than two that could drift.
+
+**The boards — every keeper's grove has a standing, and you can walk into somebody else's.**
+The Grovement was the one screen two accounts at the same progress did not share, and until
+now nobody could see anybody's but their own. A leaderboard is the obvious feature and the
+architecture is the whole of it: this is the first thing in the game that reads across
+accounts, and the first number a player *benefits* from forging.
+
+**What it cost the save file is nothing, and what it cost the security model is one new
+adjudication.** Invariant 16g said a grove's score is derived, stores nothing, and would be
+"forgeable in the one direction that would matter if a leaderboard ever reads it". This is
+that leaderboard. `homesteadOwned`, `groveLandOwned` and `companionsOwned` are all
+client-written, and `firestore.rules` justified letting them be with the sentence "a forged
+entry buys a picture on a screen nobody else sees" — a sentence this feature makes false.
+So the score moves to invariant 13's fourth clause: **bounded so tightly that forging it buys
+nothing.** `publishGrove` opens the save with its own credentials and splits the worth in two.
+The **earned** half — companions the keeper ladder reached — is derived from records the
+server already validates for currency, so it is unforgeable by construction. The **bought**
+half was paid for in credits, and credits are server-derived, so it is clamped:
+
+    score = earned + min(bought, earnedCredits + grantedBaseline)
+
+A save awarding itself the whole catalog scores exactly what its owner could have afforded.
+The clamp is deliberately generous rather than exact — it counts currency ever *received*
+rather than currency spent on the grove — because understating a leaderboard position is a
+bug and overstating one is an exploit, and only one of those is recoverable.
+
+**The save document stays private, and that is not a detail.** `players/{uid}` holds the level
+ledger, the streak dates, the event floors and the ad allowance; a board needs a name, a
+number and where the benches are. Widening its read rule would publish everything else with it
+and make the save's *shape* a public API that could never change again. So a card is a
+separate server-written document (`groves/{uid}`), holding only what a visitor draws — which
+is also the natural place to put the one number that now needs adjudicating.
+
+**Four decisions worth not re-litigating.**
+
+**Ranking is a published distribution, never a global sort.** `stats.ts`' bargain, for the
+second time: nine score deciles and a hundred-row board, rebuilt once a day by
+`publishGroveRanks`, read as one document at O(1) whatever the player count. The alternative —
+order the player collection by score and take the first hundred — is a hundred document reads
+every time anybody opens the screen, against a collection that grows for the life of the game.
+There is no scale at which the exact version buys a player anything they could notice, and
+`GroveRankTable.TopPercent` answers "where do I stand" to within the point it is rounded to.
+**Redis is the right tool for a live PvP ladder and the wrong one here**: a grove's worth moves
+a few times a week, only ever upward, and Memorystore plus a Serverless VPC connector is an
+always-on cost and an extra failure domain in front of a feature that must degrade to "no
+board today".
+
+**A league is the star rating the player already wears.** `GroveLeague` derives from
+`GroveScoreTable.StarsFor`, so there is no second ladder to tune, no second thing to keep in
+step with the catalog's growth, and nothing to explain — a player in the three-star league is a
+player wearing three stars. `GroveScoreTable.MaxStars` caps the ladder at eight and there are
+nine league ids, which `GroveBoardTests` pins: a content drop that lengthened the ladder past
+the ids would put players on a board that does not exist.
+
+**The client chooses *when* to publish and the server chooses *what*.** A Firestore trigger on
+`players/{uid}` would rebuild a card on every sync — a function invocation per player per sync
+for ever, for a thing that changes a handful of times a week and is not moved by a star, a
+heart, a chest or a streak night. So `GrovePublishPolicy` debounces ten seconds over a
+`GroveCard.Fingerprint` covering exactly what a visitor can see, and calls a callable whose
+**request body is empty**. A player who never calls it is simply not on the board, which is the
+shape a forgeable trigger should have. The published fingerprint is remembered in
+`PlayerPrefs`, keyed by account — `RunGuard`'s reason, since "what this device uploaded" is a
+fact about the device and goes both up and down, so it could never be joined (invariant 11b) —
+without which the first request of every session would be a write for a grove that had not
+moved.
+
+**Visiting is one document read.** `GroveVisitScreen` is a screen of its own rather than a mode
+on `HomesteadScreen`, which is a thousand lines of editing that would each need a branch saying
+"not while visiting" — the mode toggle invariant 16 already refused once. It draws a
+`GroveCard` and nothing else, so it is read-only by construction rather than by discipline, and
+it uses the *same* projection this device publishes for its own grove, so visiting your own
+grove and looking at it are the same picture. Its art loads into `AssetLibrary.GroveVisitScope`
+— a third scope, because a scope owns its addresses and loading a stranger's grove into the
+player's would free art the player's own screen is drawing the moment they left (invariant 7b).
+
+**Two things this forced, both about strangers reading a string.** `GroveNames` is a second,
+stricter rule on top of `RenameOverlay.Clean`: storage owes a bounded, trimmed string, and
+*publication* owes one that cannot break the row below it. The bidirectional controls are the
+reason it is not a length check — U+202E re-orders the text that *follows* it, so a name
+carrying one misdraws the rest of the list, and a length cap and a word filter both sail
+straight past. Whitespace is tested **before** the forbidden set, deliberately: a tab is a
+control character *and* a word break, and deleting it turns two words into one. The word filter
+lives only on the server, because a list shipped in a client is a list read out of the client,
+and a refused name is not rejected — the player keeps it and appears under a handle the server
+derives from their uid, which is also what gives two unnamed keepers rows that differ. The
+opt-out is `settings.board` (a `StoredFlag`, so "never chosen" is a state), which cost the wire
+nothing because `settings` was already merged, mapped and inside `hasOnly`; turning it off
+raises a **withdrawal** rather than merely stopping the next rebuild, because a card left
+standing after an opt-out is a data-protection failure rather than a stale cache.
+
+**Four rules now exist twice, and all four fail silently.** The worth, the keeper level behind
+it, the public name and the league. `firebase/shared/grove-vectors.json` pins them and both
+halves run it — `GroveBoardTests.cs` and `functions/test/grove.mjs` — which is invariant 9a for
+the boards. Two things that made it work are worth keeping: `GroveScore.Value` gained an
+`IGroveHoldings` overload so the *shipped* summation is what the vectors drive rather than a
+copy of it, and the name cases are carried as **code points** as well as strings, because
+Unity's `JsonUtility` truncated `Fern‮Willow` at the escape and shifted every expectation
+in the array by one field — a failure that read exactly like a bug in the sanitiser. The server
+half asserts the two encodings agree, so the file cannot come to disagree with itself.
+
+The vectors earned their keep on the first run: they caught the C# holdings resolving against
+the ambient `AvatarCatalog` rather than the vector's own roster, and `GrovePublishPolicyTests`
+caught the pending mark being consumed on the *reply* instead of at the start of the call —
+which is `SyncScheduler.Started`'s rule and the exact shape that lost a keeper's name for a
+year.
+
+**Two more the deploy caught, and neither was reachable from a unit test.** They are the
+argument for `firebase/e2e/smoke-test.mjs` existing at all, and both are now in it.
+
+`deciles([])` returned nine `undefined`s, which **Firestore refuses as a document value** — so
+the ranking job threw *after* writing ten board documents, leaving the boards published and
+`config/groveRanks` absent. That is the state on the first day of the feature, when nobody has
+a card, so it is the state it would have shipped in. `stats.ts` never hits it because its
+buckets exist only once something is pushed into them. The lesson is narrower than "test the
+empty case": **anything a scheduled job writes has to be checked for writability, not only for
+arithmetic** — the old test asserted the sample count was zero and never that the result could
+be written.
+
+And the clamp read **`credits.grantedBaseline`, which is the name the wallet has on the way
+out to a client, not the name it is stored under** (`credits.granted`). It silently yielded
+zero, so the ceiling was derived earnings alone and every account seed, daily chest, streak
+night, rewarded video and **real-money coin purchase** was left out of what a player could be
+said to afford — somebody who bought forty dollars of coins and spent them on their grove
+would have been clamped to near nothing and ranked last. Live, the ceiling went from 90 to
+1,490 on the same account. Nothing but a live run could see it: the shared vectors take
+`affordable` as a *parameter*, and **a clamp that is too tight looks exactly like a clamp that
+is working**. The read is typed against `WalletDoc` now, so reaching for the reply's name is a
+compile error rather than a zero.
+
+Where the numbers land: **two documents read per screen**, a card is a couple of kilobytes, a
+board is a hundred rows, and the whole feature adds **no save schema change** (v17 stands),
+**no `progression.json` retune** and **no new concept in the reward path** — nothing here pays
+currency. `config/grove` and the `keeper` curve are published by the seeder from
+`homestead.json` and the manifest, for `config/products`' reason: a price list maintained beside
+the content file is two files edited on different days.
+
+One thing deliberately left: with more than `RANK_SAMPLE_SIZE` participants the global hundred
+becomes the best hundred *seen* rather than the best hundred alive, because the ranking job
+reads a bounded sample. That is why the screen leads with a percentile, which a bounded sample
+answers accurately, and the fix when it matters is a scored index and a query — a change to
+`summarise` alone.
+
+**Live as of 2026-08-20.** Rules released, eleven functions deployed (`publishGrove`,
+`withdrawGrove` and `publishGroveRanks` created; the eight existing ones updated, which also
+took `appleNotification` and the hourly `sweepVoidedPurchases` live for the first time), and
+`config/grove` seeded at grove v9 — 150 priced pieces, 8 regions, 30 companions, 5 home rungs,
+a complete grove worth 493,770, matching what `Validate Content` prints. The smoke test is
+**64/64 live**, of which 21 are the boards and 15 the names, and it attacks them from the client's
+side: a
+save claiming the entire catalog publishes a card worth 2,290, a bidi override is stripped from
+the published name, a client cannot write its own card or a board, a second keeper can read the
+card and cannot read the save behind it, and opting out takes the card down.
+
+**Difficulty is a ramp and a live scalar — and the first finding was that the game had one
+fail state, not four.** Reported as "the levels are very doable without losing any heart",
+which was right, and the arithmetic said why. A glade allowed `2.6 × par` turns and
+`2.0 × par` seconds, so running out of *turns* first needed **1.30 taps a second sustained
+for the whole run** without solving — above the 1.35 the game asks of an expert replay, just
+under the 1.8 `LevelValidator` calls drumming. `BoardView.Undo` also refunds the move while
+the clock keeps running, so exploring was free in turns and paid in seconds. And `MoveBudget`
+is floored at one turn past the one-star line, so a lower `budgetFactor` does nothing at all.
+Lowering the turn count was therefore close to a no-op; **the clock is the fail state and the
+budget is the backstop under somebody flailing.** That is now written down in `CONTENT.md`
+rather than rediscovered.
+
+**The star thresholds stopped being fractions of the limit, and that reversal is the whole
+design.** They were `.50` and `.75` of the clock, chosen so retuning `timeFactor` moved all
+three together and they could never drift apart — which also meant they could never move
+*apart*, and difficulty and the economy want opposite things. Earned credits are derived from
+the star ledger (invariant 9), so a 15% tighter clock was a 15% smaller three-star window and
+a quietly poorer game: same clears, same stars on the panel, fewer credits per day, and a
+493,770-credit catalog stretching past its 909 days. They are now `TimeGoldFactor = 1.00` and
+`TimeSilverFactor = 1.50` **seconds per par turn** — numerically identical to what the old
+fractions came to at the old factor, so nothing already earned moved — clamped to the limit,
+because a threshold past the point the run is lost is one nothing can be measured against. A
+glade tightened under its own gold line grades *finishing* as three stars, which is the only
+reading that cannot punish somebody for something they did not do. `RunOutcome` had to start
+carrying `TimeGold`: `WinOverlay` derived it from the limit, and the two are no longer
+proportional.
+
+**The ramp: `DefaultTimeFactor` 2.00 → 1.70, and all twenty glades author their own.** Flat
+was the wrong shape — it punishes hardest where it costs retention and least where it
+monetises. The Shallows runs **2.20 → 1.50**, opening *looser* than it used to (nothing about
+a player's first ten minutes should end in a lost heart) and ending on a finale wall; the Mill
+Vale runs **1.90 → 1.50**, with slack on the glade that teaches the crossing. A new mechanic
+gets slack on its own glade. The target is a clear *rate* — roughly 85% of first attempts
+early, 60% late, finales lower — not a feeling, and the honest position is that nobody knows
+the real numbers until the game is live.
+
+**Which is why `difficulty.clockScale` exists.** One published number multiplying every
+glade's limit, bounded to **0.6–2.0** by `DifficultyLimits`, applied in exactly one place
+(`LevelTuning.TimeLimitMillis`). Every other number in `progression.json` was tuned against
+something observable; difficulty was tuned by people who already knew every solution, which is
+the one thing no player will ever be. Four properties keep it safe. The band is a **constant a
+file cannot move** — this is the only block whose bad push is an unfinishable game rather than
+a worse deal, which is `HeartLimits.HardCeiling`'s argument one notch sharper. It reaches the
+limit and **never the stars**, so a difficulty push cannot retune the economy behind it. It
+reaches **nothing that is stored** — a run records elapsed play time, never time left, so
+`bestMillis`, the map badge and `publishGroveStats` all needed no migration and no deploy,
+which is `CountdownTests`' invariant tested against the first change that could have broken it.
+And `LevelValidator.CheckClock` now warns when a glade **could not survive being pushed to the
+0.6 floor**, because that retune never passes back through the validator.
+
+Two things it deliberately is not. It is **not published to `config/progression`** — nothing
+about a clock is adjudicated, so the server has no opinion, exactly as it has none about the
+heart gate. And it is **not live yet in the sense the word usually means**: the client reads
+`progression.json` through `ContentBootstrap.LocalSource`, so this becomes a minutes-not-days
+lever the moment `ContentConfig.RemoteBaseUrl` is set, and until then it is exactly as live as
+the heart gate, the chest odds and the ad payouts already are. That one setting is now the
+highest-value unshipped thing in the build.
+
+No save schema change (v17 stands), no `progression.json` retune of anything that existed, no
+server work and no deploy. `DifficultyRuleTableTests` adds 9 cases and `CountdownTests` gained
+the pin for the shipped tuning; the offline suite is **723**.
+
+**Chapter three: The Amberwood, and colour as the subject.** Ten glades, and the first
+chapter to introduce no new rule at all — which was the bet the whole content design rests
+on. The Shallows brought brittle stone, roots, taproots and duskcaps; the Mill Vale brought
+the crossing. A third mechanic in three chapters would have been a habit rather than a
+decision, and the answer to "this will get boring" has always been *modifiers to the one
+verb*, not more verbs. So the Amberwood is about the one thing the vocabulary already had
+and no chapter had ever been **about**: a blend needs its own pair of crystals, a purity is
+ruined by a single wrong join, and a crossing is what lets the two share ground.
+
+**The thesis is counted, not asserted.** A board can be *about* colour and still have no
+place a wrong turn costs anything — the nets simply never touch, and the glade is a
+rotation exercise with a colour theme painted on. So the authoring pass measures
+**hazards**: pairs of neighbouring tiles in different networks that some reachable rotation
+would mate, plus every twisted crossing carrying two networks (turning one swaps which arm
+belongs to which strand, and there is no rotation that does not). The first cut of
+*Rootbound Amber* scored **zero** and read perfectly — the amber ridge and the green foot
+were three rows apart. It was rebuilt until the two combs interleave. The shipped ten run
+5 to 20 hazards each.
+
+**Straight crossings and twisted ones are two different things and the chapter uses both.**
+A straight crossing (`=NS+EW`) is inert, owes no turns and cannot be misturned: architecture,
+a bridge somebody built. A twisted one (`=NW+ES`) is worth exactly one tap and *both* lanes
+turn with it. The chapter's second glade teaches the chromatic use and carries two twisted
+ones, deliberately authored off-solution — a twisted crossing left at `/0` is scenery on the
+glade whose whole subject is that it is not. The later duskcap boards ford the dark under the
+light through straight ones, which is what a ford is.
+
+The ladder runs par **44, 50, 46, 53, 57, 45, 62, 58, 55, 70** and `timeFactor`
+**1.75 → 1.45**. Not monotonic, and the dip at glade six is the point: it is the taproot
+board, and a bound board's par is *lower* than its tile count suggests because one tap moves
+three conduits. 1.45 is one notch past both previous finales and still clears the 0.6
+`clockScale` floor with room, which `CheckClock` proves rather than anybody trusting.
+
+**The map is five strips, and the number is arithmetic rather than taste.**
+`make_chapter_art.py` scales a source to whole strips and trims surplus width from the
+centre — but only if the scaled source is *wider* than 1080. The Amberwood's source is
+892x4745, so five strips scale it to 1128 wide (trim 48, invisible) and four would have
+forced 902 up to 1080 and stretched the whole map sideways by a fifth. The ten backdrops are
+graded from two layers of one jungle painting, which is why a wood shot through with light
+shafts comes out as ten different times of day.
+
+**What the chapter cost, and what it found.** No save schema change (v17 stands), no
+`progression.json` retune, no new art beyond the chapter's own strips and backdrops, no new
+loc key that is not derived from an id, and no server work beyond re-seeding — `config/progression`
+now carries 30 levels. What it *found* is invariant 5c: authoring against `LevelValidator`
+for a day turned up a rooted tile in the Mill Vale that had shipped a board the validator
+had never actually proved. The check now exists in all three places the rules live —
+`LevelValidator`, `Tools/verify/content.py` and `Tools/verify/author.py` — because a rule
+proved in one of them is a rule that drifts out of the other two.
+
+**Keeper names are unique — and it cost the save file nothing.** Two groves could stand on a
+board under one name, and the fix is one collection: `names/{fold}`, holding a uid, created in a
+transaction. Uniqueness is the **document id**, so it is enforced by Firestore's primary key at
+any concurrency, with no index, no scan and no query — see invariant 19d for why the obvious
+alternative is both racy and the shape that grows with the game.
+
+**The cost split is the design, and it is the part worth not re-litigating.** The hint under the
+rename field is a **direct document read** — one read, no function invocation — because it happens
+while somebody is typing; the claim is a **callable**, because it is the only part that has to be
+adjudicated, and it happens once or twice in the life of an account. The rules grant `get` and
+refuse `list`, so a player may ask about a name they typed and nobody may walk the reservations.
+`NameCheckScheduler` is what keeps the hint honest about cost: a pause rather than a keystroke,
+answers remembered, and a name that could never be reserved refused locally where it is free.
+Measured on the shipped debounce, a sixteen-character name typed straight through is **one read**;
+without it, sixteen — roughly a tenfold difference in the bill over the life of the game, which is
+why it is a class with no Unity types and eleven offline tests rather than a comment.
+
+**Uniqueness could never live in the save**, and that is what kept the schema at v17.
+`wallet.displayName` is still a preference merged by recency (invariant 11c) — no rule over two
+devices can decide a global fact — so the name became invariant 13's fourth clause: the client's
+copy is what its own screens draw, and the reservation is what a stranger sees. `boardName` now
+reads the confirmed name off the wallet document rather than the save, which is a security
+improvement on its own (invariant 19f) and cost one field on the one document a client cannot
+write.
+
+**A rename never fails.** Offline, signed out, or in a build with no backend, the name is stored
+and the panel closes; `publishGrove` claims whatever the save asks for when it differs from what
+is held, so the offline path needed no client-side retry state whatever. Re-claiming a name
+already held writes nothing, which is what makes that free. The panel keeps itself open for the
+two refusals a player can act on — **taken** (pick another) and **cooldown** (wait, and it says
+how long) — and closes for the two it cannot: **refused** applies the name and says it will not
+appear on the boards, because a name that quietly does not appear reads as the boards being
+broken, and **unavailable** is silent because renaming on a train should feel ordinary.
+
+**The vectors earned their keep on the first Editor run, three times over.** Unity's Mono and
+Node's ICU disagree about Unicode, and nothing but running both halves against one file can see
+it: `İzmir` folded two ways (U+0130 is the one character whose lowercase is longer than itself),
+Greek names ending in Σ diverged on Final_Sigma, Mono does not decompose the Latin ligature block,
+and Cherokee and Georgian Mtavruli were given lowercase after Mono's tables froze. `Agree` closes
+those by hand and **stops there on purpose** — 27 of the BMP's 256 blocks still disagree
+somewhere, measured rather than guessed, and closing them would mean shipping normalisation tables
+in a client to make a hint exact. Invariant 19e has why that is safe.
+
+**One bug found on the way, and it is invariant 12a one document over.** Every wallet write is
+`transaction.set` with no merge, so a field `readWallet` does not copy is a field the next sync
+deletes — the name would have vanished from the board on the player's next chest, silently, and
+the next publish would have re-claimed it, so all anybody would ever see is their name
+occasionally missing. `readWallet` carries it through now. The same read also stopped deciding
+"brand new account" from `snapshot.exists`, which stopped being that question the moment a second
+feature wrote to the document: a name claimed before the first sync would have created the wallet
+and handed the account the unbounded first streak claim that the seeded floor exists to prevent.
+
+Where the numbers land: **a check is one document read, a claim is one transaction**, renames are
+one or two per account ever, and nothing here scales with player count per operation. Save schema
+**v17 stands**, `progression.json` is untouched, and no reward path changed — nothing about a name
+pays currency. `NameCheckTests` adds 19 offline cases and `GroveBoardTests` three; the offline
+suite is **749**, the Editor suite **855** and the server suite **591**, all green.
+
+**What the panel does was moved out of the panel.** `RenameRules` holds the two branching
+decisions — what the line under the field reads, and what a claim's answer is worth — because a
+`switch` inside a `MonoBehaviour` is the one place here nothing can be proved about. The property
+worth having is written as one assertion over the enum: **for every answer the server can give,
+either the name is stored or the panel stays open with something to read, never neither.** A
+rename that silently vanishes is the failure this codebase has already shipped once for a
+different reason (invariant 11c), and that test covers outcomes added later without being edited.
+
+**Two fixes that had no guard now have one.** `functions/test/wallet.mjs` replays the
+whole-document write every wallet function performs, three times over, and fails if the name is
+dropped; it also pins that "brand new account" is decided by whether the server ever recorded
+currency rather than by the document existing. Both were checked against the *old* code first —
+they fail 5 assertions on it, which is the only way to know a guard guards anything. **Deployed 2026-08-20**: rules
+released with the `names` block, `claimName` created and the other eleven functions updated
+(`wallet.ts` and `grove.ts` are shared by all of them). The smoke test is **64/64 live**, the last
+fifteen of which walk two accounts racing for one name.
+
+One thing the live run caught that no unit test could, and it is this suite's own recurring
+lesson: the case hard-coded a name, and **a reservation is permanent and global**, so the first
+run claimed it and every run afterwards was correctly told it was taken. It uses a per-run tag now,
+exactly as the spend ids do. Before launch, the reservations that leaves behind get swept with the
+synthetic saves.
+
+**Hints are a pool, not an allowance — save schema v19.** A hint was three per glade,
+handed back in full at every board, charging +2 moves and stored nowhere. So it cost
+nothing and meant nothing: the only players who never used one were the ones who had not
+found the button. It is now an account-wide resource on a clock — **three in the pool, one
+back every eight hours** — spent wherever the player decides it is worth spending, which
+makes using one a decision. `LevelTuning.HintAllowance` is gone and must not come back.
+
+**The arithmetic is not written out twice.** Hearts had a produced/spent/due ledger with a
+merge proof attached (invariant 11b), and a second pool needs exactly that ledger with
+different numbers. Copying it is invariant 5b's mistake — five correct copies of "is this
+tile solved" until a tile appeared one of them had not been written for — and a lossless
+merge across an unknown number of devices is a worse thing to hold two copies of than a
+mask comparison. So `RegenLedger` (Domain/Persistence) is the walk, the spend, the grant
+and the join; `RegenPeriod` is how long one wait lasts and whether anything shortens it;
+`Hearts` and `Hints` are thin wrappers holding what is genuinely different about each.
+`Hearts` kept its whole public surface, so **the 37 existing heart tests are the proof the
+extraction changed nothing** — that was the point of doing it this way round.
+
+Four decisions worth not re-litigating. **The pool lives in `wallet`**, which is what kept
+this off the server entirely: `firestore.rules` constrains the save's top-level keys and has
+never constrained the wallet map's inner ones, so invariant 12a's four places came to three
+and **no rules deploy is needed**. **A v18 file needs no migration code** — `hintsProduced`
+of zero is unreachable for a real ledger (an account is seeded at the cap and the counter
+only rises), so an older save reads as a fresh full pool, which is v13's sentinel argument
+for the fourth time. **The ceiling equals the cap**, unlike hearts, so a granted hint at a
+full pool is *refused* rather than clamped — safe only because `RewardedAds.WouldBenefit`
+grew a second branch and hides the offer there. And **a hint charges no moves**: the hint is
+now the price, and charging moves as well is two punishments for one decision, the second of
+them invisible until the victory panel counts a star the player did not know they had lost.
+
+`hint_refill` is the fifth rewarded placement — offered from the hint button when the pool
+is empty, paying one, capped at five a day. It pays no currency, so `adCurrencyOf` answers
+null and the callback grants nothing; it needed **no server code beyond two list entries**
+(`AD_PLACEMENTS` and the seeder's `known`/`kinds`), both of which would otherwise have made
+the next `seed-config.mjs` run throw. Its LevelPlay ad units are created under both apps and
+filled in (`AdConfig`), with the reward item name set to `hint_refill` on each so
+`namedPlacement` can attribute a callback — which this placement never needs, since a hint
+is not currency, but which keeps the callback log free of refusals nobody would look into.
+
+The pool is content (`hints` in `progression.json`, `HintRuleTable`, `HintLimits`), beside
+the heart gate and for its reason: hearts decide how many attempts a day a player gets and
+hints decide how many of those they can rescue, so both multiply the count of glades
+finished per day, which is what every credit figure in that file is paid per.
+
+One thing deliberately *not* added: a permanent validator warning about the
+ceiling-equals-cap shape. It is the shipped configuration, so the warning would fire on
+every run for ever, and a warning that always fires is one nobody reads — the lesson
+invariant 4c states about the word "synced". Both validators print it as a fact instead, and
+the thing that has to be true because of it is held by code and pinned by a test.
+
+The one hazard this created is worth naming because the compiler was no help: removing
+`hintAllowance` from `LevelTuning`'s constructor left an `int` gap that five tests happily
+filled with their next positional argument, so `3` became a `budgetFactor` of 3. It compiled
+clean and the suite caught it. Same shape as `WithTime` versus `WithRun`.
+
+One bug this introduced and a review caught before it shipped: `AdOfferOverlay` raises
+**exactly one** of `Rewarded` and `Dismissed` (the paid branch does not also dismiss), so
+unlocking the board in only the dismissed handler left a player who actually watched the
+video sitting on a frozen board with a stopped clock. Both handlers call `CloseHintOffer`
+now, which restores the latch to what it was rather than clearing it. Third time this file
+has learned that the safe outcome has to be what *every* exit does.
+
+`HintsTests` adds 21 offline cases and `CloudWireTests` two; the offline suite is **771**,
+the Editor suite **890 of 891** (the one failure is the batch-mode bundle-id artefact, not a
+defect), and the server suite unchanged and green.
+
+**Live as of 2026-08-21.** `config/progression` re-seeded — five ad placements now, with
+`hint_refill` paying one hint — and all twelve functions redeployed for the one line
+`hint_refill` added to `AD_PLACEMENTS`. The smoke test is **64/64 live** against the new
+deploy. No `firestore.rules` change was needed or made: `hasOnly` constrains the save's
+top-level keys and has never constrained the wallet map's inner ones. Both LevelPlay ad units
+exist and are filled in `AdConfig`.
+
+**Chapters two and three, rebuilt — the mechanics reject something now.** Reported from
+play as "the glades are pretty easy, and some mechanics don't even make sense — I can
+complete a glade with brittle conduits, taproots and duskcaps on it as if they aren't
+there". That was exactly right, and it turned out to be measurable rather than a matter of
+taste. `Tools/verify/difficulty.py` is the instrument: it enumerates every arrangement in
+which **every arm mates and none dangles** — the tidy boards a player plausibly arrives at
+— and then asks which of them win.
+
+**Twenty-two of the thirty shipped glades had exactly one such arrangement.** That is the
+whole diagnosis in one number: if the arms admit one tidy board and that board wins, then
+the brittle stone, the taproots and the duskcaps rejected nothing and could all have been
+deleted without changing a single solution. `dark` — arrangements the duskcaps alone
+reject — was **zero on every duskcap board that had ever shipped**. Every brittle conduit
+sat on a tile the arms already forced, so it never asked anybody to know anything. Every
+taproot removed nothing.
+
+Two causes, and both are now written into `CONTENT.md` under *What makes a glade hard*.
+
+**The boards were open ground.** Corridors a tile or two wide with empty cells either side,
+so an arm had almost nowhere to point and nearly every tile read at a glance. Filling the
+ground is the fix, with two riders: no four-armed conduits (inert, so they read as
+nothing), and no spine along the board's edge — a straight or a tee on an edge is forced by
+the edge, while a critter or an elbow is not. On the shipped 7x7s that is the difference
+between `glance 21/49` and `40/49`.
+
+**And a twisted crossing is the cheapest honest decision a board can carry**, which is what
+every other mechanic now rides on. It wears all four arms at every angle, so nothing about
+the arms can settle it and only colour or the dark can. Brittle stone therefore sits on a
+crossing — a tile the player *cannot* simply try — at `~2` against one turn owed, which is
+exactly one wrong guess. A taproot binds two crossings in opposite corners, so one tap
+answers both. And a duskcap's ford sits on a **cycle** of the live network, which is the
+single decision that separates a shadow that matters from a shadow that is scenery: turning
+that ford joins the dark to the grove *while every critter stays lit*, so it is an
+arrangement that looks finished and will not settle. If the wrong turn also puts a critter
+out, the critter tells the player and the duskcap taught them nothing.
+
+**`hazards` was the wrong metric and a whole chapter was authored to it.** It counts places
+where *some* rotation would mate two networks — but such a rotation almost always leaves an
+arm dangling somewhere else, so it is not a board anybody reaches. The Amberwood scored 5 to
+20 hazards a glade and still admitted one tidy arrangement on eight of ten boards.
+
+Where the twenty rebuilt glades land: `arms` runs 2 → 32 with **`wins` 1 on every one of
+them**, `glance` runs 21/42 to 48/56, both duskcap boards in each chapter reject six or
+seven arrangements the critters accept, every brittle conduit is a tile only colour can
+settle, and both taproots remove real arrangements. Every glade kept its id, its name, its
+map position, its palette and its subject — a `LevelId` is permanent (invariant 1) and the
+art is cut from the chapter's own JSON, so nothing outside the two `rows` arrays moved.
+
+**What this cost, and what it did not.** No save schema change (v17 stands), no
+`progression.json` retune, no server work, no new art and no new loc key that is not derived
+from an id — six `lesson` strings were rewritten because their boards changed. `timeFactor`
+runs a notch looser at the head of each chapter and lands where it did at the foot (the Vale
+1.95 → 1.55, the Amberwood 1.85 → 1.50): a board that has to be *read* rather than fitted
+needs a little more room to be read in, and the star lines do not move with it — three stars
+is `par × 1.00` seconds however long the limit is — so a clear is worth exactly what it was
+worth and only the point where a run is *lost* moved. Difficulty went into the boards, which
+is where it was asked for. `clockScale` remains the lever once there is a clear-rate to aim
+at.
+
+The Mill Vale now has a Python source beside the Amberwood's (`Tools/chapters/c02_millvale.py`),
+both `--check` clean against the shipped JSON. Offline suite 750, Editor suite 870, `Validate
+Content` 30 levels across 3 chapters with no errors.
+
+One thing this exposed and did **not** fix, because it is a different feature: `Sync Manifest`
+bumps a chapter's `version` only when its **level list** changes, so rewriting every board in
+a chapter leaves the version alone — and `ContentRefresher` uses exactly that number to decide
+whether to refetch a cached body. Harmless while `ContentConfig.RemoteBaseUrl` is unset and the
+bodies ship inside the app; the day remote delivery is switched on, a content-only drop would
+never reach anybody who had already cached the chapter. The fix wants a digest of the body in
+the manifest entry, which `ManifestSync.SurvivesRoundTrip` would then police.
+
+**Switching accounts, rebuilt — the switch stopped being a download.** Reported from play,
+and the report is worth quoting because every sentence in it was the game's fault: switching
+between two of the owner's own Google accounts gave "couldn't load this account's progress",
+then a panel reading "this phone is signed in as someone else" with a **FIX THIS** button,
+then — after choosing the same account again — "this account is already used by another
+player · you will lose 26 finished levels and level 7 from this phone". Nothing was lost and
+nothing was ever at risk. One document read had failed.
+
+**The root cause was an ordering, not a bug.** The switch was secure → authenticate → fetch →
+replace, so *reading the incoming grove over the network decided whether the switch happened*.
+That read runs in the frame after an OAuth browser hands control back, which is the single most
+fragile moment in an app's life — the process has just been foregrounded and the Firestore
+stream has just been re-authenticated — and its failure left the device authenticated as one
+account holding another's save, syncing nothing, with `AccountGate` correctly refusing
+everything. The recovery path then made it worse: tapping a provider from that state ran
+`ResumeAccountAsync`, which proceeds *only* if the credential names the account the save
+already belongs to, and answered a legitimate second account with `DifferentAccount` — which
+the panel rendered as the destructive adopt prompt, priced in glades that were sitting safely
+on the server the whole time.
+
+**`SaveService.SwitchTo` is the fix and invariant 17a is the rule.** The swap is local: the
+outgoing grove is copied into `IAccountArchive` under its own account and the incoming one
+restored from there if this device has played it before, so once the credential is in hand the
+switch is finished and cannot stop halfway. The server is asked afterwards by an ordinary sync
+— pull, monotonic join, push, retried on `SyncScheduler`'s backoff like every other sync — so
+its failure decides which of two *true* sentences the screen says and nothing else. Switching
+back to an account played here before needs no network at all.
+
+`AccountArchiveStore` is one folder per account under `accounts/`, each holding an ordinary save
+file, and it **reuses `SaveStore`** rather than writing JSON itself: the atomic write, the backup
+rotation, the corrupt-file recovery and the checksum are the hard parts of persistence, they are
+already right, and they are already tested against a real filesystem — invariant 5b's lesson in
+the file with least reason to relearn it. The folder name is an FNV-1a hash of the uid (a uid is
+an opaque provider token and this build must never be why one turns out not to be a legal path
+segment) and the id is stored *inside* the file, which is what makes the hash safe: a slot that
+does not name the account being asked for is discarded rather than adopted. Six slots are kept,
+newest first — it is a **cache, not a backup**, so an eviction loses a copy and never a grove.
+
+**Four states stopped existing, and one refusal grew a repair.** `SwitchOutcome.Interrupted`
+and `DifferentAccount` are gone with `ResumeAccountAsync`; `SwitchOutcome.Pending` replaces
+them, meaning "signed in, and the server has not been reached, so it cannot yet say whether
+this account has a grove" — which exists so the panel never tells somebody with three chapters
+behind them that they are starting fresh. And `AccountGate`'s refusal is now completed
+**forward**, silently: Firebase persists its signed-in user before this code sees it and the
+session only ever moves because a player chose an account, so a disagreement means the
+authentication got further than the file did. `SaveService.Wipe` went with all of it — nothing
+called it once a switch stopped meaning "erase what is here", and erasing cleared the pre-1.0
+PlayerPrefs keys, which belong to whoever installed the game on the handset rather than to
+whichever account is signed in this minute.
+
+**Two smaller faults found on the way, both of which put a false sentence on screen.** The
+securing sync used `SyncAsync`, which answers `Busy` the instant the latch is held — and a sync
+starts on every foreground, which is exactly when somebody opens the account panel, so the
+commonest moment to switch was the likeliest to be told "we could not save your grove".
+`SyncPatientlyAsync` waits it out (`ClaimAsync`'s reasoning one level up, same budget) and
+retries contention only. And closing the provider's sheet was classified as
+`CloudFailure.Offline`, so backing out of a consent screen said "no internet connection";
+`CloudFailure.Cancelled` is its own answer now.
+
+**The panel can finally name the account.** `CloudIdentity.Label` carries the provider's email
+or display name — display only, never compared, never stored, never keyed on — because two
+Google accounts belonging to one person routinely share a display name, and without it both
+sides of a switch said "your progress is saved online" and neither said *which* grove was on
+the phone. Google's scopes gained `email` for it. Every other string in the flow was rewritten
+under one rule: **never name a loss that is not happening, and never call the player's own
+second account a stranger.** The destructive prompt survives, narrowed to the one case it was
+ever about — a *guest* whose provider already carries a grove, reachable from linking and from
+nothing else — so its copy can say what is actually true of a guest.
+
+**One thing the Editor run caught that no offline test could, and it is a product bug rather
+than a fixture one.** Whether a switch reports *"welcome back · 26 finished levels"* or *"here
+is a new grove"* was read off `PlayerProgression.ClearedGlades`, which drops any record the
+catalog has never heard of — correct there, because an unrecognised level must never mint
+credits, and wrong for a sentence. Before the content index has loaded it answers **zero**, so
+the panel would greet a three-chapter grove as an empty one. `PlayerProgress.ClearedCount`
+counts the records themselves and is what the account screen asks now, along with `HoldsAGrove`
+— which also gates the destructive prompt, where the same zero would have removed a warning
+rather than added one.
+
+**What this cost:** no save schema change (v19 stands), no `progression.json` retune, no server
+work and no deploy — `firestore.rules` is untouched, because an archive never leaves the device.
+`AccountArchiveTests` adds 7 cases and `AccountSwitchTests` was rewritten to 21; the offline
+suite is **787**. Twelve of the feature's cases still need Test Runner, all of them because
+`RunGuard` and `Application.temporaryCachePath` are `PlayerPrefs` and native by design.
+
+One thing worth having anyway: `Tools/verify/runner` now clears `Debug.unityLogger.logEnabled`
+before running. `Debug.Log` reaches an extern handler, so the *first log line on a path* used to
+end a test with "ECall methods must be packaged into a system module" before any assertion was
+evaluated — which quietly decided which rules could be proved offline, and the cloud and save
+layers warn on exactly the paths worth testing. Measured on this suite it moves **fourteen**
+cases from Editor-only to offline (110 → 96), including the two that matter most here: that a
+sync never pushes a grove to an account it does not belong to, and that a repair never mixes two
+groves together. The cost is that a test asserting on log output cannot run offline — those use
+`LogAssert`, which needs the Editor anyway.
+
+**Consent, ATT and app-ads.txt — the ad plumbing that decides what an impression is worth.**
+Reported as "how will I show ads to millions of users" after a day of `Mediation No fill (509)`
+on every placement. The 509s were demand-side and expected (two adapters installed, app not on
+a store yet), but the question exposed three things that were genuinely missing and would each
+have cost real money silently.
+
+**Nothing here changes gameplay and nothing here is stored.** The save file gains no field,
+`progression.json` gains no block, and no server code moved. That is not a small mercy — it is
+the design. A consent answer is per-device, revocable and therefore **not monotonic**, which is
+exactly the shape invariant 11b forbids in a save file; and the CMP already keeps its own
+record in the form the ad networks read. A copy of ours would be a second source of truth for a
+value we neither own nor parse, and it would be the copy that went stale.
+
+**The ordering is the whole feature, and it lives in one method.** `RewardedAds.StartAsync`
+resolves consent, applies it to the provider, and only then initialises. A mediation SDK that
+starts before it has been told has already decided what it may collect and has already
+auctioned on that decision — a signal applied afterwards changes the next request and cannot
+undo the first. Put anywhere a caller can get the order wrong, it eventually is wrong, so
+`Boot` installs and the splash calls one thing. `LevelPlayAdProvider.InitializeAsync` also
+refuses to start unconfigured, applying `AdPrivacySignals.Restricted` and warning, because the
+failure it prevents is unrecoverable in the one direction that matters.
+
+Four decisions worth not re-litigating. **The seam is `IConsentGateway` in Domain**, naming no
+SDK type — `IAdProvider`'s bargain for the third time, and it is what lets the ordering, the
+derived rule and the failure paths all be proved offline against a fake, on a subsystem the
+Editor never exercises. **The CMP is Google UMP** rather than a dialog of our own: a hand-rolled
+prompt cannot tell whether a player is in the EEA (so it interrupts everybody or nobody), cannot
+write the IAB TCF string the adapters actually read (so a consenting player still counts as
+non-consented and the revenue never arrives), and does not satisfy Google's EU User Consent
+Policy once AdMob is in the waterfall. **Every failure lands on the restrictive answer** — a CMP
+that throws, times out, or was never installed leaves personalisation off and the game running,
+because the cost of guessing the other way is personalised ads served to somebody who was never
+asked. And **a build with no ad provider asks nobody anything**, which is a guard rather than a
+happy accident: without it a consent form and Apple's prompt would appear on a build that cannot
+show a single ad.
+
+**ATT is hand-written rather than a package** (`AppTrackingPrompt` plus a 40-line `.mm`). Unity's
+iOS-support package is another dependency to resolve for one framework call, and the mediation
+SDKs that ship their own helper each want to own the timing — which is the one thing that has to
+stay ours. It **polls rather than taking Apple's completion handler**, deliberately: bridging a
+callback needs a static function pointer and a `MonoPInvokeCallback`, which is a known way to
+crash on IL2CPP, for a value already readable from the framework. `IosPrivacyPlist` writes
+`NSUserTrackingUsageDescription` at build time, because Unity has no field for it and iOS
+**silently refuses to show the prompt** without it — the dialog never appears, every player is
+non-consented, and the build passes review with iOS revenue near zero.
+
+`app-ads.txt` is in the repository root rather than pasted onto a server once, so it is reviewed
+in a diff beside the mediation change that made it wrong. Every line in it is a placeholder and
+the file says so.
+
+**The CMP is installed as a vendored UPM tarball, and the route matters.** Google publishes the
+Mobile Ads plugin to GitHub as a `.unitypackage` and to OpenUPM as a package, and to
+`dl.google.com` — where every other Google package here comes from — not at all. The
+`.unitypackage` is the wrong one and would fail *silently*: it unpacks as loose files under
+`Assets/`, so it is not a package, so it carries no version, so `versionDefines` never fires,
+`GLIMMER_UMP` is never defined, `UmpConsentGateway` compiles to nothing and nobody is ever asked
+anything. So `GooglePackages/fetch.ps1` grew a per-package registry and pulls
+`com.google.ads.mobile` 11.4.0 from OpenUPM beside the Firebase tarballs, and
+`Packages/manifest.json` references it by relative path exactly as they are. EDM went to
+**1.2.187** with it, which the ads plugin requires and Firebase accepts — a UPM dependency
+version is a minimum, not a pin.
+
+Every symbol the gateway uses was checked against the shipped `GoogleMobileAds.Ump.dll` before
+this was believed, because the file had been written against documentation alone. It still has
+**never been compiled**: the offline check deliberately builds the privacy assembly *without*
+the define, which proves only that a fresh clone compiles, so it wants a real compile the first
+time the Editor resolves the package.
+
+**The next Android build will fail until an AdMob app id is set**, and that is by design rather
+than a bug — `ManifestProcessor` calls `StopBuildWithMessage` on an empty id rather than letting
+a build ship that would crash at launch. So installing the CMP requires an AdMob account and an
+app registered in it, which is wanted anyway: AdMob is the largest source of rewarded demand and
+is also what makes the certified-CMP requirement bite. Set it in
+`Assets ▸ Google Mobile Ads ▸ Settings`. Then: fill in `app-ads.txt` from each network's
+dashboard and host it on the domain in **both** store listings, add the adapters that are
+actually missing (AdMob first — it is the largest source of rewarded demand, and it is also what
+makes the certified-CMP requirement bite), and turn on in-app bidding.
+
+`PrivacyTests` adds 11 offline cases; the offline suite is **798**.
+
+**A guest can buy, and is told what that costs — no field, no schema bump, no deploy.** The
+game signs a player in anonymously on the splash and is fully playable having never seen
+`AccountOverlay`, which is right; what was missing is that the shop takes real money on that
+same anonymous account. An anonymous credential lives in the app's own storage and no server
+can mint it again, so a reinstall or a lost phone takes the uid and everything keyed on it.
+For progress that is bad. For money it is worse and differently shaped: `receipts/{store}__{txn}`
+is keyed **globally** — correctly, because replaying one real receipt across thousands of
+accounts is the industrialised attack (invariant 18a) — so a fresh installation presenting the
+same transaction is refused as a replay. A purchase made anonymously and then lost is therefore
+**unrecoverable by any route, including the stores' own restore**. Nobody can give it back.
+
+**The answer is not a login wall, and that is the design rather than a concession.** Blocking
+the buy is where conversion dies: the payment sheet *is* the confirmation (`ShopScreen.Tap`
+already argues it), and an OAuth consent screen is worse than a panel because it backgrounds the
+app mid-decision — a player talked out of a purchase by the dialog protecting that purchase.
+Nobody in the market gates purchases behind login either. So the warning splits in two by
+**cost to the player**: a standing bar that costs no tap, and one modal placed where it costs no
+sale.
+
+**The bar** sits under the shelf tabs on the three shelves priced in money, and reaches the grid
+rather than floating over it — `PaintNotice` reserves its height out of the viewport only while
+it is drawn, so a linked player and the supplies shelf are pixel-identical to what shipped.
+Supplies are deliberately exempt: hearts and boosts are bought with gems and live in the save,
+which merges into whatever account the device eventually links, so nothing bought there can be
+lost and a sentence that is false on one shelf is how a warning gets read past everywhere.
+
+**The modal** is chained behind `ShopGrantOverlay` on `Dismissed`, so it is raised only after the
+server has actually granted — the sale banked, the goods on screen, and "keep what you just
+bought" the easiest sentence in the game to agree with. `Dismissed` is raised from `OnDestroy`
+for `AdOfferOverlay`'s reason: four exits, and anything wired to one of them fires from one of
+them.
+
+**`AccountPromptPolicy` (Domain) is the rule, and the split it makes is the part worth not
+re-litigating.** Two budgets — 2 chapter asks, 3 purchase asks — because those reach different
+populations and a player who buys gems in week one must not burn the nudge aimed at everybody
+who never will. **One shared quiet period** (48h), because that answers a different question:
+not "have we made this case yet" but "how often may this game interrupt somebody", and the
+answer cannot depend on which subsystem is interrupting. Without it, finishing a chapter and
+then buying a coin pack meets two account panels inside a minute. The generous spacing is safe
+precisely *because* the bar carries the message between asks.
+
+It holds no clock and reaches nothing — handed the time and the account's state, `SyncScheduler`'s
+bargain — so all sixteen cases run offline, which matters here more than usual because every
+state it is about (a live session, a real purchase, a device away two days) is one the Editor
+never reaches. Persistence is the caller's, `GrovePublishPolicy`'s rule: the counts are
+`PlayerPrefs` and must never enter the save, since merged they would arrive on a second device
+as a reason to stay quiet — backwards, because a second device is a player with *more* to lose.
+`AccountPrompts` keeps the shipped `account_prompt_count` key, so an installation that has
+already declined twice is not handed a fresh allowance. One case earns the file on its own:
+the obvious `now - last < Quiet` is negative when a player moves their device clock forward,
+reads as "inside the quiet period", and silences every prompt for the life of the installation
+with nothing able to write a smaller stamp. Checked against the naive rule first — it fails
+exactly that test.
+
+**`CloudSaveService.IdentityChanged` came out of it and is the more general fix.** Every screen
+saying something about the account samples `IsLinked` once in `Build`, and nothing told any of
+them when it moved — so a player who tapped the bar, linked, and came back met a shelf still
+saying their purchases were stranded. The panel that changes it has four exits, which is the
+companion screens' bug exactly; an event cannot be forgotten. `NoteIdentity` compares before it
+raises, so it is idempotent and safe from anywhere; `Agreed`/`Disagreed` call it for immediacy
+and `Tick` polls it at 2Hz as the backstop, because `CurrentIdentity` walks the provider list
+and builds a label, and doing that per frame is how a menu screen starts allocating. The first
+sample is recorded silently — there is nothing to announce about the state the game booted in.
+
+What it cost: **no save schema change (v17 stands), no `progression.json` retune, no server work
+and no deploy** — nothing here adjudicates anything. Two loc keys, `AccountPromptTests` adds 16
+offline cases, and the offline suite is **814**.
+
+**`ProfileScreen.BuildBody` was fixed to take the event, and it needed three things rather than
+one.** It creates the scrolling body and is called again whenever something moves more than one
+card — a card's position is the running cursor, so one that changes height moves every card
+below it. It **never destroyed what it replaced**, so the board-visibility toggle left a whole
+viewport behind on every tap, stacked over the live one and still carrying its invisible drag
+catcher: a leak that also stopped the page scrolling properly. It now hides before destroying,
+which this screen already did in `PaintCompanions` and did not do here. It **replayed the
+staggered entrance** on every rebuild, so `_entered` splits arriving from redrawing — `GridView`'s
+`Show`/`Refresh` rule, in the one place on this screen that had no equivalent, and anything
+raised by an event is a redraw. And it **returned the player to the top of the page**, so the
+scroll offset is now carried across and clamped to the new content height, since the account card
+grows a line when the provider names the account. With all three done, `IdentityChanged` is wired
+and the account card stops saying "your progress is saved only on this phone" to somebody who
+linked thirty seconds ago in a panel raised over it.
 
 Not done, deliberate: **Play Games Services**
 (better Android sign-in and the natural home for the "ranks" leaderboards, but

@@ -1,0 +1,211 @@
+{
+  "schemaVersion": 2,
+  "id": "c03_amberwood",
+  "accent": "#FFC24A",
+  "slate": "#33240F",
+  "backdrop": "c03_play_0",
+  "mapStrips": [
+    "c03_strip0",
+    "c03_strip1",
+    "c03_strip2",
+    "c03_strip3",
+    "c03_strip4"
+  ],
+  "teaserX": 0.3,
+  "levels": [
+    {
+      "id": "c03_amberlight",
+      "width": 6,
+      "height": 6,
+      "mapX": 0.28,
+      "mapY": 0.06,
+      "timeFactor": 1.85,
+      "rows": [
+        "-ES/2 -SW/0 @E#R/1 -ESW/1 @W#R/2 @S#A/0",
+        "@N#R/0 *NE#R/1 -ESW/1 -NEW/0 -EW/0 -NW/0",
+        "-ES/1 *EW#R/0 =NE+SW/1 @W#R/2 -ES/1 -SW/1",
+        "@N#Y/0 @E#Y/0 -NEW/0 -EW/0 *NW#G/0 @N#Y/1",
+        "-ES/0 -EW/1 -ESW/1 -ESW/0 *ESW#G/0 @W#G/1",
+        "-NE/0 @W#G/3 @N#A/1 @N#G/0 -NE/2 @W#A/0"
+      ]
+    },
+    {
+      "id": "c03_two_lights",
+      "width": 6,
+      "height": 7,
+      "mapX": 0.72,
+      "mapY": 0.145,
+      "timeFactor": 1.8,
+      "accent": "#FF8A5C",
+      "slate": "#351C14",
+      "backdrop": "c03_play_1",
+      "rows": [
+        "-ES/3 -SW/2 @E#Y/1 -ESW/3 @W#Y/3 @S#A/2",
+        "@N#A/1 *NE#R/0 -ESW/0 -NEW/0 *ESW#G/0 -NW/0",
+        "@E#R/1 -ESW/2 =NE+SW/1 -SW/0 -NE/1 @W#Y/0",
+        "@E#A/2 -NESW/0 -NW/2 -NS/0 @S#R/0 @S#A/0",
+        "@E#R/0 -NSW/1 @E#Y/3 =NW+ES/1 -NSW/3 -NS/1",
+        "@S#A/1 *NES#R/1 -ESW/3 -NESW/0 -NEW/2 -NSW/0",
+        "-NE/2 -NW/0 @N#R/3 -NE/0 @W#R/2 @N#R/1"
+      ]
+    },
+    {
+      "id": "c03_the_verdigris",
+      "width": 7,
+      "height": 6,
+      "mapX": 0.26,
+      "mapY": 0.225,
+      "timeFactor": 1.75,
+      "accent": "#4FD1C5",
+      "slate": "#0F2E2C",
+      "backdrop": "c03_play_2",
+      "rows": [
+        "-ES/2 -SW/1 @S#B/0 @S#A/2 @S#B/2 -ES/0 -SW/2",
+        "@N#A/2 *NE#B/0 -NESW/0 -NEW/0 -NEW/2 -NW/2 @N#B/1",
+        "@E#C/2 -ESW/3 =NE+SW/1 @W#B/1 -ES/2 *EW#B/0 @W#C/0",
+        "@E#C/0 *NEW#G/1 -NEW/3 -EW/0 =ES+NW/1 @W#G/3 @S#A/0",
+        "-ES/0 *EW#G/0 -ESW/3 -ESW/0 -NESW/0 -SW/1 @NS#G/0",
+        "-NE/0 @W#A/2 @N#G/0 @N#A/2 @N#G/2 -NE/0 -NW/3"
+      ]
+    },
+    {
+      "id": "c03_foxfire",
+      "width": 7,
+      "height": 6,
+      "mapX": 0.7,
+      "mapY": 0.305,
+      "timeFactor": 1.75,
+      "accent": "#E86AD8",
+      "slate": "#2E1233",
+      "backdrop": "c03_play_3",
+      "rows": [
+        "-ES/3 -SW/2 @S#R/2 @S#A/3 @S#R/1 -ES/1 -SW/2",
+        "@N#A/0 *NE#R/3 -NESW/0 -NEW/1 -NEW/2 -NW/1 @N#R/0",
+        "@E#M/0 -ESW/2 =NE+SW/1~2 @W#R/1 -ES/3 *EW#B/0 @W#M/0",
+        "@E#M/3 *NEW#R/0 -NEW/1 -EW/0 =ES+NW/1~2 @W#B/2 @S#A/1",
+        "-ES/3 *EW#B/0 -ESW/0 -ESW/3 -NESW/0 -SW/3 @NS#B/0",
+        "-NE/2 @W#A/1 @N#B/0 @N#A/0 @N#B/1 -NE/2 -NW/0"
+      ]
+    },
+    {
+      "id": "c03_the_quiet_hollow",
+      "width": 7,
+      "height": 7,
+      "mapX": 0.3,
+      "mapY": 0.39,
+      "timeFactor": 1.7,
+      "accent": "#A98BFF",
+      "slate": "#1C1830",
+      "backdrop": "c03_play_4",
+      "rows": [
+        "-ES/3 -SW/2 @E#Y/2 -ESW/3 @W#Y/1 -ES/1 -SW/2",
+        "@N#A/0 *NES#R/3 -ESW/1 -NEW/1 -ESW/2 -NSW/0 @N#A/0",
+        "@S#Y/0 -NES/2 =NW+ES/1 -ESW/1 =NE+SW/1 -NSW/0 @S#Y/0",
+        "-NES/3 -NSW/0 -NES/1 xNSW/2 -NS/0 -NES/2 -NSW/1",
+        "@N#Y/0 -NES/0 =SW+NE/1 -NEW/3 xNW/0 -NS/0 @N#Y/2",
+        "@S#A/2 -NES/1 -NEW/0 -ESW/0 -EW/0 *NEW#G/2 -SW/0",
+        "-NE/0 -NW/0 @E#Y/0 -NEW/3 @W#Y/0 @E#A/3 -NW/1"
+      ]
+    },
+    {
+      "id": "c03_rootbound",
+      "width": 7,
+      "height": 7,
+      "mapX": 0.74,
+      "mapY": 0.475,
+      "timeFactor": 1.7,
+      "accent": "#C9D94A",
+      "slate": "#262B12",
+      "backdrop": "c03_play_5",
+      "rows": [
+        "-ES/3 -SW/2 @E#Y/1 -ESW/3 @W#Y/0 -ES/0 @W#A/3",
+        "@N#A/1 *NE#R/0 -ESW/0 -NEW/0 -ESW/0 *NESW#G/0 -SW/1",
+        "@E#G/1 -ESW/2 =NE+SW/1&A -SW/0 @N#Y/1 -NS/0 @NS#A/0",
+        "@E#A/0 -NSW/0 -NE/2 =NE+SW/1&A -SW/0 @N#Y/0 -NS/0",
+        "@E#G/0 -NSW/1 @S#G/3 -NE/0 =NE+SW/1&A -SW/3 @NS#Y/0",
+        "@S#A/1 *NES#G/1 -NEW/3 -ESW/0 -NEW/0 =NE+SW/1 -NW/0",
+        "-NE/2 -NW/0 @E#G/3 -NEW/0 @W#G/2 -NE/0 @W#A/2"
+      ]
+    },
+    {
+      "id": "c03_three_springs",
+      "width": 7,
+      "height": 7,
+      "mapX": 0.28,
+      "mapY": 0.555,
+      "timeFactor": 1.65,
+      "accent": "#7FD6FF",
+      "slate": "#10243A",
+      "backdrop": "c03_play_6",
+      "rows": [
+        "-ES/0 -SW/2 @E#Y/2 -ESW/3 @W#Y/3 -ES/3 @SW#A/1",
+        "@N#A/3 *NE#R/1 -ESW/3 -NEW/0 -ESW/3 *NW#G/0 @N#Y/2",
+        "@E#M/1 -ESW/0 =NE+SW/1 @EW#Y/1 =NW+ES/1 -ESW/2 @W#M/2",
+        "@E#A/2 *NEW#R/2 -NEW/3 @EW#M/1 -NESW/0 *NESW#B/0 @W#A/1",
+        "@E#C/0 -SW/1 @S#C/0 -ES/0 =NE+SW/1 -NW/0 @S#C/0",
+        "@S#A/1 *NES#G/1 -NESW/0 -NESW/0 -NESW/0 *ESW#B/2 -NSW/0",
+        "-NE/0 -NW/2 @N#C/1 @N#A/2 @N#C/1 -NE/1 -NW/0"
+      ]
+    },
+    {
+      "id": "c03_under_the_lanterns",
+      "width": 7,
+      "height": 7,
+      "mapX": 0.7,
+      "mapY": 0.64,
+      "timeFactor": 1.6,
+      "accent": "#FFE08A",
+      "slate": "#30291A",
+      "backdrop": "c03_play_7",
+      "rows": [
+        "*ES#R/2 -ESW/2 -EW/1 @W#R/0 @E#G/3 -ESW/2 *SW#G/0",
+        "-NES/0 =ES+NW/1 -ESW/1 *EW#R/0 -ESW/0 =SW+NE/1 -NSW/3",
+        "@NS#A/1 -NS/0 @N#W/0 @S#W/0 @N#W/0 -NS/1 @NS#A/0",
+        "@N#R/3 *NES#G/3 @W#W/2 -NS/0 @E#W/3 *NSW#B/1 @N#G/0",
+        "@S#Y/2 -NS/1 @S#W/3 -NS/0 @S#W/1 -NS/0 @S#B/3",
+        "-NES/1 =NE+SW/1 -NEW/2 -NEW/3 -NEW/0 =NW+ES/1 -NSW/3",
+        "*NE#R/1 -NEW/1 *EW#G/1 @W#Y/1 @E#B/3 -NEW/1 *NW#B/1"
+      ]
+    },
+    {
+      "id": "c03_the_ashen_path",
+      "width": 8,
+      "height": 7,
+      "mapX": 0.24,
+      "mapY": 0.725,
+      "timeFactor": 1.55,
+      "accent": "#D9A05B",
+      "slate": "#2A211A",
+      "backdrop": "c03_play_8",
+      "rows": [
+        "-ES/1 -SW/0 @S#Y/1 @S#A/2 @S#Y/0 @S#A/2 -ES/3 -SW/2",
+        "@N#Y/0 -NES/2 -NEW/1 *NEW#R/0 -NEW/0 -NEW/2 -NSW/2 @N#Y/2",
+        "-ES/3 =NE+SW/1 -EW/0 -EW/1 *EW#G/1 -EW/1 =NW+ES/1~2 -SW/1",
+        "xNS/0 -NES/3 -EW/0 xEW/0 -EW/0 -EW/1 -NSW/0 xNS/0",
+        "-NE/1 =ES+NW/1~2 -EW/0 -EW/1 -EW/1 -EW/0 =SW+NE/1 -NW/0",
+        "@S#B/2 -NES/0 -ESW/0 *ESW#B/0 -ESW/0 -ESW/3 -NSW/0 @S#B/2",
+        "-NE/0 -NW/2 @N#B/3 @N#A/1 @N#B/2 @N#A/0 -NE/0 -NW/0"
+      ]
+    },
+    {
+      "id": "c03_the_amberwood_knot",
+      "width": 8,
+      "height": 7,
+      "mapX": 0.72,
+      "mapY": 0.815,
+      "timeFactor": 1.5,
+      "accent": "#F0803C",
+      "slate": "#3A1E10",
+      "backdrop": "c03_play_9",
+      "rows": [
+        "-ES/3 -SW/2 @S#Y/1 @S#A/3 @S#Y/3 @S#A/2 -ES/3 -SW/3",
+        "@N#Y/1 -NES/2 -NEW/0 *NEW#R/0 -NEW/0 -NEW/0 -NSW/1 @N#Y/0",
+        "@E#R/1 =NE+SW/1&A -EW/1 *EW#G/1 -EW/1 -EW/0 =NW+ES/1~2 @W#R/3",
+        "@E#R/2 -NEW/3 -EW/0 -EW/1 *EW#R/0 -EW/0 -NEW/0 @W#R/1",
+        "@E#C/2 -ESW/1 -EW/1 *EW#G/0 -EW/1 -EW/1 -ESW/2 @W#C/3",
+        "-ES/1 =NE+SW/1~2 -ESW/3 *ESW#B/3 -ESW/2 -ESW/2 =NW+ES/1&A -SW/0",
+        "xNE/2 -NW/3 @N#C/3 @N#A/0 @N#C/2 @N#A/1 -NE/2 xNW/2"
+      ]
+    }
+  ]
+}

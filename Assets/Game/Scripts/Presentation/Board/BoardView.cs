@@ -57,13 +57,24 @@ namespace GlimmerGrove
         /// <summary>One tile's transform, for anything that needs to point at the board.</summary>
         public RectTransform TileAt(int index)
             => _byIndex.TryGetValue(index, out var tile) ? (RectTransform)tile.transform : null;
-        public int HintsLeft { get; private set; }
+        /// <summary>
+        /// Whether the board has a hint to give right now.
+        ///
+        /// <para>
+        /// Asked separately from <see cref="Hint"/> because the two refusals are different
+        /// questions with different answers, and only one of them costs anything. This one
+        /// is "there is nothing left to point at" — every turnable tile is already where the
+        /// solution wants it, which happens on a board finished but for its rooted stubs.
+        /// Whether the <em>player</em> can afford a hint is not a fact about a board and is
+        /// decided by <c>PlayScreen</c> against the account pool.
+        /// </para>
+        /// </summary>
+        public bool CanHint => !Locked && !_celebrating && P.NextHint() >= 0;
 
-        public void Build(RectTransform host, Puzzle puzzle, Pal.BoardTheme theme, int hints = 3)
+        public void Build(RectTransform host, Puzzle puzzle, Pal.BoardTheme theme)
         {
             P = puzzle;
             _theme = theme;
-            HintsLeft = hints;
             _start = puzzle.Snapshot();
 
             var rect = host.rect;
@@ -481,20 +492,37 @@ namespace GlimmerGrove
             // ever move the count away from the limit.
         }
 
+        /// <summary>
+        /// Turns the tile nearest the crystal that is still wrong, all the way to where the
+        /// solution wants it. Returns false when the board has nothing to point at.
+        ///
+        /// <para>
+        /// <b>It charges no moves.</b> It used to add two, back when a hint was three per
+        /// glade handed back at every board — the move cost was the only price a hint had,
+        /// because the allowance itself cost nothing. A hint is now spent from an
+        /// account-wide pool that refills on a clock, so the hint <em>is</em> the price, and
+        /// charging moves as well is two punishments for one decision — the second of them
+        /// invisible until the victory panel counts a star the player did not know they had
+        /// lost.
+        /// </para>
+        /// <para>
+        /// The pool is not touched here. <c>PlayScreen</c> checks it before calling and
+        /// spends after this returns true, so a board with nothing to give — see
+        /// <see cref="CanHint"/> — cannot cost anybody a hint.
+        /// </para>
+        /// </summary>
         public bool Hint()
         {
-            if (Locked || _celebrating || HintsLeft <= 0) return false;
+            if (Locked || _celebrating) return false;
             int i = P.NextHint();
             if (i < 0) return false;
 
-            HintsLeft--;
             Locked = true;
             var tile = _byIndex[i];
             tile.Beckon(Pal.Gold);
             Audio.Sfx("shatter", .45f, 1.25f);
 
             int turns = P.TurnsOwed(i);
-            P.Moves += 2;                       // hints cost a little polish
             OnChanged?.Invoke();
 
             for (int k = 0; k < turns; k++)

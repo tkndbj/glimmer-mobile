@@ -54,6 +54,20 @@ namespace GlimmerGrove
         bool _finished;
 
         /// <summary>
+        /// Hints spent on this run, for <see cref="RunOutcome.HintsUsed"/> and the flawless
+        /// stamp.
+        ///
+        /// <para>
+        /// Counted here rather than derived from the board, which is what changed: a hint
+        /// used to be an allowance the board handed out, so "spent" was the allowance minus
+        /// what was left. It is now taken from an account pool that also refills on a clock
+        /// and is spent on other glades, so nothing about the pool's count describes
+        /// <em>this</em> run. Reset wherever a fresh board is handed over, beside the clock.
+        /// </para>
+        /// </summary>
+        int _hintsThisRun;
+
+        /// <summary>
         /// True once this run has been paid for — that is, once abandoning it costs a heart.
         ///
         /// <para>
@@ -110,7 +124,18 @@ namespace GlimmerGrove
             // board appears in the same frame it always did. It only ever waits when
             // the player arrived some other way: a deep link, or a "next" that stepped
             // over a chapter boundary.
+            // The pool refills on a clock, so the badge cannot be a thing painted once when
+            // the board was built — an eight-hour wait can land while somebody is staring at
+            // a glade. An event rather than a poll in Update, because it fires perhaps twice
+            // in a session and Update runs every frame.
+            Wallet.HintsChanged += OnHintsChanged;
+
             StartCoroutine(ResolveThenBuild());
+        }
+
+        void OnDestroy()
+        {
+            Wallet.HintsChanged -= OnHintsChanged;
         }
 
         IEnumerator ResolveThenBuild()
@@ -208,8 +233,7 @@ namespace GlimmerGrove
             while (_boardHost.rect.width < 40f && guard++ < 60) yield return null;
 
             _board.Build(_boardHost, _puzzle,
-                         Pal.BoardTheme.From(_def.Presentation.ResolveSlate(_chapter)),
-                         _def.Tuning.HintAllowance);
+                         Pal.BoardTheme.From(_def.Presentation.ResolveSlate(_chapter)));
             Refresh();
         }
 
@@ -362,7 +386,7 @@ namespace GlimmerGrove
 
             var badge = UIKit.Img("Badge", _hint.transform, Art.Disc(64), Pal.Rose,
                                   new Vector2(58f, 58f), new Vector2(1f, 1f), new Vector2(-16f, -16f));
-            _hintCount = UIKit.Titled("N", badge.transform, _def.Tuning.HintAllowance.ToString(), 34,
+            _hintCount = UIKit.Titled("N", badge.transform, Wallet.Hints.Count.ToString(), 34,
                                       Pal.Cream, TextAnchor.MiddleCenter, outline: 0f, shadow: 2f);
 
             Caption(bar, "undo", -215f);
@@ -618,6 +642,10 @@ namespace GlimmerGrove
             // silence — the board would simply stop, with no panel and no defeat.
             _offeringTime = false;
 
+            // Same funnel, same reason. A hint count carried into a restarted run would
+            // deny the player the flawless stamp on a run they solved unaided.
+            _hintsThisRun = 0;
+
             _paintedSeconds = -1;
             PaintClock();
         }
@@ -662,22 +690,134 @@ namespace GlimmerGrove
             if (_undo) _undo.Interactable = _board != null && _board.CanUndo;
             if (_hint)
             {
-                bool can = _board != null && _board.HintsLeft > 0;
-                _hint.Interactable = can;
-                if (_hintCount) _hintCount.text = (_board == null ? 0 : _board.HintsLeft).ToString();
+                // Live while the *board* has something to point at, whatever the pool holds.
+                // An empty pool is not a reason to grey the button: that is the moment the
+                // player has decided they want help, which is the best moment in the game to
+                // offer a video and the worst to teach somebody a control is dead — the rule
+                // CompanionUnlockOverlay already follows for a short balance. UseHint is
+                // where the pool is consulted.
+                _hint.Interactable = _board != null && _board.CanHint;
+                PaintHintCount();
             }
         }
 
+        /// <summary>
+        /// The badge over the hint button: how many the account holds right now.
+        ///
+        /// Separated from <see cref="Refresh"/> because the number moves for a reason the
+        /// board knows nothing about — the refill clock — so it is also repainted from
+        /// <see cref="OnHintsChanged"/>. Reading <c>Wallet.Hints</c> is what commits a refill
+        /// that fell due while this screen was open.
+        /// </summary>
+        void PaintHintCount()
+        {
+            if (!_hintCount) return;
+
+            string text = Wallet.Hints.Count.ToString();
+            if (_hintCount.text == text) return;
+
+            _hintCount.text = text;
+            Tween.Punch(_hintCount.transform, .22f, .3f);
+        }
+
+        void OnHintsChanged(Hints hints)
+        {
+            if (this == null) return;
+            PaintHintCount();
+            if (_hint) _hint.Interactable = _board != null && _board.CanHint;
+        }
+
+        /// <summary>
+        /// Spend a hint from the account pool, if there is one and the board has anything to
+        /// point at.
+        ///
+        /// <para>
+        /// The order is the whole of the safety here. The board is asked first, so a board
+        /// with nothing left to reveal cannot cost anybody a hint; the pool is charged only
+        /// once the reveal has actually begun. Both refusals say which one they are, because
+        /// "nothing happened" is how a player concludes a button is broken.
+        /// </para>
+        /// </summary>
         void UseHint()
         {
             if (_board == null) return;
-            if (!_board.Hint())
+
+            if (!_board.CanHint)
             {
-                Scenery.Toast(Content, Loc.Get("ui.play.no_hints"), Pal.Parchment, 1.6f);
+                Scenery.Toast(Content, Loc.Get("ui.play.hint_nothing"), Pal.Parchment, 1.6f);
                 return;
             }
-            LevelAnalytics.TrackHintUsed(_def, _board.HintsLeft, _puzzle.Moves);
+
+            if (!Wallet.Hints.CanSpend) { OfferHint(); return; }
+
+            if (!_board.Hint()) return;
+
+            Wallet.TrySpendHint();
+            _hintsThisRun++;
+
+            LevelAnalytics.TrackHintUsed(_def, Wallet.Hints.Count, _puzzle.Moves);
             Scenery.Toast(Content, Loc.Get("ui.play.hint_used"), Pal.Gold, 1.6f);
+            Refresh();
+        }
+
+        /// <summary>
+        /// The pool is empty. Offer a video for one, or say when the next one lands.
+        ///
+        /// <para>
+        /// The board is latched behind the panel exactly as it is for the continue offer,
+        /// and for the same reason: the clock only accrues on an unlocked board, so a player
+        /// reading the panel or watching thirty seconds of video is not charged the time.
+        /// <c>AdOfferOverlay</c> reports through <c>Dismissed</c> on every one of its six
+        /// exits, which is what guarantees the board comes back however the panel goes away
+        /// — the fault the pause menu shipped with.
+        /// </para>
+        /// <para>
+        /// <c>ShouldOffer</c> rather than <c>CanOffer</c>: a cooldown or a spent allowance
+        /// still draws the panel, which then says which of them it was. The refusals that
+        /// cannot resolve by waiting fall through to a toast carrying the countdown, because
+        /// "no hints" with no number on it is the sentence that makes a resource feel broken.
+        /// </para>
+        /// </summary>
+        void OfferHint()
+        {
+            if (!RewardedAds.ShouldOffer(AdPlacement.HintRefill))
+            {
+                Scenery.Toast(Content, Loc.Format("ui.play.hint_empty", Profile.HintCountdown()),
+                              Pal.Parchment, 2.2f);
+                return;
+            }
+
+            bool wasLocked = _board != null && _board.Locked;
+            if (_board != null) _board.Locked = true;
+
+            // Both handlers, and they must both hand the board back. AdOfferOverlay raises
+            // *exactly one* of Rewarded and Dismissed — the paid branch does not also
+            // dismiss — so unlocking in only one of them leaves a player who actually
+            // watched the video sitting on a frozen board with a stopped clock, which is the
+            // one outcome worse than not offering at all. Same shape as the pause menu's
+            // unlatch, and the same rule: the safe outcome is what every exit does.
+            Flow.Modal<AdOfferOverlay>(v =>
+            {
+                v.PlacementId = AdPlacement.HintRefill;
+                v.Rewarded = () => CloseHintOffer(wasLocked);
+                v.Dismissed = () => CloseHintOffer(wasLocked);
+            });
+        }
+
+        /// <summary>
+        /// Hands the board back after the hint offer, however it went away.
+        ///
+        /// Restores the latch to what it was rather than clearing it, so an offer raised over
+        /// an already-locked board — nothing does that today, and something will — does not
+        /// quietly unfreeze a run that was frozen for another reason.
+        /// </summary>
+        void CloseHintOffer(bool wasLocked)
+        {
+            if (this == null) return;
+
+            if (_board != null && !wasLocked && !_finished) _board.Locked = false;
+
+            PaintHintCount();
             Refresh();
         }
 
@@ -873,16 +1013,8 @@ namespace GlimmerGrove
             return new StreakNote(DailyStreak.Days, DailyStreak.Days > before);
         }
 
-        /// <summary>
-        /// Hints spent on the run so far.
-        ///
-        /// Derived from the allowance rather than counted, so it cannot fall out of step
-        /// with the badge the player is looking at. Clamped because a board that has not
-        /// finished building yet reports no hints left, and a negative count would travel
-        /// into analytics.
-        /// </summary>
-        int HintsSpent
-            => _board == null ? 0 : Mathf.Max(0, _def.Tuning.HintAllowance - _board.HintsLeft);
+        /// <summary>Hints spent on the run so far. See <see cref="_hintsThisRun"/>.</summary>
+        int HintsSpent => _hintsThisRun;
 
         /// <summary>
         /// The run was lost.

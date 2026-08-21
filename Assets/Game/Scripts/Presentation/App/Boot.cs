@@ -80,20 +80,33 @@ namespace GlimmerGrove
             // and retried, so this is cheap however often it fires. See SyncScheduler.
             Wallet.ProfileChanged += CloudSaveService.RequestSync;
 
+            // The public boards listen to the three grove ledgers and the profile, so that a
+            // purchase or a rearrangement reaches the leaderboard without any screen having to
+            // remember to say so. Wired once, here, for the reason above — and it is a no-op in
+            // a build with no backend, because everything behind it checks IsAvailable.
+            Social.GroveBoard.Attach();
+
             // Rewarded ads, chosen the same way and inert by the same default. Two gates,
             // not one: the SDK has to be compiled in *and* a real app key has to exist.
             // Without the second, LevelPlay would start, fail, and leave the game showing
             // offers that can never fill — which is worse than showing none.
+            // The consent platform and Apple's tracking prompt, installed before anything can
+            // ask what the player agreed to. Installed, not resolved: asking is a network
+            // round trip and possibly a native dialog, neither of which belongs before the
+            // first scene has loaded — the splash starts that, through RewardedAds.StartAsync.
+            Privacy.PrivacySetup.Install();
+
 #if GLIMMER_ADS
             if (AdConfig.IsConfigured)
             {
-                var ads = new LevelPlayAdProvider(AdConfig.AppKey, AdConfig.AdUnits());
-                RewardedAds.Install(ads);
+                RewardedAds.Install(new LevelPlayAdProvider(AdConfig.AppKey, AdConfig.AdUnits()));
 
-                // Not awaited. Mediation start-up is a network round trip and nothing on
-                // the splash depends on it; the offers simply become available when they
-                // become available, which is what ReadinessChanged is for.
-                _ = ads.InitializeAsync();
+                // Deliberately *not* started here, which is the one thing about this block
+                // worth reading twice. Mediation may not be initialised until the player's
+                // consent is known — an SDK that starts first has already decided what it may
+                // collect and has already auctioned on that decision, and telling it
+                // afterwards changes only the next request. RewardedAds.StartAsync owns that
+                // ordering and the splash calls it.
             }
 #endif
 
@@ -118,7 +131,25 @@ namespace GlimmerGrove
             // exactly them.
             StoreService.Granted += grant =>
             {
-                if (grant.IsValid) Flow.Modal<ShopGrantOverlay>(v => v.Grant = grant);
+                if (!grant.IsValid) return;
+
+                Flow.Modal<ShopGrantOverlay>(v =>
+                {
+                    v.Grant = grant;
+
+                    // Chained behind the receipt rather than raised beside it, and the ordering
+                    // is the whole reason this is the right moment to ask. The sale is banked,
+                    // the goods are on screen, and "keep what you just bought" is the easiest
+                    // sentence in the game to agree with — where the same words in front of the
+                    // payment sheet would be a dialog talking somebody out of the purchase it
+                    // exists to protect.
+                    //
+                    // The gap is what stops it reading as one panel replacing another: Destroy
+                    // lands at the end of the frame, so the receipt is still drawn while its
+                    // replacement springs in from scale zero. The hub learned that twice.
+                    v.Dismissed = () => Tween.After(
+                        .22f, () => AccountPrompts.Offer(AccountPromptTrigger.Purchase));
+                });
             };
 
 #if UNITY_EDITOR || DEVELOPMENT_BUILD

@@ -17,8 +17,17 @@
       },
       "hash": "4ce7dd3cc54e37e2ed6dc59cb5a047f3dccb3f50"
     },
+    "com.google.ads.mobile": {
+      "version": "file:../GooglePackages/com.google.ads.mobile-11.4.0.tgz",
+      "depth": 0,
+      "source": "local-tarball",
+      "dependencies": {
+        "com.google.external-dependency-manager": "1.2.187",
+        "com.unity.modules.androidjni": "1.0.0"
+      }
+    },
     "com.google.external-dependency-manager": {
-      "version": "file:../GooglePackages/com.google.external-dependency-manager-1.2.186.tgz",
+      "version": "file:../GooglePackages/com.google.external-dependency-manager-1.2.187.tgz",
       "depth": 0,
       "source": "local-tarball",
       "dependencies": {}

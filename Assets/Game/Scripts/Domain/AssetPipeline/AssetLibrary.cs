@@ -65,6 +65,20 @@ namespace GlimmerGrove.AssetPipeline
         /// moment somebody opens the shop.
         /// </summary>
         public const string HomesteadShopScope = "grove_shop";
+
+        /// <summary>
+        /// Somebody else's grove, while it is being visited.
+        ///
+        /// <para>
+        /// A third scope rather than a reuse of <see cref="HomesteadScope"/>, and invariant 7b
+        /// is the reason: a scope owns its addresses, so loading a stranger's grove into the
+        /// player's would mean leaving their visit frees art the player's own grove screen is
+        /// drawing — and coming back from a visit would land on a floor of white rectangles.
+        /// It is bounded by what is standing in one grove, which is the same bound
+        /// <see cref="HomesteadScope"/> has and for the same reason.
+        /// </para>
+        /// </summary>
+        public const string GroveVisitScope = "grove_visit";
         sealed class Scope
         {
             public readonly HashSet<string> Addresses = new HashSet<string>(StringComparer.Ordinal);

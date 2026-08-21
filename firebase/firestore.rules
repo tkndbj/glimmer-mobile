@@ -17,6 +17,9 @@ rules_version = '2';
 //   players/{uid}/spendLog/{id}      idempotency records for debits. Client reads only.
 //   players/{uid}/grantLog/{id}      idempotency records for awards. Client reads only.
 //   receipts/{store}__{txn}          global receipt claims. Client cannot see them.
+//   groves/{uid}                     the public grove card. Any player reads, none write.
+//   names/{nameKey}                  a reserved keeper name. Any player gets one, none list.
+//   leaderboards/{boardId}           a published board. Any player reads, none write.
 //   config/{doc}                     reward table and product catalog. Read-only.
 //
 // What these rules deliberately do NOT do: validate the contents of the level ledger
@@ -103,12 +106,16 @@ service cloud.firestore {
                && (!('companionsOwned' in d) || (d.companionsOwned is list
                                                  && d.companionsOwned.size() <= 256))
                // The grove: what the player bought for it, and where they put it. Both are
-               // client-owned and forgeable, and both are accounted for the same way the
-               // companion set above is — a forged entry buys a picture on a screen nobody
-               // else sees, with no currency, no progression and no advantage on a board.
-               // The money half is defended where money always is, by `submitSpends`
-               // refusing a debit the server-derived balance cannot cover, so there is
-               // nothing here for the server to adjudicate. Note what is deliberately
+               // client-owned and forgeable, and both are still accounted for the same way
+               // the companion set above is, with one addition that used to be unnecessary.
+               // These three sets are what a grove's public worth is derived from, so since
+               // the boards exist a forged entry no longer only buys a picture — it would
+               // buy a place on a public list. That is adjudicated in `publishGrove`, which
+               // recomputes the score from this document and clamps its bought half to
+               // currency the server derived itself, so nothing forged here reaches a board
+               // (see functions/src/grove.ts and the `groves` rule below). The money half is
+               // defended where money always is, by `submitSpends` refusing a debit the
+               // server-derived balance cannot cover. Note what is deliberately
                // absent: any count of how many benches a player owns. Holding a piece is
                // permission to draw it in as many slots as they like, which is why the
                // owned list is a set and cannot go down.
@@ -178,6 +185,70 @@ service cloud.firestore {
         allow read:  if isOwner(uid);
         allow write: if false;
       }
+    }
+
+    // ------------------------------------------------------- the public boards
+    // A player's grove, as everybody else may see it. This collection exists so that the
+    // save document never has to be readable by anyone but its owner: `players/{uid}`
+    // holds the level ledger, the streak's dates, the event floors and the ad allowance,
+    // and a leaderboard needs a name, a number and where the benches are. Widening the
+    // save's read rule to serve that would publish everything else with it and make the
+    // save's shape a public API that could never change again.
+    //
+    // Server-written, without exception. The score on a card is recomputed by
+    // `publishGrove` from the save it reads with admin credentials and clamped to currency
+    // the server itself derived — see functions/src/grove.ts. Letting a client write here
+    // would hand it the leaderboard, because the three id sets a card is built from are
+    // client-written and forgeable by design. That was always fine while a forged entry
+    // "bought a picture on a screen nobody else sees"; it is this collection that makes
+    // that sentence stop being true, which is why it is the one place the client is
+    // refused write access to something built entirely out of its own save.
+    //
+    // Readable by any signed-in player, and only by a signed-in player. It carries a
+    // display name, so it is not world-readable the way `config/stats` is — that document
+    // holds nine numbers per glade and names nobody, and it is public precisely because
+    // the splash needs it before authentication has finished. Nothing here is needed
+    // before a player is in the game.
+    match /groves/{uid} {
+      allow get, list: if signedIn();
+      allow write: if false;
+    }
+
+    // The published boards: one document each, holding up to a hundred rows.
+    //
+    // Denormalised rather than queried, and that is a cost decision that does not move as
+    // the game grows. The obvious shape — order the player collection by score and take
+    // the first hundred — is a hundred document reads every time anybody opens the screen,
+    // against a collection that grows for the life of the game, on a database billed per
+    // read. One document is one read, the same for everybody, and cacheable. It is the
+    // same trade `config/stats` already makes.
+    match /leaderboards/{boardId} {
+      allow get, list: if signedIn();
+      allow write: if false;
+    }
+
+    // --------------------------------------------------------- keeper names
+    // One document per reserved name, keyed by the name's fold — see functions/src/names.ts.
+    //
+    // The id *is* the uniqueness. A create against an id that already exists fails, so two
+    // players cannot take one name however close together they try, with no index and no
+    // scan behind it. The alternative — query the player collection for a matching name and
+    // then write — is racy in a way nothing can repair afterwards, and is an index over a
+    // collection that grows for the life of the game.
+    //
+    // `get` and deliberately not `list`. A player may ask whether one name they have typed is
+    // free, which is the whole client interaction and is one document read; nobody may walk
+    // the collection. That distinction is why the "is this taken" hint costs no function
+    // invocation and can be debounced on a keystroke without becoming a bill.
+    //
+    // Never client-written, even though rules could nearly express it: `create` is already
+    // create-if-absent and the uid could be checked against the caller. What rules cannot
+    // express is *one name per account*, because that needs the previous reservation released
+    // in the same operation and its other half is a document the client itself writes. Without
+    // that, one account holds as many names as it cares to pay writes for.
+    match /names/{nameKey} {
+      allow get: if signedIn();
+      allow list, write: if false;
     }
 
     // ------------------------------------------------------------- receipts

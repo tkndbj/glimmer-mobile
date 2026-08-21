@@ -9,6 +9,7 @@
 
 import { getFirestore, Timestamp, Transaction } from "firebase-admin/firestore";
 import { CURRENCIES, CurrencyId, PATHS } from "./config";
+import { NameHolding, heldName } from "./names";
 import { todayKey } from "./daily";
 import { assertUsableConfig, earnedCredits, ProgressionConfig } from "./progression";
 import { readFloor, StreakFloor } from "./streak";
@@ -42,6 +43,17 @@ export type WalletDoc = Record<CurrencyId, CurrencyState> & {
    * moving with it. See `streak.ts`.
    */
   streak?: StreakFloor;
+
+  /**
+   * The keeper name this account holds, and the key it is reserved under.
+   *
+   * It rides here for `streak`'s reason: this is the document no client can write. That is
+   * what makes the name on a public card unforgeable rather than merely sanitised — a card is
+   * built from this and never from the save's own string. Written only by `names.ts`, in the
+   * same transaction that takes the reservation, so a name cannot be held without the
+   * reservation existing or the reverse.
+   */
+  name?: NameHolding;
 };
 
 /** What the client's `CloudWalletState` expects back. */
@@ -84,6 +96,29 @@ export function readWallet(
   const raw = (snapshot.exists ? snapshot.data() : undefined) as Partial<WalletDoc> | undefined;
   const wallet = {} as WalletDoc;
 
+  // The reserved keeper name, carried through for `streak`'s reason and with more urgency:
+  // every writer of this document writes it *whole* (`transaction.set` with no merge), so a
+  // field this function does not copy is a field the next sync deletes. That is invariant 12a
+  // one document over — and it would have been near-invisible, because the reservation
+  // survives, the next publish silently re-claims it, and all anybody sees is their name
+  // occasionally missing from a board.
+  const name = heldName(raw as Record<string, unknown> | undefined);
+
+  // Assigned only when there is one. Firestore rejects `undefined` as a document value, so an
+  // unconditional assignment would fail every wallet write for an account that has no name.
+  if (name) wallet.name = name;
+
+  // Whether this server has ever recorded currency for the account, which is what "brand new"
+  // has always meant here. It used to be read off `snapshot.exists`, and that stopped being
+  // the same question the moment a second feature wrote to this document: a name claimed
+  // before the first sync would create it, and the account would then be treated as one
+  // migrating in — which hands it the unbounded first streak claim that the seeded floor below
+  // exists to prevent.
+  const everBanked = CURRENCIES.some((currency) => {
+    const state = raw?.[currency];
+    return !!state && typeof state.granted === "number";
+  });
+
   // The streak floor, carried through so that writing the document back cannot drop it.
   //
   // A brand-new wallet is seeded to *yesterday*, and that one line is what stops a fresh
@@ -92,7 +127,7 @@ export function readWallet(
   // without one — see `advances`. A player upgrading into this build is holding a streak
   // this server has never recorded, and an invented floor would refuse the nights the game
   // has already shown them.
-  wallet.streak = snapshot.exists
+  wallet.streak = everBanked
     ? readFloor(raw?.streak)
     : { paidThroughDay: todayKey(Date.now()) - 1, paidNight: 0 };
 

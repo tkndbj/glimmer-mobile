@@ -38,7 +38,7 @@ namespace GlimmerGrove.Content
 
             CheckSpacing(inPlayOrder, strips, issues);
             CheckAscending(inPlayOrder, issues);
-            CheckTeaserClearance(inPlayOrder, strips, issues);
+            CheckTeaserClearance(inPlayOrder, strips, chapter.TeaserX, issues);
 
             return issues;
         }
@@ -98,7 +98,7 @@ namespace GlimmerGrove.Content
         /// nobody wrote a coordinate for, which is exactly why it is easy to miss.
         /// </summary>
         static void CheckTeaserClearance(IReadOnlyList<LevelDefinition> levels, int strips,
-                                         List<LevelIssue> issues)
+                                         float across, List<LevelIssue> issues)
         {
             float highest = 0f;
             foreach (var level in levels)
@@ -107,7 +107,7 @@ namespace GlimmerGrove.Content
                 if (y > highest) highest = y;
             }
 
-            var teaser = ChapterMap.TeaserPosition(highest, strips);
+            var teaser = ChapterMap.TeaserPosition(highest, strips, across);
 
             foreach (var level in levels)
             {

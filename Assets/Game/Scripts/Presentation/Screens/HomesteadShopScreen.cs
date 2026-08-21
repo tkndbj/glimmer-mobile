@@ -54,6 +54,13 @@ namespace GlimmerGrove
         const float TabRow = 104f;
 
         /// <summary>
+        /// Breathing room under the last row. There is no nav bar here — the back arrow and
+        /// the back key are the way out, so the grid runs to the bottom of the safe area
+        /// rather than stopping short of a control that is not there.
+        /// </summary>
+        const float BottomPad = 24f;
+
+        /// <summary>
         /// Where a cell's picture sits, and why it is computed rather than typed.
         ///
         /// The art used to be pinned a fixed distance from the top of the plate, which left it
@@ -95,9 +102,6 @@ namespace GlimmerGrove
 
             BuildGrid();
             BuildHeader();
-            // A side page of the Grovement rather than the Grovement itself, so the tab stays
-            // live: the most natural way back from a shop is the thing it belongs to.
-            NavBar.Build(Content, NavBar.Tab.Grove, onSidePage: true);
 
             Warm();
 
@@ -277,7 +281,7 @@ namespace GlimmerGrove
         void BuildGrid()
         {
             _viewport = UIKit.Node("Viewport", Safe);
-            _viewport.offsetMin = new Vector2(0f, NavBar.Height);
+            _viewport.offsetMin = new Vector2(0f, BottomPad);
             _viewport.offsetMax = new Vector2(0f, -HeaderHeight - TabRow);
 
             _grid = GridView.Attach(_viewport, Columns, CellW, CellH,

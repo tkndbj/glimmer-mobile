@@ -97,7 +97,16 @@ namespace GlimmerGrove
                 if (_inst == null)
                 {
                     var go = new GameObject("~Tween");
-                    DontDestroyOnLoad(go);
+
+                    // DontDestroyOnLoad throws outside play mode, which is what kept this
+                    // engine untestable: a driver nothing can instantiate is a driver nothing
+                    // can drive a frame of. Outside play there are no scene loads to survive,
+                    // so the call is meaningless there anyway - and the object is marked never
+                    // to be saved, so an EditMode test cannot leave one behind in whatever
+                    // scene happens to be open.
+                    if (Application.isPlaying) DontDestroyOnLoad(go);
+                    else go.hideFlags = HideFlags.HideAndDontSave;
+
                     _inst = go.AddComponent<Tween>();
                 }
                 return _inst;
@@ -138,6 +147,59 @@ namespace GlimmerGrove
                     list[i].alive = false;
         }
 
+        /// <summary>
+        /// Whether a tween was given an owner and that owner has since been destroyed.
+        ///
+        /// <para>
+        /// Two null checks that mean different things, and the order is the whole of it.
+        /// <c>UnityEngine.Object</c> overloads <c>==</c> to answer null for an object that
+        /// has been <em>destroyed</em> as well as for one that was never set — so
+        /// <c>owner != null</c> is false in exactly the case this exists to catch, and the
+        /// guard it used to be written as could never fire once. The managed
+        /// <see cref="object.ReferenceEquals"/> is the only way to ask "was an owner
+        /// supplied at all", and it has to be asked first.
+        /// </para>
+        /// <para>
+        /// What that cost: every tween whose owner had been destroyed went on running to
+        /// completion and calling its <c>OnDone</c>, for the life of the game, against the
+        /// class's own promise to die with its owner. The <c>apply</c> bodies here all guard
+        /// their target, so the motion was harmless and invisible — the callbacks do not,
+        /// and a payout chip destroyed mid-flight still landed seven tokens on a glyph that
+        /// no longer existed. Passing an owner is opt-in, so a caller that passes one is
+        /// asking for this and had not been getting it.
+        /// </para>
+        /// </summary>
+        /// <remarks>
+        /// Fixing it changed behaviour at every call site that passes an owner, so the
+        /// <c>OnDone</c> chains were walked once and the answer is worth keeping: <b>none of
+        /// them needs to outlive its owner</b>. Almost all are cosmetic and already guard
+        /// their target — destroy a spent ring, start a breathe, rehome a button. Three carry
+        /// state, and each is safe for its own reason rather than by luck:
+        /// <list type="bullet">
+        /// <item><description>
+        /// <c>Overlays.Close</c> hangs <c>Flow.Dismiss</c> and the caller's continuation off a
+        /// scale owned by <c>Panel</c>. The only thing that destroys Panel mid-close is
+        /// <c>Flow.Go</c>'s swap — which clears <c>_modals</c> itself, so the missed Dismiss is
+        /// a no-op, and which sets <c>Busy</c> first, so a missed <c>Flow.Go</c> continuation
+        /// would have been refused anyway. Skipping it is if anything more correct than
+        /// firing a second navigation into the first.
+        /// </description></item>
+        /// <item><description>
+        /// <c>Flow</c>'s iris is owned by <c>_iris</c>, which is built once on the persistent
+        /// effects layer and is never destroyed while the game runs.
+        /// </description></item>
+        /// <item><description>
+        /// The dismissals that must not be missed do not rely on a tween at all:
+        /// <c>AdOfferOverlay</c> raises <c>Dismissed</c> from <c>OnDestroy</c> behind a latch,
+        /// which is the whole reason that panel was built that way.
+        /// </description></item>
+        /// </list>
+        /// The general rule the audit leaves behind: an <c>OnDone</c> that must happen whatever
+        /// becomes of the thing being animated does not belong on an owned tween.
+        /// </remarks>
+        public static bool Orphaned(UnityEngine.Object owner)
+            => !ReferenceEquals(owner, null) && owner == null;
+
         public static void KillAll(UnityEngine.Object owner)
         {
             if (_inst == null || owner == null) return;
@@ -146,19 +208,42 @@ namespace GlimmerGrove
                 if (ReferenceEquals(list[i].owner, owner)) list[i].alive = false;
         }
 
-        void Update()
+        // Clamped before anything reads them, because the phase arithmetic in Tick is only
+        // as sound as the step handed to it — see TweenCycle.MaxStep for why the frame after
+        // a resume is not a frame's worth of time.
+        void Update() => Tick(TweenCycle.Step(Time.unscaledDeltaTime),
+                              TweenCycle.Step(Time.deltaTime));
+
+        /// <summary>
+        /// One frame of every live tween, handed the elapsed time rather than reading a clock.
+        ///
+        /// <para>
+        /// Split from <see cref="Update"/> for <see cref="RunClock"/>'s reason, and it is not
+        /// a tidying. <see cref="TweenCycle"/> made the phase arithmetic provable offline, and
+        /// that left exactly one rule in this file untestable — the one that decides whether a
+        /// tween <em>runs at all</em>. It was wrong for the life of the game (see
+        /// <see cref="Orphaned"/>), and a test of the predicate alone would not have caught it,
+        /// because the predicate was never the part that was broken: the wiring was. A test
+        /// has to be able to say "this owner is gone, therefore this OnDone did not fire",
+        /// and that needs a frame it can drive.
+        /// </para>
+        /// <para>
+        /// The clamp deliberately stays in <see cref="Update"/>. What a caller hands in is
+        /// the step it wants applied; what the engine does with a real frame's
+        /// <c>deltaTime</c> is the engine's business, and a test asking for half a second
+        /// should get half a second.
+        /// </para>
+        /// </summary>
+        public void Tick(float unscaledStep, float scaledStep)
         {
-            // Clamped before anything reads them, because the phase arithmetic below is
-            // only as sound as the step handed to it — see TweenCycle.MaxStep for why the
-            // frame after a resume is not a frame's worth of time.
-            float dt = TweenCycle.Step(Time.unscaledDeltaTime);
-            float sdt = TweenCycle.Step(Time.deltaTime);
+            float dt = unscaledStep;
+            float sdt = scaledStep;
             _iterating = true;
             for (int i = 0; i < _live.Count; i++)
             {
                 var t = _live[i];
                 if (!t.alive) continue;
-                if (t.owner != null && t.owner.Equals(null)) { t.alive = false; continue; }
+                if (Orphaned(t.owner)) { t.alive = false; continue; }
 
                 float step = t.unscaled ? dt : sdt;
                 if (t.delay > 0f) { t.delay -= step; if (t.delay > 0f) continue; step = -t.delay; t.delay = 0f; }

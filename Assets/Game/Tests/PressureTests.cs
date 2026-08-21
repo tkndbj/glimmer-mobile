@@ -58,7 +58,7 @@ namespace GlimmerGrove.Tests
         [Test]
         public void ANegativeFactorRemovesTheBudgetEntirely()
         {
-            var tuning = new LevelTuning(10, 0f, 0f, 3, LevelTuning.Unlimited);
+            var tuning = new LevelTuning(10, 0f, 0f, LevelTuning.Unlimited);
 
             Assert.IsFalse(tuning.HasBudget);
             Assert.AreEqual(int.MaxValue, tuning.MoveBudget);
@@ -72,7 +72,7 @@ namespace GlimmerGrove.Tests
         [Test]
         public void AnUnwrittenFactorTakesTheDefaultRatherThanRemovingTheBudget()
         {
-            var tuning = new LevelTuning(10, 0f, 0f, 3, 0f);
+            var tuning = new LevelTuning(10, 0f, 0f, 0f);
 
             Assert.IsTrue(tuning.HasBudget);
             Assert.AreEqual(LevelTuning.DefaultBudgetFactor, tuning.BudgetFactor);
@@ -82,7 +82,7 @@ namespace GlimmerGrove.Tests
         public void RunningOutOfTurnsEndsTheRun()
         {
             // par 1, budget forced small: 2 turns allowed
-            var tuning = new LevelTuning(1, 1f, 1f, 3, 2f);
+            var tuning = new LevelTuning(1, 1f, 1f, 2f);
             var board = Board(2, 1, new[] { "*E#R/1 @W#R/0" }, tuning);
 
             Assert.IsFalse(board.OutOfMoves);
@@ -98,7 +98,7 @@ namespace GlimmerGrove.Tests
         [Test]
         public void SpendingTheLastTurnOnTheSolutionStillWins()
         {
-            var tuning = new LevelTuning(1, 1f, 1f, 3, 2f);
+            var tuning = new LevelTuning(1, 1f, 1f, 2f);
             var board = Board(2, 1, new[] { "*E#R/0 @W#R/0" }, tuning);
 
             board.Moves = tuning.MoveBudget;
@@ -112,7 +112,7 @@ namespace GlimmerGrove.Tests
         [Test]
         public void AnUnbudgetedBoardCanNeverRunOut()
         {
-            var tuning = new LevelTuning(1, 1f, 1f, 3, LevelTuning.Unlimited);
+            var tuning = new LevelTuning(1, 1f, 1f, LevelTuning.Unlimited);
             var board = Board(2, 1, new[] { "*E#R/1 @W#R/0" }, tuning);
 
             board.Moves = 100_000;

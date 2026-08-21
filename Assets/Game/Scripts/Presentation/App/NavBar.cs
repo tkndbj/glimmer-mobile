@@ -85,10 +85,11 @@ namespace GlimmerGrove
         ///
         /// <para>
         /// <paramref name="onSidePage"/> says the caller is a <em>page belonging to</em> that
-        /// tab rather than the tab's own screen — the grove's shop is the first. Without it
-        /// the marked tab is left inert, which is right when you are standing on it and wrong
-        /// one page in: the most natural way back from the shop is the tab it belongs to, and
-        /// a dead control there is the worst place in the UI to put one.
+        /// tab rather than the tab's own screen. Without it the marked tab is left inert,
+        /// which is right when you are standing on it and wrong one page in: a dead control
+        /// is the worst thing to put where somebody is looking for the way back. Nothing
+        /// passes it today — the grove's shop and the boards were the two callers and both
+        /// now carry the bar not at all, leaning on their own back arrow instead.
         /// </para>
         /// </summary>
         public static RectTransform Build(Transform parent, Tab active, bool onSidePage = false)

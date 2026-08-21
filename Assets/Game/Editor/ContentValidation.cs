@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Text;
 using System.Text.RegularExpressions;
+using GlimmerGrove.Ads;
 using GlimmerGrove.Content;
 using GlimmerGrove.Content.Sources;
 using GlimmerGrove.Daily;
@@ -215,6 +216,7 @@ namespace GlimmerGrove.EditorTools
 
             ValidateRewardChaptersExist(fetch.Text, index, result);
             ValidateHearts(table.Hearts, result, verbose);
+            ValidateHints(table.Hints, table.Ads, result, verbose);
             ValidateDailyChests(table.Daily, table.Hearts, result, verbose);
             ValidateStreak(table.Streak, result, verbose);
             ValidateGolden(table.Golden, table, index, result, verbose);
@@ -518,6 +520,54 @@ namespace GlimmerGrove.EditorTools
                       $"{hearts.RefillSeconds / 3600f:0.##}h ({hearts.BoostedRefillSeconds / 3600f:0.##}h " +
                       $"boosted, up to {hearts.MaxBoostHours}h of boost), hold up to {hearts.Ceiling}, " +
                       $"a loss costs {hearts.DefeatCost}");
+        }
+
+        /// <summary>
+        /// The hint pool, checked for the two things the reader cannot know.
+        ///
+        /// <para>
+        /// Warnings rather than errors, exactly as the heart gate is: an aggressive hint
+        /// tuning is a legitimate weekend decision, and neither of these is a mistake that
+        /// costs anybody money.
+        /// </para>
+        /// </summary>
+        static void ValidateHints(HintRuleTable hints, AdRewardTable ads,
+                                  ContentValidationResult result, bool verbose)
+        {
+            if (hints == null) { result.Errors.Add("progression.json produced no hint table"); return; }
+
+            // A pool that refills in minutes is not scarce, and a hint that is not scarce is
+            // the per-glade allowance this feature replaced: three at every board, costing
+            // nothing and meaning nothing.
+            long toFull = hints.RefillSeconds * hints.RefillCap;
+            if (toFull < 3600)
+                result.Warnings.Add($"hints refill a full pool in {toFull / 60} minutes " +
+                                    $"({hints.RefillCap} × {hints.RefillSeconds}s); at that rate a hint " +
+                                    "costs nothing and the pool is decoration");
+
+            // A payout larger than the whole pool can never land in full, whatever the player
+            // is holding — so it is a mistake rather than a tuning, and it is worth naming
+            // even though the grant clamps it safely.
+            var offer = ads?.Offer(AdPlacement.HintRefill) ?? default;
+            if (offer.IsValid && offer.Amount > hints.Ceiling)
+                result.Warnings.Add($"'{AdPlacement.HintRefill}' pays {offer.Amount} hint(s) into a " +
+                                    $"pool that holds {hints.Ceiling}; the surplus is refused, not banked");
+
+            // Note what is deliberately *not* warned about: a ceiling equal to the cap. That is
+            // the shipped shape, so a warning would fire on every run for ever — and a warning
+            // that always fires is one nobody reads. It is logged as a fact below instead, and
+            // the thing that has to be true because of it, that no offer is made at a full
+            // pool, is held by RewardedAds.WouldBenefit and pinned by HintsTests.
+
+            if (!verbose) return;
+
+            Debug.Log($"[Glimmer] hints: refill to {hints.RefillCap} every " +
+                      $"{hints.RefillSeconds / 3600f:0.##}h, hold up to {hints.Ceiling} " +
+                      $"({toFull / 3600f:0.##}h from empty to full)" +
+                      (hints.Ceiling <= hints.RefillCap
+                           ? "; the ceiling is the cap, so a granted hint at a full pool is "
+                             + "refused rather than banked"
+                           : string.Empty));
         }
 
         /// <summary>

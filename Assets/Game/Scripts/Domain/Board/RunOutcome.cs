@@ -139,12 +139,28 @@ namespace GlimmerGrove
         /// </summary>
         public readonly int TimeLimit;
 
+        /// <summary>
+        /// Elapsed time at or under which the clock still allowed three stars, or 0 when the
+        /// glade is untimed.
+        ///
+        /// <para>
+        /// Carried rather than derived from <see cref="TimeLimit"/>, which is what it used to
+        /// be. The two stopped being proportional the moment the star thresholds were held
+        /// against par so a live clock retune could not move them — after which a panel
+        /// reading a fraction of the limit would quote a three-star time the game does not
+        /// grade against, on the one screen whose whole job is telling a player what a run
+        /// was worth.
+        /// </para>
+        /// </summary>
+        public readonly int TimeGold;
+
         RunOutcome(LevelId level, bool won, int stars, int moves, int target, int previousBest,
                    bool firstClear, int attempt, DefeatReason reason, int turnsToSolution,
                    int lampsLit, int lampCount, int hintsUsed, float seconds, int millis,
-                   int route, int timeLimit)
+                   int route, int timeLimit, int timeGold)
         {
             TimeLimit = timeLimit < 0 ? 0 : timeLimit;
+            TimeGold = timeGold < 0 ? 0 : timeGold;
             Level = level;
             Won = won;
             Stars = stars < 0 ? 0 : stars;
@@ -170,7 +186,8 @@ namespace GlimmerGrove
             => new RunOutcome(board.Id, true, stars, board.Moves, board.Gold, previousBest,
                               firstClear, attempt, DefeatReason.OutOfMoves, 0,
                               board.LampsLit, board.LampCount, hintsUsed, seconds, millis, route,
-                              board.HasTimeLimit ? board.TimeLimitMillis : 0);
+                              board.HasTimeLimit ? board.TimeLimitMillis : 0,
+                              board.HasTimeLimit ? board.TimeGoldMillis : 0);
 
         /// <summary>
         /// A run lost. No stars, no record and no reward — <c>PlayerProgress</c> never
@@ -183,7 +200,8 @@ namespace GlimmerGrove
             => new RunOutcome(board.Id, false, 0, board.Moves, board.Gold, previousBest,
                               false, attempt, reason, board.TurnsToSolution,
                               board.LampsLit, board.LampCount, hintsUsed, seconds, millis, route,
-                              board.HasTimeLimit ? board.TimeLimitMillis : 0);
+                              board.HasTimeLimit ? board.TimeLimitMillis : 0,
+                              board.HasTimeLimit ? board.TimeGoldMillis : 0);
 
         // ------------------------------------------------------------- derived
         /// <summary>

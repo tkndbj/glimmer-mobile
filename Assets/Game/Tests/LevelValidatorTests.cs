@@ -151,6 +151,55 @@ namespace GlimmerGrove.Tests
                             "a rooted tile can never be turned, so it cannot cost a move");
         }
 
+        // A board the validator now refuses on purpose - see the four cases below. It is
+        // still the right fixture here, because what is under test is that MinimumMoves
+        // skips a rooted tile at all, and a rooted tile at /0 owes nothing anyway.
+
+        [Test]
+        public void ARootedTileAwayFromItsSolutionIsAnError()
+        {
+            var report = LevelValidator.Validate(Level(new[] { "*E#R/1 -EW/1! @W#R/0" },
+                                                       mapPos: new Vector2(.5f, .5f)));
+
+            Assert.IsTrue(HasError(report, "can never be turned"), report.Describe());
+        }
+
+        [Test]
+        public void ARootedTileOnItsSolutionIsFine()
+        {
+            var report = LevelValidator.Validate(Level(new[] { "*E#R/1 -EW/0! @W#R/0" },
+                                                       mapPos: new Vector2(.5f, .5f)));
+
+            Assert.IsFalse(report.HasErrors, report.Describe());
+        }
+
+        [Test]
+        public void ARootedStraightHalfATurnRoundReadsAsSolved()
+        {
+            // The check asks Puzzle.Alike rather than rot == 0. A straight conduit is the
+            // same conduit half a turn round, so refusing this would refuse a tile that is
+            // already correct - and every rooted straight in the Mill Vale is one.
+            var report = LevelValidator.Validate(Level(new[] { "*E#R/1 -EW/2! @W#R/0" },
+                                                       mapPos: new Vector2(.5f, .5f)));
+
+            Assert.IsFalse(report.HasErrors, report.Describe());
+        }
+
+        [Test]
+        public void ARootedStraightCrossingIsSolvedAtEveryAngle()
+        {
+            // Stonebridge's shape. Turning a straight crossing swaps which strand is called
+            // which and nothing on the board can tell, so no rotation of one is ever wrong.
+            var report = LevelValidator.Validate(Level(new[]
+            {
+                ". *S#G/0 .",
+                "*E#R/1 =NS+EW/1! @W#R/0",
+                ". @N#G/0 .",
+            }, mapPos: new Vector2(.5f, .5f)));
+
+            Assert.IsFalse(report.HasErrors, report.Describe());
+        }
+
         [Test]
         public void EveryShippedLevelIsValid()
         {

@@ -1,0 +1,17 @@
+bell
+blocked
+chest
+chime
+chime2
+coin
+lit
+pop
+pop2
+shatter
+star
+tap
+tick
+tock
+unlock
+whoosh
+win

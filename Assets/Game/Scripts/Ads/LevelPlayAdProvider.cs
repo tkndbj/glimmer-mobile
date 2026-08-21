@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 using GlimmerGrove.Persistence;
+using GlimmerGrove.Privacy;
 using Unity.Services.LevelPlay;
 using UnityEngine;
 
@@ -42,6 +43,9 @@ namespace GlimmerGrove.Ads
         AdImpression _showing;
         bool _starting;
 
+        /// <summary>Whether anything has told this provider what it may collect.</summary>
+        bool _privacyApplied;
+
         /// <summary>
         /// <paramref name="adUnitIds"/> maps our permanent placement ids onto the ad unit
         /// ids from the LevelPlay dashboard. Kept as a constructor argument rather than
@@ -66,11 +70,58 @@ namespace GlimmerGrove.Ads
             return _units.TryGetValue(placementId, out var unit) && unit != null && unit.IsAdReady();
         }
 
+        // ------------------------------------------------------------- privacy
+        /// <summary>
+        /// Hands the consent answer to LevelPlay.
+        ///
+        /// <para>
+        /// Safe before <c>Init</c>, and that is not luck: the Unity wrapper builds its
+        /// platform bridge in a <em>static constructor</em> rather than on initialisation, so
+        /// <c>SetMetaData</c> and <c>SetGDPRConsent</c> reach the native SDK from the first
+        /// touch of the class. ironSource's own contract requires exactly that — the metadata
+        /// keys are documented as "before init" — and calling them after would configure an
+        /// SDK that had already run an auction.
+        /// </para>
+        /// <para>
+        /// Three calls and no more, because three is what this SDK actually consumes. The IAB
+        /// TCF consent string is not among them: the CMP writes it into the platform's own
+        /// preference store and every adapter reads it there, so passing a copy would make us
+        /// a second source of truth for a value we do not own.
+        /// </para>
+        /// <para>
+        /// <c>SetGDPRConsent</c> is given <see cref="AdPrivacySignals.AllowsPersonalisation"/>
+        /// rather than the raw GDPR answer, so a US opt-out and a child-directed build also
+        /// turn personalisation off — one derived answer, decided in Domain, rather than three
+        /// conditions restated at the edge.
+        /// </para>
+        /// </summary>
+        public void ApplyPrivacy(AdPrivacySignals signals)
+        {
+            _privacyApplied = true;
+
+            LevelPlayPrivacySettings.SetGDPRConsent(signals.AllowsPersonalisation);
+            LevelPlay.SetMetaData("do_not_sell", signals.DoNotSell ? "true" : "false");
+            LevelPlay.SetMetaData("is_child_directed", signals.ChildDirected ? "true" : "false");
+
+            Debug.Log($"[Ads] privacy applied: {signals}");
+        }
+
         // ------------------------------------------------------------ starting
         public Task InitializeAsync(CancellationToken cancellation = default)
         {
             if (IsInitialized) return Task.CompletedTask;
             if (_starting) return _ready.Task;
+
+            // Never start unconfigured. A caller that forgets the ordering gets the restrictive
+            // answer rather than an SDK free to assume consent — the failure is then lost
+            // revenue, which is recoverable, instead of personalised ads served to somebody who
+            // was never asked, which is not.
+            if (!_privacyApplied)
+            {
+                Debug.LogWarning("[Ads] starting LevelPlay with no privacy signals; " +
+                                 "assuming no consent. Boot should apply AdPrivacy.Signals first.");
+                ApplyPrivacy(AdPrivacySignals.Restricted);
+            }
 
             if (string.IsNullOrEmpty(AppKey))
             {

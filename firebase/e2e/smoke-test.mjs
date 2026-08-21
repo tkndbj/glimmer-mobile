@@ -455,5 +455,270 @@ check(creditsOf(preFarmed.body)?.grantedBaseline === creditsBefore + 150,
 check(rejectedBy(preFarmed.body).includes(`streak:${today + 7}:8:credits`),
       "and is refused rather than left pending");
 
+
+// ------------------------------------------------------------------ the boards
+// The one part of this system where a forged save buys something a *stranger* sees, so it
+// is the part worth attacking from the client's side. Everything below runs against the
+// deployed rules and the deployed functions, because neither can be checked anywhere else.
+
+// A grove nobody could possibly have afforded: every priced piece, every region, and a
+// companion the keeper ladder has not reached. This account has cleared one glade.
+const groveConfig = await (await fetch(`${FS}/config/grove`, { headers: bearer })).json();
+check(!groveConfig.error, "config/grove is readable by a signed-in player",
+      groveConfig.error?.status ?? "");
+
+const pieceIds = Object.keys(groveConfig?.fields?.pieces?.mapValue?.fields ?? {});
+const regionIds = Object.keys(groveConfig?.fields?.regions?.mapValue?.fields ?? {});
+const companionIds = Object.keys(groveConfig?.fields?.companions?.mapValue?.fields ?? {});
+
+check(pieceIds.length > 0 && regionIds.length > 0 && companionIds.length > 0,
+      "the grove catalog has been seeded",
+      `${pieceIds.length} piece(s), ${regionIds.length} region(s), ${companionIds.length} companion(s)`);
+
+const priceTotal =
+  Object.values(groveConfig?.fields?.pieces?.mapValue?.fields ?? {})
+        .reduce((sum, v) => sum + Number(v.integerValue ?? 0), 0) +
+  Object.values(groveConfig?.fields?.regions?.mapValue?.fields ?? {})
+        .reduce((sum, v) => sum + Number(v.integerValue ?? 0), 0);
+
+const list = (ids) => ({ arrayValue: { values: ids.map((id) => ({ stringValue: id })) } });
+
+// The name is written with a right-to-left override in it. Left alone it would re-order
+// every row drawn after it on the board — the defect a length cap and a word filter both
+// miss, and the reason the server sanitises rather than trusting what it is sent.
+// The keeper name this run uses.
+//
+// Unique per run, and it has to be: a reservation is permanent and global, so the first run of
+// a hard-coded name claims it for ever and every run afterwards is told — correctly — that it
+// is taken. That is the same trap the earned-credits case fell into, one collection over. It
+// still carries the bidi override, because stripping that is the assertion this name exists for.
+const RUN_TAG = Math.random().toString(36).slice(2, 7);
+const STORED_NAME = `Fern‮${RUN_TAG}`;
+const PUBLIC_NAME = `Fern${RUN_TAG}`;
+const NAME_KEY = PUBLIC_NAME.toLowerCase();
+
+const forgedGrove = await fetch(
+  `${FS}/players/${uid}?updateMask.fieldPaths=homesteadOwned` +
+  `&updateMask.fieldPaths=groveLandOwned&updateMask.fieldPaths=companionsOwned` +
+  `&updateMask.fieldPaths=wallet`,
+  {
+    method: "PATCH", headers: json,
+    body: JSON.stringify({ fields: {
+      homesteadOwned: list(pieceIds),
+      groveLandOwned: list(regionIds),
+      companionsOwned: list(companionIds),
+      wallet: { mapValue: { fields: {
+        heartsProduced: { integerValue: "9" }, heartsSpent: { integerValue: "5" },
+        heartsDueUnix: { integerValue: "1700028800" }, hearts: { integerValue: "4" },
+        heartsNextRefillUnix: { integerValue: "1700028800" },
+        heartBoostUntilUnix: { integerValue: "0" },
+        displayName: { stringValue: STORED_NAME },
+        avatarId: { stringValue: "monarch" },
+      } } },
+    } }),
+  }
+);
+check(forgedGrove.ok, "a client may write its own grove sets", String(forgedGrove.status));
+
+const published = await call("publishGrove", {});
+check(published.status === 200, "publishGrove accepts an honest call", String(published.status));
+
+const card = await (await fetch(`${FS}/groves/${uid}`, { headers: bearer })).json();
+const cardScore = Number(card?.fields?.score?.integerValue ?? -1);
+
+check(cardScore >= 0, "a card was published", `score ${cardScore}`);
+
+// The whole point. The save claims the entire catalog; the server pays out only what this
+// account could ever have afforded, which after one cleared glade is the seed plus a few
+// dozen credits. See invariant 19a.
+check(cardScore < priceTotal,
+      "a forged grove is clamped to what the account could afford",
+      `${cardScore} against a catalog worth ${priceTotal}`);
+
+// And the ceiling includes currency the server *granted*, not only currency the ledger
+// derives. This is the assertion that catches the clamp being too tight, which is the
+// failure mode that looks exactly like the clamp working: the first live run read the
+// wallet's reply field name instead of its stored one, got zero, and would have ranked
+// every player who bought coins with real money at the bottom of the board. A unit test
+// cannot see it — the vectors take the ceiling as a parameter.
+const grantedCredits = Number(creditsOf(wallet.body)?.grantedBaseline ?? 0);
+check(cardScore >= grantedCredits,
+      "the ceiling counts currency the server granted, not only what play derived",
+      `score ${cardScore} against ${grantedCredits} granted`);
+
+check(card?.fields?.name?.stringValue === PUBLIC_NAME,
+      "the published name has its bidi override stripped",
+      JSON.stringify(card?.fields?.name?.stringValue));
+
+check(card?.fields?.league?.stringValue?.startsWith("l"),
+      "the card names a league", card?.fields?.league?.stringValue);
+
+// Server-written, and that is the rule with teeth: everything on a card is derived from a
+// document the client controls, so a client that could write here would own the board.
+const forgeCard = await fetch(`${FS}/groves/${uid}?updateMask.fieldPaths=score`, {
+  method: "PATCH", headers: json,
+  body: JSON.stringify({ fields: { score: { integerValue: "999999999" } } }),
+});
+check(forgeCard.status === 403, "a client cannot write its own card", String(forgeCard.status));
+
+const forgeBoard = await fetch(`${FS}/leaderboards/global?updateMask.fieldPaths=population`, {
+  method: "PATCH", headers: json,
+  body: JSON.stringify({ fields: { population: { integerValue: "1" } } }),
+});
+check(forgeBoard.status === 403, "a client cannot write a board", String(forgeBoard.status));
+
+const boardRead = await fetch(`${FS}/leaderboards/global`, { headers: bearer });
+check(boardRead.ok, "a signed-in player may read a board", String(boardRead.status));
+
+const ranksRead = await fetch(`${FS}/config/groveRanks`, { headers: bearer });
+check(ranksRead.ok, "and the published distribution", String(ranksRead.status));
+
+// A second keeper, because visiting is the feature and one account cannot prove it.
+const second = await (await fetch(
+  `https://identitytoolkit.googleapis.com/v1/accounts:signUp?key=${KEY}`,
+  { method: "POST", headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ returnSecureToken: true }) }
+)).json();
+
+const visitor = { Authorization: `Bearer ${second.idToken}` };
+
+const visited = await fetch(`${FS}/groves/${uid}`, { headers: visitor });
+check(visited.ok, "another keeper may read this grove's card", String(visited.status));
+
+// And still cannot read the save it was built from. This is the whole reason a card is a
+// separate document — see invariant 19.
+const peekSave = await fetch(`${FS}/players/${uid}`, { headers: visitor });
+check(peekSave.status === 403, "and cannot read the save behind it", String(peekSave.status));
+
+// -------------------------------------------------------------- keeper names
+console.log("\nnames");
+
+// Publishing above should have reserved the name, because that is the path a rename made
+// offline takes: `publishGrove` claims whatever the save asks for and nothing else has to
+// remember to. The document id is the fold, so the bidi override is not in it.
+const reservation = await (await fetch(`${FS}/names/${NAME_KEY}`, { headers: bearer })).json();
+check(reservation?.fields?.uid?.stringValue === uid,
+      "publishing reserved the keeper's name",
+      JSON.stringify(reservation?.fields?.uid?.stringValue));
+
+// A `get` is granted and a `list` is not. Without that split the reservations are a directory
+// of every name in the game, downloadable by anybody with an account.
+const walkNames = await fetch(`${FS}/names?pageSize=1`, { headers: bearer });
+check(walkNames.status === 403, "a client cannot walk the reservations", String(walkNames.status));
+
+// The whole security position in one request: uniqueness is server-held, so a client that
+// could write here could take any name it liked, including one somebody else is using.
+const forgeName = await fetch(`${FS}/names/somebodyelse`, {
+  method: "PATCH", headers: json,
+  body: JSON.stringify({ fields: { uid: { stringValue: uid } } }),
+});
+check(forgeName.status === 403, "a client cannot write a reservation", String(forgeName.status));
+
+// Re-claiming the name already held writes nothing and is a success, which is what makes a
+// retry after a dropped reply free rather than a second write.
+const reclaim = await call("claimName", { name: STORED_NAME });
+check(reclaim.body?.result?.outcome === "unchanged",
+      "re-claiming the name already held is a no-op",
+      JSON.stringify(reclaim.body?.result));
+
+// The point of the feature. A second keeper asks for the same name and is refused — and the
+// refusal comes from the document id, not from a query that two callers could both pass.
+const callAs = async (name, data, token) => {
+  const r = await fetch(`${FN}/${name}`, {
+    method: "POST",
+    headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
+    body: JSON.stringify({ data }),
+  });
+  return { status: r.status, body: await r.json().catch(() => ({})) };
+};
+
+// The save has to exist first: a reservation costs a real session rather than an anonymous
+// token, which is the only cheap bound on squatting.
+const noSave = await callAs("claimName", { name: PUBLIC_NAME }, second.idToken);
+check(noSave.status === 400,
+      "a name cannot be claimed before a save exists", String(noSave.status));
+
+const secondSave = await fetch(`${FS}/players/${second.localId}`, {
+  method: "PATCH",
+  headers: { Authorization: `Bearer ${second.idToken}`, "Content-Type": "application/json" },
+  body: JSON.stringify({ fields: {
+    schemaVersion: { integerValue: "17" }, updatedUnix: { integerValue: "1700000000" },
+    levels: { mapValue: { fields: {} } },
+  } }),
+});
+check(secondSave.ok, "the second keeper has a save", String(secondSave.status));
+
+const stolen = await callAs("claimName", { name: `fern ${RUN_TAG}` }, second.idToken);
+check(stolen.body?.result?.outcome === "taken",
+      "a name another keeper holds is refused",
+      JSON.stringify(stolen.body?.result));
+
+// And the fold is what refused it: `fern willow` is not the string the first keeper stored.
+// Case, spacing and width are the ways a duplicate actually gets in.
+const stolenWide = await callAs(
+  "claimName", { name: `FERN.${RUN_TAG.toUpperCase()}` }, second.idToken);
+check(stolenWide.body?.result?.outcome === "taken",
+      "and so is the same name spelled differently",
+      JSON.stringify(stolenWide.body?.result));
+
+// A free name is taken, once, by whoever asks first.
+const freeName = "Moss" + Math.random().toString(36).slice(2, 8);
+const claimed = await callAs("claimName", { name: freeName }, second.idToken);
+check(claimed.body?.result?.outcome === "claimed",
+      "a free name is claimed", JSON.stringify(claimed.body?.result));
+check(claimed.body?.result?.name === freeName,
+      "and the reply says what the account is now called",
+      JSON.stringify(claimed.body?.result?.name));
+
+// Renaming again inside the cooldown is refused with a number rather than an error, because
+// it is the one refusal a player acts on by waiting.
+const tooSoon = await callAs("claimName", { name: freeName + "x" }, second.idToken);
+check(tooSoon.body?.result?.outcome === "cooldown",
+      "renaming twice inside the cooldown is refused",
+      JSON.stringify(tooSoon.body?.result));
+check(Number(tooSoon.body?.result?.cooldownSeconds ?? 0) > 0,
+      "and says how long is left",
+      String(tooSoon.body?.result?.cooldownSeconds));
+
+// Refused, not rejected: the player keeps the name on their own screens. The word list lives
+// only on the server, which is why this is the only place the answer can come from.
+const filtered = await call("claimName", { name: "ADMIN" });
+check(filtered.body?.result?.outcome === "refused",
+      "a filtered name is refused", JSON.stringify(filtered.body?.result));
+check(filtered.body?.result?.name === PUBLIC_NAME,
+      "and the account keeps the name it had",
+      JSON.stringify(filtered.body?.result?.name));
+
+// Two visible characters and an empty fold. It used to publish and could never be reserved,
+// so two keepers would have stood on one board under one name.
+const punctuation = await call("claimName", { name: "!!" });
+check(punctuation.body?.result?.outcome === "refused",
+      "a name that folds to nothing is refused",
+      JSON.stringify(punctuation.body?.result));
+
+// Opting out is a withdrawal rather than a preference that takes effect later: a card left
+// standing after somebody asked to be hidden is a data-protection failure.
+const optOut = await fetch(`${FS}/players/${uid}?updateMask.fieldPaths=settings`, {
+  method: "PATCH", headers: json,
+  body: JSON.stringify({ fields: { settings: { mapValue: { fields: {
+    music: { integerValue: "1" }, sfx: { integerValue: "1" }, haptics: { integerValue: "1" },
+    board: { integerValue: "2" }, language: { stringValue: "en" },
+  } } } } }),
+});
+check(optOut.ok, "a client may opt out of the boards", String(optOut.status));
+
+const republish = await call("publishGrove", {});
+check(republish.body?.result?.withdrawn === true,
+      "publishing while opted out takes the card down instead");
+
+const afterOptOut = await fetch(`${FS}/groves/${uid}`, { headers: bearer });
+check(afterOptOut.status === 404, "and the card is gone", String(afterOptOut.status));
+
+// Twice is a success, not an error. A withdrawal that could fail permanently is a device
+// retrying it for the life of the account — invariant 13a.
+const withdrawAgain = await call("withdrawGrove", {});
+check(withdrawAgain.status === 200, "withdrawing a card that is already gone succeeds",
+      String(withdrawAgain.status));
+
 console.log(`\n${pass} passed, ${fail} failed`);
 process.exit(fail === 0 ? 0 : 1);

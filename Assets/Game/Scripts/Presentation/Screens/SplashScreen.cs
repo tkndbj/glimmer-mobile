@@ -6,6 +6,7 @@ using GlimmerGrove.Cloud;
 using GlimmerGrove.Content;
 using GlimmerGrove.Localization;
 using GlimmerGrove.Progression;
+using GlimmerGrove.Ads;
 using GlimmerGrove.Store;
 using UnityEngine;
 using UnityEngine.UI;
@@ -204,6 +205,15 @@ namespace GlimmerGrove
             CloudSaveService.BeginStatsRefresh();
 
             StoreService.BeginConnect();
+
+            // Consent, then mediation, in that order and never the other one. This is the
+            // only thing on the splash that can put a dialog in front of the player — the
+            // CMP's form, and on iOS Apple's tracking prompt — and it is here rather than in
+            // Boot because neither belongs before the first scene has loaded. Nothing waits
+            // on it: the offer buttons light up when readiness arrives, which is what
+            // RewardedAds.Changed is for. See RewardedAds.StartAsync for why the order is
+            // owned there rather than written out at this call site.
+            RewardedAds.BeginStart();
 
             while (Time.unscaledTime - started < MinimumShow || _shown < .999f) yield return null;
 

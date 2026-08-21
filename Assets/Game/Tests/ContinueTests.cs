@@ -28,8 +28,7 @@ namespace GlimmerGrove.Tests
     {
         /// <summary>Par 30 at the shipped 2s/turn: a 60 second glade, gold at 30, silver at 45.</summary>
         static LevelTuning Timed(int par = 30)
-            => new LevelTuning(par, LevelTuning.DefaultGoldFactor, LevelTuning.DefaultSilverFactor,
-                               LevelTuning.DefaultHintAllowance, 0f, 0f);
+            => new LevelTuning(par, LevelTuning.DefaultGoldFactor, LevelTuning.DefaultSilverFactor, 0f, 0f);
 
         /// <summary>A clock run out on a 60 second glade, exactly as a timeout leaves it.</summary>
         static RunClock Expired()

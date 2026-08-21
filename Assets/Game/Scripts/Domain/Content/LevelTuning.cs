@@ -1,3 +1,4 @@
+using GlimmerGrove.Progression;
 using UnityEngine;
 
 namespace GlimmerGrove.Content
@@ -14,7 +15,6 @@ namespace GlimmerGrove.Content
     {
         public const float DefaultGoldFactor = 1.35f;
         public const float DefaultSilverFactor = 2.00f;
-        public const int DefaultHintAllowance = 3;
 
         /// <summary>
         /// Seconds of clock per par turn — the whole time limit, in one number.
@@ -33,20 +33,36 @@ namespace GlimmerGrove.Content
         /// the one rule in the game that a player can fail through no fault of their reasoning.
         /// </para>
         /// </summary>
-        public const float DefaultTimeFactor = 2.00f;
+        public const float DefaultTimeFactor = 1.70f;
 
         /// <summary>
-        /// Where the clock's own star thresholds sit, as fractions of the limit.
+        /// Where the clock's own star thresholds sit, in seconds per par turn.
         ///
         /// <para>
-        /// Fractions of the limit rather than their own factors over par, so that moving
-        /// <see cref="TimeFactor"/> moves all three together. Two numbers that both had to be
-        /// retuned in step is how the move budget and the one-star line came to need
-        /// <see cref="MoveBudget"/>'s floor.
+        /// <b>Factors over par, not fractions of the limit</b> — and that is a reversal, so it
+        /// carries its reason. Fractions were chosen so that moving <see cref="TimeFactor"/>
+        /// moved all three together and they could never drift apart. What that also meant is
+        /// that they could never move <em>apart</em>: tightening the losing edge by a fifth
+        /// tightened the three-star window by a fifth as well, and the two want opposite
+        /// things. The fail line is difficulty, and it is the number a live retune will reach
+        /// for; the star line is the <em>economy</em>, because earned credits are derived from
+        /// the star ledger, so quietly moving it deflates every reward in the game by a factor
+        /// nobody wrote down. Held against par instead, three stars means the same run it
+        /// always did whatever the clock is doing.
+        /// </para>
+        /// <para>
+        /// The shipped values are exactly what the old fractions came to at the old factor
+        /// (2.00 × .50 and 2.00 × .75), so nothing already earned moves.
+        /// </para>
+        /// <para>
+        /// They are clamped to the limit rather than checked against it — see
+        /// <see cref="TimeGoldMillis"/>. A glade tuned tighter than its own gold line is not a
+        /// content error, it is a glade where finishing at all is worth three stars, which is
+        /// the honest reading and cannot punish anybody.
         /// </para>
         /// </summary>
-        public const float TimeGoldFraction = .50f;
-        public const float TimeSilverFraction = .75f;
+        public const float TimeGoldFactor = 1.00f;
+        public const float TimeSilverFactor = 1.50f;
 
         /// <summary>
         /// How many pars' worth of turns a player gets before the run is lost.
@@ -72,8 +88,6 @@ namespace GlimmerGrove.Content
         public readonly float GoldFactor;
         public readonly float SilverFactor;
 
-        public readonly int HintAllowance;
-
         /// <summary>Turns allowed, as a multiple of par. <see cref="Unlimited"/> for none.</summary>
         public readonly float BudgetFactor;
 
@@ -82,13 +96,12 @@ namespace GlimmerGrove.Content
         /// </summary>
         public readonly float TimeFactor;
 
-        public LevelTuning(int par, float goldFactor, float silverFactor, int hintAllowance,
+        public LevelTuning(int par, float goldFactor, float silverFactor,
                            float budgetFactor = 0f, float timeFactor = 0f)
         {
             Par = Mathf.Max(1, par);
             GoldFactor = goldFactor > 0f ? goldFactor : DefaultGoldFactor;
             SilverFactor = silverFactor > 0f ? silverFactor : DefaultSilverFactor;
-            HintAllowance = Mathf.Max(0, hintAllowance);
 
             // 0 means "not authored", which takes the default. Only a deliberate
             // negative turns the budget off, so a level cannot lose its fail state by
@@ -106,7 +119,7 @@ namespace GlimmerGrove.Content
         }
 
         public static LevelTuning Default(int par)
-            => new LevelTuning(par, DefaultGoldFactor, DefaultSilverFactor, DefaultHintAllowance);
+            => new LevelTuning(par, DefaultGoldFactor, DefaultSilverFactor);
 
         public int GoldThreshold => Mathf.CeilToInt(Par * GoldFactor);
         public int SilverThreshold => Mathf.CeilToInt(Par * SilverFactor);
@@ -128,17 +141,35 @@ namespace GlimmerGrove.Content
         /// The whole clock, in milliseconds. <see cref="int.MaxValue"/> when the glade is
         /// untimed, so callers can compare without special-casing — the same shape
         /// <see cref="MoveBudget"/> uses.
+        ///
+        /// <para>
+        /// The published <c>clockScale</c> is applied here and only here, which is what keeps
+        /// the whole lever to one multiplication. It reaches the limit and never the star
+        /// thresholds (<see cref="TimeGoldFactor"/>) and never what a run records, because
+        /// what is stored is elapsed play time rather than time left — so a retune moves
+        /// where a run is lost and moves nothing else in the game.
+        /// </para>
         /// </summary>
         public int TimeLimitMillis
-            => HasTimeLimit ? Mathf.CeilToInt(Par * TimeFactor * 1000f) : int.MaxValue;
+            => HasTimeLimit
+                ? DifficultyRules.ScaleLimit(Mathf.CeilToInt(Par * TimeFactor * 1000f))
+                : int.MaxValue;
 
-        /// <summary>Elapsed time at or under which the clock still allows three stars.</summary>
+        /// <summary>
+        /// Elapsed time at or under which the clock still allows three stars.
+        ///
+        /// Derived from par rather than from the limit, so a retuned clock cannot move it —
+        /// see <see cref="TimeGoldFactor"/> — and clamped to the limit, because a threshold
+        /// beyond the point the run is lost at is a threshold nothing can be measured against.
+        /// </summary>
         public int TimeGoldMillis
-            => HasTimeLimit ? Mathf.CeilToInt(TimeLimitMillis * TimeGoldFraction) : int.MaxValue;
+            => HasTimeLimit ? Mathf.Min(TimeLimitMillis, Mathf.CeilToInt(Par * TimeGoldFactor * 1000f))
+                            : int.MaxValue;
 
         /// <summary>Elapsed time at or under which the clock still allows two.</summary>
         public int TimeSilverMillis
-            => HasTimeLimit ? Mathf.CeilToInt(TimeLimitMillis * TimeSilverFraction) : int.MaxValue;
+            => HasTimeLimit ? Mathf.Min(TimeLimitMillis, Mathf.CeilToInt(Par * TimeSilverFactor * 1000f))
+                            : int.MaxValue;
 
         // ------------------------------------------------------------------ the stars
         /// <summary>How many stars the move count alone would allow.</summary>

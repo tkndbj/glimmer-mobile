@@ -38,8 +38,16 @@ namespace GlimmerGrove.AssetPipeline
 
         public T Load<T>(string address) where T : Object
         {
+            // A cached handle that has gone invalid is dropped and loaded again rather than
+            // answered with null. Returning null and *keeping* the dead entry made the
+            // address permanently unloadable for the life of the process: every later call
+            // took the same branch, so one release race turned into art that silently never
+            // appeared again — invariant 7b's white rectangle, with nothing in the log.
             if (_handles.TryGetValue(address, out var existing))
-                return existing.IsValid() ? existing.Result as T : null;
+            {
+                if (existing.IsValid()) return existing.Result as T;
+                _handles.Remove(address);
+            }
 
             // Synchronous only where a call site genuinely cannot wait. Prefer
             // LoadAsync, and prefer preloading the chapter over either.
@@ -64,15 +72,51 @@ namespace GlimmerGrove.AssetPipeline
             return Sorted(list);
         }
 
+        /// <summary>
+        /// Loads one address, and survives the scope being released underneath it.
+        ///
+        /// <para>
+        /// <b>A handle can die while this method is awaiting it, and that is ordinary rather
+        /// than exceptional.</b> A scope's load is started when a screen opens and released
+        /// when it closes (<c>AssetLibrary.ReleaseScope</c>), so opening a visited grove and
+        /// going straight back — a tap and a tap — releases handles that are still in flight.
+        /// Every member of a released <c>AsyncOperationHandle</c> throws, including
+        /// <c>Status</c>, so reading it to decide whether the load worked threw
+        /// "Attempting to use an invalid operation handle" out of the continuation, where
+        /// nothing was catching it. It surfaced as an exception per unfinished address every
+        /// time somebody left a grove quickly.
+        /// </para>
+        /// <para>
+        /// The validity check therefore comes <em>first</em>, before the cancellation token
+        /// and before the status. The token is not a substitute for it: a release and a
+        /// cancellation are different events and only one of them trips the token.
+        /// </para>
+        /// </summary>
         public async Task<T> LoadAsync<T>(string address, CancellationToken cancellation) where T : Object
         {
             if (_handles.TryGetValue(address, out var existing))
-                return existing.IsValid() ? existing.Result as T : null;
+            {
+                if (!existing.IsValid()) _handles.Remove(address);          // see Load<T>
+                else if (existing.IsDone) return existing.Result as T;
+                else
+                {
+                    // Already in flight. Awaiting it is the point: reading `Result` off an
+                    // unfinished handle yields null, so a second request for an address the
+                    // first had not finished loading used to come back empty — which is the
+                    // same white rectangle by a different route.
+                    await existing.Task;
+                    return existing.IsValid() && existing.Status == AsyncOperationStatus.Succeeded
+                        ? existing.Result as T
+                        : null;
+                }
+            }
 
             var handle = Addressables.LoadAssetAsync<T>(address);
             _handles[address] = handle;
 
             var result = await handle.Task;
+
+            if (!handle.IsValid()) return null;
             if (cancellation.IsCancellationRequested) return null;
 
             if (handle.Status != AsyncOperationStatus.Succeeded)

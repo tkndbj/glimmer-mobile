@@ -27,7 +27,7 @@ namespace GlimmerGrove.Tests
         }
 
         /// <summary>A board with no budget, so the budget tip does not crowd the test.</summary>
-        static LevelTuning NoBudget => new LevelTuning(3, 0f, 0f, 3, LevelTuning.Unlimited);
+        static LevelTuning NoBudget => new LevelTuning(3, 0f, 0f, LevelTuning.Unlimited);
 
         /// <summary>The head of the teaching queue, or an invalid sighting when empty.</summary>
         static MechanicSighting First(Puzzle board, System.Func<Mechanic, bool> seen)

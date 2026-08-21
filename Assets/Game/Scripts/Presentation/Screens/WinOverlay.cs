@@ -1,5 +1,6 @@
 using System;
 using GlimmerGrove.Ads;
+using GlimmerGrove.Cloud;
 using GlimmerGrove.Content;
 using GlimmerGrove.Daily;
 using GlimmerGrove.Localization;
@@ -372,7 +373,7 @@ namespace GlimmerGrove
             // player who made the turn count that they had done everything asked.
             string hintText = Run.HasTimeLimit
                 ? Loc.Format("ui.win.three_stars_timed", Run.Target,
-                             RunClock.Format(Mathf.CeilToInt(Run.TimeLimit * LevelTuning.TimeGoldFraction)))
+                             RunClock.Format(Run.TimeGold))
                 : Loc.Format("ui.win.three_stars", Run.Target);
 
             Text hintLine = hint ? Row("Hint", -hintY, hintText,
@@ -1220,7 +1221,8 @@ namespace GlimmerGrove
             // Offered here and nowhere else. A player who has just finished a chapter has
             // something worth keeping, which is exactly when asking them to protect it is a
             // service rather than an obstacle — and the answer costs nothing either way.
-            bool offerAccount = FinishedAChapter(index) && AccountOverlay.ShouldOffer();
+            bool offerAccount = FinishedAChapter(index)
+                                && AccountPrompts.ShouldOffer(AccountPromptTrigger.Chapter);
 
             var nextButton = UIKit.TextButton("Next", Panel, "btn_green",
                                               Loc.Get(last ? "ui.win.glades" : "ui.win.next"), 50,
@@ -1228,12 +1230,14 @@ namespace GlimmerGrove
                                               new Vector2(0f, ButtonY),
                                               () => Close(() =>
                                               {
-                                                  if (offerAccount)
-                                                  {
-                                                      AccountOverlay.NoteOffered();
-                                                      Flow.Modal<AccountOverlay>();
+                                                  // Asked again rather than trusting the flag
+                                                  // measured when the row was laid out: a sync
+                                                  // can link this device while the panel is up,
+                                                  // and Offer is the only thing that spends the
+                                                  // budget, so the two can never disagree.
+                                                  if (offerAccount
+                                                      && AccountPrompts.Offer(AccountPromptTrigger.Chapter))
                                                       return;
-                                                  }
                                                   if (last) Flow.Go<LevelsScreen>();
                                                   else Flow.Go<PlayScreen>(v => v.LevelId = nextId);
                                               }));

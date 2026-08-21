@@ -6,7 +6,8 @@
         "GlimmerGrove.Cloud",
         "GlimmerGrove.Presentation",
         "UnityEngine.TestRunner",
-        "UnityEditor.TestRunner"
+        "UnityEditor.TestRunner",
+        "GlimmerGrove.Privacy"
     ],
     "includePlatforms": [
         "Editor"

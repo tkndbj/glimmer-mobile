@@ -833,5 +833,6 @@ namespace GlimmerGrove
         // worth — it only passes the question on to its tuning.
         public bool HasTimeLimit => Tuning.HasTimeLimit;
         public int TimeLimitMillis => Tuning.TimeLimitMillis;
+        public int TimeGoldMillis => Tuning.TimeGoldMillis;
     }
 }

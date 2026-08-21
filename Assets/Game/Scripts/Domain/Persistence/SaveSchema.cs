@@ -169,8 +169,25 @@ namespace GlimmerGrove.Persistence
         ///      through to "return the first argument", which is argument order rather than a
         ///      tie-break, and with a second field able to differ that would have left two
         ///      devices pushing facings at each other for ever.
+        /// v19 — the hint pool (<see cref="WalletDto.hintsProduced"/>,
+        ///      <see cref="WalletDto.hintsSpent"/>, <see cref="WalletDto.hintsDueUnix"/>).
+        ///      A hint used to be three per glade, handed back in full at every board, so it
+        ///      was stored nowhere and meant nothing — the only players who never used one
+        ///      were the ones who had not found the button. It is now an account-wide
+        ///      resource on a clock, which means it is state, which means it has to be
+        ///      mergeable. So it is the heart ledger's shape for the second time and for its
+        ///      reason: three counters that only ever rise, joined by <c>max</c>, with the
+        ///      count derived (invariant 11b). The arithmetic is not written out twice —
+        ///      both pools run <see cref="RegenLedger"/>, which is invariant 5b applied
+        ///      before the mistake rather than after it. Zero in
+        ///      <see cref="WalletDto.hintsProduced"/> means "written before hints were
+        ///      stored", which is unreachable for a real ledger because an account is seeded
+        ///      at the refill cap and the field only rises, so a v18 file needs no migration
+        ///      code at all: it reads as a fresh full pool. The per-glade allowance is gone
+        ///      from <see cref="Content.LevelTuning"/> entirely — a glade has no opinion
+        ///      about how much of a player's own pool they may spend on it.
         /// </summary>
-        public const int Version = 18;
+        public const int Version = 19;
 
         /// <summary>Progress that predates this file: index-keyed keys in PlayerPrefs.</summary>
         public const int LegacyPlayerPrefsVersion = 0;
@@ -383,6 +400,28 @@ namespace GlimmerGrove.Persistence
         public StoredFlag sfx;
         public StoredFlag haptics;
         public string language;
+
+        /// <summary>
+        /// Whether this keeper's grove may appear on the public boards.
+        ///
+        /// <para>
+        /// <b>A setting rather than a new top-level field, and that is what kept it free.</b>
+        /// <c>settings</c> is already carried by the merge, already in the mapper both ways and
+        /// already inside <c>firestore.rules</c>' <c>hasOnly</c> list, so a preference put here
+        /// reaches the server without any of the four places invariant 12a names having to be
+        /// touched — which is the same reason it is the right home for it rather than a
+        /// coincidence. It is also read by <c>publishGrove</c> off the save document the server
+        /// already opens, so the refusal is enforced where it cannot be talked out of.
+        /// </para>
+        /// <para>
+        /// A <see cref="StoredFlag"/> rather than a bool, so "never chosen" is a state. It
+        /// defaults to <em>on</em>: a keeper who has never renamed is published under a name
+        /// the server generates, which names nobody, and a board that ships empty because
+        /// nobody found the toggle is a board that never starts. The toggle is on the profile
+        /// beside the account section, which is where identity lives.
+        /// </para>
+        /// </summary>
+        public StoredFlag board;
     }
 
     /// <summary>
@@ -476,6 +515,44 @@ namespace GlimmerGrove.Persistence
         public long heartBoostUntilUnix;
 
         /// <summary>
+        /// Every hint ever handed to this player — timer refills, the starting set, a
+        /// watched video. Only ever rises.
+        ///
+        /// <para>
+        /// <b>Zero or less means the writer stored no hint pool</b>, and it is a real
+        /// sentinel rather than a hopeful one, for exactly the reason
+        /// <see cref="heartsProduced"/> spells out at length: <c>JsonUtility</c> fills an
+        /// absent field with zero, and zero is unreachable for a genuine ledger because an
+        /// account is seeded at <see cref="HintRules.RefillCap"/> and this only ever rises.
+        /// So a v18 file reads as a fresh full pool and needs no migration code.
+        /// </para>
+        /// <para>
+        /// This field and the two below are the whole reason hints survive a sync, and the
+        /// argument is the one hearts already lost a schema version to: a stored count of
+        /// three-against-zero is equally consistent with "one device spent three" and "one
+        /// device has not heard about a refill", so any rule over the pair mints in one
+        /// reading and deletes in the other. See <see cref="RegenLedger"/> for the
+        /// invariants and why the join preserves them.
+        /// </para>
+        /// </summary>
+        public long hintsProduced;
+
+        /// <summary>
+        /// Every hint ever consumed. Only ever rises. Read only when
+        /// <see cref="hintsProduced"/> says a ledger is present — on its own, zero is both
+        /// "spent nothing" and "field absent", and it does not have to tell them apart.
+        /// </summary>
+        public long hintsSpent;
+
+        /// <summary>
+        /// When the pending hint lands. Advances one period per refill, and forward again
+        /// when a spend restarts an idle timer; never rewound, and never cleared on reaching
+        /// the cap — a field that is zeroed cannot be merged with <c>max</c>. Zero means only
+        /// "this timer has never started".
+        /// </summary>
+        public long hintsDueUnix;
+
+        /// <summary>
         /// The name the player chose, or empty when they never have.
         ///
         /// <para>
@@ -525,6 +602,7 @@ namespace GlimmerGrove.Persistence
         public static WalletDto Unwritten() => new WalletDto
         {
             coins = -1, gems = -1, hearts = -1, heartsProduced = -1, heartsSpent = -1,
+            hintsProduced = -1, hintsSpent = -1,
         };
     }
 

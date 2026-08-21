@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using GlimmerGrove.Progression;
 
 namespace GlimmerGrove.Content
 {
@@ -25,6 +26,7 @@ namespace GlimmerGrove.Content
 
             CheckPopulation(cells, issues);
             CheckArmsMate(level, cells, issues);
+            CheckRootedTiles(level, cells, issues);
             CheckAuthoredSolution(level, cells, issues);
             CheckFragileConduits(level, cells, issues);
             CheckBoundConduits(level, cells, issues);
@@ -166,6 +168,21 @@ namespace GlimmerGrove.Content
                 Warn(issues, $"three stars needs {tuning.GoldThreshold} turns inside " +
                              $"{goldSeconds:0.#}s — {toStar:0.0} taps a second, which is drumming " +
                              "rather than solving, so the third star is effectively unreachable");
+
+            // And the same question asked of the tightest clock anybody could publish.
+            //
+            // The limit is multiplied by a live `clockScale` (DifficultyRuleTable), so a glade
+            // that is merely demanding as authored can be unwinnable as retuned — and that
+            // retune reaches every device in the world without an app update and without
+            // passing this validator again. So the build gate has to judge the worst case
+            // rather than the shipped one; the floor is a constant precisely so it can.
+            float atFloor = toFinish / DifficultyLimits.MinClockScale;
+            if (toFinish <= FinishTapRate && atFloor > FinishTapRate)
+                Warn(issues, $"the clock allows {limitSeconds:0.#}s as authored, but a published " +
+                             $"clockScale of {DifficultyLimits.MinClockScale:0.##} would cut it to " +
+                             $"{limitSeconds * DifficultyLimits.MinClockScale:0.#}s and need " +
+                             $"{atFloor:0.0} taps a second just to finish — raise timeFactor, or " +
+                             "the glade cannot survive the tightest retune anybody can push");
         }
 
         /// <summary>
@@ -331,6 +348,47 @@ namespace GlimmerGrove.Content
         /// Cheap to prove: turns owed at the opening rotation is exactly how many turns
         /// the tile needs, and its count is exactly how many it has.
         /// </summary>
+        /// <summary>
+        /// A rooted tile has to start in an orientation that already reads as solved.
+        ///
+        /// <para>
+        /// This is the one check that guards the other checks. Every proof below runs
+        /// against a copy of the board with every rotation set to zero, because that is
+        /// the authored solution — but a rooted tile can never be turned, so a rooted
+        /// tile authored away from zero is a tile the player is stuck with at an angle
+        /// the proof never sees. What is proved is then a different board from the one
+        /// that ships, and nothing else here can notice: every arm mates, the solved
+        /// probe lights, par is unaffected because <see cref="PuzzleFactory.MinimumMoves"/>
+        /// skips rooted tiles, and the glade draws perfectly.
+        /// </para>
+        /// <para>
+        /// It also breaks the one promise <see cref="Puzzle.TurnsToSolution"/> makes.
+        /// That count includes rooted tiles, so one stuck off its solution adds turns
+        /// that can never be paid: a player who has in fact reached the solution is told
+        /// they were one turn away, which is the near-miss line being generous — the
+        /// single thing it exists not to be.
+        /// </para>
+        /// <para>
+        /// Asked as <see cref="Puzzle.Alike"/> rather than as <c>rot == 0</c>, because a
+        /// straight conduit and a straight crossing genuinely read the same half a turn
+        /// round and refusing those would be refusing a tile that is already correct.
+        /// </para>
+        /// </summary>
+        static void CheckRootedTiles(LevelDefinition level, Cell[] cells, List<LevelIssue> issues)
+        {
+            int w = level.Layout.Width;
+
+            for (int i = 0; i < cells.Length; i++)
+            {
+                if (!cells[i].locked || cells[i].kind == Kind.Empty) continue;
+                if (Puzzle.Alike(cells[i], cells[i].rot)) continue;
+
+                Error(issues, $"the rooted tile at {i % w},{i / w} starts {PuzzleFactory.TurnsOwed(cells[i])} " +
+                              "turn(s) from its solution and can never be turned, so the board that was " +
+                              "proved solvable is not the board the player gets; author it at /0");
+            }
+        }
+
         static void CheckFragileConduits(LevelDefinition level, Cell[] cells, List<LevelIssue> issues)
         {
             int w = level.Layout.Width;

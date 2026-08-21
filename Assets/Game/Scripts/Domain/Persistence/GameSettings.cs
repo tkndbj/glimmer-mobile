@@ -19,6 +19,18 @@ namespace GlimmerGrove.Persistence
         public static string Language { get; private set; } = string.Empty;
 
         /// <summary>
+        /// Whether this keeper's grove appears on the public boards.
+        ///
+        /// <para>
+        /// The one setting here that is about other people rather than about this device, and
+        /// the only one whose "off" has to reach a server to mean anything — turning it off
+        /// raises a withdrawal, which takes the published card down rather than merely
+        /// stopping the next rebuild. See <c>GroveBoard</c> and <see cref="SettingsDto.board"/>.
+        /// </para>
+        /// </summary>
+        public static bool BoardOptIn { get; private set; } = true;
+
+        /// <summary>
         /// Raised after any setting changes. The audio player subscribes to this
         /// rather than being called directly, which is what keeps settings — a piece
         /// of saved state — from having to know that a sound system exists.
@@ -46,6 +58,20 @@ namespace GlimmerGrove.Persistence
             Commit();
         }
 
+        /// <summary>
+        /// Joins or leaves the public boards.
+        ///
+        /// Raised through <see cref="Changed"/> like every other setting, so the board service
+        /// hears about it by subscribing once rather than by the profile panel remembering to
+        /// call it — the wiring lesson this project has now paid for three times.
+        /// </summary>
+        public static void SetBoardOptIn(bool on)
+        {
+            if (BoardOptIn == on) return;
+            BoardOptIn = on;
+            Commit();
+        }
+
         public static void SetLanguage(string languageCode)
         {
             languageCode ??= string.Empty;
@@ -68,6 +94,7 @@ namespace GlimmerGrove.Persistence
             MusicOn = s.music.Resolve(true);
             SfxOn = s.sfx.Resolve(true);
             HapticsOn = s.haptics.Resolve(true);
+            BoardOptIn = s.board.Resolve(true);
             Language = s.language ?? string.Empty;
         }
 
@@ -78,6 +105,7 @@ namespace GlimmerGrove.Persistence
                 music = StoredFlag.From(MusicOn),
                 sfx = StoredFlag.From(SfxOn),
                 haptics = StoredFlag.From(HapticsOn),
+                board = StoredFlag.From(BoardOptIn),
                 language = Language,
             };
         }

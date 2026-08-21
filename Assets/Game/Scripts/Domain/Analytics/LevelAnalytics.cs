@@ -78,6 +78,15 @@ namespace GlimmerGrove.Analytics
                 "hearts_left", heartsLeft);
         }
 
+        /// <summary>
+        /// A hint was spent on this glade.
+        ///
+        /// <paramref name="hintsRemaining"/> is what the <em>account</em> holds afterwards,
+        /// not what is left on this board — the per-glade allowance is gone, and the pool
+        /// refills on a clock and is spent across every glade. Worth knowing before reading
+        /// a chart: a zero here means the player is now waiting, which is a fact about their
+        /// session rather than about this level.
+        /// </summary>
         public static void TrackHintUsed(LevelDefinition level, int hintsRemaining, int moves)
         {
             if (level == null) return;

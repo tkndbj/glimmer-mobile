@@ -5,6 +5,7 @@ using GlimmerGrove.Content;
 using GlimmerGrove.Daily;
 using GlimmerGrove.Localization;
 using GlimmerGrove.Persistence;
+using GlimmerGrove.Privacy;
 using GlimmerGrove.Social;
 using UnityEngine;
 using UnityEngine.UI;
@@ -697,7 +698,15 @@ namespace GlimmerGrove
             // old height. Everything else here hangs off the top edge and only Close hangs
             // off the bottom, so shrinking the panel is what closes the hole — moving Close
             // up instead would have left the panel the same size with dead space in it.
-            MakePanel(new Vector2(860f, 700f), Loc.Get("ui.settings.title"));
+            // Only players whose jurisdiction requires an ongoing privacy control get the
+            // row, and the CMP is what decides that — not a locale, not a guess. Drawing it
+            // for everybody would put a button in front of people it does nothing for;
+            // hiding it from somebody in the EEA who consented is a compliance failure,
+            // because withdrawing has to be as easy as agreeing. So the panel is measured
+            // to the state it is in, exactly as the account panel is.
+            bool privacy = AdPrivacy.CanRevisit;
+
+            MakePanel(new Vector2(860f, privacy ? 830f : 700f), Loc.Get("ui.settings.title"));
 
             var row = UIKit.Box("Toggles", Panel, new Vector2(700f, 200f), new Vector2(.5f, 1f), new Vector2(0f, -260f));
             Toggle(row, "ic_music", new Vector2(-190f, 0f), () => GameSettings.MusicOn, GameSettings.SetMusic);
@@ -715,6 +724,19 @@ namespace GlimmerGrove
             UIKit.Titled("Credit", Panel, Loc.Get("ui.settings.credit"), 24, new Color(.52f, .40f, .31f, .85f),
                          TextAnchor.MiddleCenter, new Vector2(700f, 36f), new Vector2(.5f, 1f),
                          new Vector2(0f, -462f), 0f, 0f);
+
+            if (privacy)
+            {
+                // Reopens the consent form. Deliberately not a toggle of our own: the answer
+                // has to be recorded by the CMP in the form the ad networks read, so a switch
+                // here would either lie about what it changed or need us to write a consent
+                // string we do not own. The panel closes first, because the form is a native
+                // dialog and stacking one over a Unity modal leaves the modal drawn behind it
+                // for as long as it is up.
+                UIKit.TextButton("Privacy", Panel, "btn_blue", Loc.Get("ui.settings.privacy"), 40,
+                                 new Vector2(600f, 116f), new Vector2(.5f, 1f), new Vector2(0f, -560f),
+                                 () => Close(() => _ = AdPrivacy.RevisitAsync()));
+            }
 
             // Account lives on the profile screen, not here. It is the one part of
             // settings that is about *who the player is* rather than how the game

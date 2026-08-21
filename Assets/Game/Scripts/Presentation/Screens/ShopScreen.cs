@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using GlimmerGrove.Cloud;
 using GlimmerGrove.Localization;
 using GlimmerGrove.Persistence;
 using GlimmerGrove.Progression;
@@ -39,7 +40,12 @@ namespace GlimmerGrove
     /// </summary>
     public sealed class ShopScreen : View
     {
-        public override string Track => "hub";
+        // "hub" was not a clip. Every other screen off the map and the board names
+        // mus_menu, and an address nothing can resolve throws InvalidKeyException on the
+        // frame the shop opens and then plays nothing — on the one screen in the game
+        // that takes money. Nothing catches a track name: Validate Art walks the assets
+        // the *catalog* asks for, and a track is named by a screen.
+        public override string Track => "mus_menu";
 
         const float HeaderHeight = 300f;
         const float TabRow = 132f;
@@ -51,10 +57,18 @@ namespace GlimmerGrove
         // pixel radius and there is no such thing as half a pixel of corner.
         const int CellRadius = 30;
 
+        /// <summary>
+        /// The standing "not signed in" bar, and the gap under it. Reserved out of the grid's
+        /// viewport only while it is drawn, so a linked player and the gem-priced shelf stay
+        /// pixel-identical to what shipped rather than carrying a hole where a warning would
+        /// have gone.
+        /// </summary>
+        const float NoticeH = 74f, NoticeGap = 14f;
+
         RectTransform _viewport, _tabs;
         GridView _grid;
         Text _summary, _coins, _gems, _hearts;
-        Btn _restore;
+        Btn _restore, _notice;
 
         readonly List<StoreProduct> _products = new List<StoreProduct>();
         readonly List<StoreGood> _goods = new List<StoreGood>();
@@ -106,6 +120,13 @@ namespace GlimmerGrove
 
             // A content push can retune the whole shop, including which products exist.
             ProgressionRules.Changed += Reload;
+
+            // The notice is a claim about the account, so it has to follow the account. A
+            // player taps it, links, and comes back to a shelf that would otherwise still be
+            // telling them their purchases are stranded on this phone — and the panel they
+            // linked from has four exits, so an event is the only thing that catches all of
+            // them. See CloudSaveService.IdentityChanged.
+            CloudSaveService.IdentityChanged += Repaint;
         }
 
         void OnDestroy()
@@ -116,6 +137,7 @@ namespace GlimmerGrove
             PlayerProgression.Changed -= Repaint;
             Wallet.HeartsChanged -= OnHeartsChanged;
             ProgressionRules.Changed -= Reload;
+            CloudSaveService.IdentityChanged -= Repaint;
         }
 
         public override bool OnBack() { Flow.Go<HomeScreen>(); return true; }
@@ -156,6 +178,95 @@ namespace GlimmerGrove
 
             BuildBalances();
             BuildTabs();
+            BuildNotice();
+        }
+
+        /// <summary>
+        /// The standing warning on the shelves priced in real money: this phone is not signed
+        /// in, so anything bought here is tied to an account that dies with the installation.
+        ///
+        /// <para>
+        /// <b>Why a bar and not a dialog.</b> Everything else about a purchase on this screen
+        /// is deliberately un-interrupted — the payment sheet is the confirmation and nothing
+        /// stands in front of it — so the honest way to warn somebody is to have the warning
+        /// already there when they arrive, rather than to stop them once they have decided. It
+        /// costs no tap, it is true every time it is drawn, and it is what allows the panel
+        /// that <em>does</em> interrupt to be as rare as <c>AccountPromptPolicy</c> makes it.
+        /// </para>
+        /// <para>
+        /// <b>Only the money shelves.</b> Supplies are priced in gems, and hearts and boosts
+        /// live in the save, which merges into whatever account this device eventually links —
+        /// nothing bought there can be lost. Warning about it anyway would put the sentence on
+        /// a shelf where it is false, and a warning that is sometimes false is the fastest way
+        /// to teach somebody to read past it.
+        /// </para>
+        /// <para>
+        /// Built once and shown or hidden, never created on demand: this sits on a repaint
+        /// path, and a bar destroyed and rebuilt flashes every time a price arrives.
+        /// </para>
+        /// </summary>
+        void BuildNotice()
+        {
+            _notice = UIKit.Button("GuestNotice", Safe, Art.Round(18), new Vector2(1000f, NoticeH),
+                                   new Vector2(.5f, 1f),
+                                   new Vector2(0f, -(HeaderHeight + TabRow + 44f) - NoticeH * .5f),
+                                   () => Flow.Modal<AccountOverlay>());
+
+            var plate = _notice.GetComponent<Image>();
+            if (plate) plate.color = new Color(.17f, .11f, .05f, .92f);
+
+            var edge = UIKit.Img("Edge", _notice.transform, Art.RoundOutline(18, 2.5f),
+                                 Pal.A(Pal.Sun, .55f));
+            UIKit.StretchTo((RectTransform)edge.transform, 0, 0, 0, 0);
+
+            var glyph = UIKit.Img("Icon", _notice.transform, Art.S("Ui/ic_profile"), Pal.Sun,
+                                  new Vector2(42f, 42f), new Vector2(0f, .5f), new Vector2(46f, 0f));
+            glyph.preserveAspect = true;
+
+            // Wrapped and shrinkable, because it is a translated sentence on a fixed bar — the
+            // lesson the victory panel's two lines cost twice. UIKit.Label overflows rather
+            // than clipping, so an over-long line is not truncated, it simply keeps drawing.
+            UIKit.Shrinkable(
+                UIKit.Titled("Label", _notice.transform, Loc.Get("ui.shop.guest_notice"), 25,
+                             Pal.A(Pal.Cream, .94f), TextAnchor.MiddleLeft,
+                             new Vector2(788f, 58f), new Vector2(0f, .5f), new Vector2(486f, 0f),
+                             3f, 0f, wrap: true), 17);
+
+            var chevron = UIKit.Img("More", _notice.transform, Art.S("Ui/ic_right"),
+                                    Pal.A(Pal.Sun, .82f), new Vector2(32f, 32f),
+                                    new Vector2(1f, .5f), new Vector2(-40f, 0f));
+            chevron.preserveAspect = true;
+
+            _notice.gameObject.SetActive(false);
+        }
+
+        /// <summary>
+        /// Shows or hides the notice and gives the grid back the room when it is hidden, and
+        /// reports whether the viewport actually moved.
+        ///
+        /// <para>
+        /// Called before the grid is told to lay out, because <c>GridView</c> measures the
+        /// viewport to decide how many rows it needs. The return value matters for the same
+        /// reason: <c>Refresh</c> rebinds the cells that are already live and deliberately does
+        /// <em>not</em> re-measure, so a repaint that changes the viewport's height has to ask
+        /// for a full relayout or the grid is left sized for the height it used to have — a
+        /// content rect shorter than its window makes a <c>ScrollRect</c> bounce against
+        /// nothing. There is exactly one way to reach that: linking an account while standing
+        /// on a money shelf, which is the whole flow this notice exists to start.
+        /// </para>
+        /// </summary>
+        bool PaintNotice()
+        {
+            if (_notice == null || _viewport == null) return false;
+
+            bool show = !OnSupplies && AccountPrompts.ShouldWarn;
+            if (_notice.gameObject.activeSelf != show) _notice.gameObject.SetActive(show);
+
+            float top = -HeaderHeight - TabRow - 44f - (show ? NoticeH + NoticeGap : 0f);
+            if (Mathf.Approximately(_viewport.offsetMax.y, top)) return false;
+
+            _viewport.offsetMax = new Vector2(_viewport.offsetMax.x, top);
+            return true;
         }
 
         /// <summary>
@@ -333,6 +444,7 @@ namespace GlimmerGrove
 
             PaintTabs();
             PaintSummary();
+            PaintNotice();
 
             _grid.Show(OnSupplies ? _goods.Count : _products.Count);
         }
@@ -342,7 +454,14 @@ namespace GlimmerGrove
         {
             if (_grid == null) return;
 
-            _grid.Refresh();
+            bool reflowed = PaintNotice();
+
+            // Same list either way, and no entrance either way — Show(animate: false) is the
+            // re-measuring form of Refresh, not a rebuild. See PaintNotice for when this is
+            // reachable at all.
+            if (reflowed) _grid.Show(OnSupplies ? _goods.Count : _products.Count, animate: false);
+            else _grid.Refresh();
+
             PaintTabs();
             PaintSummary();
 

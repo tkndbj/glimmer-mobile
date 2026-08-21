@@ -1,4 +1,4 @@
-# Downloads the Firebase Unity SDK packages this project depends on.
+﻿# Downloads the Firebase Unity SDK packages this project depends on.
 #
 #     pwsh GooglePackages/fetch.ps1
 #
@@ -9,18 +9,34 @@
 #
 # Firebase requires every Firebase package to be on the SAME version. Bump $FIREBASE
 # and re-run; do not upgrade one package on its own.
+#
+# NOT EVERYTHING COMES FROM GOOGLE'S REGISTRY. The Mobile Ads plugin - which is here only
+# because Google's consent SDK (UMP) is bundled inside it - is published to OpenUPM as a UPM
+# package and to GitHub as a .unitypackage, and to dl.google.com not at all. The .unitypackage
+# is the wrong one: it unpacks as loose files under Assets/ and is therefore not a package, so
+# it carries no version, so `versionDefines` never fires and GLIMMER_UMP is never defined. The
+# consent gateway would silently not compile and nobody would be asked anything. Hence the
+# per-package registry below.
 
 $ErrorActionPreference = 'Stop'
 
 $FIREBASE = '13.15.0'
-$EDM      = '1.2.186'      # External Dependency Manager, versioned separately
+$EDM      = '1.2.187'      # External Dependency Manager, versioned separately
+$ADS      = '11.4.0'       # Google Mobile Ads, for the UMP consent SDK inside it
 
+$GOOGLE  = 'https://dl.google.com/games/registry/unity'
+$OPENUPM = 'https://package.openupm.com'
+
+# EDM is at 1.2.187 because the ads plugin asks for it. Safe for Firebase, which asks for
+# 1.2.186 - a UPM dependency version is a minimum, not a pin, and the resolver takes the
+# highest anybody asked for.
 $packages = @(
-    @{ id = 'com.google.external-dependency-manager'; version = $EDM },
-    @{ id = 'com.google.firebase.app';                version = $FIREBASE },
-    @{ id = 'com.google.firebase.auth';               version = $FIREBASE },
-    @{ id = 'com.google.firebase.firestore';          version = $FIREBASE },
-    @{ id = 'com.google.firebase.functions';          version = $FIREBASE }
+    @{ id = 'com.google.external-dependency-manager'; version = $EDM;      registry = $GOOGLE },
+    @{ id = 'com.google.firebase.app';                version = $FIREBASE; registry = $GOOGLE },
+    @{ id = 'com.google.firebase.auth';               version = $FIREBASE; registry = $GOOGLE },
+    @{ id = 'com.google.firebase.firestore';          version = $FIREBASE; registry = $GOOGLE },
+    @{ id = 'com.google.firebase.functions';          version = $FIREBASE; registry = $GOOGLE },
+    @{ id = 'com.google.ads.mobile';                  version = $ADS;      registry = $OPENUPM }
 )
 
 $here = Split-Path -Parent $MyInvocation.MyCommand.Path
@@ -35,7 +51,12 @@ foreach ($package in $packages) {
         continue
     }
 
-    $url = "https://dl.google.com/games/registry/unity/$($package.id)/$file"
+    # Google lays its registry out as <id>/<file>; a plain npm registry as <id>/-/<file>.
+    $url = if ($package.registry -eq $OPENUPM) {
+        "$($package.registry)/$($package.id)/-/$file"
+    } else {
+        "$($package.registry)/$($package.id)/$file"
+    }
     Write-Host "get  $file"
 
     try {

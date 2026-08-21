@@ -137,6 +137,7 @@ namespace GlimmerGrove.Cloud
                         { "music", (long)(dto.settings?.music.state ?? 0) },
                         { "sfx", (long)(dto.settings?.sfx.state ?? 0) },
                         { "haptics", (long)(dto.settings?.haptics.state ?? 0) },
+                        { "board", (long)(dto.settings?.board.state ?? 0) },
                         { "language", dto.settings?.language ?? string.Empty },
                     }
                 },
@@ -161,6 +162,14 @@ namespace GlimmerGrove.Cloud
                         { "heartsNextRefillUnix", dto.wallet?.heartsNextRefillUnix ?? 0L },
 
                         { "heartBoostUntilUnix", dto.wallet?.heartBoostUntilUnix ?? 0L },
+
+                        // The hint ledger, whole, for the heart ledger's reason. -1 rather
+                        // than 0 for the two counters, so a document written before hints
+                        // existed is recognisable as holding no opinion rather than as a
+                        // player who has spent everything.
+                        { "hintsProduced", dto.wallet?.hintsProduced ?? -1L },
+                        { "hintsSpent", dto.wallet?.hintsSpent ?? -1L },
+                        { "hintsDueUnix", dto.wallet?.hintsDueUnix ?? 0L },
 
                         // The two preferences, each with the moment it was chosen. The
                         // stamps are not decoration: they are the whole of how the merge
@@ -369,6 +378,7 @@ namespace GlimmerGrove.Cloud
                 dto.settings.music = new StoredFlag { state = (int)Long(settings, "music", 0) };
                 dto.settings.sfx = new StoredFlag { state = (int)Long(settings, "sfx", 0) };
                 dto.settings.haptics = new StoredFlag { state = (int)Long(settings, "haptics", 0) };
+                dto.settings.board = new StoredFlag { state = (int)Long(settings, "board", 0) };
                 dto.settings.language = Str(settings, "language");
             }
 
@@ -384,6 +394,13 @@ namespace GlimmerGrove.Cloud
                 dto.wallet.heartsSpent = Long(wallet, "heartsSpent", -1);
                 dto.wallet.heartsDueUnix = Long(wallet, "heartsDueUnix", 0);
                 dto.wallet.heartBoostUntilUnix = Long(wallet, "heartBoostUntilUnix", 0);
+
+                // -1 when the document predates the hint pool, which SaveMerge reads as "no
+                // opinion" and answers with a full pool. Defaulting to 0 would claim a real
+                // ledger belonging to a player who had spent every hint they ever had.
+                dto.wallet.hintsProduced = Long(wallet, "hintsProduced", -1);
+                dto.wallet.hintsSpent = Long(wallet, "hintsSpent", -1);
+                dto.wallet.hintsDueUnix = Long(wallet, "hintsDueUnix", 0);
                 dto.wallet.displayName = Str(wallet, "displayName");
                 dto.wallet.avatarId = Str(wallet, "avatarId");
 

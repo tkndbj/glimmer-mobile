@@ -78,11 +78,13 @@ namespace GlimmerGrove.Ads
         public const string AndroidCoinBonus = "tqzvj9fd70ec87qi";
         public const string AndroidRunContinue = "mbhc7pqqhnp5znd8";
         public const string AndroidWinBonus = "ezx904bb5q89hse4";
+        public const string AndroidHintRefill = "1lt4rtqzgvn9zgsf";
 
         public const string IosHeartRefill = "xwe669e56bzrs6wb";
         public const string IosCoinBonus = "h8rmyy4ol8scwpmy";
         public const string IosRunContinue = "fh2djyoesd3akw86";
         public const string IosWinBonus = "1ijvtsidp55nfekg";
+        public const string IosHintRefill = "1b3el4i4h7ga2sl9";
 
         /// <summary>
         /// Whether real identifiers have been filled in.
@@ -116,6 +118,7 @@ namespace GlimmerGrove.Ads
                 { AdPlacement.CoinBonus, Real(IosCoinBonus) },
                 { AdPlacement.RunContinue, Real(IosRunContinue) },
                 { AdPlacement.WinBonus, Real(IosWinBonus) },
+                { AdPlacement.HintRefill, Real(IosHintRefill) },
             };
 #else
             return new Dictionary<string, string>
@@ -124,6 +127,7 @@ namespace GlimmerGrove.Ads
                 { AdPlacement.CoinBonus, Real(AndroidCoinBonus) },
                 { AdPlacement.RunContinue, Real(AndroidRunContinue) },
                 { AdPlacement.WinBonus, Real(AndroidWinBonus) },
+                { AdPlacement.HintRefill, Real(AndroidHintRefill) },
             };
 #endif
         }

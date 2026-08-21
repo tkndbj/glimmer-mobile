@@ -174,6 +174,14 @@ namespace GlimmerGrove.Ads
         /// three-star first clear pays, which is what makes "on top of what you just
         /// earned" true enough to print.
         /// </para>
+        /// <para>
+        /// A hint pays <b>one</b>, and one is the only number that can be right: the shipped
+        /// pool holds three and the ceiling is the cap, so paying two would be refused
+        /// outright for anybody holding two. Its cap is five, which is above the three a
+        /// full pool holds — the binding limit is meant to be "you already have hints",
+        /// not the allowance, so that a player who genuinely burns through a day's help can
+        /// keep going.
+        /// </para>
         /// </summary>
         public static readonly AdRewardTable Default = Build(AdRules.DefaultCooldownSeconds, new[]
         {
@@ -181,6 +189,7 @@ namespace GlimmerGrove.Ads
             new AdOffer(AdPlacement.CoinBonus, ChestDropKind.Credits, 150, 6),
             new AdOffer(AdPlacement.RunContinue, ChestDropKind.RunTime, 30, 8),
             new AdOffer(AdPlacement.WinBonus, ChestDropKind.Credits, 200, 6),
+            new AdOffer(AdPlacement.HintRefill, ChestDropKind.Hints, 1, 5),
         });
 
         static AdRewardTable Build(int cooldownSeconds, AdOffer[] offers)

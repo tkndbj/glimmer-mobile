@@ -20,7 +20,9 @@ actually be defended:
 | Debit idempotency records | `players/{uid}/spendLog/{id}` | read only |
 | Award idempotency records | `players/{uid}/grantLog/{id}` | read only |
 | Receipt claims | `receipts/{store}__{txn}` | neither |
-| Reward table, product catalog | `config/*` | read only |
+| Reward table, product catalog, grove catalog | `config/*` | read only |
+| A player's public grove card | `groves/{uid}` | any player reads, none write |
+| The published boards | `leaderboards/{boardId}` | any player reads, none write |
 
 The interesting consequence: a player who forges their save can change what their own
 progress screen says and **cannot mint a single credit**. Earned currency is re-derived
@@ -72,17 +74,109 @@ firestore.rules          the security boundary. Read this first.
 firebase.json            deploy config
 functions/src/
   index.ts               getWallet, submitSpends, claimAwards, redeemPurchase,
-                         adReward, appleNotification, sweepVoidedPurchases, publishGroveStats
+                         adReward, appleNotification, sweepVoidedPurchases, publishGroveStats,
+                         publishGrove, withdrawGrove, publishGroveRanks, claimName
   progression.ts         server-side derivation — mirrors ProgressionLedger.cs
   daily.ts               daily chest generator — mirrors DailyChestTable.cs
   streak.ts              streak ladder and the rule that bounds a night — mirrors StreakTable.cs
   receipts.ts            Apple and Google validation, fails closed
   products.ts            what a product grants — read from config/products, never from the client
   refunds.ts             reversing a purchase a store took back
+  names.ts               keeper-name reservations — uniqueness held by a document id
   wallet.ts              balance arithmetic over the private wallet document
-seed/seed-config.mjs     publishes the reward table AND the product catalog, both from
-                         the shipped content
+  grove.ts               the public boards: what a grove is worth (recomputed, never
+                         believed), the public form of a name, and the daily ranking job
+seed/seed-config.mjs     publishes the reward table, the product catalog AND the grove
+                         catalog, all three from the shipped content
 ```
+
+## The public boards
+
+`groves/{uid}` is a player's grove as everybody else may see it, and it exists so the save
+document never has to be readable by a stranger. `players/{uid}` carries the level ledger,
+the streak's dates, the event floors and the ad allowance; a leaderboard row needs a name,
+a number and where the benches are.
+
+**The score is recomputed here and never believed.** The three id sets a grove's worth is
+derived from — `homesteadOwned`, `groveLandOwned`, `companionsOwned` — are all written by
+the client, which was fine while a forged entry bought a picture nobody else saw. A board
+changes that, so `publishGrove` opens the save with its own credentials and splits the
+worth in two:
+
+```
+score = earned + min(bought, earnedCredits + grantedBaseline)
+```
+
+The **earned** half is companions the keeper ladder reached, derived from records this
+server already validates for currency. The **bought** half was paid for in credits, and
+credits are server-derived, so it is clamped to everything the account could ever have had
+to spend. A save awarding itself the whole catalog scores what its owner could afford.
+
+The clamp is deliberately generous — currency *received*, not currency spent on the grove —
+because understating a leaderboard position is a bug and overstating one is an exploit.
+`worth.clamped` is logged, and a sudden run of them means the catalog or the economy moved
+and nobody re-seeded.
+
+**The request body is empty.** No score, no contents, no name. The client decides *when*
+(`GrovePublishPolicy`, debounced over a fingerprint of what a visitor can see) and the
+server decides *what*. A player who never calls it is simply not on the board, which is
+self-punishing and therefore the right shape for a trigger a client controls. The
+alternative — a Firestore trigger on `players/{uid}` — is a function invocation per player
+per sync, for ever, for a card that changes a handful of times a week.
+
+**Ranking is sampled, not sorted.** `publishGroveRanks` runs at 04:00 UTC (an hour after
+`publishGroveStats`, so the two heaviest reads never overlap), reads a bounded sample of
+cards and writes ten board documents plus `config/groveRanks`. One document read per screen
+open, at any player count. With more than `RANK_SAMPLE_SIZE` participants the global
+hundred becomes the best hundred *seen* — which is why the client leads with a percentile,
+and the fix when it matters is a scored index and a query inside `summarise`.
+
+**Names are sanitised here and only here.** `sanitiseName` strips the bidirectional
+controls and the zero-width family — U+202E re-orders the text that *follows* it, so one
+name misdraws the whole list — and the word filter is server-only, because a list shipped
+in a client is a list read out of the client. A refused name is not rejected: the player
+keeps it and appears under a handle derived from their uid, which is also what gives two
+unnamed keepers rows that differ. `settings.board == 2` opts out, read off the save so the
+refusal cannot be talked past, and `withdrawGrove` takes the card down.
+
+Four rules exist in both C# and TypeScript — the worth, the keeper level behind it, the
+name and the league — and all four fail silently. `firebase/shared/grove-vectors.json` pins
+them; `test/grove.mjs` is this half and `Assets/Game/Tests/GroveBoardTests.cs` is the other.
+
+## Names are unique because a document id is unique
+
+`names/{fold}` holds one document per reserved keeper name, carrying a uid. Reserving one is a
+create inside a transaction, so Firestore's own primary key does the enforcing — at any
+concurrency, with no index and no scan. The alternative, querying the player collection for a
+matching name and then writing, is racy in a way nothing can repair afterwards (two clients a
+second apart both read "free") and is an index over a collection that grows for the life of the
+game.
+
+**The cost split is deliberate and is the whole design.** The "is this taken" hint the rename
+panel shows while somebody types is a **direct document read** by the client — one read, no
+function invocation — under a rule that grants `get` and refuses `list`, so a player can ask about
+a name they typed and nobody can walk the collection. Only the **claim** is a function, because
+only the claim needs adjudicating: it releases the previous reservation and takes the new one in
+one transaction, which no client write could ever be, and it is the only place "one name per
+account" can be enforced. Renames happen once or twice in the life of an account.
+
+`claimName` reports five outcomes and only two are failures — `taken` and `cooldown` are things a
+player acts on, `refused` is permanent (the word filter, or a name that folds to nothing) and the
+client stops asking, and re-claiming the name already held is `unchanged` and writes nothing.
+That last one is what lets `publishGrove` attempt a claim whenever the save's name differs from
+the one held: it is how a rename made offline eventually lands, and it costs two strings compared
+in the settled case.
+
+**The published name comes from the reservation, not the save.** `boardName` reads the confirmed
+name off `players/{uid}/private/wallet`, which no client may write, so a forged save changes its
+owner's screens and leaves the board alone. The word filter runs again there, so adding a word
+takes a name off every board on the next rebuild rather than needing a sweep.
+
+**The fold has to be identical on both sides** — `nameKey` here, `GroveNames.Key` in the client,
+pinned by `nameCases` in `firebase/shared/grove-vectors.json`. Unity's Mono and Node's ICU
+genuinely disagree about Unicode; `agree()` closes the reachable cases by hand and documents where
+it stops. A divergence beyond that costs a wrong hint on the device and can never cause a
+duplicate, because a reservation is decided by this fold and only ever by this fold.
 
 ## Status
 
@@ -91,11 +185,72 @@ Deployed and verified live on 2026-08-15:
 - Firestore database in `eur3`, security rules released — including the `streak` key on
   the save document, which had to go out **before** any client that writes it, or every
   push fails `hasOnly` with permission-denied
-- Six functions on Node 22 in `europe-west1` as of that date: `getWallet`, `submitSpends`,
-  `claimAwards`, `redeemPurchase`, `adReward`, and the `publishGroveStats` schedule.
-  **Two more are written and not yet deployed** — `appleNotification` and the hourly
-  `sweepVoidedPurchases` — along with a `redeemPurchase` that grants more than one
-  currency and reports what it granted. `firebase deploy --only functions`
+- **Keeper names went live on 2026-08-20**: rules re-released with the `names/{nameKey}` block,
+  `claimName` created, and the other eleven functions updated because `wallet.ts` and `grove.ts`
+  are shared by all of them. Unlike the save's `hasOnly` keys, the deploy order here is not
+  destructive and it is worth being precise about why: the reservation is written by the Admin
+  SDK, which rules do not apply to, so the claim works either way — what the rule gates is the
+  **client's read**, the "is this taken" hint. A client shipped ahead of the rule would simply
+  show nothing while typing and learn a name was taken on save
+- **A newly created 2nd-gen function is not callable the instant `deploy` returns.** The first
+  smoke-test run straight after this deploy failed eleven name cases with non-JSON replies and a
+  401 while Cloud Run finished wiring the `cloudfunctions.net` mapping; a minute later everything
+  passed. Do not debug a fresh function's first failure — re-run it once first
+- **Eleven functions on Node 22 in `europe-west1` as of 2026-08-20**: `getWallet`,
+  `submitSpends`, `claimAwards`, `redeemPurchase`, `adReward`, `appleNotification`,
+  `publishGrove`, `withdrawGrove`, and the `publishGroveStats`, `sweepVoidedPurchases` and
+  `publishGroveRanks` schedules. The refund handlers went live with that deploy — they had
+  been written and undeployed since the shop landed
+- Security rules re-released on 2026-08-20 with `groves/{uid}` and `leaderboards/{boardId}`,
+  both readable by any signed-in player and writable by none. Released **before** the
+  client that reads them, which is the order that matters: a rule deployed late means a
+  screen that reads permission-denied, and a `hasOnly` key deployed late means every save
+  write fails
+- `config/grove` seeded at grove v9 — 150 priced pieces, 8 regions, 30 companions, 5 home
+  rungs, a complete grove worth 493,770. Until it is seeded `publishGrove` refuses every
+  call by design, because a board scored against a catalog the server does not have would
+  rank the whole world at zero
+- `firebase/e2e/smoke-test.mjs` is **64/64 live**, of which 21 are the boards and 15 the
+  keeper names
+
+### Showcase groves
+
+`node firebase/seed/seed-showcase.mjs` writes ten built villages so the boards are not
+empty on launch day. They are **not permanent**: every account is a `showcase-` id, every
+card carries `synthetic: true`, and `--remove` takes the lot down in one command. Take
+them down when there are real groves worth visiting.
+
+Worth 215,290 to 441,990, so all ten sit in the five-star league — which means the global
+top ten is synthetic until real players catch up. That is the trade, and it is why they
+are one command to remove.
+
+Each card is built by `buildCard`/`groveWorth` out of the compiled functions, so it is
+exactly what `publishGrove` would have written from the same save. Writing one by hand
+would put a number on the board that the server's own derivation disagrees with. The
+script also refuses to place a piece its keeper does not hold — free, earned, bought or a
+resident on their roster — because a village assembled by a script has no picker to
+guarantee it.
+
+Run `gcloud scheduler jobs run firebase-schedule-publishGroveRanks-europe-west1` after
+writing them, or wait for 04:00 UTC.
+
+### Two things only the deploy could catch
+
+Both are in the smoke test now, and neither was reachable from a unit test.
+
+`deciles([])` returned nine `undefined`s, which Firestore refuses as a document value — so
+the ranking job threw *after* writing ten board documents, leaving the boards published and
+`config/groveRanks` absent. That is the state on day one, when nobody has a card. **Anything
+a scheduled job writes has to be checked for writability, not only for arithmetic.**
+
+The clamp read `credits.grantedBaseline` — the name the wallet has on the way *out* to a
+client — rather than `credits.granted`, the name it is stored under. It silently yielded
+zero, so the ceiling was derived earnings alone and every seed, chest, streak night, video
+and **real-money coin purchase** was left out of what a player could afford. Live, the
+ceiling went from 90 to 1,490 on the same account. The shared vectors take `affordable` as
+a parameter, so they cannot see it, and **a clamp that is too tight looks exactly like a
+clamp that is working**. The read is typed against `WalletDoc` now, so reaching for the
+reply's name is a compile error.
 - `claimAwards` grants daily chests *and* streak nights
 - Anonymous authentication enabled
 - Android and iOS apps registered for `com.digikeygames.glimmergrove`

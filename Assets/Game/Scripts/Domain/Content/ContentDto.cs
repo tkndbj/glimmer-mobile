@@ -267,6 +267,18 @@ namespace GlimmerGrove.Content
         /// <summary>Map strips stacked bottom to top, forming this chapter's road.</summary>
         public string[] mapStrips;
 
+        /// <summary>
+        /// Where the end-of-chapter marker sits across the map, 0..1. Leave at 0 to take
+        /// <see cref="ChapterMap.TeaserX"/>, which is the right answer for a chapter whose
+        /// last glade is on the left.
+        ///
+        /// Only the across-axis is authorable: how far *up* the marker floats is derived
+        /// from the highest glade and the header's clearance, and a typed one could drift
+        /// off the top of a chapter that later gained a strip. The across-axis cannot —
+        /// the map is one canvas width whatever the chapter's length.
+        /// </summary>
+        public float teaserX;
+
         public LevelDto[] levels;
     }
 
@@ -285,7 +297,6 @@ namespace GlimmerGrove.Content
         public int par;
         public float goldFactor;
         public float silverFactor;
-        public int hintAllowance;
 
         /// <summary>
         /// Turns allowed before the run is lost, as a multiple of par. 0 takes the
@@ -399,6 +410,28 @@ namespace GlimmerGrove.Content
         public HeartsDto hearts;
 
         /// <summary>
+        /// The hint pool. Optional: absent means the built-in numbers stand.
+        ///
+        /// Rides here beside the heart gate because it is the same lever from the other
+        /// side. Hearts decide how many attempts a day a player gets; hints decide how many
+        /// of those attempts they can rescue. Both multiply the count of glades finished per
+        /// day, which is what every credit figure in this file is paid per.
+        /// </summary>
+        public HintsDto hints;
+
+        /// <summary>
+        /// How hard the game is. Optional: absent means the content is played as authored.
+        ///
+        /// Rides here for the reasons every block above it does, and one of its own: it is
+        /// the only block that is not about the economy at all, and it still has to be tuned
+        /// beside one. Difficulty decides how often a run is lost, a loss costs a heart, and
+        /// the heart gate directly above it decides how much that costs — so the three are
+        /// one lever seen from three sides, and moving any of them alone is how a game ends
+        /// up either ungated or unplayable.
+        /// </summary>
+        public DifficultyDto difficulty;
+
+        /// <summary>
         /// What the shop sells. Optional: absent means the built-in ladder stands.
         ///
         /// <para>
@@ -506,6 +539,17 @@ namespace GlimmerGrove.Content
         public long gems;
     }
 
+    [Serializable]
+    public sealed class DifficultyDto
+    {
+        /// <summary>
+        /// Multiplies every glade's time limit. Anything at or below 0 means "not set",
+        /// which is the convention every other optional number in this file uses — see
+        /// <see cref="HeartsDto.refillCap"/>. Bounded by <c>DifficultyLimits</c>.
+        /// </summary>
+        public float clockScale = -1f;
+    }
+
     /// <summary>
     /// How many hearts a player may hold and how fast they come back.
     ///
@@ -548,6 +592,39 @@ namespace GlimmerGrove.Content
 
         /// <summary>Hearts one lost run costs.</summary>
         public int defeatCost = -1;
+    }
+
+    /// <summary>
+    /// The hint pool, as a content file writes it.
+    ///
+    /// <para>
+    /// Every field is -1 for "not written, inherit", the same tri-state the heart block and
+    /// the reward rules use.
+    /// </para>
+    /// <para>
+    /// Note what is deliberately absent, twice over. There is no per-level allowance any
+    /// more — a hint is spent from the account, so a glade has no opinion about how many of
+    /// them a player may use on it. And there is nothing about <em>buying</em> hints: the
+    /// refill timer and a watched video are the only two ways one arrives, and a price
+    /// authored here would make the pool a storefront without anybody having designed one.
+    /// </para>
+    /// </summary>
+    [Serializable]
+    public sealed class HintsDto
+    {
+        /// <summary>Where the refill timer stops. This is the number that paces free help.</summary>
+        public int refillCap = -1;
+
+        /// <summary>
+        /// The most a player may hold once granted hints stack on top. Equal to
+        /// <see cref="refillCap"/> as shipped, which means a hint granted at a full pool is
+        /// refused — safe only because nothing offers one without checking first. Safe to
+        /// lower: it refuses new grants and never confiscates.
+        /// </summary>
+        public int ceiling = -1;
+
+        /// <summary>Seconds between refills.</summary>
+        public int refillSeconds = -1;
     }
 
     /// <summary>

@@ -146,12 +146,16 @@
       "text": "swipe to explore the chain"
     },
     {
-      "key": "ui.play.no_hints",
-      "text": "no whispers left in this glade"
+      "key": "ui.play.hint_nothing",
+      "text": "every conduit you can turn is already right"
+    },
+    {
+      "key": "ui.play.hint_empty",
+      "text": "no whispers left — the next one comes in {0}"
     },
     {
       "key": "ui.play.hint_used",
-      "text": "a whisper turns one conduit  (+2 moves)"
+      "text": "a whisper turns one conduit"
     },
     {
       "key": "ui.win.rank1",
@@ -606,6 +610,10 @@
       "text": "REFILL HEARTS"
     },
     {
+      "key": "ui.ads.hints_title",
+      "text": "A WHISPER"
+    },
+    {
       "key": "ui.ads.coins_title",
       "text": "BONUS COINS"
     },
@@ -734,6 +742,10 @@
       "text": "Glimmer Grove  v{0}"
     },
     {
+      "key": "ui.settings.privacy",
+      "text": "Privacy & ad choices"
+    },
+    {
       "key": "ui.settings.credit",
       "text": "art & audio by CraftPix"
     },
@@ -750,12 +762,16 @@
       "text": "Your progress is saved only on this phone. If you lose it or reinstall the game, your progress is gone. Sign in to save it online."
     },
     {
+      "key": "ui.account.guest_body_purchase",
+      "text": "Thank you! What you just bought belongs to an account, not to this phone. Sign in now and it is safe if you lose this phone or reinstall the game. Without it, it cannot be brought back."
+    },
+    {
       "key": "ui.account.linked",
       "text": "your progress is saved online"
     },
     {
       "key": "ui.account.linked_body",
-      "text": "You are signed in. Your progress is backed up and you can play on your other devices."
+      "text": "Your progress is backed up. You can play on your other devices, and you can switch to another account on this phone whenever you like."
     },
     {
       "key": "ui.account.unavailable",
@@ -786,24 +802,28 @@
       "text": "no internet connection"
     },
     {
+      "key": "ui.account.cancelled",
+      "text": "no account chosen  ·  nothing was changed"
+    },
+    {
       "key": "ui.account.guest_stakes",
       "text": "{0} levels finished  ·  level {1}  saved only on this phone"
     },
     {
       "key": "ui.account.taken",
-      "text": "this account is already used by another player"
+      "text": "that account already has its own grove"
     },
     {
       "key": "ui.account.adopt",
-      "text": "USE THAT ACCOUNT"
+      "text": "PLAY THAT ACCOUNT"
     },
     {
       "key": "ui.account.adopt_cost",
-      "text": "you will lose {0} finished levels and level {1} from this phone"
+      "text": "{0} finished levels here belong to no account, so they stay on this phone"
     },
     {
       "key": "ui.account.adopt_warning",
-      "text": "this cannot be undone"
+      "text": "this part cannot be undone"
     },
     {
       "key": "ui.account.adopt_confirm",
@@ -811,7 +831,7 @@
     },
     {
       "key": "ui.account.adopted_found",
-      "text": "signed in  ·  {0} finished levels loaded"
+      "text": "welcome back  ·  {0} finished levels"
     },
     {
       "key": "ui.account.protect",
@@ -823,7 +843,7 @@
     },
     {
       "key": "ui.account.taken_body",
-      "text": "That account already has its own grove, and the two cannot be joined. You can play it on this phone, but whatever is on this phone now will be replaced."
+      "text": "The progress on this phone does not belong to any account yet, so it cannot be moved into that one. You can play that account here instead, and it keeps everything it already has."
     },
     {
       "key": "ui.account.switch",
@@ -831,11 +851,11 @@
     },
     {
       "key": "ui.account.switch_body",
-      "text": "Choose the account you want to play on this phone. Your grove is saved online first, so you can sign back in any time to get it back."
+      "text": "Pick the account you want to play here. This grove is saved online first, and a copy stays on this phone, so coming back to it later is one tap."
     },
     {
       "key": "ui.account.switch_safe",
-      "text": "nothing is lost  ·  sign back in to return"
+      "text": "nothing is lost either way  ·  you can switch back any time"
     },
     {
       "key": "ui.account.securing",
@@ -843,39 +863,39 @@
     },
     {
       "key": "ui.account.not_secured",
-      "text": "we could not save your grove, so nothing was changed  ·  please try again"
+      "text": "we could not save your grove just now, so nothing was changed  ·  please try again when you are online"
     },
     {
       "key": "ui.account.same_account",
-      "text": "you are already playing this account"
-    },
-    {
-      "key": "ui.account.resumed",
-      "text": "welcome back  ·  your progress is being saved again"
+      "text": "that is the account you are already playing"
     },
     {
       "key": "ui.account.switched_new",
-      "text": "signed in  ·  starting a new grove"
+      "text": "signed in  ·  this account has no grove yet, so here is a new one"
     },
     {
-      "key": "ui.account.interrupted",
-      "text": "signed in, but that grove could not be loaded  ·  please try again"
+      "key": "ui.account.choose",
+      "text": "which account should this phone play?"
+    },
+    {
+      "key": "ui.account.switched_pending",
+      "text": "signed in  ·  if this account has a grove it will load once you are online"
     },
     {
       "key": "ui.account.mismatch",
-      "text": "this phone is signed in as someone else"
+      "text": "your last account change did not finish"
     },
     {
       "key": "ui.account.mismatch_body",
-      "text": "Your progress is not being saved online right now. Sign in with the account you play to carry on where you left off."
+      "text": "Nothing has been lost. Choose the account you want to play on this phone and it will carry on from there."
     },
     {
       "key": "ui.profile.mismatch_hint",
-      "text": "Your progress is not being saved online. Tap to fix it."
+      "text": "Your last account change did not finish. Nothing is lost — tap to choose an account."
     },
     {
       "key": "ui.profile.fix",
-      "text": "FIX THIS"
+      "text": "CHOOSE ACCOUNT"
     },
     {
       "key": "ui.howto.title",
@@ -958,6 +978,38 @@
       "text": "up to {0} characters"
     },
     {
+      "key": "ui.profile.name_checking",
+      "text": "checking…"
+    },
+    {
+      "key": "ui.profile.name_free",
+      "text": "that name is free"
+    },
+    {
+      "key": "ui.profile.name_taken",
+      "text": "another keeper has that name"
+    },
+    {
+      "key": "ui.profile.name_mine",
+      "text": "that is already your name"
+    },
+    {
+      "key": "ui.profile.name_short",
+      "text": "at least {0} letters or numbers"
+    },
+    {
+      "key": "ui.profile.name_saving",
+      "text": "saving…"
+    },
+    {
+      "key": "ui.profile.name_cooldown",
+      "text": "you can change your name again in {0}s"
+    },
+    {
+      "key": "ui.profile.name_hidden",
+      "text": "Kept. It will not appear on the boards."
+    },
+    {
       "key": "ui.profile.cancel",
       "text": "CANCEL"
     },
@@ -1023,7 +1075,7 @@
     },
     {
       "key": "ui.profile.linked_hint",
-      "text": "Your grove is backed up and will follow you to a new device."
+      "text": "Your grove is backed up and follows you to any device you sign in on."
     },
     {
       "key": "ui.profile.protect",
@@ -1326,6 +1378,22 @@
       "text": "Videos, chests and streak nights stack past {0} — hold up to {1}."
     },
     {
+      "key": "ui.hints.regen",
+      "text": "One whisper every {0}h, up to {1}."
+    },
+    {
+      "key": "ui.hints.next",
+      "text": "Next whisper in {0}"
+    },
+    {
+      "key": "ui.hints.full",
+      "text": "You are holding all {0} whispers."
+    },
+    {
+      "key": "ui.hints.one_conduit",
+      "text": "A whisper turns one conduit to where it belongs."
+    },
+    {
       "key": "ui.coins.from_glades",
       "text": "Every glade you clear pays coins."
     },
@@ -1460,6 +1528,10 @@
     {
       "key": "ui.reward.run_time",
       "text": "seconds"
+    },
+    {
+      "key": "ui.reward.hints",
+      "text": "whispers"
     },
     {
       "key": "ui.ads.continue_title",
@@ -2431,7 +2503,7 @@
     },
     {
       "key": "level.c02_under_the_boughs.lesson",
-      "text": "A duskcap's path used to have to go around the light. Across a crossing it can go under it instead."
+      "text": "The grove closes in a ring, so a crossing turned the wrong way wakes the shadow and leaves every critter lit. A glade with a woken duskcap will not settle however finished it looks."
     },
     {
       "key": "level.c02_the_old_weir.name",
@@ -2443,7 +2515,7 @@
     },
     {
       "key": "level.c02_the_old_weir.lesson",
-      "text": "The upper crossing crumbles after two turns and needs one. You are allowed exactly one wrong guess about which way it goes."
+      "text": "Both weirs crumble after two turns and need one. Nothing about their arms says which way they face, so read the hearts: you are allowed exactly one wrong guess."
     },
     {
       "key": "level.c02_braided_water.name",
@@ -2515,7 +2587,7 @@
     },
     {
       "key": "level.c02_the_millers_knot.lesson",
-      "text": "Three networks, a shadow through all of them, two crossings on one root and brittle stone on the only ways in."
+      "text": "Three networks, a pool of shadow under the braid, two spans on one root and brittle stone on two more."
     },
     {
       "key": "ui.shop.shelf_gems",
@@ -2646,6 +2718,10 @@
       "text": "{0}"
     },
     {
+      "key": "ui.shop.guest_notice",
+      "text": "Not signed in. Anything you buy stays on this phone only."
+    },
+    {
       "key": "ui.shop.restore",
       "text": "Restore purchases"
     },
@@ -2772,6 +2848,242 @@
     {
       "key": "ui.ads.to_shop",
       "text": "Or visit the shop"
+    },
+    {
+      "key": "ui.board.title",
+      "text": "the boards"
+    },
+    {
+      "key": "ui.board.open",
+      "text": "See the boards"
+    },
+    {
+      "key": "ui.board.global",
+      "text": "Finest groves"
+    },
+    {
+      "key": "ui.board.league",
+      "text": "My league"
+    },
+    {
+      "key": "ui.board.top_percent",
+      "text": "Your grove is in the top {0}% of keepers."
+    },
+    {
+      "key": "ui.board.placed",
+      "text": "You are ranked #{0} on this board."
+    },
+    {
+      "key": "ui.board.unranked",
+      "text": "Buy something for your grove and you will be ranked."
+    },
+    {
+      "key": "ui.board.building",
+      "text": "Your grove is ranked. The standing arrives with the next tally."
+    },
+    {
+      "key": "ui.board.opted_out",
+      "text": "Your grove is hidden from the boards."
+    },
+    {
+      "key": "ui.board.offline",
+      "text": "The boards are not available here."
+    },
+    {
+      "key": "ui.board.loading",
+      "text": "Reading the boards..."
+    },
+    {
+      "key": "ui.board.failed",
+      "text": "The boards could not be reached. Try again in a moment."
+    },
+    {
+      "key": "ui.board.no_rows",
+      "text": "Nobody has been ranked here yet. Be the first."
+    },
+    {
+      "key": "ui.board.of_keepers",
+      "text": "the finest of {0} keepers"
+    },
+    {
+      "key": "ui.board.of_league",
+      "text": "{0} — {1} keepers"
+    },
+    {
+      "key": "ui.board.row_worth",
+      "text": "{0} worth · keeper {1}"
+    },
+    {
+      "key": "ui.board.join",
+      "text": "Show my grove"
+    },
+    {
+      "key": "ui.board.leave",
+      "text": "Hide my grove"
+    },
+    {
+      "key": "ui.visit.gone",
+      "text": "This grove is no longer on the boards."
+    },
+    {
+      "key": "ui.league.l0",
+      "text": "Saplings"
+    },
+    {
+      "key": "ui.league.l1",
+      "text": "Thickets"
+    },
+    {
+      "key": "ui.league.l2",
+      "text": "Hollows"
+    },
+    {
+      "key": "ui.league.l3",
+      "text": "Meadows"
+    },
+    {
+      "key": "ui.league.l4",
+      "text": "Orchards"
+    },
+    {
+      "key": "ui.league.l5",
+      "text": "Sanctums"
+    },
+    {
+      "key": "ui.league.l6",
+      "text": "Wildwoods"
+    },
+    {
+      "key": "ui.league.l7",
+      "text": "Everglades"
+    },
+    {
+      "key": "ui.league.l8",
+      "text": "The Elderwood"
+    },
+    {
+      "key": "chapter.c03_amberwood.name",
+      "text": "The Amberwood"
+    },
+    {
+      "key": "level.c03_amberlight.name",
+      "text": "Amberlight"
+    },
+    {
+      "key": "level.c03_amberlight.tagline",
+      "text": "Amber needs two springs of its own"
+    },
+    {
+      "key": "level.c03_amberlight.lesson",
+      "text": "A critter wearing two colours wants both of them at once. The red and green hearts that feed it cannot be the two keeping the pure critters pure."
+    },
+    {
+      "key": "level.c03_two_lights.name",
+      "text": "Two Lights, One Lane"
+    },
+    {
+      "key": "level.c03_two_lights.tagline",
+      "text": "Both lanes turn where they cross"
+    },
+    {
+      "key": "level.c03_two_lights.lesson",
+      "text": "These crossings are not bridges - each is worth a tap, and each turns both lanes at once. One left the wrong way round hands the amber lane's light to the red one."
+    },
+    {
+      "key": "level.c03_the_verdigris.name",
+      "text": "The Verdigris"
+    },
+    {
+      "key": "level.c03_the_verdigris.tagline",
+      "text": "Teal, between the blue comb and the green one"
+    },
+    {
+      "key": "level.c03_the_verdigris.lesson",
+      "text": "Verdigris is green and blue together, and this is the only ground where they are allowed to meet. Both weirs stand one turn from handing a comb the colour that would ruin it."
+    },
+    {
+      "key": "level.c03_foxfire.name",
+      "text": "Foxfire"
+    },
+    {
+      "key": "level.c03_foxfire.tagline",
+      "text": "Brittle stone on the only join"
+    },
+    {
+      "key": "level.c03_foxfire.lesson",
+      "text": "Foxfire is red and blue. The two conduits carrying them to one another crumble after two turns and need one, so you are allowed exactly one wrong guess about which way the ridge closes."
+    },
+    {
+      "key": "level.c03_the_quiet_hollow.name",
+      "text": "The Quiet Hollow"
+    },
+    {
+      "key": "level.c03_the_quiet_hollow.tagline",
+      "text": "The blend can only be made under the shadow"
+    },
+    {
+      "key": "level.c03_the_quiet_hollow.lesson",
+      "text": "Amber's two springs sit on opposite sides of the dark, so the only way to join them is through it. The tiles that carry the light under the duskcaps are the same ones that would wake them."
+    },
+    {
+      "key": "level.c03_rootbound.name",
+      "text": "Rootbound Amber"
+    },
+    {
+      "key": "level.c03_rootbound.tagline",
+      "text": "One tap, and the ridge decides three times"
+    },
+    {
+      "key": "level.c03_rootbound.lesson",
+      "text": "The three conduits that let the ridge blend all carry the same rune, so they turn as one. Whatever the near one does, the two you cannot see do with it - and the green below is a turn away from going amber."
+    },
+    {
+      "key": "level.c03_three_springs.name",
+      "text": "Three Coloured Springs"
+    },
+    {
+      "key": "level.c03_three_springs.tagline",
+      "text": "Every light used twice, every pair met once"
+    },
+    {
+      "key": "level.c03_three_springs.lesson",
+      "text": "Three streams, and each holds two of the three lights: amber, foxfire, verdigris. Join any two streams and four critters go wrong at the same moment."
+    },
+    {
+      "key": "level.c03_under_the_lanterns.name",
+      "text": "Under the Lanterns"
+    },
+    {
+      "key": "level.c03_under_the_lanterns.tagline",
+      "text": "White in the middle, and gardens all round it"
+    },
+    {
+      "key": "level.c03_under_the_lanterns.lesson",
+      "text": "White is every light at once, so the ring through the middle has to gather all three springs and reach none of the gardens around it. One corner is allowed to blend. The other three are not."
+    },
+    {
+      "key": "level.c03_the_ashen_path.name",
+      "text": "The Ashen Path"
+    },
+    {
+      "key": "level.c03_the_ashen_path.tagline",
+      "text": "The shadow fords both lanes and joins beneath them"
+    },
+    {
+      "key": "level.c03_the_ashen_path.lesson",
+      "text": "One island of dark, crossing under the amber and the blue and meeting itself at the foot of the wood. Brittle stone guards an approach to each lane, and a woken duskcap is a glade that will not settle however many critters are awake."
+    },
+    {
+      "key": "level.c03_the_amberwood_knot.name",
+      "text": "The Amberwood Knot"
+    },
+    {
+      "key": "level.c03_the_amberwood_knot.tagline",
+      "text": "Everything the wood has taught, tied once"
+    },
+    {
+      "key": "level.c03_the_amberwood_knot.lesson",
+      "text": "Amber along the ridge, verdigris at the foot, a red lane between them that must stay red, two pools of shadow under the foot, and one root holding a corner of each."
     }
   ]
 }

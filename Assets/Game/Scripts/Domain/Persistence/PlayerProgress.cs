@@ -79,6 +79,30 @@ namespace GlimmerGrove.Persistence
         /// </summary>
         public static IReadOnlyDictionary<LevelId, LevelRecord> RecordsById => _records;
 
+        /// <summary>
+        /// How many glades have been finished, counted off the records alone.
+        ///
+        /// <para>
+        /// Deliberately <em>not</em> <c>PlayerProgression.ClearedGlades</c>, which is the same
+        /// question asked of the reward arithmetic and so drops any record the catalog has
+        /// never heard of — right there, because an unrecognised level must never mint credits,
+        /// and wrong for a screen. The account panel asks this after a switch to say "welcome
+        /// back · 26 finished levels", and that sentence must not depend on whether the content
+        /// index happens to have loaded yet: a player who is told they arrived at an empty
+        /// grove, and then watches it fill in a second later, has been given exactly the fright
+        /// this whole flow was rewritten to stop giving.
+        /// </para>
+        /// </summary>
+        public static int ClearedCount
+        {
+            get
+            {
+                int cleared = 0;
+                foreach (var record in _records.Values) if (record.IsCleared) cleared++;
+                return cleared;
+            }
+        }
+
         public static int Stars(LevelId id) => Record(id).Stars;
 
         public static int BestMoves(LevelId id) => Record(id).BestMoves;

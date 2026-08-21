@@ -84,6 +84,16 @@
     "defeatCost": 1
   },
 
+  "hints": {
+    "refillCap": 3,
+    "ceiling": 3,
+    "refillSeconds": 28800
+  },
+
+  "difficulty": {
+    "clockScale": 1.00
+  },
+
   "ads": {
     "cooldownSeconds": 45,
 
@@ -91,7 +101,8 @@
       { "id": "heart_refill", "kind": "hearts",   "amount": 2,   "dailyCap": 10 },
       { "id": "coin_bonus",   "kind": "credits",  "amount": 150, "dailyCap": 6 },
       { "id": "run_continue", "kind": "run_time", "amount": 30,  "dailyCap": 8 },
-      { "id": "win_bonus",    "kind": "credits",  "amount": 200, "dailyCap": 6 }
+      { "id": "win_bonus",    "kind": "credits",  "amount": 200, "dailyCap": 6 },
+      { "id": "hint_refill",  "kind": "hints",    "amount": 1,   "dailyCap": 5 }
     ]
   },
 

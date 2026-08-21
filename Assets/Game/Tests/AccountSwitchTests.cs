@@ -39,12 +39,15 @@ namespace GlimmerGrove.Tests
         const string Theirs = "uid-theirs";
 
         Backend _backend;
+        MemoryArchive _archive;
 
         [SetUp]
         public void Open()
         {
             SaveService.Unload();
-            SaveService.LoadWith(new MemoryStore());
+
+            _archive = new MemoryArchive();
+            SaveService.LoadWith(new MemoryStore(), _archive);
 
             _backend = new Backend();
             CloudSaveService.UseBackend(_backend);
@@ -87,6 +90,47 @@ namespace GlimmerGrove.Tests
             }
 
             public void Delete() => _file = null;
+        }
+
+        /// <summary>
+        /// The account archive, in memory.
+        ///
+        /// It exists here for the same reason <see cref="MemoryStore"/> does: what these tests
+        /// are about is <em>which grove is on the device and which account owns it</em>, and
+        /// the disk round trip that answers it is <c>AccountArchiveTests</c>' subject, against
+        /// a real filesystem. Keeping the object it was handed rather than copying it is
+        /// deliberate and safe — <c>SaveService.Snapshot</c> builds a fresh file every call, so
+        /// nothing here is ever holding a reference the game is still writing through.
+        /// </summary>
+        sealed class MemoryArchive : IAccountArchive
+        {
+            readonly Dictionary<string, SaveFileDto> _slots = new Dictionary<string, SaveFileDto>();
+
+            /// <summary>Set to fail every stash, the way a full disk would.</summary>
+            public bool Readonly;
+
+            public int Count => _slots.Count;
+
+            public bool Has(string userId)
+                => !string.IsNullOrEmpty(userId) && _slots.ContainsKey(userId);
+
+            public SaveFileDto Read(string userId)
+                => !string.IsNullOrEmpty(userId) && _slots.TryGetValue(userId, out var dto) ? dto : null;
+
+            public bool Stash(string userId, SaveFileDto dto)
+            {
+                if (Readonly || string.IsNullOrEmpty(userId) || dto == null) return false;
+
+                dto.cloud ??= new CloudStateDto();
+                dto.cloud.userId = userId;
+                _slots[userId] = dto;
+                return true;
+            }
+
+            public void Forget(string userId)
+            {
+                if (!string.IsNullOrEmpty(userId)) _slots.Remove(userId);
+            }
         }
 
         // ------------------------------------------------------------------ helpers
@@ -134,20 +178,27 @@ namespace GlimmerGrove.Tests
         /// <summary>
         /// The one that matters most. A sync is pull, join, push and the join is monotonic, so
         /// pointed at the wrong account it merges two strangers' saves and overwrites one.
+        ///
+        /// <para>
+        /// The device no longer <em>stops</em> when the two disagree — it finishes the account
+        /// change locally and carries on, which is what removed the state a player could sit
+        /// stranded in. So this asserts the leak directly rather than by proxy: whatever
+        /// reaches the other account's document, it is not this grove.
+        /// </para>
         /// </summary>
         [Test]
-        public void ASyncNeverTouchesAnAccountTheSaveDoesNotBelongTo()
+        public void ASyncNeverPushesAGroveToAnAccountItDoesNotBelongTo()
         {
             SignedInAs(Mine);
             _backend.Session = Theirs;
 
-            var result = Wait(CloudSaveService.SyncAsync());
+            Wait(CloudSaveService.SyncAsync());
 
-            Assert.IsFalse(result.Ok);
-            Assert.AreEqual(CloudFailure.AccountMismatch, result.Failure);
-            Assert.AreEqual(0, _backend.Pulls, "a mismatched device must not even read");
-            Assert.AreEqual(0, _backend.Pushes, "a mismatched device must never write");
-            Assert.IsTrue(CloudSaveService.AccountMismatched);
+            Assert.AreEqual("", GladeOnDevice(), "the other account's grove is what is on the device now");
+
+            if (_backend.Remote.TryGetValue(Theirs, out var pushed))
+                Assert.AreEqual(0, pushed.levels == null ? 0 : pushed.levels.Length,
+                                "this grove must never reach the other account's document");
         }
 
         /// <summary>
@@ -225,11 +276,22 @@ namespace GlimmerGrove.Tests
         }
 
         /// <summary>
-        /// Read before write. Once the session is the other account the device is holding two
-        /// people's things, and the local one is only let go of when the replacement has landed.
+        /// <b>The report this whole change came from.</b> A player switching between two of
+        /// their own Google accounts could not read the incoming grove — one document, in the
+        /// frame after an OAuth browser handed control back — and the old flow treated that as
+        /// a failed switch: the device stayed authenticated as one account holding the other's
+        /// save, stopped syncing, and said so.
+        ///
+        /// <para>
+        /// The fetch is not part of the switch any more. What this pins is every half of that:
+        /// the account did change, nothing is stranded, the grove that left is still on the
+        /// phone, and the screen is told it does not yet know what the incoming account has —
+        /// which is the one thing it must not guess, because "starting a new grove" would be a
+        /// lie told to somebody with three chapters behind them.
+        /// </para>
         /// </summary>
         [Test]
-        public void AGroveThatCannotBeFetchedDoesNotCostTheOneOnTheDevice()
+        public void AGroveThatCannotBeFetchedIsStillASwitchAndStrandsNobody()
         {
             SignedInAs(Mine);
             _backend.Session = Mine;
@@ -238,9 +300,12 @@ namespace GlimmerGrove.Tests
 
             var result = Wait(CloudSaveService.SwitchAccountAsync(LinkCredential.ForGoogle()));
 
-            Assert.AreEqual(SwitchOutcome.Interrupted, result.Outcome);
-            Assert.AreEqual("c01_first_light", GladeOnDevice(), "nothing local may be destroyed on a failed fetch");
-            Assert.IsTrue(CloudSaveService.AccountMismatched, "and the device must know it is between two accounts");
+            Assert.AreEqual(SwitchOutcome.Pending, result.Outcome);
+            Assert.IsTrue(result.Ok, "a switch that cannot reach the server is still a switch");
+            Assert.AreEqual(Theirs, CloudState.UserId);
+            Assert.IsFalse(CloudSaveService.AccountMismatched,
+                           "nothing may be left holding one account's save while signed in as another");
+            Assert.IsTrue(_archive.Has(Mine), "and the grove that left is still on this phone");
         }
 
         // ================================================================ the switch
@@ -261,6 +326,81 @@ namespace GlimmerGrove.Tests
             Assert.AreEqual("c01_lantern_ring", GladeOnDevice());
         }
 
+        /// <summary>
+        /// Pushed <em>and</em> kept. The push is what makes the grove reachable from another
+        /// handset; the copy is what makes coming back to it here instant and offline, which
+        /// is the difference between switching accounts being an ordinary thing to do and
+        /// being a download each way.
+        /// </summary>
+        [Test]
+        public void TheGroveThatLeavesIsKeptOnTheDeviceAsWellAsPushed()
+        {
+            SignedInAs(Mine);
+            _backend.Session = Mine;
+            _backend.SignsInAs = Theirs;
+
+            Wait(CloudSaveService.SwitchAccountAsync(LinkCredential.ForGoogle()));
+
+            Assert.IsTrue(_archive.Has(Mine));
+            Assert.IsTrue(SaveService.HasLocalGroveFor(Mine), "and the screens can say so before anything moves");
+            Assert.IsTrue(_backend.Remote.ContainsKey(Mine), "and it is on the server too");
+        }
+
+        /// <summary>
+        /// Switching back needs the credential and nothing else — no document read, no server
+        /// at all. Arranged by killing the incoming account's pull outright, which under the
+        /// previous design was exactly the failure that produced the report.
+        /// </summary>
+        [Test]
+        public void SwitchingBackToAGrovePlayedHereBeforeNeedsNoNetwork()
+        {
+            SignedInAs(Mine);
+            _backend.Session = Mine;
+
+            _backend.SignsInAs = Theirs;
+            Assert.IsTrue(Wait(CloudSaveService.SwitchAccountAsync(LinkCredential.ForGoogle())).Ok);
+            Assert.AreEqual(Theirs, CloudState.UserId, "arrange: this phone is on the other account");
+
+            _backend.SignsInAs = Mine;
+            _backend.PullFailsFor = Mine;
+
+            var back = Wait(CloudSaveService.SwitchAccountAsync(LinkCredential.ForGoogle()));
+
+            Assert.AreEqual(SwitchOutcome.Adopted, back.Outcome);
+            Assert.AreEqual(Mine, CloudState.UserId);
+            Assert.AreEqual("c01_first_light", GladeOnDevice(),
+                            "the grove came back off this phone, not off the server");
+            Assert.AreEqual(1, back.ClearedGlades, "and the panel can say what it found");
+        }
+
+        /// <summary>
+        /// A restored copy is not a second source of truth: the ordinary sync joins it with
+        /// whatever the server has, which is <c>SaveMerge</c>'s job and is monotonic, so the
+        /// glade cleared on the other handset is on this one a moment later.
+        /// </summary>
+        [Test]
+        public void ARestoredGroveIsStillJoinedWithWhatTheServerHas()
+        {
+            SignedInAs(Mine);
+            _backend.Session = Mine;
+
+            _backend.SignsInAs = Theirs;
+            Wait(CloudSaveService.SwitchAccountAsync(LinkCredential.ForGoogle()));
+
+            // Meanwhile, on another handset.
+            _backend.Remote[Mine] = SaveWith(Mine, "c01_lantern_ring");
+
+            _backend.SignsInAs = Mine;
+            Wait(CloudSaveService.SwitchAccountAsync(LinkCredential.ForGoogle()));
+
+            var levels = SaveService.Snapshot().levels;
+            var ids = new List<string>();
+            foreach (var record in levels) ids.Add(record.levelId);
+
+            CollectionAssert.Contains(ids, "c01_first_light", "what this phone had");
+            CollectionAssert.Contains(ids, "c01_lantern_ring", "and what the other one did");
+        }
+
         [Test]
         public void SwitchingToAnAccountThatHasNeverPlayedStartsAFreshGrove()
         {
@@ -276,9 +416,9 @@ namespace GlimmerGrove.Tests
         }
 
         /// <summary>
-        /// The one that keeps the whole thing recoverable: arriving at the account already held
-        /// is a no-op, not a refresh. It is what a player taps after an interrupted switch, and
-        /// it must be safe to tap when they were never interrupted at all.
+        /// Picking the wrong entry out of a provider's account chooser is an ordinary mistake.
+        /// It has to be a no-op rather than a refresh, and it has to be reported, because a
+        /// switch that appears to do nothing reads as broken.
         /// </summary>
         [Test]
         public void SigningInAsTheAccountAlreadyHeldChangesNothing()
@@ -292,75 +432,232 @@ namespace GlimmerGrove.Tests
             Assert.AreEqual(SwitchOutcome.SameAccount, result.Outcome);
             Assert.AreEqual(Mine, CloudState.UserId);
             Assert.AreEqual("c01_first_light", GladeOnDevice());
+            Assert.AreEqual(0, _archive.Count, "and nothing was filed away, because nothing left");
         }
 
-        // ============================================================== the recovery
+        /// <summary>
+        /// A sync already running is not a grove that could not be saved, and the difference
+        /// is a sentence on screen. One starts on every foreground, which is exactly when a
+        /// player opens the account panel — so reporting contention as a refusal would make
+        /// the commonest moment to switch the likeliest one to be told it had failed.
+        ///
+        /// <para>
+        /// The provider is made to refuse so the flow stops immediately after the step being
+        /// tested; what is asserted is that it got that far at all.
+        /// </para>
+        /// </summary>
         [Test]
-        public void RecoveringClearsTheMismatchAndTouchesNothing()
+        public void ASwitchWaitsForARunningSyncRatherThanCallingItAFailure()
+        {
+            SignedInAs(Mine);
+            _backend.Session = Mine;
+            _backend.CredentialSignInFails = true;
+
+            // The only test here with a genuine suspension in it, and the only one that has to
+            // say anything about threads. Unity's Editor installs a SynchronizationContext on
+            // the main thread, so every `await` in the flow posts its continuation back to a
+            // thread this test is about to block by waiting — which is a deadlock, not a
+            // failure of the rule. Every other case in this file completes synchronously and
+            // never notices. Dropped for the duration and restored after; nothing on the path
+            // touches a GameObject, which is what makes that safe.
+            var context = SynchronizationContext.Current;
+            SynchronizationContext.SetSynchronizationContext(null);
+
+            SwitchResult result;
+            try
+            {
+                _backend.HoldPulls();
+                var background = CloudSaveService.SyncAsync();
+                var switching = CloudSaveService.SwitchAccountAsync(LinkCredential.ForGoogle());
+                _backend.ReleasePulls();
+
+                Wait(background);
+                result = Wait(switching);
+            }
+            finally
+            {
+                SynchronizationContext.SetSynchronizationContext(context);
+            }
+
+            Assert.AreNotEqual(SwitchOutcome.NotSecured, result.Outcome);
+            Assert.AreEqual(1, _backend.CredentialSignIns,
+                            "the switch waited out the sync and reached the provider");
+            Assert.AreEqual(Mine, CloudState.UserId, "and a refused provider changes nothing");
+        }
+
+        // ============================================================== the repair
+        /// <summary>
+        /// A process death between the sign-in and the swap used to be permanent: the device
+        /// sat authenticated as one account holding another's save, refusing every read and
+        /// write, with a panel telling its owner they were signed in as somebody else and a
+        /// button that led to a destructive prompt.
+        ///
+        /// <para>
+        /// It is repaired without anybody being told now, and forward is the only direction it
+        /// can be repaired in — the session only ever moves because a player chose an account,
+        /// and Firebase persists that choice before this code sees it, so a disagreement means
+        /// the authentication got further than the file did.
+        /// </para>
+        /// </summary>
+        [Test]
+        public void ASessionThatMovedAheadOfTheSaveIsRepairedByTheNextSync()
         {
             SignedInAs(Mine);
             _backend.Session = Theirs;
-            Wait(CloudSaveService.SyncAsync());
-            Assert.IsTrue(CloudSaveService.AccountMismatched, "arrange: the device is between two accounts");
 
-            _backend.SignsInAs = Mine;
-            var result = Wait(CloudSaveService.ResumeAccountAsync(LinkCredential.ForGoogle()));
+            var result = Wait(CloudSaveService.SyncAsync());
 
-            Assert.AreEqual(SwitchOutcome.SameAccount, result.Outcome);
+            Assert.IsTrue(result.Ok, "the sync finishes rather than refusing for ever");
+            Assert.AreEqual(Theirs, CloudState.UserId);
             Assert.IsFalse(CloudSaveService.AccountMismatched);
+            Assert.IsTrue(_archive.Has(Mine), "and the grove it was holding was filed, not dropped");
+        }
+
+        /// <summary>
+        /// The repair is a swap, not a merge. Half of one grove arriving in the other is the
+        /// failure <c>AccountGate</c> exists for, and it must stay unreachable however the two
+        /// sides came to disagree.
+        /// </summary>
+        [Test]
+        public void ARepairNeverMixesTheTwoGrovesTogether()
+        {
+            SignedInAs(Mine);
+            _backend.Session = Theirs;
+            _backend.Remote[Theirs] = SaveWith(Theirs, "c01_lantern_ring");
+
+            Wait(CloudSaveService.SyncAsync());
+
+            Assert.AreEqual("c01_lantern_ring", GladeOnDevice());
+
+            var levels = SaveService.Snapshot().levels;
+            Assert.AreEqual(1, levels.Length, "exactly the incoming grove, and nothing of the outgoing one");
+        }
+
+        /// <summary>
+        /// The one path that must still refuse, and it is the money one. A receipt is redeemed
+        /// against whichever account is authorised, so repairing first would move a purchase
+        /// made under one account onto another — a support case with a proof of purchase
+        /// attached. Refusing costs nothing: both stores re-deliver an unfinished transaction
+        /// for ever, and by the retry the next sync has repaired the device anyway.
+        /// </summary>
+        [Test]
+        public void ARepairNeverMovesAPurchaseOntoAnotherAccount()
+        {
+            SignedInAs(Mine);
+            _backend.Session = Theirs;
+
+            var (result, _) = Wait(CloudSaveService.RedeemPurchaseAsync(
+                new PurchaseReceipt
+                {
+                    Store = "apple",
+                    ProductId = "gems_small",
+                    TransactionId = "txn-1",
+                    Payload = "payload",
+                }));
+
+            Assert.IsFalse(result.Ok);
+            Assert.AreEqual(CloudFailure.AccountMismatch, result.Failure);
+            Assert.AreEqual(Mine, CloudState.UserId, "and the device is left exactly as it was");
             Assert.AreEqual("c01_first_light", GladeOnDevice());
         }
 
         /// <summary>
-        /// A device that cannot save its grove anywhere must not be talked into replacing it.
-        /// Recovery signs you back in; becoming somebody else from here is the destructive
-        /// prompt's job, and that one asks twice.
+        /// A device that cannot file the outgoing grove anywhere must not swap it away. This is
+        /// the only reason <c>AccountMismatched</c> still exists, and it is why the repair is
+        /// conditional rather than unconditional.
         /// </summary>
         [Test]
-        public void RecoveringRefusesToBecomeAThirdAccount()
+        public void ARepairThatCannotFileTheOutgoingGroveDoesNotHappen()
         {
             SignedInAs(Mine);
+            _archive.Readonly = true;
             _backend.Session = Theirs;
-            Wait(CloudSaveService.SyncAsync());
 
-            _backend.SignsInAs = "uid-somebody-else";
-            var result = Wait(CloudSaveService.ResumeAccountAsync(LinkCredential.ForGoogle()));
+            var result = Wait(CloudSaveService.SyncAsync());
 
-            Assert.AreEqual(SwitchOutcome.DifferentAccount, result.Outcome);
-            Assert.IsTrue(result.Untouched);
-            Assert.AreEqual("c01_first_light", GladeOnDevice(), "the unsaveable grove is still here");
+            Assert.IsFalse(result.Ok);
+            Assert.AreEqual(CloudFailure.AccountMismatch, result.Failure);
+            Assert.AreEqual(Mine, CloudState.UserId, "the grove stays where it is until it can be filed");
+            Assert.AreEqual("c01_first_light", GladeOnDevice());
+            Assert.IsTrue(CloudSaveService.AccountMismatched);
         }
 
-        // =================================================================== the wipe
+        // ============================================================== the local swap
+        // Everything here calls SaveService.SwitchTo directly, which is where the switch
+        // actually happens now — no backend, no network, and nothing about it that could not
+        // be run in an aeroplane. That is the point of the redesign and it is what makes
+        // these the cheapest tests in the feature to keep honest.
+
+        /// <summary>
+        /// Out and back, on a device with no network at all. This is the shape of the thing a
+        /// player asked for — two of their own accounts on one phone — and neither direction
+        /// costs a document read.
+        /// </summary>
         [Test]
-        public void AWipeThatForgetsTheAccountLeavesTheFileOwnedByNobody()
+        public void TheLocalSwapKeepsBothGrovesAndGoesBothWays()
         {
             SignedInAs(Mine);
 
+            Assert.AreEqual(SaveService.SwapResult.Started, SaveService.SwitchTo(Theirs, true));
+            Assert.AreEqual(Theirs, CloudState.UserId);
+            Assert.AreEqual("", GladeOnDevice(), "the other account has played nothing here");
+
+            Assert.AreEqual(SaveService.SwapResult.Restored, SaveService.SwitchTo(Mine, true));
+            Assert.AreEqual(Mine, CloudState.UserId);
+            Assert.AreEqual("c01_first_light", GladeOnDevice(), "and this one is exactly as it was left");
+
+            // Counted off the records, so it holds with no content catalog loaded — which is
+            // the state this fixture is in and, for a moment after launch, the state a real
+            // device is in. Read through PlayerProgression instead it comes back zero, and the
+            // panel greets somebody's twenty-six glades with "here is a new grove".
+            Assert.AreEqual(1, PlayerProgress.ClearedCount);
+            Assert.IsTrue(CloudSaveService.HoldsAGrove);
+        }
+
+        /// <summary>
+        /// The revision and the sync mark describe a conversation with one account's document.
+        /// Carried into another they are worse than meaningless — a revision invented against
+        /// somebody else's history is precisely the input a backend using it for optimistic
+        /// concurrency must not be given.
+        /// </summary>
+        [Test]
+        public void AnAccountsSyncHistoryNeverTravelsToTheNextOne()
+        {
+            SignedInAs(Mine);
             long before = CloudState.Revision;
 
-            SaveService.Wipe(forgetAccount: true);
+            SaveService.SwitchTo(Theirs, true);
 
-            Assert.AreEqual("", CloudState.UserId);
-            Assert.AreEqual(0, CloudState.LastSyncedUnix, "nothing here has ever been synced");
-
-            // Not zero: the wipe writes the fresh file, and writing is what a revision counts.
-            // What matters is that it no longer carries the outgoing account's history, which
-            // is the number a backend would use for optimistic concurrency.
+            Assert.AreEqual(0, CloudState.LastSyncedUnix, "this account has never been synced from here");
             Assert.Less(CloudState.Revision, before,
                         "a revision belongs to one account's history and cannot travel");
         }
 
+        /// <summary>
+        /// Music, sound and language describe the handset and the person holding it, not the
+        /// grove, so signing in to a second account must not silently turn the music back on.
+        /// </summary>
         [Test]
-        public void AWipeThatKeepsTheAccountStillDoes()
+        public void ThePhonesOwnPreferencesSurviveASwap()
+        {
+            SignedInAs(Mine);
+            GameSettings.SetMusic(false);
+
+            SaveService.SwitchTo(Theirs, true);
+
+            Assert.IsFalse(GameSettings.MusicOn);
+        }
+
+        [Test]
+        public void SwappingToTheAccountAlreadyHeldIsANoOp()
         {
             SignedInAs(Mine);
 
-            SaveService.Wipe();
-
-            Assert.AreEqual(Mine, CloudState.UserId,
-                            "the adopt path overwrites this a line later and relies on it surviving");
+            Assert.AreEqual(SaveService.SwapResult.Same, SaveService.SwitchTo(Mine, true));
+            Assert.AreEqual("c01_first_light", GladeOnDevice());
+            Assert.AreEqual(0, _archive.Count, "and nothing is filed, because nothing left");
         }
+
 
         // ================================================================ the backend
         /// <summary>
@@ -375,6 +672,25 @@ namespace GlimmerGrove.Tests
             public string Session;
             public string SignsInAs;
             public bool PushFails;
+
+            /// <summary>Set to make the provider refuse, the way a closed consent screen does.</summary>
+            public bool CredentialSignInFails;
+
+            /// <summary>
+            /// Lets a test hold a sync open, which is the ordinary state of the world rather
+            /// than an exotic one: a sync starts on every foreground, and opening the account
+            /// panel is what a player does straight after foregrounding.
+            /// </summary>
+            TaskCompletionSource<bool> _held;
+
+            public void HoldPulls() => _held = new TaskCompletionSource<bool>();
+
+            public void ReleasePulls()
+            {
+                var held = _held;
+                _held = null;
+                held?.TrySetResult(true);
+            }
 
             /// <summary>
             /// Which account cannot be read. Per-account rather than a flag, because the
@@ -424,21 +740,28 @@ namespace GlimmerGrove.Tests
                 if (CredentialSignIns == 0) SecuredBeforeCredentialSignIn = Pushes > 0;
                 CredentialSignIns++;
 
+                if (CredentialSignInFails)
+                    return Task.FromResult((CloudResult.Failed(CloudFailure.Offline, "cancelled by the player"),
+                                            CloudIdentity.None));
+
                 Session = SignsInAs;
                 return Task.FromResult((CloudResult.Success, new CloudIdentity(Session, true)));
             }
 
-            public Task<(CloudResult result, CloudSnapshot snapshot)> PullAsync(
+            public async Task<(CloudResult result, CloudSnapshot snapshot)> PullAsync(
                 string userId, CancellationToken c = default)
             {
+                var held = _held;
+                if (held != null) await held.Task;
+
                 if (userId == PullFailsFor)
-                    return Task.FromResult((CloudResult.Failed(CloudFailure.Offline), CloudSnapshot.Missing));
+                    return (CloudResult.Failed(CloudFailure.Offline), CloudSnapshot.Missing);
 
                 Pulls++;
-                return Task.FromResult((CloudResult.Success,
-                                        Remote.TryGetValue(userId, out var save)
-                                            ? new CloudSnapshot(save, true)
-                                            : CloudSnapshot.Missing));
+                return (CloudResult.Success,
+                        Remote.TryGetValue(userId, out var save)
+                            ? new CloudSnapshot(save, true)
+                            : CloudSnapshot.Missing);
             }
 
             public Task<CloudResult> PushAsync(string userId, SaveFileDto snapshot, SaveDelta delta,

@@ -103,6 +103,24 @@ namespace GlimmerGrove.Ads
         /// </summary>
         event Action<string> ReadinessChanged;
 
+        /// <summary>
+        /// Tells the SDK what it may do with this player's data.
+        ///
+        /// <para>
+        /// <b>Must be called before <see cref="InitializeAsync"/>, and the ordering is the
+        /// whole point.</b> A mediation SDK that starts without having been told has already
+        /// decided what it may collect and has already run an auction on it; a signal applied
+        /// afterwards changes the next request and cannot undo the first. <c>Boot</c> awaits
+        /// <c>AdPrivacy.ResolveAsync</c>, applies the result here, and only then initialises.
+        /// </para>
+        /// <para>
+        /// Also called again whenever the player revisits the consent form, which is why it is
+        /// separate from initialisation rather than a parameter of it: withdrawing consent has
+        /// to reach the SDK without restarting the app.
+        /// </para>
+        /// </summary>
+        void ApplyPrivacy(Privacy.AdPrivacySignals signals);
+
         /// <summary>Starts the SDK. Safe to call more than once; later calls are no-ops.</summary>
         Task InitializeAsync(CancellationToken cancellation = default);
 
@@ -153,6 +171,9 @@ namespace GlimmerGrove.Ads
             add { }
             remove { }
         }
+
+        /// <summary>Nothing to tell. Kept so no caller has to branch on which provider it holds.</summary>
+        public void ApplyPrivacy(Privacy.AdPrivacySignals signals) { }
 
         public Task InitializeAsync(CancellationToken cancellation = default)
             => Task.CompletedTask;

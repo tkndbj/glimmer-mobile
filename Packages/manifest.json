@@ -2,7 +2,8 @@
   "dependencies": {
     "com.coplaydev.unity-mcp": "https://github.com/CoplayDev/unity-mcp.git?path=/MCPForUnity#v10.1.2",
 
-    "com.google.external-dependency-manager": "file:../GooglePackages/com.google.external-dependency-manager-1.2.186.tgz",
+    "com.google.ads.mobile": "file:../GooglePackages/com.google.ads.mobile-11.4.0.tgz",
+    "com.google.external-dependency-manager": "file:../GooglePackages/com.google.external-dependency-manager-1.2.187.tgz",
     "com.google.firebase.app": "file:../GooglePackages/com.google.firebase.app-13.15.0.tgz",
     "com.google.firebase.auth": "file:../GooglePackages/com.google.firebase.auth-13.15.0.tgz",
     "com.google.firebase.firestore": "file:../GooglePackages/com.google.firebase.firestore-13.15.0.tgz",

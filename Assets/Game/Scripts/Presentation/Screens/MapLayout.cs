@@ -66,7 +66,8 @@ namespace GlimmerGrove
             }
 
             layout.Levels = levels;
-            layout.TeaserPosition = ChapterMap.TeaserPosition(highest, layout.Strips.Count);
+            layout.TeaserPosition = ChapterMap.TeaserPosition(highest, layout.Strips.Count,
+                                                              definition.TeaserX);
             return layout;
         }
 

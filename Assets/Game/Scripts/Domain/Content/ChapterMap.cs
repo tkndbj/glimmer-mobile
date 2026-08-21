@@ -66,7 +66,23 @@ namespace GlimmerGrove.Content
         /// </summary>
         public const float TeaserHeadroom = 500f;
 
+        /// <summary>
+        /// Where the end-of-chapter marker sits across the map when a chapter does not say.
+        /// The Shallows ends on the right, so this is above its last glade.
+        /// </summary>
         public const float TeaserX = 0.66f;
+
+        /// <summary>
+        /// An authored teaser x as it will actually be used: 0 (or anything outside the
+        /// map) means "not authored" and takes <see cref="TeaserX"/>.
+        ///
+        /// The same convention <c>par</c> and <c>budgetFactor</c> already use, and for the
+        /// same reason — <c>JsonUtility</c> writes a zero into every field a file predating
+        /// it never had, so zero is the one value that cannot mean a choice. Nothing is
+        /// lost by it: a marker at the very left edge of the map is half off it.
+        /// </summary>
+        public static float TeaserAcross(float authored)
+            => authored > 0f && authored <= 1f ? authored : TeaserX;
 
         /// <summary>The map's height in canvas units. Always at least one strip.</summary>
         public static float Height(int stripCount)
@@ -82,9 +98,17 @@ namespace GlimmerGrove.Content
         /// fraction of the map, and the room kept clear at the top is a distance.
         /// </summary>
         public static Vector2 TeaserPosition(float highestY, int stripCount)
+            => TeaserPosition(highestY, stripCount, TeaserX);
+
+        /// <inheritdoc cref="TeaserPosition(float,int)"/>
+        /// <param name="across">
+        /// The chapter's own <c>teaserX</c>; 0 takes the default. Only this axis is
+        /// authorable — see <see cref="ChapterDefinition.TeaserX"/>.
+        /// </param>
+        public static Vector2 TeaserPosition(float highestY, int stripCount, float across)
         {
             float ceiling = Mathf.Clamp01(1f - TeaserHeadroom / Height(stripCount));
-            return new Vector2(TeaserX, Mathf.Min(ceiling, highestY + TeaserGap));
+            return new Vector2(TeaserAcross(across), Mathf.Min(ceiling, highestY + TeaserGap));
         }
 
         /// <summary>
