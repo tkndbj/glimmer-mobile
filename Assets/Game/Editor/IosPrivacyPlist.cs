@@ -61,7 +61,7 @@ namespace GlimmerGrove.EditorTools
         /// that is vague, and players refuse copy that begs.
         /// </summary>
         const string TrackingUsage =
-            "Glimmer Grove is free to play. Allowing this lets us show ads that are relevant " +
+            "Glimmer Groove is free to play. Allowing this lets us show ads that are relevant " +
             "to you rather than random ones, which is what pays for the glades.";
 
         [PostProcessBuild(100)]

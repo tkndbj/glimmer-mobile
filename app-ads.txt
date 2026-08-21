@@ -44,12 +44,18 @@ unityads.unity3d.com, PLACEHOLDER_PUBLISHER_ID, DIRECT, 96cabb5fbdde3c78
 # TODO: replace with the exact lines from the Unity Ads dashboard
 unityads.unity3d.com, PLACEHOLDER_PUBLISHER_ID, DIRECT, 96cabb5fbdde3c78
 
+# ---------------------------------------------------------------- Google AdMob
+# Publisher id taken from the Cyprus AdMob account (pub-4604184534032643, confirmed against
+# the payments profile). VERIFY against AdMob > Apps > app-ads.txt before publishing - that
+# page prints the exact line this account needs, and it is the only authoritative source.
+# AdMob is not in the LevelPlay waterfall yet; the line is harmless until it is.
+google.com, pub-4604184534032643, DIRECT, f08c47fec0942fa0
+
 # ---------------------------------------------------------------- not yet installed
 # Nothing below is in the project yet. Each one needs an adapter added to Unity, keys entered
 # in LevelPlay, AND its lines added here — all three, or the network cannot buy. Left in as a
 # checklist rather than deleted, because the list of what is missing is the useful part.
 #
-# Google AdMob         google.com, pub-PLACEHOLDER, DIRECT, f08c47fec0942fa0
 # AppLovin             applovin.com, PLACEHOLDER, DIRECT
 # Meta Audience Network facebook.com, PLACEHOLDER, DIRECT, c3e20eee3f780d68
 # Liftoff / Vungle     vungle.com, PLACEHOLDER, DIRECT, 7d5b2e4bb0d0b8bc

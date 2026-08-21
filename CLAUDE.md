@@ -1,4 +1,4 @@
-# Glimmer Grove
+# Glimmer Groove
 
 A globally distributed mobile puzzle game (Unity 6000.5.4f1, Android + iOS).
 New level chapters ship every two to four weeks.
