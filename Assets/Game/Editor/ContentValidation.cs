@@ -217,6 +217,7 @@ namespace GlimmerGrove.EditorTools
             ValidateRewardChaptersExist(fetch.Text, index, result);
             ValidateHearts(table.Hearts, result, verbose);
             ValidateHints(table.Hints, table.Ads, result, verbose);
+            ValidatePrompts(table.Prompts, result, verbose);
             ValidateDailyChests(table.Daily, table.Hearts, result, verbose);
             ValidateStreak(table.Streak, result, verbose);
             ValidateGolden(table.Golden, table, index, result, verbose);
@@ -568,6 +569,44 @@ namespace GlimmerGrove.EditorTools
                            ? "; the ceiling is the cap, so a granted hint at a full pool is "
                              + "refused rather than banked"
                            : string.Empty));
+        }
+
+        /// <summary>
+        /// The account-prompt pacing, which the reader can bound but cannot judge.
+        ///
+        /// <para>
+        /// <c>AccountPromptRuleTable.Resolve</c> already clamps anything outside the band a
+        /// published file may ask for, and says so. What is left is the combination that is
+        /// perfectly legal and probably not what somebody meant: switching off the ask that
+        /// protects money. Zero is deliberately a value an author can write — it is the lever
+        /// that turns the panel off in minutes if it costs more conversion than it protects —
+        /// so this is a warning, never an error.
+        /// </para>
+        /// <para>
+        /// Reported in full even when there is nothing wrong, because these three numbers
+        /// decide how often the game interrupts a player and nobody should have to open a
+        /// JSON file to find out what they are. <c>ValidateHearts</c>' rule.
+        /// </para>
+        /// </summary>
+        static void ValidatePrompts(AccountPromptRuleTable prompts,
+                                    ContentValidationResult result, bool verbose)
+        {
+            if (prompts == null) { result.Errors.Add("progression.json produced no prompt table"); return; }
+
+            if (prompts.PurchaseBudget == 0)
+                result.Warnings.Add("prompts purchaseBudget is 0, so a guest who spends real money " +
+                                    "is never asked to protect it - and a purchase made on an " +
+                                    "anonymous account cannot be restored by any route");
+
+            if (prompts.ChapterBudget == 0 && prompts.PurchaseBudget == 0)
+                result.Warnings.Add("both prompt budgets are 0, so the account panel never opens " +
+                                    "by itself; the shop's standing notice is the whole warning");
+
+            if (!verbose) return;
+
+            Debug.Log($"[Glimmer] account prompt: {prompts.ChapterBudget} ask(s) after a chapter, " +
+                      $"{prompts.PurchaseBudget} after a purchase, " +
+                      $"{prompts.QuietSeconds / 3600L}h apart whatever raised them");
         }
 
         /// <summary>

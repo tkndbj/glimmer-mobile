@@ -201,9 +201,10 @@ namespace GlimmerGrove
         {
             int i = 0;
 
-            // The level route first, always. It is the one that costs nothing, and leading
-            // with the price on a companion the player is going to be given anyway is how a
-            // roster starts reading as a paywall.
+            // The gate first, always, because it is the half credits cannot answer. It used
+            // to be described as the free route — "wakes on its own at keeper level 40" — and
+            // that sentence stopped being true when the rule became level AND purchase: the
+            // gate is now permission to pay rather than a second way in.
             Fact(top, i++, Art.S("Ui/ic_star"), ChestDropKind.None, Pal.Gold,
                  Avatar.UnlockLevel > 0
                      ? Loc.Format("ui.companion.by_level", Avatar.UnlockLevel)
@@ -309,6 +310,16 @@ namespace GlimmerGrove
                                             size, anchor, at, OnGetCoins, "ic_play");
                     break;
 
+                // A closed gate gets a dead-looking button naming the level rather than the
+                // coin offer, and that is the point: credits cannot open this and sending
+                // somebody to the coin shelf for a companion they still could not buy is the
+                // refusal HintPrompt exists to prevent, one screen over.
+                case CompanionPurchaseState.LevelLocked:
+                    UIKit.TextButton("Gate", Panel, "btn_blue",
+                                     Loc.Format("ui.companion.locked_button", offer.RequiredLevel), 44,
+                                     size, anchor, at, () => Close());
+                    break;
+
                 default:
                     UIKit.TextButton("Ok", Panel, "btn_blue", Loc.Get("ui.common.got_it"), 46,
                                      size, anchor, at, () => Close());
@@ -365,6 +376,10 @@ namespace GlimmerGrove
 
                 case CompanionPurchaseState.TooExpensive:
                     return Loc.Format("ui.companion.short", Compact.Number(offer.Shortfall), Compact.Number(offer.Balance));
+
+                case CompanionPurchaseState.LevelLocked:
+                    return Loc.Format("ui.companion.locked_level",
+                                      offer.RequiredLevel, PlayerProgression.Level.Level);
 
                 case CompanionPurchaseState.AlreadyHeld:
                     return Loc.Get("ui.companion.already");

@@ -19,6 +19,7 @@ rules_version = '2';
 //   receipts/{store}__{txn}          global receipt claims. Client cannot see them.
 //   groves/{uid}                     the public grove card. Any player reads, none write.
 //   names/{nameKey}                  a reserved keeper name. Any player gets one, none list.
+//   nameReports/{uid}/...            who reported whose name. Server-only, both ways.
 //   leaderboards/{boardId}           a published board. Any player reads, none write.
 //   config/{doc}                     reward table and product catalog. Read-only.
 //
@@ -246,9 +247,42 @@ service cloud.firestore {
     // express is *one name per account*, because that needs the previous reservation released
     // in the same operation and its other half is a document the client itself writes. Without
     // that, one account holds as many names as it cares to pay writes for.
+    // A reservation is never released when a name is taken off the boards, only flagged --
+    // and the flag lives on the account's wallet rather than here, so this document is exactly
+    // what it always was. That is what stops a reported name being handed to the next person
+    // who asks for it. See functions/src/reports.ts.
     match /names/{nameKey} {
       allow get: if signedIn();
       allow list, write: if false;
+    }
+
+    // --------------------------------------------------------- name reports
+    // Who has reported whose keeper name, and how many distinct players have.
+    //
+    // Server-only in **both** directions, which is unusual here and deliberate in each.
+    //
+    // Not client-written, for the reason `names` is not: the constraint that matters is "one
+    // report per player per name", and while an id of `nameReports/{target}/reporters/{caller}`
+    // does express exactly that in rules, the *count* the threshold reads cannot be maintained
+    // alongside it by a client without letting the client write the count. A takedown decided
+    // by a number the client writes is a takedown anybody can trigger. `reportKeeperName` does
+    // both halves in one transaction instead, with a per-account daily quota the rules could
+    // not express at all.
+    //
+    // Not client-*readable*, which matters more than it looks. A caller who can see the count
+    // can binary-search the threshold and learn exactly how many accounts a brigade needs; a
+    // caller who can read the reporter documents learns who reported them, which turns a safety
+    // feature into a way of finding somebody to retaliate against. The callable tells a client
+    // only whether its own report was counted -- see the outcome mapping in index.ts.
+    //
+    // The reporter's own daily quota lives at players/{uid}/private/reports and is covered by
+    // the existing `private` rule, which is why it is not named here.
+    match /nameReports/{uid} {
+      allow read, write: if false;
+
+      match /reporters/{reporterUid} {
+        allow read, write: if false;
+      }
     }
 
     // ------------------------------------------------------------- receipts

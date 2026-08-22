@@ -618,12 +618,18 @@ namespace GlimmerGrove.Store
             long credits = redemption.AmountOf(Currency.Credits);
             long gems = redemption.AmountOf(Currency.Gems);
 
+            // `linked` is the number the whole guest-purchase feature is answered by: what
+            // share of real money lands on an account that dies with the installation. It is
+            // read here rather than inferred later because this is the only moment both facts
+            // are in hand at once, and because a purchase credited on the launch after a crash
+            // is exactly the case a session-level property would attribute to the wrong state.
             Telemetry.Track("store_purchase_granted",
                             "product", purchase.ProductId,
                             "store", purchase.Store,
                             "credits", credits,
                             "gems", gems,
-                            "already", redemption.AlreadyGranted);
+                            "already", redemption.AlreadyGranted,
+                            "linked", Cloud.CloudSaveService.IsLinked);
 
             // Nothing to celebrate on a retry, which is what every launch after an
             // interrupted purchase looks like: the server had already honoured it, and

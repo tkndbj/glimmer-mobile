@@ -1,4 +1,6 @@
+using GlimmerGrove.Analytics;
 using GlimmerGrove.Cloud;
+using GlimmerGrove.Progression;
 using UnityEngine;
 
 namespace GlimmerGrove
@@ -69,7 +71,11 @@ namespace GlimmerGrove
         public static bool ShouldOffer(AccountPromptTrigger trigger)
         {
             Load();
-            return Policy.ShouldOffer(trigger, CloudSaveService.IsAvailable,
+
+            // The live table, read at the moment of asking rather than captured, so a config
+            // push reaches the next ask instead of the next launch.
+            return Policy.ShouldOffer(trigger, AccountPromptRules.Table,
+                                      CloudSaveService.IsAvailable,
                                       CloudSaveService.IsLinked,
                                       CloudSaveService.AccountMismatched,
                                       GameClock.NowUnix());
@@ -96,6 +102,13 @@ namespace GlimmerGrove
             PlayerPrefs.SetInt(PurchaseKey, Policy.PurchaseOffers);
             PlayerPrefs.SetString(LastOfferedKey, Policy.LastOfferedUnix.ToString());
             PlayerPrefs.Save();
+
+            // Half of the pair that makes this feature measurable at all: this counts the
+            // asks, `account_linked` counts the outcomes, and `store_purchase_granted` carries
+            // whether the money landed on a guest. Without the three, nobody can tell whether
+            // the panel earns its interruption or should have its budget pushed to zero — and
+            // the whole reason the pacing is content is so that answer can be acted on.
+            Telemetry.Track("account_prompt_shown", "trigger", trigger.ToString());
 
             Flow.Modal<AccountOverlay>(v => v.Reason = trigger);
             return true;

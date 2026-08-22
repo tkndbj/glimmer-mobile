@@ -317,29 +317,35 @@ namespace GlimmerGrove
                          TextAnchor.MiddleCenter, new Vector2(CellW - 60f, 40f), new Vector2(.5f, 0f),
                          new Vector2(0f, 76f), 3f, 3f);
 
-            // A locked companion says its price rather than only its level gate. The gate is
-            // still the honest headline for a companion the player will reach soon, but most
-            // of this grid is gated above anything a shipped catalog can reach — so a cell
-            // that only ever said "level 40" was telling a player about a wait that does not
-            // end, and hiding the answer that does.
+            // A locked cell leads with whichever half is actually stopping the player, and
+            // carries the other underneath. Both are required — the rule is keeper level AND
+            // purchase — so a cell quoting only the price was telling somebody four levels
+            // short that 8,000 coins would do it, and a cell quoting only the gate was hiding
+            // the second thing they still have to find. Which one leads is therefore a
+            // question about *this* player, not about the companion.
             //
             // An unlocked cell's caption is StyleWorn's to write, so it is built empty rather
             // than given a value here that would have to agree with the one over there.
+            bool gated = !unlocked && !AvatarCatalog.ReachedBy(avatar, Profile.Rank);
+
+            string lead = !avatar.IsForSale || gated
+                ? Loc.Format("ui.profile.locked_at", avatar.UnlockLevel)
+                : Loc.Format("ui.profile.cost", Compact.Number(avatar.UnlockCost));
+
             var sub = UIKit.Shrinkable(
                 UIKit.Titled("Sub", plate.transform,
-                             unlocked ? string.Empty
-                                      : avatar.IsForSale
-                                          ? Loc.Format("ui.profile.cost", Compact.Number(avatar.UnlockCost))
-                                          : Loc.Format("ui.profile.locked_at", avatar.UnlockLevel),
-                             24, unlocked ? Color.white : Pal.A(Pal.Sun, .90f),
+                             unlocked ? string.Empty : lead,
+                             24, unlocked ? Color.white
+                                          : gated ? Pal.A(Pal.Aqua, .95f) : Pal.A(Pal.Sun, .90f),
                              TextAnchor.MiddleCenter, new Vector2(CellW - 60f, 32f), new Vector2(.5f, 0f),
                              new Vector2(0f, 36f), 3f, 0f), 18);
 
-            // The gate keeps a line of its own on a priced cell, because the free route is
-            // the one that must not disappear behind the paid one.
-            if (!unlocked && avatar.IsForSale)
+            // The other half, quieter. Only on a priced cell whose gate is closed: once the
+            // gate is open the price is the whole remaining story and a second line repeating
+            // a level the player has already passed is noise.
+            if (gated && avatar.IsForSale)
                 UIKit.Titled("Gate", plate.transform,
-                             Loc.Format("ui.profile.locked_at", avatar.UnlockLevel), 20,
+                             Loc.Format("ui.profile.cost", Compact.Number(avatar.UnlockCost)), 20,
                              new Color(1f, .95f, .88f, .42f), TextAnchor.MiddleCenter,
                              new Vector2(CellW - 60f, 26f), new Vector2(.5f, 0f),
                              new Vector2(0f, 12f), 3f, 0f);

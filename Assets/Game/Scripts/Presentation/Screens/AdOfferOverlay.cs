@@ -329,7 +329,8 @@ namespace GlimmerGrove
             => placementId == AdPlacement.CoinBonus ? "ui.ads.coins_title"
              : placementId == AdPlacement.RunContinue ? "ui.ads.continue_title"
              : placementId == AdPlacement.WinBonus ? "ui.ads.bonus_title"
-             : placementId == AdPlacement.HintRefill ? "ui.ads.hints_title"
+             : placementId == AdPlacement.HintRefill
+                 ? (Wallet.Hints.CanSpend ? "ui.ads.hints_title" : "ui.ads.hints_empty_title")
              : "ui.ads.hearts_title";
 
         /// <summary>
@@ -342,7 +343,9 @@ namespace GlimmerGrove
         /// "watch" beside a lost board does not say that.
         /// </summary>
         static string WatchKey(string placementId)
-            => placementId == AdPlacement.RunContinue ? "ui.ads.continue_cta" : "ui.ads.watch";
+            => placementId == AdPlacement.RunContinue ? "ui.ads.continue_cta"
+             : placementId == AdPlacement.HintRefill ? "ui.ads.hints_cta"
+             : "ui.ads.watch";
 
         /// <summary>
         /// What this placement pays into, when the table has no offer to describe. The card

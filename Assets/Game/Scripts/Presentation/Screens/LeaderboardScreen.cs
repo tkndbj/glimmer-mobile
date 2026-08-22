@@ -45,9 +45,9 @@ namespace GlimmerGrove
         const float RowHeight = 132f;
 
         /// <summary>
-        /// Breathing room under the last row. There is no nav bar here — the back arrow and
-        /// the back key are the way out, so the list runs to the bottom of the safe area
-        /// rather than stopping short of a control that is not there.
+        /// Breathing room between the last row and the nav bar. The boards are a tab now, so
+        /// the bar is drawn here exactly as it is on the shop, and the list stops above it —
+        /// a row half-covered by the bar is a row nobody can tap.
         /// </summary>
         const float BottomPad = 24f;
 
@@ -68,10 +68,16 @@ namespace GlimmerGrove
             Scenery.Layered(Content, "home", .26f);
             Fireflies.Spawn(Content, 14, new Color(1f, .93f, .70f), 6f, 20f);
 
-            if (string.IsNullOrEmpty(_boardId)) _boardId = GroveBoard.MyLeagueId();
+            // Finest groves by default, and deliberately: the league is where the player is
+            // already standing — it is their own star rating, drawn over their own grove —
+            // so opening onto it shows them what they mostly know. The global hundred is the
+            // aspirational half of the feature and the one worth arriving on, and the
+            // standing above it is what keeps the screen about the player either way.
+            if (string.IsNullOrEmpty(_boardId)) _boardId = LeaderboardBoard.Global;
 
             BuildList();
             BuildHeader();
+            NavBar.Build(Content, NavBar.Tab.Ranks);
 
             // Portraits, for the row avatars. Arriving from the profile or the roster the
             // scope is usually warm and this repaints immediately.
@@ -127,9 +133,13 @@ namespace GlimmerGrove
             banner.transform.localScale = Vector3.zero;
             Tween.Pop(banner.transform, 0f, .6f, .1f);
 
+            // Home, not the Grovement. This is a tab of its own now and can be reached from
+            // the bar on any screen, so the one destination that is right however the player
+            // arrived is the way back — ShopScreen's rule, and the other four tabs are one
+            // tap away in the bar below regardless.
             UIKit.IconButton("Back", chrome, Skins.Nav, "ic_left", new Vector2(112f, 112f),
                              new Vector2(0f, 1f), new Vector2(92f, -104f),
-                             () => Flow.Go<HomesteadScreen>());
+                             () => Flow.Go<HomeScreen>());
 
             BuildStanding(chrome);
             BuildTabs(chrome);
@@ -249,7 +259,7 @@ namespace GlimmerGrove
         void BuildList()
         {
             _viewport = UIKit.Node("Viewport", Safe);
-            _viewport.offsetMin = new Vector2(0f, BottomPad);
+            _viewport.offsetMin = new Vector2(0f, NavBar.Height + BottomPad);
             _viewport.offsetMax = new Vector2(0f, -HeaderHeight);
 
             _grid = GridView.Attach(_viewport, 1, 960f, RowHeight,
@@ -481,7 +491,7 @@ namespace GlimmerGrove
 
         public override bool OnBack()
         {
-            Flow.Go<HomesteadScreen>();
+            Flow.Go<HomeScreen>();
             return true;
         }
     }

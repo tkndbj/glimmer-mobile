@@ -557,9 +557,11 @@ namespace GlimmerGrove
 
                 _lock.gameObject.SetActive(!held && _piece.IsValid);
 
-                // The leaf marks what play alone will reach, which on the residents' shelf is
-                // most of it — the half of this page that money is not the only way through.
-                _leaf.gameObject.SetActive(_piece.IsValid && !held && _piece.HasRequirement);
+                // The leaf marks what play alone will reach. It used to be every piece with a
+                // requirement, which put it on the whole residents' shelf — and that stopped
+                // being true when a companion started needing its gate *and* its price, so it
+                // was marking money-only cells as free. HomesteadLedger owns which is which.
+                _leaf.gameObject.SetActive(_piece.IsValid && !held && HomesteadLedger.HasFreeRoute(_piece));
 
                 _name.text = _piece.IsValid ? Loc.Get(_piece.NameKey) : string.Empty;
                 _name.color = held ? Pal.Cream : new Color(1f, .95f, .88f, .62f);
@@ -632,10 +634,12 @@ namespace GlimmerGrove
 
             if (held) return (Loc.Get("ui.grove.yours"), Pal.A(Pal.Mint, .95f));
 
-            // The free route first, and the price second, wherever both exist — which is
-            // CompanionUnlockOverlay's rule and for its reason: a panel that leads with the
-            // price reads as a paywall on something the player was going to be given anyway.
-            if (piece.RequiresKeeperLevel > 0 && !piece.IsForSale)
+            // The keeper gate leads whenever it is the refusal that binds, priced or not.
+            // It used to be drawn only on a resident with no price, back when reaching the
+            // gate handed the companion over; now the gate and the price are both required,
+            // so a cell that showed the price alone was quoting the half a player could act
+            // on and hiding the half stopping them.
+            if (piece.RequiresKeeperLevel > 0 && Profile.Rank < piece.RequiresKeeperLevel)
                 return (Loc.Format("ui.grove.needs_level", piece.RequiresKeeperLevel),
                         Pal.A(Pal.Aqua, .95f));
 

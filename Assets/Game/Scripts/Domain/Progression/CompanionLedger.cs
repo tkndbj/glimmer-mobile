@@ -19,6 +19,19 @@ namespace GlimmerGrove.Progression
 
         /// <summary>For sale, unheld, and the player is short. Carries the shortfall.</summary>
         TooExpensive,
+
+        /// <summary>
+        /// For sale and unheld, but the keeper gate is not reached yet. Carries the level.
+        ///
+        /// <para>
+        /// Tested <em>before</em> affordability on purpose. When both refusals apply, the gate
+        /// is the one that cannot be resolved by finding credits, so leading with the price
+        /// would offer somebody a rewarded video for a companion the video cannot buy — the
+        /// mistake <c>HintPrompt</c> documents, where the board is asked before the pool so
+        /// nobody is ever sold a watch they could not have spent.
+        /// </para>
+        /// </summary>
+        LevelLocked,
     }
 
     /// <summary>What a companion costs this player right now, and whether they can pay it.</summary>
@@ -32,11 +45,16 @@ namespace GlimmerGrove.Progression
         /// <summary>Credits the player is holding, for a panel that shows the gap.</summary>
         public readonly long Balance;
 
-        public CompanionOffer(CompanionPurchaseState state, long cost, long balance)
+        /// <summary>The keeper level this companion is gated behind. Zero when ungated.</summary>
+        public readonly int RequiredLevel;
+
+        public CompanionOffer(CompanionPurchaseState state, long cost, long balance,
+                              int requiredLevel = 0)
         {
             State = state;
             Cost = cost;
             Balance = balance;
+            RequiredLevel = requiredLevel;
         }
 
         public bool CanBuy => State == CompanionPurchaseState.Ready;
@@ -49,12 +67,21 @@ namespace GlimmerGrove.Progression
     /// Which companions this player holds, and the act of buying one.
     ///
     /// <para>
-    /// <b>The rule is level OR purchase, and it lives here alone.</b> Every screen asks
-    /// <see cref="IsHeld(AvatarDefinition, int)"/>; nothing else composes the two halves.
+    /// <b>The rule is keeper level AND purchase, and it lives here alone.</b> Every screen
+    /// asks <see cref="IsHeld(AvatarDefinition, int)"/>; nothing else composes the halves.
     /// <see cref="AvatarCatalog.ReachedBy"/> answers only the level half and is named so
     /// that reading it as the whole rule is obviously wrong — it used to be called
     /// <c>IsUnlocked</c>, and a call site checking half the rule under a name that promises
     /// all of it is precisely how a companion somebody paid for stays behind a padlock.
+    /// </para>
+    /// <para>
+    /// <b>Why the gate had to stop granting.</b> This was "level OR purchase" for a year,
+    /// and the two clauses cannot both survive the change: if reaching the gate still handed
+    /// the companion over, then at the moment a player became allowed to buy one they would
+    /// already own it, and the price would be unreachable code. So a priced companion is
+    /// held only when it was <em>bought</em>, and the gate is a prerequisite for buying it.
+    /// A companion the roster puts no price on is still granted at its gate — that is the
+    /// starter, and <see cref="AvatarDefinition.IsForSale"/> is what tells the two apart.
     /// </para>
     /// <para>
     /// <b>Why the purchased half is stored when nothing else here is.</b> This file's
@@ -108,13 +135,20 @@ namespace GlimmerGrove.Progression
 
         // ------------------------------------------------------------- reading
         /// <summary>
-        /// Whether the player holds this companion: reached by keeper level, or bought.
+        /// Whether the player holds this companion: bought it, or was handed it at its gate
+        /// because the roster puts no price on it.
         ///
         /// <b>The whole unlock rule.</b> Nothing else composes it.
+        ///
+        /// <para>
+        /// Note what is deliberately absent: reaching the gate of a <em>priced</em> companion
+        /// grants nothing. It is permission to pay. See the type's remarks.
+        /// </para>
         /// </summary>
         public static bool IsHeld(AvatarDefinition avatar, int keeperLevel)
             => avatar.IsValid
-            && (AvatarCatalog.ReachedBy(avatar, keeperLevel) || _bought.Contains(avatar.Id));
+            && (_bought.Contains(avatar.Id)
+                || (!avatar.IsForSale && AvatarCatalog.ReachedBy(avatar, keeperLevel)));
 
         public static bool IsHeld(string id, int keeperLevel) => IsHeld(AvatarCatalog.Find(id), keeperLevel);
 
@@ -201,11 +235,15 @@ namespace GlimmerGrove.Progression
             if (!avatar.IsForSale)
                 return new CompanionOffer(CompanionPurchaseState.NotForSale, 0L, balance);
 
+            if (!AvatarCatalog.ReachedBy(avatar, keeperLevel))
+                return new CompanionOffer(CompanionPurchaseState.LevelLocked, avatar.UnlockCost,
+                                          balance, avatar.UnlockLevel);
+
             var state = balance >= avatar.UnlockCost
                 ? CompanionPurchaseState.Ready
                 : CompanionPurchaseState.TooExpensive;
 
-            return new CompanionOffer(state, avatar.UnlockCost, balance);
+            return new CompanionOffer(state, avatar.UnlockCost, balance, avatar.UnlockLevel);
         }
 
         // ------------------------------------------------------------- writing

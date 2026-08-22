@@ -69,16 +69,35 @@ namespace GlimmerGrove.Tests
         }
 
         [Test]
-        public void LevelAndPurchaseAreBothRoutesToTheSameCompanion()
+        public void ReachingTheGateIsPermissionToPayAndNotAGrant()
         {
+            // The rule is keeper level AND purchase. Both halves are pinned here because the
+            // two obvious wrong versions each pass one of these lines: a build that kept the
+            // old "or" grants at line two, and a build that also re-checked the gate on a
+            // purchase confiscates at line four.
             AvatarCatalog.Publish(new[] { Free("monarch"), Gated("coral", 40, 14500) });
             var coral = AvatarCatalog.Find("coral");
 
             Assert.IsFalse(CompanionLedger.IsHeld(coral, 39), "one rank short and unbought");
-            Assert.IsTrue(CompanionLedger.IsHeld(coral, 40), "the level route");
+            Assert.IsFalse(CompanionLedger.IsHeld(coral, 40),
+                           "standing at the gate is permission to pay, not the companion");
 
             CompanionLedger.LoadFrom(File("coral"));
-            Assert.IsTrue(CompanionLedger.IsHeld(coral, 1), "the purchased route, far below the gate");
+            Assert.IsTrue(CompanionLedger.IsHeld(coral, 40), "reached and paid for");
+            Assert.IsTrue(CompanionLedger.IsHeld(coral, 1),
+                          "and a purchase is permanent, so a gate retune never takes it back");
+        }
+
+        [Test]
+        public void AnUnpricedCompanionIsStillHandedOverAtItsGate()
+        {
+            // The one thing the gate still grants on its own, and what keeps the starter
+            // working: a companion the roster puts no price on has nothing to pay.
+            AvatarCatalog.Publish(new[] { Free("monarch"), Gated("wren", 6, 0) });
+            var wren = AvatarCatalog.Find("wren");
+
+            Assert.IsFalse(CompanionLedger.IsHeld(wren, 5));
+            Assert.IsTrue(CompanionLedger.IsHeld(wren, 6), "no price, so the gate is the whole rule");
         }
 
         [Test]
@@ -87,7 +106,7 @@ namespace GlimmerGrove.Tests
             // The level half stays derived. Writing it down as well would create a second
             // answer that a retune could put out of step with the first — and would mean the
             // save grew every time somebody levelled up.
-            AvatarCatalog.Publish(new[] { Free("monarch"), Gated("plum", 11, 2600) });
+            AvatarCatalog.Publish(new[] { Free("monarch"), Gated("plum", 11, 0) });
             var plum = AvatarCatalog.Find("plum");
 
             Assert.IsTrue(CompanionLedger.IsHeld(plum, 11));
@@ -134,7 +153,14 @@ namespace GlimmerGrove.Tests
                             CompanionLedger.OfferFor(AvatarCatalog.Find("earned_only"), 1).State,
                             "zero cost means earned by playing, never free");
 
-            var dear = CompanionLedger.OfferFor(AvatarCatalog.Find("priced"), 1);
+            // The gate is tested before the price, so a player who is both short and too
+            // junior is told about the wall credits cannot climb. Leading with the price would
+            // sell them a rewarded video for a companion the video could not buy.
+            var junior = CompanionLedger.OfferFor(AvatarCatalog.Find("priced"), 1);
+            Assert.AreEqual(CompanionPurchaseState.LevelLocked, junior.State);
+            Assert.AreEqual(20, junior.RequiredLevel);
+
+            var dear = CompanionLedger.OfferFor(AvatarCatalog.Find("priced"), 20);
             Assert.AreEqual(CompanionPurchaseState.TooExpensive, dear.State);
             Assert.AreEqual(500_000L - dear.Balance, dear.Shortfall);
 

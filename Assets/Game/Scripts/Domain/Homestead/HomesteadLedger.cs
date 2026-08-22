@@ -20,6 +20,17 @@ namespace GlimmerGrove.Homestead
 
         /// <summary>For sale, unheld, and the player is short. Carries the shortfall.</summary>
         TooExpensive,
+
+        /// <summary>
+        /// A resident whose keeper gate the player has not reached. Credits cannot answer it.
+        ///
+        /// Only residents can be in this state — <c>CompanionPurchaseState.LevelLocked</c>
+        /// under the grove's own name. Mapping it onto <see cref="NotForSale"/> instead would
+        /// tell a player a friend "can only be earned by playing" when it is for sale and they
+        /// are four keeper levels away, which is the class of refusal this enum exists to keep
+        /// apart.
+        /// </summary>
+        LevelLocked,
     }
 
     /// <summary>What a piece costs this player right now, and whether they can pay it.</summary>
@@ -33,8 +44,13 @@ namespace GlimmerGrove.Homestead
         /// <summary>Credits the player is holding, for a panel that shows the gap.</summary>
         public readonly long Balance;
 
-        public HomesteadOffer(HomesteadPurchaseState state, long cost, long balance)
+        /// <summary>The keeper level a resident is gated behind. Zero for everything else.</summary>
+        public readonly int RequiredLevel;
+
+        public HomesteadOffer(HomesteadPurchaseState state, long cost, long balance,
+                              int requiredLevel = 0)
         {
+            RequiredLevel = requiredLevel;
             State = state;
             Cost = cost;
             Balance = balance;
@@ -152,6 +168,26 @@ namespace GlimmerGrove.Homestead
         public static bool IsHeld(string id) => IsHeld(HomesteadCatalog.Current.Find(id));
 
         /// <summary>
+        /// Whether play alone could ever get this piece, whether or not it has yet.
+        ///
+        /// <para>
+        /// Distinct from <see cref="IsEarned"/>, which is the past tense of the same question,
+        /// and the distinction is the whole reason this exists: a shop cell marks the pieces
+        /// money is not the only way through, and it has to do that <em>before</em> the player
+        /// has got there. A resident is the case that made the two diverge — its keeper gate
+        /// is now a prerequisite for paying rather than a route of its own, so a priced
+        /// companion has no free route at any level.
+        /// </para>
+        /// </summary>
+        public static bool HasFreeRoute(HomesteadPiece piece)
+        {
+            if (!piece.IsValid) return false;
+            if (piece.IsResident) return !GroveResidents.CompanionOf(piece).IsForSale;
+
+            return piece.HasRequirement || !piece.IsForSale;
+        }
+
+        /// <summary>
         /// Whether play alone has earned this piece.
         ///
         /// <b>Half of the rule.</b> Named for its narrowness on purpose — see the type's
@@ -163,9 +199,15 @@ namespace GlimmerGrove.Homestead
         {
             if (!piece.IsValid) return false;
 
-            // A resident's free route is the keeper ladder, which is the companion roster's
-            // half of its own rule — asked there so the two screens cannot come to disagree.
-            if (piece.IsResident) return AvatarCatalog.ReachedBy(GroveResidents.CompanionOf(piece), KeeperLevel);
+            // A resident's keeper gate is a prerequisite for buying rather than a free route
+            // — see CompanionLedger's remarks — so play alone earns a resident only when the
+            // roster puts no price on it. Asked through the companion's own definition so the
+            // two screens cannot come to disagree about it.
+            if (piece.IsResident)
+            {
+                var companion = GroveResidents.CompanionOf(piece);
+                return !companion.IsForSale && AvatarCatalog.ReachedBy(companion, KeeperLevel);
+            }
 
             // Nothing asked of it and no price: the starter furniture a new grove opens with.
             if (!piece.HasRequirement) return !piece.IsForSale;
@@ -341,10 +383,11 @@ namespace GlimmerGrove.Homestead
                 case CompanionPurchaseState.Ready: state = HomesteadPurchaseState.Ready; break;
                 case CompanionPurchaseState.AlreadyHeld: state = HomesteadPurchaseState.AlreadyHeld; break;
                 case CompanionPurchaseState.TooExpensive: state = HomesteadPurchaseState.TooExpensive; break;
+                case CompanionPurchaseState.LevelLocked: state = HomesteadPurchaseState.LevelLocked; break;
                 default: state = HomesteadPurchaseState.NotForSale; break;
             }
 
-            return new HomesteadOffer(state, offer.Cost, offer.Balance);
+            return new HomesteadOffer(state, offer.Cost, offer.Balance, offer.RequiredLevel);
         }
 
         // ------------------------------------------------------------- writing

@@ -70,6 +70,18 @@ namespace GlimmerGrove.Tests
 
             /// <summary>True when the ceiling bit, which makes the case server-only.</summary>
             public bool clamped;
+
+            /// <summary>
+            /// True when the two halves legitimately disagree, so only the server runs it.
+            ///
+            /// One thing puts a case here: a save naming a companion whose gate its own keeper
+            /// level has not reached. The server drops it, because no honest save can hold one
+            /// — the rule is level AND purchase. This side counts it, because it is scoring
+            /// holdings it knows to be real and a purchase is permanent, so a companion kept
+            /// through a gate retune is still the player's. Both are right; the case cannot
+            /// pin both.
+            /// </summary>
+            public bool serverOnly;
         }
 
         [Serializable]
@@ -209,8 +221,22 @@ namespace GlimmerGrove.Tests
 
                 if (piece.IsResident)
                 {
-                    return _level >= piece.RequiresKeeperLevel
-                        || _companions.Contains(GroveResidents.CompanionIdOf(piece.Id));
+                    // <b>Bought, and only bought, for anything with a price on it.</b> This
+                    // read `level >= gate || bought` for as long as the unlock rule was level
+                    // OR purchase, and it is the last place in the game that still did — the
+                    // shipped rule became keeper level AND purchase, so reaching a gate now
+                    // grants nothing and only opens the shop cell.
+                    //
+                    // Mirrors CompanionLedger.IsHeld rather than restating it, because this
+                    // double cannot reach a ledger. The free clause is kept even though
+                    // GroveScore.Value only ever counts a piece whose cost is positive: an
+                    // adapter that silently answers a *different* question from the shipped
+                    // one is how this case came to disagree with the server in the first
+                    // place, and the day a free companion is given a price it has to be the
+                    // price that decides, not this method's shape.
+                    if (_companions.Contains(GroveResidents.CompanionIdOf(piece.Id))) return true;
+
+                    return piece.Cost <= 0 && _level >= piece.RequiresKeeperLevel;
                 }
 
                 return _pieces.Contains(piece.Id);
@@ -233,8 +259,10 @@ namespace GlimmerGrove.Tests
             {
                 // A clamped case is the server disbelieving a save. There is nothing on this
                 // side to compare it against — the client is scoring holdings it knows to be
-                // real — so it is skipped rather than approximated.
-                if (c.clamped) continue;
+                // real — so it is skipped rather than approximated. `serverOnly` is the same
+                // situation arriving one step earlier: a companion dropped by its gate rather
+                // than cut down by the ceiling.
+                if (c.clamped || c.serverOnly) continue;
 
                 long value = GroveScore.Value(catalog, new CaseHoldings(c));
 

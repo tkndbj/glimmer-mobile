@@ -55,7 +55,11 @@ const wholeDocumentWrite = (doc) => {
 // ------------------------------------------------------------------ the name survives a write
 console.log("\nthe keeper name survives a whole-document write");
 {
-  const held = { key: "fernwillow", public: "Fern Willow", atUnix: 1700000000 };
+  // `deniedUnix` is part of the holding, so the round trip has to carry it. It is written
+  // explicitly as a zero rather than left absent for the reason `claimName` writes it that
+  // way: the wallet is written with `{ merge: true }` from more than one place, and a field
+  // that is sometimes present and sometimes not is a field whose absence means two things.
+  const held = { key: "fernwillow", public: "Fern Willow", atUnix: 1700000000, deniedUnix: 0 };
 
   const once = wholeDocumentWrite({ credits: { granted: 1250, spent: 0 }, name: held });
   equal("a held name is carried through the read", once.name, held);
@@ -67,6 +71,24 @@ console.log("\nthe keeper name survives a whole-document write");
 
   const thrice = wholeDocumentWrite(twice);
   equal("and a third, because a player syncs all day", thrice.name, held);
+
+  // The same failure, one field further in, and strictly worse: a takedown that a routine
+  // wallet write erases. Nothing would report it — the name simply reappears on the boards the
+  // next time the player opens a chest, and the moderator who hid it has no reason to look
+  // again. This is invariant 12a in the document that is not the save.
+  const denied = { ...held, deniedUnix: 1700009999 };
+  const hidden = wholeDocumentWrite({ credits: { granted: 1250, spent: 0 }, name: denied });
+  equal("a takedown survives a wallet write", hidden.name, denied);
+  equal("and the one after it", wholeDocumentWrite(hidden).name, denied);
+
+  // An older wallet, written before the field existed, must read as "not denied" rather than
+  // as anything else. Zero is unreachable for a real takedown, which is what makes that safe
+  // and is why no migration is needed.
+  const legacy = wholeDocumentWrite({
+    credits: { granted: 1250, spent: 0 },
+    name: { key: "fernwillow", public: "Fern Willow", atUnix: 1700000000 },
+  });
+  equal("a wallet written before takedowns existed reads as not denied", legacy.name.deniedUnix, 0);
 }
 
 // ------------------------------------------------------------------ absent means absent

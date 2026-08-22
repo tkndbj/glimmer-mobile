@@ -1202,6 +1202,20 @@ def main():
         print("       the ceiling is the cap, so a granted hint at a full pool is refused "
               "rather than banked - nothing may offer one there")
 
+    prompts = progression.get("prompts") or {}
+    chapter_budget = prompts.get("chapterBudget", 2)
+    purchase_budget = prompts.get("purchaseBudget", 3)
+    quiet_hours = prompts.get("quietHours", 48)
+    print()
+    print(f"account prompt: {chapter_budget} ask(s) after a chapter, "
+          f"{purchase_budget} after a purchase, "
+          f"{quiet_hours}h apart whatever raised them")
+    if not chapter_budget and not purchase_budget:
+        print("       both budgets are zero, so the panel never opens by itself - the shop's "
+              "standing notice is the whole warning")
+    elif not purchase_budget:
+        print("       purchaseBudget is zero, so a guest who pays is never asked to protect it")
+
     print()
     for w in warnings:
         print("WARN  " + w)

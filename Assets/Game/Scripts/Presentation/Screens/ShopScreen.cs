@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using GlimmerGrove.Analytics;
 using GlimmerGrove.Cloud;
 using GlimmerGrove.Localization;
 using GlimmerGrove.Persistence;
@@ -210,7 +211,7 @@ namespace GlimmerGrove
             _notice = UIKit.Button("GuestNotice", Safe, Art.Round(18), new Vector2(1000f, NoticeH),
                                    new Vector2(.5f, 1f),
                                    new Vector2(0f, -(HeaderHeight + TabRow + 44f) - NoticeH * .5f),
-                                   () => Flow.Modal<AccountOverlay>());
+                                   OnNoticeTapped);
 
             var plate = _notice.GetComponent<Image>();
             if (plate) plate.color = new Color(.17f, .11f, .05f, .92f);
@@ -238,6 +239,18 @@ namespace GlimmerGrove
             chevron.preserveAspect = true;
 
             _notice.gameObject.SetActive(false);
+        }
+
+        /// <summary>
+        /// The bar was tapped, which is a player asking rather than the game asking — so it
+        /// spends no budget and starts no quiet period, and it is counted separately from
+        /// <c>account_prompt_shown</c> for exactly that reason. Telling the two apart is what
+        /// answers whether the standing notice does the work on its own.
+        /// </summary>
+        void OnNoticeTapped()
+        {
+            Telemetry.Track("account_notice_tapped", "shelf", _shelf.ToString());
+            Flow.Modal<AccountOverlay>();
         }
 
         /// <summary>

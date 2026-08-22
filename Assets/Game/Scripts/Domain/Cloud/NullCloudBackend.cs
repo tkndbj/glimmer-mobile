@@ -117,6 +117,11 @@ namespace GlimmerGrove.Cloud
             => Task.FromResult((CloudResult.Failed(CloudFailure.Offline, "no cloud backend configured"),
                                 NameClaim.Unavailable));
 
+        public Task<(CloudResult result, NameReportOutcome outcome)> ReportKeeperNameAsync(
+            string keeperId, CancellationToken cancellation = default)
+            => Task.FromResult((CloudResult.Failed(CloudFailure.Offline, "no cloud backend configured"),
+                                NameReportOutcome.Unavailable));
+
         public Task<(CloudResult result, GroveCard card)> ReadGroveCardAsync(
             string ownerId, CancellationToken cancellation = default)
             => Task.FromResult((CloudResult.Failed(CloudFailure.Offline, "no cloud backend configured"),

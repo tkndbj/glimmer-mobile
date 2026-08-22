@@ -105,6 +105,25 @@ namespace GlimmerGrove.Social
             string storedName, CancellationToken cancellation = default);
 
         /// <summary>
+        /// Reports a keeper's published name.
+        ///
+        /// <para>
+        /// <b>The request carries one id and nothing else</b> — no reason, no category, no free
+        /// text. The server reads the card and the reservation itself, so there is nothing in
+        /// the body to forge and no way to report a name that is not actually on a board. It is
+        /// <see cref="PublishGroveAsync"/>'s bargain in the other direction: the client says
+        /// only that it wants something to happen, and the server decides what.
+        /// </para>
+        /// <para>
+        /// The reply deliberately does not say whether the report counted towards a takedown —
+        /// see <see cref="NameReportOutcome"/>. Safe to call twice: the server keys the record
+        /// on the pair of accounts, so a retry after a lost reply records nothing new.
+        /// </para>
+        /// </summary>
+        Task<(CloudResult result, NameReportOutcome outcome)> ReportKeeperNameAsync(
+            string keeperId, CancellationToken cancellation = default);
+
+        /// <summary>
         /// Reads one keeper's published grove, for a visit.
         ///
         /// <para>

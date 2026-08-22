@@ -87,6 +87,11 @@ namespace GlimmerGrove.Tests
             // to gate its last two companions at 61 and 66, at which point a hard-coded 60 made
             // this permanently red — and a suite with a standing failure in it is a suite
             // nobody reads. Whatever the top gate becomes, the claim stays the same one.
+            //
+            // What the claim is stopped being "every companion is reachable" when the rule
+            // became keeper level AND purchase: levelling alone now reaches only the ones the
+            // roster puts no price on. The monotonicity is the part worth pinning either way —
+            // a count that goes down as a player levels up is the shape of bug this catches.
             int top = 0;
             foreach (var avatar in AvatarCatalog.All)
                 if (avatar.UnlockLevel > top) top = avatar.UnlockLevel;
@@ -99,7 +104,13 @@ namespace GlimmerGrove.Tests
                 Assert.LessOrEqual(count, AvatarCatalog.All.Count);
                 previous = count;
             }
-            Assert.AreEqual(AvatarCatalog.All.Count, previous, "every companion is reachable");
+
+            int free = 0;
+            foreach (var avatar in AvatarCatalog.All)
+                if (!avatar.IsForSale) free++;
+
+            Assert.AreEqual(free, previous,
+                            "levelling to the top gate reaches exactly the unpriced companions");
         }
 
         static AvatarDefinition LastLockedCompanion()

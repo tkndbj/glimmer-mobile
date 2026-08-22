@@ -26,10 +26,16 @@
     "The roster the worth cases are scored against, in the manifest's own shape.",
     "",
     "A companion with no price is given away and is worth nothing, which is why monarch",
-    "never appears in an expected total however it is held. Everything else is worth its",
-    "price whether it was earned or bought — the reading is market value rather than spend",
-    "(invariant 16g) — and which half of the score it lands in is decided by the keeper",
-    "gate, because that is the half the server can vouch for without believing the save."
+    "never appears in an expected total however it is held. Everything else must be owned",
+    "outright to count: the unlock rule is keeper level AND purchase, so passing a gate",
+    "hands nothing over and a companion is in a grove only because it was paid for.",
+    "",
+    "The gate is still read, and it is read before the clamp rather than inside it. A save",
+    "naming a companion whose gate its own keeper level has not reached cannot have come",
+    "about honestly, so the server drops that entry entirely — which is tighter than clamping",
+    "it. The client does not, and cannot: it is scoring holdings it knows to be real and a",
+    "purchase is permanent, so a companion kept through a gate retune stays held. Those cases",
+    "carry `serverOnly` and the C# half skips them, for the reason it skips a clamped one."
   ],
   "companions": [
     {
@@ -64,9 +70,13 @@
     "`affordable` is the ceiling on the bought half: everything the account could ever have",
     "had to spend, derived by the server from the star ledger plus what it granted itself.",
     "The client has no ceiling — it is scoring its own true holdings — so the C# half runs",
-    "only the cases whose clamp does not bite, and the server half runs all of them. A case",
-    "with `clamped: true` is therefore server-only by construction, and that asymmetry is",
-    "the point: the clamp is the one part of the rule that exists to disbelieve a client."
+    "only the cases whose clamp does not bite and which are not marked `serverOnly`.",
+    "",
+    "`earned` is structurally zero now and every case says so. It was companions the keeper",
+    "ladder had reached, back when reaching a gate granted one; the rule is level AND",
+    "purchase now, so everything in a grove was bought and everything is clamped. The field",
+    "stays because the clamp is expressed in terms of the split and because a future reward",
+    "that genuinely is handed over belongs in it."
   ],
   "worthCases": [
     {
@@ -80,7 +90,8 @@
       "bought": 0,
       "score": 0,
       "stars": 0,
-      "clamped": false
+      "clamped": false,
+      "serverOnly": false
     },
     {
       "name": "free pieces and starter land add nothing",
@@ -100,7 +111,8 @@
       "bought": 0,
       "score": 0,
       "stars": 0,
-      "clamped": false
+      "clamped": false,
+      "serverOnly": false
     },
     {
       "name": "a bought bench is worth its price",
@@ -115,7 +127,8 @@
       "bought": 500,
       "score": 500,
       "stars": 0,
-      "clamped": false
+      "clamped": false,
+      "serverOnly": false
     },
     {
       "name": "land counts, and the first star is reachable",
@@ -133,38 +146,25 @@
       "bought": 4200,
       "score": 4200,
       "stars": 1,
-      "clamped": false
+      "clamped": false,
+      "serverOnly": false
     },
     {
-      "name": "a companion reached by the keeper ladder is earned, not bought",
+      "name": "reaching a companion's gate hands nothing over",
       "keeperLevel": 5,
       "pieces": [],
       "land": [],
       "companions": [],
-      "affordable": 0,
-      "earned": 1800,
-      "bought": 0,
-      "score": 1800,
-      "stars": 1,
-      "clamped": false
-    },
-    {
-      "name": "a companion bought above the gate is bought",
-      "keeperLevel": 5,
-      "pieces": [],
-      "land": [],
-      "companions": [
-        "coral"
-      ],
       "affordable": 20000,
-      "earned": 1800,
-      "bought": 8000,
-      "score": 9800,
-      "stars": 2,
-      "clamped": false
+      "earned": 0,
+      "bought": 0,
+      "score": 0,
+      "stars": 0,
+      "clamped": false,
+      "serverOnly": false
     },
     {
-      "name": "buying one the ladder already reached does not pay twice",
+      "name": "a companion owned with its gate reached is worth its price",
       "keeperLevel": 5,
       "pieces": [],
       "land": [],
@@ -173,11 +173,60 @@
         "timber"
       ],
       "affordable": 20000,
-      "earned": 1800,
-      "bought": 0,
+      "earned": 0,
+      "bought": 1800,
       "score": 1800,
       "stars": 1,
-      "clamped": false
+      "clamped": false,
+      "serverOnly": false
+    },
+    {
+      "name": "a companion claimed below its gate is dropped, not clamped",
+      "keeperLevel": 5,
+      "pieces": [],
+      "land": [],
+      "companions": [
+        "coral"
+      ],
+      "affordable": 20000,
+      "earned": 0,
+      "bought": 0,
+      "score": 0,
+      "stars": 0,
+      "clamped": false,
+      "serverOnly": true
+    },
+    {
+      "name": "the gate is read against this save's own keeper level",
+      "keeperLevel": 39,
+      "pieces": [],
+      "land": [],
+      "companions": [
+        "vesper"
+      ],
+      "affordable": 100000,
+      "earned": 0,
+      "bought": 0,
+      "score": 0,
+      "stars": 0,
+      "clamped": false,
+      "serverOnly": true
+    },
+    {
+      "name": "and the same companion counts once that level is reached",
+      "keeperLevel": 40,
+      "pieces": [],
+      "land": [],
+      "companions": [
+        "vesper"
+      ],
+      "affordable": 100000,
+      "earned": 0,
+      "bought": 30000,
+      "score": 30000,
+      "stars": 3,
+      "clamped": false,
+      "serverOnly": false
     },
     {
       "name": "the whole catalog, honestly afforded",
@@ -196,16 +245,23 @@
         "east_strip",
         "south_strip"
       ],
-      "companions": [],
+      "companions": [
+        "monarch",
+        "cinder",
+        "timber",
+        "coral",
+        "vesper"
+      ],
       "affordable": 100000,
-      "earned": 39800,
-      "bought": 26700,
+      "earned": 0,
+      "bought": 66500,
       "score": 66500,
       "stars": 3,
-      "clamped": false
+      "clamped": false,
+      "serverOnly": false
     },
     {
-      "name": "a forged grove is clamped to what the account could afford",
+      "name": "a forged grove is clamped, and its impossible companions dropped first",
       "keeperLevel": 1,
       "pieces": [
         "lodge",
@@ -224,13 +280,14 @@
       ],
       "affordable": 1250,
       "earned": 0,
-      "bought": 64700,
+      "bought": 26700,
       "score": 1250,
       "stars": 1,
-      "clamped": true
+      "clamped": true,
+      "serverOnly": false
     },
     {
-      "name": "the clamp never touches the earned half",
+      "name": "a zero ceiling leaves nothing standing, because nothing is unclamped now",
       "keeperLevel": 40,
       "pieces": [
         "oak"
@@ -238,11 +295,12 @@
       "land": [],
       "companions": [],
       "affordable": 0,
-      "earned": 39800,
+      "earned": 0,
       "bought": 4000,
-      "score": 39800,
-      "stars": 3,
-      "clamped": true
+      "score": 0,
+      "stars": 0,
+      "clamped": true,
+      "serverOnly": false
     }
   ],
   "_starComment": [

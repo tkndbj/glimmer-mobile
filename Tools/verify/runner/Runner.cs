@@ -173,6 +173,13 @@ static class Runner
             string m = current.Message ?? "";
             if (m.Contains("ECall methods must be packaged into a system module")) return true;
             if (m.Contains("Unity.SerializationLogic")) return true;
+
+            // LogAssert's scope is opened by Unity's own test runner, so any test that
+            // touches it is Editor-only by construction — which this file's summary below
+            // already says. Without this line such a test is reported as a *failure*, which
+            // is the one classification that matters: a red offline run that is really a
+            // harness limit is how somebody learns to stop reading the offline run.
+            if (m.Contains("No log scope is available")) return true;
             if (current is DllNotFoundException || current is EntryPointNotFoundException) return true;
         }
         return false;

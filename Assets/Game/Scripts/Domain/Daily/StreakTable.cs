@@ -217,7 +217,7 @@ namespace GlimmerGrove.Daily
         /// </summary>
         public static readonly StreakTable Default = new StreakTable(new[]
         {
-            new StreakRung(ChestDropKind.Credits, 150),             // night 1 — the lap opens
+            new StreakRung(ChestDropKind.Credits, 500),             // night 1 — the lap opens
             new StreakRung(ChestDropKind.Hearts, 1),                // 2
             new StreakRung(ChestDropKind.Gems, 5),                  // 3
             new StreakRung(ChestDropKind.Hearts, 2),                // 4

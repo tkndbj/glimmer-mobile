@@ -1082,7 +1082,7 @@ video, capped per UTC day.
   "cooldownSeconds": 45,
   "placements": [
     { "id": "heart_refill", "kind": "hearts",   "amount": 2,   "dailyCap": 10 },
-    { "id": "coin_bonus",   "kind": "credits",  "amount": 150, "dailyCap": 6 },
+    { "id": "coin_bonus",   "kind": "credits",  "amount": 1000, "dailyCap": 6 },
     { "id": "run_continue", "kind": "run_time", "amount": 30,  "dailyCap": 8 },
     { "id": "win_bonus",    "kind": "credits",  "amount": 200, "dailyCap": 6 }
   ]

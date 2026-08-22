@@ -1,4 +1,5 @@
 using GlimmerGrove.Homestead;
+using GlimmerGrove.Persistence;
 using GlimmerGrove.Localization;
 using GlimmerGrove.Progression;
 using GlimmerGrove.Social;
@@ -58,6 +59,9 @@ namespace GlimmerGrove
         GroveFieldView _field;
         Text _name, _worth, _status;
         StarRow _stars;
+
+        Btn _report;
+        bool _reporting;
 
         /// <summary>Opens on a keeper. The name is what the board already knew, so the
         /// header has something to say while the card is in flight.</summary>
@@ -248,6 +252,18 @@ namespace GlimmerGrove
             _stars = StarRow.Create(chrome, new Vector2(.5f, 1f), new Vector2(0f, -186f),
                                     30f, 36f, 0, false, rungs);
 
+            // Small, quiet, and in the corner opposite Back. A report control is not something
+            // a screen should invite — it is something a player has to be able to find once
+            // they have already decided. So it is sized and coloured like chrome rather than
+            // like an action, which is the same call the grove's score readout makes.
+            _report = UIKit.TextButton("Report", chrome, Skins.Alternate,
+                                       Loc.Get("ui.visit.report"), 24,
+                                       new Vector2(232f, 72f),
+                                       new Vector2(1f, 1f), new Vector2(-136f, -104f),
+                                       OnReport);
+
+            if (_report != null && _report.Label != null) UIKit.Shrinkable(_report.Label, 16);
+
             _status = UIKit.Shrinkable(
                 UIKit.Titled("Status", Safe, string.Empty, 28, new Color(1f, .96f, .88f, .78f),
                              TextAnchor.UpperCenter, new Vector2(760f, 160f), new Vector2(.5f, 1f),
@@ -276,12 +292,96 @@ namespace GlimmerGrove
 
             if (_stars) _stars.SetInstant(_card.IsValid ? Mathf.Min(_card.Stars, _stars.Count) : 0);
 
+            PaintReport();
+
             if (!_status) return;
 
             if (_card.IsValid) _status.text = string.Empty;
             else if (_fetching) _status.text = Loc.Get("ui.board.loading");
             else if (_failed) _status.text = Loc.Get("ui.visit.gone");
             else _status.text = Loc.Get("ui.board.loading");
+        }
+
+        // ---------------------------------------------------------------- report
+        /// <summary>
+        /// Whether the control is worth offering, and what it says.
+        ///
+        /// <para>
+        /// <b>Hidden rather than greyed wherever it cannot work.</b> That is the inverse of
+        /// <c>AdOfferState</c>'s rule and deliberate: that panel greys and explains because the
+        /// player went looking for it, whereas nobody arrives at a grove wanting to report it,
+        /// so a dead control here would only ever read as a broken game. There is nothing to
+        /// report before the card lands, on the player's own grove, or with no boards at all.
+        /// </para>
+        /// <para>
+        /// It stays visible and disabled once used, rather than vanishing. A control that
+        /// disappears after a tap leaves somebody wondering whether the tap registered — which
+        /// is the one question this feature must not leave open, since the obvious response is
+        /// to report again.
+        /// </para>
+        /// </summary>
+        void PaintReport()
+        {
+            if (_report == null) return;
+
+            bool worth = _card.IsValid
+                         && !string.IsNullOrEmpty(_ownerId)
+                         && _ownerId != CloudState.UserId
+                         && GroveBoard.IsAvailable;
+
+            _report.gameObject.SetActive(worth);
+            if (!worth) return;
+
+            bool sent = NameReports.AlreadySent(_ownerId);
+
+            _report.Interactable = !sent && !_reporting;
+
+            if (_report.Label != null)
+                _report.Label.text = Loc.Get(sent ? "ui.visit.report_sent" : "ui.visit.report");
+        }
+
+        void OnReport()
+        {
+            if (_reporting || NameReports.AlreadySent(_ownerId)) return;
+
+            Flow.Modal<ReportNameOverlay>(v => v.OnConfirm = Send);
+        }
+
+        async void Send()
+        {
+            if (_reporting) return;
+
+            _reporting = true;
+            PaintReport();
+
+            // Captured before the await rather than read after it. `Flow.Go` builds a fresh
+            // screen today so the field cannot move underneath this, which is exactly why it
+            // would go unnoticed: the day somebody makes this screen reusable, a report fired
+            // at one keeper lands against whoever the screen is showing when the reply arrives.
+            // A moderation action recorded against the wrong account is not a failure worth
+            // leaving one line away.
+            string owner = _ownerId;
+
+            var (result, outcome) = await GroveBoard.ReportNameAsync(owner);
+
+            _reporting = false;
+
+            // The screen can be gone: a report is the one call here a player can start and then
+            // immediately walk away from, because the panel that raised it has already closed.
+            if (!this) return;
+
+            PaintReport();
+
+            // Three sentences for four outcomes, and the collapse is deliberate. Somebody who
+            // reported a name twice is told exactly what somebody who reported it once is told,
+            // because the difference is ours to care about and not theirs — see
+            // NameReportOutcome for why the server tells the client so little.
+            string line =
+                !result.Ok || outcome == NameReportOutcome.Unavailable ? "ui.visit.report_failed"
+                : outcome == NameReportOutcome.Throttled ? "ui.visit.report_limit"
+                : "ui.visit.report_done";
+
+            Scenery.Toast(Content, Loc.Get(line), Pal.Cream, 2.6f, new Vector2(.5f, 0f), 320f);
         }
 
         // ------------------------------------------------------------------ tile

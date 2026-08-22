@@ -315,6 +315,35 @@ const goldenBands = (async () => {
   return percents;
 })();
 
+/**
+ * What night one of the streak ladder pays, read from the live config.
+ *
+ * The same lesson as the golden bands above, learned a second time on a second number: the
+ * three cases below hard-coded 150 and went red the day the ladder was retuned to 500. A
+ * rung is content — it is published to `config/progression` by the seeder and the server
+ * grants from its own copy — so the only figure this suite is entitled to assert is
+ * whatever it can read back. Hard-coding the new number would simply set the same trap for
+ * whoever retunes it next.
+ */
+const firstNightCredits = (async () => {
+  const body = await publishedConfig.clone().json().catch(() => null);
+  const rungs = body?.fields?.streak?.mapValue?.fields?.rungs?.arrayValue?.values ?? [];
+  const first = rungs[0]?.mapValue?.fields;
+
+  const kind = first?.kind?.stringValue;
+  const amount = Number(first?.amount?.integerValue ?? first?.amount?.doubleValue ?? 0);
+
+  if (kind !== "credits" || !(amount > 0)) {
+    // Never silently, for the golden bands' reason. If night one stops paying credits the
+    // three cases below are no longer about anything and should be rewritten, not skipped.
+    check(false, "night one of the published ladder pays credits",
+          `read kind=${kind} amount=${amount}`);
+    return 0;
+  }
+
+  return amount;
+})();
+
 // ------------------------------------------------------------------ functions
 console.log("\nfunctions");
 
@@ -413,15 +442,16 @@ check(rejectedBy(topRung.body).includes(`streak:${today}:7:gems`),
 
 // The one night it may claim, and the amount comes from config/progression rather than
 // from the request — `claimedAmount` above says 1.
+const rungOne = await firstNightCredits;
 const firstNight = await call("claimAwards", { awards: [night(today, 1, "credits")] });
-check(creditsOf(firstNight.body)?.grantedBaseline === creditsBefore + 150,
+check(creditsOf(firstNight.body)?.grantedBaseline === creditsBefore + rungOne,
       "the first night pays the ladder's figure, not the client's",
       `credits ${creditsBefore} -> ${creditsOf(firstNight.body)?.grantedBaseline}`);
 
 // The derived id is what makes this safe to resubmit, which the client does on every sync
 // until the server confirms it.
 const sameNight = await call("claimAwards", { awards: [night(today, 1, "credits")] });
-check(creditsOf(sameNight.body)?.grantedBaseline === creditsBefore + 150,
+check(creditsOf(sameNight.body)?.grantedBaseline === creditsBefore + rungOne,
       "resubmitting that night does not pay twice",
       `credits -> ${creditsOf(sameNight.body)?.grantedBaseline}`);
 
@@ -449,7 +479,7 @@ check(rejectedBy(notCurrency.body).includes(`streak:${today + 1}:2:hearts`),
 // for; it is pinned instead by the shared vectors, on both implementations. What belongs
 // here is the check that a client cannot skip the wait by dating its claim forward.
 const preFarmed = await call("claimAwards", { awards: [night(today + 7, 8, "credits")] });
-check(creditsOf(preFarmed.body)?.grantedBaseline === creditsBefore + 150,
+check(creditsOf(preFarmed.body)?.grantedBaseline === creditsBefore + rungOne,
       "a night dated a week ahead pays nothing",
       `credits -> ${creditsOf(preFarmed.body)?.grantedBaseline}`);
 check(rejectedBy(preFarmed.body).includes(`streak:${today + 7}:8:credits`),
@@ -695,6 +725,78 @@ const punctuation = await call("claimName", { name: "!!" });
 check(punctuation.body?.result?.outcome === "refused",
       "a name that folds to nothing is refused",
       JSON.stringify(punctuation.body?.result));
+
+// ----------------------------------------------------------------- the word filter, live
+//
+// The filter's arithmetic is proved offline by functions/test/names.mjs, which runs the
+// shipped list against the shipped fold. What only a live run can prove is that the *deployed*
+// build is running that list — that `config/names` was seeded, that the loader adopted it
+// rather than quietly falling back, and that a claim actually consults it. All three failures
+// look identical from a console: a filter that refuses nothing.
+
+const bypasses = [
+  ["f4ggot", "leetspeak, which the old filter let straight through"],
+  ["fu\u0441k", "a Cyrillic es, which the old filter *deleted* rather than folded"],
+  ["fuuuck", "a repeated run"],
+  ["\u0445\u0443\u0439", "Russian, which used to fold to the empty string and never be filtered"],
+];
+
+for (const [attempt, why] of bypasses) {
+  const tried = await callAs("claimName", { name: attempt }, second.idToken);
+  check(tried.body?.result?.outcome === "refused", `the deployed filter refuses ${why}`,
+        JSON.stringify(tried.body?.result));
+}
+
+// The other half, and the one a word list gets wrong far more often. `rape` is a substring of
+// `Grapevine` and the shipped filter refused it for a year, in a game about a garden.
+const innocent = await callAs("claimName", { name: `Grapevine${RUN_TAG}` }, second.idToken);
+check(innocent.body?.result?.outcome !== "refused",
+      "and does not refuse an innocent name that merely contains one",
+      JSON.stringify(innocent.body?.result));
+
+// ---------------------------------------------------------------------- reporting a name
+//
+// `nameReports` is server-only in both directions. Not writable, for the obvious reason; not
+// *readable*, because a caller who can see the count can binary-search the takedown threshold,
+// and one who can read the reporter documents learns who reported them.
+
+const reportRead = await fetch(`${FS}/nameReports/${uid}`, { headers: bearer });
+check(reportRead.status === 403 || reportRead.status === 404,
+      "a client cannot read a report summary", String(reportRead.status));
+
+const reportWrite = await fetch(`${FS}/nameReports/${uid}`, {
+  method: "PATCH", headers: json,
+  body: JSON.stringify({ fields: { reports: { integerValue: "99" } } }),
+});
+check(reportWrite.status === 403, "and cannot write one", String(reportWrite.status));
+
+// The first keeper republishes so there is a card to report. (The opt-out below takes it down
+// again, which is why this runs first.)
+await call("publishGrove", {});
+
+const reported = await callAs("reportKeeperName", { keeperId: uid }, second.idToken);
+check(reported.body?.result?.outcome === "reported", "a keeper can report another's name",
+      JSON.stringify(reported.body?.result));
+
+// Idempotent on the pair, which is what makes the control safe to tap twice and what makes the
+// threshold count *people* rather than taps.
+const again = await callAs("reportKeeperName", { keeperId: uid }, second.idToken);
+check(again.body?.result?.outcome === "duplicate", "and reporting the same name twice is one",
+      JSON.stringify(again.body?.result));
+
+// Reporting yourself is answered exactly as a real report is. The client is told nothing it
+// could use to probe the moderation state — see NameReportOutcome.
+const self = await call("reportKeeperName", { keeperId: uid });
+check(self.status === 200, "reporting yourself is answered rather than refused",
+      String(self.status));
+
+const noKeeper = await call("reportKeeperName", {});
+check(noKeeper.status === 400, "a report with no keeper is rejected", String(noKeeper.status));
+
+const unpublished = await call("reportKeeperName", { keeperId: `nobody-${RUN_TAG}` });
+check(unpublished.body?.result?.outcome === "reported",
+      "reporting an account with no card says nothing about whether it exists",
+      JSON.stringify(unpublished.body?.result));
 
 // Opting out is a withdrawal rather than a preference that takes effect later: a card left
 // standing after somebody asked to be hidden is a data-protection failure.

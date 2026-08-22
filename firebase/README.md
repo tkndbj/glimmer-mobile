@@ -479,3 +479,28 @@ is idempotent, so re-reading costs nothing.
   a sandbox or a test purchase. It is deliberately still granted — app review has to be
   able to buy things — but a live economy should know the difference, and nothing
   currently reports on it.
+
+## Keeper names: the word filter and the moderation desk
+
+The filter is three layers and only one of them is a list — see invariants 19g-19i in
+`CLAUDE.md` for the arguments.
+
+- `functions/src/profanity.ts`   the fold, and the three matching classes
+- `functions/src/blocklist.ts`   where the list comes from; `config/names` overrides the
+                                 compiled `name-blocklist.json`, which is the floor
+- `functions/src/reports.ts`     one report per pair of accounts; auto-hide at the threshold
+- `Tools/make_name_blocklist.py` rebuilds the list (LDNOOBW, 27 languages, CC-BY-4.0)
+
+Adding a slur, or removing an entry that turned out to refuse an innocent name, is an edit to
+`config/names` in the console and reaches every instance inside ten minutes. Reconcile it back
+into `Tools/make_name_blocklist.py` afterwards, or the next seed will undo it.
+
+Taking one specific name down is instant and does not go through the list at all:
+
+    node firebase/seed/moderate-names.mjs queue            # what is waiting
+    node firebase/seed/moderate-names.mjs show <account>   # the reports, and who filed them
+    node firebase/seed/moderate-names.mjs hide <account>
+    node firebase/seed/moderate-names.mjs restore <account>
+
+A hidden name keeps its reservation, so nobody else can claim it. A restore records that the
+name was reviewed, so the next single report cannot undo it.

@@ -690,13 +690,13 @@ namespace GlimmerGrove
             if (_undo) _undo.Interactable = _board != null && _board.CanUndo;
             if (_hint)
             {
-                // Live while the *board* has something to point at, whatever the pool holds.
-                // An empty pool is not a reason to grey the button: that is the moment the
-                // player has decided they want help, which is the best moment in the game to
-                // offer a video and the worst to teach somebody a control is dead — the rule
-                // CompanionUnlockOverlay already follows for a short balance. UseHint is
-                // where the pool is consulted.
-                _hint.Interactable = _board != null && _board.CanHint;
+                // Live whenever the board is taking input at all — not when it has a hint to
+                // give, and never mind what the pool holds. Both refusals are sentences
+                // worth reading (UseHint owns them) and one of them is the way to the offer
+                // panel, so greying the button would hide the very control a player with an
+                // empty pool needs. The rule CompanionUnlockOverlay already follows for a
+                // short balance: a dead control teaches people the feature is broken.
+                _hint.Interactable = _board != null && _board.Accepting;
                 PaintHintCount();
             }
         }
@@ -713,7 +713,17 @@ namespace GlimmerGrove
         {
             if (!_hintCount) return;
 
-            string text = Wallet.Hints.Count.ToString();
+            var hints = Wallet.Hints;
+
+            // A question mark rather than a nought, because the two say different things.
+            // "0" reads as a spent control and invites nobody to press it; "?" is the state
+            // the button is actually in — there is nothing in the pool, and this is where
+            // you find out when there will be. It is a loc key rather than a literal for
+            // invariant 6's reason: not every script writes this mark the way English does.
+            string text = hints.CanSpend
+                ? hints.Count.ToString()
+                : Loc.Get("ui.play.hint_none");
+
             if (_hintCount.text == text) return;
 
             _hintCount.text = text;
@@ -724,33 +734,38 @@ namespace GlimmerGrove
         {
             if (this == null) return;
             PaintHintCount();
-            if (_hint) _hint.Interactable = _board != null && _board.CanHint;
+            if (_hint) _hint.Interactable = _board != null && _board.Accepting;
         }
 
         /// <summary>
-        /// Spend a hint from the account pool, if there is one and the board has anything to
-        /// point at.
+        /// The hint button's one handler: reveal a conduit, open the offer, or say why
+        /// neither is happening.
         ///
         /// <para>
-        /// The order is the whole of the safety here. The board is asked first, so a board
-        /// with nothing left to reveal cannot cost anybody a hint; the pool is charged only
-        /// once the reveal has actually begun. Both refusals say which one they are, because
-        /// "nothing happened" is how a player concludes a button is broken.
+        /// Which of the three is <see cref="HintPrompt.OnTap"/>, so the rule is provable
+        /// offline and this method is only the doing. The board is asked before the pool,
+        /// which is the safety: a board with nothing left to reveal cannot cost anybody a
+        /// hint, and nobody is sold a video for one that could not have been spent. The pool
+        /// is charged only once the reveal has actually begun, and each refusal says which
+        /// one it is — "nothing happened" is how a player concludes a button is broken.
         /// </para>
         /// </summary>
         void UseHint()
         {
-            if (_board == null) return;
+            if (_board == null || _finished) return;
 
-            if (!_board.CanHint)
+            switch (HintPrompt.OnTap(_board.CanHint, Wallet.Hints.CanSpend))
             {
-                Scenery.Toast(Content, Loc.Get("ui.play.hint_nothing"), Pal.Parchment, 1.6f);
-                return;
+                case HintTap.NothingToReveal:
+                    Scenery.Toast(Content, Loc.Get("ui.play.hint_nothing"), Pal.Parchment, 1.6f);
+                    return;
+
+                case HintTap.Offer:
+                    OfferHint();
+                    return;
             }
 
-            if (!Wallet.Hints.CanSpend) { OfferHint(); return; }
-
-            if (!_board.Hint()) return;
+            if (!_board.Hint(HintRevealed)) return;
 
             Wallet.TrySpendHint();
             _hintsThisRun++;
@@ -761,7 +776,32 @@ namespace GlimmerGrove
         }
 
         /// <summary>
-        /// The pool is empty. Offer a video for one, or say when the next one lands.
+        /// The reveal has finished and the board is back. If that was the player's last
+        /// hint, the offer follows it.
+        ///
+        /// <para>
+        /// Raised from the board rather than from the spend, because the spend happens while
+        /// the conduit is still turning: a panel thrown up then would land on a latched board
+        /// and cover the very thing the hint was bought to show. The decision itself is
+        /// <see cref="HintPrompt.OffersAfterSpending"/>, where it can be proved.
+        /// </para>
+        /// </summary>
+        void HintRevealed()
+        {
+            if (this == null) return;
+
+            bool live = !_finished && !_offeringTime && _board != null && _board.Accepting;
+
+            if (!HintPrompt.OffersAfterSpending(live, Wallet.Hints.CanSpend,
+                                                RewardedAds.ShouldOffer(AdPlacement.HintRefill)))
+                return;
+
+            OfferHint();
+        }
+
+        /// <summary>
+        /// The pool is empty. Open the panel that says so, offers a video for one, and
+        /// carries the countdown to the next one either way.
         ///
         /// <para>
         /// The board is latched behind the panel exactly as it is for the continue offer,
@@ -772,21 +812,16 @@ namespace GlimmerGrove
         /// — the fault the pause menu shipped with.
         /// </para>
         /// <para>
-        /// <c>ShouldOffer</c> rather than <c>CanOffer</c>: a cooldown or a spent allowance
-        /// still draws the panel, which then says which of them it was. The refusals that
-        /// cannot resolve by waiting fall through to a toast carrying the countdown, because
-        /// "no hints" with no number on it is the sentence that makes a resource feel broken.
+        /// It opens on every state, including the ones with no video behind them at all —
+        /// the hub's "+" rule (the panel for a resource is always the answer to tapping its
+        /// control) and the same judgement <c>AdOfferOverlay</c> already makes internally:
+        /// a placement the content table does not carry loses its watch button and keeps its
+        /// facts, because "no hints" with no number beside it is the sentence that makes a
+        /// resource feel broken. The countdown is the thing the player came for.
         /// </para>
         /// </summary>
         void OfferHint()
         {
-            if (!RewardedAds.ShouldOffer(AdPlacement.HintRefill))
-            {
-                Scenery.Toast(Content, Loc.Format("ui.play.hint_empty", Profile.HintCountdown()),
-                              Pal.Parchment, 2.2f);
-                return;
-            }
-
             bool wasLocked = _board != null && _board.Locked;
             if (_board != null) _board.Locked = true;
 

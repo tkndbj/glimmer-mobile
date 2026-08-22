@@ -1,3 +1,5 @@
+using GlimmerGrove.Progression;
+
 namespace GlimmerGrove.Cloud
 {
     /// <summary>What raised the account panel by itself, rather than the player asking for it.</summary>
@@ -58,6 +60,14 @@ namespace GlimmerGrove.Cloud
     /// prompts.
     /// </para>
     /// <para>
+    /// <b>All three numbers are content</b>, handed in as an <see cref="AccountPromptRuleTable"/>
+    /// rather than read off a facade, so this stays a pure function of its arguments and a test
+    /// can pass whatever pacing it wants without touching global state. The caller passes the
+    /// live table, which is what makes a config push take effect on the next ask rather than on
+    /// the next launch. A budget of zero is legal and switches a trigger off — the lever that
+    /// matters if the modal turns out to cost more conversion than it protects.
+    /// </para>
+    /// <para>
     /// <b>It holds no clock and reaches nothing.</b> Handed the time and the account's state,
     /// exactly as <c>SyncScheduler</c> and <c>RunClock</c> are handed theirs, so the whole
     /// policy runs in the offline test suite — which matters here more than usual, because
@@ -70,33 +80,6 @@ namespace GlimmerGrove.Cloud
     /// </summary>
     public sealed class AccountPromptPolicy
     {
-        /// <summary>
-        /// Asked at most twice ever off the back of a finished chapter.
-        ///
-        /// Unchanged from what shipped, deliberately: this is the ask aimed at players who are
-        /// never going to spend money, and two is what somebody who has already declined
-        /// twice to protect their progress has told us.
-        /// </summary>
-        public const int ChapterBudget = 2;
-
-        /// <summary>
-        /// Asked at most three times ever off the back of a purchase, which is one more than
-        /// the chapter budget on purpose. A player who has paid has strictly more to lose than
-        /// one who has not, they have demonstrated they are staying, and theirs is the only
-        /// loss in the game that cannot be undone by playing the game again.
-        /// </summary>
-        public const int PurchaseBudget = 3;
-
-        /// <summary>
-        /// The shortest gap between any two automatic asks, whatever raised them.
-        ///
-        /// Two days rather than a session count, because a session is not a unit of anybody's
-        /// patience and a calendar day is. It is safe to be this generous precisely because
-        /// the shop's standing notice carries the message between asks, so the modal never has
-        /// to be the only thing telling somebody.
-        /// </summary>
-        public const long QuietSeconds = 48L * 60L * 60L;
-
         int _chapterOffers;
         int _purchaseOffers;
         long _lastOfferedUnix;
@@ -120,8 +103,12 @@ namespace GlimmerGrove.Cloud
             _lastOfferedUnix = lastOfferedUnix > 0 ? lastOfferedUnix : 0;
         }
 
-        public static int BudgetFor(AccountPromptTrigger trigger)
-            => trigger == AccountPromptTrigger.Purchase ? PurchaseBudget : ChapterBudget;
+        public static int BudgetFor(AccountPromptRuleTable rules, AccountPromptTrigger trigger)
+        {
+            rules ??= AccountPromptRuleTable.Default;
+            return trigger == AccountPromptTrigger.Purchase ? rules.PurchaseBudget
+                                                            : rules.ChapterBudget;
+        }
 
         public int OffersMade(AccountPromptTrigger trigger)
             => trigger == AccountPromptTrigger.Purchase ? _purchaseOffers : _chapterOffers;
@@ -139,11 +126,13 @@ namespace GlimmerGrove.Cloud
         /// the panel would offer two buttons that cannot work.
         /// </para>
         /// </summary>
-        public bool ShouldOffer(AccountPromptTrigger trigger, bool available, bool linked,
-                                bool mismatched, long nowUnix)
+        public bool ShouldOffer(AccountPromptTrigger trigger, AccountPromptRuleTable rules,
+                                bool available, bool linked, bool mismatched, long nowUnix)
         {
+            rules ??= AccountPromptRuleTable.Default;
+
             if (!available || linked || mismatched) return false;
-            if (OffersMade(trigger) >= BudgetFor(trigger)) return false;
+            if (OffersMade(trigger) >= BudgetFor(rules, trigger)) return false;
 
             // Note the direction test. A clock that has moved backwards — a player changing the
             // device date, or a first launch before network time arrives — leaves a stamp in
@@ -152,7 +141,7 @@ namespace GlimmerGrove.Cloud
             // Treating a future stamp as expired heals it: the next offer writes `now` over it,
             // which is smaller.
             if (_lastOfferedUnix > 0 && nowUnix > _lastOfferedUnix
-                && nowUnix - _lastOfferedUnix < QuietSeconds) return false;
+                && nowUnix - _lastOfferedUnix < rules.QuietSeconds) return false;
 
             return true;
         }

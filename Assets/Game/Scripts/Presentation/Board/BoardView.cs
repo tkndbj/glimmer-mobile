@@ -9,7 +9,47 @@ namespace GlimmerGrove
     public sealed class BoardView : MonoBehaviour
     {
         public Puzzle P { get; private set; }
-        public bool Locked { get; set; }
+
+        bool _locked;
+
+        /// <summary>
+        /// Whether the board is refusing input — the raise animation, a hint's reveal, the
+        /// pause menu, a panel raised over the run, the win and defeat sequences.
+        ///
+        /// <para>
+        /// <b>It raises <see cref="OnChanged"/>, and that is not a convenience.</b> Every
+        /// control that depends on it — the undo button, the hint button, the clock's own
+        /// start edge — is recomputed from that event, so a latch that moved silently was a
+        /// control left in whatever state it happened to be in when the last turn was taken.
+        /// The hint shipped exactly that bug: the reveal locks the board, every tween along
+        /// the way raises <see cref="OnChanged"/> while it is still locked, and the unlatch
+        /// at the end raised nothing — so the hint and undo buttons stayed dead for the rest
+        /// of the run unless the player happened to turn a tile. The same hole sat under the
+        /// entry animation and under every panel that latches the board.
+        /// </para>
+        /// <para>
+        /// Fixing it at the eight call sites was the wrong shape: a repaint somebody has to
+        /// remember beside every assignment is one the ninth caller forgets, which is this
+        /// project's oldest lesson (<c>AdOfferOverlay.Dismissed</c>, the pause menu's
+        /// unlatch, <c>CompanionLedger.Changed</c>). Here the safe outcome is what
+        /// <em>every</em> exit does, because there is only one exit.
+        /// </para>
+        /// <para>
+        /// Only a real move raises, so this is safe to assign from anywhere, including from
+        /// inside a handler of the event itself.
+        /// </para>
+        /// </summary>
+        public bool Locked
+        {
+            get => _locked;
+            set
+            {
+                if (_locked == value) return;
+                _locked = value;
+                OnChanged?.Invoke();
+            }
+        }
+
         public Action OnChanged;
         public Action OnSolved;
 
@@ -69,7 +109,20 @@ namespace GlimmerGrove
         /// decided by <c>PlayScreen</c> against the account pool.
         /// </para>
         /// </summary>
-        public bool CanHint => !Locked && !_celebrating && P.NextHint() >= 0;
+        public bool CanHint => Accepting && P.NextHint() >= 0;
+
+        /// <summary>
+        /// Whether the board is taking input at all — not latched, not in the middle of its
+        /// own celebration, and not already lost.
+        ///
+        /// <para>
+        /// Separate from <see cref="CanHint"/> because the bottom bar's hint button is drawn
+        /// live on a board that has nothing left to point at: the refusal is a sentence
+        /// worth reading rather than a greyed control, and the same button is the way to the
+        /// offer when the account's pool is empty.
+        /// </para>
+        /// </summary>
+        public bool Accepting => !Locked && !_celebrating && !_lost;
 
         public void Build(RectTransform host, Puzzle puzzle, Pal.BoardTheme theme)
         {
@@ -510,10 +563,15 @@ namespace GlimmerGrove
         /// spends after this returns true, so a board with nothing to give — see
         /// <see cref="CanHint"/> — cannot cost anybody a hint.
         /// </para>
+        /// <para>
+        /// <paramref name="revealed"/> fires on the beat the reveal finishes and the board
+        /// is handed back, and only then — anything raised while the tiles are still turning
+        /// would land on a latched board with a stopped clock.
+        /// </para>
         /// </summary>
-        public bool Hint()
+        public bool Hint(Action revealed = null)
         {
-            if (Locked || _celebrating) return false;
+            if (!Accepting) return false;
             int i = P.NextHint();
             if (i < 0) return false;
 
@@ -541,7 +599,18 @@ namespace GlimmerGrove
                     OnChanged?.Invoke();
                 }, this);
             }
-            Tween.After(.55f + turns * .2f, () => { if (this) Locked = _celebrating; }, this);
+            // The board comes back and the caller is told, in that order, on the one beat
+            // the whole reveal ends on. `Locked` raises OnChanged for us, so the bar
+            // repaints itself; `revealed` is for what the board cannot know — that this was
+            // the player's last hint, which is worth an offer while their hand is still on
+            // the button. It runs owned by this component, so a screen torn down mid-reveal
+            // simply never hears.
+            Tween.After(.55f + turns * .2f, () =>
+            {
+                if (this == null) return;
+                Locked = _celebrating || _lost;
+                revealed?.Invoke();
+            }, this);
             return true;
         }
 

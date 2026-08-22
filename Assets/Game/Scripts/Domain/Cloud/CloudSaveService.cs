@@ -316,6 +316,7 @@ namespace GlimmerGrove.Cloud
                 && mismatched == _wasMismatched && userId == _wasUserId) return;
 
             bool announce = _sampled;
+            bool justLinked = announce && linked && !_wasLinked;
 
             _sampled = true;
             _wasAvailable = available;
@@ -324,6 +325,12 @@ namespace GlimmerGrove.Cloud
             _wasUserId = userId;
 
             if (!announce) return;
+
+            // The one edge worth counting, at the one place every route through it passes:
+            // linking, switching to a linked account and resuming one all end here. Raised
+            // from the transition rather than from the panel because the panel has four exits
+            // and two of the three routes do not involve it at all.
+            if (justLinked) Analytics.Telemetry.Track("account_linked");
 
             // Guarded for the reason StoreService guards its own raise: these subscribers are
             // screens, one of them can be mid-teardown, and an exception thrown out of a

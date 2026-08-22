@@ -48,9 +48,10 @@ import {
   optedIn, rebuildGroveRanks, withdrawCard,
 } from "./grove";
 import {
-  ClaimOutcome, NameHolding, RENAME_COOLDOWN_SECONDS,
-  claimName as claimName_, heldName, nameKey,
+  ClaimOutcome, NameHolding, RENAME_COOLDOWN_SECONDS, claimName as claimName_, heldName, nameKey, publishableName,
 } from "./names";
+import { loadNameConfig } from "./blocklist";
+import { reportName, ReportOutcome } from "./reports";
 import { earnedCredits } from "./progression";
 import {
   deriveEarned,
@@ -1050,6 +1051,7 @@ export const publishGrove = onCall(callOptions, async (request): Promise<{
   const affordable = derived.credits + Math.max(0, granted);
 
   const nowUnix = Math.floor(Date.now() / 1000);
+  const { list } = await loadNameConfig(db, nowUnix);
 
   // ------------------------------------------------------------------ the name
   //
@@ -1068,7 +1070,7 @@ export const publishGrove = onCall(callOptions, async (request): Promise<{
 
   if (wanted.length > 0 && holding?.key !== wanted) {
     try {
-      const claim = await claimName_(db, uid, stored, nowUnix);
+      const claim = await claimName_(db, uid, stored, nowUnix, list);
       holding = claim.holding;
 
       if (claim.outcome !== "claimed" && claim.outcome !== "unchanged") {
@@ -1084,7 +1086,15 @@ export const publishGrove = onCall(callOptions, async (request): Promise<{
   }
 
   const worth = groveWorth(save, groveConfig, level, affordable);
-  const card = buildCard(uid, save, groveConfig, worth, level, nowUnix, holding?.public ?? null);
+
+  // `publishableName` rather than `holding.public`, and that one word is the whole takedown
+  // path: a name that has been reported past the threshold resolves to null here and falls
+  // through to the generated handle, exactly as an unnamed keeper's does. Reading the field
+  // directly would republish a name a moment after it was taken down, on this player's very
+  // next sync, and nothing else would ever notice.
+  const card = buildCard(
+    uid, save, groveConfig, worth, level, nowUnix, publishableName(holding), list
+  );
 
   await db.doc(GROVE_PATHS.card(uid)).set(card);
 
@@ -1140,7 +1150,14 @@ export const claimName = onCall(callOptions, async (request): Promise<{
   }
 
   const nowUnix = Math.floor(Date.now() / 1000);
-  const claim = await claimName_(db, uid, raw, nowUnix);
+
+  // The word list, from `config/names` if it has been published and from the list compiled
+  // into this deployment otherwise. Cached per instance, so this is a document read a few
+  // times an hour rather than one per claim — and it never throws, because a name claim that
+  // failed when Firestore hiccuped would tell a player their name was unacceptable.
+  const { list } = await loadNameConfig(db, nowUnix);
+
+  const claim = await claimName_(db, uid, raw, nowUnix, list);
 
   const cooldownSeconds = claim.outcome === "cooldown" && claim.holding
     ? Math.max(0, RENAME_COOLDOWN_SECONDS - (nowUnix - claim.holding.atUnix))
@@ -1160,6 +1177,62 @@ export const claimName = onCall(callOptions, async (request): Promise<{
     cooldownSeconds,
   };
 });
+
+/**
+ * Reports another keeper's published name.
+ *
+ * <b>The request carries one id and nothing else</b> — no reason, no category, no free text.
+ * That is deliberate and it is what keeps this endpoint uninteresting to attack: there is
+ * nothing in the body to forge, nothing to store that a stranger wrote, and no way to report a
+ * name that is not actually on a board, because the server reads the card itself.
+ *
+ * <b>Every outcome is a success and the client is told almost nothing.</b> A report that was a
+ * duplicate, a report that hit the threshold and a report of a keeper with no chosen name all
+ * come back as `reported`, because the alternative leaks moderation state to the person best
+ * placed to game it: a caller who can tell "counted" from "already hidden" can binary-search
+ * the threshold, and one who can tell "counted" from "nothing to report" learns which accounts
+ * are worth brigading. The two answers a player can act on are kept — they reported this name
+ * before, and they have filed a day's worth — because both change what the button should say.
+ *
+ * See `reports.ts` for why the auto-hide is safe to run without a human in front of it.
+ */
+export const reportKeeperName = onCall(callOptions, async (request): Promise<{
+  outcome: "reported" | "duplicate" | "throttled";
+}> => {
+  const uid = requireUid(request);
+  const db = getFirestore();
+
+  const body = (request.data ?? {}) as { keeperId?: unknown };
+
+  // Bounded before anything is read, so an oversized body cannot be used to make the function
+  // do work. A uid is an opaque provider token, so the only thing worth asserting about it is
+  // that it is a plausible document id.
+  const targetUid = typeof body.keeperId === "string" ? body.keeperId.slice(0, 128) : "";
+  if (targetUid.length === 0 || targetUid.includes("/")) {
+    throw new HttpsError("invalid-argument", "a keeper id is required");
+  }
+
+  const nowUnix = Math.floor(Date.now() / 1000);
+  const { reportThreshold } = await loadNameConfig(db, nowUnix);
+
+  const result = await reportName(db, uid, targetUid, nowUnix, reportThreshold);
+
+  if (result.outcome === "hidden") {
+    logger.warn("keeper name hidden by reports", {
+      uid: targetUid, reports: result.reports, threshold: reportThreshold,
+    });
+  }
+
+  return { outcome: reply(result.outcome) };
+});
+
+/** Collapses the six internal outcomes into the three a client is allowed to tell apart. */
+function reply(outcome: ReportOutcome): "reported" | "duplicate" | "throttled" {
+  if (outcome === "duplicate" || outcome === "already") return "duplicate";
+  if (outcome === "throttled") return "throttled";
+
+  return "reported";
+}
 
 /**
  * Takes this account's card down.

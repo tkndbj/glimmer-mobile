@@ -32,7 +32,7 @@ namespace GlimmerGrove.Progression
         }
 
         /// <summary>Used when no file ships and when a field is left unwritten.</summary>
-        public static readonly RewardRule Default = new RewardRule(40, 20, 30, 15);
+        public static readonly RewardRule Default = new RewardRule(60, 30, 80, 40);
 
         public long XpFor(int stars) => stars <= 0 ? 0L : XpFirstClear + (long)XpPerStar * stars;
 
@@ -83,7 +83,8 @@ namespace GlimmerGrove.Progression
                          Dictionary<ChapterId, RewardRule> chapterRules,
                          DailyChestTable daily, AdRewardTable ads, StreakTable streak,
                          GoldenTable golden, HeartRuleTable hearts, HintRuleTable hints,
-                         StoreCatalog store, DifficultyRuleTable difficulty)
+                         StoreCatalog store, DifficultyRuleTable difficulty,
+                         AccountPromptRuleTable prompts)
         {
             _cumulative = cumulative;
             _defaultRule = defaultRule;
@@ -96,6 +97,7 @@ namespace GlimmerGrove.Progression
             Hints = hints ?? HintRuleTable.Default;
             Store = store ?? StoreCatalog.Default;
             Difficulty = difficulty ?? DifficultyRuleTable.Default;
+            Prompts = prompts ?? AccountPromptRuleTable.Default;
         }
 
         /// <summary>
@@ -185,6 +187,15 @@ namespace GlimmerGrove.Progression
         public DifficultyRuleTable Difficulty { get; }
 
         /// <summary>
+        /// How often an anonymous player may be asked to attach a real account.
+        ///
+        /// Published for the reason the ad cooldown is: it paces an interruption, nothing
+        /// adjudicates it, and the right value is found from live link rates rather than
+        /// guessed before launch. See <see cref="AccountPromptRuleTable"/>.
+        /// </summary>
+        public AccountPromptRuleTable Prompts { get; }
+
+        /// <summary>
         /// A usable curve for when no file could be read. The game stays playable and
         /// the validator fails the build, which is the right way round — a content
         /// problem should stop a build, never a player's session.
@@ -203,7 +214,8 @@ namespace GlimmerGrove.Progression
             hearts: HeartRuleTable.Default,
             hints: HintRuleTable.Default,
             store: StoreCatalog.Default,
-            difficulty: DifficultyRuleTable.Default);
+            difficulty: DifficultyRuleTable.Default,
+            prompts: AccountPromptRuleTable.Default);
 
         /// <summary>Highest level this curve defines. Level 1 always exists.</summary>
         public int MaxLevel => _cumulative.Length;
@@ -398,9 +410,14 @@ namespace GlimmerGrove.Progression
             // content is played exactly as authored, which is a working game.
             var difficulty = DifficultyRuleTable.Resolve(dto.difficulty, problems);
 
+            // And the only block that is not about the game at all. An unreadable prompts
+            // block costs the live pacing of one panel; the built-in pacing is a working game
+            // and a working shop.
+            var prompts = AccountPromptRuleTable.Resolve(dto.prompts, problems);
+
             table = Build(dto.xpToNext, dto.tailXpToNext, dto.tailXpIncrement, maxLevel,
                           defaultRule, chapterRules, daily, ads, streak, golden, hearts, hints,
-                          store, difficulty);
+                          store, difficulty, prompts);
             return true;
         }
 
@@ -410,7 +427,8 @@ namespace GlimmerGrove.Progression
                                       DailyChestTable daily, AdRewardTable ads,
                                       StreakTable streak, GoldenTable golden,
                                       HeartRuleTable hearts, HintRuleTable hints,
-                                      StoreCatalog store, DifficultyRuleTable difficulty)
+                                      StoreCatalog store, DifficultyRuleTable difficulty,
+                                      AccountPromptRuleTable prompts)
         {
             if (maxLevel < 1) maxLevel = 1;
 
@@ -428,7 +446,7 @@ namespace GlimmerGrove.Progression
             }
 
             return new ProgressionTable(cumulative, defaultRule, chapterRules, daily, ads, streak,
-                                        golden, hearts, hints, store, difficulty);
+                                        golden, hearts, hints, store, difficulty, prompts);
         }
     }
 }

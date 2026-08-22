@@ -318,12 +318,23 @@ What that means in practice here:
     currency and no advantage, and the money half is defended where money always is, by
     `submitSpends` refusing a debit the server-derived balance cannot cover. Before storing
     anything new, ask which of the two it is; if it pays, it goes back to 13 and 14a.
-15a. **The unlock rule is "level **or** purchase", and it lives only in `CompanionLedger`.**
-    `AvatarCatalog.ReachedBy` answers the level half and is named for its narrowness on
-    purpose — it used to be `IsUnlocked`, and a call site checking half the rule under a name
-    that promises all of it is exactly how a companion somebody paid for stays behind a
-    padlock. Every screen asks `IsHeld`. The level half stays derived and is never written
-    down: a second answer is a second thing a retune can put out of step with the first.
+15a. **The unlock rule is "keeper level **and** purchase", and it lives only in
+    `CompanionLedger`.** `AvatarCatalog.ReachedBy` answers the level half and is named for its
+    narrowness on purpose — it used to be `IsUnlocked`, and a call site checking half the rule
+    under a name that promises all of it is exactly how a companion somebody paid for stays
+    behind a padlock. Every screen asks `IsHeld`. The level half stays derived and is never
+    written down: a second answer is a second thing a retune can put out of step with the first.
+    It was **or** for a year, and the two clauses cannot both survive the change — if reaching
+    the gate still handed the companion over, then at the moment a player became allowed to buy
+    one they would already own it and the price would be unreachable code. So the gate is
+    *permission to pay*: a priced companion is held only when it was bought, and a companion the
+    roster does not price is still granted at its gate, which is what keeps the starter working.
+    Two consequences that are easy to get backwards. The gate is tested **before** the price, so
+    a player who is both too junior and too poor is told about the wall credits cannot climb —
+    otherwise the panel sells a rewarded video for a companion the video could not buy, which is
+    the refusal `HintPrompt` exists to prevent one screen over. And `IsHeld` must **never**
+    re-check the gate on a companion already bought: a purchase is irreversible (invariant 15),
+    so a gate retune that moves past a paid-for friend confiscates them.
 16. **A grove is built, and only three facts about it are stored.** The Grovement is the one
     reward in the game that is a *thing the player made* rather than a number that went up,
     and the whole feature costs `SaveFileDto` three fields because everything else is derived —
@@ -409,8 +420,11 @@ What that means in practice here:
     one purchased set (`companionsOwned` — never mirrored into `homesteadOwned`, because two
     records of one purchase is two things a merge can disagree about). The endowment argument
     survives where it belongs: **wearing and housing are separate**, so buying in the village
-    never changes the nameplate, and the free route is still the keeper ladder and is still what
-    a cell leads with. Two ids follow from it. A resident's piece id is the companion's id
+    never changes the nameplate. What did not survive is the free route: since invariant 15a
+    became "level and purchase" a priced resident has none at any level, so a shop cell asks
+    `HomesteadLedger.HasFreeRoute` for its leaf rather than "does this have a requirement", and
+    it leads with whichever half is actually binding — the gate while it is closed, the price
+    once it is open. Two ids follow from it. A resident's piece id is the companion's id
     **prefixed** (`friend_coral`), because the two id spaces were minted independently and
     already collided — `pebble` is a decor rock *and* a companion, both in save files, neither
     renameable — so the prefix makes the collision unrepresentable and the build gate reserves
@@ -565,10 +579,17 @@ What that means in practice here:
     and said so plainly: safe while private, "forgeable in the one direction that would matter
     if a leaderboard ever reads it". The boards are that leaderboard, so the score is now
     invariant 13's fourth clause — bounded so tightly that forging buys nothing. It splits in
-    two: the **earned** half (companions the keeper ladder reached) is derived from records the
-    server already validates for currency and so is unforgeable by construction, and the
-    **bought** half is clamped to `earnedCredits + grantedBaseline`, because everything in it
-    was paid for in currency the server derives. The client's figure stays a prediction and is
+    two: the **earned** half is derived from records the server already validates for currency
+    and so is unforgeable by construction, and the **bought** half is clamped to
+    `earnedCredits + grantedBaseline`, because everything in it was paid for in currency the
+    server derives. The earned half was *companions the keeper ladder reached*, and it is
+    structurally **zero** since invariant 15a became "level and purchase": the ladder was the
+    only thing in a grove ever handed over, so now every part of a grove was bought and every
+    part is clamped. The gate still does work and does it *before* the clamp — a save naming a
+    companion its own keeper level has not reached cannot have come about honestly, so that
+    entry is dropped outright rather than cut down, which is strictly tighter. The field stays
+    in the shape because the clamp is expressed in terms of the split and a future reward that
+    genuinely is handed over belongs in it. The client's figure stays a prediction and is
     still what its own screens draw; they agree for every honest player. Before making
     anything else public, ask what a forged version of it would buy, and clamp to something the
     server owns.
@@ -637,6 +658,65 @@ What that means in practice here:
     nothing, so the settled case is two strings compared and no database work.
 
 
+19g. **A word list is the cheapest layer of name moderation and the least important; the fold
+    is what stops bypasses and reporting is what catches the rest.** The filter that shipped was
+    thirteen English words and `flat.includes(word)` over a string with everything outside
+    `a-z0-9` **deleted** rather than folded, and every one of its failures was silent. Three
+    bypasses, each one keystroke: leetspeak walked past (`5hit`, `f4ggot`, `phuck`); a single
+    Cyrillic character *removed itself* and left a word matching nothing (`fuсk` → `fuk`); and any
+    name in a non-Latin script squashed to the empty string and was never filtered at all, which
+    in a game shipping globally is most of the world. It also refused **Grapevine**, because
+    `rape` is a substring of it, in a game about a garden. So the work is in reducing the name
+    *and every list entry* to the same canonical form before comparing — `profanity.ts`, four
+    forms, because one cannot serve both jobs: folding Cyrillic `а` onto Latin `a` is exactly
+    right for catching an English slur in lookalikes and exactly wrong for comparing two Russian
+    words. Matching then splits by **how**, never by meaning: `anywhere` and `reserved` are
+    substring classes, short, curated and guarded by an allowlist that is *cut out of the
+    haystack* before the test (the Scunthorpe repair); `exact` is the 2,600-entry vendored
+    multilingual set matched whole-name and per-word, which cannot have a false positive by
+    construction and is what makes it safe to be that long and to come from somebody else.
+    `nazi`, `porn`, `anal`, `ass`, `cock` and `dick` are deliberately **not** substring entries —
+    Nazir, Pornchai, analysis, bass, peacock and Dickens are real, and each one is somebody's
+    name. Everything else follows from those two ideas: `Tools/make_name_blocklist.py` refuses
+    rather than warns on the four ways a list is quietly wrong, and it models the *matcher* when
+    it does (`shiitake` shadows `shit` only once squeezed, which the first version of that check
+    missed).
+
+19h. **The list is a document and the takedown is a flag, because both have to move without a
+    deploy.** `config/names` overrides the list compiled into the deployment, and the compiled
+    one is the floor rather than a nicety: a filter that fails *open* looks exactly like a filter
+    with nothing to catch, so an absent or unreadable document must never mean "allow
+    everything" — `blocklist.ts` refuses a published list materially smaller than the shipped
+    one, keeps the last good one when a read throws, and caches for ten minutes because the list
+    is **not** the takedown path. That is `deniedUnix` on the account's name holding, read inside
+    the claim transaction and on every publish, and it lives on the *wallet* rather than on
+    `names/{key}` because `publishGrove` already opens the wallet — a flag on the reservation
+    would be a document read per publish per player, for ever, to carry one bit that is almost
+    always zero. It costs nothing in safety, because a denied name's **reservation is never
+    released**: the key stays held, so nobody else can claim a name somebody was just hidden for.
+    `claimName` has to refuse a re-claim of a denied name, and that is not a detail — it is the
+    branch every publish takes once a name has settled, so without it a report would take a card
+    down and the very next sync would put it straight back.
+
+19i. **A report is keyed on the pair of accounts, and the client is told almost nothing.**
+    `nameReports/{target}/reporters/{reporter}` — the id *is* the idempotency, so tapping twice
+    is one report on any device after any reinstall with no client state to remember (invariant
+    10a's argument, for something that is not an award), and it is why the threshold counts
+    **distinct reporters** rather than taps, which is the only bound that means anything. The
+    count is denormalised onto the parent and written in the same transaction, so it cannot drift
+    from the documents it counts. Three collapses matter. The server's seven outcomes reach the
+    client as **three**: a caller who can tell "counted" from "already hidden" can binary-search
+    the threshold, and one who can tell "counted" from "nothing to report" learns which accounts
+    are worth brigading. `nameReports` is server-only in **both** directions for the second half
+    of that. And the auto-hide runs **without a human** because it is reversible and cheap — a
+    brigade of three costs a real player a plainer row and nothing else — where waiting on a
+    queue means the offensive name stands for as long as the queue is long. What a person is
+    left with is the half a threshold cannot judge, and `firebase/seed/moderate-names.mjs` is the
+    desk: queue, show, hide, restore. A restore stamps `reviewedAt` with the count as it stands
+    and never deletes the reports, because clearing them would let the same three reporters undo
+    the review with one tap, and the reports are the record of why the name was hidden.
+
+
 ## Layout
 
 ```
@@ -666,6 +746,9 @@ scripts fail to compile. Do not guess — verify offline:
 - **Difficulty check:** `python Tools/verify/difficulty.py` — what each glade actually asks
   of a player, counted rather than argued about. Not a gate; see invariant 5d and
   *What makes a glade hard* in `CONTENT.md`.
+- **Word list check:** `python Tools/make_name_blocklist.py --check` proves the checked-in list
+  is what the tool would write, and refuses the four ways a blocklist goes quietly wrong. The
+  filter itself is `npm --prefix firebase/functions test` (`names.mjs`, `reports.mjs`).
 - **Name fold check:** `Tools/verify/names.py` runs `GroveNames` against the shared vectors
   **on Unity's own Mono** (`MonoBleedingEdge/bin/mono.exe`), not on the bundled .NET. That is
   the whole point of it: the first version ran on .NET 8, whose ICU agrees with Node about
@@ -854,7 +937,7 @@ first. Do not "improve" it into a silent merge.
 holds the policy (placements, caps, cooldown, what an offer is worth); `Assets/Game/Scripts/Ads/`
 is the LevelPlay half behind `GLIMMER_ADS`, and `NullAdProvider` keeps the whole feature dark
 in a build without the SDK. Two placements, both content in `progression.json`: `heart_refill`
-pays 2 hearts, `coin_bonus` pays 150 credits. Offered from the defeat screen when hearts run
+pays 2 hearts, `coin_bonus` pays 1,000 credits. Offered from the defeat screen when hearts run
 out, and from the home screen's two `+` buttons.
 
 Four decisions worth not re-litigating. The grant is **server-authorised** — invariant 10d,
@@ -938,7 +1021,7 @@ one's rung, for ever. It used to repeat the *last* rung instead, which meant a t
 "night 8" paid night seven's reward — the board and the table telling the same player two
 different things — and it forced the milestone to be small, because whatever ended the ladder
 was what every engaged player received for the rest of their life. A lap lets night seven be
-the week's peak and still come round again. The shipped lap is seven nights: **150 credits,
+the week's peak and still come round again. The shipped lap is seven nights: **500 credits,
 1 heart, 5 gems, 2 hearts, a 12-hour boost, 3 hearts, 10 gems.**
 
 Two currency rungs is the part that needed building, and invariant 13 has the argument. In
@@ -2191,7 +2274,7 @@ screen: the pile is made of the same coin the hub's pill spins. `ShopArt` is
 chests, cut from the same CraftPix pack the rest of the UI came from and global for `Win/*`'s
 reason — five 160px sprites, on the one screen where a frame of white rectangles costs money.
 
-**The prices, and the arithmetic behind them.** Free play collects about **543 credits and 6
+**The prices, and the arithmetic behind them.** Free play collects about **593 credits and 6
 gems a day** (`content.py` derives both from the published tables and prints them), and every
 credit sink in the game — companions, grove pieces, land, the home ladder — comes to **272,770
 credits, about 500 days**. Against that: gems run **100 → 8,500 for $0.99 → $49.99**, a 1.68×
@@ -2277,7 +2360,7 @@ there is one star row in the game rather than a second one that pops differently
 
 Where the numbers land: the whole catalog is **493,770 credits** — 154,770 of decor and homes,
 68,500 of land, 270,500 of residents — so the ladder runs 2% / 4% / 10% / 20% / 41% of
-everything, and at ~543 credits a day the first star is about 18 days and the fifth about a year.
+everything, and at ~593 credits a day the first star is about 17 days and the fifth about eleven months.
 Both validators print that table, which is the point of it being content: retuning the ladder is
 an edit to `homestead.json` and a `groveVersion` bump, with no app update. (`content.py`'s "every
 credit sink in the game" line was wrong on the way past — it double-counted the home ladder,
@@ -2562,7 +2645,7 @@ three together and they could never drift apart — which also meant they could 
 *apart*, and difficulty and the economy want opposite things. Earned credits are derived from
 the star ledger (invariant 9), so a 15% tighter clock was a 15% smaller three-star window and
 a quietly poorer game: same clears, same stars on the panel, fewer credits per day, and a
-493,770-credit catalog stretching past its 909 days. They are now `TimeGoldFactor = 1.00` and
+493,770-credit catalog stretching past its 832 days. They are now `TimeGoldFactor = 1.00` and
 `TimeSilverFactor = 1.50` **seconds per par turn** — numerically identical to what the old
 fractions came to at the old factor, so nothing already earned moved — clamped to the limit,
 because a threshold past the point the run is lost is one nothing can be measured against. A
@@ -2809,6 +2892,70 @@ defect), and the server suite unchanged and green.
 deploy. No `firestore.rules` change was needed or made: `hasOnly` constrains the save's
 top-level keys and has never constrained the wallet map's inner ones. Both LevelPlay ad units
 exist and are filled in `AdConfig`.
+
+**The hint button, fixed — and a latch that moves silently is now impossible.** Reported
+from play as "I use one hint and then I cannot use another one", which read like a cooldown
+and was neither a cooldown nor anything to do with the pool. `PlayScreen` recomputes the
+bottom bar from `BoardView.OnChanged`; the hint's reveal latches the board, every tween
+along the way raises that event *while it is still latched*, and the unlatch at the end
+raised nothing — so the hint and undo buttons stayed dead for the rest of the run unless the
+player happened to turn a tile. The same hole sat under the entry animation (the button was
+dead from the first frame of every glade) and under every panel that latches the board.
+
+**`BoardView.Locked` is a property that raises `OnChanged` when it actually moves**, which is
+the fix and the reason it cannot come back. Repainting beside all eight assignments is the
+shape this file has already been burned by three times — `AdOfferOverlay.Dismissed`, the
+pause menu's unlatch, `CompanionLedger.Changed` — because the ninth caller forgets. Only a
+real change raises, so it is safe to assign from inside a handler of the event itself, and
+the re-entrant read it can provoke (`Wallet.Hints` commits a refill from its own getter) is a
+no-op for the same reason. The reveal now hands the board back as `_celebrating || _lost`
+rather than unconditionally, so a run that ended underneath it is not quietly resumed.
+
+**The pool never decides whether the button works.** Three glade-facing rules, and
+`HintPrompt` (Domain, pure, five offline cases) owns the branching for `RenameRules`' reason —
+a `switch` in a `MonoBehaviour` is the one place here nothing can be proved, and every state
+these rules are about is one the Editor never sits in. The button is live whenever the board
+is taking input at all, so an empty pool is a *destination* rather than a refusal; the board
+is asked before the pool, so nobody is ever sold a video for a hint that could not have been
+spent; and the badge reads **"?"** rather than "0", because a nought reads as a spent control
+and invites nobody to press it. Spending the last hint raises the offer by itself, once per
+emptied pool, and only while the run is still live and there is something to offer — a panel
+over a glade the hint had just solved is a nuisance, not an offer.
+
+`OfferHint` opens the panel in **every** state now, including the ones with no video behind
+them, which is the hub's `+` rule (the panel for a resource is always the answer to tapping
+its control) and what `AdOfferOverlay` already does internally: a placement the table does not
+carry loses its watch button and keeps its facts. The toast it replaces said less than the
+panel does. The panel is titled from the state it is in (`ui.ads.hints_empty_title`), so the
+one a player meets on an empty pool leads with that rather than with the reward's name.
+
+**`BoardLatchTests` is the guard, and it is written the way the screen reads the board.** It
+builds a real board on a real component and drives `Tween.Tick` by hand — the seam
+`TweenOwnerTests` established — then keeps the value *the handler was told on the last event
+it received*, because that is what ends up on the button. Asserting `board.CanHint` after the
+dust settles passes on the broken code too: the state was always right and nobody was ever
+told. Checked against the old property first, which is the only way to know a guard guards
+anything: four of the five fail on it, one of them reading `the button comes back when the
+reveal ends — Expected: True, But was: False`. They are Editor-only (a `GameObject` is an
+ECall) and they set `LogAssert.ignoreFailingMessages` from *inside the test body*, since the
+runner opens its log scope per test after `[SetUp]` — the hint's beckon spawns a `Ripple` that
+tidies itself with `Object.Destroy`, which is correct in a player and an error log in edit
+mode. `Tools/verify/runner` now reads "No log scope is available" as a harness limit rather
+than a failure, which its own summary already argued: a red offline run that is really a
+limitation is how somebody learns to stop reading the offline run.
+
+**One unrelated crash found by building a board with the art unloaded.** `TileView.ApplyLamp`
+indexed `Art.Frames(...)[0]` without a guard — the only unguarded frame read in the file, and
+the duskcap's identical line twenty rows up has one. `AssetLibrary.Frames` answers an *empty
+array* and a warning when art is missing, deliberately, so a failed bundle draws blank rather
+than throwing; indexing it unchecked turned that into an `IndexOutOfRangeException` raised out
+of a tween callback in the middle of `BoardView.Build`, which is a half-drawn unplayable board
+instead of a critter nobody can see. Invariant 7b's failure mode, one call site short.
+
+Nothing about the pool itself changed: three account-wide, one back every eight hours, ceiling
+equal to the cap — `Validate Content` and `content.py` both print it. No save schema change
+(v19 stands), no `progression.json` retune, no server work and no deploy. Offline suite 829
+with 101 needing the Editor; the Editor suite is **953/953**.
 
 **Chapters two and three, rebuilt — the mechanics reject something now.** Reported from
 play as "the glades are pretty easy, and some mechanics don't even make sense — I can
@@ -3097,18 +3244,47 @@ answer cannot depend on which subsystem is interrupting. Without it, finishing a
 then buying a coin pack meets two account panels inside a minute. The generous spacing is safe
 precisely *because* the bar carries the message between asks.
 
-It holds no clock and reaches nothing — handed the time and the account's state, `SyncScheduler`'s
-bargain — so all sixteen cases run offline, which matters here more than usual because every
-state it is about (a live session, a real purchase, a device away two days) is one the Editor
-never reaches. Persistence is the caller's, `GrovePublishPolicy`'s rule: the counts are
-`PlayerPrefs` and must never enter the save, since merged they would arrive on a second device
-as a reason to stay quiet — backwards, because a second device is a player with *more* to lose.
-`AccountPrompts` keeps the shipped `account_prompt_count` key, so an installation that has
-already declined twice is not handed a fresh allowance. One case earns the file on its own:
-the obvious `now - last < Quiet` is negative when a player moves their device clock forward,
-reads as "inside the quiet period", and silences every prompt for the life of the installation
-with nothing able to write a smaller stamp. Checked against the naive rule first — it fails
-exactly that test.
+It holds no clock, no storage and no facade — handed the time, the account's state *and the
+pacing table*, `SyncScheduler`'s bargain — so all twenty-four cases run offline, which matters
+here more than usual because every state it is about (a live session, a real purchase, a device
+away two days) is one the Editor never reaches. Persistence is the caller's,
+`GrovePublishPolicy`'s rule: the counts are `PlayerPrefs` and must never enter the save, since
+merged they would arrive on a second device as a reason to stay quiet — backwards, because a
+second device is a player with *more* to lose. `AccountPrompts` keeps the shipped
+`account_prompt_count` key, so an installation that has already declined twice is not handed a
+fresh allowance. One case earns the file on its own: the obvious `now - last < Quiet` is negative
+when a player moves their device clock forward, reads as "inside the quiet period", and silences
+every prompt for the life of the installation with nothing able to write a smaller stamp. Checked
+against the naive rule first — it fails exactly that test.
+
+**All three pacing numbers are content, and that is `ads.cooldownSeconds`' argument rather than a
+flourish.** `prompts` in `progression.json` carries `chapterBudget`, `purchaseBudget` and
+`quietHours`, read through `AccountPromptRuleTable`/`AccountPromptRules` exactly as the heart gate
+and the clock scale are. They pace an interruption, nothing adjudicates them, and the right values
+are discovered from live link rates rather than known before launch — so shipping them as `const`
+would mean finding out that the modal costs conversion needs a store review. **Zero is a legal
+budget and is the point of the lever**: it switches a trigger off in minutes, per trigger, which is
+why the DTO sentinel is -1 and why `Validate Content` *warns* rather than errors on it.
+`AccountPromptLimits.MaxBudget` is a hard `const` for `HeartLimits.HardCeiling`'s reason — the bad
+push here is not a worse deal, it is a modal in front of every purchase for every guest in the
+world with no app update to roll it back. Deliberately **not** published to `config/progression`,
+for `difficulty`'s reason: the server has no opinion about a prompt, so there is no second copy to
+keep in step and no deploy. Two of the twenty-four cases walk a block from `ProgressionDto` to the
+live facade, because this project has twice shipped a field that reached a DTO and stopped there
+(`groveLandOwned`, `unlockCost`) — a lever that parses and never arrives looks exactly like a lever
+that was pushed and did not help. Severing `dto.prompts` fails exactly those two.
+
+**Three telemetry events, each at its single funnel, because a monetisation change with no
+measurement cannot be evaluated.** `account_prompt_shown` (with the trigger) counts the asks;
+`account_notice_tapped` (with the shelf) counts the bar, separately, because it is the player
+asking rather than the game asking and telling them apart is what says whether the standing notice
+does the work alone; and `store_purchase_granted` gained a **`linked`** property, which is the
+number the whole feature is answered by — what share of real money lands on an account that dies
+with the installation. It is read at the grant rather than inferred from a session property because
+a purchase credited on the launch after a crash would otherwise be attributed to the wrong state.
+The outcome is `account_linked`, raised from the unlinked→linked edge inside `NoteIdentity` rather
+than from the panel: linking, switching to a linked account and resuming one all pass through
+there, and two of those three never touch the panel at all.
 
 **`CloudSaveService.IdentityChanged` came out of it and is the more general fix.** Every screen
 saying something about the account samples `IsLinked` once in `Build`, and nothing told any of
@@ -3138,6 +3314,138 @@ scroll offset is now carried across and clamped to the new content height, since
 grows a line when the provider names the account. With all three done, `IdentityChanged` is wired
 and the account card stops saying "your progress is saved only on this phone" to somebody who
 linked thirty seconds ago in a panel raised over it.
+
+**A companion now needs the keeper level *and* the coins.** Reported from play: an account
+at keeper level 7 could wake Thorn — gated at 66 — for coins alone, while the profile grid
+drew a padlock over it and called it locked. Both halves of that were true and they
+contradicted each other. The rule was "level **or** purchase" (invariant 15a) and is now
+"level **and** purchase": the gate is permission to pay rather than a second way in.
+
+The reversal is not symmetrical, and the asymmetry is the design. **Reaching a gate now
+grants nothing** — it had to stop granting, because if it still did then the moment a player
+became allowed to buy a companion they would already own it and the price would be
+unreachable code. But **`IsHeld` still never re-checks the gate on a companion already
+bought**: a purchase is irreversible (invariant 15), so a retune that moves a gate past a
+paid-for friend must not confiscate them. A companion the roster puts no price on is still
+handed over at its gate, which is what keeps the starter working (invariant 16f) — and
+`IsForSale` is the whole of what tells the two apart.
+
+**One new refusal, and it is tested before the price.** `CompanionPurchaseState.LevelLocked`
+carries the required level, translates into `HomesteadPurchaseState.LevelLocked` for the
+village, and is ordered ahead of `TooExpensive` deliberately: a player who is both too junior
+and too poor is told about the wall credits cannot climb. Leading with the price would send
+them to the coin shelf for a companion the coins could not buy — `HintPrompt`'s rule, which
+asks the board before the pool so nobody is ever sold a watch they could not have spent.
+
+**Both screens lead with whichever half is binding.** The profile cell shows the gate while
+it is closed and the price once it is open, with the other underneath; the village cell does
+the same through `StatusOf`, and its leaf now asks `HomesteadLedger.HasFreeRoute` instead of
+"does this have a requirement" — the keeper gate stopped being a free route, so the leaf was
+marking money-only cells as free. Four loc strings changed with it, all of them sentences
+that had quietly become false: a companion no longer "wakes on its own at keeper level 40",
+it "opens" there.
+
+**The server half needed the same change and it is a security fix as well as an agreement
+one.** `groveWorth` counted a companion as *earned* whenever the keeper level passed its gate,
+owned or not — correct while the gate granted, and after this a level-40 account would have
+scored 39,800 of leaderboard for companions it did not have. A companion now counts only if
+it is in `companionsOwned`, and it counts in the **clamped** half, because nothing is handed
+over any more and therefore nothing about a grove is unforgeable by construction. The gate
+still runs, ahead of the clamp: an entry whose gate this save's own level has not reached is
+dropped outright rather than clamped down, which is tighter than what it replaces. `earned` is
+now structurally zero and invariant 19a says why it stays in the shape.
+
+Where the client and the server legitimately disagree is worth naming, because the shared
+vectors had to grow a flag for it. The server drops a companion held below its gate; the
+client counts it, and must, because it is scoring holdings it knows to be real and a purchase
+survives a retune. Both are right and one file cannot pin both, so those cases carry
+`serverOnly` and `GroveBoardTests` skips them exactly as it skips a clamped one.
+
+What this cost: **no save schema change** (v19 stands — `companionsOwned` is unchanged in
+shape and meaning), no `progression.json` retune, no `firestore.rules` change, and no
+migration. Existing accounts keep every companion they bought and lose the ones the ladder had
+merely reached, which is the change working rather than a defect; the game has not launched.
+Two new loc keys, `CompanionPurchaseTests` gained the AND rule and its unpriced exception, the
+grove vectors were rewritten to twelve cases, and the offline suite is **830**. Functions
+redeployed and the live smoke test is **64/64** — three streak cases in it had hard-coded the
+150-credit first rung and went red on the retune above, so they read the figure out of
+`config/progression` now, which is the lesson that file already records about the golden bands.
+
+**Keeper names are filtered properly, and reportable — no save field, no schema bump, no rules
+change to the save.** Asked as "what is the industry standard, and will it explode the bill at
+millions of players", and the answer to the second half is the reason the first half is shaped
+the way it is: a name is checked **once or twice per account, ever**, so nothing here scales
+per-player-per-session. Measured at a million players — roughly 1.5M claims over the life of the
+game — the whole feature is **about $10 in Firestore**, total: two reads and three writes per
+claim, one debounced read per typing session (`NameCheckScheduler`, already), one config read per
+instance per ten minutes, and reports bounded by human behaviour. Judging a name is under a
+millisecond and folding the 2,600-entry list is a few milliseconds once per cache window, both
+pinned as tests rather than asserted.
+
+Invariants 19g, 19h and 19i have the arguments. What is new: `profanity.ts` (the fold and the
+three matching classes), `blocklist.ts` (where the list comes from, and the floor that stops it
+failing open), `reports.ts` (the pair-keyed report and the auto-hide),
+`Tools/make_name_blocklist.py` (vendors LDNOOBW's 27 languages, CC-BY-4.0, and refuses a list
+that is quietly wrong), `firebase/seed/moderate-names.mjs` (the desk), the `reportKeeperName`
+callable, and a report control on `GroveVisitScreen` behind the game's second confirmation —
+`ReportNameOverlay`, confirmed for `ForfeitOverlay`'s reason, because it is an act taken against
+another person that the person taking it cannot retract.
+
+Four things worth not rediscovering. The vendored list's coverage is **uneven** and only a test
+finds that: LDNOOBW's Russian has 151 entries and no `сука`, its Japanese has 180 and no word for
+genitalia at all — both discovered by cases asserting they were blocked and finding they were
+not, which is why `EXTRA_EXACT` exists and why that suite asserts on specific words rather than
+on a count. Stripping combining marks **breaks Japanese and Devanagari** — NFKD splits the
+handakuten off `ポ` and turns it into a different word — which is exactly why a script-preserving
+form is kept beside the aggressive one and matched too. `reserved` is a **substring** class
+rather than a whole-name one, because the abuse is `AdminFern` rather than `Admin` and a shipped
+vector already asserted `Fernadminmoss` is refused; it pays for that with `badminton`,
+`stafford` and `systemic` in the allowlist. And the wallet round-trip test caught the field
+being dropped before it shipped: every wallet function writes that document **whole**, so a
+takedown flag `readWallet` did not copy would have been erased by the reporter's next
+chest — invariant 12a, in the document that is not the save.
+
+**A refused name is silent, so the refusal is logged — and that log is the only evidence the
+word list is the right word list.** A player refused a name keeps it on their own screens and
+simply appears under a generated handle, which is the proportionate response and is why nothing
+on that path is an error. The cost is no signal at all: the list is retunable from a console in
+minutes, and without a log there is no way to learn it *needs* retuning except somebody
+complaining, which is exactly how `rape` went on refusing **Grapevine** for a year. `claimName`
+now logs the **entry that fired and its class**, with both lengths so a shape refusal (too short
+once folded) is told apart from a word one — and never the name that was typed, because the
+entry is ours and the name is the player's. That is what turned `NameVerdict.word` from a dead
+field into a load-bearing one: `exact` used to hand back the folded *candidate*, so a set-backed
+lookup would have put the player's own spelling in an operations log the moment their name
+folded onto an entry spelled another way. `PreparedBlocklist.exact` is a map for that reason
+alone, and the suite pins that every refusal names a string from the shipped list.
+
+One thing about the live suite worth not rediscovering: **it is sensitive to cold starts**. Run
+straight after a thirteen-function deploy, one `getWallet` came back unusable and took three
+streak cases down with it, reading as a retune regression. Warm, it is 76/76. Re-run before
+believing a failure that arrives in the first minute after a deploy.
+
+The offline suite is **836** (`NameReportTests` adds 6), the server suite adds `names.mjs` (145)
+and `reports.mjs` (27) for **763**, and the live smoke test gains 12 cases that prove the
+*deployed* build is running the published list — the one failure mode nothing offline can see,
+since a filter that was never seeded refuses nothing and looks identical from a console.
+
+**Live as of 2026-08-21.** Rules released with the `nameReports` block, `config/names` seeded at
+v3 (51 substring, 2,621 whole-word across 27 languages, 11 reserved, 37 allowed), and all
+thirteen functions deployed — `reportKeeperName` created, the other twelve rebuilt because
+`grove.ts` and `names.ts` are shared by all of them. The smoke test is **76/76 live**, and the
+five new filter cases are the ones worth having: they attack the *deployed* build with the four
+bypasses the old filter had and confirm it still allows `Grapevine`.
+
+One trap the live run caught, and it will recur on every callable added from here: **a newly
+created 2nd-gen function has no public invoker binding**, so `reportKeeperName` answered every
+call with 401 while the twelve updated ones were fine — they were granted it when they were
+created. The fix is one command, and it is not something `firebase deploy` does or warns about:
+
+    gcloud run services add-iam-policy-binding <lowercased-name>       --region=europe-west1 --member=allUsers --role=roles/run.invoker
+
+The service name is the function name **lowercased**. Nothing offline can see this: the function
+deploys, logs cleanly, and is simply unreachable — which from a client is indistinguishable from
+being signed out.
 
 Not done, deliberate: **Play Games Services**
 (better Android sign-in and the natural home for the "ranks" leaderboards, but

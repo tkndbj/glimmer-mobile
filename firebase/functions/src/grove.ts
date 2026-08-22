@@ -49,6 +49,8 @@ import { logger } from "firebase-functions";
 import {
   ProgressionConfig, RewardRule, MAX_STARS, MAX_LEVEL_ID_LENGTH, earnedCredits,
 } from "./progression";
+import { PreparedBlocklist, judgeName } from "./profanity";
+import { builtInBlocklist } from "./blocklist";
 
 // --------------------------------------------------------------------------- config
 
@@ -197,7 +199,16 @@ export function derivedXp(levels: unknown, config: ProgressionConfig): number {
 
 /** What a grove is worth, split so the clamp can be applied to the half that needs it. */
 export interface GroveWorth {
-  /** Value held without paying: companions the keeper ladder reached. Unforgeable. */
+  /**
+   * Value held without paying anything.
+   *
+   * Structurally **zero** since the companion rule became keeper level AND purchase: the
+   * keeper ladder was the only thing in a grove that was ever handed over, and it no longer
+   * is. Kept in the shape rather than deleted because the clamp is expressed in terms of the
+   * split, the published card and the shared vectors are both built around it, and a rule
+   * that puts something back here later — a companion granted by an event, say — should find
+   * the half it belongs in already present rather than have to reintroduce it.
+   */
   earned: number;
 
   /** Value paid for, before clamping. */
@@ -277,17 +288,24 @@ export function groveWorth(
     if (typeof cost === "number" && cost > 0) bought += cost;
   }
 
-  // A companion is worth its price however it was come by — the reading is market value
-  // rather than spend (invariant 16g), which is the only version of the rule with no
-  // special case in it. Which half it lands in is decided by the keeper gate, because that
-  // is the half this server can vouch for on its own.
+  // A companion is worth its price, and only a companion the save actually **owns** —
+  // which is the whole of what changed when the unlock rule became keeper level AND
+  // purchase. It used to be that passing a gate handed the companion over, so a gate the
+  // star ledger had provably passed was value this server could vouch for on its own, and
+  // it went into the unforgeable `earned` half. Nothing is handed over now: every companion
+  // in a grove was paid for in credits, so every companion belongs in the clamped half,
+  // beside the benches and the land that were always bought.
+  //
+  // The gate still does work, and it does it *before* the clamp rather than inside it: a
+  // save naming a companion whose gate its own keeper level has not reached cannot have
+  // come about honestly, so that entry is dropped outright rather than clamped down. That
+  // is strictly tighter than clamping — a level-1 save claiming the 30,000-credit companion
+  // now scores nothing for it instead of scoring whatever it could afford.
   for (const [id, entry] of Object.entries(grove.companions)) {
     if (!entry || typeof entry.cost !== "number" || entry.cost <= 0) continue;
+    if (!companions.has(id)) continue;
 
-    const reached = level >= Math.floor(entry.level ?? 0);
-
-    if (reached) earned += entry.cost;
-    else if (companions.has(id)) bought += entry.cost;
+    if (level >= Math.floor(entry.level ?? 0)) bought += entry.cost;
   }
 
   const ceiling = affordable > 0 ? Math.floor(affordable) : 0;
@@ -402,30 +420,29 @@ export function sanitiseName(stored: unknown): string {
 }
 
 /**
- * Words a public name may not contain, matched against the name with separators removed.
+ * Whether a sanitised name may go on a board.
  *
- * Deliberately short and deliberately server-only. A list shipped in a client is a list an
- * attacker reads out of the client, and an exhaustive multilingual filter is a product in
- * its own right — what this buys is that the obvious attempts do not reach a board, and
- * what actually holds the line is that a reported name can be taken down centrally by
- * clearing one field. Matched on a squashed, case-folded form so `f_u_c_k` does not walk
- * past it.
+ * <b>The word matching moved out of this file and the fold is the reason.</b> What stood here
+ * was thirteen English words and `flat.includes(word)` over a string with everything outside
+ * `a-z0-9` deleted, and it was weaker than it read in three ways that are each one keystroke:
+ * leetspeak walked past it (`5hit`, `f4ggot`, `phuck`), a single Cyrillic character defeated
+ * it entirely (the deletion removed the `с` from `fuсk` and left `fuk`, which matched
+ * nothing), and any name written in a non-Latin script squashed to the empty string and was
+ * never filtered at all — which in a game that ships globally is most of the world. It also
+ * refused **Grapevine**, in a game about a garden, because `rape` is a substring of it.
+ *
+ * `profanity.ts` holds the fold and the three matching classes; `blocklist.ts` holds where the
+ * list comes from and how fast a change to it lands. This is the seam they meet at, and it is
+ * kept synchronous — with the shipped list as the default — because it has four call sites
+ * that have no database in hand and no reason to grow one.
+ *
+ * The length test stays here rather than moving with the rest: it is a fact about what a row
+ * can draw, not about what a word means, and `MIN_NAME_LENGTH` is this file's constant.
  */
-const BLOCKED = [
-  "fuck", "shit", "cunt", "nigger", "nigga", "faggot", "rape", "nazi", "hitler",
-  "admin", "moderator", "glimmergrove", "support",
-];
-
-function squash(name: string): string {
-  return name.toLowerCase().replace(/[^a-z0-9]/gu, "");
-}
-
-/** Whether a sanitised name may go on a board. */
-export function isNameAllowed(name: string): boolean {
+export function isNameAllowed(name: string, list: PreparedBlocklist = builtInBlocklist()): boolean {
   if (name.length < MIN_NAME_LENGTH) return false;
 
-  const flat = squash(name);
-  return !BLOCKED.some((word) => flat.includes(word));
+  return judgeName(name, list).allowed;
 }
 
 /**
@@ -460,9 +477,11 @@ export function fallbackName(uid: string): string {
  * claim path to work out what to reserve. It is deliberately no longer what a card is built
  * from — see `boardName`.
  */
-export function publicName(stored: unknown, uid: string): string {
+export function publicName(
+  stored: unknown, uid: string, list?: PreparedBlocklist
+): string {
   const cleaned = sanitiseName(stored);
-  return isNameAllowed(cleaned) ? cleaned : fallbackName(uid);
+  return isNameAllowed(cleaned, list) ? cleaned : fallbackName(uid);
 }
 
 /**
@@ -476,15 +495,19 @@ export function publicName(stored: unknown, uid: string): string {
  * modified save changes its owner's screens and leaves the board untouched.
  *
  * **The word filter runs again here, on a name that already passed it.** That is not
- * redundancy: `BLOCKED` grows, and re-testing at publish time means adding a word takes a
- * name off every board on its next rebuild rather than needing a sweep over the reservations.
+ * redundancy: the list grows, and re-testing at publish time means adding a word takes a name
+ * off every board on its next rebuild rather than needing a sweep over the reservations. It is
+ * also what makes `config/names` a takedown lever rather than merely a rule for future renames
+ * -- a word added to the published list at noon is off every card by that account's next publish.
  *
  * A keeper with no confirmed name — never renamed, or renamed while offline and not yet
  * claimed — is published under a generated handle, exactly as an unnamed one always was.
  */
-export function boardName(confirmed: string | null | undefined, uid: string): string {
+export function boardName(
+  confirmed: string | null | undefined, uid: string, list?: PreparedBlocklist
+): string {
   const cleaned = sanitiseName(confirmed);
-  return isNameAllowed(cleaned) ? cleaned : fallbackName(uid);
+  return isNameAllowed(cleaned, list) ? cleaned : fallbackName(uid);
 }
 
 // ------------------------------------------------------------------------ the card
@@ -538,7 +561,8 @@ export function buildCard(
   worth: GroveWorth,
   level: number,
   nowUnix: number,
-  confirmedName: string | null
+  confirmedName: string | null,
+  list?: PreparedBlocklist
 ): GroveCardDoc {
   const wallet = (save.wallet ?? {}) as Record<string, unknown>;
 
@@ -587,7 +611,7 @@ export function buildCard(
   }
 
   return {
-    name: boardName(confirmedName, uid),
+    name: boardName(confirmedName, uid, list),
     avatar: typeof wallet.avatarId === "string" ? wallet.avatarId.slice(0, 64) : "",
     level,
     score: worth.score,

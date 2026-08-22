@@ -178,8 +178,14 @@ namespace GlimmerGrove.Tests
             var offer = HomesteadLedger.OfferFor(coral);
 
             Assert.AreEqual(14500L, offer.Cost);
-            Assert.AreEqual(HomesteadPurchaseState.TooExpensive, offer.State,
-                            "a fresh account cannot pay 14,500, and the refusal names why");
+
+            // A fresh account is level 1 against a gate of 40, so the refusal it meets is the
+            // gate rather than the price — translated out of CompanionPurchaseState.LevelLocked
+            // rather than flattened onto NotForSale, which would tell the player this friend
+            // can only be earned by playing when it is for sale and they are 39 ranks short.
+            Assert.AreEqual(HomesteadPurchaseState.LevelLocked, offer.State,
+                            "a fresh account is nowhere near level 40, and the refusal names why");
+            Assert.AreEqual(40, offer.RequiredLevel);
         }
 
         [Test]

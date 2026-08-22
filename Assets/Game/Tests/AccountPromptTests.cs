@@ -1,4 +1,7 @@
+using System.Collections.Generic;
 using GlimmerGrove.Cloud;
+using GlimmerGrove.Content;
+using GlimmerGrove.Progression;
 using NUnit.Framework;
 
 namespace GlimmerGrove.Tests
@@ -29,9 +32,24 @@ namespace GlimmerGrove.Tests
 
         static AccountPromptPolicy Guest() => new AccountPromptPolicy();
 
+        /// <summary>The pacing that ships in the build, which is what these cases are about.</summary>
+        static AccountPromptRuleTable Shipped => AccountPromptRuleTable.Default;
+
+        static int ChapterBudget => Shipped.ChapterBudget;
+        static int PurchaseBudget => Shipped.PurchaseBudget;
+        static long QuietSeconds => Shipped.QuietSeconds;
+
         /// <summary>An anonymous, healthy, backed-by-a-server device — the only state that asks.</summary>
-        static bool Ask(AccountPromptPolicy policy, AccountPromptTrigger trigger, long now)
-            => policy.ShouldOffer(trigger, available: true, linked: false, mismatched: false, now);
+        static bool Ask(AccountPromptPolicy policy, AccountPromptTrigger trigger, long now,
+                        AccountPromptRuleTable rules = null)
+            => policy.ShouldOffer(trigger, rules ?? Shipped,
+                                  available: true, linked: false, mismatched: false, nowUnix: now);
+
+        static AccountPromptRuleTable Published(int chapter = -1, int purchase = -1, int quietHours = -1,
+                                                List<string> problems = null)
+            => AccountPromptRuleTable.Resolve(
+                new PromptsDto { chapterBudget = chapter, purchaseBudget = purchase, quietHours = quietHours },
+                problems ?? new List<string>());
 
         // ------------------------------------------------------------ the states that stay quiet
         [Test]
@@ -46,8 +64,9 @@ namespace GlimmerGrove.Tests
         {
             var policy = Guest();
 
-            Assert.IsFalse(policy.ShouldOffer(AccountPromptTrigger.Purchase, available: true,
-                                              linked: true, mismatched: false, Now));
+            Assert.IsFalse(policy.ShouldOffer(AccountPromptTrigger.Purchase, Shipped,
+                                              available: true, linked: true, mismatched: false,
+                                              nowUnix: Now));
         }
 
         [Test]
@@ -56,8 +75,9 @@ namespace GlimmerGrove.Tests
             // Nothing to link to, so the panel would offer two buttons that cannot work.
             var policy = Guest();
 
-            Assert.IsFalse(policy.ShouldOffer(AccountPromptTrigger.Purchase, available: false,
-                                              linked: false, mismatched: false, Now));
+            Assert.IsFalse(policy.ShouldOffer(AccountPromptTrigger.Purchase, Shipped,
+                                              available: false, linked: false, mismatched: false,
+                                              nowUnix: Now));
         }
 
         [Test]
@@ -67,8 +87,9 @@ namespace GlimmerGrove.Tests
             // card is already telling them the thing that actually matters.
             var policy = Guest();
 
-            Assert.IsFalse(policy.ShouldOffer(AccountPromptTrigger.Chapter, available: true,
-                                              linked: false, mismatched: true, Now));
+            Assert.IsFalse(policy.ShouldOffer(AccountPromptTrigger.Chapter, Shipped,
+                                              available: true, linked: false, mismatched: true,
+                                              nowUnix: Now));
         }
 
         // ------------------------------------------------------------------------- the budgets
@@ -78,7 +99,7 @@ namespace GlimmerGrove.Tests
             var policy = Guest();
             long now = Now;
 
-            for (int i = 0; i < AccountPromptPolicy.ChapterBudget; i++)
+            for (int i = 0; i < ChapterBudget; i++)
             {
                 Assert.IsTrue(Ask(policy, AccountPromptTrigger.Chapter, now), "offer " + i);
                 policy.NoteOffered(AccountPromptTrigger.Chapter, now);
@@ -91,12 +112,12 @@ namespace GlimmerGrove.Tests
         [Test]
         public void ThePurchaseNudgeGetsOneMoreThanTheChapterNudge()
         {
-            Assert.Greater(AccountPromptPolicy.PurchaseBudget, AccountPromptPolicy.ChapterBudget);
+            Assert.Greater(PurchaseBudget, ChapterBudget);
 
             var policy = Guest();
             long now = Now;
 
-            for (int i = 0; i < AccountPromptPolicy.PurchaseBudget; i++)
+            for (int i = 0; i < PurchaseBudget; i++)
             {
                 Assert.IsTrue(Ask(policy, AccountPromptTrigger.Purchase, now), "offer " + i);
                 policy.NoteOffered(AccountPromptTrigger.Purchase, now);
@@ -117,7 +138,7 @@ namespace GlimmerGrove.Tests
             var policy = Guest();
             long now = Now;
 
-            for (int i = 0; i < AccountPromptPolicy.PurchaseBudget; i++)
+            for (int i = 0; i < PurchaseBudget; i++)
             {
                 policy.NoteOffered(AccountPromptTrigger.Purchase, now);
                 now += 30L * Day;
@@ -135,9 +156,9 @@ namespace GlimmerGrove.Tests
             policy.NoteOffered(AccountPromptTrigger.Purchase, Now);
 
             Assert.IsFalse(Ask(policy, AccountPromptTrigger.Purchase,
-                               Now + AccountPromptPolicy.QuietSeconds - 1L));
+                               Now + QuietSeconds - 1L));
             Assert.IsTrue(Ask(policy, AccountPromptTrigger.Purchase,
-                              Now + AccountPromptPolicy.QuietSeconds));
+                              Now + QuietSeconds));
         }
 
         /// <summary>
@@ -153,7 +174,7 @@ namespace GlimmerGrove.Tests
 
             Assert.IsFalse(Ask(policy, AccountPromptTrigger.Purchase, Now + 60L));
             Assert.IsTrue(Ask(policy, AccountPromptTrigger.Purchase,
-                              Now + AccountPromptPolicy.QuietSeconds));
+                              Now + QuietSeconds));
         }
 
         // ------------------------------------------------------------------- a clock that lies
@@ -219,7 +240,7 @@ namespace GlimmerGrove.Tests
         public void AnInstallationThatAlreadySpentTheChapterBudgetIsNotAskedAgain()
         {
             var policy = Guest();
-            policy.Adopt(AccountPromptPolicy.ChapterBudget, 0, 0L);
+            policy.Adopt(ChapterBudget, 0, 0L);
 
             Assert.IsFalse(Ask(policy, AccountPromptTrigger.Chapter, Now));
         }
@@ -235,7 +256,7 @@ namespace GlimmerGrove.Tests
         {
             var policy = Guest();
 
-            for (int i = 0; i < AccountPromptPolicy.PurchaseBudget; i++)
+            for (int i = 0; i < PurchaseBudget; i++)
                 policy.NoteOffered(AccountPromptTrigger.Purchase, Now);
 
             Assert.IsFalse(Ask(policy, AccountPromptTrigger.Purchase, Now));
@@ -252,6 +273,193 @@ namespace GlimmerGrove.Tests
                                                           mismatched: false));
             Assert.IsFalse(AccountPromptPolicy.ShouldWarn(available: true, linked: false,
                                                           mismatched: true));
+        }
+
+        // ------------------------------------------------------------- the published pacing
+        /// <summary>
+        /// An absent block is not an error. A client that predates the field keeps the pacing
+        /// that shipped inside it — every optional block in this file works that way.
+        /// </summary>
+        [Test]
+        public void AnAbsentBlockKeepsTheShippedPacing()
+        {
+            var problems = new List<string>();
+            var rules = AccountPromptRuleTable.Resolve(null, problems);
+
+            Assert.AreSame(AccountPromptRuleTable.Default, rules);
+            Assert.IsEmpty(problems);
+        }
+
+        [Test]
+        public void AnUnsetFieldInheritsRatherThanReadingAsZero()
+        {
+            var problems = new List<string>();
+            var rules = Published(chapter: 5, problems: problems);
+
+            Assert.AreEqual(5, rules.ChapterBudget);
+            Assert.AreEqual(AccountPromptLimits.DefaultPurchaseBudget, rules.PurchaseBudget);
+            Assert.AreEqual(AccountPromptLimits.DefaultQuietHours * 3600L, rules.QuietSeconds);
+            Assert.IsEmpty(problems);
+        }
+
+        /// <summary>
+        /// The lever the whole block exists for: if the modal costs more conversion than the
+        /// protection is worth, a push turns it off without a store review. Zero must therefore
+        /// be a value an author can write and not be mistaken for "said nothing" — which is why
+        /// the DTO's sentinel is -1.
+        /// </summary>
+        [Test]
+        public void APublishedBudgetOfZeroTurnsThatTriggerOffAndLeavesTheOtherAlone()
+        {
+            var problems = new List<string>();
+            var rules = Published(purchase: 0, problems: problems);
+            var policy = Guest();
+
+            Assert.IsEmpty(problems, "zero is a decision, not a mistake");
+            Assert.IsFalse(Ask(policy, AccountPromptTrigger.Purchase, Now, rules));
+            Assert.IsTrue(Ask(policy, AccountPromptTrigger.Chapter, Now, rules));
+        }
+
+        /// <summary>
+        /// The bound whose absence is a hostile game rather than a mistuning — a file saying
+        /// "ask every time" would put a modal in front of every purchase for every guest, with
+        /// no app update to roll back.
+        /// </summary>
+        [Test]
+        public void ABudgetAboveTheCeilingIsClampedAndSaidOutLoud()
+        {
+            var problems = new List<string>();
+            var rules = Published(chapter: 9999, problems: problems);
+
+            Assert.AreEqual(AccountPromptLimits.MaxBudget, rules.ChapterBudget);
+            Assert.AreEqual(1, problems.Count);
+            StringAssert.Contains("chapterBudget", problems[0]);
+        }
+
+        /// <summary>
+        /// Zero hours would let two triggers land back to back, which is the failure the shared
+        /// clock exists to prevent — and it is reachable by a typo rather than by a decision,
+        /// which is exactly why it is clamped rather than honoured.
+        /// </summary>
+        [Test]
+        public void AQuietPeriodOfNothingIsRefused()
+        {
+            var problems = new List<string>();
+            var rules = Published(quietHours: 0, problems: problems);
+
+            Assert.AreEqual(AccountPromptLimits.MinQuietHours * 3600L, rules.QuietSeconds);
+            Assert.AreEqual(1, problems.Count);
+            StringAssert.Contains("quietHours", problems[0]);
+        }
+
+        [Test]
+        public void APublishedQuietPeriodIsWhatTheAskActuallyUses()
+        {
+            var rules = Published(quietHours: 6);
+            var policy = Guest();
+
+            policy.NoteOffered(AccountPromptTrigger.Purchase, Now);
+
+            Assert.IsFalse(Ask(policy, AccountPromptTrigger.Purchase, Now + 5L * 3600L, rules));
+            Assert.IsTrue(Ask(policy, AccountPromptTrigger.Purchase, Now + 6L * 3600L, rules));
+        }
+
+        /// <summary>
+        /// A null table is the built-in pacing rather than a crash. This is reachable: the table
+        /// is read live off <c>ProgressionRules</c>, and a content push landing mid-frame is the
+        /// kind of thing that must never take a screen down.
+        /// </summary>
+        [Test]
+        public void ANullTableFallsBackRatherThanThrowing()
+        {
+            var policy = Guest();
+
+            Assert.IsTrue(policy.ShouldOffer(AccountPromptTrigger.Purchase, null,
+                                             available: true, linked: false, mismatched: false,
+                                             nowUnix: Now));
+        }
+
+        /// <summary>
+        /// The table reaches the ask and nothing else. A guest is a guest whatever the pacing
+        /// says, so switching every trigger off must not also take the bar off the shelf — that
+        /// is the standing half of the warning and the reason the modal can be rare.
+        /// </summary>
+        [Test]
+        public void TurningEveryPromptOffDoesNotTakeDownTheShopNotice()
+        {
+            var rules = Published(chapter: 0, purchase: 0);
+            var policy = Guest();
+
+            Assert.IsFalse(Ask(policy, AccountPromptTrigger.Chapter, Now, rules));
+            Assert.IsFalse(Ask(policy, AccountPromptTrigger.Purchase, Now, rules));
+            Assert.IsTrue(AccountPromptPolicy.ShouldWarn(available: true, linked: false,
+                                                         mismatched: false));
+        }
+
+        // ---------------------------------------------------- the wire from file to facade
+        /// <summary>
+        /// The published block reaches the live facade, which is the half no unit of the policy
+        /// can see.
+        ///
+        /// <para>
+        /// This project has twice shipped a field that reached a DTO and stopped there —
+        /// `groveLandOwned` never reached the mapper, `unlockCost` never reached the manifest
+        /// writer — and both were invisible because everything either side of the gap kept
+        /// working. A pacing lever that parses correctly and never reaches the ask is the same
+        /// bug wearing the same disguise: it would look exactly like a lever that had been
+        /// pushed and had not helped.
+        /// </para>
+        /// </summary>
+        [Test]
+        public void APublishedBlockReachesTheLiveFacade()
+        {
+            try
+            {
+                var dto = new ProgressionDto
+                {
+                    schemaVersion = ProgressionSchema.Version,
+                    xpToNext = new[] { 100 },
+                    tailXpToNext = 100,
+                    tailXpIncrement = 10,
+                    prompts = new PromptsDto
+                    {
+                        chapterBudget = 1, purchaseBudget = 7, quietHours = 3,
+                    },
+                };
+
+                Assert.IsTrue(ProgressionTable.TryBuild(dto, out var table, new List<string>()));
+                ProgressionRules.Publish(table);
+
+                Assert.AreEqual(1, AccountPromptRules.Table.ChapterBudget);
+                Assert.AreEqual(7, AccountPromptRules.Table.PurchaseBudget);
+                Assert.AreEqual(3L * 3600L, AccountPromptRules.Table.QuietSeconds);
+            }
+            finally { ProgressionRules.Reset(); }
+        }
+
+        /// <summary>A file with no block at all leaves the facade on the shipped pacing.</summary>
+        [Test]
+        public void AFileWithNoBlockLeavesTheFacadeOnTheShippedPacing()
+        {
+            try
+            {
+                var dto = new ProgressionDto
+                {
+                    schemaVersion = ProgressionSchema.Version,
+                    xpToNext = new[] { 100 },
+                    tailXpToNext = 100,
+                    tailXpIncrement = 10,
+                };
+
+                Assert.IsTrue(ProgressionTable.TryBuild(dto, out var table, new List<string>()));
+                ProgressionRules.Publish(table);
+
+                Assert.AreEqual(AccountPromptLimits.DefaultChapterBudget,
+                                AccountPromptRules.Table.ChapterBudget);
+                Assert.AreEqual(AccountPromptLimits.DefaultPurchaseBudget,
+                                AccountPromptRules.Table.PurchaseBudget);
+            }
+            finally { ProgressionRules.Reset(); }
         }
     }
 }

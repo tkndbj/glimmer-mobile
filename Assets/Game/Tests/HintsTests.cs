@@ -364,5 +364,82 @@ namespace GlimmerGrove.Tests
             Assert.IsFalse(ChestDropKinds.IsCurrency(ChestDropKind.Hints));
             Assert.AreEqual(ChestDropKind.Hints, ChestDropKinds.Parse(ChestDropKinds.Hints));
         }
+
+        // ------------------------------------------------------------- the button
+        /// <summary>
+        /// The property the whole control rests on: an empty pool is a destination, never a
+        /// refusal. Every state a player can be in routes somewhere that says something.
+        /// </summary>
+        [Test]
+        public void AnEmptyPoolSendsThePlayerToTheOfferRatherThanNowhere()
+        {
+            Assert.AreEqual(HintTap.Reveal, HintPrompt.OnTap(boardHasHint: true, poolHasHint: true));
+            Assert.AreEqual(HintTap.Offer, HintPrompt.OnTap(boardHasHint: true, poolHasHint: false));
+        }
+
+        /// <summary>
+        /// The board is asked before the pool, and that ordering is the safety: a video sold
+        /// for a hint the board could not have spent is a charge with nothing behind it, and
+        /// it is the one mistake here a player would be right to call a scam.
+        /// </summary>
+        [Test]
+        public void ABoardWithNothingToPointAtIsNeverSoldAVideo()
+        {
+            Assert.AreEqual(HintTap.NothingToReveal, HintPrompt.OnTap(boardHasHint: false, poolHasHint: false));
+            Assert.AreEqual(HintTap.NothingToReveal, HintPrompt.OnTap(boardHasHint: false, poolHasHint: true));
+        }
+
+        /// <summary>
+        /// Spending the last one raises the offer by itself, because that is the moment the
+        /// player has just decided a hint was worth having.
+        /// </summary>
+        [Test]
+        public void SpendingTheLastHintOffersAnother()
+        {
+            Assert.IsTrue(HintPrompt.OffersAfterSpending(runIsLive: true, poolHasHint: false,
+                                                         offerWorthShowing: true));
+        }
+
+        /// <summary>
+        /// And nothing else does. Each of these was a way to put a panel where nobody asked
+        /// for one — over a glade the hint had just solved, over a run the clock had already
+        /// ended, after a hint that left two more in the pool, and in a build with no video
+        /// to show at all.
+        /// </summary>
+        [Test]
+        public void NothingElseRaisesThePanelOnItsOwn()
+        {
+            Assert.IsFalse(HintPrompt.OffersAfterSpending(runIsLive: false, poolHasHint: false,
+                                                          offerWorthShowing: true),
+                           "not over a board that is no longer being played");
+
+            Assert.IsFalse(HintPrompt.OffersAfterSpending(runIsLive: true, poolHasHint: true,
+                                                          offerWorthShowing: true),
+                           "not while the player still holds one");
+
+            Assert.IsFalse(HintPrompt.OffersAfterSpending(runIsLive: true, poolHasHint: false,
+                                                          offerWorthShowing: false),
+                           "not when there is nothing behind it to offer");
+        }
+
+        /// <summary>
+        /// The pool empties exactly once per refill, so the panel it raises arrives exactly
+        /// once — the fact that makes the automatic offer an event rather than a habit.
+        /// </summary>
+        [Test]
+        public void TheOfferFollowsTheLastHintAndNotTheOnesBeforeIt()
+        {
+            var hints = Hints.Full;
+            int raised = 0;
+
+            for (int i = 0; i < HintRules.RefillCap; i++)
+            {
+                hints = hints.Spend(1, T0);
+                if (HintPrompt.OffersAfterSpending(true, hints.CanSpend, true)) raised++;
+            }
+
+            Assert.AreEqual(0, hints.Count);
+            Assert.AreEqual(1, raised, "once, on the spend that emptied the pool");
+        }
     }
 }

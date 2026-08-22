@@ -825,6 +825,54 @@ console.log(
   `a complete grove worth ${groveTotal.toLocaleString()}`
 );
 
+// ------------------------------------------------------------------- keeper names
+//
+// The word list, so a slur can be added — or a false positive removed — without a deploy.
+//
+// It is published from the same file the deployment compiles in, which is what makes the
+// document an *override* rather than a second source of truth: `blocklist.ts` runs the
+// compiled list when this is absent, so a project that has never been seeded still filters,
+// and a seeded one runs exactly what was reviewed in the repository. The only thing that ever
+// differs between them is a hand edit made in the console during an incident, which is
+// precisely what this document exists for and is meant to be reconciled back into
+// `Tools/make_name_blocklist.py` afterwards.
+//
+// Replaced rather than merged, for `config/products`' reason and one of its own: a merge would
+// leave a word that had been *deliberately removed* still in the document, which is the one
+// direction of this that costs a real player their name.
+const blocklistPath = join(HERE, "..", "functions", "src", "name-blocklist.json");
+const blocklist = JSON.parse(readFileSync(blocklistPath, "utf8"));
+
+// The seeder refuses rather than warns, because a truncated word list reads from every side
+// exactly like a word list with nothing to catch. `blocklist.ts` has the same guard on the
+// reading end — this one is here so the mistake never reaches the database at all.
+if (!Array.isArray(blocklist.anywhere) || blocklist.anywhere.length < 20
+    || !Array.isArray(blocklist.exact) || blocklist.exact.length < 1000) {
+  throw new Error(
+    "name-blocklist.json looks truncated; run: python Tools/make_name_blocklist.py"
+  );
+}
+
+await writeDoc(token, "config/names", {
+  version: blocklist.version,
+  anywhere: blocklist.anywhere,
+  exact: blocklist.exact,
+  reserved: blocklist.reserved,
+  allow: blocklist.allow,
+
+  // How many distinct players must report a name before it comes off the boards on its own.
+  // Published here rather than hard-coded so the balance between "an offensive name stands for
+  // hours" and "three accounts can hide an innocent one" can be moved at three in the morning.
+  // Clamped to 2..100 on the reading end, so this can never be pushed to one.
+  reportThreshold: 3,
+}, { replace: true });
+
+console.log(
+  `config/names: v${blocklist.version} — ${blocklist.anywhere.length} substring, ` +
+  `${blocklist.exact.length} whole-word across ${blocklist.languages.length} language(s), ` +
+  `${blocklist.reserved.length} reserved, ${blocklist.allow.length} allowed`
+);
+
 if (grove.stars[grove.stars.length - 1] > groveTotal) {
   console.log("warning: the top star asks for more than the whole catalog is worth — nobody can reach it");
 }

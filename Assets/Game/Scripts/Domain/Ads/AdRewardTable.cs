@@ -151,10 +151,13 @@ namespace GlimmerGrove.Ads
         /// config push if a market turns out to behave differently.
         /// </para>
         /// <para>
-        /// Coins pay a little under a two-star clear and are capped tighter, because that
-        /// placement is player-initiated with no natural trigger: it is the one a
-        /// determined farmer would sit on, and the one whose payout competes directly with
-        /// playing the game.
+        /// Coins pay <b>1,000</b> and are capped tighter, because that placement is
+        /// player-initiated with no natural trigger: it is the one a determined farmer
+        /// would sit on, and the one whose payout competes directly with playing the game.
+        /// The cap is what bounds it — six a day is 6,000 credits against roughly 593 a
+        /// day of free play, so the offer is worth taking rather than worth ignoring, and
+        /// the daily ceiling rather than the per-view figure is the lever to pull if that
+        /// turns out to be too generous once there are live numbers to read.
         /// </para>
         /// <para>
         /// A continue pays <b>thirty seconds</b>, which is a fraction of every shipped
@@ -166,13 +169,14 @@ namespace GlimmerGrove.Ads
         /// time than any star threshold will reward.
         /// </para>
         /// <para>
-        /// The victory bonus pays <b>200</b>, above the coin pill's 150 and for a reason
-        /// worth writing down: it is offered at the one moment the player is certain the
+        /// The victory bonus pays <b>200</b>, and it is deliberately the smaller of the two
+        /// credit placements: it is offered at the one moment the player is certain the
         /// game has been fair to them, and it is the placement most likely to be watched
         /// several times a session, so it is also the one whose payout most directly
         /// competes with playing the next glade. Two hundred is roughly what a clean
         /// three-star first clear pays, which is what makes "on top of what you just
-        /// earned" true enough to print.
+        /// earned" true enough to print — the coin pill is a trip the player chose to make
+        /// and pays accordingly, this one rides a glade they were going to finish anyway.
         /// </para>
         /// <para>
         /// A hint pays <b>one</b>, and one is the only number that can be right: the shipped
@@ -186,7 +190,7 @@ namespace GlimmerGrove.Ads
         public static readonly AdRewardTable Default = Build(AdRules.DefaultCooldownSeconds, new[]
         {
             new AdOffer(AdPlacement.HeartRefill, ChestDropKind.Hearts, 2, 10),
-            new AdOffer(AdPlacement.CoinBonus, ChestDropKind.Credits, 150, 6),
+            new AdOffer(AdPlacement.CoinBonus, ChestDropKind.Credits, 1000, 6),
             new AdOffer(AdPlacement.RunContinue, ChestDropKind.RunTime, 30, 8),
             new AdOffer(AdPlacement.WinBonus, ChestDropKind.Credits, 200, 6),
             new AdOffer(AdPlacement.HintRefill, ChestDropKind.Hints, 1, 5),

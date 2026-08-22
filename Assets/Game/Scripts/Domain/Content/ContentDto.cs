@@ -430,6 +430,7 @@ namespace GlimmerGrove.Content
         /// up either ungated or unplayable.
         /// </summary>
         public DifficultyDto difficulty;
+        public PromptsDto prompts;
 
         /// <summary>
         /// What the shop sells. Optional: absent means the built-in ladder stands.
@@ -537,6 +538,29 @@ namespace GlimmerGrove.Content
 
         /// <summary>What it costs in gems.</summary>
         public long gems;
+    }
+
+    /// <summary>
+    /// How often the game may ask an anonymous player to attach a real account.
+    ///
+    /// <para>
+    /// Every field is -1 for "not written, inherit", the same tri-state the reward rules and
+    /// the heart gate use — and here the distinction genuinely carries weight, because
+    /// <b>zero is a meaningful budget</b>: it is how a trigger is switched off from a config
+    /// push without an app update. See <c>AccountPromptLimits.MinBudget</c>.
+    /// </para>
+    /// </summary>
+    [Serializable]
+    public sealed class PromptsDto
+    {
+        /// <summary>Times a finished chapter may raise the account panel, ever.</summary>
+        public int chapterBudget = -1;
+
+        /// <summary>Times a completed purchase may raise it, ever.</summary>
+        public int purchaseBudget = -1;
+
+        /// <summary>Hours between any two automatic asks, whatever raised them.</summary>
+        public int quietHours = -1;
     }
 
     [Serializable]

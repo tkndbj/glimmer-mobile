@@ -1,6 +1,10 @@
 import { Firestore, Transaction } from "firebase-admin/firestore";
 
+import { logger } from "firebase-functions";
+
 import { sanitiseName, isNameAllowed, MIN_NAME_LENGTH } from "./grove";
+import { PreparedBlocklist, judgeName } from "./profanity";
+import { builtInBlocklist } from "./blocklist";
 import { PATHS } from "./config";
 
 /**
@@ -217,9 +221,9 @@ export function nameKey(stored: unknown): string {
  * "publishable" and "reservable" one predicate, which is what every caller here quietly
  * assumes.
  */
-export function isNameClaimable(stored: unknown): boolean {
+export function isNameClaimable(stored: unknown, list?: PreparedBlocklist): boolean {
   const visible = sanitiseName(stored);
-  if (!isNameAllowed(visible)) return false;
+  if (!isNameAllowed(visible, list)) return false;
 
   return nameKey(stored).length >= MIN_NAME_LENGTH;
 }
@@ -251,6 +255,28 @@ export interface NameHolding {
 
   /** When it was claimed. The cooldown's clock. */
   atUnix: number;
+
+  /**
+   * When this name was taken off the boards, or 0 if it never was.
+   *
+   * <h4>Why the denial lives on the holding rather than on the reservation</h4>
+   *
+   * Both are defensible and only one is free. `publishGrove` already opens the wallet -- for
+   * the affordability clamp and for this holding -- so a flag here is read at no cost on the
+   * one path that has to honour it, where a flag on `names/{key}` would be a second document
+   * read per publish per player, for ever, to carry one bit that is almost always zero.
+   *
+   * It costs nothing in safety, because a denied name's reservation is **not** released: the
+   * key stays held by the account that took it, so nobody else can claim it and there is
+   * nothing left for a flag over there to protect. See `reports.ts`.
+   *
+   * <h4>Why it is a date and not a boolean</h4>
+   *
+   * A moderator reversing a bad takedown needs to know when it happened, and a support case
+   * needs to be answerable. A boolean throws that away to save one field. Anything above zero
+   * reads as denied, so nothing branches on the value itself.
+   */
+  deniedUnix?: number;
 }
 
 /** Every way a claim can end. Two of the five are not failures. */
@@ -276,7 +302,34 @@ function readHolding(data: Record<string, unknown> | undefined): NameHolding | n
     key: raw.key,
     public: typeof raw.public === "string" ? raw.public : "",
     atUnix: Math.floor(Number(raw.atUnix ?? 0)),
+    deniedUnix: Math.floor(Number(raw.deniedUnix ?? 0)),
   };
+}
+
+/**
+ * Whether a name has been taken off the boards.
+ *
+ * Written as a predicate so a caller cannot get the sense of it backwards. The obvious
+ * `holding.deniedUnix > 0` is correct, and is exactly the expression somebody writes as
+ * `!holding.deniedUnix` at the fourth call site. There are four call sites.
+ */
+export function isDenied(holding: NameHolding | null | undefined): boolean {
+  return !!holding && Math.floor(Number(holding.deniedUnix ?? 0)) > 0;
+}
+
+/**
+ * The name a card should carry, or null when there is none to show.
+ *
+ * <b>A denied name resolves to null rather than to itself</b>, so the caller falls through to
+ * `fallbackName` exactly as it does for a keeper who has never renamed. That fall-through is
+ * the entire mechanism of a takedown, and it lives here rather than at the call site because
+ * `publishGrove` and the report path both have to agree about it -- a rule with two readers
+ * and no home is a rule that ends up with two answers.
+ */
+export function publishableName(holding: NameHolding | null | undefined): string | null {
+  if (!holding || isDenied(holding)) return null;
+
+  return holding.public.length > 0 ? holding.public : null;
 }
 
 /**
@@ -304,14 +357,48 @@ export async function claimName(
   db: Firestore,
   uid: string,
   requested: unknown,
-  nowUnix: number
+  nowUnix: number,
+  list?: PreparedBlocklist
 ): Promise<ClaimResult> {
   const visible = sanitiseName(requested);
   const key = nameKey(requested);
 
+  // Resolved once rather than at each use. The parameter is optional so the two callers that
+  // have a loaded list can pass it and the tests need not; letting that `undefined` reach two
+  // separate defaults would be two places for them to stop agreeing about what was judged.
+  const words = list ?? builtInBlocklist();
+
   const walletRef = db.doc(PATHS.wallet(uid));
 
-  if (!isNameClaimable(requested)) {
+  if (!isNameClaimable(requested, words)) {
+    // **The only evidence that the word list is the right word list.**
+    //
+    // A refused name is silent by design: the player keeps it on their own screens and simply
+    // appears under a generated handle, which is the proportionate response and is why nothing
+    // here is an error. The cost of that is no signal at all — the list can be retuned from a
+    // console in minutes, and without this there is no way to learn that it *needs* retuning
+    // except somebody complaining. That is exactly how `rape` went on refusing **Grapevine**
+    // for a year in a game about a garden.
+    //
+    // What is logged is the entry that fired and the class it came from, never the name that
+    // was typed. The entry is ours; the name is the player's, and a public list of the names
+    // people tried to call themselves is not something an operations log should accumulate.
+    // `uid` is here because "why can I not rename" is a support question, and it identifies an
+    // account without describing anybody.
+    const verdict = judgeName(visible, words);
+
+    logger.info("keeper name refused", {
+      uid,
+      reason: verdict.kind ?? "unusable",
+      entry: verdict.word ?? "",
+
+      // Both lengths, because a name refused with no matching entry was refused for shape —
+      // too short once folded, or nothing but punctuation — and the two are told apart here
+      // and nowhere else.
+      visibleLength: visible.length,
+      keyLength: key.length,
+    });
+
     // Refused rather than failed: the player keeps the name on their own screens and is
     // published under a generated handle, which is what `publicName` has always done for a
     // name the filter would not take. Nothing here is worth retrying, so the client is told
@@ -334,6 +421,17 @@ export async function claimName(
     // Already ours. Not a write, not a cooldown and not an error — a device retrying after a
     // dropped reply lands here, and so does every publish once the name is settled.
     if (existing && existing.uid === uid && holding?.key === key) {
+      // A denied name is the one exception, and it has to be handled *here*, because this is
+      // the branch every publish takes once a name has settled. Without it, reporting a name
+      // would take the card down and the very next publish would put it straight back.
+      //
+      // Reported as `refused` rather than as an outcome of its own, because from the player's
+      // side it is the same thing: the name is still theirs, their own screens keep drawing
+      // it, and it is not what strangers see. `refused` is also already the permanent one, so
+      // the client stops asking rather than resubmitting for the life of the account
+      // (invariant 13a).
+      if (isDenied(holding)) return { outcome: "refused" as ClaimOutcome, holding };
+
       return { outcome: "unchanged" as ClaimOutcome, holding };
     }
 
@@ -346,7 +444,12 @@ export async function claimName(
       return { outcome: "cooldown" as ClaimOutcome, holding };
     }
 
-    const next: NameHolding = { key, public: visible, atUnix: nowUnix };
+    // A fresh claim is never born denied: a denial attaches to a name *this account holds*,
+    // and this is a different name. The zero is written explicitly rather than left absent
+    // because the wallet write below is a merge -- a field it is not given keeps whatever it
+    // had, so an omitted zero would carry the previous name's denial onto its replacement and
+    // take the new name down for something the old one did.
+    const next: NameHolding = { key, public: visible, atUnix: nowUnix, deniedUnix: 0 };
 
     // The old reservation goes in the same transaction as the new one. Releasing it
     // afterwards would strand a name for ever on any failure between the two, and there is no

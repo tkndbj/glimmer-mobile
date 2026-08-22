@@ -88,8 +88,8 @@ namespace GlimmerGrove
         /// tab rather than the tab's own screen. Without it the marked tab is left inert,
         /// which is right when you are standing on it and wrong one page in: a dead control
         /// is the worst thing to put where somebody is looking for the way back. Nothing
-        /// passes it today — the grove's shop and the boards were the two callers and both
-        /// now carry the bar not at all, leaning on their own back arrow instead.
+        /// passes it today — the grove's shop is the one caller left and it carries the bar
+        /// not at all, leaning on its own back arrow instead.
         /// </para>
         /// </summary>
         public static RectTransform Build(Transform parent, Tab active, bool onSidePage = false)
@@ -123,7 +123,7 @@ namespace GlimmerGrove
                                     new Vector2(.5f, .5f), new Vector2(x, 4f), Tap(tab, standing));
             var hit = cell.GetComponent<Image>();
             hit.color = new Color(1f, 1f, 1f, 0f);
-            if (standing && Tap(tab, true) == null) { cell.ClickSfx = null; cell.PressScale = .97f; }
+            if (standing) { cell.ClickSfx = null; cell.PressScale = .97f; }
 
             float cap = (active ? CapLive : CapRest) * (tab == Tab.Grove ? GroveCapScale : 1f);
             float capY = active ? 22f : 14f;
@@ -188,14 +188,6 @@ namespace GlimmerGrove
         }
 
         /// <summary>
-        /// What a tab that is still a promise says. Ranks is the last of them — the shop
-        /// stopped being one when it became a screen, and its key is left in the string
-        /// file rather than deleted, because a key removed from a shipped language file is
-        /// a warning in every translation that still carries it.
-        /// </summary>
-        static string SoonKey(Tab tab) => "ui.soon.ranks";
-
-        /// <summary>
         /// Which jelly a cap wears.
         ///
         /// <para>
@@ -230,29 +222,41 @@ namespace GlimmerGrove
         }
 
         /// <summary>
-        /// Home, Profile and the Grovement are screens; the rest are still promises. A tab
-        /// whose own screen is the one being drawn returns null and is left inert rather than
-        /// re-entering it — <paramref name="standing"/>, which is not the same as being the
-        /// marked tab. See <see cref="Build"/>.
+        /// Every tab is a screen. A tab whose own screen is the one being drawn returns null
+        /// and is left inert rather than re-entering it — <paramref name="standing"/>, which is
+        /// not the same as being the marked tab. See <see cref="Build"/>.
+        ///
+        /// <para>
+        /// Ranks was the last promise here and the boards ended it, so there is no
+        /// coming-soon branch left. <c>ui.soon.ranks</c> and <c>ui.soon.shop</c> stay in the
+        /// string files rather than being deleted, because a key removed from a shipped
+        /// language file is a warning in every translation that still carries it.
+        /// </para>
         /// </summary>
         static Action Tap(Tab tab, bool standing)
         {
-            if (standing && (tab == Tab.Home || tab == Tab.Profile || tab == Tab.Grove ||
-                             tab == Tab.Shop)) return null;
-            if (tab == Tab.Home) return () => Flow.Go<HomeScreen>();
-            if (tab == Tab.Profile) return () => Flow.Go<ProfileScreen>();
-            if (tab == Tab.Grove) return () => Flow.Go<HomesteadScreen>();
+            if (standing) return null;
 
-            // The shop is a screen now. It stays a tab rather than becoming a button on the
-            // hub because it is one of the two places a player goes deliberately rather than
-            // being taken — the Grovement is the other — and because a shop reached only
-            // from an out-of-hearts prompt is a shop that is only ever seen at the worst
-            // moment to be sold anything.
-            if (tab == Tab.Shop) return () => Flow.Go<ShopScreen>();
+            switch (tab)
+            {
+                case Tab.Home: return () => Flow.Go<HomeScreen>();
 
-            string title = LabelKey(tab), body = SoonKey(tab);
-            var glyph = Icon(tab);
-            return () => Flow.Modal<ComingSoonOverlay>(v => v.Configure(title, glyph, body));
+                // The shop is a screen. It stays a tab rather than becoming a button on the
+                // hub because it is one of the two places a player goes deliberately rather
+                // than being taken — the Grovement is the other — and because a shop reached
+                // only from an out-of-hearts prompt is a shop that is only ever seen at the
+                // worst moment to be sold anything.
+                case Tab.Shop: return () => Flow.Go<ShopScreen>();
+
+                case Tab.Grove: return () => Flow.Go<HomesteadScreen>();
+
+                // The boards. It was the last tab that opened a panel saying "soon", which is
+                // the worst thing to leave in a row of five permanent controls — four of them
+                // go somewhere and the fifth teaches the player that this one does not.
+                case Tab.Ranks: return () => Flow.Go<LeaderboardScreen>();
+
+                default: return () => Flow.Go<ProfileScreen>();
+            }
         }
     }
 }

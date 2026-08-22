@@ -222,6 +222,11 @@ namespace GlimmerGrove.Social
             _boards.Clear();
             _cards.Clear();
             _cardOrder.Clear();
+
+            // "Who this device reported" belongs to the player rather than to the handset, so
+            // it goes with the account. Keeping it would grey the report control for somebody
+            // who has never used it, on a grove they have never seen.
+            NameReports.Forget();
             Mine = GroveCard.Empty;
             _ranksAsked = false;
         }
@@ -429,6 +434,46 @@ namespace GlimmerGrove.Social
             if (result.Ok && card != null && card.IsValid) Remember(ownerId, card);
 
             return (result, card ?? GroveCard.Empty);
+        }
+
+        /// <summary>
+        /// Reports a keeper's published name.
+        ///
+        /// <para>
+        /// Best-effort like everything else here: a failure is an empty answer rather than an
+        /// exception, and nothing in the game waits on it. A successful report is remembered
+        /// for the session so the control can say it has been used — see
+        /// <see cref="NameReports"/> for why that record must never reach the save file.
+        /// </para>
+        /// <para>
+        /// The visited card is <b>not</b> evicted from the cache on a report. The name does not
+        /// change for the reporter — a takedown needs more than one of them — so dropping it
+        /// would buy a document read and an identical picture.
+        /// </para>
+        /// </summary>
+        public static async Task<(CloudResult result, NameReportOutcome outcome)> ReportNameAsync(
+            string keeperId, CancellationToken cancellation = default)
+        {
+            if (string.IsNullOrEmpty(keeperId))
+                return (CloudResult.Failed(CloudFailure.Rejected, "no keeper"),
+                        NameReportOutcome.Unavailable);
+
+            if (!IsAvailable)
+                return (CloudResult.Failed(CloudFailure.Offline, "no boards here"),
+                        NameReportOutcome.Unavailable);
+
+            var (result, outcome) = await Backend.ReportKeeperNameAsync(keeperId, cancellation);
+
+            // Remembered for a duplicate as well as for a fresh report: both mean the server
+            // holds this pair, and treating only the first as recorded would leave a device
+            // that lost a reply offering the control for ever.
+            if (result.Ok && outcome != NameReportOutcome.Unavailable
+                && outcome != NameReportOutcome.Throttled)
+            {
+                NameReports.Remember(keeperId);
+            }
+
+            return (result, outcome);
         }
 
         static void Remember(string ownerId, GroveCard card)

@@ -813,6 +813,63 @@ namespace GlimmerGrove.Cloud
         }
 
         /// <summary>
+        /// Reports a keeper's name.
+        ///
+        /// A function rather than a document write, for <c>ClaimNameAsync</c>'s reason and one
+        /// of its own: the record and the count the threshold reads have to move together, and
+        /// a takedown decided by a number the client writes is a takedown anybody can trigger.
+        /// </summary>
+        public async Task<(CloudResult result, Social.NameReportOutcome outcome)> ReportKeeperNameAsync(
+            string keeperId, CancellationToken cancellation = default)
+        {
+            if (string.IsNullOrEmpty(keeperId))
+                return (CloudResult.Failed(CloudFailure.Rejected, "no keeper"),
+                        Social.NameReportOutcome.Unavailable);
+
+            if (!await EnsureReadyAsync())
+                return (CloudResult.Failed(CloudFailure.Offline, "Firebase unavailable"),
+                        Social.NameReportOutcome.Unavailable);
+
+            try
+            {
+                var reply = await CallAsync("reportKeeperName", new Dictionary<string, object>
+                {
+                    { "keeperId", keeperId },
+                });
+
+                return (CloudResult.Success, ReadReport(reply));
+            }
+            catch (Exception e)
+            {
+                return (Classify(e, "report name"), Social.NameReportOutcome.Unavailable);
+            }
+        }
+
+        /// <summary>
+        /// Reads a report reply.
+        ///
+        /// An outcome this build does not recognise is read as
+        /// <see cref="Social.NameReportOutcome.Reported"/> rather than as a failure, which is
+        /// the opposite of <see cref="ReadClaim"/> and deliberate. A claim that is not
+        /// understood must not be treated as settled, because something local depends on it; a
+        /// report has no local consequence at all, and the one thing an older client must not
+        /// do is tell somebody their report failed when the server took it.
+        /// </summary>
+        static Social.NameReportOutcome ReadReport(IDictionary<string, object> reply)
+        {
+            if (reply == null) return Social.NameReportOutcome.Unavailable;
+
+            string outcome = reply.TryGetValue("outcome", out object o) ? o as string : null;
+
+            switch (outcome)
+            {
+                case "duplicate": return Social.NameReportOutcome.Duplicate;
+                case "throttled": return Social.NameReportOutcome.Throttled;
+                default:          return Social.NameReportOutcome.Reported;
+            }
+        }
+
+        /// <summary>
         /// Reads a claim reply.
         ///
         /// An outcome this build does not recognise is read as

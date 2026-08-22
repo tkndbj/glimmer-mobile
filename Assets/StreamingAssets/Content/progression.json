@@ -8,19 +8,19 @@
   "tailXpIncrement": 150,
 
   "rewards": {
-    "xpFirstClear": 40,
-    "xpPerStar": 20,
-    "creditsFirstClear": 30,
-    "creditsPerStar": 15
+    "xpFirstClear": 60,
+    "xpPerStar": 30,
+    "creditsFirstClear": 80,
+    "creditsPerStar": 40
   },
 
   "chapterRewards": [
     {
       "chapterId": "c01_shallows",
-      "xpFirstClear": 25,
-      "xpPerStar": 15,
-      "creditsFirstClear": 20,
-      "creditsPerStar": 10
+      "xpFirstClear": 40,
+      "xpPerStar": 20,
+      "creditsFirstClear": 50,
+      "creditsPerStar": 25
     }
   ],
 
@@ -65,7 +65,7 @@
 
   "streak": {
     "rungs": [
-      { "kind": "credits",     "amount": 150 },
+      { "kind": "credits",     "amount": 500 },
       { "kind": "hearts",      "amount": 1 },
       { "kind": "gems",        "amount": 5 },
       { "kind": "hearts",      "amount": 2 },
@@ -94,12 +94,18 @@
     "clockScale": 1.00
   },
 
+  "prompts": {
+    "chapterBudget": 2,
+    "purchaseBudget": 3,
+    "quietHours": 48
+  },
+
   "ads": {
     "cooldownSeconds": 45,
 
     "placements": [
       { "id": "heart_refill", "kind": "hearts",   "amount": 2,   "dailyCap": 10 },
-      { "id": "coin_bonus",   "kind": "credits",  "amount": 150, "dailyCap": 6 },
+      { "id": "coin_bonus",   "kind": "credits",  "amount": 1000, "dailyCap": 6 },
       { "id": "run_continue", "kind": "run_time", "amount": 30,  "dailyCap": 8 },
       { "id": "win_bonus",    "kind": "credits",  "amount": 200, "dailyCap": 6 },
       { "id": "hint_refill",  "kind": "hints",    "amount": 1,   "dailyCap": 5 }

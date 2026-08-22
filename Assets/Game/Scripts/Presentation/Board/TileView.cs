@@ -669,7 +669,18 @@ namespace GlimmerGrove
             {
                 if (this == null || _critter == null) return;
                 if (_book) _book.enabled = lit;
-                if (!lit && _book) _critter.sprite = Art.Frames("Critters/c" + (_p.C[_i].critter + 1))[0];
+                // Guarded like every other frame read in this file (the duskcap's, twenty
+                // lines up, is the same line): AssetLibrary.Frames answers an *empty array*
+                // and a warning when art is missing, deliberately, so that a failed bundle
+                // draws blank rather than throwing. Indexing it unchecked turned that into
+                // an IndexOutOfRangeException raised out of a tween callback in the middle
+                // of BoardView.Build — a half-drawn, unplayable board instead of a critter
+                // nobody can see. Found by building a board with the art unloaded.
+                if (!lit && _book)
+                {
+                    var sleeping = Art.Frames("Critters/c" + (_p.C[_i].critter + 1));
+                    if (sleeping != null && sleeping.Length > 0) _critter.sprite = sleeping[0];
+                }
 
                 // Swapped rather than cross-faded. The three arcs and the single colour are
                 // two different statements, and a blend between them would read as a fourth.
