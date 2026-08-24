@@ -360,15 +360,42 @@ check(creditsOf(wallet.body)?.grantedBaseline === SEED_CREDITS,
       `a new account is seeded with ${SEED_CREDITS} credits`,
       `got ${creditsOf(wallet.body)?.grantedBaseline}`);
 
-// The save above holds two cleared glades in c01_shallows, whose override pays
-// 20 + 10 per star: three stars is 50, two stars is 40. The server derives this from
-// the ledger itself — nothing in the request said anything about currency.
+// The save above holds two cleared glades in c01_shallows, one at three stars and one at
+// two. The server derives what they are worth from the ledger itself — nothing in the
+// request said anything about currency.
 //
-// Each glade then carries its own golden multiplier, so the answer is one of a small set
-// rather than a single number. Every member of that set is still proof of the thing this
-// case is really about: the figure came from the ledger and the published bands, not from
-// anything the client said.
-const BASE_CREDITS = [50, 40];
+// The per-star figures are read from the published table rather than written here. They
+// were hard-coded as 20 + 10 per star, the chapter was later retuned to 50 + 25, and this
+// case then failed with a number that was entirely correct — which is the same trap the
+// golden bands above already document, one field over: a money suite that goes red for a
+// tuning change is a money suite people learn to ignore. Deriving them means a retune
+// moves the expectation with it and only a real disagreement fails.
+const chapterRewards = await (async () => {
+  const body = await publishedConfig.clone().json().catch(() => null);
+
+  // Published by buildChapterRules as a map keyed by chapter id, not as the array the
+  // content file authors. resolveRule has already folded the defaults in, so an override
+  // that names only some fields still arrives complete.
+  const rule = body?.fields?.chapterRewards?.mapValue?.fields?.c01_shallows?.mapValue?.fields;
+
+  // No override published for this chapter: the base table governs.
+  const source = rule ?? body?.fields?.rewards?.mapValue?.fields;
+
+  return {
+    firstClear: Number(source?.creditsFirstClear?.integerValue ?? NaN),
+    perStar: Number(source?.creditsPerStar?.integerValue ?? NaN),
+  };
+})();
+
+check(Number.isFinite(chapterRewards.firstClear) && Number.isFinite(chapterRewards.perStar),
+      "the published table names what a c01_shallows clear pays",
+      `got ${JSON.stringify(chapterRewards)}`);
+
+// Three stars and two stars, which is what the save above holds.
+const BASE_CREDITS = [
+  chapterRewards.firstClear + chapterRewards.perStar * 3,
+  chapterRewards.firstClear + chapterRewards.perStar * 2,
+];
 const percents = await goldenBands;
 
 const achievable = new Set();
