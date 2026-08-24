@@ -910,6 +910,23 @@ Builds are gated: `ContentBuildGate` fails the build on any content error.
   seventh script for the reason the importer hook is not a menu item.
 - **Unity only re-resolves packages and reimports on window focus.** If a change seems
   not to apply, the Editor probably has not been clicked.
+- **An Editor launched from the Hub gets a minimal `PATH`, and one failed post-processor
+  abandons the rest.** Measured on macOS: `/usr/bin:/bin:/usr/sbin:/sbin`. Homebrew on Apple
+  Silicon installs to `/opt/homebrew/bin`, and EDM4U's iOS resolver searches the process
+  `PATH` plus `/usr/local/bin` — the *Intel* prefix — so it cannot find `pod` on any Apple
+  Silicon Mac even though CocoaPods works perfectly in a terminal. What that costs is not one
+  missing step: EDM4U runs `pod install` from a `[PostProcessBuild]` at order 4, **Unity
+  abandons every remaining callback when one throws**, and so it also took down
+  `IosPrivacyPlist` (order 100) — the only writer of `NSUserTrackingUsageDescription` and the
+  only thing linking `AppTrackingTransparency.framework`. The observable result is an Xcode
+  project that exists and looks complete, with no `.xcworkspace`, no tracking prompt, and a
+  link error twenty minutes into an Xcode build naming Apple's classes rather than CocoaPods.
+  `MacToolPath` fixes the cause in-process (repo-owned, so a fresh clone and CI get the same
+  answer) and `IosWorkspaceGuard` proves it happened, because a Podfile with no workspace
+  beside it is invisible everywhere else.
+- **A post-processor ordered after another one is not guaranteed to run.** The corollary of
+  the above, and general: ordering expresses *dependency*, never *safety*. Anything that must
+  happen has to be robust to the step before it throwing — or be ordered before it.
 
 ## Current state
 
@@ -1057,9 +1074,39 @@ which lives in the **app** package.
 player is signed in silently on first launch and the game is fully playable having never
 seen `AccountOverlay`. Linking is offered once a chapter is finished, at most twice ever,
 because that is when there is something worth protecting. Firebase drives the OAuth flow
-itself via `FederatedOAuthProvider`, so **neither Apple's nor Google's Unity plugin is a
-dependency** — one code path, both providers, both platforms. Moving to native sign-in
-sheets later is a change to `LinkCredential` only.
+itself via `FederatedOAuthProvider` for **Google on both platforms and Apple on Android**,
+so neither provider's Unity plugin is a dependency there.
+
+**Apple on iOS is the one exception, and it is not a choice.** This section used to read
+"one code path, both providers, both platforms", and that premise is false in the one place
+it cannot be worked around: `FirebaseAuth` on iOS calls `fatalError` the moment `apple.com`
+reaches the generic IDP path — *"Sign in with Apple is not supported via generic IDP; You
+must use the Apple SDK for Sign in with Apple."* A Swift `fatalError` is not an exception,
+so no managed `catch` runs and the process is killed the instant the player taps the button.
+Nothing offline can see it: the refusal lives inside Apple's framework and fires only on a
+device, so it compiled, validated and shipped looking correct because Android — where the
+generic path *is* allowed for Apple — worked. So iOS gets `Assets/Plugins/iOS/GlimmerAppleSignIn.mm`
+and `AppleSignIn.cs`, and nothing else moved.
+
+Two things about that are worth not rediscovering. **The credential path was already
+right** — `FirebaseCloudSaveBackend` has always branched on `LinkCredential.HasToken` and
+called `LinkWithCredentialAsync` when one is present; nothing on iOS ever produced a token,
+so Apple fell to the generic branch. And **`LinkCredential.AccessToken` is not unused by
+Apple**, however much it is named after Google's. Firebase's fourth `GetCredential`
+parameter is called `accessToken`, so that field was documented as Google-only and
+`ToCredential` passed `null` — but for `apple.com` what belongs there is Apple's
+`authorizationCode`, and a credential without one is refused with **the same sentence a
+malformed token or a mismatched nonce gets**: `"Invalid OAuth response from apple.com"`.
+Three different repairs, one error string, which is why `AppleSignIn.Describe` logs the
+decoded JWT's `aud`, `iss`, nonce agreement and code length — the only way to tell them
+apart is to read what Apple actually signed.
+
+The entitlement is written by `IosAppleSignInBuild` rather than by Xcode. Xcode writes one
+when a team is first selected, which is why the first build appears to have it already —
+and Unity rewrites the whole project on every build, so it vanishes on the next one and
+takes Apple sign-in with it. That is a step somebody has to remember after every build,
+which this file has already twice recorded as a step nobody remembers. Note it is a
+**paid-account** capability: a free Personal Team cannot sign it.
 
 The one destructive prompt in the game lives here: a provider already attached to another
 grove cannot be merged, because currency was granted and spent separately against each
