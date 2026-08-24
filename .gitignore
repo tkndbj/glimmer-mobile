@@ -70,6 +70,13 @@ crashlytics-build.properties
 # Restore with: pwsh GooglePackages/fetch.ps1
 /GooglePackages/*.tgz
 
+# ...except the ads plugin, which is committed deliberately. It is 2 MB rather than 75,
+# and it is the one package not served by dl.google.com - OpenUPM is the only source, and
+# it answers 404 from some networks while serving the same URL fine from others, which
+# left a fresh Mac clone unable to open the project at all. A build input nobody can
+# reliably download is not a build input.
+!/GooglePackages/com.google.ads.mobile-*.tgz
+
 # Firebase
 firebase-debug.log
 firebase-debug.*.log
