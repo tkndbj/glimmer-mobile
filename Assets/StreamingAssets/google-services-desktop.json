@@ -14,6 +14,14 @@
       },
       "oauth_client": [
         {
+          "client_id": "310440655052-9jdeom3dn8mc6jrgotlo2ju2bsbofl9p.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.tekoworld.glimmergroove",
+            "certificate_hash": "834a18e7691fbca84e58fec96ea20d25cab786a7"
+          }
+        },
+        {
           "client_id": "310440655052-g0m0hcq5h6nftthagjp5j7jfcdcb9v3u.apps.googleusercontent.com",
           "client_type": 1,
           "android_info": {
