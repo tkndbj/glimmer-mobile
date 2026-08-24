@@ -149,11 +149,40 @@ namespace GlimmerGrove
         /// The store's own state changed: it connected, prices arrived, or a purchase moved
         /// into or out of the queue waiting to be credited.
         ///
-        /// A repaint and never a reload, because none of that changes which products exist —
-        /// and a rebuild here would replay every card's entrance at the moment a player is
-        /// watching a purchase land.
+        /// <para>
+        /// A repaint in every ordinary case, because none of that changes which products exist
+        /// and a rebuild would replay every card's entrance at the moment a player is watching
+        /// a purchase land. The exception is the store answering for the first time: the shelf
+        /// now lists only what the store carries, so the set genuinely grows when a connection
+        /// completes, and a repaint alone would leave those cards missing until the player
+        /// changed tabs. <see cref="ShelfCount"/> is compared rather than a connection flag
+        /// because a storefront can also drop a product it previously offered.
+        /// </para>
         /// </summary>
-        void OnStoreChanged() => Repaint();
+        void OnStoreChanged()
+        {
+            if (!OnSupplies && ShelfCount() != _products.Count) Reload();
+            else Repaint();
+        }
+
+        /// <summary>
+        /// How many products the store would show on this shelf right now.
+        ///
+        /// Counted rather than rebuilt, so the common case — a price arriving, a purchase
+        /// settling — costs a walk of the catalog and no allocation, and never disturbs the
+        /// cells a player is looking at.
+        /// </summary>
+        int ShelfCount()
+        {
+            int count = 0;
+            foreach (var product in StoreRules.Catalog.Products)
+            {
+                if (product.Shelf != _shelf) continue;
+                if (StoreService.OfferFor(product).State == StoreOfferState.Missing) continue;
+                count++;
+            }
+            return count;
+        }
 
         // ---------------------------------------------------------------- header
         void BuildHeader()
@@ -449,8 +478,20 @@ namespace GlimmerGrove
                 // Cheapest first. Deliberately not the file's order: the tier a card's
                 // picture is drawn from is derived from the price, so an authored order that
                 // disagreed would put a gold chest above a pouch on the same shelf.
+                // A product the store has never heard of is left out of the list entirely
+                // rather than added and then hidden by its own cell. Hiding it kept the slot:
+                // the grid was still sized to it, so the shelf drew a hole, and the hole still
+                // answered taps — which is how an unreleased product came to look like a
+                // broken screen. Products not yet created in a console, and products not sold
+                // in this storefront, both land here and neither is anything a player can act
+                // on. The cell keeps its own Missing guard as a backstop for the race between
+                // this list being built and the store answering.
                 foreach (var product in catalog.Products)
-                    if (product.Shelf == _shelf) _products.Add(product);
+                {
+                    if (product.Shelf != _shelf) continue;
+                    if (StoreService.OfferFor(product).State == StoreOfferState.Missing) continue;
+                    _products.Add(product);
+                }
 
                 _products.Sort((a, b) => a.Tier.CompareTo(b.Tier));
             }
