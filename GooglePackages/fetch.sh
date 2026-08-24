@@ -21,13 +21,17 @@
 set -uo pipefail
 
 FIREBASE='13.15.0'
-EDM='1.2.186'      # External Dependency Manager, versioned separately
+EDM='1.2.187'      # External Dependency Manager, versioned separately
+ADS='11.4.0'       # Google Mobile Ads, for the UMP consent SDK inside it
+
+GOOGLE='https://dl.google.com/games/registry/unity'
+OPENUPM='https://package.openupm.com'
 
 here="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 failed=0
 
 fetch() {
-    local id="$1" version="$2"
+    local id="$1" version="$2" registry="$3"
     local file="${id}-${version}.tgz"
     local path="${here}/${file}"
 
@@ -56,11 +60,15 @@ fetch() {
     fi
 }
 
-fetch 'com.google.external-dependency-manager' "$EDM"
-fetch 'com.google.firebase.app'                "$FIREBASE"
-fetch 'com.google.firebase.auth'               "$FIREBASE"
-fetch 'com.google.firebase.firestore'          "$FIREBASE"
-fetch 'com.google.firebase.functions'          "$FIREBASE"
+# EDM is at 1.2.187 because the ads plugin asks for it. Safe for Firebase, which asks for
+# 1.2.186 - a UPM dependency version is a minimum, not a pin, and the resolver takes the
+# highest anybody asked for.
+fetch 'com.google.external-dependency-manager' "$EDM"      "$GOOGLE"
+fetch 'com.google.firebase.app'                "$FIREBASE" "$GOOGLE"
+fetch 'com.google.firebase.auth'               "$FIREBASE" "$GOOGLE"
+fetch 'com.google.firebase.firestore'          "$FIREBASE" "$GOOGLE"
+fetch 'com.google.firebase.functions'          "$FIREBASE" "$GOOGLE"
+fetch 'com.google.ads.mobile'                  "$ADS"      "$OPENUPM"
 
 if [ "$failed" -gt 0 ]; then
     echo
