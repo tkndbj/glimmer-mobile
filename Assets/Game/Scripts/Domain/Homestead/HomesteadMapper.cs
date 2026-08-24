@@ -358,9 +358,23 @@ namespace GlimmerGrove.Homestead
 
             string art = string.IsNullOrEmpty(dto.art) ? DefaultArt(dto.id) : dto.art;
 
+            // A bundle is clamped rather than reported unless it is nonsense: the build gate
+            // has already refused a catalog whose price a bundle does not divide (see
+            // ContentValidation.ValidateGrove), so anything arriving here that is out of range
+            // came from a CDN rather than from an author, and a shop that sells a fence one at
+            // a time is a worse outcome than a shop that does not open. Zero means one, for
+            // `scale`'s reason.
+            int bundle = dto.bundle;
+            if (bundle < 0 || bundle > GroveStock.MaxCopies)
+            {
+                problems.Add($"grove piece '{dto.id}' is sold in bundles of {bundle}, which is " +
+                             "outside what a purchase may grant; it is sold singly instead");
+                bundle = 1;
+            }
+
             piece = new HomesteadPiece(dto.id, art, dto.animated, kind, cost,
                                        requiresLevel, requiresChapter, dto.scale, dto.lift,
-                                       ReadSlotKind(dto.slot, dto.id, problems), tier);
+                                       ReadSlotKind(dto.slot, dto.id, problems), tier, bundle: bundle);
             return true;
         }
 

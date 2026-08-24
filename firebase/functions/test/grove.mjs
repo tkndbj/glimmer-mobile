@@ -69,9 +69,11 @@ function equal(name, actual, expected) {
 function groveConfig() {
 
   const pieces = {};
+  const bundles = {};
   const dwellings = {};
   for (const piece of catalog.pieces) {
     if ((piece.cost ?? 0) > 0) pieces[piece.id] = piece.cost;
+    if ((piece.cost ?? 0) > 0 && (piece.bundle ?? 1) > 1) bundles[piece.id] = piece.bundle;
     if (piece.kind === "dwelling") dwellings[piece.id] = piece.tier ?? 0;
   }
 
@@ -87,7 +89,7 @@ function groveConfig() {
     }
   }
 
-  return { version: 1, pieces, regions, companions, dwellings, stars: catalog.score.stars };
+  return { version: 1, pieces, bundles, regions, companions, dwellings, stars: catalog.score.stars };
 }
 
 // ------------------------------------------------------------------- grove worth
@@ -96,11 +98,21 @@ console.log("\ngrove worth");
   const config = groveConfig();
 
   for (const c of vectors.worthCases) {
-    const save = {
-      homesteadOwned: c.pieces,
-      groveLandOwned: c.land,
-      companionsOwned: c.companions,
-    };
+    // A case carrying `stock` is a v20 save; one carrying only `pieces` is a v19 save,
+    // and it stays that way on purpose — it is the coverage for the fallback a device
+    // that has not updated still goes through. Both must reach the same worth for the
+    // same holdings, which is what the "reads as one bundle of each" case pins.
+    const save = c.stock
+      ? {
+          homesteadStock: c.stock,
+          groveLandOwned: c.land,
+          companionsOwned: c.companions,
+        }
+      : {
+          homesteadOwned: c.pieces,
+          groveLandOwned: c.land,
+          companionsOwned: c.companions,
+        };
 
     const worth = groveWorth(save, config, c.keeperLevel, c.affordable);
 
@@ -120,6 +132,47 @@ console.log("\ngrove worth");
     config, 1, 100000
   );
   equal("an unknown id is worth nothing", unknown.score, 0);
+
+  // Every axis a client controls on the stock array. None of these can be reached by the
+  // shipped writer; all of them can be reached by a modified one, and the failure this
+  // guards against is arithmetic that overflows rather than a grove that scores high —
+  // the affordability ceiling already handles scoring high.
+  const junkStock = groveWorth(
+    {
+      homesteadStock: [
+        { id: "fence", copies: 1e308 },       // beyond the copy ceiling
+        { id: "fence", copies: 5 },           // a duplicate row, which the file forbids
+        { id: "bench", copies: -4 },          // negative
+        { id: "bench", copies: "12" },        // not a number
+        { id: "", copies: 3 },                // no id
+        { id: "x".repeat(200), copies: 3 },   // an id no catalog could hold
+        null,
+        "bench",
+      ],
+      groveLandOwned: [],
+      companionsOwned: [],
+    },
+    config, 1, 100000
+  );
+  // fence resolves to the copy ceiling (the larger of the two rows, clamped), which is
+  // 9,999 x 90 = 899,910 — and every other row in that array is dropped.
+  equal("a malformed stock row is dropped rather than trusted", junkStock.bought, 899910);
+  equal("and the copy ceiling is what stops it overflowing", junkStock.score, 100000);
+
+  // An empty stock array is not "owns nothing"; it falls through to the v19 field, because
+  // that is what GroveStock.In does on the client and the two must agree. Reachable from an
+  // ordinary partial update, and it scores a real grove at zero if it is got wrong.
+  const emptyStock = groveWorth(
+    { homesteadStock: [], homesteadOwned: ["bench"], groveLandOwned: [], companionsOwned: [] },
+    config, 1, 100000
+  );
+  equal("an empty stock array falls back to the v19 field", emptyStock.bought, 500);
+
+  const legacyBundle = groveWorth(
+    { homesteadOwned: ["fence"], groveLandOwned: [], companionsOwned: [] },
+    config, 1, 100000
+  );
+  equal("a v19 fence is worth one whole bundle", legacyBundle.bought, 900);
 
   // Malformed inputs are the shape a forged save actually arrives in.
   const junk = groveWorth(

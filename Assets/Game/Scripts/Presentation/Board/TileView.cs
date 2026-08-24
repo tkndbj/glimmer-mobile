@@ -32,6 +32,19 @@ namespace GlimmerGrove
         /// <summary>The dark backing under a crossing's over-strand. Empty on every other tile.</summary>
         readonly List<Image> _armShade = new List<Image>(2);
 
+        /// <summary>
+        /// Each arm's resting base colour, in the order the arms were built.
+        ///
+        /// One per arm rather than one per tile because a briar's thorned arms rest darker
+        /// than its open ones — and <see cref="RestoreFragility"/> puts the base colours back
+        /// after a restart, which without this would quietly repaint a closed way as an open
+        /// one and leave the tile drawing a rule it does not follow.
+        /// </summary>
+        readonly List<Color> _armRest = new List<Color>(4);
+
+        /// <summary>The thorns across a briar's two closed ways. Empty on every other tile.</summary>
+        readonly List<Image> _thorns = new List<Image>(2);
+
         Image _hubBase, _hubLit, _hubGlow;
 
         Image _crystal, _crystalGlow;
@@ -89,11 +102,21 @@ namespace GlimmerGrove
             // the rule stated in the vocabulary the player already reads.
             float hub = thick * 1.72f;
             bool crossing = cell.kind == Kind.Crossing;
+            bool briar = cell.kind == Kind.Briar;
 
             foreach (int d in ArmOrder(cell))
             {
                 float z = -90f * d;
-                int strand = crossing && (cell.cross & Puzzle.Bits[d]) == 0 ? 1 : 0;
+
+                // Strand 1 means two different things on the two four-armed tiles, and one
+                // line serves both because the painting only ever asks it one question: what
+                // energy does this arm carry? On a crossing it is the second flow. On a briar
+                // there is no second flow, so a closed way is put on a strand the tile does
+                // not have — and Puzzle.EnergyOn answers 0 for a strand that does not exist,
+                // which is exactly the right answer for a way with thorns across it. Nothing
+                // below needs to know which of the two it is drawing.
+                int shutBy = crossing ? cell.cross : briar ? cell.gate : 0;
+                int strand = shutBy != 0 && (shutBy & Puzzle.Bits[d]) == 0 ? 1 : 0;
 
                 // The strand that crosses on top is drawn a little thicker and rimmed in
                 // shadow along its whole length. A dark patch at the junction alone is not
@@ -107,13 +130,24 @@ namespace GlimmerGrove
 
                 float armThick = crossing && strand == 0 ? thick * 1.1f : thick;
 
+                // A thorned way rests darker than an open one, and the thorns are drawn on it
+                // besides. Two statements rather than one because either alone is ambiguous:
+                // an unlit arm is already dark on every tile on the board, and a mark on a
+                // fully bright arm reads as decoration hung on a working conduit.
+                var rest = briar && strand == 1
+                    ? Color.Lerp(_theme.ArmBase, Pal.Slate, .55f)
+                    : _theme.ArmBase;
+
                 var glow = MakeArm("ArmGlow", Art.SoftCapsule(40, 120), glowThick, reach * 1.02f, z,
                                    Pal.A(Pal.Dormant, 0f));
-                var base_ = MakeArm("ArmBase", Art.Capsule(24, 96), armThick, reach, z, _theme.ArmBase);
+                var base_ = MakeArm("ArmBase", Art.Capsule(24, 96), armThick, reach, z, rest);
                 var lit = MakeArm("ArmLit", Art.Capsule(24, 96), armThick * .74f, reach, z,
                                   Pal.A(Pal.Dormant, 0f));
 
                 _armGlow.Add(glow); _armBase.Add(base_); _armLit.Add(lit); _armStrand.Add(strand);
+                _armRest.Add(rest);
+
+                if (briar && strand == 1) BuildThorn(d, thick);
             }
 
             if (!crossing)
@@ -155,19 +189,55 @@ namespace GlimmerGrove
         /// </summary>
         static IEnumerable<int> ArmOrder(Cell cell)
         {
-            if (cell.kind == Kind.Crossing)
+            // The two four-armed tiles both name one pair and draw it last, for opposite
+            // reasons that happen to want the same order: a crossing's named strand is the one
+            // passing over, and a briar's named pair is the one still open, which has to draw
+            // across the thorns rather than under them.
+            int last = cell.kind == Kind.Crossing ? cell.cross
+                     : cell.kind == Kind.Briar ? cell.gate
+                     : 0;
+
+            if (last != 0)
             {
                 for (int d = 0; d < 4; d++)
-                    if ((cell.solved & Puzzle.Bits[d]) != 0 && (cell.cross & Puzzle.Bits[d]) == 0) yield return d;
+                    if ((cell.solved & Puzzle.Bits[d]) != 0 && (last & Puzzle.Bits[d]) == 0) yield return d;
 
                 for (int d = 0; d < 4; d++)
-                    if ((cell.cross & Puzzle.Bits[d]) != 0) yield return d;
+                    if ((last & Puzzle.Bits[d]) != 0) yield return d;
 
                 yield break;
             }
 
             for (int d = 0; d < 4; d++)
                 if ((cell.solved & Puzzle.Bits[d]) != 0) yield return d;
+        }
+
+        /// <summary>
+        /// The thorns laid across one of a briar's closed ways.
+        ///
+        /// <para>
+        /// On the rotor rather than the fixture, which is the whole drawing: a tap turns the
+        /// tile and the thorns visibly sweep off the two ways they were closing and onto the
+        /// other two. Nothing else on this board moves an obstacle, so the rule shows itself
+        /// on the first tile the player tries — which is what the lesson can only describe.
+        /// </para>
+        /// <para>
+        /// Set out along the arm rather than at the hub. A mark at the centre would sit where
+        /// four ways meet and say nothing about which of them it closed; out on the arm it is
+        /// unambiguously across <em>that</em> way, and it leaves the hub free to light, which
+        /// it does, because a briar is a junction on the pair that is open.
+        /// </para>
+        /// </summary>
+        void BuildThorn(int d, float thick)
+        {
+            var dir = Quaternion.Euler(0, 0, -90f * d) * Vector3.up;
+
+            var img = UIKit.Img($"Thorn{d}", _rotor, Art.Thorn(64), Pal.A(Pal.Thorn, .95f),
+                                Vector2.one * thick * 1.85f, new Vector2(.5f, .5f),
+                                new Vector2(dir.x, dir.y) * _size * .33f);
+            img.transform.localRotation = Quaternion.Euler(0, 0, -90f * d);
+            img.raycastTarget = false;
+            _thorns.Add(img);
         }
 
         /// <summary>The overpass shadow: dark enough to read as depth, not as a second colour.</summary>
@@ -412,6 +482,7 @@ namespace GlimmerGrove
             if (_wearCount) { Tween.Tint(_wearCount, Pal.A(dust, 0f), .2f); }
 
             foreach (var shade in _armShade) Tween.Tint(shade, Pal.A(dust, 0f), .3f, Ease.InQuad);
+            foreach (var thorn in _thorns) Tween.Tint(thorn, Pal.A(dust, 0f), .3f, Ease.InQuad);
             foreach (var arm in _armBase) Tween.Tint(arm, Pal.A(dust, 0f), .34f, Ease.InQuad);
             foreach (var arm in _armLit) Tween.Tint(arm, Pal.A(dust, 0f), .22f, Ease.InQuad);
             foreach (var arm in _armGlow) Tween.Tint(arm, Pal.A(dust, 0f), .22f, Ease.InQuad);
@@ -441,7 +512,8 @@ namespace GlimmerGrove
             if (_slotEdge) _slotEdge.color = new Color(1, 1, 1, .075f);
 
             foreach (var shade in _armShade) shade.color = ShadeTint;
-            foreach (var arm in _armBase) arm.color = _theme.ArmBase;
+            foreach (var thorn in _thorns) thorn.color = Pal.A(Pal.Thorn, .95f);
+            for (int k = 0; k < _armBase.Count; k++) _armBase[k].color = _armRest[k];
             if (_hubBase) _hubBase.color = _theme.Hub;
         }
 

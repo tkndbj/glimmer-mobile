@@ -203,11 +203,14 @@ looking like ten crops of two paintings.
 ```
 head + arms [+ #colour] + /startRotation [+ !] [+ ~turns] [+ &rune]
 crossings: = armsA + armsB + /startRotation [+ !] [+ ~turns] [+ &rune]
+briars:    % open   + shut   + /startRotation [+ !] [+ ~turns] [+ &rune]
 
-head   -  conduit    =  crossing    *  heart-crystal
+head   -  conduit    =  crossing    %  briar    *  heart-crystal
        @  sleeping critter    x  duskcap    .  empty
 arms   any of N E S W, written in the SOLVED orientation
-A+B    on a crossing only: the arms of one strand, then the arms of the other
+A+B    on a crossing: the arms of one strand, then the arms of the other, which are
+       interchangeable. On a briar: the arms that are OPEN, then the arms the thorns
+       have closed — and there the order is the tile.
 colour R G B, Y=R+G, M=R+B, C=G+B, W=R+G+B, A=any
 /0..3  quarter turns clockwise the tile starts away from its solution
 !      rooted: the player cannot turn this tile
@@ -292,6 +295,51 @@ light rather than only around it.** In the solution every arm mates, so a lit ce
 neighbours are lit — which used to force the dark to detour. Across a crossing it does
 not, and the misrotation that joins the two is a real and recoverable trap.
 
+**Briars (`%`)** are conduits with two of their four ways thorned shut, and one tap
+swaps which. Written `%NS+EW` or `%NE+SW`: four arms in two pairs of two, the open pair
+first. They are the crossing's opposite number — a bridge carries both ways through and a
+bramble carries one — and they cost the light model even less: a crossing splits a cell
+into two strands, where a briar leaves the graph alone and changes only *which of a tile's
+arms conduct* (`Puzzle.Live`). Five things follow.
+
+- **All four arms are drawn and all four must mate**, thorned or not. That is the whole
+  point rather than an implementation detail: every one of a briar's neighbours mates it at
+  every angle, so **nothing about the pipe-fitting can settle a briar** and only colour or
+  the dark can. It is the cheapest honest decision a board can carry — cheaper than a
+  twisted crossing, which is worth two states where a twisted briar is worth four — and it
+  is why a briar may never stand on the border. `author.Board.briar` joins the four edges
+  itself, because the arm an author forgets is always the same one: a thorned way carries
+  no light, so nothing about the solution notices it missing.
+- **The order of the pairs matters**, unlike a crossing's. A straight briar (`%NS+EW`) has
+  two states and is worth exactly one tap; a twisted one (`%NE+SW`) has four and can owe
+  three. No briar is ever inert.
+- **A briar can never merge two networks and then keep them merged.** The pair it opens is
+  merged and the pair it shuts is cut, always both at once, which is what makes the three
+  shapes below the whole of what a briar can be worth.
+- **A briar whose thorns close nothing off** — every way it has leading back into one
+  network in the authored solution — is a tile the player cannot place and has no reason to
+  place either way, and the validator says so. A warning rather than an error: a glade may
+  want a bramble that is scenery on the board that teaches what a bramble is. Note the
+  question is about what its *ways touch*, never about what reaches it: an unlit briar is
+  not evidence of anything, and a briar standing in an island of dark with its thorns
+  facing the grove is one of the best tiles this mechanic has.
+- **It takes no colour and it keeps its hub**, because the pair it holds open really is
+  joined. What tells it from a crossroads is the thorns, drawn across the closed ways and
+  swept round to the other pair by every tap.
+
+Three shapes are what a briar is actually *for*, and it is worth knowing them before
+authoring one:
+
+1. **It cuts its own way.** Whatever the open pair was feeding goes dark. The plainest
+   version, and the right one for the glade that introduces it.
+2. **It joins what its thorns were holding apart.** Thorns standing between a red network
+   and a blue one blend both the moment they move.
+3. **It wakes the dark.** If the open pair is part of a *loop*, shutting it costs nothing —
+   the light goes round — so no critter warns the player, and the only thing that changed
+   is the shadow the other pair just let in. That is this file's rule about fords, and the
+   briar is what makes it easy to author rather than a happy accident: put one shut arm on
+   the live network and the other on the island of dark, and turning it always wakes.
+
 **Duskcaps (`x`)** are creatures the light must never reach. Any light at all
 wakes one, and a glade with a woken duskcap is not finished however many critters
 are awake — it is one extra term in the win condition and nothing else. They take
@@ -357,6 +405,95 @@ badge and the published move deciles all keep their meaning. And the build gate
 warns when a glade could not survive being pushed to the 0.6 floor, because that
 retune never passes back through the validator.
 
+## Hollow levels
+
+A chapter chooses how it is played. `"mode": "hollow"` on a manifest chapter entry (absent means
+`"glade"`) says its levels are hollows rather than conduit boards. A hollow has **no `rows`** at
+the level's top level — it carries a `hollow` block instead, and a level must have exactly one of
+the two:
+
+```json
+{
+  "id": "h01_first_ember",
+  "mapX": 0.30,
+  "mapY": 0.05,
+  "hollow": {
+    "rows": [
+      "R>G G>R R>G A>G",
+      "G>R R>G G>R R>R",
+      "R>G G>G A>R G>R",
+      "G>R R>G G>R R>G"
+    ],
+    "sparks": "RR"
+  }
+}
+```
+
+**The rule in one paragraph.** Every critter wants a colour (its *ring*) and gives a colour (the
+*pip* on its shoulder). Spend a spark on a sleeping critter and that light lands on it; when the
+light on a critter contains what it wants, it wakes and hands its own colour to the four critters
+beside it — which may wake them, and so on. Light accumulates and never decays. You win when
+every critter is awake; you lose when the sparks run out and one is not.
+
+**The vocabulary**, one space-separated token per cell:
+
+| token | means |
+|-------|-------|
+| `.` | nothing stands here |
+| `R>G` | a sleeping critter that needs red and gives green |
+| `A>B` | needs *any* light at all, gives blue |
+| `Y>R` | needs yellow — red **and** green have to reach it — and gives red |
+| `*G` | a heart: awake before the run starts, giving green from the first frame |
+| `x` | a duskcap (see below — supported, and not usable yet) |
+
+Colours are the board's own letters: `R G B` and the mixes `Y M C W`, plus `A` for "anything".
+A token may end in `:n` to choose which critter flipbook draws it; left off, one is picked from
+the cell's coordinates, which is varied, stable and nothing an author has to think about.
+
+**`sparks` is the whole difficulty.** It is the queue, in the order it must be spent — `"RGB"` is
+red then green then blue — and it is also the fail state. Nothing else about a hollow is authored:
+
+- **Never author a par.** Par is the fewest sparks that finish the board and is found by search
+  (`HollowSolver`), because it *is* the star ladder here — three stars is finishing in exactly
+  par — and a typed one that drifts by a single spark either hands three stars to a careless run
+  for ever or makes them unreachable. `Validate Content` prints the par it found, the slack the
+  queue leaves over it, and how many positions the proof took.
+- **Give exactly one spare spark.** Par sparks is the three-star line; one more is worth two
+  stars. Past two spare, most wrong answers still win and the board stops having a shape — the
+  validator warns.
+- **The queue is ordered, and that is the puzzle.** Light never decays, so *which* cells are
+  sparked could not otherwise matter in what order. An ordered queue makes the decision an
+  assignment: this red has to go somewhere now, and the green behind it can only reach what the
+  red left asleep.
+
+### What makes a hollow hard
+
+`wins` — the number of distinct winning states at par — is the number that matters, and
+`Tools/hollow/generate.py` searches for boards against it. Par is a weak knob on a connected
+field: light spreads far, so most boards are one tap and a demanding one is two, and pushing
+needs harder to raise par tips straight over into unsolvable (at a blend rate of .65 on a 6x6,
+six hundred candidates in a row could not be finished at all). The knobs that work are **size**,
+**how many needs are blends**, and above all **how few openings win**. An early hollow has dozens
+of taps that work; a late one has two.
+
+Boards are *searched for* rather than typed. `Tools/hollow/` holds a mirror of the rules in
+Python, a generator, and `build_chapter.py`, which writes the chapter body and prints the ladder
+as a table. The mirror is a second copy of the rules and is therefore never authoritative — the
+shipping C# solver is what `Validate Content` runs, and any disagreement is a bug in the mirror.
+
+### Duskcaps do not work yet, and the reason is worth knowing
+
+`x` parses, the model implements it, and `HollowSolver.DarkRejects` counts what it refuses — and
+on every board it is zero, so no chapter should ship one. Every critter has to wake to finish a
+hollow, and a waking critter gives light to all four of its neighbours, so a duskcap standing
+beside anything alive is ruined *by the board* rather than by the player, and one standing beside
+only empty cells can never be reached. There is no third case: "solvable" and "the dark refuses
+something" are mutually exclusive. That is invariant 5d's question asked of a second mode, and it
+is the same failure the first thirty glades had — a mechanic that rejects no arrangement is
+decoration. Making it real needs a hollow where not every critter has to wake, or a critter whose
+gift depends on the light that woke it rather than on what the author typed.
+
+## What makes a glade hard
 ## What makes a glade hard
 
 `Tools/verify/difficulty.py` answers this in numbers rather than in opinions, and it is
@@ -395,26 +532,30 @@ their brittle stone, taproots and duskcaps rejected nothing and could all have b
 deleted without changing a single solution. The player fits pipes, the lights come on, and
 the duskcap they never thought about was never reachable.
 
-**A twisted crossing is the cheapest honest decision a board can carry**, and everything
-else rides on it. It wears all four arms at every angle, so nothing about the arms can
-settle it — only colour or the dark can. Three of them is eight tidy arrangements with one
-winner. That is where the rest of the vocabulary gets its teeth:
+**A four-armed tile is the cheapest honest decision a board can carry**, and everything
+else rides on it. A twisted crossing or a briar wears all four arms at every angle, so
+nothing about the arms can settle it — only colour or the dark can. Three of them is eight
+tidy arrangements with one winner. A **briar** is the stronger of the two and usually the
+one to reach for: a twisted crossing has two states where a straight briar has two and a
+twisted one has four, and a briar can be aimed at the dark as well as at colour. That is
+where the rest of the vocabulary gets its teeth:
 
 - **Brittle stone belongs on a tile the player cannot simply try**, which in practice means
-  a crossing. `~2` on a conduit owed one turn is exactly one wrong guess; `~1` is none, and
-  a crumble ends the run, so save it for a finale. Brittle on a tile the arms already force
-  asks nothing of anybody.
+  a crossing or a briar. `~2` on a conduit owed one turn is exactly one wrong guess; `~1` is
+  none, and a crumble ends the run, so save it for a finale. Brittle on a tile the arms
+  already force asks nothing of anybody.
 - **A taproot's members should all be tiles the arms cannot settle**, for the same reason -
-  bind two crossings in opposite corners and one tap answers both. Bind tiles the arms
-  already force and the root is a hint, not a decision. The reading prints what the binding
-  removes.
+  bind two briars in opposite corners and one tap answers both. Bind tiles the arms already
+  force and the root is a hint, not a decision. The reading prints what the binding removes.
 - **A duskcap's ford must sit on a *cycle* of the live network.** This is the one that is
   easy to get wrong and impossible to see afterwards. Turning that ford has to join the
   shadow to the grove *while every critter stays lit* — one arrangement that looks finished
   and will not settle. If the wrong turn also puts a critter out, the critter tells the
   player and the shadow taught them nothing; `dark` in the reading counts exactly the
   arrangements the duskcaps alone reject, and it was **zero on every duskcap board that had
-  ever shipped**.
+  ever shipped**. A briar makes this straightforward: stand one on a loop with one thorned
+  arm on the live network and the other on the island of dark. The Nightbriar's five
+  duskcap glades score `dark` 1 to 3 that way.
 
 **`hazards` is the metric this replaces, and it is worth knowing why it was wrong**, because
 a whole chapter was authored to it. It counts places where *some* rotation would mate two
@@ -552,6 +693,7 @@ bought. It lives in its own file because it is a **body**, not index knowledge:
       "art": "Homestead/fence_low",
       "kind": "decor",
       "cost": 340,
+      "bundle": 10,
       "scale": 1.0, "lift": 0.45
     }
   ]
@@ -621,6 +763,33 @@ none of them is optional:
 companions* below; a row claiming to be one is refused and named. `cost` of 0 means "not for
 sale" (never "free"), because `JsonUtility` writes a zero into every field an older file
 never had.
+
+`bundle` is **how many copies one purchase grants**, and absent means one. Priced decor is
+bought by the copy since save v20: a player who wants a dozen fences buys a dozen, and each
+one stands on one tile. The four scatter kinds — `ground`, `bed`, `edge`, `path` — ship at
+`10` at the price a single one used to cost, because a grove wants a lot of them and buying
+one tap at a time is a chore rather than a decision; trees and structures ship at `1`,
+because you want a handful and one well.
+
+Three rules about it, and the first is a build error rather than a warning:
+
+- **The price must be divisible by the bundle.** A copy is worth `cost / bundle`, so a fence
+  costing 95 in tens makes every copy worth 9 and a player who buys the bundle is scored 90
+  for 95 credits spent. It looks perfectly authored, it cannot be seen on a device, and the
+  server derives the same short figure — so nothing anywhere disagrees, on the one number
+  that reaches a public leaderboard.
+- **Only priced decor may carry one.** A resident is a companion, a home rung is a rung, and
+  anything free or earned is an entitlement that can never run out; a bundle on one of those
+  is a number that will never be read, which is worse than a wrong number because it reads as
+  a rule somebody is relying on.
+- **Retuning it is safe.** `GroveStock` counts copies and never purchases, so changing a
+  bundle changes what the *next* purchase grants and never what a player already holds.
+
+It is authored per piece rather than derived from `slot`, because the slot kind is the shop's
+*shelf* rather than a claim about how many of a thing anybody wants — the first oversized gate
+that belongs on the edge shelf and sells one at a time would otherwise be an engine change.
+`Tools/grove_art.tsv` carries it as its fifth column and `import_grove_art.py` refuses a row
+whose price its bundle does not divide.
 
 `art` is a whole path under `Art/`; decor sits under `Art/Homestead/`. `animated` says
 whether it names a folder of frames rather than one sprite. `scale` is a multiple of the art

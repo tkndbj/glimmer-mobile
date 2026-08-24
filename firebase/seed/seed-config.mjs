@@ -130,6 +130,7 @@ function buildGroveConfig() {
   const manifest = readJson(join(CONTENT, "manifest.json"));
 
   const pieces = {};
+  const bundles = {};
   const dwellings = {};
 
   for (const piece of homestead.pieces ?? []) {
@@ -137,6 +138,22 @@ function buildGroveConfig() {
 
     const cost = Math.floor(piece.cost ?? 0);
     if (cost > 0) pieces[piece.id] = cost;
+
+    // How many copies one purchase grants, so the boards can score a grove by what was
+    // paid for it rather than by how the shop happened to package it. Only written when
+    // it is not one: an absent entry means "sells singly", which is what a config seeded
+    // before bundles existed already meant, so this stayed additive.
+    const bundle = Math.floor(piece.bundle ?? 1);
+    if (cost > 0 && bundle > 1) {
+      if (cost % bundle !== 0) {
+        throw new Error(
+          `grove piece '${piece.id}' costs ${cost} in bundles of ${bundle}, which does not ` +
+          "divide it — a copy would be worth less than a tenth of the bundle and every " +
+          "grove holding one would score short on the boards"
+        );
+      }
+      bundles[piece.id] = bundle;
+    }
 
     // Every rung, priced or not: the first is free and still has to be findable, because
     // the hall draws the best rung *held* and a free one is held by everybody.
@@ -176,6 +193,7 @@ function buildGroveConfig() {
   return {
     version: Math.floor(manifest.groveVersion ?? 1),
     pieces,
+    bundles,
     regions,
     companions,
     dwellings,

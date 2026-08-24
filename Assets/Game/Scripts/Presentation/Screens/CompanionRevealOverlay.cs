@@ -105,7 +105,7 @@ namespace GlimmerGrove
         protected override void Build()
         {
             _tier = TierOf(Avatar);
-            _c = ChromaOf(_tier);
+            _c = Chroma.Of(_tier);
 
             // The friend's own colour, cached because a dozen places below read it and
             // `_c.Tint` at every one of them is noise.
@@ -155,78 +155,8 @@ namespace GlimmerGrove
         }
 
         // -------------------------------------------------------------- chroma
-        /// <summary>
-        /// A tier's whole colour scheme: the friend's own colour, two more that light the room
-        /// around it, and the deep hue the room is built out of.
-        ///
-        /// <para>
-        /// Three colours rather than one, because that is the difference between a light and a
-        /// place. A tint over black gives a bright shape floating on nothing; a partner lighting
-        /// the ground, an accent crossing it and a deep hue underneath give somewhere for the
-        /// friend to arrive into — which is the entire job of this screen.
-        /// </para>
-        /// <para>
-        /// Every colour is one already in <see cref="Pal"/>, so the loudest moment in the game
-        /// cannot drift away from the game's own palette by inventing shades of its own, and
-        /// retuning the palette retunes the reveal. Derived from the tier like everything else
-        /// here, so a companion a content drop adds is dressed without a code change.
-        /// </para>
-        /// </summary>
-        readonly struct Chroma
-        {
-            public readonly Color Tint, Partner, Accent, Deep;
-
-            public Chroma(Color tint, Color partner, Color accent, Color deep)
-            {
-                Tint = tint; Partner = partner; Accent = accent; Deep = deep;
-            }
-
-            /// <summary>
-            /// The three lights in order, wrapping — for anything spawning a run of them, so a
-            /// row of rings or sparks cycles the scheme instead of repeating one colour.
-            /// </summary>
-            public Color Nth(int i)
-            {
-                switch (((i % 3) + 3) % 3)
-                {
-                    case 0: return Tint;
-                    case 1: return Partner;
-                    default: return Accent;
-                }
-            }
-        }
-
-        /// <summary>
-        /// The tier's scheme: pale, green, blue, purple, gold.
-        ///
-        /// <para>
-        /// The <see cref="Chroma.Tint"/> ladder is deliberately the rarity ladder every player
-        /// already knows from every other game they have installed — common through to
-        /// legendary — because this is the one piece of the reveal that has to be understood
-        /// without being taught. The first version ran cream → mint → sun → gold → magenta,
-        /// which put the game's own premium colour in fourth place and ended on a pink nobody
-        /// reads as "the best one". Gold last is worth more than gold in the middle, and it
-        /// agrees with what gold means everywhere else in this UI.
-        /// </para>
-        /// <para>
-        /// The partner is always across the wheel from the tint and the accent always warm,
-        /// because a scheme built from neighbours is the monochrome problem again wearing three
-        /// names. The deep hue is the tint's own family driven down to about a tenth of its
-        /// value — dark enough for cream text and a lit rim to read against, and still
-        /// unmistakably a colour rather than the absence of one.
-        /// </para>
-        /// </summary>
-        static Chroma ChromaOf(int tier)
-        {
-            switch (tier)
-            {
-                case 1: return new Chroma(Pal.Cream, Pal.Aqua, Pal.Sun, Pal.Hex("#0B2230"));
-                case 2: return new Chroma(Pal.Mint, Pal.Aqua, Pal.Sun, Pal.Hex("#0A2A22"));
-                case 3: return new Chroma(Pal.Azure, Pal.Bloom, Pal.Aqua, Pal.Hex("#111A46"));
-                case 4: return new Chroma(Pal.Bloom, Pal.Azure, Pal.Sun, Pal.Hex("#2B0E3E"));
-                default: return new Chroma(Pal.Gold, Pal.Ember, Pal.Bloom, Pal.Hex("#331409"));
-            }
-        }
+        // The scheme is Chroma, shared with the grove's own unveiling — see there for why the
+        // rarity ladder is one table rather than one per celebration.
 
         // --------------------------------------------------------------- stage
         /// <summary>

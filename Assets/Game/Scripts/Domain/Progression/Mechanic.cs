@@ -39,6 +39,9 @@ namespace GlimmerGrove.Progression
         /// <summary>A conduit carrying two flows that pass through one another and never meet.</summary>
         public static readonly Mechanic Crossing = new Mechanic("crossing");
 
+        /// <summary>A conduit with two of its four ways thorned shut, and one tap swaps which.</summary>
+        public static readonly Mechanic Briar = new Mechanic("briar");
+
         // ------------------------------------------------------------- screens
         // Two things a board cannot teach, because they are not on one. They ride this type
         // rather than a parallel one because everything about a lesson is already here and
@@ -84,10 +87,19 @@ namespace GlimmerGrove.Progression
         /// discover a new rule, they conclude the board is broken. It goes after the duskcap
         /// because a duskcap can lose a run and a misread crossing only costs turns.
         /// </para>
+        /// <para>
+        /// A briar sits directly after the crossing, and for the same reason one notch weaker.
+        /// It is the other tile here that wears four arms and is not a crossroads, so it is
+        /// misread in exactly the way a crossing is — but a briar shows its own rule, because
+        /// the thorns are drawn across the ways they have closed and the light stops at them
+        /// while the player watches. What it still cannot show is that the thorns *move*, and
+        /// that is what the lesson is for.
+        /// </para>
         /// </remarks>
         public static readonly Mechanic[] TeachingOrder =
         {
-            FragileConduit, MoveBudget, RootedTile, ColourMixing, Duskcap, Crossing, BoundConduit,
+            FragileConduit, MoveBudget, RootedTile, ColourMixing, Duskcap, Crossing, Briar,
+            BoundConduit,
         };
 
         /// <summary>
@@ -105,8 +117,8 @@ namespace GlimmerGrove.Progression
         /// </summary>
         public static readonly Mechanic[] All =
         {
-            FragileConduit, MoveBudget, RootedTile, ColourMixing, Duskcap, Crossing, BoundConduit,
-            Grove, GroveShop,
+            FragileConduit, MoveBudget, RootedTile, ColourMixing, Duskcap, Crossing, Briar,
+            BoundConduit, Grove, GroveShop,
         };
 
         public bool IsValid => !string.IsNullOrEmpty(Id);
@@ -156,6 +168,7 @@ namespace GlimmerGrove.Progression
             if (board == null) return found;
 
             int fragile = -1, rooted = -1, blended = -1, duskcap = -1, bound = -1, crossing = -1;
+            int briar = -1;
 
             for (int i = 0; i < board.C.Length; i++)
             {
@@ -165,6 +178,7 @@ namespace GlimmerGrove.Progression
                 if (cell.locked && rooted < 0) rooted = i;
                 if (cell.kind == Kind.Duskcap && duskcap < 0) duskcap = i;
                 if (cell.kind == Kind.Crossing && crossing < 0) crossing = i;
+                if (cell.kind == Kind.Briar && briar < 0) briar = i;
 
                 // Asked of the board rather than of the cell, because a rune only one
                 // conduit carries binds nothing — the validator refuses that level, and
@@ -187,6 +201,7 @@ namespace GlimmerGrove.Progression
             if (blended >= 0) found.Add(new MechanicSighting(Mechanic.ColourMixing, blended));
             if (duskcap >= 0) found.Add(new MechanicSighting(Mechanic.Duskcap, duskcap));
             if (crossing >= 0) found.Add(new MechanicSighting(Mechanic.Crossing, crossing));
+            if (briar >= 0) found.Add(new MechanicSighting(Mechanic.Briar, briar));
             if (bound >= 0) found.Add(new MechanicSighting(Mechanic.BoundConduit, bound));
 
             return found;

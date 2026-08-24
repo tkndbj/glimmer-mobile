@@ -118,6 +118,23 @@ What that means in practice here:
     networks, but such a rotation leaves an arm dangling elsewhere, so it is not a board
     anybody reaches. A chapter was authored to it and came out reading like a dot-to-dot.
 
+5e. **A briar's thorns mate across the divide, and that is why `Puzzle.Matters` has a
+   second clause.** Every other tile on this board conducts along every arm it draws; a briar
+   draws four and conducts two, so `Puzzle.Live` exists and the light walks it while the
+   drawing walks `Mask`. One consequence is not obvious and it is the reason the tile needed
+   more than a parser change. `TurnsToSolution` counts only tiles the authored solution's
+   light reaches, and that was safe for four chapters because joining the grove to an island
+   of dark needs a mated pair of arms, the solution mates none across that divide, so one of
+   the two tiles always had to be a *lit* one turned off its solution — and lit tiles were
+   already counted. A briar's shut arms mate straight across it. Open one that the solution
+   leaves dark and the shadow lights up with every counted tile still exactly right, so the
+   near-miss line would have told a player they had finished a glade that will not settle:
+   the one thing invariant-by-design it must never do. The fix is one clause — a tile the
+   player has lit counts, whatever the solution wanted of it — and
+   `BriarTests.AMisturnedBriarThatLightsTheDarkIsCountedAsADistance` reads 0 on the old rule
+   and 1 on this one. Before adding a tile whose drawn arms and conducting arms differ, ask
+   what it can now join that no arrangement could join before.
+
 6. **All player-facing text is a loc key.** The build gate scans the source for
    key-shaped literals and fails on any that is missing. Do not build keys by
    concatenation — write them out (see `WinOverlay.RankKeys`).
@@ -344,12 +361,12 @@ What that means in practice here:
     **instruction**, so `homesteadPlaced` is merged by recency with a stamp per slot, which is
     11c for the third time — and it is therefore the only part of this feature that can lose
     something, which is why an untouched slot writes no row at all and a slot the player
-    *emptied* keeps one. Note what is deliberately absent: any count of how many benches
-    somebody owns, and any count of tiles. **Holding a piece is permission to draw it in as many
-    slots as you like**, because a count of copies is precisely the shape 11b forbids and hearts
-    already spent a schema version proving it — and it makes the better shop, since variety
-    rather than quantity is what makes two groves differ. A slot id is written into the save, so
-    invariant 1 applies to it in full and it is unique across the whole floor.
+    *emptied* keeps one. Note what is deliberately absent: any count of tiles. A slot id is
+    written into the save, so invariant 1 applies to it in full and it is unique across the whole
+    floor. **This invariant said a count of copies was unrepresentable and 16h is where that was
+    corrected** — it was right about a count of copies *remaining* and wrong that no shape
+    existed. Anything earned, free or entitled is still permission to draw it as often as you
+    like; only the shop's half of the catalog is counted.
 16b. **The grove is a tile floor, and a tile is a slot.** It was ten floating islands with
     hand-authored slots — each with a position, a size and a role — so the player's decision was
     which of eleven pre-placed dots got which sticker, and every grove came out with the same
@@ -409,6 +426,37 @@ What that means in practice here:
     (`score.stars` in `homestead.json`, `GroveScoreTable`), because the catalog grows every drop
     and a rung that means "nearly everything" today means "a start" in a year; the build gate
     refuses one that does not rise and warns on a top rung above the value of the whole catalog.
+
+16h. **Priced decor is bought by the copy, and the count is only representable because it
+    counts purchases — save v20.** Invariant 16 said a number of copies held is the stored count
+    11b forbids, and it was right about the shape it described: a count of copies *remaining*
+    cannot be merged, because two devices showing 3 and 1 are equally consistent with "one bought
+    two more" and "one has not heard about a purchase". A count of copies **ever bought** only
+    rises, so the join is a per-id `max` and the larger side always knows more — hearts' and
+    hints' trick for the third time, and the first time it was seen before shipping rather than
+    after. What is left to place is *derived*: `bought − placed`, and both halves are already in
+    the file. `GroveStock` owns the arithmetic and holds no policy, so every rule about merging
+    and migrating it is proved offline against plain integers.
+    <br>Four things follow and each is load-bearing. **The subtraction is clamped at zero and
+    nothing is ever taken down** — two devices can each place the last copy on a different tile,
+    the placement map merges by recency per slot (11c), so both survive and the grove briefly
+    holds one more fence than it bought; answering "none left" costs nothing, where removing a
+    placement to balance an identity would be the loss 11 refuses. **Only priced decor is
+    stocked**: a resident is a companion (16a), a home rung is a rung, and anything free or
+    earned is derived from the star ledger, so writing a count of one down would be a second
+    answer for a retune to put out of step with the first (14). **A bundle is content**
+    (`HomesteadPiece.Bundle`) and a copy is worth `cost / bundle`, so ten fences bought as one
+    bundle are worth the bundle — which is why the star ladder needed no retune and why
+    `ContentValidation` *errors* on a price its bundle does not divide: the shortfall is
+    invisible on a device, the server derives the same short figure, and it lands on the one
+    number that reaches a public leaderboard (19a). And **the v19 field is kept as a derived
+    mirror rather than deleted** — `homesteadOwned` is written on every save as the ids with a
+    copy, read only when the stock section is empty, which is what lets a rolled-back client and
+    a not-yet-redeployed `groveWorth` both keep working; that is 12a's deploy-ordering hazard
+    removed rather than merely written down. The migration grants `max(placed, 1)` and being
+    generous there was tried and is wrong: neither `HomesteadLedger.LoadFrom` nor `SaveMerge` has
+    the catalog loaded, so a fixed grant would hand ten copies of a singly-sold 4,000-credit oak
+    to anybody who owned one.
 
 16a. **A resident is a companion, and the roster is written down once.** This replaces the
     rule that a resident is never for sale, which was right about the endowment and wrong about
@@ -717,6 +765,61 @@ What that means in practice here:
     the review with one tap, and the reports are the record of why the name was hidden.
 
 
+20. **A mode is code, and a chapter names one.** A way of playing brings an interaction, a
+    fail state and a scoring rule, so content can never add one — but a chapter says which
+    mode it belongs to (`mode` in `manifest.json`, absent meaning the classic `glade`), so a
+    drop ships a whole second game with no app update. A chapter naming a mode this build has
+    never heard of is **skipped whole and reported to nobody**, exactly as `minAppVersion`
+    skips one needing newer code: content ships ahead of builds, so an unknown mode is content
+    from the future and the honest response is to lose that chapter rather than open it into a
+    screen that cannot run it. `GameMode` is a permanent string id for `LevelId`'s reason — it
+    reaches the manifest, analytics and loc keys, so an enum's ordinal would be a second
+    identity nobody authored.
+20a. **A second mode's glade is an ordinary glade, and that is why it cost nothing.** It has
+    its own permanent `LevelId`, so its record, its stars, its merge and its rewards are the
+    ones every other glade already has — `ProgressionLedger` has no opinion about modes and
+    neither does `functions/src/progression.ts`. So a whole second *game* added **no save
+    schema version, no `progression.json` retune, no `firestore.rules` change and no server
+    work**. Anything tempted to key on a mode goes back to this: the two things that genuinely
+    differ are *order* and *unlocking*, and those are per-mode in `CatalogIndex` alone. Totals
+    stay mode-blind — `LevelIds` is every glade in the game and is what stars, XP and credits
+    are summed over — while `Next`, `Previous`, `OrderOf` and `IsLast` stay inside one mode.
+    Chained end to end instead, finishing the classic game would be the price of opening the
+    second one, which is precisely what a second mode must not cost.
+20b. **A mode may be a whole screen, and the second one is.** The first attempt at a second
+    mode reused the board, the light graph and the star rule, and the containment that bought
+    was exactly what made it fail: the same grid, the same conduits, the same critters, with a
+    different way to fill it in. It was deleted. What a mode is allowed to share is the
+    *world* — the palette, the colour arithmetic, the critters, the sounds — and what it must
+    share is everything about being a **run**: the heart, the stake (`RunGuard`), the clock
+    (`RunClock`), the daily chest, the streak and the star ledger. Those are reached through
+    the same Domain classes rather than copied, because a second copy of the run lifecycle is a
+    second place that can come to disagree about when somebody is charged. `LevelsScreen.Open`
+    is the one place a mode decides which screen opens.
+20c. **A level carries a board or a hollow, never neither.** `LevelDefinition.Layout` is null on
+    a hollow and `LevelDefinition.Hollow` is null on a glade; the constructor refuses both being
+    absent, because a level with neither is a node on a map that cannot be opened and it would
+    validate perfectly. `PuzzleFactory` refuses a boardless level rather than throwing on it, and
+    `LevelValidator` branches at the top — none of its proofs are about arms mating, and what
+    replaces them is stronger rather than weaker: a hollow is *searched*, so the validator knows
+    exactly how few sparks finish it and therefore knows the two ways a board is worthless —
+    one nobody can finish, and one that finishes itself. Both look perfectly authored in the JSON.
+20d. **A hollow authors no numbers at all.** Its whole surface is a grid of text and a string of
+    spark colours. Par is the fewest sparks that finish it, found by search, and the star ladder
+    falls out of par — three stars is finishing in exactly par, which is a contract a player can
+    hold in their head. A typed par is the failure that has no symptom: one too high hands three
+    stars to a careless run for ever, one too low makes them unreachable, and neither is visible
+    in the file that caused it. `HollowSetup` searches once, lazily, and the build gate refuses
+    any board that cannot be proved inside `HollowSolver.NodeBudget`, so a pathological hollow
+    fails a build rather than a phone.
+20e. **The ordered spark queue is the puzzle, and light never decaying is why.** Because light
+    accumulates and never fades, the *set* of cells a player sparks decides the outcome and the
+    order they are sparked in cannot — so a pool of sparks would collapse every hollow to "which
+    cells". An ordered queue makes it an assignment instead: this red has to go somewhere now,
+    and the green behind it can only reach what the red left asleep. The same property is what
+    makes a hollow impossible to get stuck in, which is what makes unlimited undo safe, and what
+    makes the mode legible to somebody meeting it — the only endings are winning and running out.
+
 ## Layout
 
 ```
@@ -775,6 +878,36 @@ Builds are gated: `ContentBuildGate` fails the build on any content error.
   mobile build with no art and no error explaining it.
 - **`m_BuildAddressablesWithPlayerBuild: 1`** is set explicitly in the project asset,
   not left to the per-machine Editor preference, so CI and teammates build identically.
+- **A `[Serializable]` class field is never null after `JsonUtility`, so never test one for
+  null.** It instantiates the field even when the JSON has no such key, so `dto.hollow != null`
+  is true for every level ever parsed — which read all forty shipped glades as hollow fields,
+  dropped every one and failed the Android build with eighty errors. The fixed shape is a value
+  a real block cannot hold (`HollowDto.IsAuthored`), which is invariant 11b's rule from the
+  other direction. Two guards now: `HollowTests` reads both shapes back through `ContentMapper`
+  (Editor-only, because the serialiser is a native call and is the subject), and `compile.py`
+  refuses a null test on any class-typed field of a DTO. Note why nothing offline saw it —
+  Python's `json` returns nothing for a missing key where Unity returns an object, so the
+  mirror and the game disagreed about the one thing that mattered. Same class of divergence as
+  Mono and ICU in invariant 19e.
+- **`LevelDefinition.Layout` is null on a hollow, and nothing in the language says so.**
+  Nullable reference types are off, so a reader that forgets is a `NullReferenceException` in
+  whichever tool touches it first — which is exactly what shipped: `ContentValidation` and
+  `ContentAuthoring` both printed `level.Layout.Width`, and both blew up the moment a
+  boardless level existed, on a path no offline gate runs. `compile.py` now refuses a file that reads
+  `.Layout.` without anywhere saying it knows the thing can be absent (`HasBoard`, or a null
+  check on `Layout`/`Hollow`). The rule is coarse on purpose: four files touch it, so a false
+  positive costs one word and a missing guard costs a crash in the Editor's own validate.
+- **A Unity magic method is an engine rule, not a language rule, and the offline compile
+  is blind to it.** `public bool Awake(int i)` on a `MonoBehaviour` compiles perfectly in
+  Roslyn and the Editor then refuses the whole script — *"Script error (BoardView): Awake()
+  can not take parameters"* — so a green `Tools/verify/compile.py` is not by itself proof
+  the Editor will accept a build. It shipped exactly once, on `BoardView.Alight`, which read
+  far better as `Awake` and cost a round trip through the Editor to find. `compile.py` now
+  walks every class that ends up a `MonoBehaviour` and refuses a method named after one of
+  the no-argument messages; the parameterised ones (`OnApplicationPause(bool)`,
+  `OnCollisionEnter`, `OnAnimatorIK`) are deliberately not on the list, because flagging
+  those would make the check noise nobody reads. It lives in `compile.py` rather than in a
+  seventh script for the reason the importer hook is not a menu item.
 - **Unity only re-resolves packages and reimports on window focus.** If a change seems
   not to apply, the Editor probably has not been clicked.
 
@@ -3446,6 +3579,387 @@ created. The fix is one command, and it is not something `firebase deploy` does 
 The service name is the function name **lowercased**. Nothing offline can see this: the function
 deploys, logs cleanly, and is simply unreachable — which from a client is indistinguishable from
 being signed out.
+
+**Land arrives, rather than being there when you get back.** The most expensive thing in the
+game was the only purchase nobody watched: a region is *ground* rather than an object, so buying
+one left the player in the shop and the floor was simply bigger when they walked back. Buying
+land now takes them to the Grovement and plays `GroveRise` — the plot is surveyed in faint
+diamonds under a struck outline, the outline flashes, and the ground rises out of the grove they
+already had in a wave that spreads from wherever the new region touches what they owned.
+
+**The order is `GroveGrowth`, in Domain, and it is tested — `TweenCycle`'s argument for the
+second time.** A wave that runs inward, a region that takes six seconds and thirty-six thuds
+fired inside one all compile, validate and read perfectly in the source; nothing but motion shows
+them. So the walk is a breadth-first search over the region seeded from its edge against land
+already held, and everything else is a function of that one ring number — when a tile rises,
+whether the ring speaks, and at what pitch. Three decisions in it are worth not re-litigating.
+**`MaxSpread` is a ceiling and the gap gives way**, so a drop that sells a 12x12 cannot silently
+ship a six-second interruption while a shallow 6x4 keeps the authored rhythm. **The sound budget
+is fixed at six rings however deep the wave is** — `Roll.Ticks`' bargain, since one thud per tile
+clips on a phone speaker, and it means re-drawing the map of what is for sale can never change
+how an unlock sounds. And **the corner fallback is the shipped floor rather than a defensive
+branch**: `dusk_field` meets the starter `hearthstead` only diagonally, so a player who owns
+nothing else buys ground with no edge against anything they hold, and the wave starts at the
+single tile nearest the hall.
+
+**Four things it needed from the field, and one of them was a bug waiting.** `Revisit` re-tests
+which tiles exist without discarding the ones already drawn — `Cull` only works when the *window*
+moves, which is right while panning a fixed floor and exactly wrong while ground arrives under a
+still camera. `Layer` is a node in field space, so thirty marks travel with their tiles instead of
+being re-placed every frame the way the edit bar has to be. `CentreOn` and `GroveFloor.TileX`/
+`TileY` widened to **fractional** coordinates, which is what lets a camera be eased between two
+places without a second copy of the isometric transform. And `Locked` exists because **a scrim is
+not enough**: a drag, a tap and a long press all route through the event system, but `Pinch` polls
+`Input.GetTouch` directly and does not care what is drawn over it, so two fingers laid on the
+ceremony would have fought its camera for the whole of it.
+
+**A tile rises on a child node, never on its own root.** `GroveFieldView` owns a cell's position —
+it rewrites it every time one is recycled onto new coordinates, and the pick box is derived from
+the same arithmetic — so animating the root would be fighting the one transform that has to stay
+authoritative, and a cell recycled mid-rise would drag its old destination onto its new tile.
+Animating `_body` makes the offset purely cosmetic and abandonable by writing two zeroes, which is
+what `Bind` does when a rising cell is rebound elsewhere.
+
+Two smaller decisions. The ceremony is **skippable from the first frame** (tap or back key), for
+`CompanionRevealOverlay`'s reason, and one method serves both the tap and the last beat — the rule
+this file keeps relearning about panels with more than one way out. And the **star the purchase
+earned lands here** rather than in the shop: `ArrivingStars` is read before the money moves,
+because the star row celebrates what was not there a moment ago and a screen that has just been
+built has no moment ago. Everything is generated art (`IsoTile`, `Ring`, `Glow`, `Capsule`,
+`Spark`) — `Art.Bloom`'s rule, unusually load-bearing on a screen whose asset scope is opening in
+the same breath, since a celebration that can look like a failed load is not worth firing.
+
+What it cost: **no save schema change (v19 stands)**, no `progression.json` retune, no server work,
+no deploy and no new art. One loc key, `ModalView.Close` grew a `quiet` flag for the one panel that
+closes because the player *bought* something, and `GroveGrowthTests` adds 15 offline cases — checked
+against three wrong implementations first, which fail exactly three of them. The offline suite is
+**851**.
+
+**Chapter four: The Nightbriar, and a way that is shut.** Ten glades, and one new
+mechanic — the **briar** (`%NS+EW`), a conduit with two of its four ways thorned shut where
+one tap swaps which. It is the crossing's opposite number and it cost the light model even
+less: a crossing splits a cell into two strands, where a briar leaves the graph alone and
+changes only **which of a tile's arms conduct**. That is `Puzzle.Live`, one word in each of
+the two walks, and nothing above them moved — colour, winning, par, the budget, the clock,
+the hint and the near-miss reading are all untouched.
+
+**What it buys is the thing arms cannot buy.** All four of a briar's neighbours mate it at
+every angle, so nothing about the pipe-fitting settles it and only colour or the dark can —
+which is exactly the property `Tools/verify/difficulty.py` counts, and exactly what
+twenty-two of the game's first thirty glades turned out not to have anywhere (invariant 5d).
+A twisted crossing was the cheapest such tile and is worth two states; a straight briar is
+worth two and a twisted one four, and a briar can be aimed at the dark as well as at colour.
+Every briar on all ten boards is reported `decided` — not one of them is decoration.
+
+**Three shapes are the whole chapter**, and they are in `CONTENT.md` because the next author
+needs them: a briar **cuts its own way** (whatever the open pair fed goes dark); it **joins
+what its thorns held apart** (thorns between a red network and a blue one blend both the
+moment they move); and, on a **loop**, it **wakes the dark** while every critter stays lit,
+which is this project's rule about fords made straightforward to author rather than a happy
+accident. Five of the ten glades reject arrangements by the dark alone — `dark` runs 1 to 3
+— against zero on every duskcap board that had ever shipped before the chapter-two rebuild.
+
+**Two decisions were forced and both are worth not re-litigating.** The order of the pairs
+**matters** on a briar and does not on a crossing, because a crossing's strands are
+interchangeable labels and a briar's are a way through and a wall — that one sentence is why
+a straight crossing is inert and a straight briar is worth exactly one tap, and it lives in
+`Puzzle.Alike` beside the crossing's clause. And a briar's shut arms still have to be
+**drawn and mated**, which is what makes all four neighbours mate it at every angle; it is
+also the arm an author forgets, since a thorned way carries no light and nothing about the
+solution notices it missing, so `author.Board.briar` joins the four edges itself and refuses
+to stand on the border.
+
+The ladder runs par **42, 47, 44, 52, 49, 45, 58, 54, 51, 69** and `timeFactor`
+**1.90 → 1.45**, opening a notch tighter than the Amberwood and closing one notch past it,
+with the usual slack on the glade that teaches the new rule. Not monotonic, and the dip at
+glade six is the point: it is the taproot board, and a bound board's par is lower because one
+tap moves both brambles and par charges for it once. Each glade has one idea — the bramble
+itself; a lane of blossom that is the only ground where red and blue may meet; a ford on a
+loop; the bridge and the bramble a tile apart; brittle stone on the one tile guessing is all
+you have; two brambles on one rune waking two shadows at once; three groves and a bramble on
+every border; a shadow running the width of the board under two bridges; a blend that can
+only be made beside the dark; and a knot with all of it.
+
+The map is six strips (the source is 1080x6568, so six scale it to 1184 wide and five would
+have stretched it), and the backdrops are graded from a cave roof and a bare treeline — the
+same silhouettes the map is full of. `Tools/chapters/c04_nightbriar.py` regenerates the
+shipped JSON and checks itself against it.
+
+What this cost: **no save schema change** (v19 stands), no `progression.json` retune, no
+server work and no deploy. `BriarTests` adds 22 cases (offline suite **873**), the drawing is
+one generated glyph (`Art.Thorn`) and one palette entry, and `content.py`, `author.py` and
+`difficulty.py` all mirror the rule. **The Editor still owes two steps**: `Glimmer Grove ▸
+Addressables ▸ Sync All Assets` (sixteen PNGs arrived while it was closed, and an unaddressed
+sprite draws as nothing) and `Content ▸ Sync Manifest`, which should be a no-op — the entry
+was written to match what it produces, at order 40.
+
+**Everything else in the grove's shop arrives too — `GroveUnveilOverlay`.** Land got a ceremony
+and the other hundred and fifty things in the same shop got a spark burst and a fade, which made
+the shop feel like two different features. A piece bought now falls out of a lit room onto a patch
+of ground, lands hard, and is named. Residents are untouched and still go through
+`CompanionRevealOverlay`: a creature deserves a portrait in a dark room and a fence does not.
+
+**It is a drop onto an isometric tile, and that is the whole reason it reads as this game.** Land
+arriving already means *ground with weight behind it*; a piece arriving as a soft cross-fade would
+be another game's animation played inside this one. So the fall **accelerates** (`Ease.InQuad`) —
+an eased-out drop is a thing being *placed*, and a thing being placed has no impact to celebrate —
+and the landing squashes to 1.16/0.82 before over-recovering, throws shockwaves cycling the
+scheme, and puts a flat dust ring out along the tile. The shadow is the entire depth cue: wide and
+faint while the piece is high, tight and dark as it lands, and both at once, because either alone
+reads as a stain.
+
+**The spectacle scales with the price — `GroveUnveil`, in Domain, tested.** This is
+`CompanionRevealOverlay`'s tier idea moved from a keeper gate onto a cost, and it is the win
+panel's argument about the screen flash: an effect used everywhere singles out nothing. Bands are
+**250 / 700 / 2,000 / 7,000 credits** — absolute, because the first attempt used a fraction of the
+catalog's dearest thing and the dearest thing is a 28,000-credit home, which put all 146 decor
+pieces in the bottom tier. At the shipped ~593 credits a day they read as half a day, a day, three
+days and a fortnight. Rays, aurora, shockwaves, sparks, flash and hold all climb; confetti and a
+struck seal are the top two tiers, which is **every home rung and the one 4,000-credit
+centrepiece** — deliberately not "homes only", because a player who saved a week for one fence
+should not be told it matters less than a house.
+
+**`MaxSeconds` is 3 and the hold gives way, which is `GroveGrowth.MaxSpread` for the second
+time.** The shop is a grid of 150 cells and buying is what the player came to do; tier one is over
+in 1.66s and tier five takes 2.76s. `PlateAt` and `Outro` live in Domain beside the ceiling
+rather than beside the drawing, so `Seconds(tier)` is the length the sequence *actually* runs at
+rather than an estimate of it — a ceiling checked against a number the code does not use goes
+quietly wrong the first time somebody retunes a beat.
+
+**`Chroma` came out of `CompanionRevealOverlay` and is now shared.** The obvious move was a second
+colour table beside the first, which is invariant 5b's mistake where it is least visible: two
+rarity ladders that disagree do not fail a build, they quietly teach the player two different
+things. Gold means *the best one*, and it has to mean that whether what arrived was a friend or a
+house.
+
+**Three bugs found on review, and two of them cost real money.** The overlay skipped `MakePanel`
+and so **never named `Panel`** — `Close()` scales it unconditionally, a null tween finishes in a
+millisecond, and the exit would have been a hard cut from a lit room straight back to the shop.
+The sky **had to block from the first frame**: the home panel deliberately stays open behind the
+ceremony with its buy button live and pointed at the *next* rung, so an impatient double tap on a
+6,000-credit upgrade would have bought the 13,000-credit one. It is still deaf until the plate
+lands, because the button that raised this is under the thumb that just pressed it — blocking and
+answering are two needs, not one. And the piece is painted through **two art sources**
+(`HomesteadArt.HasArt`): the shop holds shelf atlases and the *grove* holds full-size art, and the
+home panel is reachable from both — so a home bought by tapping your own hall would have been
+unveiled as an empty room.
+
+**The shop's tab row, and two faults reported as one.** "The filter buttons flicker and sometimes
+get smaller" turned out to be two unrelated bugs wearing one symptom.
+
+**Smaller: `Tween.Pop` reads the transform's own scale as the size to spring back to.** A second
+pop landing inside the first one's 0.3s therefore captures a half-sprung scale as its new resting
+size and springs to *that* — so the tab ends up permanently smaller, and smaller again next time,
+because the mistake compounds. The channel does not save it: killing the old tween is exactly what
+leaves the transform mid-flight for the new one to read. The same hazard `HomesteadScreen` already
+records for `Tween.Breathe` on an empty tile's ring. Fixed twice over — the scale is reset to one
+before every pop, and `Restyle` now animates **only when a tab's selected-ness actually moves**,
+which is `GridView`'s `Show`/`Refresh` rule applied to a control instead of a list. That second
+half is the real repair: the row is repainted by *events* — a balance moving, a ledger changing, a
+run finishing, an atlas landing — and every one of them was replaying the selected tab's entrance.
+Tapping a tab fires two of those back to back.
+
+**Flickering: the emblems were in the scope that gets swapped.** `AssetManifest.GroveShelfAssets`
+carried the tab atlas once per shelf, which is right about what a tab *needs* and wrong about how
+long it needs it — `EnsureScopeAsync` releases before it loads, so every tap destroyed the atlas
+all eight tabs draw from and immediately asked for the same file back. `AssetLibrary.HomesteadTabScope`
+is a fourth grove scope bounded by *the shop being open* rather than by one shelf, released through
+`HomesteadArt.Close` so the one door every screen already leaves through covers it. Making it
+global was the alternative and is the wrong trade: global is what the game needs before the menu
+appears, and this is one screen's furniture. `OpenTabsAsync` carries an in-flight guard rather than
+trusting `IsScopeLoaded`, which goes true the instant a load *starts* — the check `Browse` documents
+as the home of the shop's old double-load.
+
+**And the unveiling lost its haptic.** `Handheld.Vibrate` is one fixed-length buzz on Android with
+no way to make it lighter, and this fires on every purchase in a shop of 150 cells — the argument
+that already took the buzz off the victory panel's payout. The land ceremony keeps its two: it runs
+eight times in the life of an account, not a hundred and fifty.
+
+Both panels now play `coin` at the moment the money leaves and let the ceremony own `unlock`,
+which is the split `GroveLandOverlay` already made. `GroveUnveilTests` adds 14 offline cases —
+checked against two wrong band tables first, which fail five of them — and the offline suite is
+**887**. No save schema change (v19 stands), no `progression.json` retune, no server work, no
+deploy, and one loc key.
+
+
+**A second way to play — the Hollow, and Glimmer Chain is deleted.** The chain was a
+score attack played by dragging through touching motes, and it was two things at once: a
+Dots clone with this game's palette on it, and a screen whose own HUD was clipped off the
+right edge. Both halves are the same mistake — it shared the *world* and nothing else, so
+there was no reason for it to be in this game rather than any other. It is gone: nine
+files, one chapter, seventeen loc keys.
+
+**What replaces it is a puzzle, and its one idea is that you aim a chain reaction.** A
+hollow is a field of sleeping critters. Each wants a colour (its ring) and gives a colour
+(the pip on its shoulder). You spend a short, *ordered* queue of sparks; light lands where
+you put it, accumulates, and never decays — so a critter whose light comes to contain what
+it wants wakes, hands its own colour to the four critters beside it, and the wake spreads
+itself. Win when every critter is awake; lose when the sparks run out and one is not.
+
+Three properties fall out of "light never decays" and each decides something:
+
+- **A player can never be stuck.** No arrangement of sparks puts the board in a state a
+  later spark cannot still work with, so the endings are winning and running out. That is
+  what makes unlimited undo safe and what makes the mode legible to somebody learning it.
+- **Order matters only through the queue.** The same colour on the same cell does the same
+  thing whenever it is spent, so the decision is an *assignment*: this red has to go
+  somewhere now, and the green behind it can only reach what the red left asleep. A pool of
+  sparks instead of a queue would collapse the whole puzzle to "which cells".
+- **Par is the fewest sparks that finish the board**, found by search and never authored —
+  invariant 5 in the mode that most needed it, because par *is* the star ladder here (three
+  stars is finishing in exactly par) and a typed one that drifts by a single spark either
+  hands three stars to a careless run for ever or makes them unreachable.
+
+**What it cost: no save schema change (v20 stands), no `progression.json` retune, no
+`firestore.rules` change and no server work.** Invariant 20a again — a hollow has its own
+permanent `LevelId`, so its record, its stars, its merge and its rewards are the ones every
+glade already has.
+
+**`RunLedger` is the part that had to be built rather than copied.** Invariant 20b says a
+mode may bring a whole screen and must share everything about being a run, and until now
+"everything about being a run" lived inside `PlayScreen.Finish` and `PlayScreen.Defeat` —
+the record, the daily chests, the streak, the reward and the analytics, in a screen a second
+mode cannot use. It is one Domain class now and both screens call it, so a loss can stop
+feeding the streak in one place or none. It also owns an ordering that was a comment before
+it was a rule: the `RunOutcome` is built *before* the record is folded in, because half of
+what it describes — the previous best, whether this was a first clear — stops being true the
+moment it is. `RunScreen` is the same move for the panels: the defeat panel, the pause menu
+and the forfeit prompt were typed to `PlayScreen`, so a second mode either duplicated three
+panels carrying the heart accounting or went without them.
+
+**And `PlayRoute`, which is a bug this found.** There are three doors into a run — a node on
+the map, the victory panel's *next glade*, and its replay — and two of them still said
+`Flow.Go<PlayScreen>`. On a hollow that opens a screen which finds no board, logs an error
+and returns the player to the map, at the one moment they were most engaged. Which screen
+plays a level is now answered once. `RunWording` is the same shape for a smaller thing: a
+glade counts *turns* and a hollow counts *sparks*, and the map badge and the victory panel
+have to word one run identically.
+
+**Duskcaps are supported by the model, used by no level, and that is a finding rather than
+an omission.** `x` parses, `HollowRun` implements it and `HollowSolver.DarkRejects` counts
+what it refuses — and on every board it is zero. Every critter has to wake to finish a
+hollow and a waking critter gives light to all four of its neighbours, so a duskcap beside
+anything alive is ruined *by the board* rather than by the player, and one beside only empty
+cells can never be reached. There is no third case: "solvable" and "the dark refuses
+something" are mutually exclusive, which a search over thousands of candidate boards
+confirmed by producing none. That is invariant 5d asked of a second mode, and it is the same
+failure the first thirty glades had. Making the dark real needs a hollow where not every
+critter must wake, or a critter whose gift depends on the light that woke it rather than on
+what the author typed — and the validator warns rather than letting one ship quietly.
+
+**Boards are searched for, not typed.** `Tools/hollow/` holds a mirror of the rules in
+Python, a generator and `build_chapter.py`. What the search taught, measured rather than
+argued: **par is a weak difficulty knob**. Light spreads far on a connected field, so most
+boards are one tap and a demanding one is two, and pushing needs harder to raise par tips
+straight over into unsolvable — at a blend rate of .65 on a 6x6, six hundred candidates in a
+row could not be finished at all. The knobs that work are size, how many needs are blends,
+and above all **how few openings win**: an early hollow has dozens of taps that work and a
+late one has two. The mirror is a second copy of the rules and is never authoritative; the
+shipping C# solver is what `Validate Content` runs.
+
+**No new art, and no new sounds.** Every critter is a flipbook the classic mode already
+loads globally; the rings, pips, motes, beams and ripples are generated (`Art.Disc`,
+`Ring`, `PrismRing`, `Glow`, `Capsule`), which is `Art.Bloom`'s rule and unusually
+load-bearing here — a hollow opens onto a dark screen, and an `Image` whose sprite has not
+arrived is a white rectangle. The cascade's note climbs a pentatonic ladder on the existing
+`lit` clip, one note per *ring* rather than per critter: what the player did was reach far,
+and the ear reads distance as rising pitch, where a ring of eight waking together is a chord
+a phone speaker renders as a clip.
+
+**There is deliberately no countdown.** A hollow is deterministic and its fail state is the
+spark queue, so the pressure is "have I enough left" rather than "am I fast enough" — and a
+clock on a board whose whole content is a plan punishes exactly the thinking the mode asks
+for. The classic mode owns the clock; that the two differ is the point of having two.
+`RunClock` still runs, because elapsed time is recorded either way and the map badge reads
+it.
+
+**What shipped: `h01_emberfall`, ten hollows.** Sizes 4x4 to 7x7, 16 to 46 critters, par 1 then
+2 throughout, and the number that ramps is how many distinct winning states each board has:
+**7, 8, 6, 4, 2, 3, 4, 1, 4, 1**. Every one hands out exactly one spare spark, so a single
+wrong decision costs a star rather than a heart. The proofs cost between 1 and 852 positions
+against a three-million ceiling, so opening the chapter is free.
+
+Both validators print the ladder as a table (`Validate Content`, `Tools/verify/content.py`),
+because par is derived and nobody authoring a chapter can read it off the file.
+
+**The grove shop sells copies — save schema v20 — and the ad allowance doubled.** Two
+changes on one afternoon, and only one of them touched anything structural.
+
+**The ad caps doubled** (`progression.json`): hearts 10→20, coins 6→12, continues 8→16, win
+bonus 6→12, hints 5→10. They were already set above what any network will fill for one player
+in a day, so this is a lever moving rather than a faucet opening — the binding constraint is
+demand, not the table. `AdRules.MaxDailyCap` is still 30 and still a hard `const`. **Re-seed
+`config/progression`**, because the placement list is published.
+
+**Priced decor is now bought by the copy.** Invariant 16h has the argument for why the count is
+representable at all; what follows is what it cost. A purchase of a stocked piece grants
+`HomesteadPiece.Bundle` copies, each placed on one tile, and what is left is derived rather than
+stored. The four scatter kinds — ground, bed, edge, path — sell **ten at the price a single one
+used to cost** (99 of the 150 priced pieces); trees and structures sell singly. **The catalog is
+worth exactly what it was worth**, so the grove's star ladder needed no retune: a copy is worth
+`cost / bundle` and ten of them come back to the bundle price.
+
+Five decisions are worth not re-litigating. **`GroveStock` holds no policy and no Unity types**,
+so the merge, the clamp and the migration are proved offline against plain integers — the
+argument `TweenCycle` and `AccountGate` already make, and it matters more here because the two
+failures it guards against (a merge losing a purchase, a subtraction reading short) are invisible
+in an Editor that never has two devices. **The offer carries its own quantity**, so the stepper's
+caption, the shortfall and the debit cannot come from three different numbers. **One debit for
+the whole order**, never a loop of single purchases — a loop would write twenty idempotency keys
+for one decision, each separately refusable by the next sync, so a player could be charged for
+six fences and receive four with nothing on screen able to explain it. **Room is checked before
+price**, so somebody at the ceiling is told they are full rather than sent to buy coins they
+could not spend (`HintPrompt`'s rule). And **the picker keeps a depleted piece in the grid**,
+dimmed, saying why, and tapping it buys more: hiding it would be the same picture as never having
+owned it.
+
+What the wire cost is one field and one kept one. `homesteadStock` is `{id, copies}` rows;
+`homesteadOwned` survives as a **derived mirror**, written every save and read only when the stock
+section is empty. That is what identifies a v19 file, and it is also what removes invariant 12a's
+deploy-ordering hazard — a client shipped before the functions are redeployed still scores its
+grove on the boards instead of dropping to nothing. `firestore.rules` allows both keys for the
+same reason in the other direction: `hasOnly` is an allow-list over the whole document, so a
+client still sending the old field would lose *every* save write rather than that field.
+
+Two things were caught only by running it. The Editor suite found `[Serializable]` had been
+stolen from `GroveBoardTests.WorthCase` by an insertion above it — `JsonUtility` then returned
+`null` for that one array and every grove vector silently stopped running, which is precisely the
+failure mode that file's own remarks warn about. And play mode found the buy panel drawing its
+status line **underneath** the buy button: `ModalView.MakePanel` centres, so growing a panel puts
+half the new room above the art, and the fix is to lift the block above the stepper by that half.
+Neither is visible in a compile, a validator or a screenshot of the source.
+
+Where the numbers land: 99 of 150 priced pieces sell in tens, the catalog is unchanged at 493,770
+credits, `GroveStock.MaxCopies` is 9,999 (structural, a `const`) and `HomesteadLedger.MaxPerPurchase`
+is 20 (economy, and the stepper's stop). `GroveStockTests` adds 30 offline cases and the shared
+grove vectors gain 9; the offline suite is **931**, the Editor suite **1057/1057**, the server suite
+**572** in `grove.mjs`. `Validate Content` reports no new errors and `Validate Art` is unchanged at
+416 assets and 202 atlas pictures.
+
+**Live as of 2026-08-22.** Rules released with `homesteadStock` in `hasOnly`, all thirteen
+functions redeployed, and `config/grove` re-seeded at **v10** — 150 priced pieces, a new
+`bundles` block with 99 entries, a complete grove still worth 493,770. Rules went first
+(invariant 12a, from the direction with teeth). One thing that is *not* published and should not
+be: a placement's `dailyCap`. `config/progression` carries only `kind` and `amount` for ads,
+because caps are pacing rather than money and the server has never counted them — the doubled
+allowance ships to the client in `progression.json` with the build.
+
+The live smoke test is **83/83**, and the five new cases in it found a real bug that every
+offline suite had passed. `stockOf` tested `Array.isArray(rows)`, so an **empty** `homesteadStock`
+array was read as "owns nothing" instead of falling through to the v19 field — where
+`GroveStock.In` on the client falls through on empty. Invariant 9a, in the pair of files this
+change created, and reachable from an ordinary partial update: a document whose stock array is
+empty beside a populated mirror scores **zero on a public board** with nothing to show why. Fixed,
+pinned by a server case, and it is the argument for the live suite in one paragraph — the shared
+vectors could not see it, because they hand `groveWorth` a save they built themselves and never
+one Firestore had written.
+
+Two smaller lessons from the same run. The suite's earned-credits case failed once and passed on
+re-run, which is the documented cold-start artefact right after a deploy — believe nothing that
+fails in the first minute. And the new cases were first inserted **before** the forged-grove
+assertions, where they rewrote the grove those assertions read and broke two of them; they run
+after it now, because a case that isolates state by emptying it has to be placed where nothing
+downstream is still reading it.
 
 Not done, deliberate: **Play Games Services**
 (better Android sign-in and the natural home for the "ranks" leaderboards, but

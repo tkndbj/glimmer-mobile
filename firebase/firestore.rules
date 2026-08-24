@@ -56,7 +56,8 @@ service cloud.firestore {
                  'schemaVersion', 'updatedUnix', 'settings', 'wallet', 'levels',
                  'progression', 'cloud', 'lastPlayedLevelId', 'legacyImportDone',
                  'tipsSeen', 'daily', 'ads', 'streak', 'events', 'eventsSeeded',
-                 'companionsOwned', 'homesteadOwned', 'homesteadPlaced', 'groveLandOwned',
+                 'companionsOwned', 'homesteadStock', 'homesteadOwned',
+                 'homesteadPlaced', 'groveLandOwned',
                  'checksum'
                ])
                && d.schemaVersion is int
@@ -117,14 +118,25 @@ service cloud.firestore {
                // (see functions/src/grove.ts and the `groves` rule below). The money half is
                // defended where money always is, by `submitSpends` refusing a debit the
                // server-derived balance cannot cover. Note what is deliberately
-               // absent: any count of how many benches a player owns. Holding a piece is
-               // permission to draw it in as many slots as they like, which is why the
-               // owned list is a set and cannot go down.
+               // Since v20 a priced piece is bought by the copy, so `homesteadStock` is a
+               // list of {id, copies} rather than a set of ids. That is a stored count and
+               // invariant 11b permits exactly one kind: copies *ever bought*, which only
+               // rises, so the merge is a per-id max. What is left to place is derived
+               // against the placements and is never written down.
                //
-               // Both are bounded because the client controls their length. The placement
-               // bound is generous against the shipped 52 slots on purpose: it has to hold
-               // for every future content drop as well, and rows naming slots an older
+               // `homesteadOwned` is the v19 field and is still allowed here deliberately.
+               // Nothing this build writes emits it, but `hasOnly` is an allow-list over the
+               // whole document, so a client that has not updated and still sends it would
+               // lose *every* save write rather than that one field — which is invariant
+               // 12a from the direction with teeth, and why these rules can be deployed
+               // before the client that stops sending it.
+               //
+               // All three are bounded because the client controls their length. The
+               // placement bound is generous against the shipped floor on purpose: it has to
+               // hold for every future content drop as well, and rows naming slots an older
                // build does not know are carried through rather than dropped.
+               && (!('homesteadStock' in d) || (d.homesteadStock is list
+                                                && d.homesteadStock.size() <= 512))
                && (!('homesteadOwned' in d) || (d.homesteadOwned is list
                                                 && d.homesteadOwned.size() <= 512))
                && (!('homesteadPlaced' in d) || (d.homesteadPlaced is list

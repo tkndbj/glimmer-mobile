@@ -126,7 +126,8 @@ namespace GlimmerGrove.Persistence
         ///      file needs no migration — see <see cref="Wallet.LoadFrom"/> for the one
         ///      ambiguity it does have to resolve.
         /// v16 — the grove the player builds: the pieces they bought
-        ///      (<see cref="SaveFileDto.homesteadOwned"/>) and where everything stands
+        ///      (<c>homesteadOwned</c>, since v20 <see cref="SaveFileDto.homesteadStock"/>)
+        ///      and where everything stands
         ///      (<see cref="SaveFileDto.homesteadPlaced"/>). Two fields for a whole screen,
         ///      because the rest of it is derived: the land from chapters finished, the
         ///      residents from glades cleared, and neither leaves a trace on disk. What
@@ -186,8 +187,47 @@ namespace GlimmerGrove.Persistence
         ///      code at all: it reads as a fresh full pool. The per-glade allowance is gone
         ///      from <see cref="Content.LevelTuning"/> entirely — a glade has no opinion
         ///      about how much of a player's own pool they may spend on it.
+        /// v20 — grove decor is bought <b>by the copy</b>
+        ///      (<see cref="SaveFileDto.homesteadStock"/> replaces <c>homesteadOwned</c>).
+        ///      Read v16's entry above and then this one, because this is that decision
+        ///      reversed and the reversal needs its reasons written down.
+        ///      <para>
+        ///      What v16 said was that a count of copies is the shape invariant 11b forbids,
+        ///      and it was right about the naive shape and wrong that no shape existed. A
+        ///      stored <em>count remaining</em> is unmergeable for hearts' reason: two devices
+        ///      at 3 and 1 are equally consistent with "one bought two more" and "one has not
+        ///      heard about a purchase". A stored count of <em>copies ever bought</em> has no
+        ///      such problem — it only ever rises, so the join is <c>max</c> per id and the
+        ///      larger value is always the one that knows more. That is the produced/spent
+        ///      ledger's trick for the third time after hearts and hints, and it is why this
+        ///      section stores purchases and derives what is left: <c>available = bought −
+        ///      placed</c>, where the placements are already in the file.
+        ///      </para>
+        ///      <para>
+        ///      <b>The subtraction may go negative and that is not a bug.</b> Two devices can
+        ///      each place the last copy on a different tile; the placement map merges by
+        ///      recency per slot (invariant 11c), so both placements survive and the grove
+        ///      briefly holds more than it bought. The reading is clamped at zero and
+        ///      <em>nothing is taken down</em> — a merge that removed a placement to balance
+        ///      an arithmetic identity would be the data loss invariant 11 exists to refuse,
+        ///      to fix a discrepancy worth one fence. It resolves itself the moment anything
+        ///      is bought or cleared.
+        ///      </para>
+        ///      <para>
+        ///      <b>Only priced decor is stocked.</b> Anything earned by playing, anything
+        ///      free, every resident and every home rung is held exactly as it was before —
+        ///      an entitlement, unlimited, derived where it can be. So the twelve starter
+        ///      pieces and the eight earned ones behave identically to v19 and the stock is
+        ///      purely the shop's half. See <see cref="Homestead.GroveStock"/>.
+        ///      </para>
+        ///      <para>
+        ///      A v19 file is migrated by <c>HomesteadLedger.LoadFrom</c> rather than by a
+        ///      pass of its own: each id in the old <c>homesteadOwned</c> set becomes a stock
+        ///      row of <c>max(copies placed, GroveStock.LegacyGrant)</c>, which is read out of
+        ///      the same DTO. Nobody loses a placement and everybody keeps room to rearrange.
+        ///      </para>
         /// </summary>
-        public const int Version = 19;
+        public const int Version = 20;
 
         /// <summary>Progress that predates this file: index-keyed keys in PlayerPrefs.</summary>
         public const int LegacyPlayerPrefsVersion = 0;
@@ -317,28 +357,58 @@ namespace GlimmerGrove.Persistence
         public string[] companionsOwned;
 
         /// <summary>
-        /// Permanent ids of the grove pieces this player <b>bought</b>, sorted.
+        /// How many copies of each priced grove piece this player has <b>bought</b>, sorted
+        /// by id.
         ///
         /// <para>
-        /// Purchases only, exactly as <see cref="companionsOwned"/> is. A piece earned by
-        /// finishing a glade is never listed, because that half of the rule is derived and
-        /// re-derives correctly on every device — writing it down as well would create a
-        /// second answer for a retune to put out of step with the first. Residents are never
-        /// here at all: they have no price, which is the one rule the two kinds of piece do
-        /// not share, and <c>ContentValidation</c> fails the build on a priced one.
+        /// <b>A count, and v16 said this could never be one.</b> It said a number of copies
+        /// held is the stored count invariant 11b forbids, because two devices showing 3 and 1
+        /// are equally consistent with "one bought two more" and "one has not heard about a
+        /// purchase" — and that is exactly right about a count of copies <em>remaining</em>.
+        /// It is not true of a count of copies <em>ever bought</em>, which only rises, so the
+        /// join is a per-id <c>max</c> and the larger value is always the one that knows more.
+        /// What is left to place is derived: <c>bought − placed</c>, and the placements are
+        /// already in this file. Hearts and hints reached the same shape from the same
+        /// mistake; this is the third time, and the first where it was seen before shipping.
         /// </para>
         /// <para>
-        /// <b>A set, and never a count.</b> Owning a piece is permission to draw it anywhere,
-        /// not possession of a copy — so there is nothing here that could go down, and the
-        /// merge is a union. A number of copies held would be hearts' old mistake in a new
-        /// costume: two devices at 3 and 1 are equally consistent with "one bought two more"
-        /// and "one has not heard about a purchase", so every rule over the pair is wrong
-        /// somewhere. See <see cref="Homestead.HomesteadPiece"/>.
+        /// <b>Absent is "bought nothing".</b> A row is written only for an id with copies, so
+        /// a v19 file's empty array and a fresh install say the same true thing and no
+        /// sentinel is needed — the property that makes every other id set here mergeable.
         /// </para>
         /// <para>
-        /// Unknown ids are carried through untouched, for <see cref="tipsSeen"/>'s reason.
-        /// Absent is the same fact as "bought nothing", which is what makes this mergeable
-        /// with no sentinel at all.
+        /// <b>Only priced decor appears.</b> A resident is a companion and lives in
+        /// <see cref="companionsOwned"/>; a home rung and a piece earned by playing are
+        /// entitlements and are unlimited by design, exactly as they were in v19. Writing an
+        /// unlimited thing down as a count would be a second answer for a retune to put out of
+        /// step with the derived one.
+        /// </para>
+        /// <para>
+        /// Unknown ids are carried through untouched, for <see cref="tipsSeen"/>'s reason: a
+        /// piece bought on a newer build must not be confiscated by a trip through an older
+        /// one. See <see cref="Homestead.GroveStock"/>.
+        /// </para>
+        /// </summary>
+        public HomesteadStockDto[] homesteadStock;
+
+        /// <summary>
+        /// <b>v19 and earlier.</b> The ids of the grove pieces this player bought, when owning
+        /// one was permission to draw it rather than possession of a copy.
+        ///
+        /// <para>
+        /// <b>A derived mirror since v20, and never authoritative.</b> It is written on every
+        /// save as the ids in <see cref="homesteadStock"/> that have at least one copy, and it
+        /// is read only when that section is empty — which identifies a file written before
+        /// v20, exactly as a zero in <see cref="WalletDto.heartsProduced"/> identifies a
+        /// pre-v8 one. <c>GroveStock.In</c> is the one door both readings go through.
+        /// </para>
+        /// <para>
+        /// Keeping it costs a few hundred bytes and buys two things worth more than that. A
+        /// client rolled back to a build before v20 finds the section it understands and keeps
+        /// its pieces. And the <em>deployed</em> <c>groveWorth</c> reads this field, so a
+        /// client that ships before the functions are redeployed still scores its grove on the
+        /// boards rather than dropping to nothing — invariant 12a's ordering hazard removed
+        /// rather than merely written down.
         /// </para>
         /// </summary>
         public string[] homesteadOwned;
@@ -368,7 +438,7 @@ namespace GlimmerGrove.Persistence
         ///
         /// <para>
         /// An entitlement, so a set of permanent ids joined by union — invariant 15, and the
-        /// same shape as <see cref="homesteadOwned"/> and <see cref="companionsOwned"/>.
+        /// same shape as <see cref="companionsOwned"/>.
         /// Buying is irreversible, so between two devices the player owns whatever either
         /// bought, and the join is idempotent and order-independent without trying.
         /// </para>
@@ -883,6 +953,30 @@ namespace GlimmerGrove.Persistence
     /// tree down is a choice too and deleting the row would let a stale device put it back.
     /// </para>
     /// </summary>
+    /// <summary>
+    /// One priced grove piece and how many copies of it the player has ever bought.
+    ///
+    /// <para>
+    /// An array on the wire and a map everywhere else, keyed by the piece's permanent id —
+    /// invariant 11a, for <see cref="SaveFileDto.levels"/>'s reason: a duplicated row would be
+    /// two answers to one question rather than a malformed file, and a sync can write one id
+    /// without re-uploading the shop.
+    /// </para>
+    /// </summary>
+    [Serializable]
+    public sealed class HomesteadStockDto
+    {
+        /// <summary>The piece's permanent id, as authored in the grove catalog.</summary>
+        public string id;
+
+        /// <summary>
+        /// Copies ever bought. <b>It only ever rises</b>, which is the whole reason a count is
+        /// representable here at all — see <see cref="SaveFileDto.homesteadStock"/>. What is
+        /// left to place is this minus what is standing in the grove, clamped at zero.
+        /// </summary>
+        public int copies;
+    }
+
     [Serializable]
     public sealed class HomesteadPlacementDto
     {

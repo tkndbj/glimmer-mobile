@@ -14,6 +14,22 @@
       "text": "The Amberwood"
     },
     {
+      "key": "chapter.c04_nightbriar.name",
+      "text": "The Nightbriar"
+    },
+    {
+      "key": "chapter.f01_lightfall.name",
+      "text": "The Deep Well"
+    },
+    {
+      "key": "chapter.k01_grovekeeper.name",
+      "text": "The Clearing"
+    },
+    {
+      "key": "chapter.w01_lightweave.name",
+      "text": "The Weftwood"
+    },
+    {
       "key": "level.c01_bound_roots.lesson",
       "text": "Conduits wearing the same pips share a root. Turn one and its partners turn with it."
     },
@@ -372,6 +388,246 @@
     {
       "key": "level.c03_under_the_lanterns.tagline",
       "text": "White in the middle, and gardens all round it"
+    },
+    {
+      "key": "level.c04_bramble_and_bridge.lesson",
+      "text": "A bridge carries both flows through and never needs turning. A bramble carries one and turning it is the point. They are a tile apart here, and only the thorns tell them apart."
+    },
+    {
+      "key": "level.c04_bramble_and_bridge.name",
+      "text": "Bramble and Bridge"
+    },
+    {
+      "key": "level.c04_bramble_and_bridge.tagline",
+      "text": "Four arms, two meanings"
+    },
+    {
+      "key": "level.c04_nightfall.lesson",
+      "text": "This bramble stands on a ring, so shutting its way costs nothing at all and no critter will tell you. What the same tap opens is the way north, into the dark."
+    },
+    {
+      "key": "level.c04_nightfall.name",
+      "text": "Nightfall"
+    },
+    {
+      "key": "level.c04_nightfall.tagline",
+      "text": "The loop forgives the turn; the shadow does not"
+    },
+    {
+      "key": "level.c04_rootbriar.lesson",
+      "text": "Both brambles carry the same rune, so they turn as one - and neither of them can be read off its own arms. Whatever the near one does, the far one does with it, and the tap is charged once."
+    },
+    {
+      "key": "level.c04_rootbriar.name",
+      "text": "Rootbriar"
+    },
+    {
+      "key": "level.c04_rootbriar.tagline",
+      "text": "One rune, two brambles, opposite corners"
+    },
+    {
+      "key": "level.c04_the_hollow_gate.lesson",
+      "text": "Nothing about the arms can settle a bramble, which is why these two crumble after two turns and need one. You are allowed exactly one wrong guess about which way the middle opens."
+    },
+    {
+      "key": "level.c04_the_hollow_gate.name",
+      "text": "The Hollow Gate"
+    },
+    {
+      "key": "level.c04_the_hollow_gate.tagline",
+      "text": "Brittle stone where guessing is all you have"
+    },
+    {
+      "key": "level.c04_the_long_dark.lesson",
+      "text": "The bridges carry the dark beneath the light without touching it. The brambles decide whether it stays that way - and both of them stand on loops, so nothing on the board will warn you."
+    },
+    {
+      "key": "level.c04_the_long_dark.name",
+      "text": "The Long Dark"
+    },
+    {
+      "key": "level.c04_the_long_dark.tagline",
+      "text": "A shadow under the grove, forded twice"
+    },
+    {
+      "key": "level.c04_the_nightbriar_knot.lesson",
+      "text": "Two bridges, four brambles - two of them on one rune in opposite corners, one of them brittle - an amber ridge that can only be joined across the middle, and a shadow running the width of the board beneath all of it."
+    },
+    {
+      "key": "level.c04_the_nightbriar_knot.name",
+      "text": "The Nightbriar Knot"
+    },
+    {
+      "key": "level.c04_the_nightbriar_knot.tagline",
+      "text": "Everything the wood has taught, tied once"
+    },
+    {
+      "key": "level.c04_the_shut_way.lesson",
+      "text": "The lane across the middle has a heart at each end, so it is blossom. Above and below it the groves must stay pure - and the thorns are the whole of what keeps them that way."
+    },
+    {
+      "key": "level.c04_the_shut_way.name",
+      "text": "The Shut Way"
+    },
+    {
+      "key": "level.c04_the_shut_way.tagline",
+      "text": "The only ground where red and blue may meet"
+    },
+    {
+      "key": "level.c04_thornlight.lesson",
+      "text": "A bramble wears four arms and lets light along only two of them. Turn it and the thorns swing round onto the other pair - so whatever the open way was feeding goes dark."
+    },
+    {
+      "key": "level.c04_thornlight.name",
+      "text": "Thornlight"
+    },
+    {
+      "key": "level.c04_thornlight.tagline",
+      "text": "Thorns close two ways, and a tap moves them"
+    },
+    {
+      "key": "level.c04_three_thorns.lesson",
+      "text": "Red, green and blue, each pure, each within a tile of the others. Every bramble here stands on the one square where two of them could meet."
+    },
+    {
+      "key": "level.c04_three_thorns.name",
+      "text": "Three Thorns"
+    },
+    {
+      "key": "level.c04_three_thorns.tagline",
+      "text": "Three groves, and every bramble a colour"
+    },
+    {
+      "key": "level.c04_wick_and_wane.lesson",
+      "text": "Amber wants a red heart and a green one joined, and the only ground where they can be joined is a brittle bramble standing beside the dark. Two turns of stone, one turn needed."
+    },
+    {
+      "key": "level.c04_wick_and_wane.name",
+      "text": "Wick and Wane"
+    },
+    {
+      "key": "level.c04_wick_and_wane.tagline",
+      "text": "A blend to make, a shadow to leave alone"
+    },
+    {
+      "key": "level.f01_first_fall.lesson",
+      "text": "Tap a column to drop a mote. It BLENDS into the top of the stack if it adds a colour - red onto green makes amber. If it adds nothing it sits on top and the stack grows. Complete all three colours to make white, and white detonates. Fill a column and it is over."
+    },
+    {
+      "key": "level.f01_first_fall.name",
+      "text": "First Fall"
+    },
+    {
+      "key": "level.f01_first_fall.tagline",
+      "text": "Never match. Cook."
+    },
+    {
+      "key": "level.k01_first_grove.lesson",
+      "text": "Tap any outlined space touching a tile you have placed. Two DIFFERENT colours meeting light a seam; two the same are worth nothing. Gather all three around one tile and it blooms. Thirty tiles, no clock - just how much grove you made with them."
+    },
+    {
+      "key": "level.k01_first_grove.name",
+      "text": "First Clearing"
+    },
+    {
+      "key": "level.k01_first_grove.tagline",
+      "text": "Unlike edges bloom"
+    },
+    {
+      "key": "level.w01_first_weave.lesson",
+      "text": "Press a crystal and drag to the critter wearing its colour. The channel stays where you draw it, and no two channels may ever cross - so a lazy route walls somebody else in. Tap a finished channel to take it back. Wake all four before the light runs out."
+    },
+    {
+      "key": "level.w01_first_weave.name",
+      "text": "First Weave"
+    },
+    {
+      "key": "level.w01_first_weave.tagline",
+      "text": "Four channels. No crossings."
+    },
+    {
+      "key": "mode.cap.best",
+      "text": "best chain"
+    },
+    {
+      "key": "mode.cap.blooms",
+      "text": "blooms"
+    },
+    {
+      "key": "mode.cap.height",
+      "text": "height"
+    },
+    {
+      "key": "mode.cap.joined",
+      "text": "awake"
+    },
+    {
+      "key": "mode.cap.lives",
+      "text": "lives"
+    },
+    {
+      "key": "mode.cap.score",
+      "text": "score"
+    },
+    {
+      "key": "mode.cap.served",
+      "text": "served"
+    },
+    {
+      "key": "mode.cap.stars",
+      "text": "stars"
+    },
+    {
+      "key": "mode.cap.tiles",
+      "text": "tiles left"
+    },
+    {
+      "key": "mode.cap.time",
+      "text": "light left"
+    },
+    {
+      "key": "mode.fall.name",
+      "text": "Lightfall"
+    },
+    {
+      "key": "mode.fall.over",
+      "text": "The well is full."
+    },
+    {
+      "key": "mode.fall.tagline",
+      "text": "Never match. Cook."
+    },
+    {
+      "key": "mode.glade.name",
+      "text": "Glades"
+    },
+    {
+      "key": "mode.glade.tagline",
+      "text": "Turn the conduits until every critter wakes."
+    },
+    {
+      "key": "mode.keeper.name",
+      "text": "Grovekeeper"
+    },
+    {
+      "key": "mode.keeper.over",
+      "text": "Grove finished - {0} points."
+    },
+    {
+      "key": "mode.keeper.tagline",
+      "text": "Unlike edges bloom."
+    },
+    {
+      "key": "mode.weave.name",
+      "text": "Lightweave"
+    },
+    {
+      "key": "mode.weave.over",
+      "text": "The grove went dark. {0} served."
+    },
+    {
+      "key": "mode.weave.tagline",
+      "text": "Draw the light. Let it mix."
     },
     {
       "key": "store.good.boost_day",
@@ -1234,8 +1490,20 @@
       "text": "{0} is yours. Tap any spot in your grove to place it."
     },
     {
+      "key": "ui.grove.bought_copies",
+      "text": "{0} added. Tap a spot in your grove to place them."
+    },
+    {
       "key": "ui.grove.bought_note",
       "text": "Yours. Tap a spot in your grove to place it."
+    },
+    {
+      "key": "ui.grove.bundle_note",
+      "text": "One purchase gives you {0}, to place wherever you like."
+    },
+    {
+      "key": "ui.grove.buy_bundle",
+      "text": "BUY {0} · {1}"
     },
     {
       "key": "ui.grove.buy_for",
@@ -1264,6 +1532,10 @@
     {
       "key": "ui.grove.home_best",
       "text": "The finest home in the grove."
+    },
+    {
+      "key": "ui.grove.home_moved",
+      "text": "Your grove has a new home."
     },
     {
       "key": "ui.grove.home_next",
@@ -1302,6 +1574,14 @@
       "text": "Earned by playing"
     },
     {
+      "key": "ui.grove.order_copies",
+      "text": "{0} pieces"
+    },
+    {
+      "key": "ui.grove.owned_price",
+      "text": "{0} yours · {1} coins"
+    },
+    {
       "key": "ui.grove.place",
       "text": "place"
     },
@@ -1334,8 +1614,32 @@
       "text": "FIND MORE"
     },
     {
+      "key": "ui.grove.single_note",
+      "text": "Each purchase gives you one to place."
+    },
+    {
       "key": "ui.grove.soon",
       "text": "a later chapter"
+    },
+    {
+      "key": "ui.grove.stock_first",
+      "text": "You have none of these yet."
+    },
+    {
+      "key": "ui.grove.stock_full",
+      "text": "You are holding as many of these as a grove can take."
+    },
+    {
+      "key": "ui.grove.stock_have",
+      "text": "{0} in stock · {1} standing in your grove"
+    },
+    {
+      "key": "ui.grove.stock_left",
+      "text": "{0} left"
+    },
+    {
+      "key": "ui.grove.stock_none",
+      "text": "None left — tap to buy"
     },
     {
       "key": "ui.grove.summary",
@@ -1502,6 +1806,10 @@
       "text": "You have {0}"
     },
     {
+      "key": "ui.land.claimed",
+      "text": "New ground"
+    },
+    {
       "key": "ui.land.dusk_field",
       "text": "Dusk Field"
     },
@@ -1604,6 +1912,42 @@
     {
       "key": "ui.levels.more_soon",
       "text": "more glades soon"
+    },
+    {
+      "key": "ui.levels.rewards_again_body",
+      "text": "Each star is paid for once. Play a glade again and only new stars pay, so beating your rating earns the difference and matching it earns nothing."
+    },
+    {
+      "key": "ui.levels.rewards_again_title",
+      "text": "playing again"
+    },
+    {
+      "key": "ui.levels.rewards_finish_body",
+      "text": "Every run you finish moves your daily chests along — one per {0} runs — and keeps your streak lit, win or lose. Leaving early counts for nothing."
+    },
+    {
+      "key": "ui.levels.rewards_finish_title",
+      "text": "finishing counts"
+    },
+    {
+      "key": "ui.levels.rewards_golden_body",
+      "text": "A few glades quietly pay more — up to {0}% of the usual coins. Which ones is fixed for your grove, and the victory panel says so."
+    },
+    {
+      "key": "ui.levels.rewards_golden_title",
+      "text": "golden glades"
+    },
+    {
+      "key": "ui.levels.rewards_stars_body",
+      "text": "Clearing a glade pays coins and keeper XP, and your stars decide how much — {0}, {1} or {2} coins in this chapter."
+    },
+    {
+      "key": "ui.levels.rewards_stars_title",
+      "text": "stars pay"
+    },
+    {
+      "key": "ui.levels.rewards_title",
+      "text": "how a glade pays"
     },
     {
       "key": "ui.levels.swipe",
@@ -2326,6 +2670,14 @@
       "text": "a whisper turns one conduit"
     },
     {
+      "key": "ui.play.reset",
+      "text": "reset"
+    },
+    {
+      "key": "ui.play.undo",
+      "text": "undo"
+    },
+    {
       "key": "ui.profile.account",
       "text": "account"
     },
@@ -2480,6 +2832,22 @@
     {
       "key": "ui.profile.xp_max",
       "text": "every keeper level earned"
+    },
+    {
+      "key": "ui.rank.points",
+      "text": "{0} points  ·  {1}"
+    },
+    {
+      "key": "ui.rank.points_one",
+      "text": "{0} point  ·  {1}"
+    },
+    {
+      "key": "ui.rank.points_untimed",
+      "text": "{0} points"
+    },
+    {
+      "key": "ui.rank.points_untimed_one",
+      "text": "{0} point"
     },
     {
       "key": "ui.rank.record",
@@ -2952,6 +3320,14 @@
     {
       "key": "ui.tip.bound.title",
       "text": "SHARED ROOT"
+    },
+    {
+      "key": "ui.tip.briar.body",
+      "text": "Thorns have grown across two of this tile's four ways. Light passes along the other two, and turning the tile swings the thorns round onto them - so a bramble never opens a way without shutting one."
+    },
+    {
+      "key": "ui.tip.briar.title",
+      "text": "BRAMBLE"
     },
     {
       "key": "ui.tip.crossing.body",

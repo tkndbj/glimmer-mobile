@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using GlimmerGrove.Homestead;
 using GlimmerGrove.Persistence;
 
 namespace GlimmerGrove.Cloud
@@ -115,6 +116,10 @@ namespace GlimmerGrove.Cloud
                 // that never left the phone is the worst kind of loss — invisible until a
                 // reinstall. Neither is adjudicated: a piece is a cosmetic, and the money half
                 // is already defended by submitSpends. See HomesteadLedger.
+                { "homesteadStock", Stock(dto.homesteadStock) },
+
+                // The v19 mirror, derived by HomesteadLedger and carried so a rolled-back
+                // client and a not-yet-redeployed groveWorth both keep working.
                 { "homesteadOwned", new List<object>(dto.homesteadOwned ?? new string[0]) },
                 { "homesteadPlaced", Placements(dto.homesteadPlaced) },
 
@@ -317,6 +322,33 @@ namespace GlimmerGrove.Cloud
         /// would silently become a nested path. Already sorted by
         /// <c>HomesteadLayout.WriteInto</c>, so the walk back is ordered.
         /// </summary>
+        /// <summary>
+        /// The stock rows, as a list of maps.
+        ///
+        /// A list rather than a map keyed by piece id, for <see cref="Placements"/>'s reason: a
+        /// piece id is content and a Firestore field name is not, so an id carrying a dot would
+        /// silently become a nested path. Already sorted by <c>GroveStock.Write</c>, so the walk
+        /// back is ordered and <see cref="SaveDelta"/> can compare it row by row.
+        /// </summary>
+        static List<object> Stock(HomesteadStockDto[] rows)
+        {
+            var list = new List<object>();
+            if (rows == null) return list;
+
+            foreach (var row in rows)
+            {
+                if (row == null || string.IsNullOrEmpty(row.id) || row.copies <= 0) continue;
+
+                list.Add(new Dictionary<string, object>
+                {
+                    { "id", row.id },
+                    { "copies", (long)row.copies },
+                });
+            }
+
+            return list;
+        }
+
         static List<object> Placements(HomesteadPlacementDto[] rows)
         {
             var list = new List<object>();
@@ -361,6 +393,10 @@ namespace GlimmerGrove.Cloud
                 legacyImportDone = Bool(doc, "legacyImportDone"),
                 tipsSeen = StrList(doc, "tipsSeen"),
                 companionsOwned = StrList(doc, "companionsOwned"),
+                // Read as well as written, and it is the v19 field. A document written by a
+                // device that has not updated carries the old id set and no stock at all, and
+                // GroveStock.In is what turns one into the other — so leaving this out would
+                // mean a sync from an older phone arrived as a grove with nothing bought.
                 homesteadOwned = StrList(doc, "homesteadOwned"),
                 groveLandOwned = StrList(doc, "groveLandOwned"),
                 checksum = Str(doc, "checksum"),
@@ -445,6 +481,7 @@ namespace GlimmerGrove.Cloud
             // Absent on a document written before the grove existed, which reads back as no
             // rows — and no rows is "this device has no opinion about any slot", so the join
             // takes the local side whole. Nothing has to detect the upgrade.
+            dto.homesteadStock = ReadStock(doc);
             dto.homesteadPlaced = ReadPlacements(doc);
 
             if (Map(doc, "progression") is IDictionary<string, object> progression)
@@ -518,6 +555,41 @@ namespace GlimmerGrove.Cloud
         /// The grove's arrangement, tolerating anything that is not one — the rule
         /// <see cref="ReadEventFloors"/> follows and for the same reason.
         /// </summary>
+        /// <summary>
+        /// The stock rows out of a cloud document, dropping anything malformed.
+        ///
+        /// A row with no id or a count that is not positive is skipped rather than repaired:
+        /// <c>GroveStock</c> would drop it a moment later anyway, and letting it through would
+        /// make the round trip write back a row it did not receive, which is exactly the
+        /// difference <see cref="SaveDelta"/> would then read as a change on every launch.
+        /// </summary>
+        static HomesteadStockDto[] ReadStock(IDictionary<string, object> doc)
+        {
+            if (!doc.TryGetValue("homesteadStock", out object raw) || !(raw is IEnumerable<object> items))
+                return new HomesteadStockDto[0];
+
+            var rows = new List<HomesteadStockDto>();
+
+            foreach (object item in items)
+            {
+                if (!(item is IDictionary<string, object> map)) continue;
+
+                string id = Str(map, "id");
+                if (string.IsNullOrEmpty(id)) continue;
+
+                long copies = Long(map, "copies", 0L);
+                if (copies <= 0L) continue;
+
+                rows.Add(new HomesteadStockDto
+                {
+                    id = id,
+                    copies = copies > GroveStock.MaxCopies ? GroveStock.MaxCopies : (int)copies,
+                });
+            }
+
+            return rows.ToArray();
+        }
+
         static HomesteadPlacementDto[] ReadPlacements(IDictionary<string, object> doc)
         {
             if (!doc.TryGetValue("homesteadPlaced", out object raw) || !(raw is IEnumerable<object> items))

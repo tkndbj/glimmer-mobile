@@ -583,6 +583,111 @@ check(card?.fields?.name?.stringValue === PUBLIC_NAME,
 check(card?.fields?.league?.stringValue?.startsWith("l"),
       "the card names a league", card?.fields?.league?.stringValue);
 
+// Placed after the forged-grove assertions rather than before them, and that is not
+// housekeeping: these cases rewrite the player's grove sets to isolate the arithmetic, so
+// running them first left every assertion above reading a grove this section had emptied.
+// ---------------------------------------------------------------- stock, live
+//
+// WHY THIS IS HERE AND NOT ONLY IN THE VECTORS. Save v20 made priced decor a count of
+// copies, and two things about that can only be seen against the deployed project. The
+// first has teeth: `hasOnly` in firestore.rules is an allow-list over the whole document,
+// so a client writing a key the released rules do not name loses *every* save write rather
+// than that one field — the failure invariant 12a is about, which is invisible until
+// something replaces the local save. The second is that `groveWorth` has to divide by the
+// bundle it reads out of `config/grove`, and a seeder that published no `bundles` block
+// would score every bundled piece at ten times what was paid for it, silently.
+//
+// The account is freshly seeded, so the cheapest bundled piece is chosen deliberately:
+// everything below has to stay under the affordability ceiling or the clamp would hide
+// exactly the arithmetic being proved.
+const bundleFields = groveConfig?.fields?.bundles?.mapValue?.fields ?? {};
+const bundledIds = Object.keys(bundleFields);
+
+check(bundledIds.length > 0,
+      "config/grove carries the bundle sizes",
+      `${bundledIds.length} bundled piece(s)`);
+
+const priceOf = (id) =>
+  Number(groveConfig?.fields?.pieces?.mapValue?.fields?.[id]?.integerValue ?? 0);
+const bundleOf = (id) => Number(bundleFields[id]?.integerValue ?? 1);
+
+const cheapest = bundledIds
+  .filter((id) => priceOf(id) > 0)
+  .sort((a, b) => priceOf(a) - priceOf(b))[0];
+
+const stockRows = (id, copies) => ({
+  arrayValue: { values: [{ mapValue: { fields: {
+    id: { stringValue: id },
+    copies: { integerValue: String(copies) },
+  } } }] },
+});
+
+const writeStock = (body) => fetch(
+  `${FS}/players/${uid}?updateMask.fieldPaths=homesteadStock` +
+  `&updateMask.fieldPaths=homesteadOwned&updateMask.fieldPaths=groveLandOwned` +
+  `&updateMask.fieldPaths=companionsOwned`,
+  { method: "PATCH", headers: json, body: JSON.stringify({ fields: body }) }
+);
+
+const scoreNow = async () => {
+  const r = await call("publishGrove", {});
+  if (r.status !== 200) return -1;
+  const c = await (await fetch(`${FS}/groves/${uid}`, { headers: bearer })).json();
+  return Number(c?.fields?.score?.integerValue ?? -1);
+};
+
+if (cheapest) {
+  const bundle = bundleOf(cheapest);
+  const price = priceOf(cheapest);
+
+  // The write itself is the assertion. A rules deploy that forgot this key answers 403 and
+  // the client silently stops syncing anything at all.
+  const oneBundle = await writeStock({
+    homesteadStock: stockRows(cheapest, bundle),
+    homesteadOwned: { arrayValue: { values: [] } },
+    groveLandOwned: { arrayValue: { values: [] } },
+    companionsOwned: { arrayValue: { values: [] } },
+  });
+  check(oneBundle.ok, "the released rules accept a homesteadStock write", String(oneBundle.status));
+
+  const stockScore = await scoreNow();
+  check(stockScore === price,
+        "one bundle of copies is worth the bundle, not ten of it",
+        `${stockScore} for ${bundle} copies of ${cheapest} at ${price}`);
+
+  // Ten bundles, still inside what a seeded account can afford, so the multiplication is
+  // read rather than clamped away.
+  const tenBundles = await writeStock({
+    homesteadStock: stockRows(cheapest, bundle * 10),
+    homesteadOwned: { arrayValue: { values: [] } },
+    groveLandOwned: { arrayValue: { values: [] } },
+    companionsOwned: { arrayValue: { values: [] } },
+  });
+  check(tenBundles.ok, "and a larger stock write too", String(tenBundles.status));
+
+  const tenScore = await scoreNow();
+  check(tenScore === price * 10,
+        "copies multiply, so buying more is worth more",
+        `${tenScore} against ${price * 10}`);
+
+  // The v19 shape has to keep scoring the same thing, because a device that has not updated
+  // still writes it — that is what the derived mirror on the client is for, and it is the
+  // whole reason this deploy could go out before the client.
+  const legacy = await writeStock({
+    homesteadStock: { arrayValue: { values: [] } },
+    homesteadOwned: { arrayValue: { values: [{ stringValue: cheapest }] } },
+    groveLandOwned: { arrayValue: { values: [] } },
+    companionsOwned: { arrayValue: { values: [] } },
+  });
+  check(legacy.ok, "a v19 client's owned set is still accepted", String(legacy.status));
+
+  const legacyScore = await scoreNow();
+  check(legacyScore === price,
+        "a v19 save reads as one bundle, so it scores exactly what it used to",
+        `${legacyScore} against ${price}`);
+}
+
+
 // Server-written, and that is the rule with teeth: everything on a card is derived from a
 // document the client controls, so a client that could write here would own the board.
 const forgeCard = await fetch(`${FS}/groves/${uid}?updateMask.fieldPaths=score`, {

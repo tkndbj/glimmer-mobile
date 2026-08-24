@@ -27,20 +27,36 @@ def rotl(mask, turns):
     return out
 
 
-def alike(solved, cross, turns):
+def alike(solved, cross, turns, gate=0):
     """Whether a tile turned this far from its solution is indistinguishable from it.
 
     Mirrors Puzzle.Alike, and it is the whole of "is this tile solved" everywhere here.
-    A crossing wears all four arms at every angle, so the bare mask comparison this
-    replaced calls every one of them solved - deriving a par short by one per twisted
+    Both four-armed tiles wear all four arms at every angle, so the bare mask comparison
+    this replaced calls every one of them solved - deriving a par short by one per twisted
     crossing, on a board that cannot be finished.
+
+    A briar's `gate` is the stricter reading and is asked first: a turn that merely swapped
+    a crossing's two interchangeable labels has moved a briar's thorns onto the way the
+    light was using.
     """
     if rotl(solved, turns) != solved:
         return False
+    if gate:
+        return rotl(gate, turns) == gate
     if not cross:
         return True
     strand = rotl(cross, turns)
     return strand == cross or strand == (solved & ~cross & 15)
+
+
+def live(c):
+    """The arms of a cell that actually carry light, in the authored solution.
+
+    Mirrors Puzzle.Live. Every tile but a briar conducts along every arm it draws; a briar
+    draws four and conducts two, which is the one place where "there is an arm here" and
+    "light may go this way" are different questions.
+    """
+    return c['gate'] or c['solved']
 
 
 def read_arms(tok, p):
@@ -57,34 +73,45 @@ def parse_token(tok, ctx):
         return None
 
 
-    if tok[0] not in '-=*@x':
+    if tok[0] not in '-=%*@x':
         errors.append(f"{ctx}: unknown head '{tok[0]}' in '{tok}'")
         return None
 
-    kind = {'-': 'pipe', '=': 'cross', '*': 'source', '@': 'lamp', 'x': 'duskcap'}[tok[0]]
+    kind = {'-': 'pipe', '=': 'cross', '%': 'briar', '*': 'source', '@': 'lamp',
+            'x': 'duskcap'}[tok[0]]
     mask, p = read_arms(tok, 1)
     if mask == 0:
         errors.append(f"{ctx}: '{tok}' has no arms")
         return None
 
-    cross = 0
+    # '+' names one of a four-armed tile's two pairs: on a crossing the arms carrying one
+    # flow, on a briar the arms that are open. The order matters on a briar and not on a
+    # crossing, which is the difference between the two mechanics stated in the grammar.
+    cross = gate = 0
     if p < len(tok) and tok[p] == '+':
-        if kind != 'cross':
-            errors.append(f"{ctx}: '+' separates the two strands of a crossing, written '=' ('{tok}')")
+        if kind not in ('cross', 'briar'):
+            errors.append(f"{ctx}: '+' separates the two pairs of arms on a crossing ('=') "
+                          f"or a briar ('%') ('{tok}')")
         second, p = read_arms(tok, p + 1)
         if second == 0:
             errors.append(f"{ctx}: '+' with no arms after it in '{tok}'")
         elif mask & second:
-            errors.append(f"{ctx}: the two strands of '{tok}' share an arm")
-        cross = mask
+            errors.append(f"{ctx}: the two pairs of '{tok}' share an arm")
+        if kind == 'briar':
+            gate = mask
+        else:
+            cross = mask
         mask |= second
 
-    if kind == 'cross':
-        other = mask & ~cross & 15
-        if not cross:
-            errors.append(f"{ctx}: '{tok}' must say which arms belong to which strand, as '=NS+EW'")
-        elif bin(cross).count('1') != 2 or bin(other).count('1') != 2:
-            errors.append(f"{ctx}: a crossing carries exactly two arms on each strand ('{tok}')")
+    if kind in ('cross', 'briar'):
+        named = cross or gate
+        other = mask & ~named & 15
+        if not named:
+            errors.append(f"{ctx}: '{tok}' must say which arms are which pair, as "
+                          f"'{'=NS+EW' if kind == 'cross' else '%NS+EW'}'")
+        elif bin(named).count('1') != 2 or bin(other).count('1') != 2:
+            errors.append(f"{ctx}: a {kind} carries exactly two arms on each of its two "
+                          f"pairs ('{tok}')")
 
     colour, rot, locked, fragile, link = 0, 0, False, 0, 0
     if p < len(tok) and tok[p] == '#':
@@ -113,9 +140,9 @@ def parse_token(tok, ctx):
         p += 2
     if p != len(tok):
         errors.append(f"{ctx}: trailing '{tok[p:]}' in '{tok}'")
-    if fragile and kind not in ('pipe', 'cross'):
+    if fragile and kind not in ('pipe', 'cross', 'briar'):
         errors.append(f"{ctx}: only a conduit can be fragile ('{tok}')")
-    if link and kind not in ('pipe', 'cross'):
+    if link and kind not in ('pipe', 'cross', 'briar'):
         errors.append(f"{ctx}: only a conduit can share a taproot ('{tok}')")
     if link and locked:
         errors.append(f"{ctx}: '{tok}' is both rooted and bound to a taproot")
@@ -127,9 +154,12 @@ def parse_token(tok, ctx):
         errors.append(f"{ctx}: a duskcap takes no colour ('{tok}')")
     if kind == 'cross' and colour:
         errors.append(f"{ctx}: a crossing takes no colour ('{tok}')")
+    if kind == 'briar' and colour:
+        errors.append(f"{ctx}: a briar takes no colour; it decides which way light may go, "
+                      f"never which light may go there ('{tok}')")
 
     return dict(kind=kind, solved=mask, rot=rot, locked=locked, colour=colour,
-                fragile=fragile, link=link, cross=cross)
+                fragile=fragile, link=link, cross=cross, gate=gate)
 
 
 # Difficulty, mirroring LevelTuning.cs and DifficultyRuleTable.cs. The star thresholds are
@@ -141,9 +171,40 @@ MIN_CLOCK_SCALE, MAX_CLOCK_SCALE = 0.60, 2.00
 FINISH_TAP_RATE, STAR_TAP_RATE = 1.2, 1.8
 
 
+MODE_BLOCKS = ("fall", "keeper", "weave")
+
+
 def check_level(level, chapter_id):
-    lid = level.get('id', '<no id>')
+    """A level is a glade, or it carries exactly one mode block.
+
+    Mirrors ContentMapper: the modes are asked which one claims the level rather than this
+    growing a branch each time one is added. Nothing outside the classic mode has authored
+    difficulty, so there is nothing here to prove about them beyond the block being sane -
+    the real checks live in each LevelMode.Validate and run in the Editor.
+    """
+    lid = level.get('id', '?')
+
+    claimed = [b for b in MODE_BLOCKS if level.get(b)]
+    if len(claimed) > 1:
+        errors.append("%s: carries %s blocks; a level is played one way"
+                      % (lid, " and ".join(claimed)))
+
+    if claimed:
+        block = level[claimed[0]]
+        if level.get('rows'):
+            errors.append("%s: carries both a grid and a '%s' block" % (lid, claimed[0]))
+        return dict(id=lid, chapter=chapter_id,
+                    w=block.get('width', 0), h=block.get('height', 0), par=0, limit=0, rate=0,
+                    gold=0, silver=0, lamps=0, sources=0, fragile=0, caps=0, bound=0,
+                    crossings=0, briars=0, mode=claimed[0])
+
+    # From here it is a glade: a grid of conduits, with everything that has to be proved
+    # about one.
     ctx = lid
+    if not level.get('rows'):
+        errors.append("%s: has no grid and no mode block, so there is no way to play it" % lid)
+        return None
+
     rows = level['rows']
     h = level.get('height') or len(rows)
     w = level.get('width') or max(len(r.split()) for r in rows)
@@ -210,7 +271,7 @@ def check_level(level, chapter_id):
                 colour |= ca['colour']
             ax, ay = a % w, a // w
             for d in range(4):
-                if not (ca['solved'] & BITS[d]):
+                if not (live(ca) & BITS[d]):
                     continue
                 if strand_at(ca, d) != sa:
                     continue
@@ -219,7 +280,7 @@ def check_level(level, chapter_id):
                 if nb is None:
                     continue
                 back = (d + 2) % 4
-                if not (nb['solved'] & BITS[back]):
+                if not (live(nb) & BITS[back]):
                     continue
                 into = (by * w + bx) * 2 + strand_at(nb, back)
                 if comp[into] != -1:
@@ -244,11 +305,11 @@ def check_level(level, chapter_id):
     for i, c in enumerate(cells):
         if not c or not c['locked']:
             continue
-        if alike(c['solved'], c['cross'], c['rot']):
+        if alike(c['solved'], c['cross'], c['rot'], c['gate']):
             continue
         owed = 0
         for k in range(4):
-            if alike(c['solved'], c['cross'], (c['rot'] + k) & 3):
+            if alike(c['solved'], c['cross'], (c['rot'] + k) & 3, c['gate']):
                 owed = k
                 break
         errors.append(f"{ctx}: the rooted tile at {i % w},{i // w} starts {owed} turn(s) from "
@@ -263,13 +324,13 @@ def check_level(level, chapter_id):
         if c['locked']:
             warnings.append(f"{ctx}: the fragile conduit at {fx},{fy} is also rooted, so it never wears")
             continue
-        if alike(c['solved'], c['cross'], 1):
+        if alike(c['solved'], c['cross'], 1, c['gate']):
             warnings.append(f"{ctx}: the conduit at {fx},{fy} is the same in every orientation, "
                             "so its fragility can never matter")
             continue
         owed = 0
         for k in range(4):
-            if alike(c['solved'], c['cross'], (c['rot'] + k) & 3):
+            if alike(c['solved'], c['cross'], (c['rot'] + k) & 3, c['gate']):
                 owed = k
                 break
         if owed > c['fragile']:
@@ -292,7 +353,8 @@ def check_level(level, chapter_id):
             errors.append(f"{ctx}: taproot '{letter}' has only the conduit at {i % w},{i // w} "
                           "on it; a root of one wears a binding mark and binds nothing")
             continue
-        if not any(all(alike(cells[i]['solved'], cells[i]['cross'], (cells[i]['rot'] + k) & 3)
+        if not any(all(alike(cells[i]['solved'], cells[i]['cross'], (cells[i]['rot'] + k) & 3,
+                             cells[i]['gate'])
                        for i in members) for k in range(4)):
             errors.append(f"{ctx}: the conduits on taproot '{letter}' can never all be right "
                           "at once, so the glade cannot be finished")
@@ -304,11 +366,43 @@ def check_level(level, chapter_id):
         warnings.append(f"{ctx}: carries {real_roots} taproots but a mark can only tell "
                         f"{MAX_READABLE_RUNES} of them apart")
 
-    lamps = lit = caps = woken = crossings = 0
+    def separates(i, c):
+        """Whether taking this briar's thorns off would join anything to anything.
+
+        Mirrors LevelValidator.CheckBriars. Only the thorned ways are asked about, and the
+        way has to be open on the *other* side too, or lifting these thorns would still join
+        nothing - which is what two briars back to back are. Deliberately not asked: whether
+        the tile carries any light, because a briar standing in an island of dark with its
+        thorns facing the grove is one of the best tiles this mechanic has.
+        """
+        mine = comp[i * 2]
+        for d in range(4):
+            if c['gate'] & BITS[d] or not c['solved'] & BITS[d]:
+                continue
+            bx, by = i % w + STEP[d][0], i // w + STEP[d][1]
+            nb = at(bx, by)
+            if nb is None:
+                continue
+            back = (d + 2) % 4
+            if not live(nb) & BITS[back]:
+                continue
+            if comp[(by * w + bx) * 2 + strand_at(nb, back)] != mine:
+                return True
+        return False
+
+    lamps = lit = caps = woken = crossings = briars = 0
     for i, c in enumerate(cells):
         if not c:
             continue
         have = energy(i)
+        if c['kind'] == 'briar':
+            briars += 1
+            if not separates(i, c):
+                bx, by = i % w, i // w
+                warnings.append(f"{ctx}: the thorns on the briar at {bx},{by} close nothing "
+                                "off in the authored solution - every way it has leads back "
+                                "into one network")
+            continue
         if c['kind'] == 'cross':
             crossings += 1
             cx, cy = i % w, i // w
@@ -355,15 +449,16 @@ def check_level(level, chapter_id):
             charged.add(c['link'])
             members = roots[c['link']]
             for k in range(4):
-                if all(alike(cells[i]['solved'], cells[i]['cross'], (cells[i]['rot'] + k) & 3)
+                if all(alike(cells[i]['solved'], cells[i]['cross'], (cells[i]['rot'] + k) & 3,
+                             cells[i]['gate'])
                        for i in members):
                     par += k
                     break
             continue
-        if alike(c['solved'], c['cross'], 1):
+        if alike(c['solved'], c['cross'], 1, c['gate']):
             continue
         for k in range(4):
-            if alike(c['solved'], c['cross'], (c['rot'] + k) & 3):
+            if alike(c['solved'], c['cross'], (c['rot'] + k) & 3, c['gate']):
                 par += k
                 break
 
@@ -402,7 +497,7 @@ def check_level(level, chapter_id):
     return dict(id=lid, chapter=chapter_id, w=w, h=h, par=par, limit=limit, rate=star_rate,
                 gold=-(-par * 135 // 100), silver=-(-par * 200 // 100),
                 lamps=lamps, sources=sources, fragile=fragile, caps=caps, bound=bound,
-                crossings=crossings)
+                crossings=crossings, briars=briars)
 
 
 # Canvas geometry, mirroring ChapterMap.cs. mapX/mapY are fractions of the chapter's
@@ -603,10 +698,11 @@ def check_grove(keys, level_ids, chapter_ids, companions, companion_costs=None):
     hearths = [hall] if hall else []
 
     piece_ids = set()
-    piece_starters = for_sale = earned = 0
+    piece_starters = for_sale = earned = bundled = 0
     total = 0
     dwellings = []
     decor_kinds = set()
+    bundle_kinds = {}
 
     for piece in pieces:
         pid = piece.get("id", "")
@@ -639,9 +735,41 @@ def check_grove(keys, level_ids, chapter_ids, companions, companion_costs=None):
                               "which is not a kind anything can be placed in")
             decor_kinds.add(slot_kind)
 
+        # A bundle is how many copies one purchase grants (save v20, HomesteadPiece.Bundle).
+        #
+        # THE DIVISIBILITY CHECK IS AN ERROR AND HAS TO BE. A copy is worth cost/bundle, so a
+        # fence costing 95 in tens makes every copy worth 9 and a player who buys the bundle is
+        # scored 90 for 95 credits spent. It looks perfectly authored, it cannot be seen on a
+        # device, and the server derives the same short figure — so nothing anywhere would
+        # disagree and report it, on the one number that reaches a public leaderboard.
+        bundle = int(piece.get("bundle", 1) or 1)
+        if bundle < 1:
+            errors.append(f"grove piece '{pid}' is sold in bundles of {bundle}; "
+                          "a purchase grants at least one copy")
+            bundle = 1
+        elif bundle > 1:
+            if cost <= 0:
+                errors.append(f"grove piece '{pid}' has no price but is sold in bundles of "
+                              f"{bundle}; an unpriced piece is an entitlement and is never "
+                              "counted in copies")
+            elif kind != "decor":
+                errors.append(f"grove piece '{pid}' is a {kind} sold in bundles of {bundle}; "
+                              "only decor is bought by the copy")
+            elif cost % bundle:
+                errors.append(f"grove piece '{pid}' costs {cost} in bundles of {bundle}, which "
+                              f"does not divide it - a copy would be worth {cost // bundle} and "
+                              f"the bundle {(cost // bundle) * bundle}, so the grove's worth "
+                              "would silently fall short of what was paid")
+            elif bundle > MAX_COPIES:
+                errors.append(f"grove piece '{pid}' is sold in bundles of {bundle}, above the "
+                              f"{MAX_COPIES} copies a player may hold")
+
         if cost > 0:
             for_sale += 1
             total += cost
+            if bundle > 1:
+                bundled += 1
+                bundle_kinds[piece.get("slot") or "ground"] = bundle
         if needs:
             earned += 1
         if not needs and cost <= 0:
@@ -772,6 +900,7 @@ def check_grove(keys, level_ids, chapter_ids, companions, companion_costs=None):
         "slots": cols * rows, "pieces": len(pieces),
         "residents": len(companions),
         "for_sale": for_sale, "earned": earned, "starters": piece_starters, "total": total,
+        "bundled": bundled, "bundle_kinds": bundle_kinds,
         "stars": ladder, "worth": everything, "roster": roster,
     }
 
@@ -783,6 +912,12 @@ MAX_GRANT = 5_000_000
 STORE_SHELVES = {"gems", "coins", "bundles"}
 STORE_KINDS = {"consumable", "nonconsumable"}
 HINT_DEFAULTS = {"refillCap": 3, "ceiling": 3, "refillSeconds": 8 * 60 * 60}
+
+# Mirrors GroveStock.MaxCopies — the structural ceiling on how many copies of one piece a
+# save may hold. A permanent const on both sides rather than anything published, for
+# HeartLimits.HardCeiling's reason: lowering a published one would cut a counter the merge
+# proof requires to be monotonic.
+MAX_COPIES = 9999
 
 
 def hint_pool(progression):
@@ -1134,14 +1269,14 @@ def main():
 
     print(f"{'#':<3}{'level id':<22}{'chapter':<16}{'size':<7}{'par':<5}{'gold':<6}{'silver':<7}"
           f"{'clock':<7}{'3*taps/s':<10}{'hearts':<7}{'critters':<9}{'brittle':<8}"
-          f"{'duskcaps':<10}{'roots':<7}crossings")
+          f"{'duskcaps':<10}{'roots':<7}{'crossings':<11}briars")
     for i, s in enumerate(summaries, 1):
         clock = "-" if not s['limit'] else f"{s['limit']}s"
         rate = "-" if not s['rate'] else f"{s['rate']:.2f}"
         print(f"{i:<3}{s['id']:<22}{s['chapter']:<16}{str(s['w'])+'x'+str(s['h']):<7}"
               f"{s['par']:<5}{s['gold']:<6}{s['silver']:<7}{clock:<7}{rate:<10}"
               f"{s['sources']:<7}{s['lamps']:<9}{s['fragile']:<8}{s['caps']:<10}"
-              f"{s['bound']:<7}{s['crossings']}")
+              f"{s['bound']:<7}{s['crossings']:<11}{s['briars']}")
 
     live_companions = [c for c in (manifest.get("companions") or [])
                        if c.get("id") and not c.get("disabled")]
@@ -1152,6 +1287,13 @@ def main():
                         {c["id"] for c in live_companions},
                         {c["id"]: int(c.get("unlockCost") or 0) for c in live_companions})
 
+    others = [x for x in summaries if x.get("mode")]
+    if others:
+        print()
+        print("other modes:")
+        for c in others:
+            print(f"  {c['id']:<24} {c['mode']:<10} {c['w']}x{c['h']}")
+
     if grove:
         print(f"\ngrove: {grove['cols']}x{grove['rows']} floor, {grove['slots']} tile(s), "
               f"{grove['pieces']} piece(s) - {grove['residents']} resident(s) from the roster, "
@@ -1160,6 +1302,13 @@ def main():
         print(f"       land: {grove['regions']} region(s), {grove['free_regions']} free, "
               f"{grove['owned_tiles']} tile(s) sellable - {grove['land']} credits to own it all")
         print(f"       home ladder: {grove['homes']} rung(s), {grove['ladder']} credits to the top")
+        if grove["bundled"]:
+            shelves = ", ".join(f"{k} x{n}" for k, n in sorted(grove["bundle_kinds"].items()))
+            print(f"       bundles: {grove['bundled']} of {grove['for_sale']} priced piece(s) "
+                  f"are sold by the bundle ({shelves}) - a copy is worth cost/bundle, so a "
+                  "bundle is worth what was paid for it")
+        else:
+            print("       bundles: every priced piece sells one copy at a time")
         if grove["worth"] > 0:
             rungs = ", ".join(f"{n + 1}@{at} ({round(at * 100 / grove['worth'])}%)"
                               for n, at in enumerate(grove["stars"]))

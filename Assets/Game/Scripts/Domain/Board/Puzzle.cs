@@ -11,7 +11,7 @@ namespace GlimmerGrove
     /// every load, but analytics and save records travel with level ids that were
     /// authored against a particular meaning of these numbers.
     /// </summary>
-    public enum Kind : byte { Empty = 0, Pipe = 1, Source = 2, Lamp = 3, Duskcap = 4, Crossing = 5 }
+    public enum Kind : byte { Empty = 0, Pipe = 1, Source = 2, Lamp = 3, Duskcap = 4, Crossing = 5, Briar = 6 }
 
     public struct Cell
     {
@@ -56,13 +56,36 @@ namespace GlimmerGrove
         public byte cross;
 
         /// <summary>
-        /// A conduit, plain or crossed — the tiles fragility and taproots are allowed to modify.
+        /// On a <see cref="Kind.Briar"/>, the two arms light is allowed along. 0 everywhere else.
         ///
-        /// A crossing is still a length of conduit; it only happens to carry two flows. Asking
-        /// this rather than comparing to <see cref="Kind.Pipe"/> is what stopped the two
-        /// modifiers silently refusing the newest tile on the board.
+        /// <para>
+        /// The other two arms are drawn, mate their neighbours and carry nothing — thorns have
+        /// closed them. So one mask says everything here too, and it is the mask that decides
+        /// the tile: <see cref="Puzzle.Alike"/> asks whether a turn leaves the same pair open,
+        /// which is why a straight briar is worth one tap where a straight crossing is worth
+        /// none. A crossing's two strands are interchangeable labels; a briar's two pairs are
+        /// the difference between a way through and a wall.
+        /// </para>
+        /// <para>
+        /// Kept apart from <see cref="cross"/> rather than folded into it, though both name
+        /// two of four arms. Every reader of <c>cross</c> asks it "how many flows does this
+        /// tile carry", and the answer for a briar is one — a shared field would have
+        /// <see cref="Puzzle.StrandCount"/> reporting two and the light walking down a closed
+        /// way with nothing anywhere saying so.
+        /// </para>
         /// </summary>
-        public bool IsConduit => kind == Kind.Pipe || kind == Kind.Crossing;
+        public byte gate;
+
+        /// <summary>
+        /// A conduit, plain, crossed or gated — the tiles fragility and taproots are allowed
+        /// to modify.
+        ///
+        /// A crossing is still a length of conduit; it only happens to carry two flows, and a
+        /// briar is one with two of its ways shut. Asking this rather than comparing to
+        /// <see cref="Kind.Pipe"/> is what stopped the two modifiers silently refusing the
+        /// newest tile on the board.
+        /// </summary>
+        public bool IsConduit => kind == Kind.Pipe || kind == Kind.Crossing || kind == Kind.Briar;
     }
 
     /// <summary>
@@ -86,6 +109,14 @@ namespace GlimmerGrove
     /// par, the near-miss reading — is unchanged, because to all of them a strand is simply
     /// what a cell always was. That is the whole reason the light model survived a mechanic
     /// whose entire point is that two networks can occupy one tile.
+    /// </para>
+    /// <para>
+    /// A <b>briar</b> (<see cref="Kind.Briar"/>) is the fourth, and it is the crossing's
+    /// opposite number: four arms again, but only one pair open and the other pair thorned
+    /// shut. So it changes neither the graph nor what a join means — only <em>which of a
+    /// tile's arms conduct</em>, which is <see cref="Live"/> and one word in two walks. What
+    /// it buys is the thing arms cannot buy: all four of its neighbours mate it at every
+    /// angle, so nothing about the pipe-fitting settles it and only colour or the dark can.
     /// </para>
     /// </summary>
     public sealed class Puzzle
@@ -144,6 +175,9 @@ namespace GlimmerGrove
 
         /// <summary>Crossings on this board: conduits carrying two flows that never meet.</summary>
         public int CrossingCount;
+
+        /// <summary>Briars on this board: conduits with two of their four ways thorned shut.</summary>
+        public int BriarCount;
 
 
         int _groups;
@@ -210,6 +244,7 @@ namespace GlimmerGrove
                 if (cells[i].kind == Kind.Lamp) LampCount++;
                 else if (cells[i].kind == Kind.Duskcap) DuskcapCount++;
                 else if (cells[i].kind == Kind.Crossing) CrossingCount++;
+                else if (cells[i].kind == Kind.Briar) BriarCount++;
 
                 int rune = cells[i].link;
                 if (rune == 0 || rune > MaxRunes) continue;
@@ -308,11 +343,42 @@ namespace GlimmerGrove
         {
             int solved = cell.solved;
             if (Rotl(solved, turns) != solved) return false;
+
+            // A briar is decided by which pair is open and by nothing else — its arms are the
+            // same four at every angle, exactly like a crossing's, and the mask comparison
+            // above has therefore already said yes. Asked before the crossing branch because
+            // the two fields are exclusive and this one is the stricter reading: a turn that
+            // merely swapped a crossing's labels has moved a briar's thorns onto the way the
+            // light was using.
+            if (cell.gate != 0) return Rotl(cell.gate, turns) == cell.gate;
+
             if (cell.cross == 0) return true;
 
             int strand = Rotl(cell.cross, turns);
             return strand == cell.cross || strand == (solved & ~cell.cross & 15);
         }
+
+        /// <summary>
+        /// The arms of a cell that actually carry light, as it is turned right now.
+        ///
+        /// <para>
+        /// Every tile but a briar answers <see cref="Mask"/>, because every other tile
+        /// conducts along every arm it draws. A briar draws four and conducts two, so the
+        /// light walks this and the drawing walks <c>Mask</c> — the one place in the game
+        /// where "there is an arm here" and "light may go this way" are different questions.
+        /// </para>
+        /// <para>
+        /// The shut pair still has to be <em>drawn</em> and still has to mate its neighbours
+        /// (<c>LevelValidator.CheckArmsMate</c> knows nothing about gates), and that is the
+        /// whole mechanic rather than an implementation detail: the player is looking at a
+        /// way through that is closed, next to a way through that is open, and one tap swaps
+        /// them.
+        /// </para>
+        /// </summary>
+        public int Live(int i) => C[i].gate != 0 ? Rotl(C[i].gate, C[i].rot) : Mask(i);
+
+        /// <summary>The same question asked of the authored solution, ignoring how a tile is turned.</summary>
+        static int SolvedLive(in Cell cell) => cell.gate != 0 ? cell.gate : cell.solved;
 
         /// <summary>
         /// Which of a cell's strands the arm pointing in direction <paramref name="d"/>
@@ -407,10 +473,9 @@ namespace GlimmerGrove
         /// player can catch being generous is worse than none.
         /// </para>
         /// <para>
-        /// Only conduits the solution's own light graph reaches are counted. A decorative
-        /// pipe strung off the network can sit at any angle in a perfectly winnable board,
-        /// and charging the player turns for straightening it would inflate every reading.
-        /// <see cref="SolutionDepth"/> already distinguishes the two.
+        /// Which conduits count is <see cref="Matters"/>, and the argument for both halves of
+        /// it is there. In short: the solution's own light graph, plus whatever the player has
+        /// lit that it did not.
         /// </para>
         /// <para>
         /// -1 when a conduit the solution needs has crumbled. There is then no turn count
@@ -433,9 +498,9 @@ namespace GlimmerGrove
 
                 for (int i = 0; i < C.Length; i++)
                 {
-                    // Unreached by the solution's own light: decoration, and free to be
-                    // pointing anywhere at all.
-                    if (SolutionDepth[i] == int.MaxValue) continue;
+                    // Neither the solution's light nor the player's reaches it: decoration,
+                    // and free to be pointing anywhere at all.
+                    if (!Matters(i)) continue;
 
                     if (Shattered(i)) return -1;
                     if (C[i].kind == Kind.Empty) continue;
@@ -453,6 +518,28 @@ namespace GlimmerGrove
                 return total;
             }
         }
+
+        /// <summary>
+        /// Whether this tile's orientation is part of the distance to the solution.
+        ///
+        /// <para>
+        /// The first clause is the old rule and the reason it exists: a conduit the solution's
+        /// light never reaches can sit at any angle in a perfectly winnable board, so charging
+        /// the player turns for straightening it would inflate every reading.
+        /// </para>
+        /// <para>
+        /// The second is a briar's doing, and without it <see cref="TurnsToSolution"/> can be
+        /// <em>generous</em> — the single thing it exists not to be. Before briars this could
+        /// not happen: joining the light to an island of dark needs a mated pair of arms, the
+        /// authored solution mates none across that divide, so one of the two tiles had to be
+        /// a lit one turned off its solution and was already being counted. A briar's shut
+        /// arms mate straight across the divide. Open them and the dark lights up with every
+        /// counted tile still exactly right, and the board would report itself solved while
+        /// refusing to settle. So a tile the player has lit counts, whatever the solution
+        /// wanted of it.
+        /// </para>
+        /// </summary>
+        bool Matters(int i) => SolutionDepth[i] != int.MaxValue || Depth[i] >= 0;
 
         /// <summary>Whether this tile alone reads the same at every angle.</summary>
         public bool InertAlone(int i) => Alike(C[i], 1);
@@ -543,7 +630,7 @@ namespace GlimmerGrove
                     int node = _q.Dequeue();
                     int a = node / Strands, onA = node % Strands;
                     if (C[a].kind == Kind.Source) colour |= C[a].colour;
-                    int ma = Mask(a);
+                    int ma = Live(a);
                     for (int d = 0; d < 4; d++)
                     {
                         if ((ma & Bits[d]) == 0) continue;
@@ -555,7 +642,7 @@ namespace GlimmerGrove
                         int b = Neighbour(a, d);
                         if (b < 0) continue;
                         int back = (d + 2) & 3;
-                        if ((Mask(b) & Bits[back]) == 0) continue;
+                        if ((Live(b) & Bits[back]) == 0) continue;
 
                         int into = Node(b, StrandAt(b, back));
                         if (_comp[into] != -1) continue;
@@ -574,7 +661,7 @@ namespace GlimmerGrove
             {
                 int node = _q.Dequeue();
                 int a = node / Strands, onA = node % Strands;
-                int ma = Mask(a);
+                int ma = Live(a);
                 for (int d = 0; d < 4; d++)
                 {
                     if ((ma & Bits[d]) == 0) continue;
@@ -583,7 +670,7 @@ namespace GlimmerGrove
                     int b = Neighbour(a, d);
                     if (b < 0) continue;
                     int back = (d + 2) & 3;
-                    if ((Mask(b) & Bits[back]) == 0) continue;
+                    if ((Live(b) & Bits[back]) == 0) continue;
 
                     int into = Node(b, StrandAt(b, back));
                     if (_strandDepth[into] >= 0) continue;
@@ -712,13 +799,13 @@ namespace GlimmerGrove
                 int a = node / Strands, onA = node % Strands;
                 for (int d = 0; d < 4; d++)
                 {
-                    if ((C[a].solved & Bits[d]) == 0) continue;
+                    if ((SolvedLive(C[a]) & Bits[d]) == 0) continue;
                     if (SolvedStrandAt(a, d) != onA) continue;
 
                     int b = Neighbour(a, d);
                     if (b < 0) continue;
                     int back = (d + 2) & 3;
-                    if ((C[b].solved & Bits[back]) == 0) continue;
+                    if ((SolvedLive(C[b]) & Bits[back]) == 0) continue;
 
                     int into = Node(b, SolvedStrandAt(b, back));
                     if (reach[into] != int.MaxValue) continue;
@@ -751,7 +838,7 @@ namespace GlimmerGrove
 
             for (int i = 0; i < C.Length; i++)
             {
-                if (SolutionDepth[i] == int.MaxValue) continue;
+                if (!Matters(i)) continue;
                 if (!Used(i) || TurnsOwed(i) == 0) continue;
                 into.Add(i);
             }

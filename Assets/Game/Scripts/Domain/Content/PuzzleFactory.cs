@@ -15,6 +15,14 @@ namespace GlimmerGrove.Content
         {
             puzzle = null;
 
+            // A chain level has no board at all. Refused here rather than throwing, because
+            // "this level is not played on a grid" is an ordinary fact about the catalog now.
+            if (level.Layout == null)
+            {
+                errors = new[] { $"level '{level.Id}' is not played on a conduit board" };
+                return false;
+            }
+
             var parsed = LevelGridParser.Parse(level.Layout);
             errors = parsed.Errors;
             if (!parsed.Ok) return false;

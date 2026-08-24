@@ -270,6 +270,11 @@ namespace GlimmerGrove
             }
 
             PaintTabs();
+
+            // The emblems, in a scope of their own that survives every shelf change — see
+            // HomesteadArt.OpenTabsAsync. Asked for once here rather than on every shelf,
+            // which is the whole point of it having a lifetime of its own.
+            HomesteadArt.OpenTabsAsync(() => { if (this) PaintTabs(); });
         }
 
         void PaintTabs()
@@ -426,9 +431,37 @@ namespace GlimmerGrove
                 _mark.raycastTarget = false;
             }
 
+            /// <summary>
+            /// Whether this tab was live the last time it was painted, and whether it has ever
+            /// been painted at all.
+            ///
+            /// <para>
+            /// <see cref="GridView"/>'s <c>Show</c>/<c>Refresh</c> rule, on a control rather
+            /// than on a list, and it is here for exactly the reason it is there: this row is
+            /// repainted by <em>events</em> — a balance moving, a ledger changing, a run
+            /// finishing, the shelf's atlas landing — and every one of those was replaying the
+            /// selected tab's entrance. Tapping a tab fires two of them back to back (the
+            /// reload, then the atlas callback), which is the flicker.
+            /// </para>
+            /// </summary>
+            bool _live, _painted;
+
+            /// <summary>
+            /// Restyles the tab, and animates only when its selected-ness has actually moved.
+            ///
+            /// <para>
+            /// Colours and sprites are assigned unconditionally because they are idempotent —
+            /// Unity's own setters compare before dirtying a mesh. The <em>animation</em> is
+            /// the part that must not repeat.
+            /// </para>
+            /// </summary>
             public void Restyle(bool live)
             {
                 if (!_plate) return;
+
+                bool moved = !_painted || live != _live;
+                _painted = true;
+                _live = live;
 
                 _plate.color = live ? new Color(.10f, .26f, .27f, .96f)
                                     : new Color(.06f, .12f, .16f, .72f);
@@ -450,7 +483,22 @@ namespace GlimmerGrove
                         ? (live ? Pal.Verdant : Pal.A(Pal.Verdant, .55f))
                         : (live ? Color.white : new Color(1f, 1f, 1f, .55f));
 
-                if (live) Tween.Pop(_plate.transform, .86f, .3f);
+                if (!live || !moved) return;
+
+                // Reset before popping, and that is not tidiness — it is the bug this fixes.
+                //
+                // Tween.Pop reads the transform's *current* scale as the size to spring back
+                // to. A second pop landing inside the first one's 0.3s therefore captures a
+                // half-sprung scale as its new resting size and springs to that instead of to
+                // one, so the tab ends up permanently smaller — and smaller again on the next
+                // one, because the mistake compounds. Reported from play as filter buttons
+                // shrinking. The channel does not save it: killing the old tween is exactly
+                // what leaves the transform mid-flight for the new one to read.
+                //
+                // The same hazard HomesteadScreen records for Tween.Breathe on an empty tile's
+                // ring, in the other place a repeated animation reads its own start state.
+                _plate.transform.localScale = Vector3.one;
+                Tween.Pop(_plate.transform, .86f, .3f);
             }
         }
 
@@ -631,6 +679,15 @@ namespace GlimmerGrove
                     ? (Loc.Get("ui.grove.home_best"), Pal.A(Pal.Gold, .95f))
                     : (Loc.Format("ui.grove.price", Compact.Number(piece.Cost)),
                        Profile.CanAfford(piece.Cost) ? Pal.A(Pal.Sun, .95f) : Pal.A(Pal.Sun, .58f));
+
+            // Stock keeps its price on the cell, because a stocked piece is never finished
+            // being sold — "Yours" over something the player wants three more of is the cell
+            // refusing to answer the question they opened the shop with. The count leads,
+            // because how many they already have is what decides whether to buy again.
+            if (held && piece.IsStocked)
+                return (Loc.Format("ui.grove.owned_price", HomesteadLedger.Copies(piece),
+                                   Compact.Number(piece.Cost)),
+                        Profile.CanAfford(piece.Cost) ? Pal.A(Pal.Mint, .95f) : Pal.A(Pal.Mint, .62f));
 
             if (held) return (Loc.Get("ui.grove.yours"), Pal.A(Pal.Mint, .95f));
 

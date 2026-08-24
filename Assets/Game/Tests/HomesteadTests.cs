@@ -164,18 +164,47 @@ namespace GlimmerGrove.Tests
             Assert.IsFalse(live.IsChapterFinished(ChapterId.None));
         }
 
-        // ================================================ purchases: a union
-        [Test]
-        public void PurchasesJoinAsAUnionInEitherOrder()
+        // ============================================== purchases: a per-id max
+        static HomesteadStockDto[] Stock(params (string id, int copies)[] rows)
         {
-            var a = new[] { "bench", "oak" };
-            var b = new[] { "lantern", "oak" };
+            var dto = new HomesteadStockDto[rows.Length];
+            for (int i = 0; i < rows.Length; i++)
+                dto[i] = new HomesteadStockDto { id = rows[i].id, copies = rows[i].copies };
+
+            return dto;
+        }
+
+        static string Describe(HomesteadStockDto[] rows)
+        {
+            var parts = new List<string>();
+            foreach (var row in rows) parts.Add(row.id + "=" + row.copies);
+            return string.Join(",", parts);
+        }
+
+        [Test]
+        public void PurchasesJoinByKeepingTheLargerCountInEitherOrder()
+        {
+            // The whole reason a count is representable in this file. Copies *ever bought* only
+            // rise, so the larger side is always the one that has heard about more purchases,
+            // and max is idempotent and order-independent without trying.
+            var a = Stock(("bench", 2), ("oak", 5));
+            var b = Stock(("lantern", 1), ("oak", 3));
 
             var left = HomesteadLedger.Join(a, b);
             var right = HomesteadLedger.Join(b, a);
 
-            CollectionAssert.AreEqual(new[] { "bench", "lantern", "oak" }, left);
-            CollectionAssert.AreEqual(left, right, "a join is commutative or it is not a join");
+            Assert.AreEqual("bench=2,lantern=1,oak=5", Describe(left));
+            Assert.AreEqual(Describe(left), Describe(right),
+                            "a join is commutative or it is not a join");
+        }
+
+        [Test]
+        public void JoiningPurchasesWithItselfChangesNothing()
+        {
+            var mine = Stock(("bench", 4), ("oak", 1));
+
+            Assert.AreEqual("bench=4,oak=1", Describe(HomesteadLedger.Join(mine, mine)),
+                            "a join is idempotent or a sync writes for ever");
         }
 
         [Test]
@@ -184,43 +213,92 @@ namespace GlimmerGrove.Tests
             // No early return for an empty side, deliberately. Handing one array straight back
             // would skip the sort, and SaveDelta walks these in order — so an unsorted file
             // would read as changed on every launch and push a write for nothing, forever.
-            var unsorted = new[] { "oak", "bench" };
+            var unsorted = Stock(("oak", 1), ("bench", 1));
 
-            CollectionAssert.AreEqual(new[] { "bench", "oak" }, HomesteadLedger.Join(unsorted, null));
-            CollectionAssert.AreEqual(new[] { "bench", "oak" }, HomesteadLedger.Join(null, unsorted));
+            Assert.AreEqual("bench=1,oak=1", Describe(HomesteadLedger.Join(unsorted, null)));
+            Assert.AreEqual("bench=1,oak=1", Describe(HomesteadLedger.Join(null, unsorted)));
         }
 
         [Test]
         public void AnIdThisBuildDoesNotKnowSurvivesTheJoin()
         {
             // A piece bought on a newer build must not be confiscated by a trip through an
-            // older one. It costs one short string; losing it costs a purchase.
-            var joined = HomesteadLedger.Join(new[] { "from_the_future" }, new[] { "bench" });
+            // older one. It costs one short row; losing it costs a purchase.
+            var joined = HomesteadLedger.Join(Stock(("from_the_future", 3)), Stock(("bench", 1)));
 
-            CollectionAssert.Contains(joined, "from_the_future");
+            Assert.AreEqual("bench=1,from_the_future=3", Describe(joined));
         }
 
         [Test]
-        public void HoldingAPieceIsPermissionToDrawItEverywhereRatherThanOneCopy()
+        public void APieceIsHeldOnceOneCopyHasBeenBoughtHoweverManyArePlaced()
         {
-            // The decision the whole save shape rests on. A count of copies would be hearts'
-            // old mistake — two devices at 3 and 1 are equally consistent with "one bought two
-            // more" and "one has not heard" — so a purchase buys the right to draw a piece and
-            // nothing limits how often.
-            HomesteadLedger.LoadFrom(new SaveFileDto { homesteadOwned = new[] { "fence" } });
+            // Held is "was this ever paid for", which is what the shop's padlock and the
+            // picker's grid both ask. How many are left to place is a different question with
+            // a different answer — see AvailableIsWhatWasBoughtMinusWhatIsStanding.
+            HomesteadLedger.LoadFrom(new SaveFileDto { homesteadStock = Stock(("fence", 3)) });
 
             Assert.IsTrue(HomesteadLayout.Place("a", "fence"));
             Assert.IsTrue(HomesteadLayout.Place("b", "fence"));
-            Assert.IsTrue(HomesteadLayout.Place("c", "fence"));
 
             Assert.AreEqual("fence", HomesteadLayout.At("a"));
-            Assert.AreEqual("fence", HomesteadLayout.At("c"));
+            Assert.AreEqual(2, HomesteadLayout.CountOf("fence"));
 
             var save = new SaveFileDto();
             HomesteadLedger.WriteInto(save);
 
-            CollectionAssert.AreEqual(new[] { "fence" }, save.homesteadOwned,
-                                      "three placements are still one entitlement");
+            Assert.AreEqual("fence=3", Describe(save.homesteadStock),
+                            "placing spends nothing; it is the buying that is written down");
+            // The v19 mirror rides along, derived from the stock rather than kept beside it —
+            // which is what lets a rolled-back client and a server that has not been redeployed
+            // both still see what this player owns. It can never re-grant anything: GroveStock.In
+            // only looks at it when the stock section is empty.
+            CollectionAssert.AreEqual(new[] { "fence" }, save.homesteadOwned);
+            Assert.AreEqual("fence=3", Describe(GroveStock.In(save)),
+                            "a file carrying both is read as the v20 file it is");
+        }
+
+        // ==================================================== v19 → v20 migration
+        [Test]
+        public void AV19FileGivesOneCopyOfEachPieceItOwned()
+        {
+            // A purchase is worth what it cost. Ten copies of a singly-sold oak would be a
+            // grove worth forty thousand where four was paid — see GroveStock.LegacyGrant for
+            // why generosity here was tried and lost.
+            var file = new SaveFileDto { homesteadOwned = new[] { "oak", "bench" } };
+
+            Assert.AreEqual("bench=1,oak=1", Describe(GroveStock.In(file)));
+        }
+
+        [Test]
+        public void AV19FileKeepsEveryPlacementItAlreadyHad()
+        {
+            // Before v20 owning a fence meant standing eleven of them, so the migration has to
+            // cover what was built or the grove would open over-placed with nothing to buy
+            // back. Counted off the same DTO, because HomesteadLayout has not been loaded yet.
+            var file = new SaveFileDto
+            {
+                homesteadOwned = new[] { "fence" },
+                homesteadPlaced = new[] { Row("a", "fence", 10), Row("b", "fence", 10),
+                                          Row("c", "fence", 10), Row("d", string.Empty, 10) },
+            };
+
+            Assert.AreEqual("fence=3", Describe(GroveStock.In(file)));
+        }
+
+        [Test]
+        public void AMigratedFileIsNotMigratedTwice()
+        {
+            // The v19 field is never written back, so this cannot re-run against its own
+            // output and re-grant what a player has since spent. Belt and braces: a file
+            // carrying both is read as the v20 one it is.
+            var file = new SaveFileDto
+            {
+                homesteadStock = Stock(("fence", 40)),
+                homesteadOwned = new[] { "fence", "oak" },
+            };
+
+            Assert.AreEqual("fence=40", Describe(GroveStock.In(file)),
+                            "the stock section wins outright when it has anything in it");
         }
 
         // ============================================ placement: recency, per slot

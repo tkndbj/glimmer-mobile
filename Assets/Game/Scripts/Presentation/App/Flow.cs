@@ -136,8 +136,26 @@ namespace GlimmerGrove
 
         // ------------------------------------------------------------ screens
         public static void Go<T>(Action<T> configure = null, bool instant = false) where T : View
+            => Go(typeof(T), v => configure?.Invoke((T)v), instant);
+
+        /// <summary>
+        /// The same, told which screen at run time rather than at compile time.
+        ///
+        /// It exists so a mode can <em>name</em> its screen (see <c>ModeLook.Screen</c>) instead
+        /// of every caller switching on the mode to pick one. The generic overload above is the
+        /// ordinary way in and now simply calls this, so there is one implementation of what a
+        /// screen change does rather than two that could come to disagree about, say, whether
+        /// multi-touch is reapplied.
+        /// </summary>
+        public static void Go(Type view, Action<View> configure = null, bool instant = false)
         {
             if (Busy) return;
+            if (view == null || !typeof(View).IsAssignableFrom(view))
+            {
+                Debug.LogError($"[Flow] '{view}' is not a screen");
+                return;
+            }
+
             Busy = true;
 
             void Swap()
@@ -146,16 +164,16 @@ namespace GlimmerGrove
                 _modals.Clear();
                 if (Current) UnityEngine.Object.Destroy(Current.gameObject);
 
-                var rt = UIKit.Node(typeof(T).Name, Screens);
-                var view = rt.gameObject.AddComponent<T>();
-                configure?.Invoke(view);
-                view.Init();
-                Current = view;
-                if (view.Track != null) Audio.Music(view.Track);
+                var rt = UIKit.Node(view.Name, Screens);
+                var screen = (View)rt.gameObject.AddComponent(view);
+                configure?.Invoke(screen);
+                screen.Init();
+                Current = screen;
+                if (screen.Track != null) Audio.Music(screen.Track);
 
                 // Applied on every swap rather than only when it changes, so the answer is
                 // always the incoming screen's own — see View.WantsMultiTouch.
-                Input.multiTouchEnabled = view.WantsMultiTouch;
+                Input.multiTouchEnabled = screen.WantsMultiTouch;
             }
 
             if (instant)

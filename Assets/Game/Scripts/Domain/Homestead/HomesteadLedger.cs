@@ -38,8 +38,27 @@ namespace GlimmerGrove.Homestead
     {
         public readonly HomesteadPurchaseState State;
 
-        /// <summary>The price, or 0 when there is none.</summary>
+        /// <summary>
+        /// The price of the whole order — one bundle's price times <see cref="Quantity"/>.
+        ///
+        /// <b>Not a unit price.</b> Every caller is about to draw a button that takes this many
+        /// credits, so quoting anything else here would make the panel's arithmetic the
+        /// panel's problem, in three panels, one of which would get it wrong.
+        /// </summary>
         public readonly long Cost;
+
+        /// <summary>
+        /// How many bundles this offer is for. One unless a stepper asked for more.
+        ///
+        /// It rides the offer rather than being passed beside it so that
+        /// <see cref="HomesteadOffer.Shortfall"/>, the buy button's caption and the debit can
+        /// never come from two different numbers — the bug the win panel's separately-derived
+        /// reward row already proved is real.
+        /// </summary>
+        public readonly int Quantity;
+
+        /// <summary>How many copies land in the player's stock if this offer is taken.</summary>
+        public readonly int Copies;
 
         /// <summary>Credits the player is holding, for a panel that shows the gap.</summary>
         public readonly long Balance;
@@ -48,12 +67,14 @@ namespace GlimmerGrove.Homestead
         public readonly int RequiredLevel;
 
         public HomesteadOffer(HomesteadPurchaseState state, long cost, long balance,
-                              int requiredLevel = 0)
+                              int requiredLevel = 0, int quantity = 1, int copies = 0)
         {
             RequiredLevel = requiredLevel;
             State = state;
             Cost = cost;
             Balance = balance;
+            Quantity = quantity < 1 ? 1 : quantity;
+            Copies = copies < 0 ? 0 : copies;
         }
 
         public bool CanBuy => State == HomesteadPurchaseState.Ready;
@@ -83,11 +104,21 @@ namespace GlimmerGrove.Homestead
     /// proved: a set of permanent ids that only ever grows.
     /// </para>
     /// <para>
-    /// <b>What a purchase buys is permission, not a copy.</b> Holding <c>fence_low</c> means
-    /// every slot in the grove may draw a low fence — one of them, or all of them. See
-    /// <see cref="HomesteadPiece"/> for why a count of copies is not merely undesirable but
-    /// unrepresentable in a file that has to merge across devices, and why the shop is
-    /// better for it.
+    /// <b>A purchase buys copies; an entitlement buys permission.</b> Buying <c>fence_low</c>
+    /// grants <see cref="HomesteadPiece.Bundle"/> fences and each one stands somewhere, so a
+    /// grove that wants a dozen buys a dozen. Anything <em>earned</em> — the starter pieces,
+    /// the eight glade rewards, every resident, every home rung — is held exactly as it was
+    /// before v20: unlimited, derived where it can be, and never counted. The split is the
+    /// design rather than a compromise. Stock is the shop's half of the feature and it should
+    /// run out; an entitlement is play's half and it should not.
+    /// </para>
+    /// <para>
+    /// <b>What is left is derived, never stored.</b> <see cref="Available(HomesteadPiece)"/> is
+    /// copies bought minus copies standing in the grove, and both sides are already in the save
+    /// file and already merged. That is what makes a count representable here at all — see
+    /// <see cref="GroveStock"/> for the full argument, and note the subtraction is clamped at
+    /// zero rather than trusted: two devices can each place the last copy on a different tile,
+    /// and the answer to that is a shop that says "none left", never a placement taken down.
     /// </para>
     /// <para>
     /// <b>The forging bound is the same one companions accept.</b> The set is client-written,
@@ -100,10 +131,28 @@ namespace GlimmerGrove.Homestead
     /// </summary>
     public static class HomesteadLedger
     {
-        static readonly HashSet<string> _bought = new HashSet<string>(StringComparer.Ordinal);
+        static readonly GroveStock _stock = new GroveStock();
 
         /// <summary>Prefix on a purchase's spend reason. Read by support, never by code.</summary>
         public const string SpendReason = "grove:";
+
+        /// <summary>
+        /// Most bundles one tap of the buy button may order.
+        ///
+        /// <para>
+        /// An <em>economy</em> bound rather than a structural one, which is why it lives here
+        /// and not on <see cref="GroveStock"/>: the structural ceiling exists so a hostile file
+        /// cannot overflow a sum, and this exists so a stepper cannot spend a player's entire
+        /// balance in one held-down press. They are different jobs and a single number serving
+        /// both would eventually be moved for one reason and break the other —
+        /// <c>HeartLimits.HardCeiling</c> against the published ceiling, one file over.
+        /// </para>
+        /// <para>
+        /// Twenty of a ten-piece bundle is two hundred copies against a 196-tile floor, so it
+        /// binds only somebody who has stopped reading the screen.
+        /// </para>
+        /// </summary>
+        public const int MaxPerPurchase = 20;
 
         /// <summary>Raised when the held set changed, so an open screen can redraw.</summary>
         public static event Action Changed;
@@ -161,7 +210,7 @@ namespace GlimmerGrove.Homestead
             if (!piece.IsValid) return false;
             if (piece.IsResident) return CompanionLedger.IsHeld(GroveResidents.CompanionOf(piece), KeeperLevel);
 
-            if (_bought.Contains(piece.Id)) return true;
+            if (_stock.Any(piece.Id)) return true;
             return IsEarned(piece);
         }
 
@@ -226,14 +275,95 @@ namespace GlimmerGrove.Homestead
         /// <see cref="IsHeld(HomesteadPiece)"/>: most of the roster is earned and was never
         /// bought, so gating anything on this locks the grove.
         /// </summary>
-        /// <summary>How many pieces were paid for. See <c>CompanionLedger.BoughtCount</c>.</summary>
-        public static int BoughtCount => _bought.Count;
+        /// <summary>
+        /// How many <em>distinct</em> pieces were paid for. See <c>CompanionLedger.BoughtCount</c>.
+        ///
+        /// Distinct rather than a copy count, because every reader of this is counting the shop
+        /// grid's cells rather than the grove's tiles.
+        /// </summary>
+        public static int BoughtCount => _stock.Count;
 
         public static bool WasBought(HomesteadPiece piece)
             => piece.IsValid
             && (piece.IsResident
                     ? CompanionLedger.WasBought(GroveResidents.CompanionOf(piece))
-                    : _bought.Contains(piece.Id));
+                    : _stock.Any(piece.Id));
+
+        // ------------------------------------------------------------- stock
+        /// <summary>
+        /// How many copies of this piece the player has bought over the life of the account.
+        ///
+        /// The stored half. It only rises, which is what lets it be stored (invariant 11b);
+        /// what is left to place is <see cref="Available(HomesteadPiece)"/>.
+        /// </summary>
+        public static int Copies(HomesteadPiece piece)
+            => piece.IsStocked ? _stock.Of(piece.Id) : 0;
+
+        /// <summary>
+        /// How many copies of this piece the player may still stand somewhere.
+        ///
+        /// <para>
+        /// <see cref="Unlimited"/> for anything that is not stocked — every resident, every home
+        /// rung, and every piece that is free or earned by playing. Those are entitlements and
+        /// behave exactly as the whole catalog did before v20.
+        /// </para>
+        /// <para>
+        /// For a stocked piece it is copies bought minus copies standing, <b>clamped at
+        /// zero</b>. The clamp is not defensive tidying: two devices editing offline can each
+        /// place the last copy on a different tile, and the placement map merges by recency per
+        /// slot (invariant 11c), so both survive and the grove briefly holds one more fence than
+        /// it bought. Answering "none left" costs the player nothing and resolves the moment
+        /// they buy or clear anything; taking a placement down to balance an identity would be
+        /// the data loss invariant 11 exists to refuse.
+        /// </para>
+        /// </summary>
+        public static int Available(HomesteadPiece piece)
+        {
+            if (!piece.IsValid) return 0;
+            if (!piece.IsStocked) return IsHeld(piece) ? Unlimited : 0;
+
+            int left = _stock.Of(piece.Id) - HomesteadLayout.CountOf(piece.Id);
+            return left < 0 ? 0 : left;
+        }
+
+        /// <summary>
+        /// What <see cref="Available(HomesteadPiece)"/> answers for a piece that cannot run out.
+        ///
+        /// A large number rather than a nullable or a second predicate, so every caller can do
+        /// plain arithmetic on the answer and the one branch that cares reads
+        /// <see cref="HomesteadPiece.IsStocked"/> — which is the honest question anyway.
+        /// </summary>
+        public const int Unlimited = int.MaxValue;
+
+        /// <summary>True when the player can put another of these in their grove right now.</summary>
+        public static bool CanPlace(HomesteadPiece piece)
+            => piece.CanBePlaced && IsHeld(piece) && Available(piece) > 0;
+
+        /// <summary>
+        /// How many bundles the player could afford and hold, for a stepper's upper stop.
+        ///
+        /// Bounded by three things and the smallest wins: the balance, <see cref="MaxPerPurchase"/>,
+        /// and the room left under <see cref="GroveStock.MaxCopies"/> — the last so a stepper can
+        /// never offer an order whose copies would be clamped away after the credits were taken.
+        /// </summary>
+        public static int MaxQuantity(HomesteadPiece piece)
+        {
+            if (!piece.IsStocked) return 1;
+
+            long cost = piece.Cost;
+            if (cost <= 0L) return 1;
+
+            long affordable = PlayerProgression.Credits / cost;
+            if (affordable < 1L) return 1;
+
+            int bundle = piece.Bundle < 1 ? 1 : piece.Bundle;
+            int room = (GroveStock.MaxCopies - _stock.Of(piece.Id)) / bundle;
+
+            long capped = affordable < MaxPerPurchase ? affordable : MaxPerPurchase;
+            if (room < capped) capped = room;
+
+            return capped < 1L ? 1 : (int)capped;
+        }
 
         // Land moved out of this file entirely when the islands became a floor: it is bought
         // with credits now rather than earned by finishing a chapter, so it is an entitlement
@@ -344,7 +474,21 @@ namespace GlimmerGrove.Homestead
         /// for a resident that is not for sale at any price, and one of those resolves by
         /// playing for an hour while the other never resolves at all.
         /// </summary>
-        public static HomesteadOffer OfferFor(HomesteadPiece piece)
+        public static HomesteadOffer OfferFor(HomesteadPiece piece) => OfferFor(piece, 1);
+
+        /// <summary>
+        /// The same question for an order of several bundles.
+        ///
+        /// <para>
+        /// <b>A stocked piece is never <c>AlreadyHeld</c>.</b> That state means "there is
+        /// nothing to buy", which stopped being true of the shop's half of the catalog in v20 —
+        /// a player with three fences may want three more. It still answers for a resident, a
+        /// home rung and anything earned, because those genuinely cannot be bought twice, and
+        /// keeping the one state for the one meaning is what stops the shop grid drawing a dead
+        /// cell over something it should be selling.
+        /// </para>
+        /// </summary>
+        public static HomesteadOffer OfferFor(HomesteadPiece piece, int quantity)
         {
             long balance = PlayerProgression.Credits;
 
@@ -357,17 +501,42 @@ namespace GlimmerGrove.Homestead
             if (piece.IsResident) return Translate(CompanionLedger.OfferFor(GroveResidents.CompanionOf(piece),
                                                                            KeeperLevel));
 
-            if (IsHeld(piece))
-                return new HomesteadOffer(HomesteadPurchaseState.AlreadyHeld, piece.Cost, balance);
+            // Everything that is not stock is bought once, so holding one is the end of it.
+            if (!piece.IsStocked)
+            {
+                if (IsHeld(piece))
+                    return new HomesteadOffer(HomesteadPurchaseState.AlreadyHeld, piece.Cost, balance);
 
-            if (!piece.IsForSale)
-                return new HomesteadOffer(HomesteadPurchaseState.NotForSale, 0L, balance);
+                if (!piece.IsForSale)
+                    return new HomesteadOffer(HomesteadPurchaseState.NotForSale, 0L, balance);
 
-            var state = balance >= piece.Cost
+                var once = balance >= piece.Cost
+                    ? HomesteadPurchaseState.Ready
+                    : HomesteadPurchaseState.TooExpensive;
+
+                return new HomesteadOffer(once, piece.Cost, balance, 0, 1, 1);
+            }
+
+            int wanted = Clamp(quantity, 1, MaxPerPurchase);
+
+            // Room is checked before the price so a player at the structural ceiling is told
+            // they are full rather than told they are poor — the ordering CompanionLedger uses
+            // for the keeper gate, and for its reason.
+            int bundle = piece.Bundle < 1 ? 1 : piece.Bundle;
+            int room = (GroveStock.MaxCopies - _stock.Of(piece.Id)) / bundle;
+            if (room < 1)
+                return new HomesteadOffer(HomesteadPurchaseState.AlreadyHeld, piece.Cost, balance,
+                                          0, 1, 0);
+
+            if (wanted > room) wanted = room;
+
+            long cost = (long)piece.Cost * wanted;
+
+            var state = balance >= cost
                 ? HomesteadPurchaseState.Ready
                 : HomesteadPurchaseState.TooExpensive;
 
-            return new HomesteadOffer(state, piece.Cost, balance);
+            return new HomesteadOffer(state, cost, balance, 0, wanted, bundle * wanted);
         }
 
         /// <summary>
@@ -407,7 +576,21 @@ namespace GlimmerGrove.Homestead
         /// the piece already held on the second pass and returns false without charging.
         /// </para>
         /// </summary>
-        public static bool TryBuy(HomesteadPiece piece)
+        public static bool TryBuy(HomesteadPiece piece) => TryBuy(piece, 1);
+
+        /// <summary>
+        /// Buys several bundles at once, debiting the whole order and granting all of it.
+        ///
+        /// <para>
+        /// <b>One debit for the order, never a loop of single purchases.</b> A loop would write
+        /// a spend entry per bundle — twenty idempotency keys for one decision — and each one
+        /// would be separately refusable by the next sync, so a player could be charged for six
+        /// fences and receive four with nothing on screen able to explain it. The order is one
+        /// spend and one grant, which is also what makes it re-entrant in the same way a single
+        /// purchase already was.
+        /// </para>
+        /// </summary>
+        public static bool TryBuy(HomesteadPiece piece, int quantity)
         {
             // A resident is bought as a companion, in one transaction with one spend reason and
             // one entitlement set. Never mirrored into `homesteadOwned`: two records of one
@@ -415,16 +598,18 @@ namespace GlimmerGrove.Homestead
             // the forgeable half of a pair whose other half is already safe.
             if (piece.IsResident) return TryBuyResident(piece);
 
-            var offer = OfferFor(piece);
+            var offer = OfferFor(piece, quantity);
             if (!offer.CanBuy) return false;
 
             if (!PlayerProgression.TrySpend(Currency.Credits, offer.Cost, SpendReason + piece.Id))
                 return false;
 
-            _bought.Add(piece.Id);
+            // Only a stocked piece has copies; everything else is an entitlement and one row of
+            // stock is how this file records that it was paid for.
+            _stock.Add(piece.Id, offer.Copies > 0 ? offer.Copies : 1);
 
             Telemetry.Track("grove_piece_bought", "piece", piece.Id, "cost", offer.Cost,
-                            "kind", piece.Kind.ToString());
+                            "kind", piece.Kind.ToString(), "copies", offer.Copies);
 
             // TrySpend already wrote the debit. This write carries the id that debit paid for,
             // and losing it is the failure described above.
@@ -469,75 +654,68 @@ namespace GlimmerGrove.Homestead
         }
 
         // --------------------------------------------------- file bridge (internal)
+        /// <summary>
+        /// Reads the stock, migrating a v19 file on the way.
+        ///
+        /// <para>
+        /// <b>The migration is here rather than in a pass of its own</b> because this is the one
+        /// place that can see both halves of it at once: the old id set and the placements those
+        /// ids are standing in. Before v20 a purchase was permission rather than a copy, so
+        /// there is no honest number to convert — the player bought "a fence" and stood eleven.
+        /// Each id therefore becomes the larger of what is actually standing in their grove and
+        /// <see cref="GroveStock.LegacyGrant"/>, so nothing they built is left over-placed and
+        /// they keep room to rearrange.
+        /// </para>
+        /// <para>
+        /// It runs only when the new section is empty, which is what makes it idempotent: a
+        /// migrated file writes stock rows on its next save and never sees this path again, and
+        /// a v20 file that genuinely holds nothing has nothing to migrate. The old array is
+        /// never written back (see <c>SaveFileDto.homesteadOwned</c>), so this cannot re-run
+        /// against its own output and re-grant what a player has since spent.
+        /// </para>
+        /// </summary>
         internal static void LoadFrom(SaveFileDto dto)
         {
-            _bought.Clear();
-
-            var ids = dto?.homesteadOwned;
-            if (ids != null)
-                foreach (var id in ids)
-                    if (!string.IsNullOrEmpty(id)) _bought.Add(id);
+            // GroveStock.In is what knows whether this file predates v20, and it reads the
+            // placements out of the same DTO rather than from HomesteadLayout — the save is
+            // read section by section and nothing here may depend on the order that happens in.
+            _stock.LoadFrom(GroveStock.In(dto));
 
             Raise();
         }
 
         internal static void WriteInto(SaveFileDto dto)
         {
-            dto.homesteadOwned = Sorted(_bought);
+            var rows = _stock.Write();
+
+            dto.homesteadStock = rows;
+
+            // The v19 section, derived rather than kept — see GroveStock.Mirror. It is never
+            // read back while the stock section has anything in it, so it cannot re-grant what
+            // a player has spent, and it is what lets a rolled-back client and a not-yet-
+            // redeployed server both keep working.
+            dto.homesteadOwned = GroveStock.Mirror(rows);
         }
 
         /// <summary>
-        /// The union of two devices' purchases. Buying cannot be undone, so between them the
-        /// player owns whatever either bought.
+        /// Two devices' purchases, joined. Delegated whole to <see cref="GroveStock.Join"/>,
+        /// which is where the argument for a per-id maximum lives.
         ///
-        /// <para>
-        /// No early return for an empty side, deliberately — the trap <c>EventCollection.Join</c>
-        /// and <c>CompanionLedger.Join</c> both document. Handing one array straight back would
-        /// skip the sort, so an unsorted file joined against nothing would come out still
-        /// unsorted, and <see cref="SaveDelta"/> walks these in order: every launch would then
-        /// read as changed and push a write for nothing, forever.
-        /// </para>
-        /// <para>
-        /// Unknown ids are kept, exactly as <c>tipsSeen</c> and <c>companionsOwned</c> keep
-        /// theirs: a piece bought on a newer build must not be confiscated by a trip through an
-        /// older one, and an id this build does not recognise costs one short string.
-        /// </para>
+        /// It stays on this type because <see cref="SaveMerge"/> reaches for the ledger that
+        /// owns each section, and a section that answered from somewhere else would be one more
+        /// thing to look up when the merge is the part of this file that has to be obviously
+        /// right.
         /// </summary>
-        public static string[] Join(string[] mine, string[] other)
-        {
-            var union = new SortedSet<string>(StringComparer.Ordinal);
+        public static HomesteadStockDto[] Join(HomesteadStockDto[] mine, HomesteadStockDto[] other)
+            => GroveStock.Join(mine, other);
 
-            Absorb(union, mine);
-            Absorb(union, other);
-
-            var result = new string[union.Count];
-            union.CopyTo(result);
-            return result;
-        }
-
-        static void Absorb(SortedSet<string> into, string[] ids)
-        {
-            if (ids == null) return;
-
-            foreach (var id in ids)
-                if (!string.IsNullOrEmpty(id)) into.Add(id);
-        }
-
-        /// <summary>
-        /// The held ids, sorted. Not tidiness — <see cref="SaveChecksum"/> hashes the
-        /// serialised file and <see cref="SaveDelta"/> walks these in order, so hash-set order
-        /// would make an unchanged save look changed on every launch.
-        /// </summary>
-        static string[] Sorted(HashSet<string> ids)
-        {
-            if (ids.Count == 0) return Array.Empty<string>();
-
-            var list = new List<string>(ids);
-            list.Sort(StringComparer.Ordinal);
-            return list.ToArray();
-        }
+        static int Clamp(int value, int low, int high)
+            => value < low ? low : value > high ? high : value;
 
         /// <summary>Test seam: forgets every purchase, as a fresh install would.</summary>
-        internal static void ResetForTests() => _bought.Clear();
+        internal static void ResetForTests() => _stock.Clear();
+
+        /// <summary>Test seam: grants copies without a debit. Never call this from the game.</summary>
+        internal static void GrantForTests(string id, int copies) => _stock.Add(id, copies);
     }
 }

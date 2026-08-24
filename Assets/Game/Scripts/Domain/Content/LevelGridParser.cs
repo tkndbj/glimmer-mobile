@@ -126,8 +126,9 @@ namespace GlimmerGrove.Content
                 case 'x': cell.kind = Kind.Duskcap; break;
                 case '-': cell.kind = Kind.Pipe; break;
                 case '=': cell.kind = Kind.Crossing; break;
+                case '%': cell.kind = Kind.Briar; break;
                 default:
-                    error = $"unknown head '{token[0]}', expected one of - = * @ x .";
+                    error = $"unknown head '{token[0]}', expected one of - = % * @ x .";
                     return false;
             }
 
@@ -136,15 +137,21 @@ namespace GlimmerGrove.Content
 
             if (mask == 0) { error = "no arms, every filled cell needs at least one of N E S W"; return false; }
 
-            // '+' separates a crossing's two strands: the arms that carry one flow, then the
-            // arms that carry the other. Written out rather than implied, because which pair
-            // is which is the whole of what a crossing is and a reader of the grid has to be
-            // able to see it without deriving anything.
+            // '+' separates a tile's two pairs of arms: on a crossing the arms carrying one
+            // flow and then the arms carrying the other, on a briar the arms that are open and
+            // then the arms the thorns have closed. Written out rather than implied, because
+            // which pair is which is the whole of what both tiles are, and a reader of the grid
+            // has to be able to see it without deriving anything.
+            //
+            // The *order* is what differs, and the difference is the difference between the two
+            // mechanics. A crossing's pairs are interchangeable labels, so writing the other one
+            // first says nothing new; a briar's are a way through and a wall, so the pair
+            // written first is the open one and swapping them is a different tile.
             if (p < token.Length && token[p] == '+')
             {
-                if (cell.kind != Kind.Crossing)
+                if (cell.kind != Kind.Crossing && cell.kind != Kind.Briar)
                 {
-                    error = "'+' separates the two strands of a crossing, which is written '='";
+                    error = "'+' separates the two pairs of arms on a crossing ('=') or a briar ('%')";
                     return false;
                 }
 
@@ -153,12 +160,16 @@ namespace GlimmerGrove.Content
                 if (second == 0) { error = "'+' with no arms after it"; return false; }
                 if ((mask & second) != 0)
                 {
-                    error = "the two strands of a crossing cannot share an arm; light entering " +
-                            "one would leave by the other, which is a crossroads rather than a crossing";
+                    error = cell.kind == Kind.Crossing
+                        ? "the two strands of a crossing cannot share an arm; light entering " +
+                          "one would leave by the other, which is a crossroads rather than a crossing"
+                        : "a briar's open pair and its thorned pair cannot share an arm; one way " +
+                          "through cannot be both open and shut";
                     return false;
                 }
 
-                cell.cross = (byte)mask;
+                if (cell.kind == Kind.Crossing) cell.cross = (byte)mask;
+                else cell.gate = (byte)mask;
                 mask |= second;
             }
 
@@ -176,6 +187,25 @@ namespace GlimmerGrove.Content
                     error = "a crossing carries exactly two arms on each of its two strands; " +
                             "a strand of one is a flow that arrives and stops, and a strand of " +
                             "three is a junction wearing a crossing's mark";
+                    return false;
+                }
+            }
+
+            if (cell.kind == Kind.Briar)
+            {
+                if (cell.gate == 0)
+                {
+                    error = "a briar must say which way is open and which way the thorns have " +
+                            "closed, as '%NS+EW'";
+                    return false;
+                }
+
+                int shut = mask & ~cell.gate & 15;
+                if (CountArms(cell.gate) != 2 || CountArms(shut) != 2)
+                {
+                    error = "a briar carries exactly two open arms and two thorned ones; that is " +
+                            "what makes all four of its neighbours mate it at every angle, which " +
+                            "is the only reason its arms cannot settle it";
                     return false;
                 }
             }
@@ -293,6 +323,15 @@ namespace GlimmerGrove.Content
             {
                 error = "a crossing takes no colour; each of its strands simply carries " +
                         "whatever reaches it";
+                return false;
+            }
+
+            // Nor does a briar. It decides *whether* light passes and never *which* light,
+            // which is the one sentence that tells it from every coloured tile on the board.
+            if (cell.kind == Kind.Briar && cell.colour != 0)
+            {
+                error = "a briar takes no colour; it decides which way light may go, never " +
+                        "which light may go there";
                 return false;
             }
 

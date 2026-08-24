@@ -276,6 +276,42 @@ namespace GlimmerGrove.Homestead
         }
 
         /// <summary>
+        /// How many copies of one piece are standing in the grove.
+        ///
+        /// <para>
+        /// The other half of the stock subtraction: what a player may still place is what they
+        /// bought minus this (see <see cref="HomesteadLedger.Available(HomesteadPiece)"/>).
+        /// Deriving it rather than keeping a running total is what makes a copy count safe to
+        /// store at all — a stored "how many are left" would go up and down, which is precisely
+        /// the shape invariant 11b refuses, while this is recomputed from rows that are already
+        /// merged and can never disagree with what the grove is drawing.
+        /// </para>
+        /// <para>
+        /// Counted over <em>every</em> row rather than only over tiles the floor still contains,
+        /// deliberately. Land the player has not bought back, a region a content drop moved and
+        /// a tile id from a newer build all hold a piece the player put there and will get back;
+        /// counting only visible tiles would hand them a free copy of everything parked outside
+        /// the current floor, and the id is what was paid for rather than the tile.
+        /// </para>
+        /// <para>
+        /// The starter companion is deliberately absent, for the reason
+        /// <see cref="PlacedIds"/> gives: it is shown rather than stored, it is a resident, and
+        /// a resident is an entitlement that is never counted against stock.
+        /// </para>
+        /// </summary>
+        public static int CountOf(string pieceId)
+        {
+            if (string.IsNullOrEmpty(pieceId)) return 0;
+
+            int count = 0;
+            foreach (var placed in _placed.Values)
+                if (placed.IsOccupied && string.Equals(placed.PieceId, pieceId, StringComparison.Ordinal))
+                    count++;
+
+            return count;
+        }
+
+        /// <summary>
         /// Every distinct piece id standing somewhere in the grove.
         ///
         /// What the grove screen's art scope is built from, which is why it is a set rather

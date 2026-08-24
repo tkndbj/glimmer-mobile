@@ -36,6 +36,8 @@ Notes that cost time to rediscover
 """
 
 import glob
+import io
+import re
 import os
 import subprocess
 import sys
@@ -269,6 +271,210 @@ def build(key, spec):
     return True
 
 
+
+# ---------------------------------------------------------------- Unity messages
+# Unity's magic methods are a rule of the *engine*, not of the language, so a compiler
+# has nothing to say about them. `public bool Awake(int i)` on a MonoBehaviour compiles
+# perfectly and the Editor then refuses the script outright:
+#
+#     Script error (BoardView): Awake() can not take parameters.
+#
+# That is the one class of build failure this file is otherwise blind to, and it cost a
+# round trip through the Editor to find - which is precisely what running the compiler
+# offline exists to avoid. So it is checked here rather than in a seventh script nobody
+# remembers to run.
+#
+# Only the messages that genuinely take no arguments are listed. Plenty of others are
+# legitimately parameterised - OnApplicationPause(bool), OnCollisionEnter(Collision),
+# OnAnimatorIK(int), OnAudioFilterRead(float[], int) - and flagging those would make the
+# check noise.
+NO_ARG_MESSAGES = {
+    "Awake", "Start", "Update", "FixedUpdate", "LateUpdate",
+    "OnEnable", "OnDisable", "OnDestroy", "OnGUI", "Reset", "OnValidate",
+    "OnPreCull", "OnPreRender", "OnPostRender", "OnRenderObject", "OnWillRenderObject",
+    "OnBecameVisible", "OnBecameInvisible", "OnDrawGizmos", "OnDrawGizmosSelected",
+    "OnMouseDown", "OnMouseUp", "OnMouseUpAsButton", "OnMouseEnter", "OnMouseExit",
+    "OnMouseOver", "OnMouseDrag", "OnApplicationQuit", "OnAnimatorMove",
+    "OnTransformChildrenChanged", "OnTransformParentChanged", "OnCanvasGroupChanged",
+    "OnRectTransformDimensionsChange", "OnDidApplyAnimationProperties",
+}
+
+# Unity types that are MonoBehaviours without saying so in this repo's source.
+ENGINE_BEHAVIOURS = {"MonoBehaviour", "UIBehaviour", "Graphic", "MaskableGraphic",
+                     "Image", "Text", "Selectable", "Button", "ScrollRect", "EditorWindow"}
+
+CLASS_DECL = re.compile(
+    r"^\s*(?:public|internal|private|protected|sealed|abstract|static|partial|\s)*"
+    r"class\s+(\w+)\s*(?::\s*([^{]+))?", re.M)
+
+METHOD_DECL = re.compile(
+    r"^\s*(?:\[[^\]]*\]\s*)*"
+    r"(?:public|private|protected|internal|virtual|override|sealed|static|extern|async|\s)*"
+    r"(?:[\w<>\[\],\.\?]+\s+)?(\w+)\s*\(([^)]*)\)", re.M)
+
+
+def behaviour_classes(files):
+    """Every class in the project that ends up a MonoBehaviour, however deep the chain."""
+    bases = {}
+    for path in files:
+        text = io.open(path, encoding="utf-8", errors="replace").read()
+        for name, inherits in CLASS_DECL.findall(text):
+            first = (inherits or "").split(",")[0].strip()
+            first = re.sub(r"<.*", "", first).strip()
+            bases[name] = first
+
+    found = set()
+    for name in bases:
+        seen, at = set(), name
+        while at and at not in seen:
+            seen.add(at)
+            parent = bases.get(at)
+            if parent in ENGINE_BEHAVIOURS:
+                found.add(name)
+                break
+            at = parent
+    return found
+
+
+def check_messages(files):
+    """Reports MonoBehaviour methods named after a no-argument Unity message."""
+    behaviours = behaviour_classes(files)
+    problems = []
+
+    for path in files:
+        text = io.open(path, encoding="utf-8", errors="replace").read()
+
+        # Which class each character offset belongs to, by brace depth. Cheap and good
+        # enough: this source has no braces inside string literals on a class line.
+        owners, stack, depth = [], [], 0
+        for m in CLASS_DECL.finditer(text):
+            owners.append((m.start(), m.group(1)))
+
+        for m in METHOD_DECL.finditer(text):
+            name, args = m.group(1), m.group(2).strip()
+            if name not in NO_ARG_MESSAGES or not args:
+                continue
+            if args.startswith("this "):          # an extension method, not a message
+                continue
+
+            owner = None
+            for start, cls in owners:
+                if start < m.start():
+                    owner = cls
+            if owner not in behaviours:
+                continue
+
+            line = text.count("\n", 0, m.start()) + 1
+            problems.append("%s:%d  %s.%s(%s) - Unity refuses a %s that takes parameters"
+                            % (path.replace("\\", "/"), line, owner, name, args, name))
+
+    return problems
+
+
+# ------------------------------------------------------- a level is one of three things
+# A LevelDefinition carries a conduit board, a hollow, or a Lab experiment - and exactly one of
+# them. The other two are null, nothing in the language says so (nullable reference types are
+# off), and a reader that forgets is a NullReferenceException in whichever tool touches it first.
+#
+# It has now happened twice, and the second time is why this checks all three. The first was
+# `level.Layout.Width` in ContentValidation and ContentAuthoring, which blew up the moment a
+# boardless level shipped. The second was `level.Hollow.Duskcaps` in the same two files, guarded
+# by `if (!level.HasBoard)` - a correct test right up until a third kind of level existed, at
+# which point "not a board" stopped meaning "a hollow" and the Android build died in the
+# validator.
+#
+# The rule is coarse on purpose: a file that reads one of these must somewhere say it knows the
+# thing can be absent. A handful of files touch them, so a false positive costs one word and a
+# missing guard costs a crash on a path no offline gate runs.
+ALTERNATIVES = (
+    ("Layout", "HasBoard", re.compile(r"\.Layout\s*\."),
+     ("HasBoard", "Layout == null", "Layout != null"),
+     "a hollow and a lab level have no board"),
+    ("Hollow", "HasHollow", re.compile(r"\.Hollow\s*\."),
+     ("HasHollow", "Hollow == null", "Hollow != null"),
+     "a glade and a lab level have no hollow"),
+    ("Lab", "HasLab", re.compile(r"\.Lab\s*\."),
+     ("HasLab", "Lab == null", "Lab != null"),
+     "a glade and a hollow have no lab"),
+)
+
+
+def check_layout(files):
+    problems = []
+
+    for path in files:
+        raw = io.open(path, encoding="utf-8", errors="replace").read()
+        text = without_comments(raw)
+
+        for name, has, pattern, guards, why in ALTERNATIVES:
+            hit = pattern.search(text)
+            if not hit:
+                continue
+            if any(guard in raw for guard in guards):
+                continue
+
+            line = text[:hit.start()].count("\n") + 1
+            problems.append("%s:%d  reads .%s without ever checking %s - %s"
+                            % (path.replace("\\", "/"), line, name, has, why))
+
+    return problems
+
+
+# ------------------------------------------------- a serialised DTO field is never null
+# JsonUtility instantiates a [Serializable] class field even when the JSON has no such key,
+# so `dto.block != null` is true for every file ever parsed. Testing it is not a weak check,
+# it is an inverted one: it says "this was authored" about content that never mentioned it.
+#
+# That shipped. `dto.chain != null` read all forty existing glades as chain fields, dropped
+# every one and failed the build with eighty errors - and no offline gate could see it,
+# because Python's json returns nothing for a missing key where Unity returns an object.
+#
+# The rule: a class-typed field of a DTO gets an `IsAuthored`-style test on a value a real
+# one cannot hold, never a null test. Arrays are exempt - JsonUtility does leave those null.
+DTO_FIELD = re.compile(r"^\s*public\s+(\w+Dto)\s+(\w+)\s*;", re.M)
+
+# Comments are stripped before any of these scan. This codebase documents its traps in prose
+# next to the code that avoids them, so the wrong shape appears in a doc comment far more often
+# than in a statement - and a checker that cannot tell them apart is one nobody keeps.
+COMMENT = re.compile(r"//[^\n]*|/\*.*?\*/", re.S)
+
+
+def without_comments(text):
+    """Blank out comments, keeping line numbers intact."""
+    return COMMENT.sub(lambda m: "\n" * m.group(0).count("\n"), text)
+
+
+def check_dto_nulls(files):
+    fields = set()
+    for path in files:
+        if not path.endswith("ContentDto.cs"):
+            continue
+        text = without_comments(io.open(path, encoding="utf-8", errors="replace").read())
+        for _, name in DTO_FIELD.findall(text):
+            fields.add(name)
+
+    if not fields:
+        return []
+
+    tests = re.compile(r"\.(" + "|".join(sorted(fields)) + r")\s*(?:!=|==)\s*null")
+    problems = []
+
+    for path in files:
+        text = without_comments(io.open(path, encoding="utf-8", errors="replace").read())
+
+        for m in tests.finditer(text):
+            # A null test paired with a real "was this authored" test is the fixed shape.
+            window = text[max(0, m.start() - 120):m.end() + 120]
+            if "IsAuthored" in window:
+                continue
+
+            line = text[:m.start()].count("\n") + 1
+            problems.append("%s:%d  tests '%s' for null, but JsonUtility never leaves a "
+                            "serialised class field null" % (path.replace("\\", "/"), line, m.group(1)))
+
+    return problems
+
+
 def main():
     wanted = [a.lower() for a in sys.argv[1:]]
     print("Unity: %s" % DATA)
@@ -282,6 +488,23 @@ def main():
             # Later assemblies reference this one's output, so their errors would
             # be noise rather than news.
             break
+
+    if ok:
+        every = sorted(set(sum((spec["src"] for _, spec in ASSEMBLIES), [])))
+        problems = check_messages(every)
+        for line in problems:
+            print("  message FAILED  " + line)
+
+        boards = check_layout(every)
+        for line in boards:
+            print("  board   FAILED  " + line)
+
+        dtos = check_dto_nulls(every)
+        for line in dtos:
+            print("  dto     FAILED  " + line)
+
+        if problems or boards or dtos:
+            ok = False
 
     print("OK" if ok else "FAILED")
     return 0 if ok else 1

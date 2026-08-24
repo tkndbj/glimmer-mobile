@@ -12,7 +12,7 @@ PlayerSettings:
   targetDevice: 2
   useOnDemandResources: 0
   accelerometerFrequency: 60
-  companyName: Arcade Games
+  companyName: Tekoworld
   productName: Glimmer Groove
   defaultCursor: {fileID: 0}
   cursorHotspot: {x: 0, y: 0}
@@ -169,9 +169,9 @@ PlayerSettings:
   androidMaxAspectRatio: 2.4
   androidMinAspectRatio: 1
   applicationIdentifier:
-    Android: com.arcade.glimmergrove
-    Standalone: com.digikeygames.glimmergrove
-    iPhone: com.arcade.glimmergrove
+    Android: com.tekoworld.glimmergroove
+    Standalone: com.tekoworld.glimmergroove
+    iPhone: com.tekoworld.glimmergroove
   buildNumber:
     Standalone: 0
     VisionOS: 0

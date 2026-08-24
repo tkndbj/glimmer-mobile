@@ -246,11 +246,20 @@ namespace GlimmerGrove
 
             if (!bought) { Paint(); return; }
 
-            Audio.Sfx("unlock", .85f);
-            Burst.Sparks(Panel, new Vector2(0f, 116f), Pal.Sun, 22);
+            Audio.Sfx("coin", .6f);
             Tween.Punch(_art.transform, .22f, .5f);
 
+            // Repainted first, so the panel underneath is already showing the new house and
+            // offering the rung above it by the time the ceremony clears — the same reason this
+            // panel stays open at all.
             Paint();
+
+            // A home is the loudest thing the grove sells and the only purchase that changes
+            // the whole island, so it gets the full unveiling rather than a spark burst. It
+            // lands in the top two tiers on price alone (see GroveUnveil), which is where the
+            // confetti and the struck seal live.
+            var bring = next;
+            Flow.Modal<GroveUnveilOverlay>(v => v.Piece = bring);
         }
     }
 }

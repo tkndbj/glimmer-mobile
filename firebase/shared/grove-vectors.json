@@ -301,6 +301,191 @@
       "stars": 0,
       "clamped": true,
       "serverOnly": false
+    },
+    {
+      "name": "one bundle of fences is worth the bundle, not ten of it",
+      "keeperLevel": 1,
+      "stock": [
+        {
+          "id": "fence",
+          "copies": 10
+        }
+      ],
+      "pieces": [],
+      "land": [],
+      "companions": [],
+      "affordable": 1000000,
+      "earned": 0,
+      "bought": 900,
+      "score": 900,
+      "stars": 0,
+      "clamped": false,
+      "serverOnly": false
+    },
+    {
+      "name": "three bundles are worth three bundles",
+      "keeperLevel": 1,
+      "stock": [
+        {
+          "id": "fence",
+          "copies": 30
+        }
+      ],
+      "pieces": [],
+      "land": [],
+      "companions": [],
+      "affordable": 1000000,
+      "earned": 0,
+      "bought": 2700,
+      "score": 2700,
+      "stars": 1,
+      "clamped": false,
+      "serverOnly": false
+    },
+    {
+      "name": "a part-spent bundle is worth only the copies still bought",
+      "keeperLevel": 1,
+      "stock": [
+        {
+          "id": "fence",
+          "copies": 7
+        }
+      ],
+      "pieces": [],
+      "land": [],
+      "companions": [],
+      "affordable": 1000000,
+      "earned": 0,
+      "bought": 630,
+      "score": 630,
+      "stars": 0,
+      "clamped": false,
+      "serverOnly": false
+    },
+    {
+      "name": "a piece with no bundle is worth its price per copy",
+      "keeperLevel": 1,
+      "stock": [
+        {
+          "id": "bench",
+          "copies": 4
+        }
+      ],
+      "pieces": [],
+      "land": [],
+      "companions": [],
+      "affordable": 1000000,
+      "earned": 0,
+      "bought": 2000,
+      "score": 2000,
+      "stars": 1,
+      "clamped": false,
+      "serverOnly": false
+    },
+    {
+      "name": "one of everything is the sum of the prices",
+      "keeperLevel": 1,
+      "stock": [
+        {
+          "id": "bench",
+          "copies": 1
+        },
+        {
+          "id": "lantern",
+          "copies": 1
+        },
+        {
+          "id": "oak",
+          "copies": 1
+        }
+      ],
+      "pieces": [],
+      "land": [],
+      "companions": [],
+      "affordable": 1000000,
+      "earned": 0,
+      "bought": 5700,
+      "score": 5700,
+      "stars": 2,
+      "clamped": false,
+      "serverOnly": false
+    },
+    {
+      "name": "a home rung is clamped to one however many copies a save claims",
+      "keeperLevel": 1,
+      "stock": [
+        {
+          "id": "hall",
+          "copies": 40
+        }
+      ],
+      "pieces": [],
+      "land": [],
+      "companions": [],
+      "affordable": 1000000,
+      "earned": 0,
+      "bought": 9000,
+      "score": 9000,
+      "stars": 2,
+      "clamped": false,
+      "serverOnly": true
+    },
+    {
+      "name": "a free piece is worth nothing however many copies are claimed",
+      "keeperLevel": 1,
+      "stock": [
+        {
+          "id": "starter_rock",
+          "copies": 99
+        }
+      ],
+      "pieces": [],
+      "land": [],
+      "companions": [],
+      "affordable": 1000000,
+      "earned": 0,
+      "bought": 0,
+      "score": 0,
+      "stars": 0,
+      "clamped": false,
+      "serverOnly": false
+    },
+    {
+      "name": "a hoard of fences is still cut down to what the player could afford",
+      "keeperLevel": 1,
+      "stock": [
+        {
+          "id": "fence",
+          "copies": 2000
+        }
+      ],
+      "pieces": [],
+      "land": [],
+      "companions": [],
+      "affordable": 5000,
+      "earned": 0,
+      "bought": 180000,
+      "score": 5000,
+      "stars": 2,
+      "clamped": true,
+      "serverOnly": false
+    },
+    {
+      "name": "a v19 save's owned set reads as one bundle of each",
+      "keeperLevel": 1,
+      "pieces": [
+        "fence",
+        "bench"
+      ],
+      "land": [],
+      "companions": [],
+      "affordable": 1000000,
+      "earned": 0,
+      "bought": 1400,
+      "score": 1400,
+      "stars": 1,
+      "clamped": false,
+      "serverOnly": false
     }
   ],
   "_starComment": [

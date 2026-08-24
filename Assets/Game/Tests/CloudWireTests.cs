@@ -88,6 +88,14 @@ namespace GlimmerGrove.Tests
                     watched = new[] { new AdViewCountDto { placement = "coin_bonus", count = 2 } },
                 },
                 companionsOwned = new[] { "coral", "puff" },
+
+                // Both grove sections, and the mirror has to agree with the stock it is
+                // derived from or the round trip is comparing the fixture against itself.
+                homesteadStock = new[]
+                {
+                    new HomesteadStockDto { id = "bench_oak", copies = 3 },
+                    new HomesteadStockDto { id = "lantern_post", copies = 20 },
+                },
                 homesteadOwned = new[] { "bench_oak", "lantern_post" },
                 groveLandOwned = new[] { "r_north", "r_east" },
                 homesteadPlaced = new[]
@@ -249,6 +257,15 @@ namespace GlimmerGrove.Tests
             // the grove back as the free starter square, with everything standing outside it
             // invisible because the ground under it was gone.
             CollectionAssert.AreEqual(new[] { "coral", "puff" }, restored.companionsOwned);
+            Assert.AreEqual(2, restored.homesteadStock.Length);
+            Assert.AreEqual("bench_oak", restored.homesteadStock[0].id);
+            Assert.AreEqual(3, restored.homesteadStock[0].copies);
+            Assert.AreEqual("lantern_post", restored.homesteadStock[1].id);
+            Assert.AreEqual(20, restored.homesteadStock[1].copies,
+                            "copies are what a grove is worth; losing them is losing the purchase");
+
+            // The v19 mirror travels too, so a rolled-back client and a server that has not
+            // been redeployed both still see what this player owns. See GroveStock.Mirror.
             CollectionAssert.AreEqual(new[] { "bench_oak", "lantern_post" }, restored.homesteadOwned);
             CollectionAssert.AreEqual(new[] { "r_north", "r_east" }, restored.groveLandOwned);
 

@@ -26,7 +26,11 @@ namespace GlimmerGrove.Content
         public static readonly CatalogIndex Empty =
             new CatalogIndex(Array.Empty<ChapterIndexEntry>(), Array.Empty<LevelId>(),
                              new Dictionary<LevelId, int>(), new Dictionary<LevelId, ChapterId>(),
-                             Array.Empty<AvatarDefinition>(), Array.Empty<Events.GroveEvent>());
+                             Array.Empty<AvatarDefinition>(), Array.Empty<Events.GroveEvent>(),
+                             null, null, null);
+
+        static readonly LevelId[] NoLevels = Array.Empty<LevelId>();
+        static readonly ChapterIndexEntry[] NoChapters = Array.Empty<ChapterIndexEntry>();
 
         readonly ChapterIndexEntry[] _chapters;
         readonly LevelId[] _levelIds;
@@ -36,11 +40,19 @@ namespace GlimmerGrove.Content
         readonly AvatarDefinition[] _companions;
         readonly Events.GroveEvent[] _events;
 
+        readonly Dictionary<LevelId, GameMode> _levelMode;
+        readonly Dictionary<GameMode, LevelId[]> _byMode;
+        readonly Dictionary<GameMode, ChapterIndexEntry[]> _chaptersByMode;
+        readonly GameMode[] _modes;
+
         internal CatalogIndex(ChapterIndexEntry[] chapters, LevelId[] levelIds,
                               Dictionary<LevelId, int> levelOrder,
                               Dictionary<LevelId, ChapterId> levelChapter,
                               AvatarDefinition[] companions,
-                              Events.GroveEvent[] events)
+                              Events.GroveEvent[] events,
+                              Dictionary<LevelId, GameMode> levelMode,
+                              Dictionary<GameMode, List<LevelId>> byMode,
+                              Dictionary<GameMode, List<ChapterIndexEntry>> chaptersByMode)
         {
             _chapters = chapters;
             _levelIds = levelIds;
@@ -48,10 +60,66 @@ namespace GlimmerGrove.Content
             _levelChapter = levelChapter;
             _companions = companions ?? Array.Empty<AvatarDefinition>();
             _events = events ?? Array.Empty<Events.GroveEvent>();
+            _levelMode = levelMode ?? new Dictionary<LevelId, GameMode>();
 
             _chapterById = new Dictionary<ChapterId, ChapterIndexEntry>(chapters.Length);
             foreach (var c in chapters) _chapterById[c.Id] = c;
+
+            _byMode = Freeze(byMode);
+            _chaptersByMode = Freeze(chaptersByMode);
+
+            // Offered in the order the modes shipped rather than in the order chapters happen
+            // to appear, so the switcher never reorders itself under a thumb reaching for the
+            // entry that was there yesterday. A mode with no chapters in this catalog is not
+            // on the list at all - an empty tab is a promise the content did not keep.
+            var modes = new List<GameMode>();
+            foreach (var mode in GameMode.Shipped)
+                if (_chaptersByMode.ContainsKey(mode)) modes.Add(mode);
+            _modes = modes.ToArray();
         }
+
+        static Dictionary<GameMode, T[]> Freeze<T>(Dictionary<GameMode, List<T>> source)
+        {
+            var frozen = new Dictionary<GameMode, T[]>();
+            if (source == null) return frozen;
+
+            foreach (var pair in source) frozen[pair.Key] = pair.Value.ToArray();
+            return frozen;
+        }
+
+        // ---------------------------------------------------------------- modes
+        /// <summary>
+        /// Every mode this catalog has chapters for, in the order the switcher offers them.
+        /// </summary>
+        public IReadOnlyList<GameMode> Modes => _modes;
+
+        /// <summary>Whether more than one way of playing exists, which is what earns the switcher.</summary>
+        public bool HasSeveralModes => _modes.Length > 1;
+
+        /// <summary>
+        /// How a glade is played. <see cref="GameMode.Default"/> for one the catalog has never
+        /// heard of, which is the same forgiving answer <see cref="ChapterOf"/> gives.
+        /// </summary>
+        public GameMode ModeOf(LevelId level)
+            => _levelMode.TryGetValue(level, out var mode) ? mode : GameMode.Default;
+
+        /// <summary>One mode's chapters, in play order.</summary>
+        public IReadOnlyList<ChapterIndexEntry> ChaptersIn(GameMode mode)
+            => _chaptersByMode.TryGetValue(mode, out var list) ? list : NoChapters;
+
+        /// <summary>One mode's glades, flattened into play order across its chapters.</summary>
+        public IReadOnlyList<LevelId> LevelsIn(GameMode mode)
+            => _byMode.TryGetValue(mode, out var list) ? list : NoLevels;
+
+        /// <summary>The chapter a mode's map opens on when nothing else says otherwise.</summary>
+        public ChapterIndexEntry FirstChapterIn(GameMode mode)
+        {
+            var list = ChaptersIn(mode);
+            return list.Count > 0 ? list[0] : null;
+        }
+
+        LevelId[] Lane(LevelId id)
+            => _byMode.TryGetValue(ModeOf(id), out var lane) ? lane : NoLevels;
 
         /// <summary>
         /// The companion roster, in display order.
@@ -96,22 +164,40 @@ namespace GlimmerGrove.Content
 
         public ChapterIndexEntry FirstChapter => _chapters.Length > 0 ? _chapters[0] : null;
 
-        /// <summary>Position of a chapter in play order, or -1. Display only.</summary>
+        /// <summary>
+        /// Position of a chapter among the ones played the same way, or -1. Display only.
+        ///
+        /// Within its own mode rather than across the catalog, because that is the number a
+        /// player is looking at: the second wisp chapter is the second one they meet, whatever
+        /// it happens to sit behind in the file.
+        /// </summary>
         public int ChapterOrderOf(ChapterId id)
         {
-            for (int i = 0; i < _chapters.Length; i++)
-                if (_chapters[i].Id == id) return i;
+            var entry = FindChapter(id);
+            if (entry == null) return -1;
+
+            var lane = ChaptersIn(entry.Mode);
+            for (int i = 0; i < lane.Count; i++)
+                if (lane[i].Id == id) return i;
             return -1;
         }
 
-        /// <summary>The chapter <paramref name="step"/> places away, or null at either end.</summary>
+        /// <summary>
+        /// The chapter <paramref name="step"/> places away in the same mode, or null at either
+        /// end. This is what the map's arrows walk, so they never step out of the mode the
+        /// player chose.
+        /// </summary>
         public ChapterIndexEntry ChapterNeighbour(ChapterId id, int step)
         {
+            var entry = FindChapter(id);
+            if (entry == null) return null;
+
+            var lane = ChaptersIn(entry.Mode);
             int i = ChapterOrderOf(id);
             if (i < 0) return null;
 
             int j = i + step;
-            return j >= 0 && j < _chapters.Length ? _chapters[j] : null;
+            return j >= 0 && j < lane.Count ? lane[j] : null;
         }
 
         /// <summary>Level ids of one chapter, in order. Empty for an unknown chapter.</summary>
@@ -119,7 +205,16 @@ namespace GlimmerGrove.Content
             => FindChapter(chapter)?.LevelIds ?? Array.Empty<LevelId>();
 
         // --------------------------------------------------------------- levels
-        /// <summary>Every level id, flattened into play order across every chapter.</summary>
+        /// <summary>
+        /// Every level id in the game, across every mode.
+        ///
+        /// This is the set totals are taken over - stars, XP, earned credits - and it is
+        /// deliberately mode-blind: a glade is a glade whichever way it is played, and the
+        /// reward path (see <c>ProgressionLedger</c>) has no opinion about modes, which is the
+        /// whole reason a second one needed no server work. It is <em>not</em> a play order;
+        /// for that see <see cref="LevelsIn"/>, <see cref="Next"/> and <see cref="Previous"/>,
+        /// all of which stay inside one mode.
+        /// </summary>
         public IReadOnlyList<LevelId> LevelIds => _levelIds;
 
         public int Count => _levelIds.Length;
@@ -128,31 +223,65 @@ namespace GlimmerGrove.Content
         public bool Contains(LevelId id) => _levelOrder.ContainsKey(id);
 
         /// <summary>
-        /// Zero-based position in play order, or -1. Use this for display numbering and
-        /// for nothing else — never persist it. Position moves when a chapter is
+        /// Zero-based position within its own mode's play order, or -1. Use this for display
+        /// numbering and for nothing else — never persist it. Position moves when a chapter is
         /// inserted; a <see cref="LevelId"/> never does.
         /// </summary>
         public int OrderOf(LevelId id) => _levelOrder.TryGetValue(id, out int i) ? i : -1;
 
-        public LevelId At(int order)
-            => order >= 0 && order < _levelIds.Length ? _levelIds[order] : LevelId.None;
+        /// <summary>The nth glade of one mode, in play order.</summary>
+        public LevelId At(GameMode mode, int order)
+        {
+            var lane = LevelsIn(mode);
+            return order >= 0 && order < lane.Count ? lane[order] : LevelId.None;
+        }
 
-        public LevelId First => _levelIds.Length > 0 ? _levelIds[0] : LevelId.None;
-        public LevelId Last => _levelIds.Length > 0 ? _levelIds[_levelIds.Length - 1] : LevelId.None;
+        /// <summary>The nth glade of the ordinary mode. Kept for dev tools and old call sites.</summary>
+        public LevelId At(int order) => At(GameMode.Default, order);
 
+        public LevelId FirstIn(GameMode mode)
+        {
+            var lane = LevelsIn(mode);
+            return lane.Count > 0 ? lane[0] : LevelId.None;
+        }
+
+        public LevelId LastIn(GameMode mode)
+        {
+            var lane = LevelsIn(mode);
+            return lane.Count > 0 ? lane[lane.Count - 1] : LevelId.None;
+        }
+
+        public LevelId First => FirstIn(GameMode.Default);
+        public LevelId Last => LastIn(GameMode.Default);
+
+        /// <summary>
+        /// The glade after this one <em>in the same mode</em>, or none at the end of it.
+        ///
+        /// Staying inside the mode is what makes the two ladders independent, and it is one
+        /// rule rather than a rule per caller: the unlock, the map's numbering, the victory
+        /// panel's onward button and "where was I up to" all reduce to this and its neighbour.
+        /// Chained end to end instead, finishing the classic game would be the price of
+        /// opening the second one.
+        /// </summary>
         public LevelId Next(LevelId id)
         {
+            var lane = Lane(id);
             int i = OrderOf(id);
-            return i >= 0 && i + 1 < _levelIds.Length ? _levelIds[i + 1] : LevelId.None;
+            return i >= 0 && i + 1 < lane.Length ? lane[i + 1] : LevelId.None;
         }
 
         public LevelId Previous(LevelId id)
         {
+            var lane = Lane(id);
             int i = OrderOf(id);
-            return i > 0 ? _levelIds[i - 1] : LevelId.None;
+            return i > 0 && i <= lane.Length ? lane[i - 1] : LevelId.None;
         }
 
-        public bool IsLast(LevelId id) => _levelIds.Length > 0 && OrderOf(id) == _levelIds.Length - 1;
+        public bool IsLast(LevelId id)
+        {
+            var lane = Lane(id);
+            return lane.Length > 0 && OrderOf(id) == lane.Length - 1;
+        }
 
         /// <summary>The chapter a level belongs to. Also satisfies <see cref="IChapterMap"/>.</summary>
         public bool TryGetChapter(LevelId level, out ChapterId chapter)

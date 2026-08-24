@@ -1,0 +1,24 @@
+{
+  "schemaVersion": 2,
+  "id": "k01_grovekeeper",
+  "accent": "#7BD86A",
+  "slate": "#14241A",
+  "backdrop": "play_4",
+  "mapStrips": [
+    "strip0",
+    "strip1",
+    "strip2"
+  ],
+  "levels": [
+    {
+      "id": "k01_first_grove",
+      "mapX": 0.34,
+      "mapY": 0.14,
+      "keeper": {
+        "width": 9,
+        "height": 9,
+        "tiles": 30
+      }
+    }
+  ]
+}

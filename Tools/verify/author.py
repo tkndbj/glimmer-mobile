@@ -38,24 +38,30 @@ def rotl(mask, turns):
     return out
 
 
-def alike(solved, cross, turns):
+def alike(solved, cross, turns, gate=0):
     """Whether a tile turned this far from its solution is indistinguishable from it.
 
-    Mirrors Puzzle.Alike. A crossing wears all four arms at every angle, so the bare
-    mask comparison this replaces calls every one of them solved - which derives a par
+    Mirrors Puzzle.Alike. Both four-armed tiles wear all four arms at every angle, so the
+    bare mask comparison this replaces calls every one of them solved - which derives a par
     short by one per twisted crossing and a board nobody can finish.
+
+    A briar's `gate` is asked first and is the stricter reading: a turn that merely swapped
+    a crossing's two interchangeable labels has moved a briar's thorns onto the way the
+    light was using.
     """
     if rotl(solved, turns) != solved:
         return False
+    if gate:
+        return rotl(gate, turns) == gate
     if not cross:
         return True
     strand = rotl(cross, turns)
     return strand == cross or strand == (solved & ~cross & 15)
 
 
-def owed(solved, rot, cross=0):
+def owed(solved, rot, cross=0, gate=0):
     for k in range(4):
-        if alike(solved, cross, (rot + k) & 3):
+        if alike(solved, cross, (rot + k) & 3, gate):
             return k
     return 0
 
@@ -69,19 +75,19 @@ class Board:
     # ----------------------------------------------------------- authoring
     def pipe(self, x, y, rot=0, locked=False, fragile=0, link=None):
         self.cells[(x, y)] = dict(kind='pipe', colour=0, rot=rot, locked=locked,
-                                  fragile=fragile, link=link, cross=0)
+                                  fragile=fragile, link=link, cross=0, gate=0)
 
     def source(self, x, y, colour, rot=0):
         self.cells[(x, y)] = dict(kind='source', colour=COLOURS[colour], rot=rot,
-                                  locked=False, fragile=0, link=None, cross=0)
+                                  locked=False, fragile=0, link=None, cross=0, gate=0)
 
     def lamp(self, x, y, colour='A', rot=0):
         self.cells[(x, y)] = dict(kind='lamp', colour=COLOURS[colour], rot=rot,
-                                  locked=False, fragile=0, link=None, cross=0)
+                                  locked=False, fragile=0, link=None, cross=0, gate=0)
 
     def duskcap(self, x, y, rot=0, locked=False):
         self.cells[(x, y)] = dict(kind='duskcap', colour=0, rot=rot,
-                                  locked=locked, fragile=0, link=None, cross=0)
+                                  locked=locked, fragile=0, link=None, cross=0, gate=0)
 
     def cross(self, x, y, strand, rot=0, locked=False, fragile=0, link=None):
         """A crossing: four arms in two pairs that pass through one another.
@@ -94,7 +100,33 @@ class Board:
         for ch in strand:
             mask |= {'N': N, 'E': E, 'S': S, 'W': W}[ch]
         self.cells[(x, y)] = dict(kind='cross', colour=0, rot=rot, locked=locked,
-                                  fragile=fragile, link=link, cross=mask)
+                                  fragile=fragile, link=link, cross=mask, gate=0)
+
+    def briar(self, x, y, open_arms, rot=0, locked=False, fragile=0, link=None):
+        """A briar: four arms, of which only the named pair is open.
+
+        `open_arms` names the two arms light may pass along, e.g. 'NS' or 'NE'; the thorns
+        close the other two, which still have to be drawn and still have to mate their
+        neighbours. That is the whole mechanic - all four neighbours mate it at every angle,
+        so nothing about the pipe-fitting can settle a briar and only colour or the dark can.
+
+        Unlike `cross`, which pair you name is the tile: a crossing's strands are
+        interchangeable labels and a briar's are a way through and a wall.
+
+        **The four edges are joined here rather than by the caller**, which is the one place
+        this module wires anything on its own. A briar with three arms is not a briar, and
+        the arm an author forgets is always the same one: a thorned way carries no light, so
+        nothing about the solution notices it missing. It also cannot stand on the border,
+        because one of its four arms would have nowhere to point.
+        """
+        assert 0 < x < self.w - 1 and 0 < y < self.h - 1,             f"a briar needs four neighbours, so it cannot stand on the border at {(x, y)}"
+        mask = 0
+        for ch in open_arms:
+            mask |= {'N': N, 'E': E, 'S': S, 'W': W}[ch]
+        self.cells[(x, y)] = dict(kind='briar', colour=0, rot=rot, locked=locked,
+                                  fragile=fragile, link=link, cross=0, gate=mask)
+        for d in range(4):
+            self.link((x, y), (x + STEP[d][0], y + STEP[d][1]))
 
     def fill(self, x0, y0, w, h, skip=()):
         """Make every cell of a rectangle a conduit, leaving anything already placed.
@@ -117,8 +149,9 @@ class Board:
 
     def period(self, p):
         """After how many quarter turns this tile reads as itself again: 1, 2 or 4."""
+        c = self.cells[p]
         for k in (1, 2):
-            if alike(self.mask(p), self.cells[p]['cross'], k):
+            if alike(self.mask(p), c['cross'], k, c['gate']):
                 return k
         return 4
 
@@ -157,11 +190,13 @@ class Board:
         c = self.cells.get(p)
         if not c:
             return '.'
-        head = {'pipe': '-', 'source': '*', 'lamp': '@', 'duskcap': 'x', 'cross': '='}[c['kind']]
+        head = {'pipe': '-', 'source': '*', 'lamp': '@', 'duskcap': 'x', 'cross': '=',
+                'briar': '%'}[c['kind']]
         m = self.mask(p)
-        if c['kind'] == 'cross':
-            first = ''.join(ch for ch, b in zip('NESW', BITS) if c['cross'] & b)
-            second = ''.join(ch for ch, b in zip('NESW', BITS) if m & ~c['cross'] & b)
+        named = c['cross'] or c['gate']
+        if named:
+            first = ''.join(ch for ch, b in zip('NESW', BITS) if named & b)
+            second = ''.join(ch for ch, b in zip('NESW', BITS) if m & ~named & b)
             tok = head + first + '+' + second
         else:
             tok = head + ''.join(ch for ch, b in zip('NESW', BITS) if m & b)
@@ -191,6 +226,16 @@ class Board:
     def strands(self, p):
         return 2 if self.cells[p]['cross'] else 1
 
+    def live(self, p, rots=None):
+        """The arms of a cell that actually carry light. Mirrors Puzzle.Live.
+
+        Every tile but a briar conducts along every arm it draws; a briar draws four and
+        conducts two. So the light walks this and the drawing walks `mask` - the one place
+        where "there is an arm here" and "light may go this way" are different questions.
+        """
+        c = self.cells[p]
+        return rotl(c['gate'] or self.mask(p), (rots or {}).get(p, 0))
+
     def solve_state(self, rots=None):
         """Networks and colours at the given rotations (default: solved).
 
@@ -210,7 +255,7 @@ class Board:
                     ca = self.cells[a]
                     if ca['kind'] == 'source':
                         col |= ca['colour']
-                    ma = rotl(self.mask(a), (rots or {}).get(a, 0))
+                    ma = self.live(a, rots)
                     for d in range(4):
                         if not ma & BITS[d]:
                             continue
@@ -219,8 +264,7 @@ class Board:
                         b = (a[0] + STEP[d][0], a[1] + STEP[d][1])
                         if b not in self.cells:
                             continue
-                        mb = rotl(self.mask(b), (rots or {}).get(b, 0))
-                        if not mb & BITS[OPP[d]]:
+                        if not self.live(b, rots) & BITS[OPP[d]]:
                             continue
                         into = (b, self.strand_at(b, OPP[d], rots))
                         if into in comp:
@@ -252,15 +296,17 @@ class Board:
                 if p not in self.cells:
                     errs.append(f"edge {tuple(e)} touches empty {p}")
 
-        # a crossing carries four arms in two disjoint pairs of two, or it is not one
+        # both four-armed tiles carry four arms in two disjoint pairs of two, or they are
+        # not one of them
         for p, c in self.cells.items():
-            if c['kind'] != 'cross':
+            named = c['cross'] or c['gate']
+            if c['kind'] not in ('cross', 'briar'):
                 continue
             m = self.mask(p)
-            other = m & ~c['cross'] & 15
-            if bin(c['cross']).count('1') != 2 or bin(other).count('1') != 2 or (m & c['cross']) != c['cross']:
-                errs.append(f"crossing {p} needs four arms in two pairs of two, "
-                            f"got {bin(m).count('1')} with {bin(c['cross']).count('1')} named")
+            other = m & ~named & 15
+            if bin(named).count('1') != 2 or bin(other).count('1') != 2 or (m & named) != named:
+                errs.append(f"{c['kind']} {p} needs four arms in two pairs of two, "
+                            f"got {bin(m).count('1')} with {bin(named).count('1')} named")
 
         comp, colour = self.solve_state()
         for p, c in self.cells.items():
@@ -279,6 +325,10 @@ class Board:
                                  "crosses nothing")
                 elif not have:
                     warns.append(f"crossing {p} carries no light at all in the solution")
+            if c['kind'] == 'briar' and not self.separates(p, comp):
+                warns.append(f"briar {p} closes nothing off - every way it has leads back "
+                             "into one network, so turning it moves the light and never "
+                             "where the light gets to")
 
         # bound groups: one common turn count, no rooted member, at least two members
         groups = {}
@@ -289,25 +339,26 @@ class Board:
             if len(members) < 2:
                 errs.append(f"bound rune '{rune}' has only one member {members}")
             for p in members:
-                if self.cells[p]['kind'] not in ('pipe', 'cross'):
+                if self.cells[p]['kind'] not in ('pipe', 'cross', 'briar'):
                     errs.append(f"bound {p} is not a conduit")
                 if self.cells[p]['locked']:
                     errs.append(f"bound {p} is also rooted")
             common = [k for k in range(4)
                       if all(alike(self.mask(p), self.cells[p]['cross'],
-                                   (self.cells[p]['rot'] + k) & 3)
+                                   (self.cells[p]['rot'] + k) & 3, self.cells[p]['gate'])
                              for p in members)]
             if not common:
                 errs.append(f"bound rune '{rune}' has no shared turn count: "
-                            f"{[(p, owed(self.mask(p), self.cells[p]['rot'])) for p in members]}")
+                            f"{[(p, self.group_turns(p)) for p in members]}")
 
         # A rooted tile must already read as solved: it can never be turned, and every
         # check above ran against the board with every rotation at zero, so one authored
         # off its solution means what was proved is not what ships. Mirrors
         # LevelValidator.CheckRootedTiles.
         for p, c in self.cells.items():
-            if c['locked'] and not alike(self.mask(p), c['cross'], c['rot']):
-                errs.append(f"rooted {p} starts {owed(self.mask(p), c['rot'], c['cross'])} "
+            if c['locked'] and not alike(self.mask(p), c['cross'], c['rot'], c['gate']):
+                errs.append(f"rooted {p} starts "
+                            f"{owed(self.mask(p), c['rot'], c['cross'], c['gate'])} "
                             "turn(s) from its solution and can never be turned")
 
         # fragile conduits must survive their own group's turn count
@@ -320,14 +371,41 @@ class Board:
 
         return errs, warns
 
+    def separates(self, p, comp):
+        """Whether taking this briar's thorns off would join anything to anything.
+
+        Mirrors LevelValidator.CheckBriars. Only the thorned ways are asked about - the open
+        pair is the network the tile is already in, so it can never disagree with itself -
+        and the way has to be open on the *other* side too, or lifting these thorns would
+        still join nothing, which is what two briars back to back are.
+
+        Note what is deliberately not asked: whether the tile carries any light. A briar
+        standing in an island of dark with its thorns facing the grove is one of the best
+        tiles this mechanic has, because opening it is how a shadow wakes.
+        """
+        c = self.cells[p]
+        mine = comp[(p, 0)]
+        for d in range(4):
+            if c['gate'] & BITS[d] or not self.mask(p) & BITS[d]:
+                continue
+            q = (p[0] + STEP[d][0], p[1] + STEP[d][1])
+            if q not in self.cells:
+                continue
+            if not self.live(q) & BITS[OPP[d]]:
+                continue
+            if comp[(q, self.strand_at(q, OPP[d]))] != mine:
+                return True
+        return False
+
     def group_turns(self, p):
         c = self.cells[p]
         if not c['link']:
-            return owed(self.mask(p), c['rot'], c['cross'])
+            return owed(self.mask(p), c['rot'], c['cross'], c['gate'])
         members = [q for q, d in self.cells.items() if d['link'] == c['link']]
         for k in range(4):
             if all(alike(self.mask(q), self.cells[q]['cross'],
-                         (self.cells[q]['rot'] + k) & 3) for q in members):
+                         (self.cells[q]['rot'] + k) & 3, self.cells[q]['gate'])
+                   for q in members):
                 return k
         return 0
 
@@ -336,7 +414,7 @@ class Board:
         for p, c in self.cells.items():
             if c['locked']:
                 continue
-            if alike(self.mask(p), c['cross'], 1):         # inert at every angle
+            if alike(self.mask(p), c['cross'], 1, c['gate']):   # inert at every angle
                 continue
             if c['link']:
                 if c['link'] in counted:
@@ -424,14 +502,17 @@ class Board:
                     continue
                 turns_p = range(1) if c['locked'] else range(4)
                 turns_q = range(1) if self.cells[q]['locked'] else range(4)
-                if not any(rotl(self.mask(p), k) & BITS[d] for k in turns_p):
+                # the live mask, not the drawn one: a briar draws an arm down every way it
+                # has and carries light along only two of them
+                if not any(rotl(c['gate'] or self.mask(p), k) & BITS[d] for k in turns_p):
                     continue
-                if not any(rotl(self.mask(q), k) & BITS[OPP[d]] for k in turns_q):
+                if not any(rotl(self.cells[q]['gate'] or self.mask(q), k) & BITS[OPP[d]]
+                           for k in turns_q):
                     continue
                 out.append((p, q, why(comp[(p, 0)], comp[(q, 0)])))
 
             if (c['kind'] == 'cross' and not c['locked']
-                    and not alike(self.mask(p), c['cross'], 1)
+                    and not alike(self.mask(p), c['cross'], 1, 0)
                     and comp[(p, 0)] != comp[(p, 1)]):
                 out.append((p, p, why(comp[(p, 0)], comp[(p, 1)]) + ' (crossing)'))
         return out
@@ -464,17 +545,19 @@ class Board:
                 if not c:
                     top += '    '; mid += ' .  '; bot += '    '; continue
                 m = rotl(self.mask(p), (rots or {}).get(p, 0))
+                shut = m & ~self.live(p, rots) & 15
                 glyph = {'pipe': '+', 'source': '*', 'lamp': 'O', 'duskcap': 'X',
-                         'cross': ')'}[c['kind']]
+                         'cross': ')', 'briar': '%'}[c['kind']]
                 if c['link']:
                     glyph = c['link'].lower()
                 if c['locked']:
                     glyph = glyph.upper() if c['kind'] == 'pipe' else glyph
                     glyph = '#' if c['kind'] == 'pipe' else glyph
-                top += ' | ' if m & N else '   '
+                top += (' : ' if shut & N else ' | ') if m & N else '   '
                 top += ' '
-                mid += ('-' if m & W else ' ') + glyph + ('-' if m & E else ' ') + ' '
-                bot += ' | ' if m & S else '   '
+                mid += ('=' if shut & W else '-' if m & W else ' ') + glyph + \
+                       ('=' if shut & E else '-' if m & E else ' ') + ' '
+                bot += (' : ' if shut & S else ' | ') if m & S else '   '
                 bot += ' '
             out += [top, mid, bot]
         return '\n'.join(out)

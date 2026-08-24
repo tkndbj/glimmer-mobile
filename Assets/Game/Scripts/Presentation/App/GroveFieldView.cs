@@ -118,6 +118,25 @@ namespace GlimmerGrove
         public float Zoom => _zoom;
 
         /// <summary>
+        /// Stops the field taking input, while it goes on drawing and culling normally.
+        ///
+        /// <para>
+        /// <b>A scrim is not enough here and that is the whole reason this exists.</b> A drag,
+        /// a tap and a long press all arrive through the event system, so an invisible blocker
+        /// over the screen stops all three — but <see cref="Pinch"/> reads <c>Input.GetTouch</c>
+        /// directly, because a two-finger gesture has no single pointer to route, and polled
+        /// input does not care what is drawn on top of it. Left ungated, two fingers laid on a
+        /// ceremony that is moving the camera would fight it for the whole of it.
+        /// </para>
+        /// <para>
+        /// Culling deliberately keeps running: what is frozen is the player's hold on the
+        /// camera, not the field, and a ceremony that adds ground needs tiles to keep being
+        /// realised while it does.
+        /// </para>
+        /// </summary>
+        public bool Locked { get; set; }
+
+        /// <summary>
         /// Which tiles exist at all. Ground the player does not own is simply absent — see
         /// <see cref="SetVisible"/>.
         /// </summary>
@@ -170,12 +189,65 @@ namespace GlimmerGrove
         /// <summary>
         /// Centres the camera on one tile. Used on the first paint so a new player opens onto
         /// their hall rather than onto whichever corner the arithmetic happened to start at.
+        ///
+        /// <para>
+        /// Fractional coordinates are legal — see <see cref="GroveFloor.TileX"/>. That is what
+        /// lets a camera move be eased between two places by calling this every frame, rather
+        /// than by a second copy of the transform living beside the one that draws the floor.
+        /// </para>
         /// </summary>
-        public void CentreOn(int col, int row)
+        public void CentreOn(float col, float row)
         {
             _pan = new Vector2(-GroveFloor.TileX(col, row), GroveFloor.TileY(col, row));
             Apply();
         }
+
+        /// <summary>
+        /// Sets the zoom directly, clamped to the same band a pinch is.
+        ///
+        /// For a ceremony that frames something the player did not choose to look at — see
+        /// <c>GroveRise</c>. Ordinary use is the pinch, which owns <see cref="_zoom"/> through
+        /// <see cref="Pinch"/>; nothing about a screen's own layout should be reaching in here.
+        /// </summary>
+        public void ZoomTo(float zoom)
+        {
+            _zoom = Mathf.Clamp(zoom, MinZoom, MaxZoom);
+            Apply();
+        }
+
+        /// <summary>
+        /// Re-tests which tiles exist, keeping the ones already drawn.
+        ///
+        /// <para>
+        /// <see cref="Cull"/> only does any work when the <em>window</em> moves, which is
+        /// exactly right while the floor is a fixed set of tiles being panned over — and
+        /// exactly wrong while ground is arriving under a still camera, where the window never
+        /// changes and the answer to <see cref="_visible"/> does. Forcing the range to an
+        /// impossible one makes the next frame re-evaluate it; tiles already live are left
+        /// alone rather than rebuilt, which is what separates this from <see cref="Rebuild"/>
+        /// and what stops the whole grove flashing every time one tile lands.
+        /// </para>
+        /// </summary>
+        public void Revisit()
+        {
+            _firstCol = 1; _lastCol = 0;
+            _firstRow = 1; _lastRow = 0;
+        }
+
+        /// <summary>
+        /// A node in the field's own space, for effects that must pan and zoom with the floor.
+        ///
+        /// <para>
+        /// A mark naming a tile has to travel with that tile, and the only way to be sure of
+        /// that is to be a child of the same transform — <c>HomesteadScreen</c>'s edit bar is
+        /// the alternative and it has to be re-placed every frame from <c>LateUpdate</c>,
+        /// which is right for one bar and absurd for thirty diamonds. Kept out of the tile
+        /// pool, so <see cref="Restack"/> never renumbers it and it ends up drawn over every
+        /// tile rather than sorted among them.
+        /// </para>
+        /// </summary>
+        public RectTransform Layer(string name)
+            => _field == null ? null : UIKit.Node(name, _field);
 
         /// <summary>Rebinds every live tile without moving the camera. For an event repaint.</summary>
         public void Refresh()
@@ -241,6 +313,8 @@ namespace GlimmerGrove
 
         public void OnDrag(PointerEventData e)
         {
+            if (Locked) return;
+
             // A two-finger gesture is a zoom, and treating its drag as a pan as well makes the
             // floor lurch away under the pinch.
             if (Input.touchCount >= 2) return;
@@ -258,6 +332,8 @@ namespace GlimmerGrove
 
         public void OnPointerDown(PointerEventData e)
         {
+            if (Locked) return;
+
             _pressing = true;
             _held = false;
             _dragged = 0f;
@@ -270,6 +346,8 @@ namespace GlimmerGrove
 
         public void OnPointerClick(PointerEventData e)
         {
+            if (Locked) return;
+
             // A pan that ends over a tile is not a tap on it. The threshold is in screen points
             // rather than tiles because it is about the finger, not the floor.
             if (_dragged > PressSlop) { _dragged = 0f; return; }
@@ -380,8 +458,14 @@ namespace GlimmerGrove
 
         void Update()
         {
-            Pinch();
-            Hold();
+            // Culling runs whatever else is going on — see Locked. Everything above it is the
+            // player's hold on the camera, and that is what a ceremony takes away.
+            if (!Locked)
+            {
+                Pinch();
+                Hold();
+            }
+
             Cull();
         }
 

@@ -13,33 +13,16 @@ using UnityEngine.UI;
 
 namespace GlimmerGrove
 {
-    /// <summary>
-    /// What the streak did on the run that just ended: how long it now is, and whether
-    /// this run is what extended it.
-    ///
-    /// Both are needed and neither implies the other. A second run of the evening leaves a
-    /// six-day streak at six and extends nothing, and a panel that congratulated the player
-    /// every time would be congratulating them for a thing they did an hour ago.
-    /// </summary>
-    public readonly struct StreakNote
-    {
-        public readonly int Days;
-        public readonly bool Advanced;
-
-        public StreakNote(int days, bool advanced)
-        {
-            Days = days < 0 ? 0 : days;
-            Advanced = advanced;
-        }
-
-        /// <summary>Worth a line only when this run moved it. See the type summary.</summary>
-        public bool WorthSaying => Advanced && Days > 0;
-    }
-
-    public sealed class PlayScreen : View
+    public sealed class PlayScreen : RunScreen, IPlaysLevel
     {
         /// <summary>Which level to play. Set by whoever opened the screen.</summary>
         public LevelId LevelId;
+
+        /// <summary>
+        /// How <c>PlayRoute</c> hands the level over, without the field above having to
+        /// become a property that every line in this file then reads through.
+        /// </summary>
+        LevelId IPlaysLevel.LevelId { set => LevelId = value; }
 
         public override string Track => "mus_play";
 
@@ -863,12 +846,12 @@ namespace GlimmerGrove
             Flow.Modal<PauseOverlay>(v => v.Screen = this);
         }
 
-        public void Resume()
+        public override void Resume()
         {
             if (_board != null && !_finished) _board.Locked = false;
         }
 
-        public void RestartLevel()
+        public override void RestartLevel()
         {
             if (_board == null) return;
 
@@ -963,11 +946,11 @@ namespace GlimmerGrove
         }
 
         /// <summary>Leaving without solving is a data point, not just a navigation.</summary>
-        public void LeaveToMap()
+        public override void LeaveToMap()
             => ConfirmForfeit(ForfeitOverlay.Kind.Leave, "back", () => Flow.Go<LevelsScreen>());
 
         /// <summary>The pause menu's way out to the hub, guarded like every other.</summary>
-        public void LeaveToHome()
+        public override void LeaveToHome()
             => ConfirmForfeit(ForfeitOverlay.Kind.Leave, "home", () => Flow.Go<HomeScreen>());
 
         void Finish()
@@ -986,66 +969,25 @@ namespace GlimmerGrove
             int moves = _puzzle.Moves;
             int stars = _puzzle.StarsFor(Mathf.Max(1, moves), _clock.Millis);
 
-            var before = PlayerProgress.Record(_def.Id);
-            int previousBest = before.BestMoves;
-            bool firstClear = !before.IsCleared;
-
-            // Decided once, here, and handed to everything downstream. Built *before*
-            // the record is updated, because half of what it describes — the previous
-            // best, whether this was a first clear — stops being true the moment
-            // RecordRun folds this run in. See RunOutcome.
-            var run = RunOutcome.Win(_puzzle, stars, previousBest, firstClear,
-                                     before.Clears + 1, HintsSpent,
-                                     Time.unscaledTime - _startedAt, _clock.Millis, _route);
-
-            PlayerProgress.RecordRun(_def.Id, stars, moves, run.Millis);
-
-            // Counted here and in Defeat, which are the two places a run actually ends.
-            // PlayerProgress hears about wins only — a defeat is not a worse clear, it
-            // simply did not happen — so there is no single Domain hook to hang this on,
-            // and pretending otherwise would silently stop counting losses.
-            DailyChests.RecordRun();
-            var streak = RecordStreak();
-
-            // The reward is the difference between the record before and after, not a
-            // payout for the run. A replay that does not beat the old result is worth
-            // nothing, and that falls out of the subtraction rather than needing a rule.
-            var reward = PlayerProgression.RewardFor(before, PlayerProgress.Record(_def.Id));
-
-            LevelAnalytics.TrackCompleted(_def, moves, stars, run.HintsUsed,
-                                          run.Seconds, firstClear);
+            // Everything an ending does to the account happens in one place for both modes -
+            // the record, the chests, the streak, the reward and the analytics. See RunLedger,
+            // which also owns the ordering this used to state in a comment.
+            var done = RunLedger.Win(_def, stars, moves, _clock.Millis,
+                                     Time.unscaledTime - _startedAt, HintsSpent, _route,
+                                     _puzzle.LampsLit, _puzzle.LampCount);
 
             Flow.Modal<WinOverlay>(v =>
             {
-                v.Run = run;
-                v.Streak = streak;
-                v.XpGained = reward.Xp;
-                v.CreditsGained = reward.EarnedCredits;
+                v.Run = done.Run;
+                v.Streak = done.Streak;
+                v.XpGained = done.Xp;
+                v.CreditsGained = done.Credits;
 
                 // Already inside CreditsGained. Passed separately only so the panel can
                 // say *why* the number is larger than the glade's usual, which is the
                 // whole point of the bonus existing.
-                v.GoldenPercent = PlayerProgression.GoldenPercentFor(_def.Id);
+                v.GoldenPercent = done.GoldenPercent;
             });
-        }
-
-        /// <summary>
-        /// Feeds the streak and reports what happened, so the panel that follows can say
-        /// so.
-        ///
-        /// <para>
-        /// Measured either side of the call rather than read from an event, because the
-        /// panel needs the answer synchronously — it is built on the next line — and an
-        /// event handler would have to stash the result somewhere for it to be found
-        /// again. Two reads of a derived number is the cheapest correct version.
-        /// </para>
-        /// </summary>
-        StreakNote RecordStreak()
-        {
-            int before = DailyStreak.Days;
-            DailyStreak.Record();
-
-            return new StreakNote(DailyStreak.Days, DailyStreak.Days > before);
         }
 
         /// <summary>Hints spent on the run so far. See <see cref="_hintsThisRun"/>.</summary>
@@ -1076,33 +1018,21 @@ namespace GlimmerGrove
             // ended, rather than depending on the modal's scrim to swallow taps.
             if (_board != null) _board.Locked = true;
 
-            var record = PlayerProgress.Record(_def.Id);
-
             // Read off the board before anything touches it. The panel this feeds offers
             // a retry, which restarts the very board being measured — so a screen that
             // asked afterwards would be describing a run that no longer exists.
-            var run = RunOutcome.Loss(_puzzle, reason, record.BestMoves,
-                                      record.Clears + 1, HintsSpent,
-                                      Time.unscaledTime - _startedAt, _clock.Millis);
-
-            bool charged = Wallet.TrySpendHeart();
-            int left = Profile.Hearts;
-
-            // A loss is a run. It cost a heart, which is the same price a win pays, and a
-            // daily loop that only rewards winning takes hearts from exactly the players
-            // who most need what the chests hold.
-            DailyChests.RecordRun();
-            var streak = RecordStreak();
-
-            LevelAnalytics.TrackDefeated(_def, run.Moves, run.Seconds, left, reason.ToString());
+            var done = RunLedger.Loss(_def, reason, _puzzle.Moves, _clock.Millis,
+                                      Time.unscaledTime - _startedAt, HintsSpent, _route,
+                                      _puzzle.TurnsToSolution,
+                                      _puzzle.LampsLit, _puzzle.LampCount);
 
             Flow.Modal<DefeatOverlay>(v =>
             {
                 v.Screen = this;
-                v.Run = run;
-                v.Streak = streak;
-                v.HeartsLeft = left;
-                v.HeartWasCharged = charged;
+                v.Run = done.Run;
+                v.Streak = done.Streak;
+                v.HeartsLeft = done.HeartsLeft;
+                v.HeartWasCharged = done.HeartCharged;
             });
         }
 
@@ -1111,7 +1041,7 @@ namespace GlimmerGrove
         /// the run had already been declared over — the finished latch has to come back
         /// off, and the board has to be rebuilt rather than merely rewound.
         /// </summary>
-        public void RetryAfterDefeat()
+        public override void RetryAfterDefeat()
         {
             _finished = false;
             _startedAt = Time.unscaledTime;

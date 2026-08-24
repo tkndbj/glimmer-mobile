@@ -263,6 +263,14 @@ namespace GlimmerGrove.EditorTools
                 sb.AppendLine($"      \"order\": {entry.order},");
                 sb.AppendLine($"      \"disabled\": {(entry.disabled ? "true" : "false")},");
                 sb.AppendLine($"      \"minAppVersion\": {entry.minAppVersion},");
+
+                // Written only when it says something, so every chapter authored before modes
+                // existed round-trips byte for byte and the ordinary mode never has to be
+                // spelled out. An omitted field reads as the default (GameMode.Default), which
+                // is what makes that safe rather than merely tidy.
+                if (!string.IsNullOrEmpty(entry.mode))
+                    sb.AppendLine($"      \"mode\": \"{entry.mode}\",");
+
                 sb.AppendLine("      \"levels\": [");
 
                 var levels = entry.levels ?? new string[0];
@@ -395,6 +403,7 @@ namespace GlimmerGrove.EditorTools
                 var b = after.chapters[i];
                 if (a.id != b.id || a.version != b.version || a.order != b.order ||
                     a.disabled != b.disabled || a.minAppVersion != b.minAppVersion ||
+                    a.mode != b.mode ||
                     !Same(a.levels, new List<string>(b.levels ?? new string[0])))
                 {
                     lost = $"chapter '{a.id}' did not survive the write";

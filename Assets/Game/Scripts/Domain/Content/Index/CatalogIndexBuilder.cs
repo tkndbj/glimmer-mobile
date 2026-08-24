@@ -47,6 +47,19 @@ namespace GlimmerGrove.Content
             // Content that needs newer client code is skipped whole, never half-read.
             if (entry.minAppVersion > 0 && appVersion < entry.minAppVersion) return false;
 
+            if (!GameMode.TryParse(entry.mode, out var mode, out string modeError))
+            {
+                _problems.Add($"chapter '{chapterId}' names mode '{entry.mode}' which is " +
+                              $"rejected: {modeError}");
+                return false;
+            }
+
+            // A mode this build cannot play is content from the future, not a mistake - so it
+            // is skipped in silence exactly as minAppVersion is, and reported to nobody. A
+            // chapter opened into a mode the client has no interaction for is a dead screen,
+            // which is strictly worse than a chapter that is simply not there yet.
+            if (!mode.IsPlayable) return false;
+
             if (!_chapterIds.Add(chapterId))
             {
                 _problems.Add($"manifest lists chapter '{chapterId}' twice; the later entry is ignored");
@@ -57,7 +70,7 @@ namespace GlimmerGrove.Content
             if (levelIds.Count == 0)
                 _problems.Add($"chapter '{chapterId}' lists no levels and will show as empty");
 
-            _chapters.Add(new ChapterIndexEntry(chapterId, entry.order, entry.version, levelIds));
+            _chapters.Add(new ChapterIndexEntry(chapterId, entry.order, entry.version, levelIds, mode));
             return true;
         }
 
@@ -322,18 +335,40 @@ namespace GlimmerGrove.Content
                 return byOrder != 0 ? byOrder : a.Id.CompareTo(b.Id);
             });
 
+            // Two orderings, and the split is the point. The flat list is every glade in the
+            // game and is what totals are taken over - stars, XP, credits - because a glade is
+            // a glade whichever way it is played and the reward path has no opinion about
+            // modes. The per-mode list is what *order* means to a player: the next glade, the
+            // previous one, what unlocks what. Sharing one list would chain the second mode
+            // onto the end of the first, so finishing the classic game would be the price of
+            // opening the second one - which is precisely what a second mode must not cost.
             var levelIds = new List<LevelId>();
             var levelOrder = new Dictionary<LevelId, int>();
+            var levelMode = new Dictionary<LevelId, GameMode>();
+            var byMode = new Dictionary<GameMode, List<LevelId>>();
+            var chaptersByMode = new Dictionary<GameMode, List<ChapterIndexEntry>>();
 
             foreach (var chapter in _chapters)
-                foreach (var levelId in chapter.LevelIds)
+            {
+                if (!byMode.TryGetValue(chapter.Mode, out var lane))
                 {
-                    levelOrder[levelId] = levelIds.Count;
-                    levelIds.Add(levelId);
+                    byMode[chapter.Mode] = lane = new List<LevelId>();
+                    chaptersByMode[chapter.Mode] = new List<ChapterIndexEntry>();
                 }
 
+                chaptersByMode[chapter.Mode].Add(chapter);
+
+                foreach (var levelId in chapter.LevelIds)
+                {
+                    levelOrder[levelId] = lane.Count;
+                    levelMode[levelId] = chapter.Mode;
+                    lane.Add(levelId);
+                    levelIds.Add(levelId);
+                }
+            }
+
             return new CatalogIndex(_chapters.ToArray(), levelIds.ToArray(), levelOrder, _levelChapter,
-                                    SortedCompanions(), UsableEvents());
+                                    SortedCompanions(), UsableEvents(), levelMode, byMode, chaptersByMode);
         }
 
         /// <summary>

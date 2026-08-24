@@ -131,6 +131,30 @@ namespace GlimmerGrove
                 : AssetLibrary.Peek<Sprite>(AssetManifest.ArtRoot + piece.Art);
 
         /// <summary>
+        /// Whether <see cref="Paint"/> would draw anything right now — that is, whether this
+        /// piece's full-size art is resident.
+        ///
+        /// <para>
+        /// For a caller that can fall back to <see cref="PaintThumb"/>, which is a different
+        /// scope and therefore available at different times: the shop holds shelf atlases and
+        /// the grove holds the real thing, and the one screen reachable from both is the home
+        /// panel. Asking here rather than at the call site is the point — "is it animated, and
+        /// if so are its frames in" is exactly the pair of facts <see cref="Paint"/> already
+        /// knows and a second copy of would get wrong the first time a decor piece was
+        /// animated.
+        /// </para>
+        /// </summary>
+        public static bool HasArt(HomesteadPiece piece)
+        {
+            if (!piece.IsValid) return false;
+
+            if (!piece.Animated) return Still(piece) != null;
+
+            var frames = AssetLibrary.PeekFrames(AssetManifest.ArtRoot + piece.Art);
+            return frames != null && frames.Length > 0;
+        }
+
+        /// <summary>
         /// Puts a piece on an <see cref="Image"/> at full size, animating it when it has frames.
         ///
         /// <para>
@@ -339,6 +363,65 @@ namespace GlimmerGrove
         /// </summary>
         public static void OpenShelfAsync(GroveShelf shelf, Action onReady = null)
             => Browse("shelf:" + GroveShelves.Key(shelf), AssetManifest.GroveShelfAssets(shelf), onReady);
+
+        /// <summary>
+        /// Loads the tab row's emblems, into a scope that outlives the shelf being shown.
+        ///
+        /// <para>
+        /// Separate from <see cref="OpenShelfAsync"/> because the two have different lifetimes,
+        /// and sharing one was a visible fault: <c>EnsureScopeAsync</c> releases before it
+        /// loads, so every tab tap destroyed the atlas all eight tabs draw from and immediately
+        /// asked for it back. See <c>AssetLibrary.HomesteadTabScope</c>.
+        /// </para>
+        /// <para>
+        /// Released by <see cref="Close"/> along with everything else the grove holds, so the
+        /// one door every screen already leaves through covers it and nothing new has to be
+        /// remembered.
+        /// </para>
+        /// </summary>
+        /// <remarks>
+        /// The in-flight guard is not defensive padding: <c>IsScopeLoaded</c> goes true the
+        /// instant a load <em>starts</em>, which is precisely the check <see cref="Browse"/>
+        /// records as the home of the shop's old double-load. A second caller answered from it
+        /// would be told the emblems were ready and would paint a row of blanks, and
+        /// <c>EnsureScopeAsync</c> releases before it loads, so starting a second load would
+        /// tear the atlas out from under the first caller's row.
+        /// </remarks>
+        static bool _tabsLoading;
+        static Action _tabsWaiting;
+
+        public static async void OpenTabsAsync(Action onReady = null)
+        {
+            if (!_tabsLoading && AssetLibrary.IsScopeLoaded(AssetLibrary.HomesteadTabScope))
+            {
+                onReady?.Invoke();
+                return;
+            }
+
+            _tabsWaiting += onReady;
+            if (_tabsLoading) return;
+
+            _tabsLoading = true;
+
+            try
+            {
+                await AssetLibrary.EnsureScopeAsync(AssetLibrary.HomesteadTabScope,
+                                                    AssetManifest.GroveTabAssets());
+            }
+            catch (Exception e)
+            {
+                // async void swallows exceptions; a row of blank tabs must not happen silently.
+                Debug.LogException(e);
+            }
+            finally
+            {
+                _tabsLoading = false;
+            }
+
+            var waiting = _tabsWaiting;
+            _tabsWaiting = null;
+            waiting?.Invoke();
+        }
 
         /// <summary>
         /// Loads what the picker draws, which is every shelf.
@@ -633,6 +716,7 @@ namespace GlimmerGrove
 
             AssetLibrary.ReleaseScope(AssetLibrary.HomesteadScope);
             AssetLibrary.ReleaseScope(AssetLibrary.HomesteadShopScope);
+            AssetLibrary.ReleaseScope(AssetLibrary.HomesteadTabScope);
         }
 
         /// <summary>

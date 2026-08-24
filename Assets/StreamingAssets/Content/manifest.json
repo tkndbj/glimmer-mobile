@@ -1,7 +1,7 @@
 {
   "schemaVersion": 2,
   "progressionVersion": 3,
-  "groveVersion": 9,
+  "groveVersion": 10,
   "chapters": [
     {
       "id": "c01_shallows",
@@ -59,6 +59,58 @@
         "c03_the_ashen_path",
         "c03_the_amberwood_knot"
       ]
+    },
+    {
+      "id": "c04_nightbriar",
+      "version": 1,
+      "order": 40,
+      "disabled": false,
+      "minAppVersion": 0,
+      "levels": [
+        "c04_thornlight",
+        "c04_the_shut_way",
+        "c04_nightfall",
+        "c04_bramble_and_bridge",
+        "c04_the_hollow_gate",
+        "c04_rootbriar",
+        "c04_three_thorns",
+        "c04_the_long_dark",
+        "c04_wick_and_wane",
+        "c04_the_nightbriar_knot"
+      ]
+    },
+    {
+      "id": "f01_lightfall",
+      "version": 1,
+      "order": 50,
+      "disabled": false,
+      "minAppVersion": 0,
+      "mode": "fall",
+      "levels": [
+        "f01_first_fall"
+      ]
+    },
+    {
+      "id": "k01_grovekeeper",
+      "version": 1,
+      "order": 60,
+      "disabled": false,
+      "minAppVersion": 0,
+      "mode": "keeper",
+      "levels": [
+        "k01_first_grove"
+      ]
+    },
+    {
+      "id": "w01_lightweave",
+      "version": 1,
+      "order": 70,
+      "disabled": false,
+      "minAppVersion": 0,
+      "mode": "weave",
+      "levels": [
+        "w01_first_weave"
+      ]
     }
   ],
   "events": [
@@ -81,12 +133,30 @@
         "c01_grovekeepers_knot"
       ],
       "milestones": [
-        { "goal": 1, "credits": 60 },
-        { "goal": 2, "credits": 90 },
-        { "goal": 4, "credits": 250 },
-        { "goal": 6, "credits": 400 },
-        { "goal": 8, "credits": 600 },
-        { "goal": 10, "credits": 1000 }
+        {
+          "goal": 1,
+          "credits": 60
+        },
+        {
+          "goal": 2,
+          "credits": 90
+        },
+        {
+          "goal": 4,
+          "credits": 250
+        },
+        {
+          "goal": 6,
+          "credits": 400
+        },
+        {
+          "goal": 8,
+          "credits": 600
+        },
+        {
+          "goal": 10,
+          "credits": 1000
+        }
       ]
     }
   ],

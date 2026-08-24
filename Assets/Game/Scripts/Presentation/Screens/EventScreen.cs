@@ -1124,7 +1124,7 @@ namespace GlimmerGrove
             var play = UIKit.TextButton("Play", Content, "btn_violet", Loc.Get("ui.event.cta"), 46,
                                         new Vector2(520f, 132f), new Vector2(.5f, 0f),
                                         new Vector2(0f, NavBar.Height + 76f),
-                                        () => Flow.Go<PlayScreen>(v => v.LevelId = next));
+                                        () => PlayRoute.Open(next));
             UIKit.Halo(play.transform, Pal.Bloom, 620f, .30f);
 
             play.transform.localScale = Vector3.zero;
@@ -1199,7 +1199,7 @@ namespace GlimmerGrove
                 // reachable, and a rail that only reports is a rail that wastes its own space.
                 var tap = UIKit.Button("Tap", node, null, Vector2.one * size,
                                        new Vector2(.5f, .5f), Vector2.zero,
-                                       () => Flow.Go<PlayScreen>(v => v.LevelId = levelId));
+                                       () => PlayRoute.Open(levelId));
                 tap.GetComponent<Image>().color = new Color(0f, 0f, 0f, 0f);
                 tap.PressScale = .92f;
 

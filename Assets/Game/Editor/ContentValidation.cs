@@ -994,6 +994,21 @@ namespace GlimmerGrove.EditorTools
 
                 if (!verbose || !report.IsClean || !byId.TryGetValue(report.Id, out var level)) continue;
 
+                // Anything that is not the classic mode reports its own line and stops:
+                // everything below reads a conduit board. Asked as "is it a board" rather than
+                // "is it one of the others", which is the reasoning that broke the moment a
+                // third kind of level existed.
+                if (!level.HasBoard)
+                {
+                    Debug.Log($"[Glimmer] {report.Id} verified ({level.Mode} level)");
+                    continue;
+                }
+
+                // Said rather than left to elimination. Everything below reads the conduit
+                // board, and "it was not one of the other two" is the reasoning that broke the
+                // moment a third kind of level existed.
+                if (!level.HasBoard) continue;
+
                 var tuning = level.Tuning;
 
                 // The clock and what three stars asks of it, printed rather than left to be
@@ -1196,9 +1211,15 @@ namespace GlimmerGrove.EditorTools
                 return;
             }
 
+            // Not "nobody can win it" any more: since v20 a priced piece is bought by the
+            // copy, so a player may buy the same fence again and there is no ceiling on a
+            // grove's worth. It is still the number worth checking against — a top rung above
+            // one of everything is a rung asking somebody to buy four hundred fences — so this
+            // stayed a warning and changed its sentence rather than being deleted.
             if (ladder.Top > everything)
-                result.Warnings.Add($"the grove's last star asks for {ladder.Top} credits and the " +
-                                    $"whole catalog is worth {everything}; nobody can ever win it");
+                result.Warnings.Add($"the grove's last star asks for {ladder.Top} credits and one " +
+                                    $"of everything in the catalog is worth {everything}; it can " +
+                                    "only be reached by buying duplicates");
 
             if (verbose)
             {
@@ -1474,7 +1495,7 @@ namespace GlimmerGrove.EditorTools
         static void ValidateHomesteadPieces(EditorContent content, HomesteadCatalog grove,
                                             ContentValidationResult result)
         {
-            int starters = 0, forSale = 0, earned = 0, residents = 0;
+            int starters = 0, forSale = 0, earned = 0, residents = 0, bundled = 0;
 
             foreach (var piece in grove.Pieces)
             {
@@ -1482,6 +1503,9 @@ namespace GlimmerGrove.EditorTools
                 if (piece.IsForSale) forSale++;
                 if (piece.HasRequirement) earned++;
                 if (piece.IsResident) residents++;
+                if (piece.IsStocked && piece.Bundle > 1) bundled++;
+
+                ValidateGroveBundle(piece, result);
 
                 RequireGroveArt(piece.Art, $"grove piece '{piece.Id}'", piece.Animated, result);
 
@@ -1521,9 +1545,61 @@ namespace GlimmerGrove.EditorTools
             long total = 0;
             foreach (var piece in grove.Pieces) total += piece.Cost;
 
-            result.Warnings.Add($"grove shop: {forSale} for sale, {earned} earned by playing, " +
-                                $"{starters} free - {total} credits in all, about {total / daily} day(s) " +
-                                $"of play at {daily} credits a day");
+            result.Warnings.Add($"grove shop: {forSale} for sale ({bundled} sold in bundles), " +
+                                $"{earned} earned by playing, {starters} free - {total} credits in " +
+                                $"all, about {total / daily} day(s) of play at {daily} credits a day");
+        }
+
+        /// <summary>
+        /// What a bundle may be, and the one mistake no reader can catch on its own.
+        ///
+        /// <para>
+        /// <b>A price its bundle does not divide is an error rather than a warning.</b> A copy
+        /// is worth <c>cost / bundle</c> (see <c>HomesteadPiece.UnitCost</c>), so a fence
+        /// costing 95 in tens makes every copy worth 9 and a player who buys the bundle is
+        /// scored 90 for 95 credits spent — five credits of their grove quietly gone, on the
+        /// one number that reaches a public leaderboard. It looks perfectly authored in the
+        /// file, it cannot be seen on a device, and the server would derive the same short
+        /// figure, so nothing anywhere would disagree and report it.
+        /// </para>
+        /// <para>
+        /// <b>A bundle on something free is an error too</b>, because it is a statement that
+        /// contradicts itself: an unpriced piece is an entitlement, is never stock, and can
+        /// never run out, so a bundle on one is a number that will never be read — which is
+        /// worse than a wrong number, because it reads as a rule somebody is relying on.
+        /// </para>
+        /// </summary>
+        static void ValidateGroveBundle(HomesteadPiece piece, ContentValidationResult result)
+        {
+            if (piece.Bundle <= 1) return;
+
+            if (!piece.IsForSale)
+            {
+                result.Errors.Add($"grove piece '{piece.Id}' has no price but is sold in bundles " +
+                                  $"of {piece.Bundle}; an unpriced piece is an entitlement and is " +
+                                  "never counted in copies");
+                return;
+            }
+
+            if (!piece.IsStocked)
+            {
+                result.Errors.Add($"grove piece '{piece.Id}' is a {piece.Kind} sold in bundles of " +
+                                  $"{piece.Bundle}; only decor is bought by the copy");
+                return;
+            }
+
+            if (piece.Bundle > GroveStock.MaxCopies)
+            {
+                result.Errors.Add($"grove piece '{piece.Id}' is sold in bundles of {piece.Bundle}, " +
+                                  $"above the {GroveStock.MaxCopies} copies a player may hold");
+                return;
+            }
+
+            if (piece.Cost % piece.Bundle != 0)
+                result.Errors.Add($"grove piece '{piece.Id}' costs {piece.Cost} in bundles of " +
+                                  $"{piece.Bundle}, which does not divide it - a copy would be " +
+                                  $"worth {piece.UnitCost} and the bundle {piece.UnitCost * piece.Bundle}, " +
+                                  "so the grove's worth would silently fall short of what was paid");
         }
 
         /// <summary>
@@ -1852,6 +1928,18 @@ namespace GlimmerGrove.EditorTools
             {
                 Require(table, mechanic.TitleKey, $"mechanic '{mechanic.Id}'", result);
                 Require(table, mechanic.BodyKey, $"mechanic '{mechanic.Id}'", result);
+            }
+
+            // And a mode's, for the same reason and with one sharper edge. Both of its strings
+            // are drawn by the switcher, which is chrome on the map - so a mode shipped without
+            // them does not fail anywhere, it simply offers a way of playing labelled
+            // "mode.wisp.name". Walked over every mode this build carries rather than over the
+            // ones the catalog happens to have chapters for: a mode with no content yet is
+            // exactly the one whose strings nobody has thought about.
+            foreach (var mode in GameMode.Shipped)
+            {
+                Require(table, mode.NameKey, $"mode '{mode.Value}'", result);
+                Require(table, mode.TaglineKey, $"mode '{mode.Value}'", result);
             }
 
             ValidateKeysUsedInCode(table, result);

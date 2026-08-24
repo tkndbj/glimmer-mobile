@@ -3,9 +3,9 @@
 <plist version="1.0">
 <dict>
 	<key>CLIENT_ID</key>
-	<string>310440655052-qq9vrl8d41a3qnj95sd8akevpgg2m3n2.apps.googleusercontent.com</string>
+	<string>310440655052-14f2g9dsn06tcspol0iak9mj1fmcshs3.apps.googleusercontent.com</string>
 	<key>REVERSED_CLIENT_ID</key>
-	<string>com.googleusercontent.apps.310440655052-qq9vrl8d41a3qnj95sd8akevpgg2m3n2</string>
+	<string>com.googleusercontent.apps.310440655052-14f2g9dsn06tcspol0iak9mj1fmcshs3</string>
 	<key>ANDROID_CLIENT_ID</key>
 	<string>310440655052-a1e7btpqfco3dgnq9sn2ts2fb1solm0m.apps.googleusercontent.com</string>
 	<key>API_KEY</key>
@@ -15,7 +15,7 @@
 	<key>PLIST_VERSION</key>
 	<string>1</string>
 	<key>BUNDLE_ID</key>
-	<string>com.arcade.glimmergrove</string>
+	<string>com.tekoworld.glimmergroove</string>
 	<key>PROJECT_ID</key>
 	<string>glimmer-groove-1cd60</string>
 	<key>STORAGE_BUCKET</key>
@@ -31,6 +31,6 @@
 	<key>IS_SIGNIN_ENABLED</key>
 	<true></true>
 	<key>GOOGLE_APP_ID</key>
-	<string>1:310440655052:ios:d65e2c1ce20b2dc3492a69</string>
+	<string>1:310440655052:ios:faa701d95cf14483492a69</string>
 </dict>
 </plist>

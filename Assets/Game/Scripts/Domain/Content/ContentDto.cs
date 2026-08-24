@@ -239,6 +239,21 @@ namespace GlimmerGrove.Content
         /// drift, and the build gate proves they have not.
         /// </summary>
         public string[] levels;
+
+        /// <summary>
+        /// How this chapter is played - "glade" (turn the conduits) or "chain" (drag through
+        /// motes of light). Empty means glade, so every chapter authored before modes existed
+        /// keeps working with its file untouched.
+        ///
+        /// <para>
+        /// A chapter naming a mode this build cannot play is skipped whole, exactly as
+        /// <see cref="minAppVersion"/> skips one needing newer code - and for the same reason.
+        /// A mode is code, so content that names one this client lacks is content from the
+        /// future, and the honest response is to lose that chapter rather than to open it into
+        /// a screen that cannot run it.
+        /// </para>
+        /// </summary>
+        public string mode;
     }
 
     [Serializable]
@@ -313,6 +328,14 @@ namespace GlimmerGrove.Content
         public float timeFactor;
 
         // ---- presentation, all optional ------------------------------------
+        // ---- the mode blocks ----------------------------------------------
+        // A level carries exactly one of these, or none and a `rows` grid, which is a glade.
+        // Which one it is decides how the level is played - see LevelModes. Adding a mode is a
+        // field here plus a LevelMode subclass, and nothing else in the game changes.
+        public FallDto fall;
+        public KeeperDto keeper;
+        public WeaveDto weave;
+
         public float mapX;
         public float mapY;
         public string accent;
@@ -335,6 +358,62 @@ namespace GlimmerGrove.Content
     /// <see cref="tailXpIncrement"/> continue it arithmetically forever, so the
     /// curve can never simply run out under a long-lived player.
     /// </summary>
+    /// <summary>
+    /// Lightfall's well. Its difficulty lives in the deal and in <c>FallBoard</c>'s constants,
+    /// so a level authors a size and nothing that could disagree with how it plays.
+    /// </summary>
+    [Serializable]
+    public sealed class FallDto
+    {
+        public int width;
+        public int height;
+
+        /// <summary>Fixes the deal. 0 derives it from the level id, which is the ordinary way.</summary>
+        public int seed;
+
+        /// <summary>
+        /// Whether this block was authored. <b>Never test the block itself for null</b> -
+        /// JsonUtility instantiates a [Serializable] class field on every level in the game, so
+        /// absence has to be a value a real block cannot hold.
+        /// </summary>
+        public bool IsAuthored => width > 0 || height > 0;
+    }
+
+    /// <summary>Grovekeeper's ground, and how many tiles the run hands out.</summary>
+    [Serializable]
+    public sealed class KeeperDto
+    {
+        public int width;
+        public int height;
+
+        /// <summary>Tiles the run gets. This is the level - see <c>KeeperMode</c>.</summary>
+        public int tiles;
+
+        public int seed;
+
+        public bool IsAuthored => tiles > 0 || width > 0 || height > 0;
+    }
+
+    /// <summary>Lightweave's grove and its crystal hearts.</summary>
+    [Serializable]
+    public sealed class WeaveDto
+    {
+        public int width;
+        public int height;
+
+        /// <summary>
+        /// How many crystal-and-critter pairs to join. Where they stand is generated, not
+        /// authored: see <c>WeaveGenerator</c>, which carves the solution first so the board is
+        /// solvable by construction. Authoring endpoints by hand would mean authoring boards
+        /// that mostly cannot be finished.
+        /// </summary>
+        public int pairs;
+
+        public int seed;
+
+        public bool IsAuthored => pairs > 0 || width > 0 || height > 0;
+    }
+
     [Serializable]
     public sealed class ProgressionDto
     {
@@ -1053,6 +1132,19 @@ namespace GlimmerGrove.Content
         /// put a whole shop on sale for nothing.
         /// </summary>
         public int cost;
+
+        /// <summary>
+        /// How many copies one purchase grants. <b>Zero or absent means one</b>, which is
+        /// <c>scale</c>'s convention and the reason a catalog written before this field existed
+        /// still sells one of everything rather than none.
+        ///
+        /// The small repeatable things — fences, flowers, paving, ground cover — are sold in
+        /// tens at the price a single one used to cost, because a player wants a dozen of each
+        /// and buying them one tap at a time is a chore rather than a decision. It is authored
+        /// per piece rather than derived from <c>slot</c>: the slot kind is the shop's shelf,
+        /// not a claim about how many of a thing anybody wants.
+        /// </summary>
+        public int bundle;
 
         /// <summary>A glade whose clear earns this piece, or empty.</summary>
         public string requiresLevel;

@@ -79,6 +79,28 @@ namespace GlimmerGrove.AssetPipeline
         /// </para>
         /// </summary>
         public const string GroveVisitScope = "grove_visit";
+
+        /// <summary>
+        /// The shop's tab row: eight little emblems in one atlas, held for as long as the shop
+        /// is open rather than for as long as one shelf is.
+        ///
+        /// <para>
+        /// <b>A fourth scope for one small atlas, and it is the flicker it was reported as.</b>
+        /// The emblems used to ride in <see cref="HomesteadShopScope"/>, once per shelf — which
+        /// is correct about what a tab <em>needs</em> and wrong about how long it needs it.
+        /// <see cref="EnsureScopeAsync"/> releases before it loads, so every tap on a tab
+        /// destroyed the atlas all eight tabs were drawing from and asked for the same file
+        /// back: the whole row blinked for the frame or two the load took, every time anybody
+        /// changed shelf.
+        /// </para>
+        /// <para>
+        /// The alternative was making it global, and that is the wrong trade — global is "what
+        /// the game needs before the menu appears", and this is one screen's furniture. A scope
+        /// bounded by <em>the shop being open</em> is the honest bound, which is invariant 7b's
+        /// whole question: not "is this small" but "what is it on screen for".
+        /// </para>
+        /// </summary>
+        public const string HomesteadTabScope = "grove_tabs";
         sealed class Scope
         {
             public readonly HashSet<string> Addresses = new HashSet<string>(StringComparer.Ordinal);

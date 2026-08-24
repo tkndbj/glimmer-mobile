@@ -67,8 +67,26 @@ export interface GroveConfig {
   /** `groveVersion` from the manifest, so a stale seed is visible in the document. */
   version: number;
 
-  /** Piece id → credits. Free pieces are absent rather than zero; they are worth nothing. */
+  /**
+   * Piece id → credits for one purchase. Free pieces are absent rather than zero; they
+   * are worth nothing.
+   *
+   * Since save v20 a purchase of priced decor grants `bundles[id]` copies, so this is the
+   * price of a *bundle* and a single copy is worth `cost / bundle`. Dwellings are in here
+   * too and are never bundled — see `dwellings`.
+   */
   pieces: Record<string, number>;
+
+  /**
+   * Piece id → how many copies one purchase grants. Absent means one.
+   *
+   * Published as a second map rather than by widening `pieces` into an object, because that
+   * keeps this field additive: a config seeded before bundles existed reads as "everything
+   * sells singly", which is exactly what it meant. What it buys is the ability to score a
+   * grove by what was *paid* for it — ten fences bought in one bundle are worth the bundle,
+   * not ten of them — so a bundle retune cannot inflate every existing grove on the boards.
+   */
+  bundles: Record<string, number>;
 
   /** Region id → credits. Starter land is absent for the same reason. */
   regions: Record<string, number>;
@@ -227,6 +245,66 @@ export interface GroveWorth {
   clamped: boolean;
 }
 
+/**
+ * The `homesteadStock` rows of a save, as id → copies.
+ *
+ * Bounded on every axis a client controls, because this walks a client-written array: the
+ * number of rows, the length of an id and the count on each row. `MAX_COPIES` mirrors
+ * `GroveStock.MaxCopies` and exists so no arithmetic downstream can be made to overflow;
+ * the *economic* bound is the affordability clamp in `groveWorth`, which is the one that
+ * actually decides what a forged save scores.
+ *
+ * A v19 save carries `homesteadOwned` — a set of ids, from when owning a piece was
+ * permission to draw it rather than possession of a copy — and it is read as one bundle of
+ * each, which is exactly what that save used to score. A device that has not updated
+ * therefore keeps its position on the boards instead of dropping to nothing, and its first
+ * v20 push replaces the reading with the real one.
+ */
+const MAX_STOCK_ROWS = 512;
+const MAX_COPIES = 9999;
+
+function stockOf(save: Record<string, unknown>, grove: GroveConfig): Map<string, number> {
+  const out = new Map<string, number>();
+  const rows = save.homesteadStock;
+
+  // An **empty** array falls through to the v19 field rather than meaning "owns nothing",
+  // which is what `GroveStock.In` does on the client — and the two halves have to agree or
+  // this is invariant 9a again. It is reachable: a document written by a v20 client that has
+  // bought no decor carries `homesteadStock: []` beside a mirror, and a partial update that
+  // rewrites only the legacy field leaves the empty array standing. Reading that as an empty
+  // v20 save scores such a grove at zero, on a public board, with nothing to show why.
+  if (Array.isArray(rows) && rows.length > 0) {
+    for (const row of rows) {
+      if (!row || typeof row !== "object") continue;
+
+      const id = (row as { id?: unknown }).id;
+      const copies = (row as { copies?: unknown }).copies;
+      if (typeof id !== "string" || id.length === 0 || id.length > 64) continue;
+      if (typeof copies !== "number" || !Number.isFinite(copies) || copies <= 0) continue;
+
+      // The larger of two rows for one id, never the last one. The file forbids duplicates
+      // (invariant 11a), so this is only reachable from a modified client — but `GroveStock`
+      // resolves it by taking the larger, and two implementations of one rule that disagree
+      // about a malformed input is exactly the drift invariant 9a is about. Cheaper to agree
+      // than to find out later which half was right.
+      const clamped = Math.min(Math.floor(copies), MAX_COPIES);
+      const had = out.get(id) ?? 0;
+      if (clamped > had) out.set(id, clamped);
+
+      if (out.size >= MAX_STOCK_ROWS) break;
+    }
+
+    return out;
+  }
+
+  for (const id of idSet(save.homesteadOwned, MAX_STOCK_ROWS)) {
+    const bundle = grove.bundles?.[id];
+    out.set(id, typeof bundle === "number" && bundle > 1 ? Math.min(bundle, MAX_COPIES) : 1);
+  }
+
+  return out;
+}
+
 function idSet(raw: unknown, limit: number): Set<string> {
   const out = new Set<string>();
   if (!Array.isArray(raw)) return out;
@@ -271,16 +349,37 @@ export function groveWorth(
   level: number,
   affordable: number
 ): GroveWorth {
-  const pieces = idSet(save.homesteadOwned, 512);
+  const stock = stockOf(save, grove);
   const land = idSet(save.groveLandOwned, 128);
   const companions = idSet(save.companionsOwned, 256);
 
   let bought = 0;
   let earned = 0;
 
-  for (const id of pieces) {
+  // A copy is worth `cost / bundle`, so a bundle comes back to the price paid for it. That
+  // is the same reading this file has always taken — market value of what is held — and it
+  // is what keeps a bundle retune from moving every grove already on the boards.
+  //
+  // A home rung is clamped to one copy. It is in `pieces` and it is not stock: the ladder
+  // is a set of ids and the hall draws the best one owned, so a save claiming five sanctums
+  // is claiming something the client cannot produce. Clamping is strictly tighter than
+  // leaving it to the affordability ceiling, and the server knows which ids are rungs
+  // because it publishes them.
+  for (const [id, copies] of stock) {
     const cost = grove.pieces[id];
-    if (typeof cost === "number" && cost > 0) bought += cost;
+    if (typeof cost !== "number" || cost <= 0) continue;
+
+    if (id in (grove.dwellings ?? {})) {
+      bought += cost;
+      continue;
+    }
+
+    const bundle = grove.bundles?.[id];
+    const unit = typeof bundle === "number" && bundle > 1
+      ? Math.floor(cost / bundle)
+      : cost;
+
+    bought += unit * copies;
   }
 
   for (const id of land) {

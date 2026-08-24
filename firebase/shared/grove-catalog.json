@@ -86,6 +86,14 @@
       "kind": "decor",
       "slot": "canopy",
       "cost": 4000
+    },
+    {
+      "id": "fence",
+      "art": "Homestead/fence",
+      "kind": "decor",
+      "slot": "edge",
+      "cost": 900,
+      "bundle": 10
     }
   ]
 }

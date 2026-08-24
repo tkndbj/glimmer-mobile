@@ -1,0 +1,24 @@
+{
+  "schemaVersion": 2,
+  "id": "w01_lightweave",
+  "accent": "#3BE9D8",
+  "slate": "#122A2E",
+  "backdrop": "play_6",
+  "mapStrips": [
+    "strip0",
+    "strip1",
+    "strip2"
+  ],
+  "levels": [
+    {
+      "id": "w01_first_weave",
+      "mapX": 0.34,
+      "mapY": 0.14,
+      "weave": {
+        "width": 7,
+        "height": 9,
+        "pairs": 4
+      }
+    }
+  ]
+}

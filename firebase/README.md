@@ -253,7 +253,7 @@ clamp that is working**. The read is typed against `WalletDoc` now, so reaching 
 reply's name is a compile error.
 - `claimAwards` grants daily chests *and* streak nights
 - Anonymous authentication enabled
-- Android and iOS apps registered for `com.digikeygames.glimmergrove`
+- Android and iOS apps registered for `com.tekoworld.glimmergroove`
 - `config/progression` seeded from the shipped content, streak ladder included
 - `shared/reward-vectors.json` passes on both sides, so client and server arithmetic agree
 - `firebase/e2e/smoke-test.mjs` passes **28/28** against the live project

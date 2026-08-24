@@ -322,19 +322,32 @@ namespace GlimmerGrove.AssetPipeline
         /// </para>
         /// </summary>
         public static List<AssetRequest> GroveShelfAssets(Homestead.GroveShelf shelf)
-            => new List<AssetRequest>(2)
+            => new List<AssetRequest>(1)
             {
-                // The tab row's eight emblems, packed together. Their own tiny atlas rather
-                // than eight shelf atlases, because a tab has to be drawn before it is chosen
-                // and a row of blank plates is a row nobody can navigate by (invariant 7b) —
-                // and pulling in every shelf to draw eight little pictures would undo the whole
-                // point of paging.
-                AssetRequest.Atlas(TabAtlas),
-
                 AssetRequest.Atlas(BrowseAtlas(Homestead.GroveShelves.HasAtlas(shelf)
                                                    ? shelf
                                                    : Homestead.GroveShelf.Ground)),
             };
+
+        /// <summary>
+        /// The tab row's eight emblems, packed together.
+        ///
+        /// <para>
+        /// Their own tiny atlas rather than eight shelf atlases, because a tab has to be drawn
+        /// before it is chosen and a row of blank plates is a row nobody can navigate by
+        /// (invariant 7b) — and pulling in every shelf to draw eight little pictures would undo
+        /// the whole point of paging.
+        /// </para>
+        /// <para>
+        /// <b>Its own request list rather than a line in <see cref="GroveShelfAssets"/>, which
+        /// is where it used to be.</b> A shelf's assets are swapped whenever the shelf changes
+        /// and the emblems are not — they belong to the row, which outlives every shelf shown
+        /// in it. See <c>AssetLibrary.HomesteadTabScope</c> for what that cost when the two
+        /// shared a lifetime.
+        /// </para>
+        /// </summary>
+        public static List<AssetRequest> GroveTabAssets()
+            => new List<AssetRequest>(1) { AssetRequest.Atlas(TabAtlas) };
 
         /// <summary>
         /// What the picker draws: every shelf, because every tile of the floor takes everything.

@@ -129,7 +129,7 @@ namespace GlimmerGrove.Persistence
             // another device and notice missing — a grove that stayed on one phone is an
             // evening's work lost on reinstall. Both are written sorted, so both compare as
             // an ordered walk.
-            if (!SameSet(remote.homesteadOwned, merged.homesteadOwned)) return true;
+            if (!SameStock(remote.homesteadStock, merged.homesteadStock)) return true;
             if (!SameSet(remote.groveLandOwned, merged.groveLandOwned)) return true;
             if (!SamePlacements(remote.homesteadPlaced, merged.homesteadPlaced)) return true;
             if (!Same(remote.lastPlayedLevelId, merged.lastPlayedLevelId)) return true;
@@ -247,6 +247,31 @@ namespace GlimmerGrove.Persistence
         /// unsent until something else changed, and a third device would then take the stale
         /// one.
         /// </summary>
+        /// <summary>
+        /// Whether two stock sections say the same thing.
+        ///
+        /// Compared row by row rather than as a set, for <see cref="SamePlacements"/>'s reason:
+        /// <c>GroveStock.Write</c> emits rows sorted by id with no duplicates and no zero
+        /// counts, so equal contents are equal sequences and a walk is exact as well as cheap.
+        /// </summary>
+        static bool SameStock(HomesteadStockDto[] a, HomesteadStockDto[] b)
+        {
+            int an = a?.Length ?? 0;
+            int bn = b?.Length ?? 0;
+            if (an != bn) return false;
+
+            for (int i = 0; i < an; i++)
+            {
+                var x = a[i] ?? new HomesteadStockDto();
+                var y = b[i] ?? new HomesteadStockDto();
+
+                if (!string.Equals(x.id, y.id, StringComparison.Ordinal)) return false;
+                if (x.copies != y.copies) return false;
+            }
+
+            return true;
+        }
+
         static bool SamePlacements(HomesteadPlacementDto[] a, HomesteadPlacementDto[] b)
         {
             int na = a?.Length ?? 0, nb = b?.Length ?? 0;

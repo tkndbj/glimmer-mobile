@@ -644,6 +644,45 @@ namespace GlimmerGrove
             });
         }
 
+        /// <summary>
+        /// The thorns laid across a briar's closed way: a bar with a barb above it and a barb
+        /// below, drawn once and turned with the tile.
+        ///
+        /// <para>
+        /// Generated rather than addressed, for <see cref="Bloom"/>'s reason — an
+        /// <c>Image</c> whose sprite has not arrived is a white rectangle, and a white
+        /// rectangle laid across a conduit is a tile whose rule the player would read exactly
+        /// backwards.
+        /// </para>
+        /// <para>
+        /// The barbs are offset along the bar rather than facing each other, which is the
+        /// whole of what stops it reading as a plus sign — the one shape this board must
+        /// never put on a tile, since a crossroads is what a briar is not.
+        /// </para>
+        /// </summary>
+        public static Sprite Thorn(int size = 64)
+            => Make($"thorn{size}", size, size, (x, y) =>
+            {
+                float u = x / size, v = y / size;
+
+                float bar = Cover(SdRoundBox(u, v, .5f, .5f, .42f, .095f, .065f) * size);
+                float up = Barb(u, v, .31f, size);
+                float down = Barb(u, 1f - v, .69f, size);
+
+                return Mathf.Clamp01(Mathf.Max(bar, Mathf.Max(up, down)));
+            });
+
+        /// <summary>One barb of a thorn: a spike tapering out of the bar, measured upward.</summary>
+        static float Barb(float u, float v, float centre, int size)
+        {
+            float t = (v - .585f) / .26f;                // 0 at the bar's face, 1 at the tip
+            if (t < 0f) return 0f;
+
+            // Past the tip the half-width goes negative, so the coverage fades out on its own
+            // rather than being cut off — a spike that ends in a hard edge reads as a chip.
+            return Cover((Mathf.Abs(u - centre) - .095f * (1f - t)) * size);
+        }
+
         /// <summary>Screen vignette; dark at the edges, clear in the middle.</summary>
         public static Sprite Vignette(int size = 256)
         {

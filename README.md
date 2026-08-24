@@ -150,7 +150,7 @@ If the file is missing the game falls back to Unity's built-in font.
 
 `Glimmer Grove ▸ Build Windows Player` writes `Builds/Win/GlimmerGrove.exe`.
 For Android/iOS switch platform in Build Settings; the project is already set to
-portrait-only, 1080×1920 reference, `com.digikeygames.glimmergrove`.
+portrait-only, 1080×1920 reference, `com.tekoworld.glimmergroove`.
 
 Input uses the legacy Input Manager and `StandaloneInputModule`.
 

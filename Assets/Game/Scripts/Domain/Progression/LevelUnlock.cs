@@ -32,17 +32,39 @@ namespace GlimmerGrove.Progression
         /// Where the player should be sent by default: the first unlocked level they
         /// have not cleared, or the last level once the grove is finished.
         /// </summary>
-        public static LevelId NextToPlay(CatalogIndex index)
-        {
-            if (index == null || index.IsEmpty) return LevelId.None;
+        public static LevelId NextToPlay(CatalogIndex index) => NextToPlay(index, GameMode.Default);
 
-            foreach (var id in index.LevelIds)
+        /// <summary>
+        /// The same question asked of one way of playing.
+        ///
+        /// <para>
+        /// Every mode keeps its own place, which is the whole of what "the modes are
+        /// independent" means in code: the ladders never chain, so finishing one is never the
+        /// price of opening another, and a player halfway through both is halfway through both
+        /// rather than at whichever the flattened order happened to reach first. The rule
+        /// itself is unchanged and is still expressed once - <see cref="IsUnlocked"/> asks
+        /// <c>CatalogIndex.Previous</c>, which already stays inside a mode.
+        /// </para>
+        /// <para>
+        /// The mode-less overload answers for the ordinary one, which is what the hub's
+        /// continue button and the splash want: a new player has never chosen a mode, and
+        /// sending them anywhere else would be the game choosing for them.
+        /// </para>
+        /// </summary>
+        public static LevelId NextToPlay(CatalogIndex index, GameMode mode)
+        {
+            if (index == null) return LevelId.None;
+
+            var lane = index.LevelsIn(mode);
+            if (lane.Count == 0) return LevelId.None;
+
+            for (int i = 0; i < lane.Count; i++)
             {
-                if (PlayerProgress.IsCleared(id)) continue;
-                if (IsUnlocked(index, id)) return id;
+                if (PlayerProgress.IsCleared(lane[i])) continue;
+                if (IsUnlocked(index, lane[i])) return lane[i];
             }
 
-            return index.Last;
+            return index.LastIn(mode);
         }
 
         /// <summary>The level a "next" button should lead to, or none at the end.</summary>
@@ -65,12 +87,16 @@ namespace GlimmerGrove.Progression
 
         /// <summary>The chapter the map should open on: wherever the player is up to.</summary>
         public static ChapterIndexEntry CurrentChapter(CatalogIndex index)
-        {
-            if (index == null || index.IsEmpty) return null;
+            => CurrentChapter(index, GameMode.Default);
 
-            var next = NextToPlay(index);
+        /// <summary>The chapter one mode's map should open on: wherever the player is up to in it.</summary>
+        public static ChapterIndexEntry CurrentChapter(CatalogIndex index, GameMode mode)
+        {
+            if (index == null) return null;
+
+            var next = NextToPlay(index, mode);
             var chapter = next.IsValid ? index.FindChapter(index.ChapterOf(next)) : null;
-            return chapter ?? index.FirstChapter;
+            return chapter ?? index.FirstChapterIn(mode) ?? index.FirstChapter;
         }
 
         public static ChapterIndexEntry ChapterBefore(CatalogIndex index, ChapterId chapter)

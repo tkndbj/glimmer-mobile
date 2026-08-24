@@ -13,13 +13,44 @@ namespace GlimmerGrove.Content
     /// </summary>
     public static class LevelValidator
     {
+        /// <summary>
+        /// Proves a level is worth shipping, by asking its own mode.
+        ///
+        /// <para>
+        /// <b>No branch per mode.</b> Each mode brings its own checks (see
+        /// <see cref="LevelMode.Validate"/>); this runs them and adds the checks every level
+        /// shares whatever it is played on. A mode added tomorrow is validated without this file
+        /// being opened — which is what stops it turning into the switch it used to be, where
+        /// "not a board, therefore a hollow" was true until it silently was not.
+        /// </para>
+        /// </summary>
         public static LevelValidationReport Validate(LevelDefinition level)
         {
             var issues = new List<LevelIssue>();
 
+            var mode = LevelModes.Find(level.Mode);
+            if (mode == null)
+            {
+                Error(issues, $"nothing in this build knows how to play a '{level.Mode}' level");
+                return new LevelValidationReport(level.Id, issues, 0);
+            }
+
+            mode.Validate(level, issues);
+            CheckPresentation(level, issues);
+
+            return new LevelValidationReport(level.Id, issues,
+                                             level.HasBoard ? level.Tuning.Par : 0);
+        }
+
+        /// <summary>
+        /// Everything a conduit board has to prove. Called by <c>GladeMode</c> rather than from
+        /// <see cref="Validate"/>, so the classic mode's checks belong to the classic mode.
+        /// </summary>
+        internal static void ValidateGlade(LevelDefinition level, List<LevelIssue> issues)
+        {
             var parsed = LevelGridParser.Parse(level.Layout);
             foreach (var e in parsed.Errors) Error(issues, e);
-            if (!parsed.Ok) return new LevelValidationReport(level.Id, issues, 0);
+            if (!parsed.Ok) return;
 
             var cells = parsed.Cells;
             int computedPar = PuzzleFactory.MinimumMoves(cells);
@@ -31,11 +62,9 @@ namespace GlimmerGrove.Content
             CheckFragileConduits(level, cells, issues);
             CheckBoundConduits(level, cells, issues);
             CheckCrossings(level, cells, issues);
+            CheckBriars(level, cells, issues);
             CheckPar(level, computedPar, issues);
             CheckClock(level, issues);
-            CheckPresentation(level, issues);
-
-            return new LevelValidationReport(level.Id, issues, computedPar);
         }
 
         /// <summary>
@@ -116,6 +145,76 @@ namespace GlimmerGrove.Content
                     Warn(issues, $"the two strands of the crossing at {i % w},{i / w} are joined " +
                                  "elsewhere in the authored solution, so it crosses nothing; " +
                                  "the player will route around a separation that is not there");
+            }
+        }
+
+        /// <summary>
+        /// A briar's thorns have to be closing something off.
+        ///
+        /// <para>
+        /// The mechanic's whole promise is that one of a tile's two ways is shut and the other
+        /// is open. When every way it has — the open pair and both thorned arms — leads into
+        /// the same network in the authored solution, the thorns are shutting a door onto the
+        /// room they are already in: turning the tile changes which arms carry the light and
+        /// changes nothing about where the light gets to. The player has a tile they cannot
+        /// place by looking, no reason on the board to place it either way, and a par that
+        /// charged them for it.
+        /// </para>
+        /// <para>
+        /// Invisible everywhere else, exactly as with a crossing: the arms mate, the solution
+        /// lights, par comes out a sensible number and the board draws beautifully. Unlike a
+        /// crossing, an unlit briar is <em>not</em> evidence of that — a briar standing in an
+        /// island of dark with its thorns facing the grove is one of the best tiles this
+        /// mechanic has, because opening it is how a shadow wakes. So the question asked here
+        /// is about what the ways touch, never about what reaches the tile.
+        /// </para>
+        /// <para>
+        /// A warning rather than an error, for <see cref="CheckCrossings"/>' reason: it is a
+        /// question about intent, and a chapter can want a briar that is scenery on the glade
+        /// that teaches what a briar is.
+        /// </para>
+        /// </summary>
+        static void CheckBriars(LevelDefinition level, Cell[] cells, List<LevelIssue> issues)
+        {
+            int w = level.Layout.Width;
+
+            var solved = Copy(cells);
+            for (int i = 0; i < solved.Length; i++) solved[i].rot = 0;
+
+            Puzzle probe = null;
+
+            for (int i = 0; i < cells.Length; i++)
+            {
+                if (cells[i].kind != Kind.Briar) continue;
+
+                probe ??= new Puzzle(level.Id, w, level.Layout.Height, level.Tuning, solved);
+
+                int mine = probe.Comp(i, 0);
+                bool separates = false;
+
+                for (int d = 0; d < 4 && !separates; d++)
+                {
+                    // Only the thorned ways are asked about. The open pair is the network this
+                    // tile is already in, so it can never disagree with itself.
+                    if ((cells[i].gate & Puzzle.Bits[d]) != 0) continue;
+                    if ((cells[i].solved & Puzzle.Bits[d]) == 0) continue;
+
+                    int j = probe.Neighbour(i, d);
+                    if (j < 0) continue;
+
+                    // The way has to be open on the *other* side too, or taking these thorns
+                    // off would still join nothing — which is what two briars back to back are.
+                    int back = (d + 2) & 3;
+                    if ((probe.Live(j) & Puzzle.Bits[back]) == 0) continue;
+
+                    if (probe.Comp(j, probe.StrandAt(j, back)) != mine) separates = true;
+                }
+
+                if (!separates)
+                    Warn(issues, $"the thorns on the briar at {i % w},{i / w} close nothing off " +
+                                 "in the authored solution — every way it has leads back into one " +
+                                 "network, so turning it moves the light and never where the " +
+                                 "light gets to");
             }
         }
 

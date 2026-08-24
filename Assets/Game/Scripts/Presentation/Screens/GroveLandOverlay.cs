@@ -144,6 +144,13 @@ namespace GlimmerGrove
         {
             if (_paid || _buying) return;
 
+            // Read before the money moves, because it cannot be read afterwards: the star row
+            // on the Grovement celebrates what was not there a moment ago, and this is the last
+            // moment that exists. See HomesteadScreen.ArrivingStars.
+            int stars = HomesteadCatalog.IsLoaded
+                ? GroveScore.Of(HomesteadCatalog.Current).Stars
+                : -1;
+
             _buying = true;
             bool bought;
 
@@ -161,12 +168,22 @@ namespace GlimmerGrove
             if (!bought) { Repaint(); return; }
 
             _paid = true;
-            Audio.Sfx("unlock", .6f);
 
-            // Nothing is reported to the screen behind: it repaints on GroveLand.Changed, which
-            // the purchase already raised. An event cannot be forgotten by a new call site and a
-            // callback threaded through each of them will be.
-            Close();
+            // The coin is the money leaving. What the land opening sounds like belongs to the
+            // ceremony, which is about to play it — see GroveRise.
+            Audio.Sfx("coin", .6f);
+
+            // Ground is the one thing in this shop that is not an object the player then
+            // places, so it is the one purchase with nowhere to be looked at afterwards. They
+            // are taken back to their grove and shown it arriving instead of walking back to a
+            // floor that is quietly bigger. Quiet, because the celebration starts a beat later
+            // and a backing-out whoosh under it is one sound too many.
+            var region = Region;
+            Close(() => Flow.Go<HomesteadScreen>(v =>
+            {
+                v.Arriving = region;
+                v.ArrivingStars = stars;
+            }), quiet: true);
         }
 
         void OnGetCoins()

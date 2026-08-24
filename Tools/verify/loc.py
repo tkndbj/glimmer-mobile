@@ -39,7 +39,12 @@ DERIVED_PREFIXES = ("level.", "chapter.", "ui.companion.", "ui.avatar.", "ui.tip
                     # a glade is (invariant 5a): anything holding the id can name the thing
                     # without reading the catalog, which is what lets a purchase say what
                     # was bought long after the shop screen has gone.
-                    "store.product.", "store.good.")
+                    "store.product.", "store.good.",
+                    # A mode names itself from its own permanent id for the reason a glade
+                    # does (invariant 5a): the switcher has to label a way of playing without
+                    # reading anything, and an overridable key would put a file read in front
+                    # of a control that is drawn before any chapter has loaded.
+                    "mode.")
 
 # Keys whose middle segment is a content id: `ui.event.<id>.name`. The prefix alone would
 # also hide the event panel's own generic keys, which are written out and worth checking.

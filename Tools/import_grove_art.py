@@ -47,12 +47,27 @@ def rows():
             if not line or line.startswith("#"):
                 continue
             parts = line.split("\t")
-            if len(parts) != 7:
-                sys.exit("%s:%d has %d columns, expected 7" % (TSV, n, len(parts)))
-            src, pid, slot, cost, scale, lift, name = parts
+            if len(parts) != 8:
+                sys.exit("%s:%d has %d columns, expected 8" % (TSV, n, len(parts)))
+            src, pid, slot, cost, bundle, scale, lift, name = parts
             if slot not in KINDS:
                 sys.exit("%s:%d unknown slot kind '%s'" % (TSV, n, slot))
-            out.append(dict(src=src, id=pid, slot=slot, cost=int(cost),
+
+            # A bundle has to divide the price exactly, or a copy is worth cost/bundle
+            # rounded down and every grove holding one is quietly scored short. The
+            # catalog is the only place this can be caught: nothing at runtime can tell
+            # a deliberate 90 from a 99 that should have been 100.
+            cost, bundle = int(cost), int(bundle)
+            if bundle < 1:
+                sys.exit("%s:%d bundle must be at least 1" % (TSV, n))
+            if bundle > 1 and cost % bundle:
+                sys.exit("%s:%d '%s' costs %d, which its bundle of %d does not divide"
+                         % (TSV, n, pid, cost, bundle))
+            if bundle > 1 and cost <= 0:
+                sys.exit("%s:%d '%s' is free, so it is an entitlement and cannot be "
+                         "sold in bundles" % (TSV, n, pid))
+
+            out.append(dict(src=src, id=pid, slot=slot, cost=cost, bundle=bundle,
                             scale=float(scale), lift=float(lift), name=name))
     return out
 
@@ -118,16 +133,24 @@ def main():
 
     fresh = []
     for r in wanted:
-        fresh.append(collections.OrderedDict([
+        row = collections.OrderedDict([
             ("id", r["id"]),
             ("art", "Homestead/" + r["id"]),
             ("kind", "decor"),
             ("slot", r["slot"]),
             ("cost", r["cost"]),
-            ("scale", r["scale"]),
-            ("lift", r["lift"]),
-            ("_imported", True),
-        ]))
+        ])
+
+        # Omitted when it is 1, which is what the reader assumes for an absent field —
+        # so a catalog written before bundles existed and one whose pieces sell singly
+        # are the same file, and the diff of a drop shows only what actually bundles.
+        if r["bundle"] > 1:
+            row["bundle"] = r["bundle"]
+
+        row["scale"] = r["scale"]
+        row["lift"] = r["lift"]
+        row["_imported"] = True
+        fresh.append(row)
 
     # The home ladder, then decor by kind and price — the order the shop draws them in,
     # so the file reads the way the screen does. Residents are not in this file at all:

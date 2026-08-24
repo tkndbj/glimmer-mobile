@@ -81,6 +81,21 @@ namespace GlimmerGrove
         /// </summary>
         public static readonly Color Dusk = Hex("#6B5BC4");
 
+        /// <summary>
+        /// The thorns across a briar's closed ways: the second colour on the board that
+        /// deliberately says nothing about light, and <see cref="Rope"/>'s argument again.
+        ///
+        /// <para>
+        /// Dry bramble, desaturated well off the energy wheel. The three channels and their
+        /// blends are all bright and saturated, so a dull warm brown cannot be read as a dim
+        /// one — which matters more here than anywhere, because the thorns are drawn on an
+        /// <em>unlit</em> arm and a player who read them as faint light would have the
+        /// mechanic exactly backwards. Not rope either: rope means "these tiles turn
+        /// together", and a mark that meant two things would be worth less than both.
+        /// </para>
+        /// </summary>
+        public static readonly Color Thorn = Hex("#8A7060");
+
         static readonly Color[] Table =
         {
             Dormant,                       // 0

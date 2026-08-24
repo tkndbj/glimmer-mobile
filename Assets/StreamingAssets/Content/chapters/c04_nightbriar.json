@@ -1,0 +1,213 @@
+{
+  "schemaVersion": 2,
+  "id": "c04_nightbriar",
+  "accent": "#F2B45C",
+  "slate": "#1B1426",
+  "backdrop": "c04_play_0",
+  "mapStrips": [
+    "c04_strip0",
+    "c04_strip1",
+    "c04_strip2",
+    "c04_strip3",
+    "c04_strip4",
+    "c04_strip5"
+  ],
+  "teaserX": 0.28,
+  "levels": [
+    {
+      "id": "c04_thornlight",
+      "width": 6,
+      "height": 6,
+      "mapX": 0.3,
+      "mapY": 0.055,
+      "timeFactor": 1.9,
+      "rows": [
+        "-ES/2 @W#A/0 -ES/0 @W#A/0 @S#A/0 @S#A/2",
+        "-NES/1 -ESW/2 *NEW#R/2 -ESW/2 -NEW/2 -NSW/0",
+        "-NE/3 %NS+EW/1 -SW/2 -NS/0 @S#A/2 @N#A/0",
+        "@E#A/1 -NW/3 -NS/0 @NE#A/0 %NS+EW/1 -SW/0",
+        "-ES/0 -ESW/2 -NEW/0 *ESW#R/1 -NEW/2 -NSW/1",
+        "@N#A/2 @NE#A/0 @W#A/1 @NE#A/0 @W#A/0 @N#A/3"
+      ]
+    },
+    {
+      "id": "c04_the_shut_way",
+      "width": 6,
+      "height": 7,
+      "mapX": 0.72,
+      "mapY": 0.14,
+      "timeFactor": 1.8,
+      "accent": "#C77BFF",
+      "slate": "#1A1030",
+      "backdrop": "c04_play_1",
+      "rows": [
+        "@S#R/2 -ES/2 @W#R/1 -ES/0 @W#R/0 @S#R/2",
+        "-NES/0 -NEW/2 *ESW#R/1 -NEW/0 -ESW/0 -NSW/2",
+        "-NE/3 @W#R/0 -NES/0 @W#R/0 -NS/0 @N#R/1",
+        "@E#M/3 *EW#R/1 %EW+NS/0 *EW#B/0 %EW+NS/1 @W#M/0",
+        "-ES/2 @W#B/1 -NES/3 @W#B/0 -NS/1 @S#B/0",
+        "-NES/1 -ESW/0 -NEW/2 *ESW#B/3 -NEW/0 -NSW/0",
+        "@N#B/1 -NE/1 @W#B/3 -NE/0 @W#B/3 @N#B/1"
+      ]
+    },
+    {
+      "id": "c04_nightfall",
+      "width": 7,
+      "height": 6,
+      "mapX": 0.26,
+      "mapY": 0.225,
+      "timeFactor": 1.8,
+      "accent": "#5FD1B0",
+      "slate": "#0F2027",
+      "backdrop": "c04_play_2",
+      "rows": [
+        "-ES/2 @W#A/0 -E/3 xESW/2 -SW/3 @E#A/3 -SW/3",
+        "-NES/1 -SW/1 -ES/0 %EW+NS/1 %EW+NS/1 -ESW/0 -NSW/0",
+        "-NS/0 -NS/1 -NES/1 @NW#A/1 -NS/0 -NS/0 -NS/0",
+        "@N#A/0 -NS/0 -NE/3 -ESW/3 -NW/0 -NS/0 @N#A/1",
+        "-ES/3 -NESW/0 -EW/0 *NEW#R/1 -ESW/1 -NEW/0 -SW/2",
+        "@N#A/3 -NE/3 @W#A/3 @E#A/3 -NW/3 @E#A/0 -NW/2"
+      ]
+    },
+    {
+      "id": "c04_bramble_and_bridge",
+      "width": 7,
+      "height": 7,
+      "mapX": 0.7,
+      "mapY": 0.31,
+      "timeFactor": 1.75,
+      "accent": "#FF8C6B",
+      "slate": "#2A1420",
+      "backdrop": "c04_play_3",
+      "rows": [
+        "@ES#G/2 @W#G/0 @E#G/0 -ESW/3 @W#G/0 @E#G/2 @SW#G/0",
+        "-NES/1 -EW/0 -ESW/2 *NESW#G/0 -ESW/2 -EW/0 -NSW/1",
+        "-NE/3 @W#G/3 @NS#G/0 -NS/0 @N#G/2 @E#G/3 -NW/0",
+        "@E#R/1 *ESW#R/3 %EW+NS/0 =NS+EW/0 -EW/1 *ESW#R/0 @W#R/2",
+        "@S#R/3 -NES/2 -NEW/0 %NS+EW/1 -EW/0 -NSW/1 @S#R/0",
+        "-NES/2 -NEW/0 -SW/1 -NS/0 -ES/0 -NEW/3 -NSW/3",
+        "-NE/3 @W#R/3 @N#R/0 @N#G/2 @N#R/1 @E#R/2 -NW/2"
+      ]
+    },
+    {
+      "id": "c04_the_hollow_gate",
+      "width": 7,
+      "height": 7,
+      "mapX": 0.28,
+      "mapY": 0.395,
+      "timeFactor": 1.7,
+      "accent": "#9BB6FF",
+      "slate": "#141A2E",
+      "backdrop": "c04_play_4",
+      "rows": [
+        "-ES/0 @W#R/0 -ES/2 @W#R/0 @S#R/0 @E#R/3 -SW/2",
+        "-NE/1 *EW#R/1 -NESW/0 -ESW/2 -NEW/2 -EW/0 -NW/0",
+        "@S#G/0 -ES/0 %SW+NE/3~2 -NSW/2 @E#B/2 -SW/2 @S#B/1",
+        "-NS/1 -NS/0 @N#G/1 -NS/0 @S#B/3 -NS/1 -NS/1",
+        "-NS/0 -NS/0 @S#G/0 -NES/0 %NE+SW/3~2 -NSW/3 -NS/1",
+        "-NES/2 *NEW#G/0 -NSW/3 -NS/0 -NES/2 *NEW#B/2 -NSW/1",
+        "-NE/0 @W#G/0 @N#G/1 @N#R/0 @N#B/0 @E#B/3 -NW/2"
+      ]
+    },
+    {
+      "id": "c04_rootbriar",
+      "width": 7,
+      "height": 7,
+      "mapX": 0.74,
+      "mapY": 0.48,
+      "timeFactor": 1.65,
+      "accent": "#A8D94A",
+      "slate": "#1A2413",
+      "backdrop": "c04_play_5",
+      "rows": [
+        "-ES/0 @W#A/0 xS/0 @E#A/0 -SW/0 @E#A/0 -SW/0",
+        "-NES/1 -ESW/2 %EW+NS/1&A -ESW/2 -NESW/0 -ESW/0 -NSW/1",
+        "-NS/1 -NE/0 -NW/2 -NS/0 @N#A/2 @N#A/0 @N#A/0",
+        "-NE/1 -ESW/3 -EW/0 *NESW#R/0 -EW/0 -EW/0 -SW/2",
+        "@E#A/0 -NSW/2 @S#A/0 -NS/1 -ES/2 -SW/1 -NS/0",
+        "-ES/2 -NW/0 -NES/1 -NEW/0 %EW+NS/1&A -NEW/3 -NSW/3",
+        "-NE/3 @W#A/0 -NE/0 @W#A/2 xN/1 @E#A/2 -NW/0"
+      ]
+    },
+    {
+      "id": "c04_three_thorns",
+      "width": 7,
+      "height": 7,
+      "mapX": 0.3,
+      "mapY": 0.56,
+      "timeFactor": 1.6,
+      "accent": "#FF6FA8",
+      "slate": "#2A1226",
+      "backdrop": "c04_play_6",
+      "rows": [
+        "@E#R/3 -SW/2 @S#R/1 @S#B/3 @S#G/3 -ES/2 @W#G/3",
+        "-ES/1 *NESW#R/0 -NEW/0 %NS+EW/0 -NEW/0 *NESW#G/0 -SW/1",
+        "@N#R/1 -NES/2 @SW#R/3 -NS/0 @ES#G/1 -NSW/0 @N#G/0",
+        "@E#R/2 %EW+NS/1 @NW#R/2 -NS/0 @NE#G/0 %EW+NS/0 @W#G/0",
+        "@S#B/0 -NES/1 @W#B/3 -NS/0 @E#B/3 -NSW/3 @S#B/2",
+        "-NES/1 -NEW/1 -ESW/3 *NEW#B/0 -ESW/2 -NEW/0 -NSW/0",
+        "-NE/2 @W#B/0 -NE/3 @W#B/0 @N#B/2 @E#B/1 -NW/2"
+      ]
+    },
+    {
+      "id": "c04_the_long_dark",
+      "width": 8,
+      "height": 7,
+      "mapX": 0.68,
+      "mapY": 0.645,
+      "timeFactor": 1.55,
+      "accent": "#6E8BFF",
+      "slate": "#101830",
+      "backdrop": "c04_play_7",
+      "rows": [
+        "-ES/0 -EW/0 @W#A/0 @E#A/2 -EW/0 -SW/0 -ES/2 -SW/1",
+        "-NES/1 -ESW/2 -ESW/0 *ESW#R/2 -ESW/2 @NEW#A/0 -NSW/1 -NS/1",
+        "@N#A/1 -NES/0 %EW+NS/1 -NEW/3 -NEW/1 @EW#A/1 -NSW/0 @N#A/0",
+        "xE/3 =NS+EW/0 -NEW/0 -EW/1 -EW/0 -ESW/2 =NS+EW/0 xW/2",
+        "@S#A/0 -NES/0 @EW#A/0 -ESW/1 -ESW/2 %EW+NS/1 -NSW/0 @S#A/2",
+        "-NES/0 -NEW/0 -EW/0 -NEW/0 *NEW#R/0 -NESW/0 -NSW/3 -NS/0",
+        "-NE/2 -EW/0 @W#A/2 @E#A/1 -EW/1 -NW/0 -NE/2 -NW/0"
+      ]
+    },
+    {
+      "id": "c04_wick_and_wane",
+      "width": 7,
+      "height": 7,
+      "mapX": 0.26,
+      "mapY": 0.73,
+      "timeFactor": 1.5,
+      "accent": "#FFD36B",
+      "slate": "#241B12",
+      "backdrop": "c04_play_8",
+      "rows": [
+        "-ES/2 -ESW/0 -EW/0 @W#Y/0 -ES/0 @W#Y/2 @S#Y/0",
+        "-NS/1 -NES/2 -ESW/2 -ESW/2 -NEW/2 -ESW/0 -NSW/1",
+        "@N#Y/3 @N#Y/0 @N#Y/2 -NS/0 @E#Y/2 -NSW/0 @N#Y/0",
+        "@E#Y/1 *ESW#R/3 -EW/0 %EW+NS/1~2 -EW/1 *NEW#G/0 @W#Y/2",
+        "@S#Y/0 -NES/2 @W#Y/0 xNS/1 @E#Y/2 @EW#Y/1 -SW/0",
+        "-NES/2 -NEW/0 -ESW/1 %EW+NS/0 -ESW/0 -ESW/3 -NW/3",
+        "-NE/3 @W#Y/3 -NE/0 -NEW/2 -NW/1 -NE/2 @W#Y/0"
+      ]
+    },
+    {
+      "id": "c04_the_nightbriar_knot",
+      "width": 8,
+      "height": 7,
+      "mapX": 0.72,
+      "mapY": 0.815,
+      "timeFactor": 1.45,
+      "accent": "#D96BFF",
+      "slate": "#20122E",
+      "backdrop": "c04_play_9",
+      "rows": [
+        "@S#Y/0 -ES/2 @SW#Y/2 @E#Y/3 -SW/3 @ES#Y/3 -SW/1 @S#Y/0",
+        "-NES/3 *NEW#R/1 %EW+NS/1&A -ESW/0 -NEW/3 %EW+NS/1&A *NEW#G/2 -NSW/2",
+        "-NE/1 @W#Y/0 -NS/1 -NE/3 @SW#Y/3 -NS/0 @E#Y/2 -NW/3",
+        "xE/2 -EW/0 =NS+EW/0 -EW/1 %EW+NS/0 =NS+EW/0 -EW/1 xW/3",
+        "@S#B/0 @S#B/1 -NES/0 @W#B/0 xNS/0 -NS/0 @S#B/0 @S#B/2",
+        "-NES/1 -NEW/1 -NEW/0 *ESW#B/1 %EW+NS/1~2 -NEW/2 -NEW/0 -NSW/1",
+        "-NE/0 @W#B/2 @E#B/1 -NEW/2 -NW/1 @E#B/1 @EW#B/0 -NW/2"
+      ]
+    }
+  ]
+}

@@ -69,12 +69,17 @@ def board_of(level):
         for x, tok in enumerate(row.split()):
             if tok == ".":
                 continue
-            kind = {"-": "pipe", "=": "cross", "*": "source", "@": "lamp", "x": "duskcap"}[tok[0]]
+            kind = {"-": "pipe", "=": "cross", "%": "briar", "*": "source", "@": "lamp",
+                    "x": "duskcap"}[tok[0]]
             mask, p = read_arms(tok, 1)
-            cross = 0
+            cross = gate = 0
             if p < len(tok) and tok[p] == "+":
                 second, p = read_arms(tok, p + 1)
-                cross, mask = mask, mask | second
+                # the named pair, which is one flow of a crossing and the open way of a briar
+                if kind == "briar":
+                    gate, mask = mask, mask | second
+                else:
+                    cross, mask = mask, mask | second
             colour, rot, locked, fragile, link = 0, 0, False, 0, None
             if p < len(tok) and tok[p] == "#":
                 colour = {"R": 1, "G": 2, "B": 4, "Y": 3, "M": 5, "C": 6, "W": 7, "A": 0}[tok[p + 1]]
@@ -88,7 +93,7 @@ def board_of(level):
             if p < len(tok) and tok[p] == "&":
                 link = tok[p + 1]; p += 2
             b.cells[(x, y)] = dict(kind=kind, colour=colour, rot=rot, locked=locked,
-                                   fragile=fragile, link=link, cross=cross)
+                                   fragile=fragile, link=link, cross=cross, gate=gate)
             # edges are derived from the masks, so a board loaded this way is the same
             # object `author` builds from runs and joins
             for d in range(4):
@@ -374,13 +379,14 @@ def analyse(level):
             brittle.append((p, owed, c["fragile"], p in r["decided"]))
 
     dark = [p for p, c in sorted(b.cells.items()) if c["kind"] == "duskcap"]
+    briars = [p for p, c in sorted(b.cells.items()) if c["kind"] == "briar"]
     roots = {}
     for p, c in sorted(b.cells.items()):
         if c["link"]:
             roots.setdefault(c["link"], []).append(p)
 
     return dict(board=b, par=b.par(), hazards=len(b.hazards()), reading=r, bare=bare,
-                brittle=brittle, dark=dark, roots=roots)
+                brittle=brittle, dark=dark, briars=briars, roots=roots)
 
 
 def line(lid, a):
@@ -392,6 +398,11 @@ def line(lid, a):
         marks.append(f"brittle {live}/{len(a['brittle'])}")
     if a["dark"]:
         marks.append(f"dark {r['dark_only']}")
+    if a["briars"]:
+        # every briar is a free decision by construction, so what is worth printing is how
+        # many of them a mechanic actually settles rather than how many there are
+        dec = sum(1 for p in a["briars"] if p in r["decided"])
+        marks.append(f"briar {dec}/{len(a['briars'])}")
     if a["roots"]:
         gain = a["bare"]["solutions"] - r["solutions"] if a["bare"] else 0
         marks.append(f"root -{gain}")
@@ -420,6 +431,10 @@ def detail(lid, a):
         note = "must be deduced" if dec else "forced by its arms alone"
         print(f"      brittle {p}: owes {owed}, survives {f} "
               f"(slack {f - owed}) - {note}")
+    for p in a["briars"]:
+        note = "settled by a mechanic" if p in r["decided"] else (
+            "free even in a winning board" if p in r["slack"] else "settled by its own arms")
+        print(f"      briar {p}: {note}")
     if a["dark"] and not r["dark_only"]:
         print(f"      {len(a['dark'])} duskcap(s) reject nothing the critters do not")
 

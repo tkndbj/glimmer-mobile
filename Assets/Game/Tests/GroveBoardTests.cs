@@ -52,10 +52,24 @@ namespace GlimmerGrove.Tests
         }
 
         [Serializable]
+        public sealed class StockCase
+        {
+            public string id;
+            public int copies;
+        }
+
+        [Serializable]
         public sealed class WorthCase
         {
             public string name;
             public int keeperLevel;
+
+            /// <summary>
+            /// A v20 save: ids with copies. Absent means the case is a v19 one and
+            /// <see cref="pieces"/> carries it — see <c>CaseHoldings.Copies</c>.
+            /// </summary>
+            public StockCase[] stock;
+
             public string[] pieces;
             public string[] land;
             public string[] companions;
@@ -203,12 +217,17 @@ namespace GlimmerGrove.Tests
         sealed class CaseHoldings : IGroveHoldings
         {
             readonly HashSet<string> _pieces;
+            readonly Dictionary<string, int> _stock;
             readonly HashSet<string> _land;
             readonly HashSet<string> _companions;
             readonly int _level;
 
             public CaseHoldings(WorthCase c)
             {
+                _stock = new Dictionary<string, int>(StringComparer.Ordinal);
+                foreach (var row in c.stock ?? Array.Empty<StockCase>())
+                    if (row != null && !string.IsNullOrEmpty(row.id)) _stock[row.id] = row.copies;
+
                 _pieces = new HashSet<string>(c.pieces ?? Array.Empty<string>(), StringComparer.Ordinal);
                 _land = new HashSet<string>(c.land ?? Array.Empty<string>(), StringComparer.Ordinal);
                 _companions = new HashSet<string>(c.companions ?? Array.Empty<string>(), StringComparer.Ordinal);
@@ -239,7 +258,31 @@ namespace GlimmerGrove.Tests
                     return piece.Cost <= 0 && _level >= piece.RequiresKeeperLevel;
                 }
 
+                if (_stock.Count > 0 && piece.IsStocked)
+                    return _stock.ContainsKey(piece.Id);
+
                 return _pieces.Contains(piece.Id);
+            }
+
+            /// <summary>
+            /// How many copies of a stocked piece this case holds.
+            ///
+            /// <para>
+            /// A case carrying <c>stock</c> is a v20 save. One carrying only <c>pieces</c> is a
+            /// v19 save, and it answers <em>one bundle</em> — which is exactly what that save
+            /// used to be worth, and exactly what the server's own fallback derives from the
+            /// same row. Keeping both readings in one adapter is what lets the two halves be
+            /// compared against the same expectation without either of them special-casing.
+            /// </para>
+            /// </summary>
+            public int Copies(HomesteadPiece piece)
+            {
+                if (!piece.IsValid || !piece.IsStocked) return 0;
+
+                if (_stock.Count > 0)
+                    return _stock.TryGetValue(piece.Id, out int copies) ? copies : 0;
+
+                return _pieces.Contains(piece.Id) ? (piece.Bundle < 1 ? 1 : piece.Bundle) : 0;
             }
 
             public bool Owns(GroveRegion region)

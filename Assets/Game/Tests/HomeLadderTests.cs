@@ -119,9 +119,17 @@ namespace GlimmerGrove.Tests
             Assert.IsTrue(HomesteadLedger.IsHeld(catalog.Find("cottage")));
             Assert.IsTrue(HomesteadLedger.IsHeld(catalog.Find("lodge")));
 
-            var joined = HomesteadLedger.Join(new[] { "cottage" }, new[] { "cottage", "lodge", "hall" });
+            // The ladder is a set of ids in the same section every other purchase lives in, so
+            // "best owned" is a maximum over what is held — idempotent, order-independent and
+            // impossible to lose in a merge. A rung is bought once, so its count is one.
+            var joined = HomesteadLedger.Join(
+                new[] { new HomesteadStockDto { id = "cottage", copies = 1 } },
+                new[] { new HomesteadStockDto { id = "cottage", copies = 1 },
+                        new HomesteadStockDto { id = "lodge", copies = 1 },
+                        new HomesteadStockDto { id = "hall", copies = 1 } });
 
-            CollectionAssert.AreEqual(new[] { "cottage", "hall", "lodge" }, joined);
+            CollectionAssert.AreEqual(new[] { "cottage", "hall", "lodge" },
+                                      System.Array.ConvertAll(joined, r => r.id));
         }
 
         [Test]

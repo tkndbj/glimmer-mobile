@@ -56,16 +56,21 @@ namespace GlimmerGrove.Homestead
     /// One thing a player can put in their grove.
     ///
     /// <para>
-    /// <b>Owning a piece is permission to draw it, not possession of a copy.</b> A player
-    /// who holds <c>fence_low</c> may place it in one slot or in twelve; there is no count
-    /// anywhere and no such thing as running out. That is not a simplification, it is the
-    /// only shape the save file permits — a number of copies held is exactly the stored
-    /// count invariant 11b forbids, because two devices showing 3 and 1 are equally
-    /// consistent with "one bought two more" and "one has not heard about a purchase", so
-    /// every merge rule over the pair is wrong somewhere. Hearts spent a schema version
-    /// learning that. An entitlement set joined by union has no such problem, and it
-    /// happens to make the better game: the shop sells variety rather than quantity, which
-    /// is what makes two players' groves look different.
+    /// <b>A priced piece is bought by the copy; everything else is permission.</b> A player
+    /// who buys <c>fence_low</c> gets <see cref="Bundle"/> of them and may stand each one
+    /// somewhere; a player who <em>earned</em> <c>rune_stone</c> by clearing a glade may draw
+    /// it in one tile or in twelve. That split is not a compromise between two designs, it is
+    /// the two things being genuinely different: stock is the shop's half of the feature and
+    /// an entitlement is play's, and only one of them should ever run out.
+    /// </para>
+    /// <para>
+    /// <b>What made the count representable.</b> Until v20 there was no count anywhere,
+    /// because a number of copies <em>remaining</em> is exactly the stored count invariant 11b
+    /// forbids — two devices showing 3 and 1 are equally consistent with "one bought two
+    /// more" and "one has not heard about a purchase", so every merge rule over the pair is
+    /// wrong somewhere, and hearts spent a schema version learning it. What is stored instead
+    /// is copies <b>ever bought</b>, which only rises and therefore joins by <c>max</c>, with
+    /// what is left derived against the placements. See <see cref="GroveStock"/>.
     /// </para>
     /// <para>
     /// A piece is held when its requirement is met <em>or</em> it was bought — the
@@ -158,6 +163,34 @@ namespace GlimmerGrove.Homestead
         /// retune that moves a requirement takes nothing away, because <see cref="Cost"/>
         /// and the placement are separate facts.
         /// </summary>
+        /// <summary>
+        /// How many copies one purchase grants. Always at least 1.
+        ///
+        /// <para>
+        /// <b>Content, and per piece rather than per kind.</b> A fence, a flower and a paving
+        /// stone are wanted by the dozen and a well is wanted once, so the shop sells the first
+        /// three in tens at the price the single one used to cost. Which pieces those are is a
+        /// judgement that moves with every pack imported, so it rides the catalog and can be
+        /// retuned in a drop with no app update — the argument <see cref="Cost"/> is already
+        /// under. It is authored per piece rather than derived from <see cref="Slot"/> because
+        /// the slot kind is the shop's <em>shelf</em> rather than a statement about how many of
+        /// a thing anybody wants: the first oversized gate that belongs on the edge shelf and
+        /// sells one at a time would otherwise be an engine change.
+        /// </para>
+        /// <para>
+        /// Zero or absent means 1, which is <see cref="Scale"/>'s convention and the reason a
+        /// catalog written before this field existed reads correctly rather than selling
+        /// nothing at all.
+        /// </para>
+        /// <para>
+        /// It is <b>not</b> a divisor anybody stores. <see cref="GroveStock"/> counts copies and
+        /// never purchases, so retuning a bundle changes what the next purchase grants and never
+        /// what a player already holds — the only version of this that is safe to change in a
+        /// live drop.
+        /// </para>
+        /// </summary>
+        public readonly int Bundle;
+
         public readonly LevelId RequiresLevel;
 
         /// <summary>
@@ -216,8 +249,9 @@ namespace GlimmerGrove.Homestead
                               int cost, LevelId requiresLevel, ChapterId requiresChapter,
                               float scale, float lift,
                               HomesteadSlotKind slot = HomesteadSlotKind.Ground, int tier = 0,
-                              int requiresKeeperLevel = 0)
+                              int requiresKeeperLevel = 0, int bundle = 1)
         {
+            Bundle = bundle < 1 ? 1 : bundle;
             Id = id;
             Art = string.IsNullOrEmpty(art) ? id : art;
             Animated = animated;
@@ -262,6 +296,40 @@ namespace GlimmerGrove.Homestead
 
         /// <summary>True when credits are a way to get this one. See <see cref="Cost"/>.</summary>
         public bool IsForSale => IsValid && Cost > 0;
+
+        /// <summary>
+        /// True when the player holds a <em>number</em> of these rather than the right to draw
+        /// one — that is, when copies are counted and can run out.
+        ///
+        /// <para>
+        /// <b>Priced decor, and nothing else.</b> A resident is a companion and lives in
+        /// <c>companionsOwned</c> as an entitlement (invariant 16a); a home rung is a rung; and
+        /// anything free or earned by playing is derived from the star ledger, so writing a
+        /// count of it down would be a second answer for a retune to put out of step with the
+        /// first (invariant 14). Only the shop's half of the catalog is stock, which is what
+        /// keeps the twelve starter pieces and the eight earned ones behaving exactly as they
+        /// did before v20.
+        /// </para>
+        /// <para>
+        /// Asked of the <em>piece</em> and never of the player, so it cannot come to depend on
+        /// who is looking. Whether a particular player has run out is
+        /// <see cref="HomesteadLedger.Available(HomesteadPiece)"/>.
+        /// </para>
+        /// </summary>
+        public bool IsStocked => IsValid && Kind == HomesteadPieceKind.Decor && IsForSale;
+
+        /// <summary>
+        /// What one copy is worth, which is the price divided by the bundle.
+        ///
+        /// <para>
+        /// Read by <see cref="GroveScore"/> so a grove's worth is what was paid for it however
+        /// the shop happened to package it — ten fences bought as one bundle are worth the
+        /// bundle, not ten of them. <c>ContentValidation</c> refuses a price its bundle does not
+        /// divide, so the division is exact rather than quietly rounding a player's grove down
+        /// by nine credits a fence.
+        /// </para>
+        /// </summary>
+        public int UnitCost => Bundle <= 1 ? Cost : Cost / Bundle;
 
         /// <summary>True when something in the game has to happen before this is held.</summary>
         public bool HasRequirement

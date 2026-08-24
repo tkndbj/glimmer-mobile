@@ -97,6 +97,16 @@ namespace GlimmerGrove.Content
             return true;
         }
 
+        /// <summary>
+        /// Reads one level by asking the modes which of them it belongs to.
+        ///
+        /// <para>
+        /// <b>No branch per mode.</b> The registry is asked which mode claims the level's
+        /// authored block, and that mode reads it and tunes it. Adding a mode therefore adds
+        /// nothing here — which is the whole reason this file used to grow a clause every time
+        /// and had a comment explaining which of two blocks to look at first.
+        /// </para>
+        /// </summary>
         static bool TryReadLevel(LevelDto dto, ChapterId chapter, ICollection<string> problems,
                                  out LevelDefinition level)
         {
@@ -109,56 +119,32 @@ namespace GlimmerGrove.Content
                 return false;
             }
 
-            if (dto.rows == null || dto.rows.Length == 0)
+            var mode = LevelModes.Claimant(dto);
+            if (mode == null)
             {
-                problems.Add($"level '{id}' has no rows");
+                problems.Add($"level '{id}' carries no board and no mode block the build " +
+                             "recognises, so there is no way to play it");
                 return false;
             }
 
-            int width = dto.width > 0 ? dto.width : WidestRow(dto.rows);
-            int height = dto.height > 0 ? dto.height : dto.rows.Length;
-
-            LevelLayout layout;
-            try
+            if (!mode.TryRead(dto, id, problems, out var rules) || rules == null)
             {
-                layout = new LevelLayout(width, height, dto.rows);
-            }
-            catch (System.Exception e)
-            {
-                problems.Add($"level '{id}' has an unusable grid: {e.Message}");
+                // TryRead reports its own reason. A silent refusal here would be a level that
+                // vanishes from a chapter with nothing said about it.
+                if (problems.Count == 0)
+                    problems.Add($"level '{id}' could not be read as a {mode.Mode} level");
                 return false;
             }
 
-            // Par is derivable from the board, so an omitted par is not an error —
-            // it is the recommended way to author, since a hand-typed one can drift.
-            int par = dto.par;
-            if (par <= 0)
-            {
-                var parsed = LevelGridParser.Parse(layout);
-                if (!parsed.Ok)
-                {
-                    problems.Add($"level '{id}' cannot be parsed: {string.Join("; ", parsed.Errors)}");
-                    return false;
-                }
-                par = PuzzleFactory.MinimumMoves(parsed.Cells);
-            }
-
-            var tuning = new LevelTuning(
-                par,
-                dto.goldFactor > 0f ? dto.goldFactor : LevelTuning.DefaultGoldFactor,
-                dto.silverFactor > 0f ? dto.silverFactor : LevelTuning.DefaultSilverFactor,
-                dto.budgetFactor,
-                dto.timeFactor);
-
-            var presentation = new LevelPresentation(
-                new Vector2(dto.mapX, dto.mapY),
-                OptionalColour(dto.accent),
-                OptionalColour(dto.slate),
-                dto.backdrop);
-
-            level = new LevelDefinition(id, chapter, layout, tuning, presentation);
+            level = new LevelDefinition(id, chapter, rules, mode.Tune(dto, rules),
+                                        ReadPresentation(dto));
             return true;
         }
+
+        static LevelPresentation ReadPresentation(LevelDto dto)
+            => new LevelPresentation(new Vector2(dto.mapX, dto.mapY),
+                                     OptionalColour(dto.accent), OptionalColour(dto.slate),
+                                     dto.backdrop);
 
         public static ManifestDto ReadManifest(string json, out string error)
         {

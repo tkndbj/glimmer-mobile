@@ -193,7 +193,7 @@ namespace GlimmerGrove
         {
             readonly HomesteadPickerOverlay _panel;
             readonly Image _plate, _edge, _art, _cross;
-            readonly Text _name;
+            readonly Text _name, _stock;
 
             HomesteadPiece _piece;
 
@@ -238,6 +238,50 @@ namespace GlimmerGrove
                     UIKit.Titled("N", _plate.transform, string.Empty, 24, Pal.Cream,
                                  TextAnchor.MiddleCenter, new Vector2(CellW - 44f, 54f),
                                  new Vector2(.5f, 0f), new Vector2(0f, 34f), 3f, 2f), 15);
+
+                _stock = UIKit.Shrinkable(
+                    UIKit.Titled("S", _plate.transform, string.Empty, 20, Pal.A(Pal.Mint, .95f),
+                                 TextAnchor.MiddleCenter, new Vector2(CellW - 44f, 34f),
+                                 new Vector2(.5f, 0f), new Vector2(0f, 8f), 3f, 2f), 13);
+            }
+
+            /// <summary>
+            /// How many of this one are left to place, and the dimming when there are none.
+            ///
+            /// <para>
+            /// <b>A depleted piece stays in the grid rather than disappearing from it.</b>
+            /// Hiding it would be the same picture as never having owned it, so a player who
+            /// has used all ten of their fences would conclude the fence had been taken away —
+            /// and there would be nothing on the screen to correct them. It is dimmed, it says
+            /// why, and tapping it goes and buys more.
+            /// </para>
+            /// <para>
+            /// Nothing is drawn for a resident or an earned piece: those cannot run out, and a
+            /// count on one would be inviting the player to worry about a number that has no
+            /// meaning.
+            /// </para>
+            /// </summary>
+            void PaintStock(bool standing)
+            {
+                bool stocked = _piece.IsStocked;
+                int left = stocked ? HomesteadLedger.Available(_piece) : 0;
+
+                _stock.gameObject.SetActive(stocked);
+                if (stocked)
+                {
+                    _stock.text = left > 0
+                        ? Loc.Format("ui.grove.stock_left", left)
+                        : Loc.Get("ui.grove.stock_none");
+                    _stock.color = left > 0 ? Pal.A(Pal.Mint, .95f) : Pal.A(Pal.Sun, .95f);
+                }
+
+                // The art is knocked back rather than greyed, for the shop grid's reason: a
+                // tint multiplies, and half this catalog is dark enough that a grey silhouette
+                // is a black rectangle.
+                bool spent = stocked && left <= 0 && !standing;
+                _art.color = spent ? new Color(.72f, .76f, .80f, .55f) : Color.white;
+                _name.color = spent ? new Color(1f, .96f, .88f, .48f)
+                            : standing ? Pal.Cream : new Color(1f, .96f, .88f, .82f);
             }
 
             public void Bind(int index)
@@ -260,11 +304,27 @@ namespace GlimmerGrove
 
                 _name.text = _piece.IsValid ? Loc.Get(_piece.NameKey) : Loc.Get("ui.grove.clear");
                 _name.color = standing ? Pal.Cream : new Color(1f, .96f, .88f, .82f);
+
+                PaintStock(standing);
             }
         }
 
         void Choose(HomesteadPiece piece)
         {
+            // Nothing left to place: this goes and buys more rather than doing nothing. A dead
+            // cell is the refusal HintPrompt exists to prevent one screen over — the player has
+            // just told us exactly what they want, which is the worst possible moment to teach
+            // them that a control does not work.
+            //
+            // Closed first and the panel raised from the continuation, so the buy panel lands
+            // over the grove rather than over a picker that is about to be destroyed —
+            // HomesteadBuyOverlay.OnBuy's ordering, for its reason.
+            if (piece.IsStocked && HomesteadLedger.Available(piece) <= 0)
+            {
+                Close(() => Flow.Modal<HomesteadBuyOverlay>(v => v.Piece = piece));
+                return;
+            }
+
             // Place first, close second. The screen behind repaints on HomesteadLayout.Changed,
             // so by the time the panel has faded the slot is already showing what was chosen —
             // which is the whole feedback for the tap.

@@ -169,11 +169,18 @@ namespace GlimmerGrove.Homestead
     /// is also the rule with nothing in it to special-case as the catalog grows.
     /// </para>
     /// <para>
-    /// <b>It counts what is held, never what is placed.</b> Holding a piece is permission to
-    /// draw it in as many tiles as you like (invariant 16), so a score over placements would
-    /// be won by standing one expensive thing on two hundred tiles — rewarding exactly the
-    /// monotony the feature is built to avoid. Rearranging a grove cannot change its score,
-    /// and that is the point.
+    /// <b>It counts what is held, never what is placed.</b> Since v20 a priced piece is bought
+    /// by the copy, so holding ten fences is worth ten fences — but it is the <em>buying</em>
+    /// that moves the number and never the arranging. A score over placements would still be
+    /// the wrong one: it would fall when a player took a bench off a tile to try it somewhere
+    /// else, which is the single most ordinary thing anybody does on that screen.
+    /// </para>
+    /// <para>
+    /// <b>A bundle is worth what it cost, not ten times what it cost.</b> The catalog sells
+    /// fences in tens at one price, so a copy is worth <see cref="HomesteadPiece.UnitCost"/> and
+    /// the ten of them come back to the price paid. That is the same reading as before v20 —
+    /// market value of what is held — and it is why the star ladder needed no retune: a player
+    /// who spends 900 credits scores 900 whether the shop handed them one thing or ten.
     /// </para>
     /// </summary>
     public static class GroveScore
@@ -214,7 +221,23 @@ namespace GlimmerGrove.Homestead
             long total = 0L;
 
             foreach (var piece in catalog.Pieces)
-                if (piece.Cost > 0 && held.Holds(piece)) total += piece.Cost;
+            {
+                if (piece.Cost <= 0) continue;
+
+                // Stock is worth what was paid for it: copies times the price of one, which
+                // multiplies back to the bundle price. Everything else is an entitlement and is
+                // worth its price once — asked through Holds so a resident is still answered by
+                // the companion ledger and a home rung by the set that holds it.
+                if (piece.IsStocked)
+                {
+                    long copies = held.Copies(piece);
+                    if (copies > 0L) total += copies * piece.UnitCost;
+                }
+                else if (held.Holds(piece))
+                {
+                    total += piece.Cost;
+                }
+            }
 
             // Starter land is free and is never written down (invariant 16e), so it adds
             // nothing here without needing to be excluded — its cost is zero.
@@ -247,8 +270,11 @@ namespace GlimmerGrove.Homestead
         /// What a complete grove would be worth: every piece and every region of a catalog.
         ///
         /// Nothing in the game reads this — it is for the build gate, which uses it to say
-        /// whether the top of the ladder is reachable at all. A top star nobody can win is a
-        /// content mistake that looks perfectly authored in the file.
+        /// whether the top of the ladder is sensibly placed. Since v20 it is no longer a
+        /// <em>ceiling</em>: a player may buy any number of copies of a stocked piece, so a
+        /// ladder above this is reachable rather than impossible. It is still the number worth
+        /// checking against, because a top star asking for more than one of everything in the
+        /// catalog is asking a player to buy the same fence four hundred times.
         /// </summary>
         public static long MaximumValue(HomesteadCatalog catalog)
         {
@@ -276,6 +302,20 @@ namespace GlimmerGrove.Homestead
     public interface IGroveHoldings
     {
         bool Holds(HomesteadPiece piece);
+
+        /// <summary>
+        /// How many copies of a stocked piece are held. Asked only of a piece for which
+        /// <see cref="HomesteadPiece.IsStocked"/> is true; anything else answers through
+        /// <see cref="Holds"/>.
+        ///
+        /// A separate member rather than folding <see cref="Holds"/> into "copies &gt; 0",
+        /// because the two questions have different evidence behind them: a companion is held
+        /// by a gate and a purchase, a region by a set, and only the shop's half of the catalog
+        /// has a number at all. One method returning 0 or 1 for the entitlements would read as
+        /// though a second copy of a home rung were a thing that could exist.
+        /// </summary>
+        int Copies(HomesteadPiece piece);
+
         bool Owns(GroveRegion region);
     }
 
@@ -292,6 +332,7 @@ namespace GlimmerGrove.Homestead
         LedgerHoldings() { }
 
         public bool Holds(HomesteadPiece piece) => HomesteadLedger.IsHeld(piece);
+        public int Copies(HomesteadPiece piece) => HomesteadLedger.Copies(piece);
         public bool Owns(GroveRegion region) => GroveLand.IsOwned(region);
     }
 }

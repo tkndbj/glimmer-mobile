@@ -28,7 +28,7 @@
   </files>
   <settings>
     <setting name="androidAbis" value="arm64-v8a" />
-    <setting name="bundleId" value="com.arcade.glimmergrove" />
+    <setting name="bundleId" value="com.tekoworld.glimmergroove" />
     <setting name="explodeAars" value="False" />
     <setting name="gradleBuildEnabled" value="True" />
     <setting name="gradlePropertiesTemplateEnabled" value="True" />

@@ -297,10 +297,20 @@ namespace GlimmerGrove.Homestead
         /// The standard isometric transform: a step along a column moves right and down, a step
         /// along a row moves left and down. Y grows downward, which is the convention every
         /// other measured thing in this project uses.
+        ///
+        /// <para>
+        /// <b>Fractional coordinates are legal and that is deliberate.</b> Every caller that
+        /// names a tile passes whole numbers, but three things want the points <em>between</em>
+        /// them: the corners of a region's outline, which sit half a tile outside its edge
+        /// tiles; a camera easing from one place to another; and the centre of a rectangle with
+        /// an even number of tiles in it, which is not a tile. Widening the parameters is what
+        /// stops each of those growing its own copy of the transform, which is the mistake
+        /// <c>Puzzle.Alike</c> and <c>TweenCycle</c> both exist to record.
+        /// </para>
         /// </summary>
-        public static float TileX(int col, int row) => (col - row) * TileWidth * .5f;
+        public static float TileX(float col, float row) => (col - row) * TileWidth * .5f;
 
-        public static float TileY(int col, int row) => (col + row) * TileHeight * .5f;
+        public static float TileY(float col, float row) => (col + row) * TileHeight * .5f;
 
         /// <summary>
         /// How far left of the origin the field reaches — the bottom-left corner of the diamond.

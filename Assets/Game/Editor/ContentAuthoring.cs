@@ -37,10 +37,22 @@ namespace GlimmerGrove.EditorTools
                 var report = LevelValidator.Validate(level);
                 string flag = report.HasErrors ? "  BROKEN" : report.IsClean ? "" : "  (warnings)";
 
-                sb.AppendLine($"{++order,-4}{level.Id,-24}{level.Chapter,-18}" +
-                              $"{level.Layout.Width + "x" + level.Layout.Height,-8}" +
-                              $"{level.Tuning.Par,-6}{level.Tuning.GoldThreshold,-6}" +
-                              $"{level.Tuning.SilverThreshold,-7}{report.ComputedPar}{flag}");
+                // A hollow reports in sparks rather than turns. Both have a real par and a
+                // real ladder, so the columns mean the same thing in both modes - which is the
+                // point of deriving a hollow's par rather than authoring a score to beat.
+                // Only the classic mode has an authored grid to measure. Everything else
+                // says what mode it is, which is the honest answer and does not have to grow a
+                // clause when a mode is added.
+                string size = level.HasBoard
+                    ? level.Layout.Width + "x" + level.Layout.Height
+                    : level.Mode.Value;
+
+                string par = level.Tuning.Par.ToString();
+                string gold = level.Tuning.GoldThreshold.ToString();
+                string silver = level.Tuning.SilverThreshold.ToString();
+
+                sb.AppendLine($"{++order,-4}{level.Id,-24}{level.Chapter,-18}{size,-8}" +
+                              $"{par,-6}{gold,-6}{silver,-7}{report.ComputedPar}{flag}");
             }
 
             Debug.Log(sb.ToString());

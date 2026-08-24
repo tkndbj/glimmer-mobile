@@ -1,0 +1,23 @@
+{
+  "schemaVersion": 2,
+  "id": "f01_lightfall",
+  "accent": "#FF6B57",
+  "slate": "#241414",
+  "backdrop": "play_2",
+  "mapStrips": [
+    "strip0",
+    "strip1",
+    "strip2"
+  ],
+  "levels": [
+    {
+      "id": "f01_first_fall",
+      "mapX": 0.34,
+      "mapY": 0.14,
+      "fall": {
+        "width": 6,
+        "height": 11
+      }
+    }
+  ]
+}

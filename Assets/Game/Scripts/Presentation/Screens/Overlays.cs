@@ -133,11 +133,22 @@ namespace GlimmerGrove
             }
         }
 
-        protected void Close(Action after = null)
+        /// <summary>
+        /// Puts the panel away, and optionally runs something once it is gone.
+        ///
+        /// <para>
+        /// <paramref name="quiet"/> suppresses the dismissal sound, and it is for exactly one
+        /// case: a panel that is closing because the player <em>bought</em> something, where
+        /// the next thing they hear is the celebration and a backing-out whoosh underneath it
+        /// is one sound too many. It is not a general volume control — an ordinary close makes
+        /// a noise because an ordinary close is the player leaving.
+        /// </para>
+        /// </summary>
+        protected void Close(Action after = null, bool quiet = false)
         {
             if (_closing) return;
             _closing = true;
-            Audio.SfxVaried("back", .5f);
+            if (!quiet) Audio.SfxVaried("back", .5f);
             var cg = UIKit.Group(Content);
             Tween.Fade(cg, 0f, .22f);
             Tween.Scale(Panel, .82f, .24f, Ease.InQuad).OnDone(() =>
@@ -180,7 +191,7 @@ namespace GlimmerGrove
     /// </summary>
     public sealed class DefeatOverlay : ModalView
     {
-        public PlayScreen Screen;
+        public RunScreen Screen;
         public int HeartsLeft;
 
         /// <summary>The run that was lost, decided by the screen. See <see cref="RunOutcome"/>.</summary>
@@ -545,7 +556,7 @@ namespace GlimmerGrove
     // ====================================================================== pause
     public sealed class PauseOverlay : ModalView
     {
-        public PlayScreen Screen;
+        public RunScreen Screen;
 
         /// <summary>
         /// Set by the three exits that hand the run straight to something which latches the

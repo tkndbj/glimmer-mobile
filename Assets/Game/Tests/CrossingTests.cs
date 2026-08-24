@@ -378,8 +378,8 @@ namespace GlimmerGrove.Tests
         }
 
         [Test]
-        public void OnlyACrossingMaySplitItsArms()
-            => StringAssert.Contains("which is written '='", ParseError("-NS+EW/0"));
+        public void OnlyAFourArmedTileMaySplitItsArms()
+            => StringAssert.Contains("'+' separates the two pairs of arms", ParseError("-NS+EW/0"));
 
         [Test]
         public void ACrossingTakesNoColour()

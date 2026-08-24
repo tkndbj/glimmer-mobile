@@ -105,8 +105,11 @@ namespace GlimmerGrove.Persistence
                 // Invariant 11c is what keeps that from losing a grove: the stamp travels
                 // per slot rather than being read off this file's updatedUnix, and an
                 // untouched slot writes nothing at all.
-                homesteadOwned = Homestead.HomesteadLedger.Join(mine.homesteadOwned,
-                                                                other.homesteadOwned),
+                // Read through GroveStock.In on both sides rather than off the field, so a
+                // v19 document — on this disk, or in the cloud under a device that has not
+                // updated — brings its purchases into the join instead of arriving as nothing.
+                homesteadStock = Homestead.HomesteadLedger.Join(Homestead.GroveStock.In(mine),
+                                                                Homestead.GroveStock.In(other)),
                 groveLandOwned = Homestead.GroveLand.Join(mine.groveLandOwned,
                                                           other.groveLandOwned),
                 homesteadPlaced = Homestead.HomesteadLayout.Join(mine.homesteadPlaced,

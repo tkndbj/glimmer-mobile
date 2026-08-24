@@ -86,10 +86,8 @@ namespace GlimmerGrove
         /// as a broken record rather than an untimed one.
         /// </para>
         /// </summary>
-        static string TurnsKey(int moves, int millis)
-            => millis > 0
-                ? (moves == 1 ? "ui.rank.record_one" : "ui.rank.record")
-                : (moves == 1 ? "ui.rank.untimed_one" : "ui.rank.untimed");
+        static string TurnsKey(LevelId level, int moves, int millis)
+            => RunWording.RecordKey(level, moves, millis);
 
         /// <summary>Seconds between one star landing and the next.</summary>
         const float StarGap = .42f;
@@ -380,8 +378,8 @@ namespace GlimmerGrove
                                        30, new Color(1f, .95f, .86f, .68f), 640f, 22) : null;
 
             string yours = Run.Millis > 0
-                ? Loc.Format(TurnsKey(Run.Moves, Run.Millis), Run.Moves, RunClock.Format(Run.Millis))
-                : Loc.Format(TurnsKey(Run.Moves, 0), Run.Moves);
+                ? Loc.Format(TurnsKey(Run.Level, Run.Moves, Run.Millis), Run.Moves, RunClock.Format(Run.Millis))
+                : Loc.Format(TurnsKey(Run.Level, Run.Moves, 0), Run.Moves);
 
             var youCap = Caption("YouCap", -youCapY, Loc.Get("ui.win.route_you"));
             var youVal = Value("YouVal", -youCapY, yours, Pal.Cream);
@@ -1239,14 +1237,14 @@ namespace GlimmerGrove
                                                       && AccountPrompts.Offer(AccountPromptTrigger.Chapter))
                                                       return;
                                                   if (last) Flow.Go<LevelsScreen>();
-                                                  else Flow.Go<PlayScreen>(v => v.LevelId = nextId);
+                                                  else PlayRoute.Open(nextId);
                                               }));
             UIKit.Halo(nextButton.transform, Pal.Mint, 620f, .28f);
 
             var replayId = Run.Level;
             UIKit.IconButton("Replay", Panel, "sq_orange", "ic_restart", new Vector2(138f, 138f),
                              new Vector2(.5f, 0f), new Vector2(-SideButtonX, ButtonY),
-                             () => Close(() => Flow.Go<PlayScreen>(v => v.LevelId = replayId)));
+                             () => Close(() => PlayRoute.Open(replayId)));
 
             // Skins.Nav rather than the literal, so this panel moves with the rule the rest of
             // the chrome now follows. Replay keeps its own orange: only the greys moved.

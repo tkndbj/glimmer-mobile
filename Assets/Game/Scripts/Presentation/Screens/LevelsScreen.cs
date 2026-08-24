@@ -26,6 +26,22 @@ namespace GlimmerGrove
         /// <summary>Which chapter to show. Defaults to wherever the player is up to.</summary>
         public ChapterId ChapterId;
 
+        /// <summary>
+        /// Which way of playing this map is showing.
+        ///
+        /// <para>
+        /// A field rather than a read of the remembered choice, so the one place a mode is
+        /// decided is <see cref="Build"/> - and so a caller that already knows (the switcher,
+        /// or a chapter arrow carrying its own chapter's mode) can say so without writing the
+        /// preference first. An unset one falls back to what the player last looked at.
+        /// </para>
+        /// <para>
+        /// A chapter's own mode always wins over this: a chapter belongs to exactly one mode,
+        /// so opening one is choosing a mode whether or not anybody said so.
+        /// </para>
+        /// </summary>
+        public GameMode Mode;
+
         public override string Track => "mus_map";
 
         ScrollRect _scroll;
@@ -59,7 +75,6 @@ namespace GlimmerGrove
 
         public override bool Ready => _built;
 
-        static readonly string[] Rocks = { "rock_grass", "rock_wide", "rock_tall", "rock_chip", "rock_plain" };
 
         /// <summary>
         /// Drawn size of a map node, and where a glyph has to sit inside one to land on
@@ -91,9 +106,21 @@ namespace GlimmerGrove
             _catalog = GameContent.Catalog;
             _index = _catalog.Index;
 
+            // The chapter decides the mode when there is one, because a chapter belongs to
+            // exactly one; otherwise the field, and failing that whatever the player was last
+            // looking at. ModeChoice.Read also refuses a mode this catalog has no chapters for,
+            // which is what stops a rolled-back client or an undownloaded drop opening the map
+            // onto nothing at all.
             _entry = ChapterId.IsValid
                 ? _index.FindChapter(ChapterId)
-                : LevelUnlock.CurrentChapter(_index);
+                : LevelUnlock.CurrentChapter(_index, Mode.IsPlayable ? Mode : ModeChoice.Read(_index));
+
+            if (_entry != null) Mode = _entry.Mode;
+            else if (!Mode.IsPlayable) Mode = ModeChoice.Read(_index);
+
+            // Remembered on arrival rather than on the tap, so the map a player is returned to
+            // after a run is the one they left - the tap is only one of the ways to get here.
+            ModeChoice.Write(Mode);
 
             // The header is index knowledge - chapter name, total stars - so it draws
             // immediately and never waits on a file.
@@ -293,7 +320,8 @@ namespace GlimmerGrove
                     : LevelUnlock.IsUnlocked(_index, levels[i + 1].Id);
 
                 var trail = _map.gameObject.AddComponent<Trail>();
-                trail.Setup(_map, from, to, 13, live ? Pal.Gold : new Color(1f, .99f, .92f, .8f), live);
+                trail.Setup(_map, from, to, 13,
+                            live ? ModeLooks.Of(Mode).Accent : new Color(1f, .99f, .92f, .8f), live);
             }
         }
 
@@ -312,7 +340,8 @@ namespace GlimmerGrove
             // reads as its true position in the catalog.
             int displayNumber = _index.OrderOf(level.Id) + 1;
 
-            var node = MakePerch(_layout.PositionOf(level.Id), Rocks[indexInChapter % Rocks.Length], indexInChapter);
+            var node = MakePerch(_layout.PositionOf(level.Id), ModeLooks.Of(Mode).Perch,
+                                 indexInChapter);
             _nodes[level.Id] = node;
 
             string skin = !unlocked ? "node_lock" : (stars > 0 ? "node_s" + stars : "node_open");
@@ -365,7 +394,7 @@ namespace GlimmerGrove
         void BuildChapterEnd()
         {
             var next = LevelUnlock.ChapterAfter(_index, _entry.Id);
-            var node = MakePerch(_layout.TeaserPosition, "rock_sand", 99);
+            var node = MakePerch(_layout.TeaserPosition, ModeLooks.Of(Mode).Perch, 99);
 
             bool onward = next != null;
             bool reachable = onward && LevelUnlock.IsChapterUnlocked(_index, next.Id);
@@ -415,7 +444,11 @@ namespace GlimmerGrove
             UIKit.Img("Shadow", node, Art.Glow(96, 2.2f), new Color(.03f, .10f, .16f, .38f),
                       new Vector2(370f, 150f), new Vector2(.5f, .5f), new Vector2(0f, -150f));
 
-            var img = UIKit.Img("Rock", node, Art.S("Map/" + rock), Color.white,
+            // Tinted rather than re-cut, which is the whole of what a second mode costs the map
+            // art: one multiply over sprites that are already loaded, moving every island of a
+            // chapter together. The rock *set* differs too, so the two maps are still told apart
+            // by somebody who cannot see the colour.
+            var img = UIKit.Img("Rock", node, Art.S("Map/" + rock), ModeLooks.Of(Mode).Wash,
                                 new Vector2(360f, 290f), new Vector2(.5f, .5f), new Vector2(0f, -50f));
             img.preserveAspect = true;
 
@@ -496,11 +529,6 @@ namespace GlimmerGrove
         /// existed has a move count and no time — a dash where the time goes would read as
         /// a broken record rather than an untimed one.
         /// </summary>
-        static string RecordKey(int moves, int millis)
-            => millis > 0
-                ? (moves == 1 ? "ui.rank.record_one" : "ui.rank.record")
-                : (moves == 1 ? "ui.rank.untimed_one" : "ui.rank.untimed");
-
         /// <summary>
         /// The permanent standing on a cleared glade: "TOP 10%".
         ///
@@ -590,7 +618,7 @@ namespace GlimmerGrove
             }
 
             var record = UIKit.Titled("Record", bg.transform,
-                                      Loc.Format(RecordKey(moves, millis), moves, RunClock.Format(millis)),
+                                      Loc.Format(RunWording.RecordKey(id, moves, millis), moves, RunClock.Format(millis)),
                                       ranked ? 28 : 29,
                                       new Color(1f, .96f, .88f, ranked ? .80f : .92f),
                                       TextAnchor.MiddleCenter,
@@ -713,8 +741,18 @@ namespace GlimmerGrove
             UIKit.IconButton("Back", Safe, Skins.Nav, "ic_left", new Vector2(118f, 118f),
                              new Vector2(0f, 1f), new Vector2(96f, -132f), () => Flow.Go<HomeScreen>());
 
+            // What a glade pays, and under what rule — the one thing this screen is full of
+            // and cannot draw. A node shows its stars and says nothing about what the stars
+            // were worth, or what a second run at a glade already three-starred is worth,
+            // which is the question the map invites and the victory panel answers only once.
+            // Top-right corner, the same place the streak and event pages keep theirs.
+            var chapter = _entry != null ? _entry.Id : ChapterId;
+            UIKit.IconButton("Info", Safe, Skins.Aside, "ic_info", new Vector2(118f, 118f),
+                             new Vector2(1f, 1f), new Vector2(-96f, -132f),
+                             () => { if (!Flow.HasModal) Flow.Modal<GladeRewardsOverlay>(v => v.For(chapter)); });
+
             _banner = UIKit.Img("Banner", Safe, Art.S("Ui/banner"), Color.white,
-                                new Vector2(BannerWidth, 148f), new Vector2(.5f, 1f),
+                                new Vector2(BannerWidth, BannerHeight), new Vector2(.5f, 1f),
                                 new Vector2(0f, BannerY));
             string title = _entry != null ? Loc.Get(_entry.NameKey) : Loc.Get("ui.levels.title");
             var name = UIKit.Titled("Title", _banner.transform, title.ToUpperInvariant(), 40,
@@ -733,13 +771,26 @@ namespace GlimmerGrove
             _banner.transform.localScale = Vector3.zero;
             Tween.Pop(_banner.transform, 0f, .6f, .1f);
 
-            Scenery.Pill(Safe,
-                         $"{PlayerProgress.TotalStars(_index)} / {PlayerProgress.MaxStars(_index)}",
-                         36, new Vector2(196f, 78f), new Vector2(1f, 1f), new Vector2(-106f, -132f), null, "ic_star");
-
             if (_entry == null) return;
 
+            // Under the plaque, and counting *this chapter*. The corner is where every
+            // second-level screen here keeps its "i", and a star count directly beneath the
+            // name reads as belonging to the chapter that name announces — which is what it
+            // now is. It used to total the whole catalog, so the one number on a screen
+            // showing ten glades was out of 90 and moved by a thirtieth when a glade was
+            // three-starred: a progress readout for a chapter that could not show progress
+            // through it. The catalog total still exists and still has a home, on the
+            // profile, where a lifetime figure belongs.
+            Scenery.Pill(Safe,
+                         $"{PlayerProgress.TotalStars(_entry)} / {PlayerProgress.MaxStars(_entry)}",
+                         36, new Vector2(196f, 78f), new Vector2(.5f, 1f), new Vector2(0f, StarsY), null, "ic_star");
+
             BuildChapterArrows();
+
+            // In the safe layer with the rest of the chrome, and drawn last so it sits over the
+            // map. It builds nothing at all while the catalog holds one mode, which is what
+            // makes calling it unconditionally safe.
+            ModeSwitch.Build(Safe, _index, Mode, SwitchTo);
 
             var swipe = UIKit.Titled("Swipe", Safe, Loc.Get("ui.levels.swipe"), 26,
                                      new Color(1f, .96f, .88f, .5f), TextAnchor.MiddleCenter,
@@ -799,8 +850,18 @@ namespace GlimmerGrove
         /// The plaque carrying the chapter name: its size, where it sits under the fade, the
         /// ink everything carved into it is written in, and how much of it the name may use.
         /// </summary>
-        const float BannerWidth = 520f, BannerY = -142f;
-        const float ChevronX = 196f, NameWidth = 268f;
+        const float BannerWidth = 476f, BannerHeight = 138f, BannerY = -142f;
+        const float ChevronX = 180f, NameWidth = 246f;
+
+        /// <summary>
+        /// Where the chapter's star count sits, clear of the plaque's lower edge.
+        ///
+        /// Derived rather than typed: the plaque is centred on <see cref="BannerY"/>, so its
+        /// underside moves whenever its height does, and a constant here would have to be
+        /// re-found every time the banner is resized — which is exactly what this pair of
+        /// numbers was last changed for.
+        /// </summary>
+        const float StarsY = BannerY - BannerHeight * .5f - 47f;
         static readonly Color BannerInk = new Color(.36f, .24f, .16f);
 
         /// <summary>The plaque, kept so the chevrons can be carved into it.</summary>
@@ -895,6 +956,24 @@ namespace GlimmerGrove
             return lo > hi ? 0f : (lo + hi) * .5f / label.pixelsPerUnit;
         }
 
+        /// <summary>
+        /// Opens another mode's map at wherever the player is up to in it.
+        ///
+        /// A fresh screen rather than a repaint: the map is a chapter's body, its art scope and
+        /// a scroll position, and rebuilding those in place is the same work as arriving plus
+        /// the risk of leaving half of the old one behind. Going through <c>Flow</c> also gives
+        /// the change the transition every other navigation here gets, so a mode swap reads as
+        /// going somewhere rather than as the screen glitching.
+        /// </summary>
+        void SwitchTo(GameMode mode)
+        {
+            if (!mode.IsValid || mode == Mode) return;
+
+            ModeChoice.Write(mode);
+            Audio.Sfx("whoosh", .5f);
+            Flow.Go<LevelsScreen>(v => v.Mode = mode);
+        }
+
         void GoToChapter(ChapterId id)
         {
             // No sound here either: the arrow that was tapped has already made one, and
@@ -914,7 +993,7 @@ namespace GlimmerGrove
 
             _scroll.verticalNormalizedPosition = 0f;
 
-            var target = LevelUnlock.NextToPlay(_index);
+            var target = LevelUnlock.NextToPlay(_index, Mode);
             if (!target.IsValid || !_layout.Has(target)) yield break;
 
             float want = NormalisedFor(_layout.PositionOf(target).y);
@@ -956,7 +1035,11 @@ namespace GlimmerGrove
             }
 
             Audio.Sfx("unlock", .55f);
-            Flow.Go<PlayScreen>(v => v.LevelId = id);
+
+            // Which screen a mode opens on lives in PlayRoute, because this is not the only
+            // door into a run - the victory panel's "next glade" and its replay are two more,
+            // and both of them opened the classic screen on a hollow until it was moved.
+            PlayRoute.Open(id);
         }
 
         public override bool OnBack() { Flow.Go<HomeScreen>(); return true; }

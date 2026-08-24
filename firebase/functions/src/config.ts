@@ -16,7 +16,7 @@ export const REGION = "europe-west1";
  * mismatch here refuses every genuine purchase. `CloudWireTests` pins this against
  * `Application.identifier` so the two cannot drift apart unnoticed.
  */
-export const BUNDLE_ID = "com.arcade.glimmergrove";
+export const BUNDLE_ID = "com.tekoworld.glimmergroove";
 
 /** Firestore paths, named once so a typo cannot become two collections. */
 export const PATHS = {

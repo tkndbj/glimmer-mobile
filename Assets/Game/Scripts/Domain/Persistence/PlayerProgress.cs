@@ -136,6 +136,26 @@ namespace GlimmerGrove.Persistence
 
         public static int MaxStars(CatalogIndex index) => (index?.Count ?? 0) * 3;
 
+        /// <summary>Stars earned in one chapter, and the most that chapter can hold.</summary>
+        /// <remarks>
+        /// The chapter overloads, not a second reading of the whole catalog filtered down.
+        /// A chapter entry already carries its level ids in play order — that is the whole
+        /// of what the manifest is for — so this is the same walk over a shorter list, and
+        /// it stays index knowledge: no body is read and no grid is parsed to total a
+        /// chapter's stars.
+        /// </remarks>
+        public static int TotalStars(ChapterIndexEntry chapter)
+        {
+            if (chapter == null) return 0;
+
+            int total = 0;
+            var ids = chapter.LevelIds;
+            for (int i = 0; i < ids.Count; i++) total += Stars(ids[i]);
+            return total;
+        }
+
+        public static int MaxStars(ChapterIndexEntry chapter) => (chapter?.LevelCount ?? 0) * 3;
+
         public static bool AllCleared(CatalogIndex index)
         {
             if (index == null || index.IsEmpty) return false;

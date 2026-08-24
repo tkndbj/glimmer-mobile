@@ -205,7 +205,8 @@ namespace GlimmerGrove.Tests
             // the scan a chapter after this list was written and went unlisted for it.
             var board = new[] { Mechanic.FragileConduit, Mechanic.MoveBudget,
                                 Mechanic.RootedTile, Mechanic.ColourMixing,
-                                Mechanic.Duskcap, Mechanic.Crossing, Mechanic.BoundConduit };
+                                Mechanic.Duskcap, Mechanic.Crossing, Mechanic.Briar,
+                                Mechanic.BoundConduit };
 
             foreach (var m in board)
                 Assert.IsTrue(InOrder(m), $"'{m}' is not in TeachingOrder and can never be shown");

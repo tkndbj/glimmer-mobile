@@ -69,9 +69,13 @@ def rows():
             if not line or line.startswith("#"):
                 continue
             parts = line.split("\t")
-            if len(parts) != 3:
-                sys.exit(f"chapter_art.tsv line {n}: expected 3 tab-separated columns, got {len(parts)}")
-            out[parts[0]] = (parts[1], [p for p in parts[2].split(",") if p])
+            if len(parts) not in (3, 4):
+                sys.exit(f"chapter_art.tsv line {n}: expected 3 or 4 tab-separated columns, "
+                         f"got {len(parts)}")
+            # The fourth column is optional and defaults to 0, so every row written before map
+            # grading existed keeps producing exactly the map it produced.
+            grade = float(parts[3]) if len(parts) == 4 and parts[3].strip() else 0.0
+            out[parts[0]] = (parts[1], [p for p in parts[2].split(",") if p], grade)
     return out
 
 
@@ -156,7 +160,30 @@ def backdrop(source, window, slate, accent):
                            vignette(graded.size))
 
 
-def strips(source, names):
+def night(image, slate, accent, strength):
+    """Pulls a map toward the chapter's own palette, keeping its painted detail.
+
+    A blend rather than a replacement, and that is the difference between a map and a
+    silhouette: `backdrop` grades all the way because a board is drawn on top of it and
+    detail there is noise, while a map *is* the thing being looked at. At .55 a daylight
+    island map reads as the same islands at night, which is what lets two chapters share a
+    source and still be two places -- the argument the backdrops already make.
+
+    Zero returns the image untouched, so a chapter that does not ask for this gets exactly
+    what it got before the option existed.
+    """
+    if strength <= 0:
+        return image
+
+    grey = ImageOps.autocontrast(image.convert("L"), cutoff=1)
+    table = ramp(slate, accent)
+    graded = Image.merge("RGB", [
+        grey.point([table[i][channel] for i in range(256)]) for channel in range(3)
+    ])
+    return Image.blend(image, graded, strength)
+
+
+def strips(source, names, slate=None, accent=None, grade=0.0):
     """The map, cut bottom-upward so strip 0 is the foot of the trail."""
     src = Image.open(source).convert("RGB")
     w, h = src.size
@@ -165,6 +192,10 @@ def strips(source, names):
     scaled = src.resize((max(STRIP_W, int(round(w * total / float(h)))), total), Image.LANCZOS)
     x = (scaled.size[0] - STRIP_W) // 2
     board = scaled.crop((x, 0, x + STRIP_W, total))
+
+    # Graded whole rather than per strip, or every strip would autocontrast against its
+    # own slice and the map would step in brightness at each seam.
+    board = night(board, slate, accent, grade)
 
     for i, name in enumerate(names):
         bottom = total - i * STRIP_H
@@ -181,7 +212,7 @@ def main():
     table = rows()
     if args.chapter not in table:
         sys.exit(f"no row for '{args.chapter}' in Tools/chapter_art.tsv")
-    map_src, bg_srcs = table[args.chapter]
+    map_src, bg_srcs, map_grade = table[args.chapter]
 
     path = os.path.join(CHAPTERS, args.chapter + ".json")
     if not os.path.exists(path):
@@ -213,7 +244,11 @@ def main():
         os.makedirs(MAP_ART, exist_ok=True)
         os.makedirs(BG_ART, exist_ok=True)
 
-    for name, image in strips(os.path.join(args.source, map_src), chapter.get("mapStrips") or []):
+    for name, image in strips(os.path.join(args.source, map_src),
+                              chapter.get("mapStrips") or [],
+                              hexcolour(fallback_slate, "#123640"),
+                              hexcolour(fallback_accent, "#FFC93C"),
+                              map_grade):
         out = os.path.join(MAP_ART, name + ".png")
         print(f"  map  {name:<16} {image.size[0]}x{image.size[1]}")
         if not args.dry_run:

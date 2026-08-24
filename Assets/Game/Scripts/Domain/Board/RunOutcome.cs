@@ -179,6 +179,43 @@ namespace GlimmerGrove
             Route = route < 0 ? 0 : route;
         }
 
+        /// <summary>
+        /// A run finished, described by its facts rather than by the thing it was played on.
+        ///
+        /// <para>
+        /// This is the factory a second mode uses, and it is what let one exist at all. Every
+        /// field of this type is a plain number about what a player did — turns taken, how many
+        /// of the things wanted lit up, how long it took — and none of it is about conduits. The
+        /// <see cref="Puzzle"/> overloads below simply read those numbers off a board; a hollow
+        /// reads them off a cascade. So the victory panel, the defeat panel, the near-miss line,
+        /// the record and the analytics are the ones the classic mode already had, rather than
+        /// a second set that could come to disagree with them.
+        /// </para>
+        /// <para>
+        /// <paramref name="target"/> is the three-star threshold in whatever the mode counts,
+        /// and <paramref name="route"/> is the best a perfect run could have managed — turns to
+        /// the authored solution on a board, the fewest sparks that finish a hollow.
+        /// </para>
+        /// </summary>
+        public static RunOutcome Win(LevelId level, int stars, int moves, int target,
+                                     int previousBest, bool firstClear, int attempt,
+                                     int lit, int wanted, int hintsUsed,
+                                     float seconds, int millis, int route,
+                                     int timeLimit, int timeGold)
+            => new RunOutcome(level, true, stars, moves, target, previousBest, firstClear,
+                              attempt, DefeatReason.OutOfMoves, 0, lit, wanted, hintsUsed,
+                              seconds, millis, route, timeLimit, timeGold);
+
+        /// <summary>A run lost, described by its facts. See the win above.</summary>
+        public static RunOutcome Loss(LevelId level, DefeatReason reason, int moves, int target,
+                                      int previousBest, int attempt, int stepsToSolution,
+                                      int lit, int wanted, int hintsUsed,
+                                      float seconds, int millis, int route,
+                                      int timeLimit, int timeGold)
+            => new RunOutcome(level, false, 0, moves, target, previousBest, false,
+                              attempt, reason, stepsToSolution, lit, wanted, hintsUsed,
+                              seconds, millis, route, timeLimit, timeGold);
+
         /// <summary>A glade finished. <paramref name="attempt"/> counts this run.</summary>
         public static RunOutcome Win(Puzzle board, int stars, int previousBest, bool firstClear,
                                      int attempt, int hintsUsed, float seconds, int millis,

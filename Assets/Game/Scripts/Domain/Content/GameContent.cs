@@ -59,6 +59,12 @@ namespace GlimmerGrove.Content
 
         public static ChapterId ChapterOf(LevelId id) => _catalog.ChapterOf(id);
 
+        /// <summary>
+        /// How a glade is played, answered off the index so a screen can route to the right
+        /// interaction without opening a chapter body first.
+        /// </summary>
+        public static GameMode ModeOf(LevelId id) => _catalog.Index.ModeOf(id);
+
         public static ChapterIndexEntry FindChapter(ChapterId id) => _catalog.FindChapter(id);
 
         /// <summary>The level's definition, reading its chapter body if need be.</summary>

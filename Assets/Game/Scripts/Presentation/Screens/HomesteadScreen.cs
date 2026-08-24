@@ -49,7 +49,48 @@ namespace GlimmerGrove
         /// </summary>
         public override bool WantsMultiTouch => true;
 
-        public override bool OnBack() { Flow.Go<HomeScreen>(); return true; }
+        public override bool OnBack()
+        {
+            // The back key ends the ceremony rather than the screen, which is what it means
+            // everywhere else in the game: it closes the innermost thing that is open. Leaving
+            // instead would cost nothing that is stored — the land is bought either way — but
+            // it would answer "let me get on with it" by taking the grove away.
+            if (_rise != null) { _rise.Skip(); return true; }
+
+            Flow.Go<HomeScreen>();
+            return true;
+        }
+
+        /// <summary>
+        /// Ground bought a moment ago, which this screen was opened to show arriving. Null on
+        /// every ordinary visit.
+        ///
+        /// <para>
+        /// Set by <c>GroveLandOverlay</c> through <c>Flow.Go</c>, which is what makes the
+        /// purchase and the ceremony one act rather than two: a player who buys land is taken
+        /// back to their grove and shown it happening, instead of walking back to a floor that
+        /// is simply bigger than it was. Nothing about it is stored — the purchase is already
+        /// recorded and this is only a request to <em>animate</em> it, so a player who kills
+        /// the app mid-ceremony finds their land exactly where they left it, undecorated.
+        /// </para>
+        /// </summary>
+        public GroveRegion Arriving { get; set; }
+
+        /// <summary>
+        /// How many stars the grove was worth before that purchase, or -1 when nothing is
+        /// arriving.
+        ///
+        /// <para>
+        /// Carried rather than derived because it cannot be: land is bought in the shop, so by
+        /// the time this screen exists the score has already moved, and the star row's own
+        /// rule — celebrate what was not there a moment ago — has no "a moment ago" to compare
+        /// against on a screen that has just been built. Without it the reward for the single
+        /// most expensive thing in the game would be a number that had quietly changed while
+        /// the player was looking somewhere else, which is exactly what drawing the score here
+        /// was meant to fix.
+        /// </para>
+        /// </summary>
+        public int ArrivingStars { get; set; } = -1;
 
         const float HeaderHeight = 214f;
 
@@ -101,8 +142,27 @@ namespace GlimmerGrove
 
         bool _presented, _teaching, _taught;
 
+        /// <summary>
+        /// The arrival ceremony, and the ground it is still holding back.
+        ///
+        /// <para>
+        /// Two fields rather than one because they answer at different times.
+        /// <see cref="_pending"/> is set the instant this screen is built, which is what keeps
+        /// the new land off the very first paint — the iris opens on the grove as it was, and
+        /// nothing has to be un-drawn. <see cref="_rise"/> exists only once there is a floor to
+        /// stage it against, and takes the question over from there.
+        /// </para>
+        /// </summary>
+        GroveRegion _pending;
+        GroveRise _rise;
+
         protected override void Build()
         {
+            // Read before anything can draw. Everything below asks whether ground is being
+            // withheld, and a screen that painted the new land once and took it away again
+            // would spend the whole ceremony undoing its own first frame.
+            _pending = Arriving;
+
             // The hub's own sky and nothing else from it. The grove here is the content, so
             // laying the hub's ground and decoration behind it would be two groves in one
             // picture — and this one is supposed to be the player's.
@@ -160,6 +220,12 @@ namespace GlimmerGrove
         void Regrow()
         {
             if (_field == null) return;
+
+            // A ceremony owns the ground while it is running, and refilling the field under one
+            // would throw away the tiles it is in the middle of raising. Unreachable today —
+            // land is only sold in the shop, which is a different screen — and one line rather
+            // than a comment explaining why it cannot happen.
+            if (_rise != null) return;
 
             // The ground itself changed, so a bar anchored to a tile is anchored to a fact that
             // no longer holds.
@@ -226,36 +292,158 @@ namespace GlimmerGrove
         {
             if (_field == null) return;
 
-            CloseEditor();
-
             var floor = HomesteadCatalog.Current.Floor;
+
+            // Called at least twice in the ordinary case — the catalog raises its event and
+            // Warm calls this directly — and it throws every tile away when it runs. A ceremony
+            // already staged against this same ground must not be rebuilt out from under
+            // itself; one staged against ground that has genuinely been republished is a
+            // ceremony about a floor that no longer exists, so the land is simply delivered and
+            // nothing is lost but the show.
+            if (_rise != null)
+            {
+                if (_rise.Stages(floor)) { Repaint(); return; }
+                _rise.Skip();
+            }
+
+            CloseEditor();
 
             _field.SetFloor(floor);
             ShowOwned();
             _field.Rebuild();
 
-            // Opened on the hall rather than on the field's origin, which is the corner of a
-            // diamond and therefore the emptiest place on the screen.
-            if (GroveFloor.TryParse(floor.HallTile, out int col, out int row))
-                _field.CentreOn(col, row);
-            else
-                _field.CentreOn(floor.Cols / 2, floor.Rows / 2);
+            // A ceremony frames its own shot, and it has to be allowed to: the whole point of
+            // the framing is that it is not where the player would have been left.
+            if (!OpenRise(floor))
+            {
+                // Opened on the hall rather than on the field's origin, which is the corner of
+                // a diamond and therefore the emptiest place on the screen.
+                if (GroveFloor.TryParse(floor.HallTile, out int col, out int row))
+                    _field.CentreOn(col, row);
+                else
+                    _field.CentreOn(floor.Cols / 2, floor.Rows / 2);
+            }
 
             Repaint();
 
             // The body usually arrives before the transition finishes and sometimes after it.
-            // Teaching is attempted from both ends rather than from whichever happens to be
-            // second, because a lesson shown once in a player's life must not be spent on a
-            // screen that had nothing on it yet — see Teach.
+            // Both of these are attempted from both ends rather than from whichever happens to
+            // be second: a lesson shown once in a player's life must not be spent on a screen
+            // that had nothing on it yet, and neither must a ceremony — see Teach and
+            // StartRise.
+            StartRise();
             Teach();
+        }
+
+        // -------------------------------------------------------------- arriving
+        /// <summary>
+        /// Stages the ceremony for ground bought a moment ago, if there is any. True once
+        /// something is framing the camera, so the ordinary opening shot stands aside.
+        /// </summary>
+        bool OpenRise(GroveFloor floor)
+        {
+            if (_rise != null) return true;
+            if (_pending == null) return false;
+
+            // The catalog is a body and may have been republished between the purchase and
+            // this screen, so the region is looked up again rather than trusted. A region that
+            // is no longer on the floor is simply not celebrated; the land is still owned.
+            var region = _pending;
+            if (floor.IsEmpty || floor.Region(region.Id) == null)
+            {
+                _pending = null;
+                return false;
+            }
+
+            _rise = GroveRise.Play(Content, _field, floor, region,
+                                   (col, row) => GroveLand.IsOwned(floor, col, row)
+                                              && !region.Holds(col, row),
+                                   OnRiseDone);
+
+            return _rise != null;
+        }
+
+        /// <summary>
+        /// Starts the ceremony once there is both a staged one and a screen the player can
+        /// see. Does nothing twice — <c>GroveRise.Begin</c> holds that rule rather than a flag
+        /// here, so a second caller cannot get it wrong.
+        /// </summary>
+        void StartRise()
+        {
+            if (_presented) _rise?.Begin();
+        }
+
+        /// <summary>
+        /// Hands the ground back. The withholding stops, the field is re-tested, and whatever
+        /// the ceremony was standing in front of happens now: the star the purchase earned,
+        /// and the first-visit lessons it was holding up.
+        /// </summary>
+        void OnRiseDone()
+        {
+            _rise = null;
+            _pending = null;
+
+            if (_field != null)
+            {
+                ShowOwned();
+                _field.Revisit();
+            }
+
+            Repaint();
+            CelebrateArrival();
+            Teach();
+        }
+
+        /// <summary>
+        /// A star won by the purchase, landed now rather than while the player was in the shop.
+        ///
+        /// <para>
+        /// Measured against the reading taken before the money was spent (see
+        /// <see cref="ArrivingStars"/>) rather than against <see cref="_starsShown"/>, which
+        /// this screen's first paint has already moved to the new figure — quietly, and
+        /// deliberately, because a baseline taken on a blank grove is how a celebration comes
+        /// to mean nothing.
+        /// </para>
+        /// </summary>
+        void CelebrateArrival()
+        {
+            if (ArrivingStars < 0 || _scoreStars == null) return;
+
+            int before = ArrivingStars;
+            ArrivingStars = -1;
+
+            if (!HomesteadCatalog.IsLoaded) return;
+
+            int stars = Mathf.Min(GroveScore.Of(HomesteadCatalog.Current).Stars, _scoreStars.Count);
+            if (stars > before) _scoreStars.Reveal(stars, .12f, .32f);
         }
 
         /// <summary>
         /// Which ground exists. Unowned land is not drawn at all — see
         /// <c>GroveFieldView.SetVisible</c> for why a field of padlocks was the wrong screen.
+        ///
+        /// <para>
+        /// Ground bought a moment ago is owned and still withheld, which is the one place
+        /// those two come apart. Kept as an <c>and</c> of two questions rather than folded
+        /// into one predicate: what the player owns is <c>GroveLand</c>'s answer and never
+        /// this screen's, and a ceremony that could make land look unowned is a ceremony one
+        /// bug away from selling it twice.
+        /// </para>
         /// </summary>
-        static bool Owned(int col, int row)
-            => GroveLand.IsOwned(HomesteadCatalog.Current.Floor, col, row);
+        bool Owned(int col, int row)
+            => GroveLand.IsOwned(HomesteadCatalog.Current.Floor, col, row)
+            && !Withheld(col, row);
+
+        bool Withheld(int col, int row)
+            => _rise != null
+                ? _rise.Hides(col, row)
+                : _pending != null && _pending.Holds(col, row);
+
+        /// <summary>
+        /// True exactly once per tile of arriving ground, on the bind that first draws it.
+        /// The cell's signal to rise into place rather than appear — see <c>GroveRise</c>.
+        /// </summary>
+        bool TakeArrival(int col, int row) => _rise != null && _rise.TakeArrival(col, row);
 
         /// <summary>
         /// Tells the field which ground exists and how far it reaches.
@@ -878,6 +1066,25 @@ namespace GlimmerGrove
             readonly HomesteadScreen _screen;
             readonly Image _ground, _art, _ring;
 
+            /// <summary>
+            /// Everything the tile draws, held one node below <see cref="Root"/>.
+            ///
+            /// <para>
+            /// <b>The split exists so a tile can be moved without moving the tile.</b>
+            /// <see cref="Root"/>'s position is the field's — it is written by
+            /// <c>GroveFieldView</c> every time a cell is recycled onto new coordinates, and
+            /// the pick box is derived from the same arithmetic. A rise animated on
+            /// <see cref="Root"/> would therefore be fighting the one transform that has to be
+            /// authoritative, and a cell recycled mid-rise would drag its old destination onto
+            /// its new tile. Animating a child means the offset is purely cosmetic and can be
+            /// abandoned at any moment by writing two zeroes.
+            /// </para>
+            /// </summary>
+            readonly RectTransform _body;
+
+            bool _rising;
+            int _riseCol, _riseRow;
+
             public RectTransform Root { get; }
 
             public TileCell(HomesteadScreen screen)
@@ -887,7 +1094,9 @@ namespace GlimmerGrove
                 Root = UIKit.Node("Tile", null);
                 Root.sizeDelta = new Vector2(GroveFloor.TileWidth, GroveFloor.TileHeight);
 
-                _ground = UIKit.Img("G", Root, null, Color.white,
+                _body = UIKit.Node("B", Root);
+
+                _ground = UIKit.Img("G", _body, null, Color.white,
                                     new Vector2(GroveFloor.TileWidth, GroveFloor.TileHeight),
                                     new Vector2(.5f, .5f), Vector2.zero);
                 _ground.raycastTarget = false;
@@ -896,12 +1105,12 @@ namespace GlimmerGrove
                 // A ring rather than a fill, and only on tiles you can build on: an empty tile
                 // has to look like an invitation rather than like a hole, and the whole floor is
                 // empty on the first visit.
-                _ring = UIKit.Img("R", Root, Art.Ring(96, 7f), Pal.A(Pal.Cream, .30f),
+                _ring = UIKit.Img("R", _body, Art.Ring(96, 7f), Pal.A(Pal.Cream, .30f),
                                   new Vector2(EmptyMark, EmptyMark * .5f), new Vector2(.5f, .5f),
                                   Vector2.zero);
                 _ring.raycastTarget = false;
 
-                _art = UIKit.Img("A", Root, null, Color.white, new Vector2(140f, 140f),
+                _art = UIKit.Img("A", _body, null, Color.white, new Vector2(140f, 140f),
                                  new Vector2(.5f, .5f), Vector2.zero);
                 _art.preserveAspect = true;
                 _art.raycastTarget = false;
@@ -909,6 +1118,10 @@ namespace GlimmerGrove
 
             public void Bind(int col, int row)
             {
+                // A cell recycled onto another tile while it was still rising has to let go of
+                // the rise, or the new tile inherits the old one's offset for the rest of it.
+                if (_rising && (col != _riseCol || row != _riseRow)) EndRise();
+
                 var catalog = HomesteadCatalog.Current;
                 var floor = catalog.Floor;
                 string id = GroveFloor.TileId(col, row);
@@ -963,6 +1176,45 @@ namespace GlimmerGrove
                     // rather than pulsing in unison, which reads as a fault rather than as life.
                     Tween.Breathe(_ring.transform, .10f, 2.4f, (col * .37f + row * .61f) % 1f);
                 }
+
+                // Ground the player has just paid for arrives out of the floor rather than
+                // switching on. Asked last, so the tile is fully drawn before it starts moving.
+                if (_screen.TakeArrival(col, row)) BeginRise(col, row);
+            }
+
+            /// <summary>
+            /// One tile of new ground travelling up into its place, overshooting a little as it
+            /// lands.
+            ///
+            /// <para>
+            /// On a channel so a second rise replaces the first rather than running beside it,
+            /// and owned by the body so it dies with the cell. The overshoot is <c>OutBack</c>
+            /// read unclamped — clamping it would flatten precisely the part of the motion that
+            /// makes ground feel like it has weight.
+            /// </para>
+            /// </summary>
+            void BeginRise(int col, int row)
+            {
+                _rising = true;
+                _riseCol = col;
+                _riseRow = row;
+
+                Tween.Run(GroveGrowth.RiseSeconds, Ease.OutBack, t =>
+                {
+                    if (!_body) return;
+                    _body.anchoredPosition = new Vector2(0f, Mathf.LerpUnclamped(-GroveRise.Lift, 0f, t));
+                    _body.localScale = Vector3.one * Mathf.LerpUnclamped(GroveRise.RiseFrom, 1f, t);
+                }, _body, "rise").OnDone(EndRise);
+            }
+
+            void EndRise()
+            {
+                _rising = false;
+                Tween.KillChannel(_body, "rise");
+
+                if (!_body) return;
+                _body.anchoredPosition = Vector2.zero;
+                _body.localScale = Vector3.one;
             }
         }
 
@@ -993,6 +1245,7 @@ namespace GlimmerGrove
         public override void OnPresented()
         {
             _presented = true;
+            StartRise();
             Teach();
         }
 
@@ -1023,6 +1276,12 @@ namespace GlimmerGrove
         {
             if (_taught || _teaching || !_presented) return;
             if (!HomesteadCatalog.IsLoaded || HomesteadCatalog.Current.Floor.IsEmpty) return;
+
+            // Ground arriving takes the screen, and a lesson raised over it would be a modal
+            // in front of the thing the player just paid to watch. The ceremony calls this
+            // itself when it hands the screen back, so nothing is lost by waiting — and a
+            // first visit cannot be one of these anyway, since land costs credits.
+            if (_pending != null || _rise != null) return;
 
             var queue = new List<Mechanic>(2);
 
