@@ -406,6 +406,12 @@ namespace GlimmerGrove
                 yield break;
             }
 
+            // The player gets one sentence; the log gets the reason. Classify puts the
+            // provider's own text into Message and nothing was reading it, so every failure
+            // here looked identical from outside — which cost a diagnosis round trip on the
+            // one flow whose failures are hardest to reproduce.
+            Debug.LogWarning($"[Account] link failed: {result.Failure} · {result.Message}");
+
             Report(result.Failure);
         }
 

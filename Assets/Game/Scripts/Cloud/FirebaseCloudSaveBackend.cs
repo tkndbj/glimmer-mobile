@@ -199,6 +199,10 @@ namespace GlimmerGrove.Cloud
             {
                 if (_auth.CurrentUser == null) await _auth.SignInAnonymouslyAsync();
 
+                var (upgraded, refusal) = await NativeIfRequiredAsync(credential);
+                if (refusal.HasValue) return (refusal.Value, CloudIdentity.None);
+                credential = upgraded;
+
                 if (credential.HasToken)
                     await _auth.CurrentUser.LinkWithCredentialAsync(ToCredential(credential));
                 else
@@ -245,6 +249,10 @@ namespace GlimmerGrove.Cloud
                 // Firebase replaces the current user atomically on success and leaves it alone
                 // on failure, which is the behaviour that is actually wanted: cancelling costs
                 // nothing at all.
+                var (upgraded, refusal) = await NativeIfRequiredAsync(credential);
+                if (refusal.HasValue) return (refusal.Value, CloudIdentity.None);
+                credential = upgraded;
+
                 if (credential.HasToken)
                     await _auth.SignInAndRetrieveDataWithCredentialAsync(ToCredential(credential));
                 else
@@ -267,6 +275,55 @@ namespace GlimmerGrove.Cloud
         /// Firebase drives the OAuth flow itself, so neither Apple's nor Google's Unity
         /// plugin is a dependency of this game. One path, both providers, both platforms.
         /// </summary>
+        /// <summary>
+        /// Fills in the identity token for the one provider that cannot use the generic path.
+        ///
+        /// <para>
+        /// <b>This is not an optimisation and it is not optional.</b> FirebaseAuth on iOS calls
+        /// <c>fatalError</c> — not an exception, an immediate process kill no <c>catch</c> can
+        /// intercept — the moment <c>apple.com</c> reaches <see cref="Provider"/>:
+        /// <c>"Sign in with Apple is not supported via generic IDP"</c>. So the check has to
+        /// happen <em>before</em> the call rather than around it, which is the whole reason this
+        /// is a separate step instead of a try/catch at the call site.
+        /// </para>
+        /// <para>
+        /// Everything else keeps the path it had. Google uses the generic provider on both
+        /// platforms, Apple uses it on Android, and a credential that already carries a token
+        /// is returned untouched — so a caller that obtained one some other way still works.
+        /// </para>
+        /// <para>
+        /// A cancelled sheet is reported as <see cref="CloudFailure.Cancelled"/> rather than an
+        /// error, for the reason <c>SignInWithCredentialAsync</c> gives one comment further
+        /// down: closing a consent screen is the most ordinary outcome in the flow, and calling
+        /// it a failure tells a player their progress could not be saved because they changed
+        /// their mind.
+        /// </para>
+        /// </summary>
+        static async Task<(LinkCredential credential, CloudResult? refusal)> NativeIfRequiredAsync(
+            LinkCredential credential)
+        {
+            if (credential.HasToken) return (credential, null);
+            if (credential.ProviderId != LinkCredential.Apple) return (credential, null);
+            if (!AppleSignIn.IsSupported) return (credential, null);
+
+            var result = await AppleSignIn.RequestAsync();
+
+            switch (result.Outcome)
+            {
+                case AppleSignIn.Outcome.Succeeded:
+                    return (new LinkCredential(LinkCredential.Apple, result.IdToken,
+                                               result.AuthorizationCode, result.RawNonce), null);
+
+                case AppleSignIn.Outcome.Cancelled:
+                    return (credential, CloudResult.Failed(CloudFailure.Cancelled,
+                                                           "sign in with Apple was cancelled"));
+
+                default:
+                    return (credential, CloudResult.Failed(CloudFailure.Rejected,
+                                                           result.Error ?? "sign in with Apple failed"));
+            }
+        }
+
         static FederatedOAuthProvider Provider(string providerId)
         {
             var data = new FederatedOAuthProviderData { ProviderId = providerId };
@@ -287,7 +344,7 @@ namespace GlimmerGrove.Cloud
         static Credential ToCredential(LinkCredential credential)
             => credential.ProviderId == LinkCredential.Apple
                 ? OAuthProvider.GetCredential(LinkCredential.Apple, credential.IdToken,
-                                              credential.RawNonce, null)
+                                              credential.RawNonce, credential.AccessToken)
                 : GoogleAuthProvider.GetCredential(credential.IdToken, credential.AccessToken);
 
         /// <summary>

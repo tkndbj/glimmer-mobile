@@ -214,7 +214,18 @@ namespace GlimmerGrove.Cloud
         /// <summary>The OIDC identity token, when a native sheet produced one.</summary>
         public readonly string IdToken;
 
-        /// <summary>Google's OAuth access token. Unused by Apple.</summary>
+        /// <summary>
+        /// Google's OAuth access token — and, for Apple, the <em>authorization code</em>.
+        ///
+        /// <para>
+        /// This said "unused by Apple" for as long as nothing on iOS produced an Apple token,
+        /// and it was wrong. Firebase's <c>GetCredential</c> names its fourth parameter
+        /// <c>accessToken</c>, and for <c>apple.com</c> what belongs there is the
+        /// <c>authorizationCode</c> off Apple's credential. Sending only the identity token is
+        /// refused with <c>"Invalid OAuth response from apple.com"</c> — indistinguishable from
+        /// a malformed token or a mismatched nonce, which is what made it expensive to find.
+        /// </para>
+        /// </summary>
         public readonly string AccessToken;
 
         /// <summary>The unhashed nonce that was passed to Apple. Unused by Google.</summary>
