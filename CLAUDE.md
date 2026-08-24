@@ -1147,10 +1147,12 @@ The watch buttons carry a play glyph in front of the label, centred with it as o
 `UIKit.FitLabel` — which any path that repaints a caption has to call, because the captions
 here are countdowns.
 
-`AdConfig` holds `UNSET` for the app key and every ad unit, exactly as the store secrets do,
-so `Boot` keeps the null provider until a LevelPlay account exists. Filling those in, plus
-the `LEVELPLAY_SECRET` in Secret Manager and the callback URL on the dashboard, is the whole
-remaining step.
+`AdConfig` ships `UNSET` as the sentinel for the app key and every ad unit, so `Boot` keeps
+the null provider until a LevelPlay account exists. **Both platforms are now filled in** —
+Android and iOS app keys and all five ad units each — and `LEVELPLAY_SECRET` is set. What
+remains is demand rather than configuration: every placement answers
+`Mediation No fill (509)` because the app has no store listing yet and only two adapters are
+installed.
 
 **Retention: the run outcome, the streak, the golden glade, the calendar, the percentile.**
 Five features that all hang off one seam. `RunOutcome` (Domain/Board) is decided once by
@@ -2500,11 +2502,33 @@ publish a ladder that gets worse as it gets bigger; `products.example.json` is g
 `StoreTests` adds 17 cases (offline suite **657**), `firebase/functions/test/store.mjs` adds 18,
 and `Validate Content` errors — not warns — on the three shop mistakes no reader can catch.
 
-**What is still needed before a penny moves:** the thirteen products created in App Store
-Connect and the Play Console with exactly these ids and kinds, the four store secrets filled in
-(they still hold `UNSET`, so every receipt is refused, which is correct), **View financial data**
-on the Play service account for the refund sweep, the `appleNotification` URL set for both the
-production and sandbox environments, and a redeploy of the functions.
+**Live and verified on iOS as of 2026-08-24.** The thirteen products exist in App Store
+Connect, all five secrets are set, and a sandbox purchase of `gg_gems_1` was redeemed end to
+end — `{"message":"purchase redeemed","granted":{"gems":100},"sandbox":true}`. Still owed:
+the same thirteen products in the Play Console, **View financial data** on the Play service
+account for the refund sweep, and the `appleNotification` URL registered for both the
+production and sandbox environments.
+
+**A secret is pinned at deploy time, and that is how a correct key produces a 401.** Firebase
+Functions v2 records the secret *version* in the function's config, so
+`firebase functions:secrets:set` changes nothing about a running function until it is
+redeployed. `redeemPurchase` spent a day signing App Store Server API tokens with version 2 of
+`APPLE_KEY_ID` while `firebase functions:secrets:access` — which reads *latest* — showed
+version 3. Both readings were true at once, which is what made it expensive: every credential
+checked out, and the running code had different ones. Apple answers a bad key with
+`401 App Store Server API refused the lookup`, which is indistinguishable from a revoked key
+or a wrong issuer id.
+
+Two things follow. **Redeploy every function that names a secret after setting it**, not only
+the one being worked on — `appleNotification` shares these three and was equally stale, so
+refunds would have silently failed to reverse. And **destroy the old versions** once nothing
+uses them (`firebase functions:secrets:destroy NAME@n`; `secrets:prune` will not, because it
+counts a secret as in use by name rather than by version), so a stale pin fails loudly at
+startup instead of signing with the wrong key for ever.
+
+One note for anyone reading `redeemPurchase` logs: a **401 from the production endpoint
+followed by success on the sandbox one is the normal path** for a sandbox purchase, because
+the transaction does not exist in production. The failure is both endpoints refusing.
 
 **The Grovement keeps its own score, and the display stopped hiding under the camera.**
 Three changes to one screen, and the first is the one that was not only about that screen.

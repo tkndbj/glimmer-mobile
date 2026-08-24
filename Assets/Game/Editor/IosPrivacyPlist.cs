@@ -85,9 +85,32 @@ namespace GlimmerGrove.EditorTools
             // Apple actually reads.
             plist.root.SetString("NSUserTrackingUsageDescription", TrackingUsage);
 
+            // Export compliance, declared here rather than answered by hand on every upload.
+            //
+            // App Store Connect asks the encryption question for each build, and answering it
+            // in the console is a step somebody performs while trying to ship — which is
+            // exactly when a wrong answer is cheapest to give and most expensive to have
+            // given. Declaring it in the binary means the question stops being asked and the
+            // answer lives in version control where a diff shows it changing.
+            //
+            // False is the correct answer for this game, and the reason is narrow enough to
+            // write down: the exemption covers an app whose only cryptography is the HTTPS
+            // its platform provides, plus standard hashing that is not used to protect data
+            // in transit. Everything here fits — Firebase and the ad SDKs talk TLS through
+            // the OS, SaveChecksum and the daily-chest roll are FNV-1a and xorshift over
+            // local data, and SHA-256 appears once, on the Sign in with Apple nonce, which
+            // is a replay guard rather than a cipher. Nothing in this app implements or
+            // bundles an encryption algorithm of its own.
+            //
+            // If that ever stops being true — a bundled cipher, an encrypted save, a custom
+            // secure channel — this line has to change with it, because it is a declaration
+            // to a regulator rather than a convenience.
+            plist.root.SetBoolean("ITSAppUsesNonExemptEncryption", false);
+
             plist.WriteToFile(plistPath);
 
-            Debug.Log("[Privacy] NSUserTrackingUsageDescription written into Info.plist");
+            Debug.Log("[Privacy] NSUserTrackingUsageDescription and ITSAppUsesNonExemptEncryption " +
+                      "written into Info.plist");
 
             LinkTrackingFramework(pathToBuiltProject);
         }
