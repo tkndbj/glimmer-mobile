@@ -97,3 +97,13 @@ firebase-debug.*.log
 # credentials from the environment instead; see DevBuild.KeystoreEnv.
 *.keystore
 *.jks
+
+# The generated Xcode project. Unity rewrites this whole tree on every iOS build
+# (Classes/, Data/, Libraries/, Il2CppOutputProject/, Frameworks/), CocoaPods writes
+# Pods/ and the .xcworkspace into it, and the Firebase editor script copies
+# GoogleService-Info.plist in. It is ~1 GB, it is a pure function of the project plus
+# the two resolver steps, and nothing in it is authored — so committing it means a
+# gigabyte of churn per build and a stale copy that eventually gets opened by mistake.
+# Regenerate with: Build Profiles > iOS > Build (the workspace is produced by the
+# post-build CocoaPods step; see IosWorkspaceGuard).
+/glimmer-ios-builds/

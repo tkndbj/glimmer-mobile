@@ -14,27 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Unity.Addressables.Editor::UnityEditor.AddressableAssets.Settings.AddressableAssetGroup
   m_GroupName: Glimmer Chapter h01_emberfall
   m_GUID: 0188415b36b128a4a804541930f73763
-  m_SerializeEntries:
-  - m_GUID: 22427555a74699340bb21242076f2771
-    m_Address: Art/Map/h01_strip0
-    m_ReadOnly: 0
-    m_SerializedLabels: []
-    FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: 4c21ac22fa11d9d429a3e55c63856af7
-    m_Address: Art/Map/h01_strip1
-    m_ReadOnly: 0
-    m_SerializedLabels: []
-    FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: da75ae6d2839a8b4db8767487bdfbdbd
-    m_Address: Art/Map/h01_strip2
-    m_ReadOnly: 0
-    m_SerializedLabels: []
-    FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: e4724e59a29c29741953b1a0619a22ce
-    m_Address: Art/Bg/h01_play_0
-    m_ReadOnly: 0
-    m_SerializedLabels: []
-    FlaggedDuringContentUpdateRestriction: 0
+  m_SerializeEntries: []
   m_ReadOnly: 0
   m_Settings: {fileID: 11400000, guid: 6c4c5f6eb57af6542b195d29840b42f2, type: 2}
   m_SchemaSet:

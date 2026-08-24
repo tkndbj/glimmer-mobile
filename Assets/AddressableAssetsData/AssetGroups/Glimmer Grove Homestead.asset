@@ -105,6 +105,11 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 0ff8f10b0e00b2b4b9693ff7c04ab7d3
+    m_Address: Art/Homestead/Anim/flag_red
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 111a1dabf3c36654ca38cc8f3aab23b9
     m_Address: Art/Homestead/Anim/flag_red/f05
     m_ReadOnly: 0
@@ -231,6 +236,11 @@ MonoBehaviour:
     m_SerializedLabels:
     - Art/Homestead/Anim/crystal
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 2b0a5326c6e141c45a410d8e02f99572
+    m_Address: Art/Homestead/Anim/torch_low
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 2b74ef0ffe4471846a378cfd5b564a5f
     m_Address: Art/Homestead/Anim/torch_low/f04
     m_ReadOnly: 0
@@ -352,6 +362,11 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels:
     - Art/Homestead/Anim/well
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 42a1c8e7c4f1f274996e928663cffc63
+    m_Address: Art/Homestead/Anim
+    m_ReadOnly: 0
+    m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 43f0c6b812a859d409cdd8ab22d17e22
     m_Address: Art/Homestead/Anim/well/f03
@@ -525,6 +540,11 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 69379d07ed1a40041aa3a1a1cf674cea
+    m_Address: Art/Homestead/Anim/torch
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 69c47e25cb54c3c4f95b8d5d5f8277e0
     m_Address: Art/Homestead/broken_pillars
     m_ReadOnly: 0
@@ -552,6 +572,11 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 6f249bb7bf82ac2429118bde0ff01c7b
+    m_Address: Art/Homestead/Anim/candle
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 7215a3a814924fc4b8838273e5388376
     m_Address: Art/Homestead/gravel
     m_ReadOnly: 0
@@ -564,6 +589,11 @@ MonoBehaviour:
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 73d97d0fc7428444b84075921a323251
     m_Address: Art/Homestead/flat_stone
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 757ee3f9c7b92ce40ab822d92382087d
+    m_Address: Art/Homestead/Anim/torch_tall
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
@@ -647,6 +677,11 @@ MonoBehaviour:
     m_SerializedLabels:
     - Art/Homestead/Anim/torch
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 8e304b2a046160548a16d02a75349dc1
+    m_Address: Art/Homestead/Anim/crystal
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 8f24e521fb254114c968fca637a0057a
     m_Address: Art/Homestead/ladder
     m_ReadOnly: 0
@@ -675,6 +710,11 @@ MonoBehaviour:
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 96159a4b21dbaf9469bcbe8a5d316f0e
     m_Address: Art/Homestead/fence_timber_end
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 96527b5f6b2ab6140957d4fd2dd45db3
+    m_Address: Art/Homestead/Anim/well
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
@@ -713,6 +753,11 @@ MonoBehaviour:
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 9b95a80b1c2cb9a48869fee9f28c37c3
     m_Address: Art/Homestead/rope_walk_turn
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 9e4007e20573c4e4386d52e99d414b99
+    m_Address: Art/Homestead/Anim/banner_crimson
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
@@ -903,6 +948,11 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: bddc4e26bcaa5d243ab9b466bf261bc6
+    m_Address: Art/Homestead/Anim/waterfall
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: bde6527e07e9cef4a979220dd57f207e
     m_Address: Art/Homestead/Anim/well/f00
     m_ReadOnly: 0
@@ -948,6 +998,11 @@ MonoBehaviour:
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: c7c879f29b38f7e42b87fa2ade7e177b
     m_Address: Art/Homestead/ice_stump
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: c96629a236fe03e40b14e2af954dd3bf
+    m_Address: Art/Homestead/Anim/crystal_shards
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
@@ -1199,6 +1254,11 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: f65e8ba7c8f486043884bb2cac260886
+    m_Address: Art/Homestead/Anim/lantern
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: f83f2528b3914b0586e0ef335cd30a94
     m_Address: Art/Homestead/blossom
     m_ReadOnly: 0
@@ -1231,6 +1291,11 @@ MonoBehaviour:
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: fc63375967819ec4c99ab5293828c951
     m_Address: Art/Homestead/tree_slim
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: fe8fa795d7f789943b066a9a3bd583df
+    m_Address: Art/Homestead/Anim/banner_gold
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0

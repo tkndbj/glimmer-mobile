@@ -14,22 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Unity.Addressables.Editor::UnityEditor.AddressableAssets.Settings.AddressableAssetGroup
   m_GroupName: Glimmer Chapter x02_lab
   m_GUID: ffdbf233a5de9924f9b402e5e22ab4bf
-  m_SerializeEntries:
-  - m_GUID: 4108d579ba3da4346b1a886fd7646a21
-    m_Address: Art/Map/x02_strip1
-    m_ReadOnly: 0
-    m_SerializedLabels: []
-    FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: 88fd2ffc4fb698f41a67f175b2d841fd
-    m_Address: Art/Bg/x02_play_0
-    m_ReadOnly: 0
-    m_SerializedLabels: []
-    FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: defdc791d3b85544d8db268b19f65ae2
-    m_Address: Art/Map/x02_strip0
-    m_ReadOnly: 0
-    m_SerializedLabels: []
-    FlaggedDuringContentUpdateRestriction: 0
+  m_SerializeEntries: []
   m_ReadOnly: 0
   m_Settings: {fileID: 11400000, guid: 6c4c5f6eb57af6542b195d29840b42f2, type: 2}
   m_SchemaSet:
