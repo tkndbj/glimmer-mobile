@@ -303,26 +303,63 @@ namespace GlimmerGrove.Cloud
             LinkCredential credential)
         {
             if (credential.HasToken) return (credential, null);
-            if (credential.ProviderId != LinkCredential.Apple) return (credential, null);
-            if (!AppleSignIn.IsSupported) return (credential, null);
 
-            var result = await AppleSignIn.RequestAsync();
-
-            switch (result.Outcome)
+            if (credential.ProviderId == LinkCredential.Apple && AppleSignIn.IsSupported)
             {
-                case AppleSignIn.Outcome.Succeeded:
-                    return (new LinkCredential(LinkCredential.Apple, result.IdToken,
-                                               result.AuthorizationCode, result.RawNonce), null);
+                var apple = await AppleSignIn.RequestAsync();
 
-                case AppleSignIn.Outcome.Cancelled:
-                    return (credential, CloudResult.Failed(CloudFailure.Cancelled,
-                                                           "sign in with Apple was cancelled"));
+                switch (apple.Outcome)
+                {
+                    case AppleSignIn.Outcome.Succeeded:
+                        return (new LinkCredential(LinkCredential.Apple, apple.IdToken,
+                                                   apple.AuthorizationCode, apple.RawNonce), null);
 
-                default:
-                    return (credential, CloudResult.Failed(CloudFailure.Rejected,
-                                                           result.Error ?? "sign in with Apple failed"));
+                    case AppleSignIn.Outcome.Cancelled:
+                        return (credential, CloudResult.Failed(CloudFailure.Cancelled,
+                                                               "sign in with Apple was cancelled"));
+
+                    default:
+                        return (credential, CloudResult.Failed(CloudFailure.Rejected,
+                                                               apple.Error ?? "sign in with Apple failed"));
+                }
             }
+
+            if (credential.ProviderId == LinkCredential.Google && GoogleSignIn.IsSupported)
+            {
+                var google = await GoogleSignIn.RequestAsync(GoogleClientId);
+
+                switch (google.Outcome)
+                {
+                    case GoogleSignIn.Outcome.Succeeded:
+                        return (new LinkCredential(LinkCredential.Google, google.IdToken,
+                                                   google.AccessToken), null);
+
+                    case GoogleSignIn.Outcome.Cancelled:
+                        return (credential, CloudResult.Failed(CloudFailure.Cancelled,
+                                                               "signing in with Google was cancelled"));
+
+                    default:
+                        return (credential, CloudResult.Failed(CloudFailure.Rejected,
+                                                               google.Error ?? "signing in with Google failed"));
+                }
+            }
+
+            return (credential, null);
         }
+
+        /// <summary>
+        /// The <em>iOS</em> OAuth client id.
+        ///
+        /// <para>
+        /// Deliberately not the web client the hosted handler used: a native PKCE flow
+        /// authenticates as the iOS client, which is the one whose reversed-id redirect scheme
+        /// is registered in this app's <c>Info.plist</c>. It is read out of the bundled
+        /// <c>GoogleService-Info.plist</c> by <see cref="GoogleSignIn.ClientId"/> rather than
+        /// written down here, because Firebase's managed <c>AppOptions</c> does not expose it
+        /// and a copy in C# is a copy that can drift from the plist the same tool generated.
+        /// </para>
+        /// </summary>
+        static string GoogleClientId => GoogleSignIn.ClientId;
 
         static FederatedOAuthProvider Provider(string providerId)
         {
