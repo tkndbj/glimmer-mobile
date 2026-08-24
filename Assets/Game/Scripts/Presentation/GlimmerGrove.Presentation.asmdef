@@ -5,6 +5,7 @@
         "GlimmerGrove.Domain",
         "GlimmerGrove.Cloud",
         "GlimmerGrove.Ads",
+        "GlimmerGrove.Iap",
         "UnityEngine.UI",
         "GlimmerGrove.Privacy"
     ],
@@ -30,6 +31,11 @@
             "name": "com.unity.services.levelplay",
             "expression": "9.0",
             "define": "GLIMMER_ADS"
+        },
+        {
+            "name": "com.unity.purchasing",
+            "expression": "5.0",
+            "define": "GLIMMER_IAP"
         }
     ],
     "noEngineReferences": false
