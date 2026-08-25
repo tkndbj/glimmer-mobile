@@ -103,13 +103,22 @@
     },
     {
       "id": "w01_lightweave",
-      "version": 1,
+      "version": 2,
       "order": 70,
       "disabled": false,
       "minAppVersion": 0,
       "mode": "weave",
       "levels": [
-        "w01_first_weave"
+        "w01_first_weave",
+        "w01_two_threads",
+        "w01_the_shuttle",
+        "w01_tight_warp",
+        "w01_five_lanterns",
+        "w01_the_long_skein",
+        "w01_close_quarters",
+        "w01_six_sleepers",
+        "w01_the_tangle",
+        "w01_the_weftwood_knot"
       ]
     }
   ],
@@ -133,30 +142,12 @@
         "c01_grovekeepers_knot"
       ],
       "milestones": [
-        {
-          "goal": 1,
-          "credits": 60
-        },
-        {
-          "goal": 2,
-          "credits": 90
-        },
-        {
-          "goal": 4,
-          "credits": 250
-        },
-        {
-          "goal": 6,
-          "credits": 400
-        },
-        {
-          "goal": 8,
-          "credits": 600
-        },
-        {
-          "goal": 10,
-          "credits": 1000
-        }
+        { "goal": 1, "credits": 60 },
+        { "goal": 2, "credits": 90 },
+        { "goal": 4, "credits": 250 },
+        { "goal": 6, "credits": 400 },
+        { "goal": 8, "credits": 600 },
+        { "goal": 10, "credits": 1000 }
       ]
     }
   ],

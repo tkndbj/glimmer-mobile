@@ -122,6 +122,28 @@ namespace GlimmerGrove
         const float Feather = 1.35f;
         static float Cover(float d) => Mathf.Clamp01(.5f - d / Feather);
 
+        /// <summary>
+        /// A capsule whose radius changes along its length — a finger, or a thumb.
+        ///
+        /// The radius is interpolated rather than solved for the true slanted cone, which
+        /// understates the distance slightly along a strong taper. That is invisible here: the
+        /// only consumers are <see cref="Cover"/> and an outline a couple of pixels wide, and
+        /// both want a smooth monotonic field rather than a metrically exact one.
+        /// </summary>
+        static float SdRoundCone(float px, float py, float ax, float ay, float bx, float by,
+                                 float ra, float rb)
+        {
+            float bax = bx - ax, bay = by - ay;
+            float l2 = bax * bax + bay * bay;
+            if (l2 < 1e-9f)
+                return Mathf.Sqrt((px - ax) * (px - ax) + (py - ay) * (py - ay)) - ra;
+
+            float t = Mathf.Clamp01(((px - ax) * bax + (py - ay) * bay) / l2);
+            float cx = ax + bax * t, cy = ay + bay * t;
+
+            return Mathf.Sqrt((px - cx) * (px - cx) + (py - cy) * (py - cy)) - Mathf.Lerp(ra, rb, t);
+        }
+
         static float SdRoundBox(float px, float py, float cx, float cy, float hx, float hy, float r)
         {
             float qx = Mathf.Abs(px - cx) - (hx - r);
@@ -207,6 +229,40 @@ namespace GlimmerGrove
             {
                 float dx = x - h, dy = y - h;
                 float d = Mathf.Sqrt(dx * dx + dy * dy) - r;
+                return Cover(Mathf.Abs(d) - thickness * .5f);
+            });
+        }
+
+        /// <summary>
+        /// A hexagonal ring: the silhouette a Lightweave bead wears.
+        ///
+        /// <para>
+        /// <b>It exists because a circle was already taken.</b> A bead was first drawn with
+        /// <see cref="Ring"/>, which is also what a sleeping critter wears to say which colour it
+        /// wants — so a grove came out carrying eleven rings in six colours, five of them places
+        /// to go through and six of them creatures to reach, told apart only by whether something
+        /// was standing inside. That is a distinction you have to look for, on the one screen
+        /// where reading the board at a glance is the entire game. A hexagon is a third
+        /// silhouette against the critter's circle and the crystal's diamond, and it is legible
+        /// at a cell's width on a phone, which a dashed or double ring is not.
+        /// </para>
+        /// <para>
+        /// Hollow, and that is the half that carries the meaning: a bead is somewhere light
+        /// passes <em>through</em>, and its own channel is drawn through the hole. A filled shape
+        /// would read as a thing in the way, which is exactly the wrong half of what it is.
+        /// </para>
+        /// </summary>
+        public static Sprite HexRing(int size = 128, float thickness = 10f)
+        {
+            float h = size * .5f;
+            float r = h - thickness * .5f - 1f;
+
+            return Make($"hexring{size}_{thickness}", size, size, (x, y) =>
+            {
+                // The same flat-topped hexagon Hex draws, as a signed distance in pixels so the
+                // ring is the same width all the way round rather than pinching at the corners.
+                float dx = Mathf.Abs(x - h), dy = Mathf.Abs(y - h);
+                float d = Mathf.Max(dx * .866f + dy * .5f, dy) - r;
                 return Cover(Mathf.Abs(d) - thickness * .5f);
             });
         }
@@ -681,6 +737,124 @@ namespace GlimmerGrove
             // Past the tip the half-width goes negative, so the coverage fades out on its own
             // rather than being cut off — a spike that ends in a hard edge reads as a chip.
             return Cover((Mathf.Abs(u - centre) - .095f * (1f - t)) * size);
+        }
+
+        /// <summary>
+        /// A pointing hand, for the lessons that teach a gesture rather than a rule.
+        ///
+        /// <para>
+        /// <b>Generated, and this is the strongest case of any of them.</b> An <c>Image</c>
+        /// whose sprite has not arrived is a white rectangle, and this one is drawn on top of a
+        /// dimmed board over a modal that is only ever shown once in a player's life — there is
+        /// no second showing to catch it at. A hand is also chrome in the strictest sense: it
+        /// belongs to no chapter, so it would sit in the global group and be loaded by every
+        /// screen in the game to be used by two.
+        /// </para>
+        /// <para>
+        /// Painted with <see cref="MakeRGBA"/> rather than as a white mask, because it needs an
+        /// ink rim and a drop shadow of its own. A tinted mask cannot carry either, and without
+        /// them the glyph disappears wherever the board underneath it happens to be pale — which
+        /// on a grove is wherever a channel has just been drawn, so the hand would vanish exactly
+        /// where it is doing its work.
+        /// </para>
+        /// <para>
+        /// The fingertip is at <c>(.251, .89)</c> of the sprite, and callers pivot there rather
+        /// than at the centre: the point of the demonstration is where the finger is, and a hand
+        /// centred on the cell it is pressing covers the cell.
+        /// </para>
+        /// </summary>
+        public static Sprite Hand(int size = 128)
+        {
+            var ink = new Color(.08f, .11f, .16f, 1f);
+            var lit = Color.white;
+            var shade = new Color(.76f, .81f, .88f, 1f);
+            var deep = new Color(.55f, .62f, .74f, 1f);
+            var shadow = new Color(.01f, .03f, .06f, .45f);
+
+            float rim = size * .026f;
+            float drop = size * .045f;
+            float soft = size * .090f;
+
+            // The light is up and to the left, so the form turns away along its lower-right.
+            // Measured by asking how close a point is to the edge *in that direction* rather
+            // than by a second gradient: a gradient darkens the bottom of the finger and the
+            // bottom of the fist by the same amount, which is a flat shape with a flat shadow
+            // on it. This one follows the silhouette, so the thumb rounds and the cuff sits
+            // behind the knuckles.
+            float turn = size * .055f;
+            float band = size * .085f;
+
+            return MakeRGBA($"hand{size}", size, size, (x, y) =>
+            {
+                float d = HandSd(x, y, size);
+
+                // The shadow is the shape sampled a little above, so it falls below the hand.
+                // Ramped over several pixels rather than through Cover, because a hard-edged
+                // shadow reads as a second, darker hand.
+                float below = HandSd(x, y + drop, size);
+                Color c = Over(default, shadow, Mathf.Clamp01(.5f - below / soft));
+
+                c = Over(c, ink, Cover(d - rim));
+
+                // Whiter at the fingertip than at the wrist, which is all the modelling a
+                // silhouette this size can carry — a highlight and a shaded edge on top of it
+                // would only be two more things to read.
+                float v = Mathf.Clamp01((y / size - .08f) / .82f);
+                var body = Color.Lerp(shade, lit, v * v * (3f - 2f * v));
+
+                float t = Mathf.Clamp01(HandSd(x + turn, y - turn, size) / band);
+                body = Color.Lerp(body, deep, t * t * (3f - 2f * t) * .75f);
+
+                c = Over(c, body, Cover(d));
+
+                return c;
+            });
+        }
+
+        /// <summary>
+        /// Signed distance, in pixels, to the hand: an index finger up, a thumb out and the
+        /// rest closed.
+        ///
+        /// <para>
+        /// The two scallops are subtracted from the closed side, and they are what make it a
+        /// fist rather than a mitten — without them the silhouette reads as a glove, which is
+        /// the one shape that does not say "your finger goes here".
+        /// </para>
+        /// </summary>
+        static float HandSd(float x, float y, int size)
+        {
+            // Sampled in the glyph's own frame, which is tilted anticlockwise about the centre
+            // of the sprite. A pointing hand drawn upright is not a pointing hand — a single
+            // finger raised straight up from a closed fist is a gesture this game must never
+            // put on a teaching panel in any market, and no amount of thumb makes it read as
+            // anything else. The tilt is the fix rather than a flourish: it is what puts the
+            // fingertip up and to one side of the knuckles, which is the whole silhouette of
+            // pointing, and it is also the angle a real hand reaches a phone screen at.
+            const float Tilt = .32f;                                    // radians, about 18 degrees
+            const float Scale = .92f, Lift = .035f;                     // room for the rim and the shadow
+
+            float cos = Mathf.Cos(Tilt), sin = Mathf.Sin(Tilt);
+
+            float px = (x / size - .5f) / Scale, py = (y / size - .5f - Lift) / Scale;
+            float u = px * cos + py * sin + .5f;
+            float v = -px * sin + py * cos + .5f;
+
+            // The finger and the thumb taper and the wrist ends in a cuff, which is the whole
+            // difference between this and the four flat boxes it replaced. A limb of constant
+            // width reads as a tube, so the old glyph was a mitten with a spike on it: fine at a
+            // glance and visibly cheap at the 156 points it is actually drawn at.
+            float d = SdRoundBox(u, v, .530f, .330f, .215f, .190f, .110f);                      // closed hand
+            d = Mathf.Min(d, SdRoundCone(u, v, .382f, .470f, .372f, .930f, .090f, .064f));      // index finger
+            d = Mathf.Min(d, SdRoundCone(u, v, .330f, .398f, .268f, .318f, .078f, .066f));      // thumb
+            d = Mathf.Min(d, SdRoundBox(u, v, .535f, .060f, .152f, .150f, .072f));              // wrist
+
+            // Scalloped out of the closed side, and they carry more of the read than they look
+            // like they should: without them the silhouette is a mitten, and a mitten with one
+            // finger out is the shape this glyph is not allowed to be.
+            d = Mathf.Max(d, -(Mathf.Sqrt((u - .775f) * (u - .775f) + (v - .470f) * (v - .470f)) - .078f));
+            d = Mathf.Max(d, -(Mathf.Sqrt((u - .793f) * (u - .793f) + (v - .290f) * (v - .290f)) - .074f));
+
+            return d * size * Scale;
         }
 
         /// <summary>Screen vignette; dark at the edges, clear in the middle.</summary>

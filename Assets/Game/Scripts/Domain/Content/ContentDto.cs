@@ -411,6 +411,24 @@ namespace GlimmerGrove.Content
 
         public int seed;
 
+        /// <summary>
+        /// How many beads to drop on the grove — cells a channel must be threaded through, drawn
+        /// in the colour of the channel that owes them.
+        ///
+        /// <para>
+        /// Where they land is generated, like the endpoints and for the same reason: a bead is
+        /// only worth placing on a cell that lies off every shortest route between its pair's
+        /// ends, and which cells those are is a fact about a board nobody has seen yet. See
+        /// <c>WeaveGenerator.Thread</c>.
+        /// </para>
+        /// <para>
+        /// Absent means none, which is what the first rungs of a chapter want: the mode's own
+        /// rule — join every pair, cross nothing — is worth meeting on its own before anything is
+        /// added to it.
+        /// </para>
+        /// </summary>
+        public int beads;
+
         public bool IsAuthored => pairs > 0 || width > 0 || height > 0;
     }
 

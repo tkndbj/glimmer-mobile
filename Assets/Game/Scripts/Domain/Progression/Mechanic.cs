@@ -43,7 +43,7 @@ namespace GlimmerGrove.Progression
         public static readonly Mechanic Briar = new Mechanic("briar");
 
         // ------------------------------------------------------------- screens
-        // Two things a board cannot teach, because they are not on one. They ride this type
+        // Four things a glade board cannot teach, because they are not on one. They ride this type
         // rather than a parallel one because everything about a lesson is already here and
         // already stored: the id is permanent, the strings derive from it, and TipLedger is a
         // union-joined set that reaches the cloud with no new field. A second "thing to teach
@@ -52,7 +52,43 @@ namespace GlimmerGrove.Progression
         //
         // They are deliberately absent from TeachingOrder, which is the *board* scan's queue —
         // see the remarks there. A screen tip is raised by the screen that owns it, because
-        // nothing about a board implies the player has opened the Grovement.
+        // nothing about a board implies the player has opened the Grovement, and nothing about
+        // a glade implies they have ever met a second mode.
+
+        /// <summary>
+        /// Lightweave's rule: join every pair, and never let two channels cross.
+        ///
+        /// <para>
+        /// A board very nearly shows this on its own — a refused drag says "not here" the first
+        /// time a finger tries to cut across somebody — but "nearly" is doing a lot of work in a
+        /// mode a player meets after four chapters of tapping tiles, where the very first thing
+        /// they must know is that this one is dragged rather than tapped. Two sentences before
+        /// the first grove costs a few seconds once in a lifetime.
+        /// </para>
+        /// <para>
+        /// <b>The retired id here is <c>weave_fill</c>, and it must never be reused.</b> It
+        /// taught the mode's old win condition: every critter awake <em>and</em> no bare ground
+        /// left anywhere. That rule is gone — it was invisible on the board, it made the sensible
+        /// route almost always wrong, and the state it produced (every critter awake, nothing
+        /// happening) was reported from play as a bug and was indistinguishable from one. What
+        /// replaced it is <see cref="WeaveBead"/>, which asks for the same thinking and can be
+        /// pointed at. A lesson id travels in the save file exactly like a level id, so the old
+        /// one stays spent for ever rather than being re-pointed at a rule it never described.
+        /// </para>
+        /// </summary>
+        public static readonly Mechanic WeaveJoin = new Mechanic("weave_join");
+
+        /// <summary>
+        /// A bead: a cell one channel must be threaded through, and no other channel may enter.
+        ///
+        /// <para>
+        /// The half of it a board cannot show is which half it is being. A ring in a colour is
+        /// plainly <em>something</em>, and a player meeting one will read it either as a place to
+        /// go or as a thing to avoid — and both readings are correct, for different colours, at
+        /// the same time. That is not something to be discovered by losing a run to it.
+        /// </para>
+        /// </summary>
+        public static readonly Mechanic WeaveBead = new Mechanic("weave_bead");
 
         /// <summary>What the Grovement is, shown once on the player's first visit.</summary>
         public static readonly Mechanic Grove = new Mechanic("grove");
@@ -118,7 +154,7 @@ namespace GlimmerGrove.Progression
         public static readonly Mechanic[] All =
         {
             FragileConduit, MoveBudget, RootedTile, ColourMixing, Duskcap, Crossing, Briar,
-            BoundConduit, Grove, GroveShop,
+            BoundConduit, WeaveJoin, WeaveBead, Grove, GroveShop,
         };
 
         public bool IsValid => !string.IsNullOrEmpty(Id);

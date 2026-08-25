@@ -6,25 +6,30 @@ namespace GlimmerGrove.Modes
     /// Builds a Lightweave puzzle that is guaranteed to be solvable, by building its solution.
     ///
     /// <para>
-    /// <b>Carve, then hide.</b> Four self-avoiding walks are grown through the grove, each one
-    /// only ever entering cells no earlier walk took. What is handed to the player is the two
-    /// ends of each walk and nothing else — so the board they are given demonstrably has at
-    /// least one arrangement, because the generator just drew one. The alternative, scattering
-    /// eight endpoints and checking afterwards, is both slower and worse: most scatterings have
-    /// no solution at all, and a search that says so cannot tell you what to do about it.
+    /// <b>Carve, then hide.</b> Self-avoiding walks are grown through the grove, each one only
+    /// ever entering cells no earlier walk took. What is handed to the player is the two ends of
+    /// each walk, a few beads dropped along them, and nothing else — so the board they are given
+    /// demonstrably has at least one arrangement, because the generator just drew one. The
+    /// alternative, scattering endpoints and checking afterwards, is both slower and worse: most
+    /// scatterings have no solution at all, and a search that says so cannot tell you what to do
+    /// about it.
     /// </para>
     /// <para>
-    /// <b>Difficulty is congestion, and the bar is a full grove.</b> A board whose paths use a
-    /// third of the ground has so much slack that almost any route works, which reads as no
-    /// puzzle at all. So a board is accepted only when its four channels use <em>every cell</em>
-    /// — there is no spare ground anywhere, which is what makes the no-crossing rule bite on
-    /// every step rather than only in the tight corners. Measured over three hundred seeds a
-    /// complete grove turns up within three attempts, so demanding one costs nothing.
+    /// <b>Difficulty is contention, and the bar is that nobody can have their way.</b> This used
+    /// to be congestion — a board was accepted only when its channels covered every cell, because
+    /// covering every cell was also what the player had to do. That rule is gone: a channel now
+    /// runs wherever the player likes. So the carve still fills the grove, but for a different
+    /// reason and to a different end — filling is what pushes the endpoints out to the edges and
+    /// interleaves the routes between them, and what a board is now <em>accepted</em> on is
+    /// <see cref="WeaveSolver.AnyTautSolution"/>: there must be no arrangement in which every
+    /// single pair is drawn as directly as it could possibly be drawn. One pair always can; the
+    /// board is refused when all of them can at once, because that board is six drags and a
+    /// celebration.
     /// </para>
     /// <para>
     /// <b>A walk is given a budget, and that is what made any of this work.</b> Warnsdorff hugs
     /// the edge of the free space, so an unbounded first walk is very nearly Hamiltonian: it eats
-    /// the grove and leaves scraps that cannot make a second pair, let alone a fourth. Measured,
+    /// the grove and leaves scraps that cannot make a second pair, let alone a sixth. Measured,
     /// that rejected 3,993 attempts in every 4,000 and drove the generator onto its straight-rows
     /// fallback for more than half of all seeds — a mode-wide difficulty failure that no test of
     /// a single board would ever have shown. Capping each walk near its fair share of what is
@@ -39,66 +44,245 @@ namespace GlimmerGrove.Modes
     public static class WeaveGenerator
     {
         /// <summary>
-        /// The least of the grove a solution may occupy.
+        /// The least of the grove a carve may occupy.
         ///
-        /// Not the acceptance bar — <see cref="Build"/> holds out for a complete grove — but the
-        /// floor below which a board is reported as slack, by <c>WeaveMode.Validate</c> and by the
-        /// suite. It is what a board that somehow could not be filled is still held to.
+        /// Not the acceptance bar — <see cref="Build"/> holds out for a carve that reaches every
+        /// cell — but the floor below which a board is reported as slack, by
+        /// <c>WeaveMode.Validate</c> and by the suite. A carve that leaves islands behind tends
+        /// to deal a board where each pair has its own quiet corner and never meets anybody.
         /// </summary>
         public const float MinCoverage = .92f;
 
         /// <summary>The fewest cells a path may run through, endpoints included.</summary>
         public const int MinPathLength = 5;
 
-        /// <summary>How many boards to try before settling for the best one seen.</summary>
-        public const int Attempts = 400;
+        /// <summary>
+        /// The least a pair's two ends may be apart, as a straight-line cell count.
+        ///
+        /// <para>
+        /// <b>This is the "place the critters cleverly" bar, and it is a rule about where things
+        /// stand rather than about which way anybody has to go.</b> A crystal three cells from
+        /// its critter is joined by a reflex — the player does not decide anything, they flick at
+        /// it — and a board with two of those on it hands away a third of itself before the
+        /// thinking starts. Half the grove's own span, so it scales with the board instead of
+        /// being a number that stops meaning anything at 7x9.
+        /// </para>
+        /// <para>
+        /// <b>Why this is allowed to exist now when the old per-pair rule had to go.</b> The rule
+        /// this replaces refused a pair whose <em>carved route</em> was the straight line between
+        /// its ends, and the argument for it was that a close pair whose route has to run right
+        /// round the grove is the mode's finest trick. That argument depended entirely on the
+        /// fill rule: something had to make the long way round compulsory, and covering every
+        /// cell was what did. With routing free there is no trick left in a close pair — the
+        /// short way works, so the short way is what happens, and the only honest way to make a
+        /// drag a decision is to put the two ends far enough apart that there is more than one
+        /// sensible way to get between them. So the bar moved from the route to the placement,
+        /// which is also the one of the two the player can see before they commit to anything.
+        /// </para>
+        /// <para>
+        /// Measured against the raw distance between the ends and deliberately not against
+        /// <see cref="WeaveLayout.Straight"/>: a bead lifts a pair's floor, so a gated pair could
+        /// clear a bar on its floor while its crystal sat next to its critter — and then the bead
+        /// would be carrying a pair that should not have been dealt that way in the first place.
+        /// </para>
+        /// </summary>
+        /// <remarks>
+        /// A third of the grove's span plus two, and never more than six. Both halves are
+        /// measured rather than chosen: below five, boards come out full of two-cell flicks; at
+        /// seven, six-pair groves stop being dealable at all — a filled carve simply does not
+        /// have that many long walks in it, and the generator falls back to a board that clears
+        /// no bar whatsoever, which is worse than the close pair it was trying to avoid. Six is
+        /// the largest value every shape this mode ships can actually meet.
+        /// </remarks>
+        public static int MinReach(int width, int height)
+        {
+            int scaled = (width + height) / 3 + 2;
+            return scaled > 6 ? 6 : scaled;
+        }
 
         /// <summary>
-        /// How far past its fair share of the free ground one walk may run.
+        /// The least total detour a shipped grove may force — <c>WeaveSolver.Tally.Slack</c>.
         ///
+        /// <para>
+        /// <b>This is the acceptance bar, and it is the mode's whole difficulty argument.</b>
+        /// Slack is how many cells of light, over and above every pair's own floor, the board
+        /// makes somebody spend. Zero means there is an arrangement in which every pair goes as
+        /// directly as it possibly could, so the board is joined by drawing the obvious line six
+        /// times — which is what the chapter did before anything was measuring it, and it came
+        /// back from play as "each critter is literally next to their matching light".
+        /// </para>
+        /// <para>
+        /// <b>Why this is not the old rule wearing a new name.</b> What used to be enforced was a
+        /// <em>per-pair</em> detour: no channel could be the straight line between its own ends,
+        /// so every pair was sent the long way round and the player was walking a route the board
+        /// had already picked. This is a bar on the pairs <em>together</em>. Any one route may
+        /// still be perfectly direct — most are — and what the board denies is all of them being
+        /// direct at the same time. So the question a grove asks is "who yields", the player
+        /// chooses, and nothing is forced on anybody in particular.
+        /// </para>
+        /// <para>
+        /// <b>Two, because a detour cannot be odd.</b> A route and the floor it is measured
+        /// against always share a parity, so two is the smallest slack there is and the bar reads
+        /// as "not everybody at once" rather than as a number somebody picked.
+        /// </para>
+        /// </summary>
+        public const int MinSlack = 2;
+
+        /// <summary>
+        /// How hard the acceptance bar may search before it gives up on a candidate.
+        ///
+        /// <para>
+        /// This runs on the player's phone, once per level opened, so it is bounded rather than
+        /// exact — and an undecided candidate is <em>refused</em>. That errs towards throwing a
+        /// good board away rather than shipping an easy one, which is the right direction for a
+        /// bar whose failure is silent. In practice it is never close: an excess budget of zero
+        /// prunes every step that does not shorten the walk ahead of it, so a candidate is
+        /// usually decided inside a few thousand positions.
+        /// </para>
+        /// </summary>
+        public const int BarBudget = 120_000;
+
+        /// <summary>How many boards to try before settling for the best one seen.</summary>
+        public const int Attempts = 240;
+
+        /// <summary>
+        /// How many times one walk may be re-grown looking for ends far enough apart.
+        ///
+        /// Small on purpose: a walk that has failed this eight times is being grown through
+        /// ground that has no long route left in it, and the next attempt's different carve is a
+        /// better use of the time than a ninth try at this one.
+        /// </summary>
+        public const int WalkTries = 8;
+
+        /// <summary>
+        /// How far past its fair share of the free ground one walk may run, as an exact
+        /// fraction — thirteen tenths.
+        ///
+        /// <para>
         /// At exactly its share every channel comes out the same length, which fills the grove and
         /// reads as four identical problems; the slack is what lets one channel be a long snake
         /// and another a short hop. Measured, 1.3 fills the grove on 88% of attempts against 75%
         /// at 1.0, so the variety is free.
+        /// </para>
+        /// <para>
+        /// <b>A fraction rather than a <c>float</c>, and that is a correctness fix rather than a
+        /// tidy-up.</b> This was <c>(int)(free / (float)walksLeft * 1.3f)</c>, and 1.3 is not
+        /// representable in binary: the nearest float is 1.2999999523162842, so a walk with
+        /// thirty cells free and three walks to go computes 12.99999952… — which truncates to
+        /// <b>13</b> if the multiply is kept in single precision and to <b>12</b> if it is
+        /// promoted to double. Both are legal for a C# compiler, and the runtimes disagree:
+        /// Unity's Mono answers 13 and .NET 8 answers 12, on the same source and the same seed.
+        /// </para>
+        /// <para>
+        /// <b>A one-cell budget difference is not a rounding error here — it is a different
+        /// board.</b> The budget decides where the first walk stops, so every later walk starts
+        /// from different ground and the whole grove is re-dealt. That is the one thing this
+        /// generator must never do: a level's board is proved solvable and measured for
+        /// difficulty at authoring time, on a desktop, and then generated again from the same
+        /// seed on the player's phone under a third code generator. A grove that is not the same
+        /// board everywhere is a grove whose proof does not apply to the copy anybody plays.
+        /// Found by <c>WeaveLadderTests</c> failing offline and passing in the Editor, which is
+        /// exactly the divergence the shared name-fold vectors were written to catch in
+        /// invariant 19e — the same lesson, in arithmetic rather than in Unicode.
+        /// </para>
+        /// <para>
+        /// The rule this leaves: <b>nothing that decides a cell may be a float.</b> Integers all
+        /// the way down are identical on every runtime this game will ever run on.
+        /// </para>
         /// </summary>
-        public const float Slack = 1.3f;
+        public const int SlackNumerator = 13, SlackDenominator = 10;
 
         /// <summary>
         /// The colours pairs are dealt, in order.
         ///
-        /// Four distinct hues rather than three, because the mode now asks the player to
-        /// <em>match</em> a colour rather than mix one, and three pairs on a grove this size is
-        /// not enough traffic to make routes collide. Amber is the game's own R|G, so it reads
-        /// as part of the same light rather than as a fifth invented colour.
+        /// <para>
+        /// <b>Every mix the board's own light makes, except white.</b> Not invented hues — the
+        /// three channels and their three two-channel blends are what <see cref="Energy"/>
+        /// already means, so a Lightweave grove is lit by exactly the same palette a glade is
+        /// and nothing here is a colour the player has not already been taught.
+        /// </para>
+        /// <para>
+        /// <b>White is deliberately left out, and it is the one exclusion that matters.</b>
+        /// <c>Energy.All</c> is <see cref="Pal.Radiance"/>, a near-white cream — and a woken
+        /// critter is tinted white, because that is how this mode says "awake". A seventh pair
+        /// wearing it would be a critter whose sleeping colour is the colour of being awake, so
+        /// the one thing the board most has to say at a glance would be the one thing it could
+        /// not say. Six is therefore the ceiling, and it is a fact about the colour language
+        /// rather than a number somebody picked.
+        /// </para>
+        /// <para>
+        /// Four was the old ceiling and it capped the mode's difficulty rather than its palette:
+        /// pairs are the only thing that makes channels contend for ground, so a ladder of ten
+        /// groves had nothing but size to climb, and size on a phone is finger accuracy rather
+        /// than thinking.
+        /// </para>
         /// </summary>
         public static readonly int[] Palette =
-            { Energy.R, Energy.G, Energy.B, Energy.R | Energy.G };
+        {
+            Energy.R, Energy.G, Energy.B,
+            Energy.R | Energy.G, Energy.G | Energy.B, Energy.R | Energy.B
+        };
 
-        public static WeaveLayout Build(int width, int height, int pairs, uint seed)
+        /// <summary>
+        /// The most beads a grove may be given, however many a level asks for.
+        ///
+        /// One per pair. A pair with two beads is a tour rather than a route, which is a
+        /// different and much fussier kind of thinking — and on a phone it is mostly an exercise
+        /// in remembering which circle you have already been through. The board says everything
+        /// it has to say with one apiece.
+        /// </summary>
+        public static int MostBeads(int pairs) => pairs;
+
+        public static WeaveLayout Build(int width, int height, int pairs, uint seed, int beads = 0)
         {
             if (pairs < 1) pairs = 1;
             if (pairs > Palette.Length) pairs = Palette.Length;
 
+            if (beads < 0) beads = 0;
+            if (beads > MostBeads(pairs)) beads = MostBeads(pairs);
+
             var rng = new Roller(seed);
             WeaveLayout best = null;
 
+            int bestRank = int.MinValue;
+
             for (int attempt = 0; attempt < Attempts; attempt++)
             {
-                var candidate = Attempt(width, height, pairs, rng);
+                var candidate = Attempt(width, height, pairs, beads, rng);
                 if (candidate == null) continue;
 
-                if (candidate.IsComplete) return candidate;
-                if (best == null || candidate.Coverage > best.Coverage) best = candidate;
+                // The cheap half first. A carve that did not reach every cell is refused before
+                // the search runs, because the search is the expensive half and a slack carve is
+                // the common way an attempt is poor.
+                bool full = candidate.IsComplete;
+                bool contested = false;
+
+                if (full)
+                {
+                    bool taut = WeaveSolver.AnyTautSolution(candidate, out bool decided, BarBudget);
+
+                    // Undecided is refused rather than believed either way — see BarBudget.
+                    contested = decided && !taut;
+                    if (contested) return candidate;
+                }
+
+                // Ranked as integers rather than compared as coverage fractions. Every candidate
+                // of one Build is the same grove size, so cell counts order identically to the
+                // fractions — and a float comparison deciding which board ships is exactly the
+                // hazard SlackNumerator documents, one line further on.
+                int rank = (full ? 1 << 20 : 0) + (contested ? 1 << 19 : 0)
+                         + candidate.SolutionLength;
+                if (best == null || rank > bestRank) { best = candidate; bestRank = rank; }
             }
 
-            // No complete grove turned up, which the shipped shape never does. The best board seen
-            // still has a solution — it was carved the same way — so it is a slack puzzle rather
-            // than a broken one, and that is the right way to fail: a level that is a little easy
-            // beats a level that cannot be finished.
+            // Nothing met both bars, which the shipped shapes do not do. The best board seen still
+            // has a solution — it was carved the same way — so it is a slacker puzzle rather than
+            // a broken one, and that is the right way to fail: a level that is a little easy beats
+            // a level that cannot be finished. Validate Content says so out loud either way.
             return best ?? Fallback(width, height, pairs);
         }
 
-        static WeaveLayout Attempt(int width, int height, int pairs, Roller rng)
+        static WeaveLayout Attempt(int width, int height, int pairs, int beads, Roller rng)
         {
             int count = width * height;
             var taken = new bool[count];
@@ -114,7 +298,21 @@ namespace GlimmerGrove.Modes
                 int left = pairs - p;
                 int budget = left > 1 ? Share(taken, left) : count;
 
-                var walk = Walk(width, height, taken, rng, budget);
+                // Re-walked rather than discarded, and that is what makes the reach bar
+                // affordable at all. A walk whose two ends came out close together is one walk's
+                // bad luck; throwing the attempt away for it discards every other pair's work
+                // too, so the chance of dealing a board becomes the bar's odds raised to the
+                // number of pairs — measured, a reach of five went from ordinary to one seed in
+                // five at six pairs, purely from that. Retrying the one walk multiplies the odds
+                // instead of compounding them.
+                List<int> walk = null;
+                for (int tries = 0; tries < WalkTries; tries++)
+                {
+                    walk = Walk(width, height, taken, rng, budget);
+                    if (walk == null || walk.Count < MinPathLength) continue;
+                    if (Reaches(walk[0], walk[walk.Count - 1], width, height)) break;
+                }
+
                 if (walk == null || walk.Count < MinPathLength) return null;
 
                 foreach (int cell in walk) taken[cell] = true;
@@ -139,25 +337,103 @@ namespace GlimmerGrove.Modes
                 var walk = grown[p];
                 int head = walk[0], tail = walk[walk.Count - 1];
 
-                // Ends that touch make a pair joinable in a single step, whatever route the
+                // Ends too close together make a pair joinable by a reflex, whatever route the
                 // generator took to get between them - a free pair on a board that is meant to
-                // be four decisions.
-                if (Touching(head, tail, width)) return null;
+                // be a set of decisions. See MinReach.
+                if (Gap(head, tail, width) + 1 < MinReach(width, height)) return null;
 
                 walks[p] = walk.ToArray();
                 made[p] = new WeavePair(head, tail, Palette[p]);
             }
 
-            return new WeaveLayout(width, height, made, walks);
+            return new WeaveLayout(width, height, made, walks,
+                                   Thread(width, made, walks, beads, rng));
         }
 
-        /// <summary>How long a walk may run when this many are still to be grown.</summary>
+        /// <summary>
+        /// Drops beads along the carved routes, one pair at a time.
+        ///
+        /// <para>
+        /// <b>On the carved route, so the board's own proof still holds.</b> A bead is a cell one
+        /// channel must be threaded through; putting it anywhere else would mean the arrangement
+        /// the generator just drew no longer satisfies the board it just built, and solvability
+        /// here is a property of construction rather than something checked afterwards.
+        /// </para>
+        /// <para>
+        /// <b>Off the direct corridor, or it is decoration.</b> A cell <c>c</c> lies on some
+        /// shortest route between a pair's ends exactly when <c>d(heart,c) + d(c,critter)</c>
+        /// equals <c>d(heart,critter)</c> — so a bead placed on one of those asks for nothing at
+        /// all: the player draws the line they were going to draw and threads it on the way past.
+        /// Only cells strictly outside that corridor are candidates, which means every bead
+        /// placed here provably lifts its own pair's floor. That is invariant 5d's rule for this
+        /// mode: a mechanic that rejects no arrangement is decoration, and this one is countable
+        /// before it is placed.
+        /// </para>
+        /// <para>
+        /// Spread across different pairs before any pair gets a second, because two beads on one
+        /// channel and none on four others is a board with one interesting corner. Beyond that the
+        /// choice is the roller's, so a level's beads are as much a property of its seed as its
+        /// endpoints are.
+        /// </para>
+        /// </summary>
+        static WeaveBead[] Thread(int width, WeavePair[] pairs, int[][] walks, int beads,
+                                  Roller rng)
+        {
+            if (beads <= 0) return System.Array.Empty<WeaveBead>();
+
+            var placed = new List<WeaveBead>(beads);
+            var used = new HashSet<int>();
+            var room = new List<int>();
+
+            for (int i = 0; i < beads; i++)
+            {
+                int pair = i % pairs.Length;
+                var walk = walks[pair];
+                if (walk.Length < 3) continue;
+
+                int heart = pairs[pair].Heart, critter = pairs[pair].Critter;
+                int direct = Gap(heart, critter, width);
+
+                room.Clear();
+                for (int step = 1; step < walk.Length - 1; step++)
+                {
+                    int cell = walk[step];
+                    if (used.Contains(cell)) continue;
+
+                    if (Gap(heart, cell, width) + Gap(cell, critter, width) > direct)
+                        room.Add(cell);
+                }
+
+                if (room.Count == 0) continue;
+
+                int chosen = room[rng.Next(room.Count)];
+                used.Add(chosen);
+                placed.Add(new WeaveBead(chosen, pair));
+            }
+
+            return placed.ToArray();
+        }
+
+        static int Gap(int a, int b, int width)
+        {
+            int ax = a % width, ay = a / width, bx = b % width, by = b / width;
+            int dx = ax > bx ? ax - bx : bx - ax;
+            int dy = ay > by ? ay - by : by - ay;
+            return dx + dy;
+        }
+
+        /// <summary>
+        /// How long a walk may run when this many are still to be grown.
+        ///
+        /// Exact integer arithmetic, deliberately — see <see cref="SlackNumerator"/> for the
+        /// board this used to deal differently on different runtimes.
+        /// </summary>
         static int Share(bool[] taken, int walksLeft)
         {
             int free = 0;
             for (int i = 0; i < taken.Length; i++) if (!taken[i]) free++;
 
-            int budget = (int)(free / (float)walksLeft * Slack);
+            int budget = free * SlackNumerator / (walksLeft * SlackDenominator);
             return budget < MinPathLength ? MinPathLength : budget;
         }
 
@@ -221,14 +497,9 @@ namespace GlimmerGrove.Modes
             return walk;
         }
 
-        /// <summary>Whether two cells are orthogonally adjacent.</summary>
-        static bool Touching(int a, int b, int width)
-        {
-            int ax = a % width, ay = a / width, bx = b % width, by = b / width;
-            int dx = ax > bx ? ax - bx : bx - ax;
-            int dy = ay > by ? ay - by : by - ay;
-            return dx + dy == 1;
-        }
+        /// <summary>Whether a pair standing on these two cells is far enough apart to be a decision.</summary>
+        static bool Reaches(int a, int b, int width, int height)
+            => Gap(a, b, width) + 1 >= MinReach(width, height);
 
         /// <summary>
         /// Grows a walk outward from either end through ground nobody took, one cell at a time.
@@ -257,7 +528,13 @@ namespace GlimmerGrove.Modes
                     // end of the attempt discards every other pair's work with it, which is what
                     // sent this generator to its straight-rows fallback on more than half of all
                     // seeds. Declining the one step costs the board nothing.
-                    if (Touching(next, other, width)) continue;
+                    //
+                    // The step is only refused for closing the gap, never for the gap being
+                    // small: a walk already inside the bar has to be able to climb back out of
+                    // it, and a guard that declined every step would instead leave the leftover
+                    // ground it was in the middle of eating.
+                    if (!Reaches(next, other, width, height)
+                        && Gap(next, other, width) <= Gap(from, other, width)) continue;
 
                     int onward = 0;
                     foreach (int beyond in Neighbours(next, width, height))
@@ -300,8 +577,20 @@ namespace GlimmerGrove.Modes
             var made = new WeavePair[pairs];
             var walks = new int[pairs][];
 
-            for (int p = 0; p < pairs && p < height; p++)
+            for (int p = 0; p < pairs; p++)
             {
+                // A grove with fewer rows than pairs has no row left to give, and leaving the
+                // entry null is a NullReferenceException in whichever tool reads the solution
+                // first — which on this path is Validate Content, in the Editor, with no board
+                // on screen to explain it. An empty route is a board the validator reports as
+                // unsolvable, out loud, which is the failure this should have.
+                if (p >= height)
+                {
+                    walks[p] = new int[0];
+                    made[p] = new WeavePair(0, 0, Palette[p]);
+                    continue;
+                }
+
                 var row = new int[width];
                 for (int x = 0; x < width; x++) row[x] = p * width + x;
 
@@ -309,6 +598,8 @@ namespace GlimmerGrove.Modes
                 made[p] = new WeavePair(row[0], row[width - 1], Palette[p]);
             }
 
+            // Deliberately beadless. This board is already the failure case, and a bead on it
+            // would be one more thing that has to be satisfiable on a board nothing has checked.
             return new WeaveLayout(width, height, made, walks);
         }
 

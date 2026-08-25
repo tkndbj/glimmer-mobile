@@ -3,14 +3,23 @@ using System.Collections.Generic;
 namespace GlimmerGrove.Modes
 {
     /// <summary>
-    /// A Lightweave puzzle being solved: which channels have been drawn, and what ground they
-    /// have taken.
+    /// A Lightweave puzzle being solved: which channels have been drawn, what ground they have
+    /// taken, and which beads they have been threaded through.
     ///
     /// <para>
-    /// <b>Two channels may never share a cell.</b> That one rule is the whole puzzle — without
-    /// it every pair is joined by walking straight there and the grove is a formality. It is
-    /// enforced here rather than in the drawing, because a rule the view owns is a rule the next
-    /// input method breaks.
+    /// <b>Two channels may never share a cell.</b> That one rule is what makes the pairs contend
+    /// for ground, and it is enforced here rather than in the drawing, because a rule the view
+    /// owns is a rule the next input method breaks.
+    /// </para>
+    /// <para>
+    /// <b>Where a channel goes is otherwise entirely the player's business.</b> This used to
+    /// demand that the channels between them covered every cell of the grove, which made the
+    /// direct route almost never the right one — the board sent the player the long way round
+    /// for a reason nothing on screen could show, and the state where every critter was awake
+    /// and the grove still unfinished read as the game failing to notice a win. That rule is
+    /// gone. What replaced it is on the board: a bead is a cell one channel must be threaded
+    /// through, drawn in that channel's own colour, and it asks for the same thinking while
+    /// pointing at where.
     /// </para>
     /// <para>
     /// A drawn channel stays. There is no partial state and no channel in flight: the view
@@ -26,24 +35,22 @@ namespace GlimmerGrove.Modes
 
         readonly int[] _owner;              // which pair holds each cell, -1 for free ground
         readonly List<int>[] _paths;
+        readonly bool[] _threaded;          // one per bead: has its own channel come through
 
         public WeaveRun(WeaveLayout layout)
         {
             Grove = layout;
 
             _owner = new int[layout.Count];
-            for (int i = 0; i < _owner.Length; i++) _owner[i] = -1;
-
             _paths = new List<int>[layout.Pairs.Count];
             for (int i = 0; i < _paths.Length; i++) _paths[i] = new List<int>();
 
-            // The endpoints are standing on the board from the first frame, so nothing may be
-            // routed through somebody else's crystal or critter.
-            for (int i = 0; i < layout.Pairs.Count; i++)
-            {
-                _owner[layout.Pairs[i].Heart] = i;
-                _owner[layout.Pairs[i].Critter] = i;
-            }
+            _threaded = new bool[layout.Beads.Count];
+
+            // The endpoints and the beads are standing on the board from the first frame, so
+            // nothing may be routed through somebody else's crystal, critter or bead. A bead
+            // blocking five colours is half of what it is for — see WeaveBead.
+            for (int i = 0; i < _owner.Length; i++) _owner[i] = layout.Reserved(i);
         }
 
         /// <summary>Which pair holds this cell, or -1 for free ground.</summary>
@@ -66,10 +73,38 @@ namespace GlimmerGrove.Modes
 
         public int Pairs => _paths.Length;
 
-        /// <summary>Every critter awake. The only ending this puzzle has.</summary>
-        public bool IsSolved => Joined >= _paths.Length;
+        /// <summary>Whether this bead's own channel has been threaded through it.</summary>
+        public bool IsThreaded(int bead)
+            => bead >= 0 && bead < _threaded.Length && _threaded[bead];
 
-        /// <summary>How much of the grove is spoken for, for the readout.</summary>
+        /// <summary>How many beads are still waiting for their colour.</summary>
+        public int BeadsLeft
+        {
+            get
+            {
+                int n = 0;
+                for (int i = 0; i < _threaded.Length; i++) if (!_threaded[i]) n++;
+                return n;
+            }
+        }
+
+        /// <summary>
+        /// Every critter awake and every bead threaded. The only ending this puzzle has.
+        ///
+        /// <para>
+        /// <b>The second half is a rule a board can show, which the one it replaced was not.</b>
+        /// This used to also require that no cell of the grove was left bare — a condition
+        /// nothing on screen stated, that no board could demonstrate, and that produced a state
+        /// looking exactly like a win the game had failed to notice. A bead says the same thing
+        /// with a ring on the ground: it stands on a cell the player has to come through, in the
+        /// colour that owes it, and it lights when it is satisfied. A grove with no beads on it is
+        /// finished the moment the last critter wakes, which is what the first two rungs of the
+        /// chapter are for.
+        /// </para>
+        /// </summary>
+        public bool IsSolved => Joined >= _paths.Length && BeadsLeft == 0;
+
+        /// <summary>How much of the grove is spoken for. The readout's, not the rule's.</summary>
         public int Occupied
         {
             get
@@ -81,8 +116,8 @@ namespace GlimmerGrove.Modes
         }
 
         /// <summary>
-        /// Whether a cell can be drawn through by this pair: free ground, or one of its own two
-        /// endpoints.
+        /// Whether a cell can be drawn through by this pair: free ground, or ground reserved to
+        /// it — its own two endpoints and its own beads.
         /// </summary>
         public bool Free(int pair, int cell)
         {
@@ -91,7 +126,7 @@ namespace GlimmerGrove.Modes
             int owner = _owner[cell];
             if (owner < 0) return true;
 
-            // Its own endpoints are its to use; anything else standing there is in the way,
+            // Its own ground is its to use; anything else standing there is in the way,
             // including a channel it drew earlier and has not taken back.
             return owner == pair && !IsJoined(pair);
         }
@@ -99,6 +134,14 @@ namespace GlimmerGrove.Modes
         /// <summary>
         /// Whether this path is a legal channel for this pair: it runs between the pair's own two
         /// endpoints, every step is orthogonal, it never doubles back, and it crosses nothing.
+        ///
+        /// <para>
+        /// <b>Threading is deliberately not part of legality.</b> A channel that misses one of its
+        /// own beads is a perfectly legal channel — it is simply not a finished grove, and the
+        /// player is told so by the bead still standing lit on the board. Refusing the drag
+        /// instead would mean a finger that reached its critter being silently rejected for a
+        /// reason a hundred cells away, which is the same fault the fill rule had.
+        /// </para>
         /// </summary>
         public bool IsLegal(int pair, IReadOnlyList<int> path)
         {
@@ -120,8 +163,8 @@ namespace GlimmerGrove.Modes
 
                 if (i > 0 && !Grove.Adjacent(path[i - 1], cell)) return false;
 
-                // The middle of a channel may only run over free ground. The two ends are the
-                // pair's own, which is why they are excused rather than the rule being softened.
+                // The middle of a channel may only run over free ground or its own. The two ends
+                // are the pair's own, which is why they are excused rather than the rule softened.
                 bool isEnd = i == 0 || i == path.Count - 1;
                 if (!isEnd && _owner[cell] >= 0 && _owner[cell] != pair) return false;
                 if (!isEnd && _owner[cell] == pair && IsJoined(pair)) return false;
@@ -152,20 +195,20 @@ namespace GlimmerGrove.Modes
             _paths[pair].Clear();
             _paths[pair].AddRange(path);
             foreach (int cell in path) _owner[cell] = pair;
+
+            Rethread(pair);
             return true;
         }
 
-        /// <summary>Takes a pair's channel back, leaving its endpoints where they stand.</summary>
+        /// <summary>Takes a pair's channel back, leaving its endpoints and beads where they stand.</summary>
         public void Erase(int pair)
         {
             if (pair < 0 || pair >= _paths.Length) return;
 
-            foreach (int cell in _paths[pair]) _owner[cell] = -1;
+            foreach (int cell in _paths[pair]) _owner[cell] = Grove.Reserved(cell);
             _paths[pair].Clear();
 
-            var ends = Grove.Pairs[pair];
-            _owner[ends.Heart] = pair;
-            _owner[ends.Critter] = pair;
+            Rethread(pair);
         }
 
         void Restore(int pair, List<int> path)
@@ -174,9 +217,29 @@ namespace GlimmerGrove.Modes
 
             _paths[pair].AddRange(path);
             foreach (int cell in path) _owner[cell] = pair;
+
+            Rethread(pair);
         }
 
-        /// <summary>Takes every channel back. The board returns to its endpoints.</summary>
+        /// <summary>
+        /// Re-reads which of this pair's beads its channel now runs through.
+        ///
+        /// Kept as stored state rather than derived on demand because <see cref="IsSolved"/> is
+        /// asked on every landing and the readout on every repaint, and both would otherwise walk
+        /// every path. Recomputed for the whole pair rather than adjusted, so there is no way for
+        /// a redraw, a refusal and an erase to leave it disagreeing with the path it describes.
+        /// </summary>
+        void Rethread(int pair)
+        {
+            var beads = Grove.Beads;
+            for (int b = 0; b < beads.Count; b++)
+            {
+                if (beads[b].Pair != pair) continue;
+                _threaded[b] = _paths[pair].Contains(beads[b].Cell);
+            }
+        }
+
+        /// <summary>Takes every channel back. The board returns to its endpoints and beads.</summary>
         public void Reset()
         {
             for (int i = 0; i < _paths.Length; i++) Erase(i);
@@ -185,7 +248,10 @@ namespace GlimmerGrove.Modes
         /// <summary>
         /// Draws the arrangement the generator carved. Not offered to the player — it exists so
         /// the board's own claim to be solvable can be <em>checked</em> rather than trusted, and
-        /// the tests do exactly that on every generated grove.
+        /// the tests and the validator do exactly that on every generated grove.
+        ///
+        /// It is checked all the way to <see cref="IsSolved"/>, so it proves the beads as well:
+        /// a bead the carved route does not thread is a board whose own proof does not finish it.
         /// </summary>
         public bool DrawSolution()
         {

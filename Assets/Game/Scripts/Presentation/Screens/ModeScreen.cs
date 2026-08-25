@@ -50,6 +50,29 @@ namespace GlimmerGrove
         /// <summary>How far the board sits from the screen's edges. Overridden by modes that want more room.</summary>
         protected virtual Vector4 HostInset => new Vector4(24f, 250f, 24f, 330f);
 
+        bool _ready;
+
+        /// <summary>
+        /// Holds the iris shut until the board exists.
+        ///
+        /// <para>
+        /// A mode screen builds its board from a coroutine — the chapter body has to be fetched
+        /// and the host rect has to be laid out before a grove can be sized — and until this was
+        /// here, <see cref="Flow"/> read the default <c>true</c> and opened straight away. So
+        /// <see cref="OnPresented"/> ran at a moment when <c>Play</c> may not have: the lesson
+        /// toast could be thrown over a screen with no board on it, and anything an override
+        /// wants to do with the board it just built would find nothing and quietly do nothing.
+        /// <c>WeaveScreen</c> raises the one lesson this game has that no board can demonstrate,
+        /// which is exactly the shape of thing that must not be skipped by a race.
+        /// </para>
+        /// <para>
+        /// It is also set when the screen bails, because <see cref="Flow"/> stays busy until the
+        /// iris opens and a level that could not be read would otherwise sit behind a closed one
+        /// for the whole ready timeout before navigating away.
+        /// </para>
+        /// </summary>
+        public override bool Ready => _ready;
+
         // ------------------------------------------------------------------ lifecycle
         protected override void Build() => StartCoroutine(Resolve());
 
@@ -104,10 +127,12 @@ namespace GlimmerGrove
 
             Play();
             Repaint();
+            _ready = true;
         }
 
         IEnumerator Bail()
         {
+            _ready = true;
             while (Flow.Busy) yield return null;
             Flow.Go<LevelsScreen>();
         }

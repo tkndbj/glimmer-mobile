@@ -534,8 +534,20 @@
       "text": "Unlike edges bloom"
     },
     {
+      "key": "level.w01_close_quarters.lesson",
+      "text": "Two of these channels want the same ground, and only one of them can have it. Work out which one can afford to go round."
+    },
+    {
+      "key": "level.w01_close_quarters.name",
+      "text": "Close Quarters"
+    },
+    {
+      "key": "level.w01_close_quarters.tagline",
+      "text": "Five channels, and few ways past."
+    },
+    {
       "key": "level.w01_first_weave.lesson",
-      "text": "Press a crystal and drag to the critter wearing its colour. The channel stays where you draw it, and no two channels may ever cross - so a lazy route walls somebody else in. Tap a finished channel to take it back. Wake all four before the light runs out."
+      "text": "Drag from a crystal to the critter wearing its colour. Two channels may never cross - that is the whole of it."
     },
     {
       "key": "level.w01_first_weave.name",
@@ -543,7 +555,111 @@
     },
     {
       "key": "level.w01_first_weave.tagline",
-      "text": "Four channels. No crossings."
+      "text": "Three channels, and room to think."
+    },
+    {
+      "key": "level.w01_five_lanterns.lesson",
+      "text": "A fifth colour joins the weave. With five channels sharing the ground, the order you draw them in decides what is still reachable."
+    },
+    {
+      "key": "level.w01_five_lanterns.name",
+      "text": "Five Lanterns"
+    },
+    {
+      "key": "level.w01_five_lanterns.tagline",
+      "text": "Five channels, one grove."
+    },
+    {
+      "key": "level.w01_six_sleepers.lesson",
+      "text": "All six channels at once - the three colours and the three blends. This is as many as a grove can hold, because white is the colour of being awake."
+    },
+    {
+      "key": "level.w01_six_sleepers.name",
+      "text": "Six Sleepers"
+    },
+    {
+      "key": "level.w01_six_sleepers.tagline",
+      "text": "Every colour the light makes."
+    },
+    {
+      "key": "level.w01_the_long_skein.lesson",
+      "text": "Give the channel with the furthest to go its room first. Leave it until last and there is none left."
+    },
+    {
+      "key": "level.w01_the_long_skein.name",
+      "text": "The Long Skein"
+    },
+    {
+      "key": "level.w01_the_long_skein.tagline",
+      "text": "Three rings, and less room than it looks."
+    },
+    {
+      "key": "level.w01_the_shuttle.lesson",
+      "text": "A ring belongs to the colour it is drawn in: that channel must pass through it, and no other channel may enter it."
+    },
+    {
+      "key": "level.w01_the_shuttle.name",
+      "text": "The Shuttle"
+    },
+    {
+      "key": "level.w01_the_shuttle.tagline",
+      "text": "Thread the ring."
+    },
+    {
+      "key": "level.w01_the_tangle.lesson",
+      "text": "Very few arrangements of this grove work. Expect to take a channel back and try it another way - that is the puzzle, not a mistake."
+    },
+    {
+      "key": "level.w01_the_tangle.name",
+      "text": "The Tangle"
+    },
+    {
+      "key": "level.w01_the_tangle.tagline",
+      "text": "Six channels, and few ways through."
+    },
+    {
+      "key": "level.w01_the_weftwood_knot.lesson",
+      "text": "Six channels and five rings across the largest grove in the Weftwood. Everything the wood has taught you, at once."
+    },
+    {
+      "key": "level.w01_the_weftwood_knot.name",
+      "text": "The Weftwood Knot"
+    },
+    {
+      "key": "level.w01_the_weftwood_knot.tagline",
+      "text": "The whole weave, and one way through."
+    },
+    {
+      "key": "level.w01_tight_warp.lesson",
+      "text": "A ring pulls its own channel out of line, and everything it pushes past has to find somewhere else to be."
+    },
+    {
+      "key": "level.w01_tight_warp.name",
+      "text": "Tight Warp"
+    },
+    {
+      "key": "level.w01_tight_warp.tagline",
+      "text": "Two rings, four channels."
+    },
+    {
+      "key": "level.w01_two_threads.lesson",
+      "text": "Four channels sharing one grove. They cannot all take the short way at once, so one of them gives - and you decide which one."
+    },
+    {
+      "key": "level.w01_two_threads.name",
+      "text": "Two Threads"
+    },
+    {
+      "key": "level.w01_two_threads.tagline",
+      "text": "A fourth colour joins."
+    },
+    {
+      "key": "mode.cap.asleep",
+      "text": "ASLEEP"
+    },
+    {
+      "key": "mode.cap.beads",
+      "text": "RINGS"
     },
     {
       "key": "mode.cap.best",
@@ -627,7 +743,15 @@
     },
     {
       "key": "mode.weave.tagline",
-      "text": "Draw the light. Let it mix."
+      "text": "Draw the light. Wake the grove."
+    },
+    {
+      "key": "mode.weave.unthreaded",
+      "text": "Every critter is awake, but {0} rings are still waiting for their colour. Tap a channel to take it back and send it through."
+    },
+    {
+      "key": "mode.weave.unthreaded_one",
+      "text": "Every critter is awake, but one ring is still waiting for its colour. Tap that channel to take it back and send it through."
     },
     {
       "key": "store.good.boost_day",
@@ -2878,6 +3002,22 @@
       "text": "{0} turn"
     },
     {
+      "key": "ui.rank.woven",
+      "text": "woven in {1}"
+    },
+    {
+      "key": "ui.rank.woven_one",
+      "text": "woven in {1}"
+    },
+    {
+      "key": "ui.rank.woven_untimed",
+      "text": "woven"
+    },
+    {
+      "key": "ui.rank.woven_untimed_one",
+      "text": "woven"
+    },
+    {
       "key": "ui.reward.credits",
       "text": "coins"
     },
@@ -3392,6 +3532,22 @@
     {
       "key": "ui.tip.rooted.title",
       "text": "ROOTED"
+    },
+    {
+      "key": "ui.tip.weave_bead.body",
+      "text": "A ring must be threaded by the colour it is drawn in, and no other colour may enter it."
+    },
+    {
+      "key": "ui.tip.weave_bead.title",
+      "text": "THREAD THE RINGS"
+    },
+    {
+      "key": "ui.tip.weave_join.body",
+      "text": "Drag from a crystal to the critter that wants its colour.\n\nNo two channels may ever cross."
+    },
+    {
+      "key": "ui.tip.weave_join.title",
+      "text": "DRAW THE LIGHT"
     },
     {
       "key": "ui.title.elder",

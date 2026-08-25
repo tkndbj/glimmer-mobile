@@ -1,14 +1,25 @@
 # Verifying without the Editor
 
 The Unity Editor is usually closed, and the MCP bridge is unavailable whenever scripts
-fail to compile — which is exactly when a check is wanted. These four run offline.
+fail to compile — which is exactly when a check is wanted. These run offline.
 
 ```
 python Tools/verify/compile.py            # every assembly, in dependency order
 python Tools/verify/tests.py [Fixture]    # the EditMode suite
 python Tools/verify/content.py            # the shipped levels and the manifest
 python Tools/verify/loc.py                # every key-shaped literal resolves
+python Tools/verify/weave.py              # every Lightweave grove, on both runtimes
+python Tools/verify/names.py              # the keeper-name fold, on Unity's own Mono
 ```
+
+`weave.py` and `names.py` are the two that run the shipped code on **Unity's Mono** as
+well as on the bundled .NET, because both cover arithmetic the two runtimes have already
+been caught disagreeing about — a walk budget in one case and Unicode tables in the other.
+`weave.py` diffs the two rather than checking either against a table, so there is nothing
+to go stale; it also reports each grove's `slack`, which is the least total detour any
+arrangement of it has over and above every pair's own shortest route. Zero means every
+pair can go as directly as it possibly could, all at once, so the grove is joined by
+drawing the obvious line at each critter and asks the player nothing.
 
 `make_chapter_art.py` and `import_grove_art.py` sit beside them in `Tools/` and are
 not checks at all — they are the two art pipelines, and both are re-runnable so the
@@ -38,7 +49,7 @@ counted as **needs the Editor** rather than as a failure, because it cannot run 
 calling that a failure trains everyone to ignore the number. Those still have to go
 through Test Runner before shipping.
 
-Current baseline: 641 pass offline, 84 need the Editor.
+Current baseline: 1019 pass offline, 103 need the Editor.
 
 None of this replaces `Glimmer Grove ▸ Validate Content`, `▸ Validate Art` or the build
 gate. It replaces *not checking*, which is what being unable to open the Editor used to

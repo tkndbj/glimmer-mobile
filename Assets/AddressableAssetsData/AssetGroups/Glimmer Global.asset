@@ -175,6 +175,11 @@ MonoBehaviour:
     m_SerializedLabels:
     - Art/Board/duskcap
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 1a158e089440f7146b1a8f742abf4b84
+    m_Address: Art/Map/strip4
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 1b882df37e1c6e901230015c15e5bfb8
     m_Address: Audio/Sfx/star
     m_ReadOnly: 0
@@ -548,6 +553,11 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels:
     - Art/Critters/c4
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 519453f73f0d6cd4aa843d5c2edcad6d
+    m_Address: Art/Map/strip5
+    m_ReadOnly: 0
+    m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 51d125c8d41a581241aa5ce257626ce7
     m_Address: Art/Ui/ic_share
@@ -1517,6 +1527,11 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels:
     - Art/Critters/c1
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: c55d3f8c3c5f84c458c6fc4f600155d0
+    m_Address: Art/Map/strip3
+    m_ReadOnly: 0
+    m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: c578b018b78db0e684fb04b75c1826f1
     m_Address: Art/Map/boulder

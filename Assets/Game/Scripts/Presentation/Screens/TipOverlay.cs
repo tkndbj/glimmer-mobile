@@ -41,6 +41,35 @@ namespace GlimmerGrove
         /// <summary>The tile to ring, in this canvas's space. Null to teach without pointing.</summary>
         public RectTransform Target;
 
+        /// <summary>
+        /// An ordered route for a coaching hand to trace on the real board, or null for a
+        /// lesson that is only a sentence.
+        ///
+        /// <para>
+        /// <b>It is for a lesson about a gesture rather than about a rule.</b> Every glade tip
+        /// names something on the board and says what it does, and a ring plus two sentences is
+        /// exactly the right shape for that. Lightweave's opening lesson is not that shape: after
+        /// four chapters of tapping tiles the first thing a player has to know is that this mode
+        /// is <em>dragged</em>, and a sentence describing a movement has to be turned back into
+        /// the movement by whoever reads it. So the hand does that half and the sentence is cut
+        /// down to what it is actually good at — the rule the movement does not show.
+        /// </para>
+        /// <para>
+        /// Every point of the route stays out of the dim, so the demonstration happens on the
+        /// board itself rather than on a diagram of one. <see cref="Target"/> is still what gets
+        /// the ring, which is what keeps the two ideas separate: the route says <em>do this</em>
+        /// and the ring says <em>this is the thing</em>, and a lesson may want either, both or
+        /// neither.
+        /// </para>
+        /// </summary>
+        public RectTransform[] Trace;
+
+        /// <summary>The colour the demonstration is drawn in — normally the pair's own.</summary>
+        public Color TraceTint = Pal.Cream;
+
+        /// <summary>How far the route reaches in board cells, which decides its pace.</summary>
+        public int TraceCells;
+
         /// <summary>Raised once the player has dismissed it, so the board can unlock.</summary>
         public System.Action Dismissed;
 
@@ -49,24 +78,45 @@ namespace GlimmerGrove
 
         protected override void Build()
         {
-            var spot = SpotlightRect();
+            var ring = RectOf(Target);
+            var spot = SpotlightRect(ring);
 
-            if (spot.HasValue) BuildCutout(spot.Value);
+            if (spot.HasValue) BuildCutout(spot.Value, ring);
             else UIKit.Scrim(Content, Dim, null);
 
+            BuildTrace();
             BuildBubble(spot);
         }
 
         /// <summary>
-        /// The target's rectangle in this overlay's space, or null when there is nothing
-        /// on the board to point at — a move budget lives in the HUD, not in a cell.
+        /// What has to stay lit: the thing being pointed at, and every point the hand visits.
+        ///
+        /// Null when there is nothing on the board at all — a move budget lives in the HUD, not
+        /// in a cell.
         /// </summary>
-        Rect? SpotlightRect()
+        Rect? SpotlightRect(Rect? ring)
         {
-            if (!Target) return null;
+            var spot = ring;
+
+            if (Trace != null)
+                foreach (var step in Trace)
+                {
+                    var r = RectOf(step);
+                    if (!r.HasValue) continue;
+
+                    spot = spot.HasValue ? Union(spot.Value, r.Value) : r;
+                }
+
+            return spot;
+        }
+
+        /// <summary>A transform's rectangle in this overlay's space, with the ring's margin.</summary>
+        Rect? RectOf(RectTransform target)
+        {
+            if (!target) return null;
 
             var corners = new Vector3[4];
-            Target.GetWorldCorners(corners);
+            target.GetWorldCorners(corners);
 
             var min = (Vector2)Content.InverseTransformPoint(corners[0]);
             var max = (Vector2)Content.InverseTransformPoint(corners[2]);
@@ -75,8 +125,45 @@ namespace GlimmerGrove
                             max.x - min.x + Pad * 2f, max.y - min.y + Pad * 2f);
         }
 
+        static Rect Union(Rect a, Rect b)
+        {
+            float x = Mathf.Min(a.xMin, b.xMin), y = Mathf.Min(a.yMin, b.yMin);
+            return new Rect(x, y, Mathf.Max(a.xMax, b.xMax) - x, Mathf.Max(a.yMax, b.yMax) - y);
+        }
+
+        /// <summary>
+        /// The hand, drawn over the hole and under the bubble.
+        ///
+        /// <para>
+        /// Under the bubble deliberately, and it is the reason the bubble is placed against the
+        /// hole rather than in the middle of the screen: a demonstration the player has to move a
+        /// panel off to see is a demonstration nobody sees.
+        /// </para>
+        /// </summary>
+        void BuildTrace()
+        {
+            if (Trace == null || Trace.Length < 2) return;
+
+            var route = new System.Collections.Generic.List<Vector2>(Trace.Length);
+            var corners = new Vector3[4];
+
+            foreach (var step in Trace)
+            {
+                if (!step) continue;
+
+                step.GetWorldCorners(corners);
+                var min = (Vector2)Content.InverseTransformPoint(corners[0]);
+                var max = (Vector2)Content.InverseTransformPoint(corners[2]);
+                route.Add((min + max) * .5f);
+            }
+
+            if (route.Count < 2) return;
+
+            CoachHand.Show(Content, route, TraceTint, Mathf.Max(1, TraceCells), this);
+        }
+
         /// <summary>Four quads around the hole, so the tile beneath stays fully visible.</summary>
-        void BuildCutout(Rect hole)
+        void BuildCutout(Rect hole, Rect? ring)
         {
             var shade = new Color(.02f, .04f, .06f, Dim);
 
@@ -94,14 +181,22 @@ namespace GlimmerGrove
                                new Vector2(hole.xMin, hole.yMin), new Vector2(hole.xMax, hole.yMax));
             catcher.raycastTarget = true;
 
+            // The ring goes round the thing being named, never round the hole. Those are the
+            // same rectangle for every glade tip and are deliberately not the same for a lesson
+            // that also demonstrates a route: the hole has been widened to keep the whole
+            // gesture lit, and an outline stretched to that would be pointing at a region of
+            // the board rather than at the bead the sentence is about.
+            if (!ring.HasValue) return;
+            var box = ring.Value;
+
             // A border traced around the thing itself, not a halo floating over it.
             // RoundOutline is a sliced sprite, so it takes the target's proportions
             // instead of forcing everything into the same oval — a wide HUD pill and a
             // square tile each get an outline that actually fits them.
             var border = UIKit.Img("Border", Content, Art.RoundOutline(26, 5f),
                                    Pal.A(Pal.Gold, .95f),
-                                   new Vector2(hole.width, hole.height),
-                                   new Vector2(.5f, .5f), hole.center);
+                                   new Vector2(box.width, box.height),
+                                   new Vector2(.5f, .5f), box.center);
             border.raycastTarget = false;
 
             border.transform.localScale = Vector3.one * 1.10f;

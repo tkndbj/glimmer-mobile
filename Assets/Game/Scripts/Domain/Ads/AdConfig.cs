@@ -48,8 +48,8 @@ namespace GlimmerGrove.Ads
         /// rather than as a misconfiguration.
         /// </para>
         /// </summary>
-        public const string AndroidAppKey = "27a0d017d";
-        public const string IosAppKey = "27a0dae15";
+        public const string AndroidAppKey = "27c5d65dd";
+        public const string IosAppKey = "27c5d2c55";
 
         /// <summary>The app key for the platform this build is for.</summary>
         public static string AppKey
@@ -74,17 +74,17 @@ namespace GlimmerGrove.Ads
         /// demand. The lookup below picks by platform for that reason and not for tidiness.
         /// </para>
         /// </summary>
-        public const string AndroidHeartRefill = "y58wb3ylhgpti287";
-        public const string AndroidCoinBonus = "tqzvj9fd70ec87qi";
-        public const string AndroidRunContinue = "mbhc7pqqhnp5znd8";
-        public const string AndroidWinBonus = "ezx904bb5q89hse4";
-        public const string AndroidHintRefill = "1lt4rtqzgvn9zgsf";
+        public const string AndroidHeartRefill = "y06ctzokuzrk5me4";
+        public const string AndroidCoinBonus = "tcmo4y9h32c6l1o7";
+        public const string AndroidRunContinue = "jlc9vpau9o6vviks";
+        public const string AndroidWinBonus = "jjrnpy9yqv47kspn";
+        public const string AndroidHintRefill = "ta2i9vbn3y9hh66q";
 
-        public const string IosHeartRefill = "xwe669e56bzrs6wb";
-        public const string IosCoinBonus = "h8rmyy4ol8scwpmy";
-        public const string IosRunContinue = "fh2djyoesd3akw86";
-        public const string IosWinBonus = "1ijvtsidp55nfekg";
-        public const string IosHintRefill = "1b3el4i4h7ga2sl9";
+        public const string IosHeartRefill = "hddylq6lu1sdgkz4";
+        public const string IosCoinBonus = "ptr8vmjq17ujobq2";
+        public const string IosRunContinue = "1mcymco9r27owwiq";
+        public const string IosWinBonus = "ty0ewca2k689b6si";
+        public const string IosHintRefill = "zfhlojgq1syec60g";
 
         /// <summary>
         /// Whether real identifiers have been filled in.
