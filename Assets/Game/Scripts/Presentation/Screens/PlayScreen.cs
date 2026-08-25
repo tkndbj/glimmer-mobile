@@ -423,10 +423,14 @@ namespace GlimmerGrove
             // plan the entire solution for free and then execute it, which is precisely the
             // pressure the limit exists to apply. Locked covers the raise animation, so the
             // clock still does not burn while the board is flying in.
-            if (!_clock.HasStarted && _board != null && !_board.Locked && !_finished) _clock.Start();
-
-            if (_clock.HasStarted && !_finished && _board != null && !_board.Locked)
-                _clock.Advance(Time.unscaledDeltaTime);
+            //
+            // What this screen can see is whether the board is there and settled. Whether the
+            // run has been allowed to begin at all — the screen still being presented, a
+            // first-timer still reading a lesson — is RunScreen's, and Tick asks it. Both
+            // readings are needed and only one of them is reliable on its own: `Locked` is
+            // written by several things, including tweens scheduled before anybody knew a
+            // lesson was going to be shown. See RunScreen.Hold.
+            Tick(_clock, _board != null && !_board.Locked && !_finished);
 
             PaintClock();
 
@@ -1056,71 +1060,56 @@ namespace GlimmerGrove
             Refresh();
         }
 
-        public override void OnPresented()
+        protected override string Flavour => _def != null ? Loc.Get(_def.LessonKey) : null;
+
+        /// <summary>Shorter than a mode screen's: this one is a line, not a paragraph.</summary>
+        protected override float FlavourSeconds => 3.4f;
+
+        /// <summary>
+        /// Long enough for the intro sweep to have finished, so the tile a tip rings is
+        /// actually on screen to be ringed.
+        /// </summary>
+        protected override float LessonDelay => .75f;
+
+        /// <summary>
+        /// Every mechanic on this board the player has never met, in the order the scan
+        /// reports them.
+        ///
+        /// "Never met" is per player, not per level — so the lesson lands on whichever glade
+        /// they happen to meet the idea in, however they got there, and a chapter shipped next
+        /// year that uses a known mechanic teaches it with no authoring. Almost always empty.
+        /// </summary>
+        protected override void Lessons(System.Collections.Generic.List<Lesson> into)
         {
-            if (_def == null) return;
+            if (_puzzle == null || _board == null) return;
 
-            // A brand new idea outranks the glade's flavour line. Both at once is two
-            // things to read before the first tap, and the tip is the one that is only
-            // ever offered once.
-            if (TryTeach()) return;
-
-            string lesson = Loc.Get(_def.LessonKey);
-            Tween.After(.35f, () => { if (this) Scenery.Toast(Content, lesson, Pal.Cream, 3.4f); }, this);
+            foreach (var sighting in MechanicScan.Unseen(_puzzle, TipLedger.HasSeen))
+                into.Add(Lesson.At(sighting.Mechanic,
+                                   sighting.HasCell ? _board.TileAt(sighting.CellIndex)
+                                                    : HudTargetFor(sighting.Mechanic)));
         }
 
         /// <summary>
-        /// Shows the one mechanic on this board the player has never met.
+        /// Holds the board while a lesson is up.
         ///
-        /// "Never met" is per player, not per level — so the lesson lands on whichever
-        /// glade they happen to meet the idea in, however they got there, and a chapter
-        /// shipped next year that uses a known mechanic teaches it with no authoring.
-        /// Returns false when there is nothing new, which is almost always.
+        /// <para>
+        /// The lock is still worth taking even though the tip covers the whole screen and eats
+        /// every tap: it is what the bottom bar reads to grey its own buttons, so without it a
+        /// board being taught draws an undo and a hint that look live. What it is <em>not</em>
+        /// any more is the thing holding the clock — the intro sweep unlatches this from a tween
+        /// scheduled before the tip existed, which is exactly how the countdown used to end up
+        /// running behind a lesson. See <see cref="RunScreen.Hold"/>.
+        /// </para>
         /// </summary>
-        bool TryTeach()
+        protected override void Latch(bool latched)
         {
-            if (_puzzle == null || _board == null) return false;
+            if (_board == null) return;
 
-            var queue = MechanicScan.Unseen(_puzzle, TipLedger.HasSeen);
-            if (queue.Count == 0) return false;
+            // A run that ended while a lesson was up keeps its locked board. Nothing can end
+            // one here today, and that is a fact about today's panels rather than a rule.
+            if (!latched && _finished) return;
 
-            _board.Locked = true;
-
-            // After the intro sweep, so the tile is actually on screen to be ringed.
-            Tween.After(.75f, () => ShowTip(queue, 0), this);
-            return true;
-        }
-
-        /// <summary>
-        /// Shows one tip and, when it is dismissed, the next.
-        ///
-        /// Chained on dismissal rather than shown together: a glade that introduces two
-        /// ideas would otherwise stack two modals, and the player would meet the second
-        /// before reading the first. The board stays locked until the last one closes.
-        /// </summary>
-        void ShowTip(System.Collections.Generic.List<MechanicSighting> queue, int index)
-        {
-            if (!this) return;
-
-            if (index >= queue.Count)
-            {
-                if (!_finished) _board.Locked = false;
-                return;
-            }
-
-            var sighting = queue[index];
-
-            Flow.Modal<TipOverlay>(v =>
-            {
-                v.Mechanic = sighting.Mechanic;
-                v.Target = sighting.HasCell
-                    ? _board.TileAt(sighting.CellIndex)
-                    : HudTargetFor(sighting.Mechanic);
-
-                // A short beat between them, so the second does not appear to be the
-                // first flickering.
-                v.Dismissed = () => Tween.After(.18f, () => ShowTip(queue, index + 1), this);
-            });
+            _board.Locked = latched;
         }
 
         /// <summary>

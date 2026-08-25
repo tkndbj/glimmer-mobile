@@ -471,23 +471,37 @@ namespace GlimmerGrove.Tests
             foreach (var rung in Ladder)
             {
                 var grove = Grove(rung);
-                int pair = grove.ShortestSolution();
-                var walk = grove.Solution(pair);
+                var walk = grove.CoachRoute();
 
-                Assert.Greater(walk.Count, 1, $"'{rung.Id}' has nothing to demonstrate");
-                Assert.AreEqual(grove.Pairs[pair].Heart, walk[0],
-                                $"'{rung.Id}' does not start at the crystal");
-                Assert.AreEqual(grove.Pairs[pair].Critter, walk[walk.Count - 1],
-                                $"'{rung.Id}' does not end at the critter");
+                Assert.Greater(walk.Length, 1, $"'{rung.Id}' has nothing to demonstrate");
 
-                for (int i = 1; i < walk.Count; i++)
+                int pair = grove.EndpointAt(walk[0]);
+                Assert.GreaterOrEqual(pair, 0, $"'{rung.Id}' does not start on a crystal");
+                Assert.AreEqual(grove.Pairs[pair].Critter, walk[walk.Length - 1],
+                                $"'{rung.Id}' does not end at that pair's critter");
+
+                for (int i = 1; i < walk.Length; i++)
                     Assert.IsTrue(grove.Adjacent(walk[i - 1], walk[i]),
                                   $"'{rung.Id}' step {i} is not a single orthogonal move");
 
-                // And it is the least ground on the board, or the hand draws more than it must.
-                for (int p = 0; p < grove.Pairs.Count; p++)
-                    Assert.GreaterOrEqual(grove.Solution(p).Count, walk.Count,
-                                          $"'{rung.Id}' traces a longer route than pair {p}");
+                // Never over somebody else's crystal — an illegal demonstration reads as
+                // permission, where an impossible one only reads as decoration.
+                for (int i = 1; i < walk.Length - 1; i++)
+                    Assert.AreEqual(-1, grove.EndpointAt(walk[i]),
+                                    $"'{rung.Id}' runs over an endpoint at step {i}");
+
+                // One corner. A demonstration that wanders teaches that the mode is fiddly.
+                int turns = 0;
+                for (int i = 1; i < walk.Length - 1; i++)
+                {
+                    int ax = walk[i] % grove.Width - walk[i - 1] % grove.Width;
+                    int ay = walk[i] / grove.Width - walk[i - 1] / grove.Width;
+                    int bx = walk[i + 1] % grove.Width - walk[i] % grove.Width;
+                    int by = walk[i + 1] / grove.Width - walk[i] / grove.Width;
+                    if (ax != bx || ay != by) turns++;
+                }
+
+                Assert.LessOrEqual(turns, 1, $"'{rung.Id}' turns {turns} times");
             }
         }
     }

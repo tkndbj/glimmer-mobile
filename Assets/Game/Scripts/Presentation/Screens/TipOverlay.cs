@@ -70,8 +70,22 @@ namespace GlimmerGrove
         /// <summary>How far the route reaches in board cells, which decides its pace.</summary>
         public int TraceCells;
 
-        /// <summary>Raised once the player has dismissed it, so the board can unlock.</summary>
+        /// <summary>
+        /// Raised once this tip is done with, so the run can be handed back.
+        ///
+        /// <para>
+        /// <b>Exactly once, whatever the exit</b> — the OK button, the back gesture, or the
+        /// panel simply being destroyed underneath itself. That is the house rule about panels
+        /// with several exits, and here it is load-bearing rather than tidy: whoever is showing
+        /// this holds the run's clock until it fires, so a tip that went away without reporting
+        /// would leave a board that can never be lost on time. The safe outcome is therefore on
+        /// <see cref="OnDestroy"/>, which every exit passes through, and the latch is what stops
+        /// the ordinary exit reporting twice.
+        /// </para>
+        /// </summary>
         public System.Action Dismissed;
+
+        bool _reported;
 
         const float Dim = .78f;
         const float Pad = 18f;
@@ -395,8 +409,24 @@ namespace GlimmerGrove
             // — a call, a crash, the app swapped out — still gets taught next time.
             TipLedger.MarkSeen(Mechanic);
 
-            Close(() => Dismissed?.Invoke());
+            Close(Report);
         }
+
+        /// <summary>Says this tip is finished with, once and once only. See <see cref="Dismissed"/>.</summary>
+        void Report()
+        {
+            if (_reported) return;
+            _reported = true;
+
+            Dismissed?.Invoke();
+        }
+
+        /// <summary>
+        /// The backstop. A tip torn down without being accepted — the screen navigating away
+        /// underneath it, say — still reports, because the thing waiting on it is a run's
+        /// clock and nothing else will ever come along to release it.
+        /// </summary>
+        void OnDestroy() => Report();
 
         /// <summary>The back gesture must not skip a lesson silently; treat it as OK.</summary>
         public override bool OnBack()

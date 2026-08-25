@@ -212,10 +212,14 @@ namespace GlimmerGrove
         void Update()
         {
             if (_view == null || _finished || _closing) return;
-            if (_view.Locked) return;
 
-            if (!_clock.HasStarted) _clock.Start();
-            _clock.Advance(Time.unscaledDeltaTime);
+            // The view's latch and the run's are two different questions. The first says the
+            // grove cannot be drawn on right now — a panel, a cascade, the closing sequence —
+            // and is this screen's to answer. The second says this run has not been allowed to
+            // begin at all: the screen is still being presented, or a first-timer is reading a
+            // lesson. Tick asks that one, and nothing else here may run the clock. See
+            // RunScreen.Hold.
+            if (!Tick(_clock, !_view.Locked)) return;
 
             // Handed the elapsed time and the limit rather than the time left: Remaining answers
             // zero for an untimed grove, which is indistinguishable from "out of light" to
@@ -415,102 +419,71 @@ namespace GlimmerGrove
         /// offered once.
         /// </para>
         /// <para>
-        /// The board is latched while it is up, so the clock does not run behind a modal the
-        /// player is reading, and it is unlatched from the dismissal rather than beside it — a
-        /// run that ended underneath a panel must not be handed back a live board.
+        /// <b>Declared, not shown.</b> What goes up, in what order, with the grove latched and
+        /// the clock held until the last one is closed, is <see cref="RunScreen"/>'s to arrange —
+        /// this only says what there is to teach and what on the board it is about. The
+        /// demonstration is resolved here because only this mode knows what a channel is; see
+        /// <see cref="Demonstrate"/>.
         /// </para>
         /// </summary>
-        public override void OnPresented()
+        protected override void Lessons(System.Collections.Generic.List<Lesson> into)
         {
-            if (Level == null) return;
+            if (Level == null || _view == null || _view.Run == null) return;
 
-            if (_view != null && _view.Run != null)
+            var lesson = Mechanic.WeaveJoin;
+            bool teaching = !TipLedger.HasSeen(lesson);
+
+            if (!teaching && _view.Run.Grove.HasBeads && !TipLedger.HasSeen(Mechanic.WeaveBead))
             {
-                var lesson = Mechanic.WeaveJoin;
-                bool teaching = !TipLedger.HasSeen(lesson);
-
-                if (!teaching && _view.Run.Grove.HasBeads
-                    && !TipLedger.HasSeen(Mechanic.WeaveBead))
-                {
-                    lesson = Mechanic.WeaveBead;
-                    teaching = true;
-                }
-
-                if (teaching) { Teach(lesson); return; }
+                lesson = Mechanic.WeaveBead;
+                teaching = true;
             }
 
-            string flavour = Loc.Get(Level.LessonKey);
-            Tween.After(.4f, () => { if (this) Scenery.Toast(Content, flavour, Pal.Cream, 6f); }, this);
-        }
-
-        /// <summary>
-        /// Puts the lesson up, with a hand showing the gesture it is about.
-        ///
-        /// <para>
-        /// <b>Both of this mode's lessons are shown as well as said, and neither used to be.</b>
-        /// The join lesson was three sentences in a box in the middle of the screen, which is the
-        /// right shape for a rule and the wrong one for a <em>verb</em>: a player who has spent
-        /// four chapters tapping tiles has to convert "drag from a crystal to the critter wearing
-        /// its colour" back into a movement before it means anything, and a hand doing the
-        /// movement skips that step. The bead lesson had the same box and a worse version of the
-        /// problem — it named a thing on the board and then covered the board with itself, so
-        /// there was nothing to look at while reading about it.
-        /// </para>
-        /// <para>
-        /// So the sentences were cut to the half words are good at — the rule the gesture cannot
-        /// show — and the rest is a hand on the real grove: crystal to critter for the join, and
-        /// straight through a ring for the bead, with the ring itself the only thing wearing the
-        /// gold outline.
-        /// </para>
-        /// </summary>
-        void Teach(Mechanic lesson)
-        {
-            _view.Locked = true;
+            if (!teaching) return;
 
             var ring = Demonstrate(lesson, out var route, out var tint, out int cells);
 
-            Tween.After(.55f, () =>
+            into.Add(new Lesson
             {
-                if (!this) return;
+                Mechanic = lesson,
+                Target = ring,
+                Trace = route,
+                Tint = tint,
+                Cells = cells,
+            });
+        }
 
-                Flow.Modal<TipOverlay>(v =>
-                {
-                    v.Mechanic = lesson;
-                    v.Target = ring;
-                    v.Trace = route;
-                    v.TraceTint = tint;
-                    v.TraceCells = cells;
-                    v.Dismissed = () =>
-                    {
-                        if (!this || _view == null) return;
-                        if (!_finished && !_closing) _view.Locked = false;
-                    };
-                });
-            }, this);
+        /// <summary>Long enough for the grove to have settled under the hand about to cross it.</summary>
+        protected override float LessonDelay => .55f;
+
+        /// <summary>
+        /// Holds the grove while a lesson is up, and hands it back afterwards — but never to a
+        /// run that ended underneath the panel.
+        /// </summary>
+        protected override void Latch(bool latched)
+        {
+            if (_view == null) return;
+            if (!latched && (_finished || _closing)) return;
+
+            _view.Locked = latched;
         }
 
         /// <summary>
         /// Picks what the hand traces for a lesson, and what — if anything — is ringed.
         ///
         /// <para>
-        /// The join lesson traces a pair's <b>carved route, cell by cell</b>, and that is not a
-        /// detail of how it is drawn — it is the difference between demonstrating the gesture and
-        /// demonstrating one nobody can make. It used to hand the hand two points, the crystal and
-        /// the critter, so the fingertip crossed the grove on the diagonal: a movement this mode
-        /// has no input for, shown to a player at the exact moment they are being taught what the
-        /// input <em>is</em>. A channel steps orthogonally (<see cref="WeaveLayout.Adjacent"/>), so
-        /// the demonstration has to as well, and the generator's own walk is the one route
-        /// guaranteed to be legal — it never crosses another pair and never leaves the grove. An
-        /// L-shaped path between the two ends would be orthogonal and would still be wrong, because
-        /// it can run straight through somebody else's crystal, which is a demonstration of an
-        /// illegal move rather than an impossible one.
+        /// The join lesson traces <see cref="WeaveLayout.CoachRoute"/>, an <b>elbow</b> between one
+        /// pair's ends, and both of the things it is not were shipped first. It began as two points
+        /// — the crystal and the critter — which interpolates <em>diagonally</em>, a movement this
+        /// mode has no input for, shown at the exact moment a player is being taught what the input
+        /// is. It then traced the generator's carved walk, which is orthogonal and legal and still
+        /// wrong: that walk exists to fill the grove, so it wanders, and a fingertip zig-zagging
+        /// through twenty cells teaches that this mode is fiddly rather than that it is dragged.
         /// </para>
         /// <para>
-        /// Which pair is <see cref="WeaveLayout.ShortestSolution"/> — the least ground to draw
-        /// rather than the closest two ends, which is what this used to ask for and is no longer
-        /// the same question (invariant 20f). It gives away nothing the old version did not: the
-        /// same pair was already being joined end to end, just illegally, and a player still has
-        /// every other pair and the fill rule in front of them.
+        /// The lesson is a verb, so the route is the shortest thing that shows it — press, across,
+        /// one turn, arrive. Which pair, and which way the corner falls, are decided in Domain
+        /// because "may this demonstration cross that cell" is a fact about a board.
         /// </para>
         /// <para>
         /// The bead lesson rings the first bead that has room to be traced through and strokes
@@ -559,15 +532,16 @@ namespace GlimmerGrove
 
             if (grove.Pairs.Count == 0) return null;
 
-            int chosen = grove.ShortestSolution();
-            var walk = grove.Solution(chosen);
-            if (walk == null || walk.Count < 2) return null;
+            var walk = grove.CoachRoute();
+            if (walk == null || walk.Length < 2) return null;
+
+            int chosen = Mathf.Max(0, grove.EndpointAt(walk[0]));
 
             // Every cell of the walk, endpoints included, so the hand steps the way a finger
             // has to. Degrades to nothing rather than to a shortcut if the board has not built:
             // a partial route would be a wrong demonstration, which is worse than no hand.
-            var steps = new RectTransform[walk.Count];
-            for (int i = 0; i < walk.Count; i++)
+            var steps = new RectTransform[walk.Length];
+            for (int i = 0; i < walk.Length; i++)
             {
                 steps[i] = _view.CellAt(walk[i]);
                 if (!steps[i]) return null;
@@ -575,7 +549,7 @@ namespace GlimmerGrove
 
             route = steps;
             tint = Pal.EnergyColour(grove.Pairs[chosen].Colour);
-            cells = walk.Count - 1;
+            cells = walk.Length - 1;
 
             // Nothing is ringed: the lesson is the movement between two things rather than
             // either of them, and an outline round one end would say "this one".

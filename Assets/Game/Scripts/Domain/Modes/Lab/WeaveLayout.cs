@@ -159,6 +159,86 @@ namespace GlimmerGrove.Modes
         /// whose route takes the longest way round.
         /// </para>
         /// </summary>
+        /// <summary>
+        /// The route a coaching hand traces: one corner between a pair's two ends.
+        ///
+        /// <para>
+        /// <b>Not the carved route,</b> which was tried and is wrong for this. The generator's
+        /// walk exists to <em>fill</em> the grove, so it wanders — legal at every step and
+        /// unreadable as a demonstration, because a player watching a fingertip zig-zag through
+        /// twenty cells learns that this mode is fiddly rather than that it is dragged. The
+        /// lesson is the verb. An elbow is the shortest thing that still shows it: press, go
+        /// across, turn once, arrive.
+        /// </para>
+        /// <para>
+        /// <b>And not a straight line,</b> which is what it drew before either of those and is
+        /// the reason this exists — two points and nothing between them is interpolated
+        /// diagonally, a movement this mode has no input for at all.
+        /// </para>
+        /// <para>
+        /// Both elbows are tried and one that passes through another pair's crystal or critter
+        /// is refused, because that is a demonstration of an <em>illegal</em> move, which is
+        /// worse than an impossible one — impossible reads as decoration, illegal reads as
+        /// permission. A pair with no clean elbow is skipped rather than bent around, and if no
+        /// pair on the board has one the carved route is the fallback: winding, but true.
+        /// </para>
+        /// </summary>
+        public int[] CoachRoute()
+        {
+            int[] chosen = null;
+            int fewest = int.MaxValue;
+
+            for (int p = 0; p < _pairs.Length; p++)
+            {
+                int span = Distance(_pairs[p].Heart, _pairs[p].Critter);
+                if (span < 1 || span >= fewest) continue;
+
+                var elbow = Elbow(p, true) ?? Elbow(p, false);
+                if (elbow == null) continue;
+
+                chosen = elbow;
+                fewest = span;
+            }
+
+            if (chosen != null) return chosen;
+
+            var walk = _solution[ShortestSolution()];
+            var copy = new int[walk.Length];
+            System.Array.Copy(walk, copy, walk.Length);
+            return copy;
+        }
+
+        /// <summary>
+        /// One L between a pair's ends — along x first, or along y first — or null if it would
+        /// run over somebody else's endpoint.
+        /// </summary>
+        int[] Elbow(int pair, bool acrossFirst)
+        {
+            var ends = _pairs[pair];
+            int ax = ends.Heart % Width, ay = ends.Heart / Width;
+            int bx = ends.Critter % Width, by = ends.Critter / Width;
+
+            var path = new List<int>();
+            int x = ax, y = ay;
+            path.Add(Index(x, y));
+
+            for (int leg = 0; leg < 2; leg++)
+            {
+                bool across = leg == 0 == acrossFirst;
+
+                if (across) while (x != bx) { x += x < bx ? 1 : -1; path.Add(Index(x, y)); }
+                else        while (y != by) { y += y < by ? 1 : -1; path.Add(Index(x, y)); }
+            }
+
+            for (int i = 1; i < path.Count - 1; i++)
+            {
+                int owner = EndpointAt(path[i]);
+                if (owner >= 0) return null;
+            }
+
+            return path.ToArray();
+        }
+
         public int ShortestSolution()
         {
             int chosen = 0, fewest = int.MaxValue;

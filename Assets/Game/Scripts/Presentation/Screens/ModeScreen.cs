@@ -227,12 +227,11 @@ namespace GlimmerGrove
         public override void LeaveToHome() => Flow.Go<HomeScreen>();
         public override bool OnBack() { LeaveToMap(); return true; }
 
-        public override void OnPresented()
-        {
-            if (Level == null) return;
-
-            string lesson = Loc.Get(Level.LessonKey);
-            Tween.After(.4f, () => { if (this) Scenery.Toast(Content, lesson, Pal.Cream, 6f); }, this);
-        }
+        /// <summary>
+        /// The glade's flavour line. Declared rather than shown, so <see cref="RunScreen"/>
+        /// can keep it behind whatever this run has to teach first — and so a mode that has
+        /// something to teach never has to remember that it also has a line to suppress.
+        /// </summary>
+        protected override string Flavour => Level != null ? Loc.Get(Level.LessonKey) : null;
     }
 }

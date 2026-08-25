@@ -89,22 +89,22 @@ namespace GlimmerGrove
         /// trapped in, and it is where the ink is cleared — a stroke that began on top of the
         /// last one would say the route may be drawn twice.
         /// </summary>
-        public const float RestSeconds = .85f;
+        public const float RestSeconds = .95f;
 
         /// <summary>How long the ink takes to clear, at the end of the rest.</summary>
         public const float TrailFadeSeconds = .30f;
 
         /// <summary>Seconds the fingertip spends crossing one cell, before the ceiling.</summary>
-        public const float CellSeconds = .105f;
+        public const float CellSeconds = .190f;
 
         /// <summary>
         /// The shortest a stroke may take. A two-cell demonstration at the raw rate is a fifth
         /// of a second, which is not a hand travelling — it is the hand being somewhere else.
         /// </summary>
-        public const float MinDraw = .52f;
+        public const float MinDraw = .70f;
 
         /// <summary>The longest, however far it has to go. Past this the rate gives way.</summary>
-        public const float MaxDraw = 1.45f;
+        public const float MaxDraw = 2.60f;
 
         /// <summary>How long the fingertip takes to cross <paramref name="cells"/> cells.</summary>
         public static float DrawSeconds(int cells)

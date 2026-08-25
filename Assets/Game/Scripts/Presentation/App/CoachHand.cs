@@ -49,7 +49,13 @@ namespace GlimmerGrove
         /// <summary>How far the hand rises off the board between strokes.</summary>
         const float Rise = 38f;
 
-        const float DotSize = 18f;
+        /// <summary>
+        /// How thick the demonstrated line is, against <c>WeaveView.LiveThick</c>'s .24 of a
+        /// cell. Deliberately the same weight as the line under a real finger — the ink here is
+        /// pretending to be exactly that, so a different thickness would read as a different
+        /// thing.
+        /// </summary>
+        const float InkThick = 15f;
 
         /// <summary>
         /// Starts a demonstration under <paramref name="parent"/>.
@@ -74,21 +80,49 @@ namespace GlimmerGrove
 
             var root = UIKit.Node("Coach", parent);
 
-            // Bounded by the route's own length rather than by the dot spacing, for
-            // GridView's reason: a route across a wide grove must not cost more objects than
-            // one across a narrow one, and nothing here is worth a hundred images.
-            int dots = Mathf.Clamp(Mathf.RoundToInt(cells * 2.2f), 5, 28);
-            var ink = new Image[dots];
-            var at = new float[dots];
+            // The ink is a line, not a row of dots, and that is the whole of what it is for.
+            // It used to be discs spaced along the route, which reads as a dotted trail — a
+            // *path marker*, the thing a map draws to say "go this way". What is being taught
+            // here is that the player draws, so the ink has to be the mark a finger leaves: one
+            // capsule per straight leg, grown from its own start, with a disc at every corner
+            // to round it. That is `WeaveView.Link` and `WeaveView.Knuckle`, deliberately, so
+            // the demonstration and the real thing cannot drift apart.
+            //
+            // It also costs *fewer* objects than the dots did, and bounded by corners rather
+            // than by length: an elbow is two legs however wide the grove is.
+            var corners = Corners(route);
+            int legs = corners.Length - 1;
 
-            for (int i = 0; i < dots; i++)
+            var ink = new Image[legs];
+            var from = new float[legs];
+            var span = new float[legs];
+            var joint = new Image[corners.Length];
+
+            float run = 0f;
+            for (int i = 0; i < legs; i++)
             {
-                at[i] = (i + .5f) / dots;
-                var p = PointOn(route, lengths, at[i]);
+                var a = route[corners[i]];
+                var b = route[corners[i + 1]];
+                var delta = b - a;
+                float length = delta.magnitude;
 
-                ink[i] = UIKit.Img("Ink" + i, root, Art.Disc(32), Pal.A(tint, 0f),
-                                   Vector2.one * DotSize, new Vector2(.5f, .5f), p);
+                from[i] = run / total;
+                run += length;
+                span[i] = Mathf.Max(1e-4f, length / total);
+
+                // Pivoted at the leg's own start and rotated to point along it, so growing it
+                // is one number: a capsule that grew from its centre would be a line drawn from
+                // the middle outwards, which is not how anybody draws.
+                ink[i] = UIKit.Img("Ink" + i, root, Art.Capsule(24, 96), Pal.A(tint, 0f),
+                                   new Vector2(InkThick, 0f), new Vector2(.5f, 0f), a);
+                ink[i].rectTransform.localRotation =
+                    Quaternion.Euler(0, 0, Mathf.Atan2(delta.y, delta.x) * Mathf.Rad2Deg - 90f);
             }
+
+            for (int i = 0; i < corners.Length; i++)
+                joint[i] = UIKit.Img("Joint" + i, root, Art.Disc(64), Pal.A(tint, 0f),
+                                     Vector2.one * InkThick, new Vector2(.5f, .5f),
+                                     route[corners[i]]);
 
             var hand = UIKit.Img("Hand", root, Art.Hand(160), Color.white,
                                  Vector2.one * HandSize, new Vector2(.5f, .5f), route[0]);
@@ -113,20 +147,59 @@ namespace GlimmerGrove
                 hrt.localScale = Vector3.one * (1f + beat.Lift * .10f - beat.Press * .09f);
                 hand.color = new Color(1f, 1f, 1f, beat.Alpha);
 
+                // Each leg is drawn out to wherever the fingertip has got to, so the line is
+                // laid down by the hand rather than revealed behind it.
                 for (int i = 0; i < ink.Length; i++)
                 {
                     if (!ink[i]) continue;
 
-                    // A dot lights just as the fingertip reaches it rather than all at once,
-                    // so the ink reads as being laid down by the hand and not as a route the
-                    // hand happens to be following.
-                    float lit = Mathf.Clamp01((beat.Trail - at[i]) / .07f) * beat.TrailAlpha;
-                    ink[i].color = Pal.A(tint, lit * .85f);
-                    ink[i].rectTransform.localScale = Vector3.one * (.55f + lit * .45f);
+                    float along = Mathf.Clamp01((beat.Trail - from[i]) / span[i]);
+                    var rt = ink[i].rectTransform;
+                    rt.sizeDelta = new Vector2(InkThick, span[i] * total * along);
+                    ink[i].color = Pal.A(tint, along > 0f ? .85f * beat.TrailAlpha : 0f);
+                }
+
+                for (int i = 0; i < joint.Length; i++)
+                {
+                    if (!joint[i]) continue;
+
+                    // The `> 0` matters for the first corner: the reach and the press both run
+                    // with Trail at zero, so without it a dot sits on the board waiting to be
+                    // pressed, which gives the answer away before the hand has arrived.
+                    bool reached = beat.Trail > 1e-4f &&
+                                   beat.Trail >= (i < from.Length ? from[i] : 1f) - 1e-4f;
+                    joint[i].color = Pal.A(tint, reached ? .85f * beat.TrailAlpha : 0f);
                 }
             }, owner, "coach").Loop(-1, false);
 
             return root;
+        }
+
+        /// <summary>
+        /// The indices in <paramref name="route"/> where it actually turns.
+        ///
+        /// A route arrives one board cell at a time, so a straight leg is a run of collinear
+        /// points. Drawing a capsule per cell would put a seam every cell down an otherwise
+        /// straight line; collapsing them first is what makes the ink one stroke.
+        /// </summary>
+        static int[] Corners(IList<Vector2> route)
+        {
+            var keep = new List<int> { 0 };
+
+            for (int i = 1; i < route.Count - 1; i++)
+            {
+                var before = route[i] - route[i - 1];
+                var after = route[i + 1] - route[i];
+
+                // Any turn at all is a corner. Cross rather than a dot so a doubling back —
+                // which no elbow produces, but a fallback carved route can — counts as one too.
+                if (Mathf.Abs(before.x * after.y - before.y * after.x) > 1e-3f ||
+                    Vector2.Dot(before, after) < 0f)
+                    keep.Add(i);
+            }
+
+            keep.Add(route.Count - 1);
+            return keep.ToArray();
         }
 
         static Vector2 PointOn(IList<Vector2> route, IReadOnlyList<float> lengths, float along)

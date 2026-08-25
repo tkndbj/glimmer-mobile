@@ -1350,6 +1350,16 @@ and a screenshot of the source.
   on `OnDestroy` and make the exception the thing somebody declares — `AdOfferOverlay.Dismissed`,
   the pause menu's unlatch, `BoardView.Locked` as a property that raises `OnChanged`,
   `WeaveView.Finishing`. Exactly one of `Rewarded`/`Dismissed` fires, so both must be handled.
+- **A run begins when `RunScreen` says so, never when a board happens to be unlocked.** A
+  board's `Locked` flag has several writers and one of them is an animation: a first-timer's
+  tip latched the board on presentation, `BoardView.IntroSweep`'s tween unlatched it a beat
+  later, and the countdown then ran for as long as the player took to read a lesson they are
+  shown once in their life — and after three seconds of it the run was committed, so backing
+  out cost a heart. Both writes were correct; only their order was wrong, which is why no
+  compile, validator or screenshot could see it. `RunHold` is a latch nothing else writes,
+  held from construction and released only after the last lesson closes, and `RunScreen.Tick`
+  is the one door a clock may start or advance through. A mode *declares* what it teaches
+  (`Lessons`, `Flavour`) and never sequences it.
 - **Repaint from an event, never from a callback on the panel that changed something.**
   `CompanionLedger.Changed`, `CloudSaveService.IdentityChanged`, `GameSettings.Changed`.
 - **`UIKit.Box` pivots centre.** Anchoring a child to an edge puts half of it outside, and
