@@ -27,11 +27,21 @@
 
 import { createHash, timingSafeEqual } from "node:crypto";
 
-/** The permanent placement ids, mirroring `AdPlacement` on the client. */
+/**
+ * The permanent placement ids, mirroring `AdPlacement` on the client.
+ *
+ * <p>
+ * `run_continue` is **retired and must never be reused**. It bought seconds on a glade's
+ * countdown, and the countdown is gone — a run is graded and ended on turns alone. An id
+ * travels like a level id: it is in the LevelPlay dashboard, in every `grantLog` row ever
+ * written and in every analytics event, so pointing it at some other offer would silently
+ * re-label history. Removing it from this list is also what makes a claim for it fail
+ * rather than be honoured, which is the correct answer once no client can raise one.
+ * </p>
+ */
 export const AD_PLACEMENTS = [
   "heart_refill",
   "coin_bonus",
-  "run_continue",
   "win_bonus",
   "hint_refill",
 ] as const;
@@ -142,17 +152,11 @@ export function adCurrencyValue(
  * placement id — the client does not get to name which ledger it is paid out of.
  *
  * <p>
- * `run_continue` always answers null here, and is listed in {@link AD_PLACEMENTS} anyway.
- * It pays `run_time` — seconds on the run in progress — which is spent before the callback
- * for it has finished arriving, cannot be banked and cannot be moved anywhere else. Listing
- * it keeps the published config a complete description of what the client offers, so a
- * placement missing from this list stays a real signal rather than a question.
- * </p>
- * <p>
- * `hint_refill` is the second of those, and for a plainer reason: a hint is not currency,
- * so there is nothing for this server to adjudicate and the callback grants nothing. It is
- * listed for the same reason the continue is — the published config describes what the
- * client offers, and a gap in it is a question rather than an answer.
+ * `hint_refill` and `heart_refill` answer null and are listed in {@link AD_PLACEMENTS}
+ * anyway: neither is currency, so there is nothing for this server to adjudicate and the
+ * callback grants nothing. They are listed because the published config is meant to be a
+ * complete description of what the client offers, so a placement missing from it stays a
+ * real signal rather than a question.
  * </p>
  */
 export function adCurrencyOf(ads: AdsConfig, placement: string): string | null {

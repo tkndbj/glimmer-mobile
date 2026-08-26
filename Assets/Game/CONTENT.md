@@ -109,12 +109,12 @@ Two consequences worth holding on to:
    cannot be finished, dials par to a target with `fit`, and reports what the board
    actually asks of a player — see *What makes a glade hard* below, and read it before
    authoring anything, because the first cut of two whole chapters got that wrong in a
-   way nobody could see by looking. The Mill Vale and the Amberwood keep their boards
-   that way in `Tools/chapters/c02_millvale.py` and `c03_amberwood.py`, which regenerate
-   the shipped JSON and can check themselves against it (`--check`) — worth copying for
-   any chapter whose boards will be retuned, and deliberately outside the build gate,
-   since the Shallows has no such source and a gate demanding one would make it
-   unbuildable.
+   way nobody could see by looking. Every glade chapter now keeps its boards that way in
+   `Tools/chapters/<chapter_id>.py`, which regenerate the shipped JSON and can check
+   themselves against it (`--check`) — copy one for any new chapter. It stays deliberately
+   outside the build gate all the same: a gate demanding a source would make a chapter
+   authored by hand unbuildable, and the point of these files is that a chapter can be
+   *retuned* rather than that it must have been generated.
    **Leave `par` out** — it is derived from the
    board, so an omitted par can never be wrong while a typed one can. **Do set
    `backdrop`**: a chapter that does not name its own art inherits another
@@ -142,8 +142,8 @@ Two consequences worth holding on to:
 4. Add `chapter.<id>.name` and, per level, `level.<id>.name` / `.tagline` /
    `.lesson` to `loc/en.json`. Missing keys fail validation, which names each one.
 5. `Glimmer Grove ▸ Content ▸ Sync Manifest` — adopts the new chapter into
-   `manifest.json`, picks an `order` and fills in its level list. Run it after
-   *every* content edit.
+   `manifest.json`, picks an `order`, fills in its level list and derives its `mode`
+   from the levels it holds. Run it after *every* content edit.
 6. `Glimmer Grove ▸ Validate Content`. It must report zero errors — builds refuse
    to run otherwise.
 
@@ -153,6 +153,15 @@ shipped — and says in the log what it chose; change the number there if it gue
 wrong. **`order` lives only in the manifest**: a chapter body that states its own is
 rejected, because where the game goes next must be readable from one file and
 changeable by pushing that one file.
+
+**`mode` is derived too, and that is invariant 20h.** It was the last field of an entry
+written by hand, and it is the one field whose absence nothing notices: a weave chapter
+missing `"mode": "weave"` is indexed as a glade chapter, and every level still parses,
+every board is still proved solvable, every string resolves and the build goes green —
+while the chapter is gated on a stranger's stars, filed under the wrong tab and routed to
+a screen that cannot play it. Sync now reads the mode off the body, `Validate Content`
+fails the build on any disagreement, and a chapter holding two modes is refused by both,
+because a chapter is one way of playing.
 
 **Sync rewrites the whole manifest, and it proves it lost nothing before it saves.**
 It only *derives* the chapter list; the roster and the event calendar are authored
@@ -206,7 +215,7 @@ crossings: = armsA + armsB + /startRotation [+ !] [+ ~turns] [+ &rune]
 briars:    % open   + shut   + /startRotation [+ !] [+ ~turns] [+ &rune]
 
 head   -  conduit    =  crossing    %  briar    *  heart-crystal
-       @  sleeping critter    x  duskcap    .  empty
+       @  sleeping critter    .  empty
 arms   any of N E S W, written in the SOLVED orientation
 A+B    on a crossing: the arms of one strand, then the arms of the other, which are
        interchangeable. On a briar: the arms that are OPEN, then the arms the thorns
@@ -246,8 +255,8 @@ local act. Two things follow, and both are the validator's business:
 
 - **A root is charged once.** Par is the sum of the turns each *root* owes, not
   each tile, because one tap moves them all — so a bound board's par is lower
-  than its tile count suggests, and the move budget and the clock (both multiples
-  of par) follow it automatically. Nothing is authored for this.
+  than its tile count suggests, and the star lines and the move budget (all
+  multiples of par) follow it automatically. Nothing is authored for this.
 - **A root must be able to reach its own solution.** Some single number of turns
   has to solve every conduit on it. If none does, the glade cannot be finished
   and looks perfectly authored — the same trap a brittle conduit owed more turns
@@ -289,11 +298,11 @@ three of them are the validator's business:
   that passes over wears a shadow. That is the whole of how it is told from a
   crossroads, in any language.
 
-What it unlocks is worth knowing before authoring with it, because it changes a rule
-the last chapter stated flatly. **A duskcap's island of dark can now run *through* the
-light rather than only around it.** In the solution every arm mates, so a lit cell's
-neighbours are lit — which used to force the dark to detour. Across a crossing it does
-not, and the misrotation that joins the two is a real and recoverable trap.
+What it unlocks is worth knowing before authoring with it. **A second network can now
+run *through* a live one rather than only around it.** In the solution every arm mates, so
+a lit cell's neighbours are lit — which used to force two networks that must stay apart to
+detour around each other with a gap between them. Across a crossing they do not, and the
+misrotation that joins the two is a real and recoverable trap.
 
 **Briars (`%`)** are conduits with two of their four ways thorned shut, and one tap
 swaps which. Written `%NS+EW` or `%NE+SW`: four arms in two pairs of two, the open pair
@@ -316,13 +325,18 @@ arms conduct* (`Puzzle.Live`). Five things follow.
 - **A briar can never merge two networks and then keep them merged.** The pair it opens is
   merged and the pair it shuts is cut, always both at once, which is what makes the three
   shapes below the whole of what a briar can be worth.
-- **A briar whose thorns close nothing off** — every way it has leading back into one
-  network in the authored solution — is a tile the player cannot place and has no reason to
-  place either way, and the validator says so. A warning rather than an error: a glade may
-  want a bramble that is scenery on the board that teaches what a bramble is. Note the
-  question is about what its *ways touch*, never about what reaches it: an unlit briar is
-  not evidence of anything, and a briar standing in an island of dark with its thorns
-  facing the grove is one of the best tiles this mechanic has.
+- **Turning a briar one step has to stop the glade finishing**, and the validator turns
+  every briar and every twisted crossing to check (`CheckDecidableTiles`). One that still
+  finishes is a tile the player cannot place by looking, with no reason on the board to
+  place it either way and a par charged for it. A warning rather than an error: a glade may
+  want a bramble that is scenery on the board that teaches what a bramble is. Note what the
+  question is *not*. It is not whether the tile carries light — an unlit briar is not
+  evidence of anything. And it is not whether the thorns separate two networks, which is
+  the reading that shipped and was wrong in both directions: it missed a briar holding
+  apart two networks of the **same colour**, where opening the thorns costs nobody
+  anything, and it fired on the pocket shape (invariant 5f), where the open pair is the
+  only way in and both thorned ways lead back into the one grove. The consequence is the
+  rule, because the consequence is what the player meets.
 - **It takes no colour and it keeps its hub**, because the pair it holds open really is
   joined. What tells it from a crossroads is the thorns, drawn across the closed ways and
   swept round to the other pair by every tap.
@@ -334,76 +348,99 @@ authoring one:
    version, and the right one for the glade that introduces it.
 2. **It joins what its thorns were holding apart.** Thorns standing between a red network
    and a blue one blend both the moment they move.
-3. **It wakes the dark.** If the open pair is part of a *loop*, shutting it costs nothing —
-   the light goes round — so no critter warns the player, and the only thing that changed
-   is the shadow the other pair just let in. That is this file's rule about fords, and the
-   briar is what makes it easy to author rather than a happy accident: put one shut arm on
-   the live network and the other on the island of dark, and turning it always wakes.
+3. **It only answers to the pocket beside it.** If the open pair is part of a *loop*,
+   shutting it costs the grove nothing — the light goes round — so none of the grove's
+   critters warns the player, and the only thing that changed is the pocket the other pair
+   just let in on. That is this file's rule about fords, and the briar is what makes it easy
+   to author rather than a happy accident: put one shut arm on the live network and the
+   other on a pocket that carries a heart and a critter of its own, and turning it always
+   pours one colour into the other.
 
-**Duskcaps (`x`)** are creatures the light must never reach. Any light at all
-wakes one, and a glade with a woken duskcap is not finished however many critters
-are awake — it is one extra term in the win condition and nothing else. They take
-no colour, for the obvious reason.
+**There was a fifth tile and it is gone.** `x` was the **duskcap**, a creature the light had
+to never reach: a glade with one woken was unfinished however many critters were awake. It
+was removed because no board could ever demonstrate the rule. Every other thing a player can
+get wrong here shows itself — a critter goes out — and a woken duskcap looked precisely like
+a finished glade that refuses to settle, which is the one thing a board must never look like
+(invariant 20g, learned again in Lightweave). The twenty-nine duskcaps that had shipped are
+now ordinary critters, each standing in a **pocket with a heart of its own**: the ford still
+has to be read, the wrong turn still pours one colour into another, and now the pocket's own
+critter says so. `x` is a **retired head and must never be reused**, and so is the lesson id
+`duskcap`; both are refused rather than ignored, because a chapter file carrying one is
+content written for a build that no longer exists.
 
-Authoring them is mostly a consequence of the arms-mate rule. In the solved board
-every arm points at a neighbour pointing back, so a lit cell's neighbours are lit
-too: a duskcap and its conduits have to be **their own island of dark**, reaching
-no heart-crystal at all. The validator says so in those words if you get it wrong,
-separately from the critter count, because the two are opposite mistakes with
-opposite fixes.
+**There is no clock. A glade is graded and lost on turns alone.** Every star line
+and the losing line are multiples of `par`, and `par` is derived from the board, so
+a glade authors *no* difficulty number unless it wants a different budget from the
+default. Three stars is `ceil(par × 1.20)` turns, two is `ceil(par × 1.40)`, and the
+run is lost at `ceil(par × 1.60)` — computed from exact hundredths, because `1.20f` is
+1.20000004768… and a float product put three stars a turn out on every par where it should
+have landed on a whole number.
 
-Which means the danger is never the duskcap itself — it is every *turnable* tile
-where the dark island runs alongside the live network, since that is the rotation
-that joins them. Rooting a duskcap makes it safer, not more dangerous. The design
-work is winding the dark island through the live one.
+**The three lines are even thirds of the slack, and that is what keeps them all landable.**
+A run can only ever score inside `[par, par × 1.60]` — 0.60 par of slack — so it is cut into
+three bands 0.20 wide. Change one and you change all three: this was learned by shipping a
+1.60 budget against a 2.00 two-star line, which put two stars *outside* the survivable range
+and made one star unscorable by anybody, with every number still looking plausible and every
+board still validating green.
 
-**Move budget.** Every glade gets one automatically: `ceil(par × 2.6)`, always at
-least one turn above the one-star line. Override with `budgetFactor` on a level,
-or set it negative to remove the budget entirely. Running out costs a heart.
+**Why the countdown went.** A timer prices *thinking*, and thinking is the whole
+product — every rule the board has (brittle stone on a crossing, taproots whose
+members the arms cannot settle, a ford on a cycle) exists to force a
+decision, and a clock makes flailing the dominant strategy. Stars were the *worse*
+of the turns and the time, so the turn thresholds — the only half that measures
+whether the board was solved well — decided nothing for any player who stopped to
+think, and the third star asked 1.35 sustained taps a second, which is a motor
+threshold rather than a puzzle one. It also scaled with the wrong thing: the limit
+came off par, and par is *length*, so a long dot-to-dot got a generous clock and a
+short board full of twisted crossings got a tight one.
 
-**In practice it never fires, and that is worth knowing before you tune it.** The
-budget is `2.6 × par` taps while the clock is `timeFactor × par` seconds, so
-running out of turns first needs a sustained `2.6 / timeFactor` taps a second —
-above the rate three stars asks for, for the whole run, without solving. `Undo`
-also refunds a move while the clock keeps going, so exploring is free in turns and
-paid in seconds. And `MoveBudget` is floored at one turn past the one-star line, so
-a `budgetFactor` under `silverFactor` does nothing at all. **The clock is the fail
-state; the budget is the backstop under someone who is drumming.**
+**Move budget.** Every glade gets one automatically: `ceil(par × 1.6)`. Override with
+`budgetFactor` on a level, or set it negative to remove the budget entirely — which
+the first glade in the game does, and nothing else. Running out costs a heart.
 
-**Par is length, not difficulty, and the clock is derived from it.** A chapter's
-pars should *not* rise monotonically — ten rising numbers read as a treadmill, and
-a low-par board that is hard to think about is a better change of pace than a long
-one. Watch the ceiling though: the time limit is `par × timeFactor`, so past about
-par 70 a glade becomes a three-minute run on a phone and wants a `timeFactor`
-override. Nothing warns about that — `CheckClock` has an opinion about the tap
-*rate* three stars demands, not about how long a run lasts.
+**An authored `budgetFactor` means exactly what it says — there is no floor.** `MoveBudget`
+used to clamp to one turn past the two-star line so a run still earning stars could never be
+the run that ended. That floor is gone: with the clock removed this is the only way to lose a
+glade, and a fail line past the point where the player has already stopped earning anything is
+a formality rather than a fail state.
 
-**Author `timeFactor` per glade; it is the difficulty ramp.** The default is 1.70
-seconds per par turn, and every shipped glade overrides it. The shape to keep: the
-first few glades of the game *looser* than the default (nothing about a player's
-first ten minutes should end in a lost heart), then a slow tighten, a chapter
-finale at about 1.5, and a fresh mechanic given slack on the glade that teaches it.
-The shipped ramp runs 2.20 → 1.50 across the Shallows and 1.90 → 1.50 across the
-Mill Vale. Aim the ramp at a *clear rate*, not at a feeling — around 85% of first
-attempts early, around 60% late, with finales lower. You will not know the real
-numbers until the game is live; that is what `clockScale` below is for.
+**A player can now lose a run they were on course to two-star**, which is deliberate:
+running out costs a heart and pays nothing, and that is the whole rule.
 
-**The star thresholds do not move with it.** Three stars is `par × 1.00` seconds
-and two is `par × 1.50`, held against par rather than taken as fractions of the
-limit, and clamped to the limit. So tightening a glade's clock changes where the
-run is *lost* and never what a clear is *worth* — which matters because earned
-credits are derived from the star ledger, so a star line that drifted with the
-difficulty would deflate every reward in the game by a factor nobody wrote down.
+**Moving `budgetFactor` on a level means moving its star factors too.** They are one decision
+in three numbers. `Validate Content` and `Tools/verify/content.py` both prove the ordering and
+say which band you stranded:
 
-**`difficulty.clockScale` in `progression.json` is the live lever.** It multiplies
-every glade's limit, bounded to 0.6–2.0 by `DifficultyLimits` (a bad push must not
-be able to make the game unfinishable). Reach for it rather than for twenty
-`timeFactor` edits when the whole game is out by a bit; reach for `timeFactor` when
-one glade is wrong. Two things to know. It reaches the limit and nothing that is
-stored — a run records elapsed play time, never time left, so `bestMillis`, the map
-badge and the published move deciles all keep their meaning. And the build gate
-warns when a glade could not survive being pushed to the 0.6 floor, because that
-retune never passes back through the validator.
+| what you set | reported as | why |
+|---|---|---|
+| `goldFactor >= silverFactor` | **error** | the two-star band is empty |
+| `budgetFactor <= goldFactor` | **error** | no run can be graded at all |
+| `budgetFactor <= silverFactor` | **warning** | one star can never be scored |
+
+Both read the **factors**, not the turn counts they derive: on a board of par 1 or 2 all three
+round onto the same number however they are set, and reporting that would be a complaint about
+board size rather than about tuning.
+
+Do not reach for these to make the game harder in general — that is the boards' job (see *What
+makes a glade hard*) and the budget's. And note what a star retune does **not** touch: the
+ceiling. Three stars a level, over however many levels the catalog holds, exactly as before, so
+earned credits are unmoved at the top and only the standard of play needed to reach them has
+changed. A drop that *adds* levels raises the ceiling, which is what a drop is for; a retune must
+not.
+
+**`Undo` refunds a move, is unlimited, and a hint charges none**, so the meter counts
+*committed* wrong turns and nothing else. Trying a crossing that reads the same half a turn
+round and taking it back is free — which it has to be, because that is correct play rather
+than flailing. That is what makes a budget this tight fair: the default came down **2.60 →
+2.30 → 1.60** as the clock was removed and the budget became the only fail state, and 2.60
+had been chosen while the clock ended lost runs first.
+
+**Par is length, not difficulty.** A chapter's pars should *not* rise monotonically —
+ten rising numbers read as a treadmill, and a low-par board that is hard to think
+about is a better change of pace than a long one. What makes a glade hard is
+*decisions*, which is a countable thing: see **What makes a glade hard** above and
+`Tools/verify/difficulty.py`. Aim a chapter at a *clear rate* rather than at a
+feeling — around 85% of first attempts early, around 60% late, with finales lower.
 
 ## Hollow levels
 
@@ -444,7 +481,6 @@ every critter is awake; you lose when the sparks run out and one is not.
 | `A>B` | needs *any* light at all, gives blue |
 | `Y>R` | needs yellow — red **and** green have to reach it — and gives red |
 | `*G` | a heart: awake before the run starts, giving green from the first frame |
-| `x` | a duskcap (see below — supported, and not usable yet) |
 
 Colours are the board's own letters: `R G B` and the mixes `Y M C W`, plus `A` for "anything".
 A token may end in `:n` to choose which critter flipbook draws it; left off, one is picked from
@@ -481,18 +517,6 @@ Python, a generator, and `build_chapter.py`, which writes the chapter body and p
 as a table. The mirror is a second copy of the rules and is therefore never authoritative — the
 shipping C# solver is what `Validate Content` runs, and any disagreement is a bug in the mirror.
 
-### Duskcaps do not work yet, and the reason is worth knowing
-
-`x` parses, the model implements it, and `HollowSolver.DarkRejects` counts what it refuses — and
-on every board it is zero, so no chapter should ship one. Every critter has to wake to finish a
-hollow, and a waking critter gives light to all four of its neighbours, so a duskcap standing
-beside anything alive is ruined *by the board* rather than by the player, and one standing beside
-only empty cells can never be reached. There is no third case: "solvable" and "the dark refuses
-something" are mutually exclusive. That is invariant 5d's question asked of a second mode, and it
-is the same failure the first thirty glades had — a mechanic that rejects no arrangement is
-decoration. Making it real needs a hollow where not every critter has to wake, or a critter whose
-gift depends on the light that woke it rather than on what the author typed.
-
 ## What makes a glade hard
 ## What makes a glade hard
 
@@ -511,8 +535,8 @@ boards a player might plausibly arrive at — and then asks which of them actual
 ```
 glance   tiles a player cannot place by looking at that tile and the ground around it
 arms     tidy arrangements the board admits
-wins     those of them that also light every critter and wake no duskcap
-decided  tiles whose orientation only colour or the dark can settle
+wins     those of them that also light every critter
+decided  tiles whose orientation only colour can settle
 ```
 
 Two findings drove the rebuild of chapters two and three, and both are general.
@@ -528,17 +552,16 @@ Measured on the shipped 7x7s, that is the difference between `glance 21/49` and 
 
 **When `arms` is 1, every mechanic except the arms is decoration.** Twenty-two of the
 game's first thirty glades had exactly one tidy arrangement, which is the same as saying
-their brittle stone, taproots and duskcaps rejected nothing and could all have been
-deleted without changing a single solution. The player fits pipes, the lights come on, and
-the duskcap they never thought about was never reachable.
+their brittle stone, taproots and fords rejected nothing and could all have been deleted
+without changing a single solution. The player fits pipes, the lights come on, and the
+crossing they never thought about was never turnable.
 
 **A four-armed tile is the cheapest honest decision a board can carry**, and everything
 else rides on it. A twisted crossing or a briar wears all four arms at every angle, so
-nothing about the arms can settle it — only colour or the dark can. Three of them is eight
-tidy arrangements with one winner. A **briar** is the stronger of the two and usually the
-one to reach for: a twisted crossing has two states where a straight briar has two and a
-twisted one has four, and a briar can be aimed at the dark as well as at colour. That is
-where the rest of the vocabulary gets its teeth:
+nothing about the arms can settle it — only colour can. Three of them is eight tidy
+arrangements with one winner. A **briar** is the stronger of the two and usually the one to
+reach for: a twisted crossing has two states where a straight briar has two and a twisted
+one has four. That is where the rest of the vocabulary gets its teeth:
 
 - **Brittle stone belongs on a tile the player cannot simply try**, which in practice means
   a crossing or a briar. `~2` on a conduit owed one turn is exactly one wrong guess; `~1` is
@@ -547,15 +570,16 @@ where the rest of the vocabulary gets its teeth:
 - **A taproot's members should all be tiles the arms cannot settle**, for the same reason -
   bind two briars in opposite corners and one tap answers both. Bind tiles the arms already
   force and the root is a hint, not a decision. The reading prints what the binding removes.
-- **A duskcap's ford must sit on a *cycle* of the live network.** This is the one that is
-  easy to get wrong and impossible to see afterwards. Turning that ford has to join the
-  shadow to the grove *while every critter stays lit* — one arrangement that looks finished
-  and will not settle. If the wrong turn also puts a critter out, the critter tells the
-  player and the shadow taught them nothing; `dark` in the reading counts exactly the
-  arrangements the duskcaps alone reject, and it was **zero on every duskcap board that had
-  ever shipped**. A briar makes this straightforward: stand one on a loop with one thorned
-  arm on the live network and the other on the island of dark. The Nightbriar's five
-  duskcap glades score `dark` 1 to 3 that way.
+- **A ford must sit on a *cycle* of the live network, and what it lets in must have a
+  heart of its own.** This is the one that is easy to get wrong and impossible to see
+  afterwards. Turning the ford has to matter *while the grove's own critters stay lit* — so
+  it stands on a loop, where shutting a way costs the grove nothing, and the pocket on the
+  other side carries a heart and a critter of a different colour. The wrong turn then pours
+  one into the other and exactly one critter goes out: a warning, but somewhere the player
+  is not looking. `colour` in the reading counts the arrangements the critters alone reject,
+  and it is what these boards now score on. A briar makes it straightforward: stand one on a
+  loop with one thorned arm on the live network and the other on the pocket. Every ford in
+  the Mill Vale, the Amberwood and the Nightbriar is built that way.
 
 **`hazards` is the metric this replaces, and it is worth knowing why it was wrong**, because
 a whole chapter was authored to it. It counts places where *some* rotation would mate two
@@ -907,8 +931,8 @@ data and produces no atlas at all.
 ### The one thing the grove must never do
 
 Nothing in it touches a board. No bonus, no buff, no faster hearts. `par` is derived from
-the board, stars from par, the clock from par and the server's earnings from all three, so a
-grove that granted anything would make every glade a different difficulty per player and no
+the board, stars from par, the move budget from par and the server's earnings from all three,
+so a grove that granted anything would make every glade a different difficulty per player and no
 validator could prove one fair again.
 
 ## Events
@@ -1044,7 +1068,8 @@ The optional `hearts` block. How many hearts a player holds and how fast they co
   "refillSeconds": 28800,
   "boostedRefillSeconds": 14400,
   "maxBoostHours": 72,
-  "defeatCost": 1
+  "defeatCost": 1,
+  "graceLevels": 3
 }
 ```
 
@@ -1061,6 +1086,19 @@ Two numbers, and the difference between them is the feature:
   watched videos stack past the cap up to this, instead of evaporating at a full bar.
   Keep a healthy gap: an ad pays 2 and a chest can pay 3, so a ceiling within a few of the
   cap means collected hearts are routinely thrown away. `Validate Content` warns about it.
+
+**`graceLevels` is where the gate does not apply.** The first three levels of the first
+chapter of *each mode* cost no heart at all — lose them, restart them or walk away from
+them as often as you like. It is per mode rather than once per account because a mode
+shipped a year from now is somebody's first board of that mode: Lightweave is dragged
+rather than tapped and is lost on ink rather than turns, so a player meeting it is a
+beginner again in every sense that decides whether taking a heart off them is fair. The
+window is counted inside the first chapter and stops at that chapter's end, so the same
+three means three of ten on a full chapter and all of a one-glade one. Nought switches it
+off and is a legal value; unwritten inherits three. `HeartStake` owns the rule, nothing
+about a free run is written to the save, and `Validate Content` prints where the window
+lands in every mode — and warns if it swallows a whole first chapter of more than one
+level, because the heart gate then does not exist anywhere on that map.
 
 **Every field here is safe to lower, and that is a designed property rather than a
 coincidence.** Lowering `refillCap` stops the clock earlier and leaves anybody above it
@@ -1119,46 +1157,6 @@ mean two things.
 Same channel caveat as the heart gate: hints are applied by the client and never
 adjudicated, so nothing here is published to `config/progression`.
 
-### Difficulty
-
-The optional `difficulty` block. One number, and it is the one most likely to be wrong on
-launch day.
-
-```json
-"difficulty": {
-  "clockScale": 1.00
-}
-```
-
-It multiplies every glade's time limit. `1.00` plays the content exactly as authored;
-`0.85` makes the whole game 15% tighter; `1.20` gives everybody more room. Omit it and
-nothing is scaled. `DifficultyLimits` bounds it to **0.6–2.0** and a file outside that is
-clamped *and* reported — this is the one block whose bad push is not a worse deal but an
-unfinishable game, so the bound is a compile-time constant a file cannot move, exactly as
-`HeartLimits.HardCeiling` is.
-
-Why it exists at all: every other number in this file was tuned against something
-observable, and difficulty was tuned by people who already knew every solution — which is
-the one thing no player will ever be. The real value comes from first-attempt clear rates
-in the first fortnight, and a value that needs a store review to change is a value that
-stays at the launch-day guess for a month.
-
-**What it reaches.** The limit, and nothing else:
-
-- **Not the stars.** They are held against par (`LevelTuning.TimeGoldFactor`), so a retune
-  moves where a run is lost and never what a clear pays. Earned credits are derived from
-  the star ledger, so the alternative is a difficulty push that silently retunes the
-  economy alongside it.
-- **Not anything stored.** A run records elapsed play time, never time left, so
-  `bestMillis`, the map badge and `publishGroveStats` all keep working with no migration
-  and no deploy. `CountdownTests` and `DifficultyRuleTableTests` are what stop that
-  property being traded away.
-- **Not the move budget.** See *Move budget* above — it is the backstop, not the fail state.
-
-The same channel caveat the hearts block carries applies here: nothing about the clock is
-adjudicated, so this is never published to `config/progression`, and changing it without an
-app update needs `ContentConfig.RemoteBaseUrl` set.
-
 ### Daily chests
 
 The optional `daily` block. Three chests, earned by finishing runs and opened by hand
@@ -1181,11 +1179,10 @@ from the home screen.
 ```
 
 `kind` is a permanent id: `credits`, `gems`, `hearts`, `heart_boost` — and a boost's
-band is measured in **hours**. There is a fifth, `run_time`, which a chest may **not**
-hold: it pays seconds onto the run in progress, and a chest is opened on the home screen
-where there is no run. The reader refuses it here and `Validate Content` says so, rather
-than letting a guaranteed slot pay nothing reliably. See *Rewarded ads* below. There is a
-sixth, `hints`, which a chest *may* hold but should not while the hint ceiling equals the
+band is measured in **hours**. There is a fifth, `run_time`, which is **retired**: it paid
+seconds onto a run's countdown, and there is no countdown. Its enum value is frozen because
+the daily chest vectors key on it, nothing can produce it, and both the reader and the
+seeder refuse it wherever it appears. There is a sixth, `hints`, which a chest *may* hold but should not while the hint ceiling equals the
 cap — a chest that rolls one for a player already holding three pays them nothing, which is
 the same failure in a slower costume. Omit the whole block and the built-in table in
 `DailyChestTable.Default` stands; it is deliberately not a schema bump, because a
@@ -1252,7 +1249,6 @@ video, capped per UTC day.
   "placements": [
     { "id": "heart_refill", "kind": "hearts",   "amount": 2,   "dailyCap": 10 },
     { "id": "coin_bonus",   "kind": "credits",  "amount": 1000, "dailyCap": 6 },
-    { "id": "run_continue", "kind": "run_time", "amount": 30,  "dailyCap": 8 },
     { "id": "win_bonus",    "kind": "credits",  "amount": 200, "dailyCap": 6 }
   ]
 }
@@ -1274,33 +1270,23 @@ Where each one is offered, and why there:
 |---|---|---|
 | `heart_refill` | the defeat panel, out of hearts | hearts |
 | `coin_bonus` | the hub's coin `+` | credits |
-| `run_continue` | the clock running out, mid-run | seconds |
 | `win_bonus` | the victory panel, under the payout | credits |
 | `hint_refill` | the hint button, pool empty | hints |
 
-**`run_time` is the odd one and it is the only unbanked reward in the game.** Its seconds
-go onto the `RunClock` of the run that is happening and are gone when that run resolves.
-Three consequences follow, and none of them is a special case written by hand:
+**`run_continue` is a retired placement id and must never be reused.** It bought seconds
+on a glade's countdown, and the countdown is gone. An id travels the way a `LevelId` does —
+into the mediation dashboard, into `grantLog` on the server and into every analytics row
+ever written — so pointing it at some other offer would silently re-label history. It is
+absent from `AdPlacement.All`, from `AD_PLACEMENTS` in `functions/src/ads.ts` and from the
+seeder's `known` list, which together mean a published table naming it is *refused* rather
+than honoured.
 
-- **The server has no opinion.** It is not currency, so `adCurrencyOf` answers null and the
-  signed callback grants nothing. That means no account is needed and no claim is written,
-  which is why a continue works on a first launch that has never been online — the launch
-  where a player is most likely to meet a timeout.
-- **The shared cooldown does not apply.** `RewardedAds.Paced` keys that on
-  `ChestDropKinds.IsTransient` rather than on the placement id, so the rule is a property
-  and not a list somebody has to remember to extend. The cooldown paces a faucet; a reward
-  that cannot leave the run it was granted in is not one.
-- **Only `run_continue` may pay it.** Both the client reader and the seeder refuse it
-  anywhere else, because the failure is silent in the worst way: the offer is drawn where
-  no run is open, the video plays, and the reward lands on nothing.
-
-A continue is deliberately **repeatable within one run**, bounded by its daily cap alone,
-and it needs no balancing rule to stay honest. `Extend` raises the *limit* and never lowers
-the *elapsed*, while `StarsForTime` grades against thresholds derived from **par** — so the
-second extension has usually already cost the third star and the fourth has cost the
-second. A player who buys their way through a glade keeps the clear and loses the stars.
-That is also what keeps `bestMillis`, the map badge and `publishGroveStats` correct without
-a migration: what is stored is still time *taken*. `ContinueTests` pins all of it.
+**`run_time` is retired with it, and the `transient` rule it created survives.** A kind
+spent inside a run is meaningless anywhere a run is not open, and nothing is offered from
+inside one any more — so `AdRewardTable` and `seed-config.mjs` both refuse a transient kind
+outright. That is the seam a future in-run reward would come back through; the failure it
+prevents is silent in the worst way, with the offer drawn where no run exists, the video
+played and the reward landing on nothing.
 
 `win_bonus` pays a **flat amount and the button prints it**, rather than doubling what the
 run earned. Earned credits are derived from the star ledger (invariant 9), so there is no

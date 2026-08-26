@@ -1255,7 +1255,7 @@ namespace GlimmerGrove
         ///
         /// <para>
         /// <b>They are ordinary lessons, on the ordinary ledger.</b> A grove tip is a
-        /// <c>Mechanic</c> like a duskcap is — a permanent id, strings derived from it, and
+        /// <c>Mechanic</c> like a crossing is — a permanent id, strings derived from it, and
         /// <c>TipLedger</c> recording that this player has met it. That is what makes them
         /// shown once in a lifetime rather than once per install: the ledger is a union-joined
         /// set in the save file, so a second device does not re-teach what the first one

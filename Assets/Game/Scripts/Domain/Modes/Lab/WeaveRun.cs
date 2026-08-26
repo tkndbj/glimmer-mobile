@@ -3,264 +3,143 @@ using System.Collections.Generic;
 namespace GlimmerGrove.Modes
 {
     /// <summary>
-    /// A Lightweave puzzle being solved: which channels have been drawn, what ground they have
-    /// taken, and which beads they have been threaded through.
+    /// One Lightweave grove being played: a board, the light it is drawn with, and what has been
+    /// drawn so far.
     ///
     /// <para>
-    /// <b>Two channels may never share a cell.</b> That one rule is what makes the pairs contend
-    /// for ground, and it is enforced here rather than in the drawing, because a rule the view
-    /// owns is a rule the next input method breaks.
+    /// <b>Four things that each answer one question, and this is only the wiring between
+    /// them.</b> <see cref="WeaveBoard"/> knows what is drawn and what may be; <see cref="Ink"/>
+    /// knows what a channel costs and what is left; <see cref="WeaveStrokes"/> knows what
+    /// happened and how much of it may be taken back; <see cref="WeaveVerdict"/> reads a board
+    /// against a meter and says whether the run is over. All four were one class for exactly one
+    /// change, which is how long it took to notice that a puzzle model had grown an economy, an
+    /// undo stack and a fail state — and that none of the three could be tested without a grove.
     /// </para>
     /// <para>
-    /// <b>Where a channel goes is otherwise entirely the player's business.</b> This used to
-    /// demand that the channels between them covered every cell of the grove, which made the
-    /// direct route almost never the right one — the board sent the player the long way round
-    /// for a reason nothing on screen could show, and the state where every critter was awake
-    /// and the grove still unfinished read as the game failing to notice a win. That rule is
-    /// gone. What replaced it is on the board: a bead is a cell one channel must be threaded
-    /// through, drawn in that channel's own colour, and it asks for the same thinking while
-    /// pointing at where.
-    /// </para>
-    /// <para>
-    /// A drawn channel stays. There is no partial state and no channel in flight: the view
-    /// gathers a path under the finger and offers it whole, and this either takes it or refuses
-    /// it. Refused whole rather than trimmed, for the reason a hollow refuses a half-read board:
-    /// a shortened channel is one the player did not draw, and on a screen where a finger is the
-    /// only input that reads as the game fighting them.
+    /// What is left here is the two verbs a player has — draw, and take it back — expressed as
+    /// the one place the three pieces are allowed to move together. That is the point: a channel
+    /// that lands must charge, and be written down, in one step, or a crash between two of them
+    /// leaves a meter that disagrees with the board it is measuring.
     /// </para>
     /// </summary>
     public sealed class WeaveRun
     {
-        public readonly WeaveLayout Grove;
+        public readonly WeaveBoard Board;
+        public readonly WeaveInk Ink;
 
-        readonly int[] _owner;              // which pair holds each cell, -1 for free ground
-        readonly List<int>[] _paths;
-        readonly bool[] _threaded;          // one per bead: has its own channel come through
+        readonly WeaveStrokes _strokes = new WeaveStrokes();
 
-        public WeaveRun(WeaveLayout layout)
+        /// <summary>A grove with no ink budget, which is therefore impossible to lose.</summary>
+        public WeaveRun(WeaveLayout layout) : this(layout, WeaveInk.Unlimited) { }
+
+        public WeaveRun(WeaveLayout layout, int inkBudget)
         {
-            Grove = layout;
-
-            _owner = new int[layout.Count];
-            _paths = new List<int>[layout.Pairs.Count];
-            for (int i = 0; i < _paths.Length; i++) _paths[i] = new List<int>();
-
-            _threaded = new bool[layout.Beads.Count];
-
-            // The endpoints and the beads are standing on the board from the first frame, so
-            // nothing may be routed through somebody else's crystal, critter or bead. A bead
-            // blocking five colours is half of what it is for — see WeaveBead.
-            for (int i = 0; i < _owner.Length; i++) _owner[i] = layout.Reserved(i);
+            Board = new WeaveBoard(layout);
+            Ink = new WeaveInk(inkBudget);
         }
 
-        /// <summary>Which pair holds this cell, or -1 for free ground.</summary>
-        public int OwnerOf(int cell) => _owner[cell];
+        public WeaveLayout Grove => Board.Grove;
 
-        /// <summary>The channel drawn for a pair, empty until one is.</summary>
-        public IReadOnlyList<int> PathOf(int pair) => _paths[pair];
-
-        public bool IsJoined(int pair) => _paths[pair].Count >= 2;
-
-        public int Joined
-        {
-            get
-            {
-                int n = 0;
-                for (int i = 0; i < _paths.Length; i++) if (IsJoined(i)) n++;
-                return n;
-            }
-        }
-
-        public int Pairs => _paths.Length;
-
-        /// <summary>Whether this bead's own channel has been threaded through it.</summary>
-        public bool IsThreaded(int bead)
-            => bead >= 0 && bead < _threaded.Length && _threaded[bead];
-
-        /// <summary>How many beads are still waiting for their colour.</summary>
-        public int BeadsLeft
-        {
-            get
-            {
-                int n = 0;
-                for (int i = 0; i < _threaded.Length; i++) if (!_threaded[i]) n++;
-                return n;
-            }
-        }
-
+        // ------------------------------------------------------------------ the two verbs
         /// <summary>
-        /// Every critter awake and every bead threaded. The only ending this puzzle has.
+        /// Lays a channel down and charges its light: one cell per cell it covers.
         ///
         /// <para>
-        /// <b>The second half is a rule a board can show, which the one it replaced was not.</b>
-        /// This used to also require that no cell of the grove was left bare — a condition
-        /// nothing on screen stated, that no board could demonstrate, and that produced a state
-        /// looking exactly like a win the game had failed to notice. A bead says the same thing
-        /// with a ring on the ground: it stands on a cell the player has to come through, in the
-        /// colour that owes it, and it lights when it is satisfied. A grove with no beads on it is
-        /// finished the moment the last critter wakes, which is what the first two rungs of the
-        /// chapter are for.
+        /// <b>A run with no redraw in it spends exactly <c>Board.Occupied</c></b>, which is what
+        /// the stars are read off — so the meter on screen and the grade at the end are the same
+        /// number rather than two that can quietly disagree. Where they part is the channel drawn,
+        /// thought better of, and drawn again; the ink is the honest reading of that one, because
+        /// the light really was spent.
         /// </para>
-        /// </summary>
-        public bool IsSolved => Joined >= _paths.Length && BeadsLeft == 0;
-
-        /// <summary>How much of the grove is spoken for. The readout's, not the rule's.</summary>
-        public int Occupied
-        {
-            get
-            {
-                int n = 0;
-                for (int i = 0; i < _owner.Length; i++) if (_owner[i] >= 0) n++;
-                return n;
-            }
-        }
-
-        /// <summary>
-        /// Whether a cell can be drawn through by this pair: free ground, or ground reserved to
-        /// it — its own two endpoints and its own beads.
-        /// </summary>
-        public bool Free(int pair, int cell)
-        {
-            if (cell < 0 || cell >= _owner.Length) return false;
-
-            int owner = _owner[cell];
-            if (owner < 0) return true;
-
-            // Its own ground is its to use; anything else standing there is in the way,
-            // including a channel it drew earlier and has not taken back.
-            return owner == pair && !IsJoined(pair);
-        }
-
-        /// <summary>
-        /// Whether this path is a legal channel for this pair: it runs between the pair's own two
-        /// endpoints, every step is orthogonal, it never doubles back, and it crosses nothing.
-        ///
         /// <para>
-        /// <b>Threading is deliberately not part of legality.</b> A channel that misses one of its
-        /// own beads is a perfectly legal channel — it is simply not a finished grove, and the
-        /// player is told so by the bead still standing lit on the board. Refusing the drag
-        /// instead would mean a finger that reached its critter being silently rejected for a
-        /// reason a hundred cells away, which is the same fault the fill rule had.
+        /// <b>It does not refuse for want of ink.</b> What stops a channel nobody can afford is
+        /// one step earlier — the drag is walled at <see cref="Affords"/>, so the path never
+        /// reaches this — and what ends the run is <see cref="Verdict"/>. Refusing here as well
+        /// would put the same rule in two places and enforce it in one.
         /// </para>
-        /// </summary>
-        public bool IsLegal(int pair, IReadOnlyList<int> path)
-        {
-            if (pair < 0 || pair >= _paths.Length) return false;
-            if (path == null || path.Count < 2) return false;
-
-            var ends = Grove.Pairs[pair];
-
-            bool forward = path[0] == ends.Heart && path[path.Count - 1] == ends.Critter;
-            bool backward = path[0] == ends.Critter && path[path.Count - 1] == ends.Heart;
-            if (!forward && !backward) return false;
-
-            for (int i = 0; i < path.Count; i++)
-            {
-                int cell = path[i];
-
-                if (cell < 0 || cell >= _owner.Length) return false;
-                for (int j = 0; j < i; j++) if (path[j] == cell) return false;
-
-                if (i > 0 && !Grove.Adjacent(path[i - 1], cell)) return false;
-
-                // The middle of a channel may only run over free ground or its own. The two ends
-                // are the pair's own, which is why they are excused rather than the rule softened.
-                bool isEnd = i == 0 || i == path.Count - 1;
-                if (!isEnd && _owner[cell] >= 0 && _owner[cell] != pair) return false;
-                if (!isEnd && _owner[cell] == pair && IsJoined(pair)) return false;
-            }
-
-            return true;
-        }
-
-        /// <summary>
-        /// Lays a channel down, replacing whatever this pair had before. Returns false and
-        /// changes nothing if the path is refused.
         /// </summary>
         public bool Draw(int pair, IReadOnlyList<int> path)
         {
-            if (pair < 0 || pair >= _paths.Length) return false;
+            if (!Board.Draw(pair, path, out var replaced)) return false;
 
-            // Taken up first, so a pair redrawing over its own ground is not refused for
-            // colliding with itself. Kept aside so a refusal can put it back exactly.
-            var previous = new List<int>(_paths[pair]);
-            Erase(pair);
-
-            if (!IsLegal(pair, path))
-            {
-                Restore(pair, previous);
-                return false;
-            }
-
-            _paths[pair].Clear();
-            _paths[pair].AddRange(path);
-            foreach (int cell in path) _owner[cell] = pair;
-
-            Rethread(pair);
+            Ink.Spend(path.Count);
+            _strokes.Note(pair, replaced, path.Count);
             return true;
         }
 
-        /// <summary>Takes a pair's channel back, leaving its endpoints and beads where they stand.</summary>
-        public void Erase(int pair)
+        /// <summary>
+        /// Takes back the last channel that landed, puts back whatever it replaced, and refunds
+        /// its light in full.
+        ///
+        /// <para>
+        /// A true undo rather than an erase, and the difference is the pair that was being
+        /// <em>redrawn</em>: it had a perfectly good channel a moment ago, and taking the new one
+        /// away while leaving it bare would cost the player something they never asked to lose.
+        /// </para>
+        /// <para>
+        /// Reports which pair moved, so a view can repaint that one channel rather than the whole
+        /// board. -1 when there was nothing to undo.
+        /// </para>
+        /// </summary>
+        public bool TryUndo(out int pair)
         {
-            if (pair < 0 || pair >= _paths.Length) return;
+            pair = -1;
+            if (!_strokes.TryUndo(out var stroke)) return false;
 
-            foreach (int cell in _paths[pair]) _owner[cell] = Grove.Reserved(cell);
-            _paths[pair].Clear();
+            Board.PutBack(stroke.Pair, stroke.Replaced);
+            Ink.Refund(stroke.Cost);
 
-            Rethread(pair);
+            pair = stroke.Pair;
+            return true;
         }
 
-        void Restore(int pair, List<int> path)
-        {
-            if (path.Count == 0) return;
+        /// <summary>Whether a channel of this many cells could be laid with the light in hand.</summary>
+        public bool Affords(int cells) => Ink.Affords(cells);
 
-            _paths[pair].AddRange(path);
-            foreach (int cell in path) _owner[cell] = pair;
+        /// <summary>Whether there is a channel to take back and an undo left to do it with.</summary>
+        public bool CanUndo => _strokes.CanUndo;
 
-            Rethread(pair);
-        }
+        /// <summary>How many more channels this grove may hand back. See <c>WeaveStrokes.Allowance</c>.</summary>
+        public int UndosLeft => _strokes.Left;
+
+        /// <summary>How the run stands: still playing, finished, or over.</summary>
+        public WeaveVerdict Verdict => WeaveVerdict.Read(Board, Ink);
 
         /// <summary>
-        /// Re-reads which of this pair's beads its channel now runs through.
-        ///
-        /// Kept as stored state rather than derived on demand because <see cref="IsSolved"/> is
-        /// asked on every landing and the readout on every repaint, and both would otherwise walk
-        /// every path. Recomputed for the whole pair rather than adjusted, so there is no way for
-        /// a redraw, a refusal and an erase to leave it disagreeing with the path it describes.
+        /// Back to the grove the player was dealt — the channels, the light and the undos.
+        /// A restart, in other words, and the three have to go together or one of them is a
+        /// memory of a run that no longer exists.
         /// </summary>
-        void Rethread(int pair)
+        public void Restart()
         {
-            var beads = Grove.Beads;
-            for (int b = 0; b < beads.Count; b++)
-            {
-                if (beads[b].Pair != pair) continue;
-                _threaded[b] = _paths[pair].Contains(beads[b].Cell);
-            }
+            Board.Reset();
+            Ink.Reset();
+            _strokes.Reset();
         }
 
-        /// <summary>Takes every channel back. The board returns to its endpoints and beads.</summary>
-        public void Reset()
-        {
-            for (int i = 0; i < _paths.Length; i++) Erase(i);
-        }
+        // ------------------------------------------------------------------ the board, read-only
+        // Forwarded rather than reached through, so nothing outside has to know whether a fact
+        // belongs to the board or to the run — and so the board itself stays the one place these
+        // are worked out. Only what a screen or a view actually asks for is here.
+        public int Pairs => Board.Pairs;
+        public int Joined => Board.Joined;
+        public int BeadsLeft => Board.BeadsLeft;
+        public bool IsSolved => Board.IsSolved;
+        public int Occupied => Board.Occupied;
+
+        public int OwnerOf(int cell) => Board.OwnerOf(cell);
+        public IReadOnlyList<int> PathOf(int pair) => Board.PathOf(pair);
+        public bool IsJoined(int pair) => Board.IsJoined(pair);
+        public bool IsThreaded(int bead) => Board.IsThreaded(bead);
+        public bool Free(int pair, int cell) => Board.Free(pair, cell);
 
         /// <summary>
-        /// Draws the arrangement the generator carved. Not offered to the player — it exists so
-        /// the board's own claim to be solvable can be <em>checked</em> rather than trusted, and
-        /// the tests and the validator do exactly that on every generated grove.
+        /// Draws the arrangement the generator carved, to prove the board can be finished at all.
         ///
-        /// It is checked all the way to <see cref="IsSolved"/>, so it proves the beads as well:
-        /// a bead the carved route does not thread is a board whose own proof does not finish it.
+        /// Forwarded to the board deliberately: it is a question about a grove rather than about
+        /// a run, so it neither charges light nor writes down a stroke — the validator is not
+        /// playing.
         /// </summary>
-        public bool DrawSolution()
-        {
-            Reset();
-
-            for (int i = 0; i < _paths.Length; i++)
-                if (!Draw(i, Grove.Solution(i))) return false;
-
-            return IsSolved;
-        }
+        public bool DrawSolution() => Board.DrawSolution();
     }
 }

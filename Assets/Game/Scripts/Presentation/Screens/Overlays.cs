@@ -1,8 +1,10 @@
 using System;
 using System.Collections.Generic;
 using GlimmerGrove.Ads;
+using GlimmerGrove.Analytics;
 using GlimmerGrove.Content;
 using GlimmerGrove.Daily;
+using GlimmerGrove.Layout;
 using GlimmerGrove.Localization;
 using GlimmerGrove.Persistence;
 using GlimmerGrove.Privacy;
@@ -58,12 +60,29 @@ namespace GlimmerGrove
     {
         protected RectTransform Panel;
         protected Image Backing;
+
+        /// <summary>
+        /// The dimmed sheet behind the panel.
+        ///
+        /// Kept rather than discarded because a panel that pays a reward into the screen
+        /// underneath has to take it away — a token cannot be seen landing on a readout the
+        /// player cannot see, and a scrim faded to nothing still swallows the taps aimed at
+        /// what is now visible through it. See <c>AdOfferOverlay</c>'s collect.
+        /// </summary>
+        protected Image Scrim;
+
         bool _closing;
+
+        /// <summary>
+        /// True from the first frame of the exit animation. See <see cref="View.IsLeaving"/>
+        /// for what reads it and why a closing panel must not block its own successor.
+        /// </summary>
+        public override bool IsLeaving => _closing;
 
         protected RectTransform MakePanel(Vector2 size, string title, Vector2 offset = default,
                                           bool dismissOnScrim = true)
         {
-            UIKit.Scrim(Content, .72f, dismissOnScrim ? (Action)(() => Close()) : null);
+            Scrim = UIKit.Scrim(Content, .72f, dismissOnScrim ? (Action)(() => Close()) : null);
 
             Backing = UIKit.Img("Panel", Content, Art.S("Ui/panel_main"), Color.white,
                                 size, new Vector2(.5f, .5f), offset);
@@ -203,7 +222,49 @@ namespace GlimmerGrove
         /// <summary>False when the player was already at zero — then nothing was taken.</summary>
         public bool HeartWasCharged;
 
+        /// <summary>
+        /// True when the glade is one of a mode's free openings, so the loss cost nothing.
+        ///
+        /// <para>
+        /// Distinct from <see cref="HeartWasCharged"/> being false, which is the opposite
+        /// news: that one means there was nothing left to take. Told apart because the panel
+        /// says opposite things about them — a free run always offers another go, and an empty
+        /// wallet cannot. See <c>HeartStake</c>.
+        /// </para>
+        /// </summary>
+        public bool WasFree;
+
+        /// <summary>
+        /// The most heart icons this panel will ever draw in a row.
+        ///
+        /// <para>
+        /// The row is 600 units across at a 96-unit step, so six is what fits and five is what
+        /// the free gate has always been. It exists as a bound because the cap stopped being a
+        /// single number when heart containers shipped: <c>Wallet.MaxHearts</c> is per player
+        /// and can be fifty, and a row that grew with it would draw a wall off both edges of
+        /// the panel. Everything above it is the "+n" the surplus already used.
+        /// </para>
+        /// </summary>
+        const int RowPips = 5;
+
         Btn _watch;
+
+        /// <summary>
+        /// Hearts for gems: the third way out, and the only one that costs money.
+        ///
+        /// <para>
+        /// A collaborator rather than more of this panel, which had already reached five
+        /// responsibilities — <see cref="DefeatRescueFlow"/> says why, and <c>RunContinueFlow</c>
+        /// is the precedent. What is left here is what only a panel can answer: whether there is
+        /// still a heart to spend, where the button goes, and what "back onto the board" means.
+        /// </para>
+        /// <para>
+        /// Built once and kept across rebuilds, which is what makes the offer's impression count
+        /// once. A rebuild is the same panel in a new state, so anything decided per <em>defeat</em>
+        /// rather than per <em>paint</em> has to outlive <c>Build</c>.
+        /// </para>
+        /// </summary>
+        DefeatRescueFlow _rescue;
 
         /// <summary>
         /// Keeps the offer button's countdown live while the panel is open.
@@ -228,6 +289,7 @@ namespace GlimmerGrove
             {
                 case DefeatReason.ConduitLost: return "ui.defeat.conduit_title";
                 case DefeatReason.OutOfTime: return "ui.defeat.time_title";
+                case DefeatReason.OutOfInk: return "ui.defeat.ink_title";
                 default: return "ui.defeat.moves_title";
             }
         }
@@ -238,6 +300,7 @@ namespace GlimmerGrove
             {
                 case DefeatReason.ConduitLost: return "ui.defeat.conduit_reason";
                 case DefeatReason.OutOfTime: return "ui.defeat.time_reason";
+                case DefeatReason.OutOfInk: return "ui.defeat.ink_reason";
                 default: return "ui.defeat.moves_reason";
             }
         }
@@ -257,21 +320,32 @@ namespace GlimmerGrove
 
         protected override void Build()
         {
-            bool canRetry = HeartsLeft > 0;
+            // A free opening can always be tried again, whatever the wallet says. That is the
+            // whole point of it, and it is why this is not simply a heart count.
+            bool canRetry = WasFree || HeartsLeft > 0;
 
-            // The offer only belongs on the branch that has no retry button. A player who
-            // can still play does not need to be sold a video, and putting one there would
-            // turn every defeat into an advertisement.
+            // Neither offer belongs on the branch that has a retry button. A player who can
+            // still play does not need to be sold a way to play, and putting either there
+            // would turn every defeat into an advertisement.
             //
             // ShouldOffer, not CanOffer: a cooldown draws the button disabled with its own
             // countdown rather than hiding it, so a player who watched one a minute ago can
             // see when the next is due instead of concluding the offer was a fluke.
             bool offering = !canRetry && RewardedAds.ShouldOffer(AdPlacement.HeartRefill);
 
-            // Grown rather than crowded. The alternative — squeezing a third button into
-            // the same 880 — leaves the last one a few pixels off the panel edge, which is
-            // the sort of thing that looks fine on the device it was tuned on.
-            MakePanel(new Vector2(880f, offering ? 1010f : 880f),
+            _watch = null;
+
+            // Once per defeat, never per paint: it decides the offer, counts the impression and
+            // subscribes to the balance, none of which a redraw may do again.
+            _rescue ??= new DefeatRescueFlow(this, Run.Level, HeartsLeft, canRetry,
+                                             Rebuild, BackToTheBoard);
+
+            // Derived rather than typed, so the five shapes this panel can take cannot come to
+            // disagree with the buttons drawn into them. See DefeatPanel — the two constants
+            // this replaced were 880 and 1010, written before there was a third way out.
+            var stack = DefeatPanel.Of(canRetry, offering, _rescue.Exists);
+
+            MakePanel(new Vector2(DefeatPanel.Width, stack.Height),
                       Loc.Get(TitleKey(Run.Reason)), dismissOnScrim: false);
 
             // Body copy, drawn the way every other panel here draws it: wrapped, and
@@ -280,42 +354,72 @@ namespace GlimmerGrove
             Body("Why", Loc.Get(ReasonKey(Run.Reason)), -186f, 150f);
 
             BuildHowClose();
-            BuildHearts();
 
-            if (canRetry)
+            // Five empty hearts under a run that cost none of them is a picture of a charge
+            // that did not happen, and directly above a retry button it reads as the panel
+            // contradicting itself. The row is replaced by the reason instead.
+            if (WasFree)
+                UIKit.Shrinkable(Body("Free", Loc.Get("ui.defeat.free_glade"), -424f, 96f, Pal.Mint), 22);
+            else BuildHearts();
+
+            if (stack.HasRetry)
             {
                 UIKit.TextButton("Retry", Panel, "btn_green", Loc.Get("ui.defeat.try_again"), 52,
-                                 new Vector2(620f, 148f), new Vector2(.5f, 1f), new Vector2(0f, -560f),
+                                 new Vector2(620f, DefeatPanel.RetryHeight), new Vector2(.5f, 1f),
+                                 new Vector2(0f, -stack.Retry),
                                  () => Close(() => { if (Screen) Screen.RetryAfterDefeat(); }));
             }
-            else if (offering)
-            {
-                // Out of hearts, but there is a way back in. The sentence changes with it:
-                // telling somebody to wait eight hours directly above a button that skips
-                // the wait is how a panel reads as a trick.
-                Body("Wait", Loc.Get("ui.defeat.watch_for_hearts"), -520f, 96f, Pal.Ember);
 
+            // Out of hearts. Which sentence depends on whether there is a way back in at all:
+            // telling somebody to wait eight hours directly above a button that skips the wait
+            // is how a panel reads as a trick.
+            if (stack.HasNote)
+                UIKit.Shrinkable(
+                    Body("Wait", Loc.Get(stack.HasWatch || stack.HasRescue
+                                             ? "ui.defeat.watch_for_hearts"
+                                             : "ui.defeat.out_of_hearts"),
+                         -stack.Note, DefeatPanel.NoteHeight, Pal.Ember), 22);
+
+            if (stack.HasWatch)
+            {
                 _watch = UIKit.TextButton("WatchAd", Panel, "btn_green", Loc.Get("ui.ads.hearts_cta"), 44,
-                                          new Vector2(620f, 140f), new Vector2(.5f, 1f), new Vector2(0f, -644f),
+                                          new Vector2(620f, DefeatPanel.ActionHeight),
+                                          new Vector2(.5f, 1f), new Vector2(0f, -stack.Watch),
                                           OfferHearts, "ic_play");
                 PaintWatch();
             }
-            else
-            {
-                // Out of hearts and no ad to be had: a retry button would be a lie, so it
-                // is not offered and the honest wait is all there is to say.
-                Body("Wait", Loc.Get("ui.defeat.out_of_hearts"), -540f, 130f, Pal.Ember);
-            }
+
+            if (stack.HasRescue)
+                _rescue.Draw(Panel, new Vector2(620f, DefeatPanel.ActionHeight),
+                             new Vector2(.5f, 1f), new Vector2(0f, -stack.Rescue));
 
             UIKit.TextButton("Glades", Panel, "btn_blue", Loc.Get("ui.pause.glades"), 46,
-                             new Vector2(620f, 132f), new Vector2(.5f, 1f),
-                             new Vector2(0f, canRetry ? -722f : offering ? -816f : -700f),
+                             new Vector2(620f, DefeatPanel.GladesHeight), new Vector2(.5f, 1f),
+                             new Vector2(0f, -stack.Glades),
                              () => Close(() => Flow.Go<LevelsScreen>()));
 
             // Last, and after the near-miss line has had its moment: a lost run still fed
-            // the streak, which is the one piece of good news this panel has.
-            StreakToast.Show(this, Streak, 1.05f);
+            // the streak, which is the one piece of good news this panel has. Not replayed on
+            // a repaint — the house rule is that Show animates and Refresh does not, and a
+            // streak toast that flew past again because gems landed would read as a second
+            // night collected.
+            if (!Rebuilding) StreakToast.Show(this, Streak, 1.05f);
         }
+
+        void OnDestroy() => _rescue?.Dispose();
+
+        /// <summary>
+        /// Closes this panel and starts a fresh attempt at the same board.
+        ///
+        /// <para>
+        /// The panel's, not the rescue's: only a screen knows what a way back onto the board
+        /// means, and the collaborator that sells one must not also be the thing that decides
+        /// what was sold. Quiet, because what the player hears next is the board coming back and
+        /// a backing-out whoosh underneath it is one sound too many.
+        /// </para>
+        /// </summary>
+        void BackToTheBoard()
+            => Close(() => { if (Screen) Screen.RetryAfterDefeat(); }, quiet: true);
 
         /// <summary>
         /// Opens the offer, and goes straight back into the run if it pays.
@@ -366,6 +470,19 @@ namespace GlimmerGrove
         {
             if (Run.NearMiss)
             {
+                // A repaint is not news. The line still belongs on the panel, so it is drawn
+                // at rest rather than skipped — what must not happen twice is the arrival.
+                if (Rebuilding)
+                {
+                    int at = Mathf.Clamp(Run.TurnsShort - 1, 0, NearMissKeys.Length - 1);
+
+                    UIKit.Titled("Close", Panel, Loc.Get(NearMissKeys[at]), 46, Pal.Gold,
+                                 TextAnchor.MiddleCenter, new Vector2(720f, 74f),
+                                 new Vector2(.5f, 1f), new Vector2(0f, -300f),
+                                 outline: 3f, shadow: 3f);
+                    return;
+                }
+
                 int index = Mathf.Clamp(Run.TurnsShort - 1, 0, NearMissKeys.Length - 1);
 
                 var line = UIKit.Titled("Close", Panel, Loc.Get(NearMissKeys[index]), 46, Pal.Gold,
@@ -402,12 +519,18 @@ namespace GlimmerGrove
         /// decrements is a resource players feel cheated by later.
         ///
         /// <para>
-        /// The row is <see cref="HeartRules.RefillCap"/> wide and stays that width however
-        /// many hearts are held, because it is a picture of the gate rather than of the
-        /// balance — fifty icons would be a wall, and the fifth is where the timer stops
-        /// regardless. A surplus collected from chests, streaks or videos is drawn as a
-        /// "+n" beside the row: still visible, still honest, and it does not turn a panel
-        /// about a lost run into a shelf of trophies.
+        /// The row is a fixed handful of icons wide and stays that width however many hearts
+        /// are held, because it is a picture of the gate rather than of the balance — twenty
+        /// icons would be a wall, and the row is 600 units across. A surplus, whether it came
+        /// from a chest, a streak, a video or a bought container, is drawn as a "+n" beside
+        /// the row: still visible, still honest, and it does not turn a panel about a lost run
+        /// into a shelf of trophies.
+        /// </para>
+        /// <para>
+        /// <see cref="RowPips"/> is a bound rather than the cap itself, and it became one when
+        /// heart containers shipped: <c>Wallet.MaxHearts</c> is per player now and can be
+        /// fifty, which no row of icons can draw. It is still held to the cap as well, so a
+        /// content push that lowers the free tuning to three draws three.
         /// </para>
         /// </summary>
         void BuildHearts()
@@ -419,24 +542,29 @@ namespace GlimmerGrove
             row.anchoredPosition = new Vector2(0f, -400f);
 
             const float step = 96f;
-            float left = -(HeartRules.RefillCap - 1) * step * .5f;
+            int pips = Wallet.MaxHearts < RowPips ? Wallet.MaxHearts : RowPips;
+            if (pips < 1) pips = 1;
 
-            int drawn = HeartsLeft > HeartRules.RefillCap ? HeartRules.RefillCap : HeartsLeft;
+            float left = -(pips - 1) * step * .5f;
+
+            int drawn = HeartsLeft > pips ? pips : HeartsLeft;
             int surplus = HeartsLeft - drawn;
 
             if (surplus > 0)
                 UIKit.Titled("Surplus", row, $"+{surplus}", 40, Pal.Rose, TextAnchor.MiddleLeft,
                              new Vector2(120f, 60f), new Vector2(.5f, .5f),
-                             new Vector2(left + HeartRules.RefillCap * step - 24f, 0f), 3f, 3f);
+                             new Vector2(left + pips * step - 24f, 0f), 3f, 3f);
 
-            for (int k = 0; k < HeartRules.RefillCap; k++)
+            for (int k = 0; k < pips; k++)
             {
                 bool held = k < drawn;
 
                 // The struck-through heart is only drawn when the loss actually shows in
-                // the row. A player who was over the cap still paid, but the picture would
-                // be a lie: nothing in the five went out.
-                bool justLost = HeartWasCharged && surplus == 0 && k == drawn;
+                // the row. A player who was over the drawn row still paid, but the picture
+                // would be a lie: nothing in the icons went out.
+                // Not on a repaint: the heart went out a minute ago, and draining it again
+                // because gems landed is the panel reporting a charge that did not happen.
+                bool justLost = HeartWasCharged && surplus == 0 && k == drawn && !Rebuilding;
 
                 var heart = UIKit.Img("H" + k, row, Art.S("Ui/ic_heart"),
                                       held ? Pal.Rose : new Color(.62f, .58f, .60f, .38f),
@@ -464,12 +592,17 @@ namespace GlimmerGrove
     /// the heart state catches itself up on read, so this stays correct across a
     /// backgrounded app without any resume plumbing.
     ///
-    /// There is still no "buy hearts" button, and that is deliberate: the store secrets
-    /// hold UNSET, so an offer here would be a button that cannot work. There is now a
-    /// <em>watch</em> button, which is a different thing entirely — it costs the player
-    /// attention rather than money, needs no store product to exist, and is shown only
-    /// when an ad is actually loaded and the day's allowance has room. When a purchase
-    /// exists it goes beside it, not instead of it.
+    /// Three ways out, in the order they cost the player: a video, the shop, and away. The
+    /// video is shown only when one is actually loaded and the day's allowance has room, so
+    /// it is the shop that is always there — hearts sell for <em>gems</em>, which need no
+    /// store connection and may already be in hand, so that button works in a build with no
+    /// IAP and on a plane. Free above paid, for <c>DefeatPanel</c>'s reason.
+    ///
+    /// It <b>navigates</b> rather than raising a shelf, which is the opposite of what the
+    /// defeat panel does and is right for the same reason: nothing is frozen behind this one.
+    /// A run has not started, no heart is at stake, and the map this was raised from is one
+    /// tap away again. <c>GemShopOverlay</c> exists for the case where leaving would cost
+    /// something, and this is not it.
     /// </summary>
     public sealed class OutOfHeartsOverlay : ModalView
     {
@@ -484,7 +617,12 @@ namespace GlimmerGrove
             // between, leaving a button drawn outside the panel it belongs to.
             _offering = RewardedAds.ShouldOffer(AdPlacement.HeartRefill);
 
-            MakePanel(new Vector2(860f, _offering ? 900f : 780f), Loc.Get("ui.hearts.empty"));
+            // Derived rather than typed, so the panel cannot come to disagree with the buttons
+            // drawn into it. See HeartGatePanel — the two constants this replaced were 900 and
+            // 780, written when there were two ways out rather than three.
+            var stack = HeartGatePanel.Of(_offering);
+
+            MakePanel(new Vector2(HeartGatePanel.Width, stack.Height), Loc.Get("ui.hearts.empty"));
 
             // Wrapped and unadorned, matching every other body paragraph in the game.
             UIKit.Titled("Why", Panel, Loc.Get("ui.hearts.wait_to_play"), 32,
@@ -506,10 +644,11 @@ namespace GlimmerGrove
                                       outline: 3f, shadow: 3f);
             Paint();
 
-            if (_offering)
+            if (stack.HasWatch)
             {
                 _watch = UIKit.TextButton("WatchAd", Panel, "btn_green", Loc.Get("ui.ads.hearts_cta"), 44,
-                                          new Vector2(560f, 136f), new Vector2(.5f, 1f), new Vector2(0f, -616f),
+                                          new Vector2(560f, HeartGatePanel.ActionHeight),
+                                          new Vector2(.5f, 1f), new Vector2(0f, -stack.Watch),
                                           () => Flow.Modal<AdOfferOverlay>(v =>
                                           {
                                               v.PlacementId = AdPlacement.HeartRefill;
@@ -520,16 +659,25 @@ namespace GlimmerGrove
                                               v.Rewarded = () => Close();
                                           }), "ic_play");
 
+                // The caption is a phrase rather than a word, and the captions that replace it
+                // while a video is fetched are longer still — so it is pinned to one line
+                // rather than left to best-fit, which would stack it. See UIKit.OneLine.
+                UIKit.OneLine(_watch, 24);
+            }
+
+            // Navigates rather than raising a shelf. See the class remarks: nothing is frozen
+            // behind this panel, so leaving it costs nothing and the shop is the whole answer
+            // rather than a corner of it.
+            var shop = UIKit.TextButton("Shop", Panel, "btn_violet", Loc.Get("ui.hearts.to_shop"), 44,
+                                        new Vector2(560f, HeartGatePanel.ActionHeight),
+                                        new Vector2(.5f, 1f), new Vector2(0f, -stack.Shop),
+                                        () => Close(() => Flow.Go<ShopScreen>()), "ic_gem");
+            UIKit.OneLine(shop, 24);
+
+            UIKit.OneLine(
                 UIKit.TextButton("Ok", Panel, "btn_blue", Loc.Get("ui.common.got_it"), 44,
-                                 new Vector2(560f, 120f), new Vector2(.5f, 1f), new Vector2(0f, -744f),
-                                 () => Close());
-            }
-            else
-            {
-                UIKit.TextButton("Ok", Panel, "btn_green", Loc.Get("ui.common.got_it"), 48,
-                                 new Vector2(560f, 136f), new Vector2(.5f, 1f), new Vector2(0f, -630f),
-                                 () => Close());
-            }
+                                 new Vector2(560f, HeartGatePanel.OkHeight), new Vector2(.5f, 1f),
+                                 new Vector2(0f, -stack.Ok), () => Close()), 24);
         }
 
         void Update() => Paint();

@@ -24,7 +24,7 @@ if (!existsSync(compiled)) {
   process.exit(1);
 }
 
-const { readWallet } = await import(pathToFileURL(compiled).href);
+const { readWallet, toReply } = await import(pathToFileURL(compiled).href);
 const { CURRENCIES } = await import(pathToFileURL(join(REPO, "firebase", "functions", "lib", "config.js")).href);
 
 let pass = 0, fail = 0;
@@ -154,6 +154,124 @@ console.log("\nthe account seed is still granted exactly once");
   const spent = readWallet(snapshot({ credits: { granted: 1250, spent: 900 } }), config);
   equal("an account that has spent is not re-seeded", spent.credits.granted, 1250);
   equal("and keeps what it spent", spent.credits.spent, 900);
+}
+
+// ------------------------------------------------- refunded containers survive a write
+console.log("\na refunded heart container survives a whole-document write");
+{
+  // The same failure as the keeper name, and the one with a price on it. A heart container
+  // is an entitlement the *client* holds, so this list is the only thing that can take a
+  // refunded one back — the phone reads it off every wallet reply and stops honouring the
+  // container. Drop it on the next write and the refund silently un-happens: the player
+  // keeps a heart cap they were paid back for, on every device, for ever. Buy, refund, keep
+  // is the commonest way a mobile economy leaks (invariant 18c), and this list is the whole
+  // of what stands in its way.
+  const revoked = ["gg_heart_vessel_2"];
+
+  const once = wholeDocumentWrite({ credits: { granted: 1250, spent: 0 }, containersRevoked: revoked });
+  equal("a revoked container is carried through the read", once.containersRevoked, revoked);
+
+  const twice = wholeDocumentWrite(once);
+  equal("and through a second write", twice.containersRevoked, revoked);
+
+  equal("and a third, because a player syncs all day",
+        wholeDocumentWrite(twice).containersRevoked, revoked);
+
+  // Two refunds, in the order `arrayUnion` would leave them.
+  const both = ["gg_heart_vessel_1", "gg_heart_vessel_3"];
+  equal("more than one survives together",
+        wholeDocumentWrite({ credits: { granted: 1250, spent: 0 }, containersRevoked: both })
+          .containersRevoked, both);
+
+  // Absent is the overwhelmingly common case — nobody has been refunded — and it must stay
+  // absent rather than becoming an empty array, because Firestore rejects `undefined` and a
+  // field written onto every wallet in the world to carry nothing is a cost paid for ever.
+  const none = wholeDocumentWrite({ credits: { granted: 1250, spent: 0 } });
+  check(!("containersRevoked" in none),
+        "an account with no refunds writes no list at all",
+        JSON.stringify(none.containersRevoked));
+
+  // A malformed list must not travel. It can only get here by hand or by a bug, and an entry
+  // that is not a product id would be compared against one on every device for ever.
+  const dirty = wholeDocumentWrite({
+    credits: { granted: 1250, spent: 0 },
+    containersRevoked: ["gg_heart_vessel_1", "", null, 7, { id: "x" }],
+  });
+  equal("only real ids survive a malformed list", dirty.containersRevoked, ["gg_heart_vessel_1"]);
+}
+
+console.log("\nthe bonus wheel's position survives a whole-document write");
+{
+  // The third field with this failure mode, and the one that decides a payout on the spot.
+  // The wheel's slice is a pure function of (account, day, spin index), so the index *is* the
+  // prize: drop it on the next write and every win-bonus video of the day is seeded from spin
+  // zero, so a player is paid the same slice all day while the phone — which reads this index
+  // back off the reply — draws a different one each time. Nothing errors and nothing logs.
+  const held = { credits: { granted: 1250, spent: 0 }, wheel: { day: 20330, spins: 3 } };
+
+  const once = wholeDocumentWrite(held);
+  equal("the position is carried through the read", once.wheel, { day: 20330, spins: 3 });
+
+  const twice = wholeDocumentWrite(once);
+  equal("and through a second write", twice.wheel, { day: 20330, spins: 3 });
+
+  equal("and a third, because a player syncs all day",
+        wholeDocumentWrite(twice).wheel, { day: 20330, spins: 3 });
+
+  // Absent stays absent for `containersRevoked`'s reason: Firestore rejects `undefined`, and a
+  // field written onto every wallet in the world to carry a zero is a cost paid for ever. The
+  // *reply* still answers today and zero — see below.
+  const none = wholeDocumentWrite({ credits: { granted: 1250, spent: 0 } });
+  check(!("wheel" in none), "an account that has never spun writes no position",
+        JSON.stringify(none.wheel));
+
+  const dirty = wholeDocumentWrite({
+    credits: { granted: 1250, spent: 0 },
+    wheel: { day: "yesterday", spins: -4 },
+  });
+  check(!("wheel" in dirty), "a malformed position does not travel", JSON.stringify(dirty.wheel));
+}
+
+console.log("\nthe reply always names the wheel, and rolls it over");
+{
+  // The presence of the field is the client's signal that this deployment understands the
+  // wheel at all — it draws none without it and falls back to the flat offer the deployment
+  // does grant. That is what removes invariant 12a's deploy-ordering hazard from the feature,
+  // and it only works if a brand-new account answers (today, 0) rather than nothing.
+  const today = 20331;
+
+  const fresh = toReply(readWallet(snapshot(undefined), config), {}, {}, today);
+  check(fresh.every((row) => row.wheelSpins === 0 && row.wheelDay === today),
+        "a brand-new account answers today and no spins",
+        JSON.stringify(fresh[0]));
+
+  const held = toReply(
+    readWallet(snapshot({ credits: { granted: 1250, spent: 0 }, wheel: { day: today, spins: 2 } }), config),
+    {}, {}, today);
+  check(held.every((row) => row.wheelSpins === 2 && row.wheelDay === today),
+        "today's tally is reported as it stands", JSON.stringify(held[0]));
+
+  // Rolled over in the reply as well as in the granting transaction, so a reply taken on a day
+  // with no views yet answers zero rather than yesterday's tally. Without it the phone would
+  // seed its first spin of the day from yesterday's index and disagree with the very grant
+  // that is about to be computed from today's.
+  const stale = toReply(
+    readWallet(snapshot({ credits: { granted: 1250, spent: 0 }, wheel: { day: today - 1, spins: 5 } }), config),
+    {}, {}, today);
+  check(stale.every((row) => row.wheelSpins === 0 && row.wheelDay === today),
+        "yesterday's tally reads as no spins today", JSON.stringify(stale[0]));
+
+  // A stored day in the future is a clock that ran ahead once. Left alone rather than reset
+  // into, which would hand that day's wheel out a second time.
+  const ahead = toReply(
+    readWallet(snapshot({ credits: { granted: 1250, spent: 0 }, wheel: { day: today + 1, spins: 4 } }), config),
+    {}, {}, today);
+  check(ahead.every((row) => row.wheelSpins === 4 && row.wheelDay === today + 1),
+        "a day in the future is left where it is", JSON.stringify(ahead[0]));
+
+  // Repeated on every currency row, so a reader may take it from any of them.
+  check(new Set(held.map((row) => `${row.wheelDay}:${row.wheelSpins}`)).size === 1,
+        "every currency row carries the same position");
 }
 
 console.log(`\n${pass} passed, ${fail} failed`);

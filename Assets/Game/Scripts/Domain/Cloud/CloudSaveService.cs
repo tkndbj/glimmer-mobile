@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
+using GlimmerGrove.Ads;
 using GlimmerGrove.Persistence;
 using GlimmerGrove.Progression;
 using UnityEngine;
@@ -233,7 +234,7 @@ namespace GlimmerGrove.Cloud
         ///
         /// <para>
         /// <paramref name="deltaSeconds"/> is elapsed time handed in a frame at a time,
-        /// never two readings of a wall clock, for the reason <c>RunClock</c> gives: the
+        /// never two readings of a wall clock, for the reason <c>RunScreen.Tick</c> gives: the
         /// device's clock can jump — a timezone, an NTP correction, a player winding it
         /// forward for a daily chest — and a retry timer driven by one would either fire
         /// in a storm or never fire again.
@@ -1103,6 +1104,26 @@ namespace GlimmerGrove.Cloud
                     state.ConfirmedThroughUnix,
                     state.EarnedFloor,
                     state.ConfirmedGrantIds);
+
+                // Refunded heart containers. Applied from whichever rows carry them — the
+                // list is an account fact repeated per currency row, and the ledger's own
+                // union makes applying it several times the same as applying it once.
+                //
+                // This is the only direction a container ever moves without a receipt, and
+                // it is the half a client-held entitlement cannot see for itself: buy, spend,
+                // refund, repeat is the commonest way a mobile economy leaks (invariant 18c),
+                // and a permanent upgrade that outlived its refund would be exactly that.
+                HeartContainerLedger.ApplyServerRevocations(state.RevokedContainers);
+
+                // Where the bonus wheel has got to. Applied from whichever rows carry it — the
+                // position is an account fact repeated per currency row, and the stand only ever
+                // moves forward, so applying it several times is applying it once.
+                //
+                // This is the one number in the reply the client has no copy of and cannot
+                // derive: the slice a spin lands on is a pure function of (account, day, spin
+                // index), so the index has to come from the side that grants the views. See
+                // WheelStand.
+                WheelStand.ApplyServerState(state.CarriesWheel, state.WheelDay, state.WheelSpins);
             }
 
             SaveService.MarkDirty();

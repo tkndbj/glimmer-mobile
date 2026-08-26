@@ -110,7 +110,7 @@ namespace GlimmerGrove.Persistence
         ///      same sentinel argument v13 made. Needs no migration for the same reason: an
         ///      older file reads as untimed. Unlike a standing it cannot be backfilled,
         ///      because nothing already stored implies how long a past clear took. See
-        ///      <see cref="RunClock"/>.
+        ///      <c>RunScreen.Tick</c>.
         /// v15 — when the player last chose their name and their companion
         ///      (<see cref="WalletDto.displayNameSetUnix"/>, <see cref="WalletDto.avatarSetUnix"/>).
         ///      The two preferences in this file are the only values merged by recency rather
@@ -226,8 +226,54 @@ namespace GlimmerGrove.Persistence
         ///      row of <c>max(copies placed, GroveStock.LegacyGrant)</c>, which is read out of
         ///      the same DTO. Nobody loses a placement and everybody keeps room to rearrange.
         ///      </para>
+        /// v21 — the heart containers bought with real money
+        ///      (<see cref="SaveFileDto.heartContainersOwned"/>) and the ones a refund has
+        ///      taken back (<see cref="SaveFileDto.heartContainersRevoked"/>).
+        ///      <para>
+        ///      A container raises the refill cap permanently — 5 becomes 10, 20 or 50 — and
+        ///      it is the first thing in this game bought with money that is not currency.
+        ///      Invariant 18 says a real-money product grants currency and nothing else, and
+        ///      the argument behind it is exact: hearts and boosts are <em>amounts</em>, so a
+        ///      product granting one would need the client to apply half a purchase after the
+        ///      server applied the other half — which means a record of "did I already apply
+        ///      this transaction's hearts", in this file, merged across devices, whose failure
+        ///      mode is somebody paying and receiving nothing. A capacity is not an amount: it
+        ///      arrives as the union of one permanent id, so applying it twice is applying it
+        ///      once and the record has nothing to answer. The rule is therefore widened
+        ///      rather than broken — <b>a real-money product grants currency, or an idempotent
+        ///      permanent entitlement, never a stored amount and never both</b> — and the
+        ///      shape is <see cref="companionsOwned"/>'s for the fourth time (invariant 15).
+        ///      </para>
+        ///      <para>
+        ///      <b>The cap is derived and only the ids are stored.</b> Writing the number down
+        ///      would be a second answer to a question the catalog already answers, and it
+        ///      would freeze a container's worth at whatever it was on the day it was bought.
+        ///      What a player holds is the <em>largest</em> container they own rather than the
+        ///      sum, which is what makes buying the rungs out of order, buying one twice
+        ///      through a restore, or restoring onto a device that already holds a better one
+        ///      all resolve to the same number with no special case.
+        ///      </para>
+        ///      <para>
+        ///      <b>The second set is what a client-held entitlement cannot see by itself.</b>
+        ///      Buy, spend, refund, repeat is the commonest way a mobile economy leaks
+        ///      (invariant 18c), and a permanent upgrade that survived a refund would be
+        ///      exactly that. So the server, which already revokes a refunded receipt, now
+        ///      reports the <em>explicitly revoked</em> product ids on every wallet reply, and
+        ///      they are recorded here. Note what it is not: it is not the list of ids the
+        ///      server thinks the account owns. An answer read as a whitelist would confiscate
+        ///      a purchase on any reply that was short or from an account the server had not
+        ///      caught up with; an explicit revocation can only be produced by a refund that
+        ///      really happened. Both sets only ever grow, so both are joined by union and two
+        ///      devices converge whatever order they sync in (invariant 11b); buying a
+        ///      refunded container again lifts its revocation, because <c>redeemPurchase</c>
+        ///      clears it in the same transaction that grants.
+        ///      </para>
+        ///      <para>
+        ///      A v20 file reads as "bought nothing, refunded nothing", which is true, so
+        ///      there is no migration. See <see cref="HeartContainerLedger"/>.
+        ///      </para>
         /// </summary>
-        public const int Version = 20;
+        public const int Version = 21;
 
         /// <summary>Progress that predates this file: index-keyed keys in PlayerPrefs.</summary>
         public const int LegacyPlayerPrefsVersion = 0;
@@ -455,6 +501,52 @@ namespace GlimmerGrove.Persistence
         /// </para>
         /// </summary>
         public string[] groveLandOwned;
+
+        /// <summary>
+        /// The heart containers this account has bought, sorted.
+        ///
+        /// <para>
+        /// An entitlement, so a set of permanent ids joined by union — invariant 15, and the
+        /// same shape as <see cref="companionsOwned"/> for the fourth time. It is the first
+        /// entitlement here paid for with real money rather than with credits, which changes
+        /// nothing about the shape and one thing about the reasoning: see v21 in
+        /// <see cref="SaveSchema"/> for why an idempotent capacity is the one non-currency
+        /// thing a real-money product may grant.
+        /// </para>
+        /// <para>
+        /// The refill cap is <em>derived</em> from these against the store catalog and is
+        /// never written down. Unknown ids are carried through untouched, for
+        /// <see cref="tipsSeen"/>'s reason — a container bought on a newer build must not be
+        /// confiscated by a trip through an older one, and here that would be a real payment
+        /// silently undone.
+        /// </para>
+        /// <para>
+        /// Absent is the same fact as "bought none", so this needs no sentinel. It is also
+        /// only a <em>cache</em> in the sense that matters: both stores re-deliver a
+        /// non-consumable for ever, so a player who loses this file entirely gets every
+        /// container back by tapping Restore. See <see cref="HeartContainerLedger"/>.
+        /// </para>
+        /// </summary>
+        public string[] heartContainersOwned;
+
+        /// <summary>
+        /// The heart containers a refund or a chargeback has taken back, sorted.
+        ///
+        /// <para>
+        /// Written only from the server's own answer — the receipts it granted and has since
+        /// reversed. It is a <b>revocation list and not an ownership list</b>, and that
+        /// distinction is the whole safety of the design: an id missing from the server's
+        /// reply means nothing, so a short answer, a cold account or an older deployment can
+        /// never confiscate a purchase, while an entry can only ever be produced by a refund
+        /// that actually happened. See <see cref="HeartContainerLedger.ApplyServerRevocations"/>.
+        /// </para>
+        /// <para>
+        /// Monotonic, so it is joined by union like everything else here. Buying a refunded
+        /// container again lifts its entry, driven by a real receipt rather than by anything
+        /// this file could say on its own.
+        /// </para>
+        /// </summary>
+        public string[] heartContainersRevoked;
 
         /// <summary>
         /// Integrity check over the rest of the file. Empty on files written before

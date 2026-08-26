@@ -49,6 +49,24 @@ namespace GlimmerGrove
         /// <summary>Music track for this screen, null keeps whatever is playing.</summary>
         public virtual string Track => null;
 
+        /// <summary>
+        /// True once this view has begun going away and is only finishing its exit animation.
+        ///
+        /// <para>
+        /// It exists for <see cref="Flow.Modal{T}"/>, which refuses to raise a second copy of a
+        /// panel that is already up. Without this the refusal would also swallow the legitimate
+        /// case — a panel closing and the next one of the same type opening behind it, which is
+        /// exactly how <c>RunLessons</c> walks a player through a board's tips. A view on its
+        /// way out is not "already up".
+        /// </para>
+        /// <para>
+        /// Declared here rather than on <c>ModalView</c> because <see cref="Flow"/> holds
+        /// <see cref="View"/> and may not reach downwards; false is the honest answer for a
+        /// screen, which is swapped rather than dismissed.
+        /// </para>
+        /// </summary>
+        public virtual bool IsLeaving => false;
+
         /// <summary>Called once the incoming transition has finished.</summary>
         public virtual void OnPresented() { }
 
@@ -270,14 +288,63 @@ namespace GlimmerGrove
         }
 
         // ------------------------------------------------------------- modals
+        /// <summary>
+        /// Raises a modal panel — or hands back the one that is already up.
+        ///
+        /// <para>
+        /// <b>Idempotent by type, and that is the substance rather than a nicety.</b> A button
+        /// can be pressed twice before the panel it raises has drawn a single frame: a fast
+        /// double-tap, a stylus, a screen reader, an accessibility switch, a phone that dropped
+        /// a frame. Every one of those used to build two panels — two scrims, two entrance
+        /// chimes, and a player who dismisses one and finds an identical one behind it. On the
+        /// gem shelf raised over a lost run that is worse than untidy: the second copy owns the
+        /// same <c>Bought</c> callback, so a purchase would be reported twice into whatever
+        /// raised it.
+        /// </para>
+        /// <para>
+        /// <b>The existing panel is returned unconfigured, and that is deliberate.</b> A second
+        /// call is a duplicate of a request already granted — the panel in front of the player
+        /// was configured by the first one and is live. Re-running <paramref name="configure"/>
+        /// on it would rewrite the callbacks of a panel mid-interaction, which is a subtler
+        /// version of the bug this exists to stop.
+        /// </para>
+        /// <para>
+        /// <b>A panel on its way out does not count as already up.</b> A modal stays in the
+        /// stack for the fifth of a second its exit takes, and a sequence that closes one and
+        /// opens the next of the same type — <c>RunLessons</c> walking a board's tips — must
+        /// not be refused. See <see cref="View.IsLeaving"/>.
+        /// </para>
+        /// </summary>
         public static T Modal<T>(Action<T> configure = null) where T : View
         {
+            var live = LiveModal<T>();
+            if (live != null) return live;
+
             var rt = UIKit.Node(typeof(T).Name, Overlays);
             var view = rt.gameObject.AddComponent<T>();
             configure?.Invoke(view);
             view.Init();
             _modals.Add(view);
             return view;
+        }
+
+        /// <summary>
+        /// The modal of this type that is up and staying up, or null.
+        ///
+        /// Walked from the top down, so the answer is the one the player is looking at rather
+        /// than the oldest of several — a distinction that cannot arise while
+        /// <see cref="Modal{T}"/> refuses duplicates, and would matter the moment somebody
+        /// added a way round it.
+        /// </summary>
+        public static T LiveModal<T>() where T : View
+        {
+            for (int i = _modals.Count - 1; i >= 0; i--)
+            {
+                if (!_modals[i] || _modals[i].IsLeaving) continue;
+                if (_modals[i] is T match) return match;
+            }
+
+            return null;
         }
 
         public static void Dismiss(View v)

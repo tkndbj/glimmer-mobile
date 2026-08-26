@@ -84,6 +84,7 @@ namespace GlimmerGrove.EditorTools
             }
 
             ValidateChapterOrder(load.Index, result);
+            ValidateChapterModes(load, result);
             ValidateCompanions(load.Index, result, verbose);
             ValidateHomestead(load, result, verbose);
             ValidateLevels(load, result, verbose);
@@ -157,6 +158,46 @@ namespace GlimmerGrove.EditorTools
         }
 
         /// <summary>
+        /// Every level of a chapter is the mode the manifest says the chapter is.
+        ///
+        /// <para>
+        /// <b>The failure this catches is completely silent, and it has happened.</b> A
+        /// chapter's mode lives in <c>manifest.json</c> (invariant 20) and decides three
+        /// things: which screen opens its levels, which lane of the switcher it appears
+        /// under, and — through <c>LevelUnlock.GateFor</c> — which chapter's stars unlock
+        /// it. A weave chapter whose entry does not say <c>"mode": "weave"</c> is indexed
+        /// as a glade chapter, and <em>nothing else refuses it</em>: every level parses,
+        /// every board is proved solvable, every string resolves and every address loads.
+        /// What ships is a chapter gated on a stranger's stars, filed under the wrong tab,
+        /// routed to a screen that cannot play it.
+        /// </para>
+        /// <para>
+        /// <c>Sync Manifest</c> now derives the field from the body rather than waiting for
+        /// somebody to type it, which is invariant 4a's rule for the level list applied to
+        /// the one field of an entry that was still hand-written. This is the other half of
+        /// that bargain and the half with teeth: deriving makes the mistake unlikely, and
+        /// only a check proves it did not happen anyway — a manifest is a text file, and the
+        /// one thing this project has learned twice is that a step somebody has to remember
+        /// is a step that gets skipped.
+        /// </para>
+        /// <para>
+        /// The rule itself is <see cref="ChapterModeValidator"/>, in Domain, so both callers
+        /// ask one copy of it and it can be proved offline against the chapters that ship.
+        /// </para>
+        /// </summary>
+        static void ValidateChapterModes(EditorContent content, ContentValidationResult result)
+        {
+            foreach (var chapter in content.Index.Chapters)
+            {
+                if (!content.Catalog.TryResidentChapter(chapter.Id, out var body)) continue;
+
+                if (ChapterModeValidator.TryDisagreement(chapter.Id, chapter.Mode, body.Levels,
+                                                        out var issue))
+                    result.Errors.Add(issue.Message);
+            }
+        }
+
+        /// <summary>
         /// Two chapters at the same order sort by id, which is deterministic but is
         /// almost never what the author meant — and the mistake is invisible until
         /// players find the game's chapters in an order nobody chose. Orders are sparse
@@ -215,12 +256,15 @@ namespace GlimmerGrove.EditorTools
             }
 
             ValidateRewardChaptersExist(fetch.Text, index, result);
-            ValidateHearts(table.Hearts, result, verbose);
+            ValidateHearts(table.Hearts, index, table.Store, result, verbose);
             ValidateHints(table.Hints, table.Ads, result, verbose);
             ValidatePrompts(table.Prompts, result, verbose);
+            ValidateChapterGate(table.ChapterGate, index, result, verbose);
+            ValidateContinue(table.Continue, table.Store, result, verbose);
             ValidateDailyChests(table.Daily, table.Hearts, result, verbose);
             ValidateStreak(table.Streak, result, verbose);
             ValidateGolden(table.Golden, table, index, result, verbose);
+            ValidateWheel(table.Ads, result, verbose);
             ValidateEvents(index, result, verbose);
             ValidateStore(table, result, verbose);
 
@@ -310,6 +354,7 @@ namespace GlimmerGrove.EditorTools
             }
 
             ValidateStoreLadder(catalog, result);
+            ValidateHeartContainers(catalog, table, result);
 
             if (!verbose) return;
 
@@ -363,6 +408,79 @@ namespace GlimmerGrove.EditorTools
         }
 
         /// <summary>
+        /// The heart containers: a ladder the money ladder above cannot see.
+        ///
+        /// <para>
+        /// A container grants no currency, so its value per unit of money is zero and
+        /// <see cref="ValidateStoreLadder"/> would fail every shelf it was ranked on — which
+        /// is why it is exempt there (as a non-consumable) and checked here instead. What has
+        /// to hold is the same claim in the units this product is sold in: a dearer vessel
+        /// holds more. A rung that costs more and holds no more is a card nobody can be right
+        /// to buy, and it is invisible in the file because the two numbers are in different
+        /// columns.
+        /// </para>
+        /// <para>
+        /// The check against the free cap is the one that matters most and is an error rather
+        /// than a warning: a container at or below the cap a player already has takes real
+        /// money and changes nothing they can see. Both numbers are content, so the mistake is
+        /// one config push away at any time — raise the free tuning past a shipped container
+        /// and it happens on its own, to everybody, with no code change to notice.
+        /// </para>
+        /// </summary>
+        static void ValidateHeartContainers(StoreCatalog catalog, ProgressionTable table,
+                                            ContentValidationResult result)
+        {
+            var vessels = new List<StoreProduct>();
+            foreach (var product in catalog.Products)
+                if (product.IsContainer) vessels.Add(product);
+
+            if (vessels.Count == 0) return;
+
+            vessels.Sort((a, b) => a.ReferenceUsdCents.CompareTo(b.ReferenceUsdCents));
+
+            int freeCap = table.Hearts.RefillCap;
+            int ceiling = table.Hearts.Ceiling;
+
+            foreach (var vessel in vessels)
+            {
+                if (vessel.HeartCapacity <= freeCap)
+                    result.Errors.Add(
+                        $"store product '{vessel.Id}' sells a heart capacity of " +
+                        $"{vessel.HeartCapacity}, at or below the free refill cap of {freeCap}; " +
+                        "it would take real money and change nothing the player can see");
+
+                // The timer would carry somebody past the most they may hold, so every grant
+                // would be refused while the clock kept paying. HeartContainerLedger holds the
+                // cap to the ceiling, so what the player would actually get is less than the
+                // card promised.
+                if (vessel.HeartCapacity > ceiling)
+                    result.Errors.Add(
+                        $"store product '{vessel.Id}' sells a heart capacity of " +
+                        $"{vessel.HeartCapacity}, above the published ceiling of {ceiling}; the " +
+                        "ledger holds it to the ceiling, so the card promises more than it gives");
+            }
+
+            for (int i = 1; i < vessels.Count; i++)
+            {
+                if (vessels[i].ReferenceUsdCents == vessels[i - 1].ReferenceUsdCents)
+                {
+                    result.Warnings.Add(
+                        $"store: heart containers '{vessels[i - 1].Id}' and '{vessels[i].Id}' are " +
+                        "the same price; which one the shelf draws first is then arbitrary");
+                    continue;
+                }
+
+                if (vessels[i].HeartCapacity > vessels[i - 1].HeartCapacity) continue;
+
+                result.Errors.Add(
+                    $"store: heart container '{vessels[i].Id}' costs more than " +
+                    $"'{vessels[i - 1].Id}' and holds {vessels[i].HeartCapacity} against " +
+                    $"{vessels[i - 1].HeartCapacity}. A ladder that stops getting better is a " +
+                    "rung nobody can be right to buy");
+            }
+        }
+
+        /// <summary>
         /// The shop in the terms it was priced in, printed so nobody has to derive it again.
         ///
         /// <para>
@@ -381,6 +499,18 @@ namespace GlimmerGrove.EditorTools
             {
                 foreach (var product in catalog.Shelf(shelf))
                 {
+                    // A container is priced in the same money and sold in a different unit,
+                    // so printing it as "0 gems + 0 credits" would be true and useless — and
+                    // the number worth reading is the one it moves the free cap to.
+                    if (product.IsContainer)
+                    {
+                        Debug.Log($"[Glimmer] store {shelf} #{product.Tier}: '{product.Id}' " +
+                                  $"hearts refill to {product.HeartCapacity} (from " +
+                                  $"{table.Hearts.RefillCap}) at " +
+                                  $"${product.ReferenceUsdCents / 100f:0.00}, once and for ever");
+                        continue;
+                    }
+
                     string worth = product.Credits > 0 && daily > 0
                         ? $", {product.Credits / daily} day(s) of play"
                         : string.Empty;
@@ -481,7 +611,8 @@ namespace GlimmerGrove.EditorTools
         /// the numbers that caused them.
         /// </para>
         /// </summary>
-        static void ValidateHearts(HeartRuleTable hearts, ContentValidationResult result, bool verbose)
+        static void ValidateHearts(HeartRuleTable hearts, CatalogIndex index, StoreCatalog store,
+                                   ContentValidationResult result, bool verbose)
         {
             if (hearts == null) { result.Errors.Add("progression.json produced no heart table"); return; }
 
@@ -515,12 +646,61 @@ namespace GlimmerGrove.EditorTools
                 result.Warnings.Add($"a lost run costs {hearts.DefeatCost} of {hearts.RefillCap} hearts; " +
                                     "one mistake would end the session");
 
+            ValidateFreeOpenings(hearts, index, result, verbose);
+            ValidateHeartRescue(hearts, store, result, verbose);
+
             if (!verbose) return;
 
             Debug.Log($"[Glimmer] hearts: refill to {hearts.RefillCap} every " +
                       $"{hearts.RefillSeconds / 3600f:0.##}h ({hearts.BoostedRefillSeconds / 3600f:0.##}h " +
                       $"boosted, up to {hearts.MaxBoostHours}h of boost), hold up to {hearts.Ceiling}, " +
-                      $"a loss costs {hearts.DefeatCost}");
+                      $"a loss costs {hearts.DefeatCost}, the first " +
+                      $"{hearts.GraceLevels} of each mode cost nothing");
+        }
+
+        /// <summary>
+        /// Where the free opening actually lands, chapter by chapter.
+        ///
+        /// <para>
+        /// The published number alone does not say what it does: it is counted inside the first
+        /// chapter of each mode and stops at that chapter's end (<see cref="HeartStake"/>), so
+        /// the same three means three of ten on a full chapter and all of a three-glade one. A
+        /// window that swallows a whole chapter is a legitimate decision and a large one — the
+        /// heart gate simply does not exist on that map — so it is named here rather than
+        /// discovered from a retention chart.
+        /// </para>
+        /// <para>
+        /// Asked of <c>HeartStake</c> rather than worked out here, through the overload that
+        /// takes a table: what is being checked is the candidate this build would publish
+        /// rather than the rules currently running, and a rule about charging players must not
+        /// exist twice — least of all in the file whose job is to prove that it does not.
+        /// </para>
+        /// </summary>
+        static void ValidateFreeOpenings(HeartRuleTable hearts, CatalogIndex index,
+                                         ContentValidationResult result, bool verbose)
+        {
+            if (index == null || hearts.GraceLevels <= 0) return;
+
+            for (int i = 0; i < index.Modes.Count; i++)
+            {
+                var chapter = index.FirstChapterIn(index.Modes[i]);
+                if (chapter == null || chapter.IsEmpty) continue;
+
+                int free = HeartStake.FreeLevelsIn(index, chapter.Id, hearts);
+                if (free <= 0) continue;
+
+                // Only worth saying of a chapter with something to cover. A mode still finding
+                // its shape ships one board, and "the window is longer than this chapter" is
+                // then a fact about how much content exists rather than about the tuning — a
+                // warning on every build for something that fixes itself when the second board
+                // lands is a warning nobody reads.
+                if (free >= chapter.LevelCount && chapter.LevelCount > 1)
+                    result.Warnings.Add($"the free opening covers all {chapter.LevelCount} level(s) of " +
+                                        $"'{chapter.Id}', so the heart gate does not exist anywhere on " +
+                                        $"the {index.Modes[i]} map");
+                else if (verbose)
+                    Debug.Log($"[Glimmer] hearts: the first {free} of '{chapter.Id}' cost nothing");
+            }
         }
 
         /// <summary>
@@ -607,6 +787,206 @@ namespace GlimmerGrove.EditorTools
             Debug.Log($"[Glimmer] account prompt: {prompts.ChapterBudget} ask(s) after a chapter, " +
                       $"{prompts.PurchaseBudget} after a purchase, " +
                       $"{prompts.QuietSeconds / 3600L}h apart whatever raised them");
+        }
+
+        /// <summary>
+        /// The chapter gate, checked for the things the reader cannot know.
+        ///
+        /// <para>
+        /// The reader rejects a gate no level could ever meet. This checks the gate against the
+        /// catalog it will actually be applied to, which is the part that cannot be known from
+        /// the file alone: a chapter that is <em>reachable</em> in principle is not the same as
+        /// one somebody will reach, and the two ways a gate goes wrong are both invisible in
+        /// <c>progression.json</c>. A gate of three asks for perfect play on every level of
+        /// every chapter, which is a wall wearing a gate's clothes; and a chapter that holds
+        /// fewer levels than the one before it quietly asks for less, which is worth seeing
+        /// before a drop rather than after.
+        /// </para>
+        /// <para>
+        /// Reported in full even when nothing is wrong, for <c>ValidatePrompts</c>' reason: this
+        /// one number decides how much of a drop a player has to master before the next one
+        /// opens, and nobody should have to open a JSON file to find out what it is.
+        /// </para>
+        /// </summary>
+        static void ValidateChapterGate(ChapterGateTable gate, CatalogIndex index,
+                                        ContentValidationResult result, bool verbose)
+        {
+            if (gate == null) { result.Errors.Add("progression.json produced no chapter gate"); return; }
+
+            if (gate.IsOpenToAll)
+                result.Warnings.Add("chapterGate starsPerLevel is 0, so every chapter stands open " +
+                                    "from a new player's first launch; only the level-by-level " +
+                                    "chain inside a chapter is left");
+
+            if (gate.StarsPerLevel >= LevelRecord.MaxStars)
+                result.Warnings.Add($"chapterGate starsPerLevel is {gate.StarsPerLevel}, which is " +
+                                    "every star a level can pay - the next chapter needs a perfect " +
+                                    "result on every level of this one, with no room for a single " +
+                                    "two-star clear anywhere");
+
+            if (index == null || !verbose) return;
+
+            foreach (var chapter in index.Chapters)
+            {
+                var next = index.ChapterNeighbour(chapter.Id, +1);
+                if (next == null) continue;
+
+                int required = gate.RequiredStars(chapter.LevelCount);
+                int available = chapter.LevelCount * LevelRecord.MaxStars;
+
+                Debug.Log($"[Glimmer] chapter gate: '{next.Id}' opens at {required} of the " +
+                          $"{available} stars in '{chapter.Id}' " +
+                          $"({gate.StarsPerLevel} a level over {chapter.LevelCount} levels)");
+            }
+        }
+
+        /// <summary>
+        /// The price of a way back onto a lost board, checked for the things the reader cannot
+        /// know.
+        ///
+        /// <para>
+        /// The reader bounds both numbers and refuses the one value that would break the
+        /// feature outright — a free heart. What it cannot judge is whether the price is
+        /// <em>reachable</em>, and that is the only way this pair goes quietly wrong:
+        /// <c>ValidateContinue</c>'s complaint, one panel further on and sharper, because the
+        /// player being shown this one has no hearts at all. A rescue dearer than the cheapest
+        /// gem pack sends somebody with an empty bar round the shop twice.
+        /// </para>
+        /// <para>
+        /// The second check has no counterpart on the continue and is the one worth having.
+        /// Hearts are also sold by the copy in the shop (<c>hearts_five</c> and friends), and
+        /// the two prices are set in different blocks of the same file on different days — so
+        /// a rescue dearer per heart than the shelf is a panel quietly charging a premium at
+        /// the moment a player is least able to compare, which is the shape a store reviewer
+        /// is right to object to.
+        /// </para>
+        /// <para>
+        /// <b>Against the shop's smallest pack rather than its best rate</b>, and the
+        /// difference is what stops this being noise. A bulk pack is a volume discount — the
+        /// shipped ladder runs 50/5, 125/15 and 280/40, so a two-heart rescue is dearer per
+        /// heart than the top of it at every price anybody would ever set, and a check that
+        /// fires on every honest tuning is a check people learn to scroll past. The entry pack
+        /// is the like-for-like comparison: it is what the same player would otherwise buy for
+        /// the same reason. Beating it is not asked for; matching it is.
+        /// </para>
+        /// <para>
+        /// Reported in full even when nothing is wrong, for <c>ValidateChapterGate</c>'s
+        /// reason: this is a price charged to real players at the worst moment in a session,
+        /// and nobody should have to open a JSON file to find out what it is.
+        /// </para>
+        /// </summary>
+        static void ValidateHeartRescue(HeartRuleTable hearts, StoreCatalog store,
+                                        ContentValidationResult result, bool verbose)
+        {
+            if (hearts.RescueHearts <= 0)
+            {
+                if (verbose)
+                    Debug.Log("[Glimmer] heart rescue: withdrawn - a player out of hearts waits, " +
+                              "watches a video, or leaves");
+                return;
+            }
+
+            long entry = 0L;
+            if (store != null)
+                foreach (var product in store.Products)
+                    if (product != null && product.Gems > 0L && (entry == 0L || product.Gems < entry))
+                        entry = product.Gems;
+
+            if (entry > 0L && hearts.RescueGems > entry)
+                result.Warnings.Add($"hearts rescueGems is {hearts.RescueGems}, dearer than the " +
+                                    $"{entry}-gem entry rung - a player short of it cannot cover " +
+                                    "the rescue with the cheapest thing in the shop, and they " +
+                                    "have no hearts to go away and play with");
+
+            // The shop's entry heart pack - its smallest - rather than its best rate. See
+            // the remarks for why the best one would fire on every honest tuning.
+            long packGems = 0L, packHearts = 0L;
+            if (store != null)
+                foreach (var good in store.Goods)
+                {
+                    if (good == null || good.Kind != StoreGoodKind.Hearts) continue;
+                    if (good.Amount <= 0 || good.Gems <= 0L) continue;
+
+                    if (packHearts == 0L || good.Amount < packHearts)
+                    {
+                        packGems = good.Gems;
+                        packHearts = good.Amount;
+                    }
+                }
+
+            // Cross-multiplied rather than divided, so the comparison is exact integer
+            // arithmetic - the rule this project keeps for anything a player counts towards
+            // (see LevelTuning, and the four glades that shipped a turn out).
+            if (packHearts > 0L &&
+                hearts.RescueGems * packHearts > packGems * hearts.RescueHearts)
+                result.Warnings.Add($"the heart rescue asks {hearts.RescueGems} gems for " +
+                                    $"{hearts.RescueHearts} hearts, dearer per heart than the " +
+                                    $"shop's smallest pack ({packGems} for {packHearts}); the " +
+                                    "panel charges a premium at the moment a player is least " +
+                                    "able to compare");
+
+            if (!verbose) return;
+
+            Debug.Log($"[Glimmer] heart rescue: {hearts.RescueGems} gem(s) for " +
+                      $"+{hearts.RescueHearts} heart(s) on the defeat panel - a fresh attempt " +
+                      "graded like any other, never a continue");
+        }
+
+        /// <summary>
+        /// The price of a second chance, checked for the things the reader cannot know.
+        ///
+        /// <para>
+        /// The reader bounds it and refuses the two values that would break the feature
+        /// outright — a free continue, and one that hands over nothing. What it cannot judge is
+        /// whether the price is <em>reachable</em>, and that is the only way this block goes
+        /// quietly wrong: a continue dearer than the cheapest gem pack means every player short
+        /// of gems is sold a purchase that does not cover it, and one dearer than a week of
+        /// free play is not an offer anybody without a card can ever take. Neither throws,
+        /// neither validates red anywhere else, and both read perfectly plausibly in the JSON.
+        /// </para>
+        /// <para>
+        /// Reported in full even when nothing is wrong, for <c>ValidateChapterGate</c>'s
+        /// reason: this is a price charged to real players at the worst moment in a session,
+        /// and nobody should have to open a JSON file to find out what it is.
+        /// </para>
+        /// </summary>
+        static void ValidateContinue(ContinueTable carryOn, StoreCatalog store,
+                                     ContentValidationResult result, bool verbose)
+        {
+            if (carryOn == null) { result.Errors.Add("progression.json produced no continue rule"); return; }
+
+            if (!carryOn.Enabled)
+            {
+                if (verbose)
+                    Debug.Log("[Glimmer] continue: withdrawn - a lost run ends, and the only way " +
+                              "back in is a heart");
+                return;
+            }
+
+            // The entry rung, which is the number that decides whether the buy-gems branch of
+            // the offer can actually be met in one purchase. A player short of 20 gems who is
+            // sold a 100-gem pack is fine; one short of 500 against the same pack is being sent
+            // round the shop twice, from a panel raised over a frozen board.
+            long entry = 0L;
+            if (store != null)
+                foreach (var product in store.Products)
+                    if (product != null && product.Gems > 0L && (entry == 0L || product.Gems < entry))
+                        entry = product.Gems;
+
+            if (entry > 0L && carryOn.Gems > entry)
+                result.Warnings.Add($"continueRun gems is {carryOn.Gems}, dearer than the " +
+                                    $"{entry}-gem entry rung - a player short of a continue " +
+                                    "cannot cover it with the cheapest thing in the shop, and the " +
+                                    "offer is raised over a board they cannot leave");
+
+            if (!verbose) return;
+
+            Debug.Log($"[Glimmer] continue: {carryOn.Gems} gem(s) for +{carryOn.Turns} turn(s) " +
+                      $"on a glade, +{carryOn.Ink} cell(s) of ink on a weave" +
+                      (carryOn.GemsStep > 0L
+                           ? $"; +{carryOn.GemsStep} each time, so a third on one run costs " +
+                             carryOn.PriceFor(2)
+                           : "; flat, so a run may be continued as often as the player can pay"));
         }
 
         /// <summary>
@@ -802,6 +1182,82 @@ namespace GlimmerGrove.EditorTools
         /// individual band shows.
         /// </para>
         /// </summary>
+        /// <summary>
+        /// The bonus wheel: what it really pays, and whether it looks like what it is.
+        ///
+        /// <para>
+        /// <b>The mean is printed rather than judged.</b> The wheel multiplies
+        /// <c>win_bonus</c>'s authored amount, so from the moment it is published that amount
+        /// stops being what a view is worth — and nothing else in the file says so. What the
+        /// placement <em>should</em> pay is an economy decision and not this check's to make;
+        /// what it must never be is a surprise, which is the same bargain <see cref="ValidateGolden"/>
+        /// strikes one method up.
+        /// </para>
+        /// <para>
+        /// The two things it does refuse are the two a picture can get wrong. A slice that pays
+        /// less than the flat offer is refused by the reader before this runs (the wheel only
+        /// ever adds); what is left is <b>two equal figures side by side</b>, which makes a
+        /// wheel look like it has fewer prizes than it has — the rim is drawn in the authored
+        /// order, so the file is where that is fixed. A warning rather than an error, because
+        /// it is a legibility judgement and a deliberately repeated figure on a big wheel is a
+        /// coherent thing to want.
+        /// </para>
+        /// </summary>
+        static void ValidateWheel(AdRewardTable ads, ContentValidationResult result, bool verbose)
+        {
+            if (ads == null) return;
+
+            var wheel = ads.Wheel;
+
+            // No wheel is the flat offer, which is what this game paid before there was one.
+            if (!wheel.IsUsable) return;
+
+            var offer = ads.Offer(AdPlacement.WinBonus);
+            if (!offer.IsValid)
+            {
+                // The reader drops the wheel in this case and says so; reaching here would mean
+                // it had stopped doing that.
+                result.Errors.Add("a bonus wheel survived a table with no '" + AdPlacement.WinBonus +
+                                  "' placement to multiply");
+                return;
+            }
+
+            for (int i = 0; i < wheel.Count; i++)
+            {
+                int next = (i + 1) % wheel.Count;
+                if (wheel.SliceAt(i).Percent != wheel.SliceAt(next).Percent) continue;
+
+                result.Warnings.Add($"wheel slices {i} and {next} both pay " +
+                                    $"{wheel.SliceAt(i).Percent}% and sit side by side. The rim is " +
+                                    "drawn in the authored order, so the wheel will look like it " +
+                                    "has fewer prizes than it has — interleave them in the file");
+            }
+
+            int mean = wheel.MeanPercent;
+            long perView = BonusWheel.Apply(offer.Amount, mean);
+            long best = BonusWheel.Apply(offer.Amount, wheel.TopPercent);
+
+            if (mean <= WheelRules.MinPercent)
+            {
+                result.Errors.Add("the bonus wheel averages the flat offer, so the spin costs a " +
+                                  "tap and changes nothing anybody can measure");
+            }
+
+            if (!verbose) return;
+
+            var line = new System.Text.StringBuilder("[Glimmer] bonus wheel:");
+            for (int i = 0; i < wheel.Count; i++)
+                line.Append("  ").Append(wheel.SliceAt(i).Percent).Append('%');
+
+            line.Append("  ·  1 in ").Append(wheel.Count).Append(" each");
+            Debug.Log(line.ToString());
+
+            Debug.Log($"[Glimmer] '{AdPlacement.WinBonus}' authors {offer.Amount} a view and really " +
+                      $"pays about {perView} (mean {mean}%), best {best}. At a cap of " +
+                      $"{offer.DailyCap} that is up to about {perView * offer.DailyCap} a day on " +
+                      "average — hold it against the free-play figure below before retuning either");
+        }
+
         static void ValidateGolden(GoldenTable golden, ProgressionTable table,
                                    CatalogIndex index, ContentValidationResult result, bool verbose)
         {
@@ -1011,17 +1467,15 @@ namespace GlimmerGrove.EditorTools
 
                 var tuning = level.Tuning;
 
-                // The clock and what three stars asks of it, printed rather than left to be
-                // worked out: stars are the worse of the moves and the clock, so the number
-                // that decides whether a glade is fair is the tap rate the two together imply
-                // — and that is not something anyone can read off the JSON.
-                string clock = tuning.HasTimeLimit
-                    ? $", {tuning.TimeLimitMillis / 1000f:0.#}s clock, " +
-                      $"{tuning.GoldThreshold / (tuning.TimeGoldMillis / 1000f):0.00} taps/s for three stars"
-                    : ", untimed";
+                // The three numbers a glade is actually judged by, printed rather than left to
+                // be worked out from the JSON: par is derived from the board, and both the
+                // three-star line and the losing line are multiples of it that no level here
+                // authors. A glade is graded on turns and nothing else.
+                string budget = tuning.HasBudget ? tuning.MoveBudget.ToString() : "unlimited";
 
                 Debug.Log($"[Glimmer] {report.Id} verified " +
-                          $"({level.Layout.Width}x{level.Layout.Height}, par {tuning.Par}{clock})");
+                          $"({level.Layout.Width}x{level.Layout.Height}, par {tuning.Par}, " +
+                          $"three stars at {tuning.GoldThreshold} turns, budget {budget})");
             }
         }
 

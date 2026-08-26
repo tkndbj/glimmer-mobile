@@ -62,13 +62,36 @@ namespace GlimmerGrove
             public readonly long Xp, Credits;
             public readonly int GoldenPercent;
 
-            public WinRecord(RunOutcome run, StreakNote streak, long xp, long credits, int golden)
+            /// <summary>
+            /// The chapter this run's stars opened, or none.
+            ///
+            /// <para>
+            /// Answered here rather than by the victory panel because it is a
+            /// <em>transition</em>, and by the time a panel is built the transition is over —
+            /// the record has been folded in and the gate simply reads open, which is
+            /// indistinguishable from a gate that was already open an hour ago. That is the
+            /// same trap the streak's <c>Advanced</c> exists to avoid, so it is answered the
+            /// same way: measured either side of the fold, on the one line that owns the
+            /// ordering.
+            /// </para>
+            /// <para>
+            /// It is news rather than a reward — nothing is granted, nothing is stored and
+            /// nothing is claimed. A player who never sees this line finds the chapter open on
+            /// the map, which is why it is safe for it to be a line on a panel that can be
+            /// skipped.
+            /// </para>
+            /// </summary>
+            public readonly ChapterId ChapterOpened;
+
+            public WinRecord(RunOutcome run, StreakNote streak, long xp, long credits, int golden,
+                             ChapterId chapterOpened)
             {
                 Run = run;
                 Streak = streak;
                 Xp = xp;
                 Credits = credits;
                 GoldenPercent = golden;
+                ChapterOpened = chapterOpened;
             }
         }
 
@@ -79,12 +102,28 @@ namespace GlimmerGrove
             public readonly int HeartsLeft;
             public readonly bool HeartCharged;
 
-            public LossRecord(RunOutcome run, StreakNote streak, int heartsLeft, bool charged)
+            /// <summary>
+            /// True when this glade is one of the free openings and nothing was owed for the
+            /// loss. See <see cref="HeartStake"/>.
+            ///
+            /// <para>
+            /// Carried rather than left to be inferred from <see cref="HeartCharged"/>, because
+            /// the two false cases are opposites and the panel says opposite things about them:
+            /// nothing was taken because nothing was owed, or nothing was taken because there
+            /// was nothing left to take. Read the second as the first and the panel offers a
+            /// retry button to a player who cannot use one.
+            /// </para>
+            /// </summary>
+            public readonly bool WasFree;
+
+            public LossRecord(RunOutcome run, StreakNote streak, int heartsLeft, bool charged,
+                              bool wasFree)
             {
                 Run = run;
                 Streak = streak;
                 HeartsLeft = heartsLeft;
                 HeartCharged = charged;
+                WasFree = wasFree;
             }
         }
 
@@ -99,19 +138,23 @@ namespace GlimmerGrove
         /// remember. It is also why the order above matters.
         /// </para>
         /// </summary>
-        public static WinRecord Win(LevelDefinition level, int stars, int moves, int millis,
+        public static WinRecord Win(LevelDefinition level, int stars, int moves,
                                     float seconds, int hintsUsed, int route, int lit, int wanted)
         {
             var before = PlayerProgress.Record(level.Id);
             var tuning = level.Tuning;
 
+            // Read before the fold for WinRecord.ChapterOpened's reason: a gate that is open
+            // afterwards says nothing about whether this run is what opened it.
+            var index = GameContent.Index;
+            var chapter = index.ChapterOf(level.Id);
+            bool wasOpen = LevelUnlock.GateAfter(index, chapter).IsOpen;
+
             var run = RunOutcome.Win(level.Id, stars, moves, tuning.GoldThreshold,
                                      before.BestMoves, !before.IsCleared, before.Clears + 1,
-                                     lit, wanted, hintsUsed, seconds, millis, route,
-                                     tuning.HasTimeLimit ? tuning.TimeLimitMillis : 0,
-                                     tuning.HasTimeLimit ? tuning.TimeGoldMillis : 0);
+                                     lit, wanted, hintsUsed, seconds, route);
 
-            PlayerProgress.RecordRun(level.Id, stars, moves, run.Millis);
+            PlayerProgress.RecordRun(level.Id, stars, moves);
 
             // Counted here and in the loss, which are the two places a run actually ends.
             // PlayerProgress hears about wins only — a defeat is not a worse clear, it simply
@@ -124,12 +167,39 @@ namespace GlimmerGrove
 
             LevelAnalytics.TrackCompleted(level, moves, stars, hintsUsed, seconds, run.FirstClear);
 
+            // The other half of the reading. Only a chapter that was shut a moment ago is news,
+            // and only the chapter directly after this one can have moved — a gate counts the
+            // stars of the chapter behind it and nothing else.
+            var opened = !wasOpen && LevelUnlock.GateAfter(index, chapter).IsOpen
+                ? index.ChapterNeighbour(chapter, +1)
+                : null;
+
             return new WinRecord(run, streak, reward.Xp, reward.EarnedCredits,
-                                 PlayerProgression.GoldenPercentFor(level.Id));
+                                 PlayerProgression.GoldenPercentFor(level.Id),
+                                 opened?.Id ?? ChapterId.None);
         }
 
         /// <summary>
-        /// A run was lost. Charges the heart and feeds the daily loop.
+        /// A run was lost. Charges what the run was staked for, and feeds the daily loop
+        /// whether or not anything was owed.
+        ///
+        /// <para>
+        /// <paramref name="staked"/> is <c>RunScreen.Staked</c> — whether this run is one
+        /// somebody is paying for, which is false for a mode's free openings
+        /// (<see cref="HeartStake"/>). It is <b>told</b> rather than worked out here, and that
+        /// is the whole of the ordering: the answer is latched at the instant the run became
+        /// owed for, so a content push landing mid-run cannot turn a board the player was told
+        /// was free into one they are charged for on the way out of it. Asking again here
+        /// would be a second reading of one run's price, taken later than the first and able to
+        /// disagree with it — which is the shape invariant 9a exists to refuse, and which the
+        /// forfeit path next door had already got right.
+        /// </para>
+        /// <para>
+        /// Required rather than defaulted, so a third mode has to answer it. A default would
+        /// pick a price on behalf of a caller that never thought about one, and both possible
+        /// defaults are wrong: <c>true</c> charges for free boards, <c>false</c> silently turns
+        /// the heart gate off for a whole mode.
+        /// </para>
         ///
         /// <para>
         /// No star, no record and no reward: a defeat is not a worse clear, it simply did not
@@ -143,19 +213,17 @@ namespace GlimmerGrove
         /// </para>
         /// </summary>
         public static LossRecord Loss(LevelDefinition level, DefeatReason reason, int moves,
-                                      int millis, float seconds, int hintsUsed, int route,
-                                      int stepsToSolution, int lit, int wanted)
+                                      float seconds, int hintsUsed, int route,
+                                      int stepsToSolution, int lit, int wanted, bool staked)
         {
             var record = PlayerProgress.Record(level.Id);
             var tuning = level.Tuning;
 
             var run = RunOutcome.Loss(level.Id, reason, moves, tuning.GoldThreshold,
                                       record.BestMoves, record.Clears + 1, stepsToSolution,
-                                      lit, wanted, hintsUsed, seconds, millis, route,
-                                      tuning.HasTimeLimit ? tuning.TimeLimitMillis : 0,
-                                      tuning.HasTimeLimit ? tuning.TimeGoldMillis : 0);
+                                      lit, wanted, hintsUsed, seconds, route);
 
-            bool charged = Wallet.TrySpendHeart();
+            bool charged = staked && Wallet.TrySpendHeart();
             int left = Wallet.Hearts.Count;
 
             DailyChests.RecordRun();
@@ -163,7 +231,7 @@ namespace GlimmerGrove
 
             LevelAnalytics.TrackDefeated(level, run.Moves, run.Seconds, left, reason.ToString());
 
-            return new LossRecord(run, streak, left, charged);
+            return new LossRecord(run, streak, left, charged, !staked);
         }
 
         /// <summary>

@@ -11,69 +11,6 @@ using UnityEngine.UI;
 namespace GlimmerGrove
 {
     /// <summary>
-    /// The panel behind every "watch a video for this" offer in the game.
-    ///
-    /// <para>
-    /// One overlay for both entry points — the defeat screen's heart refill and the home
-    /// screen's coin pill — because they are the same transaction seen from two moods, and
-    /// the honest states below are the whole substance of it. Two panels would be two
-    /// places to get "no fill" wrong.
-    /// </para>
-    /// <para>
-    /// It is built around saying the true thing. A rewarded ad has five ways of not
-    /// happening and a player meets all of them: the network has nothing loaded, the day's
-    /// allowance is spent, another ad was watched a minute ago, hearts are already full, or
-    /// there is no account to pay coins into yet. A panel that renders those as one greyed
-    /// button teaches people the feature is broken, and they stop looking at it — which
-    /// costs far more than the ad it failed to show.
-    /// </para>
-    /// </summary>
-    /// <summary>
-    /// The caption and enabled state of an offer button, wherever one is drawn.
-    ///
-    /// Shared by the three entry points so a cooldown reads identically on the defeat
-    /// panel, the out-of-hearts gate and the home screen. Three copies of this would be
-    /// three chances for one of them to keep saying "WATCH" while the button does nothing.
-    /// </summary>
-    static class AdOfferButton
-    {
-        /// <summary>What the button should say, given the placement's current state.</summary>
-        public static string Caption(AdOfferStatus status, string readyKey)
-        {
-            switch (status.State)
-            {
-                case AdOfferState.Ready:
-                    return Loc.Get(readyKey);
-
-                case AdOfferState.CoolingDown:
-                    return string.Format(Loc.Get("ui.ads.btn_cooling"),
-                                         Profile.Countdown(status.SecondsRemaining));
-
-                case AdOfferState.CapReached:
-                    return Loc.Get("ui.ads.btn_cap");
-
-                default:
-                    return Loc.Get("ui.ads.btn_loading");
-            }
-        }
-
-        /// <summary>
-        /// Repaints a button in place. Safe to call on a timer — the caption is only
-        /// assigned when it actually changed, and the glyph beside it is only re-measured
-        /// on the ticks where it really moved.
-        /// </summary>
-        public static void Paint(Btn button, string placementId, string readyKey)
-        {
-            if (button == null) return;
-
-            var status = RewardedAds.Status(placementId);
-
-            button.Interactable = status.CanShow;
-            button.SetCaption(Caption(status, readyKey));
-        }
-    }
-
-    /// <summary>
     /// One line of "how this actually works", with the glyph that labels it.
     ///
     /// <para>
@@ -98,6 +35,24 @@ namespace GlimmerGrove
         }
     }
 
+    /// <summary>
+    /// The panel behind every "watch a video for this" offer in the game.
+    ///
+    /// <para>
+    /// One overlay for both entry points — the defeat screen's heart refill and the home
+    /// screen's coin pill — because they are the same transaction seen from two moods, and
+    /// the honest states below are the whole substance of it. Two panels would be two
+    /// places to get "no fill" wrong.
+    /// </para>
+    /// <para>
+    /// It is built around saying the true thing. A rewarded ad has five ways of not
+    /// happening and a player meets all of them: the network has nothing loaded, the day's
+    /// allowance is spent, another ad was watched a minute ago, hearts are already full, or
+    /// there is no account to pay coins into yet. A panel that renders those as one greyed
+    /// button teaches people the feature is broken, and they stop looking at it — which
+    /// costs far more than the ad it failed to show.
+    /// </para>
+    /// </summary>
     public sealed class AdOfferOverlay : ModalView
     {
         /// <summary>Which placement is being offered. Set by the caller before Build runs.</summary>
@@ -111,7 +66,7 @@ namespace GlimmerGrove
         ///
         /// <para>
         /// Exactly one of this and <see cref="Rewarded"/> fires, always, for every way this
-        /// panel can end — the watch button, the decline button, the corner cross, a tap on
+        /// panel can end — the watch button, the corner cross, a tap on
         /// the scrim, the hardware back key, and the screen underneath being destroyed while
         /// the panel is open. That completeness is the whole point of it, and it is why it is
         /// raised from <c>OnDestroy</c> rather than from the three or four exits: this panel
@@ -120,10 +75,11 @@ namespace GlimmerGrove
         /// not fire when somebody dismisses with the cross.
         /// </para>
         /// <para>
-        /// Most callers do not need it. <see cref="AdPlacement.RunContinue"/> does, and needs
-        /// it absolutely: the run behind the panel is frozen mid-defeat, so a dismissal that
-        /// reported nothing would leave a player on a dead board with a spent clock and no
-        /// way forward.
+        /// Most callers do not need it, and the one that needed it absolutely is gone: the
+        /// retired <c>run_continue</c> froze a run mid-defeat behind this panel, where a
+        /// dismissal reporting nothing would have left the player on a dead board with no way
+        /// forward. It stays because the completeness is the point — a caller that opens this
+        /// over something it has latched has exactly one reliable way to hear that it closed.
         /// </para>
         /// </summary>
         public Action Dismissed;
@@ -144,7 +100,6 @@ namespace GlimmerGrove
         const float FactGap = 18f;
         const float StatusH = 92f;
         const float ButtonH = 148f;
-        const float DeclineH = 108f;
         const float ShopH = 96f;
         const float FootRoom = 44f;
 
@@ -156,6 +111,19 @@ namespace GlimmerGrove
         Text[] _factLines;
         bool _watching;
         bool _paid;
+
+        /// <summary>What the video paid, kept so COLLECT can fly it into the hub.</summary>
+        ChestDrop _drop;
+
+        /// <summary>
+        /// The payout, opened immediately before the reward is redeemed so it can snapshot
+        /// what each pill read at the time. Null until then, and null for a panel that was
+        /// dismissed without paying. See <see cref="RewardFlight.Begin"/>.
+        /// </summary>
+        RewardFlight _flight;
+
+        /// <summary>Set the moment COLLECT is pressed, so it cannot be pressed twice.</summary>
+        bool _collecting;
 
         /// <summary>
         /// Whether this panel offers a way through to the shop.
@@ -189,16 +157,6 @@ namespace GlimmerGrove
             float statusY = y + StatusH * .5f;  y += StatusH + 12f;
             float buttonY = y + ButtonH * .5f;  y += ButtonH;
 
-            // A spelled-out way to decline, on the one placement where declining is not
-            // "not now". Everywhere else the corner cross is right and a whole button spent
-            // on refusing reads as a panel that expects to be refused — but here the cross
-            // ends a run, and an unlabelled cross that ends a run is exactly the ambiguity
-            // ForfeitOverlay exists to remove. So the continue says what closing costs.
-            bool decline = PlacementId == AdPlacement.RunContinue;
-
-            float declineY = 0f;
-            if (decline) { y += 14f; declineY = y + DeclineH * .5f; y += DeclineH; }
-
             // A quiet way through to the shop, on the two placements opened from somewhere
             // a player can leave. Not on the run continue — the board behind it is frozen
             // mid-defeat and navigating away would forfeit the run — and not on the win
@@ -219,7 +177,7 @@ namespace GlimmerGrove
             // and closing forfeits it. The same judgement DefeatOverlay makes, for the same
             // reason: an accidental dismissal here costs the player the run.
             MakePanel(new Vector2(PanelW, y), Loc.Get(TitleKey(PlacementId)),
-                      dismissOnScrim: !decline);
+                      dismissOnScrim: true);
 
             BuildRewardCard(offer, cardY);
             BuildFacts(factsY);
@@ -242,11 +200,6 @@ namespace GlimmerGrove
                 UIKit.TextButton("Ok", Panel, "btn_blue", Loc.Get("ui.common.got_it"), 46,
                                  new Vector2(600f, ButtonH), new Vector2(.5f, 1f),
                                  new Vector2(0f, -buttonY), () => Close());
-
-            if (decline)
-                UIKit.TextButton("Decline", Panel, "btn_gray", Loc.Get("ui.ads.continue_decline"), 38,
-                                 new Vector2(600f, DeclineH), new Vector2(.5f, 1f),
-                                 new Vector2(0f, -declineY), () => Close());
 
             if (shop)
             {
@@ -291,7 +244,7 @@ namespace GlimmerGrove
         /// Tells the caller how this ended, exactly once.
         ///
         /// <para>
-        /// The latch is the substance. This panel has six exits — watch, decline, the corner
+        /// The latch is the substance. This panel has several exits — watch, the corner
         /// cross, the scrim, the back key and the screen dying underneath it — and a caller
         /// that hears twice is as broken as one that never hears: <c>PlayScreen</c> would
         /// extend a clock it had already lost the run on. Reporting through one method with
@@ -327,7 +280,6 @@ namespace GlimmerGrove
         /// </summary>
         static string TitleKey(string placementId)
             => placementId == AdPlacement.CoinBonus ? "ui.ads.coins_title"
-             : placementId == AdPlacement.RunContinue ? "ui.ads.continue_title"
              : placementId == AdPlacement.WinBonus ? "ui.ads.bonus_title"
              : placementId == AdPlacement.HintRefill
                  ? (Wallet.Hints.CanSpend ? "ui.ads.hints_title" : "ui.ads.hints_empty_title")
@@ -336,15 +288,9 @@ namespace GlimmerGrove
         /// <summary>
         /// What the watch button says when it can be pressed, written out for
         /// <see cref="TitleKey"/>'s reason.
-        ///
-        /// The continue gets its own verb because the transaction is not the same one. Every
-        /// other placement here adds to a balance the player will spend later; this one
-        /// decides whether the run they are in the middle of is over, and a button reading
-        /// "watch" beside a lost board does not say that.
         /// </summary>
         static string WatchKey(string placementId)
-            => placementId == AdPlacement.RunContinue ? "ui.ads.continue_cta"
-             : placementId == AdPlacement.HintRefill ? "ui.ads.hints_cta"
+            => placementId == AdPlacement.HintRefill ? "ui.ads.hints_cta"
              : "ui.ads.watch";
 
         /// <summary>
@@ -355,7 +301,6 @@ namespace GlimmerGrove
         static ChestDropKind ResourceOf(string placementId)
             => placementId == AdPlacement.CoinBonus || placementId == AdPlacement.WinBonus
                  ? ChestDropKind.Credits
-             : placementId == AdPlacement.RunContinue ? ChestDropKind.RunTime
              : placementId == AdPlacement.HintRefill ? ChestDropKind.Hints
              : ChestDropKind.Hearts;
 
@@ -415,19 +360,7 @@ namespace GlimmerGrove
         {
             var facts = new List<AdFact>(4);
 
-            if (placementId == AdPlacement.RunContinue)
-            {
-                // The second line is the one that has to be here, and it is the line a panel
-                // selling something would leave out. A player deciding whether thirty seconds
-                // is worth a video is entitled to know that the seconds they have already
-                // spent still count against their stars — otherwise the first continued run
-                // teaches them the offer was a trick, and they never take the second.
-                facts.Add(new AdFact("ic_play", Pal.Radiance,
-                                     () => Loc.Format("ui.time.adds", offer.IsValid ? offer.Amount : 0)));
-                facts.Add(new AdFact("ic_star", Pal.Gold, () => Loc.Get("ui.time.stars_still_run")));
-                facts.Add(new AdFact("ic_heart", Pal.Rose, () => Loc.Get("ui.time.keeps_heart")));
-            }
-            else if (placementId == AdPlacement.WinBonus)
+            if (placementId == AdPlacement.WinBonus)
             {
                 facts.Add(new AdFact("ic_star", Pal.Gold, () => Loc.Get("ui.bonus.on_top")));
                 facts.Add(new AdFact("ic_chest", Pal.Gold, () => Loc.Get("ui.coins.shop_soon")));
@@ -572,7 +505,7 @@ namespace GlimmerGrove
             var status = RewardedAds.Status(PlacementId);
 
             if (_watch != null) _watch.Interactable = status.CanShow;
-            _status.text = Explain(status);
+            _status.text = AdOfferButton.Explain(status);
         }
 
         /// <summary>
@@ -592,39 +525,6 @@ namespace GlimmerGrove
 
                 string text = _facts[i].Line();
                 if (!string.Equals(line.text, text, StringComparison.Ordinal)) line.text = text;
-            }
-        }
-
-        /// <summary>
-        /// The sentence under the button. Every branch names the real reason and, where
-        /// there is one, when it stops being true.
-        /// </summary>
-        static string Explain(AdOfferStatus status)
-        {
-            switch (status.State)
-            {
-                case AdOfferState.Ready:
-                    return Loc.Get("ui.ads.ready");
-
-                case AdOfferState.NotLoaded:
-                    return Loc.Get("ui.ads.loading");
-
-                case AdOfferState.CoolingDown:
-                    return string.Format(Loc.Get("ui.ads.cooling"),
-                                         Profile.Countdown(status.SecondsRemaining));
-
-                case AdOfferState.CapReached:
-                    return string.Format(Loc.Get("ui.ads.cap_reached"),
-                                         Profile.Countdown(status.SecondsRemaining));
-
-                case AdOfferState.NothingToGain:
-                    return Loc.Format("ui.ads.hearts_ceiling", Profile.HeartCeiling);
-
-                case AdOfferState.NeedsAccount:
-                    return Loc.Get("ui.ads.needs_account");
-
-                default:
-                    return Loc.Get("ui.ads.unavailable");
             }
         }
 
@@ -659,6 +559,14 @@ namespace GlimmerGrove
             {
                 var result = await RewardedAds.Provider.ShowAsync(impression);
 
+                // Opened before the reward is redeemed, because it snapshots what the hub's
+                // pills read and Redeem is what moves them. Deriving that afterwards by
+                // subtracting the offer is wrong in the case that matters — a heart reward
+                // landing at the ceiling grants nothing, so the subtraction would rewind the
+                // pill below where it ever stood. It costs three reads on the path where
+                // nothing is paid, which is the cheapest thing on this screen.
+                var flight = RewardFlight.Begin();
+
                 // The overlay can be gone by now — a player who backgrounds the app during
                 // a video may come back to a different screen entirely. The reward is still
                 // banked, because Redeem does not touch the UI.
@@ -666,10 +574,10 @@ namespace GlimmerGrove
 
                 if (this == null) return;
 
-                if (drop.IsValid) { Paid(drop); return; }
+                if (drop.IsValid) { _flight = flight; Paid(drop); return; }
 
                 _watching = false;
-                _status.text = Refusal(result.Outcome);
+                _status.text = AdOfferButton.Refusal(result.Outcome);
                 Repaint();
             }
             catch (Exception e)
@@ -686,18 +594,6 @@ namespace GlimmerGrove
             }
         }
 
-        /// <summary>Why nothing was paid, in the player's terms rather than the SDK's.</summary>
-        static string Refusal(AdOutcome outcome)
-        {
-            switch (outcome)
-            {
-                case AdOutcome.Dismissed: return Loc.Get("ui.ads.dismissed");
-                case AdOutcome.NoFill: return Loc.Get("ui.ads.no_fill");
-                case AdOutcome.Unavailable: return Loc.Get("ui.ads.unavailable");
-                default: return Loc.Get("ui.ads.failed");
-            }
-        }
-
         /// <summary>
         /// The reward landed. Small ceremony, then the button becomes the way out.
         ///
@@ -709,34 +605,17 @@ namespace GlimmerGrove
         {
             _paid = true;
             _watching = false;
+            _drop = drop;
 
             if (_reward) _reward.text = RewardArt.Amount(drop);
             if (_card) Tween.Pop(_card, 0f, .34f);
 
             if (_status) _status.text = Loc.Get("ui.ads.thanks");
 
-            // A continue lets itself out. Every other placement here pays into a balance the
-            // player will spend later, so a collect button is a fine last beat; this one pays
-            // seconds into a run that is frozen on the other side of the panel, and the thing
-            // the player agreed to watch a video for is *being back in it*. Making them find
-            // one more button first is a tax on exactly the action we just persuaded them to
-            // take — the argument DefeatOverlay.OfferHearts already makes about going straight
-            // back into the run rather than back to a panel that has grown a retry button.
-            if (PlacementId == AdPlacement.RunContinue)
-            {
-                if (_watch) _watch.Interactable = false;
-
-                Tween.After(PaidBeat, () => { if (this) Close(() => Report(true)); }, this);
-
-                Audio.Sfx("win", .6f);
-                Burst.Sparks(_card, Vector2.zero, RewardArt.Tint(drop.Kind), 20, 420f, 30f, .8f);
-                return;
-            }
-
             if (_watch)
             {
                 _watch.Interactable = true;
-                _watch.Setup(() => Close(() => Report(true)));
+                _watch.Setup(OnCollect);
 
                 // The play glyph goes with the offer it belonged to. Leaving it in front of
                 // "COLLECT" would advertise a second video on a button that closes a panel.
@@ -763,14 +642,101 @@ namespace GlimmerGrove
             Burst.Sparks(_card, Vector2.zero, RewardArt.Tint(drop.Kind), 20, 420f, 30f, .8f);
         }
 
+        // ------------------------------------------------------------- collecting
         /// <summary>
-        /// How long a self-closing offer holds on the reward before letting go.
+        /// The player took the reward. Where the hub is underneath, it flies there.
         ///
-        /// Long enough that the card's pop and its sparks are seen rather than glimpsed, and
-        /// short enough that it never feels like a wait — this is on the path back into a run
-        /// the player is in the middle of, and they have already watched thirty seconds of
-        /// video to get here.
+        /// <para>
+        /// This is the daily chest's collect, and deliberately the very same one — see
+        /// <see cref="RewardFlight"/>. A reward that lands somewhere is worth more than a
+        /// reward that is merely granted, and the two panels pay the same three currencies
+        /// into the same three pills; a player who has watched the chest fill their coin pill
+        /// and then watches a video for coins should not be shown a panel that simply
+        /// vanishes. It is the same transaction and it now reads as one.
+        /// </para>
+        /// <para>
+        /// Everything about when it degrades is in <see cref="RewardFlight.Add"/>, and it
+        /// degrades often and correctly: a run continue pays seconds and a hint refill pays a
+        /// hint, neither of which has a readout on the hub, and every placement opened from
+        /// somewhere that is not the hub finds no pills at all. Those simply close, exactly as
+        /// they did before this existed.
+        /// </para>
         /// </summary>
-        const float PaidBeat = .85f;
+        void OnCollect()
+        {
+            if (_collecting) return;
+
+            // Asked before the latch, so a panel with nowhere to fly to is still an ordinary
+            // close — including its sound and its scale-out, which the cascade does not use.
+            if (_flight == null || !_flight.Add(_drop, _card))
+            {
+                Close(() => Report(true));
+                return;
+            }
+
+            _collecting = true;
+            Fly();
+        }
+
+        /// <summary>
+        /// Clears the panel out of the way and throws the reward at the hub.
+        ///
+        /// <para>
+        /// The card is lifted out of the panel first. Everything else here is chrome the
+        /// moment the reward has been taken, and the panel has to go because the pills being
+        /// paid into are behind it — but the card is the thing the tokens come out of, so it
+        /// has to outlive its own parent by a beat. <c>SetParent</c> keeps its world position,
+        /// so it does not move as it changes hands.
+        /// </para>
+        /// <para>
+        /// The scrim stops taking taps rather than merely fading. A scrim at zero alpha still
+        /// swallows everything aimed at what is now visible through it, and on this panel it
+        /// carries a dismissal that would fade the whole content group — tokens included —
+        /// leaving the pills rewound with nothing on the way to walk them forward.
+        /// </para>
+        /// </summary>
+        void Fly()
+        {
+            if (_watch) _watch.Interactable = false;
+            if (_card) _card.SetParent(Content, true);
+
+            if (Scrim)
+            {
+                Scrim.raycastTarget = false;
+                Tween.Fade(Scrim, 0f, RewardFlight.ClearAt);
+            }
+
+            if (Panel)
+            {
+                var group = UIKit.Group(Panel);
+                group.interactable = false;
+                group.blocksRaycasts = false;
+                Tween.Fade(group, 0f, RewardFlight.ClearAt * .8f);
+            }
+
+            // Reported before the panel goes, so the screen behind repaints while the tokens
+            // are still arriving rather than a frame after everything has settled. Report is
+            // latched, so the backstop in OnDestroy stays harmless.
+            _flight.Play(Content, () =>
+            {
+                Report(true);
+                if (this) Flow.Dismiss(this);
+            });
+        }
+
+        /// <summary>
+        /// Swallowed once the payout has started, for <c>ChestOverlay.OnBack</c>'s reason:
+        /// everything is already banked, so leaving early costs the player nothing — but
+        /// <see cref="ModalView.Close"/> fades the whole content group and the tokens are in
+        /// it, so the back key would delete the animation mid-flight and leave the hub's pills
+        /// rewound to their old figures.
+        /// </summary>
+        public override bool OnBack()
+        {
+            if (_collecting) return true;
+            Close();
+            return true;
+        }
+
     }
 }

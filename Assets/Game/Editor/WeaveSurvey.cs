@@ -59,10 +59,10 @@ namespace GlimmerGrove.EditorTools
         /// is exactly how a finale was picked that the suite then could not count.
         /// </para>
         /// </summary>
-        public const int Budget = 2_000_000;
+        public const int Budget = WeaveSeedSearch.Budget;
 
         /// <summary>Where counting stops. Past this a grove is "many" and the difference is noise.</summary>
-        public const int Cap = 500;
+        public const int Cap = WeaveSeedSearch.Cap;
 
         /// <summary>
         /// The least slack a shipped grove may have — see the remarks on this class.
@@ -87,7 +87,7 @@ namespace GlimmerGrove.EditorTools
 
             var sb = new StringBuilder("[Glimmer] Lightweave survey\n");
             sb.AppendLine($"{"#",-4}{"level id",-26}{"size",-8}{"pairs",-7}{"beads",-7}" +
-                          $"{"par",-6}{"gold",-7}{"limit",-8}{"slack",-8}{"ways",-9}" +
+                          $"{"par",-6}{"gold",-7}{"silver",-8}{"slack",-8}{"ways",-9}" +
                           $"{"reach",-7}{"channels",-11}nodes");
 
             int order = 0, found = 0;
@@ -118,7 +118,7 @@ namespace GlimmerGrove.EditorTools
                 sb.AppendLine(
                     $"{++order,-4}{level.Id,-26}{grove.Width + "x" + grove.Height,-8}" +
                     $"{grove.Pairs.Count,-7}{grove.Beads.Count,-7}{tuning.Par,-6}" +
-                    $"{Seconds(tuning.TimeGoldMillis),-7}{Seconds(tuning.TimeLimitMillis),-8}" +
+                    $"{tuning.GoldThreshold,-7}{tuning.SilverThreshold,-8}" +
                     $"{slack,-8}{ways,-9}{reach,-7}{shortest + ".." + longest,-11}{tally.Nodes}");
 
                 if (!grove.IsComplete)
@@ -153,9 +153,6 @@ namespace GlimmerGrove.EditorTools
             Debug.Log(sb.ToString());
         }
 
-        static string Seconds(int millis)
-            => millis == int.MaxValue ? "-" : (millis / 1000f).ToString("0.#") + "s";
-
         /// <summary>
         /// Sweeps seeds for one grove shape and reports the ones whose boards land in a band.
         ///
@@ -175,21 +172,16 @@ namespace GlimmerGrove.EditorTools
         /// <param name="wantSlack">The exact slack this rung wants. Climbing this down the
         /// chapter is what makes ten groves a ladder rather than ten groves.</param>
         /// <param name="wantLow">Fewest near-best arrangements that is acceptable — below a
-        /// handful a grove is one routing the player must find exactly, which is a wall rather
-        /// than a puzzle when there is a clock running.</param>
+        /// handful a grove is one routing the player must find exactly.</param>
         /// <param name="wantHigh">Most that is acceptable for this rung.</param>
         /// <remarks>
         /// <para>
-        /// An undecided board is refused outright here, where the survey is happy to report one.
-        /// A capped search has seen some arrangements and not others, so believing its slack
-        /// would err towards calling a board <em>harder</em> than it is — the one direction an
-        /// authoring bar must never be wrong in.
-        /// </para>
-        /// <para>
-        /// So is a board that could not be given all the beads it asked for. A bead is only worth
-        /// placing on a cell lying off every shortest route between its pair's ends, and a carve
-        /// that offered too few of those is a board whose difficulty is not the one the rung was
-        /// authored for — silently one bead short, which is exactly the kind of thing that ships.
+        /// <b>The deciding is <see cref="WeaveSeedSearch"/>'s and this only prints it.</b> The
+        /// same sweep runs offline from <c>Tools/weave_seeds.py</c>, because a chapter is mostly
+        /// authored with the Editor closed and a sweep is thousands of exponential searches — so
+        /// the rule has two callers, and a copy of "which boards may a ladder use" living in each
+        /// would be two bars for a rung to be authored against (invariant 9a). What is refused
+        /// and why is documented there.
         /// </para>
         /// </remarks>
         public static string SeedSearch(int width, int height, int pairs, int beads,
@@ -199,31 +191,14 @@ namespace GlimmerGrove.EditorTools
             sb.AppendLine($"seed sweep {width}x{height} p{pairs} b{beads}, want slack " +
                           $"{wantSlack} and {wantLow}..{wantHigh} ways");
 
-            int hits = 0;
-            for (uint seed = 1; seed <= seeds && hits < 12; seed++)
-            {
-                var grove = WeaveGenerator.Build(width, height, pairs, seed, beads);
-                if (!grove.IsComplete) continue;
-                if (grove.Beads.Count < beads) continue;
+            var found = WeaveSeedSearch.Sweep(width, height, pairs, beads, wantSlack,
+                                              wantLow, wantHigh, 1, (uint)seeds, 12, Cap, Budget);
 
-                var tally = WeaveSolver.Measure(grove, Cap, Budget);
-                if (!tally.Solved || !tally.Exhausted) continue;
-                if (tally.Slack != wantSlack || tally.Slack < MinSlack) continue;
-                if (tally.Ways < wantLow || tally.Ways > wantHigh) continue;
+            foreach (var hit in found)
+                sb.AppendLine($"  seed {hit.Seed,-6}slack {hit.Slack,-6}ways {hit.Ways,-6}" +
+                              $"par {hit.Par,-6}reach {hit.Reach,-6}nodes {hit.Nodes}");
 
-                int reach = int.MaxValue;
-                for (int p = 0; p < grove.Pairs.Count; p++)
-                {
-                    int apart = grove.Distance(grove.Pairs[p].Heart, grove.Pairs[p].Critter) + 1;
-                    if (apart < reach) reach = apart;
-                }
-
-                hits++;
-                sb.AppendLine($"  seed {seed,-6}slack {tally.Slack,-6}ways {tally.Ways,-6}" +
-                              $"par {grove.Par,-6}reach {reach,-6}nodes {tally.Nodes}");
-            }
-
-            if (hits == 0)
+            if (found.Count == 0)
                 sb.AppendLine("  nothing in band — widen it, sweep more seeds, or change the " +
                               "shape. High slack with few ways is scarce at six pairs.");
             return sb.ToString();

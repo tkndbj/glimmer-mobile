@@ -130,17 +130,33 @@ namespace GlimmerGrove.Tests
         }
 
         [Test]
-        public void ADuskcapIsFoundAndPointedAt()
+        public void ACrossingIsFoundAndPointedAt()
         {
-            var board = Board(3, 2, new[] { "*E#R/0 @W#R/0 .", "-E/0 xW/0 ." }, NoBudget);
+            var board = Board(3, 3, Crossed, NoBudget);
             var found = MechanicScan.InBoard(board);
 
-            Assert.IsTrue(Contains(found, Mechanic.Duskcap));
+            Assert.IsTrue(Contains(found, Mechanic.Crossing));
 
             foreach (var s in found)
-                if (s.Mechanic.Equals(Mechanic.Duskcap))
-                    Assert.AreEqual(4, s.CellIndex, "the tip should ring the duskcap itself");
+                if (s.Mechanic.Equals(Mechanic.Crossing))
+                    Assert.AreEqual(4, s.CellIndex, "the tip should ring the crossing itself");
         }
+
+        /// <summary>Green passing north to south through the red passing east to west.</summary>
+        static readonly string[] Crossed =
+        {
+            ". *S#G/0 .",
+            "*E#R/0 =EW+NS/0 @W#R/0",
+            ". @N#G/0 .",
+        };
+
+        /// <summary>The same crossing, with a taproot reaching either side of it.</summary>
+        static readonly string[] CrossedAndBound =
+        {
+            ". . *S#G/0 . .",
+            "*E#R/0 -EW/1&A =EW+NS/0 -EW/1&A @W#R/0",
+            ". . @N#G/0 . .",
+        };
 
         [Test]
         public void BoundConduitsAreFound()
@@ -150,27 +166,22 @@ namespace GlimmerGrove.Tests
         }
 
         /// <summary>
-        /// A duskcap changes what winning is and nothing on screen can explain that; a
-        /// taproot announces itself the first time it is tapped, because two tiles visibly
-        /// move. So the rule the board cannot demonstrate goes first.
+        /// A crossing cannot be worked out and can be misread — a four-armed tile is a
+        /// crossroads everywhere else in this game — whereas a taproot announces itself the
+        /// first time it is tapped, because two tiles visibly move. So the tile that says
+        /// nothing about itself goes first.
         /// </summary>
         [Test]
-        public void TheDuskcapIsTaughtBeforeTheTaproot()
+        public void TheCrossingIsTaughtBeforeTheTaproot()
         {
-            var board = Board(4, 2, new[]
-            {
-                "*E#R/0 -EW/1&A -EW/1&A @W#R/0",
-                "-E/0 xW/0 . .",
-            }, NoBudget);
+            var board = Board(5, 3, CrossedAndBound, NoBudget);
 
             var queue = MechanicScan.Unseen(board, _ => false);
 
             Assert.AreEqual(2, queue.Count);
-            Assert.IsTrue(queue[0].Mechanic.Equals(Mechanic.Duskcap), queue[0].Mechanic.ToString());
+            Assert.IsTrue(queue[0].Mechanic.Equals(Mechanic.Crossing), queue[0].Mechanic.ToString());
             Assert.IsTrue(queue[1].Mechanic.Equals(Mechanic.BoundConduit), queue[1].Mechanic.ToString());
         }
-
-
 
 
         [Test]
@@ -186,8 +197,70 @@ namespace GlimmerGrove.Tests
                     Assert.IsFalse(s.HasCell, "the budget lives in the HUD, not in a cell");
         }
 
-        // ------------------------------------------------------- choosing the one
+        // ------------------------------------------------- what a board teaches at all
 
+        /// <summary>
+        /// The review key is offered on a glade whose lessons the player has already been
+        /// shown — which is every glade it will ever be offered on, since a first-timer meets
+        /// the tips on the way in. So the scan behind it must be blind to the ledger.
+        /// </summary>
+        [Test]
+        public void WhatABoardTeachesIsAFactAboutTheBoardAndNotAboutThePlayer()
+        {
+            var board = Board(3, 1, new[] { "*E#R/0 @EW#M/0! *W#B/0" });
+
+            Assert.AreEqual(0, MechanicScan.Unseen(board, _ => true).Count,
+                            "nothing is new to a player who has met everything");
+            Assert.AreEqual(3, MechanicScan.Taught(board).Count,
+                            "the board still teaches all three, and that is what the review shows");
+        }
+
+        /// <summary>
+        /// The two readings walk one list. A second walk could come to disagree about what a
+        /// glade contains or what order it is taught in, and the disagreement would show up as
+        /// a review that teaches a mechanic the opening sequence never mentioned.
+        /// </summary>
+        [Test]
+        public void TheUnseenQueueIsAFilterOfWhatTheBoardTeaches()
+        {
+            var board = Board(3, 1, new[] { "*E#R/0 @EW#M/0! *W#B/0" });
+
+            var all = MechanicScan.Taught(board);
+            var unseen = MechanicScan.Unseen(board, m => m.Equals(Mechanic.RootedTile));
+
+            Assert.AreEqual(all.Count - 1, unseen.Count);
+
+            // Same order, same cells, one entry short.
+            Assert.IsTrue(unseen[0].Mechanic.Equals(all[0].Mechanic));
+            Assert.IsTrue(unseen[1].Mechanic.Equals(all[2].Mechanic));
+            Assert.AreEqual(all[2].CellIndex, unseen[1].CellIndex);
+        }
+
+        /// <summary>
+        /// A glade with nothing to teach gets no review key, and that is the overwhelming
+        /// majority of them. An empty list is the only thing that can say so.
+        /// </summary>
+        [Test]
+        public void ABoardWithNothingToTeachOffersNoReview()
+        {
+            var board = Board(2, 1, new[] { "*E#R/0 @W#R/0" }, NoBudget);
+
+            Assert.AreEqual(0, MechanicScan.Taught(board).Count);
+        }
+
+        [Test]
+        public void WhatABoardTeachesComesBackInTeachingOrder()
+        {
+            var board = Board(5, 3, CrossedAndBound, NoBudget);
+
+            var all = MechanicScan.Taught(board);
+
+            Assert.AreEqual(2, all.Count);
+            Assert.IsTrue(all[0].Mechanic.Equals(Mechanic.Crossing), all[0].Mechanic.ToString());
+            Assert.IsTrue(all[1].Mechanic.Equals(Mechanic.BoundConduit), all[1].Mechanic.ToString());
+        }
+
+        // ------------------------------------------------------- choosing the one
 
 
         static bool InOrder(Mechanic m)
@@ -205,7 +278,7 @@ namespace GlimmerGrove.Tests
             // the scan a chapter after this list was written and went unlisted for it.
             var board = new[] { Mechanic.FragileConduit, Mechanic.MoveBudget,
                                 Mechanic.RootedTile, Mechanic.ColourMixing,
-                                Mechanic.Duskcap, Mechanic.Crossing, Mechanic.Briar,
+                                Mechanic.Crossing, Mechanic.Briar,
                                 Mechanic.BoundConduit };
 
             foreach (var m in board)
@@ -229,6 +302,57 @@ namespace GlimmerGrove.Tests
         {
             Assert.IsFalse(InOrder(Mechanic.Grove));
             Assert.IsFalse(InOrder(Mechanic.GroveShop));
+            Assert.IsFalse(InOrder(Mechanic.ModeSwitch));
+        }
+
+        /// <summary>
+        /// The mode lesson's id is not a near-miss of another one.
+        ///
+        /// <para>
+        /// A lesson id travels in the save file exactly like a level id, so a typo is not a
+        /// compile error and not a wrong string — it is a lesson silently sharing a ledger
+        /// entry with a different lesson, which reads as "that tip never appears" for one of
+        /// them and can only be repaired by re-teaching everybody. The switcher's obvious id
+        /// was <c>modes</c>, one letter from the move budget's <c>moves</c>; this pins the
+        /// distance rather than the spelling, so it also catches the next pair.
+        /// </para>
+        /// </summary>
+        [Test]
+        public void NoTwoLessonIdsAreOneLetterApart()
+        {
+            foreach (var a in Mechanic.All)
+                foreach (var b in Mechanic.All)
+                {
+                    if (a.Equals(b)) continue;
+
+                    Assert.Greater(Distance(a.Id, b.Id), 1,
+                                   $"'{a}' and '{b}' are one edit apart, so a typo in either " +
+                                   "is a lesson quietly recorded against the other");
+                }
+        }
+
+        /// <summary>Levenshtein distance, capped at 2 — nothing here needs a larger answer.</summary>
+        static int Distance(string a, string b)
+        {
+            if (System.Math.Abs(a.Length - b.Length) > 1) return 2;
+
+            var previous = new int[b.Length + 1];
+            var current = new int[b.Length + 1];
+
+            for (int j = 0; j <= b.Length; j++) previous[j] = j;
+
+            for (int i = 1; i <= a.Length; i++)
+            {
+                current[0] = i;
+
+                for (int j = 1; j <= b.Length; j++)
+                    current[j] = System.Math.Min(System.Math.Min(current[j - 1] + 1, previous[j] + 1),
+                                                 previous[j - 1] + (a[i - 1] == b[j - 1] ? 0 : 1));
+
+                var swap = previous; previous = current; current = swap;
+            }
+
+            return System.Math.Min(2, previous[b.Length]);
         }
 
         /// <summary>
@@ -252,6 +376,7 @@ namespace GlimmerGrove.Tests
 
             Assert.IsTrue(ids.Contains(Mechanic.Grove.Id));
             Assert.IsTrue(ids.Contains(Mechanic.GroveShop.Id));
+            Assert.IsTrue(ids.Contains(Mechanic.ModeSwitch.Id));
         }
 
         // ------------------------------------------------------------ the ledger

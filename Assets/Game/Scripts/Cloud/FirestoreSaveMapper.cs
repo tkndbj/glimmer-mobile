@@ -110,6 +110,19 @@ namespace GlimmerGrove.Cloud
                 // balance cannot cover. See CompanionLedger.
                 { "companionsOwned", new List<object>(dto.companionsOwned ?? new string[0]) },
 
+                // The heart containers, and this is the entry with the sharpest reason of the
+                // three: a container is a real-money purchase, so a set that never left the
+                // phone is a payment the player made and cannot see on their other device.
+                // The revocations travel beside them, or a refund honoured on one device
+                // would be undone by the next sync from another. Both are forgeable and both
+                // are accounted for — a forged container buys faster hearts and no currency,
+                // no progression and nothing that reaches a board, and the refund path is
+                // owned by the server, which writes the revocations this field only caches.
+                // See HeartContainerLedger and invariant 12a for why a field has to reach all
+                // four places before it is really on the wire.
+                { "heartContainersOwned", new List<object>(dto.heartContainersOwned ?? new string[0]) },
+                { "heartContainersRevoked", new List<object>(dto.heartContainersRevoked ?? new string[0]) },
+
                 // The grove. Its purchases travel for exactly the companions' reason; its
                 // arrangement travels because it is the one thing in this file a player would
                 // notice missing on a second device, and an evening spent laying out a grove
@@ -393,6 +406,8 @@ namespace GlimmerGrove.Cloud
                 legacyImportDone = Bool(doc, "legacyImportDone"),
                 tipsSeen = StrList(doc, "tipsSeen"),
                 companionsOwned = StrList(doc, "companionsOwned"),
+                heartContainersOwned = StrList(doc, "heartContainersOwned"),
+                heartContainersRevoked = StrList(doc, "heartContainersRevoked"),
                 // Read as well as written, and it is the v19 field. A document written by a
                 // device that has not updated carries the old id set and no stock at all, and
                 // GroveStock.In is what turns one into the other — so leaving this out would

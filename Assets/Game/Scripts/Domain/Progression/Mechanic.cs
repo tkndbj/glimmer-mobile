@@ -30,8 +30,13 @@ namespace GlimmerGrove.Progression
         /// <summary>Two heart colours, and a critter that wants them blended.</summary>
         public static readonly Mechanic ColourMixing = new Mechanic("mixing");
 
-        /// <summary>A creature the light must never reach.</summary>
-        public static readonly Mechanic Duskcap = new Mechanic("duskcap");
+        // "duskcap" is a **retired lesson id and must never be reused.** A lesson id
+        // travels in the save (`tipsSeen`) exactly as a level id does, so re-pointing one
+        // at a different rule would tell a player they have already been taught something
+        // they have never seen. Same rule as `weave_fill`, and for the same reason: the
+        // mechanic it named was removed because no board could demonstrate it — a glade
+        // with every critter awake and a duskcap lit looks precisely like a finished glade
+        // that refuses to settle, which is the one thing a board must never look like.
 
         /// <summary>Conduits sharing a taproot, which turn as one however far apart they are.</summary>
         public static readonly Mechanic BoundConduit = new Mechanic("bound");
@@ -43,7 +48,7 @@ namespace GlimmerGrove.Progression
         public static readonly Mechanic Briar = new Mechanic("briar");
 
         // ------------------------------------------------------------- screens
-        // Four things a glade board cannot teach, because they are not on one. They ride this type
+        // Five things a glade board cannot teach, because they are not on one. They ride this type
         // rather than a parallel one because everything about a lesson is already here and
         // already stored: the id is permanent, the strings derive from it, and TipLedger is a
         // union-joined set that reaches the cloud with no new field. A second "thing to teach
@@ -90,6 +95,89 @@ namespace GlimmerGrove.Progression
         /// </summary>
         public static readonly Mechanic WeaveBead = new Mechanic("weave_bead");
 
+        /// <summary>
+        /// A weave's ink: the light it is dealt, and that spending it is permanent.
+        ///
+        /// <para>
+        /// <b>Separate from <see cref="MoveBudget"/> on purpose, and the two must never be
+        /// merged.</b> They rhyme — both are a pot that empties and ends a run — and everything
+        /// a player has to be told is in the half that differs. A glade's budget counts
+        /// <em>committed</em> turns and hands one back for every undo, without limit, so
+        /// exploring a board costs nothing; a weave's ink is not given back when a channel is
+        /// taken up, and only two channels a grove may be undone. Somebody who learned the
+        /// glade's rule and was never taught this one would draw, look, redraw and lose, having
+        /// been told by four chapters of play that correcting yourself is free.
+        /// </para>
+        /// <para>
+        /// It is also the one lesson here about a number in the HUD rather than a thing on the
+        /// board, which is why the tip rings the readout — the same way the move budget's does,
+        /// one screen over.
+        /// </para>
+        /// </summary>
+        public static readonly Mechanic WeaveInk = new Mechanic("weave_ink");
+
+        /// <summary>
+        /// That there is more than one way to play, and where the switch between them is.
+        ///
+        /// <para>
+        /// The one lesson here about a <em>control</em> rather than about a rule, and it is the
+        /// shape of that control that earns it. It is a closed drop-down (see <c>ModeSwitch</c>)
+        /// naming only the mode the player is already in, so nothing about it says there is
+        /// anything inside it — and every other mode is reachable through it and through nothing
+        /// else, so a player who never presses it never learns the other half of the game exists.
+        /// </para>
+        /// <para>
+        /// It lived in the map's bottom corner, which made the case stronger and not weaker: a
+        /// pill in the corner most thumbs rest on, on a screen whose whole job is a vertical
+        /// chain of glades running the other way. It is now under the chapter plaque, where the
+        /// eye already is. That is a better control and still not a self-evident one, which is
+        /// why the lesson stays.
+        /// </para>
+        /// <para>
+        /// It is raised by the map rather than by a board for the reason the two grove lessons
+        /// are raised by the grove: nothing about a puzzle implies the player has ever seen the
+        /// switcher, and a modal about a menu on another screen is a modal about nothing the
+        /// player can look at. It is therefore deliberately absent from
+        /// <see cref="TeachingOrder"/>.
+        /// </para>
+        /// <para>
+        /// <b>Taught only while the switcher is actually drawn.</b> <c>ModeSwitch</c> builds
+        /// nothing when the catalog holds one mode, so a client whose content has not caught up
+        /// — a rolled-back build, an undownloaded drop, or simply the day before a second mode
+        /// ships — must not spend this lesson on a control that is not there. The ledger is a
+        /// once-in-a-lifetime record, so a tip shown over nothing is a tip that can never be
+        /// shown again.
+        /// </para>
+        /// </summary>
+        public static readonly Mechanic ModeSwitch = new Mechanic("mode_switch");
+
+        /// <summary>
+        /// That the button under a won glade's reward is a wheel, and that spinning it is free.
+        ///
+        /// <para>
+        /// <b>A lesson about a control, like <see cref="ModeSwitch"/>, and it earns one for the
+        /// same reason.</b> The victory panel is the loudest moment in the game and the button
+        /// arrives at the end of it, under a reward the player is already reading, on a screen
+        /// whose whole purpose is a large green NEXT. A control in that position is not
+        /// discovered — it is scrolled past. The wheel is the game's most generous offer and
+        /// most players would never learn it exists.
+        /// </para>
+        /// <para>
+        /// It is raised by the victory panel rather than by a board, for the reason the grove's
+        /// lessons are raised by the grove: nothing about a puzzle implies the player has an
+        /// offer waiting, and a modal about a button on another screen is a modal about nothing
+        /// they can look at. It is therefore deliberately absent from
+        /// <see cref="TeachingOrder"/>.
+        /// </para>
+        /// <para>
+        /// <b>Taught only while the button is actually drawn</b>, which is <see cref="ModeSwitch"/>'s
+        /// rule and not a detail: the offer is withheld on a cooldown, at a spent allowance and
+        /// with no account, and the ledger is a once-in-a-lifetime record — so a tip shown over
+        /// a corner with nothing in it is a tip that can never be shown again.
+        /// </para>
+        /// </summary>
+        public static readonly Mechanic LuckySpin = new Mechanic("lucky_spin");
+
         /// <summary>What the Grovement is, shown once on the player's first visit.</summary>
         public static readonly Mechanic Grove = new Mechanic("grove");
 
@@ -110,18 +198,11 @@ namespace GlimmerGrove.Progression
         /// </summary>
         /// <remarks>
         /// <para>
-        /// The two duskcap-era entries sit where they do for one reason. A duskcap changes what
-        /// winning <em>is</em>, and a player who has not been told cannot work it out — the
-        /// glade simply refuses to settle with every critter awake. A taproot announces itself
-        /// the first time it is tapped, because two tiles visibly move. So the rule nothing on
-        /// screen can explain goes first.
-        /// </para>
-        /// <para>
-        /// A crossing sits between them by the same measure. It cannot be worked out but it
-        /// can be <em>misread</em>, which is worse than not knowing: a tile with four arms is a
-        /// crossroads everywhere else in this game, so a player who has not been told does not
-        /// discover a new rule, they conclude the board is broken. It goes after the duskcap
-        /// because a duskcap can lose a run and a misread crossing only costs turns.
+        /// A crossing goes first of the three because it can be <em>misread</em>, which is
+        /// worse than not knowing: a tile with four arms is a crossroads everywhere else in
+        /// this game, so a player who has not been told does not discover a new rule, they
+        /// conclude the board is broken. A taproot goes last for the opposite reason — it
+        /// announces itself the first time it is tapped, because two tiles visibly move.
         /// </para>
         /// <para>
         /// A briar sits directly after the crossing, and for the same reason one notch weaker.
@@ -134,7 +215,7 @@ namespace GlimmerGrove.Progression
         /// </remarks>
         public static readonly Mechanic[] TeachingOrder =
         {
-            FragileConduit, MoveBudget, RootedTile, ColourMixing, Duskcap, Crossing, Briar,
+            FragileConduit, MoveBudget, RootedTile, ColourMixing, Crossing, Briar,
             BoundConduit,
         };
 
@@ -153,8 +234,8 @@ namespace GlimmerGrove.Progression
         /// </summary>
         public static readonly Mechanic[] All =
         {
-            FragileConduit, MoveBudget, RootedTile, ColourMixing, Duskcap, Crossing, Briar,
-            BoundConduit, WeaveJoin, WeaveBead, Grove, GroveShop,
+            FragileConduit, MoveBudget, RootedTile, ColourMixing, Crossing, Briar,
+            BoundConduit, WeaveJoin, WeaveBead, WeaveInk, ModeSwitch, LuckySpin, Grove, GroveShop,
         };
 
         public bool IsValid => !string.IsNullOrEmpty(Id);
@@ -203,7 +284,7 @@ namespace GlimmerGrove.Progression
             var found = new List<MechanicSighting>();
             if (board == null) return found;
 
-            int fragile = -1, rooted = -1, blended = -1, duskcap = -1, bound = -1, crossing = -1;
+            int fragile = -1, rooted = -1, blended = -1, bound = -1, crossing = -1;
             int briar = -1;
 
             for (int i = 0; i < board.C.Length; i++)
@@ -212,7 +293,6 @@ namespace GlimmerGrove.Progression
 
                 if (cell.fragile > 0 && fragile < 0) fragile = i;
                 if (cell.locked && rooted < 0) rooted = i;
-                if (cell.kind == Kind.Duskcap && duskcap < 0) duskcap = i;
                 if (cell.kind == Kind.Crossing && crossing < 0) crossing = i;
                 if (cell.kind == Kind.Briar && briar < 0) briar = i;
 
@@ -235,7 +315,6 @@ namespace GlimmerGrove.Progression
 
             if (rooted >= 0) found.Add(new MechanicSighting(Mechanic.RootedTile, rooted));
             if (blended >= 0) found.Add(new MechanicSighting(Mechanic.ColourMixing, blended));
-            if (duskcap >= 0) found.Add(new MechanicSighting(Mechanic.Duskcap, duskcap));
             if (crossing >= 0) found.Add(new MechanicSighting(Mechanic.Crossing, crossing));
             if (briar >= 0) found.Add(new MechanicSighting(Mechanic.Briar, briar));
             if (bound >= 0) found.Add(new MechanicSighting(Mechanic.BoundConduit, bound));
@@ -244,26 +323,49 @@ namespace GlimmerGrove.Progression
         }
 
         /// <summary>
-        /// Every idea on this board the player has not met, in teaching order.
+        /// Every idea on this board that has a lesson, in teaching order.
         ///
-        /// A glade can bring two at once — a rooted tile and a blend, say — and holding
-        /// the second back until some later glade repeats it means the player meets it
-        /// unexplained in between. Shown one after another instead, which is a short
-        /// queue rather than a wall of text: the list is empty on almost every glade
-        /// after the first few.
+        /// <para>
+        /// <b>Unfiltered on purpose.</b> This is what the glade <em>teaches</em>, which is a
+        /// fact about the board; whether a particular player has met any of it is a fact about
+        /// that player, and the two are asked separately because two callers want different
+        /// answers. The opening sequence wants what is new (<see cref="Unseen"/>); the button
+        /// that says "show me that again" wants the whole list, because the player pressing it
+        /// has by definition already seen every one of them.
+        /// </para>
+        /// <para>
+        /// A glade can bring two at once — a rooted tile and a blend, say — and holding the
+        /// second back until some later glade repeats it means the player meets it unexplained
+        /// in between. Shown one after another instead, which is a short queue rather than a
+        /// wall of text: the list is empty on almost every glade after the first few.
+        /// </para>
         /// </summary>
-        public static List<MechanicSighting> Unseen(Puzzle board, System.Func<Mechanic, bool> seen)
+        public static List<MechanicSighting> Taught(Puzzle board)
         {
             var present = InBoard(board);
             var queue = new List<MechanicSighting>();
 
             foreach (var candidate in Mechanic.TeachingOrder)
-            {
-                if (seen != null && seen(candidate)) continue;
-
                 foreach (var sighting in present)
                     if (sighting.Mechanic.Equals(candidate)) { queue.Add(sighting); break; }
-            }
+
+            return queue;
+        }
+
+        /// <summary>
+        /// Every idea on this board the player has not met, in teaching order.
+        ///
+        /// A filter over <see cref="Taught"/> rather than a second walk of the board, so the
+        /// two can never come to disagree about what a glade contains or what order it is
+        /// taught in.
+        /// </summary>
+        public static List<MechanicSighting> Unseen(Puzzle board, System.Func<Mechanic, bool> seen)
+        {
+            var queue = Taught(board);
+            if (seen == null) return queue;
+
+            for (int i = queue.Count - 1; i >= 0; i--)
+                if (seen(queue[i].Mechanic)) queue.RemoveAt(i);
 
             return queue;
         }

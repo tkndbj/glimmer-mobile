@@ -70,11 +70,11 @@ namespace GlimmerGrove.Content
         /// </summary>
         public abstract LevelTuning Tune(LevelDto dto, ILevelRules rules);
 
-        /// <summary>
-        /// Proves a level of this mode is worth shipping, adding to <paramref name="issues"/>.
-        /// Base does nothing, because a mode with no authored difficulty has nothing to prove.
-        /// </summary>
-        public virtual void Validate(LevelDefinition level, List<LevelIssue> issues) { }
+        // A mode used to declare `virtual void Validate(...)` here, and that one member kept six
+        // hundred lines of content checks in every player build: the authoring entry point called
+        // into the mode and the mode called back into it, so neither could leave. How a mode is
+        // proved fit to ship is now `ModeValidator`, in GlimmerGrove.Authoring — the same split
+        // `ModeLook` already makes for how a mode is drawn, and for a similar reason.
 
         /// <summary>
         /// What the level's record is counted in — turns, sparks, tiles. Used for the map badge

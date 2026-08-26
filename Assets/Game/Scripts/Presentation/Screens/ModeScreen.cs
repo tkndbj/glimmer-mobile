@@ -1,14 +1,17 @@
+using System;
 using System.Collections;
+using System.Collections.Generic;
 using GlimmerGrove.AssetPipeline;
 using GlimmerGrove.Content;
 using GlimmerGrove.Localization;
+using GlimmerGrove.Modes;
 using UnityEngine;
 using UnityEngine.UI;
 
 namespace GlimmerGrove
 {
     /// <summary>
-    /// The chrome every mode's screen shares: the backdrop, the header, three readouts and the
+    /// The chrome every mode's screen shares: the backdrop, the header, the readouts and the
     /// way out.
     ///
     /// <para>
@@ -36,19 +39,73 @@ namespace GlimmerGrove
         /// <summary>Where the board goes. Sized and resolved before <see cref="Play"/> is called.</summary>
         protected RectTransform Host { get; private set; }
 
-        Text _left, _middle, _right, _leftCap, _middleCap, _rightCap;
+        /// <summary>
+        /// One thing a mode counts, and how it wants it read.
+        ///
+        /// <para>
+        /// A declaration rather than six <c>out</c> parameters, and the six were a real seam
+        /// failure rather than an untidiness: the mode that wanted <em>one</em> number had to
+        /// hand back four empty strings that were then silently dropped, so what a mode said and
+        /// what the row did were only related by a convention nobody could see. A list says how
+        /// many there are by having that many in it.
+        /// </para>
+        /// <para>
+        /// The tint is here because a number that means something at a glance is part of what a
+        /// mode is saying — Lightweave's ink turns amber and then red — and the alternative is a
+        /// second hook, painted from a second place, that can disagree with this one about which
+        /// number it is talking about.
+        /// </para>
+        /// </summary>
+        protected readonly struct Readout
+        {
+            public readonly string Caption, Value;
+            public readonly Color Tint;
+
+            public Readout(string caption, string value, Color tint)
+            {
+                Caption = caption;
+                Value = value;
+                Tint = tint;
+            }
+
+            public Readout(string caption, string value) : this(caption, value, Pal.Cream) { }
+        }
+
+        /// <summary>The most a mode may count at once. See <c>ReadoutRow</c>.</summary>
+        const int MaxReadouts = ReadoutRow.Most;
+
+        readonly Readout[] _slots = new Readout[MaxReadouts];
+        readonly Text[] _values = new Text[MaxReadouts];
+        readonly Text[] _captions = new Text[MaxReadouts];
+        readonly List<Readout> _reading = new List<Readout>(MaxReadouts);
+        int _shown = -1;
 
         // ------------------------------------------------------------------ subclass hooks
         /// <summary>Builds the board. The host is resolved and non-zero by the time this runs.</summary>
         protected abstract void Play();
 
-        /// <summary>What the three readouts say. Called whenever the board reports a change.</summary>
-        protected abstract void Readouts(out string leftCap, out string left,
-                                         out string middleCap, out string middle,
-                                         out string rightCap, out string right);
+        /// <summary>
+        /// What this mode counts, in the order it should be read. One to three of them.
+        ///
+        /// Asked whenever the board reports a change, and again while the header is being built —
+        /// so it has to answer before <see cref="Play"/> has run, with whatever a board that does
+        /// not exist yet is worth.
+        /// </summary>
+        protected abstract void Readouts(List<Readout> into);
 
         /// <summary>How far the board sits from the screen's edges. Overridden by modes that want more room.</summary>
-        protected virtual Vector4 HostInset => new Vector4(24f, 250f, 24f, 330f);
+        protected virtual Vector4 HostInset => new Vector4(24f, 250f, 24f, 350f);
+
+        /// <summary>
+        /// Where a readout is on screen, for a lesson that has to point at one.
+        ///
+        /// Narrow on purpose: a mode may say "ring the number I called ink", and everything
+        /// about where the row sits and how it is sized stays here. Null for a slot this mode
+        /// does not use.
+        /// </summary>
+        protected RectTransform ReadoutAt(int index)
+            => index >= 0 && index < MaxReadouts && _values[index]
+                ? (RectTransform)_values[index].transform : null;
 
         bool _ready;
 
@@ -74,9 +131,20 @@ namespace GlimmerGrove
         public override bool Ready => _ready;
 
         // ------------------------------------------------------------------ lifecycle
-        protected override void Build() => StartCoroutine(Resolve());
+        protected override void Build() => StartCoroutine(Prepare());
 
-        IEnumerator Resolve()
+        /// <summary>
+        /// Fetches the chapter, resolves the level and builds the screen around it.
+        ///
+        /// <b>Named away from <c>Resolve</c> deliberately.</b> It was called that, which is also
+        /// what <see cref="RunScreen"/> calls clearing a run's stake — and a private
+        /// <c>IEnumerator Resolve()</c> here <em>hides</em> the inherited <c>void Resolve()</c>
+        /// from every mode below it. The calls still compiled, still bound, and quietly built an
+        /// iterator nobody ran, so a won grove never cleared its <c>RunGuard</c> marker and the
+        /// player was charged a heart for it at the next launch. Two members with one name in one
+        /// hierarchy is a bug waiting for whoever adds the third.
+        /// </summary>
+        IEnumerator Prepare()
         {
             var chapterId = GameContent.ChapterOf(LevelId);
             if (!chapterId.IsValid) { yield return Bail(); yield break; }
@@ -127,6 +195,11 @@ namespace GlimmerGrove
 
             Play();
             Repaint();
+
+            // Before Ready, so a mode that teaches something shows its review key while the
+            // iris is still shut rather than switching it on in front of the player.
+            Teaching.Ask();
+
             _ready = true;
         }
 
@@ -137,13 +210,62 @@ namespace GlimmerGrove
             Flow.Go<LevelsScreen>();
         }
 
+        /// <summary>How tall the header band is, and where the readout row sits under it.</summary>
+        const float BarHeight = 210f, ReadoutsY = 282f;
+
+        /// <summary>
+        /// The key in the header's right-hand corner: what it is, and what pressing it does.
+        ///
+        /// <para>
+        /// <b>A declaration rather than a flag.</b> It began as <c>bool HeaderRestart</c>, which
+        /// is the first of the five booleans that turn a shared base class back into the god file
+        /// this one was split out of — the remarks above are explicit that the arrangement before
+        /// it was one screen holding three games behind a switch. A mode says what its key is;
+        /// nothing here branches on which mode is asking.
+        /// </para>
+        /// <para>
+        /// The default is restart, which is the right control on a mode where restarting costs
+        /// nothing — the board goes back and so does the player. Lightweave stopped being one
+        /// when it was dealt ink: a restart there hands back a full pot, so it is the cheapest
+        /// way out of a grove going wrong and belongs one deliberate tap inside a pause menu
+        /// rather than under a thumb that is already reaching across the board.
+        /// </para>
+        /// </summary>
+        protected readonly struct HeaderKey
+        {
+            public readonly string Icon;
+            public readonly Action Press;
+
+            public HeaderKey(string icon, Action press)
+            {
+                Icon = icon;
+                Press = press;
+            }
+        }
+
+        protected virtual HeaderKey RightKey => new HeaderKey("ic_restart", RestartLevel);
+
+        /// <summary>
+        /// The header: a way back, and either a way to start again or a way to pause.
+        ///
+        /// <para>
+        /// <b>The level's name and its tagline used to sit here and no longer do.</b> They were
+        /// the two highest things on the screen, so on a phone with a camera cutout they were
+        /// the two it took — and the inset cannot buy back what a mode has chosen to draw at the
+        /// very top of it. Neither was load-bearing: the player picked the level by name a
+        /// screen ago, and the tagline is already offered as this run's flavour line (see
+        /// <see cref="RunScreen.Flavour"/>) at a moment when there is nothing competing with it.
+        /// What is left is the two controls and, below them, the readouts — which for a timed
+        /// mode is where the clock is, so the clock now has the band the name was using.
+        /// </para>
+        /// </summary>
         void BuildHeader()
         {
-            var bar = UIKit.Box("Header", Safe, new Vector2(0f, 210f), new Vector2(.5f, 1f),
-                                new Vector2(0f, -105f));
+            var bar = UIKit.Box("Header", Safe, new Vector2(0f, BarHeight), new Vector2(.5f, 1f),
+                                new Vector2(0f, -BarHeight * .5f));
             bar.anchorMin = new Vector2(0f, 1f);
             bar.anchorMax = new Vector2(1f, 1f);
-            bar.sizeDelta = new Vector2(0f, 210f);
+            bar.sizeDelta = new Vector2(0f, BarHeight);
 
             var shade = UIKit.Img("Shade", bar, Art.FadeUp(64), new Color(.02f, .04f, .08f, .58f));
             UIKit.StretchTo((RectTransform)shade.transform, 0, -40, 0, 0);
@@ -151,50 +273,112 @@ namespace GlimmerGrove
 
             UIKit.IconButton("Back", bar, Skins.Nav, "ic_left", new Vector2(118f, 118f),
                              new Vector2(0f, .5f), new Vector2(102f, -4f), LeaveToMap);
-            UIKit.IconButton("Again", bar, Skins.Nav, "ic_restart", new Vector2(118f, 118f),
-                             new Vector2(1f, .5f), new Vector2(-102f, -4f), RestartLevel);
 
-            UIKit.Shrinkable(UIKit.Titled("Name", bar, Loc.Get(Level.NameKey).ToUpperInvariant(),
-                                          50, Pal.Cream, TextAnchor.MiddleCenter,
-                                          new Vector2(600f, 58f), new Vector2(.5f, .5f),
-                                          new Vector2(0f, 8f), 4f, 4f));
-            UIKit.Shrinkable(UIKit.Titled("Tag", bar, Loc.Get(Level.TaglineKey), 26,
-                                          new Color(.94f, .97f, 1f, .80f), TextAnchor.MiddleCenter,
-                                          new Vector2(740f, 40f), new Vector2(.5f, .5f),
-                                          new Vector2(0f, -42f), 3f, 3f));
+            var key = RightKey;
+            UIKit.IconButton("RightKey", bar, Skins.Nav, key.Icon, new Vector2(118f, 118f),
+                             new Vector2(1f, .5f), new Vector2(-102f, -4f), key.Press);
+
+            // Beside the restart key. Built for every mode and shown only by the ones whose
+            // board actually teaches something, which is RunScreen's to decide once the board
+            // has been read — a mode that declares no lessons never sees it. See
+            // RunLessons.BuildKey.
+            Teaching.BuildKey(bar, new Vector2(-102f, -4f));
         }
 
         /// <summary>
         /// Three readouts, captioned by whichever mode is running.
         ///
+        /// <para>
         /// Captions rather than icons, because the modes count entirely different things and a
         /// shared icon set would be three lies.
+        /// </para>
+        /// <para>
+        /// One of the three is a clock on any mode that has one, which is why the values grew
+        /// with the header's text going away rather than staying where they were. They are sized
+        /// as a row and not one at a time: singling the clock out would make the other two read
+        /// as captions of it, and on the two modes that have no clock at all there would be
+        /// nothing to explain why the middle number is the loud one.
+        /// </para>
         /// </summary>
         void BuildReadouts()
         {
             var row = UIKit.Box("Readouts", Safe, new Vector2(0f, 100f), new Vector2(.5f, 1f),
-                                new Vector2(0f, -262f));
+                                new Vector2(0f, -ReadoutsY));
             row.anchorMin = new Vector2(0f, 1f);
             row.anchorMax = new Vector2(1f, 1f);
             row.sizeDelta = new Vector2(0f, 100f);
 
-            _left = Readout(row, -300f, out _leftCap);
-            _middle = Readout(row, 0f, out _middleCap);
-            _right = Readout(row, 300f, out _rightCap);
+            // Every slot is built and the unused ones are switched off, rather than the row
+            // being rebuilt when a mode's count changes. GridView's bargain: three Texts cost
+            // nothing to keep and an object destroyed and remade cannot carry an animation.
+            for (int i = 0; i < MaxReadouts; i++)
+                _values[i] = Slot(row, out _captions[i]);
+
+            Lay(Fresh());
         }
 
-        static Text Readout(RectTransform row, float x, out Text caption)
+        /// <summary>
+        /// Places as many slots as this mode counts and hides the rest.
+        ///
+        /// One number sits in the middle; two straddle it; three take the row. Called only when
+        /// the count actually changes, which on every mode that ships is once.
+        /// </summary>
+        void Lay(int count)
         {
-            var value = UIKit.Titled("Value", row, "0", 46, Pal.Cream, TextAnchor.MiddleCenter,
-                                     new Vector2(280f, 56f), new Vector2(.5f, .5f),
-                                     new Vector2(x, 12f), 4f, 3f);
-            UIKit.Shrinkable(value, 22);
+            if (count == _shown) return;
+
+            _shown = count;
+
+            for (int i = 0; i < MaxReadouts; i++)
+            {
+                bool used = i < count;
+                if (_values[i]) _values[i].gameObject.SetActive(used);
+                if (_captions[i]) _captions[i].gameObject.SetActive(used);
+                if (!used) continue;
+
+                // Where, and whether that leaves room, is ReadoutRow's — in Domain, where a
+                // test can hold the spacing to what it claims rather than a screenshot on one
+                // aspect ratio.
+                float x = ReadoutRow.XFor(i, count);
+
+                Place(_values[i], x, 14f);
+                Place(_captions[i], x, -34f);
+            }
+        }
+
+        static void Place(Text text, float x, float y)
+        {
+            if (text) ((RectTransform)text.transform).anchoredPosition = new Vector2(x, y);
+        }
+
+        /// <summary>
+        /// Builds one slot at the middle of the row. Where it ends up is <see cref="Lay"/>'s,
+        /// which is the only thing that may move it.
+        /// </summary>
+        static Text Slot(RectTransform row, out Text caption)
+        {
+            var value = UIKit.Titled("Value", row, "0", 58, Pal.Cream, TextAnchor.MiddleCenter,
+                                     new Vector2(280f, 68f), new Vector2(.5f, .5f),
+                                     new Vector2(0f, 14f), 4f, 3f);
+            UIKit.Shrinkable(value, 26);
 
             caption = UIKit.Titled("Cap", row, "", 22, new Color(.92f, .96f, 1f, .55f),
                                    TextAnchor.MiddleCenter, new Vector2(280f, 28f),
-                                   new Vector2(.5f, .5f), new Vector2(x, -30f), 3f, 0f);
+                                   new Vector2(.5f, .5f), new Vector2(0f, -34f), 3f, 0f);
             UIKit.Shrinkable(caption, 14);
             return value;
+        }
+
+        /// <summary>Asks the mode what it counts, clamped to what the row can hold.</summary>
+        int Fresh()
+        {
+            _reading.Clear();
+            Readouts(_reading);
+
+            int count = _reading.Count < MaxReadouts ? _reading.Count : MaxReadouts;
+            for (int i = 0; i < count; i++) _slots[i] = _reading[i];
+
+            return count;
         }
 
         /// <summary>Re-reads the readouts. Subclasses call it whenever their board moves.</summary>
@@ -202,15 +386,16 @@ namespace GlimmerGrove
         {
             if (Level == null) return;
 
-            Readouts(out string lc, out string lv, out string mc, out string mv,
-                     out string rc, out string rv);
+            Lay(Fresh());
 
-            if (_leftCap) _leftCap.text = lc;
-            if (_left) _left.text = lv;
-            if (_middleCap) _middleCap.text = mc;
-            if (_middle) _middle.text = mv;
-            if (_rightCap) _rightCap.text = rc;
-            if (_right) _right.text = rv;
+            for (int i = 0; i < _shown; i++)
+            {
+                if (_captions[i]) _captions[i].text = _slots[i].Caption;
+                if (!_values[i]) continue;
+
+                _values[i].text = _slots[i].Value;
+                _values[i].color = _slots[i].Tint;
+            }
         }
 
         /// <summary>Says how the run ended. Modes call it from their own ending.</summary>
@@ -221,10 +406,31 @@ namespace GlimmerGrove
         }
 
         // ------------------------------------------------------------------ the way out
-        public override void RetryAfterDefeat() => RestartLevel();
+        /// <summary>
+        /// Another go after a defeat, which is <see cref="Rewind"/> and <b>never</b>
+        /// <c>RestartLevel</c>.
+        ///
+        /// The distinction is a heart. A defeat has already charged for the run that just ended,
+        /// so putting the board back afterwards is free; <c>RestartLevel</c> abandons a run that
+        /// is still live and prices it. This used to call the latter, which was harmless only
+        /// while a restart was free — the moment <see cref="RunScreen"/> started pricing it, it
+        /// would have taken a second heart for one loss.
+        /// </summary>
+        public override void RetryAfterDefeat() => Rewind();
+
         public override void Resume() { }
-        public override void LeaveToMap() => Flow.Go<LevelsScreen>();
-        public override void LeaveToHome() => Flow.Go<HomeScreen>();
+
+        /// <summary>
+        /// A mode with no stake of its own — the lab boards, which never commit — walks away for
+        /// nothing, and that falls out of <c>RunScreen.ConfirmForfeit</c> rather than needing to
+        /// be said here.
+        /// </summary>
+        protected internal override LevelId StakeLevel => Level != null ? Level.Id : LevelId.None;
+
+        protected override bool RunOver => false;
+
+        protected override void NoteAbandoned(string reason) { }
+
         public override bool OnBack() { LeaveToMap(); return true; }
 
         /// <summary>
@@ -232,6 +438,6 @@ namespace GlimmerGrove
         /// can keep it behind whatever this run has to teach first — and so a mode that has
         /// something to teach never has to remember that it also has a line to suppress.
         /// </summary>
-        protected override string Flavour => Level != null ? Loc.Get(Level.LessonKey) : null;
+        protected internal override string Flavour => Level != null ? Loc.Get(Level.LessonKey) : null;
     }
 }

@@ -22,8 +22,16 @@ namespace GlimmerGrove.Persistence
         /// A property rather than a constant since the gate became content: a <c>const</c>
         /// is copied into every assembly that reads it at compile time, which is exactly
         /// the wrong shape for a number a config push is allowed to move.
+        ///
+        /// <para>
+        /// It is also per <em>player</em> rather than merely per build, because a heart
+        /// container raises it permanently — so this is the published cap or the largest
+        /// container the account holds, whichever is higher. Every screen that draws
+        /// "3 / 5" asks here, which is what made "3 / 20" cost no screen a change.
+        /// See <see cref="HeartContainerLedger"/>.
+        /// </para>
         /// </summary>
-        public static int MaxHearts => HeartRules.RefillCap;
+        public static int MaxHearts => HeartContainerLedger.RefillCap;
 
         /// <summary>The most hearts anybody may hold. See <see cref="HeartRules.Ceiling"/>.</summary>
         public static int HeartCeiling => HeartRules.Ceiling;
@@ -34,7 +42,7 @@ namespace GlimmerGrove.Persistence
         /// </summary>
         public static int MaxHints => HintRules.RefillCap;
 
-        public const string DefaultName = "Grovekeeper";
+        public const string DefaultName = "Groovekeeper";
 
         static readonly Dictionary<string, CurrencyLedger> _ledgers = new Dictionary<string, CurrencyLedger>();
         static readonly Dictionary<string, long> _legacyMirror = new Dictionary<string, long>();
@@ -133,6 +141,25 @@ namespace GlimmerGrove.Persistence
             SaveService.Save();
             HeartsChanged?.Invoke(_hearts);
         }
+
+        /// <summary>
+        /// Re-announces the heart bar because its <em>denominator</em> moved.
+        ///
+        /// <para>
+        /// The one thing that can change what a heart readout says without the ledger
+        /// changing at all: a container bought, or a refunded one taken back
+        /// (<see cref="HeartContainerLedger"/>). Every HUD in the game already listens to
+        /// <see cref="HeartsChanged"/> to redraw "3 / 5", so re-raising it is what makes
+        /// "3 / 20" appear everywhere without a second event for screens to forget to
+        /// subscribe to.
+        /// </para>
+        /// <para>
+        /// It reads through <see cref="Hearts"/> rather than the field, so the announced
+        /// state is caught up — and deliberately raises even when nothing about the ledger
+        /// moved, which is the whole point of it.
+        /// </para>
+        /// </summary>
+        internal static void AnnounceCapacity() => HeartsChanged?.Invoke(Hearts);
 
         /// <summary>The ledger for a currency, created empty rather than returning null.</summary>
         public static CurrencyLedger Ledger(string currency)

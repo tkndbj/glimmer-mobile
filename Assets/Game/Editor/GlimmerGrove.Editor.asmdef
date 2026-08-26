@@ -3,6 +3,7 @@
     "rootNamespace": "GlimmerGrove.EditorTools",
     "references": [
         "GlimmerGrove.Domain",
+        "GlimmerGrove.Authoring",
         "GlimmerGrove.Presentation",
         "Unity.Addressables",
         "Unity.Addressables.Editor",

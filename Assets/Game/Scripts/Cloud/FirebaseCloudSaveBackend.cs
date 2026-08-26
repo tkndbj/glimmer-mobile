@@ -1272,6 +1272,28 @@ namespace GlimmerGrove.Cloud
                         if (id is string s && s.Length > 0) state.ConfirmedGrantIds.Add(s);
                 }
 
+                // Refunded heart containers. Repeated on every currency row — see
+                // CloudWalletState.RevokedContainers — and absent entirely on a deployment
+                // that predates the field, which reads as "nothing was refunded" and is the
+                // right answer for every account until one is.
+                if (entry.TryGetValue("containersRevoked", out object revoked) &&
+                    revoked is IEnumerable<object> revokedList)
+                {
+                    foreach (var id in revokedList)
+                        if (id is string s && s.Length > 0) state.RevokedContainers.Add(s);
+                }
+
+                // The bonus wheel's position. Read as "did the key arrive" first and as a number
+                // second, because a fresh account's honest answer is zero and a deployment that
+                // predates the field also sends nothing — and only one of those two means the
+                // wheel may be drawn. See CloudWalletState.CarriesWheel.
+                if (entry.TryGetValue("wheelSpins", out object spins) && spins != null)
+                {
+                    state.CarriesWheel = true;
+                    state.WheelSpins = (int)ReadLong(entry, "wheelSpins");
+                    state.WheelDay = (int)ReadLong(entry, "wheelDay");
+                }
+
                 states.Add(state);
             }
 

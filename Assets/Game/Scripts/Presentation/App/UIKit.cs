@@ -195,6 +195,7 @@ namespace GlimmerGrove
                              new Vector2(size.x - 40f, size.y * .72f), new Vector2(.5f, .5f),
                              new Vector2(0f, lift));
             b.LabelWidth = size.x - 40f;
+            b.LabelSize = fontSize;
 
             if (string.IsNullOrEmpty(icon)) return b;
 
@@ -233,13 +234,22 @@ namespace GlimmerGrove
         /// </remarks>
         public static void FitLabel(Btn button)
         {
-            if (button == null || button.Icon == null || button.Label == null) return;
+            if (button == null || button.Label == null) return;
+
+            float glyph = button.Icon != null ? ((RectTransform)button.Icon.transform).sizeDelta.x : 0f;
+            float gap = button.Icon != null ? GlyphGap : 0f;
+            float room = Mathf.Max(0f, button.LabelWidth - glyph - gap);
+
+            // The one-line pass runs first, because everything below is measured against the
+            // width it leaves behind. See OneLine for why this lives here rather than at the
+            // call site.
+            if (button.OneLine) Squeeze(button, room);
+
+            if (button.Icon == null) return;
 
             var glyphRt = (RectTransform)button.Icon.transform;
             var labelRt = button.Label.rectTransform;
 
-            float glyph = glyphRt.sizeDelta.x;
-            float room = Mathf.Max(0f, button.LabelWidth - glyph - GlyphGap);
             float text = Mathf.Min(button.Label.preferredWidth, room);
 
             labelRt.sizeDelta = new Vector2(text, labelRt.sizeDelta.y);
@@ -247,6 +257,73 @@ namespace GlimmerGrove
             float block = glyph + GlyphGap + text;
             glyphRt.anchoredPosition = new Vector2(-block * .5f + glyph * .5f, glyphRt.anchoredPosition.y);
             labelRt.anchoredPosition = new Vector2(block * .5f - text * .5f, labelRt.anchoredPosition.y);
+        }
+
+        /// <summary>
+        /// Keeps a pill button's caption on a single line, shrinking the type until it fits.
+        ///
+        /// <para>
+        /// <b>Why it is not simply "turn wrapping off".</b> A caption on a pill has to satisfy
+        /// two rules that pull against each other: it must not wrap, and it must not draw
+        /// outside the button. Unity's best-fit — which is what <see cref="Shrinkable"/> turns
+        /// on, and what <see cref="TextButton"/> applies to every button carrying a glyph —
+        /// gets the second by conceding the first: it sets <c>HorizontalWrapMode.Wrap</c>, so a
+        /// caption that is too wide breaks onto a second line and never shrinks at all,
+        /// because two short lines fit the box the one long line did not. That is why
+        /// "WATCH FOR HEARTS" came out stacked. Turning wrapping off alone gives the opposite
+        /// failure: best-fit then has nothing to shrink against and the text draws off the end
+        /// of the button, which is the overflow-with-no-clipping trap this file already
+        /// records.
+        /// </para>
+        /// <para>
+        /// So the size is worked out directly instead, from <see cref="Text.preferredWidth"/>,
+        /// which uGUI answers from cached glyph metrics in the same frame the caption was set.
+        /// One measure, one ratio, and a re-measure to catch the rounding.
+        /// </para>
+        /// <para>
+        /// <b>It is a property of the button rather than a one-off call</b>, so it survives
+        /// <c>Btn.SetCaption</c> — the ad button rewrites its caption every frame it counts
+        /// down, and a fit the caller had to re-apply would be right only on the first frame.
+        /// </para>
+        /// </summary>
+        public static Btn OneLine(Btn button, int minSize = 16)
+        {
+            if (button == null || button.Label == null) return button;
+
+            button.OneLine = true;
+            button.LabelMinSize = Mathf.Clamp(minSize, 1, Mathf.Max(1, button.LabelSize));
+
+            button.Label.resizeTextForBestFit = false;
+            button.Label.horizontalOverflow = HorizontalWrapMode.Overflow;
+
+            FitLabel(button);
+            return button;
+        }
+
+        /// <summary>
+        /// Shrinks a single-line caption until it fits <paramref name="room"/>.
+        ///
+        /// Measured from <see cref="Btn.LabelSize"/> rather than from the size left by the last
+        /// pass, so a caption that gets shorter grows back — otherwise an ad button would walk
+        /// its own type down a point at a time as it counted down and never recover.
+        /// </summary>
+        static void Squeeze(Btn button, float room)
+        {
+            var label = button.Label;
+
+            label.fontSize = button.LabelSize > 0 ? button.LabelSize : label.fontSize;
+            if (room <= 0f || string.IsNullOrEmpty(label.text)) return;
+
+            float wide = label.preferredWidth;
+            if (wide <= room) return;
+
+            // One ratio gets within a point of it; the loop is what closes the gap left by
+            // integer font sizes and by hinting, and it is bounded by the minimum.
+            label.fontSize = Mathf.Max(button.LabelMinSize,
+                                       Mathf.FloorToInt(label.fontSize * room / wide));
+
+            while (label.fontSize > button.LabelMinSize && label.preferredWidth > room)
+                label.fontSize--;
         }
 
         /// <summary>Square button carrying a white glyph.</summary>

@@ -25,12 +25,6 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: 021817a04dedf6542a1bd27a24860526
-    m_Address: Art/Board/duskcap/f02
-    m_ReadOnly: 0
-    m_SerializedLabels:
-    - Art/Board/duskcap
-    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 02f7d9d12c3ff5bacc4f64bda65e5be6
     m_Address: Art/Critters/c1/f14
     m_ReadOnly: 0
@@ -42,12 +36,6 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels:
     - Art/Critters/c3
-    FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: 06271a0b8d1b4054583e9e570d07fe1d
-    m_Address: Art/Board/duskcap/f08
-    m_ReadOnly: 0
-    m_SerializedLabels:
-    - Art/Board/duskcap
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 06cd4bd4c585974f5ae0e1d6b4dfa406
     m_Address: Art/Ui/banner
@@ -168,12 +156,6 @@ MonoBehaviour:
     m_Address: Art/Ui/ic_music
     m_ReadOnly: 0
     m_SerializedLabels: []
-    FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: 19bc9ae4a5534c841923493772835691
-    m_Address: Art/Board/duskcap/f06
-    m_ReadOnly: 0
-    m_SerializedLabels:
-    - Art/Board/duskcap
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 1a158e089440f7146b1a8f742abf4b84
     m_Address: Art/Map/strip4
@@ -491,12 +473,6 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: 4a30cbad13e9dfb4aabc53b1b51fd491
-    m_Address: Art/Board/duskcap/f10
-    m_ReadOnly: 0
-    m_SerializedLabels:
-    - Art/Board/duskcap
-    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 4bb7b2bd706739345b7145a849831bfa
     m_Address: Art/Ui/Shop/chest_wood
     m_ReadOnly: 0
@@ -526,12 +502,6 @@ MonoBehaviour:
     m_Address: Art/Ui/jelly_gray
     m_ReadOnly: 0
     m_SerializedLabels: []
-    FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: 4d5e2393fe7f6114c820fe90ace7abc5
-    m_Address: Art/Board/duskcap/f04
-    m_ReadOnly: 0
-    m_SerializedLabels:
-    - Art/Board/duskcap
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 4d6e689b21b663e1f207a9b96dd402bf
     m_Address: Art/Ui
@@ -650,11 +620,10 @@ MonoBehaviour:
     m_SerializedLabels:
     - Art/Critters/c3
     FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: 5a278b176251e504aa2c33d44c4ef665
-    m_Address: Art/Board/duskcap/f00
+  - m_GUID: 5a67c39961e28f0489e3c2f0840ad75d
+    m_Address: Art/Map/rock_lumen
     m_ReadOnly: 0
-    m_SerializedLabels:
-    - Art/Board/duskcap
+    m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 5bdbba49e382305c06759ce48b4d7c78
     m_Address: Art/Map/node_s0
@@ -751,12 +720,6 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: 66c2e2f4bdc834044aae92e72daa299f
-    m_Address: Art/Board/duskcap/f03
-    m_ReadOnly: 0
-    m_SerializedLabels:
-    - Art/Board/duskcap
-    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 6965cb96735e4c8a32645948999911b2
     m_Address: Art/Fx/Victory/f01
     m_ReadOnly: 0
@@ -839,12 +802,6 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: 6ee0b7ae20401f945aaa0f5c80eefcfc
-    m_Address: Art/Board/duskcap/f12
-    m_ReadOnly: 0
-    m_SerializedLabels:
-    - Art/Board/duskcap
-    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 6ee1f761383ad1322ee250e90ae9462b
     m_Address: Art/Critters/c1/f13
     m_ReadOnly: 0
@@ -888,12 +845,6 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: 742a70a7cbbe2cd4f884649efdbec168
-    m_Address: Art/Board/duskcap/f05
-    m_ReadOnly: 0
-    m_SerializedLabels:
-    - Art/Board/duskcap
-    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 74375de38300086cf56fc513c5eed21b
     m_Address: Art/Fx/Victory/f02
     m_ReadOnly: 0
@@ -928,6 +879,11 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels:
     - Art/Critters/c5
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 77b551eaecab6764aa072decb29144d8
+    m_Address: Art/Map/rock_basin
+    m_ReadOnly: 0
+    m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 79f8ddd281874a9bdff1ced860dcdf24
     m_Address: Art/Ui/ic_gem
@@ -968,11 +924,6 @@ MonoBehaviour:
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 7d3cbdd284d8f5712daa14b018fe3fdb
     m_Address: Art/Bg/home_sky
-    m_ReadOnly: 0
-    m_SerializedLabels: []
-    FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: 7ef2064afbb75df448dac7fe456d19e2
-    m_Address: Art/Board/duskcap
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
@@ -1063,12 +1014,6 @@ MonoBehaviour:
     m_SerializedLabels:
     - Art/Critters/c5
     FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: 8b0d1379d5dcf394c96b9fdb9f6c0e16
-    m_Address: Art/Board/duskcap/f17
-    m_ReadOnly: 0
-    m_SerializedLabels:
-    - Art/Board/duskcap
-    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 8b1e398a365764045bc0a75ba2e7ffef
     m_Address: Art/Critters/c4/f09
     m_ReadOnly: 0
@@ -1091,12 +1036,6 @@ MonoBehaviour:
     m_Address: Art/Ui/ic_check
     m_ReadOnly: 0
     m_SerializedLabels: []
-    FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: 8d0028ced72b56c40b42269393933d68
-    m_Address: Art/Board/duskcap/f01
-    m_ReadOnly: 0
-    m_SerializedLabels:
-    - Art/Board/duskcap
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 8fa2538d9486c6d5fc7a4ab6f51c610e
     m_Address: Art/Ui/sq_aqua
@@ -1162,12 +1101,6 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels:
     - Art/Ui/Flame
-    FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: 97297ccd4f5d0174caeff1778061fc68
-    m_Address: Art/Board/duskcap/f09
-    m_ReadOnly: 0
-    m_SerializedLabels:
-    - Art/Board/duskcap
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 9813f1f482030a6e56b34641364a3e0d
     m_Address: Art/Ui/wood_panel
@@ -1442,12 +1375,6 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: bc9344590f9ec2448842a24cea432d31
-    m_Address: Art/Board/duskcap/f13
-    m_ReadOnly: 0
-    m_SerializedLabels:
-    - Art/Board/duskcap
-    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: bd918a1629f53b155e8a3f789c405390
     m_Address: Art/Ui/ic_star3d
     m_ReadOnly: 0
@@ -1495,12 +1422,6 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels:
     - Art/Ui/Coin
-    FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: c0dc4d4d9c5c3e8448dbd94afad4199d
-    m_Address: Art/Board/duskcap/f16
-    m_ReadOnly: 0
-    m_SerializedLabels:
-    - Art/Board/duskcap
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: c3480e7ca4dac9b4ea6dd60000dc2ea6
     m_Address: Audio/Sfx/coin
@@ -1603,12 +1524,6 @@ MonoBehaviour:
     m_SerializedLabels:
     - Art/Critters/c4
     FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: d12f71b5a511bb347a5be7b0e57c7116
-    m_Address: Art/Board/duskcap/f07
-    m_ReadOnly: 0
-    m_SerializedLabels:
-    - Art/Board/duskcap
-    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: d1d8023dc7fd2754e8c15388e97ba05b
     m_Address: Art/Ui/Flame/f01
     m_ReadOnly: 0
@@ -1640,11 +1555,6 @@ MonoBehaviour:
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: d70fe212f324634849cbef0302620c80
     m_Address: Art/Ui/ic_left
-    m_ReadOnly: 0
-    m_SerializedLabels: []
-    FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: d732206b90768d54faa94a889cdd2518
-    m_Address: Art/Board
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
@@ -1689,12 +1599,6 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels:
     - Art/Fx/Victory
-    FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: dca2335083c9cf9468f1d29727fce24d
-    m_Address: Art/Board/duskcap/f15
-    m_ReadOnly: 0
-    m_SerializedLabels:
-    - Art/Board/duskcap
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: defdc791d3b85544d8db268b19f65ae2
     m_Address: Art/Map/x02_strip0
@@ -1754,12 +1658,6 @@ MonoBehaviour:
     m_Address: Art/Bg/home_deco
     m_ReadOnly: 0
     m_SerializedLabels: []
-    FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: e75a5539a82fc284290f6595dabb6b65
-    m_Address: Art/Board/duskcap/f11
-    m_ReadOnly: 0
-    m_SerializedLabels:
-    - Art/Board/duskcap
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: e79a2e76c1d92fc40dadf559ada7bade
     m_Address: Art/Ui/ic_hint
@@ -1848,12 +1746,6 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels:
     - Art/Fx/Victory
-    FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: f44575a07e858044ca53d391a450834e
-    m_Address: Art/Board/duskcap/f14
-    m_ReadOnly: 0
-    m_SerializedLabels:
-    - Art/Board/duskcap
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: f4a17bb5b7bc1b0ca8539c56c3037887
     m_Address: Art/Critters/c5/f15

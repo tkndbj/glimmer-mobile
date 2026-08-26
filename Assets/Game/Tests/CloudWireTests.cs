@@ -89,6 +89,11 @@ namespace GlimmerGrove.Tests
                 },
                 companionsOwned = new[] { "coral", "puff" },
 
+                // A container held and a container refunded, because the two travel by
+                // different routes and only one of them is written by this device.
+                heartContainersOwned = new[] { "gg_heart_vessel_1", "gg_heart_vessel_2" },
+                heartContainersRevoked = new[] { "gg_heart_vessel_1" },
+
                 // Both grove sections, and the mirror has to agree with the stock it is
                 // derived from or the round trip is comparing the fixture against itself.
                 homesteadStock = new[]

@@ -55,6 +55,7 @@ namespace GlimmerGrove.Tests
             Assert.AreEqual(HeartLimits.DefaultCeiling, table.Ceiling);
             Assert.AreEqual(HeartLimits.DefaultRefillSeconds, table.RefillSeconds);
             Assert.AreEqual(HeartLimits.DefaultDefeatCost, table.DefeatCost);
+            Assert.AreEqual(HeartLimits.DefaultGraceLevels, table.GraceLevels);
         }
 
         /// <summary>
@@ -86,6 +87,7 @@ namespace GlimmerGrove.Tests
                 boostedRefillSeconds = 1,
                 maxBoostHours = 9999,
                 defeatCost = 9999,
+                graceLevels = 9999,
             }, problems);
 
             Assert.AreEqual(HeartLimits.MaxRefillCap, table.RefillCap);
@@ -93,8 +95,43 @@ namespace GlimmerGrove.Tests
             Assert.AreEqual(HeartLimits.MinRefillSeconds, table.RefillSeconds);
             Assert.AreEqual(HeartLimits.MaxBoostHoursLimit, table.MaxBoostHours);
             Assert.AreEqual(HeartLimits.MaxDefeatCost, table.DefeatCost);
+            Assert.AreEqual(HeartLimits.MaxGraceLevels, table.GraceLevels);
 
             Assert.IsNotEmpty(problems, "a clamped file is still an authoring mistake worth reporting");
+        }
+
+        /// <summary>
+        /// Nought free glades is a decision, not a mistake.
+        ///
+        /// <para>
+        /// The one field in this block whose minimum is nought, and it has to be: switching the
+        /// free opening off is a legitimate retune, so clamping it up to one would publish a
+        /// window nobody asked for and report the author's own choice as a problem. The
+        /// tri-state is what keeps that distinct from an unwritten field, which inherits three.
+        /// </para>
+        /// </summary>
+        [Test]
+        public void NoughtFreeGladesIsLegalAndTurnsTheWindowOff()
+        {
+            var problems = new List<string>();
+            var table = Read(new HeartsDto { graceLevels = 0 }, problems);
+
+            Assert.AreEqual(0, table.GraceLevels);
+            CollectionAssert.IsEmpty(problems, "switching it off is a decision, not a mistake");
+
+            var unwritten = Read(new HeartsDto());
+            Assert.AreEqual(HeartLimits.DefaultGraceLevels, unwritten.GraceLevels,
+                            "and not writing it is a different thing from writing nought");
+        }
+
+        [Test]
+        public void ThePublishedFreeWindowReachesTheLiveFacade()
+        {
+            // A block that resolves perfectly and is never wired through is a retune that
+            // silently does nothing, which is how a published lever fails.
+            Publish(new HeartsDto { graceLevels = 5 });
+
+            Assert.AreEqual(5, HeartRules.GraceLevels);
         }
 
         /// <summary>

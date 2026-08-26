@@ -1,0 +1,73 @@
+# GlimmerGrove.Authoring
+
+Rules that decide whether **content is fit to ship**, and that no player ever runs.
+
+## Why this assembly exists
+
+Everything here used to live in `GlimmerGrove.Domain`, which ships. That was not laziness —
+it was the only place that satisfied both of the constraints these rules are under:
+
+- **`GlimmerGrove.Editor` can reach them.** The build gate (`ContentValidation`) and the
+  authoring tools (`ManifestSync`, `WeaveSurvey`) are the only callers.
+- **`GlimmerGrove.Tests` can reach them.** A validator with no failing case is not a check,
+  and the test assembly references `Domain` — it does *not* reference `Editor`.
+
+Domain satisfies both, so that is where they went, and the cost was quiet: a seed sweep, a map
+collision check and a chapter-mode check compiled into every player build, wired into the
+IL2CPP graph, never called. Not a lot of bytes — but the argument that puts them there is
+"nowhere else works", and once a folder exists that both callers *can* reach and no player
+build includes, it stops being true.
+
+`includePlatforms: ["Editor"]` is what does the work: the assembly is absent from every player
+build, and `Editor` and `Tests` both reference it.
+
+## What belongs here
+
+A rule belongs here when **no shipped type references it**. That is the whole test, and it is
+mechanical — `Tools/verify/compile.py` proves it by compiling `Domain` *without* this assembly
+on its reference list, so a Domain file that starts calling into here fails offline rather
+than quietly dragging the folder back into the build.
+
+What deliberately does **not** belong here:
+
+- **`WeaveSolver`.** `WeaveGenerator` calls `AnyTautSolution` on the player's phone as its
+  acceptance bar (invariant 20f), and `Measure` is twenty-five lines of loop over the same
+  `Search` the bar needs. Splitting it would mean making a four-hundred-line search class
+  public across an assembly boundary to save the twenty-five. This is a trade, and it is the
+  only one left.
+- **`ChapterMap`, `GroveFloor`, `WeaveLayout`** and the rest of the geometry. Screens read
+  them. Only the *checks over* them are authoring.
+
+## What is here
+
+| | |
+|---|---|
+| `LevelValidator` | Every level, proved solvable and fairly graded. The bulk of it is the conduit board. |
+| `LevelValidation` | `LevelIssue`, its severity, and the report a level's checks build up. |
+| `ModeValidator` | How each mode is proved fit to ship, and the registry of them. |
+| `ChapterMapValidator` | Node collisions, backwards trails, the end-of-chapter marker's clearance. |
+| `ChapterModeValidator` | A chapter's declared mode against the mode its levels are (invariant 20h). |
+| `WeaveSeedSearch` | Which seed a Lightweave level should author, swept and measured. |
+
+## A mode is declared three times
+
+That is the shape this assembly completes, and it is worth stating because the third one was
+missing for a long time and cost the whole validator:
+
+| | assembly | what it declares |
+|---|---|---|
+| `LevelMode` | `Domain` | what a mode **is** — its block in the JSON, its rules, its tuning |
+| `ModeLook` | `Presentation` | what it **looks like** — its screen, its perch, its colour |
+| `ModeValidator` | `Authoring` | how it is **proved fit to ship** |
+
+`ModeLook` was split off because Domain may never reference Presentation. `ModeValidator` is
+the same split for a different line: a mode's checks run on the machine that builds the game
+and never on the machine that plays it. Before it existed, `LevelMode.Validate` was a `virtual`
+member, so the authoring entry point called into the mode and the mode called back into the
+authoring entry point — a cycle that pinned six hundred lines of content checks into every
+player's install.
+
+The price of a registry over an abstract member is that an entry can be *missing* where an
+override cannot, and a missing one would be silent in the worst way: a green tick over a mode
+nothing looked at. So `LevelValidator` reports an unregistered mode as an **error** rather than
+a pass, and `ModeValidatorTests` fails the build if the two registries drift apart.

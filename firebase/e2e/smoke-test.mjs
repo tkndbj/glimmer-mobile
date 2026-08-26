@@ -360,6 +360,44 @@ check(creditsOf(wallet.body)?.grantedBaseline === SEED_CREDITS,
       `a new account is seeded with ${SEED_CREDITS} credits`,
       `got ${creditsOf(wallet.body)?.grantedBaseline}`);
 
+// The heart containers' refund path, and the only part of it a client ever sees. A
+// container is an entitlement the *client* holds (invariant 18d), so the one thing this
+// server has to say about one is that it was refunded — and it says it on every wallet
+// reply. The field is checked for its shape rather than its contents: a brand-new account
+// has refunded nothing, and an absent array would read the same way while quietly meaning
+// a deployment that cannot revoke anything at all. Invariant 12a's lesson, on the wire that
+// carries money back out.
+check(Array.isArray(creditsOf(wallet.body)?.containersRevoked),
+      "the wallet reply carries the refunded heart containers",
+      JSON.stringify(creditsOf(wallet.body)));
+
+check(creditsOf(wallet.body)?.containersRevoked?.length === 0,
+      "and a new account has had none taken back");
+
+// The bonus wheel's position, and this is the one part of that feature only a live run can
+// prove. The client reads the *presence* of these two fields as "this deployment understands
+// the wheel" and draws no wheel without them — which is what makes shipping the app ahead of
+// the functions cost a feature nobody has seen rather than a payout nobody honours (invariant
+// 25). A deployment that had lost them would look identical from every offline check and from
+// a console: players would simply never see a wheel, for ever, and nothing would say why.
+const wheelRow = creditsOf(wallet.body);
+check(typeof wheelRow?.wheelSpins === "number" && typeof wheelRow?.wheelDay === "number",
+      "the wallet reply carries the bonus wheel's position",
+      JSON.stringify(wheelRow));
+
+// Today and zero, not absent. A brand-new account has spun nothing, and answering with
+// nothing would make the signal above a lie in exactly the case it matters most.
+check(wheelRow?.wheelSpins === 0, "and a new account is on its first spin",
+      `got ${wheelRow?.wheelSpins}`);
+check(wheelRow?.wheelDay === Math.floor(Date.now() / 1000 / 86400),
+      "stamped with today, so the client seeds from the same day the server will grant on",
+      `got ${wheelRow?.wheelDay}`);
+
+// Repeated on every currency row, so a client may read it off whichever one it happens to
+// walk first — the same shape `containersRevoked` rides on.
+check(new Set((wallet.body?.result?.wallets ?? []).map((w) => `${w.wheelDay}:${w.wheelSpins}`)).size === 1,
+      "and every currency row agrees about it");
+
 // The save above holds two cleared glades in c01_shallows, one at three stars and one at
 // two. The server derives what they are worth from the ledger itself — nothing in the
 // request said anything about currency.

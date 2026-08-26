@@ -23,7 +23,7 @@ namespace GlimmerGrove.Cloud
     /// So this is a debounce with a backoff and a reconnect. It holds no clock and no
     /// socket: it is handed elapsed time and told whether the network is up, which is
     /// what makes the whole policy runnable in the test suite — see <c>SyncTests</c>.
-    /// That is the same bargain <c>RunClock</c> makes, for the same reason.
+    /// That is the same bargain <c>RunScreen.Tick</c> makes, for the same reason.
     /// </para>
     /// </summary>
     public sealed class SyncScheduler

@@ -1,11 +1,11 @@
 {
   "schemaVersion": 2,
-  "progressionVersion": 3,
+  "progressionVersion": 4,
   "groveVersion": 10,
   "chapters": [
     {
       "id": "c01_shallows",
-      "version": 5,
+      "version": 6,
       "order": 10,
       "disabled": false,
       "minAppVersion": 0,
@@ -119,6 +119,26 @@
         "w01_six_sleepers",
         "w01_the_tangle",
         "w01_the_weftwood_knot"
+      ]
+    },
+    {
+      "id": "w02_nightloom",
+      "version": 2,
+      "order": 80,
+      "disabled": false,
+      "minAppVersion": 0,
+      "mode": "weave",
+      "levels": [
+        "w02_dusk_threads",
+        "w02_the_narrow_loom",
+        "w02_the_pinch",
+        "w02_who_yields",
+        "w02_six_rings",
+        "w02_spindlewood",
+        "w02_the_long_way_round",
+        "w02_the_shuttered_loom",
+        "w02_thread_the_dark",
+        "w02_the_nightloom_knot"
       ]
     }
   ],

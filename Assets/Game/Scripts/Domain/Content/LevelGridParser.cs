@@ -123,12 +123,11 @@ namespace GlimmerGrove.Content
             {
                 case '*': cell.kind = Kind.Source; break;
                 case '@': cell.kind = Kind.Lamp; break;
-                case 'x': cell.kind = Kind.Duskcap; break;
                 case '-': cell.kind = Kind.Pipe; break;
                 case '=': cell.kind = Kind.Crossing; break;
                 case '%': cell.kind = Kind.Briar; break;
                 default:
-                    error = $"unknown head '{token[0]}', expected one of - = % * @ x .";
+                    error = $"unknown head '{token[0]}', expected one of - = % * @ .";
                     return false;
             }
 
@@ -308,12 +307,6 @@ namespace GlimmerGrove.Content
             if (cell.kind == Kind.Source && cell.colour == 0)
             {
                 error = "a heart-crystal must emit a colour";
-                return false;
-            }
-
-            if (cell.kind == Kind.Duskcap && cell.colour != 0)
-            {
-                error = "a duskcap takes no colour; any light at all wakes it";
                 return false;
             }
 

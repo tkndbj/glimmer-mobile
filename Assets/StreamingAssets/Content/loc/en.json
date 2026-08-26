@@ -30,6 +30,10 @@
       "text": "The Weftwood"
     },
     {
+      "key": "chapter.w02_nightloom.name",
+      "text": "The Nightloom"
+    },
+    {
       "key": "level.c01_bound_roots.lesson",
       "text": "Conduits wearing the same pips share a root. Turn one and its partners turn with it."
     },
@@ -654,6 +658,126 @@
       "text": "A fourth colour joins."
     },
     {
+      "key": "level.w02_dusk_threads.lesson",
+      "text": "The Nightloom opens where the Weftwood ended - every colour the light makes, five rings, and a groove that will not let all six go their own way."
+    },
+    {
+      "key": "level.w02_dusk_threads.name",
+      "text": "Dusk Threads"
+    },
+    {
+      "key": "level.w02_dusk_threads.tagline",
+      "text": "Six channels, and none of them free."
+    },
+    {
+      "key": "level.w02_six_rings.lesson",
+      "text": "Every channel wears a ring now, which is as many as a groove can hold - one apiece. Two on any of them would be a tour to remember rather than a route to find."
+    },
+    {
+      "key": "level.w02_six_rings.name",
+      "text": "Six Rings"
+    },
+    {
+      "key": "level.w02_six_rings.tagline",
+      "text": "A ring on every channel."
+    },
+    {
+      "key": "level.w02_spindlewood.lesson",
+      "text": "A ring bends its own channel and shuts every other one out. Count what it closes before you decide who goes round it."
+    },
+    {
+      "key": "level.w02_spindlewood.name",
+      "text": "Spindlewood"
+    },
+    {
+      "key": "level.w02_spindlewood.tagline",
+      "text": "A wider groove, and six rings in it."
+    },
+    {
+      "key": "level.w02_the_long_way_round.lesson",
+      "text": "The shortest route for one channel can be the longest one for the groove. Spend the detour where it costs the least light."
+    },
+    {
+      "key": "level.w02_the_long_way_round.name",
+      "text": "The Long Way Round"
+    },
+    {
+      "key": "level.w02_the_long_way_round.tagline",
+      "text": "The furthest out of their way yet."
+    },
+    {
+      "key": "level.w02_the_narrow_loom.lesson",
+      "text": "Draw the channel with the least room first. Whatever is left after it is what the other five have to share."
+    },
+    {
+      "key": "level.w02_the_narrow_loom.name",
+      "text": "The Narrow Loom"
+    },
+    {
+      "key": "level.w02_the_narrow_loom.tagline",
+      "text": "A tighter frame, and the same six."
+    },
+    {
+      "key": "level.w02_the_nightloom_knot.lesson",
+      "text": "The largest groove in the Nightloom, and the furthest out of their way it will send them. Everything the loom has taught you, at once."
+    },
+    {
+      "key": "level.w02_the_nightloom_knot.name",
+      "text": "The Nightloom Knot"
+    },
+    {
+      "key": "level.w02_the_nightloom_knot.tagline",
+      "text": "The whole loom, and the longest way round."
+    },
+    {
+      "key": "level.w02_the_pinch.lesson",
+      "text": "Two channels want the same gap and only one can have it. Give it to whichever of them can afford the smaller way round."
+    },
+    {
+      "key": "level.w02_the_pinch.name",
+      "text": "The Pinch"
+    },
+    {
+      "key": "level.w02_the_pinch.tagline",
+      "text": "One gap, and everybody wants it."
+    },
+    {
+      "key": "level.w02_the_shuttered_loom.lesson",
+      "text": "Most of what you try here will not work, and finding that out is how this one is solved. Two channels a groove gives back in full - after that the light is spent."
+    },
+    {
+      "key": "level.w02_the_shuttered_loom.name",
+      "text": "The Shuttered Loom"
+    },
+    {
+      "key": "level.w02_the_shuttered_loom.tagline",
+      "text": "Six rings, and hardly a way past."
+    },
+    {
+      "key": "level.w02_thread_the_dark.lesson",
+      "text": "Erasing a channel frees the ground it stood on. It does not give the light back, so look at the whole groove before you land one."
+    },
+    {
+      "key": "level.w02_thread_the_dark.name",
+      "text": "Thread the Dark"
+    },
+    {
+      "key": "level.w02_thread_the_dark.tagline",
+      "text": "Very few arrangements, and one that is best."
+    },
+    {
+      "key": "level.w02_who_yields.lesson",
+      "text": "Nobody here can go straight while everybody else does either. The groove will not say who yields - that part is yours."
+    },
+    {
+      "key": "level.w02_who_yields.name",
+      "text": "Who Yields"
+    },
+    {
+      "key": "level.w02_who_yields.tagline",
+      "text": "Somebody gives way."
+    },
+    {
       "key": "mode.cap.asleep",
       "text": "ASLEEP"
     },
@@ -824,6 +948,18 @@
     {
       "key": "store.product.gg_gems_6",
       "text": "A Trove"
+    },
+    {
+      "key": "store.product.gg_heart_vessel_1",
+      "text": "Heart Flask"
+    },
+    {
+      "key": "store.product.gg_heart_vessel_2",
+      "text": "Heart Chalice"
+    },
+    {
+      "key": "store.product.gg_heart_vessel_3",
+      "text": "Heart Wellspring"
     },
     {
       "key": "ui.account.adopt",
@@ -1298,6 +1434,10 @@
       "text": "Spend them on new friends in your profile."
     },
     {
+      "key": "ui.common.back",
+      "text": "Back"
+    },
+    {
       "key": "ui.common.cancel",
       "text": "Not now"
     },
@@ -1378,6 +1518,46 @@
       "text": "WAKE FOR {0}"
     },
     {
+      "key": "ui.continue.get_gems",
+      "text": "Get gems"
+    },
+    {
+      "key": "ui.continue.give_up",
+      "text": "Give up"
+    },
+    {
+      "key": "ui.continue.held",
+      "text": "You have {0} gems"
+    },
+    {
+      "key": "ui.continue.ink_note",
+      "text": "Keep every channel exactly where it is and carry on."
+    },
+    {
+      "key": "ui.continue.ink_title",
+      "text": "Out of light"
+    },
+    {
+      "key": "ui.continue.ink_unit",
+      "text": "more light"
+    },
+    {
+      "key": "ui.continue.short",
+      "text": "You need {0} gems for this"
+    },
+    {
+      "key": "ui.continue.turns_note",
+      "text": "Keep the board exactly as it is and carry on."
+    },
+    {
+      "key": "ui.continue.turns_title",
+      "text": "Out of turns"
+    },
+    {
+      "key": "ui.continue.turns_unit",
+      "text": "more turns"
+    },
+    {
       "key": "ui.daily.all_open",
       "text": "every chest is open  ·  more tomorrow"
     },
@@ -1422,12 +1602,32 @@
       "text": "resets in {0}"
     },
     {
+      "key": "ui.defeat.buy_hearts",
+      "text": "+{0} hearts for {1} gems"
+    },
+    {
       "key": "ui.defeat.conduit_reason",
       "text": "That conduit was brittle and could not take another turn. Watch the number on them."
     },
     {
       "key": "ui.defeat.conduit_title",
       "text": "IT GAVE WAY"
+    },
+    {
+      "key": "ui.defeat.free_glade",
+      "text": "One of the free levels — no heart was spent. Try it as often as you like."
+    },
+    {
+      "key": "ui.defeat.get_gems",
+      "text": "Get gems"
+    },
+    {
+      "key": "ui.defeat.ink_reason",
+      "text": "There is not enough light left to finish this grove. Draw straighter and undo early."
+    },
+    {
+      "key": "ui.defeat.ink_title",
+      "text": "THE LIGHT RAN OUT"
     },
     {
       "key": "ui.defeat.moves_reason",
@@ -1608,6 +1808,14 @@
     {
       "key": "ui.forfeit.unfinished",
       "text": "{0} was left unfinished, so it cost a heart."
+    },
+    {
+      "key": "ui.gems.note",
+      "text": "Top up without leaving your run. You have {0}."
+    },
+    {
+      "key": "ui.gems.title",
+      "text": "Gems"
     },
     {
       "key": "ui.grove.already",
@@ -1814,6 +2022,10 @@
       "text": "HEARTS"
     },
     {
+      "key": "ui.hearts.to_shop",
+      "text": "GO TO SHOP"
+    },
+    {
       "key": "ui.hearts.wait_to_play",
       "text": "Wait for a heart to return before entering a glade."
     },
@@ -1856,6 +2068,10 @@
     {
       "key": "ui.home.glades",
       "text": "glades"
+    },
+    {
+      "key": "ui.home.next_chapter",
+      "text": "{0} / {1} stars  ·  opens the next chapter"
     },
     {
       "key": "ui.home.next_up",
@@ -2022,8 +2238,16 @@
       "text": "The Elderwood"
     },
     {
+      "key": "ui.levels.chapter_gate",
+      "text": "{0} / {1} stars to go on"
+    },
+    {
       "key": "ui.levels.chapter_locked",
       "text": "clear this chapter to go on"
+    },
+    {
+      "key": "ui.levels.info_title",
+      "text": "information"
     },
     {
       "key": "ui.levels.locked",
@@ -2054,12 +2278,36 @@
       "text": "finishing counts"
     },
     {
+      "key": "ui.levels.rewards_free_body",
+      "text": "The first {0} levels of this chapter cost no heart. Lose one, restart it or leave it as often as you like while you are finding your feet — after that, a lost run costs a heart."
+    },
+    {
+      "key": "ui.levels.rewards_free_title",
+      "text": "free to try"
+    },
+    {
       "key": "ui.levels.rewards_golden_body",
       "text": "A few glades quietly pay more — up to {0}% of the usual coins. Which ones is fixed for your grove, and the victory panel says so."
     },
     {
       "key": "ui.levels.rewards_golden_title",
       "text": "golden glades"
+    },
+    {
+      "key": "ui.levels.rewards_open_body",
+      "text": "The next chapter opens at {0} stars a level — {1} of this chapter's {2}. Finishing every level is not what opens it, and where the stars come from is up to you: three here and one there counts the same."
+    },
+    {
+      "key": "ui.levels.rewards_open_free",
+      "text": "Every chapter is open. Play them in any order you like."
+    },
+    {
+      "key": "ui.levels.rewards_open_rule",
+      "text": "The next chapter opens once you hold {0} stars a level in this one. Finishing every level is not what opens it, and where the stars come from is up to you."
+    },
+    {
+      "key": "ui.levels.rewards_open_title",
+      "text": "opening the next chapter"
     },
     {
       "key": "ui.levels.rewards_stars_body",
@@ -3182,6 +3430,22 @@
       "text": "Faster hearts"
     },
     {
+      "key": "ui.shop.capacity",
+      "text": "Heart limit, for good"
+    },
+    {
+      "key": "ui.shop.capacity_held",
+      "text": "Your hearts refill to {0}."
+    },
+    {
+      "key": "ui.shop.capacity_note",
+      "text": "Your hearts will refill to {0} from now on, on every device you play on."
+    },
+    {
+      "key": "ui.shop.capacity_upgrade",
+      "text": "{0} → {1} hearts"
+    },
+    {
       "key": "ui.shop.coins",
       "text": "Coins"
     },
@@ -3287,11 +3551,7 @@
     },
     {
       "key": "ui.shop.shelf_supplies",
-      "text": "Spend gems on hearts and faster hearts"
-    },
-    {
-      "key": "ui.shop.supplies_note",
-      "text": "Bought with gems. Nothing here costs real money."
+      "text": "Hearts, faster hearts, and a bigger limit"
     },
     {
       "key": "ui.shop.thanks",
@@ -3510,12 +3770,28 @@
       "text": "THE SHOP"
     },
     {
+      "key": "ui.tip.lucky_spin.body",
+      "text": "This button spins a wheel of fortune for extra coins on top of what the glade paid. Spinning costs nothing and every slice is equally likely - the best one is worth five times the rest. It is here after every glade you earn coins on."
+    },
+    {
+      "key": "ui.tip.lucky_spin.title",
+      "text": "FEELING LUCKY?"
+    },
+    {
       "key": "ui.tip.mixing.body",
       "text": "This critter dreams of a colour no single heart carries. Join two hearts into one network and their light blends — red and green make gold."
     },
     {
       "key": "ui.tip.mixing.title",
       "text": "BLENDED LIGHT"
+    },
+    {
+      "key": "ui.tip.mode_switch.body",
+      "text": "There is more than one way to play. Tap here to swap between them — each has its own map and its own levels, and every one is open to you from the very first day."
+    },
+    {
+      "key": "ui.tip.mode_switch.title",
+      "text": "WAYS TO PLAY"
     },
     {
       "key": "ui.tip.moves.body",
@@ -3540,6 +3816,14 @@
     {
       "key": "ui.tip.weave_bead.title",
       "text": "THREAD THE RINGS"
+    },
+    {
+      "key": "ui.tip.weave_ink.body",
+      "text": "Every channel spends light, and taking one back does not give it back.\n\nUndo returns a channel and its light — twice a grove."
+    },
+    {
+      "key": "ui.tip.weave_ink.title",
+      "text": "MIND THE INK"
     },
     {
       "key": "ui.tip.weave_join.body",
@@ -3606,8 +3890,44 @@
       "text": "Reported"
     },
     {
+      "key": "ui.wheel.collect",
+      "text": "WATCH A VIDEO TO COLLECT"
+    },
+    {
+      "key": "ui.wheel.cta",
+      "text": "I'M FEELING LUCKY!"
+    },
+    {
+      "key": "ui.wheel.mult",
+      "text": "x{0}"
+    },
+    {
+      "key": "ui.wheel.odds",
+      "text": "Every slice is the same size: a 1 in {0} chance of each. Spinning is free."
+    },
+    {
+      "key": "ui.wheel.spin",
+      "text": "SPIN"
+    },
+    {
+      "key": "ui.wheel.spinning",
+      "text": "SPINNING..."
+    },
+    {
+      "key": "ui.wheel.title",
+      "text": "WHEEL OF FORTUNE"
+    },
+    {
+      "key": "ui.wheel.won",
+      "text": "You won {0} coins! Watch a short video to collect them."
+    },
+    {
       "key": "ui.win.best_stamp",
       "text": "NEW BEST"
+    },
+    {
+      "key": "ui.win.chapter_opened",
+      "text": "{0} has opened"
     },
     {
       "key": "ui.win.coins",

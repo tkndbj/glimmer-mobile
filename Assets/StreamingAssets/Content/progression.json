@@ -81,7 +81,10 @@
     "refillSeconds": 28800,
     "boostedRefillSeconds": 14400,
     "maxBoostHours": 72,
-    "defeatCost": 1
+    "defeatCost": 1,
+    "rescueGems": 20,
+    "rescueHearts": 2,
+    "graceLevels": 3
   },
 
   "hints": {
@@ -90,8 +93,16 @@
     "refillSeconds": 28800
   },
 
-  "difficulty": {
-    "clockScale": 1.00
+  "chapterGate": {
+    "starsPerLevel": 2
+  },
+
+  "continueRun": {
+    "enabled": 1,
+    "gems": 20,
+    "gemsStep": 0,
+    "turns": 15,
+    "ink": 20
   },
 
   "prompts": {
@@ -106,10 +117,22 @@
     "placements": [
       { "id": "heart_refill", "kind": "hearts",   "amount": 2,   "dailyCap": 20 },
       { "id": "coin_bonus",   "kind": "credits",  "amount": 1000, "dailyCap": 12 },
-      { "id": "run_continue", "kind": "run_time", "amount": 30,  "dailyCap": 16 },
-      { "id": "win_bonus",    "kind": "credits",  "amount": 200, "dailyCap": 12 },
+      { "id": "win_bonus",    "kind": "credits",  "amount": 200, "dailyCap": 6 },
       { "id": "hint_refill",  "kind": "hints",    "amount": 1,   "dailyCap": 10 }
-    ]
+    ],
+
+    "wheel": {
+      "slices": [
+        { "percent": 100 },
+        { "percent": 200 },
+        { "percent": 150 },
+        { "percent": 300 },
+        { "percent": 100 },
+        { "percent": 250 },
+        { "percent": 150 },
+        { "percent": 500 }
+      ]
+    }
   },
 
   "store": {
@@ -128,7 +151,11 @@
 
       { "id": "gg_bundle_starter", "kind": "nonconsumable", "shelf": "bundles", "credits": 7500,  "gems": 500,  "referenceUsdCents": 299, "badge": "starter" },
       { "id": "gg_bundle_keeper",  "kind": "consumable",    "shelf": "bundles", "credits": 12000, "gems": 700,  "referenceUsdCents": 999 },
-      { "id": "gg_bundle_grove",   "kind": "consumable",    "shelf": "bundles", "credits": 42000, "gems": 2200, "referenceUsdCents": 2999, "badge": "best_value" }
+      { "id": "gg_bundle_grove",   "kind": "consumable",    "shelf": "bundles", "credits": 42000, "gems": 2200, "referenceUsdCents": 2999, "badge": "best_value" },
+
+      { "id": "gg_heart_vessel_1", "kind": "nonconsumable", "shelf": "supplies", "heartCapacity": 10, "referenceUsdCents": 1999 },
+      { "id": "gg_heart_vessel_2", "kind": "nonconsumable", "shelf": "supplies", "heartCapacity": 20, "referenceUsdCents": 2999, "badge": "popular" },
+      { "id": "gg_heart_vessel_3", "kind": "nonconsumable", "shelf": "supplies", "heartCapacity": 50, "referenceUsdCents": 3999, "badge": "best_value" }
     ],
 
     "goods": [

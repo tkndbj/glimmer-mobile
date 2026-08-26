@@ -54,11 +54,16 @@ CONTENT = os.path.join(ROOT, "Assets", "StreamingAssets", "Content")
 CHAPTERS = os.path.join(CONTENT, "chapters")
 
 DOMAIN = os.path.join(ROOT, "Assets", "Game", "Scripts", "Domain")
+# The least that compiles: the board, how it is dealt and how it is measured. Deliberately not
+# the run's economy — `WeaveInk`, `WeaveStrokes`, `WeaveVerdict` and `WeaveRun` are about paying
+# for a grove rather than about what grove was dealt, nothing here calls them, and `WeaveVerdict`
+# reaches `RunContinue`, which reaches the save, the wallet, the catalog and analytics. Compiling
+# half of Domain to prove a generator deterministic is how a check like this stops being run.
 SOURCES = [
     os.path.join(DOMAIN, "Board", "Energy.cs"),
     os.path.join(DOMAIN, "Modes", "Lab", "WeaveLayout.cs"),
     os.path.join(DOMAIN, "Modes", "Lab", "WeaveGenerator.cs"),
-    os.path.join(DOMAIN, "Modes", "Lab", "WeaveRun.cs"),
+    os.path.join(DOMAIN, "Modes", "Lab", "WeaveBoard.cs"),
     os.path.join(DOMAIN, "Modes", "Lab", "WeaveSolver.cs"),
 ]
 
@@ -122,7 +127,7 @@ static class WeaveHarness
             foreach (var bead in grove.Beads)
                 sb.Append(" {").Append(bead.Cell).Append('@').Append(bead.Pair).Append('}');
 
-            var run = new WeaveRun(grove);
+            var run = new WeaveBoard(grove);
             sb.Append(" solvable=").Append(run.DrawSolution() && run.IsSolved ? 1 : 0);
 
             var tally = WeaveSolver.Measure(grove, 500, 2000000);

@@ -29,19 +29,6 @@ namespace GlimmerGrove
     /// </summary>
     public static class CoachHand
     {
-        /// <summary>
-        /// Where the fingertip sits in <see cref="Art.Hand"/>, as a pivot.
-        ///
-        /// <para>
-        /// Derived from that glyph's geometry rather than eyeballed, and it has to move whenever
-        /// the finger does — the whole hand is positioned by this point, so a stale one slides
-        /// the fingertip off the route it is tracing and the demonstration quietly stops pointing
-        /// at anything. Run the tip of the index cone back through <c>HandSd</c>'s tilt to
-        /// re-derive it.
-        /// </para>
-        /// </summary>
-        static readonly Vector2 Fingertip = new Vector2(.244f, .929f);
-
         /// <summary>Drawn about the size of one board cell — a hand that dwarfs the grove
         /// obscures the very thing it is pointing at.</summary>
         const float HandSize = 156f;
@@ -90,19 +77,21 @@ namespace GlimmerGrove
             //
             // It also costs *fewer* objects than the dots did, and bounded by corners rather
             // than by length: an elbow is two legs however wide the grove is.
-            var corners = Corners(route);
-            int legs = corners.Length - 1;
+            // Every point handed in is already a turn — the caller collapses straight runs,
+            // because which cells are collinear is a fact about a board and belongs where that
+            // can be proved (WeaveLayout.Corners).
+            int legs = route.Count - 1;
 
             var ink = new Image[legs];
             var from = new float[legs];
             var span = new float[legs];
-            var joint = new Image[corners.Length];
+            var joint = new Image[route.Count];
 
             float run = 0f;
             for (int i = 0; i < legs; i++)
             {
-                var a = route[corners[i]];
-                var b = route[corners[i + 1]];
+                var a = route[i];
+                var b = route[i + 1];
                 var delta = b - a;
                 float length = delta.magnitude;
 
@@ -119,15 +108,14 @@ namespace GlimmerGrove
                     Quaternion.Euler(0, 0, Mathf.Atan2(delta.y, delta.x) * Mathf.Rad2Deg - 90f);
             }
 
-            for (int i = 0; i < corners.Length; i++)
+            for (int i = 0; i < route.Count; i++)
                 joint[i] = UIKit.Img("Joint" + i, root, Art.Disc(64), Pal.A(tint, 0f),
-                                     Vector2.one * InkThick, new Vector2(.5f, .5f),
-                                     route[corners[i]]);
+                                     Vector2.one * InkThick, new Vector2(.5f, .5f), route[i]);
 
             var hand = UIKit.Img("Hand", root, Art.Hand(160), Color.white,
                                  Vector2.one * HandSize, new Vector2(.5f, .5f), route[0]);
             var hrt = hand.rectTransform;
-            hrt.pivot = Fingertip;
+            hrt.pivot = Art.HandFingertip;
             hrt.anchoredPosition = route[0];
 
             float draw = CoachStroke.DrawSeconds(cells);
@@ -173,33 +161,6 @@ namespace GlimmerGrove
             }, owner, "coach").Loop(-1, false);
 
             return root;
-        }
-
-        /// <summary>
-        /// The indices in <paramref name="route"/> where it actually turns.
-        ///
-        /// A route arrives one board cell at a time, so a straight leg is a run of collinear
-        /// points. Drawing a capsule per cell would put a seam every cell down an otherwise
-        /// straight line; collapsing them first is what makes the ink one stroke.
-        /// </summary>
-        static int[] Corners(IList<Vector2> route)
-        {
-            var keep = new List<int> { 0 };
-
-            for (int i = 1; i < route.Count - 1; i++)
-            {
-                var before = route[i] - route[i - 1];
-                var after = route[i + 1] - route[i];
-
-                // Any turn at all is a corner. Cross rather than a dot so a doubling back —
-                // which no elbow produces, but a fallback carved route can — counts as one too.
-                if (Mathf.Abs(before.x * after.y - before.y * after.x) > 1e-3f ||
-                    Vector2.Dot(before, after) < 0f)
-                    keep.Add(i);
-            }
-
-            keep.Add(route.Count - 1);
-            return keep.ToArray();
         }
 
         static Vector2 PointOn(IList<Vector2> route, IReadOnlyList<float> lengths, float along)

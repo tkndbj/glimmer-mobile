@@ -17,7 +17,6 @@
       "id": "w01_first_weave",
       "mapX": 0.3,
       "mapY": 0.055,
-      "timeFactor": 5.0,
       "weave": {
         "width": 5,
         "height": 6,
@@ -29,7 +28,6 @@
       "id": "w01_two_threads",
       "mapX": 0.72,
       "mapY": 0.14,
-      "timeFactor": 4.8,
       "weave": {
         "width": 5,
         "height": 7,
@@ -41,7 +39,6 @@
       "id": "w01_the_shuttle",
       "mapX": 0.26,
       "mapY": 0.225,
-      "timeFactor": 4.6,
       "weave": {
         "width": 6,
         "height": 6,
@@ -54,7 +51,6 @@
       "id": "w01_tight_warp",
       "mapX": 0.7,
       "mapY": 0.31,
-      "timeFactor": 4.4,
       "weave": {
         "width": 6,
         "height": 7,
@@ -67,7 +63,6 @@
       "id": "w01_five_lanterns",
       "mapX": 0.28,
       "mapY": 0.395,
-      "timeFactor": 4.2,
       "weave": {
         "width": 6,
         "height": 8,
@@ -80,7 +75,6 @@
       "id": "w01_the_long_skein",
       "mapX": 0.74,
       "mapY": 0.48,
-      "timeFactor": 4.0,
       "weave": {
         "width": 7,
         "height": 7,
@@ -93,7 +87,6 @@
       "id": "w01_close_quarters",
       "mapX": 0.3,
       "mapY": 0.56,
-      "timeFactor": 3.8,
       "weave": {
         "width": 7,
         "height": 8,
@@ -106,7 +99,6 @@
       "id": "w01_six_sleepers",
       "mapX": 0.68,
       "mapY": 0.645,
-      "timeFactor": 3.6,
       "weave": {
         "width": 7,
         "height": 8,
@@ -119,7 +111,6 @@
       "id": "w01_the_tangle",
       "mapX": 0.26,
       "mapY": 0.73,
-      "timeFactor": 3.4,
       "weave": {
         "width": 7,
         "height": 9,
@@ -132,7 +123,6 @@
       "id": "w01_the_weftwood_knot",
       "mapX": 0.72,
       "mapY": 0.815,
-      "timeFactor": 3.2,
       "weave": {
         "width": 7,
         "height": 9,

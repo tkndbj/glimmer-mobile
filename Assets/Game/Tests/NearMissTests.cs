@@ -113,7 +113,7 @@ namespace GlimmerGrove.Tests
         public void RunningOutOfTurnsWithinTwoIsANearMiss()
         {
             var run = RunOutcome.Loss(OneTurnOut(), DefeatReason.OutOfMoves,
-                                      previousBest: 0, attempt: 1, hintsUsed: 0, seconds: 30f, millis: 0, route: 0);
+                                      previousBest: 0, attempt: 1, hintsUsed: 0, seconds: 30f, route: 0);
 
             Assert.AreEqual(1, run.TurnsShort);
             Assert.IsTrue(run.NearMiss);
@@ -140,7 +140,7 @@ namespace GlimmerGrove.Tests
             Assert.AreEqual(1, board.TurnsToSolution, "the solution's own path is untouched");
 
             var run = RunOutcome.Loss(board, DefeatReason.ConduitLost,
-                                      previousBest: 0, attempt: 2, hintsUsed: 0, seconds: 12f, millis: 0, route: 0);
+                                      previousBest: 0, attempt: 2, hintsUsed: 0, seconds: 12f, route: 0);
 
             Assert.AreEqual(-1, run.TurnsShort);
             Assert.IsFalse(run.NearMiss);
@@ -151,7 +151,7 @@ namespace GlimmerGrove.Tests
         {
             var board = Solved();
             var run = RunOutcome.Win(board, stars: 3, previousBest: 0, firstClear: true,
-                                     attempt: 1, hintsUsed: 0, seconds: 20f, millis: 0, route: 0);
+                                     attempt: 1, hintsUsed: 0, seconds: 20f, route: 0);
 
             Assert.AreEqual(-1, run.TurnsShort);
             Assert.IsFalse(run.NearMiss);
@@ -168,7 +168,7 @@ namespace GlimmerGrove.Tests
         public void ALossCarriesNoResult()
         {
             var run = RunOutcome.Loss(OneTurnOut(), DefeatReason.OutOfMoves,
-                                      previousBest: 14, attempt: 3, hintsUsed: 1, seconds: 9f, millis: 0);
+                                      previousBest: 14, attempt: 3, hintsUsed: 1, seconds: 9f);
 
             Assert.IsFalse(run.Won);
             Assert.AreEqual(0, run.Stars);
@@ -190,7 +190,7 @@ namespace GlimmerGrove.Tests
             board.Moves = 40;
 
             var run = RunOutcome.Win(board, stars: 1, previousBest: 0, firstClear: true,
-                                     attempt: 1, hintsUsed: 0, seconds: 60f, millis: 0, route: 0);
+                                     attempt: 1, hintsUsed: 0, seconds: 60f, route: 0);
 
             Assert.IsTrue(run.NewBest);
         }
@@ -202,7 +202,7 @@ namespace GlimmerGrove.Tests
             board.Moves = 40;
 
             var run = RunOutcome.Win(board, stars: 1, previousBest: 12, firstClear: false,
-                                     attempt: 5, hintsUsed: 0, seconds: 60f, millis: 0, route: 0);
+                                     attempt: 5, hintsUsed: 0, seconds: 60f, route: 0);
 
             Assert.IsFalse(run.NewBest);
         }
@@ -218,7 +218,7 @@ namespace GlimmerGrove.Tests
         {
             var board = Solved();
             var run = RunOutcome.Win(board, stars: 3, previousBest: 0, firstClear: true,
-                                     attempt: 1, hintsUsed: 0, seconds: 20f, millis: 0, route: 0);
+                                     attempt: 1, hintsUsed: 0, seconds: 20f, route: 0);
 
             Assert.AreEqual(board.Gold, run.Target);
             Assert.AreNotEqual(board.Par, board.Gold,

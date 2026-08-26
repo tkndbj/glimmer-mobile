@@ -84,6 +84,8 @@ namespace GlimmerGrove.EditorTools
                 var ids = new List<string>(result.Body.Count);
                 foreach (var level in result.Body.Levels) ids.Add(level.Id.Value);
 
+                if (SyncMode(entry, id, result.Body, notes)) changed++;
+
                 if (Same(entry.levels, ids)) continue;
 
                 // A chapter whose contents changed is a chapter the cache must refetch.
@@ -116,6 +118,68 @@ namespace GlimmerGrove.EditorTools
             foreach (var note in notes) sb.Append("\n  ").Append(note);
 
             message = sb.ToString();
+            return true;
+        }
+
+        // ----------------------------------------------------------------- mode
+        /// <summary>
+        /// Brings a chapter's <c>mode</c> into line with the levels it actually holds.
+        ///
+        /// <para>
+        /// <b>It was the one field of a chapter entry still written by hand, and that is
+        /// exactly the shape of mistake this whole step exists to remove.</b> A chapter's mode
+        /// decides which screen opens it, which lane it sits in and which chapter its star gate
+        /// asks about (invariant 20a) — and a weave chapter whose entry forgets to say so is
+        /// indexed as a glade chapter. Nothing refuses it: every level still parses, every board
+        /// is still solvable, the art still resolves, and <c>Validate Content</c> passes. What
+        /// ships is a chapter gated on somebody else's stars and offered under the wrong tab.
+        /// It happened the first time a second Lightweave chapter was added, on the very first
+        /// sync, and the only reason anybody saw it was a line in a log.
+        /// </para>
+        /// <para>
+        /// So the mode is <em>derived</em>, exactly as the level list is and for invariant 4a's
+        /// reason: the manifest owns membership and order, and a chapter body owns content — and
+        /// which way of playing its levels are is content. <c>ContentValidation</c> then proves
+        /// the two agree, so a manifest edited by hand is caught by the build rather than by a
+        /// player.
+        /// </para>
+        /// <para>
+        /// The rule is <see cref="ChapterModeValidator"/>, shared with the build gate rather than
+        /// restated here. A chapter whose levels disagree with each other is reported and left
+        /// alone: there is no honest answer to derive, and writing whichever mode came first
+        /// would be a guess this file has no business making — the validator says so in full.
+        /// </para>
+        /// <para>
+        /// The version is deliberately <em>not</em> bumped. A version bump means "the body has
+        /// changed, refetch it" (invariant 4a), and this changes nothing about the body: the
+        /// manifest itself is read whole at every boot, so the new mode is live the moment the
+        /// file lands.
+        /// </para>
+        /// </summary>
+        /// <returns>Whether anything was written.</returns>
+        static bool SyncMode(ManifestChapterDto entry, ChapterId id, ChapterBody body,
+                             List<string> notes)
+        {
+            if (!ChapterModeValidator.TryDerive(body.Levels, out var mode))
+            {
+                notes.Add($"chapter '{id}' holds levels of more than one mode, so its mode could " +
+                          "not be derived and was left as it was — Validate Content names them");
+                return false;
+            }
+
+            // Empty and "glade" are the same thing on the wire, so a chapter of the ordinary mode
+            // keeps writing nothing and every manifest authored before modes existed round-trips
+            // byte for byte. See the writer.
+            string wanted = mode.Equals(GameMode.Default) ? null : mode.Value;
+            if (string.Equals(entry.mode ?? string.Empty, wanted ?? string.Empty,
+                              StringComparison.Ordinal))
+                return false;
+
+            string was = string.IsNullOrEmpty(entry.mode) ? GameMode.Default.Value : entry.mode;
+            entry.mode = wanted;
+
+            notes.Add($"chapter '{id}' is a '{mode}' chapter, not a '{was}' one — its mode has " +
+                      "been corrected");
             return true;
         }
 

@@ -80,23 +80,45 @@ namespace GlimmerGrove.Content
         }
 
         /// <summary>
-        /// Time is the whole grade here: there is no move budget, and the clock decides the stars.
+        /// A weave is graded on cells, and now it is <em>lost</em> on them too.
         ///
         /// <para>
-        /// <b>The move factors are deliberately the ordinary defaults and deliberately do
-        /// nothing.</b> A weave run reports one "move", so <c>StarsForMoves</c> always answers
-        /// three and <c>StarsFor</c> takes the clock's reading every time. This used to pass a
-        /// pair of weave-specific constants into those two slots, which read exactly as though
-        /// they were the mode's star thresholds and were not: they are compared against a move
-        /// count that is always 1, so retuning them moved nothing at all, silently. The clock's
-        /// own lines are <c>LevelTuning.TimeGoldFactor</c> and <c>TimeSilverFactor</c> — global,
-        /// shared with every glade, and global on purpose, because earned credits derive from the
-        /// star ledger and a mode quietly grading its own stars differently would deflate or
-        /// inflate the economy by a number nobody wrote down.
+        /// <b>The budget is the ordinary one and it buys the mode a fail state.</b> A weave has
+        /// no turns, so when the clock went (invariant 22) this mode was left unable to be lost
+        /// at all — only forfeited, which invariant 22a wrote down as the thing to fix before
+        /// the mode grew, and named the fix: a budget in the unit it is graded in, not a clock
+        /// coming back. That unit is cells, so the budget is cells — see <see cref="WeaveInk"/>
+        /// — and it comes from exactly the same <c>par × budgetFactor</c> every glade uses,
+        /// through the same <c>LevelTuning.MoveBudget</c>, so the three lines a run is measured
+        /// against stay one decision in three numbers rather than becoming two decisions in six.
         /// </para>
         /// <para>
-        /// So what a level authors is <c>timeFactor</c> and only <c>timeFactor</c>, which moves
-        /// where a run is <em>lost</em> and never what a clear is worth.
+        /// <b>A level still authors no number.</b> <c>budgetFactor</c> is read for the reason
+        /// every glade reads it — nought means the default, a deliberate negative turns the
+        /// budget off — but no shipped grove writes one, and none should have to: par falls out
+        /// of the board, both star lines fall out of par, and now so does the ink.
+        /// </para>
+        /// <para>
+        /// <b>The star factors stay global on purpose</b>, shared with every glade: earned
+        /// credits derive from the star ledger, so a mode quietly grading its own stars
+        /// differently would deflate or inflate the economy by a number nobody wrote down. What
+        /// this mode counts is the light its channels spent, against <c>par</c> — the sum of
+        /// every pair's own shortest route plus a cell of looking per pair and per bead
+        /// (<c>WeaveLayout.Par</c>). A taut arrangement lands under the three-star line and
+        /// sprawl does not.
+        /// </para>
+        /// <para>
+        /// It used to be graded on a clock, and that had two faults. Every star came from the
+        /// countdown, so the move slots were passed a run that always reported one "move" and
+        /// silently decided nothing — and the record and the published deciles were handed
+        /// <c>par</c> as the move count, which is a constant, so every player who ever finished
+        /// a grove held an identical one. A cell count fixes both: it is a real number, the
+        /// player can improve it deliberately, and it is the same unit the population is
+        /// ranked in.
+        /// </para>
+        /// <para>
+        /// So a level authors <em>no</em> difficulty number at all. The board is generated from
+        /// its seed, par falls out of the board, and the star lines and the ink fall out of par.
         /// </para>
         /// </summary>
         public override LevelTuning Tune(LevelDto dto, ILevelRules rules)
@@ -106,58 +128,7 @@ namespace GlimmerGrove.Content
 
             return new LevelTuning(par, LevelTuning.DefaultGoldFactor,
                                    LevelTuning.DefaultSilverFactor,
-                                   LevelTuning.Unlimited,
-                                   dto.timeFactor > 0f ? dto.timeFactor : WeaveRules.TimeFactor);
-        }
-
-        public override void Validate(LevelDefinition level, List<LevelIssue> issues)
-        {
-            var grove = (WeaveRules)level.Rules;
-            var layout = grove.LayoutFor(level.Id);
-
-            // The board carries its own proof, so the validator plays it rather than trusting it.
-            // Played all the way to IsSolved, which is what proves the beads too: a bead the
-            // carved route does not thread is a board its own solution cannot finish.
-            var run = new WeaveRun(layout);
-            if (!run.DrawSolution())
-                issues.Add(new LevelIssue(LevelIssueSeverity.Error,
-                    "this grove's own solution does not join every pair and thread every bead " +
-                    "without crossing, so the generator produced a board nobody can finish"));
-
-            if (layout.Beads.Count < grove.BeadCount)
-                issues.Add(new LevelIssue(LevelIssueSeverity.Warning,
-                    $"this grove asks for {grove.BeadCount} bead(s) and could only place " +
-                    $"{layout.Beads.Count}: a bead is only worth placing on a cell off every " +
-                    "shortest route between its pair's ends, and this seed's carved routes did " +
-                    "not offer that many — re-seed it with Survey Lightweave's SeedSearch"));
-
-            // Never seen on the shipped shape — the generator holds out for a carve that reaches
-            // every cell and finds one within a handful of attempts. It is here for the size
-            // somebody authors later that cannot be filled, where the fallback is a board whose
-            // endpoints all sit in their own quiet corner.
-            if (layout.Coverage < WeaveGenerator.MinCoverage)
-                issues.Add(new LevelIssue(LevelIssueSeverity.Warning,
-                    $"the carve covers {layout.Coverage:P0} of this grove, leaving " +
-                    $"{layout.Count - layout.SolutionLength} cell(s) untouched; under " +
-                    $"{WeaveGenerator.MinCoverage:P0} the endpoints stop being spread across the " +
-                    "grove and the channels stop having to get past each other"));
-
-            // The acceptance bar, asked again of the board that actually shipped. It is the same
-            // predicate the generator held out for rather than a second opinion about it, which
-            // is the point: a grove that has drifted past the bar is one the generator could not
-            // satisfy and settled for, and that is worth saying out loud rather than inferring
-            // from a difficulty survey somebody has to remember to run.
-            //
-            // A warning rather than an error, for the reason nothing else here is a gate: the
-            // board is generated, so a build cannot be failed over a number that is a property of
-            // a seed somebody would then have to guess their way out of.
-            bool taut = WeaveSolver.AnyTautSolution(layout, out bool decided);
-            if (decided && taut)
-                issues.Add(new LevelIssue(LevelIssueSeverity.Warning,
-                    "every pair of this grove can take its own shortest route at once, so it is " +
-                    "finished by drawing the obvious line at each critter in turn and asks the " +
-                    "player nothing — re-seed the level with Survey Lightweave's SeedSearch, " +
-                    "which holds a candidate to the exact bar"));
+                                   dto.budgetFactor);
         }
 
         /// <summary>
@@ -167,10 +138,10 @@ namespace GlimmerGrove.Content
         /// It borrowed Lightfall's "points" stem, which read "56 points" on the map node — where
         /// 56 was the grove's cell count. That number was the same for every player who had ever
         /// finished the grove and it was not a score, so the one line summarising a run carried
-        /// no information at all. A count of cells is a slightly better number now that routes
-        /// differ between runs, and it is still the wrong one: a player who wanders is not doing
-        /// better than one who does not, and the mode is graded on the clock precisely because
-        /// speed is the only reading here that means anything. The record says so.
+        /// no information at all. What replaced it is the count of cells the channels took,
+        /// which is what a run is now graded on and the only reading here a player can improve
+        /// on deliberately — a tighter arrangement is a better one. The record says so, and it
+        /// is a number the published deciles can rank, which a clock reading never was.
         /// </para>
         /// </summary>
         public override string RecordStem => "ui.rank.woven";
@@ -179,26 +150,6 @@ namespace GlimmerGrove.Content
     /// <summary>A weave grove: its size, how many pairs and beads, and the deal that lays them out.</summary>
     public sealed class WeaveRules : ILevelRules
     {
-        /// <summary>
-        /// Seconds of clock per cell of par, for a level that authors none.
-        ///
-        /// <para>
-        /// <b>Retuned when par stopped meaning "the whole grove".</b> Par used to be the carved
-        /// solution's length, which fills the grove — so a 7x9 board carried a par of 63 whatever
-        /// its pairs were doing, and the limit came out of that. Par is now the sum of the pairs'
-        /// own floors, which on the same board is nearer 45: the same multiplier against a
-        /// smaller par would have quietly cut every clock in the chapter by a third, on the drop
-        /// that also made the boards harder. The multiplier moved so the limits did not.
-        /// </para>
-        /// <para>
-        /// The clock is the one rule in this game a player can fail through no fault of their
-        /// reasoning, so it is the puzzle that is hard and the clock that is fair. There are
-        /// deliberately no star factors beside it — see <c>WeaveMode.Tune</c>, which is where a
-        /// pair of them used to sit doing nothing.
-        /// </para>
-        /// </summary>
-        public const float TimeFactor = 5.0f;
-
         public readonly int Width, Height, PairCount, BeadCount, Seed;
 
         WeaveLayout _layout;

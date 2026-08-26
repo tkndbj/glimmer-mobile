@@ -75,13 +75,6 @@ namespace GlimmerGrove
         public static readonly Color Rope = Hex("#D9C39A");
 
         /// <summary>
-        /// Where the light must never reach. Deep violet, well off the energy wheel — the
-        /// three channels and their blends are all bright, so a dark cool tint cannot be
-        /// mistaken for any of them, and it is the same night the streak page is graded in.
-        /// </summary>
-        public static readonly Color Dusk = Hex("#6B5BC4");
-
-        /// <summary>
         /// The thorns across a briar's closed ways: the second colour on the board that
         /// deliberately says nothing about light, and <see cref="Rope"/>'s argument again.
         ///

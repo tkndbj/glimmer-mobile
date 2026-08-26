@@ -7,11 +7,20 @@ namespace GlimmerGrove
     /// <summary>
     /// What occupies a cell.
     ///
+    /// <para>
     /// Values are explicit and permanent: a board is parsed from authored text on
     /// every load, but analytics and save records travel with level ids that were
     /// authored against a particular meaning of these numbers.
+    /// </para>
+    /// <para>
+    /// <b>4 is a hole and must stay one.</b> It was the duskcap, the creature a glade was
+    /// trying <em>not</em> to light, removed for invariant 5f's reason. Handing the number
+    /// to the next tile would silently re-label every board reading already recorded against
+    /// it, which is invariant 1's argument about a level id applied to the one other number
+    /// here that has left the process.
+    /// </para>
     /// </summary>
-    public enum Kind : byte { Empty = 0, Pipe = 1, Source = 2, Lamp = 3, Duskcap = 4, Crossing = 5, Briar = 6 }
+    public enum Kind : byte { Empty = 0, Pipe = 1, Source = 2, Lamp = 3, Crossing = 5, Briar = 6 }
 
     public struct Cell
     {
@@ -94,12 +103,10 @@ namespace GlimmerGrove
     /// every source inside it, so keeping networks apart is the real puzzle.
     ///
     /// <para>
-    /// Three rules bend that shape rather than adding to it, which is why none of them
-    /// needed a second graph or a second pass. A <b>taproot</b> (<see cref="Cell.link"/>)
-    /// makes several conduits turn as one, so a tap stops being a local act; nothing about
-    /// how light travels changes. A <b>duskcap</b> (<see cref="Kind.Duskcap"/>) is an
-    /// ordinary cell in that same graph whose being reached is a failure rather than a
-    /// success, so it costs one term in <see cref="Won"/> and no new traversal at all.
+    /// Two rules bend that shape rather than adding to it, which is why neither needed a
+    /// second graph or a second pass. A <b>taproot</b> (<see cref="Cell.link"/>) makes
+    /// several conduits turn as one, so a tap stops being a local act; nothing about how
+    /// light travels changes.
     /// </para>
     /// <para>
     /// A <b>crossing</b> (<see cref="Kind.Crossing"/>) is the third and the only one that
@@ -116,7 +123,7 @@ namespace GlimmerGrove
     /// shut. So it changes neither the graph nor what a join means — only <em>which of a
     /// tile's arms conduct</em>, which is <see cref="Live"/> and one word in two walks. What
     /// it buys is the thing arms cannot buy: all four of its neighbours mate it at every
-    /// angle, so nothing about the pipe-fitting settles it and only colour or the dark can.
+    /// angle, so nothing about the pipe-fitting settles it and only colour can.
     /// </para>
     /// </summary>
     public sealed class Puzzle
@@ -137,6 +144,27 @@ namespace GlimmerGrove
 
         public int Moves;
         public int HintsUsed;
+
+        /// <summary>
+        /// Turns bought on this run over and above the level's own budget, and the only
+        /// thing on this board that money can move.
+        ///
+        /// <para>
+        /// <b>It moves the budget and nothing else.</b> Par is derived from the board, the two
+        /// star lines are held against par, and neither reads this — so a bought turn can
+        /// never buy a star (invariant 22). A run that had to be continued has by definition
+        /// spent more than <c>par x 1.40</c> and so scores one, which is less than replaying
+        /// the glade for nothing would pay: the offer sells a <em>finish</em>, never a
+        /// <em>grade</em>, which is what keeps it out of the economy the server derives.
+        /// </para>
+        /// <para>
+        /// Cleared by <see cref="Reset"/> along with the move count, because a restart is a
+        /// new run and not a continuation of this one — the same rule <c>WeaveInk.Reset</c>
+        /// follows for a fresh pot of light, and the reason the restart key is priced like any
+        /// other abandonment (<c>RunScreen.RestartLevel</c>).
+        /// </para>
+        /// </summary>
+        public int Granted;
 
         /// <summary>
         /// How many independent flows one cell can carry: one for every tile on the board
@@ -169,9 +197,6 @@ namespace GlimmerGrove
         public readonly int[] SolutionDepth;
         public bool Won;
         public int LampCount, LampsLit;
-
-        /// <summary>Duskcaps on this board, and how many of them the light has woken.</summary>
-        public int DuskcapCount, DuskcapsWoken;
 
         /// <summary>Crossings on this board: conduits carrying two flows that never meet.</summary>
         public int CrossingCount;
@@ -242,7 +267,6 @@ namespace GlimmerGrove
             for (int i = 0; i < cells.Length; i++)
             {
                 if (cells[i].kind == Kind.Lamp) LampCount++;
-                else if (cells[i].kind == Kind.Duskcap) DuskcapCount++;
                 else if (cells[i].kind == Kind.Crossing) CrossingCount++;
                 else if (cells[i].kind == Kind.Briar) BriarCount++;
 
@@ -691,21 +715,9 @@ namespace GlimmerGrove
             }
 
             LampsLit = 0;
-            DuskcapsWoken = 0;
             bool all = true;
             for (int i = 0; i < n; i++)
             {
-                if (C[i].kind == Kind.Duskcap)
-                {
-                    // Lit means "awake" for both creatures on the board. For a critter
-                    // that is the goal and for a duskcap it is the failure, which is
-                    // exactly one rule stated twice rather than two rules — and it lets
-                    // the view diff waking and sleeping with the array it already has.
-                    Lit[i] = Energy(i) != 0;
-                    if (Lit[i]) DuskcapsWoken++;
-                    continue;
-                }
-
                 if (C[i].kind != Kind.Lamp) continue;
                 int have = Energy(i);
                 int want = C[i].colour;
@@ -713,23 +725,21 @@ namespace GlimmerGrove
                 if (Lit[i]) LampsLit++; else all = false;
             }
 
-            // A glade settles when every critter is awake and every duskcap is still
-            // asleep. The second half is a whole mechanic and one term: light spilling
-            // where it was not wanted is as unfinished as light that never arrived.
-            Won = all && LampCount > 0 && DuskcapsWoken == 0;
+            // A glade settles when every critter on it is awake, and that is the whole
+            // rule. It used to carry a second term — no duskcap woken — and the mechanic
+            // was removed because no board could ever demonstrate it: light spilling
+            // somewhere unwanted looks exactly like a finished glade that will not settle.
+            Won = all && LampCount > 0;
         }
-
-        /// <summary>A duskcap the light has reached. Always false for anything else.</summary>
-        public bool Woken(int i) => C[i].kind == Kind.Duskcap && Lit[i];
 
 
         /// <summary>
         /// Energy currently reaching a cell, on every strand it has.
         ///
         /// A crossing is the only tile that can be answering two different colours at once,
-        /// and it is never a critter, a heart-crystal or a duskcap — so the union is only ever
-        /// read by the drawing, and the rules that care about an exact colour ask a cell that
-        /// has one strand.
+        /// and it is never a critter or a heart-crystal — so the union is only ever read by
+        /// the drawing, and the rules that care about an exact colour ask a cell that has
+        /// one strand.
         /// </summary>
         public int Energy(int i)
         {
@@ -869,6 +879,7 @@ namespace GlimmerGrove
 
             Moves = 0;
             HintsUsed = 0;
+            Granted = 0;
             ShatteredAt = -1;
             Evaluate();
         }
@@ -887,22 +898,40 @@ namespace GlimmerGrove
         public int Gold => Tuning.GoldThreshold;
         public int Silver => Tuning.SilverThreshold;
 
-        /// <summary>
-        /// What a run of this many turns, taking this long, is worth.
-        ///
-        /// <para>
-        /// There is deliberately no moves-only overload. Stars are the worse of the two
-        /// readings (<see cref="Content.LevelTuning.StarsFor"/>), so a caller that could ask
-        /// for the moves half alone would get a number that is right up until a glade is
-        /// timed — and the compiler would never mention it. Pass 0 for an untimed run; the
-        /// clock half then costs nothing, which is what 0 means everywhere else here.
-        /// </para>
-        /// </summary>
-        public int StarsFor(int moves, int millis) => Tuning.StarsFor(moves, millis);
+        /// <summary>What a run of this many turns is worth. See <c>LevelTuning.StarsFor</c>.</summary>
+        public int StarsFor(int moves) => Tuning.StarsFor(moves);
 
         // ---------------------------------------------------------------- budget
         public bool HasBudget => Tuning.HasBudget;
-        public int MoveBudget => Tuning.MoveBudget;
+
+        /// <summary>
+        /// Turns this run may spend: what the level deals, plus whatever has been bought.
+        ///
+        /// <see cref="int.MaxValue"/> on a glade with no budget, where <see cref="Granted"/>
+        /// is meaningless and adding it would overflow into a board that is instantly out of
+        /// turns — which is the one arithmetic mistake here that would be catastrophic and
+        /// silent.
+        /// </summary>
+        public int MoveBudget
+            => !HasBudget ? int.MaxValue
+             : Granted >= int.MaxValue - Tuning.MoveBudget ? int.MaxValue
+             : Tuning.MoveBudget + Granted;
+
+        /// <summary>
+        /// Hands this run more turns, for a continue that has been paid for.
+        ///
+        /// <para>
+        /// Refused outright on an unbudgeted board rather than clamped: nothing there can run
+        /// out, so a continue could never have been offered, and quietly accepting one would
+        /// mean the only witness to that bug is a player's gem balance.
+        /// </para>
+        /// </summary>
+        public void Grant(int turns)
+        {
+            if (turns <= 0 || !HasBudget) return;
+
+            Granted = turns >= int.MaxValue - Granted ? int.MaxValue : Granted + turns;
+        }
 
         /// <summary>Turns still available. <see cref="int.MaxValue"/> on an unbudgeted level.</summary>
         public int MovesLeft => HasBudget ? Mathf.Max(0, MoveBudget - Moves) : int.MaxValue;
@@ -914,12 +943,5 @@ namespace GlimmerGrove
         /// turn has solved it.
         /// </summary>
         public bool OutOfMoves => HasBudget && Moves >= MoveBudget && !Won;
-
-        // ------------------------------------------------------------------ clock
-        // As with the thresholds above, the board has no opinion on how long a glade is
-        // worth — it only passes the question on to its tuning.
-        public bool HasTimeLimit => Tuning.HasTimeLimit;
-        public int TimeLimitMillis => Tuning.TimeLimitMillis;
-        public int TimeGoldMillis => Tuning.TimeGoldMillis;
     }
 }

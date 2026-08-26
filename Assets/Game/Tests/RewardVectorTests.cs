@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using GlimmerGrove.Ads;
 using GlimmerGrove.Content;
 using GlimmerGrove.Daily;
 using GlimmerGrove.Events;
@@ -70,6 +71,34 @@ namespace GlimmerGrove.Tests
             /// it to land in.
             /// </summary>
             public ManifestEventDto[] events;
+
+            /// <summary>
+            /// The bonus wheel's own slices, synthetic for <see cref="dailyChestConfig"/>'s
+            /// reason: what is under contract is the picker, not this drop's ladder. Retuning
+            /// the shipped wheel must not turn these red.
+            /// </summary>
+            public AdWheelDto wheelConfig;
+
+            /// <summary>
+            /// What one flat view of the placement pays, so the vectors also pin the payout
+            /// arithmetic rather than only the pick. The multiply-before-divide is the half
+            /// JavaScript could get wrong on its own.
+            /// </summary>
+            public int wheelBasis;
+
+            public WheelVectorCase[] wheelCases;
+        }
+
+        [Serializable]
+        public sealed class WheelVectorCase
+        {
+            public string name;
+            public string playerKey;
+            public int dayKey;
+            public int spinIndex;
+            public int landing;
+            public int percent;
+            public int pays;
         }
 
         [Serializable]
@@ -368,6 +397,143 @@ namespace GlimmerGrove.Tests
                            "the client no longer matches the shared golden vectors. Every one of these " +
                            "is a glade somebody has been paid for — see invariant 9c.\n" +
                            string.Join("\n", failures));
+        }
+
+        /// <summary>
+        /// The bonus wheel, against the file both halves read.
+        ///
+        /// <para>
+        /// The wheel is <c>win_bonus</c>'s payout made variable, and neither side is told what
+        /// the other decided: the phone draws where it stopped before the video plays, and the
+        /// server recomputes the same slice when the network's callback lands. A disagreement
+        /// here is a player watching a wheel stop on nine hundred and then watching their
+        /// balance rise by two hundred, which is the worst thing an economy can do in front of
+        /// somebody. See invariant 9c.
+        /// </para>
+        /// <para>
+        /// The pre-sign-in row is the important one and is checked in both halves: no slice,
+        /// and the flat amount. A client rolling against a device id while the server rolls
+        /// against a uid is the one way this feature could pay two different numbers for one
+        /// video.
+        /// </para>
+        /// </summary>
+        [Test]
+        public void EveryWheelVectorMatches()
+        {
+            var file = Load();
+            Assert.IsNotNull(file.wheelConfig, "the vector file has no wheel config");
+            Assert.IsNotNull(file.wheelCases, "the vector file has no wheel cases");
+            Assert.Greater(file.wheelCases.Length, 0);
+            Assert.Greater(file.wheelBasis, 0, "the vector file has no flat amount to multiply");
+
+            var problems = new List<string>();
+            var wheel = BonusWheel.Resolve(file.wheelConfig, problems);
+
+            Assert.IsEmpty(problems, "the vector wheel is not one the reader accepts: " +
+                                     string.Join("; ", problems));
+            Assert.IsTrue(wheel.IsUsable);
+
+            var failures = new List<string>();
+
+            foreach (var test in file.wheelCases)
+            {
+                int landing = wheel.Landing(test.playerKey, test.dayKey, test.spinIndex);
+                if (landing != test.landing)
+                {
+                    failures.Add($"'{test.name}': slice expected {test.landing}, got {landing}");
+                    continue;
+                }
+
+                int percent = landing < 0
+                    ? WheelRules.MinPercent
+                    : wheel.SliceAt(landing).Percent;
+
+                if (percent != test.percent)
+                    failures.Add($"'{test.name}': expected {test.percent}%, got {percent}%");
+
+                long pays = BonusWheel.Apply(file.wheelBasis, percent);
+                if (pays != test.pays)
+                    failures.Add($"'{test.name}': pays expected {test.pays}, got {pays}");
+            }
+
+            Assert.IsEmpty(failures,
+                           "the client no longer matches the shared wheel vectors. Every one of these " +
+                           "is a video somebody watched for a figure they were shown - see invariant 9c.\n" +
+                           string.Join("\n", failures));
+        }
+
+        /// <summary>
+        /// A wheel with no <c>win_bonus</c> to multiply is dropped, and the sentence says which
+        /// placement was missing.
+        ///
+        /// <para>
+        /// Both halves of the wheel rule are refusals rather than repairs, and they have to be:
+        /// a reader that quietly fixed a table would accept one the other side had rejected, and
+        /// the two would then disagree about money. Driven here rather than trusted, because a
+        /// check with no failing case is not a check.
+        /// </para>
+        /// </summary>
+        [Test]
+        public void AWheelWithNothingToMultiplyIsDropped()
+        {
+            var file = Load();
+
+            var ads = new AdsDto
+            {
+                cooldownSeconds = 30,
+                wheel = file.wheelConfig,
+                placements = new[]
+                {
+                    new AdPlacementDto
+                    {
+                        id = AdPlacement.CoinBonus, kind = "credits", amount = 500, dailyCap = 3,
+                    },
+                },
+            };
+
+            var problems = new List<string>();
+            var table = AdRewardTable.Resolve(ads, problems);
+
+            Assert.IsFalse(table.Wheel.IsUsable,
+                           "a wheel was kept over a table with no win_bonus in it, so it would " +
+                           "multiply nothing");
+
+            Assert.IsTrue(problems.Exists(p => p.Contains(AdPlacement.WinBonus)),
+                          "the wheel was dropped without saying which placement was missing");
+        }
+
+        /// <summary>
+        /// An absent wheel means the <em>flat</em> offer, never the built-in ladder.
+        ///
+        /// This is the one table here that does not fall back to its own default, and the
+        /// difference is what removes invariant 12a's deploy-ordering hazard from the feature: a
+        /// published file that has never heard of the wheel keeps paying exactly what it
+        /// authored, on both sides, rather than a client inventing multipliers a server reading
+        /// the same file would never grant.
+        /// </summary>
+        [Test]
+        public void AnAbsentWheelIsTheFlatOfferAndNotTheBuiltInLadder()
+        {
+            var ads = new AdsDto
+            {
+                cooldownSeconds = 30,
+                placements = new[]
+                {
+                    new AdPlacementDto
+                    {
+                        id = AdPlacement.WinBonus, kind = "credits", amount = 200, dailyCap = 6,
+                    },
+                },
+            };
+
+            var problems = new List<string>();
+            var table = AdRewardTable.Resolve(ads, problems);
+
+            Assert.IsFalse(table.Wheel.IsUsable,
+                           "an ads block with no wheel produced one; a client would draw " +
+                           "multipliers a server reading the same file would never grant");
+
+            Assert.IsEmpty(problems, "an absent wheel is not an error: " + string.Join("; ", problems));
         }
 
         [Test]

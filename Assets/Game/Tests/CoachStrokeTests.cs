@@ -240,5 +240,78 @@ namespace GlimmerGrove.Tests
             Assert.AreEqual(2, seg);
             Assert.AreEqual(.5f, f, 1e-4f);
         }
+    
+
+        /// <summary>
+        /// A repeat never outstays the bar <see cref="CoachStroke.MaxDraw"/> was picked from.
+        ///
+        /// <para>
+        /// The ceiling on a stroke exists to bound the <em>loop</em>, not the stroke — a player
+        /// waits for the whole cycle before the sentence can be read again. Raising CellSeconds
+        /// or any of the fixed beats without moving MaxDraw would quietly lengthen that wait, and
+        /// nothing else in this file would notice, because every other case reads the constants
+        /// symbolically.
+        /// </para>
+        /// </summary>
+        [Test]
+        public void ARepeatNeverOutstaysTheLoopBar()
+        {
+            Assert.LessOrEqual(CoachStroke.Cycle(CoachStroke.MaxDraw), CoachStroke.LongestCycle,
+                               "the longest repeat is longer than the bar it was derived from");
+
+            // And the widest grove this chapter ships still clears it: an elbow spans at most
+            // width + height - 2, which is 14 on a 7x9.
+            Assert.LessOrEqual(CoachStroke.Cycle(CoachStroke.DrawSeconds(14)),
+                               CoachStroke.LongestCycle);
+
+            // The bar is not slack either, or the ceiling is not the one doing the work.
+            Assert.Greater(CoachStroke.Cycle(CoachStroke.MaxDraw), CoachStroke.LongestCycle - .5f,
+                           "MaxDraw is far under its bar, so something else is the real limit");
+        }
+
+        /// <summary>A longer stroke is a longer repeat, right up to the ceiling.</summary>
+        [Test]
+        public void TheRepeatGrowsWithTheStrokeAndThenStops()
+        {
+            Assert.Greater(CoachStroke.Cycle(CoachStroke.DrawSeconds(9)),
+                           CoachStroke.Cycle(CoachStroke.DrawSeconds(4)));
+
+            Assert.AreEqual(CoachStroke.Cycle(CoachStroke.DrawSeconds(40)),
+                            CoachStroke.Cycle(CoachStroke.DrawSeconds(400)), 1e-4f);
+        }
+    
+
+        /// <summary>
+        /// The hand's pivot is the fingertip, and it is derived from the glyph rather than typed.
+        ///
+        /// <para>
+        /// Pure arithmetic — no texture is generated — so it can be proved without the Editor,
+        /// which is the whole reason the constants moved into <c>Art</c>. It was a literal in
+        /// <c>CoachHand</c> and went stale the first time the finger was redrawn: the hand still
+        /// animated, still looked right in a still, and traced its route about a twentieth of the
+        /// sprite off.
+        /// </para>
+        /// </summary>
+        [Test]
+        public void TheHandIsPivotedOnItsOwnFingertip()
+        {
+            var tip = Art.HandFingertip;
+
+            Assert.Greater(tip.x, 0f, "the fingertip is off the left of the sprite");
+            Assert.Less(tip.x, 1f, "the fingertip is off the right of the sprite");
+            Assert.Greater(tip.y, 0f);
+            Assert.Less(tip.y, 1f, "the fingertip is off the top of the sprite");
+
+            // Up and to one side of the knuckles is the whole silhouette of pointing, so the tip
+            // belongs in the upper-left quadrant. A pivot that drifts out of it means the glyph
+            // is no longer a pointing hand, whatever else still compiles.
+            Assert.Less(tip.x, .5f, "the fingertip is not to the left of centre");
+            Assert.Greater(tip.y, .75f, "the fingertip is not near the top");
+
+            // Stable across redeploys of the same glyph: this is a pin, so a change to the finger
+            // is a change somebody made on purpose.
+            Assert.AreEqual(.244f, tip.x, .004f);
+            Assert.AreEqual(.929f, tip.y, .004f);
+        }
     }
 }

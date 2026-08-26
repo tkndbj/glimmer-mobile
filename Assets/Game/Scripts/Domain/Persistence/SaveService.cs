@@ -52,6 +52,12 @@ namespace GlimmerGrove.Persistence
             // derives from it; the sections are otherwise independent.
             PlayerProgress.LoadFrom(dto);
             GameSettings.LoadFrom(dto);
+            // Before the wallet, and that is the one ordering in this list that is not free.
+            // Wallet.LoadFrom brings the heart ledger up to date at once, and how far the
+            // clock is allowed to carry it is the container cap — so a wallet loaded first
+            // would refill to five on a phone that had paid for twenty, until the next HUD
+            // tick quietly corrected it.
+            HeartContainerLedger.LoadFrom(dto);
             Wallet.LoadFrom(dto);
             TipLedger.LoadFrom(dto);
             Progression.CompanionLedger.LoadFrom(dto);
@@ -62,6 +68,15 @@ namespace GlimmerGrove.Persistence
             Daily.DailyStreak.LoadFrom(dto);
             Events.EventCollection.LoadFrom(dto);
             Ads.RewardedAds.LoadFrom(dto);
+
+            // Not loaded from anything — dropped. The bonus wheel's position is the *server's*
+            // count of this account's paid spins today, cached for the session and never stored
+            // (invariant 11b: a count that two devices can both hold is not mergeable). Carrying
+            // one across a replacement would seed the incoming player's first spin from the
+            // outgoing player's place in the day, which is invariant 17 in miniature. Nothing is
+            // lost: a swap is followed by a sync, and until it lands the wheel is not offered.
+            Ads.WheelStand.Forget();
+
             ProgressionStore.LoadFrom(dto);
             CloudState.LoadFrom(dto);
 
@@ -148,6 +163,7 @@ namespace GlimmerGrove.Persistence
             GameSettings.WriteInto(dto);
             Wallet.WriteInto(dto);
             TipLedger.WriteInto(dto);
+            HeartContainerLedger.WriteInto(dto);
             Progression.CompanionLedger.WriteInto(dto);
             Homestead.HomesteadLedger.WriteInto(dto);
             Homestead.GroveLand.WriteInto(dto);
@@ -175,6 +191,12 @@ namespace GlimmerGrove.Persistence
 
             PlayerProgress.LoadFrom(dto);
             GameSettings.LoadFrom(dto);
+            // Before the wallet, and that is the one ordering in this list that is not free.
+            // Wallet.LoadFrom brings the heart ledger up to date at once, and how far the
+            // clock is allowed to carry it is the container cap — so a wallet loaded first
+            // would refill to five on a phone that had paid for twenty, until the next HUD
+            // tick quietly corrected it.
+            HeartContainerLedger.LoadFrom(dto);
             Wallet.LoadFrom(dto);
             TipLedger.LoadFrom(dto);
             Progression.CompanionLedger.LoadFrom(dto);
@@ -185,6 +207,15 @@ namespace GlimmerGrove.Persistence
             Daily.DailyStreak.LoadFrom(dto);
             Events.EventCollection.LoadFrom(dto);
             Ads.RewardedAds.LoadFrom(dto);
+
+            // Not loaded from anything — dropped. The bonus wheel's position is the *server's*
+            // count of this account's paid spins today, cached for the session and never stored
+            // (invariant 11b: a count that two devices can both hold is not mergeable). Carrying
+            // one across a replacement would seed the incoming player's first spin from the
+            // outgoing player's place in the day, which is invariant 17 in miniature. Nothing is
+            // lost: a swap is followed by a sync, and until it lands the wheel is not offered.
+            Ads.WheelStand.Forget();
+
             ProgressionStore.LoadFrom(dto);
             CloudState.LoadFrom(dto);
 

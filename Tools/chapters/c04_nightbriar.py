@@ -19,11 +19,12 @@ Three shapes carry the whole chapter, and they are worth knowing before editing 
 * **a briar cuts its own way.** Whatever the open pair was feeding goes dark.
 * **a briar joins what its thorns were holding apart.** The pair it opens is *merged*, so
   thorns standing between a red network and a blue one blend both the moment they move.
-* **a briar on a cycle wakes the dark.** If the open pair is part of a loop, shutting it
-  costs nothing - the light goes round - so the only thing that changed is the shadow the
-  other pair just let in, and every critter stays lit while the glade refuses to settle.
-  That third one is `CONTENT.md`'s rule about fords, and the briar is what makes it easy to
-  author rather than a happy accident.
+* **a briar on a cycle only answers to the pocket beside it.** If the open pair is part
+  of a loop, shutting it costs the grove nothing - the light goes round - so the only thing
+  that changed is the pocket the other pair just let in on. Every pocket in this chapter
+  carries a heart and a critter of its own, so the wrong turn puts *that* critter out and
+  leaves the whole grove lit. That third one is `CONTENT.md`'s rule about fords, and the
+  briar is what makes it easy to author rather than a happy accident.
 
 Everything the boards do not decide lives in the tables below: the palette each backdrop is
 graded to, the difficulty ramp, where the glades sit on the map, and the strings. `par` is
@@ -136,12 +137,13 @@ def g2(seed, bias):
     b.spin(seed, bias)
     return b
 def g3(seed, bias):
-    """Nightfall 7x6 - the ford on a loop, so the shadow is the only thing that answers.
+    """Nightfall 7x6 - the ford on a loop, so the pocket is the only thing that answers.
 
     The briar in the middle stands on a ring of live conduit. Shutting its way costs
-    nothing at all - the light goes round the other side - so no critter ever tells the
-    player they were wrong. What the same tap does is open the way north, into an island of
-    dark, and a glade with a woken duskcap does not settle however many critters are awake.
+    nothing at all - the light goes round the other side - so no critter on the ring ever
+    tells the player they were wrong. What the same tap does is open the way north, into a
+    pocket of green with a heart of its own, and the red pouring in puts both of its
+    critters out at once.
     """
     b = Board(7, 6)
     b.fill(0, 0, 7, 6)
@@ -153,8 +155,8 @@ def g3(seed, bias):
     b.path((3, 3), (3, 4))
     b.path((2, 2), (3, 2)); b.path((3, 2), (3, 1))
 
-    # the island of dark the thorns are holding out
-    b.duskcap(3, 0)
+    # the pocket of green the thorns are holding out of the red
+    b.source(2, 0, 'G'); b.lamp(3, 0, 'G'); b.lamp(4, 0, 'G')
     b.path((2, 0), (3, 0), (4, 0)); b.path((3, 0), (3, 1))
 
     # the grove below
@@ -273,13 +275,13 @@ def g5(seed, bias):
     b.owe((2, 2), 1); b.owe((4, 4), 1)
     return b
 def g6(seed, bias):
-    """Rootbriar 7x7 - one rune, two brambles, opposite corners, two shadows.
+    """Rootbriar 7x7 - one rune, two brambles, opposite corners, two pockets.
 
     A taproot's members should all be tiles the arms cannot settle, or the binding is a
     hint rather than a decision - and a briar is never settled by its arms. Both of these
-    stand where the light can go round them, so the tap that turns them costs no critter
-    anything at all; what it does is open a pocket of dark at each end of the board, and a
-    glade with a woken duskcap does not settle however many critters are awake.
+    stand where the light can go round them, so the tap that turns them costs the grove no
+    critter at all; what it does is pour red into a pocket of green at each end of the
+    board, and the two critters standing in those pockets are the whole of the warning.
     """
     b = Board(7, 7)
     b.fill(0, 0, 7, 7)
@@ -294,26 +296,26 @@ def g6(seed, bias):
     # the north-west bramble, and the way round it
     b.path((1, 1), (2, 1), (3, 1))
     b.path((1, 1), (1, 2), (2, 2))
-    b.duskcap(2, 0)
+    b.source(1, 0, 'G'); b.lamp(2, 0, 'G'); b.path((1, 0), (2, 0))
 
     # the south-east bramble, and the way round it
     b.path((3, 5), (4, 5), (5, 5))
     b.path((5, 5), (5, 4), (4, 4))
-    b.duskcap(4, 6)
+    b.source(5, 6, 'G'); b.lamp(4, 6, 'G'); b.path((4, 6), (5, 6))
 
     # the grove, hung off the four spokes
-    b.path((1, 1), (0, 1), (0, 0), (1, 0)); b.path((0, 1), (0, 2), (0, 3))
+    b.path((1, 1), (0, 1), (0, 0)); b.path((0, 1), (0, 2), (0, 3))
     b.path((3, 1), (4, 1), (5, 1), (6, 1))
     b.path((4, 1), (4, 0), (3, 0)); b.path((4, 1), (4, 2))
     b.path((5, 1), (5, 2)); b.path((6, 1), (6, 0), (5, 0)); b.path((6, 1), (6, 2))
     b.path((1, 3), (0, 3)); b.path((1, 3), (1, 4), (0, 4))
     b.path((5, 3), (6, 3), (6, 4), (6, 5))
     b.path((1, 4), (1, 5), (0, 5), (0, 6), (1, 6))
-    b.path((5, 5), (6, 5), (6, 6), (5, 6))
+    b.path((5, 5), (6, 5), (6, 6))
     b.path((3, 5), (2, 5), (2, 4)); b.path((2, 5), (2, 6), (3, 6))
 
-    for p in [(1, 0), (3, 0), (5, 0), (4, 2), (5, 2), (6, 2),
-              (0, 4), (2, 4), (1, 6), (3, 6), (5, 6)]:
+    for p in [(0, 0), (3, 0), (5, 0), (4, 2), (5, 2), (6, 2),
+              (0, 4), (2, 4), (1, 6), (3, 6), (6, 6)]:
         b.lamp(p[0], p[1], 'A')
 
     b.spin(seed, bias)
@@ -362,13 +364,13 @@ def g7(seed, bias):
     b.spin(seed, bias)
     return b
 def g8(seed, bias):
-    """The Long Dark 8x7 - a shadow that runs the width of the board, under two bridges.
+    """The Long Lane 8x7 - a green lane that runs the width of the board, under two bridges.
 
-    The grove is a ladder above the shadow and a ladder below it, joined down each side by a
-    column that crosses the dark without touching it. Both brambles stand on those ladders,
+    The grove is a ladder above the lane and a ladder below it, joined down each side by a
+    column that crosses the lane without touching it. Both brambles stand on those ladders,
     so shutting a way costs nothing - the light goes round the rung next to it - and the
-    only thing a wrong turn does is let the shadow into the grove, which nothing on the
-    board will tell you about.
+    only thing a wrong turn does is pour red into the green, which only the lane's own two
+    critters will tell you about.
     """
     b = Board(8, 7)
     b.fill(0, 0, 8, 7)
@@ -376,9 +378,9 @@ def g8(seed, bias):
     b.cross(1, 3, 'NS'); b.cross(6, 3, 'NS')
     b.briar(2, 2, 'EW')
     b.briar(5, 4, 'EW')
-    b.duskcap(0, 3); b.duskcap(7, 3)
+    b.source(4, 3, 'G'); b.lamp(0, 3, 'G'); b.lamp(7, 3, 'G')
 
-    # the shadow, from one edge of the board to the other, under both bridges
+    # the green lane, from one edge of the board to the other, under both bridges
     b.path((0, 3), (1, 3), (2, 3), (3, 3), (4, 3), (5, 3), (6, 3), (7, 3))
 
     # the upper ladder, with the first bramble in its lower rail
@@ -393,7 +395,7 @@ def g8(seed, bias):
     b.path((1, 4), (1, 5)); b.path((3, 4), (3, 5))
     b.path((4, 4), (4, 5)); b.path((6, 4), (6, 5))
 
-    # the two columns, each crossing the shadow on its way down
+    # the two columns, each crossing the lane on its way down
     b.path((1, 2), (1, 3), (1, 4)); b.path((6, 2), (6, 3), (6, 4))
 
     # and the border, hung off the ladders
@@ -414,19 +416,20 @@ def g8(seed, bias):
     b.owe((2, 2), 1)
     return b
 def g9(seed, bias):
-    """Wick and Wane 7x7 - a blend to make, a shadow pinned between two brambles.
+    """Wick and Wane 7x7 - a blend to make, a blue pair pinned between two brambles.
 
     Every critter here wants amber, and amber needs the red heart and the green one joined -
     which they are, across one brittle bramble in the middle of the board and nowhere else.
-    The duskcap below it is held dark by that bramble's thorns on one side and by a second
-    bramble's on the other, and the second one stands on a loop, so nothing will warn you.
+    The blue pair below it is held out of the amber by that bramble's thorns on one side
+    and by a second bramble's on the other, and the second one stands on a loop, so only
+    the pair's own critter will warn you.
     """
     b = Board(7, 7)
     b.fill(0, 0, 7, 7)
     b.source(1, 3, 'R'); b.source(5, 3, 'G')
     b.briar(3, 3, 'EW', fragile=2)
     b.briar(3, 5, 'EW')
-    b.duskcap(3, 4)
+    b.source(2, 4, 'B'); b.lamp(3, 4, 'B'); b.path((2, 4), (3, 4))
 
     # the lane: a heart at each hand of the bramble that joins them
     b.path((0, 3), (1, 3), (2, 3), (3, 3), (4, 3), (5, 3), (6, 3))
@@ -442,14 +445,14 @@ def g9(seed, bias):
     b.path((1, 0), (2, 0), (3, 0))
 
     # the lower grove, hung off the red heart alone, with the second bramble on its loop
-    b.path((1, 3), (1, 4), (1, 5)); b.path((1, 4), (2, 4))
+    b.path((1, 3), (1, 4), (1, 5))
     b.path((1, 5), (0, 5), (0, 4)); b.path((0, 5), (0, 6), (1, 6))
     b.path((1, 5), (2, 5), (2, 6), (3, 6), (4, 6), (4, 5), (5, 5))
     b.path((2, 5), (3, 5), (4, 5))
     b.path((3, 5), (3, 6))
     b.path((5, 5), (5, 6), (6, 6)); b.path((5, 5), (6, 5), (6, 4), (5, 4), (4, 4))
 
-    for p in [(0, 3), (6, 3), (0, 4), (2, 4), (4, 4), (5, 4), (1, 6), (6, 6),
+    for p in [(0, 3), (6, 3), (0, 4), (4, 4), (5, 4), (1, 6), (6, 6),
               (0, 2), (1, 2), (2, 2), (4, 2), (6, 2), (3, 0), (5, 0), (6, 0)]:
         b.lamp(p[0], p[1], 'Y')
 
@@ -461,8 +464,8 @@ def g10(seed, bias):
 
     An amber ridge along the top whose two hearts are joined only through a pair of bound
     brambles; a blue foot along the bottom; two bridges carrying the blue up through a
-    shadow that runs the whole width of the board; and, in the middle of it all, a duskcap
-    pinned between two more brambles - one standing in the dark itself, one brittle.
+    red lane that runs the whole width of the board; and, in the middle of it all, a green
+    pair pinned between two more brambles - one standing in the lane itself, one brittle.
     """
     b = Board(8, 7)
     b.fill(0, 0, 8, 7)
@@ -473,7 +476,8 @@ def g10(seed, bias):
     b.briar(5, 1, 'EW', link='A')
     b.briar(4, 3, 'EW')
     b.briar(4, 5, 'EW', fragile=2)
-    b.duskcap(0, 3); b.duskcap(7, 3); b.duskcap(4, 4)
+    b.source(3, 3, 'R'); b.lamp(0, 3, 'R'); b.lamp(7, 3, 'R')
+    b.source(3, 4, 'G'); b.lamp(4, 4, 'G')
 
     # the amber ridge: red at one hand, green at the other, joined across both brambles
     b.path((0, 1), (1, 1), (2, 1), (3, 1), (4, 1), (5, 1), (6, 1), (7, 1))
@@ -483,7 +487,7 @@ def g10(seed, bias):
     b.path((0, 1), (0, 2), (1, 2)); b.path((7, 1), (7, 2), (6, 2))
     b.path((3, 1), (3, 2), (4, 2))
 
-    # the shadow, running the width of the board under both bridges
+    # the red lane, running the width of the board under both bridges
     b.path((0, 3), (1, 3), (2, 3), (3, 3), (4, 3), (5, 3), (6, 3), (7, 3))
 
     # the blue foot, and the two columns it sends up through the bridges
@@ -491,13 +495,13 @@ def g10(seed, bias):
     b.path((2, 5), (2, 4), (2, 3)); b.path((2, 3), (2, 2))
     b.path((5, 5), (5, 4), (5, 3)); b.path((5, 3), (5, 2))
     b.path((0, 5), (0, 4)); b.path((1, 5), (1, 4)); b.path((6, 5), (6, 4))
-    b.path((7, 5), (7, 4)); b.path((2, 4), (3, 4))
+    b.path((7, 5), (7, 4)); b.path((3, 4), (4, 4))
     b.path((0, 5), (0, 6), (1, 6)); b.path((3, 5), (3, 6), (2, 6))
     b.path((3, 6), (4, 6)); b.path((7, 5), (7, 6), (6, 6), (5, 6))
 
     for p in [(0, 0), (2, 0), (3, 0), (5, 0), (7, 0), (1, 2), (6, 2), (4, 2)]:
         b.lamp(p[0], p[1], 'Y')
-    for p in [(0, 4), (1, 4), (3, 4), (6, 4), (7, 4), (1, 6), (2, 6), (5, 6), (6, 6)]:
+    for p in [(0, 4), (1, 4), (6, 4), (7, 4), (1, 6), (2, 6), (5, 6), (6, 6)]:
         b.lamp(p[0], p[1], 'B')
 
     b.spin(seed, bias)
@@ -517,11 +521,6 @@ PALETTE = {
     "c04_the_nightbriar_knot": ("#D96BFF", "#20122E"),
 }
 
-# The ramp. The default is 1.70 seconds per par turn. The Shallows ran 2.20 to 1.50, the
-# Mill Vale 1.95 to 1.55 and the Amberwood 1.85 to 1.50; a fourth chapter opens a notch
-# tighter than the third and closes one notch past it, with the usual slack on the glade
-# that teaches the new rule.
-TIME = [1.90, 1.80, 1.80, 1.75, 1.70, 1.65, 1.60, 1.55, 1.50, 1.45]
 
 # Walked up the map, alternating sides. Six strips is 7200 canvas units tall, so the
 # nearest pair is about 620 apart against a 220-unit floor.
@@ -539,13 +538,14 @@ TEXT = {
         "The Shut Way",
         "The only ground where red and blue may meet",
         "The lane across the middle has a heart at each end, so it is blossom. Above and "
-"below it the groves must stay pure - and the thorns are the whole of what keeps "
+"below it the grooves must stay pure - and the thorns are the whole of what keeps "
 "them that way."),
     "c04_nightfall": (
         "Nightfall",
-        "The loop forgives the turn; the shadow does not",
+        "The loop forgives the turn; the green pocket does not",
         "This bramble stands on a ring, so shutting its way costs nothing at all and no "
-"critter will tell you. What the same tap opens is the way north, into the dark."),
+"critter on the ring will tell you. What the same tap opens is the way north, into "
+"the green pocket, and its two go out together."),
     "c04_bramble_and_bridge": (
         "Bramble and Bridge",
         "Four arms, two meanings",
@@ -566,27 +566,27 @@ TEXT = {
 "and the tap is charged once."),
     "c04_three_thorns": (
         "Three Thorns",
-        "Three groves, and every bramble a colour",
+        "Three grooves, and every bramble a colour",
         "Red, green and blue, each pure, each within a tile of the others. Every bramble "
 "here stands on the one square where two of them could meet."),
     "c04_the_long_dark": (
-        "The Long Dark",
-        "A shadow under the grove, forded twice",
-        "The bridges carry the dark beneath the light without touching it. The brambles "
-"decide whether it stays that way - and both of them stand on loops, so nothing on "
-"the board will warn you."),
+        "The Long Lane",
+        "A green lane under the groove, forded twice",
+        "The bridges carry the green lane beneath the light without touching it. The "
+"brambles decide whether it stays that way - and both of them stand on loops, so "
+"only the lane's own two will tell you."),
     "c04_wick_and_wane": (
         "Wick and Wane",
-        "A blend to make, a shadow to leave alone",
+        "A blend to make, and a blue pair to leave alone",
         "Amber wants a red heart and a green one joined, and the only ground where they "
-"can be joined is a brittle bramble standing beside the dark. Two turns of stone, "
-"one turn needed."),
+"can be joined is a brittle bramble standing beside a blue pair of its own. Two "
+"turns of stone, one turn needed."),
     "c04_the_nightbriar_knot": (
         "The Nightbriar Knot",
         "Everything the wood has taught, tied once",
         "Two bridges, four brambles - two of them on one rune in opposite corners, one of "
 "them brittle - an amber ridge that can only be joined across the middle, and a "
-"shadow running the width of the board beneath all of it."),
+"red lane running the width of the board beneath all of it."),
 }
 
 # The ladder. Par is length rather than difficulty, so it is deliberately not monotonic -
@@ -638,7 +638,6 @@ def chapter_json(built):
         level["height"] = board.h
         level["mapX"] = MAPX[i]
         level["mapY"] = MAPY[i]
-        level["timeFactor"] = TIME[i]
         if i > 0:                       # the first glade inherits the chapter's palette
             a, s = PALETTE[lid]
             level["accent"] = a
@@ -690,9 +689,8 @@ def main():
         board, seed, bias, warns = built[lid]
         r = board.reading()
         print(f"{i + 1:>2} {lid:<26} {board.w}x{board.h} par {board.par():<3} "
-              f"clock {int(board.par() * TIME[i]):>3}s  tf {TIME[i]:.2f}  "
               f"glance {len(r['glance']):>2}/{r['tiles']:<3} arms {r['solutions']:>3} "
-              f"wins {r['wins']}  colour {r['colour_only']:>3} dark {r['dark_only']:>3}  "
+              f"wins {r['wins']}  colour {r['colour_only']:>3}  "
               f"(seed {seed}, bias {bias})"
               + ("  WARN " + "; ".join(warns) if warns else ""))
 

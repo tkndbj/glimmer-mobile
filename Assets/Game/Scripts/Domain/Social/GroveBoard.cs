@@ -239,7 +239,7 @@ namespace GlimmerGrove.Social
         /// Called from <see cref="CloudSaveService.Tick"/> rather than from <c>Boot</c>
         /// directly, so the board follows the save's lifecycle exactly and there is one place
         /// that has to be wired instead of two. Elapsed time is handed in a frame at a time
-        /// for <c>RunClock</c>'s reason: a device clock can jump, and a cache aged against one
+        /// for <c>RunScreen.Tick</c>'s reason: a device clock can jump, and a cache aged against one
         /// would either never expire or expire on every frame.
         /// </para>
         /// </summary>

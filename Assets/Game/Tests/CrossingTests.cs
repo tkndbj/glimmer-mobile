@@ -13,7 +13,7 @@ namespace GlimmerGrove.Tests
     /// splitting a cell rather than by changing what a join means — the traversal walks
     /// <em>strands</em>, of which every other tile has one. Everything above that walk is
     /// untouched, which is what these tests are mostly here to pin: colour, winning, par, the
-    /// near-miss reading and the duskcap rule all still behave exactly as they did, and the
+    /// near-miss reading and the win rule all still behave exactly as they did, and the
     /// only difference is which cells are in which network.
     /// </para>
     /// <para>
@@ -290,30 +290,41 @@ namespace GlimmerGrove.Tests
 
         // ------------------------------------------------------------- what it unlocks
         /// <summary>
-        /// The board shape chapter one could not author: a dark island running <em>through</em>
-        /// a live network rather than beside it.
+        /// The board shape chapter one could not author: a second network running
+        /// <em>through</em> a live one rather than beside it.
         ///
-        /// Every arm mates in the solution, so a lit cell's neighbours are lit — which is why a
-        /// duskcap and its conduits used to have to be their own separate island. A crossing is
-        /// the exception, and the whole reason the rule was worth revisiting.
+        /// Every arm mates in the solution, so a lit cell's neighbours are lit — which is why
+        /// two networks that must stay apart used to have to be separate islands with a gap
+        /// between them. A crossing is the exception, and the whole reason the rule was worth
+        /// revisiting: green passes north to south through the same tile red passes east to
+        /// west, and neither ever reaches the other's critter.
         /// </summary>
         [Test]
-        public void ADarkIslandCanRunThroughALiveNetworkAcrossACrossing()
+        public void ASecondNetworkCanRunThroughALiveOneAcrossACrossing()
         {
             var rows = new[]
             {
-                ". xS/0 .",
+                ". *S#G/0 .",
                 "*E#R/0 =EW+NS/0 @W#R/0",
-                ". xN/0 .",
+                ". @N#G/0 .",
             };
 
             var board = Board(rows);
-            Assert.AreEqual(2, board.DuskcapCount);
-            Assert.AreEqual(0, board.DuskcapsWoken, "the dark strand reaches no heart-crystal");
+            int i = board.Idx(1, 1);
+
+            Assert.AreEqual(1, board.CrossingCount);
+            Assert.AreEqual(Energy.R, board.EnergyOn(i, 0));
+            Assert.AreEqual(Energy.G, board.EnergyOn(i, 1),
+                            "the two strands never meet, so neither picks up the other's colour");
             Assert.IsTrue(board.Won);
 
             var report = LevelValidator.Validate(Level(rows));
             Assert.IsFalse(report.HasErrors, string.Join("; ", report.Issues));
+
+            // And it is a tile the board settles: turning it hands each critter the other's
+            // colour, so `CheckDecidableTiles` has nothing to say about it.
+            foreach (var issue in report.Issues)
+                Assert.IsFalse(issue.Message.Contains("still finishes the glade"), issue.Message);
         }
 
         // -------------------------------------------------------------- the validator

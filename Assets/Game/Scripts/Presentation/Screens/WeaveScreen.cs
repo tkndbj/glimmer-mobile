@@ -12,7 +12,7 @@ namespace GlimmerGrove
 {
     /// <summary>
     /// Lightweave's screen, and the first of the new modes to be a <em>run</em> rather than a
-    /// prototype: it costs a heart, it is timed, and it pays stars, credits and XP.
+    /// prototype: it costs a heart, it can be lost, and it pays stars, credits and XP.
     ///
     /// <para>
     /// Everything about the ending goes through <see cref="RunLedger"/> — the record, the daily
@@ -21,22 +21,29 @@ namespace GlimmerGrove
     /// board, share the run.
     /// </para>
     /// <para>
-    /// <b>The clock is the grade.</b> The move thresholds are switched off and the star lines are
-    /// derived from the length of the grove's own solution, so a knottier board allows more time
-    /// for the same three stars and nobody has to author a number. What is stored is elapsed
-    /// play time, never time left — the same property <c>CountdownTests</c> protects for glades,
-    /// which is why the map badge and the published deciles needed no change to accept a mode
-    /// that is graded entirely on speed.
+    /// <b>The cell count is the grade and the fail state, and it is one number.</b> A weave has
+    /// no turns, so what it is measured on is the light its channels spent — a cell per cell
+    /// covered — against the same three lines every glade is held to, over a par that is the sum
+    /// of the pairs' own shortest routes plus a cell of looking for each decision
+    /// (<c>WeaveLayout.Par</c>). A taut arrangement comes in well under and sprawl does not,
+    /// which is the mode's own difficulty reading seen from the player's side (invariant 20f).
+    /// </para>
+    /// <para>
+    /// <b>The third line is new and it is why this file grew.</b> Until it arrived a weave could
+    /// not be lost at all — only forfeited — which invariant 22a wrote down as the thing to fix
+    /// before the mode grew, and named the fix: a budget in the unit it is graded in, never a
+    /// clock coming back. So the same <c>par × budgetFactor</c> is dealt as ink
+    /// (<c>WeaveInk</c>), the readout counts it down, and the run ends the moment the grove
+    /// provably cannot be finished with what is left. Two channels a grove may be handed back
+    /// free; everything past that is paid for.
     /// </para>
     /// </summary>
     public sealed class WeaveScreen : ModeScreen
     {
         WeaveView _view;
-        readonly RunClock _clock = new RunClock();
 
-        bool _committed, _finished, _closing;
+        bool _finished, _closing;
         float _startedAt;
-        int _paintedSeconds = -1;
 
         RectTransform _notice;
         Text _noticeLine;
@@ -44,7 +51,45 @@ namespace GlimmerGrove
 
         WeaveRules Rules => Level.RulesAs<WeaveRules>();
 
-        protected override Vector4 HostInset => new Vector4(24f, 190f, 24f, 330f);
+        /// <summary>
+        /// The band under the board carries the undo key and, when the grove needs it, the
+        /// standing line — so it is deeper here than the 190 this used to ask for. A permanent
+        /// control the player reaches for constantly is worth the cells it costs the grove.
+        ///
+        /// Where the three things in that band sit is <c>WeaveBand</c>, in Domain, so that "they
+        /// do not overlap" is a test rather than a paragraph. See the remarks there for why that
+        /// is not over-engineering: the paragraph was wrong the first time it was written.
+        /// </summary>
+        protected override Vector4 HostInset
+            => new Vector4(24f, WeaveBand.BoardFloor, 24f, 350f);
+
+        /// <summary>Which slot the ink sits in — the only one, and what a lesson rings.</summary>
+        const int InkReadout = 0;
+
+        /// <summary>
+        /// The top-right key pauses rather than restarting: a restart deals a fresh pot of ink,
+        /// so on this mode it is the cheapest way out of a grove going wrong and must not be a
+        /// single tap beside a board being dragged across. The restart is still there, one
+        /// deliberate tap inside — <c>PauseOverlay</c> is entirely mode-agnostic.
+        /// </summary>
+        protected override HeaderKey RightKey => new HeaderKey("ic_pause", Pause);
+
+        void Pause()
+        {
+            if (_finished || _closing) return;
+
+            // Latched here and handed back by the panel's OnDestroy, which is the only way out
+            // it has that every exit takes — see PauseOverlay.
+            if (_view != null) _view.Locked = true;
+            Flow.Modal<PauseOverlay>(v => v.Screen = this);
+        }
+
+        /// <summary>
+        /// The light this grove is dealt: the ordinary <c>par × budgetFactor</c>, in cells.
+        /// <c>int.MaxValue</c> — which is <c>WeaveInk.Unlimited</c> — for a grove authored
+        /// without one.
+        /// </summary>
+        int InkBudget => Level != null ? Level.Tuning.MoveBudget : WeaveInk.Unlimited;
 
         protected override void Play()
         {
@@ -59,16 +104,17 @@ namespace GlimmerGrove
             // The run is decided when the last channel lands, and the panel opens a second and a
             // half later while the cascade plays. Everything that could still end the run has to
             // stop at the first of those two moments, not the second — see WeaveView.Finishing.
-            _view.Finishing = () => _closing = true;
+            _view.Finishing = () => { _closing = true; Teaching.Refresh(); PaintUndo(); };
 
             _closing = false;
-            _view.Begin(Host, rules.LayoutFor(Level.Id));
+            _view.Begin(Host, rules.LayoutFor(Level.Id), InkBudget);
 
             BuildNotice();
+            BuildUndo();
             PaintNotice();
+            PaintUndo();
 
             _startedAt = Time.unscaledTime;
-            _clock.Reset(Level.Tuning.HasTimeLimit ? Level.Tuning.TimeLimitMillis : 0);
 
             PlayerProgress.NoteOpened(Level.Id);
             LevelAnalytics.TrackStarted(Level, PlayerProgress.Record(Level.Id).Clears + 1);
@@ -76,9 +122,16 @@ namespace GlimmerGrove
 
         void OnChanged()
         {
-            _paintedSeconds = -1;
             Repaint();
             PaintNotice();
+            PaintUndo();
+            Teaching.Refresh();
+
+            // Asked here rather than from Update, because this is raised on exactly the edges
+            // that can end a run — a channel landing, a channel handed back, a restart — and a
+            // poll would be asking a board that has not moved, hundreds of times a second, a
+            // question that walks every pair.
+            CheckLost();
         }
 
         // ------------------------------------------------------------------ the one sentence
@@ -107,7 +160,7 @@ namespace GlimmerGrove
         /// <para>
         /// <b>Why a standing line and not a toast.</b> The rule itself is taught once, as a
         /// modal, by <see cref="Mechanic.WeaveBead"/> — that is this project's answer for a rule
-        /// no board can demonstrate, and the duskcap already has it. But a lesson read once,
+        /// no board can demonstrate. But a lesson read once,
         /// weeks ago, is not what somebody needs at the moment the screen appears to be stuck:
         /// they need the reason on screen, now, for as long as the state lasts. So this is drawn
         /// while the state holds and taken down the instant it clears.
@@ -120,16 +173,22 @@ namespace GlimmerGrove
         /// being asked for, and shrinking the board for a line that is usually absent taxes every
         /// run for one state.
         /// </para>
+        /// <para>
+        /// It sits <em>above</em> the undo key rather than beside it. Side by side is how a wide
+        /// plate and a round button end up overlapping on the one aspect ratio nobody checked,
+        /// and stacking costs nothing: the plate is up for a handful of seconds in a run that has
+        /// one, and the key below it is the control this line is asking the player to reach for.
+        /// </para>
         /// </summary>
         void BuildNotice()
         {
             if (_notice) return;
 
-            _notice = UIKit.Box("Unfinished", Safe, new Vector2(0f, 132f), new Vector2(.5f, 0f),
-                                new Vector2(0f, 100f));
+            _notice = UIKit.Box("Unfinished", Safe, new Vector2(0f, WeaveBand.NoticeHeight),
+                                new Vector2(.5f, 0f), new Vector2(0f, WeaveBand.NoticeCentre));
             _notice.anchorMin = new Vector2(0f, 0f);
             _notice.anchorMax = new Vector2(1f, 0f);
-            _notice.sizeDelta = new Vector2(-56f, 132f);
+            _notice.sizeDelta = new Vector2(-56f, WeaveBand.NoticeHeight);
 
             var plate = UIKit.Img("Plate", _notice, Art.Round(28),
                                   new Color(.05f, .11f, .16f, .86f));
@@ -200,131 +259,306 @@ namespace GlimmerGrove
             Tween.Pop(_notice, .86f, .28f);
         }
 
-        // ------------------------------------------------------------------ the clock
+        // ------------------------------------------------------------------ taking one back
+        Btn _undo;
+        Text _undoCount;
+        bool _undoLive = true;
+
         /// <summary>
-        /// Time accrues while the board can actually be acted on, so a panel over the top costs
-        /// nothing and a backgrounded app contributes nothing because no frames run.
+        /// The undo key: bottom centre, with what is left of it written on its shoulder.
         ///
-        /// It starts when the grove becomes playable rather than on the first line drawn: a
-        /// countdown a player can hold at full by not touching anything lets them plan the whole
-        /// route for free and then trace it, which removes exactly the pressure the limit is for.
+        /// <para>
+        /// <b>Bottom centre because it is the only control on this screen a hand reaches for
+        /// mid-thought.</b> Everything else here — back, pause, the "i" — is a decision about the
+        /// session, and those belong in the corners a thumb does not brush. Undo is part of
+        /// playing, it is pressed with the same hand that just drew the channel it is undoing,
+        /// and it is the one thing the mode now offers in place of the tap-to-erase it took away.
+        /// </para>
+        /// <para>
+        /// <b>The badge is not decoration.</b> Two per grove is a real bound (<c>WeaveStrokes.Allowance</c>)
+        /// and the difference between the second press and the third is the difference between a
+        /// free correction and paying for one — so the count has to be readable before the press,
+        /// not discovered by the key going dead. It is the hint pool's badge, in the same place on
+        /// the same square, because a player who has met one should not have to learn the other.
+        /// </para>
         /// </summary>
-        void Update()
+        void BuildUndo()
+        {
+            if (_undo) return;
+
+            _undo = UIKit.IconButton("Undo", Safe, "sq_blue", "ic_undo",
+                                     new Vector2(WeaveBand.UndoSize, WeaveBand.UndoSize),
+                                     new Vector2(.5f, 0f),
+                                     new Vector2(0f, WeaveBand.UndoCentre), Undo);
+
+            var badge = UIKit.Img("Badge", _undo.transform, Art.Disc(64), Pal.Rose,
+                                  new Vector2(58f, 58f), new Vector2(1f, 1f),
+                                  new Vector2(-16f, -16f));
+            _undoCount = UIKit.Titled("N", badge.transform, "0", 34, Pal.Cream,
+                                      TextAnchor.MiddleCenter, outline: 0f, shadow: 2f);
+        }
+
+        void Undo()
         {
             if (_view == null || _finished || _closing) return;
 
-            // The view's latch and the run's are two different questions. The first says the
-            // grove cannot be drawn on right now — a panel, a cascade, the closing sequence —
-            // and is this screen's to answer. The second says this run has not been allowed to
-            // begin at all: the screen is still being presented, or a first-timer is reading a
-            // lesson. Tick asks that one, and nothing else here may run the clock. See
-            // RunScreen.Hold.
-            if (!Tick(_clock, !_view.Locked)) return;
-
-            // Handed the elapsed time and the limit rather than the time left: Remaining answers
-            // zero for an untimed grove, which is indistinguishable from "out of light" to
-            // anything reading it directly. WeaveTempo.Urgency cannot make that mistake.
-            _view.Urgency = WeaveTempo.Urgency(
-                _clock.Millis, Level.Tuning.HasTimeLimit ? Level.Tuning.TimeLimitMillis : 0);
-
-            int seconds = Remaining / 1000;
-            if (seconds != _paintedSeconds)
-            {
-                _paintedSeconds = seconds;
-                Repaint();
-            }
-
-            if (Level.Tuning.HasTimeLimit && _clock.Millis >= Level.Tuning.TimeLimitMillis)
-                TimeUp();
+            // The model owns whether this can happen, and the key is already greyed when it
+            // cannot — so a refusal here is a race rather than a state the player is in, and it
+            // says so quietly rather than doing nothing at all.
+            if (!_view.Undo()) Audio.Sfx("blocked", .3f);
         }
 
-        int Remaining
+        /// <summary>
+        /// Greys the key when there is nothing to undo, and keeps the badge honest.
+        ///
+        /// Greyed rather than hidden, which is <c>RunScreen.RefreshReview</c>'s rule for the same
+        /// reason: a control that comes and goes is one the player cannot learn the position of,
+        /// and this one they are meant to find without looking.
+        /// </summary>
+        void PaintUndo()
         {
-            get
-            {
-                if (!Level.Tuning.HasTimeLimit) return 0;
+            var run = _view != null ? _view.Run : null;
+            if (run == null) return;
 
-                int left = Level.Tuning.TimeLimitMillis - _clock.Millis;
-                return left < 0 ? 0 : left;
+            // Guarded against setting the same value twice, because Btn.Interactable repaints
+            // the face — and this is called on every drag that lands. RunScreen.RefreshReview's
+            // rule, on the control right beside it.
+            bool live = run.CanUndo && !_finished && !_closing;
+            if (_undo && live != _undoLive)
+            {
+                _undoLive = live;
+                _undo.Interactable = live;
             }
+
+            if (!_undoCount) return;
+
+            string text = run.UndosLeft.ToString();
+            if (_undoCount.text == text) return;
+
+            _undoCount.text = text;
+            Tween.Punch(_undoCount.transform, .22f, .3f);
         }
 
         // ------------------------------------------------------------------ the stake
         /// <summary>
-        /// Noted on disk the moment the first channel lands, so the process dying does not make
-        /// the run free. See <see cref="RunGuard"/> — <c>Boot</c> charges anything still written
-        /// down at the next launch.
+        /// What this run is staked on, and how it is written down when it is walked away from.
+        ///
+        /// <para>
+        /// Everything else about the stake — the heart, the confirmation, <c>RunGuard</c> and
+        /// what a restart costs — is <see cref="RunScreen"/>'s, and it is worth saying why. This
+        /// screen used to carry its own copy of all four, and its restart quietly never called
+        /// them: a restart here was free, and since a restart also deals a fresh pot of ink, the
+        /// mode's whole fail state could be walked out of for nothing. It was found by playing
+        /// it, which is the only way it could have been found.
+        /// </para>
+        /// <para>
+        /// The closing cascade counts as over. That second and a half after the last channel
+        /// lands is a window in which the run is decided and the screen does not know it yet, so
+        /// a forfeit taken during it would charge a heart for a grove already won.
+        /// </para>
         /// </summary>
-        void Commit()
-        {
-            if (_committed || Level == null) return;
+        protected internal override LevelId StakeLevel => Level != null ? Level.Id : LevelId.None;
 
-            _committed = true;
-            RunGuard.Begin(Level.Id);
-        }
+        protected override bool RunOver => _finished || _closing;
 
-        void Resolve()
+        protected override void NoteAbandoned(string reason)
         {
-            _committed = false;
-            RunGuard.Resolve();
-        }
-
-        /// <summary>
-        /// The player walked away from a run that had begun. It costs exactly what losing it
-        /// costs, because that is what it is — and note what it does not do: a forfeit feeds
-        /// neither the chests nor the streak, which are for runs that were finished.
-        /// </summary>
-        void Forfeit(string reason)
-        {
-            if (!_committed) return;
+            if (Level == null) return;
 
             LevelAnalytics.TrackAbandoned(Level, _view?.Run?.Joined ?? 0,
                                           Time.unscaledTime - _startedAt, reason);
-            Wallet.TrySpendHeart();
-            Resolve();
-        }
-
-        void ConfirmForfeit(ForfeitOverlay.Kind kind, string reason, Action then)
-        {
-            // A grove already won is not forfeited on the way out of it, so leaving during the
-            // closing cascade costs nothing and asks nothing.
-            if (!_committed || _finished || _closing) { then(); return; }
-
-            if (_view != null) _view.Locked = true;
-
-            Flow.Modal<ForfeitOverlay>(v =>
-            {
-                v.Choice = kind;
-                v.OnConfirm = () => { Forfeit(reason); then(); };
-                v.OnCancel = Resume;
-            });
         }
 
         // ------------------------------------------------------------------ endings
+        /// <summary>
+        /// Ends the run the moment the grove provably cannot be finished with the light left.
+        ///
+        /// <para>
+        /// <b>At the moment it becomes true, not when the pot hits nought.</b> Those are
+        /// different, and the gap between them is the state this mode must never produce: a
+        /// player drawing and redrawing on a board that cannot be finished, with a number on
+        /// screen that has not reached zero yet and nothing telling them it is over. The model
+        /// answers both halves — the light left cannot cover the cheapest possible finish, or
+        /// there is no channel left anywhere that could be afforded — and both are lower bounds,
+        /// so a grove that could still be won is never the one that ends. See
+        /// <c>WeaveRun.IsLost</c>.
+        /// </para>
+        /// <para>
+        /// <b>Only once the run has been paid for.</b> An unbounded grove is never lost, and a
+        /// board that somehow arrived unwinnable before the player had drawn anything would be a
+        /// content fault — <c>WeaveMode.Validate</c> fails the build on one — and must not
+        /// charge a heart for it.
+        /// </para>
+        /// </summary>
+        void CheckLost()
+        {
+            var run = _view != null ? _view.Run : null;
+            if (run == null) return;
+
+            // The whole condition, in one Domain predicate that a test can hold to it. It used
+            // to be three booleans in an if on this line, which is the shape this project keeps
+            // paying for: every one of them is an edge where the run is decided and the screen
+            // has not caught up, and a condition spread across them cannot be proved.
+            if (run.Verdict.EndsTheRun(live: !RunOver, committed: Committed))
+                Defeat();
+        }
+
+        /// <summary>
+        /// The grove ran out of light. Charged, recorded and reported exactly as a glade's
+        /// defeat is — <see cref="RunLedger.Loss"/> owns the heart, the streak, the chest count
+        /// and the analytics, so there is no second copy here of what losing a run does.
+        /// </summary>
+        void Defeat()
+        {
+            if (_finished) return;
+
+            // Locked before anything else and left locked for as long as the player is
+            // deciding: this mode's board takes drags rather than taps, so a scrim is not on
+            // its own enough to keep a finger off it.
+            if (_view != null) _view.Locked = true;
+            PaintNotice();
+            PaintUndo();
+
+            // The offer first, the defeat only if it is declined — see
+            // RunContinueFlow.OfferOrLose. Nothing below runs until the player has said no, which
+            // is what keeps a continued grove from being recorded as a loss, counted towards a
+            // chest or charged a heart.
+            Continue.OfferOrLose(Concede);
+        }
+
+        /// <summary>A weave is measured in cells of light, so that is what a continue sells.</summary>
+        protected internal override ContinueUnit MeasuredIn => ContinueUnit.Ink;
+
+        /// <summary>
+        /// How much light has to be restored before a bought cell is a usable cell.
+        ///
+        /// <para>
+        /// <b>Not nought, unlike a glade's</b>, and this is the reason the whole notion of a
+        /// deficit exists. A grove is not lost when the meter reads zero — it is lost when
+        /// what is left cannot cover the cheapest possible finish, so there is usually light in
+        /// the pot and none of it spendable. Selling the authored twenty cells alone would put
+        /// the player back on a board that is still provably unwinnable and end the run again
+        /// in the same frame, having taken their gems. <c>WeaveVerdict</c> already computes
+        /// both lower bounds to decide the loss; this is that same reading, kept.
+        /// </para>
+        /// </summary>
+        protected internal override int ContinueDeficit
+        {
+            get
+            {
+                var run = _view != null ? _view.Run : null;
+                return run == null ? RunContinue.NoContinue : run.Verdict.Deficit;
+            }
+        }
+
+        /// <summary>
+        /// The light was paid for: deal it into the pot and hand the grove back.
+        ///
+        /// <para>
+        /// <see cref="OnChanged"/> rather than a bare repaint, deliberately. It is the edge
+        /// every other change on this board raises, so the readout, the standing line, the undo
+        /// key and — crucially — <see cref="CheckLost"/> all run. If a grant somehow left the
+        /// grove unwinnable the run reaches its fail state again and the player is <em>asked
+        /// again</em> rather than silently left on a dead board.
+        /// </para>
+        /// </summary>
+        protected internal override void ContinueWith(int cells)
+        {
+            var run = _view != null ? _view.Run : null;
+            if (run == null) return;
+
+            run.Ink.Grant(cells);
+
+            _view.Locked = false;
+            Audio.SfxVaried("whoosh", .45f);
+
+            OnChanged();
+        }
+
+        /// <summary>
+        /// The grove ran out of light for good. Charged, recorded and reported exactly as a
+        /// glade's defeat is — <c>RunLedger.Loss</c> owns the heart, the streak, the chest
+        /// count and the analytics, so there is no second copy here of what losing a run does.
+        ///
+        /// This was <c>Defeat</c> in full until a lost run could be carried on; nothing in it
+        /// changed, it simply runs after the offer rather than instead of one.
+        /// </summary>
+        void Concede()
+        {
+            if (_finished) return;
+
+            _finished = true;
+            Resolve();
+
+            if (_view != null) _view.Locked = true;
+            PaintNotice();
+            PaintUndo();
+
+            // Read off the board before the panel that offers a retry rebuilds it.
+            var run = _view.Run;
+
+            // No near miss, and it is not an omission. That line is measured in turns from the
+            // solution, which a weave has no notion of — a grove is one drag from finished or
+            // twenty depending on nothing the player can be told in a sentence — so it is left
+            // at nought, where RunOutcome.NearMiss reads it as "not close" and says nothing.
+            var done = RunLedger.Loss(Level, DefeatReason.OutOfInk, Math.Max(1, run.Ink.Spent),
+                                      Time.unscaledTime - _startedAt, 0, route: 0,
+                                      stepsToSolution: 0,
+                                      lit: run.Joined, wanted: run.Pairs,
+                                      staked: Staked);
+
+            Flow.Modal<DefeatOverlay>(v =>
+            {
+                v.Screen = this;
+                v.Run = done.Run;
+                v.Streak = done.Streak;
+                v.HeartsLeft = done.HeartsLeft;
+                v.HeartWasCharged = done.HeartCharged;
+                v.WasFree = done.WasFree;
+            });
+        }
+
         void Solve()
         {
             if (_finished) return;
             _finished = true;
 
             Resolve();
-            _clock.Stop();
             if (_view != null) _view.Locked = true;
             PaintNotice();
+            PaintUndo();
 
-            // Graded on the clock alone: the move count is not a thing this mode has, so it is
-            // handed the one that cannot cost a star and the time decides everything.
-            int stars = Level.Tuning.StarsFor(1, _clock.Millis);
+            // Graded on the light this run spent, against the same thresholds every glade uses,
+            // over a par that is the sum of every pair's own shortest route plus a cell of
+            // looking per pair and per bead (WeaveLayout.Par). A taut arrangement comes in well
+            // under it and sprawl does not, which is exactly what the mode's own difficulty
+            // reading measures (invariant 20f).
+            //
+            // It is the ink rather than `Occupied`, and the difference is only ever a redraw:
+            // WeaveTests.ARunWithNoRedrawInItSpendsExactlyWhatItOccupies is that claim, pinned.
+            // Note what this quietly re-points, because nothing else would say so: a weave record
+            // written before the ink existed was `Occupied`, which for a run with redraws in it
+            // is the smaller number — so an old record is at worst marginally harder to beat, and
+            // the published deciles carry both readings until the next rebuild. Nothing earned
+            // moves: stars are stored and only ever promoted, and credits derive from the star
+            // ledger rather than from the count (invariant 22).
+            // for a run with none they are the same number, because a channel costs a cell per
+            // cell it covers. Where they part is the run that drew a channel, thought better of
+            // it and drew it again — and the ink is the honest reading of that one, because the
+            // light really was spent. It also means the meter on screen and the grade at the end
+            // are one number rather than two that can disagree, which is what makes "keep some
+            // ink back and you keep your stars" a thing a player can hold in their head.
+            int cells = Math.Max(1, _view.Run.Ink.Spent);
+            int stars = Level.Tuning.StarsFor(cells);
 
             // No route, deliberately, and it is the same argument that took "56 points" off
-            // the map node. The victory panel can compare a run against the board's own solution
-            // and say something kind about a near-perfect one — but a weave has no move count to
-            // compare, so this mode was handing it par as both the run and the route. Every
-            // player who ever finished a grove therefore got the same sentence, in a unit this
-            // mode does not have: "not one turn wasted". A line identical for everybody carries
-            // no information, and one measured in turns on a board that has none is worse than
-            // none. A weave is graded on the clock, which the panel already shows.
-            var done = RunLedger.Win(Level, stars, Math.Max(1, _view.Run.Grove.Par),
-                                     _clock.Millis, Time.unscaledTime - _startedAt, 0,
+            // the map node. The victory panel compares a run against the board's own carved
+            // solution, and a weave's is one arrangement out of many that are equally good —
+            // so a route bar here would print the same verdict for every player who ever
+            // finished. What the run does carry now is a real count: the cells it took, which
+            // is what it was graded on and what its record and its standing are measured in.
+            var done = RunLedger.Win(Level, stars, Math.Max(1, cells),
+                                     Time.unscaledTime - _startedAt, 0,
                                      route: 0,
                                      lit: _view.Run.Pairs, wanted: _view.Run.Pairs);
 
@@ -339,62 +573,51 @@ namespace GlimmerGrove
                 v.XpGained = done.Xp;
                 v.CreditsGained = done.Credits;
                 v.GoldenPercent = done.GoldenPercent;
-            });
-        }
-
-        void TimeUp()
-        {
-            if (_finished) return;
-            _finished = true;
-
-            Resolve();
-            _clock.Stop();
-            if (_view != null) _view.Locked = true;
-            PaintNotice();
-
-            var run = _view.Run;
-            // Routeless for Solve's reason, one panel over.
-            var done = RunLedger.Loss(Level, DefeatReason.OutOfTime, run.Joined, _clock.Millis,
-                                      Time.unscaledTime - _startedAt, 0, route: 0,
-                                      stepsToSolution: run.Pairs - run.Joined,
-                                      lit: run.Joined, wanted: run.Pairs);
-
-            Flow.Modal<DefeatOverlay>(v =>
-            {
-                v.Screen = this;
-                v.Run = done.Run;
-                v.Streak = done.Streak;
-                v.HeartsLeft = done.HeartsLeft;
-                v.HeartWasCharged = done.HeartCharged;
+                v.ChapterOpened = done.ChapterOpened;
             });
         }
 
         // ------------------------------------------------------------------ readouts
-        protected override void Readouts(out string leftCap, out string left, out string middleCap,
-                                         out string middle, out string rightCap, out string right)
+        /// <summary>
+        /// One number: the light left to draw with.
+        ///
+        /// <para>
+        /// <b>Remaining rather than spent</b>, which is the glade's rule for its move budget and
+        /// is the same argument — a budget the player has to subtract in their head is not one
+        /// they can plan against, and once it is low the number itself is the tension. The two
+        /// readings are the same fact and only one of them can be acted on.
+        /// </para>
+        /// <para>
+        /// <b>What it replaced.</b> A ring count, a cell count and a star projection. The rings
+        /// are already said on the board, in colour, by the rings — and said again in words by
+        /// the standing line on the one state where that is not enough. The projection was a pure
+        /// function of the cell count sitting next to it, so two of the three numbers were one
+        /// number. This is the third, inverted, and it is the only one of them that can end a
+        /// run.
+        /// </para>
+        /// <para>
+        /// The colour comes from <c>WeaveInk.Pressure</c> rather than from a threshold written
+        /// here: fractions of the grove's own budget, in Domain, where a test can hold them to
+        /// what they claim. A <c>switch</c> in a <c>MonoBehaviour</c> is the one place in this
+        /// project nothing can be proved.
+        /// </para>
+        /// </summary>
+        protected override void Readouts(System.Collections.Generic.List<Readout> into)
         {
-            // Whichever of the two things left to do is the harder to read off the board. A
-            // grove with beads counts beads, because a channel that reached its critter without
-            // being threaded looks finished from across the room and is not; a grove without them
-            // counts sleeping critters, which is the only thing left to count. The readout
-            // follows the board rather than the mode, so the opening rungs are not given a
-            // counter that would read zero for their whole run.
             var run = _view != null ? _view.Run : null;
-            bool beaded = run != null && run.Grove.HasBeads;
 
-            leftCap = beaded ? Loc.Get("mode.cap.beads") : Loc.Get("mode.cap.asleep");
-            middleCap = Loc.Get("mode.cap.time");
-            rightCap = Loc.Get("mode.cap.stars");
+            if (run == null || !run.Ink.Bounded)
+            {
+                into.Add(new Readout(Loc.Get("mode.cap.ink"),
+                                     run == null ? "0" : Loc.Get("mode.cap.ink_free")));
+                return;
+            }
 
-            left = run == null ? "0"
-                 : beaded ? run.BeadsLeft.ToString()
-                          : (run.Pairs - run.Joined).ToString();
-            middle = Level != null && Level.Tuning.HasTimeLimit
-                ? RunClock.Format(Remaining) : "-";
+            var tint = run.Ink.Pressure == InkPressure.Critical ? Pal.Ember
+                     : run.Ink.Pressure == InkPressure.Low ? Pal.Gold
+                     : Pal.Cream;
 
-            // Shown live, because the whole reward is speed and a player who cannot see the
-            // threshold slipping has no reason to hurry.
-            right = Level == null ? "0" : Level.Tuning.StarsFor(1, _clock.Millis).ToString();
+            into.Add(new Readout(Loc.Get("mode.cap.ink"), run.Ink.Left.ToString(), tint));
         }
 
         // ------------------------------------------------------------------ the lessons
@@ -426,21 +649,31 @@ namespace GlimmerGrove
         /// <see cref="Demonstrate"/>.
         /// </para>
         /// </summary>
-        protected override void Lessons(System.Collections.Generic.List<Lesson> into)
+        protected internal override void Lessons(System.Collections.Generic.List<Lesson> into)
         {
             if (Level == null || _view == null || _view.Run == null) return;
 
-            var lesson = Mechanic.WeaveJoin;
-            bool teaching = !TipLedger.HasSeen(lesson);
+            // The verb first and the bead second, which is teaching order rather than a
+            // preference: a player who has met neither has to know the mode is dragged before
+            // a ring on the ground can mean anything. Whether either is new is RunScreen's
+            // question — this says only what the grove holds.
+            Teach(into, Mechanic.WeaveJoin);
 
-            if (!teaching && _view.Run.Grove.HasBeads && !TipLedger.HasSeen(Mechanic.WeaveBead))
-            {
-                lesson = Mechanic.WeaveBead;
-                teaching = true;
-            }
+            // Second, and only on a grove that can actually be lost. It is a rule about a number
+            // in the header rather than about anything on the board, so it is asked of the level's
+            // tuning the way the bead lesson is asked of the board — a grove authored without ink
+            // must not spend a once-in-a-lifetime lesson teaching a meter it does not have.
+            //
+            // Ahead of the bead deliberately. Both are rules a board cannot show, and this is the
+            // one that decides whether the run survives long enough for a ring to matter.
+            if (_view.Run.Ink.Bounded) Teach(into, Mechanic.WeaveInk);
 
-            if (!teaching) return;
+            if (_view.Run.Grove.HasBeads) Teach(into, Mechanic.WeaveBead);
+        }
 
+        /// <summary>Adds one lesson with whatever demonstration this grove can support.</summary>
+        void Teach(System.Collections.Generic.List<Lesson> into, Mechanic lesson)
+        {
             var ring = Demonstrate(lesson, out var route, out var tint, out int cells);
 
             into.Add(new Lesson
@@ -453,14 +686,22 @@ namespace GlimmerGrove
             });
         }
 
+        /// <summary>
+        /// A lesson may go up while the grove is being drawn on and at no other time. The
+        /// closing sequence latches the view itself and hands nothing back, so teaching over it
+        /// would unlatch a grove whose run is already decided.
+        /// </summary>
+        protected internal override bool Teachable
+            => _view != null && !_view.Locked && !_finished && !_closing;
+
         /// <summary>Long enough for the grove to have settled under the hand about to cross it.</summary>
-        protected override float LessonDelay => .55f;
+        protected internal override float LessonDelay => .55f;
 
         /// <summary>
         /// Holds the grove while a lesson is up, and hands it back afterwards — but never to a
         /// run that ended underneath the panel.
         /// </summary>
-        protected override void Latch(bool latched)
+        protected internal override void Latch(bool latched)
         {
             if (_view == null) return;
             if (!latched && (_finished || _closing)) return;
@@ -510,6 +751,12 @@ namespace GlimmerGrove
 
             var grove = run.Grove;
 
+            // The ink lives in the header, so what is ringed is the readout. The same answer the
+            // move budget's lesson gives one screen over, and for the same reason: a lesson about
+            // a number has to point at the number, or the player is left hunting the board for
+            // something that was never on it.
+            if (lesson.Equals(Mechanic.WeaveInk)) return ReadoutAt(InkReadout);
+
             if (lesson.Equals(Mechanic.WeaveBead))
             {
                 for (int b = 0; b < grove.Beads.Count; b++)
@@ -537,13 +784,19 @@ namespace GlimmerGrove
 
             int chosen = Mathf.Max(0, grove.EndpointAt(walk[0]));
 
+            // Handed on as corners rather than cells: the stroke is drawn a leg at a time, so
+            // the points between two turns would only be seams down a straight line. Pacing
+            // still comes from the cell count, because that is how far the finger travels.
+            var bends = grove.Corners(walk);
+            if (bends.Length < 2) return null;
+
             // Every cell of the walk, endpoints included, so the hand steps the way a finger
             // has to. Degrades to nothing rather than to a shortcut if the board has not built:
             // a partial route would be a wrong demonstration, which is worse than no hand.
-            var steps = new RectTransform[walk.Length];
-            for (int i = 0; i < walk.Length; i++)
+            var steps = new RectTransform[bends.Length];
+            for (int i = 0; i < bends.Length; i++)
             {
-                steps[i] = _view.CellAt(walk[i]);
+                steps[i] = _view.CellAt(bends[i]);
                 if (!steps[i]) return null;
             }
 
@@ -557,27 +810,49 @@ namespace GlimmerGrove
         }
 
         // ------------------------------------------------------------------ the way out
-        public override void RestartLevel()
+        /// <summary>
+        /// Puts the grove back as it was dealt — the channels, the ink and the undos, which
+        /// <c>WeaveRun.Restart</c> hands back together.
+        ///
+        /// <para>
+        /// A fresh pot of ink is exactly why a restart here has to be paid for: it is the
+        /// cheapest way out of a grove going wrong, and a free one would leave the meter
+        /// deciding nothing for anybody who noticed. What it costs is
+        /// <c>RunScreen.RestartLevel</c>'s, which asks before this runs.
+        /// </para>
+        /// </summary>
+        protected override void Rewind()
         {
-            if (_view == null || _finished || _closing) return;
+            if (_view == null || RunOver) return;
 
             _view.Clear();
             Audio.Sfx("rotate_a", .55f);
+
+            // A fresh run: the old one was just paid for, so nothing carries over into this
+            // one — the play clock, and any continues bought on it. WeaveRun.Restart deals the
+            // pot the level authored rather than the pot that was topped up, which is the same
+            // rule from the model's side.
+            _startedAt = Time.unscaledTime;
+            ResetPlayed();
+            Continue.Reset();
+
             Repaint();
             PaintNotice();
+            PaintUndo();
         }
 
         public override void RetryAfterDefeat()
         {
             _finished = false;
-            _committed = false;
+            Resolve();
+            Continue.Reset();
             _closing = false;
             _startedAt = Time.unscaledTime;
 
-            _view.Begin(Host, Rules.LayoutFor(Level.Id));
-            _clock.Reset(Level.Tuning.HasTimeLimit ? Level.Tuning.TimeLimitMillis : 0);
+            _view.Begin(Host, Rules.LayoutFor(Level.Id), InkBudget);
             Repaint();
             PaintNotice();
+            PaintUndo();
         }
 
         public override void Resume()
@@ -585,12 +860,6 @@ namespace GlimmerGrove
             if (_finished || _closing || _view == null) return;
             _view.Locked = false;
         }
-
-        public override void LeaveToMap()
-            => ConfirmForfeit(ForfeitOverlay.Kind.Leave, "back", () => Flow.Go<LevelsScreen>());
-
-        public override void LeaveToHome()
-            => ConfirmForfeit(ForfeitOverlay.Kind.Leave, "home", () => Flow.Go<HomeScreen>());
 
         public override bool OnBack()
         {

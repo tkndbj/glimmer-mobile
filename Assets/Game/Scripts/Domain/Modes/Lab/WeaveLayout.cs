@@ -188,16 +188,26 @@ namespace GlimmerGrove.Modes
             int[] chosen = null;
             int fewest = int.MaxValue;
 
-            for (int p = 0; p < _pairs.Length; p++)
+            // Two passes. The first refuses to cross a bead as well as an endpoint: a bead is
+            // legal to thread and is somebody else's lesson, so a join demonstration that runs
+            // through one is answering a question it did not ask. The second allows it, because
+            // a slightly muddled demonstration beats falling back to the carved walk.
+            for (int pass = 0; pass < 2 && chosen == null; pass++)
             {
-                int span = Distance(_pairs[p].Heart, _pairs[p].Critter);
-                if (span < 1 || span >= fewest) continue;
+                bool avoidBeads = pass == 0;
+                fewest = int.MaxValue;
 
-                var elbow = Elbow(p, true) ?? Elbow(p, false);
-                if (elbow == null) continue;
+                for (int p = 0; p < _pairs.Length; p++)
+                {
+                    int span = Distance(_pairs[p].Heart, _pairs[p].Critter);
+                    if (span < 1 || span >= fewest) continue;
 
-                chosen = elbow;
-                fewest = span;
+                    var elbow = Elbow(p, true, avoidBeads) ?? Elbow(p, false, avoidBeads);
+                    if (elbow == null) continue;
+
+                    chosen = elbow;
+                    fewest = span;
+                }
             }
 
             if (chosen != null) return chosen;
@@ -210,9 +220,9 @@ namespace GlimmerGrove.Modes
 
         /// <summary>
         /// One L between a pair's ends — along x first, or along y first — or null if it would
-        /// run over somebody else's endpoint.
+        /// run over somebody else's endpoint, or over a bead when one is not wanted.
         /// </summary>
-        int[] Elbow(int pair, bool acrossFirst)
+        int[] Elbow(int pair, bool acrossFirst, bool clearOfBeads)
         {
             var ends = _pairs[pair];
             int ax = ends.Heart % Width, ay = ends.Heart / Width;
@@ -232,11 +242,53 @@ namespace GlimmerGrove.Modes
 
             for (int i = 1; i < path.Count - 1; i++)
             {
-                int owner = EndpointAt(path[i]);
-                if (owner >= 0) return null;
+                if (EndpointAt(path[i]) >= 0) return null;
+                if (clearOfBeads && BeadOwner(path[i]) >= 0) return null;
             }
 
             return path.ToArray();
+        }
+
+        /// <summary>
+        /// The cells in a route where it actually turns, ends included.
+        ///
+        /// <para>
+        /// A route arrives one cell at a time, so a straight leg is a run of cells in a line.
+        /// Anything drawing that route as a stroke wants the corners and not the cells — a
+        /// segment per cell puts a seam every cell down a straight line, and the count of
+        /// objects then grows with the grove rather than with the shape.
+        /// </para>
+        /// <para>
+        /// Here rather than beside the drawing for this file's usual reason. It is arithmetic
+        /// over a board, it has an off-by-one at each end and a doubling-back case that no
+        /// screenshot would ever show, and it is therefore exactly the kind of thing that
+        /// should fail a test rather than look slightly wrong in motion.
+        /// </para>
+        /// </summary>
+        public int[] Corners(IReadOnlyList<int> route)
+        {
+            if (route == null || route.Count == 0) return new int[0];
+            if (route.Count <= 2)
+            {
+                var pair = new int[route.Count];
+                for (int i = 0; i < route.Count; i++) pair[i] = route[i];
+                return pair;
+            }
+
+            var bends = new List<int> { route[0] };
+
+            for (int i = 1; i < route.Count - 1; i++)
+            {
+                int ax = route[i] % Width - route[i - 1] % Width;
+                int ay = route[i] / Width - route[i - 1] / Width;
+                int bx = route[i + 1] % Width - route[i] % Width;
+                int by = route[i + 1] / Width - route[i] / Width;
+
+                if (ax != bx || ay != by) bends.Add(route[i]);
+            }
+
+            bends.Add(route[route.Count - 1]);
+            return bends.ToArray();
         }
 
         public int ShortestSolution()

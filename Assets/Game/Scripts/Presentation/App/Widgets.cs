@@ -42,6 +42,31 @@ namespace GlimmerGrove
         public float LabelWidth;
 
         /// <summary>
+        /// The size the caption was built at, before any fitting shrank it.
+        ///
+        /// Kept so a re-fit measures from the original every time rather than from whatever
+        /// the last one left behind. Without it a button whose caption changes repeatedly —
+        /// an ad button counting down, which repaints every frame — would ratchet its own
+        /// text smaller and never come back up.
+        /// </summary>
+        public int LabelSize;
+
+        /// <summary>
+        /// True when the caption must stay on one line, however long a translation is.
+        ///
+        /// <para>
+        /// Set through <see cref="UIKit.OneLine"/> and honoured by <see cref="UIKit.FitLabel"/>,
+        /// which is what makes it survive <see cref="SetCaption"/> — a flag the caller had to
+        /// re-apply after every caption change is a flag that is wrong for most of a
+        /// countdown's life.
+        /// </para>
+        /// </summary>
+        public bool OneLine;
+
+        /// <summary>Smallest the caption may be shrunk to while keeping it on one line.</summary>
+        public int LabelMinSize = 16;
+
+        /// <summary>
         /// Changes the caption, re-centring the glyph beside it.
         ///
         /// <para>

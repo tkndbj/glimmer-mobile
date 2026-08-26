@@ -89,7 +89,7 @@ namespace GlimmerGrove.AssetPipeline
         {
             "node_open", "node_lock", "node_s0", "node_s1", "node_s2", "node_s3", "pointer",
             "rock_grass", "rock_tall", "rock_wide", "rock_chip", "rock_plain",
-            "rock_sand", "rock_palm", "rock_wood",
+            "rock_sand", "rock_palm", "rock_wood", "rock_lumen", "rock_basin",
             "palm", "boulder", "stump", "boat", "post",
         };
 
@@ -128,12 +128,6 @@ namespace GlimmerGrove.AssetPipeline
 
             for (int i = 1; i <= LevelGridParser.CritterVariants; i++)
                 list.Add(AssetRequest.SpriteSet($"{ArtRoot}Critters/c{i}"));
-
-            // The duskcap, the one creature on a board that is not a critter. Global
-            // rather than chapter-scoped for the reason the critters are: it is a fixed
-            // handful of frames that does not grow with the catalog, and every chapter
-            // from here on may use it.
-            list.Add(AssetRequest.SpriteSet($"{ArtRoot}Board/duskcap"));
 
             list.Add(AssetRequest.SpriteSet($"{ArtRoot}Fx/Victory"));
             list.Add(AssetRequest.SpriteSet($"{UiRoot}Coin"));

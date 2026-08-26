@@ -18,10 +18,21 @@ namespace GlimmerGrove
     /// what is free). Neither is worth the state, and "it counts when it lands" is one sentence.
     /// </para>
     /// <para>
-    /// Dragging back over the previous cell rubs that step out; a tap on a finished channel takes
-    /// the whole thing back. Both matter more than they look: on a grid this size a finger is
-    /// wrong constantly, and a puzzle that punishes the correction rather than the mistake is one
-    /// people put down.
+    /// <b>Correcting yourself has three prices and they are in the right order.</b> Dragging back
+    /// over the previous cell rubs that step out and costs nothing, because a finger is wrong
+    /// constantly on a grid this size and a puzzle that punishes the correction rather than the
+    /// mistake is one people put down. Taking a landed channel back through undo costs nothing
+    /// either, twice a grove. Everything past that is a redraw, which is started from a crystal
+    /// and charged in full — see <c>WeaveInk</c>.
+    /// </para>
+    /// <para>
+    /// <b>A tap on a channel does nothing at all, and that is the change ink asked for.</b> It
+    /// used to take the whole channel back, which was the right control while a channel was free:
+    /// there was no erase key to find and nothing to lose by pressing it. Once a channel is paid
+    /// for, the same tap is a stray thumb destroying something bought — on a screen the player is
+    /// dragging their hand across, which is exactly where stray taps come from. So taking a
+    /// channel back is now something one asks for by name, through the undo key or by drawing the
+    /// pair again, and neither can happen by accident.
     /// </para>
     ///
     /// <para>
@@ -79,7 +90,7 @@ namespace GlimmerGrove
         RectTransform _groundLayer, _inkLayer, _beadLayer, _endLayer, _fxLayer;
 
         Image[] _ground;
-        Image _wash, _vignette;
+        Image _wash;
 
         RectTransform[] _channel;          // one ink container per pair
         List<Image>[] _parts;              // its segments, link and knuckle interleaved
@@ -109,10 +120,25 @@ namespace GlimmerGrove
         readonly List<int> _drawing = new List<int>();
 
         int _pair = -1;
+
+        /// <summary>
+        /// The pair whose landed channel is being drawn over, or -1.
+        ///
+        /// <para>
+        /// Only ever a look: the old channel stays in the model until a replacement actually
+        /// lands (<c>WeaveRun.Draw</c> swaps them, and puts the old one back if the new one is
+        /// refused), so this is what stops the two lines being drawn on top of each other while
+        /// the finger is out. Taking it up on the way <em>down</em> instead — which is what this
+        /// did before there was ink — meant a redraw thought better of half way through had
+        /// already destroyed a channel the player had paid for.
+        /// </para>
+        /// </summary>
+        int _redrawing = -1;
+
         bool _anyDrawn, _closing;
         int _blockedAt = -1;
-        float _blockedWhen = -99f, _urgency;
-        bool _pressed, _nagging;
+        float _blockedWhen = -99f;
+        bool _nagging;
         float _cell, _size;
         Vector2 _origin;
 
@@ -120,13 +146,6 @@ namespace GlimmerGrove
         public bool Locked { get; set; }
 
         public WeaveRun Run => _run;
-
-        /// <summary>
-        /// How hard the clock is pressing, 0..1. Pushed by the screen every frame rather than
-        /// read from a clock here — <see cref="WeaveTempo.Urgency"/> has the argument for why
-        /// this is not derived from the time remaining.
-        /// </summary>
-        public float Urgency { set { _urgency = value < 0f ? 0f : value > 1f ? 1f : value; } }
 
         // Free ground is the thing the player is hunting, so it is the brighter of the two.
         static readonly Color Ground = new Color(1f, 1f, 1f, .085f);
@@ -142,18 +161,27 @@ namespace GlimmerGrove
         /// <summary>How solid a bead's ring is before and after its own light has come through.</summary>
         const float WaitingRing = .62f, ThreadedRing = 1f;
 
+        /// <summary>How faint a channel goes while its pair is being drawn over. See <see cref="Dim"/>.</summary>
+        const float DimmedChannel = .22f;
+
         // ------------------------------------------------------------------ building
-        public void Begin(RectTransform host, WeaveLayout layout)
+        /// <summary>
+        /// Deals a grove and the light it is drawn with.
+        ///
+        /// <paramref name="inkBudget"/> is <c>WeaveInk.Unlimited</c> for a grove that cannot be
+        /// lost; it comes from the level's tuning, so where it is decided is content and never
+        /// here. See <see cref="WeaveInk"/>.
+        /// </summary>
+        public void Begin(RectTransform host, WeaveLayout layout, int inkBudget)
         {
             _host = host;
-            _run = new WeaveRun(layout);
+            _run = new WeaveRun(layout, inkBudget);
+            _redrawing = -1;
             _drawing.Clear();
             _liveParts.Clear();
             _pair = -1;
             _anyDrawn = false;
             _closing = false;
-            _pressed = false;
-            _urgency = 0f;
             Locked = false;
 
             Tween.KillAll(this);
@@ -218,12 +246,6 @@ namespace GlimmerGrove
             BuildBeads(layout);
 
             _liveInk = UIKit.Node("Live", _inkLayer);
-
-            // On top of the grove and nothing else. Alpha is driven from Urgency, so on a grove
-            // with no clock it is simply never drawn.
-            _vignette = UIKit.Img("Press", _fxLayer, Art.Vignette(256),
-                                  new Color(1f, .32f, .28f, 0f));
-            UIKit.StretchTo((RectTransform)_vignette.transform, -_cell, -_cell, -_cell, -_cell);
 
             RefreshCells();
         }
@@ -342,22 +364,23 @@ namespace GlimmerGrove
             int at = CellUnder(e.position);
             if (at < 0) return;
 
-            int owner = _run.OwnerOf(at);
-
-            // A tap on a finished channel takes it back — which is also how a route is changed,
-            // so there is no separate erase control to find.
-            if (owner >= 0 && _run.IsJoined(owner) && _run.Grove.EndpointAt(at) < 0)
-            {
-                Unwind(owner);
-                return;
-            }
-
+            // A drag begins on a crystal or a critter and nowhere else. A tap on the middle of a
+            // channel used to take it back; see the remarks on this class for why a paid-for
+            // channel may not be destroyed by a thumb landing on it.
             int pair = _run.Grove.EndpointAt(at);
             if (pair < 0) return;
 
-            // Starting from either end of a joined pair replaces it, so a finished channel can be
-            // redrawn without being erased first.
-            if (_run.IsJoined(pair)) Unwind(pair, quiet: true);
+            // Whatever the last drag left dimmed comes back first. A second press arriving with
+            // no up between them is not something this mode's input produces, but a channel
+            // stranded at a fifth of its brightness is invisible in every check there is.
+            Undim();
+
+            // Nothing is taken up yet. Starting from either end of a joined pair redraws it, and
+            // the old channel stands — in the model, so its ground is still spoken for as far as
+            // everybody else is concerned, and on screen, dimmed, so the line under the finger is
+            // the one being read. If the drag comes to nothing, so does all of this.
+            _redrawing = _run.IsJoined(pair) ? pair : -1;
+            if (_redrawing >= 0) Dim(_redrawing, true);
 
             _pair = pair;
             _drawing.Clear();
@@ -389,6 +412,18 @@ namespace GlimmerGrove
 
             if (_drawing.Contains(at)) return;
             if (!_run.Grove.Adjacent(_drawing[_drawing.Count - 1], at)) return;
+
+            // The ink in hand is a wall like any other, and it has to be one rather than a
+            // refusal at the end. A channel costs a cell of light per cell it covers, so a line
+            // longer than what is left could never be laid — and finding that out after a drag
+            // across the grove, from a panel, is the mode fighting the player. It stops under the
+            // finger instead, at the cell the light runs out on, which is a fact they can act on
+            // while their hand is still on the board. Dragging back gives the room straight back.
+            if (!_run.Affords(_drawing.Count + 1))
+            {
+                Starved(at);
+                return;
+            }
 
             // The rule the whole puzzle rests on, asked of the run rather than re-derived here:
             // a channel crosses free ground, its own two ends, and its own beads. Working that
@@ -464,10 +499,10 @@ namespace GlimmerGrove
         {
             if (_pair < 0) return;
 
-            // Guarded, because this is the one input path that did not check. A run lost on the
-            // clock mid-drag locks the board, and the finger coming up afterwards would otherwise
-            // still lay a channel on a board whose run is already over.
-            if (Locked) { _pair = -1; _drawing.Clear(); ClearLive(); return; }
+            // Guarded, because this is the one input path that did not check. A run lost mid-drag
+            // locks the board, and the finger coming up afterwards would otherwise still lay a
+            // channel on a board whose run is already over.
+            if (Locked) { Abandon(); return; }
 
             int pair = _pair;
             var path = new List<int>(_drawing);
@@ -476,7 +511,15 @@ namespace GlimmerGrove
             _drawing.Clear();
             ClearLive();
 
-            if (path.Count >= 2 && _run.Draw(pair, path))
+            bool landed = path.Count >= 2 && _run.Draw(pair, path);
+
+            // Whatever happened, the old channel stops being dimmed: it has either been replaced
+            // — Land rebuilds it from the model, dimming and all — or it is still standing and
+            // has to look like it. A redraw that came to nothing costs the player nothing, which
+            // is the whole reason nothing was taken up on the way down.
+            Undim();
+
+            if (landed)
             {
                 Land(pair);
 
@@ -489,6 +532,121 @@ namespace GlimmerGrove
 
             RefreshCells();
             Changed?.Invoke();
+        }
+
+        /// <summary>Drops the line under the finger and leaves the board exactly as it was.</summary>
+        void Abandon()
+        {
+            _pair = -1;
+            _drawing.Clear();
+            ClearLive();
+            Undim();
+        }
+
+        /// <summary>
+        /// Fades a channel while its pair is being drawn over, so the live line is the one being
+        /// read. A <c>CanvasGroup</c> rather than a repaint of every segment: the ink is built
+        /// once and edited (see the remarks on this class), and one alpha over the container is
+        /// both cheaper and impossible to leave half-applied.
+        /// </summary>
+        void Dim(int pair, bool dim)
+        {
+            if (_channel == null || pair < 0 || pair >= _channel.Length) return;
+
+            var root = _channel[pair];
+            if (!root) return;
+
+            var group = root.GetComponent<CanvasGroup>() ?? root.gameObject.AddComponent<CanvasGroup>();
+            group.alpha = dim ? DimmedChannel : 1f;
+        }
+
+        void Undim()
+        {
+            if (_redrawing < 0) return;
+
+            Dim(_redrawing, false);
+            _redrawing = -1;
+        }
+
+        /// <summary>
+        /// Says the light has run out, at the cell it ran out on.
+        ///
+        /// <para>
+        /// <see cref="Blocked"/>'s shape and a different colour, because it is a different
+        /// refusal and the player has to be able to tell them apart without counting: a channel
+        /// in the way is somebody else's colour and something to route around, while an empty pot
+        /// is amber, is nothing to do with where the finger is, and is the run ending soon. It
+        /// shares the throttle for the same reason — a finger held against a wall re-enters the
+        /// same cell many times a second.
+        /// </para>
+        /// </summary>
+        void Starved(int at)
+        {
+            if (at == _blockedAt && Time.unscaledTime - _blockedWhen < .45f) return;
+
+            _blockedAt = at;
+            _blockedWhen = Time.unscaledTime;
+
+            Ripple(Where(at), Pal.Amber, _cell * 1.15f, .4f);
+            Audio.Sfx("blocked", .3f, .8f);
+        }
+
+        // ------------------------------------------------------------------ taking one back
+        /// <summary>
+        /// Hands back the last channel that landed, and the light with it.
+        ///
+        /// <para>
+        /// The model owns whether there is anything to undo and what the board becomes — see
+        /// <c>WeaveRun.TryUndo</c>, which restores the route a redraw replaced rather than
+        /// merely erasing. All that is left here is showing it: one pair is repainted, not the
+        /// board, because everything else is exactly where it was.
+        /// </para>
+        /// <para>
+        /// Refused while the run is not the player's to touch, which is the same guard every
+        /// other input path takes. It reports whether it happened so the key above it can stay
+        /// in step with a model that may have said no.
+        /// </para>
+        /// </summary>
+        public bool Undo()
+        {
+            if (Locked || _closing || _run == null || !_run.CanUndo) return false;
+
+            // A drag in flight is dropped first. Undoing out from under a finger that is part
+            // way through drawing over the very channel being restored is the one way these two
+            // could disagree about what is on the board.
+            Abandon();
+
+            if (!_run.TryUndo(out int pair)) return false;
+
+            Restate(pair);
+            Audio.Sfx("back", .55f);
+
+            Brighten();
+            RefreshCells();
+            Changed?.Invoke();
+            return true;
+        }
+
+        /// <summary>
+        /// Redraws one pair from the model, whichever way it went.
+        ///
+        /// Asked of the model rather than told, so an undo that put a route <em>back</em> and one
+        /// that took the last one away are the same call — a view that had to be told which of
+        /// the two happened is a second copy of the rule, in the half that cannot be tested.
+        /// </summary>
+        void Restate(int pair)
+        {
+            _arrived[pair] = false;
+
+            if (_run.IsJoined(pair)) { Land(pair); return; }
+
+            DropChannel(pair, drain: true);
+
+            var body = _body[pair];
+            if (body) Tween.Tint(body, Sleeping, .18f);
+
+            var halo = _halo[pair];
+            if (halo) Tween.Fade(halo, 0f, .18f);
         }
 
         // ------------------------------------------------------------------ the ink
@@ -834,25 +992,6 @@ namespace GlimmerGrove
             Audio.Sfx("chime", .5f, WeaveTempo.Pitch(note));
         }
 
-        void Unwind(int pair, bool quiet = false)
-        {
-            _arrived[pair] = false;
-            _run.Erase(pair);
-            DropChannel(pair, drain: true);
-
-            var body = _body[pair];
-            if (body) Tween.Tint(body, Sleeping, .18f);
-
-            var halo = _halo[pair];
-            if (halo) Tween.Fade(halo, 0f, .18f);
-
-            if (!quiet) Audio.Sfx("back", .5f);
-
-            Brighten();
-            RefreshCells();
-            Changed?.Invoke();
-        }
-
         // ------------------------------------------------------------------ painting
         /// <summary>
         /// Re-reads the cells and the critters. Note what it no longer does: it does not touch
@@ -960,45 +1099,14 @@ namespace GlimmerGrove
         }
 
         /// <summary>
-        /// The grove pressing in as the light runs down.
-        ///
-        /// Drawn from <see cref="Urgency"/>, which is zero on a grove with no clock — so this is
-        /// simply never seen there rather than needing a branch. It breathes rather than holding
-        /// steady, because a static tint at the edge of the screen stops being read within a few
-        /// seconds and the point of it is to still be saying something at ten.
-        /// </summary>
-        void Update()
-        {
-            Nag();
-
-            if (!_vignette) return;
-
-            if (_urgency <= 0f)
-            {
-                if (_pressed) _pressed = false;
-                var clear = _vignette.color; clear.a = 0f; _vignette.color = clear;
-                return;
-            }
-
-            if (!_pressed)
-            {
-                _pressed = true;
-                Audio.Sfx("tock", .45f, .9f);
-            }
-
-            float beat = .5f + .5f * Mathf.Sin(Time.unscaledTime * (5f + 5f * _urgency));
-            var c = _vignette.color;
-            c.a = _urgency * (.16f + .22f * beat);
-            _vignette.color = c;
-        }
-
-        /// <summary>
         /// The beads still waiting, breathing, while every critter is already awake.
         ///
         /// Driven here rather than as a tween per bead: the set changes every time a channel is
         /// drawn or taken back, and a tween owned by a bead would have to be found and killed
         /// each time. One pass over a handful of rings is cheaper than the bookkeeping.
         /// </summary>
+        void Update() => Nag();
+
         void Nag()
         {
             if (!_nagging || _bead == null) return;
@@ -1012,7 +1120,10 @@ namespace GlimmerGrove
             }
         }
 
-        /// <summary>Takes every channel back, for the restart button.</summary>
+        /// <summary>
+        /// Takes every channel back, for a restart — and with them the ink and the undos, which
+        /// <c>WeaveRun.Reset</c> owns. A restart hands the player the grove they were dealt.
+        /// </summary>
         public void Clear()
         {
             if (_run == null) return;
@@ -1029,8 +1140,9 @@ namespace GlimmerGrove
                 if (halo) Tween.Fade(halo, 0f, .18f);
             }
 
-            _run.Reset();
+            _run.Restart();
             _pair = -1;
+            _redrawing = -1;
             _drawing.Clear();
             ClearLive();
 

@@ -47,11 +47,15 @@ namespace GlimmerGrove
         Image _hero;
         RectTransform _dailyPanel;
         RectTransform _resourceRow;
-        Text _heartsValue, _coinsValue, _gemsValue;
         RectTransform _streakBox;
         RectTransform _focusBox;
         Text _resetClock;
         float _clockTick;
+
+        // The shortest gap between two pokes that both get a spray. Above the rate a poke is
+        // deliberately given at, below the rate a held finger produces. See Poke.
+        const float SparkGap = .18f;
+        float _pokedAt = float.NegativeInfinity;
 
         protected override void Build()
         {
@@ -153,11 +157,24 @@ namespace GlimmerGrove
             Destroy(go);
         }
 
+        /// <summary>
+        /// Writes today's figures onto the three pills.
+        ///
+        /// <para>
+        /// Through <see cref="ResourceSlots.Repaint"/> rather than onto the labels directly,
+        /// which makes the registry the one writer of those three readouts. That is what lets
+        /// a reward cascade own a pill while it walks it forward: a chest or a rewarded ad
+        /// rewinds the number to what it said before the grant, and a wallet change landing
+        /// mid-flight — an ad's credits arriving from the server is exactly one — would
+        /// otherwise jump it to the true figure and have the next token drag it back down.
+        /// See <see cref="ResourceSlots.Claim"/>.
+        /// </para>
+        /// </summary>
         void PaintResources()
         {
-            if (_heartsValue) _heartsValue.text = Profile.HeartsLabel();
-            if (_coinsValue) _coinsValue.text = Compact.Number(Profile.Coins);
-            if (_gemsValue) _gemsValue.text = Compact.Number(Profile.Gems);
+            ResourceSlots.Repaint(ResourceSlots.Kind.Hearts, Profile.Hearts);
+            ResourceSlots.Repaint(ResourceSlots.Kind.Credits, Profile.Coins);
+            ResourceSlots.Repaint(ResourceSlots.Kind.Gems, Profile.Gems);
         }
 
         /// <summary>
@@ -300,13 +317,13 @@ namespace GlimmerGrove
             // whatever the network is doing and offers the video when there is one. The
             // states that used to hide it are states the panel renders honestly: at the
             // ceiling it says so, with nothing loaded it says it is looking.
-            _heartsValue = ResourcePill(row, -318f, Pal.Rose, "ic_heart", Profile.HeartsLabel(), false,
+            ResourcePill(row, -318f, Pal.Rose, "ic_heart", Profile.HeartsLabel(), false,
                          () => Flow.Modal<AdOfferOverlay>(v => v.PlacementId = AdPlacement.HeartRefill),
                          ResourceSlots.Kind.Hearts, n => Profile.HeartsLabel((int)n));
-            _coinsValue = ResourcePill(row, 0f, Pal.Gold, null, Compact.Number(Profile.Coins), true,
+            ResourcePill(row, 0f, Pal.Gold, null, Compact.Number(Profile.Coins), true,
                          () => Flow.Modal<AdOfferOverlay>(v => v.PlacementId = AdPlacement.CoinBonus),
                          ResourceSlots.Kind.Credits, Compact.Number);
-            _gemsValue = ResourcePill(row, 318f, Pal.Bloom, "ic_gem", Compact.Number(Profile.Gems), false,
+            ResourcePill(row, 318f, Pal.Bloom, "ic_gem", Compact.Number(Profile.Gems), false,
                          () => Flow.Modal<ComingSoonOverlay>(v => v.Configure("Gems", "ic_gem",
                              "Gems will unlock hints, skins and seasonal glades.")),
                          ResourceSlots.Kind.Gems, Compact.Number);
@@ -314,7 +331,6 @@ namespace GlimmerGrove
 
         /// <summary>
         /// Resource readout with an add button. Coins use the spinning sprite.
-        /// Returns the value label, which is what <see cref="PaintResources"/> writes to.
         /// </summary>
         /// <remarks>
         /// Each pill registers itself with <see cref="ResourceSlots"/> as it is built, which
@@ -324,7 +340,7 @@ namespace GlimmerGrove
         /// reference from the last build would be pointing at a dead object, and the one place
         /// guaranteed to run on every rebuild is the builder itself.
         /// </remarks>
-        Text ResourcePill(Transform parent, float x, Color tint, string icon, string value,
+        void ResourcePill(Transform parent, float x, Color tint, string icon, string value,
                           bool animatedCoin, Action onAdd,
                           ResourceSlots.Kind kind, Func<long, string> format)
         {
@@ -354,8 +370,6 @@ namespace GlimmerGrove
 
             bg.transform.localScale = Vector3.zero;
             Tween.Pop(bg.transform, 0f, .55f, .18f + Mathf.Abs(x) * .0004f);
-
-            return t;
         }
 
         // -------------------------------------------------------- daily bonuses
@@ -1249,10 +1263,29 @@ namespace GlimmerGrove
             Tween.Pop(host, 0f, .75f, .42f);
         }
 
+        /// <summary>
+        /// The companion answers a poke - and answers a held-down finger once per squash
+        /// rather than once per tap.
+        ///
+        /// <para>
+        /// The deformation a spammed poke used to produce was <see cref="Tween.Punch"/>'s and
+        /// is fixed there, where every re-punchable control in the game gets it. What is left
+        /// here is the other half of a spammed one: eight sparks and a pop per tap is a dozen
+        /// bursts a second, and <em>celebrate once</em> applies to a poke as much as to a win.
+        /// The squash itself still restarts on every tap, so the critter stays exactly as
+        /// answerable as it looks; only the fanfare has a floor under it, and the floor sits
+        /// above any rate a poke is deliberately given at.
+        /// </para>
+        /// </summary>
         void Poke()
         {
             if (_hero == null) return;
+
             Tween.Punch(_hero.transform, .28f, .5f);
+
+            if (Time.unscaledTime - _pokedAt < SparkGap) return;
+            _pokedAt = Time.unscaledTime;
+
             Audio.SfxVaried("pop", .5f, .18f);
             Burst.Sparks(_hero.transform, new Vector2(0f, 40f), Pal.Gold, 8, 150f, 22f, .6f);
         }
@@ -1280,14 +1313,27 @@ namespace GlimmerGrove
 
         static string NextGladeLine()
         {
-            var next = LevelUnlock.NextToPlay(GameContent.Index);
+            var index = GameContent.Index;
+            var next = LevelUnlock.NextToPlay(index);
 
-            if (!next.IsValid || PlayerProgress.IsCleared(next))
-                return Loc.Get("ui.home.all_awake");
+            if (!next.IsValid) return Loc.Get("ui.home.all_awake");
 
             // Named from the id alone, so the home screen never reads a chapter file
             // just to draw one line of text.
-            return Loc.Format("ui.home.next_up", Loc.Get(LevelDefinition.DefaultNameKey(next)));
+            if (!PlayerProgress.IsCleared(next))
+                return Loc.Format("ui.home.next_up", Loc.Get(LevelDefinition.DefaultNameKey(next)));
+
+            // Everything the player may open is finished, and since the chapter boundary
+            // became a star gate that is two different situations. One is a finished game and
+            // the other is a player two stars short of the next chapter — telling the second
+            // one that every level is awake would be the game congratulating them for being
+            // stuck, on the screen whose whole job is to say what to do next. The gate names
+            // itself instead, in the number that moves.
+            var gate = LevelUnlock.GateAfter(index, index.ChapterOf(next));
+
+            return gate.Exists && !gate.IsOpen
+                ? Loc.Format("ui.home.next_chapter", gate.Held, gate.Required)
+                : Loc.Get("ui.home.all_awake");
         }
 
         /// <summary>

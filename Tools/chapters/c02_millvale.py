@@ -19,16 +19,17 @@ puzzle and a dot-to-dot.
 
 **And no mechanic on them rejected anything.** Counted, twenty-two of the game's thirty
 glades had exactly *one* arrangement in which every arm mated - so the brittle stone, the
-taproots and the duskcaps could all have been deleted without changing a single solution.
+taproots and the pools could all have been deleted without changing a single solution.
 A twisted crossing is the cheapest honest decision this board can carry, because it wears
-all four arms at every angle: nothing about the arms can settle it and only colour or the
-dark can. Every other mechanic here now rides on that. Brittle stone sits on a crossing, so
-it asks a player who *cannot* simply try the tile. A taproot binds two of them, so one tap
-answers two corners of the board. And a duskcap's ford is placed on a **cycle** of the live
-network, which is the whole difference between a shadow that matters and a shadow that is
-scenery: turning that ford joins the dark to the grove while every critter stays lit, so it
-is the one arrangement that looks finished and will not settle. If the wrong turn also puts
-a critter out, the critter tells the player and the duskcap taught them nothing.
+all four arms at every angle: nothing about the arms can settle it and only colour can.
+Every other mechanic here now rides on that. Brittle stone sits on a crossing, so it asks a
+player who *cannot* simply try the tile. A taproot binds two of them, so one tap answers
+two corners of the board. And a pool's ford is placed on a **cycle** of the live network,
+which is the whole difference between a pool that matters and a pool that is scenery:
+turning that ford pours the grove's colour into the pool without breaking anything, so
+every critter on the ring stays lit and only the pool's own go out. That is a wrong turn
+whose warning is somewhere the player is not looking, which is as much as one tile can ask
+without lying to them.
 
 The numbers each board lands on are printed by `report()` when this file is run.
 """
@@ -122,10 +123,10 @@ def g2(seed, bias):
 
 
 def g3(seed, bias):
-    """Under the Boughs 7x6 - the shadow corners inside the grove's own tiles.
+    """Under the Boughs 7x6 - a green pool inside the grove's own tiles.
 
     The grove closes in a ring one tile inside the edge, so both fords sit on a cycle:
-    turn one and the shadow joins the grove without a single critter going out. That is
+    turn one and the grove pours into the pool without a critter on the ring going out. That is
     the first arrangement in this game that looks finished and will not settle, and
     building one is the entire point of the lesson. Everything outside the ring is a short
     chain ending in a critter, which is also what keeps the board off the edges - an arm
@@ -157,7 +158,7 @@ def g3(seed, bias):
     for p in [(0, 1), (6, 0), (0, 5), (0, 2)]:
         b.lamp(p[0], p[1], 'A')
 
-    b.duskcap(4, 2); b.duskcap(2, 3)
+    b.source(3, 2, 'G'); b.lamp(4, 2, 'G'); b.lamp(2, 3, 'G')
     b.path((2, 2), (3, 2), (4, 2), (4, 3)); b.path((3, 2), (3, 3))
     b.path((2, 2), (2, 3)); b.path((2, 3), (3, 3)); b.path((3, 3), (4, 3))
     b.spin(seed, bias)
@@ -308,11 +309,11 @@ def g6(seed, bias):
 
 
 def g7(seed, bias):
-    """Hollow Ford 7x7 - one pool of shadow in the middle, forded three times.
+    """Hollow Ford 7x7 - one green pool in the middle, forded three times.
 
     Every ford carries a strand of the pool and a strand of the grove, and the grove's two
     arms at each of them come back together round the ring. So a ford turned the wrong way
-    wakes the dark while every critter on the board stays lit: seven arrangements that mate
+    ruins the pool while every critter on the ring stays lit: seven arrangements that mate
     every arm, light every critter, and are not finished.
     """
     b = Board(7, 7)
@@ -340,7 +341,7 @@ def g7(seed, bias):
     for p in [(0, 1), (6, 1), (5, 6), (0, 5)]:
         b.lamp(p[0], p[1], 'A')
 
-    b.duskcap(3, 3); b.duskcap(4, 4)
+    b.source(4, 3, 'G'); b.lamp(3, 3, 'G'); b.lamp(4, 4, 'G')
     b.path((2, 2), (3, 2)); b.path((3, 2), (4, 2)); b.path((3, 2), (3, 3))
     b.path((2, 2), (2, 3)); b.path((2, 3), (2, 4)); b.path((2, 3), (3, 3))
     b.path((4, 2), (4, 3), (4, 4), (3, 4), (3, 3))
@@ -450,7 +451,7 @@ def g10(seed, bias):
     """The Miller's Knot 8x7 - everything the vale has taught, tied once.
 
     Four spans on the braid: two of them one root, two of them brittle, and a fifth over a
-    pool of shadow. Sixteen arrangements mate every arm; one settles the glade.
+    green pool. Sixteen arrangements mate every arm; one settles the glade.
     """
     b = Board(8, 7)
     b.fill(0, 0, 8, 7)
@@ -495,7 +496,7 @@ def g10(seed, bias):
     for p in [(6, 3), (7, 4)]:
         b.lamp(p[0], p[1], 'M')
 
-    b.duskcap(1, 4); b.duskcap(1, 5)
+    b.source(2, 4, 'G'); b.lamp(1, 4, 'G'); b.lamp(1, 5, 'G')
     b.path((2, 4), (1, 4), (1, 5), (2, 5))
     b.path((2, 5), (2, 4)); b.path((2, 5), (2, 6))
     b.spin(seed, bias)
@@ -507,11 +508,6 @@ def g10(seed, bias):
 
 # ---------------------------------------------------------------- the chapter
 # Palette, art and map positions are unchanged from the chapter that shipped: the boards
-# were rebuilt, not the vale. `timeFactor` runs a notch looser than it did at the head of
-# the chapter and lands where it did at the foot - a board that has to be read rather than
-# fitted needs a little more room to be read in, and the star lines do not move with it
-# (three stars is par x 1.00 seconds however long the limit is), so a clear is worth
-# exactly what it was worth.
 PALETTE = {
     "c02_two_ways_over": ("#7ED957", "#16301C"),
     "c02_the_millrace": ("#4FC1FF", "#0E2A3A"),
@@ -525,11 +521,6 @@ PALETTE = {
     "c02_the_millers_knot": ("#E86A5A", "#3A1A18"),
 }
 
-# Glade 3 is looser than glade 2 on purpose: it is where the duskcap first rejects
-# anything, and the reading says so - twelve tidy arrangements, seven of which light
-# every critter and still will not settle. A fresh idea gets slack on the board that
-# teaches it.
-TIME = [1.95, 1.85, 1.90, 1.75, 1.75, 1.70, 1.70, 1.65, 1.60, 1.55]
 MAPX = [0.30, 0.70, 0.26, 0.72, 0.26, 0.68, 0.28, 0.72, 0.23, 0.71]
 MAPY = [0.065, 0.145, 0.220, 0.300, 0.390, 0.485, 0.560, 0.650, 0.752, 0.830]
 
@@ -546,10 +537,10 @@ TEXT = {
         "a heart's light to the other's critters."),
     "c02_under_the_boughs": (
         "Under the Boughs",
-        "The shadow runs straight through the grove",
-        "The grove closes in a ring, so a crossing turned the wrong way wakes the shadow "
-        "and leaves every critter lit. A glade with a woken duskcap will not settle "
-        "however finished it looks."),
+        "A green pool inside the red ring",
+        "The groove closes in a ring, so a ford turned the wrong way pours red into the "
+        "pool and every critter on the ring stays lit. The two in the pool are the only "
+        "ones that will tell you."),
     "c02_the_old_weir": (
         "The Old Weir",
         "Brittle stone on both approaches",
@@ -567,23 +558,23 @@ TEXT = {
         "each, and the crossings are what let all three pass."),
     "c02_hollow_ford": (
         "Hollow Ford",
-        "The dark fords the light three times",
-        "Every crossing here is a place the shadow and the grove could be joined by "
+        "The green pool, forded three times",
+        "Every crossing here is a place the pool and the groove could be joined by "
         "mistake. Read which arm belongs to which strand before you turn."),
     "c02_stonebridge": (
         "Stonebridge",
         "Four bridges nobody can turn",
-        "These crossings are rooted where they stand. The grove is not asking which way "
+        "These crossings are rooted where they stand. The groove is not asking which way "
         "they face - it is asking what still fits through them."),
     "c02_three_bridges": (
         "Three Bridges",
         "A cascade, handed on at every span",
-        "Yellow gives the grove to red, red to green and green to blue, and every "
+        "Yellow gives the groove to red, red to green and green to blue, and every "
         "hand-over happens inside one tile."),
     "c02_the_millers_knot": (
         "The Miller's Knot",
         "Everything the vale has taught, tied once",
-        "Three networks, a pool of shadow under the braid, two spans on one root and "
+        "Four networks, a green pool under the braid, two spans on one root and "
         "brittle stone on two more."),
 }
 
@@ -631,7 +622,6 @@ def chapter_json(built):
         level["height"] = board.h
         level["mapX"] = MAPX[i]
         level["mapY"] = MAPY[i]
-        level["timeFactor"] = TIME[i]
         accent, slate = PALETTE[lid]
         level["accent"] = accent
         level["slate"] = slate
@@ -683,9 +673,8 @@ def main():
         board, seed, bias, warns = built[lid]
         r = board.reading()
         print(f"{i + 1:>2} {lid:<26} {board.w}x{board.h} par {board.par():<3} "
-              f"clock {int(board.par() * TIME[i]):>3}s  tf {TIME[i]:.2f}  "
               f"glance {len(r['glance']):>2}/{r['tiles']:<3} arms {r['solutions']:>2} "
-              f"wins {r['wins']}  colour {r['colour_only']:>2} dark {r['dark_only']:>2}  "
+              f"wins {r['wins']}  colour {r['colour_only']:>2}  "
               f"(seed {seed}, bias {bias})"
               + ("  WARN " + "; ".join(warns) if warns else ""))
 

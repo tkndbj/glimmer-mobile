@@ -69,6 +69,33 @@ namespace GlimmerGrove.Persistence
         /// <summary>Most hearts a single lost run may cost.</summary>
         public const int MaxDefeatCost = 5;
 
+        /// <summary>
+        /// Dearest a way back onto a lost board may be published at, in gems.
+        ///
+        /// A sanity bound rather than a design one, and deliberately far above anything
+        /// sensible for <c>ContinueLimits.MaxGems</c>' reason: what it guards is a misplaced
+        /// zero in a content push, which would otherwise put a price on the defeat panel that
+        /// no player could ever meet and turn every empty heart bar into a dead end.
+        /// </summary>
+        public const long MaxRescueGems = 5_000L;
+
+        /// <summary>Most hearts one purchase may hand over. Above any sensible tuning.</summary>
+        public const int MaxRescueHearts = 50;
+
+        /// <summary>
+        /// The longest free opening a content file may ask for, in glades.
+        ///
+        /// <para>
+        /// Twenty rather than something tighter because the window is bounded again by the
+        /// content itself — <c>HeartStake</c> counts it inside the first chapter of a mode and
+        /// stops at the chapter's end, so a published twenty on a ten-glade chapter is ten. The
+        /// limit is here to catch the typo that drops a zero, not to express a design view: a
+        /// whole free first chapter is a decision somebody may legitimately want to make from a
+        /// config push after a bad first-session retention week.
+        /// </para>
+        /// </summary>
+        public const int MaxGraceLevels = 20;
+
         // ------------------------------------------------------------------ defaults
         public const int DefaultRefillCap = 5;
         public const int DefaultCeiling = 50;
@@ -76,6 +103,48 @@ namespace GlimmerGrove.Persistence
         public const int DefaultBoostedRefillSeconds = 4 * 60 * 60;
         public const int DefaultMaxBoostHours = 72;
         public const int DefaultDefeatCost = 1;
+
+        /// <summary>
+        /// What a way back onto a lost board costs, in gems.
+        ///
+        /// <para>
+        /// The same twenty a continue costs, and that is a decision rather than a coincidence:
+        /// the two offers can be met on one screen a minute apart, and a player who declined
+        /// one price and is then shown a different one for the other reads the pair as
+        /// haggling. It is the number most likely to be wrong on the first guess, which is
+        /// exactly why it is content.
+        /// </para>
+        /// </summary>
+        public const long DefaultRescueGems = 20L;
+
+        /// <summary>
+        /// Hearts that purchase hands over.
+        ///
+        /// <para>
+        /// Two rather than one, because one is a purchase that has to be made again the moment
+        /// it fails — and the board it buys is a board the player has just lost, so a second
+        /// loss is the likely outcome rather than a rare one. Two is one attempt and one
+        /// recovery; a full bar of five is <c>hearts_five</c> in the shop and belongs there,
+        /// where somebody is choosing rather than reacting.
+        /// </para>
+        /// <para>
+        /// Nought is legal and withdraws the offer entirely. That is the lever that turns the
+        /// whole feature off from a config push — a store review objection, a market where
+        /// paying past a play gate is regulated, a price that turned out to read as a trap.
+        /// </para>
+        /// </summary>
+        public const int DefaultRescueHearts = 2;
+
+        /// <summary>
+        /// The first three glades of a mode are free to fail.
+        ///
+        /// Three because that is the shortest run of boards that can teach a verb, let the
+        /// player use it badly, and let them use it again — one is a demonstration and two is a
+        /// coincidence. The cost of getting this wrong is asymmetric in a way worth stating:
+        /// too generous and a player spends three glades' worth of nothing, too mean and the
+        /// heart gate meets somebody who has not yet decided they like the game.
+        /// </summary>
+        public const int DefaultGraceLevels = 3;
     }
 
     /// <summary>
@@ -108,7 +177,8 @@ namespace GlimmerGrove.Persistence
     public sealed class HeartRuleTable
     {
         HeartRuleTable(int refillCap, int ceiling, int refillSeconds, int boostedRefillSeconds,
-                       int maxBoostHours, int defeatCost)
+                       int maxBoostHours, int defeatCost, int graceLevels,
+                       long rescueGems, int rescueHearts)
         {
             RefillCap = refillCap;
             Ceiling = ceiling;
@@ -116,6 +186,9 @@ namespace GlimmerGrove.Persistence
             BoostedRefillSeconds = boostedRefillSeconds;
             MaxBoostHours = maxBoostHours;
             DefeatCost = defeatCost;
+            GraceLevels = graceLevels;
+            RescueGems = rescueGems;
+            RescueHearts = rescueHearts;
         }
 
         /// <summary>
@@ -143,6 +216,26 @@ namespace GlimmerGrove.Persistence
         public int DefeatCost { get; }
 
         /// <summary>
+        /// How many glades at the head of a mode are free to fail. Nought turns the window off.
+        ///
+        /// The number alone; <see cref="Progression.HeartStake"/> owns what it is counted over,
+        /// because that needs the catalog and this table must stay readable without one.
+        /// </summary>
+        public int GraceLevels { get; }
+
+        /// <summary>What buying a way back onto a lost board costs, in gems. See <c>HeartRescue</c>.</summary>
+        public long RescueGems { get; }
+
+        /// <summary>
+        /// Hearts that purchase hands over. Nought withdraws the offer.
+        ///
+        /// The number alone; <see cref="Progression.HeartRescue"/> owns when it may be shown,
+        /// because that needs a balance and a store and this table must stay readable without
+        /// either — the same split <see cref="GraceLevels"/> makes with <c>HeartStake</c>.
+        /// </summary>
+        public int RescueHearts { get; }
+
+        /// <summary>
         /// How long the wait starting at <paramref name="at"/> lasts.
         ///
         /// Asked per refill rather than once per catch-up, because a boost can expire in
@@ -167,7 +260,10 @@ namespace GlimmerGrove.Persistence
             HeartLimits.DefaultRefillSeconds,
             HeartLimits.DefaultBoostedRefillSeconds,
             HeartLimits.DefaultMaxBoostHours,
-            HeartLimits.DefaultDefeatCost);
+            HeartLimits.DefaultDefeatCost,
+            HeartLimits.DefaultGraceLevels,
+            HeartLimits.DefaultRescueGems,
+            HeartLimits.DefaultRescueHearts);
 
         // ------------------------------------------------------------------ building
         /// <summary>
@@ -200,6 +296,24 @@ namespace GlimmerGrove.Persistence
             int defeatCost = Read(dto.defeatCost, HeartLimits.DefaultDefeatCost, 1,
                                   HeartLimits.MaxDefeatCost, "hearts defeatCost", problems);
 
+            // Nought is a legal minimum here and nowhere else in this block: it means "no free
+            // opening", which is a decision rather than a mistake, so it must not be clamped
+            // up to one or reported as a problem.
+            int graceLevels = Read(dto.graceLevels, HeartLimits.DefaultGraceLevels, 0,
+                                   HeartLimits.MaxGraceLevels, "hearts graceLevels", problems);
+
+            // Nought is legal here too, and it is the switch that withdraws the whole offer.
+            // See HeartLimits.DefaultRescueHearts.
+            int rescueHearts = Read(dto.rescueHearts, HeartLimits.DefaultRescueHearts, 0,
+                                    HeartLimits.MaxRescueHearts, "hearts rescueHearts", problems);
+
+            // The price refuses nought rather than obeying it. A rescue that costs nothing is
+            // not a cheap rescue, it is a heart gate that has stopped gating — invariant 5d's
+            // complaint about a rule that rejects nothing, applied to the one thing in this
+            // game that can stop somebody playing. The field above says "no offer" properly,
+            // so there is no reading of a zero here that is a design decision.
+            long rescueGems = ReadPrice(dto.rescueGems, problems);
+
             // A ceiling under the refill cap is not a smaller ceiling, it is a contradiction:
             // the clock would carry a player past the most they are allowed to hold, so every
             // grant would be refused while the timer kept paying. Raised to the cap rather
@@ -224,7 +338,46 @@ namespace GlimmerGrove.Persistence
                 boosted = refill;
             }
 
-            return new HeartRuleTable(refillCap, ceiling, refill, boosted, boostHours, defeatCost);
+            // A purchase that could never be granted is a button that takes gems and hands
+            // back nothing anybody can see, so it is held at what the ceiling can accept.
+            // Reachable from an honest push: lowering the ceiling is documented as safe, and
+            // this is the one number that has to move down with it.
+            if (rescueHearts > ceiling)
+            {
+                problems.Add($"hearts rescueHearts is {rescueHearts}, above the ceiling of " +
+                             $"{ceiling}; the purchase could never be granted, so it is held " +
+                             "at the ceiling");
+                rescueHearts = ceiling;
+            }
+
+            return new HeartRuleTable(refillCap, ceiling, refill, boosted, boostHours, defeatCost,
+                                      graceLevels, rescueGems, rescueHearts);
+        }
+
+        /// <summary>
+        /// The rescue price: unwritten inherits, out of range is clamped and named, and nought
+        /// is refused rather than obeyed. See the call site for why zero is not a tuning.
+        /// </summary>
+        static long ReadPrice(long authored, List<string> problems)
+        {
+            if (authored < 0L) return HeartLimits.DefaultRescueGems;   // -1 is "not written"
+
+            if (authored == 0L)
+            {
+                problems.Add("hearts rescueGems is 0, which would hand a heart to anybody who " +
+                             "lost a run and stop the gate gating; set rescueHearts to 0 to " +
+                             "withdraw the offer instead");
+                return HeartLimits.DefaultRescueGems;
+            }
+
+            if (authored > HeartLimits.MaxRescueGems)
+            {
+                problems.Add($"hearts rescueGems is {authored}, above the " +
+                             $"{HeartLimits.MaxRescueGems} a rescue may be priced at; clamped");
+                return HeartLimits.MaxRescueGems;
+            }
+
+            return authored;
         }
 
         /// <summary>
@@ -290,6 +443,15 @@ namespace GlimmerGrove.Persistence
         public static long MaxBoostHours => Table.MaxBoostHours;
 
         public static int DefeatCost => Table.DefeatCost;
+
+        /// <summary>What a way back onto a lost board costs. See <c>HeartRescue</c>.</summary>
+        public static long RescueGems => Table.RescueGems;
+
+        /// <summary>Hearts that purchase hands over. Nought withdraws the offer.</summary>
+        public static int RescueHearts => Table.RescueHearts;
+
+        /// <summary>Glades at the head of a mode that cost no heart. See <c>HeartStake</c>.</summary>
+        public static int GraceLevels => Table.GraceLevels;
 
         /// <summary>How long the wait starting at <paramref name="at"/> lasts.</summary>
         public static long PeriodAt(long at, long boostUntilUnix)

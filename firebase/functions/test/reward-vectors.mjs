@@ -30,6 +30,9 @@ if (!existsSync(compiled)) {
 const { earnedCredits, resolveRule, buildChapterRules, DEFAULT_RULE, goldenPercent } =
   await import(pathToFileURL(compiled).href);
 
+const { usableWheelConfig, wheelLanding, applyWheelPercent, WHEEL_MIN_PERCENT } =
+  await import(pathToFileURL(join(REPO, "firebase", "functions", "lib", "wheel.js")).href);
+
 const vectors = JSON.parse(
   readFileSync(join(REPO, "firebase", "shared", "reward-vectors.json"), "utf8")
 );
@@ -240,16 +243,87 @@ for (const [name, floor, day, night, want] of advanceCases) {
 failures += advanceFailures;
 console.log(`  ${advanceCases.length - advanceFailures}/${advanceCases.length} streak advance case(s) ok`);
 
+// --------------------------------------------------------------- bonus wheel
+/**
+ * The third contract in this file: the wheel a won glade spins for its video bonus.
+ *
+ * The wheel is `win_bonus`'s payout made variable, and neither side is told what the other
+ * decided. The phone draws where the wheel stopped before the video plays; this server
+ * recomputes the same slice when the ad network's callback lands, and grants its own
+ * figure. A disagreement is a player watching a wheel stop on nine hundred and then
+ * watching their balance rise by two hundred, which is the worst thing an economy can do
+ * in front of somebody. See invariant 9c.
+ */
+const wheelCases = vectors.wheelCases ?? [];
+const wheel = usableWheelConfig(vectors.wheelConfig);
+
+let wheelFailures = 0;
+
+if (!wheel) {
+  wheelFailures++;
+  console.log("  FAIL the vector wheel is not one this server accepts");
+} else if (!wheelCases.length) {
+  wheelFailures++;
+  console.log("  FAIL the vector file has no wheel cases");
+} else if (!(vectors.wheelBasis > 0)) {
+  wheelFailures++;
+  console.log("  FAIL the vector file has no flat amount for the wheel to multiply");
+} else {
+  for (const testCase of wheelCases) {
+    const landing = wheelLanding(testCase.playerKey, testCase.dayKey, testCase.spinIndex, wheel);
+
+    if (landing !== testCase.landing) {
+      wheelFailures++;
+      console.log(`  FAIL wheel '${testCase.name}': slice expected ${testCase.landing}, ` +
+                  `got ${landing}`);
+      continue;
+    }
+
+    const percent = landing < 0 ? WHEEL_MIN_PERCENT : wheel.slices[landing].percent;
+    if (percent !== testCase.percent) {
+      wheelFailures++;
+      console.log(`  FAIL wheel '${testCase.name}': expected ${testCase.percent}%, got ${percent}%`);
+      continue;
+    }
+
+    const pays = applyWheelPercent(vectors.wheelBasis, percent);
+    if (pays !== testCase.pays) {
+      wheelFailures++;
+      console.log(`  FAIL wheel '${testCase.name}': pays expected ${testCase.pays}, got ${pays}`);
+    }
+  }
+
+  // The pre-sign-in row is the one that matters most and the easiest to lose: a client
+  // rolling against a device id while this server rolls against a uid is the only way the
+  // feature could pay two different numbers for one video.
+  if (!wheelCases.some((c) => !c.playerKey && c.landing === -1)) {
+    wheelFailures++;
+    console.log("  FAIL the wheel vectors no longer cover the pre-sign-in case");
+  }
+
+  // And a set that never leaves one slice would not notice a picker that had stopped
+  // picking - the same guard the golden bands carry above.
+  if (new Set(wheelCases.map((c) => c.landing)).size < 4) {
+    wheelFailures++;
+    console.log("  FAIL the wheel vectors reach fewer than four slices");
+  }
+}
+
+failures += wheelFailures;
+console.log(`  ${wheelCases.length - wheelFailures}/${wheelCases.length} wheel vector(s) ok`);
+
 console.log(`\n${vectors.cases.length} reward vector(s), ${dailyCases.length} chest vector(s), ` +
-            `${streakCases.length} streak vector(s), ${failures} failure(s)`);
+            `${streakCases.length} streak vector(s), ${wheelCases.length} wheel vector(s), ` +
+            `${failures} failure(s)`);
 
 if (failures > 0) {
   console.log(
     "\nThe server no longer matches the shared vectors. If the change was intended, " +
     "update firebase/shared/reward-vectors.json and make the same change in " +
     "Assets/Game/Scripts/Domain/Progression/ProgressionLedger.cs, " +
-    "Assets/Game/Scripts/Domain/Daily/DailyChestTable.cs or " +
-    "Assets/Game/Scripts/Domain/Daily/StreakTable.cs."
+    "Assets/Game/Scripts/Domain/Daily/DailyChestTable.cs, " +
+    "Assets/Game/Scripts/Domain/Daily/StreakTable.cs or " +
+    "Assets/Game/Scripts/Domain/Ads/BonusWheel.cs."
   );
 }
 

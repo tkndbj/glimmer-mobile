@@ -21,6 +21,14 @@ namespace GlimmerGrove.Persistence
     /// (invariant 9). There is deliberately no way to assign it.
     /// </para>
     /// <para>
+    /// <b>The refill cap is per player now that containers exist, and that changed nothing
+    /// else here.</b> Every reading of "where the clock stops" goes through
+    /// <see cref="HeartContainerLedger.RefillCap"/> rather than <see cref="HeartRules"/>, so a
+    /// container raises the cap without touching the ledger, the ceiling, the structural bound
+    /// or the join — which is exactly what makes an entitlement safe to sell for real money
+    /// where an amount would not be. See <see cref="HeartContainerLedger"/>.
+    /// </para>
+    /// <para>
     /// <b>The refill cap is a rule about the clock, not about the ledger.</b> The structural
     /// bound is <see cref="HeartLimits.HardCeiling"/> rather than the five a timer stops at,
     /// which is the whole of what changed when rewards were allowed to stack past a full
@@ -78,8 +86,12 @@ namespace GlimmerGrove.Persistence
             // — cheap, but this is on the path every HUD tick takes.
             var rules = HeartRules.Table;
 
+            // The cap this player's timer stops at, which is the published one unless they
+            // have bought a container — see HeartContainerLedger. Everything else in the
+            // bounds is content, and the ceiling and the structural bound are untouched by a
+            // purchase, so the merge proof this whole type rests on is unmoved.
             return new RegenBounds(
-                rules.RefillCap, rules.Ceiling, HeartLimits.HardCeiling,
+                HeartContainerLedger.RefillCap, rules.Ceiling, HeartLimits.HardCeiling,
                 new RegenPeriod(rules.RefillSeconds, rules.BoostedRefillSeconds, boostUntilUnix));
         }
 
@@ -124,7 +136,7 @@ namespace GlimmerGrove.Persistence
 
         /// <summary>A new account's starting set: the refill cap, which is what the clock
         /// would have brought them to anyway.</summary>
-        public static Hearts Full => Ledger(HeartRules.RefillCap, 0, 0);
+        public static Hearts Full => Ledger(HeartContainerLedger.RefillCap, 0, 0);
 
         /// <summary>Hearts held, never below zero and never above the ceiling.</summary>
         public int Count => (int)_ledger.Count;
@@ -138,7 +150,7 @@ namespace GlimmerGrove.Persistence
         /// kind of maximum. <see cref="IsAtCeiling"/> is the other question, and only one
         /// caller has ever needed it.
         /// </summary>
-        public bool IsRefilled => _ledger.IsRefilled(HeartRules.RefillCap);
+        public bool IsRefilled => _ledger.IsRefilled(HeartContainerLedger.RefillCap);
 
         /// <summary>
         /// Whether another heart would be thrown away — the <em>published</em> ceiling, so
@@ -159,7 +171,7 @@ namespace GlimmerGrove.Persistence
         /// Derived rather than stored, which is the whole trick: the screen still gets its
         /// "no timer" sentinel, and the merge never sees one.
         /// </summary>
-        public long NextRefillUnix => _ledger.NextDueUnix(HeartRules.RefillCap);
+        public long NextRefillUnix => _ledger.NextDueUnix(HeartContainerLedger.RefillCap);
 
         /// <summary>
         /// Brings the state up to date at <paramref name="now"/>, granting whatever refills
@@ -228,7 +240,8 @@ namespace GlimmerGrove.Persistence
         public static long JoinBoost(long a, long b) => a > b ? a : b;
 
         /// <summary>Seconds until the next heart, or 0 when no timer is running or it is overdue.</summary>
-        public long SecondsToNext(long now) => _ledger.SecondsToNext(now, HeartRules.RefillCap);
+        public long SecondsToNext(long now)
+            => _ledger.SecondsToNext(now, HeartContainerLedger.RefillCap);
 
         /// <summary>
         /// Joins two devices' hearts. Three <c>max</c>es and no special cases — see
@@ -258,6 +271,6 @@ namespace GlimmerGrove.Persistence
         public static bool operator !=(Hearts a, Hearts b) => !a.Equals(b);
 
         public override string ToString()
-            => $"{Count}/{HeartRules.RefillCap} hearts (produced {Produced}, spent {Spent}), next at {NextRefillUnix}";
+            => $"{Count}/{HeartContainerLedger.RefillCap} hearts (produced {Produced}, spent {Spent}), next at {NextRefillUnix}";
     }
 }

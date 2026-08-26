@@ -32,19 +32,6 @@ namespace GlimmerGrove.Content
         /// </summary>
         public override LevelTuning Tune(LevelDto dto, ILevelRules rules) => LevelTuning.Default(1);
 
-        public override void Validate(LevelDefinition level, List<LevelIssue> issues)
-        {
-            var well = (FallRules)level.Rules;
-
-            if (well.Width < 4 || well.Width > 8)
-                issues.Add(new LevelIssue(LevelIssueSeverity.Error,
-                    $"a well is 4..8 wide; this one is {well.Width}"));
-
-            if (well.Height < 6 || well.Height > 14)
-                issues.Add(new LevelIssue(LevelIssueSeverity.Error,
-                    $"a well is 6..14 tall; this one is {well.Height}"));
-        }
-
         public override string RecordStem => "ui.rank.points";
     }
 

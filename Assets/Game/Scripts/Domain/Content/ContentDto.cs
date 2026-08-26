@@ -320,13 +320,6 @@ namespace GlimmerGrove.Content
         /// </summary>
         public float budgetFactor;
 
-        /// <summary>
-        /// Seconds of clock per par turn. 0 takes the default; a negative value removes
-        /// the timer entirely, which is the only way to author an untimed glade — a
-        /// tutorial board, say, where a countdown teaches the wrong lesson.
-        /// </summary>
-        public float timeFactor;
-
         // ---- presentation, all optional ------------------------------------
         // ---- the mode blocks ----------------------------------------------
         // A level carries exactly one of these, or none and a `rows` grid, which is a glade.
@@ -516,18 +509,35 @@ namespace GlimmerGrove.Content
         /// </summary>
         public HintsDto hints;
 
-        /// <summary>
-        /// How hard the game is. Optional: absent means the content is played as authored.
-        ///
-        /// Rides here for the reasons every block above it does, and one of its own: it is
-        /// the only block that is not about the economy at all, and it still has to be tuned
-        /// beside one. Difficulty decides how often a run is lost, a loss costs a heart, and
-        /// the heart gate directly above it decides how much that costs — so the three are
-        /// one lever seen from three sides, and moving any of them alone is how a game ends
-        /// up either ungated or unplayable.
-        /// </summary>
-        public DifficultyDto difficulty;
         public PromptsDto prompts;
+
+        /// <summary>
+        /// How many stars of a chapter open the chapter after it. Optional: absent means the
+        /// built-in gate stands.
+        ///
+        /// Rides here rather than in the manifest for two reasons. It is a <em>rule</em> and
+        /// not a fact about any one chapter — the manifest owns membership and order
+        /// (invariant 4a) and a per-chapter number there would be one more thing
+        /// <c>Sync Manifest</c> has to carry through a rewrite. And it is the pacing lever
+        /// with the widest reach in the file: it decides how much of a chapter a player has
+        /// to master before the next one opens, which is how many glades a day they have
+        /// left worth playing, which is what every credit figure above it is paid per.
+        /// </summary>
+        public ChapterGateDto chapterGate;
+
+        /// <summary>
+        /// What a second chance costs. Optional: absent means the built-in price stands.
+        ///
+        /// <para>
+        /// Rides here rather than in the store block, which is the distinction worth keeping:
+        /// a continue is not a <em>good</em>. It grants no currency, it is not adjudicated,
+        /// the seeder does not read it, and nothing about it reaches a receipt — it is a gem
+        /// price on a rule the phone enforces, which is the same shape the heart gate has.
+        /// The block it is tuned against is <c>hearts</c>, not <c>store</c>: what a continue is
+        /// worth is entirely a question of what losing costs.
+        /// </para>
+        /// </summary>
+        public ContinueDto continueRun;
 
         /// <summary>
         /// What the shop sells. Optional: absent means the built-in ladder stands.
@@ -600,7 +610,8 @@ namespace GlimmerGrove.Content
         /// </summary>
         public string kind;
 
-        /// <summary><c>gems</c>, <c>coins</c> or <c>bundles</c>.</summary>
+        /// <summary><c>gems</c>, <c>coins</c>, <c>bundles</c>, or <c>supplies</c> for a
+        /// heart container.</summary>
         public string shelf;
 
         /// <summary>Credits the server grants against a validated receipt.</summary>
@@ -608,6 +619,25 @@ namespace GlimmerGrove.Content
 
         /// <summary>Gems the server grants against a validated receipt.</summary>
         public long gems;
+
+        /// <summary>
+        /// Where this moves the heart refill cap to, for a container; absent or nought on a
+        /// currency product.
+        ///
+        /// <para>
+        /// The one non-currency thing a real-money product may grant, and the reasoning that
+        /// permits it is in <c>StoreProduct.HeartCapacity</c>. Nought is "not a container"
+        /// rather than "a container worth nothing", which is safe here for the reason it is
+        /// not safe on <c>ContinueDto.enabled</c>: a zero written by <c>JsonUtility</c> into a
+        /// field an older file never had means exactly what an older file meant.
+        /// </para>
+        /// <para>
+        /// A capacity, not a bonus: what a player holds is the largest container they own, so
+        /// a restore, a re-delivery or buying the rungs out of order all resolve to the same
+        /// number.
+        /// </para>
+        /// </summary>
+        public int heartCapacity;
 
         /// <summary>
         /// What this is expected to cost, in US cents. <b>Never displayed.</b> It is what
@@ -660,17 +690,6 @@ namespace GlimmerGrove.Content
         public int quietHours = -1;
     }
 
-    [Serializable]
-    public sealed class DifficultyDto
-    {
-        /// <summary>
-        /// Multiplies every glade's time limit. Anything at or below 0 means "not set",
-        /// which is the convention every other optional number in this file uses — see
-        /// <see cref="HeartsDto.refillCap"/>. Bounded by <c>DifficultyLimits</c>.
-        /// </summary>
-        public float clockScale = -1f;
-    }
-
     /// <summary>
     /// How many hearts a player may hold and how fast they come back.
     ///
@@ -713,6 +732,42 @@ namespace GlimmerGrove.Content
 
         /// <summary>Hearts one lost run costs.</summary>
         public int defeatCost = -1;
+
+        /// <summary>
+        /// What buying a way back onto a lost board costs, in gems. See <c>HeartRescue</c>.
+        ///
+        /// Zero is refused rather than obeyed — a free heart is a gate that no longer gates,
+        /// and there is a field next door that says "no offer" properly.
+        /// </summary>
+        public long rescueGems = -1L;
+
+        /// <summary>
+        /// Hearts that purchase hands over. <b>Zero withdraws the offer entirely</b>, which is
+        /// why it is the switch and the price is not: an offer that hands over nothing is not a
+        /// cheap offer, it is no offer, so the two readings cannot be confused.
+        ///
+        /// <para>
+        /// -1 is "not written, inherit" and it has to be, for <c>ContinueDto.enabled</c>'s
+        /// reason: <c>JsonUtility</c> instantiates this class even when the JSON has no such
+        /// block, so a default of zero would silently withdraw the feature on every client that
+        /// had not yet taken a content push.
+        /// </para>
+        /// </summary>
+        public int rescueHearts = -1;
+
+        /// <summary>
+        /// How many glades at the start of a mode cost no heart at all — the window in which
+        /// a player is still working out what the mode <em>is</em>.
+        ///
+        /// <para>
+        /// Zero is legal and switches the window off, which is why the tri-state matters here
+        /// more than anywhere else in this block: "not written" has to mean the built-in three
+        /// rather than none. See <c>HeartStake</c> for what the number is counted over — it is
+        /// the first chapter of <em>each</em> mode, so a mode shipped later opens as gently as
+        /// the first one did.
+        /// </para>
+        /// </summary>
+        public int graceLevels = -1;
     }
 
     /// <summary>
@@ -746,6 +801,76 @@ namespace GlimmerGrove.Content
 
         /// <summary>Seconds between refills.</summary>
         public int refillSeconds = -1;
+    }
+
+    /// <summary>
+    /// What it takes to open the next chapter.
+    ///
+    /// <para>
+    /// One number, and it is written <em>per level</em> rather than as a total on purpose.
+    /// A chapter is not a fixed size — chapters ship every two to four weeks and nothing
+    /// says the next one holds ten glades — so a total of 20 would be two thirds of one
+    /// chapter and a fifth of another, and the rule a player learned on the first would
+    /// quietly stop being the rule. Two stars a level is a sentence that survives a chapter
+    /// of any length, and it is what the panel that explains the gate says.
+    /// </para>
+    /// <para>
+    /// -1 is "not written, inherit", the tri-state every other optional number in this file
+    /// uses. Zero is a legal value and is the lever's whole point: it opens every chapter at
+    /// once, which is the change that has to be available in minutes if the gate turns out to
+    /// be a wall. Bounded by <c>ChapterGateLimits</c>.
+    /// </para>
+    /// </summary>
+    [Serializable]
+    public sealed class ChapterGateDto
+    {
+        /// <summary>Stars per level of the chapter behind it. 3 means perfect play.</summary>
+        public int starsPerLevel = -1;
+    }
+
+    /// <summary>
+    /// What it costs to carry a lost run on, and how much allowance that buys.
+    ///
+    /// <para>
+    /// Every field is the tri-state this file uses throughout: <b>-1 is "not written,
+    /// inherit"</b>, and it has to be, because <c>JsonUtility</c> instantiates a
+    /// <c>[Serializable]</c> class field even when the JSON carries no such key — so "the
+    /// block is absent" and "the block is present and empty" arrive here as the same object,
+    /// and only a value a real setting cannot hold can tell them apart. The same rule
+    /// invariant 11b states for the save file, in the other direction.
+    /// </para>
+    /// <para>
+    /// That is also why <see cref="enabled"/> is an integer rather than a <c>bool</c>. A bool
+    /// would read <c>false</c> for a file written before this block existed, which would
+    /// withdraw the offer from every client that had not taken a content push — the exact
+    /// failure the tri-state exists to prevent, on the one field where it would be silent.
+    /// Zero switches it off; anything below zero inherits, which is on.
+    /// </para>
+    /// <para>
+    /// Bounded by <c>ContinueLimits</c>, which is where the reasoning behind each number
+    /// lives.
+    /// </para>
+    /// </summary>
+    [Serializable]
+    public sealed class ContinueDto
+    {
+        /// <summary>0 withdraws the offer entirely. -1 inherits, which is on.</summary>
+        public int enabled = -1;
+
+        /// <summary>What the first continue on a run costs, in gems.</summary>
+        public long gems = -1L;
+
+        /// <summary>
+        /// What each continue already taken adds to the next one's price. 0 is flat, which
+        /// is what ships — a run may be continued as often as the player can pay for.
+        /// </summary>
+        public long gemsStep = -1L;
+
+        /// <summary>Turns a glade's continue hands over, above whatever it took to un-lose it.</summary>
+        public int turns = -1;
+
+        /// <summary>Cells of light a weave's continue hands over, on the same terms.</summary>
+        public int ink = -1;
     }
 
     /// <summary>
@@ -957,6 +1082,49 @@ namespace GlimmerGrove.Content
         /// which is how an offer is withdrawn without a build.
         /// </summary>
         public AdPlacementDto[] placements;
+
+        /// <summary>
+        /// The wheel <c>win_bonus</c> is spun for, or absent for a flat offer.
+        ///
+        /// <para>
+        /// Optional, and its absence means the <em>flat</em> offer rather than a built-in
+        /// ladder — the one table here that does not fall back to a default. A published file
+        /// that has never heard of the wheel must keep paying exactly the amount it authored,
+        /// or a client taking a content push would start drawing multipliers that the server
+        /// reading the same file would never grant. See <c>BonusWheel.None</c>.
+        /// </para>
+        /// </summary>
+        public AdWheelDto wheel;
+    }
+
+    /// <summary>
+    /// The bonus wheel: a list of multipliers on <c>win_bonus</c>'s own amount.
+    ///
+    /// <para>
+    /// Every slice is the same size and every slice is equally likely, so there are no
+    /// weights here and there must never be: equal wedges drawn over unequal odds is a lie
+    /// the picture tells, and it is the one loot-box regulation exists to catch. Variance is
+    /// authored as the spread of <see cref="AdWheelSliceDto.percent"/>, where the player can
+    /// see all of it at once.
+    /// </para>
+    /// </summary>
+    [Serializable]
+    public sealed class AdWheelDto
+    {
+        /// <summary>
+        /// The rim, in the order it is drawn. Four to twelve of them; see <c>WheelRules</c>.
+        /// </summary>
+        public AdWheelSliceDto[] slices;
+    }
+
+    /// <summary>
+    /// One wedge. <c>percent</c> is a multiplier on the placement's ordinary payout and
+    /// <b>may never be below 100</b> — the wheel only ever adds. See <c>WheelRules</c>.
+    /// </summary>
+    [Serializable]
+    public sealed class AdWheelSliceDto
+    {
+        public int percent;
     }
 
     /// <summary>

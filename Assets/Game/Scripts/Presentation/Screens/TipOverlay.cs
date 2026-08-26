@@ -90,6 +90,15 @@ namespace GlimmerGrove
         const float Dim = .78f;
         const float Pad = 18f;
 
+        /// <summary>How near the screen's edge the bubble may slide. See <see cref="BuildBubble"/>.</summary>
+        const float EdgeMargin = 24f;
+
+        /// <summary>
+        /// How far from the bubble's centre the beak may sit: half the paper, less its rounded
+        /// corner and half the beak's own width, so it always has flat paper under it.
+        /// </summary>
+        const float BeakReach = 780f * .5f - 28f - 23f;
+
         protected override void Build()
         {
             var ring = RectOf(Target);
@@ -287,7 +296,7 @@ namespace GlimmerGrove
             float bodyHeight = FitBody(body, Mathf.Max(140f, MaxHeight() - Chrome), BodyMin);
             float height = Chrome + bodyHeight;
 
-            float y = 0f;
+            float y = 0f, x = 0f;
             bool above = false;
 
             if (spot.HasValue)
@@ -301,13 +310,31 @@ namespace GlimmerGrove
 
                 above = below < -limit;
                 y = Mathf.Clamp(above ? over : below, -limit, limit);
+
+                // Slid towards whatever it is naming, as far as the screen allows.
+                //
+                // It used to be hard-centred, which was invisible for as long as every tip
+                // pointed at a board tile: a board is centred too, so the subject was always
+                // within the beak's own clamp and the beak reached it. The first tip aimed at
+                // a *corner* control breaks that — the mode switcher's centre is 356 from the
+                // middle of a 1080 canvas, the beak clamps at 273, and the result is a pointer
+                // aimed 83px to the left of the pill it is talking about, on a bubble whose
+                // right edge stops 134px short of the thing under discussion.
+                //
+                // Sliding the paper fixes the general case rather than that one control: the
+                // bubble goes as near its subject as it can without leaving the screen, and
+                // the beak then has a short distance to cover instead of an impossible one.
+                // For a centred board tile the slide is small and the beak lands exactly where
+                // it always did, so nothing already shipped moves anywhere it should not.
+                float room = Content.rect.width * .5f - Width * .5f - EdgeMargin;
+                x = room > 0f ? Mathf.Clamp(hole.center.x, -room, room) : 0f;
             }
 
             // A plain white bubble rather than the carved wooden panel the other
             // overlays use. Those are furniture the player is meant to look at; this is
             // a note about something else on screen, and it should get out of the way.
             var panel = UIKit.Img("Bubble", Content, Art.Round(28), Color.white,
-                                  new Vector2(Width, height), new Vector2(.5f, .5f), new Vector2(0f, y));
+                                  new Vector2(Width, height), new Vector2(.5f, .5f), new Vector2(x, y));
             var rt = (RectTransform)panel.transform;
 
             var edge = UIKit.Img("Edge", rt, Art.RoundOutline(28, 3f), new Color(.10f, .13f, .17f, .16f));
@@ -323,9 +350,13 @@ namespace GlimmerGrove
             if (spot.HasValue)
             {
                 // A little pointer, so the bubble reads as belonging to the ring.
+                // Relative to the bubble, which has just been slid — an absolute position here
+                // would put the beak back where the subject is *not*. Still clamped, so it
+                // stays on the straight part of the paper rather than climbing a rounded
+                // corner, for the case where even a fully slid bubble cannot reach.
                 var beak = UIKit.Img("Beak", rt, Art.Crystal(48), Color.white,
                                      new Vector2(46f, 46f), new Vector2(.5f, above ? 0f : 1f),
-                                     new Vector2(Mathf.Clamp(spot.Value.center.x, -Width * .35f, Width * .35f),
+                                     new Vector2(Mathf.Clamp(spot.Value.center.x - x, -BeakReach, BeakReach),
                                                  above ? 14f : -14f));
                 beak.raycastTarget = false;
             }

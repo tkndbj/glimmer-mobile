@@ -545,12 +545,10 @@ namespace GlimmerGrove.Ads
                     break;
 
                 case ChestDropKind.RunTime:
-                    // Deliberately nothing. The reward is seconds on a RunClock that belongs
-                    // to one screen and one run, and this is a static with no view of either.
-                    // Redeem returns the drop and the caller applies it — see
-                    // ChestDropKind.RunTime. An empty case rather than a default, so adding
-                    // a kind and forgetting it here still fails the switch review rather
-                    // than falling into this one.
+                    // Deliberately nothing, and now unreachable: the retired placement that
+                    // paid it is gone and AdRewardTable refuses a transient kind outright.
+                    // Kept as an explicit case rather than folded into a default, so adding
+                    // a kind and forgetting it here still fails the switch review.
                     break;
             }
         }

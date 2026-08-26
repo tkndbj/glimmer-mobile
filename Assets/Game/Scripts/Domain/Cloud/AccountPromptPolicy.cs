@@ -69,7 +69,7 @@ namespace GlimmerGrove.Cloud
     /// </para>
     /// <para>
     /// <b>It holds no clock and reaches nothing.</b> Handed the time and the account's state,
-    /// exactly as <c>SyncScheduler</c> and <c>RunClock</c> are handed theirs, so the whole
+    /// exactly as <c>SyncScheduler</c> and <c>RunScreen.Tick</c> are handed theirs, so the whole
     /// policy runs in the offline test suite — which matters here more than usual, because
     /// every state it is about (a live SDK session, a real purchase, a device that has been
     /// away for two days) is one the Editor never reaches. Persisting the counts is the

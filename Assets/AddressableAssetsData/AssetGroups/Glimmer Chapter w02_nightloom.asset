@@ -1,0 +1,53 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: bbb281ee3bf0b054c82ac2347e9e782c, type: 3}
+  m_Name: Glimmer Chapter w02_nightloom
+  m_EditorClassIdentifier: Unity.Addressables.Editor::UnityEditor.AddressableAssets.Settings.AddressableAssetGroup
+  m_GroupName: Glimmer Chapter w02_nightloom
+  m_GUID: c1afcd4e1842e1149a5cd62e038a46f4
+  m_SerializeEntries:
+  - m_GUID: 2f507db11ef408e44b8cc309e489a5fd
+    m_Address: Art/Map/w02_strip0
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 467b9c8580ca48240b422d0c77ee1996
+    m_Address: Art/Bg/w02_play_0
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 83b664a3fea03f942b697311ae60878f
+    m_Address: Art/Map/w02_strip2
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 88dc80402b3c368448e45969341b438b
+    m_Address: Art/Map/w02_strip3
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: f80453c701f4e714c9c8472f6c7ae4b2
+    m_Address: Art/Map/w02_strip1
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  m_ReadOnly: 0
+  m_Settings: {fileID: 11400000, guid: 6c4c5f6eb57af6542b195d29840b42f2, type: 2}
+  m_SchemaSet:
+    m_Schemas:
+    - {fileID: 11400000, guid: c1a7c6fcbd717fa448c8cd2e5d90470a, type: 2}
+    - {fileID: 11400000, guid: 78f0c42c7f1563b4a8d450b7b783cae7, type: 2}
+    m_SchemaDisplayOrder:
+    - Glimmer Chapter w02_nightloom_BundledAssetGroupSchema
+    - Glimmer Chapter w02_nightloom_ContentUpdateGroupSchema
+  m_IncludeInBuild: 1
+  m_IncludeInBuildMigrated: 1

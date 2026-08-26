@@ -83,8 +83,9 @@ namespace GlimmerGrove.Progression
                          Dictionary<ChapterId, RewardRule> chapterRules,
                          DailyChestTable daily, AdRewardTable ads, StreakTable streak,
                          GoldenTable golden, HeartRuleTable hearts, HintRuleTable hints,
-                         StoreCatalog store, DifficultyRuleTable difficulty,
-                         AccountPromptRuleTable prompts)
+                         StoreCatalog store,
+                         AccountPromptRuleTable prompts, ChapterGateTable chapterGate,
+                         ContinueTable carryOn)
         {
             _cumulative = cumulative;
             _defaultRule = defaultRule;
@@ -96,8 +97,9 @@ namespace GlimmerGrove.Progression
             Hearts = hearts ?? HeartRuleTable.Default;
             Hints = hints ?? HintRuleTable.Default;
             Store = store ?? StoreCatalog.Default;
-            Difficulty = difficulty ?? DifficultyRuleTable.Default;
             Prompts = prompts ?? AccountPromptRuleTable.Default;
+            ChapterGate = chapterGate ?? ChapterGateTable.Default;
+            Continue = carryOn ?? ContinueTable.Default;
         }
 
         /// <summary>
@@ -178,15 +180,6 @@ namespace GlimmerGrove.Progression
         public StoreCatalog Store { get; }
 
         /// <summary>
-        /// How hard the glades are, published with the curve because it is the gate seen from
-        /// the other side. The heart table decides what a loss costs; this decides how often
-        /// one happens. Tuning either without the other in front of you changes how many
-        /// sessions a day a player gets by a factor nobody wrote down — the same argument the
-        /// gate itself makes against being tuned apart from the reward curve.
-        /// </summary>
-        public DifficultyRuleTable Difficulty { get; }
-
-        /// <summary>
         /// How often an anonymous player may be asked to attach a real account.
         ///
         /// Published for the reason the ad cooldown is: it paces an interruption, nothing
@@ -194,6 +187,30 @@ namespace GlimmerGrove.Progression
         /// guessed before launch. See <see cref="AccountPromptRuleTable"/>.
         /// </summary>
         public AccountPromptRuleTable Prompts { get; }
+
+        /// <summary>
+        /// How much of a chapter opens the chapter after it.
+        ///
+        /// Published with the curve because it is what every number above it is paid
+        /// <em>per</em>. The reward rule says what a glade is worth, the heart gate says how
+        /// many a player gets to attempt in a day, and this says how many are worth attempting
+        /// at all — a gate tightened without the curve in front of you is a game whose next
+        /// chapter costs more replays than the replays pay for. See <see cref="ChapterGateTable"/>.
+        /// </summary>
+        public ChapterGateTable ChapterGate { get; }
+
+        /// <summary>
+        /// What it costs to carry a lost run on.
+        ///
+        /// <para>
+        /// Rides with the curve for the reason every other block here does: one table, one
+        /// fetch, one atomic swap. A separately-loaded price would let a player briefly hold a
+        /// new continue cost against an old heart gate, and those two numbers only mean
+        /// anything beside each other — what a second chance is worth is entirely a question
+        /// of what losing costs. See <see cref="ContinueTable"/>.
+        /// </para>
+        /// </summary>
+        public ContinueTable Continue { get; }
 
         /// <summary>
         /// A usable curve for when no file could be read. The game stays playable and
@@ -214,8 +231,9 @@ namespace GlimmerGrove.Progression
             hearts: HeartRuleTable.Default,
             hints: HintRuleTable.Default,
             store: StoreCatalog.Default,
-            difficulty: DifficultyRuleTable.Default,
-            prompts: AccountPromptRuleTable.Default);
+            prompts: AccountPromptRuleTable.Default,
+            chapterGate: ChapterGateTable.Default,
+            carryOn: ContinueTable.Default);
 
         /// <summary>Highest level this curve defines. Level 1 always exists.</summary>
         public int MaxLevel => _cumulative.Length;
@@ -405,19 +423,27 @@ namespace GlimmerGrove.Progression
             // the server would refuse to honour.
             var store = StoreCatalog.Resolve(dto.store, problems);
 
-            // And once more, for the only block that is not about money at all. An unreadable
-            // difficulty block costs the live tuning of the clock and nothing else — the
-            // content is played exactly as authored, which is a working game.
-            var difficulty = DifficultyRuleTable.Resolve(dto.difficulty, problems);
-
             // And the only block that is not about the game at all. An unreadable prompts
             // block costs the live pacing of one panel; the built-in pacing is a working game
             // and a working shop.
             var prompts = AccountPromptRuleTable.Resolve(dto.prompts, problems);
 
+            // And once more, for the block that paces the content rather than the economy. An
+            // unreadable chapter gate costs the live pacing of how a catalog opens up and
+            // nothing else — the built-in gate is a working game — and it clamps rather than
+            // rejecting, because the one value that must never be reachable by a typo is a
+            // requirement no amount of play could meet.
+            var chapterGate = ChapterGateTable.Resolve(dto.chapterGate, problems);
+
+            // And the price of a second chance, which is neither an economy block nor a
+            // pacing one but sits between them: it decides what losing actually costs, so it
+            // is tuned against the heart gate above rather than against the shop below. An
+            // unreadable block costs live tuning and never the feature — see ContinueTable.
+            var carryOn = ContinueTable.Resolve(dto.continueRun, problems);
+
             table = Build(dto.xpToNext, dto.tailXpToNext, dto.tailXpIncrement, maxLevel,
                           defaultRule, chapterRules, daily, ads, streak, golden, hearts, hints,
-                          store, difficulty, prompts);
+                          store, prompts, chapterGate, carryOn);
             return true;
         }
 
@@ -427,8 +453,9 @@ namespace GlimmerGrove.Progression
                                       DailyChestTable daily, AdRewardTable ads,
                                       StreakTable streak, GoldenTable golden,
                                       HeartRuleTable hearts, HintRuleTable hints,
-                                      StoreCatalog store, DifficultyRuleTable difficulty,
-                                      AccountPromptRuleTable prompts)
+                                      StoreCatalog store,
+                                      AccountPromptRuleTable prompts, ChapterGateTable chapterGate,
+                                      ContinueTable carryOn)
         {
             if (maxLevel < 1) maxLevel = 1;
 
@@ -446,7 +473,8 @@ namespace GlimmerGrove.Progression
             }
 
             return new ProgressionTable(cumulative, defaultRule, chapterRules, daily, ads, streak,
-                                        golden, hearts, hints, store, difficulty, prompts);
+                                        golden, hearts, hints, store, prompts,
+                                        chapterGate, carryOn);
         }
     }
 }

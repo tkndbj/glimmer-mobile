@@ -58,12 +58,8 @@ namespace GlimmerGrove.Content
                 par,
                 dto.goldFactor > 0f ? dto.goldFactor : LevelTuning.DefaultGoldFactor,
                 dto.silverFactor > 0f ? dto.silverFactor : LevelTuning.DefaultSilverFactor,
-                dto.budgetFactor,
-                dto.timeFactor);
+                dto.budgetFactor);
         }
-
-        public override void Validate(LevelDefinition level, List<LevelIssue> issues)
-            => LevelValidator.ValidateGlade(level, issues);
 
         static int WidestRow(string[] rows)
         {

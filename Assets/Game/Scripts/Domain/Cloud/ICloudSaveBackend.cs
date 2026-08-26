@@ -184,6 +184,59 @@ namespace GlimmerGrove.Cloud
         /// and counting both would show a balance the server will not honour.
         /// </summary>
         public List<string> ConfirmedGrantIds = new List<string>();
+
+        /// <summary>
+        /// Heart containers the server has <b>revoked</b> — receipts it granted and has since
+        /// reversed because the store refunded or charged back the payment.
+        ///
+        /// <para>
+        /// An account fact rather than a currency one, carried on every row because the reply
+        /// is a list of currency rows and repeating one short list is cheaper than giving four
+        /// callables a second shape. A reader may take it from any row.
+        /// </para>
+        /// <para>
+        /// <b>A revocation list, never an ownership list</b>, and that is the safety of the
+        /// whole design. An id absent from here means nothing at all, so a short reply, a cold
+        /// account or a deployment that predates the field can never take back something
+        /// somebody paid for; an entry can only be produced by a refund that really happened.
+        /// See <c>HeartContainerLedger.ApplyServerRevocations</c> and invariant 18c.
+        /// </para>
+        /// </summary>
+        public List<string> RevokedContainers = new List<string>();
+
+        /// <summary>
+        /// Whether this reply carried the bonus wheel's position at all.
+        ///
+        /// <para>
+        /// Reported separately from the numbers, and that separation is the whole safety of
+        /// the feature. A brand-new account legitimately answers day 0, spin 0, which is
+        /// indistinguishable from a deployment that has never heard of the wheel unless the
+        /// presence of the key is a fact in its own right — and reading those zeros as an
+        /// answer would draw a wheel in front of a server that grants the flat amount. False
+        /// on any reply from before the field existed, which is what makes shipping the client
+        /// ahead of the functions cost a feature nobody has seen rather than a payout nobody
+        /// honours. See <c>WheelStand.ApplyServerState</c> and invariant 12a.
+        /// </para>
+        /// </summary>
+        public bool CarriesWheel;
+
+        /// <summary>The UTC day <see cref="WheelSpins"/> is counted for.</summary>
+        public int WheelDay;
+
+        /// <summary>
+        /// How many <c>win_bonus</c> views this server has granted the account today, and
+        /// therefore which spin of the wheel the next one is.
+        ///
+        /// <para>
+        /// Server-owned because it decides money: the slice is a pure function of (account,
+        /// day, spin index), so a counter the client kept for itself would drift the first time
+        /// a verification callback was delayed past the next win — and the visible form of that
+        /// drift is a wheel landing on five hundred while the balance rises by two. It rides
+        /// here for <see cref="RevokedContainers"/>'s reason, on the document no client may
+        /// write, repeated on every currency row.
+        /// </para>
+        /// </summary>
+        public int WheelSpins;
     }
 
     /// <summary>

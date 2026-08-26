@@ -62,6 +62,25 @@ namespace GlimmerGrove
         public const string Teaching = "teaching";
 
         /// <summary>
+        /// The run has reached its fail state and the player is deciding whether to buy their
+        /// way past it.
+        ///
+        /// <para>
+        /// Covers the whole sequence rather than the one panel, exactly as
+        /// <see cref="Teaching"/> does — the offer, the gem shop raised on top of it, the
+        /// store's own payment sheet, and the receipt that lands afterwards. The app is
+        /// backgrounded for most of that, and a run that resumed while a purchase was being
+        /// authorised would be one nobody was playing.
+        /// </para>
+        /// <para>
+        /// Named separately rather than folded into whatever a mode already latches, for this
+        /// type's whole reason: a board mid-defeat is locked by its own losing animation, and
+        /// the two releases must not be able to cancel each other.
+        /// </para>
+        /// </summary>
+        public const string Deciding = "deciding";
+
+        /// <summary>
         /// Small enough that a list beats a set on every count that matters here — no
         /// hashing, no allocation on the first take, and it keeps the order for a log line.
         /// </summary>

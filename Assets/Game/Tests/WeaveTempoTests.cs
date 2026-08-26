@@ -136,48 +136,5 @@ namespace GlimmerGrove.Tests
             Assert.AreEqual(0f, WeaveTempo.FinaleSeconds(1), 1e-5f);
             Assert.AreEqual(0f, WeaveTempo.FinaleAt(0, 1), 1e-5f);
         }
-
-        // ------------------------------------------------------------------ the clock
-        [Test]
-        public void AGroveWithNoClockIsNeverUnderPressure()
-        {
-            // The trap this function exists for. WeaveScreen.Remaining answers 0 for an untimed
-            // grove — the honest reading of "there is no countdown", and indistinguishable from
-            // "the countdown has run out" to anything reading it directly. A view wired to that
-            // would put a grove with no clock under a full-brightness alarm from its first frame.
-            Assert.AreEqual(0f, WeaveTempo.Urgency(0, 0), 1e-5f);
-            Assert.AreEqual(0f, WeaveTempo.Urgency(90_000, 0), 1e-5f);
-            Assert.AreEqual(0f, WeaveTempo.Urgency(90_000, int.MaxValue), 1e-5f);
-            Assert.AreEqual(0f, WeaveTempo.Urgency(5_000, -1), 1e-5f);
-        }
-
-        [Test]
-        public void AnOrdinaryRunNeverSeesTheAlarm()
-        {
-            // Late enough to stay meaningful, which is what stops it becoming wallpaper.
-            Assert.AreEqual(0f, WeaveTempo.Urgency(0, 100_000), 1e-5f);
-            Assert.AreEqual(0f, WeaveTempo.Urgency(50_000, 100_000), 1e-5f);
-            Assert.AreEqual(0f, WeaveTempo.Urgency(79_000, 100_000), 1e-5f);
-        }
-
-        [Test]
-        public void ThePressureComesUpSmoothlyAndTopsOutWhenTheLightIsGone()
-        {
-            Assert.Greater(WeaveTempo.Urgency(85_000, 100_000), 0f);
-            Assert.Greater(WeaveTempo.Urgency(95_000, 100_000),
-                           WeaveTempo.Urgency(85_000, 100_000));
-            Assert.AreEqual(1f, WeaveTempo.Urgency(100_000, 100_000), 1e-5f);
-            Assert.AreEqual(1f, WeaveTempo.Urgency(140_000, 100_000), 1e-5f);
-        }
-
-        [Test]
-        public void ThePressureIsAShareOfTheClockRatherThanACountOfSeconds()
-        {
-            // So a two-minute grove and a one-minute grove start pressing at the same point in
-            // the run rather than the same number of seconds from its end - LevelTuning's
-            // argument for factors over flat numbers, one level down.
-            Assert.AreEqual(WeaveTempo.Urgency(95_000, 100_000),
-                            WeaveTempo.Urgency(190_000, 200_000), 1e-4f);
-        }
     }
 }

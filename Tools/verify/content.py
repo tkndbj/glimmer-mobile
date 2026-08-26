@@ -73,12 +73,15 @@ def parse_token(tok, ctx):
         return None
 
 
-    if tok[0] not in '-=%*@x':
+    # 'x' was the duskcap and is deliberately not here. A retired head must be refused
+    # rather than ignored, or a chapter file written for a build that no longer exists
+    # validates green with a tile nothing on the board knows what to do with.
+    if tok[0] not in '-=%*@':
         errors.append(f"{ctx}: unknown head '{tok[0]}' in '{tok}'")
         return None
 
-    kind = {'-': 'pipe', '=': 'cross', '%': 'briar', '*': 'source', '@': 'lamp',
-            'x': 'duskcap'}[tok[0]]
+    kind = {'-': 'pipe', '=': 'cross', '%': 'briar', '*': 'source',
+            '@': 'lamp'}[tok[0]]
     mask, p = read_arms(tok, 1)
     if mask == 0:
         errors.append(f"{ctx}: '{tok}' has no arms")
@@ -150,8 +153,6 @@ def parse_token(tok, ctx):
         errors.append(f"{ctx}: '{tok}' is both brittle and bound to a taproot")
     if kind == 'source' and colour == 0:
         errors.append(f"{ctx}: heart-crystal '{tok}' emits no colour")
-    if kind == 'duskcap' and colour:
-        errors.append(f"{ctx}: a duskcap takes no colour ('{tok}')")
     if kind == 'cross' and colour:
         errors.append(f"{ctx}: a crossing takes no colour ('{tok}')")
     if kind == 'briar' and colour:
@@ -162,13 +163,17 @@ def parse_token(tok, ctx):
                 fragile=fragile, link=link, cross=cross, gate=gate)
 
 
-# Difficulty, mirroring LevelTuning.cs and DifficultyRuleTable.cs. The star thresholds are
-# factors over par rather than fractions of the limit, which is what lets the published
-# clockScale move where a run is lost without moving what a clear is worth.
-DEFAULT_TIME_FACTOR = 1.70
-TIME_GOLD_FACTOR, TIME_SILVER_FACTOR = 1.00, 1.50
-MIN_CLOCK_SCALE, MAX_CLOCK_SCALE = 0.60, 2.00
-FINISH_TAP_RATE, STAR_TAP_RATE = 1.2, 1.8
+# Difficulty, mirroring LevelTuning.cs. Both star thresholds and the losing line are
+# multiples of par, and par is derived from the board - so a glade authors no difficulty
+# number at all unless it wants a looser budget than the default.
+#
+# There is nothing here about a clock. A glade used to be graded on the worse of its turns
+# and its time, which meant the turn thresholds - the only half that measures whether the
+# board was solved well - decided nothing for any player who stopped to think. The clock is
+# gone from every mode, and with it `timeFactor`, the published `clockScale` and the tap-rate
+# warnings this file used to raise.
+DEFAULT_BUDGET_FACTOR = 1.60
+GOLD_FACTOR, SILVER_FACTOR = 1.20, 1.40
 
 
 MODE_BLOCKS = ("fall", "keeper", "weave")
@@ -194,8 +199,8 @@ def check_level(level, chapter_id):
         if level.get('rows'):
             errors.append("%s: carries both a grid and a '%s' block" % (lid, claimed[0]))
         return dict(id=lid, chapter=chapter_id,
-                    w=block.get('width', 0), h=block.get('height', 0), par=0, limit=0, rate=0,
-                    gold=0, silver=0, lamps=0, sources=0, fragile=0, caps=0, bound=0,
+                    w=block.get('width', 0), h=block.get('height', 0), par=0, budget=0,
+                    gold=0, silver=0, lamps=0, sources=0, fragile=0, bound=0,
                     crossings=0, briars=0, mode=claimed[0])
 
     # From here it is a glade: a grid of conduits, with everything that has to be proved
@@ -244,59 +249,88 @@ def check_level(level, chapter_id):
     #
     # Walked over strands rather than cells: an ordinary tile has one, and a crossing has
     # two that pass through one another and never meet. Mirrors Puzzle.Evaluate, which is
-    # what lets a dark island run *through* a live network instead of only beside it.
+    # what lets a second network run *through* a live one instead of only beside it.
+    #
+    # Parameterised by `rots` rather than pinned to the solution, because one rule needs to
+    # ask what happens when a single tile is turned - see `decidable` below. Everything else
+    # passes nothing and gets the authored board, which is what every other proof here is
+    # about. Mirrors author.Board.solve_state, and the default is the whole of what the old
+    # inline walk did.
     def strands(c):
         return 2 if c and c['cross'] else 1
 
-    def strand_at(c, d):
+    def strand_at(c, d, r=0):
         if not c['cross']:
             return 0
-        return 0 if c['cross'] & BITS[d] else 1
+        return 0 if rotl(c['cross'], r) & BITS[d] else 1
 
-    comp = [-1] * (len(cells) * 2)
-    comp_colour = []
-    for start in range(len(cells) * 2):
-        i, st = start // 2, start % 2
-        c = cells[i]
-        if not c or st >= strands(c) or comp[start] != -1:
-            continue
-        g = len(comp_colour)
-        colour = 0
-        q = deque([start]); comp[start] = g
-        while q:
-            node = q.popleft()
-            a, sa = node // 2, node % 2
-            ca = cells[a]
-            if ca['kind'] == 'source':
-                colour |= ca['colour']
-            ax, ay = a % w, a // w
-            for d in range(4):
-                if not (live(ca) & BITS[d]):
-                    continue
-                if strand_at(ca, d) != sa:
-                    continue
-                bx, by = ax + STEP[d][0], ay + STEP[d][1]
-                nb = at(bx, by)
-                if nb is None:
-                    continue
-                back = (d + 2) % 4
-                if not (live(nb) & BITS[back]):
-                    continue
-                into = (by * w + bx) * 2 + strand_at(nb, back)
-                if comp[into] != -1:
-                    continue
-                comp[into] = g
-                q.append(into)
-        comp_colour.append(colour)
+    def solve(rots=None):
+        rots = rots or {}
+        comp = [-1] * (len(cells) * 2)
+        comp_colour = []
+        for start in range(len(cells) * 2):
+            i, st = start // 2, start % 2
+            c = cells[i]
+            if not c or st >= strands(c) or comp[start] != -1:
+                continue
+            g = len(comp_colour)
+            colour = 0
+            q = deque([start]); comp[start] = g
+            while q:
+                node = q.popleft()
+                a, sa = node // 2, node % 2
+                ca = cells[a]
+                if ca['kind'] == 'source':
+                    colour |= ca['colour']
+                ax, ay = a % w, a // w
+                ra = rots.get(a, 0)
+                for d in range(4):
+                    if not (rotl(live(ca), ra) & BITS[d]):
+                        continue
+                    if strand_at(ca, d, ra) != sa:
+                        continue
+                    bx, by = ax + STEP[d][0], ay + STEP[d][1]
+                    nb = at(bx, by)
+                    if nb is None:
+                        continue
+                    back = (d + 2) % 4
+                    rb = rots.get(by * w + bx, 0)
+                    if not (rotl(live(nb), rb) & BITS[back]):
+                        continue
+                    into = (by * w + bx) * 2 + strand_at(nb, back, rb)
+                    if comp[into] != -1:
+                        continue
+                    comp[into] = g
+                    q.append(into)
+            comp_colour.append(colour)
+        return comp, comp_colour
 
-    def energy(i):
-        """Every colour reaching a cell, across all of its strands."""
+    comp, comp_colour = solve()
+
+    def energy_in(i, state):
+        """Every colour reaching a cell in the given (comp, comp_colour), across its strands."""
+        found, colours = state
         mix = 0
         for st in range(strands(cells[i])):
-            g = comp[i * 2 + st]
+            g = found[i * 2 + st]
             if g >= 0:
-                mix |= comp_colour[g]
+                mix |= colours[g]
         return mix
+
+    def energy(i):
+        return energy_in(i, (comp, comp_colour))
+
+    def wins(state):
+        """Whether every critter on the board is correctly lit in this arrangement."""
+        any_lamp = False
+        for i, c in enumerate(cells):
+            if not c or c['kind'] != 'lamp':
+                continue
+            any_lamp = True
+            have, want = energy_in(i, state), c['colour']
+            if not ((have != 0) if want == 0 else (have == want)):
+                return False
+        return any_lamp
 
     # A rooted tile must already read as solved, because every proof above ran against
     # a copy of the board with every rotation zeroed - and a rooted tile can never be
@@ -366,14 +400,14 @@ def check_level(level, chapter_id):
         warnings.append(f"{ctx}: carries {real_roots} taproots but a mark can only tell "
                         f"{MAX_READABLE_RUNES} of them apart")
 
-    def separates(i, c):
+    def thorns_separate(i, c):
         """Whether taking this briar's thorns off would join anything to anything.
 
-        Mirrors LevelValidator.CheckBriars. Only the thorned ways are asked about, and the
-        way has to be open on the *other* side too, or lifting these thorns would still join
-        nothing - which is what two briars back to back are. Deliberately not asked: whether
-        the tile carries any light, because a briar standing in an island of dark with its
-        thorns facing the grove is one of the best tiles this mechanic has.
+        No longer the rule - `decidable` is - but kept as the *reason* attached to its
+        warning, because it is the commonest cause and the most actionable one. Only the
+        thorned ways are asked about, and the way has to be open on the *other* side too, or
+        lifting these thorns would still join nothing, which is what two briars back to back
+        are. Mirrors LevelValidator.ThornsSeparate.
         """
         mine = comp[i * 2]
         for d in range(4):
@@ -390,18 +424,48 @@ def check_level(level, chapter_id):
                 return True
         return False
 
-    lamps = lit = caps = woken = crossings = briars = 0
+    def decidable(i, c):
+        """Whether turning this four-armed tile one step off its solution un-finishes the glade.
+
+        Mirrors LevelValidator.CheckDecidableTiles, and it is the rule rather than a proxy
+        for it. A crossing and a briar wear all four arms at every angle, so every neighbour
+        mates them however they are turned and nothing about the pipe-fitting says which way
+        either one goes - which is what makes them worth authoring with and how they fail. If
+        the glade still finishes with one turned, the player cannot place it by looking and
+        has no reason on the board to place it either way.
+
+        Asking the consequence is what fixed the topology check this replaces, which was
+        wrong in both directions: it missed a tile separating two networks of *compatible*
+        colour, and it fired on a briar whose open pair is the only way into a pocket
+        (invariant 5f).
+        """
+        return not wins(solve({i: 1}))
+
+    solution_wins = wins((comp, comp_colour))
+
+    lamps = lit = crossings = briars = 0
     for i, c in enumerate(cells):
         if not c:
             continue
         have = energy(i)
+        if c['kind'] in ('briar', 'cross'):
+            # A straight crossing reads the same at every angle - architecture, and
+            # Stonebridge roots four of them on purpose. A rooted tile cannot be turned at
+            # all, so it decides nothing by construction and saying so would be noise. And
+            # on a board whose solution does not win, the critter count below has the real
+            # complaint and this would bury it.
+            if (solution_wins and not c['locked']
+                    and not alike(c['solved'], c['cross'], 1, c['gate'])
+                    and not decidable(i, c)):
+                bx, by = i % w, i // w
+                why = ("every way it has leads back into one network"
+                       if c['kind'] == 'briar' and not thorns_separate(i, c)
+                       else "the two things it holds apart are answering the same colour")
+                warnings.append(f"{ctx}: turning the {c['kind']} at {bx},{by} one step from "
+                                f"its solution still finishes the glade, so nothing on this "
+                                f"board settles it - {why}")
         if c['kind'] == 'briar':
             briars += 1
-            if not separates(i, c):
-                bx, by = i % w, i // w
-                warnings.append(f"{ctx}: the thorns on the briar at {bx},{by} close nothing "
-                                "off in the authored solution - every way it has leads back "
-                                "into one network")
             continue
         if c['kind'] == 'cross':
             crossings += 1
@@ -413,11 +477,6 @@ def check_level(level, chapter_id):
                 warnings.append(f"{ctx}: neither strand of the crossing at {cx},{cy} carries any "
                                 "light in the authored solution")
             continue
-        if c['kind'] == 'duskcap':
-            caps += 1
-            if have:
-                woken += 1
-            continue
         if c['kind'] != 'lamp':
             continue
         lamps += 1
@@ -428,9 +487,6 @@ def check_level(level, chapter_id):
         errors.append(f"{ctx}: no critters, unwinnable")
     elif lit != lamps:
         errors.append(f"{ctx}: authored solution lights only {lit}/{lamps} critters")
-    if woken:
-        errors.append(f"{ctx}: authored solution wakes {woken}/{caps} duskcap(s); a duskcap's "
-                      "conduits must reach no heart-crystal at all")
 
     sources = sum(1 for c in cells if c and c['kind'] == 'source')
     if sources == 0:
@@ -473,30 +529,42 @@ def check_level(level, chapter_id):
     fragile = sum(1 for c in cells if c and c.get('fragile'))
     bound = len(roots)
 
-    # The clock, derived exactly as LevelTuning does: seconds per par turn, with 0 meaning
-    # "not authored" and only a negative value removing the timer.
-    time_factor = level.get('timeFactor', 0) or DEFAULT_TIME_FACTOR
-    limit = 0 if time_factor < 0 else -(-int(round(par * time_factor * 1000)) // 1) // 1000
+    # The losing line, derived exactly as LevelTuning.MoveBudget does: a multiple of par,
+    # with 0 meaning "not authored" and only a negative value removing the budget. There is
+    # no floor - an authored factor means what it says. It sits below SILVER_FACTOR at the
+    # shipped default, which is deliberate: the budget is the only way a glade can be lost
+    # since the clock was removed, so it has to bite before the player has already stopped
+    # earning stars.
+    gold = -(-int(round(par * GOLD_FACTOR * 100)) // 100)
+    silver = -(-int(round(par * SILVER_FACTOR * 100)) // 100)
 
-    # Gold is held against par, never against the limit, so a retuned clock cannot move it -
-    # LevelTuning.TimeGoldFactor. Clamped to the limit for the same reason it is there.
-    gold_seconds = 0 if not limit else min(limit, par * TIME_GOLD_FACTOR)
-    star_rate = 0 if not gold_seconds else (-(-par * 135 // 100)) / gold_seconds
+    budget_factor = level.get('budgetFactor', 0) or DEFAULT_BUDGET_FACTOR
+    budget = 0 if budget_factor < 0 else -(-int(round(par * budget_factor * 100)) // 100)
 
-    # The tightest clock a published clockScale could cut this to - DifficultyLimits. A glade
-    # merely demanding as authored can be unwinnable as retuned, and the retune never passes
-    # back through this file.
-    if limit:
-        at_floor = par / (limit * MIN_CLOCK_SCALE)
-        if par / limit <= FINISH_TAP_RATE < at_floor:
-            warnings.append(f"{ctx}: the clock allows {limit}s as authored, but a published "
-                            f"clockScale of {MIN_CLOCK_SCALE:g} would cut it to "
-                            f"{limit * MIN_CLOCK_SCALE:.0f}s and need {at_floor:.1f} taps a "
-                            "second just to finish")
+    # The three lines have to be ordered and all three have to be landable, or a band
+    # quietly stops existing while every number in the file still looks plausible. This is
+    # the check that would have caught shipping a 1.60 budget against a 2.00 silver line.
+    #
+    # It reads the *factors* rather than the thresholds they derive: on a board of par 1 or 2
+    # all three round onto the same number however the factors are set, so a check on
+    # thresholds would report a tuning fault whose real cause is the board's size. Mirrors
+    # LevelValidator.CheckStarBands.
+    gold_f, silver_f = GOLD_FACTOR, SILVER_FACTOR
 
-    return dict(id=lid, chapter=chapter_id, w=w, h=h, par=par, limit=limit, rate=star_rate,
-                gold=-(-par * 135 // 100), silver=-(-par * 200 // 100),
-                lamps=lamps, sources=sources, fragile=fragile, caps=caps, bound=bound,
+    if gold_f >= silver_f:
+        errors.append(f"{ctx}: goldFactor {gold_f:g} is not below silverFactor {silver_f:g}, "
+                      "so the two-star band is empty")
+    if budget and budget_factor <= gold_f:
+        errors.append(f"{ctx}: the run ends at par x {budget_factor:g} and three stars is "
+                      f"par x {gold_f:g}, so no run can be graded")
+    elif budget and budget_factor <= silver_f:
+        warnings.append(f"{ctx}: the run ends at par x {budget_factor:g} and two stars is "
+                        f"par x {silver_f:g}, so one star can never be scored - every clear "
+                        "is worth two or three")
+
+    return dict(id=lid, chapter=chapter_id, w=w, h=h, par=par, budget=budget,
+                gold=gold, silver=silver,
+                lamps=lamps, sources=sources, fragile=fragile, bound=bound,
                 crossings=crossings, briars=briars)
 
 
@@ -909,7 +977,12 @@ def check_grove(keys, level_ids, chapter_ids, companions, companion_costs=None):
 # What a card may promise, mirrored from StoreLimits so a content push cannot exceed what
 # the reader and the server will both accept.
 MAX_GRANT = 5_000_000
-STORE_SHELVES = {"gems", "coins", "bundles"}
+STORE_SHELVES = {"gems", "coins", "bundles", "supplies"}
+
+# The heart-container rungs. Mirrors StoreLimits.MinHeartCapacity / MaxHeartCapacity and
+# products.ts MAX_CAPACITY.
+MIN_CAPACITY = 6
+MAX_CAPACITY = 50
 STORE_KINDS = {"consumable", "nonconsumable"}
 HINT_DEFAULTS = {"refillCap": 3, "ceiling": 3, "refillSeconds": 8 * 60 * 60}
 
@@ -943,6 +1016,89 @@ def hint_pool(progression):
 
     return {"cap": cap, "ceiling": ceiling, "seconds": read("refillSeconds"),
             "offer_id": offer_id, "offer": offer, "offer_cap": offer_cap}
+
+
+def bonus_wheel(progression):
+    """The published wheel and what it really makes `win_bonus` worth.
+
+    The wheel multiplies that placement's authored amount, so from the moment it is
+    published the amount stops being what a view is worth and nothing else in the file
+    says so. `BonusWheel.Resolve` is the shipping copy of these rules and
+    `functions/src/wheel.ts` is the server's; this is the third, and it exists because
+    the other two need Unity and a deploy respectively.
+
+    Returns None when there is no wheel, which is the flat offer and not a mistake.
+    """
+    ads = progression.get("ads") or {}
+    wheel = ads.get("wheel") or {}
+    slices = wheel.get("slices") or []
+    if not slices:
+        return None
+
+    base, cap = 0, 0
+    for placement in ads.get("placements") or []:
+        if placement.get("id") == "win_bonus":
+            base = placement.get("amount", 0)
+            cap = placement.get("dailyCap", 0)
+
+    percents = [int(entry.get("percent", 0)) for entry in slices]
+
+    return {
+        "percents": percents,
+        "count": len(percents),
+        "base": base,
+        "cap": cap,
+        # Rounded rather than truncated, matching BonusWheel.MeanPercent: a systematic
+        # half-percent downward bias in a report is a report agreeing with itself.
+        "mean": (sum(percents) + len(percents) // 2) // len(percents),
+        "top": max(percents),
+    }
+
+
+def check_wheel(progression, warnings):
+    """The rules BonusWheel.Resolve refuses on, mirrored so a bad wheel fails offline too.
+
+    Every refusal here is a refusal there and on the server, and all three are refusals
+    rather than repairs on purpose: a reader that quietly fixed a slice would accept a
+    table another had rejected, and the two would then disagree about money.
+    """
+    wheel = bonus_wheel(progression)
+    if wheel is None:
+        return []
+
+    errors = []
+
+    if not 4 <= wheel["count"] <= 12:
+        errors.append(f"ads wheel has {wheel['count']} slices; it must have between 4 and 12. "
+                      "Fewer than four is a coin flip drawn as a wheel, and more than twelve "
+                      "cannot be read while it turns")
+
+    for i, percent in enumerate(wheel["percents"]):
+        if percent < 100:
+            errors.append(f"ads wheel slice {i} pays {percent}%, below 100%. The wheel may only "
+                          "ever add - a slice under 100 would pay less than the flat offer the "
+                          "button promised")
+        if percent > 1000:
+            errors.append(f"ads wheel slice {i} pays {percent}%, above the supported 1000%")
+
+    if wheel["top"] <= 100:
+        errors.append("ads wheel has no slice paying above the flat offer; every spin would land "
+                      "on the same figure, so the spin is decoration")
+
+    if not wheel["base"]:
+        errors.append("ads authors a wheel but no 'win_bonus' placement for it to multiply; a "
+                      "wheel is that placement's payout made variable, not a reward of its own")
+
+    # The rim is drawn in the authored order, so two equal figures side by side make the
+    # wheel look like it has fewer prizes than it has. A warning, because a deliberately
+    # repeated figure on a big wheel is a coherent thing to want.
+    for i, percent in enumerate(wheel["percents"]):
+        nxt = (i + 1) % wheel["count"]
+        if percent == wheel["percents"][nxt]:
+            warnings.append(f"wheel slices {i} and {nxt} both pay {percent}% and sit side by "
+                            "side; the rim is drawn in the authored order, so interleave them")
+
+    return errors
 
 
 def check_hints(progression, warnings):
@@ -1029,8 +1185,38 @@ def check_store(progression, keys):
 
         credits = int(entry.get("credits") or 0)
         gems = int(entry.get("gems") or 0)
+        capacity = int(entry.get("heartCapacity") or 0)
 
-        if credits <= 0 and gems <= 0:
+        # A heart container: the one non-currency thing a real-money product may grant,
+        # because a capacity is an idempotent permanent entitlement rather than an amount.
+        # See StoreProduct.HeartCapacity for the rule and why it widens invariant 18 rather
+        # than breaking it.
+        if capacity and (credits or gems):
+            errors.append(f"store product '{pid}' sells a heart capacity and also grants "
+                          "currency; a real-money product may grant one or the other, never "
+                          "both")
+        elif capacity:
+            if not MIN_CAPACITY <= capacity <= MAX_CAPACITY:
+                errors.append(f"store product '{pid}' sells a heart capacity of {capacity}, "
+                              f"outside {MIN_CAPACITY}..{MAX_CAPACITY}")
+            if capacity > ceiling:
+                errors.append(f"store product '{pid}' sells a heart capacity of {capacity}, "
+                              f"above the published ceiling of {ceiling}; the timer would "
+                              "carry a player past the most they are allowed to hold, so "
+                              "every grant would be refused while the clock kept paying")
+            if entry.get("kind") != "nonconsumable":
+                errors.append(f"store product '{pid}' sells a heart capacity as a consumable; "
+                              "a permanent upgrade must be nonconsumable so the store itself "
+                              "refuses to sell it twice")
+            if entry.get("shelf") != "supplies":
+                errors.append(f"store product '{pid}' sells a heart capacity but sits on the "
+                              f"'{entry.get('shelf')}' shelf; capacities belong on 'supplies', "
+                              "which is where everything about hearts is")
+        elif entry.get("shelf") == "supplies":
+            errors.append(f"store product '{pid}' sits on the supplies shelf without selling a "
+                          "heart capacity; that shelf is otherwise for goods bought with gems")
+
+        if credits <= 0 and gems <= 0 and capacity <= 0:
             errors.append(f"store product '{pid}' grants nothing")
         if credits > MAX_GRANT or gems > MAX_GRANT:
             errors.append(f"store product '{pid}' grants more than {MAX_GRANT}; the server "
@@ -1050,6 +1236,24 @@ def check_store(progression, keys):
         # it, because the store will not sell one twice. See ValidateStoreLadder.
         if entry.get("kind") != "nonconsumable" and cents:
             shelves.setdefault(entry["shelf"], []).append((cents, pid, credits, gems))
+
+    # The container ladder, which the money ladder below cannot see: a container grants no
+    # currency, so its value per unit of money is zero and it would fail any shelf it was
+    # ranked on. What has to hold instead is that a dearer vessel holds more — a rung that
+    # costs more and holds no more is a card nobody can be right to buy, and it is invisible
+    # in the file because the two numbers sit in different columns.
+    vessels = sorted(
+        (int(e.get("referenceUsdCents") or 0), int(e.get("heartCapacity") or 0), e.get("id"))
+        for e in products if int(e.get("heartCapacity") or 0) > 0)
+
+    for (cents0, cap0, id0), (cents1, cap1, id1) in zip(vessels, vessels[1:]):
+        if cap1 <= cap0:
+            errors.append(f"store: heart container '{id1}' costs more than '{id0}' and holds "
+                          f"{cap1} against {cap0}. A ladder that stops getting better is a "
+                          "rung nobody can be right to buy")
+        elif cents1 == cents0:
+            warnings.append(f"store: heart containers '{id0}' and '{id1}' are the same price; "
+                            "which one a shelf draws first is then arbitrary")
 
     # Credits per gem, from the cheapest rung of each money shelf. Mirrors StoreCatalog.
     per_gem = 1
@@ -1115,6 +1319,7 @@ def check_store(progression, keys):
         "goods": len(goods),
         "per_gem": per_gem,
         "shelves": {shelf: len(rungs) for shelf, rungs in shelves.items()},
+        "vessels": [(cap, cents) for cents, cap, _ in vessels],
     }
 
 
@@ -1153,6 +1358,92 @@ def daily_income(progression):
         gems += sum(r.get("amount", 0) for r in rungs if r.get("kind") == "gems") / len(rungs)
 
     return int(credits), int(gems)
+
+
+BOARD_VECTORS = os.path.join(os.path.dirname(os.path.abspath(__file__)), "board-vectors.json")
+
+# The marker the four-armed-tile rule's warning carries, in all three copies of it.
+DECIDES_MARKER = "still finishes the glade"
+
+
+def run_board_vectors():
+    """Runs `board-vectors.json` through *both* Python copies of the four-armed-tile rule.
+
+    One rule, three implementations - LevelValidator.CheckDecidableTiles, this file's
+    `decidable`, and author.Board.decides - because the Editor, this gate and the authoring
+    aid each need it and none can call the others. Three copies drift, and this one already
+    did: the topology check these replaced was wrong in two opposite ways and two tools
+    disagreed about a whole chapter without anything noticing.
+
+    So it is invariant 9a's answer, for a board rule rather than for money. The C# copy is
+    proved against the same file by `BoardVectorTests`; this proves the two Python copies are.
+    Failures land in `errors`, so a drift fails this gate rather than printing beside the
+    word "ok".
+
+    `author.Board` is reached through `difficulty.board_of`, which is the one place that
+    turns shipped rows back into the authoring DSL - so the aid is exercised the way a
+    chapter module exercises it rather than through a second transcription.
+    """
+    import difficulty                       # imported here: it reads boards through author.py
+
+    doc = json.load(open(BOARD_VECTORS, encoding="utf-8"))
+    cases = doc.get("cases") or []
+    if not cases:
+        errors.append("board-vectors.json has no cases")
+        return "board vectors: none found"
+
+    def gate_said(messages):
+        """The tiles a run of messages complained about, as {'x,y'}.
+
+        Both copies name the tile after " at ": this file writes `1,1` and author.py writes
+        a tuple, `(1, 1)`. One regex reads either, which is deliberate - making the two print
+        identically would couple an authoring aid's output to a gate's for the sake of a test.
+        """
+        out = set()
+        for m in messages:
+            if DECIDES_MARKER not in m:
+                continue
+            found = re.search(r" at \(?\s*(\d+)\s*,\s*(\d+)\s*\)?", m)
+            if found:
+                out.add(f"{found.group(1)},{found.group(2)}")
+        return out
+
+    bad = []
+    for case in cases:
+        name = case["name"]
+        want = set(case.get("undecided") or [])
+        rows = case["rows"]
+        level = {"id": "vector_" + name, "width": len(rows[0].split()),
+                 "height": len(rows), "rows": rows}
+
+        before_e, before_w = len(errors), len(warnings)
+        check_level(level, "vectors")
+        mine = gate_said(warnings[before_w:])
+        raised = errors[before_e:]
+        del errors[before_e:]
+        del warnings[before_w:]
+
+        if raised:
+            bad.append(f"{name}: the board itself is invalid - {raised[0]}")
+            continue
+        if mine != want:
+            bad.append(f"{name}: content.py said {sorted(mine) or 'nothing'}, "
+                       f"vectors say {sorted(want) or 'nothing'}")
+
+        board = difficulty.board_of(level)
+        errs, warns = board.check()
+        theirs = gate_said(warns)
+        if errs:
+            bad.append(f"{name}: author.py refuses the board - {errs[0]}")
+        elif theirs != want:
+            bad.append(f"{name}: author.py said {sorted(theirs) or 'nothing'}, "
+                       f"vectors say {sorted(want) or 'nothing'}")
+
+    for b in bad:
+        errors.append("board vectors: " + b)
+
+    return (f"board vectors: {len(cases)} case(s), both Python copies agree"
+            if not bad else f"board vectors: {len(bad)} disagreement(s)")
 
 
 def main():
@@ -1268,14 +1559,13 @@ def main():
                     errors.append(f"level '{lid}' missing string '{k}'")
 
     print(f"{'#':<3}{'level id':<22}{'chapter':<16}{'size':<7}{'par':<5}{'gold':<6}{'silver':<7}"
-          f"{'clock':<7}{'3*taps/s':<10}{'hearts':<7}{'critters':<9}{'brittle':<8}"
-          f"{'duskcaps':<10}{'roots':<7}{'crossings':<11}briars")
+          f"{'budget':<8}{'hearts':<7}{'critters':<9}{'brittle':<8}"
+          f"{'roots':<7}{'crossings':<11}briars")
     for i, s in enumerate(summaries, 1):
-        clock = "-" if not s['limit'] else f"{s['limit']}s"
-        rate = "-" if not s['rate'] else f"{s['rate']:.2f}"
+        budget = "none" if not s['budget'] else str(s['budget'])
         print(f"{i:<3}{s['id']:<22}{s['chapter']:<16}{str(s['w'])+'x'+str(s['h']):<7}"
-              f"{s['par']:<5}{s['gold']:<6}{s['silver']:<7}{clock:<7}{rate:<10}"
-              f"{s['sources']:<7}{s['lamps']:<9}{s['fragile']:<8}{s['caps']:<10}"
+              f"{s['par']:<5}{s['gold']:<6}{s['silver']:<7}{budget:<8}"
+              f"{s['sources']:<7}{s['lamps']:<9}{s['fragile']:<8}"
               f"{s['bound']:<7}{s['crossings']:<11}{s['briars']}")
 
     live_companions = [c for c in (manifest.get("companions") or [])
@@ -1324,6 +1614,7 @@ def main():
     per_day_credits, per_day_gems = daily_income(progression)
 
     errors.extend(check_hints(progression, warnings))
+    errors.extend(check_wheel(progression, warnings))
 
     if shop:
         shelves = ", ".join(f"{n} {shelf}" for shelf, n in sorted(shop["shelves"].items()))
@@ -1332,6 +1623,12 @@ def main():
         print(f"      free play collects about {per_day_credits} credit(s) and "
               f"{per_day_gems} gem(s) a day")
 
+        if shop["vessels"]:
+            ladder = ", ".join(f"{cap} for ${cents / 100:.2f}"
+                               for cap, cents in shop["vessels"])
+            print(f"      heart containers: {ladder} (free cap "
+                  f"{(progression.get('hearts') or {}).get('refillCap', 5)})")
+
         if grove and per_day_credits:
             # `worth` rather than a sum written out here: the home ladder is already inside
             # the pieces total, so adding it again double-counted 49,500 credits, and the
@@ -1339,6 +1636,19 @@ def main():
             sinks = grove["worth"]
             print(f"      every credit sink in the game is {sinks} credits, "
                   f"about {sinks // per_day_credits} day(s) of play")
+
+    wheel = bonus_wheel(progression)
+    if wheel:
+        rim = " ".join(f"{p}%" for p in wheel["percents"])
+        per_view = wheel["base"] * wheel["mean"] // 100
+        best = wheel["base"] * wheel["top"] // 100
+        print()
+        print(f"bonus wheel: {rim} - 1 in {wheel['count']} each, mean {wheel['mean']}%")
+        print(f"       'win_bonus' authors {wheel['base']} a view and really pays about "
+              f"{per_view} (best {best}); at a cap of {wheel['cap']} that is up to about "
+              f"{per_view * wheel['cap']} a day on average")
+        if per_day_credits:
+            print(f"       against about {per_day_credits} credit(s) a day of free play")
 
     hints = hint_pool(progression)
     print()
@@ -1350,6 +1660,129 @@ def main():
     if hints["ceiling"] <= hints["cap"]:
         print("       the ceiling is the cap, so a granted hint at a full pool is refused "
               "rather than banked - nothing may offer one there")
+
+    gate = progression.get("chapterGate") or {}
+    stars_per_level = gate.get("starsPerLevel", 2)
+    if stars_per_level < 0:
+        stars_per_level = 2
+    print()
+    if stars_per_level <= 0:
+        print("chapter gate: off - every chapter stands open from a new player's first launch")
+    else:
+        print(f"chapter gate: {stars_per_level} star(s) a level of the chapter behind it")
+
+        # Per mode, because a gate counts the chapter before this one *in the same mode* -
+        # the ladders never chain (invariant 20a), so the last chapter of a mode gates
+        # nothing and the first of one is always open.
+        lanes = {}
+        for chapter in sorted(manifest.get("chapters", []), key=lambda c: c.get("order", 0)):
+            lanes.setdefault(chapter.get("mode") or "glade", []).append(chapter)
+
+        for mode, lane in sorted(lanes.items()):
+            for i, chapter in enumerate(lane[:-1]):
+                levels = len(chapter.get("levels") or [])
+                if not levels:
+                    continue
+                print(f"       {lane[i + 1].get('id')} opens at "
+                      f"{stars_per_level * levels} of the {levels * 3} stars "
+                      f"in {chapter.get('id')}")
+        if stars_per_level >= 3:
+            print("       that is every star a level can pay - no room for a single "
+                  "two-star clear anywhere")
+
+    hearts_block = progression.get("hearts") or {}
+
+    carry = progression.get("continueRun") or {}
+    carry_on = carry.get("enabled", -1) != 0
+    print()
+    if not carry_on:
+        print("continue: withdrawn - a lost run ends, and the only way back in is a heart")
+    else:
+        gems = carry.get("gems", 20)
+        if gems < 0:
+            gems = 20
+        step = carry.get("gemsStep", 0)
+        if step < 0:
+            step = 0
+        turns = carry.get("turns", 15)
+        if turns < 0:
+            turns = 15
+        ink = carry.get("ink", 20)
+        if ink < 0:
+            ink = 20
+
+        print(f"continue: {gems} gem(s) for +{turns} turn(s) on a glade, "
+              f"+{ink} cell(s) of ink on a weave")
+
+        # What the price means, said in the two units a player actually earns gems in.
+        # A price nobody can reach is the failure mode this whole block is content for.
+        entry = min((int(x.get("gems") or 0)
+                     for x in (progression.get("store") or {}).get("products") or []
+                     if int(x.get("gems") or 0) > 0), default=0)
+
+        if per_day_gems:
+            line = f"       about {gems / per_day_gems:.1f} day(s) of free play"
+            if entry:
+                line += f", or {gems / entry:.0%} of the {entry}-gem entry rung"
+            print(line)
+        if step:
+            print(f"       and {step} more each time, so a third continue on one run "
+                  f"costs {gems + step * 2}")
+        else:
+            print("       flat, so a run may be continued as often as the player can pay")
+
+        print("       a continued run is already past the two-star line, so it can only "
+              "ever score one - the offer sells a finish, never a grade")
+
+    rescue_hearts = hearts_block.get("rescueHearts", 2)
+    if rescue_hearts < 0:
+        rescue_hearts = 2
+
+    print()
+    if rescue_hearts == 0:
+        print("heart rescue: withdrawn - a player out of hearts waits, watches a video, "
+              "or leaves")
+    else:
+        rescue_gems = hearts_block.get("rescueGems", 20)
+        if rescue_gems < 0:
+            rescue_gems = 20
+
+        print(f"heart rescue: {rescue_gems} gem(s) for +{rescue_hearts} heart(s) on the "
+              f"defeat panel")
+        print("       a fresh attempt graded like any other, never a continue - hearts pay "
+              "nothing, so this buys sooner and nothing else")
+
+        entry = min((int(x.get("gems") or 0)
+                     for x in (progression.get("store") or {}).get("products") or []
+                     if int(x.get("gems") or 0) > 0), default=0)
+
+        if per_day_gems:
+            line = f"       about {rescue_gems / per_day_gems:.1f} day(s) of free play"
+            if entry:
+                line += f", or {rescue_gems / entry:.0%} of the {entry}-gem entry rung"
+            print(line)
+
+        # The shop's *entry* heart pack - its smallest - rather than its best rate. A bulk
+        # pack is a volume discount and every rescue will always be dearer per heart than
+        # one, so comparing against the best would fire on every honest tuning and become a
+        # line nobody reads. The entry pack is the like-for-like: it is what the same player
+        # would otherwise buy for the same reason, and beating it is not required - matching
+        # it is. Cross-multiplied so the comparison is exact integers, the rule this project
+        # keeps for anything a player counts towards.
+        entry_pack = None
+        for good in (progression.get("store") or {}).get("goods") or []:
+            if good.get("kind") != "hearts":
+                continue
+            amount, gems = int(good.get("amount") or 0), int(good.get("gems") or 0)
+            if amount <= 0 or gems <= 0:
+                continue
+            if entry_pack is None or amount < entry_pack[1]:
+                entry_pack = (gems, amount)
+
+        if entry_pack and rescue_gems * entry_pack[1] > entry_pack[0] * rescue_hearts:
+            print(f"       WARNING: dearer per heart than the shop's smallest pack "
+                  f"({entry_pack[0]} for {entry_pack[1]}) - a premium charged at the moment "
+                  "a player cannot compare")
 
     prompts = progression.get("prompts") or {}
     chapter_budget = prompts.get("chapterBudget", 2)
@@ -1366,6 +1799,8 @@ def main():
         print("       purchaseBudget is zero, so a guest who pays is never asked to protect it")
 
     print()
+    print(run_board_vectors())
+
     for w in warnings:
         print("WARN  " + w)
     for e in errors:

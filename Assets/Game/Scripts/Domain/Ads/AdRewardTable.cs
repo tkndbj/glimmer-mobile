@@ -113,14 +113,29 @@ namespace GlimmerGrove.Ads
     {
         readonly Dictionary<string, AdOffer> _offers;
 
-        AdRewardTable(int cooldownSeconds, Dictionary<string, AdOffer> offers)
+        AdRewardTable(int cooldownSeconds, Dictionary<string, AdOffer> offers, BonusWheel wheel)
         {
             CooldownSeconds = cooldownSeconds;
             _offers = offers;
+            Wheel = wheel ?? BonusWheel.None;
         }
 
         /// <summary>Seconds a player must wait between two rewarded ads, across all placements.</summary>
         public int CooldownSeconds { get; }
+
+        /// <summary>
+        /// The wheel <see cref="AdPlacement.WinBonus"/> is spun for, or
+        /// <see cref="BonusWheel.None"/> when this table pays it flat.
+        ///
+        /// <para>
+        /// It lives inside the ad table rather than beside it because it <em>is</em> an ad
+        /// payout — the multiplier and the amount it multiplies have to be swapped atomically,
+        /// or a client briefly holds a retuned wheel against an untuned figure. That is the
+        /// same window <c>ProgressionTable.Ads</c> exists to close, one level up, and keeping
+        /// the two in one object means it cannot be reopened by adding a second fetch.
+        /// </para>
+        /// </summary>
+        public BonusWheel Wheel { get; }
 
         /// <summary>
         /// The offer for a placement, or <see cref="AdOffer.None"/> when it has none.
@@ -191,18 +206,17 @@ namespace GlimmerGrove.Ads
         {
             new AdOffer(AdPlacement.HeartRefill, ChestDropKind.Hearts, 2, 10),
             new AdOffer(AdPlacement.CoinBonus, ChestDropKind.Credits, 1000, 6),
-            new AdOffer(AdPlacement.RunContinue, ChestDropKind.RunTime, 30, 8),
             new AdOffer(AdPlacement.WinBonus, ChestDropKind.Credits, 200, 6),
             new AdOffer(AdPlacement.HintRefill, ChestDropKind.Hints, 1, 5),
-        });
+        }, BonusWheel.Default);
 
-        static AdRewardTable Build(int cooldownSeconds, AdOffer[] offers)
+        static AdRewardTable Build(int cooldownSeconds, AdOffer[] offers, BonusWheel wheel)
         {
             var map = new Dictionary<string, AdOffer>(StringComparer.Ordinal);
             for (int i = 0; i < offers.Length; i++)
                 if (offers[i].IsValid) map[offers[i].PlacementId] = offers[i];
 
-            return new AdRewardTable(cooldownSeconds, map);
+            return new AdRewardTable(cooldownSeconds, map, wheel);
         }
 
         // ------------------------------------------------------------- building
@@ -234,6 +248,13 @@ namespace GlimmerGrove.Ads
                 return Default;
             }
 
+            // Read before the placements so a wheel that fails its own rules is named in its own
+            // words rather than swallowed by a later fallback. It degrades to BonusWheel.None,
+            // which is the flat offer — never to the built-in ladder, for the reason that field
+            // documents: a published file that has never heard of the wheel must keep paying
+            // exactly what it authored.
+            var wheel = BonusWheel.Resolve(dto.wheel, problems);
+
             var map = new Dictionary<string, AdOffer>(StringComparer.Ordinal);
 
             for (int i = 0; i < dto.placements.Length; i++)
@@ -258,7 +279,18 @@ namespace GlimmerGrove.Ads
                 return Default;
             }
 
-            return new AdRewardTable(cooldown, map);
+            // A wheel with no placement to multiply is a wheel over nothing. It cannot make the
+            // table unusable — every other placement in it is still fine — so the wheel is the
+            // half that is dropped, and the sentence says which half and why.
+            if (wheel.IsUsable && !map.ContainsKey(AdPlacement.WinBonus))
+            {
+                problems.Add("ads authors a wheel but no '" + AdPlacement.WinBonus + "' placement " +
+                             "for it to multiply; the wheel is dropped. A wheel is that placement's " +
+                             "payout made variable, not a reward of its own");
+                wheel = BonusWheel.None;
+            }
+
+            return new AdRewardTable(cooldown, map, wheel);
         }
 
         /// <summary>
@@ -287,17 +319,16 @@ namespace GlimmerGrove.Ads
                 return false;
             }
 
-            // A kind spent inside a run is meaningless anywhere a run is not open, and only
-            // one placement is offered from inside one. Checked here rather than trusted,
-            // because the failure is silent in the worst way: the offer would be drawn on
-            // the home screen, the video would play, and the reward would land on a
-            // RunClock that does not exist.
-            if (ChestDropKinds.IsTransient(kind)
-                && !string.Equals(dto.id, AdPlacement.RunContinue, StringComparison.Ordinal))
+            // A transient kind is spent inside a run, and no placement is offered from
+            // inside one any more: the only one that was bought seconds on a countdown that
+            // no longer exists. Refused rather than dropped silently, because the failure is
+            // silent in the worst way — the offer would be drawn, the video would play, and
+            // the reward would land nowhere at all. See ChestDropKinds.IsTransient, which is
+            // kept as the seam a future in-run reward would come back through.
+            if (ChestDropKinds.IsTransient(kind))
             {
                 problems.Add($"ads placement '{dto.id}' pays '{dto.kind}', which is spent " +
-                             $"inside a run; only '{AdPlacement.RunContinue}' is offered from " +
-                             "inside one");
+                             "inside a run; nothing is offered from inside one");
                 return false;
             }
 

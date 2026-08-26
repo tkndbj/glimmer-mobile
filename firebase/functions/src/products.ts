@@ -28,6 +28,24 @@ export interface ProductGrant {
    * guarantee than anything expressible here.
    */
   kind: string;
+
+  /**
+   * Where this moves the player's heart refill cap to, or 0 when it is a currency product.
+   *
+   * The one non-currency thing a real-money product may grant here, and the rule that
+   * permits it is precise: a capacity is an *idempotent permanent entitlement* rather than
+   * an amount, so applying it twice is applying it once. That is what removes the record —
+   * "did I already apply this transaction's hearts" — whose absence is the whole of what
+   * invariant 18 protects. A product may grant currency or a capacity, never both, and the
+   * seeder refuses the mixture rather than picking one.
+   *
+   * This server does not hold the entitlement: the client does, in its save, and the store
+   * re-delivers the non-consumable for ever so it survives a reinstall with nothing of ours
+   * involved. What this server owns is the *reversal* — see `revokeReceipt` — which needs
+   * only to know that the receipt was a container, which is why the number is recorded on
+   * the receipt at grant time.
+   */
+  capacity: number;
 }
 
 export type ProductTable = Record<string, ProductGrant>;
@@ -51,6 +69,16 @@ const nonNegative = (value: unknown): number =>
  * pinned together by `StoreTests`.
  */
 export const MAX_GRANT = 5_000_000;
+
+/**
+ * The largest heart refill cap a container may sell.
+ *
+ * Mirrors `StoreLimits.MaxHeartCapacity` and `HeartLimits.MaxRefillCap` on the client, and
+ * is restated here rather than trusted from the document for `MAX_GRANT`'s reason. A
+ * container selling a cap the client's ledger will clamp away is a player charged for a
+ * number they never receive, which is worse than a refusal somebody has to notice.
+ */
+export const MAX_CAPACITY = 50;
 
 /**
  * Reads one product out of the published catalog.
@@ -79,9 +107,26 @@ export function readProduct(table: unknown, productId: string): ProductGrant {
     credits: nonNegative(raw.credits),
     gems: nonNegative(raw.gems),
     kind: typeof raw.kind === "string" ? raw.kind : "consumable",
+    capacity: nonNegative(raw.capacity),
   };
 
-  if (grant.credits === 0 && grant.gems === 0) {
+  if (grant.capacity > 0 && (grant.credits > 0 || grant.gems > 0)) {
+    throw new ProductRejected(
+      `product '${productId}' grants both a heart capacity and currency; a product may grant ` +
+      "one or the other, never both — the mixture is what would put an amount back on the " +
+      "client's half of a purchase"
+    );
+  }
+
+  if (grant.capacity > MAX_CAPACITY) {
+    throw new ProductRejected(
+      `product '${productId}' sells a heart capacity of ${grant.capacity}, above the ` +
+      `${MAX_CAPACITY} the client's ledger will honour; refusing rather than clamping, for ` +
+      "the same reason a clamped grant is refused"
+    );
+  }
+
+  if (grant.credits === 0 && grant.gems === 0 && grant.capacity === 0) {
     throw new ProductRejected(`product '${productId}' grants nothing`);
   }
 

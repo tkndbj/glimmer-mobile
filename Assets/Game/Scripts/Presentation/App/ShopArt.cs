@@ -69,6 +69,9 @@ namespace GlimmerGrove
             Clear(box);
             if (product == null || !product.IsValid) return;
 
+            // A heart container is not a pile of currency, so it is not composed like one.
+            if (product.IsContainer) { PaintContainer(box, product); return; }
+
             int rung = RungFor(product);
 
             // A one-time offer wears the best container on the shelf whatever it costs.
@@ -153,6 +156,70 @@ namespace GlimmerGrove
             }
 
             UIKit.Halo(box, Pal.Rose, size * .96f, .30f);
+        }
+
+        /// <summary>
+        /// The vessels, smallest first, for a container's tier. Three rungs and three
+        /// bottles already in the build.
+        /// </summary>
+        static readonly string[] Vessels = { "potion2", "potion4", "potion6" };
+
+        /// <summary>
+        /// Draws a heart container: a vessel with hearts spilling over its lip.
+        ///
+        /// <para>
+        /// The composition is the coin chest's, deliberately — a vessel plus a pile, with
+        /// the pile riding the lip so the thing reads as <em>full</em> rather than as a
+        /// bottle standing next to some hearts. What it sells is a bigger vessel, and that
+        /// is the one idea the picture has to carry before a word is read.
+        /// </para>
+        /// <para>
+        /// The hearts are the game's own <c>ic_heart</c>, for the reason the pile is the
+        /// game's own coin: a prettier heart drawn only in the shop would be a different
+        /// resource as far as a player is concerned. The vessels are three of the six potion
+        /// bottles already in the global set, so this needed no art order — which is the
+        /// whole argument of this class, applied to its fourth kind of card.
+        /// </para>
+        /// </summary>
+        static void PaintContainer(RectTransform box, StoreProduct product)
+        {
+            float size = box.rect.width;
+            if (size <= 1f) size = 200f;
+
+            int rung = product.ShelfSize <= 1
+                ? Vessels.Length - 1
+                : Mathf.Clamp(Mathf.RoundToInt(product.TierFraction * (Vessels.Length - 1)),
+                              0, Vessels.Length - 1);
+
+            // Bigger vessels for bigger caps, and the step is small on purpose: the ladder is
+            // carried by the hearts over the lip, and three bottles at wildly different sizes
+            // would make the entry rung look like a mistake rather than a rung.
+            float vessel = size * (.62f + rung * .07f);
+
+            var bottle = UIKit.Img("Vessel", box, Art.S("Ui/" + Vessels[rung]), Color.white,
+                                   new Vector2(vessel * .72f, vessel), new Vector2(.5f, .5f),
+                                   new Vector2(0f, -size * .10f));
+            bottle.preserveAspect = true;
+
+            // Three, four or five hearts. PaintGood's ladder, so a container and a heart pack
+            // on the same shelf read as the same currency in different quantities.
+            int shown = 3 + rung;
+            float heart = size * .26f;
+
+            for (int i = 0; i < shown; i++)
+            {
+                float t = (i / (float)(shown - 1)) - .5f;
+                float arc = 1f - 4f * t * t;
+
+                var img = UIKit.Img("H" + i, box, Art.S("Ui/ic_heart"), Color.white,
+                                    Vector2.one * heart, new Vector2(.5f, .5f),
+                                    new Vector2(t * size * .40f,
+                                                size * .17f + arc * size * .09f - (i % 2) * size * .04f));
+                img.preserveAspect = true;
+                img.transform.localRotation = Quaternion.Euler(0f, 0f, t * -20f);
+            }
+
+            UIKit.Halo(box, Pal.Rose, size * 1.02f, .32f);
         }
 
         // ------------------------------------------------------------------ the pile

@@ -29,18 +29,17 @@ namespace GlimmerGrove
         /// anything has a move count and no time — a dash where the time goes reads as a broken
         /// record rather than an untimed one.
         /// </summary>
-        public static string RecordKey(LevelId level, int moves, int millis)
+        public static string RecordKey(LevelId level, int moves)
         {
             var mode = Content.LevelModes.Find(ModeOf(level));
             string stem = mode != null ? mode.RecordStem : "ui.rank.record";
 
-            // Four keys per stem, because "1 turns" is wrong in English and worse in languages
-            // with real plural rules, and because a run that resolved before the clock could
-            // read anything has a count and no time - a dash where the time goes reads as a
-            // broken record rather than an untimed one.
-            bool one = moves == 1;
-            if (millis > 0) return one ? stem + "_one" : stem;
-            return one ? stem + "_untimed_one" : stem + "_untimed";
+            // Two keys per stem, because "1 turns" is wrong in English and worse in languages
+            // with real plural rules. It used to be four: a run also carried a time, and one
+            // that resolved before the clock could read anything needed a form with no time
+            // in it. There is no clock and a record is a count, so the two timed forms went
+            // with it — see LevelRecord.BestMillis for what became of the number itself.
+            return moves == 1 ? stem + "_one" : stem;
         }
 
         /// <summary>

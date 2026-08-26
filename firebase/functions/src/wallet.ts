@@ -13,6 +13,7 @@ import { NameHolding, heldName } from "./names";
 import { todayKey } from "./daily";
 import { assertUsableConfig, earnedCredits, ProgressionConfig } from "./progression";
 import { readFloor, StreakFloor } from "./streak";
+import { readWheelPosition } from "./wheel";
 
 export interface CurrencyState {
   granted: number;
@@ -54,6 +55,45 @@ export type WalletDoc = Record<CurrencyId, CurrencyState> & {
    * reservation existing or the reverse.
    */
   name?: NameHolding;
+
+  /**
+   * Heart containers this account bought and this server has since <b>revoked</b>, because
+   * the store refunded or charged back the payment.
+   *
+   * It rides here for `streak` and `name`'s reason: this is the document no client can
+   * write. That is the whole of what makes a refund stick — a container is otherwise a
+   * client-held entitlement (the save's `heartContainersOwned`), which is safe because a
+   * forged one buys faster hearts and no currency, but a *refunded* one would be money
+   * leaving with the goods still delivered. Buy, spend, refund, repeat is the commonest way
+   * a mobile economy leaks; see invariant 18c.
+   *
+   * Written by `revokeReceipt` and cleared, per product, by `redeemPurchase` when the same
+   * container is bought again. Reported to the client on every wallet reply as a list of
+   * ids that were revoked — never as a list of ids the account owns, because an answer read
+   * as a whitelist would confiscate a purchase on any reply that was short or from an
+   * account this server had not caught up with.
+   */
+  containersRevoked?: string[];
+
+  /**
+   * How many `win_bonus` views this server has granted the account, and on which UTC day.
+   *
+   * <p>
+   * It rides here for `streak`, `name` and `containersRevoked`'s reason: this is the
+   * document no client can write. That is the whole of what makes the bonus wheel safe — a
+   * slice is a pure function of (account, day, spin index), so the index decides money, and
+   * an index the client kept for itself would be both forgeable and, more prosaically,
+   * wrong the first time a verification callback was delayed past the next win.
+   * </p>
+   * <p>
+   * Advanced only inside `adReward`'s granting transaction, which is guarded by the grant
+   * document — so a retried callback collides with a record that already exists and the
+   * counter does not move. Reported back on every wallet reply as `wheelDay`/`wheelSpins`,
+   * where its <em>presence</em> is also what tells a client this deployment understands the
+   * wheel at all. See `wheel.ts` and `WheelStand` on the client.
+   * </p>
+   */
+  wheel?: { day: number; spins: number };
 };
 
 /** What the client's `CloudWalletState` expects back. */
@@ -66,12 +106,42 @@ export interface WalletReply {
   confirmedSpendIds: string[];
 
   /**
+   * Heart container product ids this server has revoked for the account.
+   *
+   * An account fact rather than a currency one, repeated on every row because the reply is
+   * a list of currency rows — cheaper than giving four callables a second shape, and the
+   * client's own union makes reading it from several rows the same as reading it once.
+   */
+  containersRevoked: string[];
+
+  /**
    * Award ids this server holds a record for, and has therefore already folded into
    * `grantedBaseline`. The client drops them from its own queue on seeing them; until
    * it does it keeps counting them locally, so a lost reply costs a resubmission rather
    * than a player's daily chest.
    */
   confirmedGrantIds: string[];
+
+  /**
+   * The bonus wheel's position: the UTC day it is counted for, and how many `win_bonus`
+   * views have been granted within it — which is therefore the index of the next spin.
+   *
+   * <p>
+   * Always present, including as (today, 0) for an account that has never spun, and that is
+   * load-bearing rather than tidy. A client reads the <em>presence</em> of the field as
+   * "this deployment understands the wheel" and draws no wheel without it, which is what
+   * makes shipping the app ahead of the functions cost a feature nobody has seen rather
+   * than a payout nobody honours — invariant 12a's deploy-ordering hazard, removed instead
+   * of written down. Omitting it for a fresh account would make that signal a lie.
+   * </p>
+   * <p>
+   * An account fact rather than a currency one, repeated on every row for
+   * {@link WalletReply.containersRevoked}'s reason; the client's stand only ever moves
+   * forward, so reading it from several rows is the same as reading it once.
+   * </p>
+   */
+  wheelDay: number;
+  wheelSpins: number;
 }
 
 export function emptyCurrency(): CurrencyState {
@@ -107,6 +177,32 @@ export function readWallet(
   // Assigned only when there is one. Firestore rejects `undefined` as a document value, so an
   // unconditional assignment would fail every wallet write for an account that has no name.
   if (name) wallet.name = name;
+
+  // Carried through for exactly the name's reason, and it is the more expensive one to get
+  // wrong: every writer of this document writes it *whole*, so a field this function does not
+  // copy is a field the next spend or claim silently deletes — and deleting a revocation hands
+  // a refunded container back to the player who was refunded for it. Invariant 12a, one
+  // document over. Assigned only when there is something, for the `undefined` reason above.
+  const revoked = Array.isArray(raw?.containersRevoked)
+    ? (raw.containersRevoked as unknown[])
+        .filter((id): id is string => typeof id === "string" && id.length > 0)
+    : [];
+
+  if (revoked.length > 0) wallet.containersRevoked = revoked;
+
+  // The bonus wheel's position, carried through for exactly the two fields above's reason:
+  // every writer of this document writes it *whole*, so a field this function does not copy
+  // is a field the next spend, claim or grant silently deletes. Invariant 12a, one document
+  // over — and dropping this one would reset the wheel to its first spin on every sync,
+  // which is a player being paid the same slice all day and nothing at all showing it.
+  const wheel = raw?.wheel;
+  if (wheel && typeof wheel === "object" &&
+      typeof wheel.day === "number" && typeof wheel.spins === "number") {
+    wallet.wheel = {
+      day: Math.max(0, Math.floor(wheel.day)),
+      spins: Math.max(0, Math.floor(wheel.spins)),
+    };
+  }
 
   // Whether this server has ever recorded currency for the account, which is what "brand new"
   // has always meant here. It used to be read off `snapshot.exists`, and that stopped being
@@ -158,8 +254,15 @@ export function readWallet(
 export function toReply(
   wallet: WalletDoc,
   confirmed: Record<string, string[]>,
-  confirmedGrants: Record<string, string[]> = {}
+  confirmedGrants: Record<string, string[]> = {},
+  today: number = todayKey(Date.now())
 ): WalletReply[] {
+  // Rolled over here as well as in the granting transaction, so a reply taken on a day with
+  // no views yet answers (today, 0) rather than yesterday's tally. Without it the client
+  // would seed its first spin of the day from yesterday's index and disagree with the very
+  // grant that is about to be computed from today's.
+  const wheel = readWheelPosition(wallet.wheel, today);
+
   return CURRENCIES.map((currency) => ({
     currency,
     grantedBaseline: wallet[currency].granted,
@@ -168,6 +271,9 @@ export function toReply(
     earnedFloor: wallet[currency].earnedFloor,
     confirmedSpendIds: confirmed[currency] ?? [],
     confirmedGrantIds: confirmedGrants[currency] ?? [],
+    containersRevoked: wallet.containersRevoked ?? [],
+    wheelDay: wheel.day,
+    wheelSpins: wheel.spins,
   }));
 }
 

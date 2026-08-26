@@ -113,9 +113,6 @@ namespace GlimmerGrove.Persistence
         /// </summary>
         public static int BestRank(LevelId id) => Record(id).BestRank;
 
-        /// <summary>Fastest clear in milliseconds, or 0 when this glade was never timed.</summary>
-        public static int BestMillis(LevelId id) => Record(id).BestMillis;
-
         public static bool IsCleared(LevelId id) => Record(id).IsCleared;
 
         // Every question below is asked of the index rather than of the catalog, and
@@ -178,19 +175,6 @@ namespace GlimmerGrove.Persistence
         // ------------------------------------------------------------- writing
         /// <summary>Folds a finished run in. Returns true when it beat the old record.</summary>
         public static bool RecordRun(LevelId id, int stars, int moves)
-            => RecordRun(id, stars, moves, 0);
-
-        /// <summary>
-        /// The same fold, also offering the run's duration. Zero milliseconds means the run
-        /// was not timed and leaves any existing best time alone.
-        ///
-        /// <para>
-        /// An overload so that a caller with no clock — a test, a dev tool, anything that
-        /// predates <see cref="RunClock"/> — keeps working and cannot accidentally claim an
-        /// instant clear.
-        /// </para>
-        /// </summary>
-        public static bool RecordRun(LevelId id, int stars, int moves, int millis)
         {
             if (!id.IsValid) return false;
 
@@ -201,11 +185,7 @@ namespace GlimmerGrove.Persistence
             // not arrived — no backend, offline, a launch that has not reached the fetch yet
             // — nothing is captured and nothing is lost: the move count is stored either
             // way, and RefreshRanks works the standing out from it later.
-            // A time is only kept for a run that actually cleared the glade. A defeat never
-            // reaches here at all, but a zero-star fold would otherwise be able to write a
-            // "fastest clear" for a glade with no clear in it.
             var after = before.WithRun(stars, moves, SaveSchema.NowUnix(), Social.GroveStats.For(id));
-            if (stars > 0) after = after.WithTime(millis);
 
             _records[id] = after;
             LastPlayed = id;

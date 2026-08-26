@@ -52,6 +52,9 @@ import {
 } from "./names";
 import { loadNameConfig } from "./blocklist";
 import { reportName, ReportOutcome } from "./reports";
+import {
+  WHEEL_MIN_PERCENT, applyWheelPercent, readWheelPosition, usableWheelConfig, wheelPercent,
+} from "./wheel";
 import { earnedCredits } from "./progression";
 import {
   deriveEarned,
@@ -627,8 +630,31 @@ export const adReward = onRequest(
         // simply nothing to grant, and saying so is not an error.
         if (!currency || !CURRENCIES.includes(currency as CurrencyId)) return 0;
 
-        const amount = adCurrencyValue(ads, verdict.placement, currency);
-        if (amount <= 0) return 0;
+        const base = adCurrencyValue(ads, verdict.placement, currency);
+        if (base <= 0) return 0;
+
+        // The bonus wheel, and it applies to exactly one placement. A view of `win_bonus` is
+        // spun for on the phone before the video plays; the slice is a pure function of
+        // (account, day, spin index), so this arrives at the same figure without being told
+        // it — see `wheel.ts`. Every other placement pays flat and takes no position.
+        //
+        // The index comes from this document rather than from the client, because it decides
+        // money. It advances only here, inside the transaction guarded by the grant record
+        // above, so a retried callback collides with a document that already exists and the
+        // wheel does not turn twice for one video.
+        const spinning = verdict.placement === "win_bonus";
+        const wheel = spinning
+          ? usableWheelConfig((config as { ads?: { wheel?: unknown } }).ads?.wheel)
+          : null;
+
+        const today = todayKey(Date.now());
+        const position = readWheelPosition(state.wheel, today);
+
+        const percent = spinning
+          ? wheelPercent(verdict.uid, position.day, position.spins, wheel)
+          : WHEEL_MIN_PERCENT;
+
+        const amount = applyWheelPercent(base, percent);
 
         transaction.set(grantRef, {
           currency,
@@ -637,10 +663,25 @@ export const adReward = onRequest(
           placement: verdict.placement,
           eventId: verdict.eventId,
           network: typeof query.adNetwork === "string" ? query.adNetwork.slice(0, 64) : "",
+
+          // Kept so a support reply can say what a view was worth and why, without re-deriving
+          // it from a seed and a day that have both moved on since.
+          basis: base,
+          percent,
+          spinIndex: spinning ? position.spins : -1,
+
           grantedAt: FieldValue.serverTimestamp(),
         });
 
         state[currency as CurrencyId].granted += amount;
+
+        // Written whether or not this view spun, so the rollover lands: a day whose only
+        // views were heart refills still has to leave today's key behind, or the next win
+        // bonus would seed its first spin from a day the client has long since left.
+        state.wheel = spinning
+          ? { day: position.day, spins: position.spins + 1 }
+          : position;
+
         transaction.set(walletRef, { ...state, updatedAt: FieldValue.serverTimestamp() });
 
         return amount;
@@ -683,12 +724,21 @@ export const adReward = onRequest(
  * attempt collides with a document that already exists.
  *
  * A product may grant more than one currency, because a bundle does. What it may never
- * grant is anything that is not currency: hearts and boosts live in the player's save
- * file and are applied by the phone, so a product that promised them would need the
- * client to apply half a purchase after the server applied the other half — and a record
- * of "did I already apply this transaction's hearts" is a new field in the save whose
- * failure mode is somebody paying and receiving nothing. Hearts are bought with gems
- * instead. See `StoreProduct` on the client for the argument in full.
+ * grant is a stored *amount*: hearts and boosts live in the player's save file and are
+ * applied by the phone, so a product that promised them would need the client to apply
+ * half a purchase after the server applied the other half — and a record of "did I already
+ * apply this transaction's hearts" is a new field in the save whose failure mode is
+ * somebody paying and receiving nothing. Hearts are bought with gems instead.
+ *
+ * The one non-currency thing a product may grant is a **heart capacity**, and it is the
+ * exception the paragraph above defines rather than one it forgot. A capacity arrives as
+ * the union of a permanent product id, so applying it twice is applying it once and the
+ * record has nothing to answer — which is why the entitlement can live entirely on the
+ * client and be recovered by a Restore, with nothing here to grant. What this server owns
+ * is the reversal: a refunded receipt is revoked, the container id is recorded on the
+ * account's wallet, and every wallet reply carries it back so the phone stops honouring
+ * something nobody paid for. See `StoreProduct.HeartCapacity` on the client for the
+ * argument in full.
  */
 export const redeemPurchase = onCall(
   {
@@ -770,6 +820,11 @@ export const redeemPurchase = onCall(
         // so a lost response cannot cost the player their purchase or hand them a second
         // one. The client reads `alreadyGranted` and skips the celebration rather than
         // congratulating somebody for reopening the app.
+        //
+        // The wallet goes back with it, and for a container that is the whole of what the
+        // reply has to carry: the entitlement lives in the client's save and is re-applied
+        // from the product id on every successful redemption, so a re-delivery after a
+        // reinstall restores it without this server granting anything twice.
         return { state, granted: {} as Record<string, number>, already: true };
       }
 
@@ -780,11 +835,23 @@ export const redeemPurchase = onCall(
         granted[currency] = amount;
       }
 
+      // Buying a container again after a refund lifts the revocation, in the transaction
+      // that grants it. Doing it anywhere else would leave a window in which the server was
+      // paid for a container it was still telling the client to take away.
+      if (grant.capacity > 0 && (state.containersRevoked ?? []).includes(purchase.productId)) {
+        state.containersRevoked =
+          (state.containersRevoked ?? []).filter((id) => id !== purchase.productId);
+      }
+
       transaction.set(receiptRef, {
         uid,
         store: purchase.store,
         productId: purchase.productId,
         kind: grant.kind,
+
+        // Recorded so a refund can be reversed without re-reading the product catalog,
+        // which may have been re-seeded by then. `revokeReceipt` reads exactly this.
+        capacity: grant.capacity,
         granted,
         sandbox: purchase.sandbox,
         purchasedAt: Timestamp.fromMillis(purchase.purchasedAtMillis),
@@ -803,7 +870,8 @@ export const redeemPurchase = onCall(
 
     logger.info("purchase redeemed", {
       uid, store: purchase.store, productId: purchase.productId,
-      granted: result.granted, already: result.already, sandbox: purchase.sandbox,
+      granted: result.granted, capacity: grant.capacity,
+      already: result.already, sandbox: purchase.sandbox,
     });
 
     return {

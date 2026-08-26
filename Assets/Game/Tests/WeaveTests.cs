@@ -233,7 +233,7 @@ namespace GlimmerGrove.Tests
             for (uint seed = 1; seed <= 200; seed++)
             {
                 var layout = Grove(seed, 7, 9, 4, 3);
-                var run = new WeaveRun(layout);
+                var run = new WeaveBoard(layout);
 
                 Assert.IsTrue(run.DrawSolution(),
                               $"seed {seed} produced a grove its own solution cannot solve");
@@ -434,7 +434,7 @@ namespace GlimmerGrove.Tests
         public void AChannelMustRunBetweenItsOwnTwoEndpoints()
         {
             var layout = Grove();
-            var run = new WeaveRun(layout);
+            var run = new WeaveBoard(layout);
             var solution = layout.Solution(0);
 
             Assert.IsFalse(run.IsLegal(0, new List<int> { solution[0] }),
@@ -448,7 +448,7 @@ namespace GlimmerGrove.Tests
         public void AChannelMayBeDrawnFromEitherEnd()
         {
             var layout = Grove();
-            var run = new WeaveRun(layout);
+            var run = new WeaveBoard(layout);
 
             var backwards = new List<int>(layout.Solution(0));
             backwards.Reverse();
@@ -462,7 +462,7 @@ namespace GlimmerGrove.Tests
         public void AChannelMustStepOrthogonallyAndMayNotDoubleBack()
         {
             var layout = Grove();
-            var run = new WeaveRun(layout);
+            var run = new WeaveBoard(layout);
             var ends = layout.Pairs[0];
 
             Assert.IsFalse(run.IsLegal(0, new List<int> { ends.Heart, ends.Critter }),
@@ -479,7 +479,7 @@ namespace GlimmerGrove.Tests
             // The rule the entire puzzle rests on. Without it every pair is joined by walking
             // straight there and the grove is a formality.
             var layout = Grove();
-            var run = new WeaveRun(layout);
+            var run = new WeaveBoard(layout);
 
             Assert.IsTrue(run.Draw(0, layout.Solution(0)));
 
@@ -496,7 +496,7 @@ namespace GlimmerGrove.Tests
         public void AChannelMayNotRunThroughSomebodyElsesEndpoint()
         {
             var layout = Grove();
-            var run = new WeaveRun(layout);
+            var run = new WeaveBoard(layout);
 
             for (int p = 0; p < layout.Pairs.Count; p++)
             {
@@ -514,7 +514,7 @@ namespace GlimmerGrove.Tests
             // Half of what a bead is for. It is a doorway to one colour and a wall to the other
             // five, and the wall half is what pushes the other channels into each other.
             var layout = Grove(7, 7, 9, 4, 3);
-            var run = new WeaveRun(layout);
+            var run = new WeaveBoard(layout);
 
             Assert.Greater(layout.Beads.Count, 0, "this seed should carry beads");
 
@@ -539,7 +539,7 @@ namespace GlimmerGrove.Tests
             //  . . .   that reached its critter being rejected for a reason elsewhere on the
             //          board, which is the fault the fill rule had.
             var grove = ByHand(3, 3, new[] { Pair(0, 2, new[] { 0, 3, 4, 5, 2 }, new[] { 4 }) });
-            var run = new WeaveRun(grove);
+            var run = new WeaveBoard(grove);
 
             var past = new List<int> { 0, 1, 2 };
             Assert.IsTrue(run.IsLegal(0, past), "going round a bead is not an illegal move");
@@ -562,7 +562,7 @@ namespace GlimmerGrove.Tests
         public void TakingAChannelBackUnthreadsItsBeadsAndLeavesThemStanding()
         {
             var grove = ByHand(3, 3, new[] { Pair(0, 2, new[] { 0, 3, 4, 5, 2 }, new[] { 4 }) });
-            var run = new WeaveRun(grove);
+            var run = new WeaveBoard(grove);
 
             Assert.IsTrue(run.Draw(0, grove.Solution(0)));
             Assert.IsTrue(run.IsThreaded(0));
@@ -578,7 +578,7 @@ namespace GlimmerGrove.Tests
         public void ARefusedRedrawLeavesTheBeadsExactlyAsTheyWere()
         {
             var grove = ByHand(3, 3, new[] { Pair(0, 2, new[] { 0, 3, 4, 5, 2 }, new[] { 4 }) });
-            var run = new WeaveRun(grove);
+            var run = new WeaveBoard(grove);
 
             Assert.IsTrue(run.Draw(0, grove.Solution(0)));
             Assert.IsTrue(run.IsThreaded(0));
@@ -594,7 +594,7 @@ namespace GlimmerGrove.Tests
         public void ARefusedChannelLeavesTheBoardExactlyAsItWas()
         {
             var layout = Grove();
-            var run = new WeaveRun(layout);
+            var run = new WeaveBoard(layout);
 
             Assert.IsTrue(run.Draw(0, layout.Solution(0)));
             int occupied = run.Occupied;
@@ -611,7 +611,7 @@ namespace GlimmerGrove.Tests
             // Redrawing has to take the old channel up first, or a pair is refused for colliding
             // with itself — which would make any route change impossible without erasing.
             var layout = Grove();
-            var run = new WeaveRun(layout);
+            var run = new WeaveBoard(layout);
 
             Assert.IsTrue(run.Draw(0, layout.Solution(0)));
             Assert.IsTrue(run.Draw(0, layout.Solution(0)), "a pair could not redraw its own route");
@@ -622,7 +622,7 @@ namespace GlimmerGrove.Tests
         public void ErasingAChannelFreesItsGroundButKeepsItsEnds()
         {
             var layout = Grove();
-            var run = new WeaveRun(layout);
+            var run = new WeaveBoard(layout);
             var solution = layout.Solution(0);
 
             run.Draw(0, solution);
@@ -644,7 +644,7 @@ namespace GlimmerGrove.Tests
             var layout = Grove(3, 5, 6, 3);
             Assert.IsFalse(layout.HasBeads);
 
-            var run = new WeaveRun(layout);
+            var run = new WeaveBoard(layout);
 
             for (int p = 0; p < layout.Pairs.Count; p++)
             {
@@ -672,7 +672,7 @@ namespace GlimmerGrove.Tests
             var layout = Grove(9, 7, 9, 4);
             Assert.IsFalse(layout.HasBeads, "a bead would make a shortcut a different question");
 
-            var run = new WeaveRun(layout);
+            var run = new WeaveBoard(layout);
             Assert.IsTrue(run.DrawSolution());
             Assert.AreEqual(layout.Count, run.Occupied, "the carved arrangement fills the grove");
 
@@ -708,7 +708,7 @@ namespace GlimmerGrove.Tests
         /// The shortest legal route between one pair's ends over whatever ground is free, found
         /// by breadth-first search. This is the route a player draws when nothing is in the way.
         /// </summary>
-        static List<int> Shortcut(WeaveRun run, WeaveLayout layout, int pair)
+        static List<int> Shortcut(WeaveBoard run, WeaveLayout layout, int pair)
         {
             int from = layout.Pairs[pair].Heart, to = layout.Pairs[pair].Critter;
 
@@ -742,6 +742,93 @@ namespace GlimmerGrove.Tests
             for (int at = to; at >= 0; at = came[at]) path.Add(at);
             path.Reverse();
             return path;
+        }
+
+        // ------------------------------------------------------------------ the coaching hand
+        /// <summary>
+        /// A 5x5 grove built so the coaching hand has a decision to make about rings.
+        ///
+        /// <code>
+        ///    0  1  2  3  4      pair 0 runs corner-to-middle (0 -> 12) and both of its elbows
+        ///    5  6  7  8  9      are blocked: a ring on 2 sits on the across-first one and a
+        ///   10 11 12 13 14      ring on 10 sits on the down-first one.
+        ///   15 16 17 18 19      pair 1 runs straight down the right edge (4 -> 24) and its
+        ///   20 21 22 23 24      elbow is clear.
+        /// </code>
+        ///
+        /// Both pairs are the same distance apart, so pair 0 is reached first and rejected on
+        /// its rings rather than on its length — which is exactly the case the preference is
+        /// about.
+        /// </summary>
+        static WeaveLayout RingedElbows()
+            => ByHand(5, 5, new[]
+            {
+                Pair(0, 12, new[] { 0, 5, 6, 7, 12 }, new[] { 10 }),
+                Pair(4, 24, new[] { 4, 9, 14, 19, 24 }, new[] { 2 }),
+            });
+
+        [Test]
+        public void ARingIsAvoidedWhenTheBoardOffersARouteThatCan()
+        {
+            // The rule, on a board built to have the choice — rather than on the shipped groves,
+            // where whether a clear elbow exists at all is a fact about how crowded the chapter
+            // got. It did get crowded: the Nightloom hangs six rings on eighty cells and has no
+            // clear elbow anywhere, which is legal and which is why asserting this against the
+            // catalog turned a rule into a coincidence.
+            var layout = RingedElbows();
+            var walk = layout.CoachRoute();
+
+            Assert.AreEqual(4, walk[0], "the demonstration should have moved to the clear pair");
+            Assert.AreEqual(24, walk[walk.Length - 1]);
+
+            for (int i = 1; i < walk.Length - 1; i++)
+                Assert.AreEqual(-1, layout.BeadOwner(walk[i]),
+                                "a ring was crossed while a route existed that need not have");
+        }
+
+        [Test]
+        public void ARingIsCrossedRatherThanFallingBackToTheCarvedWalk()
+        {
+            // The second pass, and the judgement behind it: a demonstration that clips somebody
+            // else's ring is slightly muddled, where the carved walk is the *answer* to part of
+            // the grove and wanders besides. So a crowded board gets the muddled one.
+            //
+            // Two rings on one pair, which the generator would never deal (WeaveGenerator
+            // .MostBeads is one apiece) and WeaveLayout has no opinion about — it is the cheapest
+            // way to leave a single pair with no clear elbow at all.
+            var layout = ByHand(5, 5, new[]
+            {
+                Pair(0, 12, new[] { 0, 5, 6, 7, 12 }, new[] { 2, 10 }),
+            });
+
+            var walk = layout.CoachRoute();
+
+            Assert.AreEqual(0, walk[0]);
+            Assert.AreEqual(12, walk[walk.Length - 1]);
+            Assert.AreEqual(5, walk.Length, "an elbow across a 5x5 corner is five cells");
+
+            // Three corners is an elbow; the carved walk here turns twice and would give four.
+            Assert.AreEqual(3, layout.Corners(walk).Length,
+                            "it fell back to the carved walk instead of crossing a ring");
+        }
+
+        [Test]
+        public void ADemonstrationNeverRunsOverSomebodyElsesCrystal()
+        {
+            // Refused in *both* passes, unlike a ring, and the asymmetry is the point: an
+            // illegal demonstration reads as permission, where an impossible one only reads as
+            // decoration. Pair 1's crystal sits in the middle of pair 0's only two elbows.
+            var layout = ByHand(5, 5, new[]
+            {
+                Pair(0, 12, new[] { 0, 5, 6, 7, 12 }, null),
+                Pair(2, 10, new[] { 2, 7, 6, 5, 10 }, null),
+            });
+
+            var walk = layout.CoachRoute();
+
+            for (int i = 1; i < walk.Length - 1; i++)
+                Assert.AreEqual(-1, layout.EndpointAt(walk[i]),
+                                "the hand was traced over an endpoint");
         }
 
         // ------------------------------------------------------------------ the lesson's stroke
@@ -821,11 +908,440 @@ namespace GlimmerGrove.Tests
             Assert.AreEqual(7, to);
         }
 
+        // ================================================================== the ink
+        /// <summary>
+        /// Three cells across, one pair from corner to corner along the top, so every figure
+        /// below can be counted by hand: the floor is three cells and the way round is five.
+        /// </summary>
+        static WeaveLayout Corner()
+            => ByHand(3, 3, new[] { Pair(0, 2, new[] { 0, 1, 2 }) });
+
+        static List<int> Across => new List<int> { 0, 1, 2 };
+        static List<int> Round => new List<int> { 0, 3, 4, 5, 2 };
+
+        [Test]
+        public void AGroveWithNoBudgetIsNeverLostAndThatIsWhatUnlimitedMeans()
+        {
+            var run = new WeaveRun(Corner());
+
+            Assert.IsFalse(run.Ink.Bounded);
+            Assert.AreEqual(WeaveInk.Unlimited, run.Ink.Left);
+            Assert.IsTrue(run.Affords(1_000_000));
+            Assert.IsFalse(run.Verdict.IsLost, "a grove with no ink budget cannot be lost");
+        }
+
+        [Test]
+        public void AChannelCostsACellOfInkForEveryCellItCovers()
+        {
+            var run = new WeaveRun(Corner(), 12);
+
+            Assert.AreEqual(12, run.Ink.Left);
+            Assert.IsTrue(run.Draw(0, Round));
+
+            Assert.AreEqual(5, run.Ink.Spent);
+            Assert.AreEqual(7, run.Ink.Left);
+        }
+
+        [Test]
+        public void ARunWithNoRedrawInItSpendsExactlyWhatItOccupies()
+        {
+            // The whole reason the meter and the grade can be one number. A cell of light per
+            // cell covered means the ink a clean run spends *is* Occupied, so what the player
+            // watches count down is what their stars are read off rather than a second number
+            // that can quietly disagree with it.
+            var layout = Grove(7, 7, 9, 4, 3);
+            var run = new WeaveRun(layout, 10_000);
+
+            for (int p = 0; p < layout.Pairs.Count; p++)
+                Assert.IsTrue(run.Draw(p, layout.Solution(p)));
+
+            Assert.IsTrue(run.IsSolved);
+            Assert.AreEqual(run.Occupied, run.Ink.Spent);
+        }
+
+        [Test]
+        public void ARedrawIsChargedAgainAndTheOldLightIsGone()
+        {
+            var run = new WeaveRun(Corner(), 12);
+
+            Assert.IsTrue(run.Draw(0, Round));
+            Assert.IsTrue(run.Draw(0, Across), "a pair could not redraw over its own ground");
+
+            Assert.AreEqual(8, run.Ink.Spent, "a redraw was not charged");
+            Assert.AreEqual(4, run.Ink.Left);
+        }
+
+        [Test]
+        public void ARefusedChannelIsChargedNothing()
+        {
+            var run = new WeaveRun(Corner(), 12);
+
+            Assert.IsFalse(run.Draw(0, new List<int> { 0, 9999 }));
+            Assert.AreEqual(0, run.Ink.Spent);
+            Assert.IsFalse(run.CanUndo, "a refused channel was written down as a stroke");
+        }
+
+        [Test]
+        public void TakingAChannelBackOnTheBoardFreesTheGroundAndNotTheLight()
+        {
+            // The board is what a route change goes through, and it has no idea what light is.
+            // That is the whole reason erasing cannot refund: a redraw is an erase and a draw.
+            var run = new WeaveRun(Corner(), 12);
+
+            Assert.IsTrue(run.Draw(0, Round));
+            run.Board.Erase(0);
+
+            Assert.AreEqual(-1, run.OwnerOf(3), "the ground did not come free");
+            Assert.AreEqual(5, run.Ink.Spent, "erasing a channel handed its light back");
+        }
+
+        [Test]
+        public void APairMayCrossTheChannelItAlreadyHasStanding()
+        {
+            // What makes an abandoned redraw free. Nothing is taken up until a replacement
+            // lands, so a pair really is standing on its own ground while it is being drawn
+            // again — and being refused for colliding with yourself is not a rule anybody could
+            // read off the board.
+            var board = new WeaveBoard(Corner());
+
+            Assert.IsTrue(board.Draw(0, Round));
+            Assert.IsTrue(board.Free(0, 4), "a pair was refused a cell of its own channel");
+            Assert.IsTrue(board.IsLegal(0, Across));
+        }
+
+        [Test]
+        public void ADrawReportsWhatItReplacedSoAnUndoCanPutItBack()
+        {
+            var board = new WeaveBoard(Corner());
+
+            Assert.IsTrue(board.Draw(0, Round, out var first));
+            CollectionAssert.IsEmpty(first, "the first channel of a pair replaced nothing");
+
+            Assert.IsTrue(board.Draw(0, Across, out var second));
+            CollectionAssert.AreEqual(Round, second);
+        }
+
+        // ------------------------------------------------------------------ the pressure
+        [Test]
+        public void InkReadsItsPressureAsFractionsOfItsOwnBudget()
+        {
+            // A tenth is under one channel on any grove that ships, whatever size it is — which
+            // is why this is a fraction and not a count of cells.
+            var ink = new WeaveInk(100);
+            Assert.AreEqual(InkPressure.Easy, ink.Pressure);
+
+            ink.Spend(74);
+            Assert.AreEqual(InkPressure.Easy, ink.Pressure, "26 of 100 is still room to work in");
+
+            ink.Spend(1);
+            Assert.AreEqual(InkPressure.Low, ink.Pressure, "a quarter left is worth watching");
+
+            ink.Spend(65);
+            Assert.AreEqual(InkPressure.Critical, ink.Pressure, "a tenth left is the last channel");
+
+            Assert.AreEqual(InkPressure.Easy, new WeaveInk(WeaveInk.Unlimited).Pressure,
+                            "a grove with no budget is never under pressure");
+        }
+
+        // ------------------------------------------------------------------ undo
+        [Test]
+        public void UndoHandsBackTheChannelAndTheLightTogether()
+        {
+            var run = new WeaveRun(Corner(), 12);
+
+            Assert.IsFalse(run.CanUndo, "there was something to undo on an untouched grove");
+            Assert.IsTrue(run.Draw(0, Round));
+            Assert.IsTrue(run.CanUndo);
+
+            Assert.IsTrue(run.TryUndo(out int pair));
+
+            Assert.AreEqual(0, pair);
+            Assert.IsFalse(run.IsJoined(0), "the channel was not taken back");
+            Assert.AreEqual(0, run.Ink.Spent, "the light was not handed back");
+            Assert.AreEqual(WeaveStrokes.Allowance - 1, run.UndosLeft);
+        }
+
+        [Test]
+        public void UndoingARedrawPutsTheRouteThatWasThereBack()
+        {
+            // The case that makes this an undo rather than an erase. A pair being redrawn had a
+            // perfectly good channel a moment ago, and taking the new one away while leaving the
+            // pair bare would cost the player something they never asked to lose.
+            var run = new WeaveRun(Corner(), 20);
+
+            Assert.IsTrue(run.Draw(0, Round));
+            Assert.IsTrue(run.Draw(0, Across));
+            Assert.IsTrue(run.TryUndo(out _));
+
+            Assert.IsTrue(run.IsJoined(0), "the route the redraw replaced was not put back");
+            CollectionAssert.AreEqual(Round, run.PathOf(0));
+            Assert.AreEqual(5, run.Ink.Spent, "only the redraw's own light should have come back");
+        }
+
+        [Test]
+        public void ThereAreExactlyTwoUndosAGroveAndTheyDoNotComeBack()
+        {
+            var run = new WeaveRun(Corner(), 60);
+
+            Assert.AreEqual(2, WeaveStrokes.Allowance, "the mode's whole correction budget");
+            Assert.AreEqual(WeaveStrokes.Allowance, run.UndosLeft);
+
+            for (int i = 0; i < WeaveStrokes.Allowance; i++)
+            {
+                Assert.IsTrue(run.Draw(0, Round));
+                Assert.IsTrue(run.TryUndo(out _));
+            }
+
+            Assert.IsTrue(run.Draw(0, Round));
+            Assert.IsFalse(run.CanUndo, "a third undo was offered");
+            Assert.IsFalse(run.TryUndo(out _));
+            Assert.IsTrue(run.IsJoined(0), "a refused undo took the channel anyway");
+        }
+
+        [Test]
+        public void TheStrokeStackIsPlainArithmeticAndNeedsNoGrove()
+        {
+            // WeaveStrokes exists apart from the board precisely so the rule that matters — two,
+            // and they do not come back — is provable over integers.
+            var strokes = new WeaveStrokes();
+
+            Assert.IsFalse(strokes.CanUndo, "an untouched stack offered an undo");
+
+            strokes.Note(1, new[] { 4, 5 }, 7);
+            Assert.AreEqual(1, strokes.Count);
+            Assert.IsTrue(strokes.TryUndo(out var stroke));
+
+            Assert.AreEqual(1, stroke.Pair);
+            Assert.AreEqual(7, stroke.Cost);
+            CollectionAssert.AreEqual(new[] { 4, 5 }, stroke.Replaced);
+            Assert.AreEqual(WeaveStrokes.Allowance - 1, strokes.Left);
+            Assert.AreEqual(0, strokes.Count);
+
+            strokes.Reset();
+            Assert.AreEqual(WeaveStrokes.Allowance, strokes.Left, "a restart hands the allowance back");
+        }
+
+        [Test]
+        public void ARestartHandsBackTheChannelsTheInkAndTheUndos()
+        {
+            var run = new WeaveRun(Corner(), 20);
+
+            Assert.IsTrue(run.Draw(0, Round));
+            Assert.IsTrue(run.TryUndo(out _));
+            Assert.IsTrue(run.Draw(0, Across));
+
+            run.Restart();
+
+            Assert.AreEqual(0, run.Joined);
+            Assert.AreEqual(0, run.Ink.Spent);
+            Assert.AreEqual(WeaveStrokes.Allowance, run.UndosLeft);
+            Assert.IsFalse(run.CanUndo, "a restart left the strokes of the run before it");
+        }
+
+        // ------------------------------------------------------------------ losing
+        [Test]
+        public void AGroveIsLostWhenTheLightLeftCannotCoverTheCheapestFinish()
+        {
+            //  A . B   Two pairs down the outside columns, three cells of floor each, dealt
+            //  . . .   nine. Joining the first one the long way leaves four, which still covers
+            //  a . b   the three the other one needs at its very best — so the run carries on.
+            //
+            // The floor is what makes any of this provable rather than a guess: nothing the
+            // player could do next finishes for less, including taking the first channel up
+            // again, so a run is only ever ended on a board that genuinely cannot be finished.
+            var grove = ByHand(3, 3, new[]
+            {
+                Pair(0, 6, new[] { 0, 3, 6 }),
+                Pair(2, 8, new[] { 2, 5, 8 }),
+            });
+
+            var run = new WeaveRun(grove, 9);
+            Assert.AreEqual(6, run.Verdict.Floor, "two pairs, three cells of floor each");
+            Assert.IsTrue(run.Verdict.IsPlaying);
+
+            Assert.IsTrue(run.Draw(0, new List<int> { 0, 1, 4, 7, 6 }));
+
+            Assert.AreEqual(4, run.Ink.Left);
+            Assert.AreEqual(3, run.Verdict.Floor, "one pair left, and its floor is three");
+            Assert.IsFalse(run.Verdict.IsLost, "four cells of light still covers a floor of three");
+
+            Assert.IsTrue(run.Draw(1, new List<int> { 2, 5, 8 }));
+            Assert.IsTrue(run.Verdict.IsSolved, "a finished grove is never a lost one");
+        }
+
+        [Test]
+        public void AGroveRunsDryWhenAChannelSprawls()
+        {
+            // The same board dealt seven cells, which is one more than the six it takes to draw
+            // both pairs straight — and the sprawl this mode exists to price. The first channel
+            // wanders five cells over a route worth three, and what is left cannot cover the
+            // other pair's floor, so the run is over the moment it lands.
+            var grove = ByHand(3, 3, new[]
+            {
+                Pair(0, 6, new[] { 0, 3, 6 }),
+                Pair(2, 8, new[] { 2, 5, 8 }),
+            });
+
+            var run = new WeaveRun(grove, 7);
+            Assert.AreEqual(6, run.Verdict.Floor, "the board can be drawn in six, so seven is winnable");
+            Assert.IsFalse(run.Verdict.IsLost);
+
+            Assert.IsTrue(run.Draw(0, new List<int> { 0, 1, 4, 7, 6 }));
+
+            Assert.AreEqual(2, run.Ink.Left);
+            Assert.AreEqual(3, run.Verdict.Floor);
+            Assert.IsTrue(run.Verdict.IsLost, "a grove that cannot afford its own floor is over");
+        }
+
+        [Test]
+        public void APairWalledInIsNotSomethingTheRunCanContinueWith()
+        {
+            //  A B a   The half a floor cannot see. B takes the middle column and A is sealed
+            //  . B .   into the left of the board — so the light left may look like enough while
+            //  a B A   there is no channel anywhere that could be drawn with it.
+            //
+            // Without this the player would sit in front of a board that cannot be finished and
+            // will not end, which is exactly the state invariant 20g is about.
+            var grove = ByHand(3, 3, new[]
+            {
+                Pair(0, 8, new[] { 0, 3, 6, 7, 8 }),
+                Pair(1, 7, new[] { 1, 4, 7 }),
+            });
+
+            var run = new WeaveRun(grove, 5);
+
+            Assert.AreEqual(5, run.Board.Reach(0), "the board opens with a way through");
+            Assert.IsTrue(run.Draw(1, new List<int> { 1, 4, 7 }));
+
+            Assert.AreEqual(-1, run.Board.Reach(0), "a walled pair has no route at any price");
+            Assert.AreEqual(2, run.Ink.Left);
+            Assert.IsTrue(run.Verdict.IsLost);
+        }
+
+        [Test]
+        public void TheFloorCountsAJoinedPairThatStillOwesABead()
+        {
+            // A channel that reached its critter without threading its ring has to be drawn
+            // again, and the light already spent on it is spent. A floor calling that pair
+            // finished would let a grove run dry while the meter still read affordable.
+            var grove = ByHand(3, 3, new[] { Pair(0, 2, new[] { 0, 3, 4, 5, 2 }, new[] { 4 }) });
+            var run = new WeaveRun(grove, 20);
+
+            Assert.IsTrue(run.Draw(0, Across), "going round a bead is legal");
+            Assert.IsFalse(run.IsSolved);
+            Assert.AreEqual(grove.Straight(0), run.Verdict.Floor,
+                            "a pair that still owes a bead has to be paid for in full again");
+
+            Assert.IsTrue(run.Draw(0, Round));
+            Assert.IsTrue(run.IsSolved);
+            Assert.AreEqual(0, run.Verdict.Floor);
+        }
+
+        // ------------------------------------------------------------------ ending the run
+        [Test]
+        public void ALostRunOnlyEndsOnceAndOnlyOnceItIsOwedFor()
+        {
+            // The guard that used to be three booleans in an if on the screen. A run decided
+            // twice charges two hearts for one loss, and one decided before the first channel
+            // lands charges a heart for a board the player never touched.
+            var grove = ByHand(3, 3, new[]
+            {
+                Pair(0, 6, new[] { 0, 3, 6 }),
+                Pair(2, 8, new[] { 2, 5, 8 }),
+            });
+
+            var run = new WeaveRun(grove, 7);
+            Assert.IsTrue(run.Draw(0, new List<int> { 0, 1, 4, 7, 6 }));
+
+            var lost = run.Verdict;
+            Assert.IsTrue(lost.IsLost);
+
+            Assert.IsTrue(lost.EndsTheRun(live: true, committed: true));
+            Assert.IsFalse(lost.EndsTheRun(live: false, committed: true),
+                           "a run already ending was decided a second time");
+            Assert.IsFalse(lost.EndsTheRun(live: true, committed: false),
+                           "a run nobody has drawn on yet was charged a heart");
+
+            var playing = new WeaveRun(grove, 40).Verdict;
+            Assert.IsFalse(playing.EndsTheRun(live: true, committed: true));
+        }
+
+        [Test]
+        public void EveryGroveTheChapterShipsIsDealtEnoughLightToBeDrawnAtAll()
+        {
+            // WeaveMode.Validate makes this check on every build, over the board that actually
+            // ships. Made here over the shapes the chapter is built from and a spread of seeds,
+            // so a retune of LevelTuning's factors cannot quietly deal a grove less ink than its
+            // pairs need even with nobody in anybody's way.
+            (int w, int h, int pairs, int beads)[] rungs =
+            {
+                (5, 6, 3, 0), (5, 7, 4, 0), (6, 6, 4, 1), (6, 7, 4, 2), (6, 8, 5, 2),
+                (7, 7, 5, 3), (7, 8, 5, 3), (7, 8, 6, 4), (7, 9, 6, 4), (7, 9, 6, 5),
+            };
+
+            foreach (var rung in rungs)
+                for (uint seed = 1; seed <= 8; seed++)
+                {
+                    var grove = WeaveGenerator.Build(rung.w, rung.h, rung.pairs, seed, rung.beads);
+
+                    // The real thing rather than the arithmetic restated, so this cannot pass
+                    // against a formula that has stopped being the one the game deals.
+                    int ink = new Content.LevelTuning(grove.Par,
+                                                      Content.LevelTuning.DefaultGoldFactor,
+                                                      Content.LevelTuning.DefaultSilverFactor)
+                        .MoveBudget;
+
+                    // Room to spare, not merely enough. The floor is what a perfect arrangement
+                    // costs before the board forces a single detour, and every shipped grove
+                    // forces some (WeaveGenerator.MinSlack), so ink that only just covered the
+                    // floor would be a grove nobody could finish.
+                    Assert.Less(grove.StraightTotal * 1.2f, ink,
+                                $"a {rung.w}x{rung.h} grove of {rung.pairs} pairs and " +
+                                $"{rung.beads} beads is dealt {ink} cells of ink against a floor " +
+                                $"of {grove.StraightTotal}");
+                }
+        }
+
+        // ------------------------------------------------------------------ the readout row
+        [Test]
+        public void EveryRowOfReadoutsAModeMayAskForLeavesRoomToReadThem()
+        {
+            // The spacing stopped being one arrangement the moment a mode could ask for fewer
+            // than three, and a case nobody exercises is a case nobody has looked at.
+            for (int count = 1; count <= ReadoutRow.Most; count++)
+                Assert.IsTrue(ReadoutRow.IsClear(count, out string fault), fault);
+
+            Assert.AreEqual(0f, ReadoutRow.XFor(0, 1), "one number belongs in the middle");
+            Assert.AreEqual(0f, ReadoutRow.XFor(1, 3), "the middle of three is the middle");
+            Assert.AreEqual(-ReadoutRow.XFor(1, 2), ReadoutRow.XFor(0, 2),
+                            "a pair has to straddle the centre evenly");
+
+            Assert.IsFalse(ReadoutRow.IsClear(ReadoutRow.Most + 1, out _),
+                           "a row wider than the screen was called clear");
+        }
+
+        // ------------------------------------------------------------------ the band below it
+        [Test]
+        public void TheBandBelowAWeaveDoesNotSitOnItself()
+        {
+            // What used to be a paragraph of prose claiming three numbers cleared each other —
+            // and the paragraph was wrong the first time it was written, because UIKit.Box pivots
+            // at centre whatever it is anchored to. Geometry belongs where it can be checked, for
+            // ChapterMap's reason (invariant 8a).
+            Assert.IsTrue(WeaveBand.IsClear(out string fault), fault);
+
+            Assert.Greater(WeaveBand.KeyToNotice, 0f, "the undo key and the standing line overlap");
+            Assert.GreaterOrEqual(WeaveBand.NoticeToBoard, 0f,
+                                  "the standing line is drawn over the grove");
+            Assert.Greater(WeaveBand.BoardFloor, WeaveBand.UndoTop,
+                           "the grove is drawn over the undo key");
+        }
+
         [Test]
         public void ResettingReturnsTheGroveToItsEndpointsAndItsBeads()
         {
             var layout = Grove(7, 7, 9, 4, 3);
-            var run = new WeaveRun(layout);
+            var run = new WeaveBoard(layout);
 
             run.DrawSolution();
             run.Reset();

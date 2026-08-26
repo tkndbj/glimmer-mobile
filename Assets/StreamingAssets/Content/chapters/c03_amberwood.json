@@ -19,7 +19,6 @@
       "height": 6,
       "mapX": 0.28,
       "mapY": 0.06,
-      "timeFactor": 1.85,
       "rows": [
         "-ES/2 -SW/0 @E#R/1 -ESW/1 @W#R/2 @S#A/0",
         "@N#R/0 *NE#R/1 -ESW/1 -NEW/0 -EW/0 -NW/0",
@@ -35,7 +34,6 @@
       "height": 7,
       "mapX": 0.72,
       "mapY": 0.145,
-      "timeFactor": 1.8,
       "accent": "#FF8A5C",
       "slate": "#351C14",
       "backdrop": "c03_play_1",
@@ -55,7 +53,6 @@
       "height": 6,
       "mapX": 0.26,
       "mapY": 0.225,
-      "timeFactor": 1.75,
       "accent": "#4FD1C5",
       "slate": "#0F2E2C",
       "backdrop": "c03_play_2",
@@ -74,7 +71,6 @@
       "height": 6,
       "mapX": 0.7,
       "mapY": 0.305,
-      "timeFactor": 1.75,
       "accent": "#E86AD8",
       "slate": "#2E1233",
       "backdrop": "c03_play_3",
@@ -93,7 +89,6 @@
       "height": 7,
       "mapX": 0.3,
       "mapY": 0.39,
-      "timeFactor": 1.7,
       "accent": "#A98BFF",
       "slate": "#1C1830",
       "backdrop": "c03_play_4",
@@ -101,8 +96,8 @@
         "-ES/3 -SW/2 @E#Y/2 -ESW/3 @W#Y/1 -ES/1 -SW/2",
         "@N#A/0 *NES#R/3 -ESW/1 -NEW/1 -ESW/2 -NSW/0 @N#A/0",
         "@S#Y/0 -NES/2 =NW+ES/1 -ESW/1 =NE+SW/1 -NSW/0 @S#Y/0",
-        "-NES/3 -NSW/0 -NES/1 xNSW/2 -NS/0 -NES/2 -NSW/1",
-        "@N#Y/0 -NES/0 =SW+NE/1 -NEW/3 xNW/0 -NS/0 @N#Y/2",
+        "-NES/3 -NSW/0 -NES/1 @NSW#B/2 *NS#B/0 -NES/2 -NSW/1",
+        "@N#Y/0 -NES/0 =SW+NE/1 -NEW/3 @NW#B/0 -NS/0 @N#Y/2",
         "@S#A/2 -NES/1 -NEW/0 -ESW/0 -EW/0 *NEW#G/2 -SW/0",
         "-NE/0 -NW/0 @E#Y/0 -NEW/3 @W#Y/0 @E#A/3 -NW/1"
       ]
@@ -113,7 +108,6 @@
       "height": 7,
       "mapX": 0.74,
       "mapY": 0.475,
-      "timeFactor": 1.7,
       "accent": "#C9D94A",
       "slate": "#262B12",
       "backdrop": "c03_play_5",
@@ -133,7 +127,6 @@
       "height": 7,
       "mapX": 0.28,
       "mapY": 0.555,
-      "timeFactor": 1.65,
       "accent": "#7FD6FF",
       "slate": "#10243A",
       "backdrop": "c03_play_6",
@@ -153,7 +146,6 @@
       "height": 7,
       "mapX": 0.7,
       "mapY": 0.64,
-      "timeFactor": 1.6,
       "accent": "#FFE08A",
       "slate": "#30291A",
       "backdrop": "c03_play_7",
@@ -173,7 +165,6 @@
       "height": 7,
       "mapX": 0.24,
       "mapY": 0.725,
-      "timeFactor": 1.55,
       "accent": "#D9A05B",
       "slate": "#2A211A",
       "backdrop": "c03_play_8",
@@ -181,7 +172,7 @@
         "-ES/1 -SW/0 @S#Y/1 @S#A/2 @S#Y/0 @S#A/2 -ES/3 -SW/2",
         "@N#Y/0 -NES/2 -NEW/1 *NEW#R/0 -NEW/0 -NEW/2 -NSW/2 @N#Y/2",
         "-ES/3 =NE+SW/1 -EW/0 -EW/1 *EW#G/1 -EW/1 =NW+ES/1~2 -SW/1",
-        "xNS/0 -NES/3 -EW/0 xEW/0 -EW/0 -EW/1 -NSW/0 xNS/0",
+        "@NS#G/0 -NES/3 -EW/0 @EW#G/0 -EW/0 *EW#G/1 -NSW/0 @NS#G/0",
         "-NE/1 =ES+NW/1~2 -EW/0 -EW/1 -EW/1 -EW/0 =SW+NE/1 -NW/0",
         "@S#B/2 -NES/0 -ESW/0 *ESW#B/0 -ESW/0 -ESW/3 -NSW/0 @S#B/2",
         "-NE/0 -NW/2 @N#B/3 @N#A/1 @N#B/2 @N#A/0 -NE/0 -NW/0"
@@ -193,7 +184,6 @@
       "height": 7,
       "mapX": 0.72,
       "mapY": 0.815,
-      "timeFactor": 1.5,
       "accent": "#F0803C",
       "slate": "#3A1E10",
       "backdrop": "c03_play_9",
@@ -203,8 +193,8 @@
         "@E#R/1 =NE+SW/1&A -EW/1 *EW#G/1 -EW/1 -EW/0 =NW+ES/1~2 @W#R/3",
         "@E#R/2 -NEW/3 -EW/0 -EW/1 *EW#R/0 -EW/0 -NEW/0 @W#R/1",
         "@E#C/2 -ESW/1 -EW/1 *EW#G/0 -EW/1 -EW/1 -ESW/2 @W#C/3",
-        "-ES/1 =NE+SW/1~2 -ESW/3 *ESW#B/3 -ESW/2 -ESW/2 =NW+ES/1&A -SW/0",
-        "xNE/2 -NW/3 @N#C/3 @N#A/0 @N#C/2 @N#A/1 -NE/2 xNW/2"
+        "*ES#R/1 =NE+SW/1~2 -ESW/3 *ESW#B/3 -ESW/2 -ESW/2 =NW+ES/1&A *SW#R/0",
+        "@NE#R/2 -NW/3 @N#C/3 @N#A/0 @N#C/2 @N#A/1 -NE/2 @NW#R/2"
       ]
     }
   ]

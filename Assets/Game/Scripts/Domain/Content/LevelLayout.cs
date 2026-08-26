@@ -16,18 +16,20 @@ namespace GlimmerGrove.Content
         public const string Grammar =
             "head + arms [+ #colour] + /startRotation [+ !] [+ ~turns] [+ &rune]   " +
             "head: '-' conduit, '=' crossing, '%' briar, '*' heart-crystal, " +
-            "'@' sleeping critter, 'x' duskcap, '.' empty   " +
+            "'@' sleeping critter, '.' empty   " +
             "arms: any of N E S W in the solved orientation   " +
             "'=' a crossing, written '=NS+EW': two strands of two arms that pass through " +
             "one another and never meet, so the light entering by one pair leaves only by " +
             "that pair. A crossing whose strands are joined elsewhere on the board crosses " +
             "nothing, which the validator says out loud.   " +
             "'%' a briar, written '%NS+EW': four arms again, but only the first pair is " +
-            "open and the thorns have closed the second. All four mate their neighbours at " +
-            "every angle, so nothing about the pipe-fitting settles a briar and only colour " +
-            "or the dark can; one tap swaps which way is open. Unlike a crossing the order " +
-            "matters, and a briar whose thorns close nothing off is a tile that decides " +
-            "nothing, which the validator says out loud.   " +
+            "open and the thorns have closed the second, and one tap swaps which. Unlike a " +
+            "crossing the order matters.   " +
+            "Both four-armed tiles mate every neighbour at every angle, so nothing about " +
+            "the pipe-fitting settles either one and only colour can. The validator turns " +
+            "each of them one step and says so out loud if the glade still finishes: a tile " +
+            "nothing on the board settles is one the player cannot place, and par charged " +
+            "them for it.   " +
             "colour: R G B, Y=R+G, M=R+B, C=G+B, W=R+G+B, A=any   " +
             "'!' marks a rooted tile the player cannot turn   " +
             "'~1'..'~9' a fragile conduit that crumbles after that many turns and leaves " +
@@ -35,8 +37,7 @@ namespace GlimmerGrove.Content
             "count, which the validator proves.   " +
             "'&A'..'&Z' a taproot: every conduit carrying the same rune turns as one, and " +
             "some number of turns must solve all of them at once, which the validator " +
-            "proves. A duskcap must be dark in the authored solution — any light at all " +
-            "wakes it, and a woken duskcap means the glade is not finished.";
+            "proves.";
 
         public readonly int Width;
         public readonly int Height;

@@ -49,18 +49,6 @@ namespace GlimmerGrove.Tests
         }
 
         [Test]
-        public void DuskcapsParseAsTheirOwnKind()
-        {
-            var result = LevelGridParser.Parse(Layout("xEW/1 -EW/0"));
-            Assert.IsTrue(result.Ok, string.Join("; ", result.Errors));
-
-            var cap = result.Cells[0];
-            Assert.AreEqual(Kind.Duskcap, cap.kind);
-            Assert.AreEqual(Energy.None, cap.colour, "any light at all wakes one");
-            Assert.AreEqual(1, cap.rot);
-        }
-
-        [Test]
         public void ATaprootRuneParsesToItsLetterOrdinal()
         {
             var result = LevelGridParser.Parse(Layout("-EW/0&A -EW/0&C"));
@@ -76,7 +64,11 @@ namespace GlimmerGrove.Tests
         [TestCase("-EW/9", TestName = "rotation out of range")]
         [TestCase("-EW/0zz", TestName = "trailing junk")]
         [TestCase("*EW/0", TestName = "colourless heart-crystal")]
-        [TestCase("xEW#R/0", TestName = "duskcap with a colour")]
+        // 'x' was the duskcap, which is gone. A retired head has to be refused rather than
+        // ignored: a chapter file carrying one is content written for a build that no longer
+        // exists, and reading it as anything at all would put a tile on the board that no
+        // rule here knows what to do with.
+        [TestCase("xEW/0", TestName = "retired duskcap head")]
         [TestCase("-EW/0&a", TestName = "lower-case root rune")]
         [TestCase("-EW/0&", TestName = "root rune missing")]
         [TestCase("@W#A/0&A", TestName = "critter on a taproot")]

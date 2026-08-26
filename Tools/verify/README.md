@@ -29,10 +29,10 @@ diff shows the mapping rather than the result.
 glade as cells and the edges between them and it derives the arm masks, proves the same
 rules `content.py` proves, draws the wiring as a picture and prints the rows to paste
 into a chapter file. Typing masks by hand is how an arm ends up pointing at nothing, and
-that got worse with taproots, duskcaps and crossings — a duskcap has to be its own island
-of dark, every conduit on a taproot has to agree on one number of turns, and a crossing's
-two strands must not turn out to be joined somewhere else on the board. None of the three
-is visible in a grid of tokens. `Board.cross`, `Board.root` and `Board.path` are the
+that got worse with taproots, briars and crossings — a briar draws four arms and conducts
+two, every conduit on a taproot has to agree on one number of turns, and a crossing's two
+strands must not turn out to be joined somewhere else on the board. None of the three is
+visible in a grid of tokens. `Board.cross`, `Board.root` and `Board.path` are the
 authoring side of those: `root` derives every member's start rotation from the number of
 taps you want the root to cost, rather than leaving you to type four numbers that have to
 agree. It is an aid, not a gate: `Validate Content` and the build

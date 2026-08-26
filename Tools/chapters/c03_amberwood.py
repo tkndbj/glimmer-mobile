@@ -214,7 +214,7 @@ def g4(seed, bias):
 
 
 def g5(seed, bias):
-    """The Quiet Hollow 7x7 - amber's two springs meet only across the dark."""
+    """The Quiet Hollow 7x7 - amber's two springs meet only round the blue pool."""
     b = Board(7, 7)
     b.fill(0, 0, 7, 7)
     b.source(1, 1, 'R')
@@ -241,7 +241,7 @@ def g5(seed, bias):
     for p in [(0, 1), (6, 1), (5, 6), (0, 5)]:
         b.lamp(p[0], p[1], 'A')
 
-    b.duskcap(3, 3); b.duskcap(4, 4)
+    b.source(4, 3, 'B'); b.lamp(3, 3, 'B'); b.lamp(4, 4, 'B')
     b.path((2, 2), (3, 2)); b.path((3, 2), (4, 2)); b.path((3, 2), (3, 3))
     b.path((2, 2), (2, 3)); b.path((2, 3), (2, 4)); b.path((2, 3), (3, 3))
     b.path((4, 2), (4, 3), (4, 4), (3, 4), (3, 3))
@@ -407,7 +407,7 @@ def g8(seed, bias):
 
 
 def g9(seed, bias):
-    """The Ashen Path 8x7 - one island of dark, fording both lanes at four corners."""
+    """The Green Path 8x7 - one green lane, fording both others at four corners."""
     b = Board(8, 7)
     b.fill(0, 0, 8, 7)
     b.source(3, 1, 'R'); b.source(4, 2, 'G')     # the amber lane
@@ -439,9 +439,10 @@ def g9(seed, bias):
     for p in [(3, 6), (5, 6)]:
         b.lamp(p[0], p[1], 'A')
 
-    # the shadow: one island under both lanes, meeting itself down the middle
+    # the green lane: one island under both others, meeting itself down the middle
+    b.source(5, 3, 'G')
     for p in [(0, 3), (7, 3), (3, 3)]:
-        b.duskcap(p[0], p[1])
+        b.lamp(p[0], p[1], 'G')
     b.path(*[(x, 3) for x in range(1, 7)])
     b.path((0, 2), (0, 3), (0, 4)); b.path((7, 2), (7, 3), (7, 4))
     b.path((0, 2), (1, 2)); b.path((1, 2), (1, 3))
@@ -496,8 +497,9 @@ def g10(seed, bias):
     for p in [(3, 6), (5, 6)]:
         b.lamp(p[0], p[1], 'A')
 
-    # and two pools of shadow under it, one at each corner
-    b.duskcap(0, 6); b.duskcap(7, 6)
+    # and two red pools under it, one at each corner
+    b.source(0, 5, 'R'); b.source(7, 5, 'R')
+    b.lamp(0, 6, 'R'); b.lamp(7, 6, 'R')
     b.path((1, 5), (0, 5)); b.path((0, 5), (0, 6)); b.path((0, 6), (1, 6))
     b.path((1, 6), (1, 5))
     b.path((6, 5), (7, 5)); b.path((7, 5), (7, 6)); b.path((7, 6), (6, 6))
@@ -522,10 +524,6 @@ PALETTE = {
     "c03_the_amberwood_knot": ("#F0803C", "#3A1E10"),
 }
 
-# The ramp. The default is 1.70 seconds per par turn and every glade overrides it:
-# the Shallows ran 2.20 to 1.50 and the Mill Vale 1.90 to 1.50, so a third chapter for
-# players who have met every rule opens tighter and closes one notch past both.
-TIME = [1.85, 1.80, 1.75, 1.75, 1.70, 1.70, 1.65, 1.60, 1.55, 1.50]
 
 # Walked up the map, alternating sides. Five strips is 6000 canvas units tall, so the
 # nearest pair is about 700 apart against a 220-unit floor.
@@ -558,10 +556,10 @@ TEXT = {
 "which way the ridge closes."),
     "c03_the_quiet_hollow": (
         "The Quiet Hollow",
-        "The blend can only be made under the shadow",
-        "Amber's two springs sit on opposite sides of the dark, so the only way to join "
-"them is through it. The tiles that carry the light under the duskcaps are the "
-"same ones that would wake them."),
+        "Amber all round, and a blue pool in the middle",
+        "Amber's two springs sit on opposite sides of the hollow, so the only way to join "
+"them is round it. The tiles that carry the light past the pool are the same ones "
+"that would pour it in."),
     "c03_rootbound": (
         "Rootbound Amber",
         "One tap, and the ridge decides three times",
@@ -580,16 +578,16 @@ TEXT = {
 "three springs and reach none of the gardens around it. One corner is allowed "
 "to blend. The other three are not."),
     "c03_the_ashen_path": (
-        "The Ashen Path",
-        "The shadow fords both lanes and joins beneath them",
-        "One island of dark, crossing under the amber and the blue and meeting itself at "
-"the foot of the wood. Brittle stone guards an approach to each lane, and a woken "
-"duskcap is a glade that will not settle however many critters are awake."),
+        "The Green Path",
+        "The green path fords both lanes and joins beneath them",
+        "One green path, crossing under the amber and the blue and meeting itself at the "
+"foot of the wood. Brittle stone guards an approach to each lane, and the path's "
+"own three critters are all that will tell you it was joined."),
     "c03_the_amberwood_knot": (
         "The Amberwood Knot",
         "Everything the wood has taught, tied once",
         "Amber along the ridge, verdigris at the foot, a red lane between them that must "
-"stay red, two pools of shadow under the foot, and one root holding a corner of "
+"stay red, two red pools under the foot, and one root holding a corner of "
 "each."),
 }
 
@@ -639,7 +637,6 @@ def chapter_json(built):
         level["height"] = board.h
         level["mapX"] = MAPX[i]
         level["mapY"] = MAPY[i]
-        level["timeFactor"] = TIME[i]
         if i > 0:                       # the first glade inherits the chapter's palette
             a, s = PALETTE[lid]
             level["accent"] = a
@@ -691,9 +688,8 @@ def main():
         board, seed, bias, warns = built[lid]
         r = board.reading()
         print(f"{i + 1:>2} {lid:<26} {board.w}x{board.h} par {board.par():<3} "
-              f"clock {int(board.par() * TIME[i]):>3}s  tf {TIME[i]:.2f}  "
               f"glance {len(r['glance']):>2}/{r['tiles']:<3} arms {r['solutions']:>2} "
-              f"wins {r['wins']}  colour {r['colour_only']:>2} dark {r['dark_only']:>2}  "
+              f"wins {r['wins']}  colour {r['colour_only']:>2}  "
               f"(seed {seed}, bias {bias})"
               + ("  WARN " + "; ".join(warns) if warns else ""))
 

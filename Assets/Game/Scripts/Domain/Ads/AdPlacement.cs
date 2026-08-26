@@ -32,26 +32,13 @@ namespace GlimmerGrove.Ads
         /// <summary>Offered from the coin pill on the home screen. Player-initiated, always.</summary>
         public const string CoinBonus = "coin_bonus";
 
-        /// <summary>
-        /// Offered when the glade's clock runs out, and it buys more of that clock.
-        ///
-        /// <para>
-        /// The highest-intent moment in the game: the player has already invested the whole
-        /// run, the loss is one frame away, and what is on offer is the only thing that
-        /// undoes it. It is also the only placement that pays no currency at all — see
-        /// <see cref="Daily.ChestDropKind.RunTime"/> — which is why it needs no account, no
-        /// claim and no server opinion, and why the shared cooldown does not apply to it.
-        /// </para>
-        /// <para>
-        /// Deliberately repeatable within one run. Bounded by the placement's own daily cap
-        /// and nothing else, because the thing repetition costs is not the game's: a
-        /// continued run's elapsed time keeps climbing against thresholds derived from par,
-        /// so the second extension has usually already cost the player their third star and
-        /// the fourth has cost them their second. The clock grades the run whether or not it
-        /// ends it.
-        /// </para>
-        /// </summary>
-        public const string RunContinue = "run_continue";
+        // `run_continue` is a **retired** placement id and must never be reused. It bought
+        // seconds on a glade's countdown, and the countdown is gone — a run is graded and
+        // ended on turns alone. An id travels the same way a level id does (invariant 1): it
+        // reaches the LevelPlay dashboard, the published ad table, `grantLog` on the server
+        // and every analytics row ever written, so pointing it at some other offer would
+        // silently re-label history. Removing it here is what stops a published table
+        // re-enabling it: `IsKnown` refuses an id this build does not name.
 
         /// <summary>
         /// Offered on the victory panel, for credits on top of what the glade paid.
@@ -75,9 +62,9 @@ namespace GlimmerGrove.Ads
         /// Offered from the hint button when the pool is empty, and it buys one hint.
         ///
         /// <para>
-        /// The second placement with a natural trigger, and it sits at the same kind of
-        /// moment <see cref="RunContinue"/> does: the player has decided they want something
-        /// and found that they cannot have it. That is the best moment in the game to offer
+        /// The one placement with a natural trigger rather than a button somebody went
+        /// looking for: the player has decided they want something and found that they
+        /// cannot have it. That is the best moment in the game to offer
         /// a video and the worst to teach somebody a control is dead — the argument
         /// <c>CompanionUnlockOverlay</c> already makes about a short balance.
         /// </para>
@@ -91,7 +78,7 @@ namespace GlimmerGrove.Ads
         public const string HintRefill = "hint_refill";
 
         public static readonly string[] All =
-            { HeartRefill, CoinBonus, RunContinue, WinBonus, HintRefill };
+            { HeartRefill, CoinBonus, WinBonus, HintRefill };
 
         /// <summary>
         /// Whether an id names a placement this build knows.

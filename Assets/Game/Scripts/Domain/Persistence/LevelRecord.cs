@@ -48,15 +48,24 @@ namespace GlimmerGrove.Persistence
         public readonly int BestRank;
 
         /// <summary>
-        /// Fastest clear in milliseconds, timed from the first conduit turned. Zero means
-        /// never timed — a glade cleared before the clock existed, or one whose run ended
-        /// without it starting.
+        /// <b>Retired.</b> The fastest clear in milliseconds, from back when a glade was
+        /// played against a clock.
         ///
         /// <para>
-        /// Lower is better and it only ever falls, so the merge is the same "smaller wins,
-        /// zero is absent" join <see cref="BestMoves"/> already uses. Milliseconds rather
-        /// than seconds so that zero is unreachable for a real run — see
-        /// <see cref="RunClock"/>, which owns that argument.
+        /// Nothing produces a new value: the countdown was removed, so a run is graded and
+        /// recorded on turns alone (<see cref="Content.LevelTuning.StarsFor"/>). The field
+        /// stays because deleting it would be the one change to a save field that is not free
+        /// — it is on the wire in both directions of <c>FirestoreSaveMapper</c>, and a client
+        /// that still writes a key the reader has forgotten is how a rollback loses data
+        /// rather than a field. Keeping it costs one int per cleared glade and keeps every
+        /// device, deployed or rolled back, agreeing about the document's shape (invariant
+        /// 12a, and the same call invariant 16h made for <c>homesteadOwned</c>).
+        /// </para>
+        /// <para>
+        /// It is still merged — smaller wins, zero is absent — so times already earned survive
+        /// a sync and a reinstall rather than being quietly dropped by the build that stopped
+        /// measuring them. Nothing reads it: the record shown on a map node and the population
+        /// a player is ranked against are both move counts.
         /// </para>
         /// </summary>
         public readonly int BestMillis;
@@ -114,28 +123,6 @@ namespace GlimmerGrove.Persistence
 
             return new LevelRecord(Id, bestStars, bestMoves, Clears + 1, firstCleared, nowUnix,
                                    Promote(BestRank, bestMoves, population), BestMillis);
-        }
-
-        /// <summary>
-        /// Folds a run's time in, keeping the faster. Zero — a run the clock never
-        /// started for — changes nothing.
-        ///
-        /// <para>
-        /// A separate fold rather than another argument to <see cref="WithRun(int, int, long)"/>,
-        /// and that is a deliberate refusal of the obvious signature. Moves and milliseconds
-        /// are both plain <c>int</c>s describing the same run, so adjacent parameters could be
-        /// swapped at a call site and would compile, pass every type check, and write a
-        /// two-move clear of "31 milliseconds" into a permanent record. Two single-purpose
-        /// folds cannot be got wrong in that way.
-        /// </para>
-        /// </summary>
-        public LevelRecord WithTime(int millis)
-        {
-            int better = RunClock.Better(BestMillis, millis);
-            return better == BestMillis
-                ? this
-                : new LevelRecord(Id, Stars, BestMoves, Clears, FirstClearedUnix, LastPlayedUnix,
-                                  BestRank, better);
         }
 
         /// <summary>

@@ -43,6 +43,62 @@ export const SWEEP_PATH = "ops/refundSweep";
  */
 const MAX_LOOKBACK_MILLIS = 30 * 24 * 60 * 60 * 1000;
 
+/** What a receipt records about the grant it is reversing. */
+export interface RevocableReceipt {
+  uid?: string;
+  productId?: string;
+  capacity?: number;
+  granted?: Record<string, number>;
+}
+
+/** A wallet, as much of one as a reversal needs to read. */
+export type RevocableWallet = Record<string, { granted?: number } | undefined>;
+
+/**
+ * What reversing one receipt does to a wallet, as plain arithmetic over plain objects.
+ *
+ * <p>Lifted out of `revokeReceipt` so it can be proved without a Firestore transaction, a
+ * network, or a real payment. This is the one path in the whole backend that takes money
+ * *back*, and until it was split out the only way to exercise it was to buy something and
+ * refund it — which is to say it was never exercised at all. The same argument the client
+ * makes for splitting a run's economy out of its board.</p>
+ *
+ * <p>Two rules and both are load-bearing. <b>Balances clamp at zero</b> rather than going
+ * negative: a player who already spent refunded currency ends at zero and keeps what they
+ * bought, because the alternative is a balance that silently eats everything they earn for
+ * a month, and a player who cannot see why their credits will not rise uninstalls. And a
+ * <b>heart container is revoked by id rather than by amount</b>, because it is not an
+ * amount — it is an entitlement the client holds, so the only thing this server can do
+ * about it is say, on every wallet reply, that it was taken back. `arrayUnion` rather than
+ * a read-modify-write, so a second notification for the same transaction — Apple sends
+ * several — costs nothing and cannot race.</p>
+ *
+ * @param union what to wrap an id in; `FieldValue.arrayUnion` in production and the
+ *   identity in a test, because a sentinel cannot be compared to anything.
+ */
+export function revocationUpdate(
+  receipt: RevocableReceipt,
+  wallet: RevocableWallet,
+  union: (id: string) => unknown
+): Record<string, unknown> {
+  const update: Record<string, unknown> = {};
+
+  for (const currency of CURRENCIES) {
+    const amount = Math.floor(receipt.granted?.[currency] ?? 0);
+    if (amount <= 0) continue;
+
+    const held = Math.floor(wallet[currency]?.granted ?? 0);
+    update[`${currency}.granted`] = Math.max(0, held - amount);
+  }
+
+  const capacity = Math.floor(receipt.capacity ?? 0);
+  if (capacity > 0 && receipt.productId) {
+    update.containersRevoked = union(receipt.productId);
+  }
+
+  return update;
+}
+
 /**
  * Reverses one granted receipt, exactly once.
  *
@@ -75,11 +131,7 @@ export async function revokeReceipt(
     // made in another environment, or for one the client never managed to redeem.
     if (!snapshot.exists) return false;
 
-    const receipt = snapshot.data() as {
-      uid?: string;
-      granted?: Record<string, number>;
-      revokedAt?: unknown;
-    };
+    const receipt = snapshot.data() as RevocableReceipt & { revokedAt?: unknown };
 
     if (receipt.revokedAt) return false;                   // already reversed
     if (!receipt.uid) return false;
@@ -90,17 +142,16 @@ export async function revokeReceipt(
     // No wallet means nothing was ever granted into one. Stamp the receipt anyway so a
     // repeated notification stops asking.
     if (walletSnapshot.exists) {
-      const wallet = walletSnapshot.data() as Record<string, { granted?: number }>;
-      const update: Record<string, unknown> = { updatedAt: FieldValue.serverTimestamp() };
+      // The arithmetic is `revocationUpdate` and lives outside the transaction so it can be
+      // proved offline — see its docs. All that happens here is reading, wrapping and
+      // writing.
+      const update = revocationUpdate(
+        receipt,
+        walletSnapshot.data() as RevocableWallet,
+        (id) => FieldValue.arrayUnion(id)
+      );
 
-      for (const currency of CURRENCIES) {
-        const amount = Math.floor(receipt.granted?.[currency] ?? 0);
-        if (amount <= 0) continue;
-
-        const held = Math.floor(wallet[currency]?.granted ?? 0);
-        update[`${currency}.granted`] = Math.max(0, held - amount);
-      }
-
+      update.updatedAt = FieldValue.serverTimestamp();
       transaction.update(walletRef, update);
     }
 
@@ -110,7 +161,8 @@ export async function revokeReceipt(
     });
 
     logger.warn("purchase revoked", {
-      uid: receipt.uid, store, transactionId, reason, granted: receipt.granted,
+      uid: receipt.uid, store, transactionId, reason,
+      granted: receipt.granted, productId: receipt.productId, capacity: receipt.capacity ?? 0,
     });
 
     return true;

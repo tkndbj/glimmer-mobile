@@ -76,13 +76,11 @@ namespace GlimmerGrove.Ads
         /// </summary>
         public const string AndroidHeartRefill = "y06ctzokuzrk5me4";
         public const string AndroidCoinBonus = "tcmo4y9h32c6l1o7";
-        public const string AndroidRunContinue = "jlc9vpau9o6vviks";
         public const string AndroidWinBonus = "jjrnpy9yqv47kspn";
         public const string AndroidHintRefill = "ta2i9vbn3y9hh66q";
 
         public const string IosHeartRefill = "hddylq6lu1sdgkz4";
         public const string IosCoinBonus = "ptr8vmjq17ujobq2";
-        public const string IosRunContinue = "1mcymco9r27owwiq";
         public const string IosWinBonus = "ty0ewca2k689b6si";
         public const string IosHintRefill = "zfhlojgq1syec60g";
 
@@ -116,7 +114,6 @@ namespace GlimmerGrove.Ads
             {
                 { AdPlacement.HeartRefill, Real(IosHeartRefill) },
                 { AdPlacement.CoinBonus, Real(IosCoinBonus) },
-                { AdPlacement.RunContinue, Real(IosRunContinue) },
                 { AdPlacement.WinBonus, Real(IosWinBonus) },
                 { AdPlacement.HintRefill, Real(IosHintRefill) },
             };
@@ -125,7 +122,6 @@ namespace GlimmerGrove.Ads
             {
                 { AdPlacement.HeartRefill, Real(AndroidHeartRefill) },
                 { AdPlacement.CoinBonus, Real(AndroidCoinBonus) },
-                { AdPlacement.RunContinue, Real(AndroidRunContinue) },
                 { AdPlacement.WinBonus, Real(AndroidWinBonus) },
                 { AdPlacement.HintRefill, Real(AndroidHintRefill) },
             };

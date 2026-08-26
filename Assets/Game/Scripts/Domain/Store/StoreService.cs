@@ -90,14 +90,29 @@ namespace GlimmerGrove.Store
         public readonly long Credits;
         public readonly long Gems;
 
-        public StoreGrant(StoreProduct product, long credits, long gems)
+        /// <summary>
+        /// Where the heart refill cap stood before this purchase, when it was a container.
+        ///
+        /// <para>
+        /// Read before the entitlement is applied, because after it the old figure is gone —
+        /// and "5 → 20" is the whole of what a receipt for a container has to say. Zero on
+        /// every currency product. See <c>HeartContainerLedger</c>.
+        /// </para>
+        /// </summary>
+        public readonly int CapacityWas;
+
+        public StoreGrant(StoreProduct product, long credits, long gems, int capacityWas = 0)
         {
             Product = product;
             Credits = credits;
             Gems = gems;
+            CapacityWas = capacityWas < 0 ? 0 : capacityWas;
         }
 
         public bool IsValid => Product != null;
+
+        /// <summary>True when this purchase raised the heart cap rather than paying currency.</summary>
+        public bool IsContainer => Product != null && Product.IsContainer;
     }
 
     /// <summary>Why a gem-priced good could not be bought.</summary>
@@ -386,7 +401,21 @@ namespace GlimmerGrove.Store
             var info = _backend.Info(product.Id);
             if (info == null || !info.HasPrice) return new StoreOffer(StoreOfferState.Missing);
 
-            if (product.IsOneTime && info.Owned) return new StoreOffer(StoreOfferState.Owned);
+            // Our own record first, and the store's second. They answer different questions:
+            // the store knows what this *store account* has bought, and the ledger knows what
+            // this *game account* holds — which is what a player who signed in on a friend's
+            // phone, or linked after buying as a guest, actually cares about. Either saying
+            // yes is enough to stop offering it, because neither can sell it again.
+            if (product.IsContainer && HeartContainerLedger.IsHeld(product.Id))
+                return new StoreOffer(StoreOfferState.Owned);
+
+            // A refunded container is buyable again, and the store's own receipt must not be
+            // allowed to say otherwise: both stores keep a record of a refunded
+            // non-consumable for a while, so trusting `Owned` here would leave the player
+            // looking at a card marked YOURS for something they no longer hold and cannot
+            // get back. The ledger is the authority on this one product.
+            if (product.IsOneTime && info.Owned && !HeartContainerLedger.WasRevoked(product.Id))
+                return new StoreOffer(StoreOfferState.Owned);
 
             return new StoreOffer(StoreOfferState.Ready, info.Price);
         }
@@ -503,7 +532,7 @@ namespace GlimmerGrove.Store
         /// <summary>
         /// Advances the retry policy. Driven from <c>Boot.Pump</c> beside the sync's own
         /// tick, so the whole thing holds no clock and can be run a thousand simulated
-        /// frames at a time offline — <c>RunClock</c>'s bargain, in the feature where a
+        /// frames at a time offline — <c>RunScreen.Tick</c>'s bargain, in the feature where a
         /// mistake is charged to somebody's card.
         /// </summary>
         public static void Tick(float deltaSeconds, bool networkReachable)
@@ -618,6 +647,38 @@ namespace GlimmerGrove.Store
             long credits = redemption.AmountOf(Currency.Credits);
             long gems = redemption.AmountOf(Currency.Gems);
 
+            // A heart container is recorded here, and it is recorded on *every* successful
+            // redemption rather than only on the first — including the ones the server
+            // reports as already granted. That is the property the whole feature rests on
+            // rather than an optimisation. A capacity is idempotent, so re-applying it is
+            // free; and both stores re-deliver a non-consumable for ever, so a player who
+            // reinstalls, changes phone or loses their save gets it back by tapping Restore,
+            // with no state of ours involved and nothing for support to repair. Granting only
+            // on first delivery would make that impossible for the one purchase in this shop
+            // that can never be bought a second time.
+            //
+            // Note what it does *not* wait for: the sync. The entitlement is in the save the
+            // moment the receipt is honoured, so a player who buys on a train sees their bar
+            // grow before the next wallet reply arrives — the reply's only job here is to
+            // carry a refund back the other way.
+            int capacityWas = 0;
+            bool entitled = false;
+
+            if (product != null && product.IsContainer)
+            {
+                capacityWas = HeartContainerLedger.RefillCap;
+                entitled = HeartContainerLedger.Grant(product);
+
+                if (entitled)
+                {
+                    // Before the celebration and before the sync, for CompanionLedger.TryBuy's
+                    // reason: the receipt is already confirmed with the store, so this write is
+                    // the only record on this device that it happened.
+                    SaveService.Save();
+                    CloudSaveService.RequestSync();
+                }
+            }
+
             // `linked` is the number the whole guest-purchase feature is answered by: what
             // share of real money lands on an account that dies with the installation. It is
             // read here rather than inferred later because this is the only moment both facts
@@ -628,6 +689,7 @@ namespace GlimmerGrove.Store
                             "store", purchase.Store,
                             "credits", credits,
                             "gems", gems,
+                            "capacity", product != null ? product.HeartCapacity : 0,
                             "already", redemption.AlreadyGranted,
                             "linked", Cloud.CloudSaveService.IsLinked);
 
@@ -635,9 +697,20 @@ namespace GlimmerGrove.Store
             // interrupted purchase looks like: the server had already honoured it, and
             // congratulating somebody for reopening the app is how a celebration stops
             // meaning anything.
-            if (product != null && redemption.GrantedAnything)
+            //
+            // A container reads that question differently and has to. `GrantedAnything` is
+            // about currency, and a container grants none — so what decides is whether this
+            // device's own ledger moved. That answers both halves at once: the first purchase
+            // celebrates, and a re-delivery onto a device that already holds it does not,
+            // which is exactly the retry case above. A Restore onto a fresh install *does*
+            // celebrate, and should: from the player's side something they had lost has just
+            // come back.
+            bool worthShowing = product != null &&
+                                (product.IsContainer ? entitled : redemption.GrantedAnything);
+
+            if (worthShowing)
             {
-                var grant = new StoreGrant(product, credits, gems);
+                var grant = new StoreGrant(product, credits, gems, capacityWas);
                 try { Granted?.Invoke(grant); }
                 catch (Exception e) { Debug.LogException(e); }
             }

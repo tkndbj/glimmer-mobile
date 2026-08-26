@@ -275,7 +275,8 @@ function readStore(progression) {
   }
 
   const MAX_GRANT = 5000000;                  // mirrors StoreLimits.MaxGrant and products.ts
-  const SHELVES = new Set(["gems", "coins", "bundles"]);
+  const MIN_CAPACITY = 6, MAX_CAPACITY = 50;  // mirrors StoreLimits and products.ts
+  const SHELVES = new Set(["gems", "coins", "bundles", "supplies"]);
   const KINDS = new Set(["consumable", "nonconsumable"]);
 
   const products = {};
@@ -307,12 +308,51 @@ function readStore(progression) {
 
     const credits = Math.floor(entry.credits ?? 0);
     const gems = Math.floor(entry.gems ?? 0);
+    const capacity = Math.floor(entry.heartCapacity ?? 0);
 
     if (!Number.isFinite(credits) || !Number.isFinite(gems) || credits < 0 || gems < 0) {
       throw new Error(`store product '${id}' grants ${entry.credits} credits and ${entry.gems} gems`);
     }
 
-    if (credits === 0 && gems === 0) throw new Error(`store product '${id}' grants nothing`);
+    // A heart container: the one non-currency thing a real-money product may grant, because
+    // a capacity is an idempotent permanent entitlement rather than an amount. Mixing the
+    // two is refused rather than resolved — see products.ts and StoreProduct.HeartCapacity.
+    if (capacity > 0 && (credits > 0 || gems > 0)) {
+      throw new Error(
+        `store product '${id}' sells a heart capacity and also grants currency; a real-money ` +
+        "product may grant one or the other, never both"
+      );
+    }
+
+    if (capacity > 0) {
+      if (capacity < MIN_CAPACITY || capacity > MAX_CAPACITY) {
+        throw new Error(
+          `store product '${id}' sells a heart capacity of ${capacity}, outside ` +
+          `${MIN_CAPACITY}..${MAX_CAPACITY}`
+        );
+      }
+      if (entry.kind !== "nonconsumable") {
+        throw new Error(
+          `store product '${id}' sells a heart capacity as a consumable; a permanent upgrade ` +
+          "must be nonconsumable so the store itself refuses to sell it twice"
+        );
+      }
+      if (entry.shelf !== "supplies") {
+        throw new Error(
+          `store product '${id}' sells a heart capacity but sits on the '${entry.shelf}' shelf; ` +
+          "capacities belong on 'supplies', which is where everything about hearts is"
+        );
+      }
+    } else if (entry.shelf === "supplies") {
+      throw new Error(
+        `store product '${id}' sits on the supplies shelf without selling a heart capacity; ` +
+        "that shelf is otherwise for goods bought with gems"
+      );
+    }
+
+    if (credits === 0 && gems === 0 && capacity === 0) {
+      throw new Error(`store product '${id}' grants nothing`);
+    }
 
     if (credits > MAX_GRANT || gems > MAX_GRANT) {
       throw new Error(
@@ -334,6 +374,11 @@ function readStore(progression) {
     // than anything else on its shelf, and it cannot cannibalise the ladder because the
     // store will not sell it twice. Ranking it alongside the repeatable rungs would either
     // fail the build or force it to be a worse offer than it should be.
+    //
+    // Heart containers are excluded by the same clause and need to be: they grant no
+    // currency at all, so their value per unit of money is zero and ranking them would
+    // fail every ladder they were part of. What proves a container ladder is right is
+    // `Validate Content`, which compares capacity against price instead.
     if (entry.kind !== "nonconsumable") {
       if (!shelves.has(entry.shelf)) shelves.set(entry.shelf, []);
       shelves.get(entry.shelf).push({ id, credits, gems, cents });
@@ -342,7 +387,7 @@ function readStore(progression) {
     // Only what the server needs in order to honour a receipt. The shelf, the badge and
     // the reference price are display and validation; publishing them would invite
     // somebody to think the server had an opinion about them.
-    products[id] = { credits, gems, kind: entry.kind };
+    products[id] = { credits, gems, kind: entry.kind, capacity };
   }
 
   // The ladder has to get better as it gets bigger. A middle rung worth less per unit of
@@ -545,13 +590,17 @@ function readAds(progression) {
   const ads = progression.ads;
   if (!ads || !Array.isArray(ads.placements) || ads.placements.length === 0) return null;
 
-  const known = ["heart_refill", "coin_bonus", "run_continue", "win_bonus", "hint_refill"];
+  // `run_continue` is a retired placement id and is deliberately absent — see AD_PLACEMENTS
+  // in functions/src/ads.ts. `run_time` stays in the kind list so a stale published config
+  // is rejected by the rule below with a sentence naming the real problem, rather than by
+  // "unknown reward kind", which reads like a typo.
+  const known = ["heart_refill", "coin_bonus", "win_bonus", "hint_refill"];
   const kinds = ["credits", "gems", "hearts", "heart_boost", "run_time", "hints"];
 
   // Mirrors the same rule on the client (`AdRewardTable.TryReadOffer`). A kind spent inside
-  // a run only makes sense on the one placement offered from inside one, and the failure it
-  // prevents is silent on both sides: an offer drawn where no run exists, a video watched,
-  // and a reward applied to nothing.
+  // a run makes sense only on a placement offered from inside one, and nothing is any more:
+  // the countdown the continue extended is gone. The failure it prevents is silent on both
+  // sides — an offer drawn where no run exists, a video watched, a reward applied to nothing.
   const transient = ["run_time"];
   const placements = {};
 
@@ -571,10 +620,10 @@ function readAds(progression) {
       throw new Error(`ads placement '${id}' names unknown reward kind '${placement.kind}'`);
     }
 
-    if (transient.includes(placement.kind) && id !== "run_continue") {
+    if (transient.includes(placement.kind)) {
       throw new Error(
         `ads placement '${id}' pays '${placement.kind}', which is spent inside a run; ` +
-        `only 'run_continue' is offered from inside one`
+        `nothing is offered from inside one`
       );
     }
 
@@ -589,7 +638,86 @@ function readAds(progression) {
     placements[id] = { kind: placement.kind, amount };
   }
 
-  return { placements };
+  return { placements, wheel: readWheel(ads, placements) };
+}
+
+/**
+ * The bonus wheel, published so the server can arrive at the same slice the phone drew.
+ *
+ * <p>
+ * Optional, and its absence means the flat offer rather than a default ladder — a published
+ * config that carries no wheel is one whose `adReward` pays exactly the authored amount, and
+ * a client that hears no wheel back draws no wheel. That pairing is what removes the
+ * deploy-ordering hazard from this feature entirely (invariant 12a): shipping either half
+ * first costs a feature nobody has seen, never a payout nobody honours.
+ * </p>
+ * <p>
+ * The rules below are `BonusWheel.Resolve`'s, refused rather than repaired. A seeder that
+ * quietly fixed a slice would publish a table the client had already rejected, and the two
+ * would disagree about money — which is the one thing this file exists to prevent.
+ * </p>
+ */
+function readWheel(ads, placements) {
+  const wheel = ads.wheel;
+  if (!wheel) return undefined;
+
+  if (!Array.isArray(wheel.slices) || wheel.slices.length < 4 || wheel.slices.length > 12) {
+    throw new Error(
+      `ads wheel has ${wheel.slices?.length ?? 0} slices; it must have between 4 and 12. ` +
+      `Fewer than four is a coin flip drawn as a wheel, and more than twelve cannot be read ` +
+      `while it turns.`
+    );
+  }
+
+  // A wheel is `win_bonus`'s payout made variable, not a reward of its own. Without that
+  // placement there is no amount to multiply and the wheel would silently pay nothing.
+  if (!placements.win_bonus) {
+    throw new Error(
+      `ads authors a wheel but no 'win_bonus' placement for it to multiply.`
+    );
+  }
+
+  const slices = [];
+  let anyBonus = false;
+  let total = 0;
+
+  for (let i = 0; i < wheel.slices.length; i++) {
+    const percent = Math.floor(wheel.slices[i]?.percent ?? 0);
+
+    if (!Number.isFinite(percent) || percent < 100) {
+      throw new Error(
+        `ads wheel slice ${i} pays ${wheel.slices[i]?.percent}%; it may never be below 100. ` +
+        `The wheel only ever adds — a slice under 100 would pay less than the flat offer the ` +
+        `button promised.`
+      );
+    }
+
+    if (percent > 1000) {
+      throw new Error(`ads wheel slice ${i} pays ${percent}%, above the supported 1000%`);
+    }
+
+    slices.push({ percent });
+    anyBonus ||= percent > 100;
+    total += percent;
+  }
+
+  if (!anyBonus) {
+    throw new Error(
+      `ads wheel has no slice paying above the flat offer; every spin would land on the same ` +
+      `figure, so the wheel is a spin animation in front of a fixed number.`
+    );
+  }
+
+  // Printed rather than checked, because what the placement *should* pay is an economy
+  // decision and not this script's to make. What it must never be is a surprise: the mean
+  // multiplier is the real payout of every `win_bonus` view from the moment this is published.
+  const mean = Math.round(total / slices.length);
+  const base = placements.win_bonus.amount;
+  console.log(`  wheel: ${slices.length} slices, mean ${mean}% — ` +
+              `win_bonus really pays ~${Math.floor((base * mean) / 100)} ${placements.win_bonus.kind} a view ` +
+              `(flat was ${base})`);
+
+  return { slices };
 }
 
 /**
@@ -813,10 +941,12 @@ if (products) {
   const ids = Object.keys(products);
   const gemPacks = ids.filter((id) => products[id].gems > 0 && products[id].credits === 0).length;
   const coinPacks = ids.filter((id) => products[id].credits > 0 && products[id].gems === 0).length;
+  const vessels = ids.filter((id) => (products[id].capacity ?? 0) > 0).length;
 
   console.log(
     `config/products: ${ids.length} product(s) — ${gemPacks} gem, ${coinPacks} coin, ` +
-    `${ids.length - gemPacks - coinPacks} bundle`
+    `${vessels} heart container, ` +
+    `${ids.length - gemPacks - coinPacks - vessels} bundle`
   );
 } else {
   console.log("config/products: skipped, progression.json has no store block — purchases stay inert");

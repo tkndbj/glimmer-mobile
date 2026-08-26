@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using GlimmerGrove.AssetPipeline;
 using GlimmerGrove.Content;
 using NUnit.Framework;
 
@@ -225,6 +226,24 @@ namespace GlimmerGrove.Tests
                               $"{look.Mode} stands on '{look.Perch}', which another mode "
                               + "already uses");
             }
+        }
+
+        [Test]
+        public void EveryPerchIsAnAddressTheGameActuallyLoads()
+        {
+            // A perch is fetched with Art.S, which answers null for an address nothing asked
+            // for - and an Image with no sprite is a white rectangle, not a blank. So the one
+            // failure this can have is a mode whose map draws a white square under every glade,
+            // on a screen no compile, validator or content check looks at. AssetManifest is
+            // Domain and ModeLooks is Presentation, so neither can read the other; this is the
+            // only place the two can be asked whether they agree.
+            var global = new HashSet<string>();
+            foreach (var request in AssetManifest.GlobalAssets()) global.Add(request.Address);
+
+            foreach (var look in ModeLooks.All)
+                Assert.IsTrue(global.Contains(AssetManifest.MapArt(look.Perch)),
+                              $"{look.Mode} stands on '{look.Perch}', which is not in "
+                              + "AssetManifest.MapSprites - it would draw as a white square");
         }
 
         /// <summary>

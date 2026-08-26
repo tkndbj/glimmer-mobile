@@ -16,7 +16,7 @@ namespace GlimmerGrove.Tests
     /// <para>
     /// The policy holds no clock and no socket precisely so this file can exist — it is
     /// handed elapsed time and told whether the network is up, which is the same bargain
-    /// <c>RunClock</c> makes.
+    /// <c>RunScreen.Tick</c> makes.
     /// </para>
     /// </summary>
     public sealed class SyncSchedulerTests

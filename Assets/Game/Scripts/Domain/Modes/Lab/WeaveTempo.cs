@@ -130,30 +130,5 @@ namespace GlimmerGrove.Modes
         /// </summary>
         public const float PressesUnder = .20f;
 
-        /// <summary>
-        /// How hard the clock is pressing, 0 (not at all) to 1 (out of light).
-        ///
-        /// <para>
-        /// <b>Takes the limit rather than the time left, and that is the whole reason it is a
-        /// function.</b> An untimed grove reports <c>int.MaxValue</c> for its limit and
-        /// <c>WeaveScreen.Remaining</c> answers <b>0</b> for one — the honest reading of "there
-        /// is no countdown", and indistinguishable from "the countdown has run out" to anything
-        /// reading it directly. A view wired to that would put a grove with no clock at all
-        /// under a full-brightness alarm from its first frame. Handed the elapsed time and the
-        /// limit, this cannot make that mistake, and <c>WeaveTempoTests</c> pins it.
-        /// </para>
-        /// </summary>
-        public static float Urgency(int elapsedMillis, int limitMillis)
-        {
-            if (limitMillis <= 0 || limitMillis == int.MaxValue) return 0f;
-
-            int left = limitMillis - elapsedMillis;
-            if (left <= 0) return 1f;
-
-            float share = left / (float)limitMillis;
-            if (share >= PressesUnder) return 0f;
-
-            return 1f - share / PressesUnder;
-        }
     }
 }

@@ -5,6 +5,7 @@ using GlimmerGrove.Content;
 using GlimmerGrove.Daily;
 using GlimmerGrove.Localization;
 using GlimmerGrove.Persistence;
+using GlimmerGrove.Progression;
 using GlimmerGrove.Social;
 using UnityEngine;
 using UnityEngine.UI;
@@ -66,6 +67,13 @@ namespace GlimmerGrove
         public int GoldenPercent = 100;
 
         /// <summary>
+        /// The chapter this run's stars opened, or none. Set by the screen from
+        /// <c>RunLedger.WinRecord</c>, which is the only place that can tell an opening from a
+        /// gate that was already open.
+        /// </summary>
+        public ChapterId ChapterOpened = ChapterId.None;
+
+        /// <summary>
         /// Written out rather than assembled as "ui.win.rank" + stars, so the keys are
         /// visible to the build's string checker. A key that only exists at runtime is
         /// a key nothing can verify.
@@ -77,17 +85,15 @@ namespace GlimmerGrove
         /// <see cref="RankKeys"/> is.
         ///
         /// <para>
-        /// These are the four keys the <em>map</em> quotes a record with
+        /// These are the keys the <em>map</em> quotes a record with
         /// (<c>LevelsScreen.RecordKey</c>), reused deliberately: the node and this panel then
-        /// state a run in exactly one format, so a player never sees the same pair of numbers
-        /// written two ways. Four of them because "1 turns" is wrong in English and worse in
-        /// languages with real plural rules, and because a run that resolved before the clock
-        /// could read anything has a move count and no time — a dash where the time goes reads
-        /// as a broken record rather than an untimed one.
+        /// state a run in exactly one format, so a player never sees the same number written
+        /// two ways. Two of them because "1 turns" is wrong in English and worse in languages
+        /// with real plural rules.
         /// </para>
         /// </summary>
-        static string TurnsKey(LevelId level, int moves, int millis)
-            => RunWording.RecordKey(level, moves, millis);
+        static string TurnsKey(LevelId level, int moves)
+            => RunWording.RecordKey(level, moves);
 
         /// <summary>Seconds between one star landing and the next.</summary>
         const float StarGap = .42f;
@@ -240,7 +246,15 @@ namespace GlimmerGrove
             // without any code here changing.
             var index = GameContent.Index;
             var next = index.Next(Run.Level);
-            bool last = !next.IsValid;
+
+            // "Last" is really "nothing to go on to", and since the chapter boundary became a
+            // star gate that is two different things. The catalog may have a glade after this
+            // one and still be right to refuse it — the last level of a chapter is finished
+            // every time somebody clears it, and the chapter after it opens on stars rather
+            // than on that clear. Asking the unlock rule rather than the catalog is what stops
+            // the Next button dropping a player straight through the gate it exists to hold:
+            // the button becomes the map, which is where the gate is drawn and explained.
+            bool last = !next.IsValid || !LevelUnlock.IsUnlocked(index, next);
 
             int stars = Mathf.Clamp(Run.Stars, 1, 3);
 
@@ -248,6 +262,12 @@ namespace GlimmerGrove
             // before a single thing is built. Asking later and growing the panel afterwards is
             // how a line ends up drawn a few pixels outside the frame it belongs to — which
             // looks fine on the one device it was tuned on.
+            // Both are the *difference* the run made — see RunLedger.Win, which subtracts the
+            // record before from the record after. So a replay that turns two stars into three
+            // pays the difference and this reads true, which is what makes the offer reachable
+            // on a glade the player has cleared before; a replay that beat nothing pays nothing
+            // and it reads false. The rule falls out of the subtraction rather than needing a
+            // clause anybody has to remember.
             bool paid = XpGained > 0 || CreditsGained > 0;
             bool goldened = paid && GoldenPercent > 100;
             bool hint = stars < 3 && Run.Target > 0;
@@ -366,20 +386,15 @@ namespace GlimmerGrove
             var seal = Run.NewBest ? BuildSeal() : null;
 
             // ---------------------------------------------------------- the readout
-            // Both halves of the star rule when the glade is timed, because stars are the
-            // worse of the two (LevelTuning.StarsFor) and naming only the turns would tell a
-            // player who made the turn count that they had done everything asked.
-            string hintText = Run.HasTimeLimit
-                ? Loc.Format("ui.win.three_stars_timed", Run.Target,
-                             RunClock.Format(Run.TimeGold))
-                : Loc.Format("ui.win.three_stars", Run.Target);
+            // The whole star rule in one line, which is what it became when the clock went:
+            // stars are the turn count and nothing else (LevelTuning.StarsFor), so naming the
+            // turns names everything that was asked.
+            string hintText = Loc.Format("ui.win.three_stars", Run.Target);
 
             Text hintLine = hint ? Row("Hint", -hintY, hintText,
                                        30, new Color(1f, .95f, .86f, .68f), 640f, 22) : null;
 
-            string yours = Run.Millis > 0
-                ? Loc.Format(TurnsKey(Run.Level, Run.Moves, Run.Millis), Run.Moves, RunClock.Format(Run.Millis))
-                : Loc.Format(TurnsKey(Run.Level, Run.Moves, 0), Run.Moves);
+            string yours = Loc.Format(TurnsKey(Run.Level, Run.Moves), Run.Moves);
 
             var youCap = Caption("YouCap", -youCapY, Loc.Get("ui.win.route_you"));
             var youVal = Value("YouVal", -youCapY, yours, Pal.Cream);
@@ -685,23 +700,108 @@ namespace GlimmerGrove
                 });
             }
 
+            // A whole chapter opening is the strongest thing this panel can say, so it lands
+            // after a glade opening rather than beside it, and the two can never both fire:
+            // the glade line needs the next glade to be open already, and this line is the
+            // moment it became so.
+            //
+            // It is drawn from a fact measured before the record was folded in — see
+            // RunLedger.WinRecord.ChapterOpened — because by now the gate simply reads open,
+            // and a panel that announced every open gate would announce this chapter after
+            // every run in it for the rest of the game.
+            if (ChapterOpened.IsValid)
+            {
+                string chapterOpened = Loc.Format("ui.win.chapter_opened",
+                                                  Loc.Get(ChapterDefinition.DefaultNameKey(ChapterOpened)));
+                cue.Then(.34f, () =>
+                {
+                    Audio.Sfx("unlock", .75f);
+                    Scenery.Toast(Content, chapterOpened, Pal.Gold, 2.6f, new Vector2(.5f, 0f), 190f);
+                });
+                cue.Wait(.5f);
+            }
+
             // The streak, when this run is what moved it. After the glade unlock, because an
             // unlock is about the game and a streak is about the player, and the player should
             // be the last thing said.
             cue.Then(.30f, () => StreakToast.Show(this, Streak, 0f));
             if (Streak.WorthSaying) cue.Wait(.45f);
 
-            // Last of the content, and after the streak: it is an offer rather than news, and
-            // nothing on this panel should be asking the player for something while it is still
-            // telling them what they did.
-            if (_bonus) cue.Then(.28f, () => { if (_bonus) Tween.Pop(_bonus.transform, 0f, .46f); });
-
+            // Both ways on stand together, and the shine on both arrives together.
+            //
+            // The offer used to be built at scale zero and popped here, several seconds after
+            // the exits it sits above — which was defended as "an offer should not arrive while
+            // the panel is still telling them what they did", and was wrong for a reason worth
+            // keeping. A control that materialises after the player has already read the screen
+            // is not polite, it is invisible: their eye finished with the panel while it was
+            // absent, so what they see is a NEXT button and nothing else. It now arrives with
+            // the panel, exactly as NEXT, REPLAY and the map key do — those have never been
+            // sequenced either — and what waits for this beat is the *attention*, which is the
+            // half that was actually doing the work.
             cue.Then(.35f, () =>
             {
-                if (!nextButton) return;
-                Sheen.Attach((RectTransform)nextButton.transform, 3.2f);
-                Tween.Breathe(nextButton.transform, .025f, 2f);
+                if (nextButton)
+                {
+                    Sheen.Attach((RectTransform)nextButton.transform, 3.2f);
+                    Tween.Breathe(nextButton.transform, .025f, 2f);
+                }
+
+                if (_bonus)
+                {
+                    Sheen.Attach((RectTransform)_bonus.transform, 2.4f);
+                    Tween.Punch(_bonus.transform, .10f, .42f);
+                }
             });
+
+            // The breath waits for the punch to land, and that is not pacing — the two write the
+            // same local scale on different channels, so started together the punch borrows a
+            // mid-breath size as its resting value and hands back something the breath then
+            // walks away from. The house rule about a tween that reads its own target's value,
+            // met by not overlapping two of them.
+            if (_bonus) cue.Then(.46f, () => { if (_bonus) Tween.Breathe(_bonus.transform, .034f, 1.7f); });
+
+            // The lesson, last of everything and only where there is something to point at.
+            // Once in a player's life, and a tip shown over a button that is not on screen is
+            // one that can never be shown again — see Mechanic.LuckySpin.
+            if (_bonus) cue.Then(.55f, TeachTheWheel);
+        }
+
+        /// <summary>
+        /// Points at the offer, once, for a player who has never seen it.
+        ///
+        /// <para>
+        /// It rings the real button on the real panel rather than describing it, which is what
+        /// <see cref="TipOverlay"/> is for — a diagram has to be translated back onto the screen
+        /// by whoever reads it, and this is a control they can simply be shown.
+        /// </para>
+        /// <para>
+        /// Guarded on the button still existing at the moment the beat fires, not on the flag
+        /// measured when the panel was laid out: several seconds of sequence run in between, and
+        /// a cap reached by a sync in that window takes the row away. <see cref="TipLedger"/> is
+        /// marked <em>after</em> the tip is raised rather than before, so a panel torn down in
+        /// the same frame does not spend a once-in-a-lifetime lesson on nothing.
+        /// </para>
+        /// <para>
+        /// Guarded on the wheel too, and that is <c>Mechanic.ModeSwitch</c>'s rule rather than a
+        /// nicety. The lesson describes a wheel; the button falls back to the flat offer when
+        /// there is no account to seed one from or no server that understands it, and the ledger
+        /// is a once-in-a-lifetime record — so a tip spent describing a wheel this player cannot
+        /// reach is a tip that can never be shown when they can.
+        /// </para>
+        /// </summary>
+        void TeachTheWheel()
+        {
+            if (!_bonus || !WheelStand.IsOpen || TipLedger.HasSeen(Mechanic.LuckySpin)) return;
+
+            var target = (RectTransform)_bonus.transform;
+
+            Flow.Modal<TipOverlay>(v =>
+            {
+                v.Mechanic = Mechanic.LuckySpin;
+                v.Target = target;
+            });
+
+            TipLedger.MarkSeen(Mechanic.LuckySpin);
         }
 
         // ================================================================ the bonus
@@ -715,7 +815,25 @@ namespace GlimmerGrove
         /// leave the button stale. The same reason <c>DefeatOverlay</c> has one, and the paint
         /// is a no-op on any frame the caption did not change.
         /// </summary>
-        void Update() => AdOfferButton.Paint(_bonus, AdPlacement.WinBonus, "ui.ads.bonus_cta");
+        void Update() => AdOfferButton.Paint(_bonus, AdPlacement.WinBonus, BonusCta());
+
+        /// <summary>
+        /// What the offer calls itself, asked every paint rather than latched at build.
+        ///
+        /// <para>
+        /// The wheel needs an account and a server that understands it, and a sync can supply
+        /// either while this panel is open — so the button has to be able to become the wheel
+        /// mid-panel. Latching the caption would leave somebody looking at a flat figure on a
+        /// control that now opens a wheel, which is the one direction the wording must not be
+        /// wrong in: the flat sentence names an amount, and the wheel does not pay that amount.
+        /// </para>
+        /// <para>
+        /// Written out rather than built from a condition and a suffix, so the build's string
+        /// checker can see both keys. A concatenated key is invisible to the scanner and ships
+        /// missing.
+        /// </para>
+        /// </summary>
+        static string BonusCta() => WheelStand.IsOpen ? "ui.wheel.cta" : "ui.ads.bonus_cta";
 
         /// <summary>
         /// One green button under the payout: more credits, for a video.
@@ -742,13 +860,25 @@ namespace GlimmerGrove
         {
             var offer = RewardedAds.Table.Offer(AdPlacement.WinBonus);
 
-            _bonus = UIKit.TextButton("Bonus", Panel, "btn_green",
+            // Violet, and it is the only violet on this panel. NEXT is the green one, REPLAY the
+            // orange one, and a second green button beside the first would read as a second way
+            // of doing the same thing — which is exactly what it is not. It is also the colour
+            // of the panel it opens, so the button and its destination are one object seen
+            // twice; the same reason the gem shelf's cards carry the gem colour.
+            _bonus = UIKit.TextButton("Bonus", Panel, "btn_violet",
                                       Loc.Format("ui.ads.bonus_cta_n", Compact.Number(offer.Amount)), 40,
                                       new Vector2(600f, 124f), new Vector2(.5f, 1f),
                                       new Vector2(0f, -y), OnBonus, "ic_play");
 
-            _bonus.transform.localScale = Vector3.zero;
-            AdOfferButton.Paint(_bonus, AdPlacement.WinBonus, "ui.ads.bonus_cta");
+            // Kept to one line, because both captions this button can wear are longer than
+            // WATCH and a folded one on a 124-high pill overlaps its own glyph.
+            _bonus.OneLine = true;
+
+            UIKit.Halo(_bonus.transform, Pal.Bloom, 700f, .26f);
+
+            // Visible from the moment the panel is, exactly as the exits below it are. See the
+            // sequence: what waits is the shine, not the control.
+            AdOfferButton.Paint(_bonus, AdPlacement.WinBonus, BonusCta());
         }
 
         /// <summary>
@@ -762,7 +892,10 @@ namespace GlimmerGrove
         /// </summary>
         void OnBonus()
         {
-            Flow.Modal<AdOfferOverlay>(v => v.PlacementId = AdPlacement.WinBonus);
+            // The wheel where it can be honoured and the flat offer where it cannot, decided in
+            // one place so this panel does not have to know the three things that have to be
+            // true. See BonusWheelOverlay.OpenFor.
+            BonusWheelOverlay.OpenFor(AdPlacement.WinBonus);
         }
 
         // ================================================================= the fit

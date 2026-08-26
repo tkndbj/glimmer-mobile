@@ -740,6 +740,82 @@ namespace GlimmerGrove
         }
 
         /// <summary>
+        /// One wedge of a wheel, with the hub cut out of it.
+        ///
+        /// <para>
+        /// <b>One sprite for every slice.</b> The wedge is drawn pointing straight up and each
+        /// slice is a rotation of it, so a wheel of any size costs one texture and a handful of
+        /// <c>Image</c>s that can each be tinted independently — the same "one shape, many
+        /// tints" bargain the rest of this file makes, and the reason the slice count can be
+        /// content without an art order following it.
+        /// </para>
+        /// <para>
+        /// The obvious alternative is a radial <see cref="Image.Type.Filled"/> over a disc,
+        /// which needs no art at all. It is not used, and the reason is antialiasing: a filled
+        /// image cuts <em>geometry</em>, so the two straight edges of every wedge come out
+        /// stair-stepped while the arc stays smooth. On a wheel the straight edges are what
+        /// separate one prize from the next, and a jagged one under a pointer is precisely the
+        /// place a player looks hardest.
+        /// </para>
+        /// <para>
+        /// The angular edge is feathered against <em>arc length</em> rather than against the
+        /// angle, so the softness is the same width in pixels at the hub and at the rim. Fading
+        /// on angle alone gives a wedge that looks crisp outside and blurred in the middle.
+        /// </para>
+        /// </summary>
+        public static Sprite Wedge(int size = 256, int count = 8, float hub = .22f)
+        {
+            if (count < 2) count = 2;
+
+            float h = size * .5f;
+            float outer = h - 1.5f;
+            float inner = outer * Mathf.Clamp01(hub);
+            float half = Mathf.PI / count;              // half the wedge's own angle, in radians
+
+            return Make($"wedge{size}_{count}_{hub:0.00}", size, size, (x, y) =>
+            {
+                float dx = x - h, dy = y - h;
+                float r = Mathf.Sqrt(dx * dx + dy * dy);
+                if (r < 0.0001f) return 0f;
+
+                // Zero straight up, growing clockwise, and folded so only the distance from the
+                // wedge's own centre line matters.
+                float a = Mathf.Abs(Mathf.Atan2(dx, dy));
+
+                float rim = Cover(r - outer);
+                float bore = Cover(inner - r);
+                float side = Cover(r * (a - half));
+
+                return Mathf.Min(rim, Mathf.Min(bore, side));
+            });
+        }
+
+        /// <summary>
+        /// The marker that sits over a wheel and says which slice won: a teardrop, point down.
+        ///
+        /// <para>
+        /// A teardrop rather than a triangle because it has to read at a glance against a rim
+        /// full of coloured wedges, and a triangle at this size is three straight lines that the
+        /// rim's own edges keep rhyming with. The round shoulder gives it a silhouette nothing
+        /// else on the panel has — the argument <see cref="HexRing"/> makes about a bead against
+        /// a critter, on a screen where the shapes are all curves instead of all circles.
+        /// </para>
+        /// <para>
+        /// Built from <see cref="SdRoundCone"/>, which is already here for the coaching hand, so
+        /// the taper is a real distance field and the tip fades out rather than ending in a
+        /// chipped pixel.
+        /// </para>
+        /// </summary>
+        public static Sprite Pointer(int size = 96)
+        {
+            float h = size * .5f;
+
+            return Make($"pointer{size}", size, size, (x, y) =>
+                Cover(SdRoundCone(x, y, h, size * .74f, h, size * .12f,
+                                  size * .23f, size * .015f)));
+        }
+
+        /// <summary>
         /// A pointing hand, for the lessons that teach a gesture rather than a rule.
         ///
         /// <para>
@@ -821,6 +897,47 @@ namespace GlimmerGrove
         /// the one shape that does not say "your finger goes here".
         /// </para>
         /// </summary>
+        /// <summary>
+        /// The glyph's frame, and the axis of its index finger, named because two things need
+        /// them: <see cref="HandSd"/> draws from them and <see cref="HandFingertip"/> works the
+        /// tip back out of them. They were literals in one place and a hand-derived constant in
+        /// another, which is a pivot that silently stops matching its own art the first time the
+        /// finger moves.
+        /// </summary>
+        const float HandTilt = .32f, HandScale = .92f, HandLift = .035f;
+        const float KnuckleU = .382f, KnuckleV = .470f;
+        const float TipU = .372f, TipV = .930f, TipR = .064f;
+
+        /// <summary>
+        /// Where the fingertip sits in <see cref="Hand"/>, as a pivot in sprite space.
+        ///
+        /// <para>
+        /// Derived, never typed. The whole hand is positioned by this point — it is what the
+        /// fingertip is placed with — so a stale one slides the hand off the route it is
+        /// tracing and the demonstration quietly stops pointing at anything, which is invisible
+        /// in a compile and easy to miss in motion.
+        /// </para>
+        /// </summary>
+        public static Vector2 HandFingertip
+        {
+            get
+            {
+                // The extreme tip: the end cap's centre, pushed out along the finger's own axis.
+                float ax = TipU - KnuckleU, ay = TipV - KnuckleV;
+                float len = Mathf.Sqrt(ax * ax + ay * ay);
+                if (len < 1e-6f) len = 1f;
+
+                float u = TipU + ax / len * TipR - .5f;
+                float v = TipV + ay / len * TipR - .5f;
+
+                // Back out of the tilted frame HandSd samples in.
+                float cos = Mathf.Cos(HandTilt), sin = Mathf.Sin(HandTilt);
+
+                return new Vector2((u * cos - v * sin) * HandScale + .5f,
+                                   (u * sin + v * cos) * HandScale + .5f + HandLift);
+            }
+        }
+
         static float HandSd(float x, float y, int size)
         {
             // Sampled in the glyph's own frame, which is tilted anticlockwise about the centre
@@ -830,12 +947,9 @@ namespace GlimmerGrove
             // anything else. The tilt is the fix rather than a flourish: it is what puts the
             // fingertip up and to one side of the knuckles, which is the whole silhouette of
             // pointing, and it is also the angle a real hand reaches a phone screen at.
-            const float Tilt = .32f;                                    // radians, about 18 degrees
-            const float Scale = .92f, Lift = .035f;                     // room for the rim and the shadow
+            float cos = Mathf.Cos(HandTilt), sin = Mathf.Sin(HandTilt);
 
-            float cos = Mathf.Cos(Tilt), sin = Mathf.Sin(Tilt);
-
-            float px = (x / size - .5f) / Scale, py = (y / size - .5f - Lift) / Scale;
+            float px = (x / size - .5f) / HandScale, py = (y / size - .5f - HandLift) / HandScale;
             float u = px * cos + py * sin + .5f;
             float v = -px * sin + py * cos + .5f;
 
@@ -844,7 +958,7 @@ namespace GlimmerGrove
             // width reads as a tube, so the old glyph was a mitten with a spike on it: fine at a
             // glance and visibly cheap at the 156 points it is actually drawn at.
             float d = SdRoundBox(u, v, .530f, .330f, .215f, .190f, .110f);                      // closed hand
-            d = Mathf.Min(d, SdRoundCone(u, v, .382f, .470f, .372f, .930f, .090f, .064f));      // index finger
+            d = Mathf.Min(d, SdRoundCone(u, v, KnuckleU, KnuckleV, TipU, TipV, .090f, TipR));   // index finger
             d = Mathf.Min(d, SdRoundCone(u, v, .330f, .398f, .268f, .318f, .078f, .066f));      // thumb
             d = Mathf.Min(d, SdRoundBox(u, v, .535f, .060f, .152f, .150f, .072f));              // wrist
 
@@ -854,7 +968,7 @@ namespace GlimmerGrove
             d = Mathf.Max(d, -(Mathf.Sqrt((u - .775f) * (u - .775f) + (v - .470f) * (v - .470f)) - .078f));
             d = Mathf.Max(d, -(Mathf.Sqrt((u - .793f) * (u - .793f) + (v - .290f) * (v - .290f)) - .074f));
 
-            return d * size * Scale;
+            return d * size * HandScale;
         }
 
         /// <summary>Screen vignette; dark at the edges, clear in the middle.</summary>

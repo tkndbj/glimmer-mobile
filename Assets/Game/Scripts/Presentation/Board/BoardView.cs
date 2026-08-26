@@ -323,8 +323,6 @@ namespace GlimmerGrove
                     Audio.Sfx("pop2", .3f, .78f, Mathf.Max(0, P.Depth[t.Index]) * .028f);
             }
 
-            SoundDuskcaps(before);
-
             if (chains) _chain = woken.Count > 0 ? _chain + 1 : 0;
 
             // Whole tones per link, so the lift stays inside the same scale the ladder is
@@ -357,41 +355,6 @@ namespace GlimmerGrove
             if (P.Won) Celebrate();
         }
 
-
-        /// <summary>
-        /// Says out loud that the light has spilled somewhere it was not wanted, and that
-        /// it has been taken back.
-        ///
-        /// <para>
-        /// Deliberately not a defeat. Waking a duskcap costs nothing but the turn it took,
-        /// and the board says so by making the sound recoverable: a low refusal on the way
-        /// in, a soft chime on the way out. A flash or a heart here would teach players to
-        /// stop exploring, when exploring is how this mechanic is meant to be learned — the
-        /// price is already paid by the clock and the move budget.
-        /// </para>
-        /// </summary>
-        void SoundDuskcaps(bool[] before)
-        {
-            if (P.DuskcapCount == 0) return;
-
-            bool disturbed = false, settled = false;
-            foreach (var t in _tiles)
-            {
-                if (!t.IsDuskcap) continue;
-                if (P.Lit[t.Index] && !before[t.Index]) disturbed = true;
-                else if (!P.Lit[t.Index] && before[t.Index]) settled = true;
-            }
-
-            if (disturbed)
-            {
-                Audio.Sfx("blocked", .55f, .72f);
-                Tween.Shake((RectTransform)_floor.transform, 4f, .28f);
-            }
-            else if (settled)
-            {
-                Audio.Sfx("chime2", .42f, .82f);
-            }
-        }
 
         /// <summary>
         /// The turns ran out with the glade still dark.
@@ -612,6 +575,57 @@ namespace GlimmerGrove
                 revealed?.Invoke();
             }, this);
             return true;
+        }
+
+        /// <summary>
+        /// Wakes a board that guttered, for a run that has been paid to carry on.
+        ///
+        /// <para>
+        /// <b>The opposite of <see cref="Exhaust"/> and nothing like <see cref="Restart"/>.</b>
+        /// A restart deals the board again from its start rotations and costs a heart; this
+        /// leaves every tile exactly where the player left it and only takes back the ending.
+        /// That distinction is the product: what somebody buys with a continue is the position
+        /// they were in, and a board that reset would be worth nothing to them.
+        /// </para>
+        /// <para>
+        /// It does not touch the budget. Turns are the model's business
+        /// (<c>Puzzle.Grant</c>) and this is the view catching up — which is also why it is
+        /// safe to call before or after the grant lands. What it will not do is revive a board
+        /// that is still out of turns: the model would raise the ending again on the next tap,
+        /// and a screen that let that happen would be selling a continue that did not.
+        /// </para>
+        /// <para>
+        /// The undo history is deliberately kept. A turn taken back is a turn refunded, so it
+        /// can only ever move the count away from the limit — the same reasoning
+        /// <see cref="Undo"/> already states about not re-checking the budget.
+        /// </para>
+        /// </summary>
+        public void Revive()
+        {
+            if (!_lost || _celebrating) return;
+
+            if (P.OutOfMoves)
+            {
+                Debug.LogError("[Board] revived with no turns left; the continue would have " +
+                               "ended the run again on the next tap");
+                return;
+            }
+
+            _lost = false;
+            _chain = 0;
+
+            Audio.SfxVaried("whoosh", .45f);
+
+            // Each tile's own caches are what Gutter left disagreeing with the model — see
+            // TileView.Relight. Ordered by depth by ApplyEnergy itself, so the grove comes
+            // back the way it went out.
+            foreach (var t in _tiles) if (t) t.Relight();
+
+            // Last, and through the property, which raises OnChanged for the bottom bar and
+            // the counters. A board handed back before it has been repainted is one the player
+            // can tap while it still looks asleep.
+            Locked = false;
+            OnChanged?.Invoke();
         }
 
         public void Restart()

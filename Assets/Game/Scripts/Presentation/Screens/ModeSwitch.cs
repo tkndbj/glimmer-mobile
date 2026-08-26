@@ -7,15 +7,31 @@ using UnityEngine.UI;
 namespace GlimmerGrove
 {
     /// <summary>
-    /// The control in the map's bottom corner that swaps which way of playing you are looking
-    /// at.
+    /// The control under the map's chapter plaque that swaps which way of playing you are
+    /// looking at.
     ///
     /// <para>
-    /// A drop-up rather than a tab row along the top, and that is a decision about the screen
-    /// it lives on rather than a taste. The map is one long vertical strip that is dragged
-    /// through, its top is already carrying the chapter's name and both chapter arrows, and
-    /// every pixel of chrome there is a pixel of grove nobody can see. A corner pill costs one
-    /// corner and opens over the map only while it is being used.
+    /// <b>A drop-down under the header rather than a drop-up in a corner.</b> It began in the
+    /// bottom-right corner, which cost the map no vertical chrome and hid the one control every
+    /// other mode is reached through — a pill under the thumb, on a screen whose whole job is a
+    /// chain of glades running the other way, that a player has to be <em>taught</em> exists
+    /// (see <c>Mechanic.ModeSwitch</c>). Under the plaque it is where the eye already is: the
+    /// header is what names the place you are in, and which way of playing you are in is the
+    /// same kind of fact as which chapter you are in.
+    /// </para>
+    /// <para>
+    /// <b>The caller owns where it sits.</b> The map derives its whole header stack from
+    /// <c>BannerY</c> downwards, so a switcher carrying its own corner offset would be a second
+    /// copy of that arithmetic and would stop agreeing with the plaque the first time the plaque
+    /// was resized — which is exactly what the chapter star count was changed to avoid. So
+    /// <see cref="Build"/> takes the centre it should sit on and derives the menu from it.
+    /// </para>
+    /// <para>
+    /// <b>Names and nothing else.</b> Each row carried its mode's generated mark, and a mark is
+    /// what a mode looks like on a <em>node</em> — a leaf, a disc, a ring — which says nothing
+    /// about how it is played and is one more thing to read in a list whose whole content is two
+    /// words. The mode's colour still identifies it, on the selected row's seat and rim, so the
+    /// list is still readable by something other than the word.
     /// </para>
     /// <para>
     /// Built as its own file rather than as four more methods on <c>LevelsScreen</c>, which is
@@ -30,80 +46,156 @@ namespace GlimmerGrove
     /// </summary>
     public static class ModeSwitch
     {
-        const float PillW = 300f, PillH = 96f;
-        const float RowW = 470f, RowH = 118f, RowGap = 12f;
+        /// <summary>
+        /// The pill, and the gap between it and the list it opens.
+        ///
+        /// Bigger than the corner pill it replaced (300x96) because it is no longer chrome
+        /// tucked out of the way — it is a header control, sitting under a 476-wide plaque, and
+        /// a narrow one under a wide one reads as an afterthought rather than as part of the
+        /// same piece of furniture.
+        /// </summary>
+        const float PillW = 372f, PillH = 116f, MenuGap = 16f;
 
         /// <summary>
-        /// Where a row's text block sits, measured from the row's own centre.
+        /// How tall the pill is, for whoever is stacking it.
         ///
-        /// A row is <c>RowW - 28</c> wide, so it runs from <c>-(RowW - 28) / 2</c> to the same
-        /// on the right. The mark takes the first 74 of that; the text gets the rest, less a
-        /// margin on the right so a long translation stops short of the rim rather than on it.
+        /// The map places this control (see <see cref="Build"/>) and therefore has to know how
+        /// much room it takes, and a second copy of the number in the screen is precisely the
+        /// drift the derived header constants exist to prevent.
+        /// </summary>
+        public const float PillHeight = PillH;
+
+        /// <summary>
+        /// Violet, and it is the only pill on this screen.
+        ///
+        /// <para>
+        /// The corner pill was <c>btn_blue</c>, which is this UI's second-action colour — the
+        /// undo key, the map key, the pill in a panel that is not the affirmative. That is
+        /// exactly the wrong thing to say about the one control that reaches the other half of
+        /// the game, and under a brown plaque on a dark teal fade it was also the least visible
+        /// choice on the palette. Violet is the furthest thing here from the map's greens and
+        /// golds and from the header's own blue and aqua chrome, so it reads as a control rather
+        /// than as more header.
+        /// </para>
+        /// </summary>
+        const string PillSkin = "btn_violet";
+
+        const float RowW = 500f, RowH = 124f, RowGap = 12f;
+
+        /// <summary>
+        /// A row's width inside the plate, and how much of it the text may use — a margin either
+        /// side, so a long translation stops short of the rim rather than on it.
+        ///
+        /// <para>
+        /// A row's two lines are centred boxes at the row's own centre, which is what a list with
+        /// no mark gutter wants — and it retires the one trap this file kept falling into.
+        /// <c>UIKit.Box</c> always pivots at centre whatever it is anchored to, so a text block
+        /// placed by its left edge starts outside the plate; with the mark gone there is no left
+        /// edge to place anything against and nothing left to get wrong.
+        /// </para>
         /// </summary>
         const float RowInner = RowW - 28f;
-        const float MarkGutter = 78f, RightPad = 18f;
-        const float TextW = RowInner - MarkGutter - RightPad;
-        const float TextX = (MarkGutter - RightPad) * .5f;
+        const float TextW = RowInner - 56f;
 
         /// <summary>
-        /// Puts the switcher in <paramref name="host"/>'s bottom-right corner.
+        /// How the list arrives and leaves.
         ///
-        /// <paramref name="host"/> should be the screen's safe-area layer: this is chrome, and
-        /// a control under a phone's home indicator is a control nobody can press.
+        /// <para>
+        /// The exit is deliberately quicker than the entrance and eased the other way. An
+        /// entrance is an invitation and can afford an overshoot; an exit is the answer to a tap
+        /// that has already been made, so anything slower than about a sixth of a second reads
+        /// as the menu arguing about it. <see cref="ExitRise"/> and <see cref="ExitSquash"/> are
+        /// the same offset and squash it enters on, which is what makes the two read as one
+        /// movement reversed rather than as two effects.
+        /// </para>
         /// </summary>
-        public static void Build(RectTransform host, CatalogIndex index, GameMode current,
-                                 Action<GameMode> choose)
-        {
-            if (index == null || !index.HasSeveralModes) return;
+        const float EntryTime = .22f, ExitTime = .15f;
+        const float ExitRise = 26f, ExitSquash = .86f;
 
-            var pill = UIKit.Button("ModeSwitch", host, Art.S("Ui/btn_blue"),
-                                    new Vector2(PillW, PillH), new Vector2(1f, 0f),
-                                    UIKit.Corner(new Vector2(PillW, PillH), new Vector2(1f, 0f), 34f, 34f),
-                                    null);
+        /// <summary>
+        /// Puts the switcher in <paramref name="host"/>, centred on <paramref name="y"/> measured
+        /// down from the host's top edge, and hands back the pill it drew — or <c>null</c> when
+        /// it drew nothing.
+        ///
+        /// <paramref name="host"/> should be the screen's safe-area layer: this is chrome, and a
+        /// control under a notch is a control nobody can read.
+        /// </summary>
+        /// <remarks>
+        /// The return value exists so the map can point a first-run lesson at this control
+        /// (<c>Mechanic.ModeSwitch</c>), and it is the pill rather than a bool for the reason
+        /// <c>TipOverlay.Target</c> takes a transform: the ring is cut around the real thing on
+        /// the real screen, so nothing holds a second copy of where the control is — which is
+        /// what made moving it out of the corner cost this file and one number in the map.
+        /// <b>Null is the answer that matters</b> — it is what says the switcher is not on screen
+        /// at all, which is exactly when that lesson must not be spent.
+        /// </remarks>
+        public static RectTransform Build(RectTransform host, CatalogIndex index, GameMode current,
+                                          Action<GameMode> choose, float y)
+        {
+            if (index == null || !index.HasSeveralModes) return null;
+
+            var pill = UIKit.Button("ModeSwitch", host, Art.S("Ui/" + PillSkin),
+                                    new Vector2(PillW, PillH), new Vector2(.5f, 1f),
+                                    new Vector2(0f, y), null);
 
             float lift = PillH * UIKit.PillFaceLift;
 
-            var mark = UIKit.Img("Mark", pill.transform, ModeLooks.Of(current).Mark(),
-                                 ModeLooks.Of(current).Accent, Vector2.one * 46f,
-                                 new Vector2(.5f, .5f), new Vector2(-96f, lift));
-            mark.preserveAspect = true;
-
-            // Clear of both the mark on its left (which ends at -73) and the chevron on its
-            // right (which starts at 103), rather than overlapping the mark by ten pixels as
-            // it did — invisible on "Glades" and not on a longer word in another language.
-            var label = UIKit.Titled("Name", pill.transform, Loc.Get(current.NameKey), 34, Pal.Cream,
-                                     TextAnchor.MiddleLeft, new Vector2(160f, PillH * .6f),
-                                     new Vector2(.5f, .5f), new Vector2(14f, lift), 0f, 3f);
+            // Dead centre of the pill, with the chevron out at the rim. A centred name under a
+            // centred plaque is the axis the whole header is built on; balancing the word against
+            // a glyph beside it would put it off that axis by half the glyph.
+            var label = UIKit.Titled("Name", pill.transform, Loc.Get(current.NameKey), 38, Pal.Cream,
+                                     TextAnchor.MiddleCenter, new Vector2(PillW - 128f, PillH * .6f),
+                                     new Vector2(.5f, .5f), new Vector2(0f, lift), 0f, 3f);
             UIKit.Shrinkable(label);
 
-            UIKit.Titled("Chevron", pill.transform, "▲", 22, Pal.A(Pal.Cream, .70f),
-                         TextAnchor.MiddleCenter, new Vector2(30f, 30f), new Vector2(.5f, .5f),
-                         new Vector2(118f, lift), 0f, 2f);
+            // Pointing down, because the list opens downward. It turns rather than being swapped
+            // for the other glyph while the menu is open: a mark that turns is the same mark
+            // saying the same thing about the same list, where two glyphs are two symbols a
+            // player has to notice are related.
+            var chevron = UIKit.Titled("Chevron", pill.transform, "▼", 26, Pal.A(Pal.Cream, .78f),
+                                       TextAnchor.MiddleCenter, new Vector2(34f, 34f),
+                                       new Vector2(.5f, .5f),
+                                       new Vector2(PillW * .5f - 40f, lift), 0f, 2f);
 
-            pill.Setup(() => Open(host, index, current, choose));
+            pill.Setup(() => Open(host, index, current, choose, y, (RectTransform)chevron.transform));
+
+            return (RectTransform)pill.transform;
         }
 
         /// <summary>
-        /// Opens the list above the pill.
+        /// Opens the list below the pill.
         ///
         /// <para>
         /// The veil is the whole reason this is one method rather than a small component: it
         /// swallows every tap outside the list, so there is no corner of the screen where a tap
         /// does nothing while a menu is open, and it is the one thing that has to be destroyed
-        /// with the list however the list goes away. Hiding before destroying is the house rule
-        /// - <c>Destroy</c> lands at the end of the frame, so a menu closed on the same frame
-        /// something else opens would be drawn over its replacement for it.
+        /// with the list however the list goes away.
+        /// </para>
+        /// <para>
+        /// <b>It leaves the way it arrived.</b> Closing used to hide the veil and destroy it in
+        /// the same frame — which is the house rule for a region being <em>replaced</em>, because
+        /// <c>Destroy</c> lands at the end of the frame and an outgoing panel would otherwise be
+        /// drawn over the one taking its place. Nothing replaces this one: it opens over a map
+        /// that is already there and simply stops existing, so hiding it instantly is a list that
+        /// vanishes mid-tap, which reads as a dropped frame rather than as a menu closing. It now
+        /// falls back into the pill it came out of — the same short move, squash and fade it
+        /// entered on, reversed — and is destroyed when that lands.
+        /// </para>
+        /// <para>
+        /// The veil keeps eating taps for those few frames rather than releasing them the moment
+        /// the exit starts, and the close is latched. Without both, a second tap during the exit
+        /// reaches the pill underneath and opens a second menu over the one still leaving.
         /// </para>
         /// </summary>
         static void Open(RectTransform host, CatalogIndex index, GameMode current,
-                         Action<GameMode> choose)
+                         Action<GameMode> choose, float pillY, RectTransform chevron)
         {
             var veil = UIKit.Node("ModeVeil", host);
             UIKit.StretchTo(veil, 0, 0, 0, 0);
 
             // Invisible, and still the thing that catches every tap outside the list. A modal
             // over a *decision* earns a dim — it is saying "answer this first". This one is a
-            // two-item menu in a corner, and darkening the whole map to open it made the map
+            // two-item menu under the header, and darkening the whole map to open it made the map
             // look switched off; the list has its own plate and rim, so it reads as raised
             // without the screen behind it having to be pushed down.
             //
@@ -113,21 +205,19 @@ namespace GlimmerGrove
             catcher.color = new Color(0f, 0f, 0f, 0f);
             catcher.raycastTarget = true;
 
-            void Close()
-            {
-                if (!veil) return;
-                veil.gameObject.SetActive(false);
-                UnityEngine.Object.Destroy(veil.gameObject);
-            }
-
-            veil.gameObject.AddComponent<Btn>().Setup(Close, silent: true);
-
             var modes = index.Modes;
             float height = modes.Count * RowH + (modes.Count - 1) * RowGap;
 
-            var list = UIKit.Box("Modes", veil, new Vector2(RowW, height), new Vector2(1f, 0f),
-                                 UIKit.Corner(new Vector2(RowW, height), new Vector2(1f, 0f),
-                                              34f, 34f + PillH + 18f));
+            // Hung from the same top edge the pill is, so the two cannot drift: the plaque, the
+            // pill and the list are one stack measured downwards from the header.
+            float listY = pillY - PillH * .5f - MenuGap - height * .5f;
+
+            var list = UIKit.Box("Modes", veil, new Vector2(RowW, height), new Vector2(.5f, 1f),
+                                 new Vector2(0f, listY));
+
+            // One group for the whole list, so the exit is a single fade rather than a fade per
+            // plate, rim, seat and line — which would be a dozen tweens racing to the same frame.
+            var group = list.gameObject.AddComponent<CanvasGroup>();
 
             var plate = UIKit.Img("Plate", list, Art.Round(28), new Color(.05f, .11f, .16f, .95f));
             UIKit.StretchTo((RectTransform)plate.transform, -14, -14, -14, -14);
@@ -136,24 +226,56 @@ namespace GlimmerGrove
             var edge = UIKit.Img("Edge", plate.transform, Art.RoundOutline(28, 3f), new Color(1, 1, 1, .16f));
             UIKit.StretchTo((RectTransform)edge.transform, 0, 0, 0, 0);
 
+            bool closing = false;
+
+            void Close()
+            {
+                if (closing || !veil) return;
+                closing = true;
+
+                if (chevron) Tween.Rotate(chevron, 0f, ExitTime, Ease.OutQuad);
+
+                // Back up into the pill, shrinking and fading as it goes. The move is what makes
+                // it read as returning to the control rather than merely disappearing; the fade
+                // is what stops the last few frames looking like a list lying on the map.
+                Tween.Move(list, new Vector2(0f, listY + ExitRise), ExitTime, Ease.InQuad);
+                Tween.Scale(list, new Vector3(1f, ExitSquash, 1f), ExitTime, Ease.InQuad);
+                Tween.Fade(group, 0f, ExitTime, Ease.InQuad).OnDone(() =>
+                {
+                    if (!veil) return;
+                    veil.gameObject.SetActive(false);
+                    UnityEngine.Object.Destroy(veil.gameObject);
+                });
+            }
+
+            veil.gameObject.AddComponent<Btn>().Setup(Close, silent: true);
+
             for (int i = 0; i < modes.Count; i++)
             {
                 var mode = modes[i];
 
-                // Bottom-up, so the entry nearest the pill is the first one in the list and the
-                // order does not appear to flip when the menu opens upward.
-                float y = -(height * .5f) + RowH * .5f + i * (RowH + RowGap);
-                Row(list, mode, mode == current, y, () => { Close(); choose?.Invoke(mode); });
+                // Top-down, so the entry nearest the pill is the first one in the list and the
+                // order reads the way the list opens.
+                float rowY = height * .5f - RowH * .5f - i * (RowH + RowGap);
+                Row(list, mode, mode == current, rowY, () => { Close(); choose?.Invoke(mode); });
             }
 
-            list.localScale = new Vector3(1f, .82f, 1f);
-            Tween.Scale(list, Vector3.one, .18f, Ease.OutBack);
+            if (chevron) Tween.Rotate(chevron, 180f, EntryTime, Ease.OutBack);
+
+            group.alpha = 0f;
+            list.localScale = new Vector3(1f, ExitSquash, 1f);
+            list.anchoredPosition = new Vector2(0f, listY + ExitRise);
+
+            Tween.Move(list, new Vector2(0f, listY), EntryTime, Ease.OutCubic);
+            Tween.Scale(list, Vector3.one, EntryTime, Ease.OutBack);
+            Tween.Fade(group, 1f, EntryTime * .6f, Ease.OutQuad);
+
             Audio.Sfx("click", .4f);
         }
 
         static void Row(RectTransform parent, GameMode mode, bool selected, float y, Action tap)
         {
-            var row = UIKit.Box("Mode_" + mode.Value, parent, new Vector2(RowW - 28f, RowH),
+            var row = UIKit.Box("Mode_" + mode.Value, parent, new Vector2(RowInner, RowH),
                                 new Vector2(.5f, .5f), new Vector2(0f, y));
 
             var accent = ModeLooks.Of(mode).Accent;
@@ -169,34 +291,26 @@ namespace GlimmerGrove
                                  selected ? Pal.A(accent, .18f) : new Color(1f, 1f, 1f, .05f));
             UIKit.StretchTo((RectTransform)seat.transform, 0, 0, 0, 0);
 
+            // The mode's colour, and with the marks gone this is the only thing carrying it. It
+            // rings the row the player is already in rather than being decoration on all of them.
             if (selected)
             {
                 var rim = UIKit.Img("Rim", row, Art.RoundOutline(22, 3f), Pal.A(accent, .70f));
                 UIKit.StretchTo((RectTransform)rim.transform, 0, 0, 0, 0);
             }
 
-            var mark = UIKit.Img("Mark", row, ModeLooks.Of(mode).Mark(), accent, Vector2.one * 52f,
-                                 new Vector2(0f, .5f), new Vector2(48f, 0f));
-            mark.preserveAspect = true;
-
-            // Both labels are centred boxes placed at a measured centre, never boxes anchored to
-            // the row's left edge. UIKit.Box always pivots at centre, so anchoring a 330-wide
-            // box 90px from the left edge puts its first 75px *outside* the row — and a Text is
-            // left-aligned inside that box, so the words began past the plate entirely. It is
-            // the same trap PillFaceLift and the win panel's rank word each record; the fix is
-            // to say where the middle of the text block goes, which is what TextX and TextW are.
-            var name = UIKit.Titled("Name", row, Loc.Get(mode.NameKey), 34,
+            var name = UIKit.Titled("Name", row, Loc.Get(mode.NameKey), 36,
                                     selected ? Pal.Cream : Pal.A(Pal.Cream, .82f),
-                                    TextAnchor.MiddleLeft, new Vector2(TextW, 40f),
-                                    new Vector2(.5f, .5f), new Vector2(TextX, 20f), 0f, 2f);
+                                    TextAnchor.MiddleCenter, new Vector2(TextW, 42f),
+                                    new Vector2(.5f, .5f), new Vector2(0f, 20f), 0f, 2f);
             UIKit.Shrinkable(name);
 
             // The tagline is the only place the game ever says what a mode *is*, and it is here
             // rather than on a first-run panel because this is where somebody is deciding.
             var tag = UIKit.Label("Tag", row, Loc.Get(mode.TaglineKey), 24,
-                                  Pal.A(Pal.Cream, .60f), TextAnchor.MiddleLeft,
+                                  Pal.A(Pal.Cream, .60f), TextAnchor.MiddleCenter,
                                   new Vector2(TextW, 40f), new Vector2(.5f, .5f),
-                                  new Vector2(TextX, -22f));
+                                  new Vector2(0f, -22f));
             UIKit.Shrinkable(tag, 14);
 
             row.gameObject.AddComponent<Btn>().Setup(tap);

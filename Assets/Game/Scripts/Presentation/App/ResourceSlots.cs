@@ -52,6 +52,17 @@ namespace GlimmerGrove
             /// <summary>The soft light behind the icon, brightened on each arrival.</summary>
             public Image Glow;
 
+            /// <summary>
+            /// What that light sits at when nothing is landing on it.
+            ///
+            /// Captured from the glow itself rather than assumed, because the two rows that
+            /// register are drawn differently — the hub's pills carry a wide halo and the
+            /// shop's a narrower one — and a flare that returned to a number this file made
+            /// up would leave whichever row disagreed permanently brighter or dimmer than it
+            /// was built.
+            /// </summary>
+            public Color Rest;
+
             /// <summary>The currency's colour, for sparks and the flash.</summary>
             public Color Tint;
 
@@ -63,12 +74,78 @@ namespace GlimmerGrove
 
         static readonly Slot[] Slots = new Slot[3];
 
+        /// <summary>
+        /// Which readouts a payout currently owns. See <see cref="Claim"/>.
+        /// </summary>
+        static readonly bool[] Claimed = new bool[3];
+
         public static void Register(Kind kind, RectTransform icon, Text number, Image glow,
                                     Color tint, Func<long, string> format)
-            => Slots[(int)kind] = new Slot
+        {
+            // A new row is a payout-free row, and this is the only cleanup a claim needs. A
+            // cascade whose panel is destroyed mid-flight — the player navigating away while
+            // coins are in the air — never reaches Release, and a claim left standing would
+            // freeze the pill of whatever screen came next. It cannot outlive the row it was
+            // made against, because the row is rebuilt on every navigation and the only screen
+            // that can start a payout is the one drawing the row.
+            Claimed[(int)kind] = false;
+
+            Slots[(int)kind] = new Slot
             {
-                Icon = icon, Number = number, Glow = glow, Tint = tint, Format = format
+                Icon = icon, Number = number, Glow = glow, Tint = tint, Format = format,
+                Rest = glow ? glow.color : Pal.A(tint, .30f)
             };
+        }
+
+        /// <summary>
+        /// What this currency's readout would say if it were drawn right now.
+        ///
+        /// Here rather than beside whichever panel is paying, because "which balance does the
+        /// heart pill show" is a fact about the row and two answers to it could disagree —
+        /// which is exactly how a reward would count up to the wrong figure.
+        /// </summary>
+        public static long Balance(Kind kind)
+        {
+            switch (kind)
+            {
+                case Kind.Credits: return Profile.Coins;
+                case Kind.Gems: return Profile.Gems;
+                default: return Profile.Hearts;
+            }
+        }
+
+        /// <summary>
+        /// Hands a readout to a payout, which then owns what it says until
+        /// <see cref="Release"/>.
+        ///
+        /// <para>
+        /// A payout rewinds a pill to what it read before the reward was granted and walks it
+        /// forward one token at a time, so for a second or two the number on screen is
+        /// deliberately behind the balance. The hub repaints on every wallet change, and a
+        /// change landing in that window — an ad's credits arriving from the server is exactly
+        /// one — would jump the pill to the true figure and the next token would drag it back
+        /// down. So the screen asks through <see cref="Repaint"/> and is refused, while the
+        /// payout writes through <see cref="Show"/> and is not.
+        /// </para>
+        /// </summary>
+        public static void Claim(Kind kind) => Claimed[(int)kind] = true;
+
+        /// <summary>Gives the readout back to whoever draws it.</summary>
+        public static void Release(Kind kind) => Claimed[(int)kind] = false;
+
+        /// <summary>True while a payout owns this readout — see <see cref="Claim"/>.</summary>
+        public static bool IsPaying(Kind kind) => Claimed[(int)kind];
+
+        /// <summary>
+        /// The screen's own repaint: writes <paramref name="value"/> unless a payout is
+        /// walking this readout somewhere, in which case the payout's figure stands and the
+        /// true one arrives when it settles.
+        /// </summary>
+        public static void Repaint(Kind kind, long value)
+        {
+            if (Claimed[(int)kind]) return;
+            Show(kind, value);
+        }
 
         public static bool TryGet(Kind kind, out Slot slot)
         {
@@ -122,7 +199,7 @@ namespace GlimmerGrove
                 Tween.Tint(slot.Glow, lit, .08f)
                      .OnDone(() =>
                      {
-                         if (slot.Glow) Tween.Tint(slot.Glow, Pal.A(slot.Tint, .30f), last ? .55f : .26f);
+                         if (slot.Glow) Tween.Tint(slot.Glow, slot.Rest, last ? .55f : .26f);
                      });
             }
 

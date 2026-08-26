@@ -350,16 +350,42 @@ namespace GlimmerGrove.Tests
             }
         }
 
+        /// <summary>
+        /// Every product grants currency, or an idempotent permanent entitlement, and never
+        /// both.
+        ///
+        /// <para>
+        /// This is the property the whole feature rests on, and it used to be the narrower
+        /// claim that a product grants currency and nothing else. The reason behind it was
+        /// always about <em>amounts</em>: a product granting hearts would need the client to
+        /// apply half a purchase after the server applied the other half, which means a record
+        /// in the save of what has already been applied, merged across devices, whose failure
+        /// mode is somebody paying and receiving nothing. A heart capacity is not an amount —
+        /// it is the union of a permanent id, so applying it twice is applying it once and the
+        /// record has nothing to answer.
+        /// </para>
+        /// <para>
+        /// The "never both" half is what keeps the reasoning true rather than merely stated: a
+        /// container that also paid gems would put an amount straight back onto the client's
+        /// side of a purchase. See <c>StoreProduct.HeartCapacity</c>.
+        /// </para>
+        /// </summary>
         [Test]
-        public void EveryBuiltInProductGrantsCurrencyAndOnlyCurrency()
+        public void EveryBuiltInProductGrantsCurrencyOrAnEntitlementAndNeverBoth()
         {
             foreach (var product in StoreCatalog.Default.Products)
             {
-                Assert.IsTrue(product.Credits > 0 || product.Gems > 0, product.Id);
+                bool currency = product.Credits > 0 || product.Gems > 0;
 
-                // The property the whole feature rests on. A product that granted hearts
-                // would need the client to apply half a purchase, which means a record in
-                // the save of what has already been applied — see StoreProduct.
+                Assert.IsTrue(currency || product.IsContainer, product.Id);
+                Assert.IsFalse(currency && product.IsContainer,
+                               $"{product.Id} grants currency and a capacity");
+
+                // An entitlement that could be sold twice is one the store would happily
+                // charge for twice, and it is what makes a Restore able to bring it back.
+                if (product.IsContainer)
+                    Assert.IsTrue(product.IsOneTime, $"{product.Id} must be a non-consumable");
+
                 Assert.AreEqual("store.product." + product.Id, product.NameKey);
             }
         }

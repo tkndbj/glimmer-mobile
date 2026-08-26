@@ -54,9 +54,7 @@ namespace GlimmerGrove
         int _shownWear = -1;
         Flipbook _book;
 
-        Image _moonBadge, _capAlarm;
         Image _rootRing;
-        bool _wasWoken;
 
         bool _wasLit;
         int _shownEnergy = -1;
@@ -68,7 +66,6 @@ namespace GlimmerGrove
 
         public int Index => _i;
         public bool IsLamp => _p.C[_i].kind == Kind.Lamp;
-        public bool IsDuskcap => _p.C[_i].kind == Kind.Duskcap;
         public bool Lit => _p.Lit[_i];
 
         // ------------------------------------------------------------------ build
@@ -162,7 +159,6 @@ namespace GlimmerGrove
 
             if (cell.kind == Kind.Source) BuildCrystal(cell);
             else if (cell.kind == Kind.Lamp) BuildCritter(cell);
-            else if (cell.kind == Kind.Duskcap) BuildDuskcap();
             if (cell.fragile > 0) BuildFragility();
             if (_p.IsBound(_i)) BuildTaproot(cell);
 
@@ -284,7 +280,7 @@ namespace GlimmerGrove
 
             _haloGlow = UIKit.Img("HaloGlow", _fixture, Art.Glow(128, 1.9f), Pal.A(want, 0f),
                                   Vector2.one * _size * 1.45f, new Vector2(.5f, .5f), Vector2.zero);
-            _halo = UIKit.Img("Halo", _fixture, HaloSprite(), Pal.A(want, .55f),
+            _halo = UIKit.Img("Halo", _fixture, HaloSprite(), Pal.A(want, SleepingHalo),
                               Vector2.one * _size * .82f, new Vector2(.5f, .5f), new Vector2(0, -_size * .02f));
 
             var frames = Art.Frames("Critters/c" + (cell.critter + 1));
@@ -298,6 +294,25 @@ namespace GlimmerGrove
         }
 
         static readonly Color SleepTint = new Color(.44f, .52f, .60f, .92f);
+
+        /// <summary>
+        /// How strongly a sleeping critter's ring states the colour it is waiting for.
+        ///
+        /// <para>
+        /// It is the board's only standing instruction — a player reads every demand off these
+        /// rings before touching a conduit — and at the .55 it shipped at, it was reported as
+        /// hard to pick out against a graded backdrop. Lifted rather than recoloured: the hue
+        /// is the answer and must not drift, so the only thing that may move is how loudly it
+        /// is said. It stays well under the lit ring's full alpha, because the gap between the
+        /// two is what separates "wanted" from "fed" at a glance.
+        /// </para>
+        /// <para>
+        /// Named here because it is asserted twice — once when the ring is built and once
+        /// every time the lamp is repainted — and two numbers that have to agree is the shape
+        /// this project keeps paying for.
+        /// </para>
+        /// </summary>
+        const float SleepingHalo = .72f;
 
         /// <summary>
         /// What a critter's halo says, which is two different things.
@@ -330,56 +345,6 @@ namespace GlimmerGrove
 
         Sprite HaloSprite()
             => AcceptsAnyColour && _p.Energy(_i) == 0 ? Art.PrismRing(128, 9f) : Art.Ring(128, 9f);
-
-        // --------------------------------------------------------------- duskcap
-        /// <summary>
-        /// A creature that must be left alone, drawn as the exact opposite of a critter.
-        ///
-        /// <para>
-        /// A critter sleeps grey and still and wakes into colour and motion; a duskcap does
-        /// that backwards. Asleep it breathes in the dark under a violet moon and is
-        /// perfectly content. Woken it snaps to full colour, the moon goes out, a red ring
-        /// closes on it and it stops moving — the same vocabulary the board already uses for
-        /// something having gone wrong.
-        /// </para>
-        /// <para>
-        /// The moon badge is what makes the rule visible before the player has broken it.
-        /// Everything else on a board is a thing you are trying to reach, so a tile with a
-        /// creature on it and no explanation reads as another one — and a player who has
-        /// tapped past the tip has nothing else to go on.
-        /// </para>
-        /// </summary>
-        void BuildDuskcap()
-        {
-            _haloGlow = UIKit.Img("CapGlow", _fixture, Art.Glow(128, 1.9f), Pal.A(Pal.Dusk, .42f),
-                                  Vector2.one * _size * 1.40f, new Vector2(.5f, .5f), Vector2.zero);
-
-            _capAlarm = UIKit.Img("CapAlarm", _fixture, Art.Ring(128, 10f), Pal.A(Pal.Rose, 0f),
-                                  Vector2.one * _size * .88f, new Vector2(.5f, .5f),
-                                  new Vector2(0, -_size * .02f));
-
-            var frames = Art.Frames("Board/duskcap");
-            _critter = UIKit.Img("Duskcap", _fixture, frames != null && frames.Length > 0 ? frames[0] : null,
-                                 DozeTint, Vector2.one * _size * .72f, new Vector2(.5f, .5f),
-                                 new Vector2(0, _size * .02f));
-            _critter.preserveAspect = true;
-            _book = Flipbook.Attach(_critter, "Board/duskcap", 9f);   // half a critter's pace: it is asleep
-            _book.Offset = Random.Range(0, 18);
-
-            _moonBadge = UIKit.Img("Moon", _fixture, Art.Moon(96, .78f), Pal.A(Pal.Lift(Pal.Dusk, .55f), .95f),
-                                   Vector2.one * _size * .26f, new Vector2(1f, 1f),
-                                   new Vector2(-_size * .16f, -_size * .16f));
-            _moonBadge.preserveAspect = true;
-
-            Tween.Run(2.4f, Ease.InOutSine, t =>
-            {
-                if (!_haloGlow) return;
-                _haloGlow.color = Pal.A(Pal.Dusk, Mathf.Lerp(.26f, .50f, t));
-            }, _haloGlow, "dozing").Loop(-1, true);
-        }
-
-        /// <summary>A duskcap at rest: in shadow, and glad of it.</summary>
-        static readonly Color DozeTint = new Color(.46f, .42f, .66f, .95f);
 
         // -------------------------------------------------------------- taproot
         /// <summary>
@@ -424,7 +389,6 @@ namespace GlimmerGrove
             if (_rootRing) Tween.Punch(_rootRing.transform, .09f, .34f);
             Ripple(Pal.A(Pal.Rope, .70f), 1.15f);
         }
-
 
         // -------------------------------------------------------------- fragility
         /// <summary>
@@ -540,20 +504,37 @@ namespace GlimmerGrove
             if (_hubLit) Tween.Tint(_hubLit, Pal.A(dead, 0f), .5f, Ease.InQuad).Delay(delay);
             if (_hubGlow) Tween.Tint(_hubGlow, Pal.A(dead, 0f), .55f, Ease.InQuad).Delay(delay);
 
-            // A duskcap is left alone. It wanted the dark, so the lights going out is not
-            // something happening to it, and dimming it with everything else would say the
-            // run failed it in the same way it failed the critters.
-            if (!IsDuskcap)
-            {
-                if (_critter) Tween.Tint(_critter, SleepTint, .5f, Ease.InQuad).Delay(delay);
-                if (_haloGlow) Tween.Tint(_haloGlow, Pal.A(dead, 0f), .5f, Ease.InQuad).Delay(delay);
-                if (_book) _book.enabled = false;
-            }
+            if (_critter) Tween.Tint(_critter, SleepTint, .5f, Ease.InQuad).Delay(delay);
+            if (_haloGlow) Tween.Tint(_haloGlow, Pal.A(dead, 0f), .5f, Ease.InQuad).Delay(delay);
+            if (_book) _book.enabled = false;
 
             Tween.Punch(_fixture, .05f, .35f).Delay(delay);
         }
 
-
+        /// <summary>
+        /// Undoes <see cref="Gutter"/>: paints this tile the way the model says it stands.
+        ///
+        /// <para>
+        /// <b>It has to clear the caches, and that is the whole of it.</b>
+        /// <see cref="ApplyEnergy"/> is guarded on <c>_shownEnergy</c> and <c>_shownHalo</c>
+        /// precisely so that repainting an unchanged board costs nothing — and
+        /// <see cref="Gutter"/> tints every layer to dead without touching either, because it
+        /// is a farewell rather than a state. So the model and the caches agree, the picture
+        /// does not, and a plain <c>ApplyEnergy</c> here would return having done nothing at
+        /// all. <see cref="ResetTo"/> clears them for the same reason after a restart.
+        /// </para>
+        /// <para>
+        /// Animated rather than snapped: the grove went to sleep over half a second and it
+        /// should wake the same way, ordered by depth, which is what <c>ApplyEnergy</c>'s own
+        /// delay already does.
+        /// </para>
+        /// </summary>
+        public void Relight()
+        {
+            _shownEnergy = -1;
+            _shownHalo = -1;
+            ApplyEnergy(true);
+        }
 
         /// <summary>This tile's centre in the effects layer's space, for a burst.</summary>
         Vector2 WorldCentre()
@@ -661,65 +642,8 @@ namespace GlimmerGrove
             }
 
             if (_p.C[_i].kind == Kind.Lamp) ApplyLamp(animate, delay);
-            else if (_p.C[_i].kind == Kind.Duskcap) ApplyDuskcap(animate, delay);
 
             PaintFragility(animate);
-        }
-
-        /// <summary>
-        /// A duskcap reacting, which is a critter's reaction played backwards: colour and
-        /// stillness mean it has been disturbed, grey and motion mean all is well.
-        /// </summary>
-        void ApplyDuskcap(bool animate, float delay)
-        {
-            bool woken = _p.Lit[_i];
-            if (woken == _wasWoken && animate) return;
-            _wasWoken = woken;
-
-            void Apply()
-            {
-                if (this == null || _critter == null) return;
-
-                if (_book)
-                {
-                    _book.enabled = !woken;
-                    if (woken)
-                    {
-                        var frames = Art.Frames("Board/duskcap");
-                        if (frames != null && frames.Length > 0) _critter.sprite = frames[0];
-                    }
-                }
-
-                Tween.Tint(_critter, woken ? Color.white : DozeTint, .22f);
-                Tween.Tint(_capAlarm, Pal.A(Pal.Rose, woken ? .95f : 0f), .2f);
-                if (_moonBadge)
-                    Tween.Tint(_moonBadge, Pal.A(Pal.Lift(Pal.Dusk, .55f), woken ? .10f : .95f), .22f);
-
-                Tween.KillChannel(_haloGlow, "dozing");
-
-                if (woken)
-                {
-                    Tween.Tint(_haloGlow, Pal.A(Pal.Rose, .72f), .18f);
-                    Tween.Shake((RectTransform)_fixture, 7f, .34f);
-                    Tween.Punch(_capAlarm.transform, .24f, .42f);
-                }
-                else
-                {
-                    // Back to sleep. The breath is replaced rather than resumed, because
-                    // reaching the resting state twice would otherwise leave two loops
-                    // running against each other — the lesson the companion reveal's
-                    // ambient tweens already learned.
-                    Tween.Tint(_haloGlow, Pal.A(Pal.Dusk, .42f), .3f);
-                    Tween.Run(2.4f, Ease.InOutSine, t =>
-                    {
-                        if (!_haloGlow) return;
-                        _haloGlow.color = Pal.A(Pal.Dusk, Mathf.Lerp(.26f, .50f, t));
-                    }, _haloGlow, "dozing").Loop(-1, true).Delay(.3f);
-                }
-            }
-
-            if (animate && delay > 0f) Tween.After(delay, Apply, this);
-            else Apply();
         }
 
         void ApplyLamp(bool animate, float delay)
@@ -741,10 +665,9 @@ namespace GlimmerGrove
             {
                 if (this == null || _critter == null) return;
                 if (_book) _book.enabled = lit;
-                // Guarded like every other frame read in this file (the duskcap's, twenty
-                // lines up, is the same line): AssetLibrary.Frames answers an *empty array*
-                // and a warning when art is missing, deliberately, so that a failed bundle
-                // draws blank rather than throwing. Indexing it unchecked turned that into
+                // Guarded: AssetLibrary.Frames answers an *empty array* and a warning when
+                // art is missing, deliberately, so that a failed bundle draws blank rather
+                // than throwing. Indexing it unchecked turned that into
                 // an IndexOutOfRangeException raised out of a tween callback in the middle
                 // of BoardView.Build — a half-drawn, unplayable board instead of a critter
                 // nobody can see. Found by building a board with the art unloaded.
@@ -759,7 +682,7 @@ namespace GlimmerGrove
                 if (_halo && _halo.sprite != ring) _halo.sprite = ring;
 
                 Tween.Tint(_critter, lit ? Color.white : SleepTint, .28f);
-                Tween.Tint(_halo, Pal.A(want, lit ? 1f : .55f), .28f);
+                Tween.Tint(_halo, Pal.A(want, lit ? 1f : SleepingHalo), .28f);
                 Tween.Tint(_haloGlow, Pal.A(want, lit ? .78f : 0f), .34f);
 
                 if (lit)
@@ -801,10 +724,6 @@ namespace GlimmerGrove
         /// <summary>Victory sweep: everything flares once, ordered by distance.</summary>
         public void Flare(float delay)
         {
-            // Won means every duskcap slept through it. Flaring one would be the board
-            // congratulating itself with the one tile the player spent the level avoiding.
-            if (IsDuskcap) return;
-
             var col = Pal.EnergyColour(Mathf.Max(1, _p.Energy(_i)));
             Tween.After(delay, () =>
             {

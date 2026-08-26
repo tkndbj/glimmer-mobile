@@ -56,7 +56,7 @@ namespace GlimmerGrove.Daily
         /// The odd one out, and the difference is worth stating because it changes where the
         /// reward is applied. Every other kind lands in the <see cref="Persistence.Wallet"/>
         /// and outlives the moment it was granted; this one lands on a
-        /// <see cref="RunClock"/> that belongs to a single screen and stops existing when
+        /// <c>RunScreen.Tick</c> that belongs to a single screen and stops existing when
         /// that run resolves. So <c>RewardedAds.Apply</c> deliberately does nothing with it
         /// and the caller applies it — Domain statics have no view of a live board, and
         /// giving them one would be a far worse trade than the empty case.
@@ -71,6 +71,19 @@ namespace GlimmerGrove.Daily
         /// Nothing about it reaches the server. It is not currency, so
         /// <c>adCurrencyOf</c> returns null for the placement that pays it and the signed
         /// callback grants nothing — correct, and it needed no server change to be true.
+        /// </para>
+        /// </summary>
+        /// <summary>
+        /// <b>Retired.</b> Seconds on the run in progress, paid by the <c>run_continue</c>
+        /// placement when a glade's countdown ran out.
+        ///
+        /// <para>
+        /// Nothing produces it: the countdown was removed, so a run is ended and graded on
+        /// turns alone, and <c>AdRewardTable</c> now refuses any transient kind. The member
+        /// stays because the values of this enum are a contract — they key the daily chest
+        /// vectors both runtimes are pinned against (invariant 9c), so deleting one in the
+        /// middle renumbers every kind after it and rerolls every unopened chest in the
+        /// world. Retired in place, exactly as <c>DefeatReason.OutOfTime</c> is.
         /// </para>
         /// </summary>
         RunTime,

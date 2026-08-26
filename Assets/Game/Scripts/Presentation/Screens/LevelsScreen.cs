@@ -56,6 +56,20 @@ namespace GlimmerGrove
         ChapterBody _body;
 
         MapLayout _layout;
+
+        /// <summary>
+        /// The mode pill under the header, or null when the catalog holds one mode and
+        /// <see cref="ModeSwitch"/> therefore drew nothing. It is kept for one reason: it is
+        /// what the first-run lesson rings. See <see cref="Teach"/>.
+        /// </summary>
+        RectTransform _modes;
+
+        /// <summary>Whether this visit has already decided about the mode lesson.</summary>
+        bool _taught;
+
+        /// <summary>Whether the incoming transition has finished. See <see cref="Teach"/>.</summary>
+        bool _presented;
+
         readonly Dictionary<LevelId, RectTransform> _nodes = new Dictionary<LevelId, RectTransform>();
 
         /// <summary>
@@ -208,6 +222,11 @@ namespace GlimmerGrove
             // slate disc.
             _built = true;
 
+            // The other half of the lesson's timing. A chapter slow enough to hit Flow's
+            // ready timeout is presented before any of this ran, so OnPresented found no map
+            // to teach over and correctly declined; this is where it becomes possible again.
+            Teach();
+
             yield return FocusCurrent();
         }
 
@@ -310,13 +329,23 @@ namespace GlimmerGrove
         void BuildTrails()
         {
             var levels = _layout.Levels;
+
+            // What the last trail leads to, which is the one place the two unlock rules meet.
+            // Inside the chapter a trail is lit when the island it leads to is open; the trail
+            // out of the chapter has to ask the same question of what it leads to, and since
+            // the boundary became a star gate that is no longer "was the last level cleared".
+            // A lit trail running into a padlocked signpost is the map contradicting itself.
+            var onward = LevelUnlock.ChapterAfter(_index, _entry.Id);
+
             for (int i = 0; i < levels.Count; i++)
             {
                 bool last = i == levels.Count - 1;
                 var from = _layout.PositionOf(levels[i].Id);
                 var to = last ? _layout.TeaserPosition : _layout.PositionOf(levels[i + 1].Id);
                 bool live = last
-                    ? PlayerProgress.IsCleared(levels[i].Id)
+                    ? (onward != null
+                        ? LevelUnlock.IsChapterUnlocked(_index, onward.Id)
+                        : PlayerProgress.IsCleared(levels[i].Id))
                     : LevelUnlock.IsUnlocked(_index, levels[i + 1].Id);
 
                 var trail = _map.gameObject.AddComponent<Trail>();
@@ -422,7 +451,14 @@ namespace GlimmerGrove
                 UIKit.Titled("Q", node, "?", 64, new Color(.36f, .38f, .44f), TextAnchor.MiddleCenter,
                              new Vector2(190f, 110f), new Vector2(.5f, .5f), new Vector2(0f, 2f + NodeFaceY),
                              0f, 2f);
-                Plate(node, Loc.Get(onward ? "ui.levels.chapter_locked" : "ui.levels.more_soon"),
+                // The gate, as a number rather than as an instruction. "Clear this chapter to
+                // go on" was true when the boundary was a chain and is now both wrong and
+                // unactionable - a player can be holding nine cleared glades and still be
+                // short. What they need is the count they are working towards, on the node
+                // that is withholding the chapter, so that going back for a second star on an
+                // earlier glade is visibly the thing to do.
+                Plate(node, onward ? GateLine(LevelUnlock.GateFor(_index, next.Id))
+                                   : Loc.Get("ui.levels.more_soon"),
                       new Color(1f, 1f, 1f, .62f), -196f);
             }
 
@@ -431,6 +467,23 @@ namespace GlimmerGrove
             node.localScale = Vector3.zero;
             Tween.Pop(node, 0f, .6f, .18f + PopDelay(count, count));
         }
+
+        /// <summary>
+        /// What a shut gate says, in stars.
+        ///
+        /// <para>
+        /// One string used in two places — the signpost at the end of a chain and the refusal
+        /// a padlocked glade gives — because they are the same sentence and a player who read
+        /// one and then tapped the other would otherwise be told two different things about
+        /// one rule. Falls back to the plain "locked" line for a gate with no chapter behind
+        /// it, which is a catalog nobody can reach and so a validator's problem rather than a
+        /// sentence worth composing.
+        /// </para>
+        /// </summary>
+        static string GateLine(ChapterGate gate)
+            => gate.Exists
+                ? Loc.Format("ui.levels.chapter_gate", gate.Held, gate.Required)
+                : Loc.Get("ui.levels.chapter_locked");
 
         /// <summary>Floating rock with a soft shadow, gently bobbing.</summary>
         RectTransform MakePerch(Vector2 frac, string rock, int seed)
@@ -524,10 +577,8 @@ namespace GlimmerGrove
 
         /// <summary>
         /// The record line, written out rather than assembled, so the build's loc gate can
-        /// see every key. Four of them because "1 turns" is wrong in English and worse in
-        /// languages with real plural rules, and because a glade cleared before the clock
-        /// existed has a move count and no time — a dash where the time goes would read as
-        /// a broken record rather than an untimed one.
+        /// see every key. Two of them because "1 turns" is wrong in English and worse in
+        /// languages with real plural rules.
         /// </summary>
         /// <summary>
         /// The permanent standing on a cleared glade: "TOP 10%".
@@ -551,7 +602,6 @@ namespace GlimmerGrove
             int moves = PlayerProgress.BestMoves(id);
             if (moves <= 0) return;
 
-            int millis = PlayerProgress.BestMillis(id);
             var band = Social.RankTier.Of(PlayerProgress.BestRank(id));
 
             bool ranked = band != Social.RankBand.None;
@@ -618,7 +668,7 @@ namespace GlimmerGrove
             }
 
             var record = UIKit.Titled("Record", bg.transform,
-                                      Loc.Format(RunWording.RecordKey(id, moves, millis), moves, RunClock.Format(millis)),
+                                      Loc.Format(RunWording.RecordKey(id, moves), moves),
                                       ranked ? 28 : 29,
                                       new Color(1f, .96f, .88f, ranked ? .80f : .92f),
                                       TextAnchor.MiddleCenter,
@@ -783,14 +833,20 @@ namespace GlimmerGrove
             // profile, where a lifetime figure belongs.
             Scenery.Pill(Safe,
                          $"{PlayerProgress.TotalStars(_entry)} / {PlayerProgress.MaxStars(_entry)}",
-                         36, new Vector2(196f, 78f), new Vector2(.5f, 1f), new Vector2(0f, StarsY), null, "ic_star");
+                         36, new Vector2(StarsWidth, StarsHeight), new Vector2(.5f, 1f),
+                         new Vector2(0f, StarsY), null, "ic_star");
 
             BuildChapterArrows();
 
             // In the safe layer with the rest of the chrome, and drawn last so it sits over the
             // map. It builds nothing at all while the catalog holds one mode, which is what
             // makes calling it unconditionally safe.
-            ModeSwitch.Build(Safe, _index, Mode, SwitchTo);
+            //
+            // Third in the header stack, and told where that is rather than finding out: the
+            // plaque, the star count and the switcher are one column measured downwards from
+            // BannerY, so a switcher holding its own offset would be a second copy of the same
+            // arithmetic and would stop agreeing with the plaque the first time it was resized.
+            _modes = ModeSwitch.Build(Safe, _index, Mode, SwitchTo, ModesY);
 
             var swipe = UIKit.Titled("Swipe", Safe, Loc.Get("ui.levels.swipe"), 26,
                                      new Color(1f, .96f, .88f, .5f), TextAnchor.MiddleCenter,
@@ -862,6 +918,32 @@ namespace GlimmerGrove
         /// numbers was last changed for.
         /// </summary>
         const float StarsY = BannerY - BannerHeight * .5f - 47f;
+
+        /// <summary>The star count's own size, named because the switcher is stacked under it.</summary>
+        const float StarsWidth = 196f, StarsHeight = 78f;
+
+        /// <summary>
+        /// Where the mode switcher sits: under the star count, on the same centre line as the
+        /// plaque above it.
+        ///
+        /// <para>
+        /// Derived from <see cref="StarsY"/> for the reason <see cref="StarsY"/> is derived from
+        /// <see cref="BannerY"/> — the header is one column, and a typed number here would have
+        /// to be re-found every time anything above it changed height. The star count keeps the
+        /// place directly beneath the name because it is <em>about</em> the chapter that name
+        /// announces; the switcher is about the whole map, so it sits below the pair.
+        /// </para>
+        /// <para>
+        /// Half the star pill's height plus half the switcher's is what turns a gap between two
+        /// controls of different sizes into a gap between their <em>faces</em> — the trap
+        /// <c>UIKit.Corner</c> records, in a stack rather than in a corner. The switcher's height
+        /// is read from <see cref="ModeSwitch.PillHeight"/> rather than typed here, so resizing
+        /// the control cannot leave the map placing it against the size it used to be.
+        /// </para>
+        /// </summary>
+        const float ModesGap = 20f;
+        const float ModesY = StarsY - StarsHeight * .5f - ModesGap - ModeSwitch.PillHeight * .5f;
+
         static readonly Color BannerInk = new Color(.36f, .24f, .16f);
 
         /// <summary>The plaque, kept so the chevrons can be carved into it.</summary>
@@ -982,6 +1064,88 @@ namespace GlimmerGrove
             Flow.Go<LevelsScreen>(v => v.ChapterId = id);
         }
 
+        // ------------------------------------------------------------------ tips
+        /// <summary>
+        /// A beat after the iris, so the first thing a player sees is the chapter they asked
+        /// for and the second is somebody pointing at the switcher.
+        ///
+        /// Long enough to read as a separate moment and short enough that it is plainly about
+        /// this screen; the nodes are still arriving underneath it, which is the point.
+        /// </summary>
+        const float TeachDelay = .55f;
+
+        public override void OnPresented()
+        {
+            _presented = true;
+            Teach();
+        }
+
+        /// <summary>
+        /// Points a first-timer at the mode switcher, once in their life.
+        ///
+        /// <para>
+        /// <b>Why this one control gets a lesson at all.</b> Every other way of playing in the
+        /// game is reached through the pill under this screen's header and through nothing else,
+        /// and that pill is a closed menu naming only the mode you are already in. A player who
+        /// never presses it never learns that the rest of the game is there. Everything else the
+        /// map does is either self-evident or costs nothing to miss. Moving it out of the bottom
+        /// corner and onto the header makes it far harder to miss and does not retire the
+        /// lesson: a closed drop-down still says nothing about what is inside it.
+        /// </para>
+        /// <para>
+        /// <b>Nothing is taught over a control that is not there.</b> <see cref="ModeSwitch"/>
+        /// draws no pill while the catalog holds one mode — a rolled-back client, a drop that
+        /// has not downloaded, or simply the day before a second mode ships — and
+        /// <see cref="TipLedger"/> is a once-in-a-lifetime record joined across every device the
+        /// player owns. Spending the lesson on an absent control would mean it can never be
+        /// shown again, on the very install that most needs it later. So an absent pill is not
+        /// a decision at all: nothing is marked, and the next map asks the same question.
+        /// </para>
+        /// <para>
+        /// It is marked seen by <see cref="TipOverlay"/> on the OK button rather than here, for
+        /// that overlay's reason: a player interrupted mid-tip — a call, a crash, the app swapped
+        /// out — is taught next time instead of never.
+        /// </para>
+        /// </summary>
+        void Teach()
+        {
+            if (_taught || !this || !_presented) return;
+
+            // Never over an empty screen. This is the one screen in the game that can be
+            // presented before it has drawn anything — Flow gives up waiting on View.Ready
+            // after five seconds, and a chapter body that slow still arrives eventually — and
+            // a lesson spent pointing at a blank map is spent for good. So the
+            // map has to exist first, and the wait costs nothing because BuildChapter calls
+            // this again the moment it does. Exactly the bargain HomesteadScreen makes with
+            // its catalog, for exactly the same reason.
+            if (_layout == null) return;
+
+            if (_modes == null) return;
+
+            if (TipLedger.HasSeen(Mechanic.ModeSwitch)) { _taught = true; return; }
+
+            // Something else is already speaking. Nothing on this screen raises a modal of its
+            // own, so this is a guard rather than a case — and giving up costs nothing here,
+            // because the map is the screen a player is returned to after every run.
+            if (Flow.HasModal) return;
+
+            _taught = true;
+
+            Tween.After(TeachDelay, () =>
+            {
+                if (!this || _modes == null || Flow.HasModal) return;
+
+                Flow.Modal<TipOverlay>(v =>
+                {
+                    v.Mechanic = Mechanic.ModeSwitch;
+
+                    // The pill itself, so the ring is cut around the real control on the real
+                    // screen rather than around a description of where it is.
+                    v.Target = _modes;
+                });
+            }, this);
+        }
+
         // -------------------------------------------------------------- focusing
         /// <summary>Open at the bottom, then glide up to whichever glade is next.</summary>
         IEnumerator FocusCurrent()
@@ -1021,13 +1185,29 @@ namespace GlimmerGrove
             if (!unlocked)
             {
                 if (_nodes.TryGetValue(id, out var node)) Tween.Shake(node, 12f, .35f);
-                Scenery.Toast(Content, Loc.Get("ui.levels.locked_hint"), Pal.Parchment, 1.8f);
+
+                // Two rules refuse a glade and they need different sentences. Inside a chapter
+                // it is the chain - clear the one before this. At the head of a chapter it is
+                // the star gate, and telling that player to clear the level before it would
+                // point them at a glade in another chapter they may well have already cleared.
+                var gate = LevelUnlock.IsChapterHead(_index, id)
+                    ? LevelUnlock.GateFor(_index, _index.ChapterOf(id))
+                    : ChapterGate.Open;
+
+                Scenery.Toast(Content,
+                              gate.Exists ? GateLine(gate) : Loc.Get("ui.levels.locked_hint"),
+                              Pal.Parchment, gate.Exists ? 2.4f : 1.8f);
                 return;
             }
             // The gate. Checked on the way in rather than on the way out of a defeat,
             // so a player is never dropped into a glade they cannot afford to lose —
             // being told at the door is a wait, being told at the blast is a wasted run.
-            if (!Profile.CanPlay)
+            //
+            // A mode's free openings walk straight past it, and they have to: a glade that
+            // costs nothing to lose cannot coherently be refused for lack of something to
+            // lose, and the one player this door would shut out is the one who has just met
+            // the mode. See HeartStake.
+            if (!Profile.CanPlay && !HeartStake.IsFree(_index, id))
             {
                 if (_nodes.TryGetValue(id, out var barred)) Tween.Shake(barred, 10f, .35f);
                 Flow.Modal<OutOfHeartsOverlay>();

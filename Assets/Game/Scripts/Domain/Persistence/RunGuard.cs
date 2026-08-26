@@ -65,6 +65,14 @@ namespace GlimmerGrove.Persistence
         /// <summary>
         /// Notes that a run has begun, and <b>flushes it to disk immediately</b>.
         ///
+        /// <para>
+        /// Called only for a run somebody is paying for. A mode's free opening
+        /// (<c>HeartStake</c>) writes no marker at all, and that decision belongs to
+        /// <c>RunScreen.Commit</c> rather than here: <c>Claim</c> runs from <c>Boot</c> before
+        /// any content has loaded, so nothing at the claiming end could ask whether the glade
+        /// was free. Not writing one says it in the only place that still knows.
+        /// </para>
+        ///
         /// The flush is the entire point and is not an optimisation to remove:
         /// <c>PlayerPrefs.SetString</c> writes to memory, and Unity persists that on a clean
         /// quit — which is exactly the exit this type does not care about. Without

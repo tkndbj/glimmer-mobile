@@ -25,18 +25,17 @@ namespace GlimmerGrove
             _view.Begin(Host, rules.Width, rules.Height, rules.SeedFor(Level.Id));
         }
 
-        protected override void Readouts(out string leftCap, out string left, out string middleCap,
-                                         out string middle, out string rightCap, out string right)
+        protected override void Readouts(System.Collections.Generic.List<Readout> into)
         {
-            leftCap = Loc.Get("mode.cap.score");
-            middleCap = Loc.Get("mode.cap.best");
-            rightCap = Loc.Get("mode.cap.height");
+            string score = "0", best = "0", height = "0";
+            if (_view != null) _view.Readouts(out score, out best, out height);
 
-            if (_view == null) { left = middle = right = "0"; return; }
-            _view.Readouts(out left, out middle, out right);
+            into.Add(new Readout(Loc.Get("mode.cap.score"), score));
+            into.Add(new Readout(Loc.Get("mode.cap.best"), best));
+            into.Add(new Readout(Loc.Get("mode.cap.height"), height));
         }
 
-        public override void RestartLevel()
+        protected override void Rewind()
         {
             if (_view == null) return;
 

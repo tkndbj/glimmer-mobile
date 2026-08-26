@@ -103,8 +103,36 @@ namespace GlimmerGrove
         /// </summary>
         public const float MinDraw = .70f;
 
-        /// <summary>The longest, however far it has to go. Past this the rate gives way.</summary>
-        public const float MaxDraw = 2.60f;
+        /// <summary>
+        /// The longest a stroke may take, however far it has to go. Past this the rate gives way.
+        ///
+        /// <para>
+        /// <b>Derived from the loop, not from the stroke.</b> What a player actually waits for is
+        /// <see cref="Cycle"/> — reach, press, draw, lift, rest — because that is how long until
+        /// the sentence beside the hand can be read a second time. Holding that under
+        /// <see cref="LongestCycle"/> seconds is the bar, and it leaves this as the remainder:
+        /// 4.0 less the .38 + .20 + .28 + .95 of fixed beats is 2.19, and this sits just inside
+        /// it. <c>ARepeatNeverOutstaysTheLoopBar</c> is what makes that subtraction a fact rather
+        /// than a comment — it caught this constant a hundredth of a second over the first time.
+        /// </para>
+        /// <para>
+        /// It is rarely reached now that the route is an elbow. An elbow spans at most
+        /// width + height - 2 cells, so the widest shipped grove (7x9) asks for 14 × .19 = 2.66s
+        /// and is trimmed slightly; an ordinary one is four to eight cells and never comes near.
+        /// That is the ceiling doing what it is for — a bigger board must not be a longer wait.
+        /// </para>
+        /// </summary>
+        public const float MaxDraw = 2.15f;
+
+        /// <summary>
+        /// The longest one repeat may last, and the number <see cref="MaxDraw"/> is chosen from.
+        ///
+        /// A demonstration repeats for as long as the panel is up, so this is a loop period
+        /// rather than a duration. Past about four seconds a loop stops reading as "again" and
+        /// starts reading as waiting — which is the point at which a player dismisses the panel
+        /// before the lesson has landed.
+        /// </summary>
+        public const float LongestCycle = 4.0f;
 
         /// <summary>How long the fingertip takes to cross <paramref name="cells"/> cells.</summary>
         public static float DrawSeconds(int cells)

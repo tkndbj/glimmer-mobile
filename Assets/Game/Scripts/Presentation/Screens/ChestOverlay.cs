@@ -28,6 +28,14 @@ namespace GlimmerGrove
     /// </summary>
     static class RewardArt
     {
+        /// <summary>
+        /// One key per <see cref="ChestDropKind"/>, indexed by the enum's own value — so the
+        /// order here is the enum's order and not a preference. The empty slot at index 5 is
+        /// the retired <c>RunTime</c>: its value is frozen because the daily chest vectors key
+        /// on it (invariant 9c), nothing can produce it any more, and an empty string is what
+        /// <see cref="Name"/> already answers for anything it cannot name. Filling it would
+        /// shift every kind after it onto the wrong noun.
+        /// </summary>
         static readonly string[] NameKeys =
         {
             string.Empty,
@@ -35,7 +43,7 @@ namespace GlimmerGrove
             "ui.reward.gems",
             "ui.reward.hearts",
             "ui.reward.heart_boost",
-            "ui.reward.run_time",
+            string.Empty,                       // ChestDropKind.RunTime, retired
             "ui.reward.hints",
         };
 
@@ -236,8 +244,11 @@ namespace GlimmerGrove
         /// <summary>Set the moment Collect is pressed, so it cannot be pressed twice.</summary>
         bool _collecting;
 
-        /// <summary>What each resource pill read before this chest was granted.</summary>
-        readonly long[] _before = new long[3];
+        /// <summary>
+        /// The payout, opened before the chest is granted so it can snapshot what each pill
+        /// read at the time. See <see cref="RewardFlight.Begin"/>.
+        /// </summary>
+        RewardFlight _flight;
 
         // Beat timings, in seconds from the overlay appearing. Named because the numbers
         // are the design: three thumps under two seconds is a tease, and over three is a
@@ -270,7 +281,7 @@ namespace GlimmerGrove
             // pill below where it ever was and then count it up to a gain the player did not
             // receive. The same is true of any prize a rule may clamp later. Reading the
             // balance before the grant cannot be wrong about it.
-            for (int k = 0; k < _before.Length; k++) _before[k] = Balance((ResourceSlots.Kind)k);
+            _flight = RewardFlight.Begin();
 
             if (!DailyChests.TryOpen(ChestIndex, out _drops))
             {
@@ -547,42 +558,19 @@ namespace GlimmerGrove
 
         // ------------------------------------------------------------- collecting
         /// <summary>
-        /// The rhythm of the payout, and it is the design.
-        ///
-        /// <para>
-        /// <see cref="ClearAt"/> is the beat the screen has to itself before anything is
-        /// thrown: the chest, the ribbon, the odds and the button leave, and — crucially —
-        /// the scrim goes with them, because the hub's resource pills are underneath it and
-        /// nothing can be seen flying into a readout the player cannot see yet.
-        /// </para>
-        /// <para>
-        /// <see cref="CardGap"/> staggers the prizes so three of them are three events, and
-        /// <see cref="TokenGap"/> spaces one prize's coins. About fourteen a second: packed
-        /// tighter the landings stop being separable and the rising run of notes turns into
-        /// a rattle, spread thinner and a five-coin prize outlasts the player's interest.
-        /// The cards overlap on purpose — the second starts throwing while the first is
-        /// still in the air, so the screen is never empty and the run of notes never breaks.
-        /// </para>
-        /// </summary>
-        const float ClearAt = 0.26f, CardGap = 0.17f, TokenGap = 0.072f, Flight = 0.54f;
-
-        /// <summary>How many coins one prize throws, however much it is worth.</summary>
-        const int TokensPerDrop = 7;
-
-        int _thrown, _landed;
-
-        /// <summary>
         /// Pays the chest into the hub: every prize breaks into a handful of tokens, they
         /// arc into their own resource pill, and each landing steps that pill's number.
         ///
         /// <para>
-        /// <b>The numbers are rewound first, and that is the trick.</b> The grant happened
-        /// when the chest was opened — deliberately, so a player who kills the app has still
-        /// opened it — and the hub rebuilds its pills the moment the wallet moves, so by now
-        /// they already read the new totals. <see cref="ResourceSlots.Show"/> puts them back
-        /// to what they said before, and the landings walk them forward. The player has been
-        /// looking at a scrim this whole time and has never seen either figure, so nothing is
-        /// being faked: the report simply arrives in the order the events were experienced.
+        /// The cascade itself is <see cref="RewardFlight"/>, which is where the rhythm, the
+        /// rewind and the promise that this panel closes all live. It was written here and
+        /// lifted out when the rewarded ad needed the same thing — see that class for why a
+        /// second copy would have been a second chance to strand a player on a panel with no
+        /// button on it.
+        /// </para>
+        /// <para>
+        /// What stays here is what belongs to a chest: the chrome that has to get out of the
+        /// way, and the row the tokens fall back to once the cards have gone.
         /// </para>
         /// <para>
         /// If no pill can be resolved — the hub is not the screen underneath, or it has been
@@ -595,219 +583,19 @@ namespace GlimmerGrove
             if (_collecting) return;
             _collecting = true;
 
-            if (_drops == null || _cards == null || !CanPayOut()) { Close(); return; }
+            if (_drops == null || _cards == null || _flight == null) { Close(); return; }
+
+            for (int i = 0; i < _drops.Count; i++) _flight.Add(_drops[i], _cards[i]);
+
+            // Every prize was a kind with no pill, or the hub is gone. Cannot happen with
+            // today's drop table on the screen a chest is opened from, and closing is still
+            // the right answer if it ever can.
+            if (!_flight.Any) { Close(); return; }
+
+            _flight.Fallback = _rewardRow;
 
             FadeChrome();
-
-            // Where each pill starts and where it has to end up. Counted per pill rather
-            // than per prize, because two prizes can share one — and because the last token
-            // of a pill is the only thing allowed to write its final figure.
-            var before = (long[])_before.Clone();
-            var after = new long[3];
-            var tokens = new int[3];
-            var landed = new int[3];
-
-            for (int k = 0; k < 3; k++) after[k] = Balance((ResourceSlots.Kind)k);
-
-            for (int i = 0; i < _drops.Count; i++)
-                if (RewardArt.Slot(_drops[i].Kind, out var slot))
-                    tokens[(int)slot] += TokenCount(_drops[i]);
-
-            for (int k = 0; k < 3; k++)
-                if (tokens[k] > 0) ResourceSlots.Show((ResourceSlots.Kind)k, before[k]);
-
-            _thrown = 0;
-            _landed = 0;
-            for (int i = 0; i < _drops.Count; i++) _thrown += Throw(i, before, after, tokens, landed);
-
-            // Nothing to throw at all — every prize was a kind with no pill. Cannot happen
-            // with today's drop table, and closing is still the right answer if it ever can.
-            if (_thrown == 0) { Tween.After(.2f, () => Flow.Dismiss(this), this); return; }
-
-            // Nothing is played here. The button that was pressed has already made its one
-            // sound, and the cascade starts a quarter-second later as its own event — see
-            // Btn.ClickSfx for why a tap does not get to make two noises.
-            //
-            // The panel closes when the last coin lands, and this is the promise that it
-            // closes at all: a landing callback that never arrives — a token whose tween was
-            // interrupted, a pill destroyed at the wrong instant — would otherwise leave the
-            // player looking at an empty screen with no button on it. The reward is already
-            // banked, so there is never a reason to keep them here.
-            Tween.After(PayoutDuration() + 1.4f, () =>
-            {
-                if (this == null) return;
-
-                // Settle before leaving. The pills are standing at rewound figures until the
-                // coins walk them forward, so a payout that did not finish would leave the hub
-                // reading numbers that are lower than the truth until something happened to
-                // rebuild the row — which, on a screen the player may now just sit on, could
-                // be a long time.
-                for (int k = 0; k < 3; k++)
-                {
-                    var kind = (ResourceSlots.Kind)k;
-                    ResourceSlots.Show(kind, Balance(kind));
-                }
-
-                Flow.Dismiss(this);
-            }, this);
-        }
-
-        /// <summary>How long the payout takes if every token flies and lands as scheduled.</summary>
-        float PayoutDuration()
-        {
-            int widest = 1;
-            for (int i = 0; i < _drops.Count; i++) widest = Mathf.Max(widest, TokenCount(_drops[i]));
-
-            return ClearAt
-                 + Mathf.Max(0, _drops.Count - 1) * CardGap
-                 + (widest - 1) * TokenGap
-                 + Flight;
-        }
-
-        /// <summary>True if at least one prize has a pill on screen to fly into.</summary>
-        bool CanPayOut()
-        {
-            for (int i = 0; i < _drops.Count; i++)
-                if (RewardArt.Slot(_drops[i].Kind, out var slot) && ResourceSlots.TryGet(slot, out _))
-                    return true;
-            return false;
-        }
-
-        /// <summary>
-        /// The budget, or the prize itself when the prize is smaller. Three hearts throw
-        /// three hearts — throwing seven and landing them in fractions is the one case where
-        /// the count in the air and the count on the pill visibly disagree. A boost is one
-        /// token because it is one thing, however many hours it runs for.
-        /// </summary>
-        static int TokenCount(ChestDrop drop)
-            => drop.Kind == ChestDropKind.HeartBoost
-                ? 1
-                : Mathf.Clamp(drop.Amount, 1, TokensPerDrop);
-
-        static long Balance(ResourceSlots.Kind kind)
-        {
-            switch (kind)
-            {
-                case ResourceSlots.Kind.Credits: return Profile.Coins;
-                case ResourceSlots.Kind.Gems: return Profile.Gems;
-                default: return Profile.Hearts;
-            }
-        }
-
-        /// <summary>
-        /// Breaks one prize card into tokens and sends them at its pill. Returns how many
-        /// were thrown, so the caller knows when the last one has landed.
-        /// </summary>
-        int Throw(int index, long[] before, long[] after, int[] tokens, int[] landed)
-        {
-            var drop = _drops[index];
-            var card = _cards[index];
-
-            if (card == null || !RewardArt.Slot(drop.Kind, out var kind)) return 0;
-            if (!ResourceSlots.TryGet(kind, out _)) return 0;
-
-            int count = TokenCount(drop);
-            int slot = (int)kind;
-            float start = ClearAt + index * CardGap;
-
-            RewardArt.Token(drop.Kind, out var sprite, out var tint);
-            var tone = RewardArt.Tint(drop.Kind);
-
-            // The card leaves as its tokens do, so the prize is not still sitting there
-            // while copies of it fly away.
-            Tween.After(start, () =>
-            {
-                if (!card) return;
-                Tween.Punch(card, .22f, .26f);
-                Burst.Sparks(card, Vector2.zero, tone, 12, 240f, 22f, .55f);
-
-                // Delayed past the punch rather than overlapping it. Both write localScale,
-                // and two tweens writing one value fight for it every frame they share —
-                // the card would jitter as it left. The overlap is not wasted time either:
-                // the first coins leave while the card is still there, which is what makes
-                // it read as being emptied rather than as being deleted.
-                var group = UIKit.Group(card);
-                Tween.Run(.30f, Ease.InQuad, t =>
-                {
-                    if (!card) return;
-                    card.localScale = Vector3.one * Mathf.Lerp(1f, .1f, t);
-                    if (group) group.alpha = 1f - t;
-                }, card, "leave").Delay(.26f);
-            }, this);
-
-            for (int j = 0; j < count; j++)
-            {
-                int step = j;
-
-                // Read at throw time rather than captured now: the card is still moving
-                // during its punch, and a token should leave from where it actually is.
-                Tween.After(start + step * TokenGap, () =>
-                {
-                    if (this == null || Content == null) return;
-
-                    // The card is still shrinking as its coins leave, so its position is read
-                    // now rather than captured. Both fallbacks matter: the row survives the
-                    // card, and if neither is there the token still has to fly and land, or
-                    // the payout never finishes and the panel never closes.
-                    Vector2 from = card ? TokenFlight.LocalIn(Content, card)
-                                 : _rewardRow ? TokenFlight.LocalIn(Content, _rewardRow)
-                                 : Vector2.zero;
-
-                    // Resolved late for the same reason, and this one is load-bearing: the hub
-                    // rebuilds its whole resource row whenever the wallet moves, so the pill
-                    // this token was aimed at may have been replaced since it was thrown.
-                    Vector2 to = ResourceSlots.TryGet(kind, out var live) && live.Icon
-                        ? TokenFlight.LocalIn(Content, live.Icon)
-                        : from;
-
-                    TokenFlight.Throw(Content, from, to, sprite, tint, 56f, step, 0f, Flight,
-                                      () => Land(slot, before, after, tokens, landed));
-                }, this);
-            }
-
-            return count;
-        }
-
-        /// <summary>
-        /// One token has arrived. The only place a pill's number moves, for the reason
-        /// <see cref="Payout.Land"/> gives: a roll running on its own clock beside a
-        /// particle effect drifts on a slow frame and reads as two unrelated animations.
-        /// </summary>
-        void Land(int slot, long[] before, long[] after, int[] tokens, int[] landed)
-        {
-            landed[slot]++;
-            _landed++;
-
-            bool lastOfPill = landed[slot] >= tokens[slot];
-            bool lastOfAll = _landed >= _thrown;
-
-            long shown = lastOfPill
-                ? after[slot]
-                : before[slot] + (long)Mathf.Round((after[slot] - before[slot])
-                                                   * (landed[slot] / (float)tokens[slot]));
-
-            ResourceSlots.Land((ResourceSlots.Kind)slot, shown, lastOfPill);
-
-            // The run of notes climbs across the whole payout rather than restarting per
-            // prize, so six coins and two gems are one ascending phrase instead of two. It
-            // is driven off the landing counter, not a timer, so the ear hears the rhythm
-            // the eye is seeing however long the flight took on the day.
-            float k = _thrown <= 1 ? 1f : (_landed - 1) / (float)(_thrown - 1);
-            Audio.Sfx("coin", .46f, Mathf.Lerp(.92f, 1.88f, k));
-
-            if (!lastOfAll) return;
-
-            // No haptic anywhere in this overlay, and it is a decision rather than an
-            // omission. Opening a chest used to fire eight — one per thump, one at the lid,
-            // one per prize revealed, one when the payout finished — and `Handheld.Vibrate`
-            // is a single fixed-length pulse on Android that cannot be shortened or
-            // softened, so eight inside four seconds are not eight taps. They overlap into
-            // one continuous rumble lasting the whole animation, which is the opposite of
-            // punctuation: it buzzes hardest during the anticipation and has nothing left
-            // to say at the payoff. Payout.Land refused a haptic for a milder version of
-            // this same reason.
-            Audio.Sfx("chime2", .5f, 1.14f, .06f);
-            Tween.After(.42f, () => { if (this != null) Flow.Dismiss(this); }, this);
+            _flight.Play(Content, () => Flow.Dismiss(this));
         }
 
         /// <summary>
@@ -816,13 +604,13 @@ namespace GlimmerGrove
         /// </summary>
         void FadeChrome()
         {
-            if (_scrim) Tween.Fade(_scrim, 0f, ClearAt);
+            if (_scrim) Tween.Fade(_scrim, 0f, RewardFlight.ClearAt);
 
             for (int i = 0; i < _chrome.Count; i++)
             {
                 var rt = _chrome[i];
                 if (!rt) continue;
-                Tween.Fade(UIKit.Group(rt), 0f, ClearAt * .8f);
+                Tween.Fade(UIKit.Group(rt), 0f, RewardFlight.ClearAt * .8f);
             }
         }
 

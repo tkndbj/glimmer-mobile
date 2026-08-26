@@ -75,9 +75,9 @@ What that means in practice here:
    and every copy was correct until a tile appeared whose arm mask is not the whole of its
    orientation. A **crossing** wears all four arms at every angle, so the mask comparison
    calls every one of them already solved: par comes out short by one per twisted crossing,
-   and par multiplies into the move budget *and* the clock, so a board validates, derives
-   plausible numbers and cannot be finished. Everything now asks the one predicate — par,
-   the budget, the clock, the hint, the near-miss reading and the taproot agreement check —
+   and par multiplies into both star lines *and* the move budget, so a board validates,
+   derives plausible numbers and cannot be finished. Everything now asks the one predicate —
+   par, the budget, the hint, the near-miss reading and the taproot agreement check —
    and it is the code that ships rather than a copy, for invariant 9a's reason in the file
    that had no reason to have two. `content.py` and `author.py` mirror it because they run
    with no Unity anywhere; if you add a tile whose orientation is more than its arms, there
@@ -103,17 +103,18 @@ What that means in practice here:
     none dangles — the tidy boards a player plausibly reaches — and asks which of them win.
     When that count is **one**, the arms alone decide the glade and every other rule on it
     could be deleted without changing a single solution. Twenty-two of the first thirty
-    glades were in that state, which is why brittle stone, taproots and duskcaps all read as
+    glades were in that state, which is why brittle stone, taproots and fords all read as
     absent: they were. The arms are rigid — even a filled 7x7 spanning tree usually admits
     one arrangement — so the free decisions have to be **put** there, and a twisted crossing
-    is the cheapest one, because it wears all four arms at every angle and only colour or the
-    dark can settle it. Three rules follow and each was broken everywhere before it was
+    is the cheapest one, because it wears all four arms at every angle and only colour can
+    settle it. Three rules follow and each was broken everywhere before it was
     written down: brittle stone belongs on a tile the player cannot simply try (so, a
     crossing); a taproot's members must all be tiles the arms cannot settle, or the root is a
-    hint rather than a decision; and a duskcap's ford must sit on a **cycle** of the live
-    network, so the wrong turn wakes the shadow *while every critter stays lit*. That last
-    one is the whole mechanic: if the wrong turn also puts a critter out, the critter tells
-    the player and the shadow taught them nothing. `hazards` is the metric this replaces and
+    hint rather than a decision; and a ford must sit on a **cycle** of the live network, with
+    a **pocket that carries its own heart and its own critter** on the far side — so the
+    wrong turn pours one colour into the other while every critter *the grove* has stays lit.
+    That last one is 5f's subject and is where the duskcap used to sit. `hazards` is the
+    metric this replaces and
     it is worth knowing why it was wrong — it counts rotations that *would* mate two
     networks, but such a rotation leaves an arm dangling elsewhere, so it is not a board
     anybody reaches. A chapter was authored to it and came out reading like a dot-to-dot.
@@ -131,9 +132,53 @@ What that means in practice here:
    near-miss line would have told a player they had finished a glade that will not settle:
    the one thing invariant-by-design it must never do. The fix is one clause — a tile the
    player has lit counts, whatever the solution wanted of it — and
-   `BriarTests.AMisturnedBriarThatLightsTheDarkIsCountedAsADistance` reads 0 on the old rule
-   and 1 on this one. Before adding a tile whose drawn arms and conducting arms differ, ask
+   `BriarTests.AMisturnedBriarThatLightsWhatWasDarkIsCountedAsADistance` reads 0 on the old
+   rule and 1 on this one. Before adding a tile whose drawn arms and conducting arms differ, ask
    what it can now join that no arrangement could join before.
+
+5f. **A wrong turn must be visible somewhere, and the duskcap was the one that never was.**
+   `x` was a creature the light had to never reach: every critter awake and one duskcap lit
+   was an unfinished glade. It shipped in twenty-nine places across four chapters and it is
+   **removed**, because the state it produced is indistinguishable from a bug. Everything
+   else a player can get wrong here announces itself by a critter going out; a woken duskcap
+   left every critter lit and the glade simply refusing to settle, which is exactly what a
+   broken game looks like — invariant 20g's lesson, found first in Lightweave and true here
+   for longer. The panel that explained it was not the fix, for 20g's reason: a rule the
+   board cannot show is a rule the player is always being surprised by.
+   <br>What replaced it costs nothing and is stronger. Every pool of dark is now a **pocket
+   with a heart and a critter of its own**, so the ford still stands on a cycle, the wrong
+   turn still joins two things that must stay apart, and the warning is one critter going
+   out somewhere the player is not looking. `difficulty.py` measures the swap exactly: the
+   `dark` column is gone and `colour` picks up every arrangement it used to reject, `wins`
+   is still 1 on all forty glades and every `par` is unmoved, so **no star, record or wallet
+   moved** — stars are stored and only promoted (invariant 22), and credits derive from the
+   star ledger. Three ids are retired and must never be reused: the token head **`x`**, the
+   lesson id **`duskcap`**, and the level id `c01_duskcap_hollow` is *kept* and its name
+   changed, because an id is permanent (invariant 1) and only the string above it can move.
+   The head is **refused** rather than ignored — a chapter file carrying one is content
+   written for a build that no longer exists, and reading it as anything would put a tile on
+   the board no rule knows what to do with.
+   <br>**The rule has a gate, and writing it is what found the bug in the old one.**
+   `LevelValidator.CheckDecidableTiles` turns every briar and every twisted crossing one step
+   off its solution and refuses to be satisfied unless the glade stops finishing — the
+   consequence, not a proxy for it. It replaces a check that asked only whether *lifting* a
+   briar's thorns would join two networks, which was wrong in both directions: it missed a
+   briar holding apart two networks of the same colour, and it fired on this very pocket
+   shape, where the open pair is the only way into the pocket and both thorned ways lead back
+   into the grove. That false positive is how the fault was found — three Nightbriar boards
+   were quietly redesigned to satisfy a check that was itself wrong, which is the failure
+   mode this file exists to prevent. A **warning**, not an error, because the first board of
+   a mode may legitimately carry a briar as scenery.
+   <br>**The rule exists three times, so it is pinned by a vector file** —
+   `Tools/verify/board-vectors.json`, invariant 9a's shape for a board rule rather than for
+   money. `LevelValidator`, `content.py`'s `decidable` and `author.py`'s `Board.decides` each
+   need it and none can call the others; `BoardVectorTests` proves the C# copy matches the
+   file and `content.py` proves both Python copies do on every offline run, so drift fails a
+   gate instead of printing beside the word "ok". Writing the file immediately earned itself:
+   three of its first crossing cases used `=EW+NS`, which is a *straight* crossing and
+   correctly skipped, so they exercised nothing. The set now carries a twisted crossing that
+   is settled and one on a ring that is not, and `BriarTests` keeps the same shapes inline
+   because those run on every offline compile without anybody opening Unity.
 
 6. **All player-facing text is a loc key.** The build gate scans the source for
    key-shaped literals and fails on any that is missing. Do not build keys by
@@ -480,9 +525,9 @@ What that means in practice here:
     friend_puff`, and four more, each to the companion drawing the same critter flipbook),
     because a retired id resolves to nothing and would leave a hole that still counted as
     occupied. Equally, and unchanged: **nothing in the grove touches a board.** Par is derived
-    from the board, stars from par, the clock from par and the server's earnings from all three,
-    so a grove that granted anything would make every glade a different difficulty per player and
-    no validator could prove one fair again.
+    from the board, stars from par, the move budget from par and the server's earnings from all
+    three, so a grove that granted anything would make every glade a different difficulty per
+    player and no validator could prove one fair again.
 
 16c. **A shop shelf is one idea used three times, and browsing never loads the real art.**
     `GroveShelf` is the shop's tab, the browse atlas and the asset scope — three mechanisms that
@@ -613,6 +658,46 @@ What that means in practice here:
     own word must verify the chain first. Balances clamp at zero rather than going negative —
     a player whose credits silently stop rising for a month uninstalls, and repeat abuse is a
     job for the stores' account bans.
+18d. **A real-money product grants currency, or an idempotent permanent entitlement — never
+    a stored amount, and never both.** This is invariant 18 widened rather than broken, and
+    the widening is what the heart containers cost. Read 18's argument again and notice what
+    it is actually about: hearts and boosts are **amounts**, so a product granting one would
+    need the client to apply half a purchase after the server applied the other half — which
+    means a record of *"did I already apply this transaction's hearts"*, in the save, merged
+    across devices, whose failure mode is somebody paying and receiving nothing. A **capacity**
+    is not an amount. It arrives as the union of one permanent product id, so applying it twice
+    is applying it once and the record has nothing to answer. That is the same property that
+    makes a companion purchase safe to store (invariant 15), and it has three consequences
+    worth stating because each is load-bearing. The entitlement can live **entirely on the
+    client** (`heartContainersOwned`, save v21) and still survive a reinstall, because both
+    stores re-deliver a non-consumable for ever and `HeartContainerLedger.Grant` runs on
+    *every* successful redemption rather than only the first — a Restore is the recovery path
+    and it needs no state of ours at all. The **cap is derived** from the ids against the
+    catalog and is the largest container held rather than the sum, so buying the rungs out of
+    order, buying one twice, or restoring onto a device that already holds a better one all
+    resolve to the same number with no special case. And **never both** is enforced by
+    `StoreCatalog`, `products.ts` and the seeder rather than by convention: a container that
+    also paid gems would put an amount straight back onto the path this reasoning removed it
+    from.
+    <br>**The refund is the half a client-held entitlement cannot see, and it is why there is a
+    second set.** Buy, refund, keep the upgrade is invariant 18c's leak with a $39.99 price on
+    it. So `revokeReceipt` writes the container id onto `players/{uid}/private/wallet` — the
+    document no client may write — and every wallet reply carries it back as
+    `containersRevoked`. Note carefully what that field is **not**: it is not the list of ids
+    the server thinks the account owns. An answer read as a whitelist would confiscate a
+    purchase on any reply that was short, from a cold account, or from a deployment predating
+    the field; an explicit revocation can only be produced by a refund that really happened.
+    Both sets only ever grow, so both are joined by union and two devices converge whatever
+    order they sync in (invariant 11b) — "the newer device is right" would have two phones
+    handing a refunded container back and forth for ever. Buying it again lifts the revocation,
+    in `redeemPurchase`'s own granting transaction.
+    <br>Two smaller things follow. The **supplies shelf now carries real money**, so the guest
+    notice is drawn there too and `ContentValidation` proves the container ladder separately —
+    a container grants no currency, so its value per unit of money is zero and the money
+    ladder's check would fail every shelf it was ranked on. And a container **at or below the
+    free refill cap is an error, not a warning**: both numbers are content, so raising
+    `hearts.refillCap` past a shipped vessel would take real money and change nothing the
+    player can see, from a config push, with no code change to notice it.
 
 19. **Anything a stranger can see is a separate, server-written document.** The save is
     `isOwner(uid)` and stays that way for ever. `players/{uid}` carries the level ledger, the
@@ -791,8 +876,8 @@ What that means in practice here:
     was exactly what made it fail: the same grid, the same conduits, the same critters, with a
     different way to fill it in. It was deleted. What a mode is allowed to share is the
     *world* — the palette, the colour arithmetic, the critters, the sounds — and what it must
-    share is everything about being a **run**: the heart, the stake (`RunGuard`), the clock
-    (`RunClock`), the daily chest, the streak and the star ledger. Those are reached through
+    share is everything about being a **run**: the heart, the stake (`RunGuard`), the daily
+    chest, the streak and the star ledger. Those are reached through
     the same Domain classes rather than copied, because a second copy of the run lifecycle is a
     second place that can come to disagree about when somebody is charged. `LevelsScreen.Open`
     is the one place a mode decides which screen opens.
@@ -883,6 +968,380 @@ What that means in practice here:
     id travels in the save exactly like a level id, so a rule that is deleted spends its id for ever
     rather than having it re-pointed at a rule it never described.
 
+20h. **A chapter's mode is derived from its levels, never typed — and the build gate proves it.**
+    `mode` was the last field of a manifest entry still written by hand, and it is the one field
+    whose absence nothing notices. It decides which screen opens a chapter's levels, which lane of
+    the switcher it sits in and — through `LevelUnlock.GateFor`, which looks for the chapter before
+    this one *in the same mode* — whose stars unlock it. Leave it out and the chapter is indexed as
+    a glade chapter: every level still parses, every board is still proved solvable, every string
+    resolves, every address loads and the build goes green. What ships is a chapter gated on a
+    stranger's stars, filed under the wrong tab and routed to a screen that cannot play it. That is
+    not hypothetical — it happened on the very first sync of the mode's second chapter, and the only
+    symptom was one line in a log. `Sync Manifest` now derives the field, which is invariant 4a's
+    rule for the level list applied to the one field that had escaped it, and
+    `ContentValidation` errors on any disagreement, because deriving makes a mistake unlikely and
+    only a check proves it did not happen anyway — a manifest is a text file, and a step somebody
+    has to remember is a step that gets skipped. The rule lives once, in `ChapterModeValidator`
+    (`GlimmerGrove.Authoring` — reachable by the build gate and by the suite, in no player build),
+    so both callers ask the same copy and `ChapterModeTests` drives the exact configuration that
+    shipped.
+
+21. **A chapter is opened by stars, and only its first level asks.** Inside a chapter the chain
+    is unchanged — clear the level before this one. At a **boundary** the chain gives way to
+    `LevelUnlock.GateFor`: the next chapter opens once the player holds `starsPerLevel` stars per
+    level of the one behind it, which ships as 2, so 20 of a ten-level chapter's 30. The two rules
+    answer different questions and only one is about mastery — ten levels cleared on one star each
+    is a player who never met what the chapter taught, and a player beaten by the ninth of ten had
+    no route forward at all except the board that beat them. A star gate can be met from anywhere
+    in the chapter, so being stuck on one level is never being stuck on the game, and it cannot be
+    met without having played most of it well. It is authored **per level** rather than as a total
+    because a chapter is not a fixed size: 20 is two thirds of ten levels and a fifth of fifty, so
+    a total would be the same number meaning a different rule every drop. Four things follow and
+    three of them were bugs the change laid. `NextToPlay` must return the **furthest unlocked**
+    level rather than the last of the mode — "nothing uncleared is open" no longer implies "the
+    mode is finished", and the old fall-through dropped the hub's continue button onto a padlocked
+    board. The victory panel's Next button asks `IsUnlocked` rather than `index.Next`, or it walks
+    the player straight through the gate the map exists to hold. A chapter opening is a
+    **transition**, so it is measured either side of the record fold in `RunLedger`
+    (`WinRecord.ChapterOpened`) — by the time a panel is built the gate simply reads open, which is
+    indistinguishable from one that opened an hour ago, exactly the trap the streak's `Advanced`
+    exists to avoid. And every screen that said "clear this chapter to go on" now prints the
+    **count**, because the old sentence is both wrong and unactionable to somebody holding nine
+    cleared levels. `ChapterGateTable` is content (`chapterGate` in `progression.json`) for the
+    heart gate's reason — a gate that turns out to be a wall costs installs, and the fix must not
+    cost a store review; 0 is legal and opens everything. **A level already cleared is always
+    open**, and that clause is load-bearing rather than kind: the rule in front of it is content,
+    so it can be raised, and it *did* change under everybody already playing. Without it an
+    account that cleared three chapters at one star each opens a chapter it finished and finds
+    the first level padlocked with the nine behind it open — the chain and the gate answering
+    different questions about one save. It cannot weaken the gate, because a level nobody has
+    cleared is a level nobody has opened. The server has no opinion: unlocking pays
+    nothing, mints nothing and is stored nowhere, so it stays a pure function of the star ledger.
+
+
+22. **A puzzle is graded on the puzzle, so there is no clock anywhere in this game.** Stars
+    were the *worse* of what the turns allowed and what a countdown allowed, and that one word
+    is the whole fault: the turn thresholds are the only half that measures whether a board was
+    solved well, and for anyone who stopped to think the clock's reading was always the lower
+    one — so the good measure decided nothing for exactly the players the boards are designed
+    for. Everything invariant 5d asks of a glade (brittle stone on a tile you cannot simply
+    try, taproots the arms cannot settle, a ford on a cycle) exists to force a
+    *decision*, and a countdown prices deliberation. It also scaled with the wrong thing — the
+    limit came off par, and par is **length**, so a long dot-to-dot got a generous clock and a
+    short board full of twisted crossings got a tight one — and the third star asked 1.35
+    sustained taps a second, which is a motor threshold, the same on a bus as at a desk. Gone
+    with it: `timeFactor`, `difficulty.clockScale` and the whole `DifficultyRuleTable`,
+    `RunClock`, `LevelValidator`'s tap-rate warnings, the `run_continue` rewarded ad, and the
+    timer on the board.
+    <br>**A glade is now measured against three lines and nothing else, and they are even
+    thirds of one slack.** A run can only score inside `[par, par × 1.60]` — 0.60 par of room —
+    cut into three bands 0.20 wide: three stars at **1.20**, two at **1.40**, the run ends at
+    **1.60**. `par` is derived from the board, so a glade authors no difficulty number at all
+    unless it wants a different budget; the only one that does is the first glade in the game,
+    which turns the budget off.
+    <br>**They are one decision in three numbers and must move together — that is the rule this
+    cost us.** The budget was cut from 2.60 to 1.60 while three stars was still `par × 1.35` and
+    two was `par × 2.00`, which put the two-star line *outside* the survivable range: a run
+    still alive had always spent fewer turns than the budget, so **one star became unscorable by
+    anybody**. Every number stayed individually plausible, every board validated green, and a
+    third of the ladder quietly stopped existing. That is invariant 5d's fault moved into the
+    grading — a band nothing can land in is decoration. `LevelValidator.CheckStarBands` and
+    `Tools/verify/content.py` now prove `gold < silver < budget`, and
+    `PressureTests.TheStarBandCheckCatchesAStrandedBand` drives the exact broken configuration
+    that shipped, because a check with no failing case is not a check. Both read the **factors**
+    rather than the thresholds they derive: at par 1 or 2 all three round onto the same number
+    however they are set, and reporting that would be a complaint about board size.
+    <br>**`MoveBudget` has no floor, and that is deliberate.** It clamped to
+    `SilverThreshold + 1` so a run still earning stars could never be the run that ended —
+    sound while the clock was the fail state and the budget was a backstop under somebody
+    drumming, and wrong the moment the budget became the only way to lose, because a fail line
+    past the point where the player has already stopped earning anything is a formality. An
+    authored factor now means exactly what it says. What keeps a budget this tight fair is that
+    the meter counts **committed** wrong turns only: `BoardView.Undo` refunds a turn and is
+    unlimited, and a hint charges none, so trying a crossing and taking it back is free — which
+    it has to be, because a straight conduit and a straight crossing read the same half a turn
+    round (invariant 5c), so exploring is correct play rather than flailing.
+    <br>Three consequences that are easy to get backwards. **Nothing already earned moved**:
+    `LevelRecord.Stars` is stored and only ever promoted, so this re-grades no record — had
+    stars been derived from stored turns and time, every wallet in the world would have
+    inflated on update, because credits derive from the star ledger. The **ceiling** is
+    likewise unmoved by any of the retunes: three stars a level, over however many levels the
+    catalog holds, so what changed is the standard of play needed to reach it and never what it
+    pays. (A content drop does raise it, and is meant to — that is a level being added, not a
+    number being retuned.) And **`run_continue`,
+    `ChestDropKind.RunTime` and `DefeatReason.OutOfTime` are retired ids that must never be
+    reused**, because each travels into analytics, a mediation dashboard or the chest vectors,
+    where re-pointing one silently re-labels history.
+    <br>Two things this changed that were **not** measured, and should be before they are
+    trusted. Every number above was chosen by reasoning about where the bands sit, not from
+    play: `Tools/verify/difficulty.py` was never run against them. And whether the chapter gate
+    (invariant 21, two stars a level) got easier or harder is genuinely unknown — removing the
+    clock can only ever *raise* a star count, while every turn threshold tightened in absolute
+    terms (on a par-36 board three stars went from 49 turns to 44), so it depends which
+    constraint used to bind for a given player. Do not restate either as settled.
+    <br>**`bestMillis` is retired in place, not deleted**, and it is owed a removal. It is on
+    the wire in both directions and `hasOnly` is an allow-list, so dropping a field a
+    rolled-back client still writes is how a save loses *every* write (invariant 12a). It is
+    still merged so times already earned survive, and nothing reads it — but it is now
+    permanently zero for all new data, and the honest end state is to drop it from
+    `FirestoreSaveMapper` and `firestore.rules` in a later schema version once no shipped
+    client writes one.
+
+22a. **A mode with no turns is graded on the count it does keep, never on how fast it was.**
+    Lightweave had no move budget and no move count — it reported a constant — so the clock
+    decided every star, and removing it would have handed three stars to every clear. What
+    replaced it was already there: `WeaveRun.Occupied`, the cells its channels took, against
+    `WeaveLayout.Par`, the sum of every pair's own shortest route. A taut arrangement lands
+    under the three-star line and sprawl does not, which is the mode's own difficulty reading
+    (invariant 20f) seen from the player's side. It fixed a second thing quietly: the record
+    and the published deciles had been fed `par` as the move count, which is a **constant**, so
+    every player who ever finished a grove held an identical "best" and the population ranking
+    for that mode meant nothing.
+22b. **A mode's fail state is a budget in the unit it is graded in — Lightweave's is ink.**
+    22a left a weave unable to be *lost* at all, only forfeited, and named the fix rather than
+    making it. This is it: a grove is dealt `par × budgetFactor` **cells of light**
+    (`WeaveInk`), a channel costs one per cell it covers, and the run ends when the grove
+    provably cannot be finished with what is left. Nothing about the mode's grading moved — the
+    same three factors over the same par, which is what keeps a second mode from quietly
+    retuning the economy (invariant 9) — so the ink is simply the third line of a ladder that
+    already had two, and `LevelValidator.CheckStarBands` is now asked by both modes rather than
+    copied into one.
+    <br>**Spending is permanent and that is the whole mechanic.** Erasing a channel frees the
+    *ground* so a route can be redrawn; it does not give the light back. Without that the meter
+    rejects no arrangement and is decoration, which is invariant 5d for a resource. What keeps
+    it fair is that a wrong move must be cheap to *discover* and only expensive to *keep*: a
+    drag costs nothing until it lands, the drag itself is walled at the ink in hand so a channel
+    nobody can afford can never be drawn, and `WeaveStrokes.Allowance` hands two landed channels
+    back in full — a true undo, restoring the route a redraw replaced rather than leaving the
+    pair bare. Everything past that is paid for.
+    <br>**The mode is five small classes and was very nearly one big one.** `WeaveBoard` is the
+    puzzle — what is drawn, what may be, and facts about the grove (`Floor`, `Reach`, `Settled`).
+    `WeaveInk` is the meter, `WeaveStrokes` the undo stack, `WeaveVerdict` the reading of a board
+    against a meter, and `WeaveRun` the ten lines that let the three move together. All of it
+    shipped inside `WeaveBoard` first, which took one change to become a puzzle model with an
+    economy, an undo stack and a fail state in it — and none of those three could then be tested
+    without building a grove. The split is what makes "two undos and they do not come back" and
+    "a lost run is only ever ended once" arithmetic over integers. `WeaveMode.Validate` takes a
+    **board**, not a run: proving a grove can be finished is not playing one, so it spends no
+    light and writes down no stroke.
+    <br>**Ink spent is the grade**, not `WeaveRun.Occupied`. For a run with no redraw in it they
+    are the same integer (a cell per cell covered), and where they part — the channel drawn,
+    thought better of, and drawn again — the ink is the honest reading, because the light really
+    was spent. One number means the meter on screen and the stars at the end cannot disagree.
+    <br>**The two loss conditions are lower bounds, and they have to be.** Ending a run the
+    player could still have won is the worst thing this mode could do, so `WeaveVerdict` counts
+    each unfinished pair's floor on an *empty* board — no arrangement finishes for less, and none
+    is ruled out, since taking somebody else's channel up is always allowed. The second half is
+    what a floor cannot see: a critter walled in where freeing it costs more than is left, which
+    would otherwise be a board that cannot be finished and will not end (invariant 20g's state,
+    exactly). A pair that is joined but still owes a bead counts in full, because it has to be
+    drawn again. `EndsTheRun` is the third clause and belongs with them rather than in an `if` on
+    the screen: a run decided twice charges two hearts for one loss, and one decided before the
+    first channel lands charges a heart for a board nobody touched.
+    <br>**A tap on a channel no longer erases it**, and that follows from the ink rather than
+    being a separate opinion: the same stray thumb that used to cost a free redraw now destroys
+    something bought, on a screen the player is dragging their hand across. Taking a channel back
+    is asked for by name — the undo key, or drawing the pair again from its crystal. For the same
+    reason the header's one-tap restart became a pause key: a restart deals a fresh pot, so it is
+    the cheapest way out of a grove going wrong and belongs one deliberate tap away, which is
+    where a glade's has always been.
+
+23. **A lost run may be bought back, and the offer comes before the accounting rather than on
+    top of it.** A run that reaches its fail state is offered one more go for gems
+    (`ContinueOverlay`), and only when that is declined does anything about a defeat happen —
+    the heart, the record, the chest count, the streak, the analytics. That ordering is the
+    whole feature: a continue offered *after* `RunLedger.Loss` would be an offer to undo an
+    accounting entry, and undoing one is how a ledger stops meaning anything. `RunContinueFlow`
+    owns it for the reason `RunScreen` owns the stake — this is the one way out of a run that
+    takes money instead of a heart, and two copies would be two prices and two chances to charge
+    somebody for a board that was still lost. It is a **collaborator** rather than more of
+    `RunScreen`, which had reached five responsibilities; `RunLessons` came out at the same time
+    and for the same reason, leaving the screen with what a way out costs and when a run may
+    run. `RunStakeTests` fails if a mode declares any of it, or if either collaborator is folded
+    back in.
+    <br>**It cannot inflate a reward, and that is arithmetic rather than a promise.** Stars are
+    held against par and never against the budget (invariant 22), so a run that has reached its
+    fail state has already spent past the two-star line and can score **one star at most** —
+    less than replaying the glade for nothing would pay. The offer sells a *finish*, never a
+    *grade*. `Puzzle.Granted` and `WeaveInk.Grant` therefore move the budget and touch nothing
+    else; `WeaveInk.Spent` in particular is the grade and is never given back, unlike
+    `Refund`, which is undo's. Nothing about a continue reaches the save file: **no schema
+    version, no merge rule, no server work.** The gems leave through
+    `PlayerProgression.TrySpend`, which carries an idempotency key, works on a plane and is
+    refused by `submitSpends` on the next sync if the server-derived balance could not cover it
+    — the same two lines that buy a companion.
+    <br>**A continue that does not continue is a charge, so the shortfall is cleared first.**
+    This is the half that is not obvious and the half a mode alone can answer. A glade is lost
+    when its counter reaches the budget and *any* turn makes it playable again, so its deficit
+    is nought and the offer is exactly what the table authored. A weave is lost when the light
+    left cannot cover the cheapest possible finish, which usually leaves cells in the pot that
+    cannot be spent — so selling the authored twenty alone would put the player back on a board
+    that is still provably unwinnable and end the run again in the same frame, having taken
+    their gems. `WeaveVerdict.Deficit` is the two lower bounds `Read` already takes, kept
+    instead of thrown away, and `ContinueOffer.Amount` is `deficit + authored`.
+    `RunContinueTests.ContinuingAWeaveHandsOverEnoughToActuallyCarryOn` drives the exact board.
+    A mode that cannot be rescued at any price answers `RunContinue.NoContinue` and is never
+    sold one. And the backstop for everything else is that a grant is never *silent*: if one
+    somehow left the run lost, the fail state fires again and the player is **asked again**
+    rather than billed again.
+    <br>**Short of gems must never navigate.** Every other short balance in this game opens the
+    shop, which is right everywhere else and catastrophic here — the board behind the panel is
+    frozen at its fail state, so a player who tapped "get gems" to *save* their run would lose
+    it on the way to paying for it. `GemShopOverlay` brings the shelf to them instead, stacked
+    on the offer, and steps out from under the receipt when the gems land so the offer is still
+    standing with its price now affordable. It is deliberately not a second shop: no tabs, no
+    supplies, no restore line. Note also which branch is *withdrawn* — short of gems in a build
+    with no store is `ContinueChoice.Unavailable` and no offer at all, because a control that
+    can never work is worse than no control.
+    <br>**The price is content** (`continueRun` in `progression.json`, `ContinueTable`), for the
+    heart gate's and the chapter gate's reason: it is charged to real players at the worst
+    moment in a session, it is the number most certain to be wrong on the first guess, and
+    finding out must not cost a store review. `enabled` is an **integer** tri-state and not a
+    bool — `JsonUtility` instantiates a `[Serializable]` class field even when the JSON has no
+    such key, so a bool would read `false` for every client that had not taken a content push
+    and withdraw the feature silently. `gemsStep` ships at 0, so the price is flat and a run may
+    be continued as often as somebody can pay; the field exists because an escalating continue
+    price is this genre's commonest retune and its shape decides whether that is a push or a
+    review. It is deliberately **not** seeded to `config/progression`: nothing about a continue
+    is adjudicated. And `run_continue` stays a **retired** id — the analytics are
+    `continue_offered` / `continue_bought`, and the spend reason is `continue:`.
+
+23a. **A lost run has two prices and they buy different things.** `RunContinue` sells the
+    *run* — the board stays exactly as it stood, the counter is already past the two-star line,
+    so a bought run can only ever score one star (23). `HeartRescue` sells a *heart*, which is
+    the gate rather than the run: the board is rebuilt from nothing and the fresh attempt is
+    graded like any other. They are offered by different panels in a fixed order — the continue
+    first, over a board that is still standing; the rescue only on the defeat panel that follows
+    it, and only when there is nothing left to play with — so nobody is ever shown both at once
+    and the second is never a way to undo the first's refusal. They ship at the same 20 gems on
+    purpose: the two can be met on one screen a minute apart, and a player who declined one price
+    and is then quoted another reads the pair as haggling.
+    <br>**Neither costs the save file, the wire or the server a thing**, and the rescue is the
+    plainer case: hearts are already a produced/spent ledger merged by `max` (11b) and are
+    already sold for gems in the shop (18), so this is a second call site for two proven paths —
+    no schema version, no merge rule, no server work. It cannot inflate a reward either, because
+    hearts pay nothing: stars come from turns against par (22) and credits from the star ledger
+    (9), so the only thing gems buy here is *sooner*.
+    <br>**The withdrawal switch is `hearts.rescueHearts: 0`, and the price refuses a zero.** Those
+    are opposite readings of the same shape and both are load-bearing. An offer that hands over
+    nothing is not a cheap offer, it is no offer — so nought hearts is the one clean way to say
+    "withdrawn", which a market that regulates paying past a play gate may need from a config
+    push. A *free* heart is the gate no longer gating, so nought gems is refused and named
+    (invariant 5d's complaint about a rule that rejects nothing, applied to the only thing in
+    this game that can stop somebody playing). Both fields carry a negative sentinel for
+    `ContinueDto.enabled`'s reason: `JsonUtility` writes a zero into every field an older file
+    never had, so a default of zero would withdraw the feature silently on every client that had
+    not taken the push.
+    <br>**The free way back is always drawn above the paid one.** `DefeatPanel` owns that, and it
+    is not a layout preference — a panel that puts a price above a rewarded video at the moment
+    somebody has just been stopped from playing is the shape a store reviewer is right to call a
+    dark pattern, which costs a submission rather than a metric. The panel's height is derived
+    there too: it can now take five shapes and its height had been two typed constants (880 and
+    1010), which is the arrangement `PanelStack` was lifted out of a panel that had been drawing
+    its last paragraph 78 units into its own close button.
+    <br>`GemChoice` (was `ContinueChoice`) and `GemPrice.ChoiceFor` are the one branch both
+    offers ask — spend, buy gems, or withdraw the control entirely — for invariant 9a's reason at
+    the smallest scale it appears at. And **short of gems still never navigates**: `GemShopOverlay`
+    is raised over the defeat panel exactly as it is over the continue offer, and the panel
+    underneath repaints when the gems land so the price is affordable without a second tap.
+
+24. **A mode's opening glades cost no heart, and the rule lives in one predicate.** The heart
+    gate is the only thing in this game that can stop somebody playing, and the worst moment to
+    meet it is while they are still working out what the verb is — a player who loses their
+    first three boards to a rule nobody has taught them yet is being charged for our teaching,
+    before they have decided they like the game enough to wait eight hours. So the first
+    `hearts.graceLevels` levels (3, content) of the **first chapter of each mode** cost nothing
+    however they end. Per mode rather than once per account, because a mode shipping a year from
+    now is somebody's first board of that mode: Lightweave is dragged rather than tapped and is
+    lost on ink rather than turns, so a player arriving at it having finished four glade chapters
+    is a beginner again in every sense that decides whether taking a heart off them is fair.
+    <br>**One run has one price, and `RunScreen.Staked` is it.** The rule is `HeartStake.IsFree`
+    and it is asked in exactly two situations: by the screen, once, as a fact about *its level*;
+    and by the map's door, about a board nobody has opened yet. Everything that can take a heart
+    for a run in progress reads the screen's answer — the abandonment (`RunScreen.Forfeit`, which
+    also stops asking for a confirmation over an exit that costs nothing), the marker a dead
+    process leaves behind, and the defeat, which is **told** (`RunLedger.Loss`'s required `staked`)
+    rather than working it out again. Asking twice is what invariant 9a refuses, and the second
+    reading is always the later one, so it is the one that can be wrong.
+    <br>**`Staked` is a fact about the level, not about the run, and that distinction cost a
+    silent bug.** Latching it at `Commit` and clearing it at `Resolve` reads as obviously right —
+    a run is owed for between those two calls and not otherwise. It is wrong, and nothing
+    structural says so: **both modes call `Resolve` a few lines *before* `RunLedger.Loss`**,
+    deliberately, so a crash mid-defeat cannot charge twice. A stake cleared by `Resolve`
+    therefore reads "free" at the exact instant the heart is taken — every lost glade in the game
+    becomes free, with the heart gate still drawn on every screen. It compiled, it validated, and
+    only playing would have shown it. So the answer is resolved once per screen, cached for its
+    life, and untouched by the run lifecycle;
+    `RunStakeLifecycleTests.ResolvingARunDoesNotTurnAPaidGladeFree` drives the exact ordering and
+    was watched to fail against the bug before it was kept.
+    <br>The marker is the other half. `RunGuard.Claim` runs from `Boot` **before any content has
+    loaded**, so nothing at the claiming end can ask whether a glade was free — a free run
+    therefore writes **no marker at all**, which says it in the only place that still knows.
+    <br>**Nothing about it is stored.** A heart is simply not spent; the save file, the wire and
+    the server are untouched, so no schema version, no merge rule and no server work — invariant
+    14's preferred shape, and what makes the window free to retune from a config push at any
+    time. It keys on a level's *position*, which invariant 1 forbids only for things that are
+    **stored**: this is the same derived reading of manifest order that `LevelUnlock`'s chain
+    has always taken, so a drop that inserts a glade at the head of chapter one moves the window
+    onto it — the intended meaning — and moves nothing anybody has earned.
+    <br>**The defeat panel has to tell the two silences apart.** "No heart was taken" is now
+    two opposite pieces of news — nothing was owed, or there was nothing left — so `LossRecord`
+    carries `WasFree` rather than letting the panel infer it from `HeartCharged`. Read the second
+    as the first and the panel offers a retry to somebody who cannot use one; read the first as
+    the second and it refuses one to somebody who can. A free run also replaces the heart row
+    with the reason, because five empty hearts under a run that spent none of them is a picture
+    of a charge that did not happen, sitting directly above a working retry button.
+
+25. **A variable reward the client shows must be one the server can recompute, and the bonus
+    wheel is the third thing built that way.** The victory panel's video offer used to pay a flat
+    figure; it now spins a wheel of eight equal slices, each a **multiplier on that placement's
+    own amount** (`BonusWheel`, `ads.wheel` in `progression.json`). Everything about the placement
+    is unchanged — one video, one server-adjudicated grant, one daily cap, one entry in the
+    published ad table — so the whole feature costs the save file **no schema version, no merge
+    rule and no `claimAwards` work**. The wheel decides the multiplier and nothing else.
+    <br>**Why a multiplier and not eight authored prizes.** A prize the client names is a prize
+    the server has to be told about, and invariant 10d is exactly why it cannot be told: LevelPlay
+    9 carries no per-impression token from the phone to the verification callback, so "the client
+    says it won a thousand" is evidence of nothing. What the server *can* do is recompute — the
+    daily chest's trick (9c) — and a multiplier over an amount it already publishes is the
+    smallest thing there is to recompute. The slice is a pure function of **(account, day, spin
+    index)** through the same `subjectSeed` the golden bonus uses, so `BonusWheel.cs` and
+    `functions/src/wheel.ts` arrive at the same wedge without either telling the other anything,
+    and `wheelCases` in `firebase/shared/reward-vectors.json` fails a build if they ever stop.
+    <br>**The spin index is server-owned, and that is the half that is easy to get wrong.** Two
+    counters that both increment drift the first time a callback is delayed past the next win, and
+    the visible form of that drift is a wheel landing on five hundred while the balance rises by
+    two. So it lives on `players/{uid}/private/wallet` where no client may write, advances only
+    inside the transaction that *grants* a win-bonus view, and rides back on every wallet reply —
+    `containersRevoked`'s shape (18d) for the same reason. `readWallet` must carry it through or
+    the next write deletes it, which is 12a for the third time in that document.
+    <br>**Presence of the field is what says a deployment understands the wheel**, and it is what
+    removes the deploy-ordering hazard rather than writing it down: a client that has heard
+    nothing draws no wheel and falls back to the flat `AdOfferOverlay`, which is exactly what such
+    a server grants. For the same reason an absent `wheel` block means the **flat offer**, never
+    the built-in ladder — the one table here that does not fall back to its own default.
+    <br>**The odds are uniform and printed, because they can be.** Every slice is the same size
+    and equally likely, so the disclosure is one sentence with a number in it (10b's property, for
+    the second feature). A weighted wheel drawn with equal wedges is a lie the picture tells and
+    is the specific lie loot-box rules exist to catch; the variance lives in the ladder, where a
+    player can see all of it at once. A slice may never pay **below the flat offer** (`GoldenRules.
+    MinPercent`'s argument word for word), and a wheel with no slice above it is **refused** — a
+    spin that rejects no outcome is decoration, which is 5d applied to a reward table.
+    <br>**A spin cannot be re-rolled, and that falls out of the seed rather than being enforced.**
+    Backing out, force-quitting mid-animation, or coming back an hour later all recompute the same
+    slice. What advances the index is a *paid* spin, and `WheelStand.NextSpin` is the **larger**
+    of the server's tally and `RewardedAds.WatchedToday` — both count the same thing, and each
+    can be the one that knows more. Taking the server's alone leaves a window between collecting
+    a reward and hearing about it where the wheel re-shows the slice just paid out; the maximum
+    closes it and cannot go backwards. The local half only ever moves in `Redeem`, so an
+    abandoned spin, a dismissed video and a no-fill all leave it exactly where it was.
+    <br>**The economy moved and it was a swap, not a raise.** The shipped ladder averages 218.75%,
+    so `win_bonus` really pays about **438** a view instead of 200 — and its daily cap went from
+    twelve to six in the same drop, leaving the day's ceiling at ~2,628 against 2,400 before.
+    Fewer, better videos. `Validate Content` and `Tools/verify/content.py` both print the real
+    per-view and per-day figures beside the free-play number, because the authored `amount` stops
+    being what a view is worth the moment a wheel is published and nothing else in the file says
+    so.
 
 ## Layout
 
@@ -891,10 +1350,37 @@ Assets/Game/Scripts/Domain/        GlimmerGrove.Domain       (no UnityEngine.UI)
   Board/ Content/ Persistence/ Progression/ Homestead/ Cloud/ Localization/ Analytics/ AssetPipeline/
 Assets/Game/Scripts/Presentation/  GlimmerGrove.Presentation (Domain + UnityEngine.UI)
   App/ Board/ Screens/ Dev/
+Assets/Game/Authoring/             GlimmerGrove.Authoring    (Editor-only; Domain)
 Assets/Game/Editor/                GlimmerGrove.Editor
-Assets/Game/Tests/                 GlimmerGrove.Tests        (EditMode; Domain, Cloud, Presentation)
+Assets/Game/Tests/                 GlimmerGrove.Tests        (EditMode; Domain, Authoring, Cloud, Presentation)
 Assets/StreamingAssets/Content/    manifest.json, chapters/, homestead.json, loc/
 ```
+
+**`GlimmerGrove.Authoring` is the home for a rule that decides whether content is fit to ship
+and that no player ever runs.** It exists because those rules are under two constraints at once
+— the build gate has to reach them, and so does the test assembly, which references `Domain` and
+*not* `Editor` — and for a long time `Domain` was the only place that satisfied both. So a seed
+sweep, a map-collision check and a chapter-mode check were compiled into every player build and
+never called. An Editor-only assembly both can reference satisfies the same two constraints and
+none of the third. The membership test is mechanical: **a rule belongs there when no shipped type
+references it**, and `compile.py` proves it by building `domain` *without* `Authoring` on its
+reference list, so a Domain file that starts calling into it fails offline rather than quietly
+dragging the folder back into the build. `Assets/Game/Authoring/README.md` says what is
+deliberately *not* there and why — which is now one thing, `WeaveSolver`, because
+`WeaveGenerator` runs `AnyTautSolution` on the phone and `Measure` is a short loop over the
+same search.
+
+**A mode is declared three times, and the third one is what moved the validator.** `LevelMode`
+(Domain) says what a mode *is*; `ModeLook` (Presentation) says what it *looks like*, split off
+because Domain may never reference Presentation; `ModeValidator` (Authoring) says how it is
+*proved fit to ship*. That last split is what let `LevelValidator` — six hundred lines proving
+boards solvable, arms mated, taproots binding, star bands landable — leave the player build.
+It could not before: `LevelMode.Validate` was a `virtual` member, so the authoring entry point
+called into the mode and the mode called back into it, and the cycle pinned both wherever the
+runtime could see them. The price of a registry over an abstract member is that an entry can be
+*missing* where an override cannot, and a missing one is silent in the worst way — a green tick
+over a mode nothing looked at. So `LevelValidator` reports an unregistered mode as an **error**
+rather than a pass, and `ModeValidatorTests` fails the build when the two registries drift.
 
 `Assets/Game/CONTENT.md` is the authoring and pipeline guide. Read it before touching
 content, assets or localisation.
@@ -909,10 +1395,15 @@ scripts fail to compile. Do not guess — verify offline:
   including the reference-assembly and shim details that took several attempts to
   get right.
 - **Content check:** parse the StreamingAssets JSON, prove every level solvable,
-  derive par, confirm every loc key resolves.
+  derive par, confirm every loc key resolves. It also runs `board-vectors.json` through both
+  Python copies of the four-armed-tile rule; `BoardVectorTests` runs the same file through the
+  C# one (invariant 5f).
 - **Difficulty check:** `python Tools/verify/difficulty.py` — what each glade actually asks
   of a player, counted rather than argued about. Not a gate; see invariant 5d and
-  *What makes a glade hard* in `CONTENT.md`.
+  *What makes a glade hard* in `CONTENT.md`. It enumerates rotations of a grid of conduits,
+  so it reports glades and names the other modes as skipped rather than stopping on them —
+  it used to die on a `KeyError` at the first non-glade chapter, which was every run since
+  the Hollow shipped.
 - **Word list check:** `python Tools/make_name_blocklist.py --check` proves the checked-in list
   is what the tool would write, and refuses the four ways a blocklist goes quietly wrong. The
   filter itself is `npm --prefix firebase/functions test` (`names.mjs`, `reports.mjs`).
@@ -935,7 +1426,12 @@ scripts fail to compile. Do not guess — verify offline:
   reason, so an ordinary log line on the path being tested no longer decides whether the rule
   can be proved offline.
 - **In the Editor:** `Glimmer Grove ▸ Validate Content`, `▸ Validate Art`, and
-  Test Runner (EditMode).
+  Test Runner (EditMode). **Reload the domain before believing a failure that follows a play-mode
+  session.** `Boot` starts the cloud backend and its threads, and those statics survive leaving
+  play mode — so `AccountSwitchTests` fails on a main-thread violation (`GetString can only be
+  called from the main thread`) raised by a sync that is still running, in a test that passes on
+  every clean domain. `EditorUtility.RequestScriptReload()` and re-run: 1241/1241. The failure has
+  nothing to do with whatever was just edited, which is exactly what makes it expensive.
 
 Builds are gated: `ContentBuildGate` fails the build on any content error.
 
@@ -979,6 +1475,16 @@ Builds are gated: `ContentBuildGate` fails the build on any content error.
   `OnCollisionEnter`, `OnAnimatorIK`) are deliberately not on the list, because flagging
   those would make the check noise nobody reads. It lives in `compile.py` rather than in a
   seventh script for the reason the importer hook is not a menu item.
+- **A taproot whose members are four-armed conduits binds nothing, and only the Editor
+  says so.** A four-armed tile wears all four arms at every angle, so `Puzzle.Alike` calls
+  every rotation of it solved — which means `Board.root` hands it a start rotation of zero
+  and the rune becomes paint. Nothing offline sees it: `author.check()` passes, the board is
+  winnable, par is right, and `difficulty.py` reports the root removing nothing, which is
+  also what an honest root on open ground reports. `ContentValidation` is the only thing
+  that says it out loud ("every conduit on taproot 'A' looks the same in every
+  orientation"), and it caught the first cut of `c01_bound_roots`. `c01_shallows.py`'s
+  `taproot()` now asserts a period above one where the board is authored; the same trap is
+  waiting for any chapter that hangs a fourth stub off a hub it meant to bind.
 - **Unity only re-resolves packages and reimports on window focus.** If a change seems
   not to apply, the Editor probably has not been clicked.
 - **An Editor launched from the Hub gets a minimal `PATH`, and one failed post-processor
@@ -1009,6 +1515,21 @@ Builds are gated: `ContentBuildGate` fails the build on any content error.
   Mono/ICU divergence in invariant 19e, in arithmetic rather than Unicode, and invisible to every
   check that runs on one runtime. The slack is now the exact fraction `13/10` in integer
   arithmetic, and `Tools/verify/weave.py` diffs both runtimes so it cannot come back quietly.
+- **Nor may a float decide a *threshold*, and that one shipped.** The same fault in the
+  numbers a player is graded against, and worse in one way: `1.20f` is 1.20000004768…, so
+  `Mathf.CeilToInt(45 * 1.20f)` is **55** where `par × 1.20` is exactly 54, and 61 against 60
+  at par 50. Every runtime is wrong the *same* way, so unlike the generator above no diff
+  could find it — it disagrees with arithmetic rather than with another runtime, and the only
+  thing that ever noticed was the offline mirror, which had always used integers and whose
+  table nobody was comparing. Four glades granted a turn more for three stars than the design
+  says, for as long as the three lines have existed. `LevelTuning` now holds each factor as
+  hundredths (`GoldHundredths`) and derives every threshold with `(par * n + 99) / 100`; the
+  floats are what an author writes and what a retune moves, and nothing that produces a graded
+  number reads them. `CheckStarBands` compares the hundredths for the same reason — a check
+  that disagrees with the thing it checks is worse than no check.
+  `PressureTests.AThresholdIsExactWhereTheProductLandsOnAnInteger` pins the two pars that
+  caught it. Note what made it survivable: `LevelRecord.Stars` is stored and only promoted
+  (invariant 22), so tightening a line re-grades nothing anybody has already earned.
 - **Two Google ads SDKs cannot share an APK, and a mediation adapter can drag in the second
   one.** Google ships the legacy `com.google.android.gms:play-services-ads` and a
   next-generation `com.google.android.libraries.ads.mobile.sdk:ads-mobile-sdk`; both define
@@ -1107,13 +1628,27 @@ Builds are gated: `ContentBuildGate` fails the build on any content error.
 Everything here runs without Unity unless it says otherwise.
 
 - `Tools/verify/` — `compile.py`, `tests.py`, `content.py`, `loc.py`, `names.py`,
-  `difficulty.py`, `weave.py`. See *Verifying*.
+  `difficulty.py`, `weave.py`, and `board-vectors.json`, the shared contract for the rule
+  that exists in `LevelValidator`, `content.py` and `author.py` at once. See *Verifying*.
 - `Tools/chapters/*.py` — one module per glade chapter; regenerates the shipped JSON and
   `--check`s itself against it. `author.py` is the shared board DSL (`cross`, `root`, `briar`,
   `path`), and it derives a taproot's start rotations from the taps the root should cost rather
   than leaving four numbers that have to agree.
 - `Tools/hollow/` — the Hollow's rule mirror, board generator and `build_chapter.py`. The
   mirror is never authoritative; the shipping C# solver is what `Validate Content` runs.
+- `Tools/weave_seeds.py` — which seed a Lightweave level should author, swept offline and in
+  parallel. It compiles the **shipped** `WeaveSeedSearch` rather than mirroring it, so the bar a
+  rung is chosen against is the bar `Survey Lightweave` and `WeaveLadderTests` hold it to. `pool`
+  reports every usable board a shape deals, `sweep` filters to a band, and `confirm` re-measures
+  a shortlist on **both** .NET 8 and Unity's Mono and refuses any that disagree — run it on
+  whatever a chapter ends up authoring before the numbers go into a test.
+- `Tools/render_wheel.py` — draws the bonus wheel exactly as `WheelFace` does, without Unity.
+  `render_grove.py`'s argument for the one other object here whose quality is only visible as a
+  picture: everything provable about the wheel is proved, and none of it can say whether the
+  colour ramp reads as worse-to-better or whether the twelve slices content could publish
+  tomorrow would collide. It found four faults in one pass — near-black wedges, a ramp that put
+  five of eight slices on one colour, two warm rungs that darkened to olive, and a jackpot the
+  same gold as the rim.
 - `Tools/grove_art.tsv` + `import_grove_art.py` — one row per grove piece (source, permanent
   id, slot kind, price, scale, lift, name). Copies the art, writes the loc string, regenerates
   the catalog and bumps `groveVersion`. It **refuses to remove an id it imported before**,
@@ -1141,46 +1676,60 @@ re-reading before changing something, it is in one of those two sections and not
 - **Content pipeline** — levels as data in `StreamingAssets/Content/`, stable `LevelId`s,
   manifest-built `CatalogIndex`, lazy chapter bodies, `Content ▸ Sync Manifest`, build gate.
 - **Save** — versioned atomic file with checksum, backup rotation, corrupt-file recovery,
-  tested migrations, monotonic merge (`SaveMerge.Join`). **Save schema v20.**
+  tested migrations, monotonic merge (`SaveMerge.Join`). **Save schema v21.**
   Content schema: manifest and chapter bodies **v2**, grove body **v3**.
 - **Cloud** — Firebase (Firestore + Auth + Functions), anonymous by default, Apple/Google
   linking, per-account local archive for switching, `SyncScheduler` debounce/backoff.
 - **Progression** — derived XP, keeper levels and credits from the star ledger; high-water
-  floors only. Hearts and hints are produced/spent ledgers (`RegenLedger`).
+  floors only. Hearts and hints are produced/spent ledgers (`RegenLedger`). Levels chain inside
+  a chapter; chapters open on stars (`LevelUnlock`, invariant 21). A mode's opening glades are
+  free to fail (`HeartStake`, see below).
 - **Retention** — daily chests, streak (collected by hand), golden glades, event calendar,
-  percentile standings, per-glade records (turns + time).
+  percentile standings, per-glade records (turns).
 - **Economy** — real-money shop (Unity IAP 5.4.2), gems as the soft sink, rewarded ads,
-  refund sweeps, server-adjudicated grants.
+  refund sweeps, server-adjudicated grants, a gem-priced continue on a lost run that costs
+  the save file nothing (invariant 23), and a bonus wheel on the victory panel's video offer
+  that costs it nothing either (invariant 25).
 - **The Grovement** — 14x14 isometric tile floor, land regions bought with credits, decor
   bought by the copy, residents projected from the companion roster, derived grove worth.
 - **Boards** — public `groves/{uid}` cards, published rank distribution, unique keeper names
   with server-side filtering and reporting.
 - **Two modes beyond the classic glade** — the Hollow (`h01_emberfall`) and Lightweave
-  (`w01_lightweave`). See *Modes* below.
+  (`w01_lightweave`, `w02_nightloom`). See *Modes* below.
 - **Privacy/ads plumbing** — Google UMP consent, ATT prompt, `app-ads.txt` (placeholders).
 - **Verifying** — `Tools/verify/` in the repo (see the *Verifying* section).
 
 ### Content shipped
 
-| Chapter | Mode | Levels | Par range | `timeFactor` | Subject |
+| Chapter | Mode | Levels | Par range | `budgetFactor` | Subject |
 |---|---|---|---|---|---|
-| `c01_shallows` | glade | 10 | 34–61 | 2.20 → 1.50 | the verb, then brittle stone, roots, taproots, duskcaps |
-| `c02_millvale` | glade | 10 | 36–63 | 1.95 → 1.55 | the crossing |
-| `c03_amberwood` | glade | 10 | 44–70 | 1.85 → 1.50 | colour as the subject; no new rule |
-| `c04_nightbriar` | glade | 10 | 42–69 | 1.90 → 1.45 | the briar |
+| `c01_shallows` | glade | 10 | 10–50 | none, then default | the verb, then colour, blending, rooted stone, brittle stone, taproots, pockets of colour |
+| `c02_millvale` | glade | 10 | 36–63 | default 1.60 | the crossing |
+| `c03_amberwood` | glade | 10 | 44–70 | default 1.60 | colour as the subject; no new rule |
+| `c04_nightbriar` | glade | 10 | 42–69 | default 1.60 | the briar |
 | `h01_emberfall` | hollow | 10 | 1–2 sparks | — | ladder is *how few openings win*: 7,8,6,4,2,3,4,1,4,1 |
-| `w01_lightweave` | weave | 10 | 19–64 | 5.0 → 3.2 | pairs 3→6, beads 0→5; slack 2 → 8 and ways 230 → 2 |
+| `w01_lightweave` | weave | 10 | 19–64 | default 1.60 (ink) | pairs 3→6, beads 0→5; slack 2 → 8 and ways 230 → 2 |
+| `w02_nightloom` | weave | 10 | 63–74 | default 1.60 (ink) | six pairs throughout, beads 5→6; slack 8 → 16 and ways 305 → 7 |
 
-The Weftwood's `timeFactor` moved because **par** did, not because the clock did. Par used to be
-the carved solution's length, which fills the grove — so a 7x9 board carried a par of 63 whatever
-its pairs were doing. It is now the sum of the pairs' own floors plus a cell of looking per pair
-and per bead (`WeaveLayout.Par`), which on the same board is 64: the multiplier moved so the limits
-would stay where they were rather than being cut by a third on the drop that also changed the
-puzzle. Three stars is still `par` seconds, so a clear is worth exactly what it was worth.
+**No level authors a difficulty number except the first glade in the game, and no chapter authors
+a clock** (invariant 22). Par is derived from the board; both star lines and the losing line are
+multiples of it — 1.20, 1.40 and 1.60, which are even thirds of the slack. Glade one turns the budget off entirely: nine tiles and
+three critters, and a lost heart in the first minute is the most expensive heart in the game. A
+per-chapter budget ramp was tried and removed — the budget is a fail line, and difficulty is the
+boards' job (invariant 5d).
 
 Par is **never** monotonic within a chapter — par is length, not difficulty, and ten rising
 numbers read as a treadmill. A chapter's dip is usually its taproot board (one tap moves
-several conduits and par charges once).
+several conduits and par charges once). The Shallows dips at glades five and nine.
+
+**The first glade in the game cannot be lost, and that is the one place `budgetFactor: -1`
+is used.** Both star lines are derived from par and neither is authorable — three stars is
+`par × 1.35` turns, two is `par × 2.00` — so the only lever content has over whether a board
+can be *lost* is its budget, which is what the DTO documents a negative for. Everything after
+glade one carries one, loosened through the Shallows because it is teaching. **None of this
+moves the economy**: earned credits are derived from the star ledger, and the star lines are
+held against par rather than against the budget, so tightening a budget cannot deflate a
+reward.
 
 Chapter art is generated: `Tools/chapters/*.py` regenerate the shipped JSON and self-check
 against it; `Tools/make_chapter_art.py` reads names and colours out of the chapter's own JSON
@@ -1195,8 +1744,9 @@ One verb — turn a conduit, light a critter — with modifiers, and no second s
   cannot simply try, so in practice a crossing.
 - `!` **rooted** — cannot be turned. Authored at `/0` (invariant 5c).
 - `&A` **taproot** — every conduit carrying the rune turns as one; charged once in par.
-- `x` **duskcap** — any light wakes it and a woken one means the glade is unfinished. Its
-  ford must sit on a *cycle* of the live network.
+- a **pocket** is not a tile — it is the shape that replaced the duskcap (invariant 5f): a
+  heart and a critter of another colour behind a ford, where the ford sits on a *cycle* of
+  the live network so the wrong turn costs the grove nothing and the pocket everything.
 - `=NS+EW` **crossing** — two strands through one tile that never meet. Straight is inert;
   twisted is worth exactly one tap. No hub disc.
 - `%NS+EW` **briar** — four arms drawn, two conducting; one tap swaps which. Order of the
@@ -1204,21 +1754,21 @@ One verb — turn a conduit, light a critter — with modifiers, and no second s
 
 `Tools/verify/difficulty.py` is the instrument that says whether any of that is doing work —
 see invariant 5d. `hazards` is the metric it replaced and is wrong; `arms`/`wins`/`glance`/
-`dark` are the ones to author against.
+`colour` are the ones to author against. It does not yet skip a chapter that is not glades,
+so it raises `KeyError: 'width'` on `f01_lightfall` after printing all four glade chapters —
+long-standing, and unrelated to anything it reports.
 
 ### Modes
 
-**Classic glade** — `PlayScreen`. Turn conduits, light every critter. The clock is the fail
-state and the move budget is the backstop under somebody flailing: at the shipped factors,
-running out of *turns* first needs ~1.3 taps a second sustained without solving.
+**Classic glade** — `PlayScreen`. Turn conduits, light every critter. The move budget is the
+only fail state (invariant 22) at `par × 1.60`, and `Undo` refunds a move, so exploring a
+crossing that reads the same half a turn round costs nothing.
 
 **Hollow** (`HollowScreen`) — a field of sleeping critters and a short *ordered* queue of
 sparks. Light accumulates and never decays, so a player can never be stuck, the only endings
 are winning and running out, and unlimited undo is safe. Par is the fewest sparks that finish
 the board, found by search (`HollowSolver`), never authored. Boards are searched for, not
-typed — `Tools/hollow/`. Duskcaps parse and are implemented but no hollow uses one, and that
-is a finding rather than an omission: every critter must wake and a waking critter feeds all
-four neighbours, so a duskcap is either ruined by the board or unreachable.
+typed — `Tools/hollow/`.
 
 **Lightweave** (`WeaveScreen`) — drag a channel from each crystal to its critter without
 crossing, and thread every **bead**: a hexagonal ring on the ground that its own colour must pass
@@ -1234,6 +1784,20 @@ invariant 20g, and both are gone. A bead asks for the same thinking and points a
 Boards are *generated from a seed*, so determinism across runtimes is the property the mode rests
 on — `Tools/verify/weave.py` diffs .NET 8 against Unity's Mono, boards and beads alike.
 
+**Two chapters.** The Weftwood teaches the mode: three channels growing to six, the first ring on
+its third grove, slack 2 → 8. The Nightloom asks. It opens on what the Weftwood closed on — all six
+colours, five rings, and eight cells of forced detour on its very first board — and climbs to
+sixteen, twice anything the Weftwood ever forced, with a sixth ring from its fifth grove on. Nothing
+about the second chapter is code: it is a JSON body, a manifest entry, thirty-one strings and its
+own map art. `WeaveLadderTests` holds *every* chapter to one set of rules rather than one copy per
+chapter, and `TheSecondChapterAsksMoreOfEveryGroveThanTheFirst` is the cross-chapter claim — on
+slack, colours and size, which are the readings that mean the same thing in both. **`ways` is
+deliberately not compared across chapters**: it counts arrangements within `WeaveSolver.Latitude` of
+the *best* one, and the best one moves with slack, so the Nightloom's opening count is taken in a
+band the Weftwood's finale never reached. Asserting it fell across the join would be a rule about
+two different measurements, and the only way to satisfy it would be to author a gentler second
+chapter.
+
 A grove is measured two ways and needs both (invariant 20f). **`slack`** is the least total detour
 any arrangement has, over and above every pair's own shortest possible route: zero means every pair
 can go as directly as it could, all at once, and the grove asks nothing. **`ways`** is how many
@@ -1247,15 +1811,21 @@ against both. The cheap half — is there any arrangement in which everybody goe
 phone as the generator's acceptance bar. `WeaveGenerator.MinReach` is the separate rule about
 *placement*: no pair's ends may be close enough to join by a reflex.
 
-A weave record is a **time** and nothing else, and the win panel is deliberately **routeless** —
-there is no move count here to compare against the board's own solution, so a route bar would print
-the same sentence for every player who ever finished.
+A weave record is the **cells of light its channels spent**, which is also what it is graded on
+and what it is lost on — see invariants 22a and 22b for why that replaced a clock, what it fixed
+about the published deciles, and why the mode needed a fail state at all. A grove is dealt
+`par × 1.60` cells of ink; spending is permanent, two landed channels a grove may be undone in
+full, and a tap on a channel does nothing. The win panel is deliberately **routeless**: a weave's
+carved solution is one arrangement out of many equally good ones, so a route bar would print the
+same verdict for everybody.
 
 Shared by every mode: `RunLedger` (record, chests, streak, reward, analytics — and it builds
 the `RunOutcome` *before* folding the record in, because half of what it describes stops being
-true after), `RunScreen` (defeat/pause/forfeit panels), `RunGuard` (a committed run is paid
-for however it ends), `RunClock`, `PlayRoute` (which screen opens a level — answered once),
-`RunWording` (turns vs sparks). `LevelsScreen.Open` is the one place a mode decides its screen.
+true after), `RunScreen` (defeat/pause/forfeit panels, and the continue offer that comes before
+all three — invariant 23), `RunGuard` (a committed run is paid for however it ends),
+`PlayRoute` (which screen opens a level), `RunWording` (turns vs sparks). `LevelsScreen.Open`
+is the one place a mode decides its screen. A mode joins the continue by answering three
+questions — `MeasuredIn`, `ContinueDeficit`, `ContinueWith` — and never gets at the price.
 
 ### The numbers
 
@@ -1268,22 +1838,52 @@ Free play collects about **593 credits and 6 gems a day**; `Tools/verify/content
   (9 regions, a free 6x6 starter), 270,500 residents. 150 priced pieces, of which 99 sell
   in bundles of ten at what one used to cost. Home ladder 5 rungs, first free.
 - **Grove star ladder** — 10K / 20K / 50K / 100K / 200K, content in `homestead.json`.
-- **Hearts** — refill cap 5, ceiling 50, 8h refill (4h boosted). A loss costs one.
+- **Hearts** — refill cap 5, ceiling 50, 8h refill (4h boosted). A loss costs one. The
+  **first 3 levels of the first chapter of each mode cost nothing** (`hearts.graceLevels`,
+  content) — see the note below. The cap is per player: a **heart container** raises it to
+  10, 20 or 50 permanently (invariant 18d), derived from `heartContainersOwned` and read by
+  every screen through `Wallet.MaxHearts`.
 - **Hints** — pool of 3 account-wide, one back every 8h, ceiling equals the cap (a granted
   hint at a full pool is refused, not clamped). A hint charges no moves.
 - **Streak** — a 7-night lap that wraps: 500 credits, 1 heart, 5 gems, 2 hearts, a 12h boost,
   3 hearts, 10 gems.
-- **Ads** — five placements, all opt-in, no interstitials: `heart_refill` 2 hearts,
-  `coin_bonus` 1,000 credits, `run_continue` 30s, `win_bonus` credits, `hint_refill` 1 hint.
-  Daily caps 20/12/16/12/10 — deliberately above what any network will fill, so they bind
-  only as a lever that can be lowered. `AdRules.MaxDailyCap` 30 is a hard `const`.
-- **Shop** — 13 products. Gems 100 → 8,500 for $0.99 → $49.99; coins 2,500 → 75,000 for
-  $1.99 → $39.99 (the whole catalog is ~$146); starter bundle a $2.99 non-consumable;
-  5-heart refill 50 gems, a day of fast hearts 30 gems.
-- **Stars** — the worse of moves and time. Gold is `par × 1.00` seconds, silver `par × 1.50`,
-  held against **par** and not against the limit, so tightening a clock cannot deflate the
-  economy. `difficulty.clockScale` (0.6–2.0, `DifficultyLimits`) multiplies every limit and
-  reaches nothing stored and nothing published.
+- **Ads** — four placements, all opt-in, no interstitials: `heart_refill` 2 hearts,
+  `coin_bonus` 1,000 credits, `win_bonus` credits, `hint_refill` 1 hint. (`run_continue` is
+  retired — invariant 22.) Daily caps 20/12/**6**/10 — the first, second and fourth are
+  deliberately above what any network will fill, so they bind only as a lever that can be
+  lowered; `win_bonus` is the exception and its six is a real bound, because the wheel more
+  than doubled what one view of it pays. `AdRules.MaxDailyCap` 30 is a hard `const`.
+- **Bonus wheel** — eight equal slices on `win_bonus`, at 100 / 200 / 150 / 300 / 100 / 250 /
+  150 / 500 percent of its authored 200, so the rim reads 200 / 400 / 300 / 600 / 200 / 500 /
+  300 / **1,000** and every slice is a 1-in-8 chance. Mean 218.75%, so a view really pays about
+  **438** and a capped day about **2,628** — against 2,400 under the old flat 200 at a cap of
+  twelve. Content (`ads.wheel`), and removing the block puts the flat offer back. Invariant 25.
+- **Shop** — 16 products. Gems 100 → 8,500 for $0.99 → $49.99; coins 2,500 → 75,000 for
+  $1.99 → $39.99; starter bundle a $2.99 non-consumable; 5-heart refill 50 gems, a day of
+  fast hearts 30 gems. **Heart containers** `gg_heart_vessel_1/2/3` — non-consumables at
+  $19.99 / $29.99 / $39.99 raising the refill cap to 10 / 20 / 50, on the supplies shelf
+  under the gem-priced hearts, and the only real-money products that grant something other
+  than currency (invariant 18d). The whole catalog is ~$236.
+- **Stars** — turns and nothing else (invariant 22). Gold is `par × 1.20`, silver `par × 1.40`
+  and the run ends at `par × 1.60`: even thirds of the slack between a perfect run and death,
+  so all three bands are landable. Held against **par**, never against the budget. Move one and
+  you move all three — `LevelValidator.CheckStarBands` proves the ordering. Every threshold is
+  `ceil` of exact hundredths, never of a float product: `par × 1.20` at par 45 is 54, and the
+  game said 55 on four glades until it was — see *Hard-won facts*.
+- **Chapter gate** — the next chapter opens at **2 stars a level** of the one behind it, so
+  20 of 30 on today's ten-level chapters. Content (`chapterGate`), per mode, and the first
+  chapter of every mode is always open.
+- **Heart rescue** — **20 gems** for **+2 hearts** on the defeat panel, when there is nothing
+  left to play with (invariant 23a). The same gems-per-heart as the shop's smallest pack
+  (50 for 5), which `Validate Content` and `content.py` both check against — never against the
+  bulk pack, which is a volume discount every honest tuning is dearer than. It buys a *fresh*
+  attempt, graded like any other. Content (`hearts.rescueGems` / `hearts.rescueHearts`), and
+  `"rescueHearts": 0` withdraws it.
+- **Continue** — **20 gems** for **+15 turns** on a glade or **+20 cells of ink** on a weave,
+  flat and repeatable for as long as the player can pay (invariant 23). About three days of
+  free gems, or a fifth of the entry rung. The grant is *on top of* whatever it took to un-lose
+  the board, and a bought run can only ever score one star. Content (`continueRun`), and
+  `"enabled": 0` withdraws it.
 - **Account prompts** — 2 chapter asks, 3 purchase asks, one shared 48h quiet period.
 
 Everything in that list except the shop ladder is **content** in `progression.json` or
@@ -1295,7 +1895,10 @@ Firebase project `glimmer-groove-1cd60`, Firestore `eur3`, Node 22 in `europe-we
 **Thirteen functions**: `getWallet`, `submitSpends`, `claimAwards`, `redeemPurchase`,
 `adReward`, `appleNotification`, `sweepVoidedPurchases`, `publishGroveStats`, `publishGrove`,
 `withdrawGrove`, `publishGroveRanks`, `claimName`, `reportKeeperName`.
-`firebase/README.md` is the guide; `firebase/e2e/smoke-test.mjs` is **83/83 live**.
+`firebase/README.md` is the guide; `firebase/e2e/smoke-test.mjs` is **90/90 live**.
+`adReward` is the one that grants a wheel slice: it reads the account's spin index off the
+wallet, recomputes the wedge the phone drew, grants `amount x percent`, and advances the index
+in the same transaction the grant record guards (invariant 25).
 
 Client half is `Assets/Game/Scripts/Cloud/` (assembly `GlimmerGrove.Cloud`), Firebase Unity
 SDK 13.15.0 as vendored UPM tarballs under `GooglePackages/` (gitignored — run
@@ -1310,8 +1913,16 @@ a failure that arrives in the first minute after a deploy.
 
 **Owed, in order of cost if forgotten:**
 
-1. The thirteen products in the **Play Console** (iOS is done and verified end to end —
-   a sandbox `gg_gems_1` redeemed on 2026-08-24).
+1. The sixteen products in the **Play Console**, and the **three heart containers in App
+   Store Connect** (the other thirteen iOS products are done and verified end to end — a
+   sandbox `gg_gems_1` redeemed on 2026-08-24). `gg_heart_vessel_1/2/3` must be created as
+   **non-consumables** in both, at the $19.99 / $29.99 / $39.99 tiers; a consumable would let
+   the store sell a permanent upgrade twice and would break Restore, which is the only way a
+   container comes back after a reinstall. The whole server side of them is **live as of
+   2026-08-26** — rules deployed, all thirteen functions redeployed, `config/products`
+   carrying all three capacities — so the consoles are the only thing left between this and a
+   real purchase. What is still unproven is the same last link every product here has: a real
+   receipt reaching `redeemPurchase`, which needs a sandbox buy on a device.
 2. **View financial data** on the Play service account, or the refund sweep silently no-ops.
 3. The `appleNotification` URL registered for **both** production and sandbox.
 4. AdMob **instances** under each of the ten LevelPlay ad units (the units exist on both
@@ -1319,6 +1930,40 @@ a failure that arrives in the first minute after a deploy.
 5. Fill in `app-ads.txt` from each network's dashboard and host it on the domain in both
    store listings; turn on in-app bidding.
 6. Delete the ~210 synthetic saves and the name reservations the live suite leaves behind.
+7. **Measure the turn tuning.** The three lines (1.20 / 1.40 / 1.60) were reasoned about, never
+   played against: run `Tools/verify/difficulty.py` and, once there is live data, first-attempt
+   clear rates. The budget is the only fail state a glade has now, so it is the number most
+   likely to be wrong and the one with the shortest path to an uninstall.
+8. **Retune or accept the chapter gate.** Whether two stars a level still filters anything is
+   unknown — see invariant 22. `chapterGate.starsPerLevel` is content, so this costs a re-seed
+   and no store review.
+9. **Delete the retired `run_continue` ad unit** from the LevelPlay dashboard. Harmless where it
+   is (nothing requests it, it paid no currency) but it is one of ten units that have to be
+   reconciled against AdMob instances in item 4.
+10. **Give `bestMillis` its removal.** See invariant 22 — drop it from `FirestoreSaveMapper`
+    and `firestore.rules` in a later schema version, once no shipped client writes one.
+11. **Measure the heart rescue with the continue.** `heart_rescue_offered` /
+    `heart_rescue_bought` is the second funnel on the same screen and it answers a different
+    question — the continue's ratio is taken against a lost run, this one against an empty
+    heart bar — so read them apart. What they decide together is whether 20 gems is one price
+    or two. Content, so a retune costs a re-seed and no store review.
+12. **Measure the bonus wheel, and read it against the cap.** The ladder averages 218.75% and
+    the cap moved from twelve to six to pay for it, which holds the *day* roughly where it was
+    and more than doubles what one video is worth. Both halves were reasoned about rather than
+    played against. `rewarded_ad_completed` on `win_bonus` is the funnel; what it decides is
+    whether the cap is now the thing that binds (it was never meant to be) and whether the
+    tail slice is rare enough to stay a story. Content, so a retune costs a re-seed and no
+    store review. **The server side is already live** — seeded and all thirteen functions
+    redeployed on 2026-08-26, with `adReward` proved end to end against the deployed build:
+    two synthetic callbacks on one account drew slices 2 and 7 and were granted 300 and 1,000,
+    the index advanced once per paid view, and a retried callback paid nothing and did not turn
+    the wheel again.
+13. **Measure the continue.** 20 gems for +15 turns was reasoned about, never played against
+    (invariant 23), and it is the second number after the move budget most likely to be wrong:
+    too dear and a defeat is a dead end, too cheap and the fail state stops meaning anything.
+    `continue_offered` / `continue_bought` are the funnel; the ratio and the distribution of
+    `taken` are what decide whether `gems` moves or `gemsStep` stops being zero. Content, so a
+    retune costs a re-seed and no store review.
 
 Ads **fill** as of 2026-08-24: all five placements load on device against the LevelPlay apps
 rebuilt alongside the bundle id change, from ironSource's own network and Unity Ads, with no
@@ -1343,23 +1988,78 @@ and a screenshot of the source.
 - **`Show` animates, `Refresh` does not.** Anything raised by an *event* is a redraw. A
   screen repainted by a wallet change, an art scope landing or a ledger event must not
   replay its entrance; `GridView`/`GroveFieldView` bind cells rather than rebuilding them.
-- **`Tween.Pop` reads the transform's current scale as the size to spring back to**, so a
-  second pop landing inside the first captures a half-sprung scale and the control shrinks
-  permanently. Reset to 1 first, and only animate when the state actually moves.
+- **A tween that reads its own target's value must say where an interrupted one lands, or
+  the error compounds.** `Punch`, `Shake`, `Bob` and `Breathe` read a resting value and
+  *borrow* it; `Pop` reads the size it is springing *to*. Superseding one on its channel used
+  to drop it exactly where it stood — so the next punch took a half-squashed scale as its own
+  rest, and spam-tapping the hub's companion multiplied one squash into the next until the
+  critter was a sliver. `Pop` had the same fault upside down and one hand-written workaround
+  (`GridView` resets a recycled cell's scale, because a cell retired mid-entrance kept a scale
+  of zero for ever). `Tw.OnAbandon` is where a tween declares the answer — hand it back, or
+  land on it — and `KillChannel` honours it. Anything moving a value somewhere new declares
+  nothing and is still left where it got to, which is what keeps a cross-fade a cross-fade.
 - **A panel with several exits reports through none of them reliably.** Put the safe outcome
   on `OnDestroy` and make the exception the thing somebody declares — `AdOfferOverlay.Dismissed`,
   the pause menu's unlatch, `BoardView.Locked` as a property that raises `OnChanged`,
   `WeaveView.Finishing`. Exactly one of `Rewarded`/`Dismissed` fires, so both must be handled.
+- **What a way out of a run costs is `RunScreen`'s, never a mode's.** Commit, resolve, forfeit
+  and the confirmation all live there, and `RestartLevel` is not overridable — a mode supplies
+  `Rewind`, `RunOver`, `NoteAbandoned` and `StakeLevel` and never gets at the price. It was each
+  mode's own for two modes and the copies drifted: one guarded a closing cascade and the other
+  did not, and Lightweave's restart never called its copy at all, so a restart there was free —
+  on a mode whose fail state is a pot of ink that a restart refills. Nothing could catch it but
+  playing the game, so `RunStakeTests` now fails if any mode declares a piece of the stake.
+  A related trap the same guard caught: `ModeScreen`'s chapter coroutine was called `Resolve`,
+  which *hid* `RunScreen.Resolve` from every mode below it — the calls compiled, bound to the
+  coroutine, built an iterator nobody ran, and a won grove would have been charged for again at
+  the next launch. Two members with one name in one hierarchy is a bug waiting for the third.
 - **A run begins when `RunScreen` says so, never when a board happens to be unlocked.** A
   board's `Locked` flag has several writers and one of them is an animation: a first-timer's
   tip latched the board on presentation, `BoardView.IntroSweep`'s tween unlatched it a beat
-  later, and the countdown then ran for as long as the player took to read a lesson they are
-  shown once in their life — and after three seconds of it the run was committed, so backing
-  out cost a heart. Both writes were correct; only their order was wrong, which is why no
+  later, and the run's own play time then accrued for as long as the player took to read a
+  lesson they are shown once in their life — and after three seconds of it the run was
+  committed, so backing out cost a heart. Both writes were correct; only their order was wrong, which is why no
   compile, validator or screenshot could see it. `RunHold` is a latch nothing else writes,
   held from construction and released only after the last lesson closes, and `RunScreen.Tick`
-  is the one door a clock may start or advance through. A mode *declares* what it teaches
+  is the door a run may start or advance through. A mode *declares* what it teaches
   (`Lessons`, `Flavour`) and never sequences it.
+  <br>**It is a funnel with one caller, and that is a gap rather than a design.** `Tick` was
+  written so no mode could advance a run without `RunHold` being consulted, and it had two
+  callers while both the glade and the weave ran clocks. Removing the countdown (invariant 22)
+  removed the weave's `Update` wholesale, and Fall and Keeper never had one — so `PlayScreen`
+  is now the only mode that goes through it. Nothing is broken today, because every mode
+  latches its own board through `Latch` and the only reader of `Played` is the glade's
+  commit-grace. But the guarantee the funnel exists to give is not currently being given by
+  three modes out of four, and the next thing that hangs off `RunHold` will silently not apply
+  to them. Put a mode back through `Tick` before adding anything that reads it.
+- **A reward that lands somewhere is worth more than one that is merely granted, and the
+  cascade that does it exists once.** `RewardFlight` — the chest's collect, lifted out when the
+  rewarded ad and then the shop's receipt needed the same thing, for the reason `TokenFlight` was
+  lifted out one level down. Three panels turn money or a video into currency and all three now
+  end the same way: chips empty into the balance row of whatever screen is underneath, so the hub
+  and the shop both register their pills with `ResourceSlots`.
+  Two rules keep it honest. A readout has **one writer**: the payout rewinds a pill to what it
+  said before the grant and walks it forward a token at a time, so it `Claim`s the slot and
+  `ResourceSlots.Repaint` refuses the hub underneath — a wallet change landing mid-cascade would
+  otherwise jump the number to the truth and have the next token drag it back down. And the
+  target is **read live at every landing, never captured**: a chest's credits are in the ledger
+  before the animation starts, but an ad's are granted by the server (invariant 10d), so the
+  figure is walked towards whatever the balance says when a token arrives — hearts climb at
+  once, credits climb the moment the sync lands, and a grant that has not arrived leaves the
+  number exactly where it was rather than anywhere invented. A prize with no pill (seconds on a
+  run, a hint) or a panel opened from anywhere but the hub adds nothing and simply closes: a
+  reward that is already banked must never depend on an animation being able to run.
+- **A receipt has to show the transaction happening, not report that it happened.** The shop's
+  thank-you panel was a chime, a stamp and two printed numbers, and it was defended as
+  proportionate — a coin pack is a transaction, not a companion somebody saved for over weeks.
+  That was the wrong axis: the fault was never the length, it was that *nothing happened*. It is
+  now the goods landing with a shockwave, `Payout` throwing their contents out of them, and
+  COLLECT handing the lot to `RewardFlight` — money → goods → your purse, from three mechanisms
+  that already existed. Two rules keep it repeatable rather than tiring: **a way out arrives with
+  the tokens, not after them** (the button pops in when the payout starts, and tapping it early is
+  safe because the flight's snapshot was taken at build time), and **everything loud happens once,
+  on the last landing** — one haptic, because `Handheld.Vibrate` is a single fixed-length pulse and
+  several inside a second are one rumble rather than several taps.
 - **Repaint from an event, never from a callback on the panel that changed something.**
   `CompanionLedger.Changed`, `CloudSaveService.IdentityChanged`, `GameSettings.Changed`.
 - **`UIKit.Box` pivots centre.** Anchoring a child to an edge puts half of it outside, and
@@ -1378,6 +2078,18 @@ and a screenshot of the source.
   `GroveUnveil`, `WeaveTempo`, `CoachStroke`. Every sequence is bounded and **the rate gives
   way**, so a bigger board is never a longer wait. Motion is the one subsystem whose failures
   show up only in play, which is why the arithmetic has to be reachable without an Editor.
+- **A lesson is declared as a fact about the board, never as a fact about the player.** A mode
+  fills `RunScreen.Lessons` with everything its board teaches, and `RunScreen` asks `TipLedger`
+  which of it is new. That split is what let the "show me again" key in a run's header cost one
+  method: the mode used to do the filtering itself, and a list filtered by *never met* is empty
+  at exactly the moment somebody presses a button asking to be reminded. The review re-asks
+  `Lessons` rather than replaying a list kept from the opening, because a restart rebuilds the
+  tiles a tip rings and a cached `RectTransform` is by then a destroyed object — the tip would
+  silently lose its ring and its coaching hand and become a sentence in a box. Both paths take
+  `RunHold.Teaching` and call `Latch`, so a tip on screen freezes the run whoever raised it,
+  and there is no second copy of the rule about when a run is allowed to run. `Teachable` is the
+  mode's own "is the board taking input" predicate, and it is what stops a review latching a
+  board that a cascade or a closing sequence still owns.
 - **A lesson about a gesture is shown, not described.** A `TipOverlay` with a ring and two
   sentences is the right shape for a *rule*; Lightweave's two lessons are a **verb** — this
   mode is dragged, and a channel goes *through* a ring rather than stopping at it — and a
@@ -1390,11 +2102,42 @@ and a screenshot of the source.
   leave one the player has not drawn. `Art.Hand` is generated for invariant 7b's reason and is
   **tilted on purpose** — an upright finger over a closed fist is a gesture that must never
   reach a teaching panel in any market.
+- **A demonstration must show a move the player could actually make, and the shortest one that
+  still shows it.** The Lightweave coaching hand got this wrong twice in one day. It was handed
+  two points, the crystal and the critter, which interpolates *diagonally* — an input the mode
+  does not have, shown while teaching what the input is. Traced along the generator's carved walk
+  instead it became legal and unreadable, because that walk exists to fill the grove, so a
+  fingertip zig-zagged through twenty cells and taught that the mode is fiddly. It is now an
+  elbow (`WeaveLayout.CoachRoute`), refused if it would cross another pair's endpoint — an
+  *illegal* demonstration reads as permission, where an impossible one only reads as decoration.
+  The ink is the same `Link`/`Knuckle` pair a real channel is drawn from, because a dotted trail
+  is a path marker — the thing a map draws — and the lesson is that the player draws.
 - **Celebrate once.** The board already flashes, sounds and (for a glade) throws confetti when
   it solves; the win panel adds no fanfare, no confetti and no haptic. `Handheld.Vibrate` is
   one fixed-length buzz on Android, so a second one cannot be made lighter than the first.
 - **Depth is applied to a whole visible window in one pass.** `SetSiblingIndex` *inserts*, so
   assigning depth per tile as tiles are realised leaves a field that looks sorted and is not.
+- **Whether two things on a screen overlap is arithmetic, so it goes in Domain and gets a test.**
+  `ChapterMap` did it for map nodes (invariant 8a); `WeaveBand` does it for the undo key and the
+  standing line under a grove, and `ReadoutRow` for a row of one, two or three numbers. The rule
+  earned its third instance the honest way: the band was three constants with a paragraph
+  explaining why they cleared each other, and the paragraph was wrong, because `UIKit.Box`
+  *always* pivots at centre whatever it is anchored to. A comment cannot catch that and a
+  screenshot on one aspect ratio does not reliably either. `PanelStack` is the fourth and the
+  worst-earned: `GladeRewardsOverlay`'s height was a typed number, a fourth section was added
+  without moving it, and the last paragraph had been drawn **78 units into the close button**
+  ever since — invisible in English, where that paragraph happens to be short enough. A panel
+  whose section count varies with content must derive its height, and the derivation is
+  measured against the shortest canvas this game is drawn on (portrait 4:3, so 1440 reference
+  units). Five sections is what that shape holds; a sixth fails a test rather than a tablet.
+  <br>Two things about that ceiling are worth not rediscovering. **A modal is centred, so the
+  title ribbon's overhang counts twice** — the binding constraint is `H/2 + overhang ≤
+  canvas/2`, and the obvious reading (`H + overhang ≤ canvas`) is 87 units too generous because
+  it spends the clear air *under* the panel on a problem entirely *above* it. And once the
+  height is spent, **width is the only lever left**: a paragraph needing more room can only get
+  it sideways, which is why this panel is 960 rather than 900. Both were found by rendering the
+  thing offscreen to a PNG and looking at it — `Text` best-fit is approximate, so a paragraph
+  the arithmetic calls exact can still spill a few units, and no test will ever say so.
 - **An asset scope is bounded by what is on screen**, and an in-flight guard is not
   `IsScopeLoaded` — that goes true the instant a load *starts*. Four grove scopes exist for
   four different bounds (the grove, one shelf, the shop's tab furniture, visiting).
@@ -1409,6 +2152,24 @@ and a screenshot of the source.
 - **Panels that explain the game read their numbers from the rules**, never from the copy —
   `StreakInfoOverlay`, `AdOfferOverlay`, `EventInfoOverlay`. That copy is the first thing to
   rot when the game is retuned.
+- **A screen that has grown a fourth responsibility has grown one too many.** `RunScreen`
+  reached five — the stake, the run hold, the lesson sequence, the review key and the continue
+  offer — and the symptom is always the same: no single rule in it can be changed without
+  reading all of them. `RunLessons` and `RunContinueFlow` are what came out, and the test to
+  apply before adding the next one is the test `WeaveRun` was split against — *could this rule
+  be proved without building the other four*. The collaborator holds the screen (a
+  `MonoBehaviour`) so `if (_run)` is Unity's own lifetime check, and the mode's extension points
+  widen to `protected internal`: still overridden by modes, now also readable by the piece that
+  sequences them.
+- **A thing the shop sells is drawn in exactly one place.** `ProductCard` — the plate, the
+  picture, the headline figure and the price face — because there are now two shops: the browse
+  screen, and the gem shelf a lost run raises without navigating (invariant 23). It carries the
+  answers the shop already paid for once (a store's formatted price is used verbatim, a short
+  gem balance still shows the price and greys the face) and its layout is *one* layout scaled
+  from the browse card's numbers, so the full-size card is byte-identical to what shipped and a
+  compact one is the same design rather than a second one. Scale vertical offsets by the plate's
+  height and horizontal ones by its width — one factor for both is what made the picture and the
+  headline overlap on the first compact card.
 - **A `switch` inside a `MonoBehaviour` is the one place here nothing can be proved.** The
   branching decisions live in Domain and are pinned offline: `HintPrompt`, `RenameRules`,
   `AccountPromptPolicy`, `GroveUnveil`, `GroveGrowth`, `AccountGate`.
@@ -1416,7 +2177,9 @@ and a screenshot of the source.
 ### Two confirmations, and only two
 
 `ForfeitOverlay` (a committed run being abandoned) and `ReportNameOverlay` (an act taken
-against another person that cannot be retracted). Everything else either costs nothing to
+against another person that cannot be retracted). `ContinueOverlay` is not a third: it is an
+offer rather than a confirmation — it asks a question nobody has asked yet, and its default
+answer is the free one. Everything else either costs nothing to
 undo or is confirmed by the store's own payment sheet — a panel of ours in front of that sheet
 is a tap for a question about to be asked properly. The one destructive prompt left is a
 *guest* whose provider already carries a grove, reachable from linking and nothing else.
@@ -1427,7 +2190,7 @@ is a tap for a question about to be asked properly. The one destructive prompt l
   Android-only, so it cannot be the identity.
 - **A visual level editor** — tooling, and the thing most likely to matter next for cadence.
 - **Remote content delivery** is built and switched off. Setting `ContentConfig.RemoteBaseUrl`
-  turns `difficulty.clockScale`, the heart gate, the chest odds and the ad payouts into
+  turns the heart gate, the chapter gate, the chest odds and the ad payouts into
   minutes-not-days levers; it is the highest-value unshipped setting in the build.
   One known gap first: `Sync Manifest` bumps a chapter's `version` only when its **level
   list** changes, so a content-only rewrite would never reach a client that had already cached
@@ -1435,6 +2198,3 @@ is a tap for a question about to be asked properly. The one destructive prompt l
   `ManifestSync.SurvivesRoundTrip` would then police.
 - **A "keepers near you" board** — it needs the exact global ordering invariant 19c refuses to
   keep, and the percentile already answers the question it would ask.
-- **A duskcap that matters in a hollow** — needs a hollow where not every critter must wake,
-  or a critter whose gift depends on the light that woke it. The validator warns rather than
-  letting a decorative one ship.

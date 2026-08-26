@@ -97,6 +97,17 @@ namespace GlimmerGrove.Persistence
                 companionsOwned = Progression.CompanionLedger.Join(mine.companionsOwned,
                                                                    other.companionsOwned),
 
+                // The heart containers, both halves, and both are unions for the same
+                // reason: a purchase cannot be undone by anything a device knows about, and
+                // neither can a refund. Keeping the revocations monotonic is what makes the
+                // pair converge — two devices that disagree about a refunded container end
+                // up holding the same answer whatever order they merge in, which "the newer
+                // device is right" could never promise. See HeartContainerLedger.
+                heartContainersOwned = HeartContainerLedger.Join(mine.heartContainersOwned,
+                                                                 other.heartContainersOwned),
+                heartContainersRevoked = HeartContainerLedger.Join(mine.heartContainersRevoked,
+                                                                   other.heartContainersRevoked),
+
                 // The grove's two halves, and they are joined differently on purpose. What
                 // was bought is a union, for the reason directly above. Where things stand
                 // is the only part of this file merged by *recency* other than the keeper's
@@ -170,13 +181,22 @@ namespace GlimmerGrove.Persistence
                     // rather than clearing a band the other device earned.
                     bestRank = Math.Max(existing.bestRank, record.bestRank),
 
-                    // Smaller wins, exactly like the move count and for the same reason: a
-                    // best only ever falls, so both sides hold a real achievement and the
-                    // lower one is the better. Zero is absent rather than instant — see
-                    // RunClock — so a device that never timed a glade cannot beat one that did.
-                    bestMillis = RunClock.Better(existing.bestMillis, record.bestMillis),
+                    // Retired, and still joined. Nothing writes a new time since the
+                    // countdown was removed (LevelRecord.BestMillis), but times already
+                    // earned have to survive a sync rather than being dropped by the build
+                    // that stopped measuring them. Smaller wins, and zero is absent rather
+                    // than instant, so a glade that was never timed cannot beat one that was.
+                    bestMillis = BetterTime(existing.bestMillis, record.bestMillis),
                 };
             }
+        }
+
+        /// <summary>The better of two recorded times, where 0 means "never timed".</summary>
+        static int BetterTime(int a, int b)
+        {
+            if (a <= 0) return b < 0 ? 0 : b;
+            if (b <= 0) return a;
+            return Math.Min(a, b);
         }
 
         /// <summary>Fewer moves is better, but zero means "never cleared", not "perfect".</summary>

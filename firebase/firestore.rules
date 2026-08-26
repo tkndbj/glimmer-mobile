@@ -58,6 +58,7 @@ service cloud.firestore {
                  'tipsSeen', 'daily', 'ads', 'streak', 'events', 'eventsSeeded',
                  'companionsOwned', 'homesteadStock', 'homesteadOwned',
                  'homesteadPlaced', 'groveLandOwned',
+                 'heartContainersOwned', 'heartContainersRevoked',
                  'checksum'
                ])
                && d.schemaVersion is int
@@ -107,6 +108,20 @@ service cloud.firestore {
                // the server to adjudicate. Bounded because the client controls its length.
                && (!('companionsOwned' in d) || (d.companionsOwned is list
                                                  && d.companionsOwned.size() <= 256))
+               // The heart containers the player bought with real money, and the ones a
+               // refund took back. Client-owned like the companion set and accounted for the
+               // same way — a forged container buys faster hearts and nothing else: no
+               // currency, no progression, no advantage on a board and nothing that reaches
+               // a public card, because `publishGrove` derives a grove's worth from the three
+               // sets above and not from these. What is *not* client-owned is the refund: the
+               // server writes the revocations onto its own wallet document and reports them
+               // on every reply, so a forged edit here can only take a container away from
+               // the player who forged it. Bounded because the client controls the length,
+               // and small because the catalog sells three.
+               && (!('heartContainersOwned' in d) || (d.heartContainersOwned is list
+                                                      && d.heartContainersOwned.size() <= 32))
+               && (!('heartContainersRevoked' in d) || (d.heartContainersRevoked is list
+                                                        && d.heartContainersRevoked.size() <= 32))
                // The grove: what the player bought for it, and where they put it. Both are
                // client-owned and forgeable, and both are still accounted for the same way
                // the companion set above is, with one addition that used to be unnecessary.

@@ -10,8 +10,8 @@
  *   npm --prefix firebase/functions test
  */
 
-import { grantEntries, readProduct, MAX_GRANT } from "../lib/products.js";
-import { transactionIdsIn } from "../lib/refunds.js";
+import { grantEntries, readProduct, MAX_GRANT, MAX_CAPACITY } from "../lib/products.js";
+import { revocationUpdate, transactionIdsIn } from "../lib/refunds.js";
 
 let pass = 0;
 let fail = 0;
@@ -34,6 +34,7 @@ const TABLE = {
   gg_gems_1: { credits: 0, gems: 100, kind: "consumable" },
   gg_coins_1: { credits: 2500, gems: 0, kind: "consumable" },
   gg_bundle_starter: { credits: 7500, gems: 500, kind: "nonconsumable" },
+  gg_heart_vessel_2: { credits: 0, gems: 0, kind: "nonconsumable", capacity: 20 },
 };
 
 console.log("== the product catalog");
@@ -72,6 +73,36 @@ check("a negative amount reads as zero rather than as a debit",
 check("a fractional amount is floored rather than granted as a fraction",
       readProduct({ f: { credits: 100.9, gems: 0, kind: "consumable" } }, "f").credits === 100);
 
+console.log("== heart containers");
+
+// The one non-currency thing a product may grant. It is permitted because a capacity is an
+// *idempotent permanent entitlement* rather than an amount: applying it twice is applying
+// it once, so the client needs no record of "have I already applied this transaction" — and
+// that record is the whole of what invariant 18 protects against.
+check("a container is read as published even though it grants no currency",
+      readProduct(TABLE, "gg_heart_vessel_2").capacity === 20);
+
+check("a container grants no currency entries at all",
+      grantEntries(readProduct(TABLE, "gg_heart_vessel_2")).length === 0);
+
+check("a currency product carries no capacity",
+      readProduct(TABLE, "gg_gems_1").capacity === 0);
+
+// The "never both" half, and it is load-bearing rather than tidy: a container that also
+// paid gems would put a stored amount straight back onto the client's side of a purchase.
+refuses("a product granting a capacity and currency is refused",
+        { mixed: { credits: 0, gems: 100, kind: "nonconsumable", capacity: 20 } }, "mixed");
+
+// Refusing rather than clamping, for the grant ceiling's reason: the client's ledger holds
+// the cap to what it will honour, so a clamped capacity is a card promising more than it
+// gives against a payment that already went through.
+refuses("a capacity above the ceiling is refused rather than clamped",
+        { huge: { credits: 0, gems: 0, kind: "nonconsumable", capacity: MAX_CAPACITY + 1 } },
+        "huge");
+
+refuses("a product with neither currency nor a capacity is still refused",
+        { nothing: { credits: 0, gems: 0, kind: "nonconsumable", capacity: 0 } }, "nothing");
+
 console.log("== what a grant becomes");
 
 check("only the non-zero currencies are granted",
@@ -80,6 +111,59 @@ check("only the non-zero currencies are granted",
 check("a bundle grants both, credits first",
       JSON.stringify(grantEntries(readProduct(TABLE, "gg_bundle_starter"))) ===
       '[["credits",7500],["gems",500]]');
+
+console.log("== reversing a refund");
+
+// The one path in this backend that takes money *back*, and until `revocationUpdate` was
+// split out of the Firestore transaction the only way to exercise it was to make a real
+// purchase and refund it — which is to say it was never exercised at all.
+const union = (id) => ({ arrayUnion: id });
+
+check("a refunded currency grant is taken off the baseline",
+      revocationUpdate({ granted: { credits: 2500 } },
+                       { credits: { granted: 4000 } }, union)["credits.granted"] === 1500);
+
+// Clamped rather than negative: a player who already spent it ends at zero and keeps what
+// they bought, because a balance that silently eats a month of earnings is how somebody
+// stops playing rather than how they are held to account.
+check("a balance already spent down clamps at zero rather than going negative",
+      revocationUpdate({ granted: { credits: 2500 } },
+                       { credits: { granted: 900 } }, union)["credits.granted"] === 0);
+
+check("a wallet that never recorded the currency clamps at zero too",
+      revocationUpdate({ granted: { gems: 100 } }, {}, union)["gems.granted"] === 0);
+
+check("nothing is written for a currency the receipt never granted",
+      !("gems.granted" in revocationUpdate({ granted: { credits: 100 } },
+                                           { credits: { granted: 100 } }, union)));
+
+// A container is not an amount, so it is not subtracted from anything — the entitlement is
+// held by the client, and the only thing this server can do is say it was taken back, on
+// every wallet reply, for ever. See invariant 18d.
+check("a refunded heart container is revoked by id, not by amount",
+      JSON.stringify(revocationUpdate(
+        { productId: "gg_heart_vessel_2", capacity: 20, granted: {} }, {}, union
+      )) === JSON.stringify({ containersRevoked: { arrayUnion: "gg_heart_vessel_2" } }));
+
+check("a currency refund revokes no container",
+      !("containersRevoked" in revocationUpdate({ granted: { credits: 100 } },
+                                                { credits: { granted: 100 } }, union)));
+
+// The two guards that stop a malformed receipt writing a container revocation nobody can
+// undo: a capacity with no id, and an id with no capacity.
+check("a receipt with a capacity and no product id revokes nothing",
+      !("containersRevoked" in revocationUpdate({ capacity: 20, granted: {} }, {}, union)));
+
+check("a receipt with a product id and no capacity revokes nothing",
+      !("containersRevoked" in revocationUpdate(
+        { productId: "gg_gems_1", granted: {} }, {}, union)));
+
+// Older receipts, written before containers existed, carry neither field. They must read as
+// an ordinary currency reversal rather than as anything at all to do with a container.
+check("a receipt written before containers existed reverses only its currency",
+      JSON.stringify(revocationUpdate({ granted: { gems: 100 } },
+                                      { gems: { granted: 340 } }, union)) ===
+      JSON.stringify({ "gems.granted": 240 }));
 
 console.log("== the Apple notification scan");
 

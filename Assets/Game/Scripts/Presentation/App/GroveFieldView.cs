@@ -473,7 +473,7 @@ namespace GlimmerGrove
         /// Turns a finger resting on the floor into <see cref="TileHeld"/>.
         ///
         /// <para>
-        /// Polled rather than scheduled on the press, for <c>RunClock</c>'s reason: a timer
+        /// Polled rather than scheduled on the press, for <c>RunScreen.Tick</c>'s reason: a timer
         /// started in <c>OnPointerDown</c> would have to be unwound by every way a press can
         /// end — a lift, a drag, a second finger, the screen being torn down underneath it —
         /// and the one that gets forgotten is the one that fires a panel over the next screen.

@@ -59,6 +59,34 @@ namespace GlimmerGrove.Store
         /// <summary>Most gems one good may cost.</summary>
         public const long MaxGoodPrice = 100_000L;
 
+        /// <summary>
+        /// The smallest heart capacity a container may sell.
+        ///
+        /// <para>
+        /// A container has to be worth more than the cap the player already has, and the
+        /// shipped base is five — so anything at or below that is a product that takes money
+        /// and changes nothing, which is the one mistake in this file that a player would
+        /// notice from the outside. Six rather than "above the published cap" deliberately:
+        /// the cap is content and may be retuned after these are sold, and a limit that moved
+        /// with it would be a limit that could itself be published. <c>ContentValidation</c>
+        /// compares against the live cap as well, where it can say so as a warning.
+        /// </para>
+        /// </summary>
+        public const int MinHeartCapacity = 6;
+
+        /// <summary>
+        /// The largest heart capacity a container may sell.
+        ///
+        /// <para>
+        /// <c>HeartLimits.MaxRefillCap</c> restated rather than referenced, for
+        /// <see cref="MaxGrant"/>'s reason: this file is what a published catalog is checked
+        /// <em>against</em>. The two are pinned together by <c>HeartContainerTests</c>, because
+        /// a container selling a cap the ledger will clamp away is a player charged for a
+        /// number they never receive.
+        /// </para>
+        /// </summary>
+        public const int MaxHeartCapacity = 50;
+
         /// <summary>Cheapest a product may claim to be, in US cents. Below both stores' floors.</summary>
         public const int MinReferenceCents = 49;
 
@@ -122,6 +150,30 @@ namespace GlimmerGrove.Store
 
         /// <summary>True when there is anything at all to sell.</summary>
         public bool HasAnything => _products.Length > 0 || _goods.Length > 0;
+
+        /// <summary>
+        /// True when something on this catalog grants gems — a gem pack or a bundle carrying
+        /// some.
+        ///
+        /// <para>
+        /// Asked wherever a short gem balance is about to be turned into an offer to buy some,
+        /// so that the offer is never made when there is nothing behind it. It counts
+        /// <em>gems granted</em> rather than the gem shelf, because a bundle is a perfectly
+        /// good answer to "I need gems" and a catalog could one day sell them only that way.
+        /// </para>
+        /// <para>
+        /// A property rather than a call to <see cref="Shelf"/>, which allocates a list — this
+        /// is asked from a run's fail state, which is a moment that must not stutter.
+        /// </para>
+        /// </summary>
+        public bool HasGems
+        {
+            get
+            {
+                foreach (var product in _products) if (product.Gems > 0L) return true;
+                return false;
+            }
+        }
 
         /// <summary>
         /// How many credits one gem is worth, derived from the two money ladders' entry
@@ -216,6 +268,24 @@ namespace GlimmerGrove.Store
                                  12000, 700, 999, StoreBadge.None),
                 new StoreProduct("gg_bundle_grove", StoreProductKind.Consumable, StoreShelf.Bundles,
                                  42000, 2200, 2999, StoreBadge.BestValue),
+
+                // --- heart containers ---------------------------------------------------
+                // The one shelf where a real-money product grants something that is not
+                // currency, and the only shape of thing that may: an idempotent permanent
+                // entitlement. See StoreProduct.HeartCapacity for why that is a widening of
+                // invariant 18 rather than a hole in it.
+                //
+                // Dearer than anything else in the shop on purpose. A capacity is bought once
+                // and never again, so it is priced against the years of faster play it buys
+                // rather than against a pack of gems; and the ladder is deliberately steep at
+                // the top, because the third rung takes the timer to the ceiling and there is
+                // nothing above it to sell.
+                new StoreProduct("gg_heart_vessel_1", StoreProductKind.NonConsumable, StoreShelf.Supplies,
+                                 0, 0, 1999, StoreBadge.None, 10),
+                new StoreProduct("gg_heart_vessel_2", StoreProductKind.NonConsumable, StoreShelf.Supplies,
+                                 0, 0, 2999, StoreBadge.Popular, 20),
+                new StoreProduct("gg_heart_vessel_3", StoreProductKind.NonConsumable, StoreShelf.Supplies,
+                                 0, 0, 3999, StoreBadge.BestValue, 50),
             },
             new[]
             {
@@ -342,13 +412,6 @@ namespace GlimmerGrove.Store
                 return null;
             }
 
-            if (shelf == StoreShelf.Supplies)
-            {
-                problems.Add($"store product '{id}' sits on the supplies shelf, which is for goods " +
-                             "bought with gems; a real-money product cannot go there");
-                return null;
-            }
-
             bool oneTime = string.Equals(dto.kind, "nonconsumable", StringComparison.OrdinalIgnoreCase);
             if (!oneTime && !string.Equals(dto.kind, "consumable", StringComparison.OrdinalIgnoreCase))
             {
@@ -360,10 +423,68 @@ namespace GlimmerGrove.Store
 
             long credits = dto.credits < 0 ? 0 : dto.credits;
             long gems = dto.gems < 0 ? 0 : dto.gems;
+            int capacity = dto.heartCapacity < 0 ? 0 : dto.heartCapacity;
 
-            if (credits == 0 && gems == 0)
+            // A container and a currency pack are the two things a real-money product may be,
+            // and it may not be both. See StoreProduct.HeartCapacity: what makes a capacity
+            // safe to sell for money is that it is an idempotent entitlement rather than an
+            // amount, and a product that also paid gems would put an amount straight back
+            // onto the path — the client would owe half a purchase after the server had
+            // applied the other half, which is invariant 18's whole argument.
+            if (capacity > 0 && (credits > 0 || gems > 0))
+            {
+                problems.Add($"store product '{id}' sells a heart capacity and also grants " +
+                             "currency; a real-money product may grant one or the other, never " +
+                             "both — see StoreProduct.HeartCapacity");
+                return null;
+            }
+
+            if (credits == 0 && gems == 0 && capacity == 0)
             {
                 problems.Add($"store product '{id}' grants nothing");
+                return null;
+            }
+
+            // A container is the one product whose shelf is decided rather than authored: the
+            // supplies shelf is where a player looks for hearts, and a capacity filed anywhere
+            // else is a permanent upgrade nobody browsing hearts would ever find. Refused
+            // rather than moved, because the file and the shop must agree about where a thing
+            // is.
+            if (capacity > 0 && shelf != StoreShelf.Supplies)
+            {
+                problems.Add($"store product '{id}' sells a heart capacity but sits on the " +
+                             $"'{shelf}' shelf; capacities belong on 'supplies', which is where " +
+                             "everything about hearts is");
+                return null;
+            }
+
+            if (capacity == 0 && shelf == StoreShelf.Supplies)
+            {
+                problems.Add($"store product '{id}' sits on the supplies shelf without selling a " +
+                             "heart capacity; that shelf is otherwise for goods bought with gems, " +
+                             "so a currency product cannot go there");
+                return null;
+            }
+
+            // A capacity that is not permanent is a capacity somebody can be sold twice, which
+            // both stores would allow and neither would explain. The non-consumable is also
+            // what makes a reinstall recoverable with no state of ours at all: Restore
+            // re-delivers it for ever, and applying it again is applying it once.
+            if (capacity > 0 && !oneTime)
+            {
+                problems.Add($"store product '{id}' sells a heart capacity as a consumable; a " +
+                             "permanent upgrade must be 'nonconsumable' so the store itself " +
+                             "refuses to sell it twice");
+                return null;
+            }
+
+            if (capacity > 0 &&
+                (capacity < StoreLimits.MinHeartCapacity || capacity > StoreLimits.MaxHeartCapacity))
+            {
+                problems.Add($"store product '{id}' sells a heart capacity of {capacity}, outside " +
+                             $"{StoreLimits.MinHeartCapacity}..{StoreLimits.MaxHeartCapacity}; " +
+                             "dropped rather than clamped, because a card promising a capacity " +
+                             "the ledger will not honour is worse than no card");
                 return null;
             }
 
@@ -409,7 +530,7 @@ namespace GlimmerGrove.Store
             }
 
             return new StoreProduct(id, oneTime ? StoreProductKind.NonConsumable : StoreProductKind.Consumable,
-                                    shelf, credits, gems, dto.referenceUsdCents, badge);
+                                    shelf, credits, gems, dto.referenceUsdCents, badge, capacity);
         }
 
         static StoreGood ReadGood(StoreGoodDto dto, HashSet<string> seen, List<string> problems)

@@ -63,6 +63,7 @@ namespace GlimmerGrove
         internal Easing ease;
         internal Action<float> apply;
         internal Action done;
+        internal Action revert;
         internal UnityEngine.Object owner;
         internal string channel;
         internal bool unscaled = true;
@@ -71,6 +72,22 @@ namespace GlimmerGrove
         internal bool pingPong;
 
         public Tw OnDone(Action a) { done = a; return this; }
+
+        /// <summary>
+        /// Where to leave the target if this tween ends before it reaches its end - superseded
+        /// on its channel, or killed outright. Without one, an interrupted tween abandons
+        /// whatever it was animating at whatever value the interruption caught it holding,
+        /// which is a state no caller asked for and nothing puts right.
+        ///
+        /// <para>
+        /// Two kinds of tween need one and they resolve in opposite directions. One that
+        /// <em>borrows</em> a value - a punch, a shake, an idle bob - has to hand it back.
+        /// One that <em>arrives</em> at a resting state it read off the target first - a pop -
+        /// has to land. Everything else is going somewhere new on purpose, declares nothing,
+        /// and is left exactly where it got to.
+        /// </para>
+        /// </summary>
+        public Tw OnAbandon(Action a) { revert = a; return this; }
         public Tw Delay(float d) { delay = d; return this; }
         public Tw Scaled() { unscaled = false; return this; }
         public Tw Loop(int count = -1, bool pingpong = true) { loops = count; pingPong = pingpong; return this; }
@@ -79,6 +96,7 @@ namespace GlimmerGrove
             if (!alive) return;
             alive = false;
             if (complete) { apply?.Invoke(ease(1f)); done?.Invoke(); }
+            else revert?.Invoke();
         }
     }
 
@@ -138,13 +156,26 @@ namespace GlimmerGrove
             if (_iterating) _add.Add(t); else _live.Add(t);
         }
 
+        /// <summary>
+        /// Ends whatever is running on one target's channel, and puts back anything that
+        /// channel had borrowed - see <see cref="Tw.OnAbandon"/>.
+        ///
+        /// <para>
+        /// The restore is why this is <c>Kill</c> rather than a flag flipped in place. A
+        /// superseded tween used to be dropped exactly where it stood, so a caller that kills
+        /// a breathe before punching found the transform mid-breath, and a punch superseding
+        /// a punch found it mid-squash - which is the fault the home screen's companion wore.
+        /// A tween that declares no revert is untouched by this, so every channel that moves a
+        /// value somewhere new rather than borrowing it behaves exactly as it did.
+        /// </para>
+        /// </summary>
         public static void KillChannel(UnityEngine.Object owner, string channel)
         {
             if (_inst == null || owner == null) return;
             var list = _inst._live;
             for (int i = 0; i < list.Count; i++)
                 if (list[i].alive && list[i].channel == channel && ReferenceEquals(list[i].owner, owner))
-                    list[i].alive = false;
+                    list[i].Kill();
         }
 
         /// <summary>
@@ -205,7 +236,7 @@ namespace GlimmerGrove
             if (_inst == null || owner == null) return;
             var list = _inst._live;
             for (int i = 0; i < list.Count; i++)
-                if (ReferenceEquals(list[i].owner, owner)) list[i].alive = false;
+                if (ReferenceEquals(list[i].owner, owner)) list[i].Kill();
         }
 
         // Clamped before anything reads them, because the phase arithmetic in Tick is only
@@ -218,7 +249,7 @@ namespace GlimmerGrove
         /// One frame of every live tween, handed the elapsed time rather than reading a clock.
         ///
         /// <para>
-        /// Split from <see cref="Update"/> for <see cref="RunClock"/>'s reason, and it is not
+        /// Split from <see cref="Update"/> for <c>RunScreen.Tick</c>'s reason, and it is not
         /// a tidying. <see cref="TweenCycle"/> made the phase arithmetic provable offline, and
         /// that left exactly one rule in this file untestable — the one that decides whether a
         /// tween <em>runs at all</em>. It was wrong for the life of the game (see
@@ -243,6 +274,8 @@ namespace GlimmerGrove
             {
                 var t = _live[i];
                 if (!t.alive) continue;
+                // Dropped rather than reverted: the owner is gone, so there is nothing
+                // left to put a borrowed value back onto.
                 if (Orphaned(t.owner)) { t.alive = false; continue; }
 
                 float step = t.unscaled ? dt : sdt;
@@ -346,35 +379,77 @@ namespace GlimmerGrove
         public static Tw Value(float a, float b, float dur, Action<float> set, Easing ease = null, UnityEngine.Object owner = null)
             => Run(dur, ease ?? Ease.OutCubic, t => set(Mathf.LerpUnclamped(a, b, t)), owner);
 
-        /// <summary>A quick squash-and-stretch pop.</summary>
+        /// <summary>
+        /// A quick squash-and-stretch pop.
+        ///
+        /// <para>
+        /// The rest scale is read <em>after</em> any punch still in flight has been put back,
+        /// and that ordering is the whole of it. A punch borrows the transform's scale and
+        /// hands it back at the end; a second punch landing inside the first superseded it on
+        /// the channel - which dropped it mid-squash, without its restore - and then took the
+        /// squashed scale as its own rest. So each punch multiplied into the next, and the
+        /// only way back was rebuilding the screen. Spam-tapping the home screen's companion
+        /// squeezed it to a sliver, but the shape is everywhere a control can be re-punched
+        /// before it settles: a tile tapped twice, a move counter ticking down, a chest
+        /// thumping.
+        /// </para>
+        /// </summary>
         public static Tw Punch(Transform tr, float strength = .18f, float dur = .34f)
         {
             if (tr == null) return Run(0.001f, Ease.Linear, null);
+
+            KillChannel(tr, "punch");            // put back what a punch in flight borrowed
             var baseScale = tr.localScale;
+            Action rest = () => { if (tr) tr.localScale = baseScale; };
+
             return Run(dur, Ease.Linear, t =>
             {
                 if (!tr) return;
                 float damp = 1f - t;
                 float w = Mathf.Sin(t * Mathf.PI * 3f) * strength * damp * damp;
                 tr.localScale = new Vector3(baseScale.x * (1f + w), baseScale.y * (1f - w * .7f), baseScale.z);
-            }, tr, "punch").OnDone(() => { if (tr) tr.localScale = baseScale; });
+            }, tr, "punch").OnDone(rest).OnAbandon(rest);
         }
 
+        /// <summary>
+        /// A spring up to the scale the transform is already sitting at.
+        ///
+        /// <para>
+        /// <see cref="Punch"/>'s fault in the other direction, and it had a workaround rather
+        /// than a fix. A pop reads its destination off the target, so an interrupted one used
+        /// to leave a control at whatever fraction it had sprung to - or at nothing at all, if
+        /// it was still inside its delay - and a second pop then took <em>that</em> as the size
+        /// to spring back to. <c>GridView</c> is where it bit: a recycled cell arriving mid-pop
+        /// from its last life stayed at scale zero for ever, so the type kills the channel and
+        /// resets the scale by hand every time it binds one. Landing on the rest scale rather
+        /// than freezing makes that true everywhere instead of in the one file that noticed.
+        /// </para>
+        /// </summary>
         public static Tw Pop(Transform tr, float from = 0f, float dur = .42f, float delay = 0f)
         {
             if (tr == null) return Run(0.001f, Ease.Linear, null);
+
+            KillChannel(tr, "scale");            // land a pop in flight, so `to` is a real size
             var to = tr.localScale;
             // callers often hide the object first; treat that as "pop up to full size"
             if (to.sqrMagnitude < 1e-6f) to = Vector3.one;
             tr.localScale = to * from;
-            return Run(dur, Ease.OutBack, t => { if (tr) tr.localScale = Vector3.LerpUnclamped(to * from, to, t); }, tr, "scale").Delay(delay);
+
+            return Run(dur, Ease.OutBack, t => { if (tr) tr.localScale = Vector3.LerpUnclamped(to * from, to, t); }, tr, "scale")
+                   .Delay(delay)
+                   .OnAbandon(() => { if (tr) tr.localScale = to; });
         }
 
+        /// <summary>A quick rattle. Borrows the position and returns it - see <see cref="Punch"/>.</summary>
         public static Tw Shake(RectTransform rt, float amount = 18f, float dur = .4f)
         {
             if (rt == null) return Run(0.001f, Ease.Linear, null);
+
+            KillChannel(rt, "shake");
             var home = rt.anchoredPosition;
+            Action rest = () => { if (rt) rt.anchoredPosition = home; };
             float seed = UnityEngine.Random.value * 100f;
+
             return Run(dur, Ease.Linear, t =>
             {
                 if (!rt) return;
@@ -382,34 +457,49 @@ namespace GlimmerGrove
                 rt.anchoredPosition = home + new Vector2(
                     (Mathf.PerlinNoise(seed, t * 22f) - .5f) * 2f,
                     (Mathf.PerlinNoise(seed + 31f, t * 22f) - .5f) * 2f) * amount * damp;
-            }, rt, "shake").OnDone(() => { if (rt) rt.anchoredPosition = home; });
+            }, rt, "shake").OnDone(rest).OnAbandon(rest);
         }
 
-        /// <summary>Endless gentle bob, used for idle life on menus.</summary>
+        /// <summary>
+        /// Endless gentle bob, used for idle life on menus. An idle borrows the value it waves
+        /// about for as long as it runs, so ending one lands on the rest position rather than
+        /// on wherever the wave had got to.
+        /// </summary>
         public static Tw Bob(RectTransform rt, float amplitude = 12f, float period = 2.4f, float phase = 0f)
         {
             if (rt == null) return Run(0.001f, Ease.Linear, null);
+
+            KillChannel(rt, "bob");
             var home = rt.anchoredPosition;
             float t0 = Time.unscaledTime;
+
             return Run(3600f, Ease.Linear, _ =>
             {
                 if (!rt) return;
                 float w = (Time.unscaledTime - t0) / period * Mathf.PI * 2f + phase;
                 rt.anchoredPosition = home + new Vector2(0f, Mathf.Sin(w) * amplitude);
-            }, rt, "bob");
+            }, rt, "bob").OnAbandon(() => { if (rt) rt.anchoredPosition = home; });
         }
 
+        /// <summary>
+        /// Endless gentle swell. Borrowed like <see cref="Bob"/>, and the two callers that kill
+        /// a breathe in order to punch the same control are why: they used to punch whatever
+        /// scale the breath happened to be holding at that instant.
+        /// </summary>
         public static Tw Breathe(Transform tr, float amplitude = .04f, float period = 2.2f, float phase = 0f)
         {
             if (tr == null) return Run(0.001f, Ease.Linear, null);
+
+            KillChannel(tr, "breathe");
             var home = tr.localScale;
             float t0 = Time.unscaledTime;
+
             return Run(3600f, Ease.Linear, _ =>
             {
                 if (!tr) return;
                 float w = (Time.unscaledTime - t0) / period * Mathf.PI * 2f + phase;
                 tr.localScale = home * (1f + Mathf.Sin(w) * amplitude);
-            }, tr, "breathe");
+            }, tr, "breathe").OnAbandon(() => { if (tr) tr.localScale = home; });
         }
     }
 }

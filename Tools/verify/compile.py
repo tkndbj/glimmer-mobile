@@ -183,12 +183,23 @@ ASSEMBLIES = [
              + compiled("GlimmerGrove.Domain", "GlimmerGrove.Cloud", "GlimmerGrove.Ads",
                         "GlimmerGrove.Privacy"),
     )),
+    ("authoring", dict(
+        out="GlimmerGrove.Authoring",
+        src=sources("Assets/Game/Authoring"),
+        # Editor-only in the asmdef, so it is absent from every player build. What makes that
+        # more than a claim is the entry *above*: `domain` is compiled without this on its
+        # reference list, so the day a shipped type calls into an authoring rule, the domain
+        # pass fails here rather than the rule quietly rejoining the build.
+        refs=ENGINE_EDITOR + PKG_EDITOR + [NETSTANDARD] + SHIMS
+             + compiled("GlimmerGrove.Domain"),
+        defines=DEFINES + ["UNITY_EDITOR"],
+    )),
     ("editor", dict(
         out="GlimmerGrove.Editor",
         src=sources("Assets/Game/Editor"),
         refs=ENGINE_EDITOR + PKG_EDITOR + [NETSTANDARD] + SHIMS
-             + compiled("GlimmerGrove.Domain", "GlimmerGrove.Cloud", "GlimmerGrove.Ads",
-                        "GlimmerGrove.Privacy", "GlimmerGrove.Presentation"),
+             + compiled("GlimmerGrove.Domain", "GlimmerGrove.Authoring", "GlimmerGrove.Cloud",
+                        "GlimmerGrove.Ads", "GlimmerGrove.Privacy", "GlimmerGrove.Presentation"),
         defines=DEFINES + ["UNITY_EDITOR"],
     )),
     ("editor-ios", dict(
@@ -201,8 +212,8 @@ ASSEMBLIES = [
         # would be a Mac, twenty minutes into an Xcode build, with the error naming Apple's
         # linker rather than our file.
         refs=ENGINE_EDITOR + PKG_EDITOR + [NETSTANDARD, IOS_XCODE] + SHIMS
-             + compiled("GlimmerGrove.Domain", "GlimmerGrove.Cloud", "GlimmerGrove.Ads",
-                        "GlimmerGrove.Privacy", "GlimmerGrove.Presentation"),
+             + compiled("GlimmerGrove.Domain", "GlimmerGrove.Authoring", "GlimmerGrove.Cloud",
+                        "GlimmerGrove.Ads", "GlimmerGrove.Privacy", "GlimmerGrove.Presentation"),
         defines=DEFINES + ["UNITY_EDITOR", "UNITY_IOS"],
         # Skipped, not failed, when the iOS module is not installed.
         needs=IOS_XCODE,
@@ -216,7 +227,7 @@ ASSEMBLIES = [
         # needs a GameObject still belongs in Test Runner and the runner will say so.
         refs=ENGINE_EDITOR + PKG_EDITOR + [NETSTANDARD] + SHIMS
              + nunit()
-             + compiled("GlimmerGrove.Domain", "GlimmerGrove.Cloud",
+             + compiled("GlimmerGrove.Domain", "GlimmerGrove.Authoring", "GlimmerGrove.Cloud",
                         "GlimmerGrove.Ads", "GlimmerGrove.Privacy",
                         "GlimmerGrove.Presentation"),
         defines=DEFINES + ["UNITY_EDITOR", "UNITY_INCLUDE_TESTS"],
@@ -378,10 +389,13 @@ def check_messages(files):
 #
 # It has now happened twice, and the second time is why this checks all three. The first was
 # `level.Layout.Width` in ContentValidation and ContentAuthoring, which blew up the moment a
-# boardless level shipped. The second was `level.Hollow.Duskcaps` in the same two files, guarded
-# by `if (!level.HasBoard)` - a correct test right up until a third kind of level existed, at
-# which point "not a board" stopped meaning "a hollow" and the Android build died in the
-# validator.
+# boardless level shipped. The second was a `level.Hollow.<field>` read in the same two files,
+# guarded by `if (!level.HasBoard)` - a correct test right up until a third kind of level
+# existed, at which point "not a board" stopped meaning "a hollow" and the Android build died
+# in the validator. (The field it read was the hollow's duskcap count, and neither the field
+# nor the mechanic exists any more - invariant 5f. The shape of the mistake is the point, so
+# the story is kept and the dead symbol is not, because a name nobody can grep for reads as a
+# note somebody forgot to finish.)
 #
 # The rule is coarse on purpose: a file that reads one of these must somewhere say it knows the
 # thing can be absent. A handful of files touch them, so a false positive costs one word and a

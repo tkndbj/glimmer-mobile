@@ -1,6 +1,6 @@
 """What a glade actually asks of the player, counted rather than argued about.
 
-A board can carry brittle stone, a taproot and three duskcaps and still be a rotation
+A board can carry brittle stone, a taproot and three crossings and still be a rotation
 exercise with a theme painted on it. That is not a matter of taste and it does not need
 playtesting to see: every tile on this board has one *authored* orientation, and the
 question is how much of that orientation the player has to work out from anything other
@@ -12,7 +12,7 @@ with no reference to colour, to the dark, or to what any other mechanic is for. 
 enumerates every arrangement the *arms* allow and then asks which of them win:
 
     solutions   arrangements where every arm mates and none dangles
-    wins        those of them that also light every critter and wake no duskcap
+    wins        those of them that also light every critter
     decided     tiles whose orientation varies across `solutions` but is the same in
                 every one of `wins` - the tiles the player can only place by reasoning
                 about colour or the dark
@@ -20,12 +20,11 @@ enumerates every arrangement the *arms* allow and then asks which of them win:
 
 `decided` is the number worth reading. **When `solutions` is 1, every mechanic on the
 board except the arms is decoration**: the player fits pipes, the lights come on, and the
-duskcap they never thought about was never reachable. That is measurable before anybody
+crossing they never thought about was never turnable. That is measurable before anybody
 plays it, which is the whole point of the file.
 
 The same reading, per mechanic:
 
-    duskcap   arrangements the duskcaps alone reject (every critter correct, dark woken)
     colour    arrangements the critters alone reject
     root      how much the binding removes - `solutions` with the roots dissolved
     brittle   turns owed against turns survived, and whether the tile is `decided`
@@ -69,8 +68,8 @@ def board_of(level):
         for x, tok in enumerate(row.split()):
             if tok == ".":
                 continue
-            kind = {"-": "pipe", "=": "cross", "%": "briar", "*": "source", "@": "lamp",
-                    "x": "duskcap"}[tok[0]]
+            kind = {"-": "pipe", "=": "cross", "%": "briar", "*": "source",
+                    "@": "lamp"}[tok[0]]
             mask, p = read_arms(tok, 1)
             cross = gate = 0
             if p < len(tok) and tok[p] == "+":
@@ -329,26 +328,21 @@ class Reading:
 
     def evaluate(self, rots):
         comp, colour = self.b.solve_state(rots)
-        lamps_ok, dark_ok = True, True
         for p, c in self.b.cells.items():
+            if c["kind"] != "lamp":
+                continue
             have = self.b.energy(p, comp, colour)
-            if c["kind"] == "lamp":
-                want = c["colour"]
-                if not ((have != 0) if want == 0 else (have == want)):
-                    lamps_ok = False
-            elif c["kind"] == "duskcap" and have:
-                dark_ok = False
-        return lamps_ok, dark_ok
+            want = c["colour"]
+            if not ((have != 0) if want == 0 else (have == want)):
+                return False
+        return True
 
     def report(self):
-        wins, only_dark, only_colour = [], 0, 0
+        wins, only_colour = [], 0
         for rots in self.solutions:
-            lamps_ok, dark_ok = self.evaluate(rots)
-            if lamps_ok and dark_ok:
+            if self.evaluate(rots):
                 wins.append(rots)
-            elif lamps_ok and not dark_ok:
-                only_dark += 1
-            elif not lamps_ok and dark_ok:
+            else:
                 only_colour += 1
 
         def varying(sols):
@@ -359,7 +353,7 @@ class Reading:
         varies = varying(self.solutions)
         slack = varying(wins)
         return dict(solutions=len(self.solutions), capped=self.capped, wins=len(wins),
-                    dark_only=only_dark, colour_only=only_colour,
+                    colour_only=only_colour,
                     decided=sorted(varies - slack), slack=sorted(slack),
                     open=sorted(self.settled()), glance=sorted(self.glanced()),
                     tiles=len(self.pts))
@@ -378,7 +372,6 @@ def analyse(level):
             owed = b.group_turns(p)
             brittle.append((p, owed, c["fragile"], p in r["decided"]))
 
-    dark = [p for p, c in sorted(b.cells.items()) if c["kind"] == "duskcap"]
     briars = [p for p, c in sorted(b.cells.items()) if c["kind"] == "briar"]
     roots = {}
     for p, c in sorted(b.cells.items()):
@@ -386,7 +379,7 @@ def analyse(level):
             roots.setdefault(c["link"], []).append(p)
 
     return dict(board=b, par=b.par(), hazards=len(b.hazards()), reading=r, bare=bare,
-                brittle=brittle, dark=dark, briars=briars, roots=roots)
+                brittle=brittle, briars=briars, roots=roots)
 
 
 def line(lid, a):
@@ -396,8 +389,6 @@ def line(lid, a):
     if a["brittle"]:
         live = sum(1 for _, owed, f, dec in a["brittle"] if dec or owed >= f)
         marks.append(f"brittle {live}/{len(a['brittle'])}")
-    if a["dark"]:
-        marks.append(f"dark {r['dark_only']}")
     if a["briars"]:
         # every briar is a free decision by construction, so what is worth printing is how
         # many of them a mechanic actually settles rather than how many there are
@@ -408,8 +399,8 @@ def line(lid, a):
         marks.append(f"root -{gain}")
     return (f"  {lid:<28} par {a['par']:>3}  arms {sol:>5}  wins {r['wins']:>3}  "
             f"glance {len(r['glance']):>3}/{r['tiles']:<3} open {len(r['open']):>2}  "
-            f"decided {len(r['decided']):>2}  colour {r['colour_only']:>4}  "
-            f"dark {r['dark_only']:>3}   " + "  ".join(marks))
+            f"decided {len(r['decided']):>2}  colour {r['colour_only']:>4}   "
+            + "  ".join(marks))
 
 
 def detail(lid, a):
@@ -417,7 +408,6 @@ def detail(lid, a):
     print(f"\n--- {lid}   par {a['par']}  {a['board'].w}x{a['board'].h}")
     print(f"    arm-valid arrangements : {r['solutions']}{'+' if r['capped'] else ''}")
     print(f"    of them, winning       : {r['wins']}")
-    print(f"    rejected by the dark   : {r['dark_only']}")
     print(f"    rejected by colour     : {r['colour_only']}")
     print(f"    decided by a mechanic  : {len(r['decided'])} {r['decided'][:14]}")
     print(f"    free even when won     : {len(r['slack'])} {r['slack'][:14]}")
@@ -435,8 +425,6 @@ def detail(lid, a):
         note = "settled by a mechanic" if p in r["decided"] else (
             "free even in a winning board" if p in r["slack"] else "settled by its own arms")
         print(f"      briar {p}: {note}")
-    if a["dark"] and not r["dark_only"]:
-        print(f"      {len(a['dark'])} duskcap(s) reject nothing the critters do not")
 
 
 def main():
@@ -448,8 +436,25 @@ def main():
 
     for f in files:
         doc = json.load(io.open(os.path.join(CHAPTERS, f), encoding="utf-8"))
+
+        # Everything here enumerates rotations of a grid of conduits, so it has an answer
+        # for a glade and none at all for a hollow, a fall or a weave - those are searched
+        # or generated and have their own instruments (`HollowSolver`, `Survey Lightweave`).
+        # Said out loud rather than skipped silently: a chapter quietly missing from a report
+        # somebody is using to judge difficulty is worse than one that says why it is absent.
+        # It used to read `level["width"]` unguarded and stop the whole run on a KeyError at
+        # the first non-glade chapter, which is every run since the Hollow shipped.
+        glades = [lv for lv in doc["levels"] if lv.get("rows")]
+        other = len(doc["levels"]) - len(glades)
+
         print(f"\n{doc['id']}")
-        for level in doc["levels"]:
+        if not glades:
+            print(f"  {other} level(s), none of them glades - nothing here to enumerate")
+            continue
+        if other:
+            print(f"  ({other} level(s) skipped: not a grid of conduits)")
+
+        for level in glades:
             a = analyse(level)
             print(line(level["id"], a))
             if want_detail:

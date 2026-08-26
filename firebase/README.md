@@ -293,10 +293,44 @@ can never seed different amounts.
 
 ## Secrets
 
-In Secret Manager, never in source or in `.env`. All four currently hold the literal
-`UNSET`, which `index.ts` reads as "not configured" and turns into a refusal. They exist
-only because a declared secret must exist for a deployment to go through — without the
-placeholder, cloud save itself would have been blocked on App Store Connect paperwork.
+In Secret Manager, never in source or in `.env`. `index.ts` reads the literal `UNSET` as
+"not configured" and turns it into a refusal, which is what let cloud save ship before any
+of this existed — a declared secret has to exist for a deployment to go through, so the
+placeholders stood in until the real values arrived.
+
+**They are no longer placeholders.** As of 2026-08-26 all six hold real values —
+`LEVELPLAY_SECRET`, `APPLE_KEY_ID`, `APPLE_ISSUER_ID`, `APPLE_PRIVATE_KEY`,
+`GOOGLE_PLAY_KEY`, `APPLE_SHARED_SECRET` — so `adReward` verifies callbacks and pays for
+real, and this paragraph saying otherwise was itself the hazard: it is the sentence somebody
+reads before deciding a live payment path is inert. Check rather than trust it.
+
+**Check a secret's shape with something that can read more than one line.** The Apple key is
+a six-line PEM, and `secrets:access NAME | tail -1` returns `-----END PRIVATE KEY-----` —
+twenty-five characters, which reads exactly like a truncated placeholder and is not. That
+misreading is recorded here because the obvious next move from it is to replace a working
+production key.
+
+**What proves the Apple triple is right is Apple.** The key, `APPLE_KEY_ID` and
+`APPLE_ISSUER_ID` have to be one issued set, and no local check can tell an In-App Purchase
+key from any other EC P-256 key. Sign the same JWT `lookupAppleTransaction` does and ask for
+a nonsense transaction id:
+
+- **400 `Invalid transaction id`** — the token was accepted. The triple is correct.
+- **401** — the token was rejected. Wrong key, wrong pairing, or the wrong kind of key.
+
+Verified on 2026-08-26: sandbox answers 400, production answers 401. That pair is the
+expected shape for an app with no live products yet, and it is the same asymmetry the
+hard-won facts in `CLAUDE.md` describe for `redeemPurchase` — the failure to worry about is
+**both** endpoints refusing.
+
+`APPLE_SHARED_SECRET` is declared and **read by nothing**. It belongs to the legacy
+`verifyReceipt` endpoint, which this server deliberately does not use — it asks the App Store
+Server API instead. Harmless, and worth knowing before somebody goes looking for the code
+that consumes it.
+
+Remember that a secret is **pinned at deploy time** (see the hard-won facts in `CLAUDE.md`):
+setting a new version changes nothing about a running function until every function naming it
+is redeployed.
 
 Replacing them is the whole of enabling purchases; no code changes:
 
@@ -424,12 +458,35 @@ whatever the table says then — so retune by *adding* a product, never by repoi
 
 ### What a product may grant
 
-Currency, and nothing else. Hearts and boosts live in the player's save file and are
-applied by the phone, so a product that promised them would need the client to apply
-half a purchase after the server applied the other half — which means a record in the
-save of what has already been applied, merged across devices, whose failure mode is
-somebody paying and receiving nothing. Hearts are bought with **gems** instead, through
-the ordinary spend path. See `StoreProduct` on the client for the argument in full.
+**Currency, or an idempotent permanent entitlement. Never a stored amount, and never
+both.**
+
+Currency is the ordinary case. What it may never grant is an *amount*: hearts and boosts
+live in the player's save file and are applied by the phone, so a product that promised
+them would need the client to apply half a purchase after the server applied the other
+half — which means a record in the save of what has already been applied, merged across
+devices, whose failure mode is somebody paying and receiving nothing. Hearts are bought
+with **gems** instead, through the ordinary spend path.
+
+The one exception is a **heart container** (`heartCapacity` on the product), and it is
+the exception that paragraph defines rather than one it forgot. A capacity arrives as
+the union of a permanent product id, so applying it twice is applying it once and the
+record has nothing to answer — which is why the entitlement lives entirely in the
+client's save and comes back after a reinstall through the store's own Restore, with
+nothing here to grant. A container must be a `nonconsumable` on the `supplies` shelf and
+may grant no currency; `readProduct`, the seeder and `Validate Content` all refuse the
+mixture rather than resolving it.
+
+What this server *does* own for a container is the **reversal**. `revokeReceipt` records
+the product id on `players/{uid}/private/wallet`, and every wallet reply carries it back
+as `containersRevoked` — a list of ids that were **refunded**, never a list of ids the
+account owns. An answer read as a whitelist would confiscate a purchase on any reply that
+was short or from an account this server had not caught up with; an explicit revocation
+can only come from a refund that really happened. Buying the container again lifts the
+entry, in `redeemPurchase`'s own granting transaction.
+
+See `StoreProduct.HeartCapacity` on the client, and invariant 18d, for the argument in
+full.
 
 ## Store credentials
 

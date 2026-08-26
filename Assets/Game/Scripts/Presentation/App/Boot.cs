@@ -129,28 +129,19 @@ namespace GlimmerGrove
             // launch, from the splash, with the hub on screen. Both of those are the moments
             // a player most needs telling, and a shop screen listening for itself would miss
             // exactly them.
-            StoreService.Granted += grant =>
-            {
-                if (!grant.IsValid) return;
-
-                Flow.Modal<ShopGrantOverlay>(v =>
-                {
-                    v.Grant = grant;
-
-                    // Chained behind the receipt rather than raised beside it, and the ordering
-                    // is the whole reason this is the right moment to ask. The sale is banked,
-                    // the goods are on screen, and "keep what you just bought" is the easiest
-                    // sentence in the game to agree with — where the same words in front of the
-                    // payment sheet would be a dialog talking somebody out of the purchase it
-                    // exists to protect.
-                    //
-                    // The gap is what stops it reading as one panel replacing another: Destroy
-                    // lands at the end of the frame, so the receipt is still drawn while its
-                    // replacement springs in from scale zero. The hub learned that twice.
-                    v.Dismissed = () => Tween.After(
-                        .22f, () => AccountPrompts.Offer(AccountPromptTrigger.Purchase));
-                });
-            };
+            //
+            // Through the queue rather than straight to a panel, because two grants can land
+            // seconds apart — a purchase interrupted by a crash is redeemed on the next launch
+            // beside a fresh one — and two receipts must be shown one after another rather than
+            // on top of each other or, worse, one instead of the other. See ReceiptQueue.
+            //
+            // The prompt is chained behind the last of them rather than raised beside it, and
+            // the ordering is the whole reason this is the right moment to ask. The sale is
+            // banked, the goods are on screen, and "keep what you just bought" is the easiest
+            // sentence in the game to agree with — where the same words in front of the payment
+            // sheet would be a dialog talking somebody out of the purchase it exists to protect.
+            ReceiptQueue.WhenSettled = () => AccountPrompts.Offer(AccountPromptTrigger.Purchase);
+            StoreService.Granted += ReceiptQueue.Show;
 
 #if UNITY_EDITOR || DEVELOPMENT_BUILD
             Telemetry.AddSink(new DebugAnalyticsSink());

@@ -23,7 +23,19 @@ namespace GlimmerGrove.Store
         /// <summary>Gems and credits together, at a discount on buying the parts.</summary>
         Bundles,
 
-        /// <summary>Hearts and boosts, bought with gems rather than money. Not a product.</summary>
+        /// <summary>
+        /// Everything about hearts: refills and boosts bought with gems, and the permanent
+        /// capacity upgrades bought with money.
+        ///
+        /// <para>
+        /// <b>The one shelf that carries both, and it has to.</b> A shelf is a tab, and a tab
+        /// is how a player finds a thing — somebody who wants more hearts wants this page,
+        /// and splitting the permanent answer onto a fifth tab would mean the shelf they open
+        /// is the one that cannot solve their problem. What it costs is that the guest notice
+        /// and the value ladder both had to learn that a supplies row may be a product; what
+        /// it buys is that "hearts" is one place.
+        /// </para>
+        /// </summary>
         Supplies,
     }
 
@@ -109,7 +121,8 @@ namespace GlimmerGrove.Store
     public sealed class StoreProduct
     {
         public StoreProduct(string id, StoreProductKind kind, StoreShelf shelf,
-                            long credits, long gems, int referenceUsdCents, StoreBadge badge)
+                            long credits, long gems, int referenceUsdCents, StoreBadge badge,
+                            int heartCapacity = 0)
         {
             Id = id ?? string.Empty;
             Kind = kind;
@@ -118,6 +131,7 @@ namespace GlimmerGrove.Store
             Gems = gems < 0 ? 0 : gems;
             ReferenceUsdCents = referenceUsdCents < 0 ? 0 : referenceUsdCents;
             Badge = badge;
+            HeartCapacity = heartCapacity < 0 ? 0 : heartCapacity;
         }
 
         /// <summary>
@@ -159,7 +173,42 @@ namespace GlimmerGrove.Store
 
         public StoreBadge Badge { get; }
 
-        public bool IsValid => Id.Length > 0 && (Credits > 0 || Gems > 0);
+        /// <summary>
+        /// Where this product moves the heart <em>refill cap</em> to, or nought when it is an
+        /// ordinary currency product.
+        ///
+        /// <para>
+        /// <b>The one thing a real-money product may grant that is not currency, and the rule
+        /// that lets it.</b> Invariant 18 says a product grants currency and nothing else, and
+        /// the argument behind it is precise: hearts and boosts are <em>amounts</em>, so a
+        /// product granting one would need the client to apply half a purchase after the
+        /// server applied the other half, which means a record of "did I already apply this
+        /// transaction's hearts" living in the save and merged across devices — and its
+        /// failure mode is somebody paying and receiving nothing.
+        /// </para>
+        /// <para>
+        /// A capacity is not an amount. It arrives as a set-union of one permanent id, so
+        /// applying it twice is applying it once, and the question the record existed to answer
+        /// cannot be asked. That is the same property that makes a companion purchase safe to
+        /// store (invariant 15), and it is why this is a widening of invariant 18 rather than
+        /// a hole in it: <b>a real-money product grants currency, or an idempotent permanent
+        /// entitlement — never a stored amount, and never both.</b> The "never both" half is
+        /// enforced by <c>StoreCatalog</c>, not by convention: a container that also paid gems
+        /// would put an amount back on the path this reasoning removed it from.
+        /// </para>
+        /// <para>
+        /// It is a capacity rather than a delta, so two containers do not stack into a number
+        /// nobody authored — what a player holds is the largest one they have bought, which is
+        /// what makes buying them out of order, or buying the same one twice through a restore,
+        /// impossible to get wrong. See <c>HeartContainerLedger</c>.
+        /// </para>
+        /// </summary>
+        public int HeartCapacity { get; }
+
+        /// <summary>True when this product sells a permanent heart capacity rather than currency.</summary>
+        public bool IsContainer => HeartCapacity > 0;
+
+        public bool IsValid => Id.Length > 0 && (Credits > 0 || Gems > 0 || HeartCapacity > 0);
 
         /// <summary>True when the store will only ever sell this once per account.</summary>
         public bool IsOneTime => Kind == StoreProductKind.NonConsumable;
@@ -230,7 +279,9 @@ namespace GlimmerGrove.Store
         /// </summary>
         public string NameKey => "store.product." + Id;
 
-        public override string ToString() => $"{Id} ({Credits} credits, {Gems} gems)";
+        public override string ToString()
+            => IsContainer ? $"{Id} (heart capacity {HeartCapacity})"
+                           : $"{Id} ({Credits} credits, {Gems} gems)";
     }
 
     /// <summary>

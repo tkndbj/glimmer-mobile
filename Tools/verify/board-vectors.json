@@ -1,0 +1,103 @@
+{
+  "schemaVersion": 1,
+  "about": [
+    "The four-armed-tile rule, written down once and run by all three copies of it.",
+    "",
+    "A crossing and a briar mate every neighbour at every angle, so nothing about the",
+    "pipe-fitting settles either one. The rule is therefore about the consequence: turn",
+    "it one step off its solution and the glade must stop finishing. It exists in three",
+    "places - LevelValidator.CheckDecidableTiles, Tools/verify/content.py's `decidable`",
+    "and Tools/verify/author.py's `Board.decides` - because the Editor, the offline gate",
+    "and the authoring aid each need it and none of them can call the others.",
+    "",
+    "Three copies of one rule drift. Invariant 9a's answer is a file like this one, run",
+    "as a test on every side: BoardVectorTests proves the C# copy matches it, and",
+    "Tools/verify/content.py proves both Python copies do on every offline run. Change",
+    "the rule anywhere without changing the others and one of them goes red.",
+    "",
+    "`undecided` names the tiles the rule must complain about, as \"x,y\". An empty list",
+    "means every four-armed tile on the board is settled by something."
+  ],
+  "cases": [
+    {
+      "name": "thorns_into_one_network",
+      "why": "A ring all the way round, so both of the briar's ways lead back into the same network and the critter is fed from two other sides whatever the briar does. The case the old topology check got right.",
+      "rows": [
+        "-ES/0 -ESW/0 -SW/0",
+        "*NES#R/0 %EW+NS/0 @NSW#A/0",
+        "-NE/0 -NEW/0 -NW/0"
+      ],
+      "undecided": ["1,1"]
+    },
+    {
+      "name": "two_networks_of_one_colour",
+      "why": "The false negative. The thorns genuinely separate two networks, so the old check passed it - but both are red, so opening them costs nobody anything, and the open pair is a chord of a loop so shutting it costs nothing either.",
+      "rows": [
+        "*ES#R/0 -ESW/0 -SW/0",
+        "-NE/0 %EW+NS/0 @NW#R/0",
+        ". @NE#R/0 *W#R/0"
+      ],
+      "undecided": ["1,1"]
+    },
+    {
+      "name": "open_pair_feeds_a_leaf",
+      "why": "The false positive, and the shape that replaced the duskcap (invariant 5f). Both thorned ways lead back into the one grove, so the old check called it decoration - while shutting the open pair is the only thing feeding the critter above it.",
+      "rows": [
+        ". @S#R/0 .",
+        "-ES/0 %NS+EW/0 -SW/0",
+        "-NE/0 -NEW/0 *NW#R/0"
+      ],
+      "undecided": []
+    },
+    {
+      "name": "pocket_with_its_own_heart",
+      "why": "The pocket shape itself: the briar's open pair runs into two dark stubs and its thorns hold a red grove apart from a green pocket. Turning it blends them and the pocket's critter goes out.",
+      "rows": [
+        "*E#R/0 @WS#A/0 .",
+        "-E/0 %EW+NS/0 -W/0",
+        ". @NE#G/0 *W#G/0"
+      ],
+      "undecided": []
+    },
+    {
+      "name": "twisted_crossing_settled_by_colour",
+      "why": "A twisted crossing is the other tile the arms cannot settle: it pairs north with east and south with west, and no rotation of it mates its neighbours any differently. Red goes in at the north and out at the east, green in at the west and out at the south; turn it and the two hearts pair with each other while the two critters pair with nothing.",
+      "rows": [
+        ". *S#R/0 .",
+        "*E#G/0 =NE+SW/0 @W#R/0",
+        ". @N#G/0 ."
+      ],
+      "undecided": []
+    },
+    {
+      "name": "twisted_crossing_on_a_ring",
+      "why": "The crossing half of the false negative. The same twisted tile, but every one of its four arms leads back into one ring of red, so re-pairing them strands nothing and the board finishes whichever way it faces. Architecture wearing a decision's clothes, with a tap charged for it.",
+      "rows": [
+        "-ES/0 -ESW/0 -SW/0",
+        "*NES#R/0 =NE+SW/0 @NSW#A/0",
+        "-NE/0 -NEW/0 -NW/0"
+      ],
+      "undecided": ["1,1"]
+    },
+    {
+      "name": "straight_crossing_is_architecture",
+      "why": "A straight crossing reads the same at every angle, so it is skipped rather than reported. Stonebridge roots four of them on purpose, and a warning here would be noise on every bridge in the game.",
+      "rows": [
+        ". *S#G/0 .",
+        "*E#R/0 =NS+EW/0 @W#R/0",
+        ". @N#G/0 ."
+      ],
+      "undecided": []
+    },
+    {
+      "name": "rooted_briar_is_skipped",
+      "why": "A rooted tile cannot be turned at all, so it decides nothing by construction and saying so would be noise. It is authored at its solution, which invariant 5c requires separately.",
+      "rows": [
+        "-ES/0 -ESW/0 -SW/0",
+        "*NES#R/0 %EW+NS/0! @NSW#A/0",
+        "-NE/0 -NEW/0 -NW/0"
+      ],
+      "undecided": []
+    }
+  ]
+}

@@ -97,16 +97,9 @@ namespace GlimmerGrove
         /// <b>Not the player's time.</b> This includes staring at an untouched board, and on
         /// a phone it includes being interrupted — so it describes how long the screen was
         /// open and nothing else. It exists for analytics, which wants exactly that. Anything
-        /// shown to a player or written to a record wants <see cref="Millis"/>.
+        /// shown to a player or written to a record wants <see cref="Moves"/>.
         /// </summary>
         public readonly float Seconds;
-
-        /// <summary>
-        /// Milliseconds of actual play: from the first conduit turned to the run resolving,
-        /// accumulated a frame at a time and never counting a suspended app. Zero when the
-        /// run ended before a single turn. See <see cref="RunClock"/>.
-        /// </summary>
-        public readonly int Millis;
 
         /// <summary>
         /// The authored route: how many turns separated the untouched board from the
@@ -126,41 +119,10 @@ namespace GlimmerGrove
         /// </summary>
         public readonly int Route;
 
-        /// <summary>
-        /// The glade's whole clock in milliseconds, or 0 when it is untimed.
-        ///
-        /// <para>
-        /// Carried so that anything reacting to the run can put <see cref="Millis"/> in
-        /// proportion without reaching back into a <see cref="Puzzle"/> that has since been
-        /// restarted — which is the hazard this whole type exists to remove, and a real one
-        /// here because the defeat panel offers a retry while the board it describes is still
-        /// on screen.
-        /// </para>
-        /// </summary>
-        public readonly int TimeLimit;
-
-        /// <summary>
-        /// Elapsed time at or under which the clock still allowed three stars, or 0 when the
-        /// glade is untimed.
-        ///
-        /// <para>
-        /// Carried rather than derived from <see cref="TimeLimit"/>, which is what it used to
-        /// be. The two stopped being proportional the moment the star thresholds were held
-        /// against par so a live clock retune could not move them — after which a panel
-        /// reading a fraction of the limit would quote a three-star time the game does not
-        /// grade against, on the one screen whose whole job is telling a player what a run
-        /// was worth.
-        /// </para>
-        /// </summary>
-        public readonly int TimeGold;
-
         RunOutcome(LevelId level, bool won, int stars, int moves, int target, int previousBest,
                    bool firstClear, int attempt, DefeatReason reason, int turnsToSolution,
-                   int lampsLit, int lampCount, int hintsUsed, float seconds, int millis,
-                   int route, int timeLimit, int timeGold)
+                   int lampsLit, int lampCount, int hintsUsed, float seconds, int route)
         {
-            TimeLimit = timeLimit < 0 ? 0 : timeLimit;
-            TimeGold = timeGold < 0 ? 0 : timeGold;
             Level = level;
             Won = won;
             Stars = stars < 0 ? 0 : stars;
@@ -175,7 +137,6 @@ namespace GlimmerGrove
             LampCount = lampCount < 0 ? 0 : lampCount;
             HintsUsed = hintsUsed < 0 ? 0 : hintsUsed;
             Seconds = seconds < 0f ? 0f : seconds;
-            Millis = millis < 0 ? 0 : millis;
             Route = route < 0 ? 0 : route;
         }
 
@@ -200,31 +161,26 @@ namespace GlimmerGrove
         public static RunOutcome Win(LevelId level, int stars, int moves, int target,
                                      int previousBest, bool firstClear, int attempt,
                                      int lit, int wanted, int hintsUsed,
-                                     float seconds, int millis, int route,
-                                     int timeLimit, int timeGold)
+                                     float seconds, int route)
             => new RunOutcome(level, true, stars, moves, target, previousBest, firstClear,
                               attempt, DefeatReason.OutOfMoves, 0, lit, wanted, hintsUsed,
-                              seconds, millis, route, timeLimit, timeGold);
+                              seconds, route);
 
         /// <summary>A run lost, described by its facts. See the win above.</summary>
         public static RunOutcome Loss(LevelId level, DefeatReason reason, int moves, int target,
                                       int previousBest, int attempt, int stepsToSolution,
                                       int lit, int wanted, int hintsUsed,
-                                      float seconds, int millis, int route,
-                                      int timeLimit, int timeGold)
+                                      float seconds, int route)
             => new RunOutcome(level, false, 0, moves, target, previousBest, false,
                               attempt, reason, stepsToSolution, lit, wanted, hintsUsed,
-                              seconds, millis, route, timeLimit, timeGold);
+                              seconds, route);
 
         /// <summary>A glade finished. <paramref name="attempt"/> counts this run.</summary>
         public static RunOutcome Win(Puzzle board, int stars, int previousBest, bool firstClear,
-                                     int attempt, int hintsUsed, float seconds, int millis,
-                                     int route)
+                                     int attempt, int hintsUsed, float seconds, int route)
             => new RunOutcome(board.Id, true, stars, board.Moves, board.Gold, previousBest,
                               firstClear, attempt, DefeatReason.OutOfMoves, 0,
-                              board.LampsLit, board.LampCount, hintsUsed, seconds, millis, route,
-                              board.HasTimeLimit ? board.TimeLimitMillis : 0,
-                              board.HasTimeLimit ? board.TimeGoldMillis : 0);
+                              board.LampsLit, board.LampCount, hintsUsed, seconds, route);
 
         /// <summary>
         /// A run lost. No stars, no record and no reward — <c>PlayerProgress</c> never
@@ -232,13 +188,10 @@ namespace GlimmerGrove
         /// "never" values rather than at anything a reader could mistake for a result.
         /// </summary>
         public static RunOutcome Loss(Puzzle board, DefeatReason reason, int previousBest,
-                                      int attempt, int hintsUsed, float seconds, int millis,
-                                      int route = 0)
+                                      int attempt, int hintsUsed, float seconds, int route = 0)
             => new RunOutcome(board.Id, false, 0, board.Moves, board.Gold, previousBest,
                               false, attempt, reason, board.TurnsToSolution,
-                              board.LampsLit, board.LampCount, hintsUsed, seconds, millis, route,
-                              board.HasTimeLimit ? board.TimeLimitMillis : 0,
-                              board.HasTimeLimit ? board.TimeGoldMillis : 0);
+                              board.LampsLit, board.LampCount, hintsUsed, seconds, route);
 
         // ------------------------------------------------------------- derived
         /// <summary>
@@ -255,38 +208,14 @@ namespace GlimmerGrove
         /// case; this refuses to ask.
         /// </para>
         /// <para>
-        /// The other two endings are the ones where the player has no other evidence. They
-        /// watched a conduit give way and know why they lost; running out of turns — or out
-        /// of clock — looks identical whether they were one turn short or twenty. The clock
-        /// was added to this rather than excluded from it deliberately: nothing crumbles when
-        /// time runs out, so the count is exactly as sound as it is on the move budget, and a
-        /// timeout is if anything the ending where "you were one turn away" drives a retry
-        /// hardest.
+        /// The other ending is the one where the player has no other evidence. They watched a
+        /// conduit give way and know why they lost; running out of turns looks identical
+        /// whether they were one turn short or twenty, which is exactly the ending where
+        /// "you were one turn away" drives a retry hardest.
         /// </para>
         /// </summary>
         public int TurnsShort
             => Won || Reason == DefeatReason.ConduitLost ? -1 : TurnsToSolution;
-
-        /// <summary>True when this run ended because the clock reached zero.</summary>
-        public bool TimedOut => !Won && Reason == DefeatReason.OutOfTime;
-
-        /// <summary>Whether this run was played against a clock at all.</summary>
-        public bool HasTimeLimit => TimeLimit > 0;
-
-        /// <summary>
-        /// Milliseconds still on the clock when the run ended, or 0 on an untimed glade.
-        /// Zero on a timeout too, which is the honest reading rather than a special case.
-        /// </summary>
-        public int TimeLeft
-        {
-            get
-            {
-                if (!HasTimeLimit) return 0;
-
-                int left = TimeLimit - Millis;
-                return left < 0 ? 0 : left;
-            }
-        }
 
         /// <summary>
         /// True when the player was close enough that saying so is worth a sentence.

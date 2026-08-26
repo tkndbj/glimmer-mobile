@@ -70,7 +70,7 @@ namespace GlimmerGrove.Cloud
     /// next tap of a provider button fixes.
     /// </para>
     /// <para>
-    /// Pure, static-free and free of Unity types on purpose, for the reason <c>RunClock</c>
+    /// Pure, static-free and free of Unity types on purpose, for the reason <c>RunScreen.Tick</c>
     /// and <c>TweenCycle</c> are: this is a five-line rule guarding an unrecoverable failure
     /// that is invisible in the Editor, so it has to be provable offline rather than reasoned
     /// about. <c>AccountGateTests</c> walks every cell of the table.

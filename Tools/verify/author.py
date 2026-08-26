@@ -1,8 +1,8 @@
 """Board authoring aid: describe a glade as cells and edges, get back JSON rows.
 
 Authoring a board by typing arm masks is how a level ends up with an arm pointing at
-nothing, and it gets worse with every mechanic - a duskcap has to be its own island of
-dark, and every conduit on a taproot has to agree on one number of turns. Neither is
+nothing, and it gets worse with every mechanic - a briar draws four arms and conducts
+two, and every conduit on a taproot has to agree on one number of turns. Neither is
 visible in a grid of tokens.
 
 So you say which cells exist and which of them are joined, and this derives the masks,
@@ -84,10 +84,6 @@ class Board:
     def lamp(self, x, y, colour='A', rot=0):
         self.cells[(x, y)] = dict(kind='lamp', colour=COLOURS[colour], rot=rot,
                                   locked=False, fragile=0, link=None, cross=0, gate=0)
-
-    def duskcap(self, x, y, rot=0, locked=False):
-        self.cells[(x, y)] = dict(kind='duskcap', colour=0, rot=rot,
-                                  locked=locked, fragile=0, link=None, cross=0, gate=0)
 
     def cross(self, x, y, strand, rot=0, locked=False, fragile=0, link=None):
         """A crossing: four arms in two pairs that pass through one another.
@@ -190,7 +186,7 @@ class Board:
         c = self.cells.get(p)
         if not c:
             return '.'
-        head = {'pipe': '-', 'source': '*', 'lamp': '@', 'duskcap': 'x', 'cross': '=',
+        head = {'pipe': '-', 'source': '*', 'lamp': '@', 'cross': '=',
                 'briar': '%'}[c['kind']]
         m = self.mask(p)
         named = c['cross'] or c['gate']
@@ -317,18 +313,32 @@ class Board:
                 if not ok:
                     errs.append(f"lamp {p} wants {LETTER[want]} but the solution feeds it "
                                 f"{LETTER[have] if have else 'nothing'}")
-            if c['kind'] == 'duskcap' and have:
-                errs.append(f"duskcap {p} is lit by the authored solution ({LETTER[have]})")
             if c['kind'] == 'cross':
                 if comp[(p, 0)] == comp[(p, 1)]:
                     warns.append(f"crossing {p} has both strands in one network, so it "
                                  "crosses nothing")
                 elif not have:
                     warns.append(f"crossing {p} carries no light at all in the solution")
-            if c['kind'] == 'briar' and not self.separates(p, comp):
-                warns.append(f"briar {p} closes nothing off - every way it has leads back "
-                             "into one network, so turning it moves the light and never "
-                             "where the light gets to")
+
+        # A four-armed tile mates every neighbour at every angle, so nothing about the
+        # pipe-fitting settles it: turning it one step has to un-finish the glade or it is
+        # decoration with a par charged for it. See `decides` - this is the rule, and the
+        # loop above keeps the two crossing-specific readings because they diagnose a
+        # different fault and a better message is worth two warnings on one tile.
+        if self.wins(comp, colour):
+            for p, c in self.cells.items():
+                if c['kind'] not in ('cross', 'briar') or c['locked']:
+                    continue
+                if alike(self.mask(p), c['cross'], 1, c['gate']):
+                    continue                     # a straight crossing is architecture
+                if self.decides(p):
+                    continue
+                why = ("every way it has leads back into one network"
+                       if c['kind'] == 'briar' and not self.separates(p, comp)
+                       else "the two things it holds apart are answering the same colour")
+                warns.append(f"turning the {c['kind']} at {p} one step from its solution "
+                             f"still finishes the glade, so nothing on this board settles "
+                             f"it - {why}")
 
         # bound groups: one common turn count, no rooted member, at least two members
         groups = {}
@@ -374,14 +384,12 @@ class Board:
     def separates(self, p, comp):
         """Whether taking this briar's thorns off would join anything to anything.
 
-        Mirrors LevelValidator.CheckBriars. Only the thorned ways are asked about - the open
-        pair is the network the tile is already in, so it can never disagree with itself -
-        and the way has to be open on the *other* side too, or lifting these thorns would
-        still join nothing, which is what two briars back to back are.
-
-        Note what is deliberately not asked: whether the tile carries any light. A briar
-        standing in an island of dark with its thorns facing the grove is one of the best
-        tiles this mechanic has, because opening it is how a shadow wakes.
+        No longer the rule - `decides` is - but kept as the *reason* attached to its warning,
+        because it is the commonest cause and the most actionable one. Only the thorned ways
+        are asked about (the open pair is the network the tile is already in, so it can never
+        disagree with itself) and the way has to be open on the *other* side too, or lifting
+        these thorns would still join nothing, which is what two briars back to back are.
+        Mirrors LevelValidator.ThornsSeparate.
         """
         c = self.cells[p]
         mine = comp[(p, 0)]
@@ -396,6 +404,34 @@ class Board:
             if comp[(q, self.strand_at(q, OPP[d]))] != mine:
                 return True
         return False
+
+    def wins(self, comp, colour):
+        """Whether every critter is correctly lit in this arrangement. Mirrors Puzzle.Won."""
+        any_lamp = False
+        for p, c in self.cells.items():
+            if c['kind'] != 'lamp':
+                continue
+            any_lamp = True
+            have, want = self.energy(p, comp, colour), c['colour']
+            if not ((have != 0) if want == 0 else (have == want)):
+                return False
+        return any_lamp
+
+    def decides(self, p):
+        """Whether turning this tile one step off its solution un-finishes the glade.
+
+        Mirrors LevelValidator.CheckDecidableTiles, and it is the rule rather than a proxy
+        for it. A crossing and a briar wear all four arms at every angle, so every neighbour
+        mates them however they are turned and nothing about the pipe-fitting says which way
+        either one goes - which is what makes them the two tiles worth authoring with
+        (invariant 5d) and exactly how they fail.
+
+        Asking the consequence is what fixed the topology check this replaces, which was
+        wrong in both directions: it missed a tile separating two networks of *compatible*
+        colour, and it fired on a briar whose open pair is the only way into a pocket
+        carrying a heart of its own (invariant 5f).
+        """
+        return not self.wins(*self.solve_state({p: 1}))
 
     def group_turns(self, p):
         c = self.cells[p]
@@ -479,13 +515,7 @@ class Board:
         """
         comp, colour = self.solve_state()
 
-        def dark(g):
-            return any(self.cells[q]['kind'] == 'duskcap'
-                       for q, st in comp if comp[(q, st)] == g)
-
         def why(ga, gb):
-            if dark(ga) or dark(gb):
-                return 'wakes the dark'
             a, b = colour[ga], colour[gb]
             if a and b and a != b:
                 return f'{LETTER[a]} meets {LETTER[b]}'
@@ -546,7 +576,7 @@ class Board:
                     top += '    '; mid += ' .  '; bot += '    '; continue
                 m = rotl(self.mask(p), (rots or {}).get(p, 0))
                 shut = m & ~self.live(p, rots) & 15
-                glyph = {'pipe': '+', 'source': '*', 'lamp': 'O', 'duskcap': 'X',
+                glyph = {'pipe': '+', 'source': '*', 'lamp': 'O',
                          'cross': ')', 'briar': '%'}[c['kind']]
                 if c['link']:
                     glyph = c['link'].lower()
@@ -571,8 +601,7 @@ class Board:
             r = self.reading()
             print(f"    glance {len(r['glance'])}/{r['tiles']}  arms {r['solutions']}"
                   f"{'+' if r['capped'] else ''}  wins {r['wins']}  open {len(r['open'])}  "
-                  f"decided {len(r['decided'])}  rejected by colour {r['colour_only']}, "
-                  f"by the dark {r['dark_only']}")
+                  f"decided {len(r['decided'])}  rejected by colour {r['colour_only']}")
         print(self.picture())
         for r in self.rows():
             print(f'        "{r}",')

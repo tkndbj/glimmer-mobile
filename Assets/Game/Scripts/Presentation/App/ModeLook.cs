@@ -40,13 +40,6 @@ namespace GlimmerGrove
         /// <summary>The mode's colour: its trail, its switcher row, the wash over its perches.</summary>
         public abstract Color Accent { get; }
 
-        /// <summary>
-        /// The mark on the switcher. Generated rather than a sprite, for <c>Art.Bloom</c>'s
-        /// reason: this is drawn before a chapter's art has necessarily arrived, and an
-        /// <c>Image</c> whose sprite has not loaded is a white rectangle rather than a blank.
-        /// </summary>
-        public abstract Sprite Mark();
-
         /// <summary>A gentle tint over the perch, so a strip of nodes reads as one place.</summary>
         public virtual Color Wash => Color.white;
     }
@@ -87,7 +80,6 @@ namespace GlimmerGrove
         public override string Perch => "rock_grass";
 
         public override Color Accent => Pal.Gold;
-        public override Sprite Mark() => Art.Leaf(96);
     }
 
     sealed class FallLook : ModeLook
@@ -95,12 +87,20 @@ namespace GlimmerGrove
         public override GameMode Mode => GameMode.Fall;
         public override Type Screen => typeof(FallScreen);
 
-        /// <summary>Bare stone — a well is cut into rock, and it reads as the hardest of the four.</summary>
-        public override string Perch => "rock_plain";
+        /// <summary>
+        /// An ice font: a rim with dark water held in it, so the glade disc sits *in* something
+        /// rather than on top of it. The only concave perch of the four, which is what tells it
+        /// apart from the weave's ice without relying on colour.
+        /// </summary>
+        public override string Perch => "rock_basin";
 
         public override Color Accent => Pal.Ember;
-        public override Sprite Mark() => Art.Disc(96);
-        public override Color Wash => new Color(1f, .84f, .80f, 1f);
+
+        // No Wash override, deliberately. The ember tint this mode used to carry was written
+        // for bare stone; a wash is a multiply, so over ice it takes the blue straight out of
+        // the tile and leaves grey concrete around a murky puddle. The accent still carries
+        // the mode's warmth where warmth belongs - the trail and the switcher row - and the
+        // perch is left to read as the thing it is.
     }
 
     sealed class KeeperLook : ModeLook
@@ -112,7 +112,6 @@ namespace GlimmerGrove
         public override string Perch => "rock_wood";
 
         public override Color Accent => Pal.Mint;
-        public override Sprite Mark() => Art.Round(24);
         public override Color Wash => new Color(.84f, 1f, .88f, 1f);
     }
 
@@ -121,11 +120,15 @@ namespace GlimmerGrove
         public override GameMode Mode => GameMode.Weave;
         public override Type Screen => typeof(WeaveScreen);
 
-        /// <summary>Pale sand, so the drawn channels read brightest against it.</summary>
-        public override string Perch => "rock_sand";
+        /// <summary>
+        /// A lit face on dark earth — the mode's own subject standing under every glade. It is
+        /// also the furthest thing in the set from the glade island: the sand block it replaced
+        /// was the same rounded silhouette one tint away, which is no difference at all now that
+        /// the Nightloom draws Mill Vale's map.
+        /// </summary>
+        public override string Perch => "rock_lumen";
 
         public override Color Accent => Pal.Aqua;
-        public override Sprite Mark() => Art.Ring(96, 14f);
         public override Color Wash => new Color(.80f, .98f, 1f, 1f);
     }
 }

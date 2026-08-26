@@ -16,7 +16,7 @@ namespace GlimmerGrove.Content
     /// turning them into a distance needs that chapter's strip count: the same
     /// fractional gap is six times the distance in a six-strip chapter as in a
     /// one-strip chapter. That is precisely why these checks cannot be made one level
-    /// at a time, and why <see cref="ChapterMapValidator"/> exists alongside
+    /// at a time, and why <c>ChapterMapValidator</c> exists alongside
     /// <see cref="LevelValidator"/> rather than inside it.
     /// </summary>
     public static class ChapterMap

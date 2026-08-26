@@ -212,36 +212,38 @@ namespace GlimmerGrove.Tests
             Assert.AreEqual(board.Energy(i), board.EnergyOn(i, 0));
         }
 
-        // ------------------------------------------------------------------ the dark
-        // The grove above, an island of dark below, and a briar between them whose thorns are
-        // the whole of what keeps them apart: its open way runs east and west into two dark
-        // stubs, so opening the other way joins the critter's network to the duskcap's.
+        // ------------------------------------------------------------- the ford
+        // The red grove above, a pocket of green below with a heart of its own, and a briar
+        // between them whose thorns are the whole of what keeps them apart: its open way runs
+        // east and west into two dark stubs, so opening the other way pours the red into the
+        // green. The grove's own critter takes any colour and stays lit through it, which is
+        // what makes the pocket's the only one that says anything.
         static readonly string[] Ford =
         {
             "*E#R/0 @WS#A/0 .",
             "-E/0 %EW+NS/0 -W/0",
-            ". xN/0 ."
+            ". @NE#G/0 *W#G/0"
         };
 
         [Test]
-        public void ThornsCanHoldAnIslandOfDarkAgainstTheLight()
+        public void ThornsCanHoldAPocketOfColourAgainstTheGrove()
         {
             var board = Board(Ford);
 
-            Assert.IsTrue(board.Won, "every critter awake and the shadow still asleep");
-            Assert.AreEqual(0, board.DuskcapsWoken);
+            Assert.IsTrue(board.Won, "both critters awake, and neither heart has reached the other");
+            Assert.AreEqual(2, board.LampsLit);
         }
 
         [Test]
-        public void OpeningTheThornedWayWakesTheShadow()
+        public void OpeningTheThornedWayPoursTheGroveIntoThePocket()
         {
             var board = Board(Ford);
             board.Turn(board.Idx(1, 1));
             board.Evaluate();
 
-            Assert.AreEqual(1, board.LampsLit, "the critter is still lit, so nothing warns the player");
-            Assert.AreEqual(1, board.DuskcapsWoken);
-            Assert.IsFalse(board.Won, "a woken duskcap is an unfinished glade however many critters are awake");
+            Assert.AreEqual(1, board.LampsLit,
+                            "the grove's critter takes any colour, so only the pocket's goes out");
+            Assert.IsFalse(board.Won);
         }
 
         /// <summary>
@@ -250,16 +252,17 @@ namespace GlimmerGrove.Tests
         /// existed, on a board that is not won.
         ///
         /// <para>
-        /// Before briars it could not happen. Joining the light to an island of dark needs a
-        /// mated pair of arms, the authored solution mates none across that divide, so one of
-        /// the two tiles always had to be a lit one turned off its solution — and lit tiles
-        /// were already counted. A briar's shut arms mate straight across it, so the tile that
-        /// leaks the light can be one the solution leaves dark, and the near-miss line would
-        /// have told a player they had finished a glade that would not settle.
+        /// Before briars it could not happen. Joining the light to a network the solution
+        /// leaves dark needs a mated pair of arms, the authored solution mates none across
+        /// that divide, so one of the two tiles always had to be a lit one turned off its
+        /// solution — and lit tiles were already counted. A briar's shut arms mate straight
+        /// across it, so the tile that leaks the light can be one the solution leaves dark,
+        /// and the near-miss line would have told a player they had finished a glade that
+        /// would not settle.
         /// </para>
         /// </summary>
         [Test]
-        public void AMisturnedBriarThatLightsTheDarkIsCountedAsADistance()
+        public void AMisturnedBriarThatLightsWhatWasDarkIsCountedAsADistance()
         {
             var board = Board(Ford);
             Assert.AreEqual(0, board.TurnsToSolution, "authored at the solution");
@@ -277,11 +280,19 @@ namespace GlimmerGrove.Tests
         }
 
         // ----------------------------------------------------------------- validation
+        //
+        // `LevelValidator.CheckDecidableTiles` asks one question of every four-armed tile:
+        // turn it one step off its solution, and does the glade still finish? These four
+        // drive it from both sides, and two of them are the cases the check it replaced got
+        // wrong — a rule with no failing case is not a rule, and a rule whose failing cases
+        // are only the ones it already handled is not a fix.
+
         [Test]
-        public void ABriarWhoseThornsCloseNothingOffIsCalledOut()
+        public void ABriarWhoseTurnChangesNothingIsCalledOut()
         {
             // A ring of conduit all the way round, so both of the briar's ways lead back into
-            // the same network: the thorns shut a door onto the room they are already in.
+            // the same network: the thorns shut a door onto the room they are already in, and
+            // the critter is fed from two other sides whatever the briar does.
             var report = LevelValidator.Validate(Level(new[]
             {
                 "-ES/0 -ESW/0 -SW/0",
@@ -289,16 +300,73 @@ namespace GlimmerGrove.Tests
                 "-NE/0 -NEW/0 -NW/0"
             }));
 
-            Assert.IsTrue(Has(report, LevelIssueSeverity.Warning, "close nothing off"));
+            Assert.IsTrue(Has(report, LevelIssueSeverity.Warning, "still finishes the glade"));
+            Assert.IsTrue(Has(report, LevelIssueSeverity.Warning, "leads back into one network"),
+                          "and the warning should name the cause, which is the actionable half");
+        }
+
+        /// <summary>
+        /// The false negative the topology check could not see, and the reason this rule asks
+        /// the consequence instead.
+        ///
+        /// <para>
+        /// The briar's thorns genuinely separate two networks, so "would lifting these thorns
+        /// join anything" answered yes and the old check passed it. But both networks are red:
+        /// opening the thorned way joins two reds and every critter stays correct, while the
+        /// open pair is a chord of a loop so shutting it costs nothing either. The tile is
+        /// decoration with a par charged for it, and nothing on the board says which way it
+        /// goes.
+        /// </para>
+        /// </summary>
+        [Test]
+        public void ABriarSeparatingTwoNetworksOfOneColourIsStillCalledOut()
+        {
+            var rows = new[]
+            {
+                "*ES#R/0 -ESW/0 -SW/0",
+                "-NE/0 %EW+NS/0 @NW#R/0",
+                ". @NE#R/0 *W#R/0"
+            };
+
+            var solved = Board(rows);
+            Assert.IsTrue(solved.Won, "the authored solution has to win, or this proves nothing");
+
+            var report = LevelValidator.Validate(Level(rows));
+            Assert.IsTrue(Has(report, LevelIssueSeverity.Warning, "still finishes the glade"));
+            Assert.IsTrue(Has(report, LevelIssueSeverity.Warning, "answering the same colour"),
+                          "the thorns do separate two networks, so the cause is the colour");
+        }
+
+        /// <summary>
+        /// The false positive the topology check raised, which is the shape that replaced the
+        /// duskcap (invariant 5f): the briar's <em>open</em> pair is the only way into a leaf,
+        /// and both thorned ways lead back into the one grove.
+        /// </summary>
+        [Test]
+        public void ABriarFeedingALeafOnItsOpenPairIsNotCalledOut()
+        {
+            var rows = new[]
+            {
+                ". @S#R/0 .",
+                "-ES/0 %NS+EW/0 -SW/0",
+                "-NE/0 -NEW/0 *NW#R/0"
+            };
+
+            var solved = Board(rows);
+            Assert.IsTrue(solved.Won);
+
+            var report = LevelValidator.Validate(Level(rows));
+            Assert.IsFalse(Has(report, LevelIssueSeverity.Warning, "still finishes the glade"),
+                           "shutting the open pair puts the critter out, which is the tile deciding something");
         }
 
         [Test]
-        public void ABriarThatHoldsTheDarkApartIsNotCalledOut()
+        public void ABriarThatHoldsTwoNetworksApartIsNotCalledOut()
         {
             var report = LevelValidator.Validate(Level(Ford));
 
-            Assert.IsFalse(Has(report, LevelIssueSeverity.Warning, "close nothing off"),
-                           "an unlit briar is not evidence of anything; what matters is what its ways touch");
+            Assert.IsFalse(Has(report, LevelIssueSeverity.Warning, "still finishes the glade"),
+                           "an unlit briar is not evidence of anything; what matters is what turning it costs");
             foreach (var issue in report.Issues)
                 Assert.AreNotEqual(LevelIssueSeverity.Error, issue.Severity, issue.Message);
         }
@@ -310,7 +378,7 @@ namespace GlimmerGrove.Tests
             {
                 "*E#R/0 @WS#A/0 .",
                 "-E/0 %EW+NS/1! -W/0",
-                ". xN/0 ."
+                ". -N/0 ."
             }));
 
             Assert.IsTrue(Has(report, LevelIssueSeverity.Error, "can never be turned"));
@@ -323,7 +391,7 @@ namespace GlimmerGrove.Tests
             {
                 "*E#R/0 @WS#A/0 .",
                 "-E/0 %NE+SW/1~2 -W/0",
-                ". xN/0 ."
+                ". -N/0 ."
             }));
 
             Assert.IsTrue(Has(report, LevelIssueSeverity.Error, "survives only 2"),
@@ -341,7 +409,7 @@ namespace GlimmerGrove.Tests
                 "*E#R/0 @WS#A/0 .",
                 "-E/0 %EW+NS/1&A -W/0",
                 "-E/0 %NE+SW/0&A -W/0",
-                ". xN/0 ."
+                ". -N/0 ."
             }));
 
             Assert.IsTrue(Has(report, LevelIssueSeverity.Error, "never all be right at once"));

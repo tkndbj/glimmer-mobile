@@ -8,9 +8,8 @@ namespace GlimmerGrove
     /// made a single identifiable one, and the screen should say which.
     ///
     /// It splits the analytics too: a glade draining hearts on the budget is tuned
-    /// wrong, one draining them on brittle conduits is teaching badly, and one draining
-    /// them on the clock is simply too fast. Those need three different fixes, and a
-    /// single "defeated" count cannot tell you which.
+    /// wrong and one draining them on brittle conduits is teaching badly. Those need
+    /// different fixes, and a single "defeated" count cannot tell you which.
     ///
     /// Values are explicit and permanent because analytics keys on them.
     /// </summary>
@@ -23,14 +22,29 @@ namespace GlimmerGrove
         ConduitLost = 1,
 
         /// <summary>
-        /// The clock reached zero with the glade unsolved.
+        /// <b>Retired.</b> The clock reached zero with the glade unsolved.
         ///
-        /// Kept apart from <see cref="OutOfMoves"/> even though both are "you ran out of
-        /// something", because they say opposite things about a player: one spent turns
-        /// badly and the other did not spend them fast enough, and a glade failing on the
-        /// second is retuned through <see cref="Content.LevelTuning.TimeFactor"/> rather
-        /// than through its budget.
+        /// Nothing raises it: the countdown was removed, so the only two ways to lose a
+        /// glade are the move budget and a crumbled conduit. The member stays because these
+        /// values are permanent — analytics keys on them, so every defeat row ever written
+        /// carries a 2 and re-pointing it at some other ending would silently re-label
+        /// history. Retired in place, exactly as <c>ChestDropKind.RunTime</c> is.
         /// </summary>
         OutOfTime = 2,
+
+        /// <summary>
+        /// A weave ran out of light with the grove unfinished.
+        ///
+        /// <para>
+        /// Its own value rather than <see cref="OutOfMoves"/>, for the reason this enum exists
+        /// at all: the two cost the same heart and want different fixes. A glade draining hearts
+        /// on its budget is a board asking for too many turns; a weave draining them on ink is
+        /// either a grove forcing more detour than it was dealt light for or a mode teaching
+        /// badly — and a single count could not tell you which. It covers both ways a weave
+        /// ends, running dry and being left with no move it can afford, because from the
+        /// player's side those are one thing: there is not enough light left to finish.
+        /// </para>
+        /// </summary>
+        OutOfInk = 3,
     }
 }

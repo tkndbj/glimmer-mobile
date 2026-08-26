@@ -68,7 +68,7 @@ namespace GlimmerGrove
 
         RectTransform _viewport, _tabs;
         GridView _grid;
-        Text _summary, _coins, _gems, _hearts;
+        Text _summary;
         Btn _restore, _notice;
 
         readonly List<StoreProduct> _products = new List<StoreProduct>();
@@ -119,6 +119,12 @@ namespace GlimmerGrove
             PlayerProgression.Changed += Repaint;
             Wallet.HeartsChanged += OnHeartsChanged;
 
+            // And a container bought — or refunded by a sync — moves what the shelf says the
+            // player's limit is, and turns the card that sold it into YOURS. A repaint rather
+            // than a reload: the same cards, redrawn, at the moment the player is watching
+            // one of them land. See the house rule about Show and Refresh.
+            HeartContainerLedger.Changed += Repaint;
+
             // A content push can retune the whole shop, including which products exist.
             ProgressionRules.Changed += Reload;
 
@@ -137,6 +143,7 @@ namespace GlimmerGrove
             StoreService.Failed -= OnFailed;
             PlayerProgression.Changed -= Repaint;
             Wallet.HeartsChanged -= OnHeartsChanged;
+            HeartContainerLedger.Changed -= Repaint;
             ProgressionRules.Changed -= Reload;
             CloudSaveService.IdentityChanged -= Repaint;
         }
@@ -161,7 +168,12 @@ namespace GlimmerGrove
         /// </summary>
         void OnStoreChanged()
         {
-            if (!OnSupplies && ShelfCount() != _products.Count) Reload();
+            // Supplies is included now, and it has to be: since heart containers went on that
+            // shelf it carries real-money products too, so its cards genuinely appear when the
+            // store first answers — which is the exact case this comparison exists for. Its
+            // gem-priced half never moves, so the count still only changes for the reason
+            // described above.
+            if (ShelfCount() != _products.Count) Reload();
             else Repaint();
         }
 
@@ -301,7 +313,18 @@ namespace GlimmerGrove
         {
             if (_notice == null || _viewport == null) return false;
 
-            bool show = !OnSupplies && AccountPrompts.ShouldWarn;
+            // Every shelf, since the supplies shelf started carrying heart containers.
+            //
+            // It used to be hidden here, and the reasoning was right at the time: hearts and
+            // boosts live in the save, which merges into whatever account this device links,
+            // so nothing bought on this shelf could be lost and warning about it would have
+            // put a false sentence on the one page where it was false. A container is also in
+            // the save and also merges — but it is bought with real money, and "anything you
+            // buy stays on this phone only" is a sentence that has to be true wherever money
+            // changes hands. What makes it true rather than merely cautious: the receipt is
+            // redeemed against *this* account, so a guest who reinstalls without linking gets
+            // the container back from the store's own Restore and never gets the gems back.
+            bool show = AccountPrompts.ShouldWarn && (!OnSupplies || HasMoneyOnShelf());
             if (_notice.gameObject.activeSelf != show) _notice.gameObject.SetActive(show);
 
             float top = -HeaderHeight - TabRow - 44f - (show ? NoticeH + NoticeGap : 0f);
@@ -310,6 +333,15 @@ namespace GlimmerGrove
             _viewport.offsetMax = new Vector2(_viewport.offsetMax.x, top);
             return true;
         }
+
+        /// <summary>
+        /// Whether the shelf being shown has anything on it priced in real money.
+        ///
+        /// Only ever false on a supplies shelf whose containers the store has not answered
+        /// for — which is a shelf of gem-priced goods and nothing else, exactly what it was
+        /// before containers existed.
+        /// </summary>
+        bool HasMoneyOnShelf() => _products.Count > 0;
 
         /// <summary>
         /// The three balances, because every price on this page is measured against one of
@@ -334,18 +366,33 @@ namespace GlimmerGrove
             var row = UIKit.Row("Balances", Safe, new Vector2(1000f, 76f), new Vector2(.5f, 1f),
                                 new Vector2(0f, -214f), 14f);
 
-            _coins = BalancePill(row, Pal.Gold, null, Compact.Number(Profile.Coins));
-            _gems = BalancePill(row, Pal.Bloom, "ic_gem", Compact.Number(Profile.Gems));
-            _hearts = BalancePill(row, Pal.Rose, "ic_heart", Profile.HeartsLabel());
+            BalancePill(row, Pal.Gold, null, Compact.Number(Profile.Coins),
+                        ResourceSlots.Kind.Credits, Compact.Number);
+            BalancePill(row, Pal.Bloom, "ic_gem", Compact.Number(Profile.Gems),
+                        ResourceSlots.Kind.Gems, Compact.Number);
+            BalancePill(row, Pal.Rose, "ic_heart", Profile.HeartsLabel(),
+                        ResourceSlots.Kind.Hearts, n => Profile.HeartsLabel((int)n));
         }
 
-        static Text BalancePill(Transform row, Color tint, string icon, string value)
+        /// <remarks>
+        /// Each pill registers itself with <see cref="ResourceSlots"/> as it is built, for the
+        /// reason the hub's do: it is what lets a panel drawn on top of this screen fly what it
+        /// paid into this row. The shop is the second row to register and the reason
+        /// <c>ResourceSlots.Slot.Rest</c> exists — the halo here is narrower and dimmer than the
+        /// hub's, and a flare that returned to a figure the registry had assumed would leave one
+        /// of the two rows permanently the wrong brightness.
+        /// </remarks>
+        static void BalancePill(Transform row, Color tint, string icon, string value,
+                                ResourceSlots.Kind kind, Func<long, string> format)
         {
             var pill = UIKit.Img("Pill", row, Art.Round(20), new Color(.04f, .09f, .12f, .82f),
                                  new Vector2(206f, 68f), new Vector2(.5f, .5f), Vector2.zero);
 
             var edge = UIKit.Img("Edge", pill.transform, Art.RoundOutline(20, 2.5f), Pal.A(tint, .45f));
             UIKit.StretchTo((RectTransform)edge.transform, 0, 0, 0, 0);
+
+            var glow = UIKit.Img("Glow", pill.transform, Art.Glow(96, 2f), Pal.A(tint, .22f),
+                                 new Vector2(96f, 96f), new Vector2(0f, .5f), new Vector2(38f, 0f));
 
             var glyph = UIKit.Img("Icon", pill.transform, icon == null ? null : Art.S("Ui/" + icon),
                                   Color.white, new Vector2(50f, 50f), new Vector2(0f, .5f),
@@ -357,9 +404,11 @@ namespace GlimmerGrove
             // product read as the same thing.
             if (icon == null) Flipbook.Attach(glyph, "Ui/Coin", 11f);
 
-            return UIKit.Shrinkable(
+            var text = UIKit.Shrinkable(
                 UIKit.Titled("V", pill.transform, value, 30, Pal.Cream, TextAnchor.MiddleCenter,
                              new Vector2(112f, 44f), new Vector2(.5f, .5f), new Vector2(16f, 0f), 3f, 3f), 18);
+
+            ResourceSlots.Register(kind, (RectTransform)glyph.transform, text, glow, tint, format);
         }
 
         /// <summary>
@@ -471,7 +520,27 @@ namespace GlimmerGrove
 
             if (OnSupplies)
             {
+                // Goods first, containers after, and that order is the merchandising
+                // decision on this tab. Somebody who opened the hearts shelf is almost
+                // always here to top up now; the permanent upgrade is what they find while
+                // they are looking, which is the right way round for a purchase ten times
+                // the price of anything else in the shop. It also leaves the shelf that
+                // shipped exactly where it was.
                 foreach (var good in catalog.Goods) _goods.Add(good);
+
+                // The one shelf that carries real-money products *and* gem-priced goods, so
+                // it is the one shelf that fills both lists. A container the store has never
+                // heard of is left out for the reason a gem pack is: hiding it inside its own
+                // cell keeps the slot, and a hole that answers taps is how an unreleased
+                // product comes to look like a broken screen.
+                foreach (var product in catalog.Products)
+                {
+                    if (product.Shelf != StoreShelf.Supplies) continue;
+                    if (StoreService.OfferFor(product).State == StoreOfferState.Missing) continue;
+                    _products.Add(product);
+                }
+
+                _products.Sort((a, b) => a.Tier.CompareTo(b.Tier));
             }
             else
             {
@@ -500,8 +569,14 @@ namespace GlimmerGrove
             PaintSummary();
             PaintNotice();
 
-            _grid.Show(OnSupplies ? _goods.Count : _products.Count);
+            _grid.Show(ShelfRows());
         }
+
+        /// <summary>
+        /// How many cells this shelf shows. Every shelf but one is a single list; supplies is
+        /// the goods followed by the heart containers, so its rows are the sum.
+        /// </summary>
+        int ShelfRows() => OnSupplies ? _goods.Count + _products.Count : _products.Count;
 
         /// <summary>Redraws what is on screen: same cells, same place, no entrance.</summary>
         void Repaint()
@@ -513,15 +588,20 @@ namespace GlimmerGrove
             // Same list either way, and no entrance either way — Show(animate: false) is the
             // re-measuring form of Refresh, not a rebuild. See PaintNotice for when this is
             // reachable at all.
-            if (reflowed) _grid.Show(OnSupplies ? _goods.Count : _products.Count, animate: false);
+            if (reflowed) _grid.Show(ShelfRows(), animate: false);
             else _grid.Refresh();
 
             PaintTabs();
             PaintSummary();
 
-            if (_coins) _coins.text = Compact.Number(Profile.Coins);
-            if (_gems) _gems.text = Compact.Number(Profile.Gems);
-            if (_hearts) _hearts.text = Profile.HeartsLabel();
+            // Through the registry rather than onto the labels, which makes it the one writer
+            // of these three readouts. That is what lets the receipt panel own a pill while it
+            // walks it forward: a wallet change landing mid-flight would otherwise jump the
+            // number to the truth and have the next token drag it back down. Same rule as the
+            // hub's PaintResources — see ResourceSlots.Claim.
+            ResourceSlots.Repaint(ResourceSlots.Kind.Credits, Profile.Coins);
+            ResourceSlots.Repaint(ResourceSlots.Kind.Gems, Profile.Gems);
+            ResourceSlots.Repaint(ResourceSlots.Kind.Hearts, Profile.Hearts);
         }
 
         /// <summary>
@@ -536,9 +616,14 @@ namespace GlimmerGrove
         {
             if (!_summary) return;
 
+            // The supplies shelf answers with the number every card on it is measured
+            // against — what this player's hearts refill to today. That is the context a
+            // container needs and the one thing the cards themselves cannot say: "20" only
+            // means something beside "yours is 5". It replaces a line that said nothing but
+            // real money was involved, which stopped being true when containers arrived.
             if (OnSupplies)
             {
-                _summary.text = Loc.Get("ui.shop.supplies_note");
+                _summary.text = Loc.Format("ui.shop.capacity_held", Wallet.MaxHearts);
                 _summary.color = new Color(1f, .96f, .88f, .74f);
                 return;
             }
@@ -599,28 +684,10 @@ namespace GlimmerGrove
 
             if (failure == StoreFailure.Cancelled) return;
 
-            var (key, tint) = FailureLine(failure);
+            // Shared with the panel a lost run raises, which offers the same products without
+            // navigating anywhere — see StoreWording.
+            var (key, tint) = StoreWording.Failure(failure);
             Scenery.Toast(Content, Loc.Get(key), tint, 2.6f);
-        }
-
-        /// <summary>
-        /// One sentence per failure, written out rather than composed from the enum name —
-        /// a key built by concatenation is invisible to the build gate's string scanner and
-        /// ships missing in whichever language nobody tested.
-        /// </summary>
-        static (string, Color) FailureLine(StoreFailure failure)
-        {
-            switch (failure)
-            {
-                case StoreFailure.NotConnected: return ("ui.shop.offline", Pal.Sun);
-                case StoreFailure.UnknownProduct: return ("ui.shop.unknown_product", Pal.Sun);
-                case StoreFailure.AlreadyOwned: return ("ui.shop.already_owned", Pal.Mint);
-                case StoreFailure.PaymentFailed: return ("ui.shop.payment_failed", Pal.Rose);
-                case StoreFailure.AwaitingGrant: return ("ui.shop.awaiting", Pal.Sun);
-                case StoreFailure.Deferred: return ("ui.shop.deferred", Pal.Aqua);
-                case StoreFailure.Unavailable: return ("ui.shop.unavailable", Pal.Sun);
-                default: return ("ui.shop.failed", Pal.Rose);
-            }
         }
 
         static string ShelfNameKey(StoreShelf shelf)
@@ -631,17 +698,6 @@ namespace GlimmerGrove
                 case StoreShelf.Coins: return "ui.shop.shelf_coins";
                 case StoreShelf.Bundles: return "ui.shop.shelf_bundles";
                 default: return "ui.shop.shelf_supplies";
-            }
-        }
-
-        static string BadgeKey(StoreBadge badge)
-        {
-            switch (badge)
-            {
-                case StoreBadge.Popular: return "ui.shop.badge_popular";
-                case StoreBadge.BestValue: return "ui.shop.badge_best";
-                case StoreBadge.Starter: return "ui.shop.badge_starter";
-                default: return null;
             }
         }
 
@@ -666,42 +722,13 @@ namespace GlimmerGrove
         /// </summary>
         void Tap(StoreProduct product)
         {
-            if (product == null) return;
-
-            var offer = StoreService.OfferFor(product);
-
-            switch (offer.State)
-            {
-                case StoreOfferState.Ready:
-                    var result = StoreService.Buy(product);
-                    if (!result.Ok)
-                    {
-                        var (key, tint) = FailureLine(result.Failure);
-                        Scenery.Toast(Content, Loc.Get(key), tint, 2.6f);
-                    }
-                    Repaint();
-                    break;
-
-                case StoreOfferState.Owned:
-                    Scenery.Toast(Content, Loc.Get("ui.shop.already_owned"), Pal.Mint);
-                    break;
-
-                case StoreOfferState.AwaitingGrant:
-                    Scenery.Toast(Content, Loc.Get("ui.shop.awaiting"), Pal.Sun);
-                    break;
-
-                case StoreOfferState.Purchasing:
-                    Scenery.Toast(Content, Loc.Get("ui.shop.purchasing"), Pal.Aqua);
-                    break;
-
-                case StoreOfferState.Loading:
-                    Scenery.Toast(Content, Loc.Get("ui.shop.connecting"), Pal.Aqua);
-                    break;
-
-                default:
-                    Scenery.Toast(Content, Loc.Get("ui.shop.offline"), Pal.Sun);
-                    break;
-            }
+            // The sheet, the six refusals and the reasoning behind having no confirmation all
+            // live in StoreTap now — the panel a lost run raises has to do exactly this, and
+            // six sentences maintained twice on the screen where money changes hands is
+            // invariant 9a's argument at its smallest scale. Repainting afterwards is this
+            // screen's own business: it draws cards whose state the tap may have moved.
+            StoreTap.Buy(this, product);
+            Repaint();
         }
 
         /// <summary>
@@ -730,23 +757,11 @@ namespace GlimmerGrove
 
             if (state != GoodOfferState.Ready)
             {
-                Scenery.Toast(Content, Loc.Get(GoodRefusalKey(state)), Pal.Sun, 2.6f);
+                Scenery.Toast(Content, Loc.Get(StoreWording.GoodRefusal(state)), Pal.Sun, 2.6f);
                 return;
             }
 
             Flow.Modal<ShopSupplyOverlay>(v => v.Good = good);
-        }
-
-        /// <summary>One sentence per refusal, written out. See <see cref="FailureLine"/>.</summary>
-        internal static string GoodRefusalKey(GoodOfferState state)
-        {
-            switch (state)
-            {
-                case GoodOfferState.ShortOfGems: return "ui.shop.need_gems";
-                case GoodOfferState.HeartsNearlyFull: return "ui.shop.hearts_full";
-                case GoodOfferState.BoostNearlyFull: return "ui.shop.boost_full";
-                default: return "ui.shop.unknown_product";
-            }
         }
 
         // ------------------------------------------------------------------ tab
@@ -842,285 +857,66 @@ namespace GlimmerGrove
         sealed class ShopCell : IGridCell
         {
             readonly ShopScreen _screen;
-            readonly Btn _button;
-            readonly Image _plate, _edge, _glow, _rays, _ribbon, _seal;
-            readonly RectTransform _art;
-            readonly Text _amount, _sub, _price, _ribbonText, _sealText;
-            readonly Image _priceFace;
+            readonly ProductCard _card;
 
             StoreProduct _product;
             StoreGood _good;
 
-            public RectTransform Root { get; }
+            public RectTransform Root => _card.Root;
 
             public ShopCell(ShopScreen screen, RectTransform parent)
             {
                 _screen = screen;
-
-                _button = UIKit.Button("Cell", parent, Art.Pixel,
-                                       new Vector2(CellW - 16f, CellH - 20f), new Vector2(.5f, 1f),
-                                       Vector2.zero,
-                                       () => { if (_good != null) _screen.TapGood(_good);
-                                               else _screen.Tap(_product); });
-                _button.GetComponent<Image>().color = new Color(1f, 1f, 1f, 0f);
-                Root = (RectTransform)_button.transform;
-
-                // A gold seat behind the plate, lit only on the card worth pointing at. It is
-                // the first layer of FeatureBeacon's argument: the seat is the part visible
-                // from the far side of the screen, and the badge is what you read once you
-                // are already looking.
-                _glow = UIKit.Img("Seat", Root, Art.Glow(128, 1.8f), new Color(1f, .78f, .28f, 0f),
-                                  new Vector2(CellW + 40f, CellH - 10f), new Vector2(.5f, .5f),
-                                  Vector2.zero);
-                _glow.raycastTarget = false;
-
-                _plate = UIKit.Img("Plate", Root, Art.Round(CellRadius), Color.white,
-                                   new Vector2(CellW - 34f, CellH - 40f), new Vector2(.5f, .5f),
-                                   Vector2.zero);
-
-                _edge = UIKit.Img("Edge", _plate.transform, Art.RoundOutline(CellRadius, 2f), Color.white);
-                UIKit.StretchTo((RectTransform)_edge.transform, 0, 0, 0, 0);
-
-                _rays = UIKit.Img("Rays", _plate.transform, Art.Rays(256, 14), new Color(1f, 1f, 1f, 0f),
-                                  new Vector2(CellW * .96f, CellW * .96f), new Vector2(.5f, 1f),
-                                  new Vector2(0f, -196f));
-                _rays.raycastTarget = false;
-                _rays.transform.SetAsFirstSibling();
-
-                _art = UIKit.Box("Art", _plate.transform, new Vector2(236f, 236f),
-                                 new Vector2(.5f, 1f), new Vector2(0f, -170f));
-
-                _amount = UIKit.Shrinkable(
-                    UIKit.Titled("A", _plate.transform, string.Empty, 46, Pal.Cream,
-                                 TextAnchor.MiddleCenter, new Vector2(CellW - 80f, 58f),
-                                 new Vector2(.5f, 0f), new Vector2(0f, 214f), 4f, 4f), 24);
-
-                _sub = UIKit.Shrinkable(
-                    UIKit.Titled("S", _plate.transform, string.Empty, 26, Pal.Cream,
-                                 TextAnchor.MiddleCenter, new Vector2(CellW - 76f, 40f),
-                                 new Vector2(.5f, 0f), new Vector2(0f, 166f), 3f, 0f), 16);
-
-                // The price sits on its own face rather than on a real button, because the
-                // whole card is the button — a press squashes plate, picture and price as one
-                // object, which is the hub's feature row and the nav caps' rule both.
-                _priceFace = UIKit.Img("PriceFace", _plate.transform, Art.S("Ui/btn_green"),
-                                       Color.white, new Vector2(CellW - 110f, 96f),
-                                       new Vector2(.5f, 0f), new Vector2(0f, 78f));
-
-                _price = UIKit.Shrinkable(
-                    UIKit.Titled("P", _priceFace.transform, string.Empty, 34, Pal.Cream,
-                                 TextAnchor.MiddleCenter, new Vector2(CellW - 160f, 56f),
-                                 new Vector2(.5f, .5f), new Vector2(0f, 96f * UIKit.PillFaceLift),
-                                 3f, 3f), 18);
-
-                // The bonus ribbon, across the top-left corner. A real ribbon rather than a
-                // caption because it has to survive being read at a glance on a scrolling
-                // page, and because it is the one number on the card that is arithmetic over
-                // the ladder rather than a claim.
-                _ribbon = UIKit.Img("Ribbon", _plate.transform, Art.S("Ui/ribbon_orange"), Color.white,
-                                    new Vector2(230f, 62f), new Vector2(0f, 1f), new Vector2(96f, -26f));
-                _ribbon.transform.localRotation = Quaternion.Euler(0f, 0f, -8f);
-
-                _ribbonText = UIKit.Shrinkable(
-                    UIKit.Titled("RT", _ribbon.transform, string.Empty, 26, Pal.Cream,
-                                 TextAnchor.MiddleCenter, new Vector2(190f, 40f), new Vector2(.5f, .5f),
-                                 new Vector2(0f, 4f), 3f, 2f), 15);
-
-                // The badge, top right, on the seal the win panel already uses for a record.
-                _seal = UIKit.Img("Seal", _plate.transform, Art.S("Ui/seal_gold"), Color.white,
-                                  new Vector2(126f, 126f), new Vector2(1f, 1f), new Vector2(-16f, -8f));
-                _seal.transform.localRotation = Quaternion.Euler(0f, 0f, 11f);
-
-                _sealText = UIKit.Shrinkable(
-                    UIKit.Titled("ST", _seal.transform, string.Empty, 20, new Color(.34f, .22f, .10f),
-                                 TextAnchor.MiddleCenter, new Vector2(104f, 56f), new Vector2(.5f, .5f),
-                                 new Vector2(0f, 2f), 0f, 0f, wrap: true), 12);
+                _card = new ProductCard(parent,
+                                        new ProductCard.Look(CellW, CellH, CellRadius, decorated: true),
+                                        () => { if (_good != null) _screen.TapGood(_good);
+                                                else _screen.Tap(_product); });
             }
 
+            /// <summary>
+            /// Draws whichever kind of thing this shelf sells.
+            ///
+            /// <para>
+            /// The card knows how a sellable thing looks; this knows which one row
+            /// <paramref name="index"/> is and what tapping it does. That split is why the same
+            /// face can be drawn by a panel raised over a run that must not be navigated away
+            /// from — see <see cref="ProductCard"/>.
+            /// </para>
+            /// </summary>
             public void Bind(int index)
             {
-                if (_screen.OnSupplies) { BindGood(index); return; }
+                if (_screen.OnSupplies && index < _screen._goods.Count)
+                {
+                    _product = null;
+                    _good = index >= 0 ? _screen._goods[index] : null;
+
+                    if (_good == null) _card.Hide();
+                    else _card.Draw(_good, StoreService.OfferForGood(_good));
+                    return;
+                }
+
+                // Past the goods on the supplies shelf, and from nought on every other one.
+                // The containers are real-money products, so they fall through to exactly the
+                // path the gem and coin cards already take.
+                if (_screen.OnSupplies) index -= _screen._goods.Count;
 
                 _good = null;
                 _product = index >= 0 && index < _screen._products.Count ? _screen._products[index] : null;
 
-                if (_product == null) { Hide(); return; }
+                if (_product == null) { _card.Hide(); return; }
 
                 var offer = StoreService.OfferFor(_product);
 
                 // A product the store has never heard of leaves an empty slot rather than a
                 // dead card. It means a product not yet created in a console, or one not for
                 // sale in this storefront, and there is nothing a player can do about either.
-                if (offer.State == StoreOfferState.Missing) { Hide(); return; }
+                if (offer.State == StoreOfferState.Missing) { _card.Hide(); return; }
 
-                _plate.gameObject.SetActive(true);
+                bool best = _product.Badge == StoreBadge.BestValue
+                            || _product.Badge == StoreBadge.Starter;
 
-                bool best = _product.Badge == StoreBadge.BestValue || _product.Badge == StoreBadge.Starter;
-
-                _plate.color = best ? new Color(.09f, .17f, .19f, .95f)
-                                    : new Color(.10f, .17f, .23f, .92f);
-
-                _edge.sprite = Art.RoundOutline(CellRadius, best ? 4f : 2f);
-                _edge.color = best ? Pal.A(Pal.Gold, .78f) : new Color(1f, .97f, .90f, .16f);
-
-                Light(best);
-
-                ShopArt.Paint(_art, _product);
-
-                // The headline figure is the currency, never the price. A bundle leads with
-                // its gems and says the credits underneath, because gems are the scarcer of
-                // the two and the reason somebody is on this shelf.
-                bool gemLed = _product.Gems > 0;
-
-                _amount.text = gemLed
-                    ? Compact.Number(_product.Gems)
-                    : Compact.Number(_product.Credits);
-                _amount.color = gemLed ? Pal.A(Pal.Bloom, 1f) : Pal.A(Pal.Gold, 1f);
-
-                _sub.text = _product.Gems > 0 && _product.Credits > 0
-                    ? Loc.Format("ui.shop.plus_coins", Compact.Number(_product.Credits))
-                    : Loc.Get(gemLed ? "ui.shop.gems" : "ui.shop.coins");
-                _sub.color = new Color(1f, .96f, .88f, .70f);
-
-                PaintPrice(offer);
-                PaintRibbon(_product.BonusPercent);
-                PaintSeal(BadgeKey(_product.Badge));
+                _card.Draw(_product, offer, best);
             }
-
-            /// <summary>
-            /// The price line, and the four things it can say.
-            ///
-            /// The store's own formatted string is used verbatim whenever there is one —
-            /// never rebuilt from a number and a currency code, because there is no correct
-            /// client-side rule for that and drawing anything else is a review risk as well
-            /// as simply wrong in most of the world.
-            /// </summary>
-            void PaintPrice(StoreOffer offer)
-            {
-                switch (offer.State)
-                {
-                    case StoreOfferState.Ready:
-                        _priceFace.sprite = Art.S("Ui/btn_green");
-                        _price.text = offer.Price;
-                        _price.color = Pal.Cream;
-                        break;
-
-                    case StoreOfferState.Owned:
-                        _priceFace.sprite = Art.S("Ui/btn_gray");
-                        _price.text = Loc.Get("ui.shop.owned");
-                        _price.color = Pal.A(Pal.Cream, .85f);
-                        break;
-
-                    case StoreOfferState.AwaitingGrant:
-                        _priceFace.sprite = Art.S("Ui/btn_orange");
-                        _price.text = Loc.Get("ui.shop.awaiting_short");
-                        _price.color = Pal.Cream;
-                        break;
-
-                    case StoreOfferState.Purchasing:
-                        _priceFace.sprite = Art.S("Ui/btn_gray");
-                        _price.text = Loc.Get("ui.shop.purchasing");
-                        _price.color = Pal.A(Pal.Cream, .85f);
-                        break;
-
-                    default:
-                        _priceFace.sprite = Art.S("Ui/btn_gray");
-                        _price.text = Loc.Get("ui.shop.price_pending");
-                        _price.color = Pal.A(Pal.Cream, .70f);
-                        break;
-                }
-            }
-
-            void BindGood(int index)
-            {
-                _product = null;
-                _good = index >= 0 && index < _screen._goods.Count ? _screen._goods[index] : null;
-
-                if (_good == null) { Hide(); return; }
-
-                _plate.gameObject.SetActive(true);
-
-                var state = StoreService.OfferForGood(_good);
-                bool ready = state == GoodOfferState.Ready;
-
-                _plate.color = new Color(.10f, .17f, .23f, .92f);
-                _edge.sprite = Art.RoundOutline(CellRadius, 2f);
-                _edge.color = new Color(1f, .97f, .90f, .16f);
-
-                Light(false);
-
-                ShopArt.PaintGood(_art, _good);
-
-                _amount.text = _good.Kind == StoreGoodKind.HeartBoost
-                    ? Loc.Format("ui.shop.boost_hours", _good.Amount)
-                    : Compact.Number(_good.Amount);
-                _amount.color = _good.Kind == StoreGoodKind.HeartBoost ? Pal.A(Pal.Sun, 1f)
-                                                                       : Pal.A(Pal.Rose, 1f);
-
-                _sub.text = Loc.Get(_good.Kind == StoreGoodKind.HeartBoost
-                                    ? "ui.shop.boost_note" : "ui.shop.hearts");
-                _sub.color = new Color(1f, .96f, .88f, .70f);
-
-                // A gem price rather than a store price, so the face is the shop's gem
-                // colour rather than its money colour. The two are different kinds of
-                // transaction and the card should not pretend otherwise.
-                _priceFace.sprite = Art.S("Ui/" + (ready ? "btn_violet" : "btn_gray"));
-                _price.text = ready
-                    ? Loc.Format("ui.shop.gem_price", Compact.Number(_good.Gems))
-                    : Loc.Get(GoodRefusalKey(state));
-                _price.color = ready ? Pal.Cream : Pal.A(Pal.Cream, .72f);
-
-                PaintRibbon(0);
-                PaintSeal(null);
-            }
-
-            /// <summary>
-            /// The card worth pointing at breathes and wears a fan of light; nothing else
-            /// does.
-            ///
-            /// Motion is the loudest thing on a scrolling page, so spending it on every card
-            /// singles out none — the same argument the map's rank mark makes about which
-            /// tier gets rays.
-            /// </summary>
-            /// <remarks>
-            /// The turn is <b>channelled</b>, which is what makes it safe on a recycled cell:
-            /// a card that scrolls off and comes back rebinding as a plain rung would
-            /// otherwise leave the previous row's rotation running against the same
-            /// transform, and two of those a frame out of step is the flicker
-            /// <c>CompanionRevealOverlay</c> already had to name. Killing the channel first
-            /// means at most one turn exists per cell, whatever it is rebound to.
-            /// </remarks>
-            void Light(bool best)
-            {
-                _glow.color = best ? new Color(1f, .78f, .28f, .30f) : new Color(1f, .78f, .28f, 0f);
-                _rays.color = best ? new Color(1f, .90f, .58f, .16f) : new Color(1f, 1f, 1f, 0f);
-
-                Tween.KillChannel(_rays.transform, "spin");
-                _rays.transform.localRotation = Quaternion.identity;
-
-                if (!best) return;
-
-                Tween.Run(60f, Ease.Linear, t =>
-                {
-                    if (_rays) _rays.transform.localRotation = Quaternion.Euler(0, 0, t * 360f);
-                }, _rays.transform, "spin").Loop(-1, false);
-            }
-
-            void PaintRibbon(int bonusPercent)
-            {
-                bool show = bonusPercent >= 5;
-                _ribbon.gameObject.SetActive(show);
-                if (show) _ribbonText.text = Loc.Format("ui.shop.bonus", bonusPercent);
-            }
-
-            void PaintSeal(string key)
-            {
-                bool show = key != null;
-                _seal.gameObject.SetActive(show);
-                if (show) _sealText.text = Loc.Get(key).ToUpperInvariant();
-            }
-
-            void Hide() => _plate.gameObject.SetActive(false);
         }
     }
 }

@@ -5,7 +5,7 @@ namespace GlimmerGrove
     /// easing.
     ///
     /// <para>
-    /// Split out of <see cref="Tween"/> for the reason <c>RunClock</c> is split out of
+    /// Split out of <see cref="Tween"/> for the reason <c>RunScreen.Tick</c> is split out of
     /// <c>PlayScreen</c>: it holds no Unity types and no statics, so it can be run a
     /// thousand simulated frames at a time in the test suite without an Editor. That
     /// matters more here than it looks. This is the only piece of the game whose failures
@@ -26,7 +26,7 @@ namespace GlimmerGrove
         /// The most any one frame may advance a tween, in seconds.
         ///
         /// <para>
-        /// Here for the reason <c>RunClock.MaxTick</c> is, and it is the same fact about the
+        /// Here for the reason <c>RunScreen.MaxTick</c> is, and it is the same fact about the
         /// same clock: <c>Time.deltaTime</c> is capped by <c>maximumDeltaTime</c> and
         /// <c>Time.unscaledDeltaTime</c> — which every tween here runs on — is not. So the
         /// first frame after the app is resumed carries however long the player was away,

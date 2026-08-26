@@ -39,7 +39,7 @@ namespace GlimmerGrove.Tests
 
         static RunOutcome Win(int moves, int route)
             => RunOutcome.Win(Board(moves), stars: 3, previousBest: 0, firstClear: true,
-                              attempt: 1, hintsUsed: 0, seconds: 20f, millis: 20_000, route: route);
+                              attempt: 1, hintsUsed: 0, seconds: 20f, route: route);
 
         /// <summary>
         /// A replay that beat nothing, so <see cref="RunOutcome.NewBest"/> is false and the
@@ -47,7 +47,7 @@ namespace GlimmerGrove.Tests
         /// </summary>
         static RunOutcome Replay(int moves, int route)
             => RunOutcome.Win(Board(moves), stars: 3, previousBest: 1, firstClear: false,
-                              attempt: 2, hintsUsed: 0, seconds: 20f, millis: 20_000, route: route);
+                              attempt: 2, hintsUsed: 0, seconds: 20f, route: route);
 
         // -------------------------------------------------------------- the readings
         [Test]
@@ -119,7 +119,7 @@ namespace GlimmerGrove.Tests
         public void ALostRunIsNeverMeasured()
         {
             var lost = RunOutcome.Loss(Board(40), DefeatReason.OutOfMoves, previousBest: 0,
-                                       attempt: 1, hintsUsed: 0, seconds: 20f, millis: 20_000,
+                                       attempt: 1, hintsUsed: 0, seconds: 20f,
                                        route: 34);
 
             Assert.IsFalse(lost.HasRoute);
@@ -171,7 +171,7 @@ namespace GlimmerGrove.Tests
 
             // And a replay that beats a previous record, still nowhere near the route.
             var beatIt = RunOutcome.Win(Board(80), stars: 3, previousBest: 90, firstClear: false,
-                                        attempt: 2, hintsUsed: 0, seconds: 20f, millis: 20_000,
+                                        attempt: 2, hintsUsed: 0, seconds: 20f,
                                         route: 34);
             Assert.IsTrue(beatIt.NewBest);
             Assert.IsFalse(beatIt.RouteWorthSaying);

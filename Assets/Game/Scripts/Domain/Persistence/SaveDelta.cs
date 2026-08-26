@@ -124,6 +124,14 @@ namespace GlimmerGrove.Persistence
             // both sides are written sorted — see CompanionLedger.
             if (!SameSet(remote.companionsOwned, merged.companionsOwned)) return true;
 
+            // The heart containers. These travel for the companions' reason with the stakes
+            // raised: a container is a real-money purchase, so a set that stayed on one phone
+            // is a payment the player made and cannot see on their other device. The
+            // revocations travel with them, or a refund honoured on one device would be
+            // undone by the next sync from another.
+            if (!SameSet(remote.heartContainersOwned, merged.heartContainersOwned)) return true;
+            if (!SameSet(remote.heartContainersRevoked, merged.heartContainersRevoked)) return true;
+
             // The grove. Its purchases travel for exactly the companions' reason, and its
             // arrangement travels because it is the one thing here the player can see on
             // another device and notice missing — a grove that stayed on one phone is an

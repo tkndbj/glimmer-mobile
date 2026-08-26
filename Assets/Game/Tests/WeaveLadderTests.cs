@@ -8,7 +8,7 @@ using UnityEngine;
 namespace GlimmerGrove.Tests
 {
     /// <summary>
-    /// The Weftwood's ten groves: that they still ask what they were authored to ask.
+    /// Every Lightweave grove that ships: that they still ask what they were authored to ask.
     ///
     /// <para>
     /// <b>A weave level authors a shape, a bead count and a seed, and the board is generated</b> —
@@ -71,15 +71,31 @@ namespace GlimmerGrove.Tests
             }
         }
 
+        /// <summary>One chapter of the mode: the file it ships in, and the ladder inside it.</summary>
+        sealed class Chapter
+        {
+            public readonly string File;
+            public readonly Rung[] Rungs;
+
+            public Chapter(string file, Rung[] rungs)
+            {
+                File = file;
+                Rungs = rungs;
+            }
+
+            public Rung Opening => Rungs[0];
+            public Rung Finale => Rungs[Rungs.Length - 1];
+            public override string ToString() => File;
+        }
+
         /// <summary>
-        /// The shipped chapter, and the whole point of the file.
+        /// The Weftwood: the mode's first chapter, which teaches it.
         ///
-        /// Every seed here was chosen by <c>Glimmer Grove ▸ Content ▸ Survey Lightweave</c>
-        /// sweeping its shape for a board landing in that rung's intended band — not picked, and
-        /// not left to the id hash, which deals a perfectly solvable board of entirely unknown
-        /// difficulty.
+        /// Every seed here was chosen by sweeping its shape for a board landing in that rung's
+        /// intended band — not picked, and not left to the id hash, which deals a perfectly
+        /// solvable board of entirely unknown difficulty.
         /// </summary>
-        static readonly Rung[] Ladder =
+        static readonly Rung[] Weftwood =
         {
             new Rung("w01_first_weave",       5, 6, 3, 0,    3, 2, 230, 19),
             new Rung("w01_two_threads",       5, 7, 4, 0,   16, 2, 140, 29),
@@ -92,6 +108,75 @@ namespace GlimmerGrove.Tests
             new Rung("w01_the_tangle",        7, 9, 6, 4, 2358, 8,   4, 61),
             new Rung("w01_the_weftwood_knot", 7, 9, 6, 5, 3179, 8,   2, 64),
         };
+
+        /// <summary>
+        /// The Nightloom: the mode's second chapter, which asks.
+        ///
+        /// <para>
+        /// <b>It opens on the hardest thing the Weftwood ever did and climbs from there.</b>
+        /// Every grove here wears all six colours, where the Weftwood reached six only at its
+        /// eighth; every grove forces at least the eight cells of detour the Weftwood's finale
+        /// forced, and the last one forces sixteen. What is left to climb is exactly what
+        /// invariant 20f says the mode's difficulty is — how much the pairs are in each other's
+        /// way — so slack does most of the work, and the boards grow and gain their sixth ring
+        /// underneath it.
+        /// </para>
+        /// <para>
+        /// <b>Ways opens high and that is not a slip.</b> It counts arrangements within
+        /// <c>WeaveSolver.Latitude</c> of the <em>best</em> one, and the best one here is already
+        /// eight cells out of everybody's way — so the count is taken in a band this chapter's
+        /// first grove reaches and the Weftwood's last never did. Comparing the two numbers across
+        /// chapters compares two different bands; what is comparable is slack, and it is higher on
+        /// every rung.
+        /// </para>
+        /// <para>
+        /// Chosen by <c>Tools/weave_seeds.py</c>, which runs <c>WeaveSeedSearch</c> — the same
+        /// rule <c>Survey Lightweave</c> sweeps with — over a hundred and forty thousand seeds per
+        /// shape, and every one of these ten was then re-measured on <em>both</em> .NET 8 and
+        /// Unity's own Mono and agreed (<c>weave_seeds.py confirm</c>).
+        /// </para>
+        /// </summary>
+        static readonly Rung[] Nightloom =
+        {
+            new Rung("w02_dusk_threads",       7, 10, 6, 5,  23493,  8, 305, 65),
+            new Rung("w02_the_narrow_loom",    7, 10, 6, 5,   9571, 10, 239, 63),
+            new Rung("w02_the_pinch",          8,  9, 6, 5,  51479, 10, 189, 67),
+            new Rung("w02_who_yields",         8,  9, 6, 5, 108184, 12, 141, 65),
+            new Rung("w02_six_rings",          8,  9, 6, 6,  61031, 12, 118, 68),
+            new Rung("w02_spindlewood",        8, 10, 6, 6,  13224, 12,  75, 72),
+            new Rung("w02_the_long_way_round", 8, 10, 6, 6,  56254, 14,  40, 68),
+            new Rung("w02_the_shuttered_loom", 8, 10, 6, 6,  58743, 14,  30, 72),
+            new Rung("w02_thread_the_dark",    8, 10, 6, 6,  72099, 14,  13, 74),
+            new Rung("w02_the_nightloom_knot", 8, 10, 6, 6, 104439, 16,   7, 72),
+        };
+
+        /// <summary>
+        /// Every chapter of the mode, in play order.
+        ///
+        /// <para>
+        /// <b>A chapter is data here and every rule below is asked of all of them.</b> The file
+        /// held one chapter's ladder when the mode had one, and the obvious way to add a second
+        /// was to copy it — which would have been two copies of "what makes a Lightweave grove
+        /// worth playing" for a drop to put out of step, invariant 9a's lesson in the file that
+        /// exists to stop exactly this mode drifting.
+        /// </para>
+        /// </summary>
+        static readonly Chapter[] Chapters =
+        {
+            new Chapter("w01_lightweave", Weftwood),
+            new Chapter("w02_nightloom", Nightloom),
+        };
+
+        /// <summary>Every grove the mode ships, whichever chapter it is in.</summary>
+        static IEnumerable<Rung> Ladder
+        {
+            get
+            {
+                foreach (var chapter in Chapters)
+                    foreach (var rung in chapter.Rungs)
+                        yield return rung;
+            }
+        }
 
         /// <summary>
         /// How hard the measurement tries here, and it must match what <c>WeaveSurvey</c> sweeps
@@ -237,9 +322,10 @@ namespace GlimmerGrove.Tests
                 Assert.AreEqual(rung.Beads, grove.Beads.Count,
                     $"'{rung.Id}' was dealt {grove.Beads.Count} bead(s) rather than {rung.Beads}");
 
-                var run = new WeaveRun(grove);
-                Assert.IsTrue(run.DrawSolution(), $"'{rung.Id}' cannot be solved by its own solution");
-                Assert.IsTrue(run.IsSolved, $"'{rung.Id}' did not finish");
+                var board = new WeaveBoard(grove);
+                Assert.IsTrue(board.DrawSolution(),
+                              $"'{rung.Id}' cannot be solved by its own solution");
+                Assert.IsTrue(board.IsSolved, $"'{rung.Id}' did not finish");
             }
         }
 
@@ -269,42 +355,128 @@ namespace GlimmerGrove.Tests
         [Test]
         public void TheGrovesGrowAndTheWaysThroughThemNarrow()
         {
-            // The ladder, in one assertion. Size, colour count and beads decide how much there is
+            // A chapter, in one assertion. Size, colour count and beads decide how much there is
             // to do; slack decides how much of it the board makes you pay for; ways decides how
-            // much of what you try will work. The first three climb and the last falls, which is
+            // much of what you try will work. The first four climb and the last falls, which is
             // what makes ten groves a chapter rather than ten groves.
-            for (int i = 1; i < Ladder.Length; i++)
-            {
-                var below = Ladder[i - 1];
-                var rung = Ladder[i];
+            //
+            // Asked of each chapter separately and never across the join, deliberately. Every
+            // reading here is taken relative to that board's own best arrangement, so two rungs
+            // are only comparable while the ladder is climbing continuously; a chapter that opens
+            // where the last one closed starts a fresh band, and comparing the two chapters is
+            // TheSecondChapterAsksMoreOfEveryGroveThanTheFirst's job.
+            foreach (var chapter in Chapters)
+                for (int i = 1; i < chapter.Rungs.Length; i++)
+                {
+                    var below = chapter.Rungs[i - 1];
+                    var rung = chapter.Rungs[i];
 
-                Assert.GreaterOrEqual(rung.Width * rung.Height, below.Width * below.Height,
-                    $"'{rung.Id}' is a smaller grove than '{below.Id}'");
-                Assert.GreaterOrEqual(rung.Pairs, below.Pairs,
-                    $"'{rung.Id}' has fewer channels than '{below.Id}'");
-                Assert.GreaterOrEqual(rung.Beads, below.Beads,
-                    $"'{rung.Id}' has fewer beads than '{below.Id}'");
-                Assert.GreaterOrEqual(rung.Slack, below.Slack,
-                    $"'{rung.Id}' forces less detour than '{below.Id}'");
-                Assert.Less(rung.Ways, below.Ways,
-                    $"'{rung.Id}' admits more arrangements than '{below.Id}', so the chapter gets "
-                    + "easier here rather than harder");
+                    Assert.GreaterOrEqual(rung.Width * rung.Height, below.Width * below.Height,
+                        $"'{rung.Id}' is a smaller grove than '{below.Id}'");
+                    Assert.GreaterOrEqual(rung.Pairs, below.Pairs,
+                        $"'{rung.Id}' has fewer channels than '{below.Id}'");
+                    Assert.GreaterOrEqual(rung.Beads, below.Beads,
+                        $"'{rung.Id}' has fewer beads than '{below.Id}'");
+                    Assert.GreaterOrEqual(rung.Slack, below.Slack,
+                        $"'{rung.Id}' forces less detour than '{below.Id}'");
+                    Assert.Less(rung.Ways, below.Ways,
+                        $"'{rung.Id}' admits more arrangements than '{below.Id}', so the chapter "
+                        + "gets easier here rather than harder");
+                }
+        }
+
+        /// <summary>
+        /// The Nightloom asks more of every grove than the Weftwood ever did.
+        ///
+        /// <para>
+        /// <b>What is compared, and what deliberately is not.</b> Slack is the mode's difficulty
+        /// in one integer (invariant 20f) and it is an absolute reading — how many cells of light,
+        /// over and above every pair's own floor, the board makes somebody spend — so it is the
+        /// one number that means the same thing in both chapters. Ways is not: it counts
+        /// arrangements within <c>WeaveSolver.Latitude</c> of the <em>best</em> one, and the best
+        /// one moves with slack, so a second chapter's opening count is taken in a band the first
+        /// chapter's finale never reached. Asserting it fell across the join would be a rule about
+        /// two different measurements, and the only way to satisfy it would be to author a
+        /// gentler second chapter.
+        /// </para>
+        /// <para>
+        /// The colour count is the other absolute reading and it is at its ceiling throughout —
+        /// six is every mix the light makes, because white is what being awake looks like.
+        /// </para>
+        /// </summary>
+        [Test]
+        public void TheSecondChapterAsksMoreOfEveryGroveThanTheFirst()
+        {
+            for (int c = 1; c < Chapters.Length; c++)
+            {
+                var below = Chapters[c - 1];
+                var chapter = Chapters[c];
+
+                foreach (var rung in chapter.Rungs)
+                {
+                    Assert.GreaterOrEqual(rung.Slack, below.Finale.Slack,
+                        $"'{rung.Id}' forces {rung.Slack} cell(s) of detour, less than the "
+                        + $"{below.Finale.Slack} '{below.Finale.Id}' already forced at the end of "
+                        + $"'{below.File}' — a later chapter that asks less is a ladder with a "
+                        + "step down in it");
+
+                    Assert.GreaterOrEqual(rung.Pairs, below.Finale.Pairs,
+                        $"'{rung.Id}' wears fewer colours than '{below.Finale.Id}'");
+
+                    Assert.GreaterOrEqual(rung.Width * rung.Height,
+                                          below.Finale.Width * below.Finale.Height,
+                        $"'{rung.Id}' is a smaller grove than '{below.Finale.Id}'");
+                }
+
+                Assert.Greater(chapter.Finale.Slack, below.Finale.Slack,
+                    $"'{chapter.File}' closes on no more detour than '{below.File}' did");
             }
         }
 
         [Test]
         public void TheChapterOpensGentlyAndClosesOnEveryColourTheLightMakes()
         {
-            Assert.AreEqual(3, Ladder[0].Pairs, "the first grove should teach with as few "
-                                                + "channels as the mode allows");
-            Assert.AreEqual(0, Ladder[0].Beads, "and with nothing added to the mode's own rule");
-            Assert.AreEqual(0, Ladder[1].Beads,
+            // The mode's *first* chapter, which is the one that has to teach it. A later chapter
+            // opens on what this one closed on and is held to that by
+            // TheSecondChapterAsksMoreOfEveryGroveThanTheFirst.
+            Assert.AreEqual(3, Weftwood[0].Pairs, "the first grove should teach with as few "
+                                                  + "channels as the mode allows");
+            Assert.AreEqual(0, Weftwood[0].Beads, "and with nothing added to the mode's own rule");
+            Assert.AreEqual(0, Weftwood[1].Beads,
                 "the second grove is beadless too, so the two lessons this mode has to teach "
                 + "never land on the same board — see WeaveScreen.OnPresented");
-            Assert.Greater(Ladder[2].Beads, 0, "and the third is where a bead is met");
+            Assert.Greater(Weftwood[2].Beads, 0, "and the third is where a bead is met");
 
-            Assert.AreEqual(WeaveGenerator.Palette.Length, Ladder[Ladder.Length - 1].Pairs,
-                            "the finale should wear every colour the light makes");
+            foreach (var chapter in Chapters)
+                Assert.AreEqual(WeaveGenerator.Palette.Length, chapter.Finale.Pairs,
+                    $"'{chapter.File}' should close wearing every colour the light makes");
+        }
+
+        /// <summary>
+        /// A later chapter teaches nothing, and its boards say so.
+        ///
+        /// <para>
+        /// The mode's two lessons — that it is dragged, and that a channel goes <em>through</em>
+        /// a ring rather than stopping at it — are shown once, on a board with room to show them
+        /// (see <c>WeaveScreen.OnPresented</c>). A second chapter is met by a player who has
+        /// already seen both, so it may open at full strength: every colour, and rings from its
+        /// first grove. This is the assertion that would fail if somebody softened it into a
+        /// second tutorial.
+        /// </para>
+        /// </summary>
+        [Test]
+        public void EveryChapterAfterTheFirstOpensAtFullStrength()
+        {
+            for (int c = 1; c < Chapters.Length; c++)
+            {
+                var opening = Chapters[c].Opening;
+
+                Assert.AreEqual(WeaveGenerator.Palette.Length, opening.Pairs,
+                    $"'{opening.Id}' opens on fewer than every colour, so it re-teaches the "
+                    + "palette a player already met");
+                Assert.Greater(opening.Beads, 0,
+                    $"'{opening.Id}' opens with no ring on it, so it re-teaches the ring");
+            }
         }
 
         // ------------------------------------------------------------------ the palette
@@ -375,9 +547,22 @@ namespace GlimmerGrove.Tests
         }
 
         // ------------------------------------------------------------------ the content file
-        static string ChapterPath =>
+        static string PathOf(Chapter chapter) =>
             Path.GetFullPath(Path.Combine(Application.dataPath, "StreamingAssets", "Content",
-                                          "chapters", "w01_lightweave.json"));
+                                          "chapters", chapter.File + ".json"));
+
+        static ChapterBody Read(Chapter chapter)
+        {
+            string path = PathOf(chapter);
+            Assert.IsTrue(File.Exists(path), "no Lightweave chapter at " + path);
+
+            var problems = new List<string>();
+            Assert.IsTrue(ContentMapper.TryReadChapter(File.ReadAllText(path), problems,
+                                                       out var body),
+                          $"'{chapter.File}' did not read: " + string.Join("; ", problems));
+            CollectionAssert.IsEmpty(problems);
+            return body;
+        }
 
         /// <summary>
         /// Reads the shipped chapter. Editor-only, because <c>JsonUtility</c> is a native call —
@@ -386,20 +571,19 @@ namespace GlimmerGrove.Tests
         [Test]
         public void TheShippedChapterAuthorsExactlyThisLadder()
         {
-            Assert.IsTrue(File.Exists(ChapterPath), "no Lightweave chapter at " + ChapterPath);
+            foreach (var chapter in Chapters) AuthorsThisLadder(chapter);
+        }
 
-            var problems = new List<string>();
-            Assert.IsTrue(ContentMapper.TryReadChapter(File.ReadAllText(ChapterPath), problems,
-                                                       out var body),
-                          "the Lightweave chapter did not read: " + string.Join("; ", problems));
-            CollectionAssert.IsEmpty(problems);
+        static void AuthorsThisLadder(Chapter chapter)
+        {
+            var body = Read(chapter);
 
-            Assert.AreEqual(Ladder.Length, body.Count,
-                            "the Weftwood no longer has " + Ladder.Length + " groves in it");
+            Assert.AreEqual(chapter.Rungs.Length, body.Count,
+                            $"'{chapter.File}' no longer has {chapter.Rungs.Length} groves in it");
 
-            for (int i = 0; i < Ladder.Length; i++)
+            for (int i = 0; i < chapter.Rungs.Length; i++)
             {
-                var rung = Ladder[i];
+                var rung = chapter.Rungs[i];
                 var level = body.Levels[i];
 
                 Assert.AreEqual(rung.Id, level.Id.Value, $"rung {i + 1} is a different level");
@@ -422,35 +606,52 @@ namespace GlimmerGrove.Tests
         }
 
         [Test]
-        public void EveryGroveIsTimedAndTheLightGetsTighterDownTheChapter()
+        public void EveryGroveIsGradedAndLostOnCellsAndNoneAuthorsANumber()
         {
-            // The clock is this mode's whole fail state, so a grove that lost its time limit
-            // cannot be lost at all — and an omitted timeFactor is the way that happens quietly.
-            Assert.IsTrue(File.Exists(ChapterPath), "no Lightweave chapter at " + ChapterPath);
-
-            var problems = new List<string>();
-            Assert.IsTrue(ContentMapper.TryReadChapter(File.ReadAllText(ChapterPath), problems,
-                                                       out var body));
-
-            float previous = float.MaxValue;
-            foreach (var level in body.Levels)
+            // A weave has no turns, so all three of the lines it is measured against are counted
+            // in cells of light: it is graded on what its channels spent and it is lost when the
+            // grove provably cannot be finished with what is left (WeaveInk). None of that is
+            // visible in the JSON, because none of it is authored — par falls out of the board
+            // and the three factors are the ordinary shared ones.
+            //
+            // This used to assert the opposite of the third clause below: that a weave had *no*
+            // budget, which was true and was the mode's one real gap — with the clock gone
+            // (invariant 22) a grove could not be lost at all, only forfeited. Invariant 22a
+            // named the fix and this is it, so the assertion is inverted rather than deleted:
+            // an unbudgeted grove is now the regression.
+            foreach (var chapter in Chapters)
+            foreach (var level in Read(chapter).Levels)
             {
                 var tuning = level.Tuning;
-                Assert.IsTrue(tuning.HasTimeLimit, $"'{level.Id}' has no clock, so it cannot be lost");
 
-                Assert.LessOrEqual(tuning.TimeFactor, previous + 1e-4f,
-                    $"'{level.Id}' allows more light per cell of par than the grove before it");
-                previous = tuning.TimeFactor;
+                // Three stars has to stay reachable, and on this mode that is a fact about par
+                // rather than about tuning: a taut arrangement occupies one cell per step plus
+                // one per pair, which is par less a cell for every bead, so it always lands
+                // under the gold line. A par of zero would make the whole ladder unreachable.
+                Assert.Greater(tuning.Par, 0, $"'{level.Id}' has no par to grade against");
+                Assert.GreaterOrEqual(tuning.GoldThreshold, tuning.Par,
+                    $"'{level.Id}' asks for fewer cells than its own shortest routes need");
+                Assert.Greater(tuning.SilverThreshold, tuning.GoldThreshold,
+                    $"'{level.Id}' grades two stars harder than three");
 
-                // Three stars has to stay reachable inside the limit, or the top of the ladder
-                // is unreachable on a board that is otherwise perfectly fair.
-                Assert.Less(tuning.TimeGoldMillis, tuning.TimeLimitMillis,
-                            $"'{level.Id}' cannot be three-starred inside its own clock");
-                Assert.LessOrEqual(tuning.TimeGoldMillis, tuning.TimeSilverMillis,
-                            $"'{level.Id}' grades two stars harder than three");
+                // The ink, and the three lines in the order that keeps every star band landable
+                // — the same ordering LevelValidator.CheckStarBands proves on the build.
+                Assert.IsTrue(tuning.HasBudget,
+                    $"'{level.Id}' is dealt no ink, so it cannot be lost — see invariant 22a");
+                Assert.Greater(tuning.MoveBudget, tuning.SilverThreshold,
+                    $"'{level.Id}' runs out of light at or before its two-star line, so one star " +
+                    "can never be scored on it");
+
+                // And the ink has to cover the board. The floor is what a perfect arrangement
+                // costs before the grove forces a single detour, and every shipped grove forces
+                // some (WeaveGenerator.MinSlack), so ink that merely matched the floor would be
+                // a grove nobody could finish.
+                var grove = level.RulesAs<WeaveRules>().LayoutFor(level.Id);
+                Assert.Less(grove.StraightTotal * 1.2f, tuning.MoveBudget,
+                    $"'{level.Id}' is dealt {tuning.MoveBudget} cells of ink against a floor of " +
+                    $"{grove.StraightTotal}, which leaves no room for the detour it forces");
             }
         }
-    
 
         // ------------------------------------------------------------------ the coaching hand
         /// <summary>
@@ -502,7 +703,54 @@ namespace GlimmerGrove.Tests
                 }
 
                 Assert.LessOrEqual(turns, 1, $"'{rung.Id}' turns {turns} times");
+
+                // The corners are the ends and the turn, and nothing else — a stroke drawn
+                // from them must be the same shape as the route they came from.
+                var bends = grove.Corners(walk);
+                Assert.AreEqual(turns + 2, bends.Length, $"'{rung.Id}' collapsed to {bends.Length} corners");
+                Assert.AreEqual(walk[0], bends[0], $"'{rung.Id}' lost its start");
+                Assert.AreEqual(walk[walk.Length - 1], bends[bends.Length - 1], $"'{rung.Id}' lost its end");
+
+                // Whether it also clears every ring is not asserted here, and that is deliberate:
+                // it depends on whether *this* board leaves a choice, which is a fact about how
+                // crowded a grove is rather than about the rule. The rule itself —
+                // ring-free wherever one is available — is
+                // ARingIsAvoidedWhenTheBoardOffersARouteThatCan, on a board built to have the
+                // choice, so it stays a check when the next chapter is denser still.
             }
+        }
+    
+
+        /// <summary>
+        /// <c>Corners</c>'s own edge cases, which no shipped board reaches and a demonstration
+        /// would only ever show as a seam or a missing leg.
+        /// </summary>
+        [Test]
+        public void CollapsingARouteToItsCornersHandlesItsEnds()
+        {
+            var grove = Grove(Weftwood[0]);
+            int w = grove.Width;
+
+            // A straight run keeps its two ends and gains nothing in between.
+            var straight = new[] { grove.Index(1, 1), grove.Index(2, 1), grove.Index(3, 1), grove.Index(4, 1) };
+            var bends = grove.Corners(straight);
+            Assert.AreEqual(new[] { straight[0], straight[3] }, bends);
+
+            // One turn is one corner, and it is the cell the turn happens on.
+            var elbow = new[] { grove.Index(1, 1), grove.Index(2, 1), grove.Index(2, 2), grove.Index(2, 3) };
+            Assert.AreEqual(new[] { elbow[0], elbow[1], elbow[3] }, grove.Corners(elbow));
+
+            // Doubling back is a turn too, which a cross product alone would call straight.
+            var back = new[] { grove.Index(1, 1), grove.Index(2, 1), grove.Index(1, 1) };
+            Assert.AreEqual(3, grove.Corners(back).Length, "a route that reverses lost its corner");
+
+            // Degenerate inputs answer rather than throw: nothing drawn beats a crash in a lesson.
+            Assert.AreEqual(0, grove.Corners(new int[0]).Length);
+            Assert.AreEqual(1, grove.Corners(new[] { grove.Index(0, 0) }).Length);
+            Assert.AreEqual(2, grove.Corners(new[] { grove.Index(0, 0), grove.Index(1, 0) }).Length);
+            Assert.AreEqual(0, grove.Corners(null).Length);
+
+            Assert.Greater(w, 0);
         }
     }
 }
