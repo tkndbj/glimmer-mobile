@@ -788,8 +788,8 @@ namespace GlimmerGrove
             frt.anchoredPosition = Vector2.zero;
             frt.localRotation = Quaternion.Euler(0, 0, 180f);
 
-            UIKit.IconButton("Back", Safe, Skins.Nav, "ic_left", new Vector2(118f, 118f),
-                             new Vector2(0f, 1f), new Vector2(96f, -132f), () => Flow.Go<HomeScreen>());
+            UIKit.IconButton("Back", Safe, Skins.Nav, "ic_left", Vector2.one * CornerSize,
+                             new Vector2(0f, 1f), new Vector2(CornerX, CornerY), () => Flow.Go<HomeScreen>());
 
             // What a glade pays, and under what rule — the one thing this screen is full of
             // and cannot draw. A node shows its stars and says nothing about what the stars
@@ -797,8 +797,8 @@ namespace GlimmerGrove
             // which is the question the map invites and the victory panel answers only once.
             // Top-right corner, the same place the streak and event pages keep theirs.
             var chapter = _entry != null ? _entry.Id : ChapterId;
-            UIKit.IconButton("Info", Safe, Skins.Aside, "ic_info", new Vector2(118f, 118f),
-                             new Vector2(1f, 1f), new Vector2(-96f, -132f),
+            UIKit.IconButton("Info", Safe, Skins.Aside, "ic_info", Vector2.one * CornerSize,
+                             new Vector2(1f, 1f), new Vector2(-CornerX, CornerY),
                              () => { if (!Flow.HasModal) Flow.Modal<GladeRewardsOverlay>(v => v.For(chapter)); });
 
             _banner = UIKit.Img("Banner", Safe, Art.S("Ui/banner"), Color.white,
@@ -823,18 +823,22 @@ namespace GlimmerGrove
 
             if (_entry == null) return;
 
-            // Under the plaque, and counting *this chapter*. The corner is where every
-            // second-level screen here keeps its "i", and a star count directly beneath the
-            // name reads as belonging to the chapter that name announces — which is what it
-            // now is. It used to total the whole catalog, so the one number on a screen
-            // showing ten glades was out of 90 and moved by a thirtieth when a glade was
-            // three-starred: a progress readout for a chapter that could not show progress
-            // through it. The catalog total still exists and still has a home, on the
-            // profile, where a lifetime figure belongs.
+            // Counting *this chapter*, in the top-right corner under the "i". It used to
+            // total the whole catalog, so the one number on a screen showing ten glades was
+            // out of 90 and moved by a thirtieth when a glade was three-starred: a progress
+            // readout for a chapter that could not show progress through it. The catalog
+            // total still exists and still has a home, on the profile, where a lifetime
+            // figure belongs.
+            //
+            // The corner rather than the column: a count and the "i" beside it are both
+            // *readings* of the chapter and neither is a way through the map, so they belong
+            // in the same stack — which leaves the centre line a control column, plaque then
+            // switcher, with nothing standing between the name and the thing that changes
+            // what the name is naming.
             Scenery.Pill(Safe,
                          $"{PlayerProgress.TotalStars(_entry)} / {PlayerProgress.MaxStars(_entry)}",
-                         36, new Vector2(StarsWidth, StarsHeight), new Vector2(.5f, 1f),
-                         new Vector2(0f, StarsY), null, "ic_star");
+                         36, new Vector2(StarsWidth, StarsHeight), new Vector2(1f, 1f),
+                         new Vector2(StarsX, StarsY), null, "ic_star");
 
             BuildChapterArrows();
 
@@ -842,10 +846,10 @@ namespace GlimmerGrove
             // map. It builds nothing at all while the catalog holds one mode, which is what
             // makes calling it unconditionally safe.
             //
-            // Third in the header stack, and told where that is rather than finding out: the
-            // plaque, the star count and the switcher are one column measured downwards from
-            // BannerY, so a switcher holding its own offset would be a second copy of the same
-            // arithmetic and would stop agreeing with the plaque the first time it was resized.
+            // Second in the header column, and told where that is rather than finding out: the
+            // plaque and the switcher are one column measured downwards from BannerY, so a
+            // switcher holding its own offset would be a second copy of the same arithmetic and
+            // would stop agreeing with the plaque the first time it was resized.
             _modes = ModeSwitch.Build(Safe, _index, Mode, SwitchTo, ModesY);
 
             var swipe = UIKit.Titled("Swipe", Safe, Loc.Get("ui.levels.swipe"), 26,
@@ -910,31 +914,51 @@ namespace GlimmerGrove
         const float ChevronX = 180f, NameWidth = 246f;
 
         /// <summary>
-        /// Where the chapter's star count sits, clear of the plaque's lower edge.
-        ///
-        /// Derived rather than typed: the plaque is centred on <see cref="BannerY"/>, so its
-        /// underside moves whenever its height does, and a constant here would have to be
-        /// re-found every time the banner is resized — which is exactly what this pair of
-        /// numbers was last changed for.
+        /// The two corner keys — back on the left, "i" on the right — as one set of numbers,
+        /// because the star count is now stacked under the second of them and a typed copy of
+        /// where that corner is would stop agreeing with it the first time either key moved.
         /// </summary>
-        const float StarsY = BannerY - BannerHeight * .5f - 47f;
+        const float CornerSize = 118f, CornerX = 96f, CornerY = -132f;
 
-        /// <summary>The star count's own size, named because the switcher is stacked under it.</summary>
+        /// <summary>
+        /// Where the chapter's star count sits: under the "i", right-aligned with it, measured
+        /// from the top-<em>right</em> corner rather than from the plaque's centre line.
+        ///
+        /// <para>
+        /// Both numbers are derived from the corner key above it for the reason
+        /// <see cref="ModesY"/> is derived from <see cref="BannerY"/> — the two are one stack,
+        /// and half the key's height plus half the pill's is what turns a gap between two
+        /// controls of different sizes into a gap between their <em>faces</em>.
+        /// </para>
+        /// <para>
+        /// Right edges are what line up, not centres: the pill is wider than the key, so
+        /// sharing a centre would push it past the safe edge on the narrowest canvas this
+        /// game is drawn on, and hanging it inwards is what makes the pair read as a column
+        /// against the right margin rather than as two things that happen to be near each
+        /// other. The pill pivots centre (<c>UIKit.Box</c> always does), so its x is its own
+        /// half-width plus the key's clearance inside that margin.
+        /// </para>
+        /// </summary>
+        const float StarsGap = 22f;
+        const float StarsX = -(CornerX - CornerSize * .5f + StarsWidth * .5f);
+        const float StarsY = CornerY - CornerSize * .5f - StarsGap - StarsHeight * .5f;
+
+        /// <summary>The star count's own size, named because its placement is derived from it.</summary>
         const float StarsWidth = 196f, StarsHeight = 78f;
 
         /// <summary>
-        /// Where the mode switcher sits: under the star count, on the same centre line as the
-        /// plaque above it.
+        /// Where the mode switcher sits: directly under the plaque, on the same centre line.
         ///
         /// <para>
-        /// Derived from <see cref="StarsY"/> for the reason <see cref="StarsY"/> is derived from
-        /// <see cref="BannerY"/> — the header is one column, and a typed number here would have
-        /// to be re-found every time anything above it changed height. The star count keeps the
-        /// place directly beneath the name because it is <em>about</em> the chapter that name
-        /// announces; the switcher is about the whole map, so it sits below the pair.
+        /// Derived from <see cref="BannerY"/> because the plaque is centred on it, so its
+        /// underside moves whenever its height does and a typed number here would have to be
+        /// re-found every time the banner was resized. The switcher keeps the place directly
+        /// beneath the name because it is the control that changes <em>which</em> catalog that
+        /// name is drawn from; the star count is a reading rather than a control, so it lives
+        /// with the other reading, in the corner under the "i".
         /// </para>
         /// <para>
-        /// Half the star pill's height plus half the switcher's is what turns a gap between two
+        /// Half the plaque's height plus half the switcher's is what turns a gap between two
         /// controls of different sizes into a gap between their <em>faces</em> — the trap
         /// <c>UIKit.Corner</c> records, in a stack rather than in a corner. The switcher's height
         /// is read from <see cref="ModeSwitch.PillHeight"/> rather than typed here, so resizing
@@ -942,7 +966,23 @@ namespace GlimmerGrove
         /// </para>
         /// </summary>
         const float ModesGap = 20f;
-        const float ModesY = StarsY - StarsHeight * .5f - ModesGap - ModeSwitch.PillHeight * .5f;
+        const float ModesY = BannerY - BannerHeight * .5f - ModesGap - ModeSwitch.PillHeight * .5f;
+
+        /// <summary>
+        /// How far the header column reaches down the screen, measured from the top of the
+        /// safe area. The switcher is the last thing in it, so this is its lower edge.
+        /// </summary>
+        /// <remarks>
+        /// Public because the map's own geometry has to clear it and cannot see it: the
+        /// end-of-chapter marker is placed by <see cref="ChapterMap.TeaserHeadroom"/>, which
+        /// lives in Domain and may not read Presentation, so the two are held together by a
+        /// test that adds this to <see cref="ChapterMap.TeaserTopInset"/> and
+        /// <see cref="ChapterMap.TeaserReach"/> rather than by a comment hoping somebody
+        /// re-measures. That hope is exactly what failed: the headroom was sized against the
+        /// banner, the switcher was added underneath it, and the marker sat behind the new
+        /// control in every chapter of every mode with no file naming a wrong coordinate.
+        /// </remarks>
+        public const float HeaderUnderside = -ModesY + ModeSwitch.PillHeight * .5f;
 
         static readonly Color BannerInk = new Color(.36f, .24f, .16f);
 

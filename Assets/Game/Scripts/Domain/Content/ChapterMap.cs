@@ -58,13 +58,43 @@ namespace GlimmerGrove.Content
         /// other, and no authored coordinate was wrong in either.
         /// </para>
         /// <para>
-        /// Sized for the worst case rather than the ordinary one: the banner's underside on
-        /// a display whose safe area pushes the whole header down, plus the marker's own
-        /// radius. A display with nothing in the way simply gets more room than it needs,
-        /// which is invisible; the other way round is a control the player cannot see.
+        /// Sized for the worst case rather than the ordinary one: the underside of the whole
+        /// header column on a display whose safe area pushes it down, plus the marker's own
+        /// reach above its centre. A display with nothing in the way simply gets more room
+        /// than it needs, which is invisible; the other way round is a control the player
+        /// cannot see.
+        /// </para>
+        /// <para>
+        /// <b>The column, not the plaque</b> — and getting that wrong is what this number was
+        /// last changed for. It was sized against the banner's underside when the banner was
+        /// the last thing in the header; the mode switcher then arrived beneath it, and the
+        /// marker went on landing at the same 500 units in <em>every</em> chapter of
+        /// <em>every</em> mode, half behind a control that had not existed when the figure was
+        /// chosen. Nothing could catch it: the marker's coordinate is authored nowhere, so no
+        /// content file was wrong, and the clearance check only ever compared it against
+        /// glades. <see cref="TeaserTopInset"/> and <see cref="TeaserReach"/> are the other two
+        /// terms named so a test can add them to what the header actually measures, which is
+        /// the guard that did not exist before — see <c>ChapterMapTests</c>.
         /// </para>
         /// </summary>
-        public const float TeaserHeadroom = 500f;
+        public const float TeaserHeadroom = 700f;
+
+        /// <summary>
+        /// The top safe-area inset this headroom is sized against, in canvas units.
+        ///
+        /// The header hangs from the safe area and the map does not, so every unit a notch
+        /// pushes the chrome down is a unit the marker has to give up. Roughly what the
+        /// deepest cutouts shipping today cost at this canvas width; a device with none
+        /// simply gets more air than it needs.
+        /// </summary>
+        public const float TeaserTopInset = 180f;
+
+        /// <summary>
+        /// How far the marker reaches above its own centre, plus the air that keeps it from
+        /// merely touching the control above it. Its disc is <see cref="NodeDiameter"/> and
+        /// everything else it carries — the plate, the shadow — hangs below.
+        /// </summary>
+        public const float TeaserReach = NodeDiameter * .5f + 52f;
 
         /// <summary>
         /// Where the end-of-chapter marker sits across the map when a chapter does not say.

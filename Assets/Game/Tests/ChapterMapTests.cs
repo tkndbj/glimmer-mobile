@@ -227,6 +227,39 @@ namespace GlimmerGrove.Tests
             Assert.AreEqual(1200f, ChapterMap.Height(0), "a chapter is never shorter than one strip");
         }
 
+        /// <summary>
+        /// The end-of-chapter marker has to clear the header, and the header is the one thing
+        /// about it that no content file and no validator can see.
+        /// </summary>
+        /// <remarks>
+        /// <para>
+        /// The marker's coordinate is authored nowhere — it is placed for the author by
+        /// <see cref="ChapterMap.TeaserPosition"/>, and the clearance check only ever compares
+        /// it against glades. So when the mode switcher was added <em>beneath</em> the plaque
+        /// the headroom had been sized against, the marker went on landing at the same
+        /// distance from the top of the map and sat half behind the new control, in every
+        /// chapter of every mode, with every gate green and no wrong number in any file.
+        /// </para>
+        /// <para>
+        /// This is the arithmetic that catches the next one. It has to live here rather than
+        /// beside either half: <see cref="ChapterMap"/> is Domain and may not read the screen,
+        /// and the screen may not hold a second copy of the map's geometry (invariant 8a).
+        /// Adding a row to the header now fails a test instead of quietly swallowing the
+        /// marker.
+        /// </para>
+        /// </remarks>
+        [Test]
+        public void TheEndOfChapterMarkerClearsTheHeaderOnTheWorstDisplay()
+        {
+            float needed = LevelsScreen.HeaderUnderside + ChapterMap.TeaserTopInset + ChapterMap.TeaserReach;
+
+            Assert.GreaterOrEqual(ChapterMap.TeaserHeadroom, needed,
+                                  $"the header reaches {LevelsScreen.HeaderUnderside} down the safe area, a " +
+                                  $"cutout costs another {ChapterMap.TeaserTopInset} and the marker reaches " +
+                                  $"{ChapterMap.TeaserReach} above its own centre, so a headroom below " +
+                                  $"{needed} draws it behind the chrome");
+        }
+
         /// <summary>Every chapter that actually ships must be laid out cleanly.</summary>
         [Test]
         public void EveryShippedChapterIsLaidOutCleanly()
