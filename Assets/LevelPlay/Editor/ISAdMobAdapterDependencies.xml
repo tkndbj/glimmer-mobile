@@ -14,7 +14,7 @@
   </androidPackages>
 
   <iosPods>
-    <iosPod name="IronSourceAdMobAdapter" version="5.10.0.0">
+    <iosPod name="IronSourceAdMobAdapter" version="5.13.0.0">
       <sources>
         <source>https://github.com/CocoaPods/Specs</source>
       </sources>

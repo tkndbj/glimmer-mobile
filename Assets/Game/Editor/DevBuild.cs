@@ -16,6 +16,13 @@ namespace GlimmerGrove.EditorTools
         public const string AabPath = "Builds/Android/GlimmerGrove.aab";
 
         /// <summary>
+        /// Where the generated Xcode project lands. Gitignored, like <c>Builds/</c>, because it
+        /// is generated output — 1.2 GB of transpiled C++ that is reproduced by any clone that
+        /// runs this menu item.
+        /// </summary>
+        public const string IosPath = "glimmer-ios-builds";
+
+        /// <summary>
         /// Environment variables the store build reads its signing credentials from.
         ///
         /// <para>
@@ -205,6 +212,120 @@ namespace GlimmerGrove.EditorTools
                 "Console > Setup > App integrity > App signing key certificate, and add it to " +
                 "the Firebase Android app. Play re-signs the bundle with its own key, so the " +
                 "debug fingerprint that works for sideloaded APKs does not apply here.");
+        }
+
+        /// <summary>
+        /// The Xcode project TestFlight and the App Store actually accept.
+        ///
+        /// <para>
+        /// <b>The build number is bumped here, for the reason the App Bundle bumps its
+        /// versionCode.</b> App Store Connect refuses an upload whose <c>CFBundleVersion</c> it
+        /// has already seen against the same <c>CFBundleShortVersionString</c> — and it refuses
+        /// it at the <em>end</em>, after the archive, the upload and the processing wait. Raising
+        /// it in the build script means it cannot be forgotten, and because
+        /// <c>ProjectSettings.asset</c> is tracked the change shows up in a diff rather than
+        /// happening invisibly.
+        /// </para>
+        /// <para>
+        /// <b>Refused rather than reset when it is not a whole number.</b> Connect compares build
+        /// numbers numerically within a version, so guessing at a replacement for something this
+        /// cannot parse risks picking one already uploaded — which fails at the same late point
+        /// this exists to move earlier.
+        /// </para>
+        /// <para>
+        /// <b>Replace, never Append.</b> Omitting
+        /// <see cref="BuildOptions.AcceptExternalModificationsToPlayer"/> is what makes this a
+        /// clean regeneration. Append is faster and is exactly where a drop that adds assemblies
+        /// or Addressables groups leaves stale artifacts — and nothing in the generated project is
+        /// hand-made, because the entitlement, the tracking description and the export-compliance
+        /// flag are all written by post-processors on every build.
+        /// </para>
+        /// <para>
+        /// <b>What this deliberately does not do is run <c>pod install</c>.</b> The External
+        /// Dependency Manager owns that step and <see cref="IosWorkspaceGuard"/> proves it ran; a
+        /// second caller here would be a second source of truth for which pods are installed. If
+        /// the guard reports no workspace the fault is upstream — a tool path
+        /// (<see cref="MacToolPath"/>) or a pod version conflict — and shelling out from here
+        /// would hide the cause behind a repair.
+        /// </para>
+        /// </summary>
+        [MenuItem("Glimmer Grove/Build iOS Xcode Project (store)", false, 44)]
+        public static void BuildIos()
+        {
+            // A whole number, because Connect orders builds numerically inside a version.
+            string current = PlayerSettings.iOS.buildNumber;
+            if (!int.TryParse(current, out int build))
+            {
+                Debug.LogError(
+                    $"[Glimmer] iOS build number is '{current}', which is not a whole number, so " +
+                    "it cannot be raised safely. Set it to an integer in Player Settings first — " +
+                    "App Store Connect compares it numerically against every build already " +
+                    "uploaded for this version.");
+                return;
+            }
+
+            if (EditorUserBuildSettings.activeBuildTarget != BuildTarget.iOS)
+            {
+                // Switching reimports every asset for the new platform, which is slow the first
+                // time and unavoidable. Doing it explicitly means the log says so rather than the
+                // build appearing to hang.
+                Debug.Log("[Glimmer] switching to iOS; the first switch reimports all assets");
+                if (!EditorUserBuildSettings.SwitchActiveBuildTargetAsync(
+                        BuildTargetGroup.iOS, BuildTarget.iOS))
+                {
+                    Debug.LogError("[Glimmer] could not switch to iOS - is iOS Build Support installed?");
+                    return;
+                }
+            }
+
+            ProjectSetup.Setup();
+
+            // Both of these are the requirement the Android paths document at length, and it is a
+            // fact about Firebase rather than about Android: the engine stripper removes
+            // MonoScript, which Firebase needs at runtime because it adds a MonoBehaviour to a
+            // GameObject with nothing referencing it statically. With it on, cloud save is
+            // silently dead while everything else looks fine.
+            PlayerSettings.stripEngineCode = false;
+            PlayerSettings.SetManagedStrippingLevel(NamedBuildTarget.iOS,
+                                                    ManagedStrippingLevel.Minimal);
+
+            PlayerSettings.iOS.buildNumber = (build + 1).ToString();
+
+            if (!Directory.Exists(IosPath)) Directory.CreateDirectory(IosPath);
+
+            var opts = new BuildPlayerOptions
+            {
+                scenes = new[] { ProjectSetup.ScenePath },
+                locationPathName = IosPath,
+                target = BuildTarget.iOS,
+                targetGroup = BuildTargetGroup.iOS,
+
+                // No Development and no AllowDebugging, and no
+                // AcceptExternalModificationsToPlayer — see the remarks about Replace above.
+                options = BuildOptions.None,
+            };
+
+            var report = BuildPipeline.BuildPlayer(opts);
+            var s = report.summary;
+
+            Debug.Log($"[Glimmer] xcode project {s.result} - version {PlayerSettings.bundleVersion} " +
+                      $"(build {PlayerSettings.iOS.buildNumber}), " +
+                      $"{s.totalErrors} error(s), {s.totalWarnings} warning(s) -> {IosPath}");
+
+            if (s.result != BuildResult.Succeeded)
+            {
+                Debug.LogError("[Glimmer] iOS build failed; the build number was already raised, " +
+                               "which is harmless - Connect only cares that it has not been " +
+                               "uploaded before.");
+                return;
+            }
+
+            // IosWorkspaceGuard has already said which file to open and how many pods are in it.
+            // This says the half it cannot: signing is Xcode's, and the entitlement this build
+            // wrote needs a paid team.
+            Debug.Log("[Glimmer] open the .xcworkspace, not the .xcodeproj. Signing is Xcode's " +
+                      "own - Sign in with Apple needs a paid team, which a free Personal Team " +
+                      "cannot provide.");
         }
 
         static void BuildAndroid(bool andRun)
