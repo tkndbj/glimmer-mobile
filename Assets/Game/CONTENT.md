@@ -95,11 +95,18 @@ Two consequences worth holding on to:
   any chapter file that is missing from it altogether. The build gate then proves
   both held, so forgetting to run it fails a build rather than silently hiding a
   glade or a whole chapter.
-- **A level's strings are derived from its id** (`level.<id>.name`, `.tagline`,
-  `.lesson`) and cannot be overridden. That is what lets the map, the home
+- **A level's strings are derived from its id** (`level.<id>.name` and
+  `.tagline`) and cannot be overridden. That is what lets the map, the home
   screen's "next up" line and the win overlay name a glade without reading its
   chapter. An overridable key would have made naming something you can only know
   after a file read, and the index would have stopped being sufficient.
+  <br>There was a third, `.lesson`, and it is **retired**: it was floated along the
+  bottom of any run with nothing new to teach — so on every level of every mode
+  after the first few, which is furniture rather than something anybody reads.
+  A board says what it has to say through its tips (`Mechanic`, `TipOverlay`),
+  which are derived from the board rather than authored per level. Do not re-point
+  the suffix at a different sentence: a level's strings are a pure function of its
+  id, so re-using it would silently re-label sixty levels of authored prose.
 
 ## Adding a chapter
 
@@ -139,8 +146,9 @@ Two consequences worth holding on to:
    whose last glade is on the right. A chapter ending on the right side wants a left
    `teaserX` and the other way round, or the trail's last step is a redundant
    vertical one. The Mill Vale ends at 0.71 and sets 0.3.
-4. Add `chapter.<id>.name` and, per level, `level.<id>.name` / `.tagline` /
-   `.lesson` to `loc/en.json`. Missing keys fail validation, which names each one.
+4. Add `chapter.<id>.name` and, per level, `level.<id>.name` / `.tagline` to
+   `loc/en.json`. Missing keys fail validation, which names each one. There is no
+   third per-level string — see the derived-strings note above.
 5. `Glimmer Grove ▸ Content ▸ Sync Manifest` — adopts the new chapter into
    `manifest.json`, picks an `order`, fills in its level list and derives its `mode`
    from the levels it holds. Run it after *every* content edit.
@@ -516,6 +524,111 @@ Boards are *searched for* rather than typed. `Tools/hollow/` holds a mirror of t
 Python, a generator, and `build_chapter.py`, which writes the chapter body and prints the ladder
 as a table. The mirror is a second copy of the rules and is therefore never authoritative — the
 shipping C# solver is what `Validate Content` runs, and any disagreement is a bug in the mirror.
+
+## Lightfall levels
+
+`"mode": "fall"` on a manifest chapter entry says its levels are **wells**. A well carries a
+`fall` block instead of a `rows` grid, and a level must have exactly one of the two:
+
+```json
+{
+  "id": "f01_first_fall",
+  "mapX": 0.32,
+  "mapY": 0.05,
+  "fall": {
+    "width": 4,
+    "height": 6,
+    "rows": [
+      "....",
+      "....",
+      "....",
+      "....",
+      "Y.YY",
+      "YYYM"
+    ],
+    "motes": "BGRGBR"
+  }
+}
+```
+
+**The rule in one paragraph.** Tap a column and a mote of pure light falls into it. If the mote
+on top of that column lacks the colour, the two blend and the stack does *not* grow; if it
+already holds the colour, the new mote comes to rest above it and the stack is one row taller.
+A mote holding all three channels **bursts**, and the burst washes the colour that finished it
+into the motes beside it — so any of *them* that is thereby completed bursts in turn, and one
+well-chosen drop runs through a whole connected blob. You win when the well is empty. You lose
+two ways: the supply runs out, or a mote comes to rest above the **brim**, which is row nought.
+
+**The vocabulary**, one letter per cell, no spaces needed:
+
+| letter | means |
+|--------|-------|
+| `.` | bare ground |
+| `R` `G` `B` | a mote of one channel: two more to go |
+| `Y` `M` `C` | a mote of two channels — *ripe*, and one drop from bursting |
+| `W` | refused: a well that bursts before anybody touches it is a board its author did not mean |
+
+`motes` is the procession, in the order it is dealt, written in `R`, `G` and `B` only — dealing a
+blend would hand the player a step of the cooking for free. **It repeats**, so it never needs to
+be longer than one lap, and it must carry every channel the board is missing or those motes could
+never be finished however many drops were bought.
+
+**Nothing else about a well is authored.** Par is the fewest drops that empty it *without ever
+breaching the brim*, found by search (`FallSolver`). Three stars is `par x 1.20` and two is
+`par x 1.40`, as everywhere else — but the **supply is `par + spare`**, a count of wasted drops
+rather than a multiple of par, because a wrong drop here is permanent *and* leaves a mote that
+still has to be cooked, so a mistake costs about two drops wherever it happens. `spare` defaults
+to 5 (two mistakes and a little) and is authorable per level; see invariant 26e for why a factor
+could not do this job. A typed par is the failure with no symptom — one too high hands three
+stars to a careless run for ever, one too low makes them unreachable, and neither is visible in
+the file that caused it.
+
+Two rules the validator holds a well to that are easy to get wrong by hand:
+
+- **The brim row must be empty**, or the level begins in its own fail state.
+- **Nothing may float.** The well settles the instant anything bursts, so a mote with nothing
+  under it is a mote drawn in one place and met in another.
+
+`budgetFactor: -1` turns the supply off entirely, and exactly one level in the game uses it: the
+first well, for the reason the first glade cannot be lost either. It is also what keeps the
+supply lesson off that board — a lesson shown over a meter that is not there can never be shown
+again.
+
+### What makes a well hard
+
+Four dials, and **par is not one of them**. Par is length: a big well cleared by four huge chains
+is a shorter number than a small one that has to be picked apart. The dials are:
+
+- **Headroom** — how many rows the tallest column has before the brim. This is the one that makes
+  every individual drop frightening, because a wasted mote costs a row as well as a mote. A
+  teaching well leaves four; a finale leaves two.
+- **What is standing in it** — how many motes, and how much of the well is blends (ripe, one drop
+  from bursting) against pure colours (two drops away, and only reachable by a wash from
+  somewhere else).
+- **`ways`** — how many distinct shortest solutions there are. This is invariant 5d, counted: a
+  well with hundreds of them is one where almost any tidy play wins, so the colours and the
+  ordering are deciding nothing however pretty it looks. It falls down a chapter.
+- **`greedy`** — whether a player who never looks ahead, always taking the biggest burst going,
+  clears the well inside its supply. On a chapter's opening wells they should; that is what
+  teaching the verb looks like. By the middle they should not.
+
+`Validate Content` and `Tools/verify/content.py` both print all four beside par, the two star
+lines, the supply and the number of positions the proof cost.
+
+**Boards are searched for rather than typed**, because a random fill is almost never solvable —
+every pure mote needs two more channels and the stragglers pile up faster than any chain clears
+them. `Tools/chapters/f01_lightfall.py` holds the shipped ten and self-checks against the JSON;
+`Tools/verify/fall.py` is the rule mirror it and the offline gate both run. The mirror is a
+second copy of the rules and is therefore never authoritative — `fall-vectors.json` is the
+contract between it and the shipping C#, and both sides run it.
+
+**Keep a well cheap to prove.** The player's device runs the same search — once, lazily, when
+somebody opens the level (`LevelTuning.Par` resolves the first time anything asks, which is the
+run screen and never the map). The validator **warns above 40,000 positions and refuses a level
+above 120,000**, which is about a quarter of a second of nothing happening on the way in. Cost
+goes as the column count to the power of par, so par 7 on a six-wide well is four times par 6 on
+the same board: narrow the well or shorten the answer, and start it fuller rather than making it
+bigger.
 
 ## What makes a glade hard
 ## What makes a glade hard

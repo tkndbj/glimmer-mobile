@@ -34,10 +34,6 @@
       "text": "The Nightloom"
     },
     {
-      "key": "level.c01_bound_roots.lesson",
-      "text": "Conduits wearing the same pips share a root. Turn one and its partners turn with it."
-    },
-    {
       "key": "level.c01_bound_roots.name",
       "text": "Bound Roots"
     },
@@ -46,20 +42,12 @@
       "text": "Two streams, and roots that run beneath both"
     },
     {
-      "key": "level.c01_duskcap_hollow.lesson",
-      "text": "Duskcaps sleep in the shade. Light one and the glade will not settle, so route around them."
-    },
-    {
       "key": "level.c01_duskcap_hollow.name",
       "text": "Duskcap Hollow"
     },
     {
       "key": "level.c01_duskcap_hollow.tagline",
-      "text": "Wake the grove without waking the dark"
-    },
-    {
-      "key": "level.c01_first_light.lesson",
-      "text": "Tap a conduit to turn it. Light every sleeping critter."
+      "text": "Wake the groove without waking the dark"
     },
     {
       "key": "level.c01_first_light.name",
@@ -70,20 +58,12 @@
       "text": "A single heart wakes the glade"
     },
     {
-      "key": "level.c01_grovekeepers_knot.lesson",
-      "text": "One root reaches into all four corners. Nothing here can be solved a corner at a time."
-    },
-    {
       "key": "level.c01_grovekeepers_knot.name",
-      "text": "The Grovekeeper's Knot"
+      "text": "The Groovekeeper's Knot"
     },
     {
       "key": "level.c01_grovekeepers_knot.tagline",
-      "text": "Everything the grove taught you, at once"
-    },
-    {
-      "key": "level.c01_lantern_ring.lesson",
-      "text": "The ring's four corners share one root. Its edges are what can leak light inward."
+      "text": "Everything the groove taught you, at once"
     },
     {
       "key": "level.c01_lantern_ring.name",
@@ -94,20 +74,12 @@
       "text": "One ring of light around a sleeping dark"
     },
     {
-      "key": "level.c01_prism_heart.lesson",
-      "text": "Joined hearts blend: red plus green makes gold. Keep the blue stream to itself."
-    },
-    {
       "key": "level.c01_prism_heart.name",
       "text": "Prism Heart"
     },
     {
       "key": "level.c01_prism_heart.tagline",
-      "text": "Blend the light, wake the deep grove"
-    },
-    {
-      "key": "level.c01_sleeping_thicket.lesson",
-      "text": "The thicket is the wall keeping the streams apart. Open it and you lose both at once."
+      "text": "Blend the light, wake the deep groove"
     },
     {
       "key": "level.c01_sleeping_thicket.name",
@@ -118,20 +90,12 @@
       "text": "Two streams, and a thicket between them"
     },
     {
-      "key": "level.c01_thorn_hollow.lesson",
-      "text": "Some conduits crumble after a few turns. Plan the route before you spin."
-    },
-    {
       "key": "level.c01_thorn_hollow.name",
       "text": "Brittle Hollow"
     },
     {
       "key": "level.c01_thorn_hollow.tagline",
       "text": "Three streams, and conduits that will not last"
-    },
-    {
-      "key": "level.c01_three_springs.lesson",
-      "text": "Gold and teal both carry green. Join those two and both go white together."
     },
     {
       "key": "level.c01_three_springs.name",
@@ -142,20 +106,12 @@
       "text": "Gold, teal, and a red spring of its own"
     },
     {
-      "key": "level.c01_twin_streams.lesson",
-      "text": "Critters only wake to their own colour. Keep the streams apart."
-    },
-    {
       "key": "level.c01_twin_streams.name",
       "text": "Twin Streams"
     },
     {
       "key": "level.c01_twin_streams.tagline",
       "text": "Two hearts, two hues, no mixing"
-    },
-    {
-      "key": "level.c02_braided_water.lesson",
-      "text": "Bound conduits turn as one, crossings included. The tap that settles the near braid settles the far one with it."
     },
     {
       "key": "level.c02_braided_water.name",
@@ -166,20 +122,12 @@
       "text": "Two crossings, one root, opposite corners"
     },
     {
-      "key": "level.c02_hollow_ford.lesson",
-      "text": "Every crossing here is a place the shadow and the grove could be joined by mistake. Read which arm belongs to which strand before you turn."
-    },
-    {
       "key": "level.c02_hollow_ford.name",
       "text": "Hollow Ford"
     },
     {
       "key": "level.c02_hollow_ford.tagline",
       "text": "The dark fords the light three times"
-    },
-    {
-      "key": "level.c02_stonebridge.lesson",
-      "text": "These crossings are rooted where they stand. The grove is not asking which way they face — it is asking what still fits through them."
     },
     {
       "key": "level.c02_stonebridge.name",
@@ -190,20 +138,12 @@
       "text": "Four bridges nobody can turn"
     },
     {
-      "key": "level.c02_the_millers_knot.lesson",
-      "text": "Three networks, a pool of shadow under the braid, two spans on one root and brittle stone on two more."
-    },
-    {
       "key": "level.c02_the_millers_knot.name",
       "text": "The Miller's Knot"
     },
     {
       "key": "level.c02_the_millers_knot.tagline",
       "text": "Everything the vale has taught, tied once"
-    },
-    {
-      "key": "level.c02_the_millrace.lesson",
-      "text": "The two runs change lanes at every crossing. One left the wrong way round hands a heart's light to the other's critters."
     },
     {
       "key": "level.c02_the_millrace.name",
@@ -214,20 +154,12 @@
       "text": "A rope of light, twisted three times"
     },
     {
-      "key": "level.c02_the_old_weir.lesson",
-      "text": "Both weirs crumble after two turns and need one. Nothing about their arms says which way they face, so read the hearts: you are allowed exactly one wrong guess."
-    },
-    {
       "key": "level.c02_the_old_weir.name",
       "text": "The Old Weir"
     },
     {
       "key": "level.c02_the_old_weir.tagline",
       "text": "Brittle stone on both approaches"
-    },
-    {
-      "key": "level.c02_the_wheelhouse.lesson",
-      "text": "Three networks share this ground. Two stay pure and the third holds a heart of each, and the crossings are what let all three pass."
     },
     {
       "key": "level.c02_the_wheelhouse.name",
@@ -238,20 +170,12 @@
       "text": "Kept apart here, blended there"
     },
     {
-      "key": "level.c02_three_bridges.lesson",
-      "text": "Yellow gives the grove to red, red to green and green to blue, and every hand-over happens inside one tile."
-    },
-    {
       "key": "level.c02_three_bridges.name",
       "text": "Three Bridges"
     },
     {
       "key": "level.c02_three_bridges.tagline",
       "text": "A cascade, handed on at every span"
-    },
-    {
-      "key": "level.c02_two_ways_over.lesson",
-      "text": "A crossing carries two flows past each other. Turn it the other way and both hearts pour into one channel."
     },
     {
       "key": "level.c02_two_ways_over.name",
@@ -262,20 +186,12 @@
       "text": "One tile, and two streams that never meet"
     },
     {
-      "key": "level.c02_under_the_boughs.lesson",
-      "text": "The grove closes in a ring, so a crossing turned the wrong way wakes the shadow and leaves every critter lit. A glade with a woken duskcap will not settle however finished it looks."
-    },
-    {
       "key": "level.c02_under_the_boughs.name",
       "text": "Under the Boughs"
     },
     {
       "key": "level.c02_under_the_boughs.tagline",
-      "text": "The shadow runs straight through the grove"
-    },
-    {
-      "key": "level.c03_amberlight.lesson",
-      "text": "A critter wearing two colours wants both of them at once. The red and green hearts that feed it cannot be the two keeping the pure critters pure."
+      "text": "The shadow runs straight through the groove"
     },
     {
       "key": "level.c03_amberlight.name",
@@ -286,20 +202,12 @@
       "text": "Amber needs two springs of its own"
     },
     {
-      "key": "level.c03_foxfire.lesson",
-      "text": "Foxfire is red and blue. The two conduits carrying them to one another crumble after two turns and need one, so you are allowed exactly one wrong guess about which way the ridge closes."
-    },
-    {
       "key": "level.c03_foxfire.name",
       "text": "Foxfire"
     },
     {
       "key": "level.c03_foxfire.tagline",
       "text": "Brittle stone on the only join"
-    },
-    {
-      "key": "level.c03_rootbound.lesson",
-      "text": "The three conduits that let the ridge blend all carry the same rune, so they turn as one. Whatever the near one does, the two you cannot see do with it - and the green below is a turn away from going amber."
     },
     {
       "key": "level.c03_rootbound.name",
@@ -310,20 +218,12 @@
       "text": "One tap, and the ridge decides three times"
     },
     {
-      "key": "level.c03_the_amberwood_knot.lesson",
-      "text": "Amber along the ridge, verdigris at the foot, a red lane between them that must stay red, two pools of shadow under the foot, and one root holding a corner of each."
-    },
-    {
       "key": "level.c03_the_amberwood_knot.name",
       "text": "The Amberwood Knot"
     },
     {
       "key": "level.c03_the_amberwood_knot.tagline",
       "text": "Everything the wood has taught, tied once"
-    },
-    {
-      "key": "level.c03_the_ashen_path.lesson",
-      "text": "One island of dark, crossing under the amber and the blue and meeting itself at the foot of the wood. Brittle stone guards an approach to each lane, and a woken duskcap is a glade that will not settle however many critters are awake."
     },
     {
       "key": "level.c03_the_ashen_path.name",
@@ -334,20 +234,12 @@
       "text": "The shadow fords both lanes and joins beneath them"
     },
     {
-      "key": "level.c03_the_quiet_hollow.lesson",
-      "text": "Amber's two springs sit on opposite sides of the dark, so the only way to join them is through it. The tiles that carry the light under the duskcaps are the same ones that would wake them."
-    },
-    {
       "key": "level.c03_the_quiet_hollow.name",
       "text": "The Quiet Hollow"
     },
     {
       "key": "level.c03_the_quiet_hollow.tagline",
       "text": "The blend can only be made under the shadow"
-    },
-    {
-      "key": "level.c03_the_verdigris.lesson",
-      "text": "Verdigris is green and blue together, and this is the only ground where they are allowed to meet. Both weirs stand one turn from handing a comb the colour that would ruin it."
     },
     {
       "key": "level.c03_the_verdigris.name",
@@ -358,20 +250,12 @@
       "text": "Teal, between the blue comb and the green one"
     },
     {
-      "key": "level.c03_three_springs.lesson",
-      "text": "Three streams, and each holds two of the three lights: amber, foxfire, verdigris. Join any two streams and four critters go wrong at the same moment."
-    },
-    {
       "key": "level.c03_three_springs.name",
       "text": "Three Coloured Springs"
     },
     {
       "key": "level.c03_three_springs.tagline",
       "text": "Every light used twice, every pair met once"
-    },
-    {
-      "key": "level.c03_two_lights.lesson",
-      "text": "These crossings are not bridges - each is worth a tap, and each turns both lanes at once. One left the wrong way round hands the amber lane's light to the red one."
     },
     {
       "key": "level.c03_two_lights.name",
@@ -382,20 +266,12 @@
       "text": "Both lanes turn where they cross"
     },
     {
-      "key": "level.c03_under_the_lanterns.lesson",
-      "text": "White is every light at once, so the ring through the middle has to gather all three springs and reach none of the gardens around it. One corner is allowed to blend. The other three are not."
-    },
-    {
       "key": "level.c03_under_the_lanterns.name",
       "text": "Under the Lanterns"
     },
     {
       "key": "level.c03_under_the_lanterns.tagline",
       "text": "White in the middle, and gardens all round it"
-    },
-    {
-      "key": "level.c04_bramble_and_bridge.lesson",
-      "text": "A bridge carries both flows through and never needs turning. A bramble carries one and turning it is the point. They are a tile apart here, and only the thorns tell them apart."
     },
     {
       "key": "level.c04_bramble_and_bridge.name",
@@ -406,20 +282,12 @@
       "text": "Four arms, two meanings"
     },
     {
-      "key": "level.c04_nightfall.lesson",
-      "text": "This bramble stands on a ring, so shutting its way costs nothing at all and no critter will tell you. What the same tap opens is the way north, into the dark."
-    },
-    {
       "key": "level.c04_nightfall.name",
       "text": "Nightfall"
     },
     {
       "key": "level.c04_nightfall.tagline",
       "text": "The loop forgives the turn; the shadow does not"
-    },
-    {
-      "key": "level.c04_rootbriar.lesson",
-      "text": "Both brambles carry the same rune, so they turn as one - and neither of them can be read off its own arms. Whatever the near one does, the far one does with it, and the tap is charged once."
     },
     {
       "key": "level.c04_rootbriar.name",
@@ -430,10 +298,6 @@
       "text": "One rune, two brambles, opposite corners"
     },
     {
-      "key": "level.c04_the_hollow_gate.lesson",
-      "text": "Nothing about the arms can settle a bramble, which is why these two crumble after two turns and need one. You are allowed exactly one wrong guess about which way the middle opens."
-    },
-    {
       "key": "level.c04_the_hollow_gate.name",
       "text": "The Hollow Gate"
     },
@@ -442,20 +306,12 @@
       "text": "Brittle stone where guessing is all you have"
     },
     {
-      "key": "level.c04_the_long_dark.lesson",
-      "text": "The bridges carry the dark beneath the light without touching it. The brambles decide whether it stays that way - and both of them stand on loops, so nothing on the board will warn you."
-    },
-    {
       "key": "level.c04_the_long_dark.name",
       "text": "The Long Dark"
     },
     {
       "key": "level.c04_the_long_dark.tagline",
-      "text": "A shadow under the grove, forded twice"
-    },
-    {
-      "key": "level.c04_the_nightbriar_knot.lesson",
-      "text": "Two bridges, four brambles - two of them on one rune in opposite corners, one of them brittle - an amber ridge that can only be joined across the middle, and a shadow running the width of the board beneath all of it."
+      "text": "A shadow under the groove, forded twice"
     },
     {
       "key": "level.c04_the_nightbriar_knot.name",
@@ -466,20 +322,12 @@
       "text": "Everything the wood has taught, tied once"
     },
     {
-      "key": "level.c04_the_shut_way.lesson",
-      "text": "The lane across the middle has a heart at each end, so it is blossom. Above and below it the groves must stay pure - and the thorns are the whole of what keeps them that way."
-    },
-    {
       "key": "level.c04_the_shut_way.name",
       "text": "The Shut Way"
     },
     {
       "key": "level.c04_the_shut_way.tagline",
       "text": "The only ground where red and blue may meet"
-    },
-    {
-      "key": "level.c04_thornlight.lesson",
-      "text": "A bramble wears four arms and lets light along only two of them. Turn it and the thorns swing round onto the other pair - so whatever the open way was feeding goes dark."
     },
     {
       "key": "level.c04_thornlight.name",
@@ -490,20 +338,12 @@
       "text": "Thorns close two ways, and a tap moves them"
     },
     {
-      "key": "level.c04_three_thorns.lesson",
-      "text": "Red, green and blue, each pure, each within a tile of the others. Every bramble here stands on the one square where two of them could meet."
-    },
-    {
       "key": "level.c04_three_thorns.name",
       "text": "Three Thorns"
     },
     {
       "key": "level.c04_three_thorns.tagline",
-      "text": "Three groves, and every bramble a colour"
-    },
-    {
-      "key": "level.c04_wick_and_wane.lesson",
-      "text": "Amber wants a red heart and a green one joined, and the only ground where they can be joined is a brittle bramble standing beside the dark. Two turns of stone, one turn needed."
+      "text": "Three grooves, and every bramble a colour"
     },
     {
       "key": "level.c04_wick_and_wane.name",
@@ -514,10 +354,6 @@
       "text": "A blend to make, a shadow to leave alone"
     },
     {
-      "key": "level.f01_first_fall.lesson",
-      "text": "Tap a column to drop a mote. It BLENDS into the top of the stack if it adds a colour - red onto green makes amber. If it adds nothing it sits on top and the stack grows. Complete all three colours to make white, and white detonates. Fill a column and it is over."
-    },
-    {
       "key": "level.f01_first_fall.name",
       "text": "First Fall"
     },
@@ -526,8 +362,76 @@
       "text": "Never match. Cook."
     },
     {
-      "key": "level.k01_first_grove.lesson",
-      "text": "Tap any outlined space touching a tile you have placed. Two DIFFERENT colours meeting light a seam; two the same are worth nothing. Gather all three around one tile and it blooms. Thirty tiles, no clock - just how much grove you made with them."
+      "key": "level.f01_two_lights.name",
+      "text": "Two Lights"
+    },
+    {
+      "key": "level.f01_two_lights.tagline",
+      "text": "Blue is the one thing yellow lacks."
+    },
+    {
+      "key": "level.f01_the_kindling.name",
+      "text": "The Kindling"
+    },
+    {
+      "key": "level.f01_the_kindling.tagline",
+      "text": "One drop, and the light runs."
+    },
+    {
+      "key": "level.f01_the_stack.name",
+      "text": "The Stack"
+    },
+    {
+      "key": "level.f01_the_stack.tagline",
+      "text": "Light spreads sideways as well as down."
+    },
+    {
+      "key": "level.f01_the_undertow.name",
+      "text": "The Undertow"
+    },
+    {
+      "key": "level.f01_the_undertow.tagline",
+      "text": "Clear the floor and the rest comes down."
+    },
+    {
+      "key": "level.f01_the_deep_well.name",
+      "text": "The Deep Well"
+    },
+    {
+      "key": "level.f01_the_deep_well.tagline",
+      "text": "Every mote, or none."
+    },
+    {
+      "key": "level.f01_narrow_water.name",
+      "text": "Narrow Water"
+    },
+    {
+      "key": "level.f01_narrow_water.tagline",
+      "text": "A colour it already holds is a wasted mote."
+    },
+    {
+      "key": "level.f01_deep_cistern.name",
+      "text": "The Cistern"
+    },
+    {
+      "key": "level.f01_deep_cistern.tagline",
+      "text": "What is buried is reached from beside it."
+    },
+    {
+      "key": "level.f01_brimming.name",
+      "text": "Brimming"
+    },
+    {
+      "key": "level.f01_brimming.tagline",
+      "text": "The line at the top is the one that ends you."
+    },
+    {
+      "key": "level.f01_last_ember.name",
+      "text": "Last Ember"
+    },
+    {
+      "key": "level.f01_last_ember.tagline",
+      "text": "Count what is still to come."
     },
     {
       "key": "level.k01_first_grove.name",
@@ -538,20 +442,12 @@
       "text": "Unlike edges bloom"
     },
     {
-      "key": "level.w01_close_quarters.lesson",
-      "text": "Two of these channels want the same ground, and only one of them can have it. Work out which one can afford to go round."
-    },
-    {
       "key": "level.w01_close_quarters.name",
       "text": "Close Quarters"
     },
     {
       "key": "level.w01_close_quarters.tagline",
       "text": "Five channels, and few ways past."
-    },
-    {
-      "key": "level.w01_first_weave.lesson",
-      "text": "Drag from a crystal to the critter wearing its colour. Two channels may never cross - that is the whole of it."
     },
     {
       "key": "level.w01_first_weave.name",
@@ -562,20 +458,12 @@
       "text": "Three channels, and room to think."
     },
     {
-      "key": "level.w01_five_lanterns.lesson",
-      "text": "A fifth colour joins the weave. With five channels sharing the ground, the order you draw them in decides what is still reachable."
-    },
-    {
       "key": "level.w01_five_lanterns.name",
       "text": "Five Lanterns"
     },
     {
       "key": "level.w01_five_lanterns.tagline",
-      "text": "Five channels, one grove."
-    },
-    {
-      "key": "level.w01_six_sleepers.lesson",
-      "text": "All six channels at once - the three colours and the three blends. This is as many as a grove can hold, because white is the colour of being awake."
+      "text": "Five channels, one groove."
     },
     {
       "key": "level.w01_six_sleepers.name",
@@ -586,20 +474,12 @@
       "text": "Every colour the light makes."
     },
     {
-      "key": "level.w01_the_long_skein.lesson",
-      "text": "Give the channel with the furthest to go its room first. Leave it until last and there is none left."
-    },
-    {
       "key": "level.w01_the_long_skein.name",
       "text": "The Long Skein"
     },
     {
       "key": "level.w01_the_long_skein.tagline",
       "text": "Three rings, and less room than it looks."
-    },
-    {
-      "key": "level.w01_the_shuttle.lesson",
-      "text": "A ring belongs to the colour it is drawn in: that channel must pass through it, and no other channel may enter it."
     },
     {
       "key": "level.w01_the_shuttle.name",
@@ -610,20 +490,12 @@
       "text": "Thread the ring."
     },
     {
-      "key": "level.w01_the_tangle.lesson",
-      "text": "Very few arrangements of this grove work. Expect to take a channel back and try it another way - that is the puzzle, not a mistake."
-    },
-    {
       "key": "level.w01_the_tangle.name",
       "text": "The Tangle"
     },
     {
       "key": "level.w01_the_tangle.tagline",
       "text": "Six channels, and few ways through."
-    },
-    {
-      "key": "level.w01_the_weftwood_knot.lesson",
-      "text": "Six channels and five rings across the largest grove in the Weftwood. Everything the wood has taught you, at once."
     },
     {
       "key": "level.w01_the_weftwood_knot.name",
@@ -634,20 +506,12 @@
       "text": "The whole weave, and one way through."
     },
     {
-      "key": "level.w01_tight_warp.lesson",
-      "text": "A ring pulls its own channel out of line, and everything it pushes past has to find somewhere else to be."
-    },
-    {
       "key": "level.w01_tight_warp.name",
       "text": "Tight Warp"
     },
     {
       "key": "level.w01_tight_warp.tagline",
       "text": "Two rings, four channels."
-    },
-    {
-      "key": "level.w01_two_threads.lesson",
-      "text": "Four channels sharing one grove. They cannot all take the short way at once, so one of them gives - and you decide which one."
     },
     {
       "key": "level.w01_two_threads.name",
@@ -658,20 +522,12 @@
       "text": "A fourth colour joins."
     },
     {
-      "key": "level.w02_dusk_threads.lesson",
-      "text": "The Nightloom opens where the Weftwood ended - every colour the light makes, five rings, and a groove that will not let all six go their own way."
-    },
-    {
       "key": "level.w02_dusk_threads.name",
       "text": "Dusk Threads"
     },
     {
       "key": "level.w02_dusk_threads.tagline",
       "text": "Six channels, and none of them free."
-    },
-    {
-      "key": "level.w02_six_rings.lesson",
-      "text": "Every channel wears a ring now, which is as many as a groove can hold - one apiece. Two on any of them would be a tour to remember rather than a route to find."
     },
     {
       "key": "level.w02_six_rings.name",
@@ -682,20 +538,12 @@
       "text": "A ring on every channel."
     },
     {
-      "key": "level.w02_spindlewood.lesson",
-      "text": "A ring bends its own channel and shuts every other one out. Count what it closes before you decide who goes round it."
-    },
-    {
       "key": "level.w02_spindlewood.name",
       "text": "Spindlewood"
     },
     {
       "key": "level.w02_spindlewood.tagline",
       "text": "A wider groove, and six rings in it."
-    },
-    {
-      "key": "level.w02_the_long_way_round.lesson",
-      "text": "The shortest route for one channel can be the longest one for the groove. Spend the detour where it costs the least light."
     },
     {
       "key": "level.w02_the_long_way_round.name",
@@ -706,20 +554,12 @@
       "text": "The furthest out of their way yet."
     },
     {
-      "key": "level.w02_the_narrow_loom.lesson",
-      "text": "Draw the channel with the least room first. Whatever is left after it is what the other five have to share."
-    },
-    {
       "key": "level.w02_the_narrow_loom.name",
       "text": "The Narrow Loom"
     },
     {
       "key": "level.w02_the_narrow_loom.tagline",
       "text": "A tighter frame, and the same six."
-    },
-    {
-      "key": "level.w02_the_nightloom_knot.lesson",
-      "text": "The largest groove in the Nightloom, and the furthest out of their way it will send them. Everything the loom has taught you, at once."
     },
     {
       "key": "level.w02_the_nightloom_knot.name",
@@ -730,20 +570,12 @@
       "text": "The whole loom, and the longest way round."
     },
     {
-      "key": "level.w02_the_pinch.lesson",
-      "text": "Two channels want the same gap and only one can have it. Give it to whichever of them can afford the smaller way round."
-    },
-    {
       "key": "level.w02_the_pinch.name",
       "text": "The Pinch"
     },
     {
       "key": "level.w02_the_pinch.tagline",
       "text": "One gap, and everybody wants it."
-    },
-    {
-      "key": "level.w02_the_shuttered_loom.lesson",
-      "text": "Most of what you try here will not work, and finding that out is how this one is solved. Two channels a groove gives back in full - after that the light is spent."
     },
     {
       "key": "level.w02_the_shuttered_loom.name",
@@ -754,20 +586,12 @@
       "text": "Six rings, and hardly a way past."
     },
     {
-      "key": "level.w02_thread_the_dark.lesson",
-      "text": "Erasing a channel frees the ground it stood on. It does not give the light back, so look at the whole groove before you land one."
-    },
-    {
       "key": "level.w02_thread_the_dark.name",
       "text": "Thread the Dark"
     },
     {
       "key": "level.w02_thread_the_dark.tagline",
       "text": "Very few arrangements, and one that is best."
-    },
-    {
-      "key": "level.w02_who_yields.lesson",
-      "text": "Nobody here can go straight while everybody else does either. The groove will not say who yields - that part is yours."
     },
     {
       "key": "level.w02_who_yields.name",
@@ -798,6 +622,14 @@
       "text": "height"
     },
     {
+      "key": "mode.cap.ink",
+      "text": "light left"
+    },
+    {
+      "key": "mode.cap.ink_free",
+      "text": "free"
+    },
+    {
       "key": "mode.cap.joined",
       "text": "awake"
     },
@@ -818,24 +650,56 @@
       "text": "stars"
     },
     {
+      "key": "mode.cap.supply",
+      "text": "supply"
+    },
+    {
       "key": "mode.cap.tiles",
       "text": "tiles left"
     },
     {
-      "key": "mode.cap.time",
-      "text": "light left"
+      "key": "mode.cap.motes",
+      "text": "motes left"
+    },
+    {
+      "key": "mode.cap.chain",
+      "text": "best chain"
     },
     {
       "key": "mode.fall.name",
       "text": "Lightfall"
     },
     {
-      "key": "mode.fall.over",
-      "text": "The well is full."
+      "key": "mode.fall.tagline",
+      "text": "Cook the light. Empty the well."
     },
     {
-      "key": "mode.fall.tagline",
-      "text": "Never match. Cook."
+      "key": "mode.fall.supply",
+      "text": "LEFT"
+    },
+    {
+      "key": "mode.fall.supply_free",
+      "text": "free"
+    },
+    {
+      "key": "mode.fall.chain_amazing",
+      "text": "AMAZING!"
+    },
+    {
+      "key": "mode.fall.chain_epic",
+      "text": "EPIC!"
+    },
+    {
+      "key": "mode.fall.chain_legendary",
+      "text": "LEGENDARY!"
+    },
+    {
+      "key": "mode.fall.chain_unreal",
+      "text": "UNREAL!"
+    },
+    {
+      "key": "mode.fall.multiplier",
+      "text": "x{0}"
     },
     {
       "key": "mode.glade.name",
@@ -847,11 +711,11 @@
     },
     {
       "key": "mode.keeper.name",
-      "text": "Grovekeeper"
+      "text": "Groovekeeper"
     },
     {
       "key": "mode.keeper.over",
-      "text": "Grove finished - {0} points."
+      "text": "Groove finished - {0} points."
     },
     {
       "key": "mode.keeper.tagline",
@@ -863,11 +727,11 @@
     },
     {
       "key": "mode.weave.over",
-      "text": "The grove went dark. {0} served."
+      "text": "The groove went dark. {0} served."
     },
     {
       "key": "mode.weave.tagline",
-      "text": "Draw the light. Wake the grove."
+      "text": "Draw the light. Wake the groove."
     },
     {
       "key": "mode.weave.unthreaded",
@@ -899,7 +763,7 @@
     },
     {
       "key": "store.product.gg_bundle_grove",
-      "text": "Grove Bounty"
+      "text": "Groove Bounty"
     },
     {
       "key": "store.product.gg_bundle_keeper",
@@ -907,7 +771,7 @@
     },
     {
       "key": "store.product.gg_bundle_starter",
-      "text": "Grovekeeper's Welcome"
+      "text": "Groovekeeper's Welcome"
     },
     {
       "key": "store.product.gg_coins_1",
@@ -1014,10 +878,6 @@
       "text": "Thank you! What you just bought belongs to an account, not to this phone. Sign in now and it is safe if you lose this phone or reinstall the game. Without it, it cannot be brought back."
     },
     {
-      "key": "ui.account.guest_stakes",
-      "text": "{0} levels finished  ·  level {1}  saved only on this phone"
-    },
-    {
       "key": "ui.account.later",
       "text": "NOT NOW"
     },
@@ -1043,7 +903,7 @@
     },
     {
       "key": "ui.account.not_secured",
-      "text": "we could not save your grove just now, so nothing was changed  ·  please try again when you are online"
+      "text": "we could not save your groove just now, so nothing was changed  ·  please try again when you are online"
     },
     {
       "key": "ui.account.offline",
@@ -1059,7 +919,7 @@
     },
     {
       "key": "ui.account.securing",
-      "text": "saving your grove..."
+      "text": "saving your groove..."
     },
     {
       "key": "ui.account.switch",
@@ -1067,7 +927,7 @@
     },
     {
       "key": "ui.account.switch_body",
-      "text": "Pick the account you want to play here. This grove is saved online first, and a copy stays on this phone, so coming back to it later is one tap."
+      "text": "Pick the account you want to play here. This groove is saved online first, and a copy stays on this phone, so coming back to it later is one tap."
     },
     {
       "key": "ui.account.switch_safe",
@@ -1075,15 +935,15 @@
     },
     {
       "key": "ui.account.switched_new",
-      "text": "signed in  ·  this account has no grove yet, so here is a new one"
+      "text": "signed in  ·  this account has no groove yet, so here is a new one"
     },
     {
       "key": "ui.account.switched_pending",
-      "text": "signed in  ·  if this account has a grove it will load once you are online"
+      "text": "signed in  ·  if this account has a groove it will load once you are online"
     },
     {
       "key": "ui.account.taken",
-      "text": "that account already has its own grove"
+      "text": "that account already has its own groove"
     },
     {
       "key": "ui.account.taken_body",
@@ -1351,7 +1211,7 @@
     },
     {
       "key": "ui.board.building",
-      "text": "Your grove is ranked. The standing arrives with the next tally."
+      "text": "Your groove is ranked. The standing arrives with the next tally."
     },
     {
       "key": "ui.board.failed",
@@ -1359,11 +1219,11 @@
     },
     {
       "key": "ui.board.global",
-      "text": "Finest groves"
+      "text": "Finest grooves"
     },
     {
       "key": "ui.board.join",
-      "text": "Show my grove"
+      "text": "Show my groove"
     },
     {
       "key": "ui.board.league",
@@ -1371,7 +1231,7 @@
     },
     {
       "key": "ui.board.leave",
-      "text": "Hide my grove"
+      "text": "Hide my groove"
     },
     {
       "key": "ui.board.loading",
@@ -1399,7 +1259,7 @@
     },
     {
       "key": "ui.board.opted_out",
-      "text": "Your grove is hidden from the boards."
+      "text": "Your groove is hidden from the boards."
     },
     {
       "key": "ui.board.placed",
@@ -1415,11 +1275,11 @@
     },
     {
       "key": "ui.board.top_percent",
-      "text": "Your grove is in the top {0}% of keepers."
+      "text": "Your groove is in the top {0}% of keepers."
     },
     {
       "key": "ui.board.unranked",
-      "text": "Buy something for your grove and you will be ranked."
+      "text": "Buy something for your groove and you will be ranked."
     },
     {
       "key": "ui.bonus.on_top",
@@ -1491,7 +1351,7 @@
     },
     {
       "key": "ui.companion.joined",
-      "text": "joined your grove"
+      "text": "joined your groove"
     },
     {
       "key": "ui.companion.locked_button",
@@ -1618,12 +1478,24 @@
       "text": "One of the free levels — no heart was spent. Try it as often as you like."
     },
     {
+      "key": "ui.defeat.free_replay",
+      "text": "You have finished this level before, so replaying it is free — no heart, however it goes."
+    },
+    {
+      "key": "ui.defeat.flood_title",
+      "text": "THE WELL BRIMMED OVER"
+    },
+    {
+      "key": "ui.defeat.flood_reason",
+      "text": "A mote came to rest above the line. A colour a stack already holds has nowhere to go but upward."
+    },
+    {
       "key": "ui.defeat.get_gems",
       "text": "Get gems"
     },
     {
       "key": "ui.defeat.ink_reason",
-      "text": "There is not enough light left to finish this grove. Draw straighter and undo early."
+      "text": "There is not enough light left to finish this groove. Draw straighter and undo early."
     },
     {
       "key": "ui.defeat.ink_title",
@@ -1631,11 +1503,19 @@
     },
     {
       "key": "ui.defeat.moves_reason",
-      "text": "The grove grew tired before the glade woke. Fewer turns, more thinking."
+      "text": "The groove grew tired before the glade woke. Fewer turns, more thinking."
     },
     {
       "key": "ui.defeat.moves_title",
       "text": "OUT OF TURNS"
+    },
+    {
+      "key": "ui.defeat.motes_title",
+      "text": "THE LIGHT RAN OUT"
+    },
+    {
+      "key": "ui.defeat.motes_reason",
+      "text": "Nothing left to drop, and the well is not empty. Spend each mote where it finishes something."
     },
     {
       "key": "ui.defeat.near_one",
@@ -1647,7 +1527,7 @@
     },
     {
       "key": "ui.defeat.out_of_hearts",
-      "text": "No hearts left. Rest a while and the grove will wake you."
+      "text": "No hearts left. Rest a while and the groove will wake you."
     },
     {
       "key": "ui.defeat.reason",
@@ -1671,7 +1551,7 @@
     },
     {
       "key": "ui.defeat.watch_for_hearts",
-      "text": "No hearts left — but a short video will wake the grove early."
+      "text": "No hearts left — but a short video will wake the groove early."
     },
     {
       "key": "ui.event.all_taken",
@@ -1763,7 +1643,7 @@
     },
     {
       "key": "ui.event.title",
-      "text": "GROVE EVENT"
+      "text": "GROOVE EVENT"
     },
     {
       "key": "ui.event.to_next",
@@ -1779,7 +1659,7 @@
     },
     {
       "key": "ui.forfeit.leave_body",
-      "text": "This run has begun, so leaving it costs a heart — the same as running out of time. The glade will be waiting exactly as you found it."
+      "text": "This run has begun, so leaving it costs a heart — the same as running out of turns. The glade will be waiting exactly as you found it."
     },
     {
       "key": "ui.forfeit.leave_go",
@@ -1791,7 +1671,7 @@
     },
     {
       "key": "ui.forfeit.restart_body",
-      "text": "This run has begun, so starting again costs a heart — the same as running out of time. You will get a fresh board and a full clock."
+      "text": "This run has begun, so starting again costs a heart — the same as running out of turns. You will get a fresh board and a fresh count."
     },
     {
       "key": "ui.forfeit.restart_go",
@@ -1819,15 +1699,15 @@
     },
     {
       "key": "ui.grove.already",
-      "text": "{0} is yours. Tap any spot in your grove to place it."
+      "text": "{0} is yours. Tap any spot in your groove to place it."
     },
     {
       "key": "ui.grove.bought_copies",
-      "text": "{0} added. Tap a spot in your grove to place them."
+      "text": "{0} added. Tap a spot in your groove to place them."
     },
     {
       "key": "ui.grove.bought_note",
-      "text": "Yours. Tap a spot in your grove to place it."
+      "text": "Yours. Tap a spot in your groove to place it."
     },
     {
       "key": "ui.grove.bundle_note",
@@ -1863,11 +1743,11 @@
     },
     {
       "key": "ui.grove.home_best",
-      "text": "The finest home in the grove."
+      "text": "The finest home in the groove."
     },
     {
       "key": "ui.grove.home_moved",
-      "text": "Your grove has a new home."
+      "text": "Your groove has a new home."
     },
     {
       "key": "ui.grove.home_next",
@@ -1879,7 +1759,7 @@
     },
     {
       "key": "ui.grove.loading",
-      "text": "Waking your grove…"
+      "text": "Waking your groove…"
     },
     {
       "key": "ui.grove.move",
@@ -1923,7 +1803,7 @@
     },
     {
       "key": "ui.grove.score",
-      "text": "grove worth"
+      "text": "groove worth"
     },
     {
       "key": "ui.grove.score_next",
@@ -1931,7 +1811,7 @@
     },
     {
       "key": "ui.grove.score_top",
-      "text": "the finest grove in the vale"
+      "text": "the finest groove in the vale"
     },
     {
       "key": "ui.grove.shelf",
@@ -1959,11 +1839,11 @@
     },
     {
       "key": "ui.grove.stock_full",
-      "text": "You are holding as many of these as a grove can take."
+      "text": "You are holding as many of these as a groove can take."
     },
     {
       "key": "ui.grove.stock_have",
-      "text": "{0} in stock · {1} standing in your grove"
+      "text": "{0} in stock · {1} standing in your groove"
     },
     {
       "key": "ui.grove.stock_left",
@@ -1979,11 +1859,11 @@
     },
     {
       "key": "ui.grove.title",
-      "text": "grovement"
+      "text": "groovement"
     },
     {
       "key": "ui.grove.unavailable",
-      "text": "Your grove is not available right now."
+      "text": "Your groove is not available right now."
     },
     {
       "key": "ui.grove.upgrade_for",
@@ -2279,7 +2159,7 @@
     },
     {
       "key": "ui.levels.rewards_free_body",
-      "text": "The first {0} levels of this chapter cost no heart. Lose one, restart it or leave it as often as you like while you are finding your feet — after that, a lost run costs a heart."
+      "text": "The first {0} levels of this chapter cost no heart. Lose one, restart it or leave it as often as you like while you are finding your feet — and once you have finished a level, playing it again is always free."
     },
     {
       "key": "ui.levels.rewards_free_title",
@@ -2287,7 +2167,7 @@
     },
     {
       "key": "ui.levels.rewards_golden_body",
-      "text": "A few glades quietly pay more — up to {0}% of the usual coins. Which ones is fixed for your grove, and the victory panel says so."
+      "text": "A few glades quietly pay more — up to {0}% of the usual coins. Which ones is fixed for your groove, and the victory panel says so."
     },
     {
       "key": "ui.levels.rewards_golden_title",
@@ -2308,6 +2188,14 @@
     {
       "key": "ui.levels.rewards_open_title",
       "text": "opening the next chapter"
+    },
+    {
+      "key": "ui.levels.rewards_replay_body",
+      "text": "A level you have already finished costs no heart to play again. Lose it, restart it or leave it as often as you like — only a level you have not finished yet can take one."
+    },
+    {
+      "key": "ui.levels.rewards_replay_title",
+      "text": "free to try again"
     },
     {
       "key": "ui.levels.rewards_stars_body",
@@ -2331,7 +2219,7 @@
     },
     {
       "key": "ui.nav.grovement",
-      "text": "grovement"
+      "text": "groovement"
     },
     {
       "key": "ui.nav.home",
@@ -2599,7 +2487,7 @@
     },
     {
       "key": "ui.piece.hall",
-      "text": "Grove Hall"
+      "text": "Groove Hall"
     },
     {
       "key": "ui.piece.hay_bale",
@@ -2623,7 +2511,7 @@
     },
     {
       "key": "ui.piece.idol",
-      "text": "Grove Idol"
+      "text": "Groove Idol"
     },
     {
       "key": "ui.piece.ladder",
@@ -3087,11 +2975,11 @@
     },
     {
       "key": "ui.profile.guest_hint",
-      "text": "This grove lives only on this device. Link an account and it follows you."
+      "text": "This groove lives only on this device. Link an account and it follows you."
     },
     {
       "key": "ui.profile.linked_hint",
-      "text": "Your grove is backed up and follows you to any device you sign in on."
+      "text": "Your groove is backed up and follows you to any device you sign in on."
     },
     {
       "key": "ui.profile.locked",
@@ -3127,7 +3015,7 @@
     },
     {
       "key": "ui.profile.name_hint",
-      "text": "Grovekeeper"
+      "text": "Groovekeeper"
     },
     {
       "key": "ui.profile.name_mine",
@@ -3163,11 +3051,11 @@
     },
     {
       "key": "ui.profile.protect",
-      "text": "PROTECT MY GROVE"
+      "text": "PROTECT MY GROOVE"
     },
     {
       "key": "ui.profile.record",
-      "text": "grove record"
+      "text": "groove record"
     },
     {
       "key": "ui.profile.rename",
@@ -3207,27 +3095,19 @@
     },
     {
       "key": "ui.rank.points",
-      "text": "{0} points  ·  {1}"
-    },
-    {
-      "key": "ui.rank.points_one",
-      "text": "{0} point  ·  {1}"
-    },
-    {
-      "key": "ui.rank.points_untimed",
       "text": "{0} points"
     },
     {
-      "key": "ui.rank.points_untimed_one",
+      "key": "ui.rank.points_one",
       "text": "{0} point"
     },
     {
       "key": "ui.rank.record",
-      "text": "{0} turns  ·  {1}"
+      "text": "{0} turns"
     },
     {
       "key": "ui.rank.record_one",
-      "text": "{0} turn  ·  {1}"
+      "text": "{0} turn"
     },
     {
       "key": "ui.rank.top10",
@@ -3242,28 +3122,20 @@
       "text": "You are in the top 50%"
     },
     {
-      "key": "ui.rank.untimed",
-      "text": "{0} turns"
-    },
-    {
-      "key": "ui.rank.untimed_one",
-      "text": "{0} turn"
-    },
-    {
       "key": "ui.rank.woven",
-      "text": "woven in {1}"
+      "text": "woven with {0}"
     },
     {
       "key": "ui.rank.woven_one",
-      "text": "woven in {1}"
+      "text": "woven with {0}"
     },
     {
-      "key": "ui.rank.woven_untimed",
-      "text": "woven"
+      "key": "ui.rank.motes",
+      "text": "{0} motes"
     },
     {
-      "key": "ui.rank.woven_untimed_one",
-      "text": "woven"
+      "key": "ui.rank.motes_one",
+      "text": "{0} mote"
     },
     {
       "key": "ui.reward.credits",
@@ -3303,11 +3175,11 @@
     },
     {
       "key": "ui.route.under",
-      "text": "{0} turns shorter than the grove knew"
+      "text": "{0} turns shorter than the groove knew"
     },
     {
       "key": "ui.route.under_one",
-      "text": "a turn shorter than the grove knew"
+      "text": "a turn shorter than the groove knew"
     },
     {
       "key": "ui.settings.buzz",
@@ -3471,7 +3343,7 @@
     },
     {
       "key": "ui.shop.granted_note",
-      "text": "Added to your grove. Enjoy!"
+      "text": "Added to your groove. Enjoy!"
     },
     {
       "key": "ui.shop.guest_notice",
@@ -3543,7 +3415,7 @@
     },
     {
       "key": "ui.shop.shelf_coins",
-      "text": "Coins buy companions, land and everything in your grove"
+      "text": "Coins buy companions, land and everything in your groove"
     },
     {
       "key": "ui.shop.shelf_gems",
@@ -3611,7 +3483,7 @@
     },
     {
       "key": "ui.streak.explain_held",
-      "text": "You have kept the grove awake {0} days running."
+      "text": "You have kept the groove awake {0} days running."
     },
     {
       "key": "ui.streak.explain_none",
@@ -3679,7 +3551,7 @@
     },
     {
       "key": "ui.streak.subtitle",
-      "text": "the grove after dark"
+      "text": "the groove after dark"
     },
     {
       "key": "ui.streak.title",
@@ -3754,16 +3626,40 @@
       "text": "BRITTLE CONDUIT"
     },
     {
+      "key": "ui.tip.fall_cook.title",
+      "text": "COOK, DO NOT MATCH"
+    },
+    {
+      "key": "ui.tip.fall_cook.body",
+      "text": "A mote adds its colour to the one it lands on. Red on green makes yellow.\n\nA mote holding all three bursts, and washes that colour into everything beside it."
+    },
+    {
+      "key": "ui.tip.fall_supply.title",
+      "text": "THE LIGHT IS COUNTED"
+    },
+    {
+      "key": "ui.tip.fall_supply.body",
+      "text": "This well is dealt so many motes and no more.\n\nThere is no undo here. Watch the ring under your thumb before you let go."
+    },
+    {
+      "key": "ui.tip.fall_brim.title",
+      "text": "MIND THE BRIM"
+    },
+    {
+      "key": "ui.tip.fall_brim.body",
+      "text": "A mote that comes to rest above the line ends the run.\n\nA colour the top of a stack already holds is what raises it - the ring turns red when it would."
+    },
+    {
       "key": "ui.tip.grove.body",
-      "text": "This is the corner of the grove that is yours. Every friend you rescue and every piece you buy can stand here, wherever you decide. Tap a tile to put something on it, and hold what you have placed to move or turn it."
+      "text": "This is the corner of the groove that is yours. Every friend you rescue and every piece you buy can stand here, wherever you decide. Tap a tile to put something on it, and hold what you have placed to move or turn it."
     },
     {
       "key": "ui.tip.grove.title",
-      "text": "YOUR GROVEMENT"
+      "text": "YOUR GROOVEMENT"
     },
     {
       "key": "ui.tip.grove_shop.body",
-      "text": "Everything a grove is made of is in here: friends to live in it, decor to fill it and more ground to build on. Credits come from clearing glades, and nothing you buy is ever used up."
+      "text": "Everything a groove is made of is in here: friends to live in it, decor to fill it and more ground to build on. Credits come from clearing glades, and nothing you buy is ever used up."
     },
     {
       "key": "ui.tip.grove_shop.title",
@@ -3803,7 +3699,7 @@
     },
     {
       "key": "ui.tip.rooted.body",
-      "text": "A rooted tile cannot be turned. Treat it as a fixed part of the path and route the rest of the grove around it."
+      "text": "A rooted tile cannot be turned. Treat it as a fixed part of the path and route the rest of the groove around it."
     },
     {
       "key": "ui.tip.rooted.title",
@@ -3819,7 +3715,7 @@
     },
     {
       "key": "ui.tip.weave_ink.body",
-      "text": "Every channel spends light, and taking one back does not give it back.\n\nUndo returns a channel and its light — twice a grove."
+      "text": "Every channel spends light, and taking one back does not give it back.\n\nUndo returns a channel and its light — twice a groove."
     },
     {
       "key": "ui.tip.weave_ink.title",
@@ -3835,11 +3731,11 @@
     },
     {
       "key": "ui.title.elder",
-      "text": "Grove Elder"
+      "text": "Groove Elder"
     },
     {
       "key": "ui.title.keeper",
-      "text": "Grovekeeper"
+      "text": "Groovekeeper"
     },
     {
       "key": "ui.title.sapling",
@@ -3855,7 +3751,7 @@
     },
     {
       "key": "ui.visit.gone",
-      "text": "This grove is no longer on the boards."
+      "text": "This groove is no longer on the boards."
     },
     {
       "key": "ui.visit.report",
@@ -3863,7 +3759,7 @@
     },
     {
       "key": "ui.visit.report_confirm_body",
-      "text": "Report this keeper's name if it is offensive. A person checks it, and nothing about their grove changes for you."
+      "text": "Report this keeper's name if it is offensive. A person checks it, and nothing about their groove changes for you."
     },
     {
       "key": "ui.visit.report_confirm_title",
@@ -3894,6 +3790,10 @@
       "text": "WATCH A VIDEO TO COLLECT"
     },
     {
+      "key": "ui.wheel.collected",
+      "text": "COLLECTED"
+    },
+    {
       "key": "ui.wheel.cta",
       "text": "I'M FEELING LUCKY!"
     },
@@ -3903,7 +3803,11 @@
     },
     {
       "key": "ui.wheel.odds",
-      "text": "Every slice is the same size: a 1 in {0} chance of each. Spinning is free."
+      "text": "Every slice is the same size · a 1 in {0} chance"
+    },
+    {
+      "key": "ui.wheel.prize_title",
+      "text": "YOU WON!"
     },
     {
       "key": "ui.wheel.spin",
@@ -3919,7 +3823,7 @@
     },
     {
       "key": "ui.wheel.won",
-      "text": "You won {0} coins! Watch a short video to collect them."
+      "text": "You won {0} coins!"
     },
     {
       "key": "ui.win.best_stamp",
@@ -3963,11 +3867,11 @@
     },
     {
       "key": "ui.win.route_grove",
-      "text": "THE GROVE'S ROUTE"
+      "text": "THE GROOVE'S ROUTE"
     },
     {
       "key": "ui.win.route_info",
-      "text": "The grove's route is how many turns this glade was built around. Winning only needs every lamp lit, so conduits you never touch can stay as they are — which is how a run can come in shorter."
+      "text": "The groove's route is how many turns this glade was built around. Winning only needs every lamp lit, so conduits you never touch can stay as they are — which is how a run can come in shorter."
     },
     {
       "key": "ui.win.route_you",

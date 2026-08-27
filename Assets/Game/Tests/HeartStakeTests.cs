@@ -23,8 +23,58 @@ namespace GlimmerGrove.Tests
     /// </summary>
     public sealed class HeartStakeTests
     {
+        /// <summary>
+        /// The published table and the save, both ways round. The rule reads a table another
+        /// fixture may have published and a record another fixture may have loaded, and the
+        /// offline runner promises no order — so independence is taken rather than assumed,
+        /// exactly as <c>ChapterGateTests</c> takes it next door.
+        /// </summary>
+        [SetUp]
+        public void StartFromTheShippedRules()
+        {
+            ProgressionRules.Reset();
+            PlayerProgress.LoadFrom(new SaveFileDto());
+        }
+
         [TearDown]
-        public void Restore() => ProgressionRules.Reset();
+        public void Restore()
+        {
+            ProgressionRules.Reset();
+            PlayerProgress.LoadFrom(new SaveFileDto());
+        }
+
+        /// <summary>
+        /// Drives the save directly rather than through <c>RecordRun</c>, which would write a
+        /// file. Every id given is recorded as finished; anything else is a glade the player has
+        /// either never met or never beaten, which the rule treats identically.
+        /// </summary>
+        static void Finished(params string[] levels)
+        {
+            var dto = new SaveFileDto { levels = new LevelRecordDto[levels.Length] };
+
+            for (int i = 0; i < levels.Length; i++)
+                dto.levels[i] = new LevelRecordDto
+                {
+                    levelId = levels[i],
+                    stars = 1,
+                    bestMoves = 10,
+                    clears = 1,
+                };
+
+            PlayerProgress.LoadFrom(dto);
+        }
+
+        /// <summary>A glade attempted and lost: a record exists, and it holds no star.</summary>
+        static void Attempted(string level)
+        {
+            PlayerProgress.LoadFrom(new SaveFileDto
+            {
+                levels = new[]
+                {
+                    new LevelRecordDto { levelId = level, stars = 0, bestMoves = 0, clears = 0 },
+                },
+            });
+        }
 
         /// <summary>Publishes a rules table whose only interesting field is the free window.</summary>
         static void Grace(int levels)
@@ -206,6 +256,10 @@ namespace GlimmerGrove.Tests
             // that promises a free board the run then charges for is worse than no panel. Held
             // together by walking every level of every mode rather than by trusting that they
             // are written from the same field.
+            //
+            // Asked of the opening clause rather than of the whole price, because the count is
+            // the opening clause: what a replay costs is a fact about the player and not about
+            // the chapter, and the panel states that one as a rule with no number in it.
             Grace(3);
             var index = Catalog();
 
@@ -219,11 +273,100 @@ namespace GlimmerGrove.Tests
                     int actual = 0;
 
                     for (int i = 0; i < chapter.LevelIds.Count; i++)
-                        if (HeartStake.IsFree(index, chapter.LevelIds[i])) actual++;
+                        if (HeartStake.IsOpening(index, chapter.LevelIds[i])) actual++;
 
                     Assert.AreEqual(promised, actual, $"{chapter.Id.Value} says one thing and prices another");
                 }
             }
+        }
+
+        // ------------------------------------------------------------------ the replay
+        [Test]
+        public void AGladeAlreadyFinishedIsFreeHoweverFarIntoTheGameItIs()
+        {
+            // The second clause. Nothing about position and nothing about the window: the
+            // player beat this board, so going back to it cannot cost them anything.
+            Grace(3);
+            var index = Catalog();
+            Finished("g8", "w6");
+
+            Assert.IsTrue(Free(index, "g8"), "the last glade of the second chapter");
+            Assert.IsTrue(Free(index, "w6"), "and in the other mode, on its own record");
+            Assert.IsFalse(Free(index, "g7"), "its neighbour, which was never finished");
+        }
+
+        [Test]
+        public void AGladeTriedAndLostStillCostsAHeart()
+        {
+            // The distinction the whole clause turns on, and one a record alone does not make:
+            // attempting a glade writes a record too. Only a star says it was beaten, and only
+            // a beaten board is free — otherwise one lost run would buy every later run on that
+            // board, and the gate would stop existing for exactly whoever is stuck.
+            Grace(3);
+            var index = Catalog();
+            Attempted("g4");
+
+            Assert.IsFalse(Free(index, "g4"));
+        }
+
+        [Test]
+        public void TheTwoClausesAreToldApartRatherThanMerelyCounted()
+        {
+            // The defeat panel prints one sentence per reason, so the reason has to be the true
+            // one — "one of the free levels" over the last glade of a chapter is a panel nobody
+            // believes twice.
+            Grace(3);
+            var index = Catalog();
+            Finished("g2", "g8");
+
+            Assert.AreEqual(HeartPrice.Opening, HeartStake.PriceOf(index, LevelId.Parse("g2")),
+                            "an opening glade that also happens to be finished leads with the "
+                            + "window, which is the half a beginner has not worked out yet");
+            Assert.AreEqual(HeartPrice.Replay, HeartStake.PriceOf(index, LevelId.Parse("g8")));
+            Assert.AreEqual(HeartPrice.Charged, HeartStake.PriceOf(index, LevelId.Parse("g7")));
+            Assert.AreEqual(HeartPrice.Charged, HeartStake.PriceOf(index, LevelId.None));
+        }
+
+        [Test]
+        public void AFinishedGladeIsFreeEvenWhenTheCatalogCannotNameIt()
+        {
+            // A clear is the record of a run that was won, and it means what it means whether
+            // or not the index currently carries the glade — one held back by minAppVersion is
+            // still a board they beat. Note it is not the typo case above: a record saying
+            // "finished" cannot be produced by a mistyped id, only by a run that was won.
+            Grace(3);
+            Finished("g9");
+
+            Assert.IsTrue(HeartStake.IsFree(Catalog(), LevelId.Parse("g9")));
+            Assert.IsTrue(HeartStake.IsFree(null, LevelId.Parse("g9")),
+                          "and before the catalog has loaded at all");
+        }
+
+        [Test]
+        public void TheWindowBeingOffDoesNotTurnTheReplayRuleOff()
+        {
+            // The two clauses are independent, and only one of them is content. A market that
+            // needed graceLevels pushed to nought must not lose the replay rule with it.
+            Grace(0);
+            var index = Catalog();
+            Finished("g1");
+
+            Assert.IsTrue(Free(index, "g1"), "finished, so free whatever the window says");
+            Assert.IsFalse(Free(index, "g2"), "and its unfinished neighbour is not");
+        }
+
+        [Test]
+        public void TheReplayRuleCountsNothingTowardsTheChaptersFreeOpenings()
+        {
+            // What the panel prints is about the chapter, so finishing glades must not inflate
+            // it — a player replaying their way through a chapter would otherwise be told the
+            // first ten levels of it are free.
+            Grace(3);
+            var index = Catalog();
+            Finished("g1", "g2", "g3", "g4", "g5");
+
+            Assert.AreEqual(3, HeartStake.FreeLevelsIn(index, ChapterId.Parse("c01_one")));
+            Assert.AreEqual(0, HeartStake.FreeLevelsIn(index, ChapterId.Parse("c02_two")));
         }
 
         [Test]

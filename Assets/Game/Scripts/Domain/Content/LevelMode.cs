@@ -30,10 +30,23 @@ namespace GlimmerGrove.Content
     /// level of it, and how to tell a good one from a broken one.
     ///
     /// <para>
-    /// <b>Adding a mode is a new subclass and one line in <see cref="LevelModes"/>.</b> No
-    /// switch anywhere gains a case, no shared file gains a field, and nothing else in the game
-    /// has to learn the mode exists — the mapper, the validator and the catalog all ask the
-    /// registry rather than enumerating what they know about.
+    /// <b>A mode's <em>rules</em> are a new subclass and one line in <see cref="LevelModes"/>.</b>
+    /// The mapper, the validator and the catalog all ask the registry rather than enumerating
+    /// what they know about, so none of them gains a case and nothing about reading, proving or
+    /// indexing a level has to learn the mode exists.
+    /// </para>
+    /// <para>
+    /// <b>What a mode does <em>not</em> get for free is the run</b>, and it is worth being exact
+    /// about that rather than reading the sentence above as more than it says. A run has a shared
+    /// vocabulary — how its defeat is named (<c>DefeatReason</c>), what a continue sells it
+    /// (<c>ContinueUnit</c> and <c>ContinueTable.AmountFor</c>), what it teaches
+    /// (<c>Mechanic</c>), how it is drawn (<c>ModeLook</c>) and how it is proved fit to ship
+    /// (<c>ModeValidator</c>) — and every one of those is a registry a new mode is *added to*.
+    /// That is the design rather than a leak: the alternative is each mode carrying its own copy
+    /// of what losing a run costs, which is what <c>RunScreen</c> was taken apart to prevent. The
+    /// promise those registries make is not that they never grow, it is that growing one is
+    /// additive and the compiler names the place — an existing mode reads exactly what it read
+    /// before.
     /// </para>
     /// </summary>
     public abstract class LevelMode

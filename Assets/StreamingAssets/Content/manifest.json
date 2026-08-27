@@ -81,13 +81,22 @@
     },
     {
       "id": "f01_lightfall",
-      "version": 1,
+      "version": 2,
       "order": 50,
       "disabled": false,
       "minAppVersion": 0,
       "mode": "fall",
       "levels": [
-        "f01_first_fall"
+        "f01_first_fall",
+        "f01_two_lights",
+        "f01_the_kindling",
+        "f01_narrow_water",
+        "f01_the_stack",
+        "f01_deep_cistern",
+        "f01_brimming",
+        "f01_the_undertow",
+        "f01_last_ember",
+        "f01_the_deep_well"
       ]
     },
     {

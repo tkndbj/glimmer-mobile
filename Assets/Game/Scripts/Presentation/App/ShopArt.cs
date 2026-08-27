@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using GlimmerGrove.Layout;
 using GlimmerGrove.Store;
 using UnityEngine;
 using UnityEngine.UI;
@@ -140,20 +141,13 @@ namespace GlimmerGrove
             }
 
             // One, three or five hearts — the shape of the pile says "more" faster than the
-            // number under it does, and the number is there for the exact figure.
+            // number under it does, and the number is there for the exact figure. The sizes
+            // step down as the count goes up so a heap of five is no wider than the picture it
+            // is drawn in, and TokenPile.Width is what says whether it is.
             int shown = good.Amount <= 5 ? 1 : good.Amount <= 20 ? 3 : 5;
-            float heart = size * (shown == 1 ? .68f : shown == 3 ? .46f : .40f);
+            float heart = size * (shown == 1 ? .68f : shown == 3 ? .44f : .36f);
 
-            for (int i = 0; i < shown; i++)
-            {
-                float t = shown == 1 ? 0f : (i / (float)(shown - 1)) - .5f;
-
-                var img = UIKit.Img("H" + i, box, Art.S("Ui/ic_heart"), Color.white,
-                                    Vector2.one * heart, new Vector2(.5f, .5f),
-                                    new Vector2(t * size * .44f, Mathf.Abs(t) * size * -.16f));
-                img.preserveAspect = true;
-                img.transform.localRotation = Quaternion.Euler(0f, 0f, -t * 22f);
-            }
+            Heap(box, "H", "Ui/ic_heart", shown, heart, 0f);
 
             UIKit.Halo(box, Pal.Rose, size * .96f, .30f);
         }
@@ -203,36 +197,23 @@ namespace GlimmerGrove
 
             // Three, four or five hearts. PaintGood's ladder, so a container and a heart pack
             // on the same shelf read as the same currency in different quantities.
-            int shown = 3 + rung;
-            float heart = size * .26f;
-
-            for (int i = 0; i < shown; i++)
-            {
-                float t = (i / (float)(shown - 1)) - .5f;
-                float arc = 1f - 4f * t * t;
-
-                var img = UIKit.Img("H" + i, box, Art.S("Ui/ic_heart"), Color.white,
-                                    Vector2.one * heart, new Vector2(.5f, .5f),
-                                    new Vector2(t * size * .40f,
-                                                size * .17f + arc * size * .09f - (i % 2) * size * .04f));
-                img.preserveAspect = true;
-                img.transform.localRotation = Quaternion.Euler(0f, 0f, t * -20f);
-            }
+            Heap(box, "H", "Ui/ic_heart", 3 + rung, size * .26f, size * .20f);
 
             UIKit.Halo(box, Pal.Rose, size * 1.02f, .32f);
         }
 
         // ------------------------------------------------------------------ the pile
         /// <summary>
-        /// Scatters tokens over the container in a shallow arc.
+        /// Stacks a card's currency over its container.
         ///
         /// <para>
-        /// The positions come from the index rather than from a random number, and that is
-        /// deliberate rather than lazy: a grid cell is rebound as it scrolls, so a random
-        /// scatter would re-scatter every time a card came back on screen — the same pack of
-        /// gems shuffling itself while the player flicks past. Derived positions mean a card
-        /// looks the same every time it is seen, which is the difference between a
-        /// composition and a mess.
+        /// The arrangement is <see cref="TokenPile"/>'s — two centred rows, wider at the
+        /// front — and what it replaced was a shallow arc with every second token dropped a
+        /// little, which is what made a pile read as spilt rather than stacked. The positions
+        /// come from the index rather than from a random number, and that is deliberate rather
+        /// than lazy: a grid cell is rebound as it scrolls, so a scatter would re-scatter every
+        /// time a card came back on screen — the same pack of gems shuffling itself while the
+        /// player flicks past.
         /// </para>
         /// </summary>
         static void Pile(RectTransform box, float size, bool overContainer, int gems, int coins)
@@ -245,20 +226,19 @@ namespace GlimmerGrove
             // With no container the pile owns the middle of the cell; with one it rides the
             // lip, which is what makes a full chest read as full.
             float lift = overContainer ? size * .17f : 0f;
-            float spread = overContainer ? size * .34f : size * .30f;
 
-            for (int i = 0; i < total; i++)
+            // The gems take the front row from the left, so a bundle's picture leads with the
+            // currency its card leads with. That is what TokenSpot.Slot is for: a pile is
+            // handed back in the order it has to be *drawn*, which is back to front, and
+            // picking by that would put the gems wherever the shingle happened to start.
+            foreach (var spot in TokenPile.Of(total, token))
             {
-                float t = total == 1 ? 0f : (i / (float)(total - 1)) - .5f;
-                float arc = 1f - 4f * t * t;                      // 0 at the ends, 1 in the middle
+                bool isGem = spot.Slot < gems;
 
-                var pos = new Vector2(t * spread * 2f, lift + arc * size * .10f - (i % 2) * size * .045f);
-
-                bool isGem = i < gems;
-
-                var img = UIKit.Img(isGem ? "G" + i : "C" + i, box,
+                var img = UIKit.Img((isGem ? "G" : "C") + spot.Slot, box,
                                     isGem ? Art.S("Ui/ic_gem") : null, Color.white,
-                                    Vector2.one * token, new Vector2(.5f, .5f), pos);
+                                    Vector2.one * token, new Vector2(.5f, .5f),
+                                    new Vector2(spot.X, lift + spot.Y));
                 img.preserveAspect = true;
 
                 // The coin is a flipbook, and every coin on a card runs it. They are
@@ -268,7 +248,31 @@ namespace GlimmerGrove
                 // one already-global sprite set.
                 if (!isGem) Flipbook.Attach(img, "Ui/Coin", 11f);
 
-                img.transform.localRotation = Quaternion.Euler(0f, 0f, t * -16f);
+                img.transform.localRotation = Quaternion.Euler(0f, 0f, spot.Tilt);
+            }
+        }
+
+        /// <summary>
+        /// A heap of one repeated sprite — the hearts, in both of the places they are piled.
+        ///
+        /// <para>
+        /// The arrangement is <see cref="TokenPile"/>'s, and it is the same arrangement the
+        /// coins take, which is the whole reason it left this file: the three heaps here were
+        /// three copies of one shallow arc with every second token dropped a little, and that
+        /// alternation is only symmetric on an odd count — so a heap of four came out
+        /// visibly heavier on one side and a heap of five did not, from the same three lines.
+        /// </para>
+        /// </summary>
+        static void Heap(RectTransform box, string name, string sprite,
+                         int count, float token, float lift)
+        {
+            foreach (var spot in TokenPile.Of(count, token))
+            {
+                var img = UIKit.Img(name + spot.Slot, box, Art.S(sprite), Color.white,
+                                    Vector2.one * token, new Vector2(.5f, .5f),
+                                    new Vector2(spot.X, lift + spot.Y));
+                img.preserveAspect = true;
+                img.transform.localRotation = Quaternion.Euler(0f, 0f, spot.Tilt);
             }
         }
 

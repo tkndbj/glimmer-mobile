@@ -260,7 +260,16 @@ namespace GlimmerGrove.Tests
             if (mode == GameMode.Glade)
                 dto.rows = new[] { "*R -EW", "#R ." };
             else if (mode == GameMode.Fall)
-                dto.fall = new FallDto { width = 6, height = 11 };
+                dto.fall = new FallDto
+                {
+                    // A well now authors what is standing in it and what it deals, because par
+                    // is searched from the two. Small on purpose: this case is about the
+                    // registry reading its own block, not about a board being interesting.
+                    width = 6,
+                    height = 6,
+                    rows = new[] { "......", "......", "......", "......", "......", "YY...." },
+                    motes = "BGR",
+                };
             else if (mode == GameMode.Keeper)
                 dto.keeper = new KeeperDto { width = 9, height = 9, tiles = 30 };
             else if (mode == GameMode.Weave)

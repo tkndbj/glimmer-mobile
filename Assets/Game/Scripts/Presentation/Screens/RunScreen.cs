@@ -45,11 +45,66 @@ namespace GlimmerGrove
     /// </summary>
     public abstract class RunScreen : View
     {
+        /// <summary>
+        /// A run screen's chrome runs to the top edge of the display: the safe layer holds the
+        /// sides and the bottom and gives up the top.
+        ///
+        /// <para>
+        /// <b>The board is the reason.</b> It is the largest control in the game and it is sized
+        /// from what the header leaves, so every canvas unit the top inset takes is taken off the
+        /// puzzle — on a phone with a deep cutout that is the difference between a comfortable
+        /// board and a cramped one, on the one screen a player spends their whole session on.
+        /// The home indicator is left alone, because the bottom of a board is board.
+        /// </para>
+        /// <para>
+        /// <b>What it costs is stated plainly rather than argued away.</b> The top inset on a
+        /// deep-cutout phone is around 120 canvas units (141 device pixels over a scale of
+        /// 1.19 on an iPhone 13 Pro Max), and the header's keys sit 50 units below the top of
+        /// their bar — so they do move up into the status strip. They stay on visible,
+        /// pressable screen: a sensor housing is centred and the keys are at the two ears,
+        /// which is where a phone's own clock and battery live. If a future device puts
+        /// something across the whole width up there, this is the one line to take back.
+        /// </para>
+        /// <para>
+        /// Declared here rather than per mode for this class's usual reason — a rule about what
+        /// a run screen looks like, written once, is one that cannot come to differ between the
+        /// glade and the weave.
+        /// </para>
+        /// </summary>
+        protected override SafeArea.Edges SafeEdges => SafeArea.Edges.SidesAndBottom;
+
         /// <summary>Another go after the run was declared lost.</summary>
         public abstract void RetryAfterDefeat();
 
-        /// <summary>Hand the level back after a panel that latched it.</summary>
-        public abstract void Resume();
+        /// <summary>
+        /// Hands the level back after a panel that latched it — unless something else is still
+        /// holding it.
+        ///
+        /// <para>
+        /// <b>Concrete, and it is the third time this rule has been consolidated.</b> Every mode
+        /// used to answer it, and every answer was the same two lines with the mode's own name
+        /// for its board: "unlock it, unless the run is already over". A copy per mode is what
+        /// the stake above was taken apart for, and this is a smaller version of the same
+        /// hazard — the mode already declares <see cref="Latch"/>, which is that sentence
+        /// exactly, so the second copy was only ever an opportunity for the two to drift.
+        /// </para>
+        /// <para>
+        /// <b>A board a lesson is holding is not handed back.</b> That clause is what this
+        /// method was made concrete for. A lesson is scheduled on a timer, so a player can open
+        /// the pause menu in the beat before the first tip appears — and the menu's every exit
+        /// runs through here (<c>PauseOverlay.OnDestroy</c>, deliberately, so no exit can forget
+        /// to). Without the clause, closing that menu unlocks a board a tip is about to be drawn
+        /// over, with a hole cut in its dim around the very tile it is pointing at. The rule the
+        /// hole relies on is that whoever latched a board is what hands it back:
+        /// <see cref="RunLessons"/> took this one and releases it when the last lesson closes.
+        /// </para>
+        /// </summary>
+        public void Resume()
+        {
+            if (Teaching.Teaching) return;
+
+            Latch(false);
+        }
 
         // ------------------------------------------------------------ what a run is owed for
         /// <summary>
@@ -77,11 +132,11 @@ namespace GlimmerGrove
         /// </summary>
         protected bool Committed { get; private set; }
 
-        bool? _staked;
+        HeartPrice? _price;
 
         /// <summary>
-        /// Whether this screen's level is one somebody pays a heart for. False for a mode's
-        /// free openings — see <see cref="HeartStake"/>.
+        /// What this screen's level costs, and if it costs nothing, why — a mode's free
+        /// opening, or a glade this player has already finished. See <see cref="HeartStake"/>.
         ///
         /// <para>
         /// <b>A fact about the level, resolved once and cached for the life of the screen</b>,
@@ -96,29 +151,42 @@ namespace GlimmerGrove
         /// validates, and only playing would show it.
         /// </para>
         /// <para>
-        /// Cached rather than re-asked because the window is content: a push landing mid-run
-        /// must not turn a board the player was told was free into one they are charged for on
-        /// the way out of it. And it is one answer rather than three — the ledger is
-        /// <em>told</em> this (<c>RunLedger.Loss</c>'s <c>staked</c>) instead of working it out
-        /// again later, which is what stopped one run having two prices.
+        /// <b>The latch is one-way: free is remembered, charged is not.</b> Both clauses can
+        /// move underneath a screen — the window is content and a push can land mid-run, and the
+        /// replay clause turns over the instant a glade is first cleared, which is something
+        /// that happens in the middle of this screen's own life. Only one of those directions is
+        /// dangerous. A board the player was told was free must never become one they are
+        /// charged for on the way out of it, so a free answer is kept for ever; a charged one
+        /// becoming free costs nobody anything and is the honest reading of a rule that has just
+        /// changed in the player's favour — which is what makes a first clear followed by a
+        /// restart on the same screen free, rather than charged by a value latched before the
+        /// win. And it is still one answer rather than several: the ledger is <em>told</em> this
+        /// (<c>RunLedger.Loss</c>'s <c>price</c>) instead of working it out again later, which
+        /// is what stopped one run having two prices.
         /// </para>
         /// <para>
-        /// An unresolved level answers <c>true</c> and is never cached, which is
-        /// <see cref="HeartStake"/>'s safe direction in both places: a glade nothing can name
-        /// is priced like every other glade rather than handed out free.
+        /// An unresolved level answers <see cref="HeartPrice.Charged"/> and is never latched,
+        /// which is <see cref="HeartStake"/>'s safe direction in both places: a glade nothing
+        /// can name is priced like every other glade rather than handed out free.
         /// </para>
         /// </summary>
-        protected bool Staked
+        protected HeartPrice Price
         {
             get
             {
-                if (_staked.HasValue) return _staked.Value;
-                if (!StakeLevel.IsValid) return true;
+                if (_price.HasValue && _price.Value != HeartPrice.Charged) return _price.Value;
+                if (!StakeLevel.IsValid) return HeartPrice.Charged;
 
-                _staked = !HeartStake.IsFree(GameContent.Index, StakeLevel);
-                return _staked.Value;
+                _price = HeartStake.PriceOf(GameContent.Index, StakeLevel);
+                return _price.Value;
             }
         }
+
+        /// <summary>
+        /// Whether this screen's level is one somebody pays a heart for — the bool half of
+        /// <see cref="Price"/>, and what every exit is priced from.
+        /// </summary>
+        protected bool Staked => Price == HeartPrice.Charged;
 
         /// <summary>The level this run is staked on, for <c>RunGuard</c>'s marker.</summary>
         protected internal abstract LevelId StakeLevel { get; }
@@ -190,9 +258,9 @@ namespace GlimmerGrove
         {
             if (!Committed) return;
 
-            // A free opening is walked away from for nothing, and it still reaches
-            // NoteAbandoned: what a run cost is an economy question, and whether somebody left
-            // one is a fact worth counting whatever it cost.
+            // A free run — a mode's opening, or a glade already finished — is walked away from
+            // for nothing, and it still reaches NoteAbandoned: what a run cost is an economy
+            // question, and whether somebody left one is a fact worth counting whatever it cost.
 
             NoteAbandoned(reason);
             if (Staked) Wallet.TrySpendHeart();
@@ -202,18 +270,23 @@ namespace GlimmerGrove
         /// <summary>
         /// Asks before charging, then does the thing.
         ///
-        /// On an uncommitted run, an already-finished one or one of a mode's free openings there
-        /// is nothing to charge, so it does the thing immediately — a confirmation over a free
-        /// action is friction that teaches players to dismiss the one that is not free.
+        /// On an uncommitted run, an already-finished one, one of a mode's free openings or a
+        /// glade the player has already cleared there is nothing to charge, so it does the thing
+        /// immediately — a confirmation over a free action is friction that teaches players to
+        /// dismiss the one that is not free.
         /// </summary>
         protected void ConfirmForfeit(ForfeitOverlay.Kind kind, string reason, Action then)
         {
             if (!Committed || RunOver) { then(); return; }
 
-            // A free opening is walked out of without being asked about, for the same reason an
-            // uncommitted run is: a confirmation over an action that costs nothing is friction
-            // that teaches players to dismiss the one that does. It is still forfeited, so the
-            // abandonment is written down and the run stops being owed for.
+            // A free run is walked out of without being asked about, for the same reason an
+            // uncommitted one is: a confirmation over an action that costs nothing is friction
+            // that teaches players to dismiss the one that does. That covers a mode's opening
+            // glades and every glade this player has already finished — going back to a board
+            // you beat and thinking better of it is the commonest free exit there is, and being
+            // stopped by a panel warning about a heart nobody is taking is how a player learns
+            // the warning means nothing. It is still forfeited, so the abandonment is written
+            // down and the run stops being owed for.
             if (!Staked) { Forfeit(reason); then(); return; }
 
             Latch(true);
@@ -445,18 +518,6 @@ namespace GlimmerGrove
         protected internal virtual bool Teachable => true;
 
         /// <summary>
-        /// The level's flavour line, or null for a mode that has none.
-        ///
-        /// Shown only when nothing is being taught. A brand new idea outranks a line of
-        /// flavour: both at once is two things to read before the first move, and the tip is
-        /// the one that is only ever offered once.
-        /// </summary>
-        protected internal virtual string Flavour => null;
-
-        /// <summary>How long the flavour line stays up.</summary>
-        protected internal virtual float FlavourSeconds => 6f;
-
-        /// <summary>
         /// How long to wait before the first lesson appears, so the board it points at has
         /// finished arriving. A mode whose entrance is longer overrides it.
         /// </summary>
@@ -482,8 +543,8 @@ namespace GlimmerGrove
         /// <para>
         /// <b>Sealed.</b> The ordering is the whole point of it, and an override that forgot to
         /// chain would put back a run advancing behind a modal. A mode contributes through
-        /// <see cref="Lessons"/> and <see cref="Flavour"/> instead, which are declarations and
-        /// cannot be got in the wrong order.
+        /// <see cref="Lessons"/> instead, which is a declaration and cannot be got in the
+        /// wrong order.
         /// </para>
         /// <para>
         /// <see cref="RunLessons.Open"/> takes the teaching hold before it returns, so

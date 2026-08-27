@@ -4,6 +4,8 @@ import json
 import re, math, os, sys
 from collections import deque
 
+import fall                                  # Lightfall's rules, mirrored - see fall.py
+
 ROOT = os.path.join(os.path.dirname(os.path.abspath(__file__)),
                     "..", "..", "Assets", "StreamingAssets", "Content")
 N, E, S, W = 1, 2, 4, 8
@@ -179,6 +181,185 @@ GOLD_FACTOR, SILVER_FACTOR = 1.20, 1.40
 MODE_BLOCKS = ("fall", "keeper", "weave")
 
 
+#: Where a well stops being cheap to prove, and where it stops being shippable. Mirrors
+#: `FallValidator`. These are about the *player's* device: the search runs once per level, on
+#: the phone, when somebody opens it. Forty thousand positions is about twenty milliseconds of
+#: desktop .NET and a few tens on a phone; a hundred and twenty thousand is a quarter of a
+#: second, which is a pause on the way into a level.
+FALL_NODE_WARNING, FALL_NODE_CEILING = 40_000, 120_000
+
+#: Above this many shortest solutions the board is not deciding much. Invariant 5d, counted.
+FALL_TOO_MANY_WAYS = 400
+
+
+def check_fall(lid, chapter_id, level, block):
+    """Everything a Lightfall well has to prove, mirroring `FallValidator`.
+
+    The one thing that cannot be checked by reading the file is whether the well can be
+    *emptied*, so most of this is a search. Every failure below looks like a perfectly
+    authored board in the JSON, which is the whole reason the gate exists.
+    """
+    empty = dict(id=lid, chapter=chapter_id, w=0, h=0, par=0, budget=0,
+                 gold=0, silver=0, lamps=0, sources=0, fragile=0, bound=0,
+                 crossings=0, briars=0, mode='fall',
+                 ways=0, greedy=-1, nodes=0, fall_motes=0, headroom=0, deal='')
+
+    w, h = block.get('width', 0), block.get('height', 0)
+    if not (4 <= w <= 8):
+        errors.append("%s: a well is 4..8 wide; this one says %s" % (lid, w))
+        return empty
+    if not (6 <= h <= 14):
+        errors.append("%s: a well is 6..14 tall; this one says %s" % (lid, h))
+        return empty
+
+    # Retired with the score attack. Named rather than ignored, for ChapterDto.order's
+    # reason: a number that does nothing is worse than a missing one, because somebody
+    # believes it.
+    if block.get('seed'):
+        errors.append("%s: 'seed' is retired - a well is authored rather than dealt, and a "
+                      "seed here does nothing" % lid)
+
+    try:
+        cells, ww, hh = fall.parse_rows(block.get('rows') or [], w, h)
+    except ValueError as why:
+        errors.append("%s: %s" % (lid, why))
+        return empty
+
+    try:
+        deal = fall.parse_deal(block.get('motes') or '')
+    except ValueError as why:
+        errors.append("%s: %s" % (lid, why))
+        return empty
+
+    well = fall.Well(cells, ww, hh)
+
+    if well.motes == 0:
+        errors.append("%s: an empty well is already won" % lid)
+        return empty
+
+    for x in range(ww):
+        if cells[fall.BRIM * ww + x]:
+            errors.append("%s: there is a mote standing in column %d of the brim row, which "
+                          "is the row that ends the run - this level begins lost" % (lid, x))
+            break
+
+    for x in range(ww):
+        air = False
+        for y in range(hh - 1, -1, -1):
+            here = bool(cells[y * ww + x])
+            if not here:
+                air = True
+                continue
+            if not air:
+                continue
+            errors.append("%s: the mote at column %d row %d has nothing under it, so the well "
+                          "would settle differently from the way it is written the first time "
+                          "anything bursts" % (lid, x, y))
+            break
+
+    # Every channel, not merely every channel the board wants now: a drop onto bare ground
+    # makes a fresh pure mote, so a two-colour procession can be walked into a position no
+    # amount of play recovers from - and on the opening well, which is authored without a
+    # supply, that is a board that can be neither won nor lost.
+    if fall._channels(deal) != fall.ALL:
+        absent = fall.ALL & ~fall._channels(deal)
+        errors.append("%s: this procession never deals %s, so a mote that ends up wanting it "
+                      "could never be finished - and a drop onto bare ground makes one. A deal "
+                      "has to carry all three channels" % (lid, fall.LETTER_OF[absent]))
+
+    par, ways, nodes, proved = fall.search(cells, ww, hh, deal)
+
+    if not proved:
+        errors.append("%s: this well could not be proved inside %d positions (it looked at %d) "
+                      "or within %d drops - it may be unsolvable, or simply too big to prove, "
+                      "and either way the player's device runs the same search to work out par"
+                      % (lid, fall.NODE_BUDGET, nodes, fall.MAX_DROPS))
+        return empty
+
+    if par < 1:
+        errors.append("%s: no sequence of drops empties this well without flooding it, so "
+                      "nobody can finish it" % lid)
+        return empty
+
+    budget_h = factor_of(level, 'budgetFactor', fall.BUDGET_HUNDREDTHS)
+    gold_h = factor_of(level, 'goldFactor', fall.GOLD_HUNDREDTHS)
+    silver_h = factor_of(level, 'silverFactor', fall.SILVER_HUNDREDTHS)
+
+    # A well's room is a count of wasted drops rather than a multiple of par: a wrong drop is
+    # permanent *and* leaves a mote that still has to be cooked, so a mistake costs about two
+    # drops wherever it happens, while a fraction of par gives a short well almost none.
+    # Mirrors LevelTuning.Slack and FallRules.DefaultSpare.
+    spare = block.get('spare') or fall.DEFAULT_SPARE
+    budget = (par + spare) if budget_h > 0 else 0
+
+    # A budgetFactor on a well is overruled by `spare` and therefore does nothing. Named rather
+    # than ignored - a number that silently means nothing is worse than a missing one. A
+    # negative one is not an override: it turns the budget off, which spare cannot express.
+    if budget_h > 0 and budget_h != fall.BUDGET_HUNDREDTHS:
+        errors.append("%s: this well authors budgetFactor %.2f, which does nothing - a well's "
+                      "room above par is 'spare', counted in drops. Use 'spare', or a negative "
+                      "budgetFactor if it is meant to be unlosable"
+                      % (lid, budget_h / 100.0))
+    gold, silver = fall.over(par, gold_h), fall.over(par, silver_h)
+
+    if gold_h >= silver_h:
+        errors.append("%s: goldFactor and silverFactor leave the two-star band empty" % lid)
+    elif budget and budget <= gold:
+        errors.append("%s: the supply is at or under the three-star line, so every surviving "
+                      "run would be a three-star run" % lid)
+    elif budget and budget <= silver:
+        warnings.append("%s: the supply is inside the two-star band, so one star can never "
+                        "be scored" % lid)
+
+    if nodes > FALL_NODE_CEILING:
+        errors.append("%s: proving this well took %d positions, above the %d a level may cost - "
+                      "the player's device runs the same search when somebody opens the level, "
+                      "so this is about a quarter of a second of nothing happening on the way "
+                      "in" % (lid, nodes, FALL_NODE_CEILING))
+    elif nodes > FALL_NODE_WARNING:
+        warnings.append("%s: proving this well took %d positions against the %d a level is "
+                        "expected to cost (the refusal is at %d)"
+                        % (lid, nodes, FALL_NODE_WARNING, FALL_NODE_CEILING))
+
+    if ways > FALL_TOO_MANY_WAYS:
+        warnings.append("%s: %d different sequences of %d drops empty this well, so almost "
+                        "any tidy play wins and the procession is deciding nothing"
+                        % (lid, ways, par))
+
+    greedy = fall.greedy(cells, ww, hh, deal)
+    if par > 3 and 0 <= greedy <= max(budget, 1):
+        warnings.append("%s: a player who never looks ahead empties this well in %d drops "
+                        "against a supply of %d" % (lid, greedy, budget))
+
+    if well.headroom <= 0:
+        warnings.append("%s: the fill reaches the row below the brim, so the very first "
+                        "careless drop on the tallest column ends the run" % lid)
+
+    return dict(id=lid, chapter=chapter_id, w=ww, h=hh, par=par, budget=budget,
+                gold=gold, silver=silver, lamps=0, sources=0, fragile=0, bound=0,
+                crossings=0, briars=0, mode='fall',
+                ways=ways, greedy=greedy, nodes=nodes,
+                fall_motes=well.motes, headroom=well.headroom, deal=block.get('motes'))
+
+
+def factor_of(level, key, fallback_hundredths):
+    """An authored tuning factor as hundredths, mirroring LevelTuning.
+
+    Read off the *level*, beside mapX and the id, and never out of the mode's own block - that
+    mistake takes the default on every level that authored one, which is how the well that
+    cannot be lost came out with a supply of four.
+
+    0 means "not written" and takes the default; a negative turns the line off entirely, which
+    is the only way to author a level that cannot be lost.
+    """
+    raw = level.get(key) or 0
+    if raw == 0:
+        return fallback_hundredths
+    if raw < 0:
+        return 0
+    return int(round(raw * 100))
+
+
 def check_level(level, chapter_id):
     """A level is a glade, or it carries exactly one mode block.
 
@@ -198,6 +379,13 @@ def check_level(level, chapter_id):
         block = level[claimed[0]]
         if level.get('rows'):
             errors.append("%s: carries both a grid and a '%s' block" % (lid, claimed[0]))
+
+        # Lightfall is the one other mode whose whole level is in the file, so it is the one
+        # this gate can prove without Unity. A weave is generated from a seed and a keeper's
+        # grove is a size; both are checked where they can be, which is the Editor.
+        if claimed[0] == 'fall':
+            return check_fall(lid, chapter_id, level, block)
+
         return dict(id=lid, chapter=chapter_id,
                     w=block.get('width', 0), h=block.get('height', 0), par=0, budget=0,
                     gold=0, silver=0, lamps=0, sources=0, fragile=0, bound=0,
@@ -1361,9 +1549,78 @@ def daily_income(progression):
 
 
 BOARD_VECTORS = os.path.join(os.path.dirname(os.path.abspath(__file__)), "board-vectors.json")
+FALL_VECTORS = os.path.join(os.path.dirname(os.path.abspath(__file__)), "fall-vectors.json")
 
 # The marker the four-armed-tile rule's warning carries, in all three copies of it.
 DECIDES_MARKER = "still finishes the glade"
+
+
+def run_fall_vectors():
+    """Runs `fall-vectors.json` through this file's copy of Lightfall's rules.
+
+    The burst-and-wash rule exists twice - `FallBoard`/`FallSolver`, which is what ships, and
+    `fall.py`, which is what this gate and the chapter scripts run because they have no Unity
+    anywhere. Invariant 9a's answer for a board rule: the vector file is the contract, this
+    proves the Python side of it and `FallVectorTests` proves the C# side.
+
+    The cases are the places a loose transcription reads plausibly and answers differently -
+    the wash being read before the fall, a mote that already holds the washed colour being
+    left alone, a flooded position counting as dead rather than losing, and an unsolvable
+    board coming back *proved* rather than timed out.
+    """
+    doc = json.load(open(FALL_VECTORS, encoding="utf-8"))
+    cases = doc.get("cases") or []
+    if not cases:
+        errors.append("fall-vectors.json has no cases")
+        return "fall vectors: none found"
+
+    bad = []
+    for case in cases:
+        name = case.get("name", "?")
+        try:
+            cells, w, h = fall.parse_rows(case["rows"])
+            deal = fall.parse_deal(case["motes"])
+        except ValueError as why:
+            bad.append("%s: %s" % (name, why))
+            continue
+
+        par, ways, _, proved = fall.search(cells, w, h, deal)
+        well = fall.Well(cells, w, h)
+
+        for label, got, want in (("proved", proved, case["proved"]),
+                                 ("par", par, case["par"]),
+                                 ("greedy", fall.greedy(cells, w, h, deal), case["greedy"]),
+                                 ("headroom", well.headroom, case["headroom"]),
+                                 ("standing", well.motes, case["standing"])):
+            if got != want:
+                bad.append("%s: %s is %r, vectors say %r" % (name, label, got, want))
+
+        if case["par"] > 0 and ways != case["ways"]:
+            bad.append("%s: ways is %r, vectors say %r" % (name, ways, case["ways"]))
+
+    # A vector set that has quietly lost its teeth is worse than none: it passes, it is printed
+    # beside the word "ok", and nothing says the rule stopped being checked.
+    covers = dict(chain=False, only_one=False, unsolvable=False, brim=False)
+    for case in cases:
+        if case["par"] == 1 and case["standing"] >= 4:
+            covers["chain"] = True
+        if case["par"] > 0 and case["ways"] == 1:
+            covers["only_one"] = True
+        if case["proved"] and case["par"] < 0:
+            covers["unsolvable"] = True
+        if case["headroom"] == 0:
+            covers["brim"] = True
+
+    for what, held in covers.items():
+        if not held:
+            bad.append("no case covering '%s', so nothing here would notice that rule going away"
+                       % what)
+
+    for b in bad:
+        errors.append("fall vectors: " + b)
+
+    return (f"fall vectors: {len(cases)} case(s), the offline rules agree"
+            if not bad else f"fall vectors: {len(bad)} disagreement(s)")
 
 
 def run_board_vectors():
@@ -1553,7 +1810,8 @@ def main():
             if s:
                 summaries.append(s)
             lid = level["id"]
-            for suffix, field in (("name", "nameKey"), ("tagline", "taglineKey"), ("lesson", "lessonKey")):
+            # `lesson` was a third key here and is retired — see LevelDefinition.
+            for suffix, field in (("name", "nameKey"), ("tagline", "taglineKey")):
                 k = level.get(field) or f"level.{lid}.{suffix}"
                 if k not in keys:
                     errors.append(f"level '{lid}' missing string '{k}'")
@@ -1581,8 +1839,17 @@ def main():
     if others:
         print()
         print("other modes:")
+        print(f"  {'level':<24}{'mode':<10}{'well':<8}{'motes':<7}{'head':<6}"
+              f"{'par':<5}{'3*':<5}{'2*':<5}{'supply':<8}{'ways':<6}{'greedy':<8}nodes")
         for c in others:
-            print(f"  {c['id']:<24} {c['mode']:<10} {c['w']}x{c['h']}")
+            if c['mode'] != 'fall':
+                print(f"  {c['id']:<24} {c['mode']:<10} {c['w']}x{c['h']}")
+                continue
+            greedy = c['greedy'] if c['greedy'] >= 0 else '-'
+            print(f"  {c['id']:<24}{c['mode']:<10}{str(c['w']) + 'x' + str(c['h']):<8}"
+                  f"{c['fall_motes']:<7}{c['headroom']:<6}{c['par']:<5}{c['gold']:<5}"
+                  f"{c['silver']:<5}{c['budget'] or 'free':<8}{c['ways']:<6}{str(greedy):<8}"
+                  f"{c['nodes']}")
 
     if grove:
         print(f"\ngrove: {grove['cols']}x{grove['rows']} floor, {grove['slots']} tile(s), "
@@ -1710,9 +1977,12 @@ def main():
         ink = carry.get("ink", 20)
         if ink < 0:
             ink = 20
+        motes = carry.get("motes", 6)
+        if motes < 0:
+            motes = 6
 
         print(f"continue: {gems} gem(s) for +{turns} turn(s) on a glade, "
-              f"+{ink} cell(s) of ink on a weave")
+              f"+{ink} cell(s) of ink on a weave, +{motes} mote(s) on a well")
 
         # What the price means, said in the two units a player actually earns gems in.
         # A price nobody can reach is the failure mode this whole block is content for.
@@ -1800,6 +2070,7 @@ def main():
 
     print()
     print(run_board_vectors())
+    print(run_fall_vectors())
 
     for w in warnings:
         print("WARN  " + w)

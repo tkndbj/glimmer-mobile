@@ -352,8 +352,23 @@ namespace GlimmerGrove.Content
     /// curve can never simply run out under a long-lived player.
     /// </summary>
     /// <summary>
-    /// Lightfall's well. Its difficulty lives in the deal and in <c>FallBoard</c>'s constants,
-    /// so a level authors a size and nothing that could disagree with how it plays.
+    /// Lightfall's well: how big it is, what is standing in it, and what it deals.
+    ///
+    /// <para>
+    /// <b>There is no difficulty number here and there must never be one.</b> Par is the fewest
+    /// drops that empty <see cref="rows"/> using <see cref="motes"/>, found by search
+    /// (<c>FallSolver</c>), and both star lines and the supply the run is dealt are multiples of
+    /// it. What an author tunes is the board: how big the well is, how much is standing in it,
+    /// how close to the brim it starts and what order the colours arrive in.
+    /// </para>
+    /// <para>
+    /// <b><c>seed</c> is retired.</b> The mode used to deal random colours from it, which is
+    /// what made it a score attack rather than a level — a board with no fixed future cannot be
+    /// searched, so it could author no goal, no budget and no star line, and two players on the
+    /// same level were not playing the same level. The field is not re-pointed at anything: a
+    /// chapter body carrying one is content written for a build that no longer exists, and
+    /// <c>ContentValidation</c> says so rather than ignoring it.
+    /// </para>
     /// </summary>
     [Serializable]
     public sealed class FallDto
@@ -361,7 +376,41 @@ namespace GlimmerGrove.Content
         public int width;
         public int height;
 
-        /// <summary>Fixes the deal. 0 derives it from the level id, which is the ordinary way.</summary>
+        /// <summary>
+        /// What is standing in the well, top row first — one letter per column in R, G, B, Y, M
+        /// and C, with '.' for empty ground. Spaces are ignored, so a row may be spaced out for
+        /// reading.
+        ///
+        /// Row nought is the brim and must be empty: a mote that comes to rest there floods the
+        /// well and ends the run, so a level that begins in that state begins lost.
+        /// </summary>
+        public string[] rows;
+
+        /// <summary>
+        /// The procession, in order, written in R, G and B. It repeats, so it never needs to be
+        /// longer than one lap — and it must carry all three channels, or a mote missing one of
+        /// them could never be finished however many drops were bought.
+        ///
+        /// Never a blend: the whole mode is that a blend has to be made.
+        /// </summary>
+        public string motes;
+
+        /// <summary>
+        /// Wasted drops this well forgives, above par. 0 takes <c>FallRules.DefaultSpare</c>,
+        /// which is what every level ships with.
+        ///
+        /// A count rather than a factor, because a wrong drop costs about the same wherever it
+        /// happens — it is gone, and the mote it left behind has to be cooked like any other —
+        /// while a fraction of par gives a short well almost no room at all. See
+        /// <c>LevelTuning.Slack</c>.
+        /// </summary>
+        public int spare;
+
+        /// <summary>
+        /// <b>Retired.</b> See the remarks above. Kept only so validation can name a stale one
+        /// rather than JsonUtility silently discarding it and the author believing a number that
+        /// does nothing — the same tripwire <see cref="ChapterDto.order"/> is.
+        /// </summary>
         public int seed;
 
         /// <summary>
@@ -871,6 +920,9 @@ namespace GlimmerGrove.Content
 
         /// <summary>Cells of light a weave's continue hands over, on the same terms.</summary>
         public int ink = -1;
+
+        /// <summary>Motes a well's continue hands over, on the same terms.</summary>
+        public int motes = -1;
     }
 
     /// <summary>

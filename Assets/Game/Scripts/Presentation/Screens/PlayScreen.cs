@@ -247,10 +247,9 @@ namespace GlimmerGrove
         /// <para>
         /// <b>The level's name and its tagline are gone.</b> They were the two highest things
         /// on the screen and so the two a cutout takes first, and neither was load-bearing: the
-        /// player chose the level by name a screen ago, and the tagline is already offered as
-        /// this run's flavour line (see <see cref="Flavour"/>) at a moment when there is
-        /// nothing else to read. What is left is the clock, which is the one thing here that
-        /// can end a run while the player does nothing, and it takes the weight the name had.
+        /// player chose the level by name a screen ago. The tagline used to be offered back as
+        /// a flavour line floating along the bottom of the board, and that is gone too — a box
+        /// on every level of every mode is furniture, and the tips are what a board has to say.
         /// </para>
         /// </summary>
         void BuildTopBar()
@@ -672,11 +671,6 @@ namespace GlimmerGrove
             Flow.Modal<PauseOverlay>(v => v.Screen = this);
         }
 
-        public override void Resume()
-        {
-            if (_board != null && !_finished) _board.Locked = false;
-        }
-
         /// <summary>
         /// Puts the glade back as it started. What a restart <em>costs</em> is
         /// <c>RunScreen.RestartLevel</c>'s, which is what asks before this runs.
@@ -849,7 +843,7 @@ namespace GlimmerGrove
                                       Time.unscaledTime - _startedAt, HintsSpent, _route,
                                       _puzzle.TurnsToSolution,
                                       _puzzle.LampsLit, _puzzle.LampCount,
-                                      staked: Staked);
+                                      price: Price);
 
             Flow.Modal<DefeatOverlay>(v =>
             {
@@ -858,7 +852,7 @@ namespace GlimmerGrove
                 v.Streak = done.Streak;
                 v.HeartsLeft = done.HeartsLeft;
                 v.HeartWasCharged = done.HeartCharged;
-                v.WasFree = done.WasFree;
+                v.Price = done.Price;
             });
         }
 
@@ -881,11 +875,6 @@ namespace GlimmerGrove
             ResetRun();
             Refresh();
         }
-
-        protected internal override string Flavour => _def != null ? Loc.Get(_def.LessonKey) : null;
-
-        /// <summary>Shorter than a mode screen's: this one is a line, not a paragraph.</summary>
-        protected internal override float FlavourSeconds => 3.4f;
 
         /// <summary>
         /// Long enough for the intro sweep to have finished, so the tile a tip rings is
@@ -918,7 +907,7 @@ namespace GlimmerGrove
             // closed instead of appearing in front of the player a moment after it opens. A
             // lesson that cannot find its tile is still a lesson; it teaches without pointing.
             foreach (var sighting in MechanicScan.Taught(_puzzle))
-                into.Add(Lesson.At(sighting.Mechanic, TargetFor(sighting)));
+                into.Add(Lesson.At(sighting.Mechanic, TargetFor(sighting), AlongsideFor(sighting)));
         }
 
         /// <summary>What a lesson rings, when there is anything drawn yet to ring.</summary>
@@ -927,6 +916,31 @@ namespace GlimmerGrove
             if (!sighting.HasCell) return HudTargetFor(sighting.Mechanic);
 
             return _board != null ? _board.TileAt(sighting.CellIndex) : null;
+        }
+
+        /// <summary>
+        /// The other tiles a lesson names — today, the hearts a blend comes from.
+        ///
+        /// <para>
+        /// A tile that is not drawn yet is dropped rather than passed on as a null, for the
+        /// reason <see cref="TargetFor"/> may answer null at all: a lesson that cannot find
+        /// what it points at still teaches, and a hole cut around nothing would be a hole in
+        /// the corner of the board.
+        /// </para>
+        /// </summary>
+        RectTransform[] AlongsideFor(MechanicSighting sighting)
+        {
+            if (_board == null || sighting.Alongside.Length == 0) return null;
+
+            var found = new System.Collections.Generic.List<RectTransform>(sighting.Alongside.Length);
+
+            foreach (int cell in sighting.Alongside)
+            {
+                var tile = _board.TileAt(cell);
+                if (tile) found.Add(tile);
+            }
+
+            return found.Count > 0 ? found.ToArray() : null;
         }
 
         /// <summary>

@@ -788,10 +788,30 @@ namespace GlimmerGrove
         /// is a once-in-a-lifetime record — so a tip spent describing a wheel this player cannot
         /// reach is a tip that can never be shown when they can.
         /// </para>
+        /// <para>
+        /// <b>It is raised at <see cref="ModalLayer.Coaching"/>, and that is the whole of why it
+        /// used to be invisible.</b> Every other tip in the game points at a tile on a board and
+        /// therefore belongs under anything the player raised (<see cref="ModalLayer.Teaching"/>);
+        /// this one points at a button on <em>this panel</em>, so the default put it behind the
+        /// thing it was pointing at — a spotlight cut into a dim that nothing can see, marked
+        /// seen for the rest of that player's life. A tip is only ever as visible as the control
+        /// it rings, so its layer has to be the control's and not the board's.
+        /// </para>
+        /// <para>
+        /// The licence that buys is bounded by the two guards under it rather than by the layer.
+        /// Above <c>Panel</c> a tip would cover <em>any</em> panel, and several seconds of
+        /// sequence run before this beat — long enough for a player to have tapped the offer
+        /// already — so it is refused unless this panel is still the one being looked at, and
+        /// refused once the offer has been taken, since a lesson about a wheel spent on a button
+        /// that now reads COLLECTED is spent on nothing. Neither refusal marks the ledger: an
+        /// unshown lesson is owed, not used.
+        /// </para>
         /// </summary>
         void TeachTheWheel()
         {
-            if (!_bonus || !WheelStand.IsOpen || TipLedger.HasSeen(Mechanic.LuckySpin)) return;
+            if (!_bonus || _bonusPaid || !WheelStand.IsOpen) return;
+            if (TipLedger.HasSeen(Mechanic.LuckySpin)) return;
+            if (!Flow.IsTopModal(this)) return;
 
             var target = (RectTransform)_bonus.transform;
 
@@ -799,6 +819,7 @@ namespace GlimmerGrove
             {
                 v.Mechanic = Mechanic.LuckySpin;
                 v.Target = target;
+                v.Stack = ModalLayer.Coaching;
             });
 
             TipLedger.MarkSeen(Mechanic.LuckySpin);
@@ -806,6 +827,9 @@ namespace GlimmerGrove
 
         // ================================================================ the bonus
         Btn _bonus;
+
+        /// <summary>The glow behind the offer, kept so it can be put out once it is spent.</summary>
+        Image _bonusHalo;
 
         /// <summary>
         /// Keeps the offer's caption live while the panel is open.
@@ -815,7 +839,15 @@ namespace GlimmerGrove
         /// leave the button stale. The same reason <c>DefeatOverlay</c> has one, and the paint
         /// is a no-op on any frame the caption did not change.
         /// </summary>
-        void Update() => AdOfferButton.Paint(_bonus, AdPlacement.WinBonus, BonusCta());
+        void Update()
+        {
+            // Nothing to repaint once it has been collected: the caption is no longer a
+            // function of the placement's state, and letting the ad button have it back would
+            // put "another video in 4:58" on a control that is finished.
+            if (_bonusPaid) return;
+
+            AdOfferButton.Paint(_bonus, AdPlacement.WinBonus, BonusCta());
+        }
 
         /// <summary>
         /// What the offer calls itself, asked every paint rather than latched at build.
@@ -870,11 +902,15 @@ namespace GlimmerGrove
                                       new Vector2(600f, 124f), new Vector2(.5f, 1f),
                                       new Vector2(0f, -y), OnBonus, "ic_play");
 
-            // Kept to one line, because both captions this button can wear are longer than
-            // WATCH and a folded one on a 124-high pill overlaps its own glyph.
-            _bonus.OneLine = true;
+            // Kept to one line, because every caption this button can wear is longer than WATCH
+            // and a folded one on a 124-high pill overlaps its own glyph. Through UIKit.OneLine
+            // rather than by raising the flag: TextButton turns Unity's best-fit on for any
+            // button carrying a glyph, and best-fit concedes the line before it concedes the
+            // size — so the flag alone leaves two rules fighting over one caption, which is what
+            // made the wheel's own button arrive crushed and then spring out to its real width.
+            UIKit.OneLine(_bonus, 22);
 
-            UIKit.Halo(_bonus.transform, Pal.Bloom, 700f, .26f);
+            _bonusHalo = UIKit.Halo(_bonus.transform, Pal.Bloom, 700f, .26f);
 
             // Visible from the moment the panel is, exactly as the exits below it are. See the
             // sequence: what waits is the shine, not the control.
@@ -895,7 +931,61 @@ namespace GlimmerGrove
             // The wheel where it can be honoured and the flat offer where it cannot, decided in
             // one place so this panel does not have to know the three things that have to be
             // true. See BonusWheelOverlay.OpenFor.
-            BonusWheelOverlay.OpenFor(AdPlacement.WinBonus);
+            BonusWheelOverlay.OpenFor(AdPlacement.WinBonus, BonusCollected);
+        }
+
+        /// <summary>
+        /// True once this glade's bonus has been watched and paid for.
+        ///
+        /// It is a fact about this panel rather than about the placement, and that distinction
+        /// is the reason it is a field. The placement itself only knows it is cooling down or
+        /// capped, both of which expire — so a player who sat on a victory screen for five
+        /// minutes would watch the offer come back and buy the same bonus for the same glade a
+        /// second time.
+        /// </summary>
+        bool _bonusPaid;
+
+        /// <summary>
+        /// The offer has been taken. The button stops being one.
+        ///
+        /// <para>
+        /// Raised by whichever panel paid — the wheel or the flat offer, both routed through
+        /// <c>BonusWheelOverlay.OpenFor</c> — and it fires the moment the reward is banked
+        /// rather than when the celebration is dismissed, so the control is already spent behind
+        /// the panel standing in front of it.
+        /// </para>
+        /// <para>
+        /// It says COLLECTED rather than disappearing, and that is deliberate: a row that
+        /// vanishes takes the panel's layout with it and reads as the game having second
+        /// thoughts about an offer somebody just accepted. Greyed and named, it is a receipt.
+        /// The glyph goes with it, because a play arrow in front of COLLECTED advertises a
+        /// second video that this placement will not sell.
+        /// </para>
+        /// </summary>
+        void BonusCollected()
+        {
+            if (_bonusPaid) return;
+            _bonusPaid = true;
+
+            if (!_bonus) return;
+
+            _bonus.Interactable = false;
+            _bonus.Setup(null);
+
+            // The breath borrows the button's resting scale, so it has to be stopped before
+            // anything else reads it — KillChannel hands the borrowed value back. See
+            // Tw.OnAbandon; the same three lines the wheel's own button needed.
+            Tween.KillChannel(_bonus.transform, "breathe");
+
+            if (_bonus.Icon) { Destroy(_bonus.Icon.gameObject); _bonus.Icon = null; }
+
+            // The glow goes out with it. A greyed button still lit from behind reads as one
+            // that is about to become available again, which is the one thing it is not.
+            if (_bonusHalo) Tween.Fade(_bonusHalo, 0f, .25f);
+
+            // SetCaption re-fits the caption itself, which is why the glyph is taken away
+            // first: the fit measures the block the pair make together.
+            _bonus.SetCaption(Loc.Get("ui.wheel.collected"));
         }
 
         // ================================================================= the fit

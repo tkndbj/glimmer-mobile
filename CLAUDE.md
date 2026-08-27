@@ -1245,50 +1245,78 @@ What that means in practice here:
     is raised over the defeat panel exactly as it is over the continue offer, and the panel
     underneath repaints when the gems land so the price is affordable without a second tap.
 
-24. **A mode's opening glades cost no heart, and the rule lives in one predicate.** The heart
-    gate is the only thing in this game that can stop somebody playing, and the worst moment to
-    meet it is while they are still working out what the verb is — a player who loses their
-    first three boards to a rule nobody has taught them yet is being charged for our teaching,
-    before they have decided they like the game enough to wait eight hours. So the first
+24. **A run is free when it teaches nothing new, and the rule lives in one predicate.** Two
+    clauses, and the predicate is `HeartStake.PriceOf`. **The opening**: the first
     `hearts.graceLevels` levels (3, content) of the **first chapter of each mode** cost nothing
-    however they end. Per mode rather than once per account, because a mode shipping a year from
-    now is somebody's first board of that mode: Lightweave is dragged rather than tapped and is
-    lost on ink rather than turns, so a player arriving at it having finished four glade chapters
-    is a beginner again in every sense that decides whether taking a heart off them is fair.
-    <br>**One run has one price, and `RunScreen.Staked` is it.** The rule is `HeartStake.IsFree`
-    and it is asked in exactly two situations: by the screen, once, as a fact about *its level*;
+    however they end. The heart gate is the only thing in this game that can stop somebody
+    playing, and the worst moment to meet it is while they are still working out what the verb
+    is — a player who loses their first three boards to a rule nobody has taught them yet is
+    being charged for our teaching, before they have decided they like the game enough to wait
+    eight hours. Per mode rather than once per account, because a mode shipping a year from now
+    is somebody's first board of that mode: Lightweave is dragged rather than tapped and is lost
+    on ink rather than turns, so a player arriving at it having finished four glade chapters is a
+    beginner again in every sense that decides whether taking a heart off them is fair.
+    <br>**The replay**: a glade this player has **already finished** costs nothing, for ever. The
+    gate exists to pace somebody through content they have not seen, and a board they beat is not
+    content — it is a board they beat, gone back to for a better rating or for the pleasure of
+    it. It also cannot pay for itself: stars are stored and only ever promoted (invariant 22) and
+    credits derive from the star ledger (invariant 9), so a replay that beats nothing is worth
+    nothing and the gate was guarding an empty room. What it was actually charging for was
+    mastery, and the players who go back are the ones who liked the board. **Cleared, not
+    attempted** — the clause reads `PlayerProgress.IsCleared`, which is `Stars > 0`, so a glade
+    tried and lost still costs: the gate keeps its grip on any board that is still beating
+    somebody. Two consequences follow and both are the point rather than side effects. Leaving or
+    restarting a finished glade **raises no confirmation at all**, because a panel warning about
+    a heart nobody is taking is how a player learns that the warning means nothing. And the map's
+    door **opens on everything already finished with an empty heart bar**, since a glade that
+    costs nothing to lose cannot coherently be refused for lack of something to lose — which is
+    the one thing there is to do while hearts refill, and it is the half of the rule a player has
+    no way of discovering, so `GladeRewardsOverlay` states it on every chapter that is not
+    somebody's first.
+    <br>**One run has one price, and `RunScreen.Price` is it** (`Staked` is its bool half). It
+    is asked in exactly two situations: by the screen, once, as a fact about *its level*;
     and by the map's door, about a board nobody has opened yet. Everything that can take a heart
     for a run in progress reads the screen's answer — the abandonment (`RunScreen.Forfeit`, which
     also stops asking for a confirmation over an exit that costs nothing), the marker a dead
-    process leaves behind, and the defeat, which is **told** (`RunLedger.Loss`'s required `staked`)
+    process leaves behind, and the defeat, which is **told** (`RunLedger.Loss`'s required `price`)
     rather than working it out again. Asking twice is what invariant 9a refuses, and the second
     reading is always the later one, so it is the one that can be wrong.
-    <br>**`Staked` is a fact about the level, not about the run, and that distinction cost a
+    <br>**`Price` is a fact about the level, not about the run, and that distinction cost a
     silent bug.** Latching it at `Commit` and clearing it at `Resolve` reads as obviously right —
     a run is owed for between those two calls and not otherwise. It is wrong, and nothing
     structural says so: **both modes call `Resolve` a few lines *before* `RunLedger.Loss`**,
     deliberately, so a crash mid-defeat cannot charge twice. A stake cleared by `Resolve`
     therefore reads "free" at the exact instant the heart is taken — every lost glade in the game
     becomes free, with the heart gate still drawn on every screen. It compiled, it validated, and
-    only playing would have shown it. So the answer is resolved once per screen, cached for its
-    life, and untouched by the run lifecycle;
-    `RunStakeLifecycleTests.ResolvingARunDoesNotTurnAPaidGladeFree` drives the exact ordering and
-    was watched to fail against the bug before it was kept.
+    only playing would have shown it. So the answer is resolved per screen and untouched by the
+    run lifecycle, and **the latch is one-way**: a free answer is kept for the screen's life,
+    where a charged one is re-asked. Only one direction is dangerous — a board the player was
+    told was free must never become one they are charged for on the way out of it, while a
+    charged one becoming free costs nobody anything and is the honest reading of a rule that has
+    just changed in their favour, which is what keeps a first clear followed by a restart on the
+    same screen free. `RunStakeLifecycleTests.ResolvingARunDoesNotTurnAPaidGladeFree` drives the
+    exact ordering and was watched to fail against the bug before it was kept;
+    `ClearingAGladeMidScreenNeverTurnsAFreeRunIntoAChargedOne` pins the direction.
     <br>The marker is the other half. `RunGuard.Claim` runs from `Boot` **before any content has
     loaded**, so nothing at the claiming end can ask whether a glade was free — a free run
     therefore writes **no marker at all**, which says it in the only place that still knows.
     <br>**Nothing about it is stored.** A heart is simply not spent; the save file, the wire and
     the server are untouched, so no schema version, no merge rule and no server work — invariant
     14's preferred shape, and what makes the window free to retune from a config push at any
-    time. It keys on a level's *position*, which invariant 1 forbids only for things that are
-    **stored**: this is the same derived reading of manifest order that `LevelUnlock`'s chain
+    time. The replay clause stores nothing either: it reads a record the save has kept since v1,
+    which is why a second clause on the game's most sensitive gate cost one predicate and no
+    format change. The opening clause keys on a level's *position*, which invariant 1 forbids
+    only for things that are **stored**: this is the same derived reading of manifest order that `LevelUnlock`'s chain
     has always taken, so a drop that inserts a glade at the head of chapter one moves the window
     onto it — the intended meaning — and moves nothing anybody has earned.
-    <br>**The defeat panel has to tell the two silences apart.** "No heart was taken" is now
-    two opposite pieces of news — nothing was owed, or there was nothing left — so `LossRecord`
-    carries `WasFree` rather than letting the panel infer it from `HeartCharged`. Read the second
-    as the first and the panel offers a retry to somebody who cannot use one; read the first as
-    the second and it refuses one to somebody who can. A free run also replaces the heart row
+    <br>**The defeat panel has to tell the silences apart.** "No heart was taken" is three
+    pieces of news — nothing was owed because this is an opening, nothing was owed because the
+    glade was already finished, or there was nothing left to take — so `LossRecord` carries the
+    whole `HeartPrice` rather than letting the panel infer anything from `HeartCharged`. The
+    first two need different sentences ("one of the free levels" over the fortieth glade of a
+    chapter is a panel nobody believes twice), and the third is the opposite news: read a free
+    run as an empty wallet and the panel refuses a retry to somebody who can use one, and read an
+    empty wallet as a free run and it offers one to somebody who cannot. A free run also replaces the heart row
     with the reason, because five empty hearts under a run that spent none of them is a picture
     of a charge that did not happen, sitting directly above a working retry button.
 
@@ -1335,6 +1363,19 @@ What that means in practice here:
     a reward and hearing about it where the wheel re-shows the slice just paid out; the maximum
     closes it and cannot go backwards. The local half only ever moves in `Redeem`, so an
     abandoned spin, a dismissed video and a no-fill all leave it exactly where it was.
+    <br>**The payoff is a panel of its own, and it owes the economy nothing.** The wheel asks a
+    question; `WheelPrizeOverlay` answers it — the coin landing, the figure climbing out of it and
+    a COLLECT under it, which is the shape `ChestOverlay` and `ShopGrantOverlay` already use for
+    the other two places currency is handed over. It used to be a caption change on the button
+    that had just asked for the ad, which drew the largest moment in the placement as the smallest
+    change on the screen. Two things about it are load-bearing rather than decorative. It is
+    raised **before** the wheel is asked whether it still exists, because a player who backgrounded
+    the app during the video may be standing somewhere else entirely and the prize is theirs
+    either way — nothing on the panel is a step in getting paid, and force-quitting during the
+    confetti pays exactly what tapping the button pays. And the offer button underneath goes to
+    **COLLECTED, unclickable**, latched on the panel rather than read off the placement: a
+    cooldown and a cap both *expire*, so a player sitting on a victory screen for five minutes
+    would otherwise watch the offer come back and buy the same glade's bonus twice.
     <br>**The economy moved and it was a swap, not a raise.** The shipped ladder averages 218.75%,
     so `win_bonus` really pays about **438** a view instead of 200 — and its daily cap went from
     twelve to six in the same drop, leaving the day's ceiling at ~2,628 against 2,400 before.
@@ -1342,6 +1383,100 @@ What that means in practice here:
     per-view and per-day figures beside the free-play number, because the authored `amount` stops
     being what a view is worth the moment a wheel is published and nothing else in the file says
     so.
+
+26. **A mode that cannot be lost is a prototype, and Lightfall was one.** It dealt random
+    colours into an empty well until a column filled up, and every consequence of that one
+    decision was invisible in the file. A board with no fixed future cannot be *searched*, so it
+    could author no par; with no par there is no star line and no budget; with no budget there is
+    no fail state; and with none of those it is not a level, it is a toy with a score on it. What
+    it actually shipped was `LevelTuning.Default(1)` — a par of one that nothing read — and two
+    players on the same "level" were not playing the same board. **A well now authors what is
+    standing in it (`rows`) and what it deals (`motes`), and nothing else.** Par is the fewest
+    drops that empty it without ever breaching the brim; the two star lines and the supply the
+    run is dealt are the same 1.20 / 1.40 / 1.60 multiples of par every other mode uses, so a
+    second mode still cannot retune the economy (invariant 9). The procession is **ordered and
+    repeating**, which is invariant 20e's argument in a second place: light never comes back, so
+    the *set* of colours could not otherwise matter in what order — an ordered deal makes each
+    drop an assignment rather than an aim.
+26a. **The chain the mode was documented as having did not exist and could not.** The old rule
+    destroyed a white mote and the four motes touching it, and both `FallBoard` and its tests
+    described the cascades that set off. There were none: nothing changed a mote's colour except
+    a drop, so the first wave took every white on the board and the second could never find one.
+    The wave counter, the rising pitch and the chain multiplier were all dead code against a rule
+    that rejects them — the same "rejects nothing, so it is decoration" fault invariant 5d names
+    for mechanics, in the one place nobody thought to count. What replaced it is *one*
+    destruction and a spread: **a white mote bursts alone and washes the colour that finished it
+    into the motes beside it**, so any of them thereby completed bursts in turn. That is what
+    makes one drop worth more than one mote, and it decides what the mode *is*: dropping blue
+    clears the yellows, leaves the reds and greens it passes one step better, and reaches a mote
+    buried at the bottom of a column that no drop could ever land on. Before changing it, note
+    the ordering the whole thing rests on — a wave decides what bursts and what it washes from
+    the positions the bursting motes are standing in, **before** anything is removed and
+    **before** anything falls. Apply the wash after gravity and a mote is standing in the burst's
+    own cell rather than beside it, so nothing ever touches it.
+26b. **Two fail states, and only one of them may be sold a continue.** The supply running out is
+    invariant 22b's budget in the unit the mode is graded in. The **brim** — row nought, drawn
+    with a hard line under it — is the other, and it is what makes each individual drop a spatial
+    decision: a colour the top of a stack already holds has nowhere to go but upward, so one
+    wrong mote costs a row of headroom *and* a mote from a finite supply. Running dry is a
+    shortage and more motes fix it; a flooded well is not, so `ContinueDeficit` answers
+    `RunContinue.NoContinue` for a flood. That is the honest answer rather than a gap — no amount
+    of supply empties a well that has already reached its brim — and it means the mistake money
+    cannot fix is the one skill is about. Both are read by `FallVerdict`, in one predicate, for
+    the reason `WeaveVerdict` is: three booleans in an `if` on a screen is three edges where the
+    run is decided and the screen has not caught up.
+26c. **A procession must carry all three channels, and the well that cannot be lost is why.**
+    The obvious rule is the weaker one — a deal has to supply every channel the *board* is
+    missing — and it is wrong by one step. A drop onto bare ground puts a fresh pure mote in the
+    well, wanting the two channels it does not hold, so a two-colour procession can be walked
+    into a position no amount of play recovers from. On a well with a supply that is an ordinary
+    loss. On the opening well, which is authored without one for invariant 24's reason, it is a
+    board that can be neither won nor lost — invariant 20g's state, reached by arithmetic rather
+    than by a rule nobody could see. It costs authoring nothing, because the deal repeats: one
+    character.
+26e. **A well's room to err is a count of drops, never a multiple of par — and that is the one
+    number a shared factor could not carry.** Every other mode's budget is `par x budgetFactor`
+    and it works there because a mistake costs a fixed fraction of the board: a glade's wrong turn
+    is *free* (undo refunds it, without limit, so the meter only ever counts turns the player
+    meant), and a weave's wrong channel costs the light it covered while leaving the grove exactly
+    as it was, two of them a grove handed back in full. A well's wrong drop is neither. It is
+    permanent **and it makes the board worse** — the wasted mote lands in the well and now has to
+    be cooked to white like everything else — so one mistake is worth about two drops.
+    <br>Against `par x 1.60` that gave the second level of the chapter *two* drops of room, which
+    is one mistake, and the tenth *four*. Reported from play as "one wrong fall and it shows out
+    of turns", on level 2, which is exactly where par is smallest and the proportion buys least.
+    Raising the factor cannot fix it and is worse in the other direction: 2.60 gives par 2 the
+    room it needs and hands a par-6 well ten wasted drops, at which point the fail state rejects
+    nothing and is decoration (invariant 5d). **The room a mode needs is a count when the cost of
+    a mistake is a count.** So `LevelTuning.Slack` exists, `FallRules.DefaultSpare` is 5 — two
+    mistakes and a little — and it is the same on the second well and the tenth, because the
+    budget is a fail line and difficulty is the boards' job; a per-chapter ramp on the fail line
+    was tried on the glades and removed for that reason.
+    <br>**The star lines did not move and must not.** They stay multiples of par, which is the
+    whole division of labour: stars measure how well a board was played, and the budget only
+    stops a run that has become hopeless. A generous fail line does not make a level generous —
+    it makes the stars the thing being asked for. `CheckStarBands` grows a branch rather than an
+    exception, because it reads the factors and a well no longer uses them: a check that
+    disagrees with the thing it checks is worse than no check, which is the same reason that
+    method reads factors rather than the thresholds they derive. What has no test and now does is
+    the claim the player made for us — `FallLadderTests.EveryWellForgivesTwoMistakes`.
+
+26d. **Par may be resolved lazily, and this is the mode that needed it.** A glade's par falls out
+    of walking its grid; a well's is a breadth-first search, which is milliseconds rather than
+    microseconds, and a chapter body holds ten of them. Paying for all ten while the map is
+    opening is a hitch on the one screen that never asks the question — par is read by the run
+    screen and by the validator, and by nothing that draws a map node. So `LevelTuning` takes a
+    `Func<int>` as well as a number and calls it once, the first time somebody asks. That is the
+    only place that class is not strictly immutable and the memo is safe to race on, because the
+    function is a pure search over a frozen board. Lazy is not free, though, and the cost has a
+    gate of its own: `FallValidator` warns above 40,000 positions and **refuses** a level above
+    120,000, because that is about a quarter of a second of nothing happening on a phone on the
+    way into a level. Those two numbers are measured rather than guessed, and they are a
+    different question from `FallSolver.NodeBudget` — the budget has to be large enough to
+    *prove* a hard board, since a board with no par cannot be graded at all. Cost goes as the
+    column count to the power of par, so par 7 on a six-wide well is four times par 6 on the
+    same board: the cheap fixes are a narrower well or a shorter answer, never a bigger one.
+
 
 ## Layout
 
@@ -1407,6 +1542,13 @@ scripts fail to compile. Do not guess — verify offline:
 - **Word list check:** `python Tools/make_name_blocklist.py --check` proves the checked-in list
   is what the tool would write, and refuses the four ways a blocklist goes quietly wrong. The
   filter itself is `npm --prefix firebase/functions test` (`names.mjs`, `reports.mjs`).
+- **Lightfall check:** rolled into `content.py`. A well is the one non-glade mode whose whole
+  level is in the file, so the offline gate proves it: every board searched for par, the brim
+  row empty, nothing floating, the procession carrying all three channels, and the four
+  difficulty readings (`motes`, `headroom`, `ways`, `greedy`) printed beside par and the supply.
+  `fall-vectors.json` is the contract between `Tools/verify/fall.py` and the shipping
+  `FallBoard`/`FallSolver` — `content.py` runs it through the Python copy and `FallVectorTests`
+  runs it through the C# one, so the burst-and-wash rule cannot drift quietly (invariant 9a).
 - **Weave determinism check:** `python Tools/verify/weave.py` builds every shipped Lightweave
   grove on **both** the bundled .NET 8 and **Unity's own Mono** and diffs them. A weave board is
   generated rather than authored, on a desktop at authoring time and again on the player's phone,
@@ -1628,8 +1770,15 @@ Builds are gated: `ContentBuildGate` fails the build on any content error.
 Everything here runs without Unity unless it says otherwise.
 
 - `Tools/verify/` — `compile.py`, `tests.py`, `content.py`, `loc.py`, `names.py`,
-  `difficulty.py`, `weave.py`, and `board-vectors.json`, the shared contract for the rule
-  that exists in `LevelValidator`, `content.py` and `author.py` at once. See *Verifying*.
+  `difficulty.py`, `weave.py`, `fall.py`, and two shared contracts: `board-vectors.json` for the
+  rule that exists in `LevelValidator`, `content.py` and `author.py` at once, and
+  `fall-vectors.json` for the burst-and-wash rule that exists in `FallBoard`/`FallSolver` and
+  `fall.py`. See *Verifying*.
+- `Tools/chapters/f01_lightfall.py` — the Deep Well's ten wells, and `f01_strings.py` for the
+  strings that belong to the mode rather than to a level. Both `--check` themselves against
+  what is shipped. The boards were *searched for* rather than typed, because a random fill is
+  almost never solvable — every pure mote needs two more channels and the stragglers pile up
+  faster than any chain clears them.
 - `Tools/chapters/*.py` — one module per glade chapter; regenerates the shipped JSON and
   `--check`s itself against it. `author.py` is the shared board DSL (`cross`, `root`, `briar`,
   `path`), and it derives a taproot's start rotations from the taps the root should cost rather
@@ -1694,8 +1843,8 @@ re-reading before changing something, it is in one of those two sections and not
   bought by the copy, residents projected from the companion roster, derived grove worth.
 - **Boards** — public `groves/{uid}` cards, published rank distribution, unique keeper names
   with server-side filtering and reporting.
-- **Two modes beyond the classic glade** — the Hollow (`h01_emberfall`) and Lightweave
-  (`w01_lightweave`, `w02_nightloom`). See *Modes* below.
+- **Modes beyond the classic glade** — Lightfall (`f01_lightfall`), the Hollow
+  (`h01_emberfall`) and Lightweave (`w01_lightweave`, `w02_nightloom`). See *Modes* below.
 - **Privacy/ads plumbing** — Google UMP consent, ATT prompt, `app-ads.txt` (placeholders).
 - **Verifying** — `Tools/verify/` in the repo (see the *Verifying* section).
 
@@ -1707,6 +1856,7 @@ re-reading before changing something, it is in one of those two sections and not
 | `c02_millvale` | glade | 10 | 36–63 | default 1.60 | the crossing |
 | `c03_amberwood` | glade | 10 | 44–70 | default 1.60 | colour as the subject; no new rule |
 | `c04_nightbriar` | glade | 10 | 42–69 | default 1.60 | the briar |
+| `f01_lightfall` | fall | 10 | 2–6 drops | none, then default 1.60 (motes) | the cook, then the chain; motes 3 → 30, headroom 4 → 2, `ways` never above 8 |
 | `h01_emberfall` | hollow | 10 | 1–2 sparks | — | ladder is *how few openings win*: 7,8,6,4,2,3,4,1,4,1 |
 | `w01_lightweave` | weave | 10 | 19–64 | default 1.60 (ink) | pairs 3→6, beads 0→5; slack 2 → 8 and ways 230 → 2 |
 | `w02_nightloom` | weave | 10 | 63–74 | default 1.60 (ink) | six pairs throughout, beads 5→6; slack 8 → 16 and ways 305 → 7 |
@@ -1754,15 +1904,29 @@ One verb — turn a conduit, light a critter — with modifiers, and no second s
 
 `Tools/verify/difficulty.py` is the instrument that says whether any of that is doing work —
 see invariant 5d. `hazards` is the metric it replaced and is wrong; `arms`/`wins`/`glance`/
-`colour` are the ones to author against. It does not yet skip a chapter that is not glades,
-so it raises `KeyError: 'width'` on `f01_lightfall` after printing all four glade chapters —
-long-standing, and unrelated to anything it reports.
+`colour` are the ones to author against. It names a chapter that is not glades as skipped
+rather than stopping on it, which it did not always do — see *Verifying*.
 
 ### Modes
 
 **Classic glade** — `PlayScreen`. Turn conduits, light every critter. The move budget is the
 only fail state (invariant 22) at `par × 1.60`, and `Undo` refunds a move, so exploring a
 crossing that reads the same half a turn round costs nothing.
+
+**Lightfall** (`FallScreen`) — a well of coloured motes that has to be emptied, and an ordered
+procession to empty it with. Tap a column: the mote either **enriches** the top of that column
+(a colour it lacks, and the stack does not grow) or **heightens** it (a colour it already holds).
+A mote holding all three channels **bursts**, and washes the colour that finished it into the
+motes beside it — so any of them thereby completed bursts in turn, and one well-chosen drop runs
+through a whole connected blob. It reaches a mote buried at the bottom of a column that no drop
+could ever land on, which is what makes a full well solvable at all.
+
+Two fail states, both visible: the supply runs out, or a mote comes to rest above the **brim**
+(row nought, drawn with a hard line under it). Only the first may be sold a continue — see
+invariant 26b. Par is the fewest drops that empty a well without ever breaching the brim, found
+by search (`FallSolver`) and resolved lazily, so a level authors a board and a procession and no
+difficulty number at all. Boards are searched for, not typed — `Tools/chapters/f01_lightfall.py`
+and `Tools/verify/fall.py`.
 
 **Hollow** (`HollowScreen`) — a field of sleeping critters and a short *ordered* queue of
 sparks. Light accumulates and never decays, so a player can never be stuck, the only endings
@@ -1838,9 +2002,10 @@ Free play collects about **593 credits and 6 gems a day**; `Tools/verify/content
   (9 regions, a free 6x6 starter), 270,500 residents. 150 priced pieces, of which 99 sell
   in bundles of ten at what one used to cost. Home ladder 5 rungs, first free.
 - **Grove star ladder** — 10K / 20K / 50K / 100K / 200K, content in `homestead.json`.
-- **Hearts** — refill cap 5, ceiling 50, 8h refill (4h boosted). A loss costs one. The
-  **first 3 levels of the first chapter of each mode cost nothing** (`hearts.graceLevels`,
-  content) — see the note below. The cap is per player: a **heart container** raises it to
+- **Hearts** — refill cap 5, ceiling 50, 8h refill (4h boosted). A loss costs one. Two kinds of
+  run cost nothing (invariant 24): the **first 3 levels of the first chapter of each mode**
+  (`hearts.graceLevels`, content) and **any level the player has already finished**, which also
+  means they are open, and free to leave, with no hearts left. The cap is per player: a **heart container** raises it to
   10, 20 or 50 permanently (invariant 18d), derived from `heartContainersOwned` and read by
   every screen through `Wallet.MaxHearts`.
 - **Hints** — pool of 3 account-wide, one back every 8h, ceiling equals the cap (a granted
@@ -1879,7 +2044,8 @@ Free play collects about **593 credits and 6 gems a day**; `Tools/verify/content
   bulk pack, which is a volume discount every honest tuning is dearer than. It buys a *fresh*
   attempt, graded like any other. Content (`hearts.rescueGems` / `hearts.rescueHearts`), and
   `"rescueHearts": 0` withdraws it.
-- **Continue** — **20 gems** for **+15 turns** on a glade or **+20 cells of ink** on a weave,
+- **Continue** — **20 gems** for **+15 turns** on a glade, **+20 cells of ink** on a weave or
+  **+6 motes** on a well,
   flat and repeatable for as long as the player can pay (invariant 23). About three days of
   free gems, or a fifth of the entry rung. The grant is *on top of* whatever it took to un-lose
   the board, and a bought run can only ever score one star. Content (`continueRun`), and
@@ -2068,6 +2234,18 @@ and a screenshot of the source.
   `SquareFaceLift`, `NodeFaceLift`, the win banner's `RankLift`, the iso tile's derived skirt.
 - **`UIKit.Label` defaults to `Overflow` with no clipping** — an over-long translation keeps
   drawing rather than truncating. Anything holding a translated string needs `UIKit.Shrinkable`.
+- **A one-line caption is set through `UIKit.OneLine`, never by raising `Btn.OneLine`**, and the
+  two are not the same thing. `UIKit.TextButton` switches Unity's best-fit on for any button
+  carrying a glyph, and best-fit concedes the **line** before it concedes the size — so on a long
+  caption it folds rather than shrinks, which is what `Squeeze` exists to prevent. Raising the
+  flag alone leaves both rules running over one label: `Squeeze` computes a size from
+  `preferredWidth`, best-fit overrides it at draw time, and it re-runs on the next layout rebuild
+  — a frame or two later, when the dynamic font's texture is regenerated. The player sees the
+  caption arrive crushed and then spring out to its real width, which is how it was reported.
+  `UIKit.OneLine` turns best-fit off, so the caption is sized once, in the frame it was set.
+  Measured on the wheel's own button at its real size, with `WATCH A VIDEO TO COLLECT` in it:
+  the flag alone gives `bestFit=True, lines=2`, and `UIKit.OneLine` gives `bestFit=False,
+  lines=1`. It had escaped twice, on the two buttons that open and take the video bonus.
 - **Generate art the screen cannot afford to be missing.** An `Image` whose sprite has not
   arrived is a white rectangle, so anything on a dark or ceremonial screen is
   `Art.Bloom`/`Dial`/`Gradient`/`PrismRing`/`IsoTile`/`Ring`/`Glow` rather than an address.
@@ -2117,6 +2295,16 @@ and a screenshot of the source.
   one fixed-length buzz on Android, so a second one cannot be made lighter than the first.
 - **Depth is applied to a whole visible window in one pass.** `SetSiblingIndex` *inserts*, so
   assigning depth per tile as tiles are realised leaves a field that looks sorted and is not.
+- **An arrangement of identical things is arithmetic too, and the tell is an even count.**
+  `TokenPile` — the shop's coins, its gems and both of its heaps of hearts, which were three
+  copies of one shallow arc with every second token dropped a little. `i % 2` is only a symmetric
+  rule when the count is odd, so a pile of four came out visibly heavier on one side and a pile of
+  five did not, from the same expression; that is what read as scattered rather than stacked. Two
+  rows, centred, wider at the front. The **order** matters as much as the positions: a row drawn
+  left to right shingles every token over the one before it and points the whole pile one way, so
+  each row is laid from its ends inwards and the front row goes last — which is also why a pile
+  hands back a *slot* alongside its draw order, since a caller filling a bundle's gems is choosing
+  by position and the draw order is back to front.
 - **Whether two things on a screen overlap is arithmetic, so it goes in Domain and gets a test.**
   `ChapterMap` did it for map nodes (invariant 8a); `WeaveBand` does it for the undo key and the
   standing line under a grove, and `ReadoutRow` for a row of one, two or three numbers. The rule
@@ -2138,6 +2326,32 @@ and a screenshot of the source.
   it sideways, which is why this panel is 960 rather than 900. Both were found by rendering the
   thing offscreen to a PNG and looking at it — `Text` best-fit is approximate, so a paragraph
   the arithmetic calls exact can still spill a few units, and no test will ever say so.
+  <br>`WheelPanel` is the fifth, and it failed in the one way the other four could not: it had
+  the test *and* the arithmetic and still drew a row through its neighbour, because **one number
+  in the stack meant something different from the rest**. Four rows were centres and the status
+  paragraph was documented as a *top* — but `UIKit.Box` pivots at centre whatever it is anchored
+  to, so the overlay handing that top over as a position lifted the box 46 units, straight
+  through the odds line above it. `WheelPanelTests` passed throughout, because it was checking
+  the arithmetic the panel did not use — which is the failure mode a layout test has, and the
+  reason a stack should be **all centres**: a number that has to be converted by its caller is a
+  number some caller will forget to convert. Found by a player reading the overlap, not by any
+  check here; now measured against the live objects with `GetWorldCorners` and `Rect.Overlaps`,
+  which is the only thing that compares what was *drawn* against what was *derived*.
+  <br>`ProductCardBadges` is the sixth and it widens the rule: **the two things that overlapped
+  were on different objects**. A shop card's badge hung 38 units past its own plate and the next
+  column's ribbon reached 22 past its plate's other edge, so across a gutter of 34 they shared 26
+  units of the screen — and since `GridView` recycles cells, which of the two was drawn on top was
+  whatever order the pool happened to be in. Neither number is wrong on its own, so nothing that
+  reads one object at a time could ever have seen it, and it was reported by a player. What made
+  the fix statable is that the badge now knows where its neighbour's ribbon starts: the grid's
+  column pitch *is* the card's own width, so a card can derive the constraint without being told
+  it. Two smaller lessons came out of the same corner. A mark is measured as the shape it **draws**
+  — `seal_gold` is a disc in a square texture, and treating it as a rotated square overstates its
+  reach by a sixth, which is a sixth of a badge of clear air bought by pushing it into the picture
+  underneath. And a caption is sized against the **field it is read on**, not against the sprite
+  carrying it: the badge's text box was half again as wide as the maroon disc, so a two-word badge
+  spilled onto the plate, where lettering coloured for a gold rim was drawn on the darkest thing
+  on the card and disappeared.
 - **An asset scope is bounded by what is on screen**, and an in-flight guard is not
   `IsScopeLoaded` — that goes true the instant a load *starts*. Four grove scopes exist for
   four different bounds (the grove, one shelf, the shop's tab furniture, visiting).
@@ -2149,6 +2363,21 @@ and a screenshot of the source.
 - **Ask about the blocking condition before the price.** A player who is both too junior and
   too poor is told about the wall money cannot climb (`HintPrompt`, `CompanionPurchaseState`).
   Equally, a short balance opens the shop rather than greying the button.
+- **Recall is not difficulty, so the board answers it.** Lightfall's legend under the tray is the
+  colour arithmetic, drawn permanently, because "which colour finishes yellow" is something a
+  player has to hold in their head *while* deciding rather than a thing worth testing them on —
+  reported from play as "I always forget which colour blends with which". The rule it draws is
+  derived from the same masks the board mixes with (`FallMixing`), never a typed table, so there
+  is no second answer to fall out of step. The distinction worth keeping: a legend removes
+  *bookkeeping*, and must never remove a *decision* — which is why the ghost still stops at
+  whether a drop bursts and never shows how far the chain would run.
+- **A celebration should say how good, not that something was good.** Confetti reads identically
+  for a two-chain and a six, so Lightfall counts the chain out loud instead — one number per wave
+  while it is still running (nobody watching x3 land knows yet whether there is an x4), and a word
+  at the end that climbs. The ladder is `FallChain`, in Domain, because a switch on a wave count
+  in a `MonoBehaviour` is the one place here nothing can be proved, and because how loud to shout
+  is exactly the decision that gets retuned. Measure before setting one: the shipped chapter runs
+  chains of 3–7 routinely, so a ladder pitched for 2–5 spends its top word constantly.
 - **Panels that explain the game read their numbers from the rules**, never from the copy —
   `StreakInfoOverlay`, `AdOfferOverlay`, `EventInfoOverlay`. That copy is the first thing to
   rot when the game is retuned.

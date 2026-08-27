@@ -101,10 +101,25 @@ namespace GlimmerGrove
         int _landing = -1;
         int _percent = WheelRules.MinPercent;
 
-        bool _watching, _paid, _collecting;
+        bool _watching, _paid;
 
-        ChestDrop _drop;
-        RewardFlight _flight;
+        /// <summary>
+        /// True once the button has actually become the video offer — see
+        /// <see cref="BecomeTheOffer"/>.
+        ///
+        /// <para>
+        /// The repaint is gated on this rather than on the wheel having landed, and the
+        /// difference is a whole beat wide: <c>WheelSpin.CelebrationSeconds</c> passes between
+        /// the slice being decided and the button changing hands, and the tick runs four times a
+        /// second throughout it. Gated on the landing, the first thing to write
+        /// "WATCH A VIDEO TO COLLECT" was that tick — onto a button that still had no play
+        /// glyph, so the caption was fitted to the whole face and drawn nearly edge to edge.
+        /// <c>BecomeTheOffer</c> then added the glyph and re-fitted it smaller, and what the
+        /// player saw was a caption that overflowed its button and then tidied itself up as the
+        /// button popped. One writer, once, after the glyph exists.
+        /// </para>
+        /// </summary>
+        bool _offering;
 
         /// <summary>The offer being multiplied. Read once — a table swap mid-panel would move
         /// the figures under a wheel the player has already been shown.</summary>
@@ -150,19 +165,27 @@ namespace GlimmerGrove
             _status = UIKit.Titled("Status", Panel, string.Empty, 30, new Color(.36f, .25f, .18f),
                                    TextAnchor.UpperCenter,
                                    new Vector2(WheelPanel.ContentWidth, WheelPanel.StatusHeight),
-                                   new Vector2(.5f, 1f), new Vector2(0f, -stack.StatusTop),
+                                   new Vector2(.5f, 1f), new Vector2(0f, -stack.StatusCentre),
                                    outline: 0f, shadow: 0f, wrap: true);
             UIKit.Shrinkable(_status, 22);
 
             _spin = UIKit.TextButton("Spin", Panel, "btn_violet", Loc.Get("ui.wheel.spin"), 48,
                                      new Vector2(620f, WheelPanel.ButtonHeight), new Vector2(.5f, 1f),
                                      new Vector2(0f, -stack.ButtonCentre), OnSpin, "ic_play");
-            _spin.OneLine = true;
-
             // The play glyph belongs to the video, not to the spin. It is added back the moment
             // the button becomes an offer, which is also the moment it starts being one.
             if (_spin.Icon) { Destroy(_spin.Icon.gameObject); _spin.Icon = null; }
-            UIKit.FitLabel(_spin);
+
+            // Through UIKit.OneLine rather than by raising the flag, and the difference is the
+            // whole of the bug it fixes. TextButton turns Unity's best-fit on for any button
+            // carrying a glyph, and best-fit concedes the *line* before it concedes the size —
+            // so a long caption folds, and the fold is measured, re-measured when the font
+            // texture rebuilds a frame later, and re-laid out again by FitLabel against the box
+            // that measurement produced. What the player sees is WATCH A VIDEO TO COLLECT
+            // arriving crushed and then springing out to its real width. OneLine switches
+            // best-fit off and sizes the caption once, from Text.preferredWidth, in the frame it
+            // was set. The flag alone leaves best-fit running underneath it.
+            UIKit.OneLine(_spin, 24);
 
             UIKit.Halo(_spin.transform, Pal.Bloom, 700f, .30f);
             Sheen.Attach((RectTransform)_spin.transform, 2.6f);
@@ -237,13 +260,6 @@ namespace GlimmerGrove
         /// </summary>
         string OddsLine() => Loc.Format("ui.wheel.odds", _wheel.Count);
 
-        /// <summary>How many more spins today's allowance has room for.</summary>
-        string AllowanceLine()
-        {
-            int left = RewardedAds.RemainingToday(PlacementId);
-            return left > 0 ? Loc.Format("ui.ads.left_today", left) : Loc.Get("ui.ads.none_left_today");
-        }
-
         // ------------------------------------------------------------- painting
         /// <summary>
         /// Ticks four times a second rather than sixty, for <c>AdOfferOverlay</c>'s reason:
@@ -274,15 +290,21 @@ namespace GlimmerGrove
             if (_spin != null) _spin.Interactable = status.CanShow;
 
             // Before the spin the button says SPIN whatever the network is doing, because the
-            // spin is free and the refusal below it is about the video. Once the wheel has
-            // landed the button *is* the video, so it takes the ad's own caption — cooldowns
-            // and allowances included.
-            if (_face != null && _face.Landed && _spin != null)
+            // spin is free and the refusal below it is about the video. Once the button has
+            // become the video it takes the ad's own caption — cooldowns and allowances
+            // included. See _offering for why that is not the same moment as the wheel landing.
+            if (_offering && _spin != null)
                 AdOfferButton.Paint(_spin, PlacementId, "ui.wheel.collect");
 
-            _status.text = _face != null && _face.Landed
-                ? AdOfferButton.Explain(status)
-                : status.State == AdOfferState.Ready ? AllowanceLine() : AdOfferButton.Explain(status);
+            // The line under the wheel says something only when there is something to say. A
+            // ready video needs no sentence: before the landing the button says SPIN and the
+            // spin is free, and after it the button *is* the video and carries its own caption,
+            // so "watch a short video and it is yours" underneath it was the same instruction a
+            // third time — printed over the odds line, which had already said it too. What is
+            // left is the half a caption cannot carry: loading, a cooldown, a cap, no account.
+            _status.text = status.State == AdOfferState.Ready
+                ? string.Empty
+                : AdOfferButton.Explain(status);
         }
 
         // ------------------------------------------------------------- spinning
@@ -325,8 +347,12 @@ namespace GlimmerGrove
 
             _face.Celebrate(_landing);
 
+            // No haptic, here or on the payout. Handheld.Vibrate is one fixed-length pulse on
+            // Android with no way to make it lighter, and this panel fires twice inside a few
+            // seconds on an event a player meets several times a session — which is one rumble
+            // rather than two taps. The victory panel's payout lost its buzz for the same
+            // reason; the sound and the light are what mark the moment.
             Audio.Sfx(slice.IsBonus ? "unlock" : "chime2", .62f, slice.IsBonus ? 1.05f : 1.15f);
-            Haptic.Tap();
 
             if (won != null) Burst.Sparks(won, Vector2.zero, tint, slice.IsBonus ? 26 : 14,
                                           460f, 30f, .85f);
@@ -399,8 +425,12 @@ namespace GlimmerGrove
                 _spin.Icon = glyph;
             }
 
+            // Only now, with the glyph in place, is the caption allowed to change: the fit is
+            // measured against the room the glyph leaves, and SetCaption re-fits only when the
+            // words actually change — so a caption written a beat early is one that never gets
+            // measured again.
+            _offering = true;
             AdOfferButton.Paint(_spin, PlacementId, "ui.wheel.collect");
-            UIKit.FitLabel(_spin);
 
             Tween.Pop(_spin.transform, .86f, .38f);
 
@@ -454,9 +484,13 @@ namespace GlimmerGrove
                 // banked, because Redeem does not touch the UI.
                 var drop = RewardedAds.Redeem(result);
 
-                if (this == null) return;
+                // Asked before the liveness check, and deliberately: a prize that was paid for
+                // has to be shown to somebody, and Paid raises a panel of its own rather than
+                // repainting this one. The refusal branches below are the ones that need a panel
+                // to talk on, so those still give up when it has gone.
+                if (drop.IsValid) { Paid(drop, flight); return; }
 
-                if (drop.IsValid) { _flight = flight; Paid(drop); return; }
+                if (this == null) return;
 
                 _watching = false;
                 if (_status) _status.text = AdOfferButton.Refusal(result.Outcome);
@@ -477,8 +511,7 @@ namespace GlimmerGrove
         }
 
         /// <summary>
-        /// The video paid. Note what the panel shows: the <em>wheel's</em> figure, not the
-        /// drop's.
+        /// The video paid. Note what is handed on: the <em>wheel's</em> figure, not the drop's.
         ///
         /// <para>
         /// They are the same number and that is exactly why the wheel's is the one printed. The
@@ -487,104 +520,48 @@ namespace GlimmerGrove
         /// callback. Printing the drop here would show a player two hundred under a wheel that
         /// had just stopped on a thousand, and the thousand is what arrives.
         /// </para>
+        /// <para>
+        /// <b>The payoff is a panel of its own</b> — see <see cref="WheelPrizeOverlay"/>. It used
+        /// to be a caption change on this button: the wheel stayed up with its question answered
+        /// and its own COLLECT where WATCH had been, which drew the largest moment in the
+        /// placement as the smallest change on the screen. The wheel asks; the celebration
+        /// answers; and because the answer owns its own panel it can be shown to a player who is
+        /// no longer standing here.
+        /// </para>
         /// </summary>
-        void Paid(ChestDrop drop)
+        void Paid(ChestDrop drop, RewardFlight flight)
         {
             _paid = true;
             _watching = false;
 
             var slice = _wheel.SliceAt(_landing);
-            _drop = new ChestDrop(drop.Kind, slice.Pays(_offer.Amount));
+            var prize = new ChestDrop(drop.Kind, slice.Pays(_offer.Amount));
 
-            if (_status) _status.text = Loc.Get("ui.ads.thanks");
+            // Raised before this panel is asked whether it still exists, because the prize does
+            // not depend on it: a player who backgrounded the app during the video may be
+            // standing somewhere else entirely by now, and the celebration is the only thing
+            // that tells them what the video was worth. Nothing below this line is load-bearing
+            // either — the grant is the server's (invariant 10d) and Redeem has already asked
+            // for it.
+            WheelPrizeOverlay.Celebrate(prize, WheelPaint.For(_wheel, _landing), slice.IsBonus,
+                                        slice.Percent >= _wheel.TopPercent, flight);
 
-            if (_spin)
-            {
-                _spin.Interactable = true;
-                _spin.Setup(OnCollect);
+            if (this == null) return;
 
-                // The play glyph goes with the offer it belonged to. Leaving it in front of
-                // "COLLECT" would advertise a second video on a button that closes a panel.
-                if (_spin.Icon) { Destroy(_spin.Icon.gameObject); _spin.Icon = null; }
+            // Reported the instant the reward is banked rather than when the celebration closes,
+            // because that is when it becomes true: the screen underneath carries the offer
+            // button that opened this wheel, and it must stop offering a video this player has
+            // now watched. Report is latched, so the backstop in OnDestroy stays harmless.
+            Report(true);
 
-                if (_spin.Label)
-                {
-                    _spin.Label.text = Loc.Get("ui.daily.collect");
-
-                    // Back to a plain centred caption. FitLabel is a no-op without a glyph, so
-                    // the box it left behind has to be restored by hand.
-                    var rt = _spin.Label.rectTransform;
-                    rt.sizeDelta = new Vector2(_spin.LabelWidth, rt.sizeDelta.y);
-                    rt.anchoredPosition = new Vector2(0f, rt.anchoredPosition.y);
-                }
-            }
-
-            Audio.Sfx("win", .6f);
-            Haptic.Tap();
-
-            var won = _face != null ? _face.Won(_landing) : null;
-            if (won != null)
-                Burst.Sparks(won, Vector2.zero, WheelPaint.For(_wheel, _landing), 20, 420f, 30f, .8f);
-        }
-
-        // ------------------------------------------------------------ collecting
-        /// <summary>
-        /// The player took the reward, and where there are pills underneath it flies to them.
-        ///
-        /// This is the daily chest's collect and deliberately the very same one — see
-        /// <see cref="RewardFlight"/>. It degrades to an ordinary close wherever there is
-        /// nothing to fly to, which on a victory panel is every time today; a reward that is
-        /// already banked must never depend on an animation being able to run.
-        /// </summary>
-        void OnCollect()
-        {
-            if (_collecting) return;
-
-            var from = _face != null ? _face.Won(_landing) : null;
-
-            if (_flight == null || from == null || !_flight.Add(_drop, from))
-            {
-                Close(() => Report(true), quiet: true);
-                return;
-            }
-
-            _collecting = true;
-            Fly(from);
-        }
-
-        /// <summary>Clears the panel out of the way and throws the reward at what is underneath.</summary>
-        void Fly(RectTransform from)
-        {
-            if (_spin) _spin.Interactable = false;
-            if (from) from.SetParent(Content, true);
-
-            // A scrim at zero alpha still swallows the taps aimed at what is now visible through
-            // it, so it stops taking them rather than merely fading.
-            if (Scrim)
-            {
-                Scrim.raycastTarget = false;
-                Tween.Fade(Scrim, 0f, RewardFlight.ClearAt);
-            }
-
-            if (Panel)
-            {
-                var group = UIKit.Group(Panel);
-                group.interactable = false;
-                group.blocksRaycasts = false;
-                Tween.Fade(group, 0f, RewardFlight.ClearAt * .8f);
-            }
-
-            // Reported before the panel goes, so the screen behind repaints while the tokens are
-            // still arriving. Report is latched, so the backstop in OnDestroy stays harmless.
-            _flight.Play(Content, () =>
-            {
-                Report(true);
-                if (this) Flow.Dismiss(this);
-            });
+            // Quiet, because the next thing the player hears is the celebration and a backing-out
+            // whoosh underneath it is one sound too many. The wheel has nothing left to say: its
+            // answer is standing on the panel that just opened over it.
+            Close(quiet: true);
         }
 
         /// <summary>
-        /// Back closes, except while the wheel is turning or the payout is in flight.
+        /// Back closes, except while the wheel is turning.
         ///
         /// <para>
         /// A spin that is interrupted costs nothing — the slice is a fact about the day rather
@@ -595,7 +572,6 @@ namespace GlimmerGrove
         /// </summary>
         public override bool OnBack()
         {
-            if (_collecting) return true;
             if (_face != null && _face.Spinning) return true;
 
             Close();

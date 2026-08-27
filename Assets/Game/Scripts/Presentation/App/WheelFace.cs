@@ -298,7 +298,7 @@ namespace GlimmerGrove
                                  new Vector2(0f, _radius * BadgeRadius));
 
             var badge = UIKit.Titled("Mult", chip.transform,
-                                     Loc.Format("ui.wheel.mult", Mult(slice)), 30,
+                                     Loc.Format("ui.wheel.mult", Multiplier(slice)), 30,
                                      new Color(.20f, .14f, .10f), TextAnchor.MiddleCenter,
                                      new Vector2(chipW - 14f, 38f), new Vector2(.5f, .5f),
                                      Vector2.zero, outline: 0f, shadow: 0f);
@@ -308,11 +308,13 @@ namespace GlimmerGrove
         /// <summary>
         /// A multiplier as a player would say it: "2" for double, "2.5" for two and a half.
         ///
+        /// <para>
         /// Trailing zeroes are trimmed rather than formatted away, so the badge reads "x3"
         /// instead of "x3.0" — and the decimal point comes from the culture, because a comma
         /// is the decimal separator across most of the markets this ships in.
+        /// </para>
         /// </summary>
-        static string Mult(WheelSlice slice)
+        static string Multiplier(WheelSlice slice)
         {
             int percent = slice.Percent;
             if (percent % 100 == 0) return (percent / 100).ToString();

@@ -3,28 +3,43 @@ using System.Collections.Generic;
 namespace GlimmerGrove.Modes
 {
     /// <summary>
-    /// <b>Lightfall.</b> Motes of coloured light drop into columns. You never match them — you
-    /// <em>cook</em> them, and a stack that reaches white detonates.
+    /// <b>Lightfall.</b> A well of coloured motes. You never match them — you <em>cook</em> them,
+    /// and a mote that reaches white bursts and washes the colour that finished it into
+    /// everything beside it.
     ///
     /// <para>
-    /// The whole game is one rule with two branches, and the branch is what makes it a game:
-    /// a mote dropped onto a stack either <b>enriches</b> the top of it, or <b>heightens</b> it.
-    /// Red onto green makes yellow and the stack does not grow. Red onto yellow adds nothing —
-    /// yellow already contains red — so the mote sits on top and you are one row nearer the
-    /// ceiling. Every drop is therefore a real decision with a visible cost, which is the thing
-    /// tapping a cell never had.
+    /// <b>One verb with two branches, and the branch is what makes it a game.</b> A mote dropped
+    /// onto a stack either <em>enriches</em> the top of it or <em>heightens</em> it. Red onto
+    /// green makes yellow and the stack does not grow. Red onto yellow adds nothing — yellow
+    /// already holds red — so the mote sits on top and the well is one row nearer its brim.
+    /// Every drop therefore costs one of a finite supply and, if it was the wrong one, a row of
+    /// headroom as well: one mistake, two meters, and both of them visible.
     /// </para>
     /// <para>
-    /// White is the goal and the reward. Completing all three channels detonates the mote and
-    /// everything orthogonally touching it, the stack above falls into the gap, and what lands
-    /// can complete something else — so a good drop pays out in a cascade the player set up but
-    /// did not fully predict. That is Tetris's clear and Candy Crush's chain in one move.
+    /// <b>The wash is what makes a chain possible, and it is the rule this class was rewritten
+    /// for.</b> The mode shipped with a detonation that took its white mote and the four motes
+    /// touching it, and boasted in this very file about the cascades that set off. There were
+    /// none, and there could not be: nothing here changes a mote's colour except a drop, so
+    /// every white on the board was taken by the first wave and the second could never find one.
+    /// The wave counter, the rising pitch and the chain multiplier were all dead code against a
+    /// rule that rejects them. What replaced it is <em>one</em> destruction and a spread: a
+    /// white mote bursts alone, and the motes beside it gain the channel that finished it. Any
+    /// of them that is thereby completed bursts in turn — so a single well-chosen drop runs
+    /// through a whole connected blob of motes that were all missing the same channel, which is
+    /// the chain the mode was written as if it had.
     /// </para>
     /// <para>
-    /// No Unity types: the whole thing is provable offline, which matters because a falling-piece
-    /// game is wrong in ways a screenshot cannot show — a gravity pass that settles in the wrong
-    /// order, a cascade that resolves one column at a time, a detonation that eats its own
-    /// neighbours twice.
+    /// It also decides what the mode <em>is</em>. Dropping blue clears the yellows; the reds and
+    /// greens it passes are left one step better rather than untouched; and a mote buried at the
+    /// bottom of a column — which no drop can ever land on — is reached by the wash from its
+    /// neighbours. That is what makes a full well solvable at all, and what makes which colour
+    /// goes where the whole of the thinking.
+    /// </para>
+    /// <para>
+    /// <b>No Unity types and no randomness.</b> The whole thing is provable offline, which
+    /// matters because a falling-piece game is wrong in ways a screenshot cannot show — a
+    /// gravity pass that settles in the wrong order, a wash applied after the fall rather than
+    /// before it, a cascade that resolves one column at a time.
     /// </para>
     /// </summary>
     public sealed class FallBoard
@@ -32,102 +47,104 @@ namespace GlimmerGrove.Modes
         public readonly int Width, Height;
 
         readonly int[] _cells;          // Energy mask per cell, 0 = empty
-        readonly List<int> _queue = new List<int>();
-        uint _seed;
+        int _motes;
 
-        public FallBoard(int width, int height, uint seed)
+        /// <summary>
+        /// Scratch for one wave, never read across calls — and allocated only when a wave
+        /// actually happens.
+        ///
+        /// The search forks a board per position it tries, hundreds of thousands of them, and
+        /// most of those forks resolve nothing at all. Allocating this alongside the cells made
+        /// every one of them pay for a wave that never came.
+        /// </summary>
+        bool[] _mark;
+
+        public FallBoard(FallLayout layout)
         {
-            Width = width;
-            Height = height;
-            _cells = new int[width * height];
-            _seed = seed == 0 ? 2463534242u : seed;
-
-            for (int i = 0; i < Lookahead; i++) _queue.Add(RollColour());
+            Width = layout.Width;
+            Height = layout.Height;
+            _cells = layout.Fill();
+            _motes = Count();
         }
 
-        /// <summary>How many motes the player can see coming. Three is enough to plan, few enough to hold.</summary>
-        public const int Lookahead = 3;
+        FallBoard(FallBoard other)
+        {
+            Width = other.Width;
+            Height = other.Height;
+            _cells = new int[other._cells.Length];
+            System.Array.Copy(other._cells, _cells, _cells.Length);
+            _motes = other._motes;
+            Flooded = other.Flooded;
+        }
 
-        /// <summary>Cleared motes needed before the fall speeds up. Prototype pacing.</summary>
-        public const int StepEvery = 24;
+        /// <summary>A private copy, for a search that wants to try a drop without taking it.</summary>
+        public FallBoard Fork() => new FallBoard(this);
+
+        /// <summary>The row a mote may not come to rest in. See <see cref="FallLayout"/>.</summary>
+        public const int Brim = FallLayout.Brim;
 
         public int Index(int x, int y) => y * Width + x;
         public int At(int x, int y) => _cells[Index(x, y)];
         public int At(int index) => _cells[index];
         public bool Inside(int x, int y) => x >= 0 && y >= 0 && x < Width && y < Height;
 
-        /// <summary>The mote about to fall.</summary>
-        public int Next => _queue.Count > 0 ? _queue[0] : Energy.None;
+        public int X(int index) => index % Width;
+        public int Y(int index) => index / Width;
 
-        /// <summary>What is queued behind it, for the preview.</summary>
-        public int Ahead(int n) => n >= 0 && n < _queue.Count ? _queue[n] : Energy.None;
+        /// <summary>Motes still standing. The goal is nought of them.</summary>
+        public int Motes => _motes;
 
-        public int Score { get; private set; }
-        public int Cleared { get; private set; }
-        public int Drops { get; private set; }
+        /// <summary>The well is empty and the run is won.</summary>
+        public bool IsEmpty => _motes == 0;
 
-        /// <summary>The biggest single chain this run — the number worth shouting about.</summary>
-        public int Best { get; private set; }
+        /// <summary>
+        /// A mote came to rest above the brim line.
+        ///
+        /// <para>
+        /// Decided after a drop has fully resolved rather than at the instant of landing, and
+        /// that generosity is deliberate: a mote that lands on the brim and immediately bursts
+        /// has not flooded anything, and it is the most exciting thing that can happen on this
+        /// board. Reading it at the landing would end the run in the frame before the save.
+        /// </para>
+        /// </summary>
+        public bool Flooded { get; private set; }
 
-        /// <summary>A column is full to the brim and the run is over.</summary>
-        public bool IsLost { get; private set; }
-
-        /// <summary>How high the tallest column stands, for the pressure readout.</summary>
-        public int Tallest
+        /// <summary>
+        /// Safe rows the tallest column can still take before the well floods. Nought means the
+        /// next careless drop anywhere on the tallest column ends the run.
+        /// </summary>
+        public int Headroom
         {
             get
             {
-                int tallest = 0;
+                int highest = Height;
                 for (int x = 0; x < Width; x++)
                 {
-                    int h = Height - FirstFree(x) - 1;
-                    if (h > tallest) tallest = h;
+                    int top = TopOf(x);
+                    if (top >= 0 && top < highest) highest = top;
                 }
-                return tallest;
+
+                int safe = highest - 1;
+                return safe < 0 ? 0 : safe;
             }
         }
 
-        // ------------------------------------------------------------------ dropping
-        /// <summary>
-        /// The row a mote dropped into this column would come to rest on, or -1 if the column is
-        /// full. Rows count from the top, so a taller stack is a smaller number.
-        /// </summary>
-        public int FirstFree(int x)
+        /// <summary>Every channel some mote is still missing, as a mask. Nought on an empty well.</summary>
+        public int Wanted
         {
-            for (int y = Height - 1; y >= 0; y--)
-                if (_cells[Index(x, y)] == Energy.None) return y;
-            return -1;
-        }
-
-        public bool CanDrop(int x) => !IsLost && x >= 0 && x < Width && Landing(x) >= 0;
-
-        /// <summary>
-        /// Where the mote actually ends up: the top of the stack if it can enrich it, otherwise
-        /// the first free cell above. This is the rule, and it is worth being able to ask before
-        /// committing — the screen draws a ghost of it under the player's thumb.
-        /// </summary>
-        public int Landing(int x)
-        {
-            int top = TopOf(x);
-            if (top >= 0)
+            get
             {
-                int mote = _cells[Index(x, top)];
-                if ((mote | Next) != mote) return top;      // enriches what is already there
+                int mask = Energy.None;
+                for (int i = 0; i < _cells.Length; i++)
+                {
+                    int mote = _cells[i];
+                    if (mote != Energy.None) mask |= Energy.All & ~mote;
+                }
+                return mask;
             }
-
-            return FirstFree(x);                            // sits on top instead
         }
 
-        /// <summary>Whether a drop here would enrich the stack rather than heighten it.</summary>
-        public bool Enriches(int x)
-        {
-            int top = TopOf(x);
-            if (top < 0) return false;
-
-            int mote = _cells[Index(x, top)];
-            return (mote | Next) != mote;
-        }
-
+        // ------------------------------------------------------------------ reading a column
         /// <summary>The row of the highest mote in a column, or -1 for an empty column.</summary>
         public int TopOf(int x)
         {
@@ -136,104 +153,211 @@ namespace GlimmerGrove.Modes
             return -1;
         }
 
-        /// <summary>
-        /// Drops the next mote into a column and resolves everything that follows.
-        ///
-        /// Returns the steps of the resolution in order, so the screen can play them a beat
-        /// apart rather than showing the settled board. The steps are the reward — a detonation,
-        /// the fall into the gap, and whatever that completes — and a board handed over settled
-        /// is the same information with none of the feeling.
-        /// </summary>
-        public FallResolution Drop(int x)
+        /// <summary>The lowest empty row in a column, or -1 when the column is full to the top.</summary>
+        public int FirstFree(int x)
         {
-            if (!CanDrop(x)) return null;
-
-            // Worked out *before* the queue moves, and that ordering is the whole correctness of
-            // the preview. It shipped the other way round: the queue advanced first, so Landing
-            // answered for the *next* mote rather than the one being dropped, and a mote could
-            // come to rest somewhere other than the ghost the player was shown — which is the
-            // game lying at the exact moment somebody is deciding.
-            int colour = Next;
-            int at = Landing(x);
-            int index = Index(x, at);
-            bool enriched = _cells[index] != Energy.None;
-
-            _queue.RemoveAt(0);
-            _queue.Add(RollColour());
-            Drops++;
-
-            _cells[index] = _cells[index] | colour;
-
-            var steps = new List<FallStep>();
-            Resolve(index, steps);
-
-            // Asked of every column rather than only the one just dropped into: a detonation
-            // moves motes, and the column that fills need not be the one that was touched.
-            for (int c = 0; c < Width; c++)
-                if (FirstFree(c) < 0) IsLost = true;
-
-            return new FallResolution(x, at, colour, enriched, steps);
+            for (int y = Height - 1; y >= 0; y--)
+                if (_cells[Index(x, y)] == Energy.None) return y;
+            return -1;
         }
 
         /// <summary>
-        /// Walks the board to rest: anything white detonates with its neighbours, everything
-        /// above falls, and whatever that completes detonates in turn.
+        /// Where a mote of this colour would come to rest: the top of the stack if it can enrich
+        /// it, otherwise the first free cell above. -1 when the column cannot take one.
         ///
-        /// A whole wave is collected before any of it falls, for the reason a hollow's ring is:
-        /// resolving one detonation at a time would drop motes into a gap that the next
-        /// detonation in the same wave was about to make, and the board would settle differently
-        /// depending on which column was scanned first.
+        /// <para>
+        /// Worth being able to ask before committing — the screen draws a ghost of it under the
+        /// player's thumb, and that preview is the whole reason this verb works where tapping a
+        /// cell did not.
+        /// </para>
         /// </summary>
-        void Resolve(int seed, List<FallStep> steps)
+        public int Landing(int colour, int x)
+        {
+            if (x < 0 || x >= Width || colour == Energy.None) return -1;
+
+            int top = TopOf(x);
+            if (top >= 0)
+            {
+                int mote = _cells[Index(x, top)];
+                if ((mote | colour) != mote) return top;     // enriches what is already there
+            }
+
+            return FirstFree(x);                             // sits on top instead
+        }
+
+        /// <summary>Whether a drop here would enrich the stack rather than heighten it.</summary>
+        public bool Enriches(int colour, int x)
+        {
+            int top = TopOf(x);
+            if (top < 0) return false;
+
+            int mote = _cells[Index(x, top)];
+            return (mote | colour) != mote;
+        }
+
+        /// <summary>
+        /// Whether this drop would light a mote all the way to white, which is what the ghost
+        /// promises and what the ripe halo on the board already says.
+        ///
+        /// It says nothing about how far the chain would run. That is the player's to read, and
+        /// showing it would be showing them the answer.
+        /// </summary>
+        public bool Bursts(int colour, int x)
+        {
+            int top = TopOf(x);
+            if (top < 0) return false;
+
+            int mote = _cells[Index(x, top)];
+            return (mote | colour) == Energy.All;
+        }
+
+        /// <summary>
+        /// Whether this drop would come to rest above the brim. A warning rather than a verdict
+        /// — the mote may burst on arrival and save the well — but an honest one, because most
+        /// of the time it will not.
+        /// </summary>
+        public bool AtBrim(int colour, int x)
+        {
+            int at = Landing(colour, x);
+            return at == Brim;
+        }
+
+        /// <summary>A column with somewhere for a mote of this colour to go.</summary>
+        public bool CanDrop(int colour, int x)
+            => !Flooded && !IsEmpty && x >= 0 && x < Width && Landing(colour, x) >= 0;
+
+        // ------------------------------------------------------------------ dropping
+        /// <summary>
+        /// Drops a mote into a column and resolves everything that follows.
+        ///
+        /// <para>
+        /// <paramref name="steps"/> may be null, and that is what lets the search run the very
+        /// code the game runs rather than a copy of it (invariant 9a, for a board rule). A
+        /// screen hands a list and plays the waves a beat apart, because a board handed over
+        /// settled is the same information with none of the feeling; a solver hands nothing and
+        /// pays for no allocation.
+        /// </para>
+        /// </summary>
+        public FallResolution Drop(int colour, int x, List<FallStep> steps = null)
+        {
+            if (!CanDrop(colour, x)) return null;
+
+            int at = Landing(colour, x);
+            int index = Index(x, at);
+            bool enriched = _cells[index] != Energy.None;
+
+            if (!enriched) _motes++;
+            _cells[index] |= colour;
+
+            Resolve(colour, steps, out int waves, out int burst);
+
+            // Read after the whole cascade rather than at the landing. It cannot differ today —
+            // a mote only ever comes to rest on the brim by *heightening*, and a heightened mote
+            // is a pure colour that cannot burst — but a rule that reads the board after it has
+            // finished moving is the one that stays right if the wash ever reaches further.
+            Flooded = BrimBreached();
+
+            return new FallResolution(x, at, colour, enriched, waves, burst, steps);
+        }
+
+        /// <summary>
+        /// Walks the board to rest: every white mote bursts, the motes beside it gain the colour
+        /// that finished it, everything falls, and whatever that completed bursts in turn.
+        ///
+        /// <para>
+        /// <b>A whole wave is decided before any of it is applied.</b> The wash is read off the
+        /// positions the bursting motes are standing in, so it cannot depend on which of them
+        /// was scanned first, and it is applied before gravity, so a mote is washed where it was
+        /// rather than where it ends up. Resolving one burst at a time would let a mote fall
+        /// into a gap the next burst in the same wave was about to make, and the well would
+        /// settle differently depending on which column happened to be walked first.
+        /// </para>
+        /// <para>
+        /// <b>It terminates because every wave destroys at least one mote.</b> Whites are always
+        /// taken, never washed, so the loop cannot find the same one twice.
+        /// </para>
+        /// </summary>
+        void Resolve(int wash, List<FallStep> steps, out int waves, out int burstCount)
         {
             int wave = 0;
+            burstCount = 0;
 
             while (true)
             {
-                var white = new List<int>();
+                // ---- what is white, decided over the whole board before anything moves
+                List<int> burst = null;
                 for (int i = 0; i < _cells.Length; i++)
-                    if (_cells[i] == Energy.All) white.Add(i);
-
-                if (white.Count == 0) break;
-
-                // Everything the wave takes: the white motes and whatever touches them.
-                var taken = new List<int>();
-                foreach (int at in white)
                 {
-                    if (!taken.Contains(at)) taken.Add(at);
+                    if (_cells[i] != Energy.All) continue;
+                    if (burst == null) burst = new List<int>();
+                    burst.Add(i);
+                }
 
+                if (burst == null) break;
+
+                // ---- what the burst washes: occupied neighbours that are not bursting
+                //      themselves and that this colour would actually change. A mote that
+                //      already holds the channel is left off the list rather than washed to no
+                //      effect, so the animation cannot promise something the rules did not do.
+                if (_mark == null) _mark = new bool[_cells.Length];
+                else for (int i = 0; i < _mark.Length; i++) _mark[i] = false;
+
+                for (int b = 0; b < burst.Count; b++) _mark[burst[b]] = true;
+
+                List<int> washed = null;
+                for (int b = 0; b < burst.Count; b++)
+                {
+                    int at = burst[b];
                     int x = at % Width, y = at / Width;
+
                     for (int n = 0; n < Neighbours.Length; n++)
                     {
                         int nx = x + Neighbours[n].dx, ny = y + Neighbours[n].dy;
                         if (!Inside(nx, ny)) continue;
 
                         int ni = Index(nx, ny);
-                        if (_cells[ni] != Energy.None && !taken.Contains(ni)) taken.Add(ni);
+                        if (_mark[ni]) continue;                       // bursting, or already listed
+
+                        int mote = _cells[ni];
+                        if (mote == Energy.None) continue;             // bare ground carries nothing
+                        if ((mote | wash) == mote) continue;           // already holds it
+
+                        _mark[ni] = true;
+                        if (washed == null) washed = new List<int>();
+                        washed.Add(ni);
                     }
                 }
 
-                foreach (int at in taken) _cells[at] = Energy.None;
+                // ---- apply, in the one order that has no reading order in it
+                for (int b = 0; b < burst.Count; b++)
+                {
+                    _cells[burst[b]] = Energy.None;
+                    _motes--;
+                }
 
+                burstCount += burst.Count;
+
+                if (washed != null)
+                    for (int w = 0; w < washed.Count; w++) _cells[washed[w]] |= wash;
+
+                var moved = Settle();
                 wave++;
-                Cleared += taken.Count;
-                if (taken.Count > Best) Best = taken.Count;
 
-                // A later wave in the same drop is worth more, which is what makes setting up a
-                // chain worth more than clearing the same motes one at a time.
-                Score += taken.Count * 10 * wave;
-
-                steps.Add(new FallStep(taken, wave, Settle()));
+                steps?.Add(new FallStep(burst, (IReadOnlyList<int>)washed ?? Empty, wave, moved));
             }
+
+            waves = wave;
         }
+
+        static readonly int[] Empty = new int[0];
 
         /// <summary>
         /// Lets everything fall into the gaps, and reports what moved so the screen can animate
-        /// it rather than teleporting the board.
+        /// the collapse rather than teleporting the board.
         /// </summary>
-        List<FallMove> Settle()
+        IReadOnlyList<FallMove> Settle()
         {
-            var moved = new List<FallMove>();
+            List<FallMove> moved = null;
 
             for (int x = 0; x < Width; x++)
             {
@@ -248,44 +372,63 @@ namespace GlimmerGrove.Modes
                         int to = Index(x, write);
                         _cells[to] = _cells[at];
                         _cells[at] = Energy.None;
+                        if (moved == null) moved = new List<FallMove>();
                         moved.Add(new FallMove(at, to));
                     }
+
                     write--;
                 }
             }
 
-            return moved;
+            return moved == null ? NoMoves : (IReadOnlyList<FallMove>)moved;
+        }
+
+        static readonly FallMove[] NoMoves = new FallMove[0];
+
+        bool BrimBreached()
+        {
+            for (int x = 0; x < Width; x++)
+                if (_cells[Index(x, Brim)] != Energy.None) return true;
+            return false;
+        }
+
+        int Count()
+        {
+            int n = 0;
+            for (int i = 0; i < _cells.Length; i++) if (_cells[i] != Energy.None) n++;
+            return n;
         }
 
         static readonly (int dx, int dy)[] Neighbours = { (0, -1), (1, 0), (0, 1), (-1, 0) };
 
-        // ------------------------------------------------------------------ the deal
+        // ------------------------------------------------------------------ for the search
         /// <summary>
-        /// Pure colours only, and never a blend.
+        /// A 64-bit fingerprint of what is standing in the well, so a search can recognise a
+        /// position it has already been in.
         ///
-        /// Dealing yellow would hand the player a step of the cooking for free, and the whole
-        /// game is that a secondary colour has to be <em>made</em>. It is also what keeps the
-        /// rule sayable in one line.
+        /// <para>
+        /// FNV-1a, and a hash rather than the cells themselves on purpose: a search holds
+        /// hundreds of thousands of these and a phone runs it at level load, so the difference
+        /// between eight bytes and a hundred is the difference between a search that fits and
+        /// one that does not. Collisions are the price and they are negligible — a quarter of a
+        /// million entries in a 64-bit space collide with probability around two in a billion,
+        /// and the consequence of one would be a par a single drop out, which the build gate
+        /// would have to have passed first.
+        /// </para>
         /// </summary>
-        int RollColour()
+        public ulong Signature()
         {
-            switch (Roll(3))
+            unchecked
             {
-                case 0: return Energy.R;
-                case 1: return Energy.G;
-                default: return Energy.B;
+                ulong hash = 14695981039346656037UL;
+                for (int i = 0; i < _cells.Length; i++)
+                {
+                    hash ^= (ulong)(uint)(_cells[i] + 1);
+                    hash *= 1099511628211UL;
+                }
+                return hash;
             }
         }
-
-        uint Next32()
-        {
-            _seed ^= _seed << 13;
-            _seed ^= _seed >> 17;
-            _seed ^= _seed << 5;
-            return _seed;
-        }
-
-        int Roll(int bound) => (int)(Next32() % (uint)bound);
     }
 
     /// <summary>Where a mote landed and what it set off.</summary>
@@ -296,41 +439,63 @@ namespace GlimmerGrove.Modes
         /// <summary>Whether it enriched the mote it landed on rather than sitting above it.</summary>
         public readonly bool Enriched;
 
+        /// <summary>
+        /// How far the chain ran. One is a burst; more than one is worth shouting about.
+        ///
+        /// <para>
+        /// <b>Counted rather than read off <see cref="Steps"/></b>, and that is not tidiness. A
+        /// caller that wants the number and not the choreography passes no step list — the
+        /// search does exactly that, hundreds of thousands of times — and deriving this from the
+        /// list would answer nought for every one of them. It did, and the first thing that
+        /// noticed was the test that asked whether a burst had happened at all.
+        /// </para>
+        /// </summary>
+        public readonly int Waves;
+
+        /// <summary>Motes this drop destroyed, over every wave. Counted for <see cref="Waves"/>' reason.</summary>
+        public readonly int Burst;
+
+        /// <summary>
+        /// The waves in order, for a screen that has to play them a beat apart. Empty when the
+        /// caller asked for none — see <see cref="Waves"/>.
+        /// </summary>
         public readonly IReadOnlyList<FallStep> Steps;
 
+        static readonly FallStep[] None = new FallStep[0];
+
         public FallResolution(int column, int row, int colour, bool enriched,
-                              IReadOnlyList<FallStep> steps)
+                              int waves, int burst, IReadOnlyList<FallStep> steps)
         {
             Column = column;
             Row = row;
             Colour = colour;
             Enriched = enriched;
-            Steps = steps;
-        }
-
-        public int Waves => Steps?.Count ?? 0;
-
-        public int Taken
-        {
-            get
-            {
-                int n = 0;
-                if (Steps != null) foreach (var s in Steps) n += s.Taken.Count;
-                return n;
-            }
+            Waves = waves;
+            Burst = burst;
+            Steps = steps ?? None;
         }
     }
 
-    /// <summary>One wave: what it took, and what fell afterwards.</summary>
+    /// <summary>One wave: what burst, what the light washed, and what fell afterwards.</summary>
     public readonly struct FallStep
     {
-        public readonly IReadOnlyList<int> Taken;
+        /// <summary>Cells that reached white and were destroyed, at the positions they stood in.</summary>
+        public readonly IReadOnlyList<int> Burst;
+
+        /// <summary>Cells the light reached and changed, at the positions they stood in.</summary>
+        public readonly IReadOnlyList<int> Washed;
+
+        /// <summary>Which wave of this drop's chain, counting from one.</summary>
         public readonly int Wave;
+
+        /// <summary>What slid where once the gaps opened.</summary>
         public readonly IReadOnlyList<FallMove> Moved;
 
-        public FallStep(IReadOnlyList<int> taken, int wave, IReadOnlyList<FallMove> moved)
+        public FallStep(IReadOnlyList<int> burst, IReadOnlyList<int> washed, int wave,
+                        IReadOnlyList<FallMove> moved)
         {
-            Taken = taken;
+            Burst = burst;
+            Washed = washed;
             Wave = wave;
             Moved = moved;
         }

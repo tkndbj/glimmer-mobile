@@ -35,6 +35,12 @@ What deliberately does **not** belong here:
   `Search` the bar needs. Splitting it would mean making a four-hundred-line search class
   public across an assembly boundary to save the twenty-five. This is a trade, and it is the
   only one left.
+- **`FallSolver`.** Same trade as `WeaveSolver` and a stronger version of it: a Lightfall
+  level is *graded* on what this returns. Par is the fewest drops that empty a well, both star
+  lines and the supply the run is dealt are multiples of it, and none of that may be authored
+  (a typed par drifts silently). So the player's device runs the search, once, the first time
+  anything asks — which is why `LevelTuning.Par` may be resolved lazily. The authoring-only
+  half is `Survey`, and it is a dozen lines over the same `Search` the phone needs.
 - **`ChapterMap`, `GroveFloor`, `WeaveLayout`** and the rest of the geometry. Screens read
   them. Only the *checks over* them are authoring.
 

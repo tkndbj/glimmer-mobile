@@ -25,6 +25,19 @@ namespace GlimmerGrove
         /// <summary>The thing on the board to ring, or null to teach without pointing.</summary>
         public RectTransform Target;
 
+        /// <summary>
+        /// Anything else the lesson cannot be understood without: ringed and lit exactly like
+        /// <see cref="Target"/>, and null for the lessons that are about one thing.
+        ///
+        /// <para>
+        /// Separate from <see cref="Trace"/> because the two say different things. A trace is a
+        /// route a hand walks and is deliberately not ringed; this is a second subject — the
+        /// hearts a blend comes from, which are as much what "blended light" means as the
+        /// critter asking for it.
+        /// </para>
+        /// </summary>
+        public RectTransform[] Alongside;
+
         /// <summary>An ordered route for a coaching hand, or null for a lesson that is a sentence.</summary>
         public RectTransform[] Trace;
 
@@ -34,9 +47,13 @@ namespace GlimmerGrove
         /// <summary>How far a demonstration reaches in board cells, which decides its pace.</summary>
         public int Cells;
 
-        /// <summary>A lesson that rings one thing and says a sentence about it.</summary>
-        public static Lesson At(Mechanic mechanic, RectTransform target)
-            => new Lesson { Mechanic = mechanic, Target = target, Tint = Pal.Cream, Cells = 1 };
+        /// <summary>A lesson that rings what it is about and says a sentence about it.</summary>
+        public static Lesson At(Mechanic mechanic, RectTransform target, RectTransform[] alongside = null)
+            => new Lesson
+            {
+                Mechanic = mechanic, Target = target, Alongside = alongside,
+                Tint = Pal.Cream, Cells = 1
+            };
     }
 
     /// <summary>
@@ -58,7 +75,7 @@ namespace GlimmerGrove
     /// is a <c>MonoBehaviour</c>, so <c>if (_run)</c> is Unity's own lifetime check and answers
     /// correctly for a screen destroyed under a tip that is still open — the reason
     /// <see cref="RunScreen"/> is a base class rather than an interface, kept. The mode's
-    /// declarations (<c>Lessons</c>, <c>Teachable</c>, <c>Flavour</c>, <c>Latch</c>) stay on
+    /// declarations (<c>Lessons</c>, <c>Teachable</c>, <c>Latch</c>) stay on
     /// the screen where a mode overrides them; this only reads them.
     /// </para>
     /// <para>
@@ -73,15 +90,32 @@ namespace GlimmerGrove
         readonly RunScreen _run;
         readonly RunHold _hold;
 
-        /// <summary>The queue being taught. Trimmed to what the player has never met.</summary>
-        readonly List<Lesson> _lessons = new List<Lesson>(2);
+        /// <summary>
+        /// The queue being taught, as <em>mechanics</em> rather than as lessons. Trimmed to
+        /// what the player has never met.
+        ///
+        /// <para>
+        /// <b>What a lesson points at is resolved when it is shown, never when it is queued</b>,
+        /// and that is the difference between a rule and a remembered one. A <see cref="Lesson"/>
+        /// carries <c>RectTransform</c>s, and a queue is walked across seconds of a player's
+        /// time — a pause menu opened over the board, a restart taken from inside it, and the
+        /// tiles the queue was pointing at have been destroyed and built again. A destroyed
+        /// transform is not an error here: <c>TipOverlay</c> quietly draws no ring and no
+        /// coaching hand, so the lesson still appears and is silently the wrong shape, which is
+        /// the failure this project keeps writing down as the expensive kind. Holding the id and
+        /// asking the board where it is now costs one scan per lesson shown — the same scan the
+        /// review key already pays — and cannot go stale.
+        /// </para>
+        /// </summary>
+        readonly List<Mechanic> _queue = new List<Mechanic>(2);
 
         /// <summary>
-        /// A list of its own for answering questions.
+        /// A list of its own for asking the board things.
         ///
         /// <see cref="Offer"/> can be asked while a chain is part-way through
-        /// <see cref="_lessons"/>, and answering a question must never disturb the queue being
-        /// taught.
+        /// <see cref="_queue"/>, and answering a question must never disturb the queue being
+        /// taught. Every use clears it at both ends, so no two readings can see each other's
+        /// leftovers.
         /// </summary>
         readonly List<Lesson> _probe = new List<Lesson>(2);
 
@@ -96,8 +130,20 @@ namespace GlimmerGrove
         /// <summary>A beat between two lessons, so the second does not read as the first flickering.</summary>
         const float BetweenLessons = .18f;
 
-        /// <summary>Long enough for the screen to settle before a line of flavour lands on it.</summary>
-        const float FlavourDelay = .4f;
+        /// <summary>
+        /// How often to look again while something the player raised is over the board.
+        ///
+        /// <para>
+        /// Polled rather than subscribed, and the reason is lifetime. This is not a
+        /// <c>MonoBehaviour</c>, so it has no teardown of its own to unsubscribe from — an
+        /// event on <see cref="Flow"/> would outlive the screen and would have to be released
+        /// on every path out of a run, including the ones that fail, which is the exact shape
+        /// of rule this project has paid for twice. A <c>Tween.After</c> bound to the screen
+        /// dies with it and needs nobody to remember anything. Short enough to be invisible and
+        /// long enough that a menu somebody is reading costs a handful of look-ups a second.
+        /// </para>
+        /// </summary>
+        const float WhileCovered = .2f;
 
         public RunLessons(RunScreen run, RunHold hold)
         {
@@ -110,8 +156,7 @@ namespace GlimmerGrove
 
         // ------------------------------------------------------------------ the opening
         /// <summary>
-        /// Teaches whatever this run brings that the player has never met, and says the
-        /// level's flavour line when there is nothing to teach.
+        /// Teaches whatever this run brings that the player has never met.
         ///
         /// <para>
         /// <b>It takes its hold before it returns</b>, which is the whole of what the caller
@@ -131,18 +176,28 @@ namespace GlimmerGrove
         {
             if (!_run) return;
 
-            _lessons.Clear();
+            _queue.Clear();
             _taught = 0;
-            _run.Lessons(_lessons);
+
+            _probe.Clear();
+            _run.Lessons(_probe);
 
             // Before the trim. A glade that teaches something the player already knows still
             // teaches it — that is exactly who the review key is for.
-            Offer(_lessons.Count > 0);
+            Offer(_probe.Count > 0);
 
-            for (int i = _lessons.Count - 1; i >= 0; i--)
-                if (TipLedger.HasSeen(_lessons[i].Mechanic)) _lessons.RemoveAt(i);
+            for (int i = 0; i < _probe.Count; i++)
+                if (!TipLedger.HasSeen(_probe[i].Mechanic)) _queue.Add(_probe[i].Mechanic);
 
-            if (_lessons.Count == 0) { SayFlavour(); return; }
+            _probe.Clear();
+
+            // Nothing new on this board: the run simply begins. There is deliberately no
+            // consolation line — a glade used to float its flavour text along the bottom of
+            // every run that taught nothing, which is every run after the first few, and a
+            // box that appears on every level of every mode is furniture rather than
+            // something anybody reads. Teaching is what this class is for; flavour was a
+            // second thing in the same place, saying less.
+            if (_queue.Count == 0) return;
 
             _teaching = true;
             _hold.Take(RunHold.Teaching);
@@ -176,14 +231,18 @@ namespace GlimmerGrove
         {
             if (!_run || _teaching || !_run.Teachable) return;
 
-            _lessons.Clear();
+            _queue.Clear();
             _taught = 0;
-            _run.Lessons(_lessons);
+
+            _probe.Clear();
+            _run.Lessons(_probe);
+            for (int i = 0; i < _probe.Count; i++) _queue.Add(_probe[i].Mechanic);
+            _probe.Clear();
 
             // A run whose lessons have gone away — a board that could not be read, a view torn
             // down underneath the header — takes the control with them rather than leaving a
             // key that does nothing.
-            if (_lessons.Count == 0) { Offer(false); return; }
+            if (_queue.Count == 0) { Offer(false); return; }
 
             _teaching = true;
             _hold.Take(RunHold.Teaching);
@@ -212,19 +271,66 @@ namespace GlimmerGrove
         {
             if (!_run) return;
 
-            if (_taught >= _lessons.Count) { Taught(); return; }
+            if (_taught >= _queue.Count) { Taught(); return; }
 
-            var lesson = _lessons[_taught++];
+            // Waits for a clear screen, and this is the half of the fix that matters.
+            //
+            // A lesson is the one panel in the game that raises itself on a timer — a beat
+            // after the board arrives, and a beat after each dismissal — and a player who opens
+            // the pause menu inside one of those beats had asked for their panel first. Raised
+            // anyway, it used to land on top of the menu; raised anyway *underneath* it (which
+            // ModalLayer now guarantees) it would be no better, because the tip would chime and
+            // play its coaching hand where nobody can see either, and closing the menu over the
+            // top of it hands the board back — see RunScreen.Resume, which is why that is now
+            // refused while a lesson is pending.
+            //
+            // So it simply waits. The run is already held and the board already latched, so
+            // waiting costs the player nothing and loses nothing: this is the one showing of a
+            // lesson they will ever get, and it belongs on the board it is about rather than
+            // being dropped because the timing was unlucky.
+            if (Flow.HasModalAbove(ModalLayer.Teaching))
+            {
+                Tween.After(WhileCovered, ShowLesson, _run);
+                return;
+            }
+
+            var lesson = Resolve(_queue[_taught++]);
 
             Flow.Modal<TipOverlay>(v =>
             {
                 v.Mechanic = lesson.Mechanic;
                 v.Target = lesson.Target;
+                v.Alongside = lesson.Alongside;
                 v.Trace = lesson.Trace;
                 v.TraceTint = lesson.Tint;
                 v.TraceCells = lesson.Cells;
                 v.Dismissed = () => Tween.After(BetweenLessons, ShowLesson, _run);
             });
+        }
+
+        /// <summary>
+        /// Asks the board where a queued mechanic is <em>now</em>, so a lesson always rings a
+        /// tile that exists.
+        ///
+        /// <para>
+        /// A mechanic the board can no longer point at still gets taught, without a ring — the
+        /// shape <c>PlayScreen.Lessons</c> already uses for a rule that lives in the HUD rather
+        /// than in a cell. That is the safe direction of the two: a lesson is offered once in a
+        /// player's life with the game, so teaching it plainly beats silently dropping it.
+        /// </para>
+        /// </summary>
+        Lesson Resolve(Mechanic mechanic)
+        {
+            var lesson = Lesson.At(mechanic, null);
+
+            _probe.Clear();
+            _run.Lessons(_probe);
+
+            for (int i = 0; i < _probe.Count; i++)
+                if (_probe[i].Mechanic.Equals(mechanic)) { lesson = _probe[i]; break; }
+
+            _probe.Clear();
+            return lesson;
         }
 
         /// <summary>The last lesson is closed: hand the board back, then let the run begin.</summary>
@@ -237,17 +343,6 @@ namespace GlimmerGrove
             // swept away by a path that knows nothing about it.
             _hold.Release(RunHold.Teaching);
             Refresh();
-        }
-
-        void SayFlavour()
-        {
-            string line = _run.Flavour;
-            if (string.IsNullOrEmpty(line)) return;
-
-            float hold = _run.FlavourSeconds;
-            Tween.After(FlavourDelay,
-                        () => { if (_run) Scenery.Toast(_run.Content, line, Pal.Cream, hold); },
-                        _run);
         }
 
         // ------------------------------------------------------------------ the review control

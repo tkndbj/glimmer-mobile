@@ -86,22 +86,192 @@ namespace GlimmerGrove.Content
             => LevelValidator.ValidateGlade(level, issues);
     }
 
-    /// <summary>A well: nothing to solve, so only its shape can be wrong.</summary>
+    /// <summary>
+    /// Lightfall. A well is authored rather than generated, so unlike a weave everything here is
+    /// in the file — but whether it can be <em>emptied</em> is not, and that is what most of
+    /// this proves.
+    ///
+    /// <para>
+    /// The mode's checks used to be two lines about width and height, which was the honest
+    /// amount for a score attack with no goal in it. A level with a goal, a derived par and two
+    /// fail states has considerably more that can be silently wrong, and every one of these
+    /// failures looks like a perfectly authored board in the JSON.
+    /// </para>
+    /// </summary>
     sealed class FallValidator : ModeValidator
     {
         public override GameMode Mode => GameMode.Fall;
 
+        /// <summary>
+        /// Where a well stops being cheap to prove, and where it stops being shippable.
+        ///
+        /// <para>
+        /// <b>These are about the <em>player's</em> device, not about this one.</b>
+        /// <see cref="FallSolver.NodeBudget"/> is a quarter of a million because it has to make a
+        /// genuinely hard board <em>provable</em> — a board it cannot prove is a board with no
+        /// par, and everything a player is graded against derives from par. These two are the
+        /// separate question of what that proof costs where it is actually paid: once per level,
+        /// on the phone, when somebody opens it (invariant 26d).
+        /// </para>
+        /// <para>
+        /// Measured rather than guessed. Forty thousand positions is about twenty milliseconds
+        /// of desktop .NET, so a few tens on a phone running IL2CPP — invisible behind a screen
+        /// transition. A hundred and twenty thousand is about sixty-five, so a quarter of a
+        /// second on a phone, which is a pause somebody notices on the way into a level and is
+        /// therefore refused rather than warned about. The cost is not linear in anything an
+        /// author controls directly: it goes as the column count to the power of par, so par 7
+        /// on a six-wide well is four times par 6 on the same board. Shorten the well, start it
+        /// fuller, or narrow it.
+        /// </para>
+        /// </summary>
+        const int NodeWarning = 40_000, NodeCeiling = 120_000;
+
+        /// <summary>
+        /// Above this many shortest solutions, the board is not deciding much — see
+        /// <see cref="FallSurvey.Ways"/> and invariant 5d.
+        /// </summary>
+        const int TooManyWays = 400;
+
         public override void Validate(LevelDefinition level, List<LevelIssue> issues)
         {
             var well = (FallRules)level.Rules;
+            var layout = well.Layout;
+            bool floating = false;
 
-            if (well.Width < 4 || well.Width > 8)
-                issues.Add(new LevelIssue(LevelIssueSeverity.Error,
-                    $"a well is 4..8 wide; this one is {well.Width}"));
+            // Row nought is where a mote floods the well, so a fill standing in it is a level
+            // that begins in its own fail state. Refused here rather than in the parser because
+            // the parser is what a *player's* build runs: a level that reaches a device this way
+            // should still open, and be caught on the machine that built it.
+            for (int x = 0; x < layout.Width; x++)
+            {
+                if (layout.At(x, FallLayout.Brim) == Energy.None) continue;
 
-            if (well.Height < 6 || well.Height > 14)
                 issues.Add(new LevelIssue(LevelIssueSeverity.Error,
-                    $"a well is 6..14 tall; this one is {well.Height}"));
+                    $"there is a mote standing in column {x} of the brim row, which is the row " +
+                    "that ends the run — this level begins lost"));
+                break;
+            }
+
+            // Gravity is applied whenever anything bursts, so a mote with nothing under it is
+            // a mote the author drew in one place and the player meets in another. It is only
+            // ever a slip, and it is invisible in the file.
+            for (int x = 0; x < layout.Width && !floating; x++)
+            {
+                bool air = false;
+                for (int y = layout.Height - 1; y >= 0; y--)
+                {
+                    bool here = layout.At(x, y) != Energy.None;
+                    if (!here) { air = true; continue; }
+                    if (!air) continue;
+
+                    issues.Add(new LevelIssue(LevelIssueSeverity.Error,
+                        $"the mote at column {x} row {y} has nothing under it, so the well would " +
+                        "settle differently from the way it is written the first time anything " +
+                        "bursts"));
+                    floating = true;
+                    break;
+                }
+            }
+
+            // A procession that cannot supply a channel some mote is missing makes that mote
+            // unfinishable however many drops are bought, so the well can never be emptied. The
+            // search below would catch it, but not in words anybody could act on.
+            // Every channel, not merely every channel the board wants *now*, and the
+            // difference is a well that can be neither won nor lost. A drop that lands on bare
+            // ground puts a fresh pure mote in the well, and that mote wants the two channels it
+            // does not hold — so a procession of two colours can be walked into a position no
+            // amount of play recovers from. On a well with a supply that is a loss, which is
+            // survivable; on the opening well, which is authored without one, it is a board that
+            // sits there for ever refusing to end. Invariant 20g's state, reached by arithmetic.
+            //
+            // It costs authoring nothing: the procession repeats, so this is one character.
+            if (layout.Deal.Channels != Energy.All)
+            {
+                int absent = Energy.All & ~layout.Deal.Channels;
+                issues.Add(new LevelIssue(LevelIssueSeverity.Error,
+                    $"this procession never deals {Energy.Letter(absent)}, so a mote that ends " +
+                    "up wanting it could never be finished — and a drop onto bare ground makes " +
+                    "one. A deal has to carry all three channels"));
+            }
+
+            // Room above par is `spare`, in drops, so a budgetFactor on a well is a number
+            // that does nothing. Refused rather than ignored, for ChapterDto.order's reason —
+            // and refused rather than honoured, because two ways to say one thing is how they
+            // come to disagree. A negative factor still means "cannot be lost", which is not an
+            // override and is what the first well in the game is authored with.
+            if (level.Tuning.BudgetFactorIsIgnored)
+                issues.Add(new LevelIssue(LevelIssueSeverity.Error,
+                    $"this well authors budgetFactor {level.Tuning.BudgetFactor:0.##}, which " +
+                    "does nothing: a well's room above par is 'spare', counted in drops, " +
+                    "because a wrong drop costs the same wherever it happens. Use 'spare', or " +
+                    "a negative budgetFactor if it is meant to be unlosable"));
+
+            var survey = FallSolver.Survey(layout);
+
+            if (!survey.Proved)
+            {
+                issues.Add(new LevelIssue(LevelIssueSeverity.Error,
+                    $"this well could not be proved inside {FallSolver.NodeBudget} positions " +
+                    $"(it looked at {survey.Nodes}) or within {FallSolver.MaxDrops} drops. It " +
+                    "may be unsolvable, or simply too big to prove — either way it cannot ship, " +
+                    "because the player's device runs the same search to work out par"));
+                return;
+            }
+
+            if (!survey.IsSolvable)
+            {
+                issues.Add(new LevelIssue(LevelIssueSeverity.Error,
+                    "no sequence of drops empties this well without flooding it, so nobody can " +
+                    "finish it — every arrangement was searched and none won"));
+                return;
+            }
+
+            if (survey.Nodes > NodeCeiling)
+                issues.Add(new LevelIssue(LevelIssueSeverity.Error,
+                    $"proving this well took {survey.Nodes} positions, above the {NodeCeiling} " +
+                    "a level may cost. The player's device runs this same search when somebody " +
+                    "opens the level, so this is about a quarter of a second of nothing " +
+                    "happening on the way in. Cost goes as the column count to the power of " +
+                    "par, so the cheapest fixes are a narrower well or a shorter answer — " +
+                    "start it fuller rather than making it bigger"));
+            else if (survey.Nodes > NodeWarning)
+                issues.Add(new LevelIssue(LevelIssueSeverity.Warning,
+                    $"proving this well took {survey.Nodes} positions against the " +
+                    $"{NodeWarning} a level is expected to cost. It ships — the refusal is " +
+                    $"at {NodeCeiling} — but the player's device runs this same search when " +
+                    "somebody opens the level"));
+
+            // The same three-line check every mode with a fail line gets. Shared rather than
+            // restated: a second copy of "is this ladder ordered" is a second thing to keep in
+            // step with LevelTuning (invariant 9a).
+            LevelValidator.CheckStarBands(level, issues);
+
+            // Invariant 5d, counted. A well almost anything clears is one where the colours and
+            // the ordering decide nothing, however pretty it looks.
+            if (survey.Ways > TooManyWays)
+                issues.Add(new LevelIssue(LevelIssueSeverity.Warning,
+                    $"{survey.Ways} different sequences of {survey.Par} drops empty this well, " +
+                    "so almost any tidy play wins and the procession is deciding nothing — " +
+                    "fill it fuller, mix the colours less neatly, or shorten the deal"));
+
+            // Reported rather than gated. On a chapter's opening levels thoughtlessness is
+            // supposed to work — that is what teaching the verb looks like — so this is a
+            // reading for the author, and a chapter's ladder is where it stops being true.
+            if (survey.Greedy >= 0 && survey.Greedy <= level.Tuning.MoveBudget && survey.Par > 3)
+                issues.Add(new LevelIssue(LevelIssueSeverity.Warning,
+                    $"a player who never looks ahead empties this well in {survey.Greedy} drops " +
+                    $"against a supply of {level.Tuning.MoveBudget}, so it can be cleared by " +
+                    "always taking the biggest burst going — fine early in a chapter, and worth " +
+                    "knowing later in one"));
+
+            // Zero headroom means the tallest column is one careless drop from the brim before
+            // the player has touched anything. Legitimate as a finale and alarming anywhere
+            // else, so it is said out loud rather than refused.
+            if (layout.Headroom <= 0)
+                issues.Add(new LevelIssue(LevelIssueSeverity.Warning,
+                    "the fill reaches the row below the brim, so the very first careless drop " +
+                    "on the tallest column ends the run — deliberate on a finale, a mistake " +
+                    "anywhere else"));
         }
     }
 

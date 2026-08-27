@@ -372,7 +372,7 @@ def g8(seed, bias):
 
     The thicket runs down the middle of the glade with a green heart of its own, and both
     streams pass it. Joining it to either pours a second colour into the green and the
-    thicket's three critters go out together, which is the sentence the glade's lesson
+    thicket's three critters go out together, which is the sentence the glade's tagline
     makes. The brittle conduit is on the red approach, so the side that can be tried is
     not the side that matters.
     """
@@ -547,22 +547,20 @@ MAPY = [0.05, 0.14, 0.23, 0.32, 0.41, 0.50, 0.59, 0.68, 0.77, 0.86]
 # is the most expensive heart in it.
 BUDGET = [-1, 0, 0, 0, 0, 0, 0, 0, 0, 0]
 
-# The only two strings this rebuild is allowed to touch, and what it is changing them from.
+# The only strings this rebuild is allowed to touch, and what it is changing them from.
 #
 # **This file deliberately does not own the chapter's wording.** `c02_millvale.py` carries
 # a whole TEXT table because it wrote its chapter's strings in the first place; the
 # Shallows' strings shipped long before it, they are edited by hand and by translators, and
 # a table here would quietly re-assert its own copy every time anybody regenerated the
 # boards. So the rule is narrower: every key must already exist (a missing one is an error
-# rather than something to invent in the wrong voice), and exactly two are rewritten -
-# because the board underneath them changed and a lesson describing a board the player is
-# not looking at is worse than no lesson at all.
+# rather than something to invent in the wrong voice), and a handful are rewritten -
+# because the board underneath them changed and a tagline describing a board the player is
+# not looking at is worse than no tagline at all.
 #
-# Glade four carries two streams where it carried three. Glade ten's root binds two
-# junctions rather than reaching into four corners - which was glade seven's lesson anyway,
-# so the old line was describing the wrong board even before this. The replacements avoid
-# the words "glade", "grove" and "level" on purpose, so that whichever way the game's own
-# vocabulary settles, no line has to be revisited.
+# Glade four carries two streams where it carried three. The replacements avoid the words
+# "glade", "grove" and "level" on purpose, so that whichever way the game's own vocabulary
+# settles, no line has to be revisited.
 #
 # The rest of the table is the duskcap coming out. Every pool of dark in the chapter is now
 # a pool of colour with a heart of its own, so four boards changed what they are about and
@@ -570,53 +568,30 @@ BUDGET = [-1, 0, 0, 0, 0, 0, 0, 0, 0, 0]
 # cannot be tidied away: its id is `c01_duskcap_hollow` and an id is permanent (invariant
 # 1), so the name above it is the only part of that word which is allowed to move.
 #
+# A level's third string - the `lesson` line - is gone entirely. It was floated along the
+# bottom of any run that had nothing new to teach, which after the first few levels is
+# every run in the game, and a box that appears on every level of every mode is furniture.
+# Nothing reads the key now, so nothing authors one.
+#
 # A key whose text matches neither the old line nor the new one is reported and left alone.
-# That is the whole point of keying on the previous text: somebody re-wording a lesson by
+# That is the whole point of keying on the previous text: somebody re-wording a line by
 # hand must not have it silently overwritten by a board regeneration.
 REWORDED = {
     "level.c01_thorn_hollow.tagline": (
         ("Three streams, and conduits that will not last",),
         "Two streams, and conduits that will not last"),
-    "level.c01_grovekeepers_knot.lesson": (
-        ("One root reaches into all four corners. Nothing here can be solved a corner "
-         "at a time.",
-         "One of each, all at the same time: a blend, a stream to keep out of it, a "
-         "crumbling conduit, a root reaching across the glade, and a shadow to leave "
-         "sleeping.",
-         "One of each, all at the same time: a blend, a stream to keep out of it, a "
-         "crumbling conduit, a root that reaches from one side to the other, and a "
-         "shadow to leave sleeping."),
-        "One of each, all at the same time: a blend, two streams to keep out of it, a "
-        "crumbling conduit, and a root that reaches from one side to the other."),
     "level.c01_duskcap_hollow.name": (
         ("Duskcap Hollow",),
         "Stillwater"),
     "level.c01_duskcap_hollow.tagline": (
         ("Wake the groove without waking the dark",),
         "Two streams, and a pool between them"),
-    "level.c01_duskcap_hollow.lesson": (
-        ("Duskcaps sleep in the shade. Light one and the level will not settle, so route "
-         "around them.",
-         "The pool in the middle hangs off the red run alone. There is one place the two "
-         "streams could meet, and it is not there."),
-        "The pool in the middle keeps a green of its own, and both streams pass within a "
-        "turn of it. Either one poured in puts its critter out."),
     "level.c01_lantern_ring.tagline": (
         ("One ring of light around a sleeping dark",),
         "One ring of light around a light of its own"),
-    "level.c01_lantern_ring.lesson": (
-        ("The ring's four corners share one root. Its edges are what can leak light "
-         "inward.",),
-        "The ring's four corners share one root. Its edges are what can leak red into "
-        "the blue at its centre."),
     "level.c01_sleeping_thicket.tagline": (
         ("Two streams, and a thicket between them",),
         "Two streams, and a third between them"),
-    "level.c01_sleeping_thicket.lesson": (
-        ("The thicket is the wall keeping the streams apart. Open it and you lose both "
-         "at once.",),
-        "The thicket runs its own green between the red and the blue. Join it to either "
-        "and all three of its critters go out."),
 }
 
 BOARDS = [
@@ -687,7 +662,7 @@ def write_strings():
 
     wanted = [f"chapter.{CHAPTER}.name"]
     for lid, _, _ in BOARDS:
-        wanted += [f"level.{lid}.name", f"level.{lid}.tagline", f"level.{lid}.lesson"]
+        wanted += [f"level.{lid}.name", f"level.{lid}.tagline"]
     missing = [k for k in wanted if k not in entries]
 
     changed, already, conflicts = [], [], []

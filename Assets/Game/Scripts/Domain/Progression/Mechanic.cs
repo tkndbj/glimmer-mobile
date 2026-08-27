@@ -117,6 +117,69 @@ namespace GlimmerGrove.Progression
         public static readonly Mechanic WeaveInk = new Mechanic("weave_ink");
 
         /// <summary>
+        /// Lightfall's verb: a mote dropped onto another adds its colour rather than matching
+        /// it, and one holding all three bursts.
+        ///
+        /// <para>
+        /// <b>The one rule of this mode a board genuinely cannot show</b>, and it has to be told
+        /// before the first drop because the mistake it prevents is the whole of the game.
+        /// Everything else here is a matching puzzle - four chapters of joining like to like,
+        /// and a mode whose crystals are dragged to critters of their own colour - so a well of
+        /// coloured circles reads as "put the reds together" to anybody who has played this game
+        /// at all. It is the opposite: a red dropped on a red does nothing except make the stack
+        /// taller. One sentence saves a player from spending a whole level being wrong in a way
+        /// that looks like being right.
+        /// </para>
+        /// <para>
+        /// What the board <em>can</em> show, and does, is the rest of it: a mote one channel
+        /// short wears a halo in the colour it is waiting for, the ghost under a thumb says
+        /// whether this drop enriches or heightens, and a burst visibly throws its light into
+        /// the motes beside it. So the lesson is two sentences and a ring rather than a
+        /// tutorial.
+        /// </para>
+        /// </summary>
+        public static readonly Mechanic FallCook = new Mechanic("fall_cook");
+
+        /// <summary>
+        /// A well's supply: the motes it is dealt, and that spending one is permanent.
+        ///
+        /// <para>
+        /// <b>Separate from <see cref="MoveBudget"/> and from <see cref="WeaveInk"/>, for the
+        /// reason those two are separate from each other.</b> All three are a pot that empties
+        /// and ends a run, and everything a player has to be told is in the half that differs. A
+        /// glade's budget counts committed turns and hands one back for every undo, without
+        /// limit, so exploring a board there costs nothing. A well has no undo at all: a dropped
+        /// mote is gone, and a wrong one is gone twice over because it also cost a row of
+        /// headroom. Somebody who learned the glade's rule and was never taught this one would
+        /// tap about to see what happens, which on this board is how you lose.
+        /// </para>
+        /// <para>
+        /// Only on a well that can actually run dry. The first level of the chapter is authored
+        /// without a budget - exactly as the first glade in the game is - and a lesson shown
+        /// over a meter that is not there is one that can never be shown again.
+        /// </para>
+        /// </summary>
+        public static readonly Mechanic FallSupply = new Mechanic("fall_supply");
+
+        /// <summary>
+        /// The brim: the line at the top of a well that a mote may not come to rest above.
+        ///
+        /// <para>
+        /// <b>Half of this the board shows and half of it it cannot.</b> The line is drawn, it
+        /// reddens as the stack climbs into it, and the ghost under a thumb turns red when the
+        /// drop would land there - so "this is dangerous" is on the board. What is not is that
+        /// it is <em>fatal</em> rather than merely bad, which is the difference between a player
+        /// who avoids the brim and one who finds out about it once.
+        /// </para>
+        /// <para>
+        /// Taught only on a well where the brim is in reach. On a board with six rows of
+        /// clearance it is scenery, and a modal about scenery spends a lesson that cannot be
+        /// spent twice.
+        /// </para>
+        /// </summary>
+        public static readonly Mechanic FallBrim = new Mechanic("fall_brim");
+
+        /// <summary>
         /// That there is more than one way to play, and where the switch between them is.
         ///
         /// <para>
@@ -235,7 +298,8 @@ namespace GlimmerGrove.Progression
         public static readonly Mechanic[] All =
         {
             FragileConduit, MoveBudget, RootedTile, ColourMixing, Crossing, Briar,
-            BoundConduit, WeaveJoin, WeaveBead, WeaveInk, ModeSwitch, LuckySpin, Grove, GroveShop,
+            BoundConduit, WeaveJoin, WeaveBead, WeaveInk, FallCook, FallSupply, FallBrim,
+            ModeSwitch, LuckySpin, Grove, GroveShop,
         };
 
         public bool IsValid => !string.IsNullOrEmpty(Id);
@@ -252,15 +316,34 @@ namespace GlimmerGrove.Progression
     /// <summary>Where a mechanic can be pointed at on the board. -1 when it has no home.</summary>
     public readonly struct MechanicSighting
     {
+        static readonly int[] Alone = new int[0];
+
         public readonly Mechanic Mechanic;
 
         /// <summary>The cell to ring, or -1 for a rule that lives off the board.</summary>
         public readonly int CellIndex;
 
-        public MechanicSighting(Mechanic mechanic, int cellIndex)
+        /// <summary>
+        /// The other cells this rule cannot be seen without, in reading order. Empty for
+        /// almost every mechanic, because almost every one of them is a fact about a single
+        /// tile.
+        ///
+        /// <para>
+        /// Blending is the exception and is the reason this exists: a ring round the gold
+        /// critter alone shows the <em>question</em> and none of the answer, so a first-timer
+        /// is told two hearts blend while being shown neither of them. The hearts belong to
+        /// the lesson exactly as much as the critter does, and which hearts they are is a fact
+        /// about the board — derived here rather than authored, so a chapter shipped a year
+        /// from now points at its own.
+        /// </para>
+        /// </summary>
+        public readonly int[] Alongside;
+
+        public MechanicSighting(Mechanic mechanic, int cellIndex, int[] alongside = null)
         {
             Mechanic = mechanic;
             CellIndex = cellIndex;
+            Alongside = alongside ?? Alone;
         }
 
         public bool HasCell => CellIndex >= 0;
@@ -314,12 +397,62 @@ namespace GlimmerGrove.Progression
             if (board.HasBudget) found.Add(new MechanicSighting(Mechanic.MoveBudget, -1));
 
             if (rooted >= 0) found.Add(new MechanicSighting(Mechanic.RootedTile, rooted));
-            if (blended >= 0) found.Add(new MechanicSighting(Mechanic.ColourMixing, blended));
+            if (blended >= 0)
+                found.Add(new MechanicSighting(Mechanic.ColourMixing, blended, HeartsBehind(board, blended)));
             if (crossing >= 0) found.Add(new MechanicSighting(Mechanic.Crossing, crossing));
             if (briar >= 0) found.Add(new MechanicSighting(Mechanic.Briar, briar));
             if (bound >= 0) found.Add(new MechanicSighting(Mechanic.BoundConduit, bound));
 
             return found;
+        }
+
+        /// <summary>The three channels a heart can carry, in the order a lesson names them.</summary>
+        static readonly int[] Channels = { Energy.R, Energy.G, Energy.B };
+
+        /// <summary>
+        /// The hearts a blended critter's light actually comes from: the nearest one carrying
+        /// each channel it is asking for, out of those the solution joins it to.
+        ///
+        /// <para>
+        /// <b>Out of those the solution joins it to</b>, rather than out of every heart of the
+        /// right colour on the board — a red heart the critter is never joined to is not where
+        /// its red comes from, and pointing at one teaches a rule the glade does not follow.
+        /// <b>The nearest</b>, because the lesson lights everything it rings and one hole has
+        /// to hold the lot: a far heart of a colour that is also standing next door would cut
+        /// the tip open across the whole board for no extra teaching.
+        /// </para>
+        /// </summary>
+        static int[] HeartsBehind(Puzzle board, int lamp)
+        {
+            var feeders = new List<int>();
+            board.SolutionFeeders(lamp, feeders);
+
+            var shown = new List<int>(2);
+
+            foreach (int channel in Channels)
+            {
+                if ((board.C[lamp].colour & channel) == 0) continue;
+
+                int nearest = -1, near = int.MaxValue;
+
+                foreach (int heart in feeders)
+                {
+                    if ((board.C[heart].colour & channel) == 0) continue;
+
+                    int span = System.Math.Abs(board.X(heart) - board.X(lamp)) +
+                               System.Math.Abs(board.Y(heart) - board.Y(lamp));
+
+                    if (span >= near) continue;
+                    nearest = heart;
+                    near = span;
+                }
+
+                // One heart can carry both channels, and then it is the whole answer.
+                if (nearest >= 0 && !shown.Contains(nearest)) shown.Add(nearest);
+            }
+
+            shown.Sort();
+            return shown.ToArray();
         }
 
         /// <summary>

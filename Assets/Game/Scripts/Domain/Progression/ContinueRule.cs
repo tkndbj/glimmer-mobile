@@ -77,6 +77,25 @@ namespace GlimmerGrove.Progression
         public const int DefaultInk = 20;
 
         /// <summary>
+        /// Motes a well's continue hands over.
+        ///
+        /// <para>
+        /// Smaller than the other two because the unit is bigger. A Lightfall drop is a whole
+        /// turn of thinking and a well that ships is dealt somewhere between six and twenty of
+        /// them, so six is between a third and a whole board's worth of second chances — the
+        /// same fraction of the same <c>par x budgetFactor</c> budget the other two are, in the
+        /// unit this mode is graded in (invariant 22b).
+        /// </para>
+        /// <para>
+        /// What makes six <em>enough</em> is not this number: a continue always clears the
+        /// deficit first (see <see cref="ContinueOffer"/>), so on a well that was lost because
+        /// the colour it still wanted had gone out of the procession, this is working room above
+        /// however many drops it takes for that colour to come round again.
+        /// </para>
+        /// </summary>
+        public const int DefaultMotes = 6;
+
+        /// <summary>
         /// Dearest a continue may be published at.
         ///
         /// A sanity bound rather than a design one, and it is deliberately far above anything
@@ -129,13 +148,14 @@ namespace GlimmerGrove.Progression
     /// </summary>
     public sealed class ContinueTable
     {
-        ContinueTable(bool enabled, long gems, long gemsStep, int turns, int ink)
+        ContinueTable(bool enabled, long gems, long gemsStep, int turns, int ink, int motes)
         {
             Enabled = enabled;
             Gems = gems;
             GemsStep = gemsStep;
             Turns = turns;
             Ink = ink;
+            Motes = motes;
         }
 
         /// <summary>
@@ -163,16 +183,21 @@ namespace GlimmerGrove.Progression
         /// <summary>Cells of light a weave's continue hands over, on the same terms.</summary>
         public int Ink { get; }
 
+        /// <summary>Motes a well's continue hands over, on the same terms.</summary>
+        public int Motes { get; }
+
         /// <summary>The rule that ships inside the build, and the floor under any content mistake.</summary>
         public static readonly ContinueTable Default =
             new ContinueTable(true,
                               ContinueLimits.DefaultGems, ContinueLimits.DefaultGemsStep,
-                              ContinueLimits.DefaultTurns, ContinueLimits.DefaultInk);
+                              ContinueLimits.DefaultTurns, ContinueLimits.DefaultInk,
+                              ContinueLimits.DefaultMotes);
 
         /// <summary>A rule with the feature switched off, for a file that asks for that.</summary>
         public static readonly ContinueTable Off =
             new ContinueTable(false, ContinueLimits.DefaultGems, ContinueLimits.DefaultGemsStep,
-                              ContinueLimits.DefaultTurns, ContinueLimits.DefaultInk);
+                              ContinueLimits.DefaultTurns, ContinueLimits.DefaultInk,
+                              ContinueLimits.DefaultMotes);
 
         /// <summary>
         /// What the next continue costs, given how many this run has already had.
@@ -215,6 +240,7 @@ namespace GlimmerGrove.Progression
             switch (unit)
             {
                 case ContinueUnit.Ink: return Ink;
+                case ContinueUnit.Motes: return Motes;
                 default: return Turns;
             }
         }
@@ -239,6 +265,7 @@ namespace GlimmerGrove.Progression
             long step = dto.gemsStep < 0L ? ContinueLimits.DefaultGemsStep : dto.gemsStep;
             int turns = dto.turns < 0 ? ContinueLimits.DefaultTurns : dto.turns;
             int ink = dto.ink < 0 ? ContinueLimits.DefaultInk : dto.ink;
+            int motes = dto.motes < 0 ? ContinueLimits.DefaultMotes : dto.motes;
 
             // Zero is refused rather than clamped, and it is the one refusal here worth
             // stating: a continue that costs nothing is not a cheap continue, it is a move
@@ -268,8 +295,9 @@ namespace GlimmerGrove.Progression
 
             turns = Bound(turns, "turns", ContinueLimits.DefaultTurns, problems);
             ink = Bound(ink, "ink", ContinueLimits.DefaultInk, problems);
+            motes = Bound(motes, "motes", ContinueLimits.DefaultMotes, problems);
 
-            return new ContinueTable(true, gems, step, turns, ink);
+            return new ContinueTable(true, gems, step, turns, ink, motes);
         }
 
         /// <summary>

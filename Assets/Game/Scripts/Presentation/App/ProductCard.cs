@@ -1,4 +1,5 @@
 using System;
+using GlimmerGrove.Layout;
 using GlimmerGrove.Localization;
 using GlimmerGrove.Store;
 using UnityEngine;
@@ -73,8 +74,12 @@ namespace GlimmerGrove
         // ------------------------------------------------------------------ the reference
         // The card this class was lifted from, kept exactly so the shop screen is unchanged by
         // the extraction. Every number below is measured against these two and nothing else.
-        const float RefWidth = 508f, RefHeight = 560f;
-        const float PlateInsetX = 34f, PlateInsetY = 40f;
+        //
+        // Aliases rather than a second copy: ProductCardBadges works in these same units to
+        // decide where a mark sits against the card opposite, and two plates of different sizes
+        // in the two files would put the badge back where it was found.
+        const float RefWidth = ProductCardBadges.CardWidth, RefHeight = ProductCardBadges.CardHeight;
+        const float PlateInsetX = ProductCardBadges.PlateInsetX, PlateInsetY = ProductCardBadges.PlateInsetY;
         const float RefPlateW = RefWidth - PlateInsetX, RefPlateH = RefHeight - PlateInsetY;
 
         readonly Image _plate, _edge, _glow, _rays, _ribbon, _seal, _priceFace;
@@ -165,9 +170,12 @@ namespace GlimmerGrove
             // it is the one number on the card that is arithmetic over the ladder rather than a
             // claim.
             _ribbon = UIKit.Img("Ribbon", _plate.transform, Art.S("Ui/ribbon_orange"), Color.white,
-                                new Vector2(230f * kh, 62f * kv), new Vector2(0f, 1f),
-                                new Vector2(96f * kh, -26f * kv));
-            _ribbon.transform.localRotation = Quaternion.Euler(0f, 0f, -8f);
+                                new Vector2(ProductCardBadges.RibbonWidth * kh,
+                                            ProductCardBadges.RibbonHeight * kv),
+                                new Vector2(0f, 1f),
+                                new Vector2(ProductCardBadges.RibbonInset * kh,
+                                            -ProductCardBadges.RibbonDrop * kv));
+            _ribbon.transform.localRotation = Quaternion.Euler(0f, 0f, ProductCardBadges.RibbonTilt);
 
             _ribbonText = UIKit.Shrinkable(
                 UIKit.Titled("RT", _ribbon.transform, string.Empty, Font(26, kh), Pal.Cream,
@@ -175,18 +183,34 @@ namespace GlimmerGrove
                              new Vector2(.5f, .5f), new Vector2(0f, 4f * kv), 3f, 2f),
                 Font(15, kh));
 
-            // The badge, top right, on the seal the win panel already uses for a record.
+            // The badge, top right, on the seal the win panel already uses for a record. Where
+            // it sits is ProductCardBadges' — it has to clear the *next column's* ribbon, which
+            // is a fact about the grid rather than about this card, and it was drawn straight
+            // through one for as long as the shop has had two shelves.
             _seal = UIKit.Img("Seal", _plate.transform, Art.S("Ui/seal_gold"), Color.white,
-                              new Vector2(126f * kh, 126f * kv), new Vector2(1f, 1f),
-                              new Vector2(-16f * kh, -8f * kv));
-            _seal.transform.localRotation = Quaternion.Euler(0f, 0f, 11f);
+                              new Vector2(ProductCardBadges.SealSize * kh,
+                                          ProductCardBadges.SealSize * kv),
+                              new Vector2(1f, 1f),
+                              new Vector2(-ProductCardBadges.SealInset * kh,
+                                          -ProductCardBadges.SealDrop * kv));
+            _seal.transform.localRotation = Quaternion.Euler(0f, 0f, ProductCardBadges.SealTilt);
 
+            // Cream, and inside the disc. It was dark brown in a box half again as wide as the
+            // field it sits on, so a badge said its piece across the rim and onto the plate —
+            // where lettering chosen to read on gold was being drawn on the darkest thing on
+            // the card. The two faults were one fault: the box was sized against the sprite
+            // rather than against the maroon field inside it.
             _sealText = UIKit.Shrinkable(
-                UIKit.Titled("ST", _seal.transform, string.Empty, Font(20, kh),
-                             new Color(.34f, .22f, .10f), TextAnchor.MiddleCenter,
-                             new Vector2(104f * kh, 56f * kv), new Vector2(.5f, .5f),
-                             new Vector2(0f, 2f * kv), 0f, 0f, wrap: true),
-                Font(12, kh));
+                UIKit.Titled("ST", _seal.transform, string.Empty,
+                             Font(ProductCardBadges.TextSize, kh), Pal.Cream,
+                             TextAnchor.MiddleCenter,
+                             new Vector2(ProductCardBadges.TextWidth * kh,
+                                         ProductCardBadges.TextHeight * kv),
+                             new Vector2(.5f, .5f),
+                             new Vector2(ProductCardBadges.TextShift * kh,
+                                         ProductCardBadges.TextRise * kv),
+                             0f, 0f, wrap: true),
+                Font(ProductCardBadges.TextFloor, kh));
         }
 
         /// <summary>A point size scaled with the card, never below something readable.</summary>

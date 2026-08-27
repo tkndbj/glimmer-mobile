@@ -42,6 +42,20 @@ namespace GlimmerGrove
         public RectTransform Target;
 
         /// <summary>
+        /// Anything else the lesson names, ringed and lit exactly as <see cref="Target"/> is.
+        ///
+        /// <para>
+        /// <b>A second subject, not a bigger ring.</b> Blending is the lesson that needs it:
+        /// the sentence says two hearts join and their light mixes, and a ring round the gold
+        /// critter alone leaves the player hunting the board for the two hearts it is talking
+        /// about. Ringing each of them says which, and the hole widens to keep all three lit
+        /// at once — which is the same bargain a demonstration already makes with
+        /// <see cref="Trace"/>: the hole covers everything, and a ring stays on a subject.
+        /// </para>
+        /// </summary>
+        public RectTransform[] Alongside;
+
+        /// <summary>
         /// An ordered route for a coaching hand to trace on the real board, or null for a
         /// lesson that is only a sentence.
         ///
@@ -85,6 +99,28 @@ namespace GlimmerGrove
         /// </summary>
         public System.Action Dismissed;
 
+        /// <summary>
+        /// Where this lesson sits in the modal stack, declared by whoever raises it.
+        ///
+        /// <para>
+        /// The default is the bottom of it, so a lesson can never cover a panel the player asked
+        /// for. See <see cref="ModalLayer"/> — this is the only overlay in the game that raises
+        /// itself on a timer, and therefore the only one whose arrival order means nothing.
+        /// </para>
+        /// <para>
+        /// The one exception is a lesson about a control that lives on a <em>panel</em> rather
+        /// than on the board, which has to be told <see cref="ModalLayer.Coaching"/> — there the
+        /// default hides the tip and the thing it is pointing at behind the same panel. It is a
+        /// declaration rather than something worked out from <see cref="Target"/> because this
+        /// overlay is handed a rectangle and nothing else: whose rectangle it is, and whether
+        /// that owner is a panel or a board, is knowledge only the caller has.
+        /// </para>
+        /// </summary>
+        public int Stack { get; set; } = ModalLayer.Teaching;
+
+        /// <inheritdoc/>
+        public override int Layer => Stack;
+
         bool _reported;
 
         const float Dim = .78f;
@@ -101,10 +137,10 @@ namespace GlimmerGrove
 
         protected override void Build()
         {
-            var ring = RectOf(Target);
-            var spot = SpotlightRect(ring);
+            var rings = Rings();
+            var spot = SpotlightRect(rings);
 
-            if (spot.HasValue) BuildCutout(spot.Value, ring);
+            if (spot.HasValue) BuildCutout(spot.Value, rings);
             else UIKit.Scrim(Content, Dim, null);
 
             BuildTrace();
@@ -112,14 +148,38 @@ namespace GlimmerGrove
         }
 
         /// <summary>
-        /// What has to stay lit: the thing being pointed at, and every point the hand visits.
+        /// Every rectangle this lesson is naming, in this overlay's space. Empty for a rule
+        /// that lives off the board, or one whose tiles are not drawn.
+        /// </summary>
+        System.Collections.Generic.List<Rect> Rings()
+        {
+            var rings = new System.Collections.Generic.List<Rect>(2);
+
+            var subject = RectOf(Target);
+            if (subject.HasValue) rings.Add(subject.Value);
+
+            if (Alongside != null)
+                foreach (var other in Alongside)
+                {
+                    var r = RectOf(other);
+                    if (r.HasValue) rings.Add(r.Value);
+                }
+
+            return rings;
+        }
+
+        /// <summary>
+        /// What has to stay lit: everything being pointed at, and every point the hand visits.
         ///
         /// Null when there is nothing on the board at all — a move budget lives in the HUD, not
         /// in a cell.
         /// </summary>
-        Rect? SpotlightRect(Rect? ring)
+        Rect? SpotlightRect(System.Collections.Generic.List<Rect> rings)
         {
-            var spot = ring;
+            Rect? spot = null;
+
+            foreach (var ring in rings)
+                spot = spot.HasValue ? Union(spot.Value, ring) : ring;
 
             if (Trace != null)
                 foreach (var step in Trace)
@@ -185,8 +245,8 @@ namespace GlimmerGrove
             CoachHand.Show(Content, route, TraceTint, Mathf.Max(1, TraceCells), this);
         }
 
-        /// <summary>Four quads around the hole, so the tile beneath stays fully visible.</summary>
-        void BuildCutout(Rect hole, Rect? ring)
+        /// <summary>Four quads around the hole, so the tiles beneath stay fully visible.</summary>
+        void BuildCutout(Rect hole, System.Collections.Generic.List<Rect> rings)
         {
             var shade = new Color(.02f, .04f, .06f, Dim);
 
@@ -204,18 +264,23 @@ namespace GlimmerGrove
                                new Vector2(hole.xMin, hole.yMin), new Vector2(hole.xMax, hole.yMax));
             catcher.raycastTarget = true;
 
-            // The ring goes round the thing being named, never round the hole. Those are the
-            // same rectangle for every glade tip and are deliberately not the same for a lesson
-            // that also demonstrates a route: the hole has been widened to keep the whole
-            // gesture lit, and an outline stretched to that would be pointing at a region of
-            // the board rather than at the bead the sentence is about.
-            if (!ring.HasValue) return;
-            var box = ring.Value;
+            // A ring goes round each thing being named, never round the hole. For a tip naming
+            // one tile those are the same rectangle, and they are deliberately not the same as
+            // soon as a lesson names two — or demonstrates a route: the hole is widened to keep
+            // every subject lit, and an outline stretched to that would be pointing at a region
+            // of the board rather than at the things the sentence is about.
+            foreach (var ring in rings) Outline(ring);
+        }
 
-            // A border traced around the thing itself, not a halo floating over it.
-            // RoundOutline is a sliced sprite, so it takes the target's proportions
-            // instead of forcing everything into the same oval — a wide HUD pill and a
-            // square tile each get an outline that actually fits them.
+        /// <summary>
+        /// A border traced around one thing being named, not a halo floating over it.
+        ///
+        /// RoundOutline is a sliced sprite, so it takes the target's proportions instead of
+        /// forcing everything into the same oval — a wide HUD pill and a square tile each get
+        /// an outline that actually fits them.
+        /// </summary>
+        void Outline(Rect box)
+        {
             var border = UIKit.Img("Border", Content, Art.RoundOutline(26, 5f),
                                    Pal.A(Pal.Gold, .95f),
                                    new Vector2(box.width, box.height),

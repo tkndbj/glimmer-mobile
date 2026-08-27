@@ -59,6 +59,22 @@ namespace GlimmerGrove
         /// <summary>The number, formatted by whoever built the chip.</summary>
         public Text Number { get; private set; }
 
+        /// <summary>
+        /// What the tokens fly into and what punches when one lands: the glyph where there is
+        /// one, and the number itself where there is not.
+        ///
+        /// <para>
+        /// A chip without a glyph is not a degenerate case, it is the one the bonus wheel's
+        /// payoff wants: the prize is already drawn, three times the size, immediately above the
+        /// figure — so a second coin beside the number is the same thing said twice, and it
+        /// pushes the figure off the panel's centre line to make room for itself. Expressed here
+        /// rather than by hiding the <c>Image</c> at the call site, because the seat is not only
+        /// a picture: it is where the flight lands, where the ping breaks and what the last
+        /// token punches.
+        /// </para>
+        /// </summary>
+        RectTransform _seat;
+
         Image _glow;
         CanvasGroup _group;
         Color _tint, _tokenTint;
@@ -121,22 +137,36 @@ namespace GlimmerGrove
 
             p.Root = UIKit.Box(name, parent, new Vector2(368f, 112f), anchor, pos);
 
-            p._glow = UIKit.Img("Glow", p.Root, Art.Glow(128, 2.1f), Pal.A(tint, 0f),
-                                Vector2.one * glyphSize * 2.2f, new Vector2(.5f, .5f),
-                                new Vector2(GlyphX, 0f));
+            // A glyph of no size is a chip that is only a figure — see _seat. The glow goes with
+            // it: it is the light behind the glyph, and behind a number it is a smudge.
+            bool wearsGlyph = glyphSize > 0f;
 
-            p.Glyph = UIKit.Img("Glyph", p.Root, glyph, Color.white,
-                                Vector2.one * glyphSize, new Vector2(.5f, .5f), new Vector2(GlyphX, 0f));
-            p.Glyph.preserveAspect = true;
-            p.Glyph.transform.localScale = Vector3.one * .55f;
+            if (wearsGlyph)
+            {
+                p._glow = UIKit.Img("Glow", p.Root, Art.Glow(128, 2.1f), Pal.A(tint, 0f),
+                                    Vector2.one * glyphSize * 2.2f, new Vector2(.5f, .5f),
+                                    new Vector2(GlyphX, 0f));
+
+                p.Glyph = UIKit.Img("Glyph", p.Root, glyph, Color.white,
+                                    Vector2.one * glyphSize, new Vector2(.5f, .5f), new Vector2(GlyphX, 0f));
+                p.Glyph.preserveAspect = true;
+                p.Glyph.transform.localScale = Vector3.one * .55f;
+            }
 
             // Not Shrinkable, deliberately. Best-fit re-measures on every text change, so a
             // number climbing from 0 to 1,240 would resize itself seven times on the way —
             // and the box is sized for the digits rather than for a translated sentence, so
             // there is nothing here for it to save.
+            // Beside the glyph where there is one, and on the chip's own centre line where there
+            // is not — a figure nudged 58 units right of centre to make room for something that
+            // is not drawn reads as a panel that has slipped.
             p.Number = UIKit.Titled("N", p.Root, format != null ? format(0) : "0", 54, tint,
-                                    TextAnchor.MiddleCenter, new Vector2(224f, 72f),
-                                    new Vector2(.5f, .5f), new Vector2(58f, 0f), 4f, 4f);
+                                    TextAnchor.MiddleCenter,
+                                    wearsGlyph ? new Vector2(224f, 72f) : new Vector2(340f, 72f),
+                                    new Vector2(.5f, .5f),
+                                    new Vector2(wearsGlyph ? 58f : 0f, 0f), 4f, 4f);
+
+            p._seat = wearsGlyph ? (RectTransform)p.Glyph.transform : p.Number.rectTransform;
 
             // The unlit look is a group alpha rather than a tint on each piece, because the
             // glyph's colour is not ours to touch: a caller finishing it through
@@ -176,14 +206,20 @@ namespace GlimmerGrove
 
         public void Play(Transform origin)
         {
-            if (Root == null || Glyph == null) return;
+            if (Root == null || _seat == null) return;
 
             var space = Root.parent as RectTransform;
             if (space == null || origin == null) { Settle(); return; }
 
-            // Wakes up first — see LeadIn.
-            Glyph.transform.localScale = Vector3.one * .55f;
-            Tween.Pop(Glyph.transform, .55f, .34f);
+            // Wakes up first — see LeadIn. Only a glyph gets the entrance: a number that springs
+            // in before its first token has landed is a figure announcing itself, which is the
+            // opposite of what this class is for.
+            if (Glyph)
+            {
+                Glyph.transform.localScale = Vector3.one * .55f;
+                Tween.Pop(Glyph.transform, .55f, .34f);
+            }
+
             Tween.Fade(_group, 1f, .3f);
             Tween.Run(.34f, Ease.OutQuad, t => { if (_glow) _glow.color = Pal.A(_tint, .42f * t); }, _glow);
 
@@ -191,7 +227,7 @@ namespace GlimmerGrove
             _landed = 0;
 
             Vector2 from = TokenFlight.LocalIn(space, origin);
-            Vector2 to = TokenFlight.LocalIn(space, Glyph.transform);
+            Vector2 to = TokenFlight.LocalIn(space, _seat);
 
             for (int i = 0; i < _throwing; i++) Throw(space, from, to, LeadIn + i * LandingGap, Flight, i);
         }
@@ -216,7 +252,7 @@ namespace GlimmerGrove
             // lost by stopping: the number this would have moved went with the chip. Guarded
             // here as well as in Tween.Orphaned because Land is a *callback*, and the rule
             // for a callback in this UI is that it checks rather than assumes.
-            if (Glyph == null) return;
+            if (Root == null || _seat == null) return;
 
             _landed++;
             bool last = _landed >= _throwing;
@@ -235,8 +271,11 @@ namespace GlimmerGrove
                 Tween.Punch(Number.transform, last ? .3f : .13f, last ? .42f : .22f);
             }
 
-            Glyph.transform.localScale = Vector3.one;
-            Tween.Punch(Glyph.transform, last ? .32f : .16f, last ? .44f : .24f);
+            if (Glyph)
+            {
+                Glyph.transform.localScale = Vector3.one;
+                Tween.Punch(Glyph.transform, last ? .32f : .16f, last ? .44f : .24f);
+            }
 
             // Driven off the landing index rather than a timer, so the ear hears the same
             // rhythm the eye sees however long the flight took on the day.
@@ -248,7 +287,7 @@ namespace GlimmerGrove
             if (!last) return;
 
             Settle();
-            Burst.Sparks(Glyph.transform, Vector2.zero, _tint, 14, 210f, 20f, .5f);
+            Burst.Sparks(_seat, Vector2.zero, _tint, 14, 210f, 20f, .5f);
 
             // No haptic here, and it is a decision rather than an omission. A chip used to buzz
             // once as its last token landed, which on a two-chip payout is two buzzes inside a
@@ -261,12 +300,12 @@ namespace GlimmerGrove
         /// <summary>Expanding ring at the point of arrival — the impact, not the prize.</summary>
         void Ping(bool strong)
         {
-            if (Glyph == null || Root == null) return;
+            if (Root == null || _seat == null) return;
 
             var ring = UIKit.Img("Ping", Root, Art.Ring(128, 9f),
                                  Pal.A(Pal.Lift(_tint, .4f), strong ? .85f : .5f),
                                  Vector2.one * (strong ? 118f : 86f), new Vector2(.5f, .5f),
-                                 new Vector2(GlyphX, 0f));
+                                 new Vector2(Glyph ? GlyphX : 0f, 0f));
 
             var rt = (RectTransform)ring.transform;
             float to = strong ? 2.3f : 1.7f;

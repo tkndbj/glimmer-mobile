@@ -1,3 +1,4 @@
+using System;
 using UnityEngine;
 
 namespace GlimmerGrove.Content
@@ -87,8 +88,72 @@ namespace GlimmerGrove.Content
         /// <summary>A level authored with this has no budget and cannot be lost on moves.</summary>
         public const float Unlimited = -1f;
 
-        /// <summary>Minimum turns needed to solve the board, computed at authoring time.</summary>
-        public readonly int Par;
+        /// <summary>
+        /// Room above par measured in moves rather than as a multiple of par. 0 — every mode but
+        /// one — means the budget is <c>par × budgetFactor</c>.
+        ///
+        /// <para>
+        /// <b>It exists because a mistake does not always cost a fixed fraction of a board.</b>
+        /// A glade's wrong turn is free: <c>Undo</c> refunds it, without limit, so the budget is
+        /// only ever spent on turns the player meant. A weave's wrong channel costs the light it
+        /// covered and leaves the grove exactly as it was, and two of them a grove are handed
+        /// back in full. A well's wrong drop is neither — it is permanent <em>and it makes the
+        /// board worse</em>, because the wasted mote lands in the well and now has to be cooked
+        /// to white like everything else. One mistake there costs about two drops, not one.
+        /// </para>
+        /// <para>
+        /// So the room a mode needs is a <em>count</em>, not a proportion, and a proportion
+        /// cannot be made to serve: <c>par × 1.60</c> gives a par-2 well two drops of room —
+        /// one mistake — while giving a par-6 well four. Reported from play as "one wrong fall
+        /// and it says out of turns", on the second level of the chapter, which is exactly where
+        /// par is smallest. Raising the factor instead is worse in the other direction: 2.60
+        /// fixes par 2 and hands a par-6 well ten wasted drops, at which point the fail state
+        /// has stopped rejecting anything (invariant 5d).
+        /// </para>
+        /// <para>
+        /// The star lines stay multiples of par and are not touched by this. That is the whole
+        /// division of labour: <b>stars measure how well a board was played, and the budget only
+        /// stops a run that has become hopeless.</b> A generous fail line does not make a level
+        /// generous — it makes the stars the thing that is being asked for.
+        /// </para>
+        /// </summary>
+        public readonly int Slack;
+
+        /// <summary>
+        /// Fewest moves the board can be finished in, and the number every graded line here is
+        /// a multiple of.
+        ///
+        /// <para>
+        /// <b>It may be resolved lazily, and one mode needs that.</b> A glade's par falls out of
+        /// its grid for the cost of walking it, so it is worked out as the level is read. A
+        /// Lightfall well's is a <em>search</em> — the fewest drops that empty it without
+        /// flooding — which is milliseconds rather than microseconds, and a chapter body holds
+        /// ten of them. Paying for all ten while the map is opening is a hitch on a screen that
+        /// nothing on it needs the answer for: par is read by the run screen and by the
+        /// validator, and by nothing that draws a map node. So a mode may hand over a function
+        /// instead of a number, and it is called once, the first time somebody actually asks.
+        /// </para>
+        /// <para>
+        /// That is the one place this class is not strictly immutable, and the memo is safe to
+        /// race on: the function is a pure search over a frozen board, so two callers arriving
+        /// together do the same work twice and write the same answer.
+        /// </para>
+        /// </summary>
+        public int Par
+        {
+            get
+            {
+                if (_findPar == null) return _par;
+                if (_par > 0) return _par;
+
+                int found = _findPar();
+                _par = found < 1 ? 1 : found;
+                return _par;
+            }
+        }
+
+        int _par;
+        readonly Func<int> _findPar;
 
         /// <summary>Move budget multipliers over par for three and two stars.</summary>
         public readonly float GoldFactor;
@@ -122,8 +187,26 @@ namespace GlimmerGrove.Content
 
         public LevelTuning(int par, float goldFactor, float silverFactor,
                            float budgetFactor = 0f)
+            : this(null, Mathf.Max(1, par), goldFactor, silverFactor, budgetFactor, 0) { }
+
+        /// <summary>
+        /// Tuning whose par is worked out the first time it is asked for. See <see cref="Par"/>.
+        ///
+        /// <paramref name="findPar"/> must be pure and must answer the same number every time —
+        /// it is a search over a board that cannot change, and everything a player is graded
+        /// against derives from what it returns.
+        /// </summary>
+        public LevelTuning(Func<int> findPar, float goldFactor, float silverFactor,
+                           float budgetFactor = 0f, int slack = 0)
+            : this(findPar ?? throw new ArgumentNullException(nameof(findPar)),
+                   0, goldFactor, silverFactor, budgetFactor, slack) { }
+
+        LevelTuning(Func<int> findPar, int par, float goldFactor, float silverFactor,
+                    float budgetFactor, int slack)
         {
-            Par = Mathf.Max(1, par);
+            _findPar = findPar;
+            _par = par;
+            Slack = slack > 0 ? slack : 0;
             GoldFactor = goldFactor > 0f ? goldFactor : DefaultGoldFactor;
             SilverFactor = silverFactor > 0f ? silverFactor : DefaultSilverFactor;
 
@@ -177,7 +260,37 @@ namespace GlimmerGrove.Content
         /// </para>
         /// </summary>
         public int MoveBudget
-            => HasBudget ? Over(Par, BudgetHundredths) : int.MaxValue;
+            => !HasBudget ? int.MaxValue
+             : Slack > 0 ? Par + Slack
+             : Over(Par, BudgetHundredths);
+
+        /// <summary>
+        /// The default budget as hundredths, so a check can tell an authored factor from an
+        /// absent one without doing float arithmetic to find out.
+        /// </summary>
+        public static int DefaultBudgetHundredths => Hundredths(DefaultBudgetFactor);
+
+        /// <summary>
+        /// Whether this level authored a budget factor that <see cref="Slack"/> is quietly
+        /// overruling.
+        ///
+        /// <para>
+        /// <b>A precedence nobody can see is the thing this project keeps paying for.</b> When a
+        /// slack is given it wins outright, so a factor written beside it does nothing at all —
+        /// which is <c>ChapterDto.order</c>'s trap, and the reason that field was kept rather
+        /// than deleted: a number that silently means nothing is worse than a missing one,
+        /// because somebody believes it. The validator asks this and refuses the level; it is
+        /// exposed here rather than worked out there so the rule lives with the arithmetic it
+        /// is about.
+        /// </para>
+        /// <para>
+        /// A <em>negative</em> factor is not an override and is not reported: it turns the
+        /// budget off entirely, which no amount of slack can express and which the first well
+        /// in the game relies on.
+        /// </para>
+        /// </summary>
+        public bool BudgetFactorIsIgnored
+            => Slack > 0 && HasBudget && BudgetHundredths != DefaultBudgetHundredths;
 
         // ------------------------------------------------------------------ the stars
         /// <summary>

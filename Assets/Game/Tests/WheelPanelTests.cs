@@ -26,9 +26,11 @@ namespace GlimmerGrove.Tests
         /// <summary>
         /// Every row clears the one above it, read as boxes rather than as centres.
         ///
-        /// The status paragraph is the odd one out and the reason this is worth a test: it is
-        /// placed from its <em>top</em> while its neighbours are placed from their centres, so
-        /// a reader comparing the two numbers directly gets the wrong answer by 46 units.
+        /// The status paragraph used to be the odd one out — placed from its <em>top</em> while
+        /// its neighbours were placed from their centres — and the overlay read it as a centre
+        /// like everything else, which drew it 46 units up through the odds line. This test
+        /// passed throughout, because it was checking the arithmetic the panel did not use.
+        /// Every number here is now a centre.
         /// </summary>
         [Test]
         public void NoRowIsDrawnThroughTheOneAboveIt()
@@ -38,13 +40,14 @@ namespace GlimmerGrove.Tests
             float wheelFoot = s.WheelCentre + s.WheelSize * .5f;
             float oddsHead = s.OddsCentre - WheelPanel.OddsHeight * .5f;
             float oddsFoot = s.OddsCentre + WheelPanel.OddsHeight * .5f;
-            float statusFoot = s.StatusTop + WheelPanel.StatusHeight;
+            float statusHead = s.StatusCentre - WheelPanel.StatusHeight * .5f;
+            float statusFoot = s.StatusCentre + WheelPanel.StatusHeight * .5f;
             float buttonHead = s.ButtonCentre - WheelPanel.ButtonHeight * .5f;
 
             Assert.GreaterOrEqual(s.WheelCentre - s.WheelSize * .5f, WheelPanel.HeadRoom,
                                   "the wheel is drawn up into the title ribbon");
             Assert.LessOrEqual(wheelFoot, oddsHead, "the odds line is drawn over the rim");
-            Assert.LessOrEqual(oddsFoot, s.StatusTop, "the status is drawn over the odds line");
+            Assert.LessOrEqual(oddsFoot, statusHead, "the status is drawn over the odds line");
             Assert.LessOrEqual(statusFoot, buttonHead, "the status is drawn into the button");
             Assert.LessOrEqual(s.ButtonCentre + WheelPanel.ButtonHeight * .5f, s.Height,
                                "the button is drawn off the bottom of the frame");

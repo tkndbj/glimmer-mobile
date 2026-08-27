@@ -103,8 +103,8 @@ namespace GlimmerGrove
             public readonly bool HeartCharged;
 
             /// <summary>
-            /// True when this glade is one of the free openings and nothing was owed for the
-            /// loss. See <see cref="HeartStake"/>.
+            /// What the run was priced at, and if nothing, why — a free opening or a glade this
+            /// player had already finished. See <see cref="HeartStake"/>.
             ///
             /// <para>
             /// Carried rather than left to be inferred from <see cref="HeartCharged"/>, because
@@ -113,17 +113,28 @@ namespace GlimmerGrove
             /// was nothing left to take. Read the second as the first and the panel offers a
             /// retry button to a player who cannot use one.
             /// </para>
+            /// <para>
+            /// The <em>reason</em> travels with it for the same argument one step further on:
+            /// the panel prints a sentence about it, and a panel that says "one of the free
+            /// levels" over the fortieth glade of a chapter somebody has finished is a panel
+            /// nobody believes twice. It is told rather than working the reason out again for
+            /// <see cref="Loss"/>'s standing reason — a second reading, taken later, able to
+            /// disagree with the first.
+            /// </para>
             /// </summary>
-            public readonly bool WasFree;
+            public readonly HeartPrice Price;
+
+            /// <summary>True when nothing was owed for the loss, whichever clause said so.</summary>
+            public bool WasFree => Price != HeartPrice.Charged;
 
             public LossRecord(RunOutcome run, StreakNote streak, int heartsLeft, bool charged,
-                              bool wasFree)
+                              HeartPrice price)
             {
                 Run = run;
                 Streak = streak;
                 HeartsLeft = heartsLeft;
                 HeartCharged = charged;
-                WasFree = wasFree;
+                Price = price;
             }
         }
 
@@ -184,9 +195,9 @@ namespace GlimmerGrove
         /// whether or not anything was owed.
         ///
         /// <para>
-        /// <paramref name="staked"/> is <c>RunScreen.Staked</c> — whether this run is one
-        /// somebody is paying for, which is false for a mode's free openings
-        /// (<see cref="HeartStake"/>). It is <b>told</b> rather than worked out here, and that
+        /// <paramref name="price"/> is <c>RunScreen.Price</c> — what this run was staked at,
+        /// which is free for a mode's opening glades and for any glade the player has already
+        /// finished (<see cref="HeartStake"/>). It is <b>told</b> rather than worked out here, and that
         /// is the whole of the ordering: the answer is latched at the instant the run became
         /// owed for, so a content push landing mid-run cannot turn a board the player was told
         /// was free into one they are charged for on the way out of it. Asking again here
@@ -196,9 +207,9 @@ namespace GlimmerGrove
         /// </para>
         /// <para>
         /// Required rather than defaulted, so a third mode has to answer it. A default would
-        /// pick a price on behalf of a caller that never thought about one, and both possible
-        /// defaults are wrong: <c>true</c> charges for free boards, <c>false</c> silently turns
-        /// the heart gate off for a whole mode.
+        /// pick a price on behalf of a caller that never thought about one, and every possible
+        /// default is wrong: <c>Charged</c> charges for free boards, and either free value
+        /// silently turns the heart gate off for a whole mode.
         /// </para>
         ///
         /// <para>
@@ -214,7 +225,7 @@ namespace GlimmerGrove
         /// </summary>
         public static LossRecord Loss(LevelDefinition level, DefeatReason reason, int moves,
                                       float seconds, int hintsUsed, int route,
-                                      int stepsToSolution, int lit, int wanted, bool staked)
+                                      int stepsToSolution, int lit, int wanted, HeartPrice price)
         {
             var record = PlayerProgress.Record(level.Id);
             var tuning = level.Tuning;
@@ -223,7 +234,7 @@ namespace GlimmerGrove
                                       record.BestMoves, record.Clears + 1, stepsToSolution,
                                       lit, wanted, hintsUsed, seconds, route);
 
-            bool charged = staked && Wallet.TrySpendHeart();
+            bool charged = price == HeartPrice.Charged && Wallet.TrySpendHeart();
             int left = Wallet.Hearts.Count;
 
             DailyChests.RecordRun();
@@ -231,7 +242,7 @@ namespace GlimmerGrove
 
             LevelAnalytics.TrackDefeated(level, run.Moves, run.Seconds, left, reason.ToString());
 
-            return new LossRecord(run, streak, left, charged, !staked);
+            return new LossRecord(run, streak, left, charged, price);
         }
 
         /// <summary>

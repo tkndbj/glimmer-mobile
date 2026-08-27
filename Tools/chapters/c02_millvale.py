@@ -527,55 +527,34 @@ MAPY = [0.065, 0.145, 0.220, 0.300, 0.390, 0.485, 0.560, 0.650, 0.752, 0.830]
 TEXT = {
     "c02_two_ways_over": (
         "Two Ways Over",
-        "One tile, and two streams that never meet",
-        "A crossing carries two flows past each other. Turn it the other way and both "
-        "hearts pour into one channel."),
+        "One tile, and two streams that never meet"),
     "c02_the_millrace": (
         "The Millrace",
-        "A rope of light, twisted three times",
-        "The two runs change lanes at every crossing. One left the wrong way round hands "
-        "a heart's light to the other's critters."),
+        "A rope of light, twisted three times"),
     "c02_under_the_boughs": (
         "Under the Boughs",
-        "A green pool inside the red ring",
-        "The groove closes in a ring, so a ford turned the wrong way pours red into the "
-        "pool and every critter on the ring stays lit. The two in the pool are the only "
-        "ones that will tell you."),
+        "A green pool inside the red ring"),
     "c02_the_old_weir": (
         "The Old Weir",
-        "Brittle stone on both approaches",
-        "Both weirs crumble after two turns and need one. Nothing about their arms says "
-        "which way they face, so read the hearts: you are allowed exactly one wrong guess."),
+        "Brittle stone on both approaches"),
     "c02_braided_water": (
         "Braided Water",
-        "Two crossings, one root, opposite corners",
-        "Bound conduits turn as one, crossings included. The tap that settles the near "
-        "braid settles the far one with it."),
+        "Two crossings, one root, opposite corners"),
     "c02_the_wheelhouse": (
         "The Wheelhouse",
-        "Kept apart here, blended there",
-        "Three networks share this ground. Two stay pure and the third holds a heart of "
-        "each, and the crossings are what let all three pass."),
+        "Kept apart here, blended there"),
     "c02_hollow_ford": (
         "Hollow Ford",
-        "The green pool, forded three times",
-        "Every crossing here is a place the pool and the groove could be joined by "
-        "mistake. Read which arm belongs to which strand before you turn."),
+        "The green pool, forded three times"),
     "c02_stonebridge": (
         "Stonebridge",
-        "Four bridges nobody can turn",
-        "These crossings are rooted where they stand. The groove is not asking which way "
-        "they face - it is asking what still fits through them."),
+        "Four bridges nobody can turn"),
     "c02_three_bridges": (
         "Three Bridges",
-        "A cascade, handed on at every span",
-        "Yellow gives the groove to red, red to green and green to blue, and every "
-        "hand-over happens inside one tile."),
+        "A cascade, handed on at every span"),
     "c02_the_millers_knot": (
         "The Miller's Knot",
-        "Everything the vale has taught, tied once",
-        "Four networks, a green pool under the braid, two spans on one root and "
-        "brittle stone on two more."),
+        "Everything the vale has taught, tied once"),
 }
 
 BOARDS = [
@@ -648,10 +627,9 @@ def write_strings():
 
     add(f"chapter.{CHAPTER}.name", "The Mill Vale")
     for lid, _, _ in BOARDS:
-        name, tagline, lesson = TEXT[lid]
+        name, tagline = TEXT[lid]
         add(f"level.{lid}.name", name)
         add(f"level.{lid}.tagline", tagline)
-        add(f"level.{lid}.lesson", lesson)
 
     if added:
         with io.open(LOC, "w", encoding="utf-8", newline="\n") as f:

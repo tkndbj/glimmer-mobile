@@ -530,63 +530,34 @@ MAPY = [0.055, 0.140, 0.225, 0.310, 0.395, 0.480, 0.560, 0.645, 0.730, 0.815]
 TEXT = {
     "c04_thornlight": (
         "Thornlight",
-        "Thorns close two ways, and a tap moves them",
-        "A bramble wears four arms and lets light along only two of them. Turn it and the "
-"thorns swing round onto the other pair - so whatever the open way was feeding goes "
-"dark."),
+        "Thorns close two ways, and a tap moves them"),
     "c04_the_shut_way": (
         "The Shut Way",
-        "The only ground where red and blue may meet",
-        "The lane across the middle has a heart at each end, so it is blossom. Above and "
-"below it the grooves must stay pure - and the thorns are the whole of what keeps "
-"them that way."),
+        "The only ground where red and blue may meet"),
     "c04_nightfall": (
         "Nightfall",
-        "The loop forgives the turn; the green pocket does not",
-        "This bramble stands on a ring, so shutting its way costs nothing at all and no "
-"critter on the ring will tell you. What the same tap opens is the way north, into "
-"the green pocket, and its two go out together."),
+        "The loop forgives the turn; the green pocket does not"),
     "c04_bramble_and_bridge": (
         "Bramble and Bridge",
-        "Four arms, two meanings",
-        "A bridge carries both flows through and never needs turning. A bramble carries "
-"one and turning it is the point. They are a tile apart here, and only the thorns "
-"tell them apart."),
+        "Four arms, two meanings"),
     "c04_the_hollow_gate": (
         "The Hollow Gate",
-        "Brittle stone where guessing is all you have",
-        "Nothing about the arms can settle a bramble, which is why these two crumble after "
-"two turns and need one. You are allowed exactly one wrong guess about which way "
-"the middle opens."),
+        "Brittle stone where guessing is all you have"),
     "c04_rootbriar": (
         "Rootbriar",
-        "One rune, two brambles, opposite corners",
-        "Both brambles carry the same rune, so they turn as one - and neither of them can "
-"be read off its own arms. Whatever the near one does, the far one does with it, "
-"and the tap is charged once."),
+        "One rune, two brambles, opposite corners"),
     "c04_three_thorns": (
         "Three Thorns",
-        "Three grooves, and every bramble a colour",
-        "Red, green and blue, each pure, each within a tile of the others. Every bramble "
-"here stands on the one square where two of them could meet."),
+        "Three grooves, and every bramble a colour"),
     "c04_the_long_dark": (
         "The Long Lane",
-        "A green lane under the groove, forded twice",
-        "The bridges carry the green lane beneath the light without touching it. The "
-"brambles decide whether it stays that way - and both of them stand on loops, so "
-"only the lane's own two will tell you."),
+        "A green lane under the groove, forded twice"),
     "c04_wick_and_wane": (
         "Wick and Wane",
-        "A blend to make, and a blue pair to leave alone",
-        "Amber wants a red heart and a green one joined, and the only ground where they "
-"can be joined is a brittle bramble standing beside a blue pair of its own. Two "
-"turns of stone, one turn needed."),
+        "A blend to make, and a blue pair to leave alone"),
     "c04_the_nightbriar_knot": (
         "The Nightbriar Knot",
-        "Everything the wood has taught, tied once",
-        "Two bridges, four brambles - two of them on one rune in opposite corners, one of "
-"them brittle - an amber ridge that can only be joined across the middle, and a "
-"red lane running the width of the board beneath all of it."),
+        "Everything the wood has taught, tied once"),
 }
 
 # The ladder. Par is length rather than difficulty, so it is deliberately not monotonic -
@@ -664,10 +635,9 @@ def write_strings():
 
     add(f"chapter.{CHAPTER}.name", "The Nightbriar")
     for lid, _, _ in BOARDS:
-        name, tagline, lesson = TEXT[lid]
+        name, tagline = TEXT[lid]
         add(f"level.{lid}.name", name)
         add(f"level.{lid}.tagline", tagline)
-        add(f"level.{lid}.lesson", lesson)
 
     if added:
         with io.open(LOC, "w", encoding="utf-8", newline="\n") as f:

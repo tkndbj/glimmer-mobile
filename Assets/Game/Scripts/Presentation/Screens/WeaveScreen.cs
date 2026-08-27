@@ -505,7 +505,7 @@ namespace GlimmerGrove
                                       Time.unscaledTime - _startedAt, 0, route: 0,
                                       stepsToSolution: 0,
                                       lit: run.Joined, wanted: run.Pairs,
-                                      staked: Staked);
+                                      price: Price);
 
             Flow.Modal<DefeatOverlay>(v =>
             {
@@ -514,7 +514,7 @@ namespace GlimmerGrove
                 v.Streak = done.Streak;
                 v.HeartsLeft = done.HeartsLeft;
                 v.HeartWasCharged = done.HeartCharged;
-                v.WasFree = done.WasFree;
+                v.Price = done.Price;
             });
         }
 
@@ -853,12 +853,6 @@ namespace GlimmerGrove
             Repaint();
             PaintNotice();
             PaintUndo();
-        }
-
-        public override void Resume()
-        {
-            if (_finished || _closing || _view == null) return;
-            _view.Locked = false;
         }
 
         public override bool OnBack()

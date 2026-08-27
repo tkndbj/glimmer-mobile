@@ -792,6 +792,83 @@ namespace GlimmerGrove
             return (C[i].cross & Bits[d]) != 0 ? 0 : 1;
         }
 
+        /// <summary>
+        /// Where the light standing on one strand of a tile can step in direction
+        /// <paramref name="d"/> in the authored solution, or -1 where it cannot.
+        ///
+        /// <para>
+        /// One copy for invariant 5b's reason at the smallest scale it appears at: two walks
+        /// of the solution now exist — how far from a heart every tile is, and which hearts
+        /// reach a given tile — and a second reading of "do these two tiles join" is a second
+        /// reading that can come to disagree with the first. It is also <em>symmetric</em>,
+        /// which is what lets <see cref="SolutionFeeders"/> walk outwards from a critter and
+        /// still arrive at exactly the hearts whose light reaches it.
+        /// </para>
+        /// </summary>
+        int SolvedStep(int node, int d)
+        {
+            int a = node / Strands, onA = node % Strands;
+
+            if ((SolvedLive(C[a]) & Bits[d]) == 0) return -1;
+            if (SolvedStrandAt(a, d) != onA) return -1;
+
+            int b = Neighbour(a, d);
+            if (b < 0) return -1;
+
+            int back = (d + 2) & 3;
+            if ((SolvedLive(C[b]) & Bits[back]) == 0) return -1;
+
+            return Node(b, SolvedStrandAt(b, back));
+        }
+
+        /// <summary>
+        /// Every heart whose light reaches this tile once the glade is solved, in reading
+        /// order.
+        ///
+        /// <para>
+        /// Asked of the <em>solution</em> rather than of the board as it stands, because the
+        /// one caller is a lesson: a tip pointing at the hearts that happen to be joined to a
+        /// critter before the player has turned anything would point at nothing on almost
+        /// every board. It walks rather than reads a stored answer for the same reason
+        /// <see cref="Owed"/> is a method — a set per tile is a table nobody else wants, and
+        /// the question is asked once, while a lesson is being built.
+        /// </para>
+        /// </summary>
+        public void SolutionFeeders(int cell, List<int> into)
+        {
+            into.Clear();
+            if (cell < 0 || cell >= C.Length || !Used(cell)) return;
+
+            int nodes = C.Length * Strands;
+            var seen = new bool[nodes];
+            var q = new Queue<int>();
+
+            for (int strand = 0; strand < StrandCount(cell); strand++)
+            {
+                seen[Node(cell, strand)] = true;
+                q.Enqueue(Node(cell, strand));
+            }
+
+            var found = new bool[C.Length];
+
+            while (q.Count > 0)
+            {
+                int node = q.Dequeue();
+                if (C[node / Strands].kind == Kind.Source) found[node / Strands] = true;
+
+                for (int d = 0; d < 4; d++)
+                {
+                    int next = SolvedStep(node, d);
+                    if (next < 0 || seen[next]) continue;
+
+                    seen[next] = true;
+                    q.Enqueue(next);
+                }
+            }
+
+            for (int i = 0; i < C.Length; i++) if (found[i]) into.Add(i);
+        }
+
         void ComputeSolutionDepth()
         {
             int nodes = C.Length * Strands;
@@ -806,19 +883,11 @@ namespace GlimmerGrove
             while (q.Count > 0)
             {
                 int node = q.Dequeue();
-                int a = node / Strands, onA = node % Strands;
                 for (int d = 0; d < 4; d++)
                 {
-                    if ((SolvedLive(C[a]) & Bits[d]) == 0) continue;
-                    if (SolvedStrandAt(a, d) != onA) continue;
+                    int into = SolvedStep(node, d);
+                    if (into < 0 || reach[into] != int.MaxValue) continue;
 
-                    int b = Neighbour(a, d);
-                    if (b < 0) continue;
-                    int back = (d + 2) & 3;
-                    if ((SolvedLive(C[b]) & Bits[back]) == 0) continue;
-
-                    int into = Node(b, SolvedStrandAt(b, back));
-                    if (reach[into] != int.MaxValue) continue;
                     reach[into] = reach[node] + 1;
                     q.Enqueue(into);
                 }

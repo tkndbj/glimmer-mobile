@@ -3,7 +3,6 @@ using System.Collections;
 using System.Collections.Generic;
 using GlimmerGrove.AssetPipeline;
 using GlimmerGrove.Content;
-using GlimmerGrove.Localization;
 using GlimmerGrove.Modes;
 using UnityEngine;
 using UnityEngine.UI;
@@ -253,10 +252,10 @@ namespace GlimmerGrove
         /// the two highest things on the screen, so on a phone with a camera cutout they were
         /// the two it took — and the inset cannot buy back what a mode has chosen to draw at the
         /// very top of it. Neither was load-bearing: the player picked the level by name a
-        /// screen ago, and the tagline is already offered as this run's flavour line (see
-        /// <see cref="RunScreen.Flavour"/>) at a moment when there is nothing competing with it.
-        /// What is left is the two controls and, below them, the readouts — which for a timed
-        /// mode is where the clock is, so the clock now has the band the name was using.
+        /// screen ago. The tagline used to come back as a flavour line along the bottom of the
+        /// board, and that is gone too — a box on every level of every mode is furniture, and
+        /// the tips are what a board has to say. What is left is the two controls and, below
+        /// them, the readouts.
         /// </para>
         /// </summary>
         void BuildHeader()
@@ -418,8 +417,6 @@ namespace GlimmerGrove
         /// </summary>
         public override void RetryAfterDefeat() => Rewind();
 
-        public override void Resume() { }
-
         /// <summary>
         /// A mode with no stake of its own — the lab boards, which never commit — walks away for
         /// nothing, and that falls out of <c>RunScreen.ConfirmForfeit</c> rather than needing to
@@ -433,11 +430,5 @@ namespace GlimmerGrove
 
         public override bool OnBack() { LeaveToMap(); return true; }
 
-        /// <summary>
-        /// The glade's flavour line. Declared rather than shown, so <see cref="RunScreen"/>
-        /// can keep it behind whatever this run has to teach first — and so a mode that has
-        /// something to teach never has to remember that it also has a line to suppress.
-        /// </summary>
-        protected internal override string Flavour => Level != null ? Loc.Get(Level.LessonKey) : null;
     }
 }

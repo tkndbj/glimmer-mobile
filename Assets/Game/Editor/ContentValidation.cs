@@ -655,7 +655,8 @@ namespace GlimmerGrove.EditorTools
                       $"{hearts.RefillSeconds / 3600f:0.##}h ({hearts.BoostedRefillSeconds / 3600f:0.##}h " +
                       $"boosted, up to {hearts.MaxBoostHours}h of boost), hold up to {hearts.Ceiling}, " +
                       $"a loss costs {hearts.DefeatCost}, the first " +
-                      $"{hearts.GraceLevels} of each mode cost nothing");
+                      $"{hearts.GraceLevels} of each mode cost nothing, and so does any level " +
+                      "the player has already finished");
         }
 
         /// <summary>
@@ -2344,7 +2345,6 @@ namespace GlimmerGrove.EditorTools
             {
                 Require(table, LevelDefinition.DefaultNameKey(id), $"level '{id}'", result);
                 Require(table, LevelDefinition.DefaultTaglineKey(id), $"level '{id}'", result);
-                Require(table, LevelDefinition.DefaultLessonKey(id), $"level '{id}'", result);
             }
 
             // Companion names are derived from the id like a level's, so the source scan

@@ -1,0 +1,177 @@
+{
+  "schemaVersion": 1,
+  "cases": [
+    {
+      "name": "one blob, one drop",
+      "why": "a chain runs through every mote missing the colour that was dropped, and a whole row of them is one drop",
+      "rows": [
+        "......",
+        "......",
+        "......",
+        "......",
+        "......",
+        "YYYYY."
+      ],
+      "motes": "B",
+      "par": 1,
+      "ways": 5,
+      "greedy": 1,
+      "proved": true,
+      "headroom": 4,
+      "standing": 5
+    },
+    {
+      "name": "a wall of the wrong colour",
+      "why": "cyan already holds blue, so the chain neither takes it nor crosses it - which is the whole of what makes colour a decision here",
+      "rows": [
+        "......",
+        "......",
+        "......",
+        "......",
+        "......",
+        "YYCYY."
+      ],
+      "motes": "BR",
+      "par": 3,
+      "ways": 8,
+      "greedy": 3,
+      "proved": true,
+      "headroom": 4,
+      "standing": 5
+    },
+    {
+      "name": "two blobs the wash cannot cross between",
+      "why": "par counts drops, not bursts",
+      "rows": [
+        "......",
+        "......",
+        "......",
+        "......",
+        "......",
+        "Y....Y"
+      ],
+      "motes": "B",
+      "par": 2,
+      "ways": 2,
+      "greedy": 2,
+      "proved": true,
+      "headroom": 4,
+      "standing": 2
+    },
+    {
+      "name": "a burst under a stack",
+      "why": "gravity only pulls down, so a well collapses when a wash reaches something a drop never could - and the wash is read before the fall",
+      "rows": [
+        "......",
+        "......",
+        "..M...",
+        "..M...",
+        "..M...",
+        ".YY..."
+      ],
+      "motes": "BG",
+      "par": 2,
+      "ways": 1,
+      "greedy": 2,
+      "proved": true,
+      "headroom": 1,
+      "standing": 5
+    },
+    {
+      "name": "a pure mote finished by two bursts",
+      "why": "the red between a yellow blob and a magenta blob takes blue from one and green from the other, and bursts without anybody ever dropping on it - which is what a pure mote is for",
+      "rows": [
+        "......",
+        "......",
+        "......",
+        "......",
+        ".YRM..",
+        ".YYMM."
+      ],
+      "motes": "BG",
+      "par": 2,
+      "ways": 3,
+      "greedy": 2,
+      "proved": true,
+      "headroom": 3,
+      "standing": 7
+    },
+    {
+      "name": "nothing on this board wants what the well deals",
+      "why": "proved unsolvable rather than timed out, which is the difference between a level that is broken and one that is too big",
+      "rows": [
+        "....",
+        "....",
+        "....",
+        "....",
+        "....",
+        "M..C"
+      ],
+      "motes": "R",
+      "par": -1,
+      "ways": 0,
+      "greedy": -1,
+      "proved": true,
+      "headroom": 4,
+      "standing": 2
+    },
+    {
+      "name": "a column with no room and a procession that opens badly",
+      "why": "the only mote yellow lacks is blue, so red and green both come to rest on the brim and the search will not count either - par is the fewest drops that empty a well without ever breaching the line",
+      "rows": [
+        "....",
+        "Y...",
+        "Y...",
+        "Y...",
+        "Y...",
+        "Y..."
+      ],
+      "motes": "RGB",
+      "par": 3,
+      "ways": 2,
+      "greedy": 3,
+      "proved": true,
+      "headroom": 0,
+      "standing": 5
+    },
+    {
+      "name": "a well that has to be emptied from the top down",
+      "why": "every drop lands on a column top, so what is buried is reached by the wash or not at all",
+      "rows": [
+        ".....",
+        ".....",
+        ".....",
+        "..Y..",
+        ".YYY.",
+        "YYCYY"
+      ],
+      "motes": "BR",
+      "par": 2,
+      "ways": 3,
+      "greedy": 2,
+      "proved": true,
+      "headroom": 2,
+      "standing": 9
+    },
+    {
+      "name": "a shipped shape",
+      "why": "five rows, three regions and a scattering of pure motes - the shape a chapter actually authors",
+      "rows": [
+        ".....",
+        ".....",
+        ".....",
+        ".....",
+        "M.C.G",
+        "MCCBY",
+        "MMBYY"
+      ],
+      "motes": "RBGRGBB",
+      "par": 5,
+      "ways": 2,
+      "greedy": 6,
+      "proved": true,
+      "headroom": 3,
+      "standing": 13
+    }
+  ]
+}

@@ -147,6 +147,24 @@ namespace GlimmerGrove.Content
             // band is simply everything past silver. The first glade in the game is one.
             if (!tuning.HasBudget) return;
 
+            // A budget measured in moves rather than as a multiple of par is compared as moves.
+            // Reading the factors here would be reading a number the mode does not use, and a
+            // check that disagrees with the thing it checks is worse than no check at all — the
+            // same reason the branch below reads the factors rather than the thresholds they
+            // derive. See LevelTuning.Slack.
+            if (tuning.Slack > 0)
+            {
+                if (tuning.MoveBudget <= tuning.GoldThreshold)
+                    Error(issues, $"the run ends after {tuning.MoveBudget} and three stars is " +
+                                  $"{tuning.GoldThreshold}, so no run can be graded — give it " +
+                                  "more room above par");
+                else if (tuning.MoveBudget <= tuning.SilverThreshold)
+                    Warn(issues, $"the run ends after {tuning.MoveBudget} and two stars is " +
+                                 $"{tuning.SilverThreshold}, so one star can never be scored: " +
+                                 "every clear is worth two or three");
+                return;
+            }
+
             if (tuning.BudgetHundredths <= tuning.GoldHundredths)
                 Error(issues, $"the run ends at par × {tuning.BudgetFactor:0.##} and three stars " +
                               $"is par × {tuning.GoldFactor:0.##}, so no run can be graded — " +

@@ -553,7 +553,8 @@ namespace GlimmerGrove
         /// <see cref="UIKit.Shrinkable"/> folds it — which is what wrapping means here, since
         /// best-fit only shrinks text that fails <em>vertically</em>. At 392 the box was 356
         /// and the standing wrapped by two pixels. 408 leaves 14px, which also covers the
-        /// widest record line ("108 turns · 12:04", 245px at 28pt) with room to spare.
+        /// widest record line with room to spare — that used to be "108 turns · 12:04" at
+        /// 245px, and a record has carried no time since invariant 22.
         /// </remarks>
         const float RankMarkBottom = 106f;
         static readonly Vector2 RankMarkTwoLine = new Vector2(408f, 196f);
@@ -1243,10 +1244,12 @@ namespace GlimmerGrove
             // so a player is never dropped into a glade they cannot afford to lose —
             // being told at the door is a wait, being told at the blast is a wasted run.
             //
-            // A mode's free openings walk straight past it, and they have to: a glade that
-            // costs nothing to lose cannot coherently be refused for lack of something to
-            // lose, and the one player this door would shut out is the one who has just met
-            // the mode. See HeartStake.
+            // A free run walks straight past it, and it has to: a glade that costs nothing to
+            // lose cannot coherently be refused for lack of something to lose. That is a mode's
+            // opening glades — where the one player this door would shut out is the one who has
+            // just met the mode — and every glade this player has already finished, which is
+            // the door standing open on the whole of what somebody has beaten while their
+            // hearts fill. See HeartStake.
             if (!Profile.CanPlay && !HeartStake.IsFree(_index, id))
             {
                 if (_nodes.TryGetValue(id, out var barred)) Tween.Shake(barred, 10f, .35f);

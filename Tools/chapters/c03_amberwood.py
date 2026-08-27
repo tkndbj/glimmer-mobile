@@ -533,62 +533,34 @@ MAPY = [0.060, 0.145, 0.225, 0.305, 0.390, 0.475, 0.555, 0.640, 0.725, 0.815]
 TEXT = {
     "c03_amberlight": (
         "Amberlight",
-        "Amber needs two springs of its own",
-        "A critter wearing two colours wants both of them at once. The red and green "
-"hearts that feed it cannot be the two keeping the pure critters pure."),
+        "Amber needs two springs of its own"),
     "c03_two_lights": (
         "Two Lights, One Lane",
-        "Both lanes turn where they cross",
-        "These crossings are not bridges - each is worth a tap, and each turns both "
-"lanes at once. One left the wrong way round hands the amber lane's light to "
-"the red one."),
+        "Both lanes turn where they cross"),
     "c03_the_verdigris": (
         "The Verdigris",
-        "Teal, between the blue comb and the green one",
-        "Verdigris is green and blue together, and this is the only ground where they "
-"are allowed to meet. Both weirs stand one turn from handing a comb the colour "
-"that would ruin it."),
+        "Teal, between the blue comb and the green one"),
     "c03_foxfire": (
         "Foxfire",
-        "Brittle stone on the only join",
-        "Foxfire is red and blue. The two conduits carrying them to one another crumble "
-"after two turns and need one, so you are allowed exactly one wrong guess about "
-"which way the ridge closes."),
+        "Brittle stone on the only join"),
     "c03_the_quiet_hollow": (
         "The Quiet Hollow",
-        "Amber all round, and a blue pool in the middle",
-        "Amber's two springs sit on opposite sides of the hollow, so the only way to join "
-"them is round it. The tiles that carry the light past the pool are the same ones "
-"that would pour it in."),
+        "Amber all round, and a blue pool in the middle"),
     "c03_rootbound": (
         "Rootbound Amber",
-        "One tap, and the ridge decides three times",
-        "The three conduits that let the ridge blend all carry the same rune, so they "
-"turn as one. Whatever the near one does, the two you cannot see do with it - "
-"and the green below is a turn away from going amber."),
+        "One tap, and the ridge decides three times"),
     "c03_three_springs": (
         "Three Coloured Springs",
-        "Every light used twice, every pair met once",
-        "Three streams, and each holds two of the three lights: amber, foxfire, "
-"verdigris. Join any two streams and four critters go wrong at the same moment."),
+        "Every light used twice, every pair met once"),
     "c03_under_the_lanterns": (
         "Under the Lanterns",
-        "White in the middle, and gardens all round it",
-        "White is every light at once, so the ring through the middle has to gather all "
-"three springs and reach none of the gardens around it. One corner is allowed "
-"to blend. The other three are not."),
+        "White in the middle, and gardens all round it"),
     "c03_the_ashen_path": (
         "The Green Path",
-        "The green path fords both lanes and joins beneath them",
-        "One green path, crossing under the amber and the blue and meeting itself at the "
-"foot of the wood. Brittle stone guards an approach to each lane, and the path's "
-"own three critters are all that will tell you it was joined."),
+        "The green path fords both lanes and joins beneath them"),
     "c03_the_amberwood_knot": (
         "The Amberwood Knot",
-        "Everything the wood has taught, tied once",
-        "Amber along the ridge, verdigris at the foot, a red lane between them that must "
-"stay red, two red pools under the foot, and one root holding a corner of "
-"each."),
+        "Everything the wood has taught, tied once"),
 }
 
 BOARDS = [
@@ -663,10 +635,9 @@ def write_strings():
 
     add(f"chapter.{CHAPTER}.name", "The Amberwood")
     for lid, _, _, _ in BOARDS:
-        name, tagline, lesson = TEXT[lid]
+        name, tagline = TEXT[lid]
         add(f"level.{lid}.name", name)
         add(f"level.{lid}.tagline", tagline)
-        add(f"level.{lid}.lesson", lesson)
 
     if added:
         with io.open(LOC, "w", encoding="utf-8", newline="\n") as f:

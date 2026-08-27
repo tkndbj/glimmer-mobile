@@ -363,8 +363,12 @@ namespace GlimmerGrove
         /// </summary>
         void BuildBalances()
         {
+            // -228 rather than -214: the banner is 140 tall about y=-116, so its lower edge
+            // sits at -186 and a 76-tall row centred at -214 climbs to -176 — ten units
+            // *inside* the ribbon. Nothing else moves; the row still clears the tab strip
+            // at -300 by 34.
             var row = UIKit.Row("Balances", Safe, new Vector2(1000f, 76f), new Vector2(.5f, 1f),
-                                new Vector2(0f, -214f), 14f);
+                                new Vector2(0f, -228f), 14f);
 
             BalancePill(row, Pal.Gold, null, Compact.Number(Profile.Coins),
                         ResourceSlots.Kind.Credits, Compact.Number);

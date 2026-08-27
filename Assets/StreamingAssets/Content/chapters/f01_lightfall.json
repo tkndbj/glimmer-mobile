@@ -7,16 +7,208 @@
   "mapStrips": [
     "strip0",
     "strip1",
-    "strip2"
+    "strip2",
+    "strip3",
+    "strip4",
+    "strip5"
   ],
   "levels": [
     {
       "id": "f01_first_fall",
-      "mapX": 0.34,
+      "mapX": 0.3,
+      "mapY": 0.055,
+      "budgetFactor": -1.0,
+      "fall": {
+        "width": 4,
+        "height": 6,
+        "rows": [
+          "....",
+          "....",
+          "....",
+          "....",
+          "....",
+          "RYY."
+        ],
+        "motes": "GBR"
+      }
+    },
+    {
+      "id": "f01_two_lights",
+      "mapX": 0.72,
       "mapY": 0.14,
       "fall": {
+        "width": 4,
+        "height": 6,
+        "rows": [
+          "....",
+          "....",
+          "....",
+          "....",
+          "Y.YY",
+          "YYYM"
+        ],
+        "motes": "BGRGBR"
+      }
+    },
+    {
+      "id": "f01_the_kindling",
+      "mapX": 0.26,
+      "mapY": 0.225,
+      "fall": {
+        "width": 5,
+        "height": 7,
+        "rows": [
+          ".....",
+          ".....",
+          ".....",
+          ".....",
+          "YB...",
+          "YMM.M",
+          "YYMMM"
+        ],
+        "motes": "GBRBRG"
+      }
+    },
+    {
+      "id": "f01_narrow_water",
+      "mapX": 0.7,
+      "mapY": 0.31,
+      "fall": {
+        "width": 5,
+        "height": 8,
+        "rows": [
+          ".....",
+          ".....",
+          ".....",
+          ".....",
+          "..YY.",
+          ".CRYY",
+          "CBGYM",
+          "CCMRM"
+        ],
+        "motes": "GBRGRBR"
+      }
+    },
+    {
+      "id": "f01_the_stack",
+      "mapX": 0.28,
+      "mapY": 0.395,
+      "fall": {
+        "width": 5,
+        "height": 7,
+        "rows": [
+          ".....",
+          ".....",
+          ".....",
+          ".YRB.",
+          "YYGC.",
+          "YYYCM",
+          "YYGCM"
+        ],
+        "motes": "BGRGBRB"
+      }
+    },
+    {
+      "id": "f01_deep_cistern",
+      "mapX": 0.74,
+      "mapY": 0.48,
+      "fall": {
         "width": 6,
-        "height": 11
+        "height": 8,
+        "rows": [
+          "......",
+          "......",
+          "......",
+          "......",
+          "..MRB.",
+          "M.MRCC",
+          "YMRBCC",
+          "YYYYCC"
+        ],
+        "motes": "RGBGBRGR"
+      }
+    },
+    {
+      "id": "f01_brimming",
+      "mapX": 0.3,
+      "mapY": 0.56,
+      "fall": {
+        "width": 6,
+        "height": 8,
+        "rows": [
+          "......",
+          "......",
+          "......",
+          ".YYCG.",
+          ".YGBB.",
+          ".YYMBC",
+          "YYGMMM",
+          "YYYRMM"
+        ],
+        "motes": "BGRGRBGB"
+      }
+    },
+    {
+      "id": "f01_the_undertow",
+      "mapX": 0.68,
+      "mapY": 0.645,
+      "fall": {
+        "width": 6,
+        "height": 9,
+        "rows": [
+          "......",
+          "......",
+          "......",
+          "..B...",
+          ".RBMMM",
+          "YYGMRM",
+          "YYYGBC",
+          "YYYGCC",
+          "YYYYBC"
+        ],
+        "motes": "BRGBRGRB"
+      }
+    },
+    {
+      "id": "f01_last_ember",
+      "mapX": 0.26,
+      "mapY": 0.73,
+      "fall": {
+        "width": 6,
+        "height": 9,
+        "rows": [
+          "......",
+          "......",
+          "......",
+          ".Y....",
+          "RGYY.Y",
+          "RYYY.Y",
+          "GYGYYY",
+          "CBYYYY",
+          "CCBRYY"
+        ],
+        "motes": "GRBRBGRG"
+      }
+    },
+    {
+      "id": "f01_the_deep_well",
+      "mapX": 0.72,
+      "mapY": 0.815,
+      "fall": {
+        "width": 6,
+        "height": 9,
+        "rows": [
+          "......",
+          "......",
+          "......",
+          ".R.RM.",
+          ".YRRM.",
+          "YGGMM.",
+          "YYRMMM",
+          "YYRMMM",
+          "YYRMMM"
+        ],
+        "motes": "GBRGRBBG"
       }
     }
   ]

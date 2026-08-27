@@ -52,7 +52,6 @@ namespace GlimmerGrove.Tests
 
             protected override void Build() { }
             public override void RetryAfterDefeat() { }
-            public override void Resume() { }
 
             // `protected` rather than `protected internal`: overriding across assemblies drops
             // the internal half, which C# requires rather than merely allows.
@@ -65,6 +64,7 @@ namespace GlimmerGrove.Tests
             // *not* reimplemented: the decision each of these reaches is still the base
             // class's, which is the whole point of testing here rather than in a mode.
             public bool Priced => Staked;
+            public HeartPrice Cost => Price;
             public bool Begun => Committed;
             public void Begin() => Commit();
             public void End() => Resolve();
@@ -80,7 +80,7 @@ namespace GlimmerGrove.Tests
                 => ConfirmForfeit(ForfeitOverlay.Kind.Leave, "back", () => Left = true);
         }
 
-        const string Free = "g1", Paid = "g4";
+        const string Free = "g1", Paid = "g4", Beaten = "g5";
 
         LevelCatalog _catalogBefore;
         readonly List<StakeProbe> _probes = new List<StakeProbe>();
@@ -91,16 +91,12 @@ namespace GlimmerGrove.Tests
             _catalogBefore = GameContent.Catalog;
             GameContent.Publish(LevelCatalog.FromLoaded(Catalog(), Array.Empty<ChapterBody>()));
 
-            var dto = new ProgressionDto
-            {
-                schemaVersion = ProgressionSchema.Version,
-                xpToNext = new[] { 100 },
-                tailXpToNext = 100,
-                tailXpIncrement = 10,
-                hearts = new HeartsDto { graceLevels = 3 },
-            };
-            Assert.IsTrue(ProgressionTable.TryBuild(dto, out var table, new List<string>()));
-            ProgressionRules.Publish(table);
+            Grace(3);
+
+            // A fresh save as well as a fresh table: the stake now reads what the player has
+            // finished, and another fixture in this assembly may have left records behind. The
+            // offline runner promises no order, so independence is taken rather than assumed.
+            PlayerProgress.LoadFrom(new SaveFileDto());
 
             RunGuard.Resolve();
             RunGuard.NoteReported();
@@ -116,7 +112,28 @@ namespace GlimmerGrove.Tests
             RunGuard.Resolve();
             RunGuard.NoteReported();
             ProgressionRules.Reset();
+            PlayerProgress.LoadFrom(new SaveFileDto());
             GameContent.Publish(_catalogBefore);
+        }
+
+        /// <summary>
+        /// Records the named glades as finished, straight into the save. Not through
+        /// <c>RecordRun</c>, which would write a file.
+        /// </summary>
+        static void Finished(params string[] levels)
+        {
+            var dto = new SaveFileDto { levels = new LevelRecordDto[levels.Length] };
+
+            for (int i = 0; i < levels.Length; i++)
+                dto.levels[i] = new LevelRecordDto
+                {
+                    levelId = levels[i],
+                    stars = 1,
+                    bestMoves = 10,
+                    clears = 1,
+                };
+
+            PlayerProgress.LoadFrom(dto);
         }
 
         /// <summary>One five-glade chapter, so the window covers the first three of it.</summary>
@@ -129,6 +146,22 @@ namespace GlimmerGrove.Tests
                 levels = new[] { "g1", "g2", "g3", "g4", "g5" },
             }, 1);
             return builder.Build();
+        }
+
+        /// <summary>Republishes the rules table with a different free window.</summary>
+        static void Grace(int levels)
+        {
+            var dto = new ProgressionDto
+            {
+                schemaVersion = ProgressionSchema.Version,
+                xpToNext = new[] { 100 },
+                tailXpToNext = 100,
+                tailXpIncrement = 10,
+                hearts = new HeartsDto { graceLevels = levels },
+            };
+
+            Assert.IsTrue(ProgressionTable.TryBuild(dto, out var table, new List<string>()));
+            ProgressionRules.Publish(table);
         }
 
         StakeProbe On(string level)
@@ -145,6 +178,55 @@ namespace GlimmerGrove.Tests
         {
             Assert.IsFalse(On(Free).Priced, "the third glade of the first chapter");
             Assert.IsTrue(On(Paid).Priced, "the fourth");
+        }
+
+        [Test]
+        public void AGladeAlreadyFinishedIsNotStakedEitherAndSaysWhy()
+        {
+            // The second clause, at the screen. Same catalog, same window — the only thing that
+            // moved is what the player has beaten.
+            Finished(Beaten);
+
+            var beaten = On(Beaten);
+            Assert.IsFalse(beaten.Priced, "a glade this player has already finished");
+            Assert.AreEqual(HeartPrice.Replay, beaten.Cost);
+
+            Assert.IsTrue(On(Paid).Priced, "and its unfinished neighbour still costs");
+            Assert.AreEqual(HeartPrice.Opening, On(Free).Cost, "the window still says so first");
+        }
+
+        [Test]
+        public void AFinishedGladeIsWalkedAwayFromWithoutBeingAskedAbout()
+        {
+            // What the player actually reported feeling: a warning panel about a heart nobody
+            // is taking. ConfirmForfeit asks only when there is something to charge, so the
+            // exit has to complete on its own with no modal raised — which is what Left being
+            // true synchronously proves, since the confirmation would leave it false until
+            // somebody tapped it.
+            Finished(Beaten);
+
+            var probe = On(Beaten);
+            probe.Begin();
+            probe.WalkAway();
+
+            Assert.IsTrue(probe.Left, "leaving a glade you have beaten stopped to ask");
+            Assert.IsFalse(probe.Begun, "and it is still forfeited rather than left owed for");
+            CollectionAssert.AreEqual(new[] { "back" }, probe.Abandonments,
+                                      "the abandonment is written down whatever it cost");
+        }
+
+        [Test]
+        public void ClearingAGladeMidScreenNeverTurnsAFreeRunIntoAChargedOne()
+        {
+            // The latch, in the direction that matters. A price the player has been told is
+            // free is kept for the life of the screen however the rules move underneath it;
+            // the opposite direction — a first clear making a restart free — costs nobody
+            // anything and is the honest reading of a rule that just changed in their favour.
+            var probe = On(Free);
+            Assert.IsFalse(probe.Priced);
+
+            Grace(0);
+            Assert.IsFalse(probe.Priced, "a content push mid-run cannot start charging for it");
         }
 
         [Test]

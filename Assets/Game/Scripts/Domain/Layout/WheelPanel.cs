@@ -9,8 +9,19 @@ namespace GlimmerGrove.Layout
         /// <summary>The odds line's centre — one sentence, under the rim.</summary>
         public readonly float OddsCentre;
 
-        /// <summary>The status paragraph's <em>top</em>, because it is set from its head down.</summary>
-        public readonly float StatusTop;
+        /// <summary>
+        /// The status paragraph's <em>centre</em>, like every other row here.
+        ///
+        /// <para>
+        /// It was the paragraph's top, and that is what drew it through the odds line for as
+        /// long as the wheel has existed: <c>UIKit.Box</c> pivots every box centrally whatever
+        /// it is anchored to, so a top handed to the overlay as a position lifts the box 46
+        /// units — the house rule this file was created to obey, broken by the one row that
+        /// described itself differently from its neighbours. A stack whose numbers all mean the
+        /// same thing cannot be read wrongly by the next caller.
+        /// </para>
+        /// </summary>
+        public readonly float StatusCentre;
 
         /// <summary>The one button's centre: spin, then the video, then collect.</summary>
         public readonly float ButtonCentre;
@@ -19,12 +30,12 @@ namespace GlimmerGrove.Layout
         public readonly float Height;
 
         public WheelStack(float wheelCentre, float wheelSize, float oddsCentre,
-                          float statusTop, float buttonCentre, float height)
+                          float statusCentre, float buttonCentre, float height)
         {
             WheelCentre = wheelCentre;
             WheelSize = wheelSize;
             OddsCentre = oddsCentre;
-            StatusTop = statusTop;
+            StatusCentre = statusCentre;
             ButtonCentre = buttonCentre;
             Height = height;
         }
@@ -93,7 +104,7 @@ namespace GlimmerGrove.Layout
             float odds = y + OddsHeight * .5f;
             y += OddsHeight + OddsFoot;
 
-            float status = y;
+            float status = y + StatusHeight * .5f;
             y += StatusHeight + StatusFoot;
 
             float button = y + ButtonHeight * .5f;

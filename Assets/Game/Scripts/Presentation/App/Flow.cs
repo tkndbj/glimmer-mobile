@@ -6,6 +6,61 @@ using UnityEngine.UI;
 
 namespace GlimmerGrove
 {
+    /// <summary>
+    /// Where a panel sits in the modal stack, so what draws over what is a <em>declaration</em>
+    /// rather than an accident of which one was raised first.
+    ///
+    /// <para>
+    /// <b>It exists because creation order is not the same as importance.</b> Every modal is a
+    /// child of one node and Unity draws the last sibling on top, which is right for the
+    /// overwhelming majority of panels — one is raised from another and belongs above it. It is
+    /// wrong for exactly one kind: a panel that is raised on a <em>timer</em>. A first-timer's
+    /// lesson is scheduled a beat after the board arrives (<c>RunScreen.LessonDelay</c>) and
+    /// chained a beat after each dismissal, and a player who opens the pause menu inside one of
+    /// those beats had raised their panel first — so the tip landed on top of it, over a menu
+    /// that could still be pressed through the hole cut in the tip's own dim.
+    /// </para>
+    /// <para>
+    /// Sequencing alone fixes the case that was reported (see <c>RunLessons.ShowLesson</c>,
+    /// which now waits for a clear screen), and this is the half that makes it
+    /// <em>unrepresentable</em> rather than remembered: whatever order two panels are raised in,
+    /// a lesson cannot cover a menu. The numbers are spaced so a layer can be added between two
+    /// of them without renumbering anything.
+    /// </para>
+    /// </summary>
+    public static class ModalLayer
+    {
+        /// <summary>
+        /// A lesson over the board. The bottom of the stack, because it is the only panel here
+        /// that appears without the player having asked for it at that moment.
+        /// </summary>
+        public const int Teaching = 0;
+
+        /// <summary>Everything else: menus, offers, prompts, receipts. The default.</summary>
+        public const int Panel = 10;
+
+        /// <summary>
+        /// A lesson pointing at a control that is on a <em>panel</em> rather than on the board.
+        ///
+        /// <para>
+        /// <b>It is the one place <see cref="Teaching"/> is not merely conservative but fatal.</b>
+        /// A tip cuts its spotlight out of its own dim, so the thing it is pointing at is only
+        /// visible through the hole — put the tip underneath the panel carrying that control and
+        /// the panel hides the lesson and its subject together. The win panel's wheel tip drew
+        /// exactly nothing for that reason, and because a tip is marked seen once in a player's
+        /// life it was spent on a frame nobody saw.
+        /// </para>
+        /// <para>
+        /// Above <see cref="Panel"/> is safe here only because a tip on a panel is raised by
+        /// that panel, which checks it is still the one being looked at first
+        /// (<see cref="Flow.IsTopModal"/>) — and once up, a tip swallows every tap, including
+        /// the one through its own hole. What is being bought is the licence to cover
+        /// <em>one</em> panel, not the licence <see cref="Teaching"/> exists to withhold.
+        /// </para>
+        /// </summary>
+        public const int Coaching = 20;
+    }
+
     /// <summary>Base class for a full screen of UI. Subclasses build themselves in Build().</summary>
     public abstract class View : MonoBehaviour
     {
@@ -34,7 +89,14 @@ namespace GlimmerGrove
         /// </para>
         /// </summary>
         protected RectTransform Safe
-            => _safe != null ? _safe : (_safe = SafeArea.Node("Safe", Content));
+            => _safe != null ? _safe : (_safe = SafeArea.Node("Safe", Content, SafeEdges));
+
+        /// <summary>
+        /// Which edges <see cref="Safe"/> insets. All four unless a screen says otherwise, and
+        /// the only screens that do are the run screens, which give up the top — see
+        /// <c>RunScreen.SafeEdges</c>. Read once, when the layer is first asked for.
+        /// </summary>
+        protected virtual SafeArea.Edges SafeEdges => SafeArea.Edges.All;
 
         internal void Init()
         {
@@ -66,6 +128,17 @@ namespace GlimmerGrove
         /// </para>
         /// </summary>
         public virtual bool IsLeaving => false;
+
+        /// <summary>
+        /// Which layer of the modal stack this panel belongs to. See <see cref="ModalLayer"/>.
+        ///
+        /// <para>
+        /// Declared here rather than on <c>ModalView</c> for <see cref="IsLeaving"/>'s reason —
+        /// <see cref="Flow"/> holds <see cref="View"/> and may not reach downwards. A screen is
+        /// never in the stack, so the value it inherits is never read.
+        /// </para>
+        /// </summary>
+        public virtual int Layer => ModalLayer.Panel;
 
         /// <summary>Called once the incoming transition has finished.</summary>
         public virtual void OnPresented() { }
@@ -324,8 +397,38 @@ namespace GlimmerGrove
             var view = rt.gameObject.AddComponent<T>();
             configure?.Invoke(view);
             view.Init();
-            _modals.Add(view);
+
+            // By layer first and by arrival second, so a panel raised on a timer cannot end up
+            // over one the player asked for. See ModalLayer.
+            int at = _modals.Count;
+            while (at > 0 && _modals[at - 1].Layer > view.Layer) at--;
+            _modals.Insert(at, view);
+            Restack();
+
             return view;
+        }
+
+        /// <summary>
+        /// Puts the overlay node's children back into <see cref="_modals"/> order.
+        ///
+        /// <para>
+        /// Walked forwards with <c>SetAsLastSibling</c> rather than by computing an index for
+        /// the newcomer, because the two are not the same list: <c>Destroy</c> lands at the end
+        /// of the frame, so a panel already dismissed is still a child for the rest of it and
+        /// any index taken from <see cref="Overlays"/> would be off by however many of those
+        /// there are. Doing it this way needs no such arithmetic — every live panel is lifted
+        /// above every leftover, in order, and the leftovers sink to the bottom where they
+        /// belong for the frame they have left.
+        /// </para>
+        /// <para>
+        /// Cheap enough to be unconditional: the stack is two or three panels deep at its worst
+        /// and this runs once, when one is raised.
+        /// </para>
+        /// </summary>
+        static void Restack()
+        {
+            for (int i = 0; i < _modals.Count; i++)
+                if (_modals[i]) _modals[i].Root.SetAsLastSibling();
         }
 
         /// <summary>
@@ -354,6 +457,58 @@ namespace GlimmerGrove
         }
 
         public static bool HasModal => _modals.Count > 0;
+
+        /// <summary>
+        /// Whether <paramref name="v"/> is the topmost panel that is up and staying up.
+        ///
+        /// <para>
+        /// For a panel that raises a lesson over <em>itself</em> on a timer, which is
+        /// <c>WinOverlay.TeachTheWheel</c> and nothing else. Such a tip sits above
+        /// <see cref="ModalLayer.Panel"/> (see <see cref="ModalLayer.Coaching"/>), so the check
+        /// <see cref="ModalLayer.Teaching"/> makes structurally has to be made here instead:
+        /// several seconds of victory sequence run before the beat fires, and a player who
+        /// tapped the offer inside one of them has a panel up that the lesson would cover.
+        /// </para>
+        /// <para>
+        /// A panel on its way out does not count, for <see cref="View.IsLeaving"/>'s reason —
+        /// a lesson chained behind a panel that is still fading must not be refused by it.
+        /// </para>
+        /// </summary>
+        public static bool IsTopModal(View v)
+        {
+            if (!v || v.IsLeaving) return false;
+
+            for (int i = _modals.Count - 1; i >= 0; i--)
+            {
+                var m = _modals[i];
+                if (!m || m.IsLeaving) continue;
+                return ReferenceEquals(m, v);
+            }
+
+            return false;
+        }
+
+        /// <summary>
+        /// Whether anything above <paramref name="layer"/> is up and staying up.
+        ///
+        /// <para>
+        /// For a panel that raises itself on a timer and has to decide whether now is a good
+        /// moment — <c>RunLessons</c> is the one caller and the reason this exists. A panel on
+        /// its way out does not count, for <see cref="View.IsLeaving"/>'s reason: a lesson
+        /// chained behind the tip that is still fading must not be refused by it.
+        /// </para>
+        /// </summary>
+        public static bool HasModalAbove(int layer)
+        {
+            for (int i = _modals.Count - 1; i >= 0; i--)
+            {
+                var m = _modals[i];
+                if (!m || m.IsLeaving) continue;
+                if (m.Layer > layer) return true;
+            }
+
+            return false;
+        }
 
         internal static void HandleBack()
         {

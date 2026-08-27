@@ -50,18 +50,22 @@ namespace GlimmerGrove.Tests
         /// those are the questions only the mode can answer, and none of them touches a price.
         /// </para>
         /// <para>
-        /// <c>Committed</c> and <c>Staked</c> are the two facts the exits are priced from — has
-        /// this run been paid for, and is it one that costs anything at all (a mode's free
-        /// opening is not; see <c>HeartStake</c>). They are read by the modes and written only
-        /// here, so a mode declaring either would shadow the answer rather than change it, and
-        /// every exit would silently price itself from a field nothing sets.
+        /// <c>Committed</c>, <c>Staked</c> and <c>Price</c> are the facts the exits are priced
+        /// from — has this run been paid for, does it cost anything at all, and if not, why not
+        /// (a mode's free opening does not, and neither does a glade the player has already
+        /// finished; see <c>HeartStake</c>). They are read by the modes and written only here,
+        /// so a mode declaring any of them would shadow the answer rather than change it, and
+        /// every exit would silently price itself from a field nothing sets. <c>Price</c> is on
+        /// the list for a second reason as well: it is what the defeat panel is told, so a mode
+        /// with its own copy could tell a player their run was free while the base class took a
+        /// heart for it.
         /// </para>
         /// </summary>
         static readonly string[] StakeMembers =
         {
             "Commit", "Resolve", "Forfeit", "ConfirmForfeit", "RestartLevel",
             "LeaveToMap", "LeaveToHome",
-            "Committed", "Staked",
+            "Committed", "Staked", "Price",
             "Continue", "Teaching",
             "LoseOrContinue", "OfferOrLose", "DoneDeciding", "ResetContinues",
         };
@@ -154,6 +158,43 @@ namespace GlimmerGrove.Tests
             Assert.AreEqual(typeof(RunContinueFlow),
                             typeof(RunScreen).GetProperty("Continue",
                                 BindingFlags.Instance | BindingFlags.NonPublic)?.PropertyType);
+        }
+
+        /// <summary>
+        /// Handing a board back is the screen's rule, and no mode may have an opinion about it.
+        ///
+        /// <para>
+        /// It was each mode's own, and every copy was the same two lines with a different name
+        /// for the board — which is the drift this whole suite is about, at a smaller scale.
+        /// What made it worth consolidating rather than merely tidy is the clause the shared
+        /// answer now carries: a board a lesson is holding is <em>not</em> handed back. A lesson
+        /// goes up on a timer, so a player can open the pause menu in the beat before the first
+        /// one appears, and the menu hands the board back through this method on every exit it
+        /// has. Three copies meant three places for that clause to be missing from.
+        /// </para>
+        /// </summary>
+        [Test]
+        public void HandingABoardBackIsTheScreensRuleRatherThanAModes()
+        {
+            var resume = typeof(RunScreen).GetMethod("Resume",
+                                                     BindingFlags.Instance | BindingFlags.Public);
+
+            Assert.IsNotNull(resume, "RunScreen no longer hands a board back");
+            Assert.IsFalse(resume.IsVirtual,
+                           "RunScreen.Resume is overridable again, so a mode can ship a copy that "
+                           + "unlocks a board a lesson is still holding");
+
+            var found = new List<string>();
+
+            foreach (var mode in Modes)
+                foreach (var member in mode.GetMembers(BindingFlags.Instance | BindingFlags.Public
+                                                       | BindingFlags.NonPublic
+                                                       | BindingFlags.DeclaredOnly))
+                    if (member.Name == "Resume") found.Add($"{mode.Name}.{member.Name}");
+
+            CollectionAssert.IsEmpty(found,
+                "these modes hand their own board back rather than declaring Latch and letting "
+                + "RunScreen decide when: " + string.Join(", ", found));
         }
 
         [Test]

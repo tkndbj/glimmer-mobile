@@ -82,7 +82,6 @@ namespace GlimmerGrove.Content
         /// <summary>Localisation keys. Never display these raw - go through Loc.</summary>
         public string NameKey => DefaultNameKey(Id);
         public string TaglineKey => DefaultTaglineKey(Id);
-        public string LessonKey => DefaultLessonKey(Id);
 
         /// <summary>
         /// A level's strings are a pure function of its id, by convention and with no override.
@@ -92,7 +91,13 @@ namespace GlimmerGrove.Content
         /// </summary>
         public static string DefaultNameKey(LevelId id) => "level." + id.Value + ".name";
         public static string DefaultTaglineKey(LevelId id) => "level." + id.Value + ".tagline";
-        public static string DefaultLessonKey(LevelId id) => "level." + id.Value + ".lesson";
+
+        // A third key, `level.<id>.lesson`, is retired. It was a line of flavour floated along
+        // the bottom of any run with nothing new to teach — so on every level of every mode
+        // after the first few, which is furniture rather than something anybody reads. The tips
+        // are what a board has to say. The key is not re-pointed at anything else: a level's
+        // strings are a pure function of its id, so re-using the suffix for a different sentence
+        // would silently re-label sixty levels of authored prose.
 
         public override string ToString() => Id.Value;
     }

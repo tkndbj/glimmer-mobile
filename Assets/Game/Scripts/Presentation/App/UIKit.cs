@@ -243,12 +243,42 @@ namespace GlimmerGrove
             // The one-line pass runs first, because everything below is measured against the
             // width it leaves behind. See OneLine for why this lives here rather than at the
             // call site.
-            if (button.OneLine) Squeeze(button, room);
+            //
+            // Best-fit is switched off *here* rather than only in OneLine, so that raising the
+            // flag by hand cannot leave the two rules fighting over one label. It shipped that
+            // way on both buttons that open and take the video bonus: Squeeze computed a size
+            // from preferredWidth, best-fit overrode it at draw time, and — because best-fit
+            // concedes the line before it concedes the size — the caption folded onto two lines
+            // and then re-laid itself out a frame later when the dynamic font's texture was
+            // regenerated, which the player sees as a caption arriving crushed and springing
+            // out. One label, one rule that sizes it.
+            if (button.OneLine)
+            {
+                button.Label.resizeTextForBestFit = false;
+                button.Label.horizontalOverflow = HorizontalWrapMode.Overflow;
+                Squeeze(button, room);
+            }
 
-            if (button.Icon == null) return;
+            var labelRt = button.Label.rectTransform;
+
+            // No glyph: the caption owns the whole face, so the box is put back to full width
+            // and centred. Returning early instead — which is what this did — leaves behind
+            // whatever the *last* fit wrote, and that is not hypothetical: a button built with a
+            // glyph is measured with one, so a caller that later takes the glyph away (the
+            // wheel's SPIN, the victory panel's COLLECTED) kept a narrowed box shoved to the
+            // right of centre by half a glyph. It read as a caption that is not quite centred,
+            // which is the kind of wrongness that is much easier to see than to explain.
+            // BonusWheelOverlay carried a hand-written copy of these two lines for exactly this;
+            // one restore in the one place that narrows the box is the version that cannot be
+            // forgotten by the next caller.
+            if (button.Icon == null)
+            {
+                labelRt.sizeDelta = new Vector2(button.LabelWidth, labelRt.sizeDelta.y);
+                labelRt.anchoredPosition = new Vector2(0f, labelRt.anchoredPosition.y);
+                return;
+            }
 
             var glyphRt = (RectTransform)button.Icon.transform;
-            var labelRt = button.Label.rectTransform;
 
             float text = Mathf.Min(button.Label.preferredWidth, room);
 

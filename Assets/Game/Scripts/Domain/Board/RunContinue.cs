@@ -23,6 +23,12 @@ namespace GlimmerGrove
 
         /// <summary>Cells of light in a weave's pot of ink (invariant 22b).</summary>
         Ink = 1,
+
+        /// <summary>
+        /// Motes in a well's supply. Lightfall's turn is a drop, and its budget is the same
+        /// <c>par x budgetFactor</c> every other mode is dealt, counted in motes.
+        /// </summary>
+        Motes = 2,
     }
 
     /// <summary>

@@ -46,5 +46,28 @@ namespace GlimmerGrove
         /// </para>
         /// </summary>
         OutOfInk = 3,
+
+        /// <summary>
+        /// A Lightfall well flooded: a mote came to rest above the brim.
+        ///
+        /// <para>
+        /// Its own value rather than <see cref="OutOfMoves"/>, for this enum's reason. The two
+        /// ways to lose a well want opposite fixes and a single count could not tell them
+        /// apart: flooding means the boards are asking for more spatial care than they are
+        /// teaching, which is a level design problem, where running dry means the supply is
+        /// tight, which is a tuning one. They are also the two halves of the same mistake seen
+        /// from different distances, so the ratio between them is the reading that matters.
+        /// </para>
+        /// </summary>
+        WellFlooded = 4,
+
+        /// <summary>
+        /// A Lightfall well ran out of motes with light still standing in it.
+        ///
+        /// Covers both ways the supply ends — the tray emptying, and what is left to come being
+        /// unable to finish what is left standing — because from the player's side those are
+        /// one thing: there are not enough motes left to clear the well.
+        /// </summary>
+        OutOfMotes = 5,
     }
 }

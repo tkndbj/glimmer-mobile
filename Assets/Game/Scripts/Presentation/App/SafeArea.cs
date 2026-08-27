@@ -51,6 +51,39 @@ namespace GlimmerGrove
             public bool Equals(Insets o)
                 => Mathf.Approximately(Left, o.Left) && Mathf.Approximately(Right, o.Right)
                 && Mathf.Approximately(Bottom, o.Bottom) && Mathf.Approximately(Top, o.Top);
+
+            /// <summary>The same insets with every edge not named zeroed.</summary>
+            public Insets Only(Edges edges)
+                => new Insets((edges & Edges.Left) != 0 ? Left : 0f,
+                              (edges & Edges.Right) != 0 ? Right : 0f,
+                              (edges & Edges.Bottom) != 0 ? Bottom : 0f,
+                              (edges & Edges.Top) != 0 ? Top : 0f);
+        }
+
+        /// <summary>
+        /// Which edges a safe layer honours.
+        ///
+        /// <para>
+        /// A screen opts controls into the inset (see the remarks above), and a screen may also
+        /// decide that one edge is not worth the room. The run screens drop <see cref="Top"/>:
+        /// a board is the largest control in the game and every canvas unit the header does not
+        /// take is a unit the board grows by, so a header pushed down by a cutout costs the
+        /// thing the screen exists to draw. Nothing up there is small enough for a camera to
+        /// hide — see <c>RunScreen.SafeEdges</c>.
+        /// </para>
+        /// </summary>
+        [System.Flags]
+        public enum Edges
+        {
+            None = 0,
+            Left = 1,
+            Right = 2,
+            Bottom = 4,
+            Top = 8,
+            All = Left | Right | Bottom | Top,
+
+            /// <summary>Everything but the top. The run screens' answer.</summary>
+            SidesAndBottom = Left | Right | Bottom,
         }
 
         /// <summary>
@@ -96,10 +129,10 @@ namespace GlimmerGrove
         /// per frame per open screen.
         /// </para>
         /// </summary>
-        public static RectTransform Node(string name, Transform parent)
+        public static RectTransform Node(string name, Transform parent, Edges edges = Edges.All)
         {
             var rt = UIKit.Node(name, parent);
-            rt.gameObject.AddComponent<SafeAreaFitter>();
+            rt.gameObject.AddComponent<SafeAreaFitter>().Honours = edges;
             return rt;
         }
     }
@@ -115,6 +148,23 @@ namespace GlimmerGrove
         Canvas _canvas;
         SafeArea.Insets _applied;
         bool _ever;
+        SafeArea.Edges _edges = SafeArea.Edges.All;
+
+        /// <summary>
+        /// Which edges this fitter insets. Set by <see cref="SafeArea.Node"/>; assigning it
+        /// re-applies at once, because the component is added before the value is known.
+        /// </summary>
+        public SafeArea.Edges Honours
+        {
+            get => _edges;
+            set
+            {
+                if (_edges == value) return;
+                _edges = value;
+                _ever = false;
+                Apply();
+            }
+        }
 
         void Awake()
         {
@@ -138,7 +188,7 @@ namespace GlimmerGrove
         {
             if (_rt == null) return;
 
-            var insets = SafeArea.For(_canvas);
+            var insets = SafeArea.For(_canvas).Only(_edges);
             if (_ever && insets.Equals(_applied)) return;
 
             _applied = insets;

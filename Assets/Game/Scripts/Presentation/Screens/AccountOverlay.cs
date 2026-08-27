@@ -132,13 +132,11 @@ namespace GlimmerGrove
             string account = linked || choosing ? CloudSaveService.AccountLabel : string.Empty;
             bool showAccount = !contested && !string.IsNullOrEmpty(account);
 
-            // PlayerProgress rather than PlayerProgression, here and in the two lines below.
-            // The derived total drops any glade the catalog has not loaded, which is right for
-            // the reward arithmetic and wrong for a sentence: a panel that told somebody they
-            // had nothing to lose because the content index was a moment late would be wrong in
-            // the one direction this screen must never be wrong in.
-            bool showStakes = !linked && !contested && !choosing && !mismatched
-                              && PlayerProgress.ClearedCount > 0;
+            // PlayerProgress rather than PlayerProgression in the adopt-cost line below. The
+            // derived total drops any glade the catalog has not loaded, which is right for the
+            // reward arithmetic and wrong for a sentence: a panel that told somebody they had
+            // nothing to lose because the content index was a moment late would be wrong in the
+            // one direction this screen must never be wrong in.
             bool showSwitch = linked && !choosing;
             bool showProviders = available && !contested && (choosing || mismatched || !linked);
 
@@ -164,7 +162,7 @@ namespace GlimmerGrove
             Row(StatusH, AfterStatus);
             if (showAccount) Row(LabelH, AfterLabel);
             Row(WhyH, AfterWhy);
-            if (showStakes || costly) Row(LineH, AfterLine);
+            if (costly) Row(LineH, AfterLine);
             if (choosing) Row(LineH, AfterLine);
             if (contested) Row(ButtonH, costly ? BetweenButtons : AfterButtons);
             if (costly) Row(WarnH, AfterButtons);
@@ -215,15 +213,6 @@ namespace GlimmerGrove
 
             Fit(Line("Why", Loc.Get(bodyKey), 26, new Color(.44f, .32f, .24f, .95f),
                      WhyH, TextAnchor.UpperCenter, 0f), 20, 26);
-
-            // "Lives only on this device" is abstract; "47 glades and keeper level 12
-            // live only on this device" is not. Shown only once there is something to
-            // lose, so a brand-new player is not warned about nothing.
-            if (showStakes)
-                Fit(Line("Stakes",
-                         Loc.Format("ui.account.guest_stakes",
-                                    PlayerProgress.ClearedCount, PlayerProgression.Level.Level),
-                         28, Pal.Rose, LineH, TextAnchor.MiddleCenter, 2f), 22, 28);
 
             // Named concretely rather than as "your progress". Somebody three weeks in
             // deserves to see the three weeks before they tap, and the other account's

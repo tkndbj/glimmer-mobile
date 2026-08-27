@@ -22,12 +22,20 @@ namespace GlimmerGrove
     public static class RunWording
     {
         /// <summary>
-        /// The key for "31 turns · 2:14", or the hollow's "4 sparks · 1:12".
+        /// The key for "31 turns", or a weave's "woven with 44".
         ///
-        /// Four keys per mode because "1 turns" is wrong in English and worse in languages with
-        /// real plural rules, and because a run that resolved before the clock could read
-        /// anything has a move count and no time — a dash where the time goes reads as a broken
-        /// record rather than an untimed one.
+        /// <para>
+        /// Two keys per mode, and the <em>strings</em> behind them are as much a part of that
+        /// contract as the names are. Both stems shipped reading "{0} turns · {1}", because a
+        /// record used to carry a time as well as a count — and when the clock went (invariant
+        /// 22) the two timed forms were dropped from this method while the table kept the timed
+        /// text. <see cref="Loc.Format"/> swallows the <c>FormatException</c> a missing argument
+        /// raises and hands back the pattern, so every map node and every victory panel in the
+        /// game printed the literal "{0} turns · {1}" instead of a number. Nothing could see
+        /// it: the keys all resolve, so invariant 6's gate passes, and a placeholder the caller
+        /// never fills is not a compile error. <c>Tools/verify/loc.py</c> now counts placeholders
+        /// against arguments for exactly this.
+        /// </para>
         /// </summary>
         public static string RecordKey(LevelId level, int moves)
         {

@@ -37,12 +37,16 @@ namespace GlimmerGrove
     /// runs feeding the chests, which the chest panel already says beside the chests.
     /// </para>
     /// <para>
-    /// <b>The panel's height is derived, and the sections it holds vary.</b> The free opening
-    /// (<see cref="HeartStake"/>) is true of one chapter per mode and nowhere else, so it is
-    /// drawn where it is true and the panel is measured to what it is actually saying — the
-    /// same judgement <c>SettingsOverlay</c> and <c>AccountOverlay</c> make. The arithmetic is
+    /// <b>The panel's height is derived, and the sections it holds vary.</b> The panel is
+    /// measured to what it is actually saying rather than to a typed number — the same
+    /// judgement <c>SettingsOverlay</c> and <c>AccountOverlay</c> make. The arithmetic is
     /// <see cref="PanelStack"/>'s, in Domain, because a hand-written height is how the four
-    /// sections that shipped came to be overlapping the button under them.
+    /// sections that shipped came to be overlapping the button under them. Five is what the
+    /// shortest canvas holds and five is what this panel now draws everywhere: the cost section
+    /// stopped being conditional when the heart gate grew its second clause, and the two
+    /// sentences it can carry are the same shape, so the count no longer varies. That is a fact
+    /// about today's content rather than a licence to add a sixth — <c>PanelStackTests</c> is
+    /// what says how many fit.
     /// </para>
     /// </summary>
     public sealed class GladeRewardsOverlay : ModalView
@@ -91,10 +95,13 @@ namespace GlimmerGrove
         /// asking twice — once to measure and once to fill — is how two layouts drift apart.
         /// </para>
         /// <para>
-        /// The free opening leads when it is there. It is the only answer on the panel about
-        /// the glade the player is looking at <em>right now</em> rather than about the rules
-        /// behind it, and it is only ever shown to somebody in their first chapter of a mode,
-        /// which is the one audience that has not worked anything out yet.
+        /// What a glade costs leads, and it is always said. It is the only answer on the panel
+        /// about the glade the player is looking at <em>right now</em> rather than about the
+        /// rules behind it. Which sentence depends on where they are standing: in a mode's first
+        /// chapter it is the opening window, and everywhere else it is the rule that a glade
+        /// already finished is free to play again — which is the half of the heart gate a player
+        /// otherwise has no way at all of discovering, since the only evidence of it is a panel
+        /// that does <em>not</em> appear when they leave.
         /// </para>
         /// </summary>
         List<Answer> Answers()
@@ -103,10 +110,17 @@ namespace GlimmerGrove
             var rule = table.RuleFor(_chapter);
             var answers = new List<Answer>(5);
 
+            // What a glade costs, which is the one answer that is different for the player in
+            // front of it. In a mode's first chapter it is the opening window, which subsumes
+            // the replay rule and says so; everywhere else it is the replay rule alone, which
+            // is true of every chapter that will ever ship and so is stated as a rule rather
+            // than as a count. See HeartStake.
             int free = HeartStake.FreeLevelsIn(GameContent.Index, _chapter);
-            if (free > 0)
-                answers.Add(new Answer("ic_heart", "ui.levels.rewards_free_title",
-                                       Loc.Format("ui.levels.rewards_free_body", free)));
+            answers.Add(free > 0
+                            ? new Answer("ic_heart", "ui.levels.rewards_free_title",
+                                         Loc.Format("ui.levels.rewards_free_body", free))
+                            : new Answer("ic_heart", "ui.levels.rewards_replay_title",
+                                         Loc.Get("ui.levels.rewards_replay_body")));
 
             answers.Add(new Answer("ic_star", "ui.levels.rewards_stars_title",
                                    Loc.Format("ui.levels.rewards_stars_body",

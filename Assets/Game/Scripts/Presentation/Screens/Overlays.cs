@@ -8,6 +8,7 @@ using GlimmerGrove.Layout;
 using GlimmerGrove.Localization;
 using GlimmerGrove.Persistence;
 using GlimmerGrove.Privacy;
+using GlimmerGrove.Progression;
 using GlimmerGrove.Social;
 using UnityEngine;
 using UnityEngine.UI;
@@ -223,7 +224,8 @@ namespace GlimmerGrove
         public bool HeartWasCharged;
 
         /// <summary>
-        /// True when the glade is one of a mode's free openings, so the loss cost nothing.
+        /// What the run was priced at, and if it cost nothing, why — one of a mode's free
+        /// openings, or a glade this player had already finished.
         ///
         /// <para>
         /// Distinct from <see cref="HeartWasCharged"/> being false, which is the opposite
@@ -231,8 +233,17 @@ namespace GlimmerGrove
         /// says opposite things about them — a free run always offers another go, and an empty
         /// wallet cannot. See <c>HeartStake</c>.
         /// </para>
+        /// <para>
+        /// The reason is carried rather than the bare fact because the panel prints a sentence
+        /// about it and the two sentences are not interchangeable: "one of the free levels" over
+        /// the fortieth glade of a chapter reads as a bug, and "you have already finished this
+        /// one" over somebody's second board is a fact they have no way of knowing yet.
+        /// </para>
         /// </summary>
-        public bool WasFree;
+        public HeartPrice Price;
+
+        /// <summary>Whether anything was owed for the run at all, whichever clause said so.</summary>
+        bool WasFree => Price != HeartPrice.Charged;
 
         /// <summary>
         /// The most heart icons this panel will ever draw in a row.
@@ -290,9 +301,24 @@ namespace GlimmerGrove
                 case DefeatReason.ConduitLost: return "ui.defeat.conduit_title";
                 case DefeatReason.OutOfTime: return "ui.defeat.time_title";
                 case DefeatReason.OutOfInk: return "ui.defeat.ink_title";
+                case DefeatReason.WellFlooded: return "ui.defeat.flood_title";
+                case DefeatReason.OutOfMotes: return "ui.defeat.motes_title";
                 default: return "ui.defeat.moves_title";
             }
         }
+
+        /// <summary>
+        /// Which sentence explains a run that cost nothing.
+        ///
+        /// Written out rather than built from the enum name, for <see cref="TitleKey"/>'s
+        /// reason: a concatenated key is invisible to the build's string scanner and ships
+        /// missing in whichever language nobody tested. <see cref="HeartPrice.Charged"/> cannot
+        /// reach here — the caller asks only when the run was free — but it answers the free
+        /// opening rather than throwing, because the worst a wrong sentence does on this panel
+        /// is read oddly, and the worst an exception does is eat the defeat screen.
+        /// </summary>
+        static string FreeKey(HeartPrice price)
+            => price == HeartPrice.Replay ? "ui.defeat.free_replay" : "ui.defeat.free_glade";
 
         static string ReasonKey(DefeatReason reason)
         {
@@ -301,6 +327,8 @@ namespace GlimmerGrove
                 case DefeatReason.ConduitLost: return "ui.defeat.conduit_reason";
                 case DefeatReason.OutOfTime: return "ui.defeat.time_reason";
                 case DefeatReason.OutOfInk: return "ui.defeat.ink_reason";
+                case DefeatReason.WellFlooded: return "ui.defeat.flood_reason";
+                case DefeatReason.OutOfMotes: return "ui.defeat.motes_reason";
                 default: return "ui.defeat.moves_reason";
             }
         }
@@ -357,9 +385,11 @@ namespace GlimmerGrove
 
             // Five empty hearts under a run that cost none of them is a picture of a charge
             // that did not happen, and directly above a retry button it reads as the panel
-            // contradicting itself. The row is replaced by the reason instead.
+            // contradicting itself. The row is replaced by the reason instead — the reason,
+            // not a reason: which of the two clauses spared this run is what the player needs
+            // to know, since one of them runs out after three boards and the other never does.
             if (WasFree)
-                UIKit.Shrinkable(Body("Free", Loc.Get("ui.defeat.free_glade"), -424f, 96f, Pal.Mint), 22);
+                UIKit.Shrinkable(Body("Free", Loc.Get(FreeKey(Price)), -424f, 96f, Pal.Mint), 22);
             else BuildHearts();
 
             if (stack.HasRetry)

@@ -42,6 +42,13 @@ namespace GlimmerGrove.Tests
             return false;
         }
 
+        /// <summary>The sighting for one mechanic, or an invalid one when the board has none.</summary>
+        static MechanicSighting Sighting(List<MechanicSighting> found, Mechanic wanted)
+        {
+            foreach (var s in found) if (s.Mechanic.Equals(wanted)) return s;
+            return default;
+        }
+
         // -------------------------------------------------------------- the scan
 
         [Test]
@@ -103,6 +110,47 @@ namespace GlimmerGrove.Tests
             foreach (var s in found)
                 if (s.Mechanic.Equals(Mechanic.ColourMixing))
                     Assert.AreEqual(1, s.CellIndex, "the tip should ring the critter that wants the blend");
+        }
+
+        /// <summary>
+        /// The lesson says two hearts join and their light mixes, so it has to be able to
+        /// point at the two hearts. Ringing the gold critter alone shows the question and
+        /// none of the answer, and leaves a first-timer hunting the board for the rest of
+        /// the sentence.
+        /// </summary>
+        [Test]
+        public void TheHeartsBehindABlendArePointedAtTheSame()
+        {
+            var board = Board(3, 1, new[] { "*E#R/0 @EW#M/0 *W#B/0" }, NoBudget);
+            var found = MechanicScan.InBoard(board);
+
+            var blend = Sighting(found, Mechanic.ColourMixing);
+            Assert.AreEqual(new[] { 0, 2 }, blend.Alongside, "both hearts, in reading order");
+
+            // Every other lesson here is a fact about one tile and names nothing else.
+            var rooted = Sighting(found, Mechanic.RootedTile);
+            Assert.IsFalse(rooted.Mechanic.IsValid);
+        }
+
+        /// <summary>
+        /// A heart of the right colour that the solution never joins to the critter is not
+        /// where its light comes from, however near it stands. Pointing at one would teach a
+        /// rule this glade does not follow — and this board is exactly the trap, because the
+        /// stray heart is nearer than the one that really feeds it.
+        /// </summary>
+        [Test]
+        public void AHeartTheSolutionNeverJoinsIsNotNamed()
+        {
+            var board = Board(4, 2, new[]
+            {
+                "*E#R/0 -EW/0 @EW#M/0 *W#B/0",
+                ". . *N#R/0 .",
+            }, NoBudget);
+
+            var blend = Sighting(MechanicScan.InBoard(board), Mechanic.ColourMixing);
+
+            Assert.AreEqual(new[] { 0, 3 }, blend.Alongside,
+                            "the stray red heart at 6 is the nearest one and mates with nothing");
         }
 
         /// <summary>Two hearts alone are not a blend — twin_streams wants them apart.</summary>
