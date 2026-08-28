@@ -290,6 +290,11 @@ MonoBehaviour:
     m_SerializedLabels:
     - Art/Critters/c2
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 2aaef3902264961418f358ce0eea6077
+    m_Address: Art/Bg/splash_mist
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 2b23e57abcf54b3b34b616628e87c54d
     m_Address: Art/Fx/Victory/f35
     m_ReadOnly: 0
@@ -664,6 +669,11 @@ MonoBehaviour:
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 6067986a9fd040c7a8d83460e5e04ba4
     m_Address: Art/Ui/ic_play
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 60ea9b33f45a11045a0ed9ea95a819de
+    m_Address: Art/Bg/splash_isle
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0

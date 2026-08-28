@@ -107,7 +107,8 @@ namespace GlimmerGrove.AssetPipeline
         /// </summary>
         static readonly string[] ScreenBackdrops =
         {
-            "grove_far", "grove_near", "grove_light", "splash_far",
+            "grove_far", "grove_near", "grove_light",
+            "splash_far", "splash_isle", "splash_mist",
             "home_sky", "home_ground", "home_deco",
             "map_sky", "map_ground", "map_deco",
             "streak_sky", "streak_ground", "streak_deco",

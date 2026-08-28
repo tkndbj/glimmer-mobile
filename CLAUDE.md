@@ -1539,6 +1539,11 @@ scripts fail to compile. Do not guess — verify offline:
   so it reports glades and names the other modes as skipped rather than stopping on them —
   it used to die on a `KeyError` at the first non-glade chapter, which was every run since
   the Hollow shipped.
+- **Splash art check:** `python Tools/make_splash_art.py --check` proves the three launch-screen
+  layers on disk are what the tool would write. It composes the hero island out of the *shipped*
+  grove catalog, so a drop that re-cuts a prop, retunes a `scale` or renames a piece changes what
+  the tool produces — and this is what says so, instead of the launch screen quietly keeping a
+  picture of last quarter's grove.
 - **Word list check:** `python Tools/make_name_blocklist.py --check` proves the checked-in list
   is what the tool would write, and refuses the four ways a blocklist goes quietly wrong. The
   filter itself is `npm --prefix firebase/functions test` (`names.mjs`, `reports.mjs`).
@@ -1804,6 +1809,14 @@ Everything here runs without Unity unless it says otherwise.
   because a piece id is in save files twice over.
 - `Tools/make_chapter_art.py` + `chapter_art.tsv` — map strips and per-level backdrops, graded
   from the chapter's own JSON colours, so retuning a level's `accent` regrades its backdrop.
+- `Tools/make_splash_art.py` — the launch screen's hero island, its distant islands and its
+  tileable cloud strip. Composed from `homestead.json` through `GroveFloor`'s geometry, so the
+  first thing a player sees is drawn from the same art at the same angle as the Grovement, by the
+  same numbers. `--check` gates it. Two things it teaches that were each got wrong twice: a
+  floating island's root is a **width per depth** and has to be drawn as a profile — tapering a
+  stack of copies of the footprint gives their envelope, which is a flat ellipse whatever the
+  shrink curve says — and it is **two flat facets**, not a gradient, because what makes stylised
+  stone read as stone is the hard edge down the middle.
 - `Tools/make_waterfall.py`, `Tools/make_grove_animation.py` — generated decor flipbooks. Rows
   they own are marked `_generated` rather than `_imported`, or the next import run warns
   forever about a row it no longer owns.
