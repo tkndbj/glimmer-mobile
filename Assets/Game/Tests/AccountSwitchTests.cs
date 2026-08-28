@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
@@ -794,6 +795,71 @@ namespace GlimmerGrove.Tests
             public Task<(CloudResult result, Dictionary<Content.LevelId, Social.LevelStats> stats)>
                 ReadGroveStatsAsync(CancellationToken c = default)
                 => Task.FromResult((CloudResult.Success, new Dictionary<Content.LevelId, Social.LevelStats>()));
+
+            // ------------------------------------------------------------- deletion
+            public int Reauths;
+
+            /// <summary>Set to make the provider refuse — a closed sheet, or the wrong account.</summary>
+            public CloudFailure ReauthFails = CloudFailure.None;
+
+            /// <summary>What a successful Apple re-authentication hands back.</summary>
+            public string AppleCode = "";
+
+            /// <summary>Whether the account was still present when the proof was asked for.</summary>
+            public bool ReauthBeforeDelete;
+
+            public Task<(CloudResult result, string appleAuthorizationCode)> ReauthenticateAsync(
+                LinkCredential credential, CancellationToken c = default)
+            {
+                Reauths++;
+                ReauthBeforeDelete = Deletes == 0;
+
+                if (ReauthFails != CloudFailure.None)
+                    return Task.FromResult((CloudResult.Failed(ReauthFails, "refused"), string.Empty));
+
+                return Task.FromResult((CloudResult.Success,
+                                        credential.ProviderId == LinkCredential.Apple
+                                            ? AppleCode : string.Empty));
+            }
+
+            public int Deletes;
+
+            /// <summary>Which account the last delete was authenticated as.</summary>
+            public string DeletedSession;
+
+            /// <summary>The Apple authorization code the last delete carried, or null.</summary>
+            public string DeletedWithAppleCode;
+
+            /// <summary>Whether the local grove was still present when the delete was asked for.</summary>
+            public bool SaveStillLoadedAtDelete;
+
+            public bool DeleteFails;
+
+            public Task<CloudResult> DeleteAccountAsync(
+                string userId, string appleAuthorizationCode = null, CancellationToken c = default)
+            {
+                Deletes++;
+                SaveStillLoadedAtDelete = PlayerProgress.ClearedCount > 0;
+
+                // The real backend refuses when the session has moved out from under the
+                // caller, and the refusal is the safety property — so the fake refuses too.
+                if (!string.Equals(Session, userId, StringComparison.Ordinal))
+                    return Task.FromResult(CloudResult.Failed(CloudFailure.AccountMismatch,
+                                                              "session is not the account"));
+
+                if (DeleteFails)
+                    return Task.FromResult(CloudResult.Failed(CloudFailure.Offline, "no network"));
+
+                DeletedSession = userId;
+                DeletedWithAppleCode = appleAuthorizationCode;
+
+                Remote.Remove(userId);
+
+                // What the real one leaves behind: a brand new anonymous account.
+                Session = "uid-after-delete";
+
+                return Task.FromResult(CloudResult.Success);
+            }
         }
     }
 }

@@ -5,263 +5,284 @@ using NUnit.Framework;
 namespace GlimmerGrove.Tests
 {
     /// <summary>
-    /// Grovekeeper's rules, whose whole idea is an inversion: a seam between two <em>different</em>
+    /// Groovekeeper's rules, whose whole idea is an inversion: a seam between two <em>different</em>
     /// colours is worth something and a seam between two of the same is worth nothing.
     ///
     /// <para>
-    /// The load-bearing case is <see cref="ThePreviewNeverLiesAboutWhatAPlacementIsWorth"/>. The
-    /// preview is what the player reads before committing, so if it disagrees with what placing
-    /// actually scores, every decision in the game is made on a false number.
+    /// The load-bearing case is <see cref="ThePreviewNeverLiesAboutWhatAPlantingOpens"/>. The
+    /// preview is what the player reads before committing, and a planting is permanent — so if the
+    /// two ever disagree, every decision in the mode is taken on a false number.
+    /// </para>
+    /// <para>
+    /// The one after it is <see cref="ATileAlreadyBloomingIsNotCountedAgain"/>, which is the bug
+    /// the obvious implementation writes: asking whether a neighbour has all three "except this
+    /// colour" reads correctly and is wrong, because it takes away a channel the neighbour may
+    /// have had from somewhere else. It draws as a flower opening on a tile that opened three
+    /// turns ago, and it inflates the flourish count that decides the celebration.
     /// </para>
     /// </summary>
     public sealed class KeeperBoardTests
     {
-        static KeeperBoard Board(int tiles = 30, uint seed = 7)
-            => new KeeperBoard(9, 9, tiles, seed);
-
-        static readonly (int dx, int dy)[] Around = { (0, -1), (1, 0), (0, 1), (-1, 0) };
-
-        /// <summary>What a placement ought to be worth, worked out from the board by hand.</summary>
-        static (int seams, bool bloom) Expected(KeeperBoard board, int index, int colour)
+        static KeeperLayout Grove(string[] rows, string deal)
         {
-            int gathered = colour, seams = 0;
-            int x = index % board.Width, y = index / board.Width;
+            Assert.IsTrue(KeeperDeal.TryParse(deal, out var parsed, out string dealError),
+                          dealError);
+            Assert.IsTrue(KeeperLayout.TryReadRows(rows, rows[0].Length, rows.Length,
+                                                   out var ground, out var wants, out var sprigs,
+                                                   out string error), error);
 
-            foreach (var (dx, dy) in Around)
+            return new KeeperLayout(rows[0].Length, rows.Length, ground, wants, sprigs, parsed);
+        }
+
+        static readonly string[] Plain =
+        {
+            "......",
+            "..R...",
+            "..*...",
+            "......",
+        };
+
+        [Test]
+        public void AGroveOpensWithItsSprigsStandingAndItsBedsBare()
+        {
+            var board = new KeeperBoard(Grove(Plain, "GB"));
+
+            Assert.AreEqual(1, board.Planted, "the sprig, and nothing else");
+            Assert.AreEqual(Energy.R, board.At(2, 1));
+            Assert.AreEqual(1, board.BedsLeft);
+            Assert.IsFalse(board.IsFinished);
+        }
+
+        [Test]
+        public void ATileMayOnlyGoOnBareGroundBesideSomethingStanding()
+        {
+            var board = new KeeperBoard(Grove(Plain, "GB"));
+            int sprig = board.Index(2, 1);
+
+            Assert.IsFalse(board.CanPlant(Energy.G, sprig), "already occupied");
+            Assert.IsTrue(board.CanPlant(Energy.G, board.Index(2, 2)), "beside the sprig");
+            Assert.IsFalse(board.CanPlant(Energy.G, board.Index(5, 3)),
+                           "a grove grows outward from what is standing, it is not sprinkled");
+        }
+
+        [Test]
+        public void StoneTakesNoTileAndPassesNoLight()
+        {
+            var board = new KeeperBoard(Grove(new[]
             {
-                int nx = x + dx, ny = y + dy;
-                if (!board.Inside(nx, ny)) continue;
+                "..#...",
+                "..R...",
+                "..*...",
+                "......",
+            }, "GB"));
 
-                int mate = board.At(nx, ny);
-                if (mate == Energy.None) continue;
+            Assert.IsFalse(board.CanPlant(Energy.G, board.Index(2, 0)));
 
-                gathered |= mate;
-                if (mate != colour) seams++;
-            }
-
-            return (seams, gathered == Energy.All);
+            // And it is not a neighbour either: the tile beside it gathers nothing from it.
+            Assert.AreEqual(Energy.R, board.Gathered(board.Index(2, 1)));
         }
 
         [Test]
-        public void TheGroveOpensWithOneTileAlreadyDown()
+        public void AHeartbedRefusesEveryColourButItsOwn()
         {
-            // A builder that opens on empty ground has to explain "tap anywhere" before it can
-            // explain the rule that matters, which is "place it next to something".
-            var board = Board();
-
-            Assert.AreEqual(1, board.Placed);
-            Assert.AreNotEqual(Energy.None, board.At(board.Width / 2, board.Height / 2));
-            Assert.IsNotEmpty(board.Openings());
-        }
-
-        [Test]
-        public void ATileMayOnlyGoOnEmptyGroundTouchingSomethingPlaced()
-        {
-            var board = Board();
-            int middle = board.Index(board.Width / 2, board.Height / 2);
-
-            Assert.IsFalse(board.CanPlace(middle), "that cell is already taken");
-            Assert.IsFalse(board.CanPlace(0), "the far corner touches nothing");
-            Assert.IsTrue(board.CanPlace(middle - board.Width), "directly above is legal");
-        }
-
-        [Test]
-        public void EveryOpeningIsPlaceableAndEveryPlaceableCellIsAnOpening()
-        {
-            var board = Board();
-            var openings = new HashSet<int>(board.Openings());
-
-            for (int i = 0; i < board.Width * board.Height; i++)
-                Assert.AreEqual(board.CanPlace(i), openings.Contains(i),
-                                $"cell {i} disagrees between CanPlace and Openings");
-        }
-
-        [Test]
-        public void ThePreviewNeverLiesAboutWhatAPlacementIsWorth()
-        {
-            var board = Board(60, 23);
-
-            while (!board.IsDone)
+            var board = new KeeperBoard(Grove(new[]
             {
-                var openings = board.Openings();
-                if (openings.Count == 0) break;
+                "......",
+                "..R...",
+                "..g...",
+                "......",
+            }, "GB"));
 
-                int at = openings[board.Placed % openings.Count];
-                int colour = board.Next;
+            int bed = board.Index(2, 2);
 
-                var predicted = board.Preview(at);
-                var expected = Expected(board, at, colour);
+            Assert.IsFalse(board.CanPlant(Energy.B, bed), "the wrong colour is refused outright");
+            Assert.IsTrue(board.CanPlant(Energy.G, bed));
 
-                Assert.AreEqual(expected.seams, predicted.Seams, "preview miscounted the seams");
-                Assert.AreEqual(expected.bloom, predicted.Bloom, "preview misjudged the bloom");
-
-                int scoreBefore = board.Score;
-                var actual = board.Place(at);
-
-                Assert.AreEqual(predicted.Seams, actual.Seams, "the placement differed from its preview");
-                Assert.AreEqual(predicted.Bloom, actual.Bloom);
-                Assert.AreEqual(predicted.Score, actual.Score);
-                Assert.AreEqual(scoreBefore + predicted.Score, board.Score,
-                                "the score moved by something other than what was previewed");
-            }
+            // A prism carries every channel, so it satisfies any heartbed.
+            Assert.IsTrue(board.CanPlant(Energy.All, bed));
         }
 
         [Test]
-        public void ASeamBetweenTwoOfTheSameColourIsWorthNothing()
+        public void ATileBloomsWhenItselfAndItsNeighboursCarryAllThree()
         {
-            // The inversion the whole mode rests on. If matching ever scored, this would be
-            // every other edge-matching game and the twist would be gone.
-            var board = Board(80, 5);
-
-            for (int guard = 0; guard < 200 && !board.IsDone; guard++)
+            var board = new KeeperBoard(Grove(new[]
             {
-                foreach (int at in board.Openings())
-                {
-                    var expected = Expected(board, at, board.Next);
-                    if (expected.seams != 0 || expected.bloom) continue;
+                "..G...",
+                ".R*B..",
+                "......",
+                "......",
+            }, "G"));
 
-                    var gain = board.Place(at);
-                    Assert.AreEqual(0, gain.Score,
-                                    "a placement touching only its own colour scored");
-                    Assert.AreEqual(0, gain.Seams);
-                    return;
-                }
+            int bed = board.Index(2, 1);
+            var gain = board.Preview(Energy.G, bed);
 
-                var openings = board.Openings();
-                if (openings.Count == 0) break;
-                board.Place(openings[0]);
-            }
-
-            Assert.Pass("the deal never offered a like-on-like placement in this run");
+            Assert.AreEqual(1, gain.Blooms);
+            Assert.AreEqual(1, gain.Beds);
+            Assert.AreEqual(2, gain.Seams, "red and blue are unlike, the green above is not");
         }
 
         [Test]
-        public void GatheringAllThreeColoursAroundOneTileBlooms()
+        public void ThePreviewNeverLiesAboutWhatAPlantingOpens()
         {
-            var board = Board(200, 3);
-
-            for (int guard = 0; guard < 400 && !board.IsDone; guard++)
+            var rows = new[]
             {
-                foreach (int at in board.Openings())
-                {
-                    if (!board.Preview(at).Bloom) continue;
+                "..G...",
+                ".R*B..",
+                "..*...",
+                "..R...",
+            };
 
-                    int blooms = board.Blooms;
-                    var gain = board.Place(at);
+            var board = new KeeperBoard(Grove(rows, "G"));
+            var bloomed = new List<int>();
 
-                    Assert.IsTrue(gain.Bloom);
-                    Assert.AreEqual(blooms + 1, board.Blooms);
-                    Assert.GreaterOrEqual(gain.Score, KeeperBoard.BloomScore);
-                    Assert.IsTrue(board.IsBloomed(at), "the tile should wear its bloom");
-                    return;
-                }
+            var openings = new List<int>();
+            board.Openings(Energy.G, openings);
+            Assert.IsNotEmpty(openings);
 
-                var openings = board.Openings();
-                if (openings.Count == 0) break;
-                board.Place(openings[openings.Count / 2]);
-            }
-
-            Assert.Fail("four hundred placements without a single bloom - the rule is unreachable");
-        }
-
-        [Test]
-        public void ABloomNeedsAllThreeChannelsAndNotMerelyThreeNeighbours()
-        {
-            var board = Board(200, 41);
-
-            for (int guard = 0; guard < 400 && !board.IsDone; guard++)
+            foreach (int at in openings)
             {
-                foreach (int at in board.Openings())
-                {
-                    var gain = board.Preview(at);
-                    var expected = Expected(board, at, board.Next);
-                    Assert.AreEqual(expected.bloom, gain.Bloom,
-                                    "bloom must mean red, green and blue are all present");
-                }
+                var preview = new KeeperBoard(Grove(rows, "G")).Preview(Energy.G, at);
+                var actual = new KeeperBoard(Grove(rows, "G")).Plant(Energy.G, at, bloomed);
 
-                var openings = board.Openings();
-                if (openings.Count == 0) break;
-                board.Place(openings[0]);
+                Assert.AreEqual(preview.Blooms, actual.Blooms, "blooms at " + at);
+                Assert.AreEqual(preview.Beds, actual.Beds, "beds at " + at);
+                Assert.AreEqual(preview.Seams, actual.Seams, "seams at " + at);
+                Assert.AreEqual(actual.Blooms, bloomed.Count, "the list matches the count");
             }
         }
 
         [Test]
-        public void TheRunEndsWhenTheTilesRunOut()
+        public void OneTileCanOpenTheFourBedsAroundIt()
         {
-            var board = Board(12);
-
-            while (!board.IsDone)
+            // The mode's best moment, and the thing par rewards: a cross of beds that are each one
+            // channel short of the same colour, opened together.
+            // Four tiles around one bare bed, each one channel short of blue and none of them
+            // blooming yet. The blue that lands in the middle finishes all four and itself.
+            var board = new KeeperBoard(Grove(new[]
             {
-                var openings = board.Openings();
-                Assert.IsNotEmpty(openings, "ran out of ground before running out of tiles");
-                board.Place(openings[0]);
-            }
+                ".RRG..",
+                ".G*R..",
+                "..R...",
+                "..G...",
+            }, "B"));
 
-            Assert.AreEqual(12, board.Placed - 1, "the opening tile is not one of the run's");
-            Assert.IsFalse(board.CanPlace(board.Openings().Count > 0 ? board.Openings()[0] : 0));
+            foreach (int at in new[] { board.Index(2, 0), board.Index(3, 1),
+                                       board.Index(2, 2), board.Index(1, 1) })
+                Assert.IsFalse(board.Bloomed(at), "nothing is blooming before the tile lands");
+
+            var gain = board.Preview(Energy.B, board.Index(2, 1));
+
+            Assert.AreEqual(KeeperFlourish.Most, gain.Blooms,
+                            "the cell it lands on and the four beside it is the ceiling");
+            Assert.AreEqual(1, gain.Beds, "only the bed among them counts towards the goal");
         }
 
         [Test]
-        public void TilesLeftCountsDownToNothing()
+        public void ATileAlreadyBloomingIsNotCountedAgain()
         {
-            var board = Board(10);
-            int last = board.Left;
-
-            while (!board.IsDone)
+            // The bug the obvious implementation writes. The tile at (1,1) blooms the moment the
+            // board is built; laying another red beside it must report nothing new, and the naive
+            // "all three except this colour" test reports a second flower.
+            var board = new KeeperBoard(Grove(new[]
             {
-                board.Place(board.Openings()[0]);
-                Assert.Less(board.Left, last, "the counter has to move on every placement");
-                last = board.Left;
-            }
+                ".G....",
+                "RBR...",
+                "..*...",
+                "......",
+            }, "R"));
 
-            Assert.AreEqual(0, board.Left);
+            int already = board.Index(1, 1);
+            Assert.IsTrue(board.Bloomed(already), "it is blooming before anybody plays");
+
+            var bloomed = new List<int>();
+            var gain = board.Plant(Energy.R, board.Index(1, 2), bloomed);
+
+            Assert.IsFalse(bloomed.Contains(already),
+                           "a tile that was already blooming is not news");
         }
 
         [Test]
-        public void OnlyPureColoursAreDealt()
+        public void AGroveIsFinishedWhenEveryBedIsOpen()
         {
-            var board = Board(120, 61);
-
-            while (!board.IsDone)
+            var board = new KeeperBoard(Grove(new[]
             {
-                int colour = board.Next;
-                Assert.IsTrue(colour == Energy.R || colour == Energy.G || colour == Energy.B,
-                              $"the deal produced {Energy.Letter(colour)}, which is a seam "
-                              + "already made");
+                "..G...",
+                ".R*B..",
+                "......",
+                "......",
+            }, "G"));
 
-                var openings = board.Openings();
-                if (openings.Count == 0) break;
-                board.Place(openings[0]);
-            }
+            Assert.IsFalse(board.IsFinished);
+            board.Plant(Energy.G, board.Index(2, 1), null);
+            Assert.IsTrue(board.IsFinished);
+            Assert.AreEqual(0, board.BedsLeft);
         }
 
         [Test]
-        public void TheSameSeedLaysOutTheSameGrove()
+        public void ABedWalledOffFromTheGroveIsReportedLostAndNeverEndsARun()
         {
-            var a = Board(40, 909);
-            var b = Board(40, 909);
-
-            while (!a.IsDone)
+            // The proof only ever decides whether it would be honest to sell a continue. Ending a
+            // run on it is the mistake Lightfall shipped and took back.
+            var board = new KeeperBoard(Grove(new[]
             {
-                Assert.AreEqual(a.Next, b.Next);
-                a.Place(a.Openings()[0]);
-                b.Place(b.Openings()[0]);
-            }
+                "R.####",
+                "..####",
+                "####*#",
+                "######",
+            }, "GB"));
 
-            Assert.AreEqual(a.Score, b.Score);
-            Assert.AreEqual(a.Blooms, b.Blooms);
+            Assert.IsTrue(board.AnyBedLost());
+            Assert.IsFalse(board.IsFinished);
         }
 
         [Test]
-        public void APlacementNowhereLegalChangesNothing()
+        public void AGroveWithRoomLeftIsNotOvergrown()
         {
-            var board = Board();
-            int score = board.Score, placed = board.Placed;
+            var board = new KeeperBoard(Grove(Plain, "GB"));
+            Assert.IsTrue(board.AnyRoom);
 
-            board.Place(0);                       // the far corner, touching nothing
+            var walled = new KeeperBoard(Grove(new[]
+            {
+                "#####R",
+                "#####*",
+                "######",
+                "######",
+            }, "GB"));
 
-            Assert.AreEqual(score, board.Score);
-            Assert.AreEqual(placed, board.Placed, "an illegal placement must not spend a tile");
+            // The bed beside the sprig is the only cell left, so there is room until it is used.
+            Assert.IsTrue(walled.AnyRoom);
+            walled.Plant(Energy.G, walled.Index(5, 1), null);
+            Assert.IsFalse(walled.AnyRoom);
+        }
+
+        [Test]
+        public void TheAuthoredRowsSurviveARoundTrip()
+        {
+            var rows = new[]
+            {
+                ".#R...",
+                "..*g..",
+                "...b..",
+                "..*...",
+            };
+
+            CollectionAssert.AreEqual(rows, Grove(rows, "RGBP").Written());
+        }
+
+        [Test]
+        public void ADealIsWrittenInPureLightAndPrisms()
+        {
+            Assert.IsTrue(KeeperDeal.TryParse("RGB P", out var deal, out _));
+            Assert.AreEqual(4, deal.Count);
+            Assert.AreEqual(Energy.All, deal.At(3));
+            Assert.AreEqual(1, deal.Prisms);
+            Assert.AreEqual("RGBP", deal.Written());
+
+            // It cycles, because a continue deals more tiles than the author wrote.
+            Assert.AreEqual(Energy.R, deal.At(4));
+
+            Assert.IsFalse(KeeperDeal.TryParse("RGY", out _, out string error));
+            StringAssert.Contains("blend", error);
         }
     }
 }

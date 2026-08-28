@@ -101,13 +101,22 @@
     },
     {
       "id": "k01_grovekeeper",
-      "version": 1,
+      "version": 2,
       "order": 60,
       "disabled": false,
       "minAppVersion": 0,
       "mode": "keeper",
       "levels": [
-        "k01_first_grove"
+        "k01_first_grove",
+        "k01_the_second_bed",
+        "k01_stonecrop",
+        "k01_the_boulder",
+        "k01_four_petals",
+        "k01_heartwood",
+        "k01_twin_hearts",
+        "k01_the_prism",
+        "k01_the_pocket",
+        "k01_keepers_grove"
       ]
     },
     {
@@ -148,6 +157,26 @@
         "w02_the_shuttered_loom",
         "w02_thread_the_dark",
         "w02_the_nightloom_knot"
+      ]
+    },
+    {
+      "id": "w03_wildhedge",
+      "version": 1,
+      "order": 90,
+      "disabled": false,
+      "minAppVersion": 0,
+      "mode": "weave",
+      "levels": [
+        "w03_the_first_hedge",
+        "w03_two_rooms",
+        "w03_the_green_gate",
+        "w03_hedgerows",
+        "w03_the_long_way_out",
+        "w03_thicket",
+        "w03_the_walled_garden",
+        "w03_narrow_ways",
+        "w03_the_maze_of_leaves",
+        "w03_the_wildhedge_knot"
       ]
     }
   ],

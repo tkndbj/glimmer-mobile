@@ -87,7 +87,7 @@ namespace GlimmerGrove
 
         WeaveRun _run;
         RectTransform _host, _grid;
-        RectTransform _groundLayer, _inkLayer, _beadLayer, _endLayer, _fxLayer;
+        RectTransform _groundLayer, _inkLayer, _hedgeLayer, _beadLayer, _endLayer, _fxLayer;
 
         Image[] _ground;
         Image _wash;
@@ -100,6 +100,18 @@ namespace GlimmerGrove
         RectTransform[] _bead;             // one per bead, in the order the layout lists them
         Image[] _beadRing, _beadGlow;
         readonly List<int> _waiting = new List<int>();
+
+        /// <summary>
+        /// One node per hedge, holding that run's cells of foliage.
+        ///
+        /// A node per <em>run</em> rather than per closed edge, because a run is what a lesson
+        /// points at and what a refusal shakes — the player sees one barrier, so one object owns
+        /// it. Its cells are children.
+        /// </summary>
+        RectTransform[] _hedge;
+
+        /// <summary>Every cell of foliage, by the closed edge it stands on, for the refusal.</summary>
+        readonly Dictionary<long, Image> _hedgeAt = new Dictionary<long, Image>();
 
         /// <summary>
         /// Whether each pair's light has actually finished travelling.
@@ -186,6 +198,33 @@ namespace GlimmerGrove
         /// <summary>How faint a channel goes while its pair is being drawn over. See <see cref="Dim"/>.</summary>
         const float DimmedChannel = .22f;
 
+        /// <summary>
+        /// A hedge, and the shadow under it.
+        ///
+        /// <para>
+        /// Deliberately not a pair colour and deliberately not the ground's grey. It has to read
+        /// as <em>growing there</em> rather than as one of the six channels or as a bit of the
+        /// board's chrome, so it is the one green on the grove that no crystal wears — the
+        /// palette's mixes are all far brighter, and a woken critter is white.
+        /// </para>
+        /// </summary>
+        static readonly Color Hedgerow = new Color(.35f, .52f, .31f, 1f);
+        static readonly Color HedgeShade = new Color(.03f, .06f, .05f, .80f);
+
+        /// <summary>
+        /// How thick a hedge is drawn, as a fraction of a cell, and how far its shadow falls.
+        ///
+        /// <para>
+        /// Both measured on the real board rather than reasoned about. The ground here is very
+        /// dark, so the first cut — a third of a cell in a muted moss — read as a sprig of
+        /// decoration rather than as a wall, which on the one object in this mode that can refuse
+        /// a finger is the worst possible reading. Enough of the thickness is the lobes that the
+        /// bar overlaps its two cells by about a sixth each, which is what makes it look grown
+        /// there instead of laid on top.
+        /// </para>
+        /// </summary>
+        const float HedgeThick = .42f, HedgeDrop = .055f;
+
         // ------------------------------------------------------------------ building
         /// <summary>
         /// Deals a grove and the light it is drawn with.
@@ -240,6 +279,12 @@ namespace GlimmerGrove
             _groundLayer = UIKit.Node("Ground", _grid);
             _inkLayer = UIKit.Node("Ink", _grid);
 
+            // Above the ink, because a hedge is the one thing on this board that a channel can
+            // never be drawn over — a barrier a landed channel could hide would be a rule the
+            // player stops being able to see the moment the grove fills up. Below the beads and
+            // the ends for the reason those are below nothing: they are what the finger aims at.
+            _hedgeLayer = UIKit.Node("Hedges", _grid);
+
             // Above the ink and below the ends, deliberately. A bead has to stay readable once
             // its own channel has been drawn over it — "have I been through here" is the whole
             // question it asks — and it must never sit on top of a crystal or a critter, which
@@ -271,6 +316,7 @@ namespace GlimmerGrove
             _halo = new Image[layout.Pairs.Count];
 
             BuildEndpoints(layout);
+            BuildHedges(layout);
             BuildBeads(layout);
 
             _liveInk = UIKit.Node("Live", _inkLayer);
@@ -327,6 +373,141 @@ namespace GlimmerGrove
         /// player has to come through.
         ///
         /// <para>
+        /// <summary>
+        /// Grows the grove's hedges: one strip of foliage per closed way, laid on the line
+        /// between the two cells it separates.
+        ///
+        /// <para>
+        /// <b>On the boundary rather than on a cell</b>, which is the whole of what says a hedge
+        /// is not a bead. Everything else drawn here sits in the middle of a cell and is therefore
+        /// somewhere a channel might go; this sits on the join, where nothing can ever be, so the
+        /// player reads it as the absence of a way rather than as an object in the way. Half a
+        /// cell of it hangs into each of its two neighbours, which is what makes a run look grown
+        /// rather than assembled.
+        /// </para>
+        /// <para>
+        /// One <c>Image</c> per closed way and one shadow under it, so a run of nine costs
+        /// eighteen quads on a board that already draws a hundred. The alternative — one
+        /// stretched sprite per run — was rejected for the reason <see cref="Art.Hedge"/> gives:
+        /// the leaves would be a different size on every hedge in the grove.
+        /// </para>
+        /// <para>
+        /// The whole run hangs off one node so a lesson can ring it and a refused finger can shake
+        /// it. A cell whose edge falls outside the grove is skipped rather than clamped, and
+        /// <c>WeaveLayout.HedgeEdge</c> is what decides that — the same answer the rule itself is
+        /// enforced by, so a hedge cannot be drawn somewhere it is not enforced.
+        /// </para>
+        /// </summary>
+        void BuildHedges(WeaveLayout layout)
+        {
+            _hedge = new RectTransform[layout.Hedges.Count];
+            _hedgeAt.Clear();
+
+            for (int i = 0; i < layout.Hedges.Count; i++)
+            {
+                var hedge = layout.Hedges[i];
+
+                var root = UIKit.Node("Hedge" + i, _hedgeLayer);
+                UIKit.StretchTo(root, 0, 0, 0, 0);
+
+                // Always long along its own x, because the sprite is drawn lying flat and an
+                // upright hedge is that sprite turned a quarter turn — a rect sized for the
+                // *screen* and then rotated comes out lying flat again, which is a vertical
+                // barrier drawn as a horizontal one. The flat case hides it perfectly: only an
+                // upright hedge is wrong, and only on a board that happens to grow one.
+                var span = new Vector2(_cell, _cell * HedgeThick);
+
+                var low = new Vector2(float.MaxValue, float.MaxValue);
+                var high = new Vector2(float.MinValue, float.MinValue);
+
+                for (int step = 0; step < hedge.Length; step++)
+                {
+                    if (!layout.HedgeEdge(hedge, step, out int a, out int b)) continue;
+
+                    var at = (Where(a) + Where(b)) * .5f;
+                    low = Vector2.Min(low, at);
+                    high = Vector2.Max(high, at);
+
+                    // The same size as the leaf and simply dropped, never scaled up: a shadow
+                    // wider than the thing casting it draws a dark ring round every cell of the
+                    // run, which is the other way a hedge stops reading as one bar.
+                    var shade = UIKit.Img("Shade" + step, root, Art.Hedge(64), HedgeShade,
+                                          span, new Vector2(.5f, .5f),
+                                          at + new Vector2(0f, -_cell * HedgeDrop));
+                    shade.raycastTarget = false;
+                    if (hedge.Upright) shade.rectTransform.localRotation = Quarter;
+
+                    var leaf = UIKit.Img("Leaf" + step, root, Art.Hedge(64), Hedgerow,
+                                         span, new Vector2(.5f, .5f), at);
+                    leaf.raycastTarget = false;
+                    if (hedge.Upright) leaf.rectTransform.localRotation = Quarter;
+
+                    _hedgeAt[Way(a, b)] = leaf;
+                }
+
+                // What a lesson rings: an empty node the size of the run, not the run's own node.
+                // That one is stretched over the whole grove so its children can be placed in the
+                // grid's own coordinates — ringing it would draw an outline round the entire
+                // board and point at nothing.
+                if (low.x > high.x) continue;
+
+                // Padded the same amount in both directions, so it fits a run lying either way.
+                float room = _cell * HedgeThick * 1.7f;
+                _hedge[i] = UIKit.Box("Mark" + i, root, high - low + Vector2.one * room,
+                                      new Vector2(.5f, .5f), (low + high) * .5f);
+            }
+        }
+
+        static readonly Quaternion Quarter = Quaternion.Euler(0f, 0f, 90f);
+
+        /// <summary>One key per closed way, either way round, so a refusal can find its foliage.</summary>
+        static long Way(int a, int b) => a < b ? (long)a << 20 | (uint)b : (long)b << 20 | (uint)a;
+
+        /// <summary>The run of foliage a lesson rings, or null when the grove has none.</summary>
+        public RectTransform HedgeAt(int hedge)
+            => _hedge != null && hedge >= 0 && hedge < _hedge.Length ? _hedge[hedge] : null;
+
+        /// <summary>
+        /// Says that a hedge is what refused the finger, at the hedge rather than at the cell.
+        ///
+        /// <para>
+        /// <b>A refusal that draws nothing is the fault this mechanic was most likely to ship
+        /// with.</b> A drag into a hedge takes the same code path as a drag into thin air — the
+        /// cell is simply not a neighbour — so without this the finger would slide past a barrier
+        /// in silence and the player would be left thinking the drag had been dropped. The
+        /// blocking-channel refusal one method up had exactly this reasoning applied to it
+        /// already, and this is the second thing on the board that can say no.
+        /// </para>
+        /// <para>
+        /// Drawn on the barrier and in the colour of the channel that was refused, so it answers
+        /// "why not" and "who was asking" at once. Throttled by cell and by time on the same
+        /// counter <see cref="Blocked"/> uses, because a finger held against a wall re-enters the
+        /// same cell many times a second.
+        /// </para>
+        /// </summary>
+        void Walled(int from, int at)
+        {
+            if (at == _blockedAt && Time.unscaledTime - _blockedWhen < .45f) return;
+
+            _blockedAt = at;
+            _blockedWhen = Time.unscaledTime;
+
+            var tint = _pair >= 0
+                     ? Pal.EnergyColour(_run.Grove.Pairs[_pair].Colour)
+                     : Pal.Rose;
+
+            Ripple((Where(from) + Where(at)) * .5f, tint, _cell * .95f, .3f);
+
+            if (_hedgeAt.TryGetValue(Way(from, at), out var leaf) && leaf)
+            {
+                Flare(leaf, tint);
+                Tween.Shake(leaf.rectTransform, _cell * .05f, .22f);
+            }
+
+            Audio.Sfx("blocked", .26f, .85f);
+        }
+
+        /// <summary>
         /// Hollow rather than filled, because a bead is a place to pass <em>through</em> and a
         /// solid shape reads as a thing in the way — which is exactly the wrong half of what it
         /// means. Its own channel is drawn through the hole.
@@ -439,7 +620,16 @@ namespace GlimmerGrove
             }
 
             if (_drawing.Contains(at)) return;
-            if (!_run.Grove.Adjacent(_drawing[_drawing.Count - 1], at)) return;
+
+            int last = _drawing[_drawing.Count - 1];
+            if (!_run.Grove.Adjacent(last, at))
+            {
+                // Two cells side by side that are not neighbours is a hedge and nothing else, so
+                // the refusal is said out loud. Anything further away is the finger crossing the
+                // board rather than being refused, and saying so would fire on every fast drag.
+                if (_run.Grove.Distance(last, at) == 1) Walled(last, at);
+                return;
+            }
 
             // The ink in hand is a wall like any other, and it has to be one rather than a
             // refusal at the end. A channel costs a cell of light per cell it covers, so a line
@@ -466,9 +656,8 @@ namespace GlimmerGrove
                 return;
             }
 
-            int from = _drawing[_drawing.Count - 1];
             _drawing.Add(at);
-            PushLive(from, at);
+            PushLive(last, at);
 
             Audio.Sfx("click", .2f, Mathf.Min(2.2f, 1f + _drawing.Count * .04f));
 

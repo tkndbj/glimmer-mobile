@@ -5,6 +5,7 @@ import re, math, os, sys
 from collections import deque
 
 import fall                                  # Lightfall's rules, mirrored - see fall.py
+import keeper                                # Groovekeeper's rules, mirrored - see keeper.py
 
 ROOT = os.path.join(os.path.dirname(os.path.abspath(__file__)),
                     "..", "..", "Assets", "StreamingAssets", "Content")
@@ -181,6 +182,60 @@ GOLD_FACTOR, SILVER_FACTOR = 1.20, 1.40
 MODE_BLOCKS = ("fall", "keeper", "weave")
 
 
+#: What a Lightweave grove may author, mirroring `WeaveMode.TryRead` and `WeaveGenerator`.
+#:
+#: A weave board is *generated*, so almost nothing about it can be proved without Unity -- but
+#: what is in the file can be, and every one of these is a refusal rather than a clamp on the
+#: other side. That matters more here than it looks: `TryRead` returning false does not deal a
+#: gentler board, it drops the level, so an out-of-range number is a chapter that quietly loses a
+#: rung. Catching it here says so on the machine that authored it instead of in an Editor log.
+WEAVE_SIZE = (4, 9, 4, 12)          # width low/high, height low/high
+WEAVE_PAIRS = (2, 6)                # one per colour the light makes; white is being awake
+
+
+def most_hedges(width, height):
+    """`WeaveGenerator.MostHedges`: a sixth of the grove's span, never more than three."""
+    return min(3, (width + height) // 6)
+
+
+def check_weave(lid, block):
+    """Everything about a grove that is in the file rather than in the seed."""
+    w = block.get('width', 7)
+    h = block.get('height', 9)
+    pairs = block.get('pairs', 4)
+    beads = block.get('beads', 0)
+    hedges = block.get('hedges', 0)
+
+    lo_w, hi_w, lo_h, hi_h = WEAVE_SIZE
+    if not (lo_w <= w <= hi_w and lo_h <= h <= hi_h):
+        errors.append("%s: is a %dx%d grove; a weave is %d..%d by %d..%d"
+                      % (lid, w, h, lo_w, hi_w, lo_h, hi_h))
+
+    if not WEAVE_PAIRS[0] <= pairs <= WEAVE_PAIRS[1]:
+        errors.append("%s: asks for %d pairs; it is %d..%d, one per colour the grove has"
+                      % (lid, pairs, WEAVE_PAIRS[0], WEAVE_PAIRS[1]))
+
+    if beads > pairs:
+        errors.append("%s: asks for %d beads on %d pairs; it is at most one per channel - a "
+                      "channel with two is a tour to remember rather than a route to find"
+                      % (lid, beads, pairs))
+
+    if hedges > most_hedges(w, h):
+        errors.append("%s: asks for %d hedge(s) on a %dx%d grove; it is at most %d - every "
+                      "hedge takes a way out of the grove without taking any ground, and enough "
+                      "of them leave a corridor with no decisions left in it"
+                      % (lid, hedges, w, h, most_hedges(w, h)))
+
+    # Not an error, because a board with no seed is still solvable - it is simply a board of
+    # entirely unknown difficulty, which is exactly what `Survey Lightweave` and weave_seeds.py
+    # exist to stop shipping. `Tools/verify/weave.py` refuses one outright, because it cannot
+    # reproduce an id hash without the whole content layer.
+    if block.get('seed', 0) <= 0:
+        warnings.append("%s: authors no seed, so its board is whatever its id hashes to and its "
+                        "difficulty was never measured - pick one with Tools/weave_seeds.py"
+                        % lid)
+
+
 #: Where a well stops being cheap to prove, and where it stops being shippable. Mirrors
 #: `FallValidator`. These are about the *player's* device: the search runs once per level, on
 #: the phone, when somebody opens it. Forty thousand positions is about twenty milliseconds of
@@ -342,6 +397,156 @@ def check_fall(lid, chapter_id, level, block):
                 fall_motes=well.motes, headroom=well.headroom, deal=block.get('motes'))
 
 
+#: Mirrors `KeeperValidator`. Lower than Lightfall's pair because a position here costs more to
+#: expand: the floor this search prunes on walks every bed and every standing tile.
+KEEPER_NODE_WARNING, KEEPER_NODE_CEILING = 30_000, 90_000
+
+#: Above this many shortest answers the ground is not deciding much. Invariant 5d, counted.
+KEEPER_TOO_MANY_WAYS = 300
+
+
+def check_keeper(lid, chapter_id, level, block):
+    """Everything a Groovekeeper grove has to prove, mirroring `KeeperValidator`.
+
+    The one thing that cannot be checked by reading the file is whether every bed can be
+    *opened*, so most of this is a search. Every failure below looks like a perfectly authored
+    grove in the JSON, which is the whole reason the gate exists.
+    """
+    empty = dict(id=lid, chapter=chapter_id, w=0, h=0, par=0, budget=0,
+                 gold=0, silver=0, lamps=0, sources=0, fragile=0, bound=0,
+                 crossings=0, briars=0, mode='keeper',
+                 ways=0, greedy=-1, nodes=0, beds=0, hearts=0, deal='')
+
+    w, h = block.get('width') or 0, block.get('height') or 0
+
+    if not (keeper.MIN_SIDE <= w <= keeper.MAX_SIDE):
+        errors.append("%s: a grove is %d..%d wide; this one says %d"
+                      % (lid, keeper.MIN_SIDE, keeper.MAX_SIDE, w))
+        return empty
+
+    if not (keeper.MIN_SIDE <= h <= keeper.MAX_SIDE):
+        errors.append("%s: a grove is %d..%d tall; this one says %d"
+                      % (lid, keeper.MIN_SIDE, keeper.MAX_SIDE, h))
+        return empty
+
+    # A grove used to be dealt from a seed. An author who writes one now is describing a board
+    # that no longer exists, and JsonUtility would drop it without a word - the same tripwire
+    # ChapterDto.order is.
+    if block.get('seed'):
+        errors.append("%s: this grove authors 'seed', which does nothing: a grove is authored "
+                      "now rather than rolled, so its rows and its procession are the whole "
+                      "board" % lid)
+
+    try:
+        grove = keeper.Grove(block.get('rows') or [], block.get('tiles') or '')
+    except ValueError as bad:
+        errors.append("%s: %s" % (lid, bad))
+        return empty
+
+    if grove.width != w or grove.height != h:
+        errors.append("%s: declares %dx%d and writes %dx%d"
+                      % (lid, w, h, grove.width, grove.height))
+        return empty
+
+    if not grove.sprig_count:
+        errors.append("%s: this grove has no sprig, so there is nothing to lay the first tile "
+                      "beside and no way to start it" % lid)
+        return empty
+
+    if not grove.beds:
+        errors.append("%s: this grove has no bed, so it is already finished" % lid)
+        return empty
+
+    # A procession that cannot supply a colour some heartbed insists on makes that bed
+    # unopenable however many tiles are bought. The search would catch it, but not in words
+    # anybody could act on.
+    if grove.wanted & ~grove.channels:
+        absent = grove.wanted & ~grove.channels
+        errors.append("%s: a heartbed here insists on %s and this procession never deals it, so "
+                      "that bed could never be opened by anybody"
+                      % (lid, keeper.LETTER.get(absent, '?')))
+
+    # Note what is deliberately *not* checked: that the procession carries all three channels.
+    # Lightfall refuses a deal that does not and has to; nothing here does the same thing, because
+    # a tile that cannot bloom is simply a tile and the sprigs are permanent. Two of the ten
+    # grooves that ship are finished with a two-colour basket. What matters is that every bed can
+    # be opened, and the search below proves exactly that. See `KeeperValidator`.
+
+    par, ways, nodes, proved = keeper.search(grove)
+
+    if not proved:
+        errors.append("%s: this grove could not be proved inside %d positions (it looked at %d) "
+                      "or within %d tiles - it may be unsolvable, or simply too big to prove, "
+                      "and either way the player's device runs the same search to work out par"
+                      % (lid, keeper.NODE_BUDGET, nodes, keeper.MAX_TILES))
+        return empty
+
+    if par < 1:
+        errors.append("%s: no sequence of tiles opens every bed on this grove, so nobody can "
+                      "finish it" % lid)
+        return empty
+
+    budget_h = factor_of(level, 'budgetFactor', keeper.BUDGET_HUNDREDTHS)
+    gold_h = factor_of(level, 'goldFactor', keeper.GOLD_HUNDREDTHS)
+    silver_h = factor_of(level, 'silverFactor', keeper.SILVER_HUNDREDTHS)
+
+    # A grove's room is a count of wasted tiles rather than a multiple of par: a wrong tile is
+    # permanent *and* takes a cell of ground a bed beside it may have needed, so a mistake costs
+    # about two tiles wherever it happens. Mirrors LevelTuning.Slack and KeeperRules.DefaultSpare.
+    spare = block.get('spare') or keeper.DEFAULT_SPARE
+    budget = (par + spare) if budget_h > 0 else 0
+
+    if budget_h > 0 and budget_h != keeper.BUDGET_HUNDREDTHS:
+        errors.append("%s: this grove authors budgetFactor %.2f, which does nothing - a grove's "
+                      "room above par is 'spare', counted in tiles. Use 'spare', or a negative "
+                      "budgetFactor if it is meant to be unlosable" % (lid, budget_h / 100.0))
+
+    gold, silver = keeper.over(par, gold_h), keeper.over(par, silver_h)
+
+    if gold_h >= silver_h:
+        errors.append("%s: goldFactor and silverFactor leave the two-star band empty" % lid)
+    elif budget and budget <= gold:
+        errors.append("%s: the basket is at or under the three-star line, so every surviving run "
+                      "would be a three-star run" % lid)
+    elif budget and budget <= silver:
+        warnings.append("%s: the basket is inside the two-star band, so one star can never be "
+                        "scored" % lid)
+
+    if nodes > KEEPER_NODE_CEILING:
+        errors.append("%s: proving this grove took %d positions, above the %d a level may cost - "
+                      "the player's device runs the same search when somebody opens the level, "
+                      "so this is about a quarter of a second of nothing happening on the way in"
+                      % (lid, nodes, KEEPER_NODE_CEILING))
+    elif nodes > KEEPER_NODE_WARNING:
+        warnings.append("%s: proving this grove took %d positions against the %d a level is "
+                        "expected to cost (the refusal is at %d)"
+                        % (lid, nodes, KEEPER_NODE_WARNING, KEEPER_NODE_CEILING))
+
+    # A basket bigger than the ground can hold ends the run on the one fail state a continue
+    # cannot rescue, with tiles still in the basket.
+    room = grove.room - grove.sprig_count
+    if budget and budget > room:
+        warnings.append("%s: this grove is dealt %d tiles onto %d cells of bare ground, so a "
+                        "careless run runs out of somewhere to plant before it runs out of tiles"
+                        % (lid, budget, room))
+
+    if ways > KEEPER_TOO_MANY_WAYS:
+        warnings.append("%s: %d different groves of %d tiles open every bed here, so almost any "
+                        "tidy play wins and the ground is deciding nothing" % (lid, ways, par))
+
+    greedy = keeper.greedy(grove, budget or (par + keeper.DEFAULT_SPARE))
+    if par > 3 and 0 <= greedy <= max(budget, 1):
+        warnings.append("%s: a player who never looks ahead finishes this grove in %d tiles "
+                        "against a basket of %d" % (lid, greedy, budget))
+
+    return dict(id=lid, chapter=chapter_id, w=grove.width, h=grove.height, par=par,
+                budget=budget, gold=gold, silver=silver, lamps=0, sources=0, fragile=0,
+                bound=0, crossings=0, briars=0, mode='keeper',
+                ways=ways, greedy=greedy, nodes=nodes,
+                beds=len(grove.beds), hearts=len(grove.heartbeds),
+                deal=block.get('tiles'))
+
+
 def factor_of(level, key, fallback_hundredths):
     """An authored tuning factor as hundredths, mirroring LevelTuning.
 
@@ -380,11 +585,19 @@ def check_level(level, chapter_id):
         if level.get('rows'):
             errors.append("%s: carries both a grid and a '%s' block" % (lid, claimed[0]))
 
-        # Lightfall is the one other mode whose whole level is in the file, so it is the one
-        # this gate can prove without Unity. A weave is generated from a seed and a keeper's
-        # grove is a size; both are checked where they can be, which is the Editor.
+        # Lightfall and Groovekeeper are the two modes whose whole level is in the file, so they
+        # are the two this gate can prove without Unity. A weave is generated from a seed, so it
+        # is checked where it can be, which is the Editor.
         if claimed[0] == 'fall':
             return check_fall(lid, chapter_id, level, block)
+
+        # Groovekeeper is the other mode whose whole level is in the file, so this gate proves
+        # it too: the ground, the procession and the search that turns the two into par.
+        if claimed[0] == 'keeper':
+            return check_keeper(lid, chapter_id, level, block)
+
+        if claimed[0] == 'weave':
+            check_weave(lid, block)
 
         return dict(id=lid, chapter=chapter_id,
                     w=block.get('width', 0), h=block.get('height', 0), par=0, budget=0,
@@ -1550,6 +1763,7 @@ def daily_income(progression):
 
 BOARD_VECTORS = os.path.join(os.path.dirname(os.path.abspath(__file__)), "board-vectors.json")
 FALL_VECTORS = os.path.join(os.path.dirname(os.path.abspath(__file__)), "fall-vectors.json")
+KEEPER_VECTORS = os.path.join(os.path.dirname(os.path.abspath(__file__)), "keeper-vectors.json")
 
 # The marker the four-armed-tile rule's warning carries, in all three copies of it.
 DECIDES_MARKER = "still finishes the glade"
@@ -1621,6 +1835,84 @@ def run_fall_vectors():
 
     return (f"fall vectors: {len(cases)} case(s), the offline rules agree"
             if not bad else f"fall vectors: {len(bad)} disagreement(s)")
+
+
+def run_keeper_vectors():
+    """Runs `keeper-vectors.json` through this file's copy of Groovekeeper's rules.
+
+    The bloom rule exists twice - `KeeperBoard`/`KeeperSolver`, which is what ships, and
+    `keeper.py`, which is what this gate and the chapter script run because they have no Unity
+    anywhere. Invariant 9a's answer for a board rule: the vector file is the contract, this
+    proves the Python side of it and `KeeperVectorTests` proves the C# side.
+
+    The cases are the places a loose transcription reads plausibly and answers differently -
+    a tile that was already blooming being counted a second time, a heartbed accepting a
+    colour it should refuse, stone conducting, a prism carrying one channel instead of three,
+    and a walled-off bed coming back *timed out* rather than proved unopenable.
+    """
+    doc = json.load(open(KEEPER_VECTORS, encoding="utf-8"))
+    cases = doc.get("cases") or []
+    if not cases:
+        errors.append("keeper-vectors.json has no cases")
+        return "keeper vectors: none found"
+
+    bad = []
+    for case in cases:
+        name = case.get("name", "?")
+        try:
+            grove = keeper.Grove(case["rows"], case["tiles"])
+        except ValueError as why:
+            bad.append("%s: %s" % (name, why))
+            continue
+
+        par, ways, _, proved = keeper.search(grove)
+        budget = par + keeper.DEFAULT_SPARE if par else 0
+
+        for label, got, want in (("proved", proved, case["proved"]),
+                                 ("par", par, case["par"]),
+                                 ("beds", len(grove.beds), case["beds"]),
+                                 ("heartbeds", len(grove.heartbeds), case["heartbeds"]),
+                                 ("room", grove.room, case["room"]),
+                                 ("sprigs", grove.sprig_count, case["sprigs"])):
+            if got != want:
+                bad.append("%s: %s is %r, vectors say %r" % (name, label, got, want))
+
+        if case["par"] > 0:
+            if ways != case["ways"]:
+                bad.append("%s: ways is %r, vectors say %r" % (name, ways, case["ways"]))
+
+            greedy = keeper.greedy(grove, budget)
+            if greedy != case["greedy"]:
+                bad.append("%s: greedy is %r, vectors say %r" % (name, greedy, case["greedy"]))
+
+    # A vector set that has quietly lost its teeth is worse than none: it passes, it is printed
+    # beside the word "ok", and nothing says the rule stopped being checked.
+    covers = dict(flourish=False, unopenable=False, heartbed=False, stone=False,
+                  prism=False, only_one=False)
+    for case in cases:
+        if case["beds"] >= 4:
+            covers["flourish"] = True
+        if case["proved"] and case["par"] == 0:
+            covers["unopenable"] = True
+        if case["heartbeds"] > 0:
+            covers["heartbed"] = True
+        if case["room"] < len(case["rows"]) * len(case["rows"][0].replace(" ", "")):
+            covers["stone"] = True
+        if keeper.PRISM in case["tiles"]:
+            covers["prism"] = True
+        if case["par"] > 0 and case["ways"] == 1:
+            covers["only_one"] = True
+
+    for what, held in covers.items():
+        if not held:
+            bad.append("no case covering '%s', so nothing here would notice that rule going away"
+                       % what)
+
+    for b in bad:
+        errors.append("keeper vectors: " + b)
+
+    return (f"keeper vectors: {len(cases)} case(s), the offline rules agree"
+            if not bad else f"keeper vectors: {len(bad)} disagreement(s)")
 
 
 def run_board_vectors():
@@ -1980,9 +2272,13 @@ def main():
         motes = carry.get("motes", 6)
         if motes < 0:
             motes = 6
+        tiles = carry.get("tiles", 6)
+        if tiles < 0:
+            tiles = 6
 
         print(f"continue: {gems} gem(s) for +{turns} turn(s) on a glade, "
-              f"+{ink} cell(s) of ink on a weave, +{motes} mote(s) on a well")
+              f"+{ink} cell(s) of ink on a weave, +{motes} mote(s) on a well, "
+              f"+{tiles} tile(s) on a groove")
 
         # What the price means, said in the two units a player actually earns gems in.
         # A price nobody can reach is the failure mode this whole block is content for.
@@ -2071,6 +2367,7 @@ def main():
     print()
     print(run_board_vectors())
     print(run_fall_vectors())
+    print(run_keeper_vectors())
 
     for w in warnings:
         print("WARN  " + w)

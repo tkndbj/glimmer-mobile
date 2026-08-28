@@ -271,7 +271,16 @@ namespace GlimmerGrove.Tests
                     motes = "BGR",
                 };
             else if (mode == GameMode.Keeper)
-                dto.keeper = new KeeperDto { width = 9, height = 9, tiles = 30 };
+                dto.keeper = new KeeperDto
+                {
+                    // A grove now authors its ground and what it deals, because par is searched
+                    // from the two. Small on purpose: this case is about the registry reading its
+                    // own block, not about a board being interesting.
+                    width = 6,
+                    height = 4,
+                    rows = new[] { "......", "..G...", ".R*B..", "......" },
+                    tiles = "GRB",
+                };
             else if (mode == GameMode.Weave)
                 dto.weave = new WeaveDto { width = 7, height = 9, pairs = 4 };
             else

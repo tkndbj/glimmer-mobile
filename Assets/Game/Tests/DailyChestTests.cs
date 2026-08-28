@@ -481,6 +481,17 @@ namespace GlimmerGrove.Tests
                 ReadGroveStatsAsync(CancellationToken c = default)
                 => Task.FromResult((Cloud.CloudResult.Failed(Cloud.CloudFailure.Offline),
                                     new Dictionary<Content.LevelId, Social.LevelStats>()));
+
+            public Task<(Cloud.CloudResult result, string appleAuthorizationCode)> ReauthenticateAsync(
+                Cloud.LinkCredential credential, CancellationToken c = default)
+                => Task.FromResult((Cloud.CloudResult.Failed(Cloud.CloudFailure.Rejected,
+                                                             "not part of this fixture"), string.Empty));
+
+            /// <summary>Nothing in this fixture deletes an account; refused rather than faked.</summary>
+            public Task<Cloud.CloudResult> DeleteAccountAsync(
+                string userId, string appleAuthorizationCode = null, CancellationToken c = default)
+                => Task.FromResult(Cloud.CloudResult.Failed(Cloud.CloudFailure.Rejected,
+                                                            "not part of this fixture"));
         }
 
         [TearDown]

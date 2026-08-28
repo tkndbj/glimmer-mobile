@@ -117,6 +117,28 @@ namespace GlimmerGrove.Progression
         public static readonly Mechanic WeaveInk = new Mechanic("weave_ink");
 
         /// <summary>
+        /// A hedge: a barrier grown along the edge between two cells, which no channel may cross.
+        ///
+        /// <para>
+        /// <b>Of the three rules this mode teaches, this is the one a board very nearly shows on
+        /// its own</b> — a finger pushed at a hedge simply stops, and the barrier flares in the
+        /// colour of the channel it refused. What it cannot show is the half a player has to know
+        /// <em>before</em> they draw: that it is a wall and not a bead. Every other thing drawn on
+        /// this ground is a place to go through, and a player who has just spent a chapter
+        /// learning that a ring means "come here" will read a bar the same way and route a channel
+        /// at it. One sentence is cheaper than one wasted drag, and on a mode where light is spent
+        /// permanently a wasted drag is a wasted run.
+        /// </para>
+        /// <para>
+        /// It is also the rule that changes what the <em>rest</em> of the board means. A grove
+        /// with a hedge in it has rooms and doorways, so "who yields" stops being a question about
+        /// open ground and becomes a question about which colour gets the gap. That is not
+        /// something to be discovered by losing.
+        /// </para>
+        /// </summary>
+        public static readonly Mechanic WeaveHedge = new Mechanic("weave_hedge");
+
+        /// <summary>
         /// Lightfall's verb: a mote dropped onto another adds its colour rather than matching
         /// it, and one holding all three bursts.
         ///
@@ -178,6 +200,113 @@ namespace GlimmerGrove.Progression
         /// </para>
         /// </summary>
         public static readonly Mechanic FallBrim = new Mechanic("fall_brim");
+
+        /// <summary>
+        /// Groovekeeper's verb, and the inversion at the heart of it: a tile is laid beside the
+        /// grove, and a tile whose own colour and its neighbours' between them carry all three
+        /// bursts into bloom.
+        ///
+        /// <para>
+        /// <b>The one rule of this mode no board can show</b>, and it has to be told before the
+        /// first tile because the mistake it prevents is the whole of the game. Every other mode
+        /// here rewards putting like with like — four chapters of joining a colour to its own, a
+        /// weave whose crystals are dragged to critters wearing the same light — so a basket of
+        /// coloured tiles reads as "match them up" to anybody who has played this game at all.
+        /// It is the exact opposite: red beside red is a wasted edge, and red beside green and
+        /// blue is a flower.
+        /// </para>
+        /// <para>
+        /// What the board <em>can</em> show, and does, is the rest of it: a bed wears a halo in
+        /// the colours it is still waiting for, the ghost under a thumb says what a cell would
+        /// open before anything is committed, and a bloom throws petals. So the lesson is two
+        /// sentences and a ring rather than a tutorial.
+        /// </para>
+        /// </summary>
+        public static readonly Mechanic KeeperBloom = new Mechanic("keeper_bloom");
+
+        /// <summary>
+        /// A grove's basket: the tiles it is dealt, that they come in an order the player can see,
+        /// and that a tile laid down stays there.
+        ///
+        /// <para>
+        /// <b>Separate from <see cref="MoveBudget"/>, <see cref="WeaveInk"/> and
+        /// <see cref="FallSupply"/> for the reason those three are separate from each other.</b>
+        /// All four are a pot that empties and ends a run, and everything a player has to be told
+        /// is in the half that differs. A glade hands a turn back for every undo, without limit,
+        /// so exploring costs nothing there. A grove has no undo at all, and a wrong tile is gone
+        /// twice over because it has taken a cell of ground with it. Somebody who learned the
+        /// glade's rule and was never taught this one would tap about to see what happens, which
+        /// on this board is how you lose.
+        /// </para>
+        /// <para>
+        /// Only on a grove that can actually run out. The first level of the chapter is authored
+        /// without a basket — exactly as the first glade and the first well are — and a lesson
+        /// shown over a meter that is not there is one that can never be shown again.
+        /// </para>
+        /// </summary>
+        public static readonly Mechanic KeeperBasket = new Mechanic("keeper_basket");
+
+        /// <summary>
+        /// Stone: ground nothing may be planted on, which a grove has to reach around.
+        ///
+        /// <para>
+        /// Half of this the board shows and half of it it cannot. That the grey cells are not
+        /// ground is obvious the moment one is tapped; what is not is the consequence — a bed
+        /// beside stone has fewer neighbours to gather from, so the colours it is missing have to
+        /// come from a shorter list of cells, and a grove that grows the wrong way round a rock
+        /// arrives at a bed with no room left to feed it. That is worth one sentence before it is
+        /// met rather than after.
+        /// </para>
+        /// </summary>
+        public static readonly Mechanic KeeperStone = new Mechanic("keeper_stone");
+
+        /// <summary>
+        /// Composting: spending a tile without planting it, to bring the next one round.
+        ///
+        /// <para>
+        /// <b>A lesson about a control, and one the board genuinely cannot teach</b>, because
+        /// nothing about a grove implies that the key under the basket does anything but look
+        /// decorative. It is also the one move here that costs something and changes nothing, so
+        /// a player who has not been told what it is for reads it as a mistake waiting to happen
+        /// rather than as the answer to holding the wrong colour.
+        /// </para>
+        /// <para>
+        /// Taught before the heartbeds arrive rather than with them, deliberately: the two are
+        /// one idea in the wrong order otherwise — a bed that refuses every colour but its own is
+        /// alarming until you already know that the procession can be moved on.
+        /// </para>
+        /// </summary>
+        public static readonly Mechanic KeeperCompost = new Mechanic("keeper_compost");
+
+        /// <summary>
+        /// A heartbed: a bed drawn in a colour, which only that colour may be planted on.
+        ///
+        /// <para>
+        /// It is what turns an ordered procession from scenery into the puzzle. A plain bed is
+        /// opened by whichever tile happens to be in hand when its neighbours are ready; a
+        /// heartbed has to be reached with one particular tile, which means counting forward
+        /// through the basket and deciding what to do with everything in between (see
+        /// <see cref="KeeperCompost"/>).
+        /// </para>
+        /// <para>
+        /// The refusal is what needs saying, and it is deliberately a refusal rather than a
+        /// mistake: the wrong tile cannot be planted there at all, so nobody can kill a heartbed
+        /// with a mis-tap. A player who is not told that reads the cell as broken.
+        /// </para>
+        /// </summary>
+        public static readonly Mechanic KeeperHeartbed = new Mechanic("keeper_heartbed");
+
+        /// <summary>
+        /// A prism: the one tile in the procession that carries all three channels at once.
+        ///
+        /// <para>
+        /// It blooms wherever it lands and it opens any bed, heartbed included — so the lesson is
+        /// not what it does, which the ghost shows plainly, but that there is only one and it is
+        /// coming. A prism spent on a bed that two ordinary tiles would have opened is a grove
+        /// that runs out four tiles later, and that is a decision worth arriving at knowingly.
+        /// </para>
+        /// </summary>
+        public static readonly Mechanic KeeperPrism = new Mechanic("keeper_prism");
 
         /// <summary>
         /// That there is more than one way to play, and where the switch between them is.
@@ -298,8 +427,9 @@ namespace GlimmerGrove.Progression
         public static readonly Mechanic[] All =
         {
             FragileConduit, MoveBudget, RootedTile, ColourMixing, Crossing, Briar,
-            BoundConduit, WeaveJoin, WeaveBead, WeaveInk, FallCook, FallSupply, FallBrim,
-            ModeSwitch, LuckySpin, Grove, GroveShop,
+            BoundConduit, WeaveJoin, WeaveBead, WeaveInk, WeaveHedge, FallCook, FallSupply,
+            FallBrim, KeeperBloom, KeeperBasket, KeeperStone, KeeperCompost, KeeperHeartbed,
+            KeeperPrism, ModeSwitch, LuckySpin, Grove, GroveShop,
         };
 
         public bool IsValid => !string.IsNullOrEmpty(Id);

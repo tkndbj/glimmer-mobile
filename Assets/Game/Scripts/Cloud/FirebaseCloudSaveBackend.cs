@@ -1226,6 +1226,142 @@ namespace GlimmerGrove.Cloud
             }
         }
 
+        // ------------------------------------------------------- proving who is asking
+        /// <summary>
+        /// Takes the player back through their provider and checks the answer against the
+        /// account that is already signed in.
+        ///
+        /// <para>
+        /// <b>Firebase's own mismatch check does the work.</b> <c>ReauthenticateAndRetrieveData</c>
+        /// refuses a credential belonging to anybody but the current user, with
+        /// <see cref="AuthError.UserMismatch"/>, and — unlike a sign-in — leaves the session
+        /// untouched when it does. Comparing uids by hand afterwards would be a second answer
+        /// to a question the SDK already answers correctly, and it would compare them *after*
+        /// the session had already moved.
+        /// </para>
+        /// <para>
+        /// The Apple authorization code rides back out on <c>AccessToken</c>, which is where
+        /// this codebase carries it: Firebase's fourth <c>GetCredential</c> parameter is named
+        /// after Google's access token and, for <c>apple.com</c>, must hold Apple's
+        /// authorization code. Empty for Google, and empty for a provider reached through the
+        /// web flow, because neither yields one and neither needs one.
+        /// </para>
+        /// </summary>
+        public async Task<(CloudResult result, string appleAuthorizationCode)> ReauthenticateAsync(
+            LinkCredential credential, CancellationToken cancellation = default)
+        {
+            if (!credential.IsValid)
+                return (CloudResult.Failed(CloudFailure.Rejected, "no provider named"), string.Empty);
+
+            if (!await EnsureReadyAsync())
+                return (CloudResult.Failed(CloudFailure.Offline, "Firebase unavailable"), string.Empty);
+
+            var user = _auth?.CurrentUser;
+            if (user == null)
+                return (CloudResult.Failed(CloudFailure.Unauthenticated, "not signed in"), string.Empty);
+
+            try
+            {
+                var (upgraded, refusal) = await NativeIfRequiredAsync(credential);
+                if (refusal.HasValue) return (refusal.Value, string.Empty);
+                credential = upgraded;
+
+                if (credential.HasToken)
+                    await user.ReauthenticateAndRetrieveDataAsync(ToCredential(credential));
+                else
+                    await user.ReauthenticateWithProviderAsync(Provider(credential.ProviderId));
+
+                string appleCode = credential.ProviderId == LinkCredential.Apple
+                    ? credential.AccessToken ?? string.Empty
+                    : string.Empty;
+
+                return (CloudResult.Success, appleCode);
+            }
+            catch (Exception e)
+            {
+                return (Classify(e, "reauthenticate"), string.Empty);
+            }
+        }
+
+        // ------------------------------------------------------- deleting the account
+        /// <summary>
+        /// Erases the account, then leaves this device signed in as a brand new anonymous one.
+        ///
+        /// <para>
+        /// <b>The session is checked against the caller's id before anything is sent.</b>
+        /// Nothing in the request names an account — the server takes it from the token — so a
+        /// device whose session has moved would delete whichever account it is *now* rather
+        /// than the one the player was looking at. That is <see cref="AccountGate"/>'s hazard
+        /// with the one consequence it cannot repair, and the window is entirely ordinary: a
+        /// provider sheet backgrounds the app, and the confirmation panel is on screen across
+        /// it.
+        /// </para>
+        /// <para>
+        /// <b>Signing back in is part of this call rather than left to the caller.</b> Firebase
+        /// keeps handing back the deleted user until it is told to forget it, so a device that
+        /// only deleted would hold a session for an account that no longer exists — which is
+        /// indistinguishable, from every screen in the game, from being signed in. It signs
+        /// out and takes a fresh anonymous account, which is what the player is actually left
+        /// holding: a new grove they can play immediately.
+        /// </para>
+        /// <para>
+        /// <b>A failure to sign back in is still a success.</b> The account really is deleted
+        /// by then, and reporting a failure would send the panel down a path that offers to
+        /// try again — deleting an account that is already gone, on a device that has just
+        /// lost its network. The next launch signs in anonymously by itself.
+        /// </para>
+        /// </summary>
+        public async Task<CloudResult> DeleteAccountAsync(
+            string userId, string appleAuthorizationCode = null,
+            CancellationToken cancellation = default)
+        {
+            if (!await EnsureReadyAsync())
+                return CloudResult.Failed(CloudFailure.Offline, "Firebase unavailable");
+
+            if (string.IsNullOrEmpty(userId))
+                return CloudResult.Failed(CloudFailure.Unauthenticated, "no user id");
+
+            var signedIn = _auth?.CurrentUser;
+            if (signedIn == null)
+                return CloudResult.Failed(CloudFailure.Unauthenticated, "not signed in");
+
+            if (!string.Equals(signedIn.UserId, userId, StringComparison.Ordinal))
+                return CloudResult.Failed(CloudFailure.AccountMismatch,
+                                          "the session is not the account being deleted");
+
+            try
+            {
+                var payload = new Dictionary<string, object>();
+
+                // Sent only when there is one. An empty string would be forwarded to Apple as
+                // an authorization code and refused, which turns "nothing to revoke" into a
+                // logged failure that reads like a broken credential.
+                if (!string.IsNullOrEmpty(appleAuthorizationCode))
+                    payload["appleAuthorizationCode"] = appleAuthorizationCode;
+
+                await CallAsync("deleteAccount", payload);
+            }
+            catch (Exception e)
+            {
+                return Classify(e, "delete account");
+            }
+
+            try
+            {
+                // Out first, unconditionally. SignInAsync only mints an anonymous account when
+                // nobody is signed in, and the user it is holding right now is the deleted one.
+                _auth.SignOut();
+                await _auth.SignInAnonymouslyAsync();
+            }
+            catch (Exception e)
+            {
+                Debug.LogWarning("[Cloud] the account was deleted but this device could not take " +
+                                 "a new one yet: " + e.Message);
+            }
+
+            return CloudResult.Success;
+        }
+
         // ------------------------------------------------------------- plumbing
         async Task<IDictionary<string, object>> CallAsync(string name, Dictionary<string, object> data)
         {
@@ -1356,6 +1492,14 @@ namespace GlimmerGrove.Cloud
 
                     case AuthError.NetworkRequestFailed:
                         return CloudResult.Failed(CloudFailure.Offline, inner.Message);
+
+                    // The credential is real and belongs to somebody else. Only reachable from
+                    // a re-authentication, where it is the answer that matters most: it is what
+                    // a player picking the wrong entry out of an account chooser produces, and
+                    // reporting it as an error would tell them the app is broken when they have
+                    // simply mistapped. Nothing has moved — see ReauthenticateAsync.
+                    case AuthError.UserMismatch:
+                        return CloudResult.Failed(CloudFailure.AccountMismatch, inner.Message);
                 }
             }
 
@@ -1369,6 +1513,13 @@ namespace GlimmerGrove.Cloud
                     case FunctionsErrorCode.InvalidArgument:
                     case FunctionsErrorCode.FailedPrecondition:
                         return CloudResult.Failed(CloudFailure.Rejected, functions.Message);
+
+                    // `redeemPurchase` alone raises this, and only from the branch where the
+                    // receipt exists against a different account. It is the one refusal here
+                    // that no later state can turn into a success, which is what makes it safe
+                    // for the store queue to stop asking — see CloudFailure.AlreadyRedeemed.
+                    case FunctionsErrorCode.AlreadyExists:
+                        return CloudResult.Failed(CloudFailure.AlreadyRedeemed, functions.Message);
                     case FunctionsErrorCode.Unavailable:
                     case FunctionsErrorCode.DeadlineExceeded:
                         return CloudResult.Failed(CloudFailure.Offline, functions.Message);

@@ -337,6 +337,85 @@ namespace GlimmerGrove.Persistence
         }
 
         /// <summary>
+        /// Erases this account from the device: the grove, its archived copy, and every
+        /// derived cache. What is left is a fresh grove belonging to nobody.
+        ///
+        /// <para>
+        /// <b>The one place in this file that destroys a grove without filing it anywhere.</b>
+        /// Every other route archives what it leaves, and that is the whole difference between
+        /// a switch and this: a switch means "play as somebody else, and let me come back",
+        /// where this means "there is nothing to come back to". Keeping a copy would be worse
+        /// than useless — it would leave the grove a player asked to be rid of sitting on the
+        /// handset, and <see cref="SwitchTo"/> would cheerfully restore it if that uid ever
+        /// came round again.
+        /// </para>
+        /// <para>
+        /// <b>Only this account's slot is dropped.</b> The archive holds up to six groves and
+        /// the others belong to real accounts that are still playing; a deletion that cleared
+        /// the folder would take a second player's local copy off a shared phone, which is a
+        /// loss nothing would ever explain. <see cref="IAccountArchive.Forget"/> is keyed by
+        /// account for exactly this.
+        /// </para>
+        /// <para>
+        /// <b>The new file names nobody.</b> It is deliberately not given the replacement uid:
+        /// the account this device becomes is minted by the backend a moment later, and writing
+        /// a uid in before it exists is how a save comes to name an account nothing can
+        /// authenticate as. <see cref="SwitchTo"/> then adopts the real one, and stashes
+        /// nothing on the way because there is no outgoing account left to stash.
+        /// </para>
+        /// <para>
+        /// <b>The handset's own preferences survive</b>, exactly as they do across a switch.
+        /// Music, sound, haptics and language describe the phone and the person holding it, not
+        /// the account — resetting them because somebody deleted an account would be a bug they
+        /// would report as one. The pre-1.0 <c>PlayerPrefs</c> keys are deliberately left alone
+        /// for the same reason and a stronger one: they belong to whoever installed the game on
+        /// this handset, and the fresh file carries <c>legacyImportDone</c> so nothing
+        /// re-imports them anyway.
+        /// </para>
+        /// </summary>
+        /// <param name="userId">
+        /// The account being erased. Checked against the file rather than trusted: this is
+        /// called after a network round trip, so the session may have moved underneath it, and
+        /// erasing the wrong grove is the one mistake here with no undo.
+        /// </param>
+        public static bool EraseAccount(string userId)
+        {
+            if (!_loaded || string.IsNullOrEmpty(userId)) return false;
+
+            // Not this device's account any more, or never was. Refused rather than erasing
+            // whatever happens to be loaded — see the parameter's note.
+            if (!string.Equals(CloudState.UserId, userId, StringComparison.Ordinal))
+            {
+                Debug.LogWarning("[Save] refused to erase '" + userId + "': this device is holding " +
+                                 "a different account");
+                return false;
+            }
+
+            // Before the file is replaced, so a run this device left in flight is resolved
+            // against the account that started it rather than charged to the fresh one. Same
+            // ordering, and the same reason, as a switch.
+            RunGuard.Resolve();
+
+            // The published card, the cached boards and the fingerprint that says what is
+            // already published all belong to the account being deleted.
+            Social.GroveBoard.Forget();
+
+            _archive.Forget(userId);
+
+            var fresh = FreshFile();
+            GameSettings.WriteInto(fresh);
+
+            // Adopt's answer is about the disk write. A failed one leaves the file dirty and
+            // the next Flush retries it, and what is in memory is already the empty grove —
+            // so the erasure has happened either way, which is why this reports true.
+            Adopt(fresh);
+            Flush();
+
+            Debug.Log("[Save] erased the account this device was holding");
+            return true;
+        }
+
+        /// <summary>
         /// An empty save, as this build writes one.
         ///
         /// One place, because "what a grove with nothing in it looks like" is one fact and a

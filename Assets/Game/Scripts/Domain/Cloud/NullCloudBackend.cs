@@ -138,5 +138,24 @@ namespace GlimmerGrove.Cloud
             => Task.FromResult((CloudResult.Failed(CloudFailure.Offline, "no cloud backend configured"),
                                 GroveRankTable.None,
                                 new Dictionary<string, int>(), 0L));
+
+        /// <summary>
+        /// Refused, and the panel never asks: <see cref="AccountDeletion.Offered"/> reads
+        /// <see cref="IsAvailable"/> and draws no control at all without a backend. With none
+        /// configured there is no account anywhere — the save has never left the handset — so
+        /// a "delete my account" button would be offering to erase something that does not
+        /// exist, which is worse than not offering it.
+        /// </summary>
+        /// <summary>Nobody to re-authenticate against, and nothing asks. See below.</summary>
+        public Task<(CloudResult result, string appleAuthorizationCode)> ReauthenticateAsync(
+            LinkCredential credential, CancellationToken cancellation = default)
+            => Task.FromResult((CloudResult.Failed(CloudFailure.Unauthenticated,
+                                                   "no cloud backend configured"), string.Empty));
+
+        public Task<CloudResult> DeleteAccountAsync(
+            string userId, string appleAuthorizationCode = null,
+            CancellationToken cancellation = default)
+            => Task.FromResult(CloudResult.Failed(CloudFailure.Unauthenticated,
+                                                  "no cloud backend configured"));
     }
 }

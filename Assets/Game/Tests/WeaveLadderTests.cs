@@ -50,25 +50,70 @@ namespace GlimmerGrove.Tests
     /// </summary>
     public sealed class WeaveLadderTests
     {
-        /// <summary>One authored rung: its shape, its beads, its seed, and what that board measured.</summary>
+        /// <summary>
+        /// One authored rung: its shape, what is grown on it, its seed, and what that board
+        /// measured.
+        /// </summary>
         readonly struct Rung
         {
             public readonly string Id;
-            public readonly int Width, Height, Pairs, Beads, Seed, Slack, Ways, Par;
+            public readonly int Width, Height, Pairs, Beads, Hedges, Seed, Slack, Ways, Par, Bite;
 
-            public Rung(string id, int width, int height, int pairs, int beads, int seed,
-                        int slack, int ways, int par)
+            /// <summary>
+            /// How many of this grove's channels the fence sends a longer way —
+            /// <see cref="WeaveLayout.PairsBitten"/>.
+            ///
+            /// <para>
+            /// <b><see cref="Bite"/> is a sum, and a sum cannot tell a doorway from a detour.</b>
+            /// One pair walking ten cells further and five pairs walking two each read as the same
+            /// ten, and they are opposite boards: the first is one longer line, the second is a
+            /// gap everybody wants. The Wildhedge was authored against the sum alone and came out
+            /// entirely of the first kind — eight of its ten groves reached exactly one channel of
+            /// six, with three barriers drawn across them — which is how a chapter can satisfy
+            /// every rule in this file and be reported from play as "it is like they are not
+            /// there".
+            /// </para>
+            /// </summary>
+            public readonly int Bitten;
+
+            public Rung(string id, int width, int height, int pairs, int beads, int hedges,
+                        int seed, int slack, int ways, int par, int bite = 0, int bitten = 0)
             {
                 Id = id;
                 Width = width;
                 Height = height;
                 Pairs = pairs;
                 Beads = beads;
+                Hedges = hedges;
                 Seed = seed;
                 Slack = slack;
                 Ways = ways;
                 Par = par;
+                Bite = bite;
+                Bitten = bitten;
             }
+
+            /// <summary>
+            /// How far past straight lines this grove has to be drawn, all told: the detour the
+            /// pairs force on each other, plus the detour the hedges force on the pairs.
+            ///
+            /// <para>
+            /// <b>This is the reading a ladder climbs, and <see cref="Slack"/> stopped being it
+            /// the moment a chapter grew hedges.</b> Slack is measured against each pair's own
+            /// floor, and a hedge <em>raises that floor</em> — it moves forced detour out of the
+            /// number and into the thing the number is measured against. So an open grove forcing
+            /// sixteen and a hedged grove forcing ten over floors already six cells longer are
+            /// asking for the same amount of drawing, and comparing their slacks says the second
+            /// one is easier. The sum is what stays comparable: the fewest cells of light any
+            /// arrangement costs, above the sum of the pairs' straight-line distances.
+            /// </para>
+            /// <para>
+            /// It reduces to slack exactly when nothing is grown, which is every grove of the
+            /// first two chapters — so this generalises the rule those were authored against
+            /// rather than replacing it, and their numbers are unmoved.
+            /// </para>
+            /// </summary>
+            public int Toll => Slack + Bite;
         }
 
         /// <summary>One chapter of the mode: the file it ships in, and the ladder inside it.</summary>
@@ -97,16 +142,16 @@ namespace GlimmerGrove.Tests
         /// </summary>
         static readonly Rung[] Weftwood =
         {
-            new Rung("w01_first_weave",       5, 6, 3, 0,    3, 2, 230, 19),
-            new Rung("w01_two_threads",       5, 7, 4, 0,   16, 2, 140, 29),
-            new Rung("w01_the_shuttle",       6, 6, 4, 1,  138, 4,  93, 33),
-            new Rung("w01_tight_warp",        6, 7, 4, 2,    3, 4,  62, 38),
-            new Rung("w01_five_lanterns",     6, 8, 5, 2,   60, 4,  46, 43),
-            new Rung("w01_the_long_skein",    7, 7, 5, 3,  321, 6,  16, 47),
-            new Rung("w01_close_quarters",    7, 8, 5, 3,  137, 6,  12, 56),
-            new Rung("w01_six_sleepers",      7, 8, 6, 4, 2935, 6,   9, 56),
-            new Rung("w01_the_tangle",        7, 9, 6, 4, 2358, 8,   4, 61),
-            new Rung("w01_the_weftwood_knot", 7, 9, 6, 5, 3179, 8,   2, 64),
+            new Rung("w01_first_weave",       5, 6, 3, 0, 0,    3, 2, 230, 19),
+            new Rung("w01_two_threads",       5, 7, 4, 0, 0,   16, 2, 140, 29),
+            new Rung("w01_the_shuttle",       6, 6, 4, 1, 0,  138, 4,  93, 33),
+            new Rung("w01_tight_warp",        6, 7, 4, 2, 0,    3, 4,  62, 38),
+            new Rung("w01_five_lanterns",     6, 8, 5, 2, 0,   60, 4,  46, 43),
+            new Rung("w01_the_long_skein",    7, 7, 5, 3, 0,  321, 6,  16, 47),
+            new Rung("w01_close_quarters",    7, 8, 5, 3, 0,  137, 6,  12, 56),
+            new Rung("w01_six_sleepers",      7, 8, 6, 4, 0, 2935, 6,   9, 56),
+            new Rung("w01_the_tangle",        7, 9, 6, 4, 0, 2358, 8,   4, 61),
+            new Rung("w01_the_weftwood_knot", 7, 9, 6, 5, 0, 3179, 8,   2, 64),
         };
 
         /// <summary>
@@ -138,16 +183,78 @@ namespace GlimmerGrove.Tests
         /// </summary>
         static readonly Rung[] Nightloom =
         {
-            new Rung("w02_dusk_threads",       7, 10, 6, 5,  23493,  8, 305, 65),
-            new Rung("w02_the_narrow_loom",    7, 10, 6, 5,   9571, 10, 239, 63),
-            new Rung("w02_the_pinch",          8,  9, 6, 5,  51479, 10, 189, 67),
-            new Rung("w02_who_yields",         8,  9, 6, 5, 108184, 12, 141, 65),
-            new Rung("w02_six_rings",          8,  9, 6, 6,  61031, 12, 118, 68),
-            new Rung("w02_spindlewood",        8, 10, 6, 6,  13224, 12,  75, 72),
-            new Rung("w02_the_long_way_round", 8, 10, 6, 6,  56254, 14,  40, 68),
-            new Rung("w02_the_shuttered_loom", 8, 10, 6, 6,  58743, 14,  30, 72),
-            new Rung("w02_thread_the_dark",    8, 10, 6, 6,  72099, 14,  13, 74),
-            new Rung("w02_the_nightloom_knot", 8, 10, 6, 6, 104439, 16,   7, 72),
+            new Rung("w02_dusk_threads",       7, 10, 6, 5, 0,  23493,  8, 305, 65),
+            new Rung("w02_the_narrow_loom",    7, 10, 6, 5, 0,   9571, 10, 239, 63),
+            new Rung("w02_the_pinch",          8,  9, 6, 5, 0,  51479, 10, 189, 67),
+            new Rung("w02_who_yields",         8,  9, 6, 5, 0, 108184, 12, 141, 65),
+            new Rung("w02_six_rings",          8,  9, 6, 6, 0,  61031, 12, 118, 68),
+            new Rung("w02_spindlewood",        8, 10, 6, 6, 0,  13224, 12,  75, 72),
+            new Rung("w02_the_long_way_round", 8, 10, 6, 6, 0,  56254, 14,  40, 68),
+            new Rung("w02_the_shuttered_loom", 8, 10, 6, 6, 0,  58743, 14,  30, 72),
+            new Rung("w02_thread_the_dark",    8, 10, 6, 6, 0,  72099, 14,  13, 74),
+            new Rung("w02_the_nightloom_knot", 8, 10, 6, 6, 0, 104439, 16,   7, 72),
+        };
+
+
+        /// <summary>
+        /// The Wildhedge: the mode's third chapter, and the first to add a rule since the ring.
+        ///
+        /// <para>
+        /// <b>What it brings is the hedge</b> — a barrier grown along the edge between two cells
+        /// that no channel may cross. One on its opening pair of groves, two on the third and
+        /// three from the fourth on, over groves that grow from 8x10 to 9x10.
+        /// </para>
+        /// <para>
+        /// <b>It was authored once against the toll alone and had to be authored again, and that
+        /// is the lesson this table exists to carry.</b> <see cref="Rung.Toll"/> adds the detour
+        /// the hedges force to the detour the pairs force, and the two are not worth the same. A
+        /// hedge lifts <em>every</em> route's floor, so it rejects no arrangement and asks nobody
+        /// to give way — it makes the drawing longer, and because it flows into par it lifts the
+        /// star lines with it. Slack is the one that means the pairs cannot all have their way,
+        /// which is this mode's whole difficulty argument (invariant 20f). Authored against the
+        /// sum, the chapter bought a climbing toll by trading contention away: it ran slack 10, 6,
+        /// 8, 6, 6, 12, 6, 6, 14, 16 — five rungs below anything in the Nightloom — with its toll
+        /// sitting flat at sixteen for eight groves in a row.
+        /// </para>
+        /// <para>
+        /// <b>And the mechanic it teaches reached one channel in six.</b>
+        /// <c>WeaveLayout.HedgesBite</c> is a sum over the grove, so a single pair detouring two
+        /// cells satisfies it for a board of six — and measured per channel, eight of these ten
+        /// groves had a fence that lengthened exactly one route, three barriers apiece. Five
+        /// channels out of six were drawn as though nothing were there, which is how a chapter can
+        /// pass every rule in this file and be reported from play as "it is like they are not
+        /// there". <see cref="Rung.Bitten"/> is the reading that says so, and it was not a matter
+        /// of unlucky seeds: swept over twelve thousand seeds of this chapter's own opening shape,
+        /// <em>every single</em> one-hedge grove bit exactly one pair and not one bit two. The
+        /// generator now asks the carve to put its first <c>WeaveGenerator.MinBitten</c> walks
+        /// across the fence rather than hoping they land there.
+        /// </para>
+        /// <para>
+        /// So this ladder climbs on three readings at once and every one of them is held to it
+        /// below: the toll from 16 to 28, the slack from 8 to 14 — never below the 8 the Nightloom
+        /// opened on — and the fence from two channels to three, while the near-best arrangements
+        /// fall from 137 to 11 against the 478 to 31 that shipped.
+        /// </para>
+        /// <para>
+        /// Chosen by <c>Tools/weave_seeds.py</c>, which runs <c>WeaveSeedSearch</c> — the same
+        /// rule <c>Survey Lightweave</c> sweeps with — over 825,000 seeds across seven shapes,
+        /// and every one of these ten was then re-measured on <em>both</em> .NET 8 and Unity's own
+        /// Mono and agreed (<c>weave_seeds.py confirm</c>).
+        /// </para>
+        /// </summary>
+        static readonly Rung[] Wildhedge =
+        {
+            //                          w   h  p  b  hg    seed  slack ways par bite bitten
+            new Rung("w03_the_first_hedge",    8, 10, 6, 6, 1, 120623,  8, 137, 79,  8, 2),
+            new Rung("w03_two_rooms",          8, 10, 6, 6, 1,  85182,  8, 108, 75,  8, 2),
+            new Rung("w03_the_green_gate",     8, 11, 6, 6, 2,    707,  8,  96, 82, 12, 3),
+            new Rung("w03_hedgerows",          8, 11, 6, 6, 3,  95945,  8,  88, 89, 14, 3),
+            new Rung("w03_the_long_way_out",   8, 11, 6, 6, 3,  26717,  8,  69, 81, 14, 3),
+            new Rung("w03_thicket",            9, 10, 6, 6, 3,  53031, 10,  55, 83, 12, 3),
+            new Rung("w03_the_walled_garden",  9, 10, 6, 6, 3,  89993, 10,  31, 87, 12, 3),
+            new Rung("w03_narrow_ways",        9, 10, 6, 6, 3,   1320, 10,  23, 87, 16, 3),
+            new Rung("w03_the_maze_of_leaves", 9, 10, 6, 6, 3,  86586, 10,  18, 85, 18, 3),
+            new Rung("w03_the_wildhedge_knot", 9, 10, 6, 6, 3,  26917, 14,  11, 81, 14, 3),
         };
 
         /// <summary>
@@ -165,6 +272,7 @@ namespace GlimmerGrove.Tests
         {
             new Chapter("w01_lightweave", Weftwood),
             new Chapter("w02_nightloom", Nightloom),
+            new Chapter("w03_wildhedge", Wildhedge),
         };
 
         /// <summary>Every grove the mode ships, whichever chapter it is in.</summary>
@@ -197,7 +305,7 @@ namespace GlimmerGrove.Tests
 
         static WeaveLayout Grove(Rung rung)
             => WeaveGenerator.Build(rung.Width, rung.Height, rung.Pairs, (uint)rung.Seed,
-                                    rung.Beads);
+                                    rung.Beads, rung.Hedges);
 
         // ------------------------------------------------------------------ the boards
         [Test]
@@ -220,6 +328,24 @@ namespace GlimmerGrove.Tests
                 Assert.AreEqual(rung.Ways, tally.Ways,
                     $"'{rung.Id}' now admits {tally.Ways} near-best arrangements rather than "
                     + $"{rung.Ways}, so the generator has re-dealt it");
+
+                // The hedges' half of the same claim. Slack alone would not notice a fence that
+                // moved: a barrier raises the floors slack is measured against, so a re-grown
+                // fence can leave slack exactly where it was while every route on the board is
+                // different. Pinned as the bite rather than as the hedges' positions because it
+                // is the number that decides what the board costs — Tools/verify/weave.py diffs
+                // the positions themselves, on both runtimes.
+                Assert.AreEqual(rung.Hedges, grove.Hedges.Count,
+                    $"'{rung.Id}' grew {grove.Hedges.Count} hedge(s) rather than {rung.Hedges}");
+
+                Assert.AreEqual(rung.Bitten, grove.PairsBitten,
+                    $"'{rung.Id}' now has a fence reaching {grove.PairsBitten} of its channels "
+                    + $"rather than {rung.Bitten}, so the board has been re-dealt");
+
+                Assert.AreEqual(rung.Bite, grove.StraightTotal - grove.UnhedgedTotal,
+                    $"'{rung.Id}' hedges now cost "
+                    + $"{grove.StraightTotal - grove.UnhedgedTotal} cell(s) rather than "
+                    + $"{rung.Bite}, so the fence has been re-grown and every route with it");
             }
         }
 
@@ -329,11 +455,28 @@ namespace GlimmerGrove.Tests
             }
         }
 
+        /// <summary>
+        /// Every bead lies off every shortest route between its own pair's ends.
+        ///
+        /// <para>
+        /// A bead a player threads on the way past is decoration — invariant 5d's rule for this
+        /// mode, checked on the boards that actually ship rather than on a sweep.
+        /// </para>
+        /// <para>
+        /// <b>Measured over the ways that are open, and it used to be measured in straight
+        /// lines.</b> On a hedged grove those are different questions and only one of them is the
+        /// rule: a cell can sit squarely on the straight line between two ends and be a long way
+        /// off every route that actually exists, because the barrier is in the way. The old
+        /// reading called such a bead decoration when threading it demonstrably lifts its pair's
+        /// floor — it failed on the Wildhedge's opening grove the day the chapter was authored,
+        /// on a bead the generator had placed correctly. <see cref="WeaveLayout.Span"/> is the
+        /// same integer as <c>Distance</c> wherever nothing is grown, so the two chapters this
+        /// test was written for are held to exactly what they were held to before.
+        /// </para>
+        /// </summary>
         [Test]
         public void EveryBeadOfTheLadderSitsOffItsOwnPairsDirectRoute()
         {
-            // A bead a player threads on the way past is decoration — invariant 5d's rule for
-            // this mode, checked on the boards that actually ship rather than on a sweep.
             foreach (var rung in Ladder)
             {
                 var grove = Grove(rung);
@@ -341,9 +484,9 @@ namespace GlimmerGrove.Tests
                 foreach (var bead in grove.Beads)
                 {
                     var ends = grove.Pairs[bead.Pair];
-                    int direct = grove.Distance(ends.Heart, ends.Critter);
-                    int around = grove.Distance(ends.Heart, bead.Cell)
-                               + grove.Distance(bead.Cell, ends.Critter);
+                    int direct = grove.Span(ends.Heart, ends.Critter);
+                    int around = grove.Span(ends.Heart, bead.Cell)
+                               + grove.Span(bead.Cell, ends.Critter);
 
                     Assert.Greater(around, direct,
                         $"'{rung.Id}' has a bead on cell {bead.Cell} that lies on a shortest "
@@ -377,8 +520,33 @@ namespace GlimmerGrove.Tests
                         $"'{rung.Id}' has fewer channels than '{below.Id}'");
                     Assert.GreaterOrEqual(rung.Beads, below.Beads,
                         $"'{rung.Id}' has fewer beads than '{below.Id}'");
+                    Assert.GreaterOrEqual(rung.Hedges, below.Hedges,
+                        $"'{rung.Id}' has fewer hedges than '{below.Id}'");
+                    Assert.GreaterOrEqual(rung.Toll, below.Toll,
+                        $"'{rung.Id}' has to be drawn {rung.Toll} cell(s) past straight lines "
+                        + $"against '{below.Id}'s {below.Toll}, so the chapter asks less here");
+
+                    // The half the toll cannot see, and the one the Wildhedge was authored
+                    // through. Toll adds the detour the hedges force to the detour the pairs
+                    // force, and the two are not worth the same: a hedge lifts every route's
+                    // floor, so it rejects no arrangement and asks nobody to give way — it makes
+                    // the drawing longer, and because it flows into par it lifts the star lines
+                    // with it. Slack is the one that means the pairs cannot all have their way,
+                    // which is this mode's whole difficulty argument (invariant 20f). Held to
+                    // its own bar so a chapter can never again buy a climbing toll by trading
+                    // contention away: the Wildhedge as first authored ran 10, 6, 8, 6, 6, 12,
+                    // 6, 6, 14, 16 while its toll sat flat at sixteen, which is five rungs less
+                    // contended than anything in the Nightloom.
                     Assert.GreaterOrEqual(rung.Slack, below.Slack,
-                        $"'{rung.Id}' forces less detour than '{below.Id}'");
+                        $"'{rung.Id}' forces {rung.Slack} cell(s) of detour on its pairs against "
+                        + $"'{below.Id}'s {below.Slack}: the pairs are less in each other's way "
+                        + "here, so whatever the toll says the chapter is asking for a longer "
+                        + "drawing rather than a harder one");
+
+                    Assert.GreaterOrEqual(rung.Bitten, below.Bitten,
+                        $"'{rung.Id}' has a fence reaching {rung.Bitten} channels against "
+                        + $"'{below.Id}'s {below.Bitten}, so the mechanic this chapter teaches "
+                        + "does less here than on the grove before it");
                     Assert.Less(rung.Ways, below.Ways,
                         $"'{rung.Id}' admits more arrangements than '{below.Id}', so the chapter "
                         + "gets easier here rather than harder");
@@ -386,18 +554,25 @@ namespace GlimmerGrove.Tests
         }
 
         /// <summary>
-        /// The Nightloom asks more of every grove than the Weftwood ever did.
+        /// Every chapter asks more of every grove than the one before it closed on.
         ///
         /// <para>
-        /// <b>What is compared, and what deliberately is not.</b> Slack is the mode's difficulty
-        /// in one integer (invariant 20f) and it is an absolute reading — how many cells of light,
-        /// over and above every pair's own floor, the board makes somebody spend — so it is the
-        /// one number that means the same thing in both chapters. Ways is not: it counts
-        /// arrangements within <c>WeaveSolver.Latitude</c> of the <em>best</em> one, and the best
-        /// one moves with slack, so a second chapter's opening count is taken in a band the first
-        /// chapter's finale never reached. Asserting it fell across the join would be a rule about
-        /// two different measurements, and the only way to satisfy it would be to author a
-        /// gentler second chapter.
+        /// <b>What is compared, and what deliberately is not.</b> <see cref="Rung.Toll"/> is the
+        /// mode's difficulty in one integer — how far past straight lines the whole board has to
+        /// be drawn — and it is an absolute reading, so it means the same thing in every chapter.
+        /// Ways is not: it counts arrangements within <c>WeaveSolver.Latitude</c> of the
+        /// <em>best</em> one, and the best one moves with the toll, so a later chapter's opening
+        /// count is taken in a band the earlier chapter's finale never reached. Asserting it fell
+        /// across the join would be a rule about two different measurements, and the only way to
+        /// satisfy it would be to author a gentler chapter.
+        /// </para>
+        /// <para>
+        /// <b>It was slack, and the Wildhedge is why it is the toll.</b> Slack is measured against
+        /// each pair's own floor and a hedge raises that floor, so a hedged chapter can force more
+        /// drawing than an open one while reporting less slack — the work moved, it did not go
+        /// away. Toll is slack plus what the hedges cost, which is the same number on every grove
+        /// that has none, so the two chapters authored before hedges existed are held to exactly
+        /// the bar they were authored against.
         /// </para>
         /// <para>
         /// The colour count is the other absolute reading and it is at its ceiling throughout —
@@ -405,7 +580,7 @@ namespace GlimmerGrove.Tests
         /// </para>
         /// </summary>
         [Test]
-        public void TheSecondChapterAsksMoreOfEveryGroveThanTheFirst()
+        public void EveryChapterAsksMoreOfEveryGroveThanTheOneBeforeIt()
         {
             for (int c = 1; c < Chapters.Length; c++)
             {
@@ -414,11 +589,11 @@ namespace GlimmerGrove.Tests
 
                 foreach (var rung in chapter.Rungs)
                 {
-                    Assert.GreaterOrEqual(rung.Slack, below.Finale.Slack,
-                        $"'{rung.Id}' forces {rung.Slack} cell(s) of detour, less than the "
-                        + $"{below.Finale.Slack} '{below.Finale.Id}' already forced at the end of "
-                        + $"'{below.File}' — a later chapter that asks less is a ladder with a "
-                        + "step down in it");
+                    Assert.GreaterOrEqual(rung.Toll, below.Finale.Toll,
+                        $"'{rung.Id}' has to be drawn {rung.Toll} cell(s) past straight lines, "
+                        + $"less than the {below.Finale.Toll} '{below.Finale.Id}' already asked "
+                        + $"at the end of '{below.File}' — a later chapter that asks less is a "
+                        + "ladder with a step down in it");
 
                     Assert.GreaterOrEqual(rung.Pairs, below.Finale.Pairs,
                         $"'{rung.Id}' wears fewer colours than '{below.Finale.Id}'");
@@ -428,8 +603,136 @@ namespace GlimmerGrove.Tests
                         $"'{rung.Id}' is a smaller grove than '{below.Finale.Id}'");
                 }
 
-                Assert.Greater(chapter.Finale.Slack, below.Finale.Slack,
-                    $"'{chapter.File}' closes on no more detour than '{below.File}' did");
+                Assert.Greater(chapter.Finale.Toll, below.Finale.Toll,
+                    $"'{chapter.File}' closes on no more drawing than '{below.File}' did");
+            }
+        }
+
+        /// <summary>
+        /// Every hedge on the ladder changes somebody's shortest route.
+        ///
+        /// <para>
+        /// Invariant 5d, counted, for the mechanic the Wildhedge brings — the same claim
+        /// <see cref="EveryBeadOfTheLadderSitsOffItsOwnPairsDirectRoute"/> makes about a bead.
+        /// A barrier that shuts no way anybody wanted is scenery: the player draws the line they
+        /// were going to draw, never touches it, and the rung is a plain grove wearing a mechanic.
+        /// </para>
+        /// <para>
+        /// Asked of the <em>set</em> rather than of each hedge, exactly as the slack bar is asked
+        /// of the pairs together. Two hedges can shut a corridor that neither shuts alone, and
+        /// refusing the pair for it would throw away the most interesting thing this mechanic
+        /// does.
+        /// </para>
+        /// </summary>
+        [Test]
+        public void EveryHedgeOfTheLadderShutsAWaySomebodyWanted()
+        {
+            foreach (var rung in Ladder)
+            {
+                var grove = Grove(rung);
+
+                Assert.AreEqual(rung.Hedges, grove.Hedges.Count,
+                    $"'{rung.Id}' grew {grove.Hedges.Count} hedge(s) rather than the "
+                    + $"{rung.Hedges} it authored");
+
+                if (rung.Hedges == 0)
+                {
+                    Assert.AreEqual(0, grove.StraightTotal - grove.UnhedgedTotal,
+                        $"'{rung.Id}' grows no hedges and yet its floors are not the open ones");
+                    continue;
+                }
+
+                Assert.IsTrue(grove.HedgesBite,
+                    $"'{rung.Id}' has {grove.Hedges.Count} hedge(s) that change no pair's "
+                    + "shortest route, so every channel can be drawn exactly as it would have "
+                    + "been on open ground — re-seed it with weave_seeds.py");
+
+                // And shuts it on enough of them to be a shared obstacle. HedgesBite is a total
+                // over the grove, so one channel detouring two cells satisfies it for a board of
+                // six — which is what the whole of this chapter did when it was first authored.
+                // A barrier is worth exactly what its gap is worth, and a gap nobody is queueing
+                // at is a longer walk for one pair (invariant 5d, counted per channel rather than
+                // summed over them).
+                int wanted = WeaveGenerator.MinBitten(rung.Pairs, rung.Hedges);
+                Assert.GreaterOrEqual(grove.PairsBitten, wanted,
+                    $"'{rung.Id}' grows {rung.Hedges} hedge(s) that reach {grove.PairsBitten} of "
+                    + $"its {rung.Pairs} channels, and {wanted} is the fewest that makes the "
+                    + "fence something more than one pair's detour");
+
+                // Every closed way has to be inside the grove and between two real neighbours.
+                // A run that overshot its row would wrap onto the next one and wall a pair of
+                // cells on the far side of the board, which draws nothing and is enforced anyway
+                // — a barrier nobody can see and everybody is stopped by.
+                foreach (var hedge in grove.Hedges)
+                {
+                    Assert.Greater(hedge.Length, 0, $"'{rung.Id}' has a hedge of no length");
+
+                    for (int step = 0; step < hedge.Length; step++)
+                    {
+                        Assert.IsTrue(grove.HedgeEdge(hedge, step, out int a, out int b),
+                            $"'{rung.Id}' has a hedge running off the grove at step {step}");
+                        Assert.AreEqual(1, grove.Distance(a, b),
+                            $"'{rung.Id}' has a hedge between two cells that are not neighbours");
+                        Assert.IsFalse(grove.Adjacent(a, b),
+                            $"'{rung.Id}' draws a hedge between {a} and {b} and does not enforce "
+                            + "it, so the barrier is a picture");
+                    }
+                }
+            }
+        }
+
+        /// <summary>
+        /// Three stars is still reachable on every grove that ships.
+        ///
+        /// <para>
+        /// <b>The one thing a mode whose floor can move must prove, and nothing else here could
+        /// prove it.</b> A weave is graded on the light it spends against <c>par x 1.20</c>, and
+        /// par is derived from the pairs' floors — so the question "can anybody actually score
+        /// three stars on this board" is the question whether the <em>best possible arrangement</em>
+        /// comes in under that line. <c>LevelValidator.CheckStarBands</c> proves the three lines
+        /// are ordered and <c>WeaveValidator</c> proves the ink covers the floor; neither of them
+        /// can ask this one, because the answer is <c>WeaveSolver</c>'s exponential search and a
+        /// build gate may never depend on it (a gate that times out on a slow machine fails builds
+        /// nobody can reproduce).
+        /// </para>
+        /// <para>
+        /// It is invariant 22's stranded band, in the mode where it is easiest to create by
+        /// accident: a band nothing can land in is decoration, and a three-star line under the
+        /// best play is a band nobody can land in. Hedges are exactly what would have done it —
+        /// a barrier raises what a board really costs, and if the floor it is measured against had
+        /// not risen with it the gold line would have sat below the best arrangement on every
+        /// hedged grove in the chapter.
+        /// </para>
+        /// </summary>
+        [Test]
+        public void TheBestArrangementOfEveryGroveStillScoresThreeStars()
+        {
+            foreach (var rung in Ladder)
+            {
+                var grove = Grove(rung);
+                var tally = WeaveSolver.Measure(grove, Cap, Budget);
+
+                Assert.IsTrue(tally.Solved && tally.Exhausted,
+                    $"'{rung.Id}' could not be measured, so what its best play costs is unknown");
+
+                // The cheapest finish there is: every pair's own floor, plus the detour the board
+                // forces on the set of them.
+                int best = grove.StraightTotal + tally.Slack;
+                var tuning = LevelTuning.Default(grove.Par);
+
+                Assert.LessOrEqual(best, tuning.GoldThreshold,
+                    $"'{rung.Id}' cannot be finished for less than {best} cells of light against "
+                    + $"a three-star line of {tuning.GoldThreshold}, so nobody can ever score "
+                    + "three stars on it");
+
+                Assert.AreEqual(3, tuning.StarsFor(best),
+                    $"'{rung.Id}' pays fewer than three stars for the best arrangement there is");
+
+                // And it must still be losable: a grove whose worst is inside the budget cannot
+                // run out of light, which is the fail state the mode was given for a reason.
+                Assert.Less(best, tuning.MoveBudget,
+                    $"'{rung.Id}' is dealt {tuning.MoveBudget} cells of ink and cannot be "
+                    + $"finished for less than {best}");
             }
         }
 

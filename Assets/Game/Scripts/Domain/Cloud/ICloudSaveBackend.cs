@@ -65,6 +65,28 @@ namespace GlimmerGrove.Cloud
         /// </summary>
         AccountMismatch,
 
+        /// <summary>
+        /// This store transaction was already granted to a different account, permanently.
+        ///
+        /// <para>
+        /// <b>The only refusal in this codebase that is knowably final</b>, and it exists as its
+        /// own value for exactly that reason. Everything else a server refuses here is temporary
+        /// by design — a product missing from <c>config/products</c> is fixed by a re-seed, a
+        /// transport failure by the next retry — so invariant 18a's rule holds: never confirm a
+        /// refused receipt, because confirming charges a player for a configuration mistake and
+        /// destroys the evidence. This one is different in kind. A receipt document is never
+        /// deleted and its <c>uid</c> is never rewritten, so no future state of the deployment
+        /// makes this account the owner, and resubmitting is a loop for the life of the install.
+        /// </para>
+        /// <para>
+        /// Reached by switching accounts and by deleting one: the store re-delivers a
+        /// transaction that belongs to the previous account, for ever. Left unfinished it is not
+        /// merely wasteful — Google auto-refunds an unacknowledged purchase after three days and
+        /// the refund sweep then reverses the grant against the account that legitimately paid.
+        /// </para>
+        /// </summary>
+        AlreadyRedeemed,
+
         /// <summary>Anything else. Logged, never surfaced to the player as a wall.</summary>
         Error,
     }
@@ -88,7 +110,16 @@ namespace GlimmerGrove.Cloud
             => new CloudResult(false, failure, message);
 
         /// <summary>True when trying again later is worth doing.</summary>
-        public bool IsRetryable => !Ok && Failure != CloudFailure.Rejected;
+        /// <summary>
+        /// Whether asking again could ever answer differently.
+        ///
+        /// <see cref="CloudFailure.AlreadyRedeemed"/> joins <see cref="CloudFailure.Rejected"/>
+        /// here because it is the one refusal that is permanent by construction rather than by
+        /// circumstance — see its own note.
+        /// </summary>
+        public bool IsRetryable => !Ok
+                                   && Failure != CloudFailure.Rejected
+                                   && Failure != CloudFailure.AlreadyRedeemed;
     }
 
     /// <summary>The account the player is playing as.</summary>
@@ -542,6 +573,64 @@ namespace GlimmerGrove.Cloud
         /// </para>
         /// </summary>
         Task<(CloudResult result, Dictionary<Content.LevelId, Social.LevelStats> stats)> ReadGroveStatsAsync(
+            CancellationToken cancellation = default);
+
+        /// <summary>
+        /// Erases this account: every document the deployment holds for it, the Sign in with
+        /// Apple grant, and the authentication user itself.
+        ///
+        /// <para>
+        /// <b>The account is never a parameter.</b> The server takes it from the verified
+        /// token and nothing in the request can move it, so a caller can only ever delete
+        /// itself. <paramref name="userId"/> is here to be *checked* against the session
+        /// before the call goes out — <see cref="AccountGate"/>'s rule, applied to the one
+        /// operation where aiming at the wrong account has no undo at all.
+        /// </para>
+        /// <para>
+        /// <b>Idempotent, and callers depend on it.</b> A dropped reply is retried and the
+        /// second attempt reports success. The server deletes the auth user last precisely so
+        /// that every earlier failure is still authenticated and therefore still retryable.
+        /// </para>
+        /// <para>
+        /// <b>What it leaves behind on this device: nothing, and that is the caller's job
+        /// rather than this one's.</b> An implementation removes the account and signs the
+        /// device in as a fresh anonymous player; erasing the save, the archive slot and the
+        /// derived caches is <c>CloudSaveService.DeleteAccountAsync</c>'s, because those are
+        /// the same steps a switch takes and there must not be two copies of them.
+        /// </para>
+        /// </summary>
+        /// <param name="appleAuthorizationCode">
+        /// A fresh Sign in with Apple authorization code, when the player has just
+        /// re-authenticated with Apple. Null for a guest, for Google, and on Android — Apple's
+        /// revocation applies to the native iOS grant, which is the only one this game mints.
+        /// </param>
+        /// <summary>
+        /// Proves the person at the device owns the account that is signed in, by taking them
+        /// back through their provider.
+        ///
+        /// <para>
+        /// <b>Re-authentication rather than a fresh sign-in, and the difference is the whole
+        /// value.</b> Signing in with a credential *replaces* the session — pick the wrong
+        /// entry out of an account chooser and the device quietly becomes somebody else. This
+        /// verifies the credential against the user already signed in and refuses anything
+        /// else with <see cref="CloudFailure.AccountMismatch"/>, leaving the session exactly as
+        /// it was. That is what makes it safe to run immediately before a deletion: the worst
+        /// a wrong tap can do is nothing.
+        /// </para>
+        /// <para>
+        /// <b>It is also how Apple's authorization code is obtained.</b> The code comes back
+        /// from the native sheet, is single-use, and expires in about five minutes — so it can
+        /// only be had by asking at the moment it is needed, which is exactly what this is
+        /// already doing for its own reasons. Empty for Google and for any provider reached
+        /// through the web flow, which is correct: Apple's revocation endpoint is the only one
+        /// this game has anything to revoke at.
+        /// </para>
+        /// </summary>
+        Task<(CloudResult result, string appleAuthorizationCode)> ReauthenticateAsync(
+            LinkCredential credential, CancellationToken cancellation = default);
+
+        Task<CloudResult> DeleteAccountAsync(
+            string userId, string appleAuthorizationCode = null,
             CancellationToken cancellation = default);
     }
 }

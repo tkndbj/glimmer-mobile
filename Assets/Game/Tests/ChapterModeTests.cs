@@ -38,7 +38,7 @@ namespace GlimmerGrove.Tests
         /// <summary>A weave level, built the way content builds one — the smallest grove there is.</summary>
         static LevelDefinition Weave(string id)
         {
-            var rules = new WeaveRules(5, 6, 3, 0, 3);
+            var rules = new WeaveRules(5, 6, 3, 0, 0, 3);
             var levelId = LevelId.Parse(id);
 
             return new LevelDefinition(

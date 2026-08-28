@@ -34,6 +34,10 @@
       "text": "The Nightloom"
     },
     {
+      "key": "chapter.w03_wildhedge.name",
+      "text": "The Wildhedge"
+    },
+    {
       "key": "level.c01_bound_roots.name",
       "text": "Bound Roots"
     },
@@ -442,6 +446,78 @@
       "text": "Unlike edges bloom"
     },
     {
+      "key": "level.k01_four_petals.name",
+      "text": "Four Petals"
+    },
+    {
+      "key": "level.k01_four_petals.tagline",
+      "text": "One tile. Four flowers."
+    },
+    {
+      "key": "level.k01_the_second_bed.name",
+      "text": "The Second Bed"
+    },
+    {
+      "key": "level.k01_the_second_bed.tagline",
+      "text": "Three tiles, and no more"
+    },
+    {
+      "key": "level.k01_the_boulder.name",
+      "text": "The Boulder"
+    },
+    {
+      "key": "level.k01_the_boulder.tagline",
+      "text": "Grow the long way round"
+    },
+    {
+      "key": "level.k01_the_prism.name",
+      "text": "The Prism"
+    },
+    {
+      "key": "level.k01_the_prism.tagline",
+      "text": "One tile carries all three"
+    },
+    {
+      "key": "level.k01_the_pocket.name",
+      "text": "The Pocket"
+    },
+    {
+      "key": "level.k01_the_pocket.tagline",
+      "text": "Save the one that fits"
+    },
+    {
+      "key": "level.k01_twin_hearts.name",
+      "text": "Twin Hearts"
+    },
+    {
+      "key": "level.k01_twin_hearts.tagline",
+      "text": "Count forward, and compost the rest"
+    },
+    {
+      "key": "level.k01_stonecrop.name",
+      "text": "Stonecrop"
+    },
+    {
+      "key": "level.k01_stonecrop.tagline",
+      "text": "Nothing grows on stone"
+    },
+    {
+      "key": "level.k01_heartwood.name",
+      "text": "Heartwood"
+    },
+    {
+      "key": "level.k01_heartwood.tagline",
+      "text": "One bed takes one colour"
+    },
+    {
+      "key": "level.k01_keepers_grove.name",
+      "text": "The Keeper's Groove"
+    },
+    {
+      "key": "level.k01_keepers_grove.tagline",
+      "text": "One colour each, and a long way to carry it"
+    },
+    {
       "key": "level.w01_close_quarters.name",
       "text": "Close Quarters"
     },
@@ -602,6 +678,86 @@
       "text": "Somebody gives way."
     },
     {
+      "key": "level.w03_hedgerows.name",
+      "text": "Hedgerows"
+    },
+    {
+      "key": "level.w03_hedgerows.tagline",
+      "text": "Three barriers, and less room than it looks."
+    },
+    {
+      "key": "level.w03_narrow_ways.name",
+      "text": "Narrow Ways"
+    },
+    {
+      "key": "level.w03_narrow_ways.tagline",
+      "text": "Every route is somebody else's route."
+    },
+    {
+      "key": "level.w03_the_first_hedge.name",
+      "text": "The First Hedge"
+    },
+    {
+      "key": "level.w03_the_first_hedge.tagline",
+      "text": "Something has grown across the groove."
+    },
+    {
+      "key": "level.w03_the_green_gate.name",
+      "text": "The Green Gate"
+    },
+    {
+      "key": "level.w03_the_green_gate.tagline",
+      "text": "Everything has to come through here."
+    },
+    {
+      "key": "level.w03_the_long_way_out.name",
+      "text": "The Long Way Out"
+    },
+    {
+      "key": "level.w03_the_long_way_out.tagline",
+      "text": "Around, and then around again."
+    },
+    {
+      "key": "level.w03_the_maze_of_leaves.name",
+      "text": "The Maze of Leaves"
+    },
+    {
+      "key": "level.w03_the_maze_of_leaves.tagline",
+      "text": "Find the one way round that suits everybody."
+    },
+    {
+      "key": "level.w03_the_walled_garden.name",
+      "text": "The Walled Garden"
+    },
+    {
+      "key": "level.w03_the_walled_garden.tagline",
+      "text": "Rooms, doors, and six colours."
+    },
+    {
+      "key": "level.w03_the_wildhedge_knot.name",
+      "text": "The Wildhedge Knot"
+    },
+    {
+      "key": "level.w03_the_wildhedge_knot.tagline",
+      "text": "Every hedge, every ring, and no room to spare."
+    },
+    {
+      "key": "level.w03_thicket.name",
+      "text": "Thicket"
+    },
+    {
+      "key": "level.w03_thicket.tagline",
+      "text": "Hardly a straight line left in it."
+    },
+    {
+      "key": "level.w03_two_rooms.name",
+      "text": "Two Rooms"
+    },
+    {
+      "key": "level.w03_two_rooms.tagline",
+      "text": "The groove is not one place any more."
+    },
+    {
       "key": "mode.cap.asleep",
       "text": "ASLEEP"
     },
@@ -614,8 +770,8 @@
       "text": "best chain"
     },
     {
-      "key": "mode.cap.blooms",
-      "text": "blooms"
+      "key": "mode.cap.beds",
+      "text": "beds left"
     },
     {
       "key": "mode.cap.height",
@@ -636,10 +792,6 @@
     {
       "key": "mode.cap.lives",
       "text": "lives"
-    },
-    {
-      "key": "mode.cap.score",
-      "text": "score"
     },
     {
       "key": "mode.cap.served",
@@ -664,6 +816,10 @@
     {
       "key": "mode.cap.chain",
       "text": "best chain"
+    },
+    {
+      "key": "mode.cap.flourish",
+      "text": "best flourish"
     },
     {
       "key": "mode.fall.name",
@@ -714,12 +870,36 @@
       "text": "Groovekeeper"
     },
     {
-      "key": "mode.keeper.over",
-      "text": "Groove finished - {0} points."
-    },
-    {
       "key": "mode.keeper.tagline",
       "text": "Unlike edges bloom."
+    },
+    {
+      "key": "mode.keeper.basket",
+      "text": "LEFT"
+    },
+    {
+      "key": "mode.keeper.basket_free",
+      "text": "free"
+    },
+    {
+      "key": "mode.keeper.compost",
+      "text": "COMPOST"
+    },
+    {
+      "key": "mode.keeper.multiplier",
+      "text": "x{0}"
+    },
+    {
+      "key": "mode.keeper.flourish_lovely",
+      "text": "LOVELY!"
+    },
+    {
+      "key": "mode.keeper.flourish_radiant",
+      "text": "RADIANT!"
+    },
+    {
+      "key": "mode.keeper.flourish_glorious",
+      "text": "GLORIOUS!"
     },
     {
       "key": "mode.weave.name",
@@ -1414,6 +1594,14 @@
       "text": "Carry on?"
     },
     {
+      "key": "ui.continue.tiles_title",
+      "text": "Out of tiles"
+    },
+    {
+      "key": "ui.continue.tiles_unit",
+      "text": "more tiles"
+    },
+    {
       "key": "ui.continue.defeat",
       "text": "DEFEAT"
     },
@@ -1522,6 +1710,10 @@
       "text": "You are out of hearts. They come back on their own over time."
     },
     {
+      "key": "ui.defeat.overgrown_title",
+      "text": "NOWHERE LEFT TO GROW"
+    },
+    {
       "key": "ui.defeat.reason",
       "text": "The light touched a thornstone and the glade went dark."
     },
@@ -1534,12 +1726,80 @@
       "text": "THE LIGHT WENT OUT"
     },
     {
+      "key": "ui.defeat.tiles_title",
+      "text": "THE BASKET IS EMPTY"
+    },
+    {
       "key": "ui.defeat.try_again",
       "text": "TRY AGAIN"
     },
     {
       "key": "ui.defeat.watch_for_hearts",
       "text": "You are out of hearts. Spend gems or watch a video to get hearts."
+    },
+    {
+      "key": "ui.delete.armed",
+      "text": "Tap Delete once more to confirm. There is no way back from this."
+    },
+    {
+      "key": "ui.delete.body",
+      "text": "Everything on this account is erased: your finished glades, your credits and gems, your companions, your grove and your keeper name. This cannot be undone, and support cannot bring it back."
+    },
+    {
+      "key": "ui.delete.busy",
+      "text": "Your grove is still saving. Try again in a moment. Nothing has been deleted."
+    },
+    {
+      "key": "ui.delete.cancelled",
+      "text": "Nothing has been deleted."
+    },
+    {
+      "key": "ui.delete.confirm",
+      "text": "Delete everything"
+    },
+    {
+      "key": "ui.delete.done",
+      "text": "Your account has been deleted."
+    },
+    {
+      "key": "ui.delete.failed",
+      "text": "That did not work. Nothing has been deleted."
+    },
+    {
+      "key": "ui.delete.keep",
+      "text": "Keep my grove"
+    },
+    {
+      "key": "ui.delete.offline",
+      "text": "No connection. Nothing has been deleted."
+    },
+    {
+      "key": "ui.delete.purchases",
+      "text": "Anything you paid for goes with it. Purchases cannot be moved to a new account, and only Apple or Google can give a refund."
+    },
+    {
+      "key": "ui.delete.stakes",
+      "text": "{0} finished glades on this account."
+    },
+    {
+      "key": "ui.delete.title",
+      "text": "Delete account"
+    },
+    {
+      "key": "ui.delete.verify",
+      "text": "You will be asked to sign in once more first, so we know it is really you."
+    },
+    {
+      "key": "ui.delete.verifying",
+      "text": "Checking it is you..."
+    },
+    {
+      "key": "ui.delete.working",
+      "text": "Deleting your account..."
+    },
+    {
+      "key": "ui.delete.wrong_account",
+      "text": "That is a different account. Nothing has been deleted."
     },
     {
       "key": "ui.event.all_taken",
@@ -2950,6 +3210,10 @@
       "text": "{0} coins"
     },
     {
+      "key": "ui.profile.delete",
+      "text": "Delete account"
+    },
+    {
       "key": "ui.profile.fix",
       "text": "CHOOSE ACCOUNT"
     },
@@ -3039,7 +3303,7 @@
     },
     {
       "key": "ui.profile.protect",
-      "text": "PROTECT MY GROOVE"
+      "text": "LOGIN"
     },
     {
       "key": "ui.profile.record",
@@ -3110,6 +3374,14 @@
       "text": "You are in the top 50%"
     },
     {
+      "key": "ui.rank.tiles",
+      "text": "{0} tiles"
+    },
+    {
+      "key": "ui.rank.tiles_one",
+      "text": "{0} tile"
+    },
+    {
       "key": "ui.rank.woven",
       "text": "woven with {0}"
     },
@@ -3175,7 +3447,7 @@
     },
     {
       "key": "ui.settings.credit",
-      "text": "art & audio by CraftPix"
+      "text": "art & audio by CraftPix · shop art designed by Freepik"
     },
     {
       "key": "ui.settings.music",
@@ -3186,8 +3458,20 @@
       "text": "Privacy & ad choices"
     },
     {
+      "key": "ui.settings.privacy_policy",
+      "text": "Privacy"
+    },
+    {
       "key": "ui.settings.sound",
       "text": "sound"
+    },
+    {
+      "key": "ui.settings.support",
+      "text": "Support"
+    },
+    {
+      "key": "ui.settings.terms",
+      "text": "Terms"
     },
     {
       "key": "ui.settings.title",
@@ -3702,6 +3986,14 @@
       "text": "THREAD THE RINGS"
     },
     {
+      "key": "ui.tip.weave_hedge.body",
+      "text": "A hedge grows along the edge between two cells. No channel may cross one.\n\nThe gap at its end is the only way past, and every colour wants it."
+    },
+    {
+      "key": "ui.tip.weave_hedge.title",
+      "text": "MIND THE HEDGES"
+    },
+    {
       "key": "ui.tip.weave_ink.body",
       "text": "Every channel spends light, and taking one back does not give it back.\n\nUndo returns a channel and its light — twice a groove."
     },
@@ -3716,6 +4008,54 @@
     {
       "key": "ui.tip.weave_join.title",
       "text": "DRAW THE LIGHT"
+    },
+    {
+      "key": "ui.tip.keeper_bloom.title",
+      "text": "UNLIKE, NOT ALIKE"
+    },
+    {
+      "key": "ui.tip.keeper_bloom.body",
+      "text": "A tile goes beside the groove, never on its own.\n\nOne that gathers all three colours - counting its neighbours - bursts into bloom. Two of a colour together are worth nothing."
+    },
+    {
+      "key": "ui.tip.keeper_basket.title",
+      "text": "THE BASKET IS COUNTED"
+    },
+    {
+      "key": "ui.tip.keeper_basket.body",
+      "text": "This groove is dealt so many tiles and no more, in the order the basket shows.\n\nThere is no undo here. The ring under your thumb says what a tile would open before you let go."
+    },
+    {
+      "key": "ui.tip.keeper_stone.title",
+      "text": "STONE GROWS NOTHING"
+    },
+    {
+      "key": "ui.tip.keeper_stone.body",
+      "text": "Nothing may be planted on stone, and no light passes through it.\n\nA bed beside one has fewer neighbours to gather from, so what it is missing has to come from a shorter list of cells."
+    },
+    {
+      "key": "ui.tip.keeper_compost.title",
+      "text": "COMPOST WHAT YOU CANNOT USE"
+    },
+    {
+      "key": "ui.tip.keeper_compost.body",
+      "text": "The key beside the basket spends the tile in your hand without planting it, and brings the next one round.\n\nIt costs a tile like any other. Sometimes that is the cheapest move there is."
+    },
+    {
+      "key": "ui.tip.keeper_heartbed.title",
+      "text": "A HEARTBED WANTS ITS OWN"
+    },
+    {
+      "key": "ui.tip.keeper_heartbed.body",
+      "text": "A bed drawn in a colour takes that colour and no other. Anything else is refused outright, so nothing can be spoiled by a stray tap.\n\nCount forward through the basket, and compost what is in the way."
+    },
+    {
+      "key": "ui.tip.keeper_prism.title",
+      "text": "ONE PRISM, ONE CHANCE"
+    },
+    {
+      "key": "ui.tip.keeper_prism.body",
+      "text": "A prism carries all three colours at once. It blooms wherever it lands and opens any bed, heartbed included.\n\nThere is only one. Spend it where two ordinary tiles could not."
     },
     {
       "key": "ui.title.elder",

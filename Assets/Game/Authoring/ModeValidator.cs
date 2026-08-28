@@ -275,29 +275,155 @@ namespace GlimmerGrove.Content
         }
     }
 
-    /// <summary>A keeper's grove: the ground, and how many tiles the run is dealt onto it.</summary>
+    /// <summary>
+    /// Groovekeeper. A grove is authored rather than generated, so unlike a weave everything here
+    /// is in the file — but whether every bed on it can be <em>opened</em> is not, and that is
+    /// what most of this proves.
+    ///
+    /// <para>
+    /// The mode's checks used to be three lines about width, height and a tile count, which was
+    /// the honest amount for a score attack with no goal in it. A level with a goal, a derived par
+    /// and two fail states has considerably more that can be silently wrong, and every one of
+    /// these failures looks like a perfectly authored grove in the JSON.
+    /// </para>
+    /// </summary>
     sealed class KeeperValidator : ModeValidator
     {
         public override GameMode Mode => GameMode.Keeper;
 
+        /// <summary>
+        /// Where a grove stops being cheap to prove, and where it stops being shippable.
+        ///
+        /// <para>
+        /// <b>These are about the <em>player's</em> device, not about this one.</b>
+        /// <see cref="KeeperSolver.NodeBudget"/> is large because it has to make a genuinely hard
+        /// grove <em>provable</em> — a grove it cannot prove is a grove with no par, and
+        /// everything a player is graded against derives from par. These two are the separate
+        /// question of what that proof costs where it is actually paid: once per level, on the
+        /// phone, when somebody opens it (invariant 26d).
+        /// </para>
+        /// <para>
+        /// Lower than Lightfall's pair, and deliberately: a position here costs more to expand
+        /// than a well's does, because the floor this search prunes on walks every bed and every
+        /// standing tile. Cost goes roughly as the open cell count to the power of par, so the
+        /// cheap fixes are more stone, fewer beds, or a bed one step nearer the sprig — never a
+        /// bigger grove.
+        /// </para>
+        /// </summary>
+        const int NodeWarning = 30_000, NodeCeiling = 90_000;
+
+        /// <summary>
+        /// Above this many shortest answers the grove is not deciding much — see
+        /// <see cref="KeeperSurvey.Ways"/> and invariant 5d.
+        /// </summary>
+        const int TooManyWays = 300;
+
         public override void Validate(LevelDefinition level, List<LevelIssue> issues)
         {
             var grove = (KeeperRules)level.Rules;
+            var layout = grove.Layout;
 
-            if (grove.Width < 5 || grove.Width > 11 || grove.Height < 5 || grove.Height > 11)
+            // A procession that cannot supply a colour some heartbed insists on makes that bed
+            // unopenable however many tiles are bought, so the grove can never be finished. The
+            // search below would catch it, but not in words anybody could act on.
+            int wanted = layout.Wanted;
+            if ((wanted & ~layout.Deal.Channels) != Energy.None)
+            {
+                int absent = wanted & ~layout.Deal.Channels;
                 issues.Add(new LevelIssue(LevelIssueSeverity.Error,
-                    $"a grove is 5..11 each way; this one is {grove.Width}x{grove.Height}"));
+                    $"a heartbed here insists on {Energy.Letter(absent)} and this procession " +
+                    "never deals it, so that bed could never be opened by anybody"));
+            }
 
-            // A run that hands out more tiles than there is ground for ends by having nowhere
-            // legal to place, which reads to a player as the game freezing rather than finishing.
-            if (grove.Tiles >= grove.Width * grove.Height)
+            // Note what is deliberately *not* checked: that the procession carries all three
+            // channels. Lightfall refuses a deal that does not, and has to — a drop onto bare
+            // ground there makes a fresh mote wanting the two colours it lacks, so a two-colour
+            // procession can be walked into a position no amount of play recovers from. Nothing
+            // here does that. A tile that cannot bloom is simply a tile, the sprigs standing on
+            // the ground are permanent, and two of the ten grooves that ship are finished with a
+            // two-colour basket precisely because the third colour is already on the board. What
+            // matters is that every bed can be opened, and the search below proves exactly that.
+
+            // Room above par is `spare`, in tiles, so a budgetFactor on a grove is a number that
+            // does nothing. Refused rather than ignored, for ChapterDto.order's reason — and
+            // refused rather than honoured, because two ways to say one thing is how they come to
+            // disagree. A negative factor still means "cannot be lost", which is not an override
+            // and is what the first grove in the game is authored with.
+            if (level.Tuning.BudgetFactorIsIgnored)
                 issues.Add(new LevelIssue(LevelIssueSeverity.Error,
-                    $"{grove.Tiles} tiles for {grove.Width * grove.Height} cells of ground; " +
-                    "the run would end with nowhere to place"));
+                    $"this grove authors budgetFactor {level.Tuning.BudgetFactor:0.##}, which " +
+                    "does nothing: a grove's room above par is 'spare', counted in tiles, " +
+                    "because a wrong tile costs the same wherever it happens. Use 'spare', or a " +
+                    "negative budgetFactor if it is meant to be unlosable"));
 
-            if (grove.Tiles < 8)
+            var survey = KeeperSolver.Survey(layout);
+
+            if (!survey.Proved)
+            {
+                issues.Add(new LevelIssue(LevelIssueSeverity.Error,
+                    $"this grove could not be proved inside {KeeperSolver.NodeBudget} positions " +
+                    $"(it looked at {survey.Nodes}) or within {KeeperSolver.MaxTiles} tiles. It " +
+                    "may be unsolvable, or simply too big to prove — either way it cannot ship, " +
+                    "because the player's device runs the same search to work out par"));
+                return;
+            }
+
+            if (!survey.IsSolvable)
+            {
+                issues.Add(new LevelIssue(LevelIssueSeverity.Error,
+                    "no sequence of tiles opens every bed on this grove, so nobody can finish " +
+                    "it — every arrangement was searched and none won"));
+                return;
+            }
+
+            if (survey.Nodes > NodeCeiling)
+                issues.Add(new LevelIssue(LevelIssueSeverity.Error,
+                    $"proving this grove took {survey.Nodes} positions, above the {NodeCeiling} " +
+                    "a level may cost. The player's device runs this same search when somebody " +
+                    "opens the level, so this is about a quarter of a second of nothing " +
+                    "happening on the way in. Cost goes roughly as the open cell count to the " +
+                    "power of par, so the cheapest fixes are more stone or a shorter answer"));
+            else if (survey.Nodes > NodeWarning)
                 issues.Add(new LevelIssue(LevelIssueSeverity.Warning,
-                    $"{grove.Tiles} tiles is over before a shape emerges"));
+                    $"proving this grove took {survey.Nodes} positions against the " +
+                    $"{NodeWarning} a level is expected to cost. It ships — the refusal is at " +
+                    $"{NodeCeiling} — but the player's device runs this same search when " +
+                    "somebody opens the level"));
+
+            // The same three-line check every mode with a fail line gets. Shared rather than
+            // restated: a second copy of "is this ladder ordered" is a second thing to keep in
+            // step with LevelTuning (invariant 9a).
+            LevelValidator.CheckStarBands(level, issues);
+
+            // A basket bigger than the ground can hold is a fail state that fires the wrong way:
+            // the run ends Overgrown with tiles still in the basket, which reads to a player as
+            // the game stopping rather than as running out of anything.
+            int room = layout.Room - layout.Sprigs;
+            if (level.Tuning.HasBudget && level.Tuning.MoveBudget > room)
+                issues.Add(new LevelIssue(LevelIssueSeverity.Warning,
+                    $"this grove is dealt {level.Tuning.MoveBudget} tiles onto {room} cells of " +
+                    "bare ground, so a careless run runs out of somewhere to plant before it " +
+                    "runs out of tiles — which ends it on the one fail state a continue cannot " +
+                    "rescue"));
+
+            // Invariant 5d, counted. A grove almost any tidy play finishes is one where the
+            // ground and the procession decide nothing, however pretty it looks.
+            if (survey.Ways > TooManyWays)
+                issues.Add(new LevelIssue(LevelIssueSeverity.Warning,
+                    $"{survey.Ways} different groves of {survey.Par} tiles open every bed here, " +
+                    "so almost any tidy play wins and the ground is deciding nothing — add " +
+                    "stone, move a bed further from the sprig, or make one of them a heartbed"));
+
+            // Reported rather than gated. On a chapter's opening levels thoughtlessness is
+            // supposed to work — that is what teaching the verb looks like — so this is a reading
+            // for the author, and a chapter's ladder is where it stops being true.
+            int greedy = KeeperSolver.Greedy(layout, level.Tuning.MoveBudget);
+            if (greedy >= 0 && greedy <= level.Tuning.MoveBudget && survey.Par > 3)
+                issues.Add(new LevelIssue(LevelIssueSeverity.Warning,
+                    $"a player who never looks ahead finishes this grove in {greedy} tiles " +
+                    $"against a basket of {level.Tuning.MoveBudget}, so it can be cleared by " +
+                    "always taking the biggest flourish going — fine early in a chapter, and " +
+                    "worth knowing later in one"));
         }
     }
 
@@ -348,6 +474,45 @@ namespace GlimmerGrove.Content
                     "anybody's way, so no arrangement of it can be drawn — lower the pair count " +
                     "or raise budgetFactor"));
 
+            // A grove that could not be walled the way its rung asked is a rung one barrier
+            // easier than the ladder claims, and nothing else anywhere would say so — the board
+            // is still perfectly solvable, still full, still measured. The same silent failure a
+            // short bead count is, and it is reported the same way.
+            if (layout.Hedges.Count < grove.HedgeCount)
+                issues.Add(new LevelIssue(LevelIssueSeverity.Warning,
+                    $"this grove asks for {grove.HedgeCount} hedge(s) and could only grow " +
+                    $"{layout.Hedges.Count}: a hedge has to reach a side of the grove, leave a " +
+                    "way past its tip and seal nothing off, and this seed's attempts could not " +
+                    "place that many — re-seed it with Survey Lightweave's SeedSearch"));
+
+            // Invariant 5d, counted, for this mechanic. A barrier that changes no pair's shortest
+            // route rejects no arrangement: the player draws the line they were going to draw and
+            // never touches it, and the rung is a plain grove wearing a mechanic. The generator
+            // holds out for a fence that bites, so this is the audit of that rather than a second
+            // opinion about it — and it is a warning for the reason nothing else here is a gate,
+            // that the board is generated and a build cannot be failed over a property of a seed.
+            if (grove.HedgeCount > 0 && !layout.HedgesBite)
+                issues.Add(new LevelIssue(LevelIssueSeverity.Warning,
+                    $"the {layout.Hedges.Count} hedge(s) on this grove change no pair's shortest " +
+                    "route, so they are scenery: every channel can be drawn exactly as it would " +
+                    "have been on open ground — re-seed the level, or grow one more"));
+
+            // The same claim asked of how many channels rather than of the sum, which is the half
+            // that was missing while the Wildhedge was authored. HedgesBite is a total over the
+            // grove, so one pair detouring two cells satisfies it for a board of six — and that
+            // is exactly what shipped: eight of the chapter's ten groves reached precisely one
+            // pair, three barriers apiece, five channels drawn as though the fence were not
+            // there. It passed every check in this file and came back from play as "it is like
+            // they are not there". A barrier's whole value is the gap it leaves, and a gap is
+            // only a decision when more than one channel wants it — see WeaveGenerator.MinBitten.
+            int wantedBitten = WeaveGenerator.MinBitten(grove.PairCount, grove.HedgeCount);
+            if (layout.PairsBitten < wantedBitten)
+                issues.Add(new LevelIssue(LevelIssueSeverity.Warning,
+                    $"the fence on this grove sends {layout.PairsBitten} of its " +
+                    $"{grove.PairCount} channels a longer way and {wantedBitten} is the fewest " +
+                    "that makes it a shared obstacle rather than one pair's detour — re-seed the " +
+                    "level with Survey Lightweave's SeedSearch"));
+
             if (layout.Beads.Count < grove.BeadCount)
                 issues.Add(new LevelIssue(LevelIssueSeverity.Warning,
                     $"this grove asks for {grove.BeadCount} bead(s) and could only place " +
@@ -382,6 +547,29 @@ namespace GlimmerGrove.Content
                     "finished by drawing the obvious line at each critter in turn and asks the " +
                     "player nothing — re-seed the level with Survey Lightweave's SeedSearch, " +
                     "which holds a candidate to the exact bar"));
+
+            // Whether the grading can be missed at all, which is a question only this mode has to
+            // ask and which nothing was asking. Two channels may never share a cell, so a run
+            // that never redraws cannot spend more light than the grove has ground — and if the
+            // three-star line sits above that number, every completion takes three stars however
+            // sloppily it is drawn. It is invariant 22's stranded band from the other end: there
+            // the bottom rung could not be landed in, here the top one cannot be missed.
+            //
+            // Measured when it was written: true of twenty-eight of the thirty groves the mode
+            // ships, and of all ten of the Wildhedge's. That is a property of par against the
+            // grove's size rather than of a seed — the star lines are par x 1.20 and 1.40, par is
+            // roughly four fifths of the grove plus a cell of looking per decision, so the line
+            // clears the whole board on anything much above a beginner's grove. So it is reported
+            // once per level and cannot be re-seeded away: what moves it is the shape of the
+            // grove, or WeaveLayout.Par's allowance, and both are decisions somebody has to take
+            // deliberately rather than a number to guess at.
+            if (level.Tuning.GoldThreshold >= layout.Count)
+                issues.Add(new LevelIssue(LevelIssueSeverity.Warning,
+                    $"three stars is dealt at {level.Tuning.GoldThreshold} cells of ink on a " +
+                    $"grove of {layout.Count} cells, and no two channels may share one — so a " +
+                    "run that does not redraw cannot spend enough light to miss it, whatever it " +
+                    "draws. The grading of this grove is decoration: give it fewer pairs' worth " +
+                    "of floor, or a smaller grove"));
         }
     }
 }

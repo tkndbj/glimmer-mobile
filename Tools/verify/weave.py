@@ -61,6 +61,7 @@ DOMAIN = os.path.join(ROOT, "Assets", "Game", "Scripts", "Domain")
 # half of Domain to prove a generator deterministic is how a check like this stops being run.
 SOURCES = [
     os.path.join(DOMAIN, "Board", "Energy.cs"),
+    os.path.join(DOMAIN, "Modes", "Lab", "WeaveHedges.cs"),
     os.path.join(DOMAIN, "Modes", "Lab", "WeaveLayout.cs"),
     os.path.join(DOMAIN, "Modes", "Lab", "WeaveGenerator.cs"),
     os.path.join(DOMAIN, "Modes", "Lab", "WeaveBoard.cs"),
@@ -100,14 +101,14 @@ static class WeaveHarness
         foreach (var line in File.ReadAllLines(args[0]))
         {
             var f = line.Split(' ');
-            if (f.Length != 6) continue;
+            if (f.Length != 7) continue;
 
             string id = f[0];
             int w = int.Parse(f[1]), h = int.Parse(f[2]), pairs = int.Parse(f[3]);
-            int beads = int.Parse(f[4]);
-            uint seed = uint.Parse(f[5]);
+            int beads = int.Parse(f[4]), hedges = int.Parse(f[5]);
+            uint seed = uint.Parse(f[6]);
 
-            var grove = WeaveGenerator.Build(w, h, pairs, seed, beads);
+            var grove = WeaveGenerator.Build(w, h, pairs, seed, beads, hedges);
 
             var sb = new StringBuilder();
             sb.Append(id).Append(' ').Append(grove.Width).Append('x').Append(grove.Height);
@@ -126,6 +127,26 @@ static class WeaveHarness
             // the board as much as where a crystal does, so it is diffed too.
             foreach (var bead in grove.Beads)
                 sb.Append(" {").Append(bead.Cell).Append('@').Append(bead.Pair).Append('}');
+
+            // And every hedge, for the same reason and one stronger. A hedge is grown *before*
+            // the carve, so a runtime that placed one differently would not merely draw a
+            // different barrier -- every walk after it starts from different ground and the whole
+            // grove is re-dealt. It is the first thing rolled, so it is the first thing to diff.
+            sb.Append(" hedges=").Append(grove.Hedges.Count);
+            foreach (var hedge in grove.Hedges)
+                sb.Append(" <").Append(hedge.Cell).Append(hedge.Upright ? '|' : '_')
+                  .Append(hedge.Length).Append('>');
+
+            // What the hedges are actually costing: the floor over the ways that are open,
+            // against the floor an unhedged grove of the same pairs would have. Equal means the
+            // barriers change nobody's shortest route, which is invariant 5d's decoration.
+            sb.Append(" bite=").Append(grove.StraightTotal - grove.UnhedgedTotal);
+
+            // And how many channels that cost falls on, which the sum above cannot say. One pair
+            // walking ten cells further and five walking two each are the same bite and opposite
+            // boards -- a longer line for somebody, against a gap everybody wants. See
+            // WeaveLayout.PairsBitten.
+            sb.Append(" bitten=").Append(grove.PairsBitten);
 
             var run = new WeaveBoard(grove);
             sb.Append(" solvable=").Append(run.DrawSolution() && run.IsSolved ? 1 : 0);
@@ -176,7 +197,7 @@ def groves():
             found.append((level.get("id", "?"),
                           block.get("width", 7), block.get("height", 9),
                           block.get("pairs", 4), block.get("beads", 0),
-                          block.get("seed", 0)))
+                          block.get("hedges", 0), block.get("seed", 0)))
     return found
 
 
@@ -189,7 +210,7 @@ def main():
     # without the whole content layer. Authoring the seed is what Survey Lightweave is for, and
     # a rung without one has an unmeasured difficulty anyway, so it is refused rather than
     # skipped quietly.
-    unseeded = [lid for lid, _, _, _, _, seed in levels if seed <= 0]
+    unseeded = [lid for lid, _, _, _, _, _, seed in levels if seed <= 0]
     if unseeded:
         sys.exit("these weave levels author no seed, so their board is whatever their id hashes "
                  "to: " + ", ".join(unseeded))
@@ -200,7 +221,7 @@ def main():
 
     io.open(harness, "w", encoding="utf-8", newline="\n").write(HARNESS)
     io.open(table, "w", encoding="utf-8", newline="\n").write(
-        "".join("%s %d %d %d %d %d\n" % row for row in levels))
+        "".join("%s %d %d %d %d %d %d\n" % row for row in levels))
 
     core = os.path.join(work, "weave-core.dll")
     build(core, harness, sorted(glob.glob(os.path.join(newest_net_ref(), "*.dll"))), [])
@@ -256,6 +277,15 @@ def main():
             problems += 1
             print("  UNKNOWN   " + name + " could not be measured inside the budget, so its "
                   "difficulty is unknown rather than high")
+        if " hedges=0 " not in net + " " and " bite=0" in net:
+            problems += 1
+            print("  SCENERY   " + name + " grows hedges that change no pair's shortest route, "
+                  "so the player draws the line they were going to draw anyway")
+        elif " hedges=0 " not in net + " " and " bitten=1 " in net + " ":
+            problems += 1
+            print("  ONE PAIR  " + name + " grows hedges that reach exactly one of its channels, "
+                  "so five of six are drawn as though the fence were not there -- a barrier is "
+                  "worth what its gap is worth, and nobody is queueing at this one")
 
         print("  ok        " + net)
 

@@ -69,5 +69,25 @@ namespace GlimmerGrove
         /// one thing: there are not enough motes left to clear the well.
         /// </summary>
         OutOfMotes = 5,
+
+        /// <summary>
+        /// A grove ran out of tiles with a bed still waiting.
+        ///
+        /// Its own value rather than <see cref="OutOfMoves"/>, for this enum's reason. The two
+        /// ways a grove ends want opposite fixes and a single count could not tell them apart:
+        /// running out of tiles means the basket is tight, which is a tuning problem, where
+        /// running out of ground means the boards are asking for more care about <em>where</em>
+        /// than they are teaching, which is a level design one.
+        /// </summary>
+        OutOfTiles = 6,
+
+        /// <summary>
+        /// A grove had nowhere left to grow with a bed still waiting.
+        ///
+        /// The spatial half of the pair above, and the one no purchase can rescue: no number of
+        /// tiles gives a grove somewhere to plant that it does not have. See
+        /// <c>KeeperVerdict</c>.
+        /// </summary>
+        Overgrown = 7,
     }
 }

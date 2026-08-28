@@ -115,6 +115,42 @@ namespace GlimmerGrove.Tests
             Assert.IsEmpty(_spy.Released, "closing a screen must not free the game's chrome");
         }
 
+        /// <summary>
+        /// The launch screen's case, and the one <c>EnsureScopeAsync</c> cannot serve: a screen
+        /// that draws in the frame it is built has to fetch synchronously, so the address must
+        /// already belong to a scope by the time it is asked for. Claimed late — after the
+        /// fetch — the sprite lands in the global cache and is never freed, which is a
+        /// full-screen texture held for the whole session and invisible to everything.
+        /// </summary>
+        [Test]
+        public void AClaimedAddressIsFreedEvenThoughItWasFetchedSynchronously()
+        {
+            AssetLibrary.Claim("splash", "Art/Bg/splash_cover");
+            AssetLibrary.Sprite("Art/Bg/splash_cover");
+
+            AssetLibrary.ReleaseScope("splash");
+
+            Assert.AreEqual(new[] { "Art/Bg/splash_cover" }, _spy.Released.ToArray());
+        }
+
+        /// <summary>
+        /// Claiming must obey the two rules every other route obeys, or it is a way round
+        /// them: an address the boot preload already holds stays global, and one another
+        /// screen owns stays that screen's. Both would otherwise free art somebody is drawing.
+        /// </summary>
+        [Test]
+        public void AClaimNeverTakesWhatIsAlreadySpokenFor()
+        {
+            AssetLibrary.PreloadAsync(One("Art/Ui/button")).GetAwaiter().GetResult();
+            AssetLibrary.EnsureScopeAsync("screen", One("Art/one")).GetAwaiter().GetResult();
+
+            AssetLibrary.Claim("splash", "Art/Ui/button");
+            AssetLibrary.Claim("splash", "Art/one");
+            AssetLibrary.ReleaseScope("splash");
+
+            Assert.IsEmpty(_spy.Released, "a claim took art that was already owned");
+        }
+
         [Test]
         public void ReloadingAScopeReleasesThePreviousContents()
         {

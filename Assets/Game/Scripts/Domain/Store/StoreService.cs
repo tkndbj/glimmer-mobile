@@ -606,13 +606,26 @@ namespace GlimmerGrove.Store
         /// refunded. A confirmed purchase that was never granted is gone for ever.
         /// </para>
         /// <para>
-        /// <b>A refused receipt is deliberately never confirmed.</b> The temptation is to
-        /// clear it out so the queue stops retrying — and that is precisely the wrong move,
-        /// because "the server refused" covers a product that has not been added to
-        /// <c>config/products</c> yet as well as a genuinely bad receipt. Confirming the
-        /// first case would charge a player for a configuration mistake and destroy the
-        /// evidence; leaving it lets the store's own refund path resolve it, and lets a
-        /// re-seed fix it retroactively the next time the app opens.
+        /// <b>A refused receipt is deliberately never confirmed — with exactly one
+        /// exception.</b> The temptation is to clear it out so the queue stops retrying, and
+        /// that is precisely the wrong move, because "the server refused" covers a product that
+        /// has not been added to <c>config/products</c> yet as well as a genuinely bad receipt.
+        /// Confirming the first case would charge a player for a configuration mistake and
+        /// destroy the evidence; leaving it lets the store's own refund path resolve it, and
+        /// lets a re-seed fix it retroactively the next time the app opens.
+        /// </para>
+        /// <para>
+        /// The exception is <see cref="CloudFailure.AlreadyRedeemed"/>, and it is the exception
+        /// because it is the one refusal that cannot become a success later: the transaction was
+        /// granted to a different account, a receipt document is never deleted and its owner is
+        /// never rewritten. Leaving that one unfinished is not a harmless retry — it is a loop
+        /// for the life of the install, and on Google it ends in an auto-refund after three days
+        /// whose sweep reverses the grant against <em>the account that actually paid</em>. So
+        /// finishing it is what protects that account rather than what abandons this one.
+        /// Nothing is granted here and nothing can be: the server refused, and confirming is
+        /// purely a message to the store saying this device has nothing further to do with the
+        /// transaction. Reached by switching accounts and by deleting one — both re-deliver a
+        /// purchase belonging to the previous account, for ever.
         /// </para>
         /// </summary>
         static async Task<bool> RedeemAsync(StorePurchase purchase)
@@ -626,6 +639,20 @@ namespace GlimmerGrove.Store
             };
 
             var (result, redemption) = await CloudSaveService.RedeemPurchaseAsync(receipt);
+
+            if (result.Failure == CloudFailure.AlreadyRedeemed)
+            {
+                // Finished and dropped, granting nothing. See the remarks: this is the only
+                // refusal that can never turn into a success, and the account it protects by
+                // being closed out is the one that paid for it.
+                Debug.LogWarning($"[Store] {purchase.ProductId} belongs to another account " +
+                                 $"({result.Message}); finishing the transaction rather than " +
+                                 "asking again for the life of this install");
+
+                _pending.Remove(purchase.Key);
+                _backend.Confirm(purchase);
+                return true;
+            }
 
             if (!result.Ok)
             {

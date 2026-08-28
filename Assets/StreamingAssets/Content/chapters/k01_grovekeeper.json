@@ -7,17 +7,181 @@
   "mapStrips": [
     "strip0",
     "strip1",
-    "strip2"
+    "strip2",
+    "strip3",
+    "strip4",
+    "strip5"
   ],
   "levels": [
     {
       "id": "k01_first_grove",
-      "mapX": 0.34,
+      "mapX": 0.3,
+      "mapY": 0.055,
+      "budgetFactor": -1.0,
+      "keeper": {
+        "width": 6,
+        "height": 5,
+        "rows": [
+          "......",
+          "......",
+          "..R*G.",
+          "...*..",
+          "...R.."
+        ],
+        "tiles": "BG"
+      }
+    },
+    {
+      "id": "k01_the_second_bed",
+      "mapX": 0.72,
       "mapY": 0.14,
       "keeper": {
-        "width": 9,
-        "height": 9,
-        "tiles": 30
+        "width": 6,
+        "height": 5,
+        "rows": [
+          "...G..",
+          "......",
+          "..R*R.",
+          "...*..",
+          "......"
+        ],
+        "tiles": "BRG"
+      }
+    },
+    {
+      "id": "k01_stonecrop",
+      "mapX": 0.26,
+      "mapY": 0.225,
+      "keeper": {
+        "width": 7,
+        "height": 5,
+        "rows": [
+          "#R....#",
+          "..#G#..",
+          ".*.....",
+          ".*#.#..",
+          "#.R...#"
+        ],
+        "tiles": "RBRG"
+      }
+    },
+    {
+      "id": "k01_the_boulder",
+      "mapX": 0.7,
+      "mapY": 0.31,
+      "keeper": {
+        "width": 7,
+        "height": 5,
+        "rows": [
+          "#.....#",
+          ".*.*...",
+          ".G###..",
+          "..B....",
+          "#..G..#"
+        ],
+        "tiles": "RGBBR"
+      }
+    },
+    {
+      "id": "k01_four_petals",
+      "mapX": 0.28,
+      "mapY": 0.395,
+      "keeper": {
+        "width": 5,
+        "height": 5,
+        "rows": [
+          "..G..",
+          "..*..",
+          "G*.*G",
+          "..*..",
+          "..G.."
+        ],
+        "tiles": "RRRRB"
+      }
+    },
+    {
+      "id": "k01_heartwood",
+      "mapX": 0.74,
+      "mapY": 0.48,
+      "keeper": {
+        "width": 7,
+        "height": 5,
+        "rows": [
+          "#.....#",
+          "..Bb...",
+          ".*###R.",
+          "....R..",
+          "#.....#"
+        ],
+        "tiles": "RBBGGR"
+      }
+    },
+    {
+      "id": "k01_twin_hearts",
+      "mapX": 0.3,
+      "mapY": 0.56,
+      "keeper": {
+        "width": 7,
+        "height": 5,
+        "rows": [
+          "...b...",
+          "R#.G.#.",
+          "..###..",
+          ".#.g.#.",
+          ".B*...."
+        ],
+        "tiles": "BGBRGR"
+      }
+    },
+    {
+      "id": "k01_the_prism",
+      "mapX": 0.68,
+      "mapY": 0.645,
+      "keeper": {
+        "width": 7,
+        "height": 5,
+        "rows": [
+          "#.....#",
+          "..#.#*.",
+          ".#*....",
+          "..#.#..",
+          "#R.B.G#"
+        ],
+        "tiles": "RGBPGR"
+      }
+    },
+    {
+      "id": "k01_the_pocket",
+      "mapX": 0.26,
+      "mapY": 0.73,
+      "keeper": {
+        "width": 7,
+        "height": 5,
+        "rows": [
+          "#R.B.G#",
+          "..#.#..",
+          "....*#.",
+          "..#.#..",
+          "#..g..#"
+        ],
+        "tiles": "RGBPGR"
+      }
+    },
+    {
+      "id": "k01_keepers_grove",
+      "mapX": 0.72,
+      "mapY": 0.815,
+      "keeper": {
+        "width": 7,
+        "height": 5,
+        "rows": [
+          "##.#.##",
+          "#r...b#",
+          "..#.#..",
+          "#.G.R.#",
+          "##.#.##"
+        ],
+        "tiles": "GRBGRB"
       }
     }
   ]

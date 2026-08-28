@@ -317,6 +317,8 @@ namespace GlimmerGrove
                 case DefeatReason.OutOfInk: return "ui.defeat.ink_title";
                 case DefeatReason.WellFlooded: return "ui.defeat.flood_title";
                 case DefeatReason.OutOfMotes: return "ui.defeat.motes_title";
+                case DefeatReason.Overgrown: return "ui.defeat.overgrown_title";
+                case DefeatReason.OutOfTiles: return "ui.defeat.tiles_title";
                 default: return "ui.defeat.moves_title";
             }
         }
@@ -911,7 +913,13 @@ namespace GlimmerGrove
             // to the state it is in, exactly as the account panel is.
             bool privacy = AdPrivacy.CanRevisit;
 
-            MakePanel(new Vector2(860f, privacy ? 830f : 700f), Loc.Get("ui.settings.title"));
+            // Derived rather than typed, for GladeRewardsOverlay's reason: this panel now has
+            // two optional rows, and a height somebody has to remember to move is a height that
+            // ends up drawing a paragraph through a button. Both numbers below are what the
+            // rows actually occupy, so adding a third row is one line here and one there.
+            float height = BaseHeight + (privacy ? ConsentRow : 0f) + LegalRow;
+
+            MakePanel(new Vector2(860f, height), Loc.Get("ui.settings.title"));
 
             var row = UIKit.Box("Toggles", Panel, new Vector2(700f, 200f), new Vector2(.5f, 1f), new Vector2(0f, -260f));
             Toggle(row, "ic_music", new Vector2(-190f, 0f), () => GameSettings.MusicOn, GameSettings.SetMusic);
@@ -926,9 +934,15 @@ namespace GlimmerGrove
             UIKit.Titled("Ver", Panel, Loc.Format("ui.settings.version", Application.version), 28, new Color(.44f, .32f, .24f),
                          TextAnchor.MiddleCenter, new Vector2(700f, 40f), new Vector2(.5f, 1f),
                          new Vector2(0f, -420f), 0f, 0f);
-            UIKit.Titled("Credit", Panel, Loc.Get("ui.settings.credit"), 24, new Color(.52f, .40f, .31f, .85f),
-                         TextAnchor.MiddleCenter, new Vector2(700f, 36f), new Vector2(.5f, 1f),
-                         new Vector2(0f, -462f), 0f, 0f);
+            // The art licences, and the one place in the game that discharges them. Shrinkable
+            // and nearly the full width of the panel because it is a *list* that grows with the
+            // packs the build draws from — a fixed box would let the next one run off the paper
+            // (UIKit.Label overflows rather than truncating), in whichever language is longest.
+            UIKit.Shrinkable(
+                UIKit.Titled("Credit", Panel, Loc.Get("ui.settings.credit"), 24,
+                             new Color(.52f, .40f, .31f, .85f),
+                             TextAnchor.MiddleCenter, new Vector2(800f, 36f), new Vector2(.5f, 1f),
+                             new Vector2(0f, -462f), 0f, 0f), 16);
 
             if (privacy)
             {
@@ -961,8 +975,72 @@ namespace GlimmerGrove
             // Wipe itself stays. CloudSaveService.AdoptLinkedAccountAsync needs it, and it
             // is safe there for exactly the reason it was unsafe here: it is followed by a
             // sign-in to a *different* uid, so there is no old cloud document to merge back.
+            // ----------------------------------------------------------------- the law
+            // Required in the app rather than only on the store listing: App Store Review
+            // 5.1.1(i) wants the privacy policy reachable from inside the app, and a link only
+            // in App Store Connect is a documented rejection. Support is here for Guideline
+            // 1.2's other half — this game publishes keeper names to a public board, and a way
+            // to report somebody is not a way to reach us.
+            //
+            // Blue, which is this UI's colour for a secondary action — the undo key, the map
+            // key, an overlay's dismiss. They were the shop's grey Restore skin first and read
+            // as disabled, which on the one control a reviewer is told to look for is the worst
+            // possible reading. Small rather than grey is how they stay quieter than Close
+            // without looking switched off.
+            //
+            // Anchored to the bottom edge above Close, so the optional consent button above
+            // cannot push them off: everything below the toggles hangs from the foot.
+            var law = UIKit.Box("Legal", Panel, new Vector2(760f, LegalRow), new Vector2(.5f, 0f),
+                                new Vector2(0f, 108f + 132f * .5f + LegalRow * .5f + 10f));
+
+            Link(law, "ui.settings.privacy_policy", -250f, LegalLinks.Privacy);
+            Link(law, "ui.settings.terms", 0f, LegalLinks.Terms);
+            Link(law, "ui.settings.support", 250f, LegalLinks.Support);
+
             UIKit.TextButton("Close", Panel, "btn_green", Loc.Get("ui.common.done"), 46, new Vector2(560f, 132f),
                              new Vector2(.5f, 0f), new Vector2(0f, 108f), () => Close());
+        }
+
+        /// <summary>
+        /// What the panel is made of, so its height is arithmetic rather than a typed number
+        /// somebody has to remember to move.
+        ///
+        /// <para>
+        /// Internal so <c>LegalLinkTests</c> can prove the tallest arrangement still fits inside
+        /// <see cref="PanelStack.TallestPanel"/> — a modal is centred and its ribbon stands proud
+        /// of the top edge, so a panel that grows past that is drawn off the top of a 4:3 tablet
+        /// and off nothing else. That is the failure this file has already had once.
+        /// </para>
+        /// </summary>
+        internal const float BaseHeight = 700f, ConsentRow = 130f, LegalRow = 96f;
+
+        /// <summary>
+        /// One link out to the public site.
+        ///
+        /// <para>
+        /// <see cref="Application.OpenURL"/> leaves the game, so the panel is closed first — on
+        /// iOS the browser is a separate app and coming back to a modal that was never dismissed
+        /// is how a player ends up tapping Close twice. A malformed URL is refused rather than
+        /// handed over, because the platform's answer to one is to do nothing at all, which on a
+        /// device is indistinguishable from a dead button.
+        /// </para>
+        /// </summary>
+        void Link(Transform parent, string key, float x, string url)
+        {
+            var button = UIKit.TextButton("L_" + key, parent, "btn_blue", Loc.Get(key), 24,
+                                          new Vector2(240f, 72f), new Vector2(.5f, .5f),
+                                          new Vector2(x, 0f), () =>
+            {
+                if (!LegalLinks.Usable(url))
+                {
+                    Debug.LogError($"[Settings] refused to open a malformed link: '{url}'");
+                    return;
+                }
+
+                Close(() => Application.OpenURL(url));
+            });
+
+            UIKit.Shrinkable(button.Label, 16);
         }
 
         static void Caption(Transform parent, string key, float x)

@@ -55,15 +55,21 @@ namespace GlimmerGrove.Tests
 
             // `protected` rather than `protected internal`: overriding across assemblies drops
             // the internal half, which C# requires rather than merely allows.
-            protected override LevelId StakeLevel => Level;
+            protected internal override LevelId StakeLevel => Level;
             protected override bool RunOver => false;
             protected override void Rewind() { }
             protected override void NoteAbandoned(string reason) => Abandonments.Add(reason);
 
             // The run frame. A probe never runs one, but it still has to answer: the two members
             // are abstract precisely so that nothing which is a run screen can decline to.
-            protected override bool Runnable => false;
-            protected override void Running(bool running) { }
+            // `protected internal`, matching the base exactly. It was plain `protected` and
+            // compiled, because a `protected internal` member is seen as merely `protected`
+            // from an assembly the internals are not visible to — and Presentation's
+            // InternalsVisibleTo (added so a panel's own layout constants could be checked
+            // against what it draws) makes them visible, at which point an override must match
+            // the base's accessibility exactly.
+            protected internal override bool Runnable => false;
+            protected internal override void Running(bool running) { }
 
             // The base class's own members, opened just wide enough to drive. Note what is
             // *not* reimplemented: the decision each of these reaches is still the base

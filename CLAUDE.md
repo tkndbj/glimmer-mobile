@@ -631,6 +631,21 @@ What that means in practice here:
     **never** confirmed, however tempting it is to clear the queue: "the server refused" covers
     a product missing from `config/products` as well as a bad receipt, and confirming the first
     charges a player for a configuration mistake and destroys the evidence.
+    <br>**There is exactly one exception, and what makes it one is that it can never stop being
+    true.** Every refusal above is temporary — a re-seed fixes the missing product, a retry fixes
+    the tunnel — which is why resubmitting for ever is the right answer to all of them. A receipt
+    already granted to a **different account** is not: the document is never deleted (account
+    deletion keeps it deliberately, invariant 27) and its `uid` is never rewritten, so no future
+    state makes this caller the owner. `redeemPurchase` says so with `already-exists` rather than
+    `permission-denied`, the client reads it as `CloudFailure.AlreadyRedeemed`, and the queue
+    finishes the transaction and grants nothing. That is invariant 13a's rule applied to the store
+    instead of to a claim. **The account it protects is not the one holding the phone**, which is
+    the part that decides it: left unfinished, Google auto-refunds after three days and
+    `sweepVoidedPurchases` reverses the grant against `receipt.uid` — so a device that can never
+    finish somebody else's transaction eventually costs *them* the currency they paid for.
+    Reachable by switching accounts, which has always been true, and now by deleting one.
+    `StoreReceiptTests` drives both directions, because a fixture proving only the new branch
+    would pass just as happily if every refusal started confirming.
 18b. **The shop is one authored list, and the server derives its half from it.** The `store`
     block of `progression.json` is what the game draws *and* what `seed-config.mjs` turns into
     `config/products`. A card promising 750 gems against a server granting 700 is not a bug
@@ -986,6 +1001,49 @@ What that means in practice here:
     so both callers ask the same copy and `ChapterModeTests` drives the exact configuration that
     shipped.
 
+20i. **A mechanic that moves the *floor* moves par, the ladder's yardstick and the top of the
+    star ladder with it — and only one of those three had a check.** Lightweave's third chapter
+    brings the **hedge**: a barrier grown along the edge *between* two cells that no channel may
+    cross. It takes no ground, so unlike every other object in the mode it cannot be walked round
+    by one step; it removes a *way*, and a run of them anchored at a side of the grove turns a
+    field into rooms with a doorway between them. That is the sharpest form of the only question
+    this mode asks — who yields — and it is the one form of it the player can see before
+    committing to anything (`MinReach`'s argument, for the ground rather than the endpoints).
+    <br>**Par had to follow it, and nothing would have said so.** Everything a weave is graded on
+    derives from `WeaveLayout.Straight`, the fewest cells any route of a pair's could use, and that
+    was a *Manhattan* distance — which walks straight through a hedge. Left alone, a hedged grove
+    would have been graded against a floor no arrangement of it could reach: the three-star line
+    below the best possible play, and a whole band of the ladder silently gone. That is invariant
+    22's stranded band arrived at from the other direction, and it is invisible in every check
+    there was — the board is still solvable, still full, still measured. So a distance is now a
+    breadth-first walk over the ways that are actually open (`WeaveHedges.Span`), and par, both
+    star lines and the ink all rise with the barriers by themselves. On a grove with nothing grown
+    it is the same integer, which is why the two chapters already shipped are unmoved board for
+    board; `Tools/verify/weave.py` proves that on both runtimes.
+    <br>**The difficulty *reading* had to follow it too, and that is the half that is easy to
+    miss.** `slack` is measured against each pair's own floor, so a hedge does not raise it — it
+    moves forced detour out of the number and into the thing the number is measured against. A
+    hedged grove forcing ten cells over floors already six cells longer asks exactly as much as an
+    open one forcing sixteen, and the cross-chapter rule as written (every rung at least the
+    previous chapter's finale slack) would have called it a step down and been literally
+    unsatisfiable — measured, thirty thousand seeds of the shipped shape never produced slack 16
+    with hedges on it. `Rung.Toll` is slack plus what the hedges cost, it is identical to slack
+    wherever nothing is grown, and it is what a chapter now climbs.
+    <br>**And the gate that was missing is now there.** Nothing proved three stars was reachable on
+    a weave at all: `CheckStarBands` proves the three lines are ordered and `WeaveValidator` proves
+    the ink covers the floor, but "can the best possible arrangement score three stars" is
+    `WeaveSolver`'s exponential search, which may never be a build gate.
+    `WeaveLadderTests.TheBestArrangementOfEveryGroveStillScoresThreeStars` asks it of every shipped
+    grove, and it passed on all twenty of the old ones the day it was written — which is the only
+    reason a mechanic that moves the floor could be added at all.
+    <br>Two smaller rules the hedge is held to, both countable. It is grown **before** the carve,
+    so the arrangement the generator draws respects it and a hedged board is solvable by
+    construction rather than by check — placing barriers over a finished solution would mean
+    re-proving it and sometimes failing. And a fence that changes **no** pair's shortest route is
+    refused (`WeaveLayout.HedgesBite`), by the generator, by the validator and by the suite: a
+    barrier the player routes around without noticing is invariant 5d's decoration, and here it is
+    one comparison of two integers.
+
 21. **A chapter is opened by stars, and only its first level asks.** Inside a chapter the chain
     is unchanged — clear the level before this one. At a **boundary** the chain gives way to
     `LevelUnlock.GateFor`: the next chapter opens once the player holds `starsPerLevel` stars per
@@ -1018,6 +1076,60 @@ What that means in practice here:
     cleared is a level nobody has opened. The server has no opinion: unlocking pays
     nothing, mints nothing and is stored nowhere, so it stays a pure function of the star ledger.
 
+
+27. **Deleting an account removes data first and the account itself last, and that ordering
+    is the only thing making it safe to retry.** Both stores require an app that supports account
+    creation to offer deletion *inside* the app — Apple's 5.1.1(v) does not accept a web page —
+    and this deployment holds a save ledger, a wallet, a published card and a reserved name for
+    every player. `deleteAccount` walks them in one order and the order is the whole design.
+    **Visibility first** (`groves/{uid}` and the account's row scrubbed out of all ten
+    `leaderboards/*` in a transaction apiece), because a run that dies halfway must never leave a
+    deleted keeper's name standing where a stranger can read it, and unlike `withdrawGrove` this
+    cannot wait for the nightly rebuild — the account will not exist to correct it. **The name
+    next**, while the wallet that holds the key to it is still readable: `names` is not queryable
+    by uid, so releasing it after the save is deleted would strand a reservation nothing could
+    ever find. **Then the save**, recursively, so a subcollection added next year is not a list
+    somebody forgot to extend. **Then Apple.** **The auth user last**, and that is the clause with
+    teeth: every failure before it is still authenticated, so the client simply calls again and
+    every step is delete-if-exists or a transaction that re-reads its own precondition. Delete the
+    user first and a crash halfway leaves documents under a uid nobody can ever authenticate as
+    again — unreachable by the player, by this function and by support, which is the one failure
+    here with no repair.
+    <br>**Three things are deliberately kept and each would be worse to delete.** `receipts/*`,
+    because it is the record that one store transaction has been granted, keyed globally against
+    the replay attack (18a) — dropping it makes "buy, redeem, delete, sign up, redeem again" an
+    unbounded faucet costing an attacker one purchase. Reports this account filed about *other*
+    people, because the count on the parent is denormalised from them and removing one would
+    either drift that count or silently un-hide a name three real players reported. And a
+    **denied** name's reservation, which is retargeted to a tombstone uid rather than released:
+    deleting the account is not a reason to hand an offensive name to the next person who asks
+    for it, which is exactly what `reports.ts` keeps the reservation to prevent.
+    <br>**The client's half is server-first, and it is the half that can orphan something.** The
+    local grove is the only evidence the deletion was asked for, so nothing local is touched until
+    the server confirms — which is what lets every failure sentence on the panel say "nothing has
+    been deleted" and be telling the truth (`AccountDeletion.Untouched`). It runs under the sync
+    latch for the whole of it, because a sync is pull → join → push and one in flight would put
+    the grove straight back into the document being deleted: the one orphan the server's own
+    ordering cannot prevent, because the client causes it. `SaveService.EraseAccount` is the only
+    route in that file that destroys a grove without filing it anywhere — a switch archives what
+    it leaves and this must not, or `SwitchTo` would cheerfully restore it if that uid came round
+    again — and it drops **only** this account's slot, because the other five belong to accounts
+    still playing on a shared phone. The device is left on a fresh anonymous account rather than
+    signed out: there is no sign-in screen in this game, so holding no account at all is a state
+    nothing knows how to draw.
+    <br>**A linked account re-authenticates first, and that is one step doing two jobs.** The
+    reason is proof — an account left signed in on somebody else's phone should not be erasable by
+    whoever is holding it — and it is `ReauthenticateAsync` rather than a sign-in precisely because
+    a sign-in *replaces* the session, so picking the wrong entry out of an account chooser would
+    quietly make the device somebody else. Firebase's own `UserMismatch` refuses it with the
+    session untouched. What the same step also yields is Apple's `authorizationCode`, which is
+    single-use and expires in minutes and is therefore only obtainable at the moment it is needed;
+    capturing it at *link* time instead would store a live third-party credential for every Apple
+    player for the life of their account and exercise the path months later, which is a break
+    nobody sees until the one time it matters. A guest has no provider and is asked to confirm and
+    nothing more — the only players who could not delete their account must not be the ones with
+    least invested in it. **A revocation failure never blocks a deletion**: Apple being down is not
+    a reason to refuse somebody their own account back, and the data is gone by then anyway.
 
 22. **A puzzle is graded on the puzzle, so there is no clock anywhere in this game.** Stars
     were the *worse* of what the turns allowed and what a countdown allowed, and that one word
@@ -1477,6 +1589,109 @@ What that means in practice here:
     column count to the power of par, so par 7 on a six-wide well is four times par 6 on the
     same board: the cheap fixes are a narrower well or a shorter answer, never a bigger one.
 
+28. **A mode that cannot be lost is a prototype, and Groovekeeper was the second one.**
+    Invariant 26 arrived at again by the same route and answered the same way. It dealt random
+    colours onto empty ground until a fixed number of tiles ran out, and every consequence of that
+    one decision was invisible in the file: a board with no fixed future cannot be *searched*, so
+    it could author no par; with no par there is no star line and no budget; with no budget there
+    is no fail state; and with none of those it is not a level, it is a toy with a score on it.
+    What it shipped was `LevelTuning.Default(1)` — a par of one that nothing read — and two
+    players on the same "level" were not playing the same board. **A groove now authors its
+    ground, the beds that have to bloom and the procession it is dealt, and nothing else.** Par is
+    the fewest tiles that open every bed, found by search (`KeeperSolver`), and the two star lines
+    are the same 1.20 / 1.40 multiples of par every other mode uses, so a second mode still cannot
+    retune the economy (invariant 9). The whole feature cost the save file **no schema version, no
+    merge rule and no server work**, because a Groovekeeper level is an ordinary level with its
+    own permanent id (invariant 20a).
+28a. **The inversion is the mode, and a bed is what turns it into a puzzle.** Every edge-matching
+    game ever made rewards putting like against like; this one rewards the opposite — a seam
+    between two unlike colours is worth something and a seam between two of the same is worth
+    nothing, and a tile whose own colour and its neighbours' between them carry all three
+    **blooms**. That alone is a toy. What makes it a level is the **bed**: a cell the author marked
+    that has to end up holding a bloomed tile, so the question every turn is not "where does this
+    fit" but "what does this one complete, and what does it leave the next one able to complete".
+    <br>**One tile can open five, and that is the same play as the shortest answer.** A planting is
+    read against the cell it lands on *and* the four beside it, because a tile that was one channel
+    short a moment ago is not short any more — so the ceiling is five and it is a fact about the
+    rules rather than a taste (`KeeperFlourish.Most`). It is also exactly what par rewards, which
+    is the whole design: the prettiest play and the most efficient one are the same play, and the
+    chapter's fifth groove is built to say so before a word is read. Note what falls out of the
+    board being append-only: **blooming is derived rather than stored**, so a solver's state is the
+    grid and nothing else, and there is no flag for the two to disagree about (invariant 9a).
+28b. **The room to err is a count of tiles, and the fifth of them is the two-star line.**
+    Invariant 26e for a second mode: a wrong tile is permanent *and* it takes a cell of ground a
+    bed beside it may have needed, so a mistake is worth about two tiles wherever it happens and
+    a fraction of par would give a short groove almost no room at all. What is new is why the
+    count is **five** rather than four. A budget of `par + spare` has to clear `ceil(par x 1.40)`
+    or the bottom band is stranded and every clear is worth two stars or three — invariant 22's
+    fault reached from the budget's side instead of the star line's. Four holds to par seven and
+    collides at par eight, which is exactly where this chapter's finale sits; nothing but
+    `LevelValidator.CheckStarBands` noticed, and `KeeperLadderTests` is what says so if a later
+    chapter ever goes deeper than five will carry.
+28c. **Two fail states, and only one of them may be sold a continue.** The basket running out is
+    a shortage and more tiles fix it, so it is offered one at `ContinueUnit.Tiles`. A groove with
+    **nowhere left to grow** is not: no number of tiles gives it somewhere to plant, so
+    `KeeperVerdict` answers `RunContinue.NoContinue` and the offer is never made — invariant 23's
+    rule, and Lightfall's flooded well one mode over. It also means the mistake money cannot fix
+    is the spatial one, which is the half this mode is actually about.
+    <br>**That is also the exact reading of "the first groove cannot be lost".** What the negative
+    `budgetFactor` turns off is the *basket*, not every ending — Lightfall's first well is authored
+    the same way and can still flood. A groove with nowhere left to grow is over whatever its
+    basket says, because there is genuinely nothing left to do on it, and a board that can be
+    neither won nor ended is the one state invariant 20g forbids. On the opening groove reaching it
+    means filling twenty-seven cells without opening either bed.
+28d. **Composting is the one move that changes nothing, and it costs a tile for that reason.**
+    A heartbed refuses every colour but its own, so a run can be holding exactly the wrong tile
+    with the right bed waiting — and the honest answer to that is not a free re-deal but a priced
+    one. Both ways of spending take the same tile from the same basket, so what the player is
+    being asked is simply "is moving the procession on worth a tile", which is a decision they can
+    take with the basket in front of them. It is allowed on the **last** tile too, and that is
+    deliberate rather than an oversight: withholding it there reads as protective and is the one
+    setting that can produce a groove which will not end — a last tile no cell will take would be
+    unplayable and unspendable at once, which is invariant 20g's state exactly.
+28e. **A heartbed refuses rather than spoils.** A bed drawn in a colour takes that colour and no
+    other, and the wrong tile cannot be planted there *at all* — so nobody can kill one with a
+    mis-tap, and the bed wears its colour where anyone can see it before they tap. That is what
+    turns the ordered procession from scenery into the puzzle (invariant 20e for a third mode):
+    a plain bed is opened by whichever tile happens to be in hand when its neighbours are ready,
+    where a heartbed has to be reached with one particular tile and everything in between has to
+    be dealt with.
+28f. **The proof that a bed is lost never ends a run, and only ever decides whether it would be
+    honest to sell one.** `KeeperBoard.AnyBedLost` is Lightfall's removed clause kept for the one
+    question where it is exactly right. Ending a run on it is the mistake `FallVerdict` shipped
+    and took back: it came back from play as a run that ended while the tray still had motes in
+    it, which reads as the game deciding on the player's behalf and is indistinguishable from a
+    bug unless you already know the rule being enforced. A player who wants to spend their last
+    three tiles on a groove that cannot be finished is entitled to. Both its clauses are
+    certainties rather than heuristics, because the answer decides whether money changes hands, so
+    it under-reports and never over-reports.
+28g. **A Groovekeeper procession need not carry all three colours, and that is the one place this
+    mode is not Lightfall.** A well refuses a two-colour deal and has to: a drop onto bare ground
+    there makes a fresh mote wanting the two channels it lacks, so the procession can be walked
+    into a position no amount of play recovers from (invariant 26c). Nothing here does that. A
+    tile that cannot bloom is simply a tile, the sprigs standing on the ground are permanent, and
+    **two of the ten grooves that ship are finished with a two-colour basket** precisely because
+    the third colour is already on the board. The check was written anyway, by reflex, and errored
+    on both of them; what matters is that every bed can be *opened*, which is what the search
+    proves. Copying a rule across from a mode that looks similar is how a gate comes to refuse
+    correct content.
+28h. **The search is what the mode rests on, so its floor is the thing to be careful with.**
+    Par is found by iterative deepening over a grid whose every tile's colour is decided by *when*
+    it was laid, so two orderings of the same cells are two different states and a breadth-first
+    frontier grows like permutations. Both prunes are exact — a bound that could ever be too high
+    would cut the shortest answer and hand back a par nothing can reach. The one worth
+    understanding is the **floor**: beds whose closed neighbourhoods touch may share a tile, so
+    their costs are grouped and only the worst of each group counts, while groups more than two
+    steps apart are **added**. Taking the maximum instead left a two-bed groove with a bound of
+    three against a real answer of six and the search walked a quarter of a million positions it
+    could have cut. The distance term stays a maximum and is compared rather than added, because a
+    path to one bed may well be a path to another — that is the one part that could double-count,
+    so it is the one part that is not summed. In practice the cost goes roughly as the open cell
+    count to the power of par: **par eight on tight ground is a few hundred positions and par nine
+    on open ground is a few hundred thousand**, which is why the chapter tops out at eight and why
+    `KeeperValidator` refuses a groove above 90,000 (the player's device runs this same search once,
+    when somebody opens the level — invariant 26d).
+
 
 ## Layout
 
@@ -1539,14 +1754,30 @@ scripts fail to compile. Do not guess — verify offline:
   so it reports glades and names the other modes as skipped rather than stopping on them —
   it used to die on a `KeyError` at the first non-glade chapter, which was every run since
   the Hollow shipped.
-- **Splash art check:** `python Tools/make_splash_art.py --check` proves the three launch-screen
-  layers on disk are what the tool would write. It composes the hero island out of the *shipped*
-  grove catalog, so a drop that re-cuts a prop, retunes a `scale` or renames a piece changes what
-  the tool produces — and this is what says so, instead of the launch screen quietly keeping a
-  picture of last quarter's grove.
+- **Shop art check:** `python Tools/make_shop_art.py --check` proves the twelve coin and gem
+  pictures on disk are what the tool would cut. It needs the source packs (see the
+  art-source-packs note) because the sheets live outside the repo. **It proves reproducibility
+  and says nothing about quality**, and that distinction shipped a broken card: the coin sack
+  is dark brown on a dark purple ground, its bottom edge went undetected, the silhouette fill
+  drained out through the gap, and the 9K card drew the sack's white outline wrapped around
+  nothing — right size, correctly centred, 24% opaque, every check green. Two numeric gates
+  were tried afterwards (how much of a sprite is outline; whether its silhouette encloses
+  anything) and **neither separates a broken cut from a healthy one**, because a bite out of
+  one side is not distinguishable by any global statistic from a thin part that belongs there.
+  So `--contact <png>` lays all twelve out at the size a card really draws them on the card's
+  own plate colour, and looking at that is the gate. `render_wheel.py`'s bargain, for the
+  second time.
 - **Word list check:** `python Tools/make_name_blocklist.py --check` proves the checked-in list
   is what the tool would write, and refuses the four ways a blocklist goes quietly wrong. The
   filter itself is `npm --prefix firebase/functions test` (`names.mjs`, `reports.mjs`).
+- **Groovekeeper check:** rolled into `content.py`. A groove is the other non-glade mode whose
+  whole level is in the file, so the offline gate proves it: every board searched for par, a
+  sprig to grow from, a bed to open, a heartbed whose colour the basket actually deals, and the
+  four readings (`beds`, `heartbeds`, `ways`, `greedy`) printed beside par and the basket.
+  `keeper-vectors.json` is the contract between `Tools/verify/keeper.py` and the shipping
+  `KeeperBoard`/`KeeperSolver` — `content.py` runs it through the Python copy and
+  `KeeperVectorTests` runs it through the C# one, so the bloom rule cannot drift quietly
+  (invariant 9a).
 - **Lightfall check:** rolled into `content.py`. A well is the one non-glade mode whose whole
   level is in the file, so the offline gate proves it: every board searched for par, the brim
   row empty, nothing floating, the procession carrying all three channels, and the four
@@ -1558,9 +1789,11 @@ scripts fail to compile. Do not guess — verify offline:
   grove on **both** the bundled .NET 8 and **Unity's own Mono** and diffs them. A weave board is
   generated rather than authored, on a desktop at authoring time and again on the player's phone,
   so "the same seed deals the same board everywhere" is the property the whole mode rests on and
-  the one nothing else checks. It compares boards, beads and difficulty rather than checking any
-  of them against a number, so there is no expected table to go stale. See *Hard-won facts* for
-  the divergence that made it.
+  the one nothing else checks. It compares boards, beads, hedges and difficulty rather than
+  checking any of them against a number, so there is no expected table to go stale. It also
+  refuses a grove whose hedges change no pair's shortest route, which is invariant 5d for the
+  mechanic that is hardest to see doing nothing. See *Hard-won facts* for the divergence that
+  made it.
 - **Name fold check:** `Tools/verify/names.py` runs `GroveNames` against the shared vectors
   **on Unity's own Mono** (`MonoBleedingEdge/bin/mono.exe`), not on the bundled .NET. That is
   the whole point of it: the first version ran on .NET 8, whose ICU agrees with Node about
@@ -1775,10 +2008,15 @@ Builds are gated: `ContentBuildGate` fails the build on any content error.
 Everything here runs without Unity unless it says otherwise.
 
 - `Tools/verify/` — `compile.py`, `tests.py`, `content.py`, `loc.py`, `names.py`,
-  `difficulty.py`, `weave.py`, `fall.py`, and two shared contracts: `board-vectors.json` for the
-  rule that exists in `LevelValidator`, `content.py` and `author.py` at once, and
-  `fall-vectors.json` for the burst-and-wash rule that exists in `FallBoard`/`FallSolver` and
-  `fall.py`. See *Verifying*.
+  `difficulty.py`, `weave.py`, `fall.py`, `keeper.py`, and three shared contracts:
+  `board-vectors.json` for the rule that exists in `LevelValidator`, `content.py` and `author.py`
+  at once, `fall-vectors.json` for the burst-and-wash rule that exists in
+  `FallBoard`/`FallSolver` and `fall.py`, and `keeper-vectors.json` for the bloom rule that
+  exists in `KeeperBoard`/`KeeperSolver` and `keeper.py`. See *Verifying*.
+- `Tools/chapters/k01_grovekeeper.py` — the Clearing's ten grooves, and `k01_strings.py` for
+  the strings that belong to the mode rather than to a level. Both `--check` themselves against
+  what is shipped. The boards were hand-drawn against a sweep (`ways`, `greedy` and the cost of
+  proving them), because the shape of a groove is what teaches and a random one teaches nothing.
 - `Tools/chapters/f01_lightfall.py` — the Deep Well's ten wells, and `f01_strings.py` for the
   strings that belong to the mode rather than to a level. Both `--check` themselves against
   what is shipped. The boards were *searched for* rather than typed, because a random fill is
@@ -1793,9 +2031,12 @@ Everything here runs without Unity unless it says otherwise.
 - `Tools/weave_seeds.py` — which seed a Lightweave level should author, swept offline and in
   parallel. It compiles the **shipped** `WeaveSeedSearch` rather than mirroring it, so the bar a
   rung is chosen against is the bar `Survey Lightweave` and `WeaveLadderTests` hold it to. `pool`
-  reports every usable board a shape deals, `sweep` filters to a band, and `confirm` re-measures
-  a shortlist on **both** .NET 8 and Unity's Mono and refuses any that disagree — run it on
-  whatever a chapter ends up authoring before the numbers go into a test.
+  reports every usable board a shape deals, `sweep` filters to a band (on `--slack` or on
+  `--toll`, which is the reading that stays comparable once a chapter grows hedges), and `confirm`
+  re-measures a shortlist on **both** .NET 8 and Unity's Mono and refuses any that disagree — run
+  it on whatever a chapter ends up authoring before the numbers go into a test. High-toll boards
+  are rare: expect tens of thousands of seeds per rung, which is why the sweep runs across every
+  core.
 - `Tools/render_wheel.py` — draws the bonus wheel exactly as `WheelFace` does, without Unity.
   `render_grove.py`'s argument for the one other object here whose quality is only visible as a
   picture: everything provable about the wheel is proved, and none of it can say whether the
@@ -1809,14 +2050,17 @@ Everything here runs without Unity unless it says otherwise.
   because a piece id is in save files twice over.
 - `Tools/make_chapter_art.py` + `chapter_art.tsv` — map strips and per-level backdrops, graded
   from the chapter's own JSON colours, so retuning a level's `accent` regrades its backdrop.
-- `Tools/make_splash_art.py` — the launch screen's hero island, its distant islands and its
-  tileable cloud strip. Composed from `homestead.json` through `GroveFloor`'s geometry, so the
-  first thing a player sees is drawn from the same art at the same angle as the Grovement, by the
-  same numbers. `--check` gates it. Two things it teaches that were each got wrong twice: a
-  floating island's root is a **width per depth** and has to be drawn as a profile — tapering a
-  stack of copies of the footprint gives their envelope, which is a flat ellipse whatever the
-  shrink curve says — and it is **two flat facets**, not a gradient, because what makes stylised
-  stone read as stone is the hard edge down the middle.
+- `Tools/make_shop_art.py` — the shop's two money ladders, six painted pictures each, cut out
+  of two licensed sheets. The background is keyed by **chroma rather than brightness**: both
+  sheets put a soft coloured halo behind every object, and the halo overlaps the objects in
+  brightness completely — a gem pile's own violet sits inside the range its halo covers, and the
+  coin sack is in places *darker* than the ground it stands on. What separates them is that the
+  halo is the ground's own hue scaled up, so it lies along one axis in RGB and everything painted
+  carries some colour off it. The edge threshold that finds a silhouette is **deliberately low**:
+  a silhouette open anywhere is not one, the fill drains out through the gap and the whole
+  interior is lost, which is far worse than admitting a little speckle — and it is safe because a
+  smooth halo carries brightness but no gradient, so it contributes no edges at any usable
+  threshold. `--check` gates reproduction; `--contact` is how the cut is judged.
 - `Tools/make_waterfall.py`, `Tools/make_grove_animation.py` — generated decor flipbooks. Rows
   they own are marked `_generated` rather than `_imported`, or the next import run warns
   forever about a row it no longer owns.
@@ -1856,8 +2100,10 @@ re-reading before changing something, it is in one of those two sections and not
   bought by the copy, residents projected from the companion roster, derived grove worth.
 - **Boards** — public `groves/{uid}` cards, published rank distribution, unique keeper names
   with server-side filtering and reporting.
-- **Modes beyond the classic glade** — Lightfall (`f01_lightfall`), the Hollow
-  (`h01_emberfall`) and Lightweave (`w01_lightweave`, `w02_nightloom`). See *Modes* below.
+- **Modes beyond the classic glade** — Lightfall (`f01_lightfall`), Groovekeeper
+  (`k01_grovekeeper`), the Hollow (`h01_emberfall`) and Lightweave (`w01_lightweave`,
+  `w02_nightloom`, `w03_wildhedge`).
+  See *Modes* below.
 - **Privacy/ads plumbing** — Google UMP consent, ATT prompt, `app-ads.txt` (placeholders).
 - **Verifying** — `Tools/verify/` in the repo (see the *Verifying* section).
 
@@ -1870,9 +2116,11 @@ re-reading before changing something, it is in one of those two sections and not
 | `c03_amberwood` | glade | 10 | 44–70 | default 1.60 | colour as the subject; no new rule |
 | `c04_nightbriar` | glade | 10 | 42–69 | default 1.60 | the briar |
 | `f01_lightfall` | fall | 10 | 2–6 drops | none, then default 1.60 (motes) | the cook, then the chain; motes 3 → 30, headroom 4 → 2, `ways` never above 8 |
+| `k01_grovekeeper` | keeper | 10 | 2–8 tiles | none, then par + 5 (tiles) | the inversion, then stone, the heartbed and the prism; beds 2 → 4, `ways` 2 → 2 with a 1 at the fifth |
 | `h01_emberfall` | hollow | 10 | 1–2 sparks | — | ladder is *how few openings win*: 7,8,6,4,2,3,4,1,4,1 |
 | `w01_lightweave` | weave | 10 | 19–64 | default 1.60 (ink) | pairs 3→6, beads 0→5; slack 2 → 8 and ways 230 → 2 |
 | `w02_nightloom` | weave | 10 | 63–74 | default 1.60 (ink) | six pairs throughout, beads 5→6; slack 8 → 16 and ways 305 → 7 |
+| `w03_wildhedge` | weave | 10 | 75–91 | default 1.60 (ink) | the hedge; six pairs and six rings throughout, hedges 1 → 3; toll 16 → 28 and ways 478 → 31 |
 
 **No level authors a difficulty number except the first glade in the game, and no chapter authors
 a clock** (invariant 22). Par is derived from the board; both star lines and the losing line are
@@ -1941,6 +2189,32 @@ by search (`FallSolver`) and resolved lazily, so a level authors a board and a p
 difficulty number at all. Boards are searched for, not typed — `Tools/chapters/f01_lightfall.py`
 and `Tools/verify/fall.py`.
 
+**Groovekeeper** (`KeeperScreen`) — a groove of bare ground, a handful of **sprigs** already
+standing on it, and an ordered basket of coloured tiles. A tile is laid on bare ground beside
+something already standing, and the rule is the inversion: a seam between two *unlike* colours is
+worth something and a seam between two of the same is worth nothing. A tile whose own colour and
+its neighbours' between them carry all three **blooms**.
+
+The goal is the **beds** — cells the author marked, each of which has to end up holding a bloomed
+tile. A planting is read against the cell it lands on *and* the four beside it, so one tile can
+open five at once (`KeeperFlourish.Most`), and that is also the shortest way to finish: par
+rewards exactly the play that looks best. Par is the fewest **tiles spent** — planted or
+composted — found by search (`KeeperSolver`) and never authored.
+
+Its vocabulary is four characters and they are the whole file: `.` bare ground, `#` **stone**
+(nothing grows on it and no light passes through), `*` a **bed**, `r`/`g`/`b` a **heartbed** that
+takes one colour and refuses every other outright, and `R`/`G`/`B` a **sprig**. The basket is
+written in `R`, `G`, `B` and `P` for a **prism**, the one tile carrying all three at once — it
+blooms wherever it lands and opens any bed. **Composting** spends the tile in hand without
+planting it, to bring the next colour round; it costs a tile like any other, which is what stops
+it being a free re-deal.
+
+Two fail states: the basket runs out, or the groove has **nowhere left to grow**. Only the first
+may be sold a continue (invariant 28c). There is no undo — the procession is visible and the ring
+under a thumb says what a cell would open before it is committed, so a wrong tile is a
+misjudgement rather than a surprise. Boards are authored and searched, not generated —
+`Tools/chapters/k01_grovekeeper.py` and `Tools/verify/keeper.py`.
+
 **Hollow** (`HollowScreen`) — a field of sleeping critters and a short *ordered* queue of
 sparks. Light accumulates and never decays, so a player can never be stuck, the only endings
 are winning and running out, and unlimited undo is safe. Par is the fewest sparks that finish
@@ -1948,10 +2222,11 @@ the board, found by search (`HollowSolver`), never authored. Boards are searched
 typed — `Tools/hollow/`.
 
 **Lightweave** (`WeaveScreen`) — drag a channel from each crystal to its critter without
-crossing, and thread every **bead**: a hexagonal ring on the ground that its own colour must pass
-through and no other colour may enter. Where a channel goes is otherwise entirely the player's
-business. Six colours (every mix except `Energy.All`, which is what a woken critter wears, so a
-seventh pair would sleep in the colour of being awake).
+crossing, thread every **bead** (a hexagonal ring on the ground that its own colour must pass
+through and no other colour may enter) and cross no **hedge** (a run of foliage grown along the
+edges *between* cells, which nothing may pass). Where a channel goes is otherwise entirely the
+player's business. Six colours (every mix except `Energy.All`, which is what a woken critter
+wears, so a seventh pair would sleep in the colour of being awake).
 
 It used to be won only by covering **every cell of the grove**, which was the whole difficulty and
 was also two faults at once: the sensible route was almost always wrong, and the state it produced
@@ -1959,27 +2234,39 @@ was also two faults at once: the sensible route was almost always wrong, and the
 invariant 20g, and both are gone. A bead asks for the same thinking and points at where.
 
 Boards are *generated from a seed*, so determinism across runtimes is the property the mode rests
-on — `Tools/verify/weave.py` diffs .NET 8 against Unity's Mono, boards and beads alike.
+on — `Tools/verify/weave.py` diffs .NET 8 against Unity's Mono: boards, beads and hedges alike.
+The hedges are grown **first** and the carve is threaded through what is left, so a hedged board
+is solvable by construction exactly as an open one is (invariant 20i).
 
-**Two chapters.** The Weftwood teaches the mode: three channels growing to six, the first ring on
-its third grove, slack 2 → 8. The Nightloom asks. It opens on what the Weftwood closed on — all six
+**Three chapters.** The Weftwood teaches the mode: three channels growing to six, the first ring on
+its third grove, toll 2 → 8. The Nightloom asks. It opens on what the Weftwood closed on — all six
 colours, five rings, and eight cells of forced detour on its very first board — and climbs to
-sixteen, twice anything the Weftwood ever forced, with a sixth ring from its fifth grove on. Nothing
-about the second chapter is code: it is a JSON body, a manifest entry, thirty-one strings and its
-own map art. `WeaveLadderTests` holds *every* chapter to one set of rules rather than one copy per
-chapter, and `TheSecondChapterAsksMoreOfEveryGroveThanTheFirst` is the cross-chapter claim — on
-slack, colours and size, which are the readings that mean the same thing in both. **`ways` is
-deliberately not compared across chapters**: it counts arrangements within `WeaveSolver.Latitude` of
-the *best* one, and the best one moves with slack, so the Nightloom's opening count is taken in a
-band the Weftwood's finale never reached. Asserting it fell across the join would be a rule about
-two different measurements, and the only way to satisfy it would be to author a gentler second
-chapter.
+sixteen, twice anything the Weftwood ever forced, with a sixth ring from its fifth grove on. The
+Wildhedge brings the **hedge** and is the first chapter of the mode to add a rule since the ring:
+one barrier on its opening grove, two by its third and three from its sixth, six pairs and six
+rings throughout, and the rooms the hedges make are what the ladder climbs on. It opens at the
+toll the Nightloom closed on, which is the same join the Nightloom made with the Weftwood, and it
+is the first chapter of this mode to open at full strength *and* teach something. **All ten were
+played through on device by the owner on 2026-08-28 and reported fine**, which is what the ladder's
+numbers could not answer on their own: whether a doorway reads as a decision or as a bottleneck,
+and whether that join still lands now that a rule is being taught on the first board. Nothing about the second or third chapter is code beyond the mechanic itself: a JSON
+body, a manifest entry, strings and its own map art.
+<br>`WeaveLadderTests` holds *every* chapter to one set of rules rather than one copy per chapter,
+and `EveryChapterAsksMoreOfEveryGroveThanTheOneBeforeIt` is the cross-chapter claim — on **toll**,
+colours and size, which are the readings that mean the same thing in all three. It used to be on
+slack, and invariant 20i is why it could not stay there. **`ways` is deliberately not compared
+across chapters**: it counts arrangements within `WeaveSolver.Latitude` of the *best* one, and the
+best one moves with the toll, so a later chapter's opening count is taken in a band the earlier
+one's finale never reached. Asserting it fell across the join would be a rule about two different
+measurements, and the only way to satisfy it would be to author a gentler chapter.
 
-A grove is measured two ways and needs both (invariant 20f). **`slack`** is the least total detour
-any arrangement has, over and above every pair's own shortest possible route: zero means every pair
-can go as directly as it could, all at once, and the grove asks nothing. **`ways`** is how many
-arrangements land within a couple of cells of the best one — how much of what a tidy player tries
-will work. Slack is meant to climb down the chapter and ways to fall. Both come from `WeaveSolver`,
+A grove is measured two ways and needs both (invariant 20f). **`toll`** is how far past straight
+lines the whole board has to be drawn: the detour the pairs force on each other (**`slack`**, the
+least total excess any arrangement has over every pair's own floor) plus the detour the hedges
+force on the pairs (**`bite`**). Zero slack means every pair can go as directly as it could, all at
+once, and the grove asks nothing. **`ways`** is how many arrangements land within a couple of cells
+of the best one — how much of what a tidy player tries will work. Toll is meant to climb down the
+chapter and ways to fall. Both come from `WeaveSolver`,
 which is an authoring instrument and deliberately **not** a build gate (the search is exponential in
 the worst case, so a gate would fail builds nobody can reproduce);
 `Glimmer Grove ▸ Content ▸ Survey Lightweave` reports them and its `SeedSearch` picks a level's seed
@@ -2057,8 +2344,8 @@ Free play collects about **593 credits and 6 gems a day**; `Tools/verify/content
   bulk pack, which is a volume discount every honest tuning is dearer than. It buys a *fresh*
   attempt, graded like any other. Content (`hearts.rescueGems` / `hearts.rescueHearts`), and
   `"rescueHearts": 0` withdraws it.
-- **Continue** — **20 gems** for **+15 turns** on a glade, **+20 cells of ink** on a weave or
-  **+6 motes** on a well,
+- **Continue** — **20 gems** for **+15 turns** on a glade, **+20 cells of ink** on a weave,
+  **+6 motes** on a well or **+6 tiles** on a groove,
   flat and repeatable for as long as the player can pay (invariant 23). About three days of
   free gems, or a fifth of the entry rung. The grant is *on top of* whatever it took to un-lose
   the board, and a bought run can only ever score one star. Content (`continueRun`), and
@@ -2071,10 +2358,12 @@ Everything in that list except the shop ladder is **content** in `progression.js
 ### Backend
 
 Firebase project `glimmer-groove-1cd60`, Firestore `eur3`, Node 22 in `europe-west1`.
-**Thirteen functions**: `getWallet`, `submitSpends`, `claimAwards`, `redeemPurchase`,
+**Fourteen functions**: `getWallet`, `submitSpends`, `claimAwards`, `redeemPurchase`,
 `adReward`, `appleNotification`, `sweepVoidedPurchases`, `publishGroveStats`, `publishGrove`,
-`withdrawGrove`, `publishGroveRanks`, `claimName`, `reportKeeperName`.
-`firebase/README.md` is the guide; `firebase/e2e/smoke-test.mjs` is **90/90 live**.
+`withdrawGrove`, `publishGroveRanks`, `claimName`, `reportKeeperName`, `deleteAccount`.
+`firebase/README.md` is the guide; `firebase/e2e/smoke-test.mjs` is **90/90 live** and
+`firebase/e2e/delete-account.mjs` is **14/14 live** — the second one erases the throwaway
+accounts it makes, so it is the only suite here that leaves less behind than it creates.
 `adReward` is the one that grants a wheel slice: it reads the account's spin index off the
 wallet, recomputes the wedge the phone drew, grants `amount x percent`, and advances the index
 in the same transaction the grant record guards (invariant 25).
@@ -2091,6 +2380,26 @@ case and three streak cases). And it is **sensitive to cold starts**: re-run bef
 a failure that arrives in the first minute after a deploy.
 
 **Owed, in order of cost if forgotten:**
+
+0. **Delete an Apple-linked account on a device, and check it leaves Apple's list.** Everything
+   else about deletion is **live as of 2026-08-28**: all fourteen functions deployed, the invoker
+   binding granted on `deleteaccount`, the four `APPLE_SIWA_*` secrets set from the Sign in with
+   Apple key, and `firebase/e2e/delete-account.mjs` **14/14 against the real database** — the save
+   and its subcollections gone, the card gone, the name released *and re-claimed by another
+   account*, the auth user gone, and a second call a clean no-op. `appleConfigured: true` in the
+   deletion log confirms the credentials load in the running function.
+   <br>What no test here can reach is Apple's own answer. Every account the live suite makes is
+   anonymous, so it has no authorization code and the log correctly says `no authorization code`;
+   the token exchange and `/auth/revoke` have therefore still never executed. The check is:
+   delete an Apple-linked account in-app, then **Settings ▸ your name ▸ Sign-In & Security ▸ Sign
+   in with Apple** — the app should be gone from that list, and the log should say
+   `appleRevoked: true`.
+   <br>**Two deployment traps, both learned here.** Never `firebase deploy --only functions` for
+   the whole codebase: it failed all fourteen updates with `Failed to make request to
+   cloudfunctions.googleapis.com` — transport, not rejection — while still *creating* the new
+   function, so the state read as "nothing deployed" and was really "one of fourteen". Batches of
+   three or four succeed first time. And a secret is pinned at deploy time, so setting one prints
+   `1 functions are using stale version` and changes nothing until that function is redeployed.
 
 1. The sixteen products in the **Play Console**, and the **three heart containers in App
    Store Connect** (the other thirteen iOS products are done and verified end to end — a
@@ -2161,6 +2470,30 @@ Each of these was learned two or three times in different files. They are not in
 they are the things that go wrong in Presentation and are invisible in a compile, a validator
 and a screenshot of the source.
 
+- **A screen built in the same frame as the canvas can trust neither its rect nor its scale,
+  and the launch screen is the only one that is.** `CanvasScaler` applies its scale factor from
+  `Canvas.willRenderCanvases`, which runs *after* every `Update` in the frame, and `Boot` builds
+  the canvas and raises `SplashScreen` inside that same frame. Two separate things go wrong and
+  the second is the one that survives fixing the first. **The rect lies**: `Content.rect` reports
+  raw device pixels for a frame — 1440x3120 on a QHD phone rather than 1080x2340 — so a
+  full-bleed picture fitted to it is laid out for the wrong shape and snaps a frame later. And
+  **the scale lies**: every number this screen computes is in canvas units, so even a perfect
+  layout is *drawn* at a scale factor of 1 in the first frame and at the real one in the second,
+  which rescales the whole interface after it is on screen. Both read as the same symptom — the
+  launch arrives stretched sideways and settles — and both are invisible on a 1080-wide phone,
+  where the wrong answer and the right one coincide. That is why it survives a desk full of
+  checks and is reported from a device.
+  <br>Three fixes, and they are not alternatives. `Boot` calls `Canvas.ForceUpdateCanvases()`
+  the statement after it builds the canvas, so the scaler has applied before anything is built
+  on it. `SplashScreen.Fit` does not measure the canvas **at all** — the scaler is width-matched
+  at `Boot.RefWidth`, so the canvas is always that wide and its height is the display's aspect
+  times that width, which is a pure function of `Screen` and correct in the first frame; the same
+  division converts `Screen.safeArea`, which `SafeArea` would otherwise divide by a scale factor
+  that is not set yet. And the screen holds a **black curtain** until a frame passes in which
+  neither the layout nor `Canvas.scaleFactor` has moved (ceiling half a second), then fades it
+  over another half — which covers the Android devices that report landscape for a frame before
+  locking to portrait, and is the fade the screen needed anyway, since `Flow.Go(instant: true)`
+  gives it no iris and the thing before it is the operating system's black window.
 - **`Destroy` lands at the end of the frame.** Hide a region before destroying it, or the
   outgoing panel draws over its replacement for a frame — which, with everything entering
   from scale zero, reads as a flash.
@@ -2402,6 +2735,32 @@ and a screenshot of the source.
   carrying it: the badge's text box was half again as wide as the maroon disc, so a two-word badge
   spilled onto the plate, where lettering coloured for a gold rim was drawn on the darkest thing
   on the card and disappeared.
+  <br>`SplashCover` is the seventh and it is the one with the least else to catch it: **the
+  thing the layout must not collide with is painted into a texture**. The launch screen is now
+  the key art with the wordmark baked in — a looping clip from `StreamingAssets`, over a still
+  that is its own first frame, so the handover has nothing to blend and a device that cannot
+  decode simply keeps the picture — with a loading bar under the word. Where the lettering ends
+  is not a rect anything can measure at runtime — there is no layout to ask, no
+  compile that can fail and no validator that walks it. The canvas is width-matched at 1080
+  (`Boot.BuildCanvas`), so its *height* is whatever the device's aspect makes it, and one
+  portrait picture cannot be all of those shapes: the fit is cover, and the crop comes off the
+  **top**, because everything the screen is for is in the bottom tenth. The bar's clearance is
+  bounded from both sides — it takes the gap the design wants, is raised to clear a home
+  indicator where there is room, and is finally capped so it can never come closer than
+  `MinGap` to the lettering, because on a short canvas with a navigation bar those two wants are
+  not both satisfiable and the honest answer is to give up the inset rather than the word.
+  Anything that re-cuts or replaces the cover has to re-measure `WordFootUv` off the new art:
+  it is the one number here that a wrong value puts straight through the logo, on every device
+  at once, with nothing anywhere to say so.
+  <br>**It is also the one screen whose art has to be given back.** The splash is built at every
+  launch and returned to never, so both halves of it are freed on the way out — the `VideoPlayer`
+  is stopped before it is destroyed (a player left playing keeps a hardware decoder alive through
+  teardown on some Android drivers), and the poster is claimed into `AssetLibrary.SplashScope` and
+  released. That claim is why `AssetLibrary.Claim` exists: a screen that draws in the frame it is
+  built fetches synchronously, so the address has to belong to a scope *before* it is asked for —
+  claimed afterwards, the sprite is already in the global cache and stays there for the session.
+  It is named in `AssetManifest.SplashAssets` rather than in `GlobalAssets` for the same reason,
+  and named there at all so the audit does not call it dead weight.
 - **A row's position is a centre, so a paragraph in one must be centred too — and a slot that
   is reserved and not filled belongs to the row below it.** Both halves were reported from play
   about the same sentence, the defeat panel's "no heart was spent" line. `DefeatPanel` hands out
@@ -2474,15 +2833,34 @@ and a screenshot of the source.
   compact one is the same design rather than a second one. Scale vertical offsets by the plate's
   height and horizontal ones by its width — one factor for both is what made the picture and the
   headline overlap on the first compact card.
+- **A card that says one thing twice must ask once.** A shop cell carries a painted picture of
+  what arrives and, behind it, a fan of light in that rung's colour, and the two are one
+  statement — *this is the sixth of six*. They were briefly two roundings of one fraction in two
+  files, which is invariant 9a at the smallest scale it appears at: a shelf re-cut from six rungs
+  to five would have moved one and not the other, and the fifth picture under the sixth colour is
+  not wrong in any way a compile, a validator or a screenshot could name. `ShopLadder` is the one
+  answer, it is in Domain because it is arithmetic, and it is **whole numbers throughout** — a
+  product landing exactly halfway between two rungs must not be decided by which way a
+  single-precision multiply fell, which is the hazard *Hard-won facts* names twice already.
+  <br>The rule it replaced was that **motion singles out**, so only the featured card was lit.
+  That is right when the light means *look here* and wrong when it means *how much*: a ramp says
+  which of six a card is from the far side of the screen, where one card shouting says only that
+  somebody wants to sell it. The hierarchy is kept by **strength** rather than by presence — and
+  the featured card still has the gold seat, the gold edge and the seal, which is what lets the
+  starter bundle read as special while its picture and its colour tell the truth about its size.
 - **A `switch` inside a `MonoBehaviour` is the one place here nothing can be proved.** The
   branching decisions live in Domain and are pinned offline: `HintPrompt`, `RenameRules`,
   `AccountPromptPolicy`, `GroveUnveil`, `GroveGrowth`, `AccountGate`.
 
-### Two confirmations, and only two
+### Three confirmations, and only three
 
-`ForfeitOverlay` (a committed run being abandoned) and `ReportNameOverlay` (an act taken
-against another person that cannot be retracted). `ContinueOverlay` is not a third: it is an
-offer rather than a confirmation — it asks a question nobody has asked yet, and its default
+`ForfeitOverlay` (a committed run being abandoned), `ReportNameOverlay` (an act taken
+against another person that cannot be retracted) and `DeleteAccountOverlay` (invariant 27), which
+earns one more completely than either: there is no store to re-deliver an account, no archive to
+restore it from and no support path that can bring it back. Its second tap is armed only when
+there is a grove to lose, which is `AccountOverlay.ConfirmAdopt`'s rule — arming a button over an
+empty grove is what teaches a player to tap through it on a full one. `ContinueOverlay` is not a
+fourth: it is an offer rather than a confirmation — it asks a question nobody has asked yet, and its default
 answer is the free one. Everything else either costs nothing to
 undo or is confirmed by the store's own payment sheet — a panel of ours in front of that sheet
 is a tap for a question about to be asked properly. The one destructive prompt left is a

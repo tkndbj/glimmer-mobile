@@ -4,51 +4,60 @@ using System.Collections.Generic;
 using GlimmerGrove.AssetPipeline;
 using GlimmerGrove.Cloud;
 using GlimmerGrove.Content;
+using GlimmerGrove.Layout;
 using GlimmerGrove.Localization;
 using GlimmerGrove.Progression;
 using GlimmerGrove.Ads;
 using GlimmerGrove.Store;
 using UnityEngine;
 using UnityEngine.UI;
+using UnityEngine.Video;
 
 namespace GlimmerGrove
 {
     /// <summary>
-    /// Launch screen: one floating island, waking up.
+    /// Launch screen: the cover, and a bar under the word.
     ///
     /// <para>
-    /// The bar tracks genuine work — every sprite, clip and generated texture the game
-    /// needs is pulled into memory here, so the first tap on PLAY never stutters. What
-    /// changed is what the player is shown while it happens.
+    /// The bar tracks genuine work — every sprite, clip and generated texture the game needs is
+    /// pulled into memory here, so the first tap on PLAY never stutters.
     /// </para>
     ///
     /// <para>
-    /// <b>The progress indicator is the game's own verb.</b> A light leaves a lantern at
-    /// the near edge of the grove and walks a conduit up to the cottage door, lighting
-    /// each lantern it reaches; how far along that walk it is <em>is</em> how far along
-    /// the load is. There is no bar and no percentage, and that is the point rather than
-    /// a flourish — a launch screen is the only place a puzzle game gets to say what it
-    /// is before anybody has played it, and a percentage says nothing at all. It costs no
-    /// delivered art either: a conduit here is the same <see cref="Art.Capsule"/> pair
-    /// <c>TileView</c> draws an arm from, so it cannot drift from what a board looks like.
+    /// <b>It is the key art, moving, and that is the point rather than a shortcut.</b> This
+    /// screen used to compose itself: a generated sky, generated stars, three painted layers
+    /// bobbing on parallax, drifting mist, two companions asleep on an island and a wisp
+    /// walking a spline to a cottage door as the load ran. Every part of it was real work and
+    /// none of it was the picture the game is sold with. A launch screen is the one place a
+    /// player meets the game before playing it, and the strongest thing to put there is the
+    /// art it is sold with — the same frame that stands on the store page — rather than a
+    /// second, necessarily weaker composition of the same world. What went with it is the whole
+    /// apparatus: <c>Parallax</c>, <c>MistDrift</c>, the sleeping residents, the spline, the
+    /// flare, and the three <c>splash_*</c> layers <c>Tools/make_splash_art.py</c> used to cut.
     /// </para>
     ///
     /// <para>
-    /// <b>Nothing here waits on the load to exist.</b> The sky is a generated gradient, the
-    /// stars are generated discs, the conduit and every lantern are generated shapes. The
-    /// three painted layers (<c>splash_isle</c>, <c>splash_far</c>, <c>splash_mist</c>) are
-    /// pulled synchronously in <see cref="Build"/>, exactly as the old backdrop was — see
-    /// <c>Tools/make_splash_art.py</c>, which composes the island out of the shipped grove
-    /// catalog so the first thing a player sees is a picture of the thing they are being
-    /// sold, drawn from the same art, at the same angle, by the same numbers.
+    /// <b>The still and the clip are the same frame</b>, so there is no handover to hide and no
+    /// state to get right — see <see cref="BuildVideo"/>. Everything below is placed against the
+    /// still, which means the bar's arithmetic is checkable offline against a PNG rather than
+    /// against a decoder.
     /// </para>
     ///
     /// <para>
-    /// <b>Dawn is a tint, not a second set of art.</b> The island bakes lit; the screen
-    /// walks its colour up from a cold night value to white while the two sky gradients
-    /// cross-fade under it. That is one texture instead of two to keep in step, and it is
-    /// the only version in which the light arrives <em>continuously</em> rather than in
-    /// whatever steps a pair of bakes happened to be cut at.
+    /// <b>The wordmark is in the texture, so the bar's place is arithmetic.</b> There is no
+    /// rect to measure and nothing at runtime that knows where the lettering ends — see
+    /// <see cref="SplashCover"/>, which owns the fit and the clearance and is tested, because a
+    /// number typed by eye against one phone is wrong on every other one and wrong invisibly.
+    /// This screen asks it every frame rather than once: iOS reports its safe area a frame or
+    /// two after a cold start, which is exactly the window this screen lives in.
+    /// </para>
+    ///
+    /// <para>
+    /// <b>Nothing the bar is made of waits on the load.</b> The trough, the fill, the sheen and
+    /// the head are generated shapes, so the screen is complete in the frame it is built even
+    /// though the picture itself is a delivered sprite — and if that sprite is somehow not
+    /// there, the night sky behind it is generated too, which is the difference between a dark
+    /// screen and a white one.
     /// </para>
     /// </summary>
     public sealed class SplashScreen : View
@@ -56,576 +65,554 @@ namespace GlimmerGrove
         public override string Track => "mus_menu";
 
         /// <summary>
-        /// How long the screen stands, and how fast the light is allowed to walk.
+        /// How long the screen stands, and how fast the bar is allowed to fill.
         ///
         /// <para>
         /// The rate is a ceiling rather than a speed: <c>_shown</c> chases the real
-        /// <c>_target</c> and can only ever be behind it, so a slow device stretches the
-        /// walk honestly while a warm Editor cannot finish it in a blink. Without the
-        /// ceiling everything below happens in under a second and is then waited out,
-        /// which is a loading screen that lies in the flattering direction.
+        /// <c>_target</c> and can only ever be behind it, so a slow device fills the bar
+        /// honestly while a warm Editor cannot finish it in a blink. Without the ceiling
+        /// everything below happens in under a second and is then waited out, which is a
+        /// loading screen that lies in the flattering direction.
         /// </para>
         /// </summary>
         const float MinimumShow = 2.5f;
-        const float LightRate = .55f;
+        const float FillRate = .55f;
         const float FinaleHold = .55f;
 
-        // ------------------------------------------------------------- the island
-        const float IsleWidth = 1100f;
-        /// <summary>
-        /// How far below centre the island hangs. Set against the wordmark rather than by
-        /// eye: the sprite's top edge is the cottage roof, and it has to clear the bottom of
-        /// the subtitle. The pair were 20 points apart at the first size that felt bold
-        /// enough, which is a collision on any phone whose font renders a shade larger.
-        /// </summary>
-        const float IsleDrop = -285f;
+        /// <summary>How long one pass of the sheen takes, and how wide it is drawn.</summary>
+        const float SheenPeriod = 1.45f, SheenWidth = 150f;
 
         /// <summary>
-        /// The route the light takes, in the island picture's own space: <c>x</c> across it
-        /// from the left, <c>y</c> down it from the top, both 0..1.
+        /// How long the picture takes to come up out of black.
         ///
         /// <para>
-        /// Fractions of the sprite rather than reference-canvas points, so re-running the art
-        /// tool at a different size moves the route with the island instead of leaving it
-        /// hanging in the sky. These are <em>anchors</em>, not stops: the light actually
-        /// travels a Catmull-Rom spline through them, because a light that turns corners
-        /// reads as a diagram and a light that curves reads as a light. It enters at the near
-        /// right of the grass, runs round the front past the flowers and the pond, and climbs
-        /// the path to the cottage door.
+        /// <b>Because this screen is not entered, it <em>begins</em>.</b> Every other screen in
+        /// the game arrives through the iris, which is what makes a change of place read as a
+        /// change of place rather than as a jump cut; the launch screen is raised by
+        /// <c>Flow.Go(instant: true)</c> from <c>Boot</c>, with nothing before it but the
+        /// operating system's own black window, so without this it is a hard cut from black to
+        /// a full-brightness illustration in one frame. Reported, correctly, as too sudden.
+        /// </para>
+        /// <para>
+        /// It is a curtain lifted rather than the content faded, so it is black specifically —
+        /// the colour that was already there — instead of "whatever happens to be behind the
+        /// canvas". Half a second: long enough to read as a fade and short enough that it is
+        /// finished well inside <see cref="MinimumShow"/>, so it costs the launch nothing.
         /// </para>
         /// </summary>
-        static readonly Vector2[] Route =
-        {
-            new Vector2(.880f, .600f),     // the near right corner of the grass
-            new Vector2(.720f, .642f),
-            new Vector2(.560f, .652f),
-            new Vector2(.400f, .600f),     // the flowers
-            new Vector2(.270f, .520f),     // the lily pads
-            new Vector2(.170f, .432f),     // the foot of the rune stone
-            new Vector2(.300f, .352f),     // the stone path
-            new Vector2(.392f, .296f),     // the cottage door
-        };
+        const float FadeIn = .55f;
 
         /// <summary>
-        /// Where the two residents stand, same space. Off the route rather than on it, so the
-        /// light passes <em>by</em> them and the trail never draws across a face.
+        /// Longest the curtain waits for the layout to settle before it lifts anyway.
+        ///
+        /// <para>
+        /// The curtain is not only a fade, it is also the cover over the one or two frames in
+        /// which the canvas has not finished telling anybody how big it is — a scale factor
+        /// that arrives at the end of the first frame, an orientation some Android devices
+        /// report as landscape before they lock to portrait. Lifting on the first frame shows
+        /// that settling; lifting when nothing has moved since the last frame shows a picture
+        /// that is already in its final place. This is the ceiling on that wait, because a
+        /// device that keeps changing its mind must not leave a black screen up for ever.
+        /// </para>
         /// </summary>
-        static readonly Vector2[] Perches =
-        {
-            new Vector2(.385f, .585f),
-            new Vector2(.700f, .545f),
-        };
+        const float CurtainHold = .50f;
 
-        /// <summary>The cottage front, which lights last and stays lit.</summary>
-        static readonly Vector2 Hearth = new Vector2(.455f, .272f);
+        static readonly Color Trough = new Color(.02f, .05f, .09f, .72f);
+        static readonly Color Rim = new Color(1f, .78f, .36f, .40f);
+        static readonly Color FillLow = Pal.Hex("#FFA930");
+        static readonly Color FillHigh = Pal.Hex("#FFE27A");
 
-        const int PerSegment = 10;         // spline samples between one anchor and the next
+        /// <summary>
+        /// The picture's own top row, and a shade of it for the sky band to darken into.
+        ///
+        /// <para>
+        /// <c>#30294D</c> is measured off the frame rather than picked: the top row averages
+        /// exactly that. It is only ever seen on a canvas so tall that the capped zoom leaves a
+        /// band of sky above the picture — which, with this frame's narrower wordmark, is past
+        /// anything a phone is — and behind the picture on a device that cannot decode at all.
+        /// </para>
+        /// </summary>
+        static readonly Color SkyJoin = Pal.Hex("#30294D");
+        static readonly Color SkyMid = Pal.Hex("#2A2444");
+        static readonly Color SkyTop = Pal.Hex("#231E3A");
 
-        static readonly Color Asleep = new Color(.42f, .53f, .68f, .48f);
-        static readonly Color Awake = new Color(1f, .84f, .46f, 1f);
+        Image _cover, _mirror, _veil, _fill, _head, _sheen, _halo;
+        RectTransform _coverRT, _mirrorRT, _veilRT, _barRT, _fillRT, _headRT, _sheenRT, _haloRT;
 
-        static readonly Color NightLow = Pal.Hex("#2B3660");
-        static readonly Color NightMid = Pal.Hex("#1B2247");
-        static readonly Color NightTop = Pal.Hex("#0C1130");
-        static readonly Color DawnLow = Pal.Hex("#FFC98A");
-        static readonly Color DawnMid = Pal.Hex("#9A8AC0");
-        static readonly Color DawnTop = Pal.Hex("#3E7BC4");
+        Image _curtain;
+        VideoPlayer _video;
+        RawImage _screen;
+        RectTransform _screenRT;
 
-        readonly List<Text> _letters = new List<Text>();
-        readonly List<Color> _letterTint = new List<Color>();
-        readonly List<Image> _dust = new List<Image>();
-        readonly List<float> _dustSeed = new List<float>();
-        readonly List<Vector2> _path = new List<Vector2>();
-        readonly List<Image> _bloom = new List<Image>();
-        readonly List<Sleeper> _sleepers = new List<Sleeper>();
-
-        Image _dawn, _sun, _isle, _isleBloom, _hearth;
-        Image _wisp, _wispHalo;
-        RectTransform _sunRT, _wire;
-        CanvasGroup _stars;
-        Text _flavour;
-        float _shown, _target, _isleHeight;
-        int _litBlooms;
+        float _shown, _target;
+        float _fitW, _fitH, _fitInset = -1f;
+        float _builtAt, _lastScale = -1f;
+        bool _fitApplied, _fitSettled, _lifting;
         bool _flared;
-
-        static readonly string[] Flavour =
-        {
-            "waking the fireflies",
-            "polishing the heart-crystals",
-            "teaching critters to snore",
-            "untangling the conduits",
-            "brewing the morning dew",
-            "letting the light in",
-        };
 
         protected override void Build()
         {
-            BuildSky();
-            BuildIsland();
-            BuildLogo();
-            BuildCaption();
+            BuildCover();
+            BuildBar();
+            Fit();
+            BuildCurtain();
             StartCoroutine(Run());
         }
 
-        // ------------------------------------------------------------------- sky
-        void BuildSky()
+        // ----------------------------------------------------------------- cover
+        /// <summary>
+        /// The key art, full-bleed. Sized and placed by <see cref="Fit"/>, because the shape it
+        /// has to cover is not known until the canvas has one.
+        /// </summary>
+        void BuildCover()
         {
-            UIKit.Img("Night", Content, Art.Gradient(NightLow, NightMid, NightTop, 256), Color.white);
-            _dawn = UIKit.Img("Dawn", Content, Art.Gradient(DawnLow, DawnMid, DawnTop, 256),
-                              new Color(1, 1, 1, 0f));
+            // Under everything: the picture's own sky, continued. On most phones it is entirely
+            // covered and never seen; on the tallest ones it is the band above the picture that
+            // the capped zoom leaves open (see SplashCover.WordMargin), and if the sprite is
+            // missing altogether it is the whole screen — which is the difference between a
+            // launch that looks dim for a moment and one that flashes white.
+            UIKit.Img("Sky", Content, Art.Gradient(SkyJoin, SkyMid, SkyTop, 256), Color.white);
 
-            BuildStars();
+            // Claimed before it is fetched, so the synchronous load lands in this screen's own
+            // scope rather than in the global cache — see AssetLibrary.Claim. Without it a
+            // full-screen texture stays resident for the life of the process, for a screen
+            // nobody sees twice.
+            AssetLibrary.Claim(AssetLibrary.SplashScope, AssetManifest.SplashBackdrop);
 
-            // The sun itself, behind everything, climbing out of the mist as the load runs.
-            // A glow rather than a disc: a hard edge would have to be positioned exactly and
-            // would read as a moon, and nothing here wants a second celestial body.
-            _sun = UIKit.Img("Sun", Content, Art.Glow(128, 1.5f), new Color(1f, .78f, .42f, 0f),
-                             new Vector2(1500f, 1500f), new Vector2(.5f, .5f), new Vector2(120f, -700f));
-            _sunRT = (RectTransform)_sun.transform;
+            var sprite = AssetLibrary.Sprite(AssetManifest.SplashBackdrop);
+            if (sprite == null) return;
 
-            var far = Art.S("Bg/splash_far");
-            if (far != null)
-            {
-                var host = UIKit.Node("FarHost", Content);
-                var bob = UIKit.Box("FarBob", host, new Vector2(1160f, 1160f * far.rect.height / far.rect.width),
-                                    new Vector2(.5f, .5f), new Vector2(0f, 330f));
-                UIKit.Img("Far", bob, far, new Color(1, 1, 1, .92f));
-                Parallax.Attach(host, 9f);
-                Tween.Bob(bob, 9f, 7.4f);
-            }
+            // The picture again, upside down, standing on its own top edge — so the sky above
+            // the band's join is the picture's own sky continued, exactly, rather than a colour
+            // chosen to look like it. Row nought meets row nought, so there is no seam to get
+            // right. Only ever visible on a canvas the capped zoom left a band on; it sits off
+            // the top of the screen on everything else, and is disabled there.
+            _mirror = UIKit.Img("Mirror", Content, sprite, Color.white,
+                                new Vector2(1080f, 1920f), new Vector2(.5f, .5f), Vector2.zero);
+            _mirrorRT = (RectTransform)_mirror.transform;
+            _mirrorRT.localScale = new Vector3(1f, -1f, 1f);
 
-            Mist("MistBack", 520f, -470f, .78f, 24f, 1.18f);
-        }
+            // …and a wash over it that comes up from nothing at the join to solid sky at the
+            // top, because a mirror is only sky for the first hundred units: above that it
+            // starts handing back upside-down mace. The middle stop is high (.87 rather than
+            // .5) on purpose — a straight ramp is still 20% transparent a third of the way up,
+            // which is exactly where the ghost is.
+            _veil = UIKit.Img("Veil", Content, Art.Gradient(Pal.A(SkyJoin, 0f), Pal.A(SkyJoin, .87f),
+                                                            SkyJoin, 128),
+                              Color.white, new Vector2(1080f, 0f), new Vector2(.5f, 1f), Vector2.zero);
+            _veilRT = (RectTransform)_veil.transform;
 
-        void BuildStars()
-        {
-            var host = UIKit.Node("Stars", Content);
-            _stars = host.gameObject.AddComponent<CanvasGroup>();
-            var rnd = new System.Random(41);
-            for (int i = 0; i < 54; i++)
-            {
-                float size = 4f + (float)rnd.NextDouble() * 8f;
-                var img = UIKit.Img("s" + i, host, Art.Glow(64, 1.7f),
-                                    new Color(1f, .97f, .88f, .3f + (float)rnd.NextDouble() * .55f),
-                                    Vector2.one * size, new Vector2(.5f, .5f),
-                                    new Vector2((float)rnd.NextDouble() * 1060f - 530f,
-                                                180f + (float)rnd.NextDouble() * 780f));
-                Tween.Breathe(img.transform, .35f, 1.4f + (float)rnd.NextDouble() * 2.6f,
-                              (float)rnd.NextDouble() * 6f);
-            }
+            _cover = UIKit.Img("Cover", Content, sprite, Color.white,
+                               new Vector2(1080f, 1920f), new Vector2(.5f, .5f), Vector2.zero);
+            _coverRT = (RectTransform)_cover.transform;
+
+            BuildVideo();
         }
 
         /// <summary>
-        /// A band of cloud, scrolled as two copies of one tileable strip.
+        /// The moving version of the same picture, laid over the still one.
         ///
         /// <para>
-        /// The strip is seamless left to right (see the art tool), so a second copy laid
-        /// exactly one width along and moved with it makes an endless bank out of one
-        /// texture. Two bands are drawn — one behind the island and one in front of its
-        /// root — which is what gives a flat picture its depth for the price of one sprite.
+        /// <b>The still is not a placeholder, it is the first frame.</b> So the screen is
+        /// complete and correct before the decoder has done anything, the handover has nothing
+        /// to blend because both sides are the same image, and a device that cannot play the
+        /// clip at all simply keeps the picture — which is the only acceptable failure for a
+        /// launch screen, because there is nothing here for a player to retry.
+        /// </para>
+        /// <para>
+        /// It plays from <c>StreamingAssets</c> by URL rather than as a <c>VideoClip</c>
+        /// through <c>AssetLibrary</c>: the asset pipeline addresses sprites, clips and fonts,
+        /// and a fourth kind would be a change to the manifest, the audit and the loader for
+        /// one file that must be resident before any of them have run. It is
+        /// <see cref="VideoRenderMode.APIOnly"/>, so the player owns its own texture and this
+        /// screen never allocates a <c>RenderTexture</c> the size of the display.
+        /// </para>
+        /// <para>
+        /// It <b>loops</b>, and that is what lets the launch screen stay as short as it was.
+        /// The clip is four seconds and the screen is gone in about three on a warm device;
+        /// padding the wait out to fit the video would be a loading screen lying in the
+        /// flattering direction (see <see cref="MinimumShow"/>). The camera is locked and there
+        /// is no beat to miss, so a cut anywhere reads the same — and the iris covers it.
         /// </para>
         /// </summary>
-        void Mist(string name, float height, float y, float alpha, float speed, float scale)
+        void BuildVideo()
         {
-            var strip = Art.S("Bg/splash_mist");
-            if (strip == null) return;
+            _screenRT = UIKit.Box("Screen", Content, new Vector2(1080f, 1920f),
+                                  new Vector2(.5f, .5f), Vector2.zero);
+            _screen = _screenRT.gameObject.AddComponent<RawImage>();
+            _screen.raycastTarget = false;
+            _screen.enabled = false;                       // until there is a frame to show
 
-            var host = UIKit.Box(name, Content, new Vector2(1080f, height), new Vector2(.5f, .5f),
-                                 new Vector2(0f, y));
-            float w = 1080f * scale;
-            var a = UIKit.Img("a", host, strip, new Color(1, 1, 1, alpha),
-                              new Vector2(w, height), new Vector2(.5f, .5f), Vector2.zero);
-            var b = UIKit.Img("b", host, strip, new Color(1, 1, 1, alpha),
-                              new Vector2(w, height), new Vector2(.5f, .5f), new Vector2(w, 0f));
-            MistDrift.Attach((RectTransform)a.transform, (RectTransform)b.transform, w, speed);
+            _video = _screen.gameObject.AddComponent<VideoPlayer>();
+            _video.source = VideoSource.Url;
+            _video.url = Application.streamingAssetsPath + "/" + AssetManifest.SplashVideoFile;
+            _video.renderMode = VideoRenderMode.APIOnly;
+            _video.audioOutputMode = VideoAudioOutputMode.None;
+            _video.playOnAwake = false;
+            _video.isLooping = true;
+            _video.waitForFirstFrame = true;
+            _video.skipOnDrop = true;
+
+            _video.errorReceived += OnVideoError;
+            _video.prepareCompleted += OnVideoPrepared;
+            _video.Prepare();
         }
 
-        // ---------------------------------------------------------------- island
-        void BuildIsland()
+        void OnVideoPrepared(VideoPlayer player) => player.Play();
+
+        // A failure is a line in the log and nothing else. The picture underneath is the frame
+        // the clip would have opened on, so there is nothing to fall back to and nothing for a
+        // player to retry.
+        void OnVideoError(VideoPlayer player, string message)
         {
-            var sprite = Art.S("Bg/splash_isle");
-            _isleHeight = sprite != null ? IsleWidth * sprite.rect.height / sprite.rect.width : 1150f;
-
-            var host = UIKit.Node("IsleHost", Content);
-            var bob = UIKit.Box("IsleBob", host, new Vector2(IsleWidth, _isleHeight),
-                                new Vector2(.5f, .5f), new Vector2(0f, IsleDrop));
-
-            // A warm bloom behind the island, so the dawn reads as coming from *behind* it
-            // rather than as the picture simply getting brighter.
-            _isleBloom = UIKit.Img("Bloom", bob, Art.Glow(128, 2.1f), new Color(1f, .80f, .44f, 0f),
-                                   new Vector2(IsleWidth * 1.45f, _isleHeight * 1.15f),
-                                   new Vector2(.5f, .5f), new Vector2(0f, 90f));
-
-            if (sprite != null)
-                _isle = UIKit.Img("Isle", bob, sprite, Asleep,
-                                  new Vector2(IsleWidth, _isleHeight), new Vector2(.5f, .5f), Vector2.zero);
-
-            _wire = UIKit.Box("Wire", bob, new Vector2(IsleWidth, _isleHeight),
-                              new Vector2(.5f, .5f), Vector2.zero);
-            BuildLight();
-
-            Parallax.Attach(host, 24f);
-            Tween.Bob(bob, 13f, 5.2f);
-
-            Fireflies.Spawn(Content, 30, new Color(1f, .94f, .70f), 5f, 20f);
-            Mist("MistFront", 460f, -830f, .95f, -32f, 1.30f);
-
-            var vig = UIKit.Img("Vignette", Content, Art.Vignette(256), new Color(.02f, .05f, .12f, .42f));
-            vig.type = Image.Type.Simple;
+            Debug.LogWarning("[Splash] video unavailable: " + message);
+            ReleaseVideo();
         }
-
-        Vector2 OnIsle(Vector2 uv)
-            => new Vector2((uv.x - .5f) * IsleWidth, (.5f - uv.y) * _isleHeight);
 
         /// <summary>
-        /// The route as a curve.
+        /// Gives back the decoder, its texture and this screen's picture.
         ///
         /// <para>
-        /// Catmull-Rom through the anchors, sampled evenly, with the ends doubled so the
-        /// first and last segments bend the same way as the rest. The first version of this
-        /// screen joined the anchors with straight capsules and hard discs, and it read as a
-        /// network diagram pasted over a painting rather than as light in a grove — which is
-        /// the whole difference between the two, and it is curvature and softness rather than
-        /// colour.
+        /// <b>Everything here is native and none of it is collected.</b> A <c>VideoPlayer</c>
+        /// holds a platform decoder and a texture it allocated itself; both are released when
+        /// the component is destroyed, but only if it is not still running — a player left
+        /// playing keeps the decoder alive through the teardown on some Android drivers, which
+        /// is a hardware decoder and a few megabytes held for the rest of the session, on the
+        /// one screen guaranteed to be built at every launch. So it is stopped first, its
+        /// handlers dropped so nothing fires into a half-destroyed screen, and the
+        /// <c>RawImage</c>'s reference to its texture cleared before the texture goes.
+        /// </para>
+        /// <para>
+        /// Idempotent, because it is reached two ways — an error while preparing, and the
+        /// screen being swapped out — and the second follows the first whenever both happen.
         /// </para>
         /// </summary>
-        void BuildPath()
+        void ReleaseVideo()
         {
-            for (int i = 0; i < Route.Length - 1; i++)
+            if (_screen != null)
             {
-                var p0 = Route[Mathf.Max(0, i - 1)];
-                var p1 = Route[i];
-                var p2 = Route[i + 1];
-                var p3 = Route[Mathf.Min(Route.Length - 1, i + 2)];
-
-                for (int k = 0; k < PerSegment; k++)
-                    _path.Add(OnIsle(CatmullRom(p0, p1, p2, p3, k / (float)PerSegment)));
+                _screen.texture = null;
+                _screen.enabled = false;
             }
-            _path.Add(OnIsle(Route[Route.Length - 1]));
-        }
 
-        static Vector2 CatmullRom(Vector2 a, Vector2 b, Vector2 c, Vector2 d, float t)
-        {
-            float t2 = t * t, t3 = t2 * t;
-            return .5f * ((2f * b)
-                          + (-a + c) * t
-                          + (2f * a - 5f * b + 4f * c - d) * t2
-                          + (-a + 3f * b - 3f * c + d) * t3);
+            if (_video == null) return;
+
+            _video.errorReceived -= OnVideoError;
+            _video.prepareCompleted -= OnVideoPrepared;
+
+            if (_video.isPlaying) _video.Stop();
+            _video.targetTexture = null;
+
+            Destroy(_video);
+            _video = null;
         }
 
         /// <summary>
-        /// The light itself: a dusting of small glows along the curve that lights behind the
-        /// wisp, a soft bloom wherever the route touches something, and the wisp on the front
-        /// of it. Every part of it is a generated shape, so none of it waits on the load.
+        /// The launch screen is the one screen in the game that is never returned to, so it is
+        /// also the one whose art would otherwise sit in memory for the whole session. Both
+        /// halves of it go here: the decoder, and the scope holding the picture.
         /// </summary>
-        void BuildLight()
+        void OnDestroy()
         {
-            BuildPath();
-
-            var rnd = new System.Random(19);
-            for (int i = 0; i < _path.Count; i++)
-            {
-                float size = 15f + (float)rnd.NextDouble() * 13f;
-                // Nudged off the curve, because a perfectly strung line of beads is the map
-                // marker this screen is trying not to be.
-                var jitter = new Vector2((float)rnd.NextDouble() * 14f - 7f,
-                                         (float)rnd.NextDouble() * 12f - 6f);
-                var img = UIKit.Img("d" + i, _wire, Art.Glow(64, 1.3f), Pal.A(Awake, 0f),
-                                    Vector2.one * size, new Vector2(.5f, .5f), _path[i] + jitter);
-                _dust.Add(img);
-                _dustSeed.Add((float)rnd.NextDouble() * 8f);
-            }
-
-            for (int i = 0; i < Route.Length; i++)
-            {
-                bool last = i == Route.Length - 1;
-                _bloom.Add(UIKit.Img("b" + i, _wire, Art.Glow(128, 2.1f), Pal.A(Awake, 0f),
-                                     Vector2.one * (last ? 300f : 190f), new Vector2(.5f, .5f),
-                                     OnIsle(Route[i])));
-            }
-
-            // The cottage, which is the destination and the only thing that stays properly lit.
-            _hearth = UIKit.Img("Hearth", _wire, Art.Glow(128, 1.9f), Pal.A(new Color(1f, .88f, .58f), 0f),
-                                Vector2.one * 340f, new Vector2(.5f, .5f), OnIsle(Hearth));
-
-            _wispHalo = UIKit.Img("WispHalo", _wire, Art.Glow(128, 1.7f), Pal.A(Awake, .55f),
-                                  Vector2.one * 150f, new Vector2(.5f, .5f), _path[0]);
-            _wisp = UIKit.Img("Wisp", _wire, Art.Glow(64, 1.9f), Pal.A(Pal.Radiance, .95f),
-                              Vector2.one * 46f, new Vector2(.5f, .5f), _path[0]);
+            ReleaseVideo();
+            AssetLibrary.ReleaseScope(AssetLibrary.SplashScope);
         }
 
+        // ------------------------------------------------------------------- bar
         /// <summary>
-        /// The two residents, asleep until the light gets to them.
+        /// The loading bar: a trough with a warm rim, a lozenge of light that grows in it, a
+        /// head that rides the light's edge and a sheen that sweeps the part already filled.
         ///
         /// <para>
-        /// <b>Which two is derived, never typed.</b> The starter is whoever the roster gates
-        /// at nothing (<see cref="AvatarCatalog.Starter"/>, invariant 16f) and the second is
-        /// the next companion with an animation, so a drop that changes who a new player
-        /// begins with changes the launch screen with nobody editing this file.
+        /// <b>The sheen and the head are what make a stalled bar readable.</b> Progress here is
+        /// genuine, so it moves in steps and can sit still for a second on a cold device while
+        /// a chapter body is read. A bar that only moves when the number does is
+        /// indistinguishable from a bar that has died — so the two things that never stop are
+        /// the ones a player reads as "still working", and they cost nothing because neither
+        /// touches the load.
         /// </para>
         /// <para>
-        /// Built from <see cref="Run"/> rather than <see cref="Build"/>, because the roster
-        /// arrives with the content and the content is what this screen is loading. That is
-        /// safe rather than lucky: the light has moved a fraction of the way by then, and a
-        /// sleeper the wisp has already passed simply starts awake.
+        /// The sheen lives inside a <see cref="RectMask2D"/> on the fill, so it is clipped to
+        /// however much of the bar is lit and can never be seen running along the empty part —
+        /// which is the version that reads as a barber's pole rather than as light.
         /// </para>
         /// </summary>
-        void BuildSleepers()
+        void BuildBar()
         {
-            if (_wire == null || _sleepers.Count > 0) return;
+            float h = SplashCover.BarHeight;
 
-            var picked = new List<AvatarDefinition>();
-            var starter = AvatarCatalog.Starter;
-            if (starter.HasAnimation) picked.Add(starter);
+            _barRT = UIKit.Box("Bar", Content, new Vector2(600f, h), new Vector2(.5f, .5f), Vector2.zero);
 
-            foreach (var a in AvatarCatalog.All)
+            _halo = UIKit.Img("Halo", _barRT, Art.Glow(128, 2f), new Color(1f, .80f, .38f, .22f),
+                              new Vector2(760f, 120f), new Vector2(.5f, .5f), Vector2.zero);
+            _haloRT = (RectTransform)_halo.transform;
+            Tween.Breathe(_haloRT, .06f, 3.4f);
+
+            var track = UIKit.Img("Track", _barRT, Art.Round(Mathf.RoundToInt(h * .5f)), Trough);
+            UIKit.StretchTo((RectTransform)track.transform, 0, 0, 0, 0);
+
+            var rim = UIKit.Img("Rim", _barRT, Art.RoundOutline(Mathf.RoundToInt(h * .5f), 3f), Rim);
+            UIKit.StretchTo((RectTransform)rim.transform, 0, 0, 0, 0);
+
+            // The lit part. A node rather than an Image so the mask has something to be, and so
+            // the lozenge inside it keeps its own rounded ends at every width.
+            float inner = h - 8f;
+            _fillRT = UIKit.Box("Fill", _barRT, new Vector2(0f, inner), new Vector2(0f, .5f),
+                                new Vector2(4f, 0f));
+            _fillRT.pivot = new Vector2(0f, .5f);
+            _fillRT.gameObject.AddComponent<RectMask2D>();
+
+            _fill = UIKit.Img("Lit", _fillRT, Art.Round(Mathf.RoundToInt(inner * .5f)), FillLow);
+            UIKit.StretchTo((RectTransform)_fill.transform, 0, 0, 0, 0);
+
+            _sheen = UIKit.Img("Sheen", _fillRT, Art.Glow(64, 1.35f), new Color(1f, 1f, 1f, .38f),
+                               new Vector2(SheenWidth, inner * 2.4f), new Vector2(0f, .5f), Vector2.zero);
+            _sheenRT = (RectTransform)_sheen.transform;
+
+            // Outside the mask, so it stands proud of the trough's end rather than being cut
+            // off by it — the head of the light, not part of the fill.
+            _head = UIKit.Img("Head", _barRT, Art.Glow(64, 1.7f), Pal.A(Pal.Radiance, .85f),
+                              new Vector2(56f, 56f), new Vector2(0f, .5f), Vector2.zero);
+            _headRT = (RectTransform)_head.transform;
+        }
+
+        /// <summary>
+        /// The black the app launches on, lifted off the picture. Built last so it is over
+        /// everything — the fade is of the whole screen arriving, bar included, not of the
+        /// artwork alone.
+        /// </summary>
+        void BuildCurtain()
+        {
+            _curtain = UIKit.Img("Curtain", Content, Art.Pixel, Color.black);
+            _curtain.raycastTarget = false;
+            _builtAt = Time.unscaledTime;
+        }
+
+        /// <summary>
+        /// Lifts the curtain the first frame in which nothing has moved since the last one.
+        ///
+        /// <para>
+        /// <b>The canvas's own scale is watched as well as the layout, and it is the half that
+        /// matters.</b> Everything this screen positions is in canvas units, so a scale factor
+        /// that arrives late does not change a single number here — it rescales what has
+        /// already been drawn, which is the whole interface arriving oversized and settling.
+        /// `Boot` now forces the scaler to apply before anything is built, so this should never
+        /// fire; it is here because "should never" is not a thing to hand a launch screen, and
+        /// because the same guard covers the Android devices that report landscape for a frame
+        /// before locking to portrait.
+        /// </para>
+        /// </summary>
+        void HoldCurtainUntilNothingMoves()
+        {
+            float scale = Flow.Canvas != null ? Flow.Canvas.rootCanvas.scaleFactor : 1f;
+            bool steady = _fitSettled && Mathf.Approximately(scale, _lastScale);
+            _lastScale = scale;
+
+            if (steady || Time.unscaledTime - _builtAt >= CurtainHold) LiftCurtain();
+        }
+
+        /// <summary>Starts the fade, once — see <see cref="CurtainHold"/> for when.</summary>
+        void LiftCurtain()
+        {
+            _lifting = true;
+            if (_curtain == null) return;
+
+            Tween.Run(FadeIn, Ease.InOutSine,
+                      t => { if (_curtain) _curtain.color = new Color(0f, 0f, 0f, 1f - t); }, _curtain)
+                 .OnDone(() => { if (_curtain) _curtain.enabled = false; });
+        }
+
+        // ------------------------------------------------------------------- fit
+        /// <summary>
+        /// Puts the picture and the bar where <see cref="SplashCover"/> says, and re-applies
+        /// itself whenever the canvas or the system's insets change.
+        ///
+        /// <para>
+        /// Re-applied rather than measured once for <c>SafeAreaFitter</c>'s reason: iOS reports
+        /// its safe area a frame or two after a cold start, and this screen's whole life is a
+        /// couple of seconds beginning at that moment. Measured once, the bar would sit in the
+        /// home indicator on exactly the launch somebody is watching. The check is three float
+        /// comparisons a frame.
+        /// </para>
+        /// </summary>
+        void Fit()
+        {
+            if (Content == null) return;
+
+            // ------------------------------------------------------------------------------
+            // **Not measured from the canvas, and that is the whole of this method.**
+            //
+            // Every rect under a `Canvas` is one frame behind: `CanvasScaler` applies its scale
+            // factor on `Canvas.willRenderCanvases`, which runs after every `Update` in the
+            // frame, and this screen is built inside the same frame the canvas is *created* in
+            // (see `Boot.Run`). So the first thing `Content.rect` ever reports is not the
+            // canvas the player is about to see — it is raw device pixels, or the rect's own
+            // default — and a full-bleed picture fitted to it is laid out for the wrong shape
+            // and then snaps to the right one a frame later. That snap is the launch reading as
+            // a lurch: the picture arrives stretched sideways and settles. It is invisible on a
+            // 1080-wide phone, where the wrong answer and the right one happen to coincide,
+            // which is exactly why it survives a desk full of checks.
+            //
+            // There is nothing to measure. The scaler is width-matched at `Boot.RefWidth`
+            // (`Boot.BuildCanvas`), so the canvas is *always* that wide and its height is the
+            // display's aspect times that width — a pure function of `Screen`, correct in the
+            // first frame and in every frame after it. The same division converts the safe
+            // area, which `SafeArea` would otherwise divide by a scale factor that has not been
+            // set yet. The app is portrait-locked (`defaultScreenOrientation: 0`), so this
+            // answer does not change during a launch, and the picture is placed once.
+            // ------------------------------------------------------------------------------
+            if (Screen.width <= 0 || Screen.height <= 0) return;
+
+            float units = Boot.RefWidth / (float)Screen.width;
+            float w = Boot.RefWidth, h = Screen.height * units;
+            float inset = Mathf.Max(0f, Screen.safeArea.yMin) * units;
+
+            if (Mathf.Approximately(w, _fitW) && Mathf.Approximately(h, _fitH)
+                && Mathf.Approximately(inset, _fitInset))
             {
-                if (picked.Count >= Perches.Length) break;
-                if (!a.HasAnimation || a.Id == starter.Id) continue;
-                picked.Add(a);
+                // A whole frame in which nothing moved: the canvas has finished making up its
+                // mind, and the picture is where it is going to stay.
+                if (_fitApplied) _fitSettled = true;
+                return;
             }
 
-            for (int i = 0; i < picked.Count && i < Perches.Length; i++)
+            _fitW = w; _fitH = h; _fitInset = inset;
+            _fitApplied = true;
+            _fitSettled = false;
+
+            var plan = SplashCover.Fit(w, h, inset);
+            if (plan.Height <= 0f) return;
+
+            if (_coverRT != null)
             {
-                var frames = Art.Frames("Critters/" + picked[i].Animated);
-                if (frames == null || frames.Length == 0) continue;
-
-                float w = IsleWidth * .150f;
-                float h = w * frames[0].rect.height / frames[0].rect.width;
-                var foot = OnIsle(Perches[i]);
-
-                UIKit.Img("Shade" + i, _wire, Art.Glow(64, 1.2f), new Color(.05f, .10f, .07f, .30f),
-                          new Vector2(w * .74f, w * .30f), new Vector2(.5f, .5f),
-                          foot + new Vector2(0f, -h * .04f));
-
-                var img = UIKit.Img("Sleeper" + i, _wire, frames[0], Asleep,
-                                    new Vector2(w, h), new Vector2(.5f, .5f),
-                                    foot + new Vector2(0f, h * .42f));
-                Flipbook.Attach(img, frames, 12f);
-                img.transform.localScale = Vector3.one * .86f;
-
-                _sleepers.Add(new Sleeper { Img = img, At = foot, Wake = NearestOnPath(foot) });
+                _coverRT.sizeDelta = new Vector2(plan.Width, plan.Height);
+                _coverRT.anchoredPosition = new Vector2(0f, plan.PictureY);
             }
 
-            // Drawn under the wisp and its dust, so nothing ever crosses a face.
-            foreach (var s in _sleepers) s.Img.transform.SetSiblingIndex(0);
-        }
-
-        /// <summary>How far along the path (0..1) the wisp is when it passes a point.</summary>
-        float NearestOnPath(Vector2 at)
-        {
-            int best = 0;
-            float bestD = float.MaxValue;
-            for (int i = 0; i < _path.Count; i++)
+            // Exactly the picture's rect, because it is the picture — same frame, same aspect,
+            // so one plan places both and they can never drift apart by a unit.
+            if (_screenRT != null)
             {
-                float d = (_path[i] - at).sqrMagnitude;
-                if (d < bestD) { bestD = d; best = i; }
+                _screenRT.sizeDelta = new Vector2(plan.Width, plan.Height);
+                _screenRT.anchoredPosition = new Vector2(0f, plan.PictureY);
             }
-            return _path.Count < 2 ? 1f : best / (float)(_path.Count - 1);
-        }
 
-        sealed class Sleeper
-        {
-            public Image Img;
-            public Vector2 At;
-            public float Wake;
-            public bool Awake;
-        }
+            bool banded = plan.SkyHeight > .5f;
 
-        // ------------------------------------------------------------------ logo
-        void BuildLogo()
-        {
-            var host = UIKit.Box("Logo", Content, new Vector2(1000f, 460f), new Vector2(.5f, .5f),
-                                 new Vector2(0f, 640f));
-            var bloom = UIKit.Img("Bloom", host, Art.Glow(128, 1.6f), new Color(1f, .84f, .42f, .20f),
-                                  new Vector2(1120f, 640f), new Vector2(.5f, .5f), new Vector2(0f, 20f));
-            Tween.Breathe(bloom.transform, .07f, 4.2f);
-
-            Word(host, "GLIMMER", 140, Pal.Gold, new Vector2(0f, 66f));
-            Word(host, "GROVE", 96, Pal.Cream, new Vector2(0f, -62f));
-
-            UIKit.Titled("Sub", host, "a puzzle of light", 34, new Color(1f, .95f, .82f, .62f),
-                         TextAnchor.MiddleCenter, new Vector2(900f, 50f), new Vector2(.5f, .5f),
-                         new Vector2(0f, -152f), 3f, 3f);
-        }
-
-        void Word(Transform parent, string word, int size, Color colour, Vector2 pos)
-        {
-            var row = UIKit.Box("W_" + word, parent, new Vector2(10f, size * 1.4f), new Vector2(.5f, .5f), pos);
-            var g = row.gameObject.AddComponent<HorizontalLayoutGroup>();
-            g.childAlignment = TextAnchor.MiddleCenter;
-            g.childControlWidth = true; g.childControlHeight = true;
-            g.childForceExpandWidth = false; g.childForceExpandHeight = false;
-            g.spacing = size * .02f;
-            var fit = row.gameObject.AddComponent<ContentSizeFitter>();
-            fit.horizontalFit = ContentSizeFitter.FitMode.PreferredSize;
-            fit.verticalFit = ContentSizeFitter.FitMode.PreferredSize;
-
-            foreach (var ch in word)
+            if (_mirrorRT != null)
             {
-                var t = UIKit.Titled("L", row, ch.ToString(), size, colour, TextAnchor.MiddleCenter,
-                                     outline: 7f, shadow: 6f);
-                var csf = t.gameObject.AddComponent<ContentSizeFitter>();
-                csf.horizontalFit = ContentSizeFitter.FitMode.PreferredSize;
-                csf.verticalFit = ContentSizeFitter.FitMode.PreferredSize;
-                _letters.Add(t);
-                _letterTint.Add(colour);
+                _mirror.enabled = banded;
+                _mirrorRT.sizeDelta = new Vector2(plan.Width, plan.Height);
+                _mirrorRT.anchoredPosition = new Vector2(0f, plan.PictureY + plan.Height);
             }
-        }
 
-        void BuildCaption()
-        {
-            _flavour = UIKit.Titled("Flavour", Content, Flavour[0], 33, new Color(1f, .95f, .84f, .85f),
-                                    TextAnchor.MiddleCenter, new Vector2(900f, 48f), new Vector2(.5f, 0f),
-                                    new Vector2(0f, 168f), 3f, 4f);
+            if (_veilRT != null)
+            {
+                _veil.enabled = banded;
+                _veilRT.sizeDelta = new Vector2(w, plan.SkyHeight);
+                _veilRT.anchoredPosition = new Vector2(0f, -plan.SkyHeight * .5f);
+            }
 
-            UIKit.Titled("Credit", Content, "art & audio by CraftPix", 22, new Color(1, 1, 1, .32f),
-                         TextAnchor.MiddleCenter, new Vector2(700f, 34f), new Vector2(.5f, 0f),
-                         new Vector2(0f, 96f), 0f, 0f);
+            _barRT.sizeDelta = new Vector2(plan.BarWidth, SplashCover.BarHeight);
+            _barRT.anchoredPosition = new Vector2(plan.BarX, plan.BarY);
+            _haloRT.sizeDelta = new Vector2(plan.BarWidth + 160f, 120f);
         }
 
         // ------------------------------------------------------------- the light
         void Update()
         {
-            _shown = Mathf.MoveTowards(_shown, _target, Time.unscaledDeltaTime * LightRate);
+            Fit();
 
-            float dawn = Mathf.SmoothStep(0f, 1f, _shown);
-            if (_dawn) _dawn.color = new Color(1, 1, 1, dawn);
-            if (_stars) _stars.alpha = Mathf.Clamp01(1f - dawn * 1.25f);
+            if (!_lifting) HoldCurtainUntilNothingMoves();
 
-            if (_sun)
-            {
-                _sun.color = new Color(1f, .80f, .46f, .40f * dawn);
-                _sunRT.anchoredPosition = new Vector2(120f, Mathf.Lerp(-980f, -430f, dawn));
-            }
-            if (_isle) _isle.color = Color.Lerp(Asleep, Color.white, Mathf.SmoothStep(0f, 1f, _shown * 1.1f));
-            if (_isleBloom) _isleBloom.color = new Color(1f, .80f, .44f, .34f * dawn);
+            ShowVideoOnceItHasAFrame();
 
-            WalkLight();
-        }
-
-        /// <summary>
-        /// Moves the wisp to wherever the load has got to, lights the dust behind it, blooms
-        /// whatever it has passed and wakes whoever it has reached. Interpolated along the
-        /// curve rather than stepped between anchors, so it keeps moving even when the load
-        /// does not — which is what stops a slow launch reading as a frozen one.
-        /// </summary>
-        void WalkLight()
-        {
-            if (_path.Count < 2 || _wisp == null) return;
-
-            float span = _path.Count - 1;
-            float walk = Mathf.Clamp(_shown * span, 0f, span);
-            int seg = Mathf.Min(Mathf.FloorToInt(walk), _path.Count - 2);
-
-            var at = Vector2.Lerp(_path[seg], _path[seg + 1], walk - seg);
-            ((RectTransform)_wisp.transform).anchoredPosition = at;
-            ((RectTransform)_wispHalo.transform).anchoredPosition = at;
-
-            float breath = .78f + .22f * Mathf.Sin(Time.unscaledTime * 5.2f);
-            _wispHalo.color = Pal.A(Awake, .50f * breath);
-            _wisp.transform.localScale = Vector3.one * (.92f + .12f * breath);
-
-            // Behind the wisp the dust stays lit and twinkles; ahead of it there is nothing.
-            // The few grains right under the head burn brighter, which is the comet.
-            float t0 = Time.unscaledTime;
-            for (int i = 0; i < _dust.Count; i++)
-            {
-                var d = _dust[i];
-                if (!d) continue;
-                float behind = walk - i;
-                if (behind < 0f) { d.color = Pal.A(Awake, 0f); continue; }
-
-                float head = Mathf.Clamp01(1f - behind / 5f);
-                float twinkle = .78f + .22f * Mathf.Sin(t0 * 2.6f + _dustSeed[i]);
-                d.color = Pal.A(Awake, (.30f * Mathf.Clamp01(behind) + .45f * head) * twinkle);
-            }
-
-            for (int i = 0; i < _bloom.Count; i++)
-            {
-                float reach = Mathf.Clamp01((walk - i * PerSegment) / PerSegment);
-                bool last = i == _bloom.Count - 1;
-                if (_bloom[i]) _bloom[i].color = Pal.A(Awake, (last ? .42f : .26f) * reach);
-            }
-            if (_hearth)
-            {
-                float reach = Mathf.Clamp01((walk - (_path.Count - 1 - PerSegment)) / PerSegment);
-                _hearth.color = Pal.A(new Color(1f, .88f, .58f), .55f * reach);
-            }
-
-            float here = walk / span;
-            for (int i = 0; i < _sleepers.Count; i++)
-                if (!_sleepers[i].Awake && here >= _sleepers[i].Wake) Wake(_sleepers[i]);
-
-            while (_litBlooms < _bloom.Count &&
-                   walk >= _litBlooms * PerSegment) Touch(_litBlooms++);
+            _shown = Mathf.MoveTowards(_shown, _target, Time.unscaledDeltaTime * FillRate);
+            DrawBar();
 
             if (!_flared && _shown > .999f) { _flared = true; Flare(); }
         }
 
-        /// <summary>A grain of confetti where the light touches down. No sound: see
-        /// <see cref="Flare"/> for why the whole screen makes exactly one.</summary>
-        void Touch(int i)
-        {
-            if (i >= Route.Length) return;
-            Burst.Sparks(_wire, OnIsle(Route[i]), Awake, 5, 90f, 15f, .5f);
-        }
-
         /// <summary>
-        /// A critter waking, which is the same beat the game itself is made of: the colour
-        /// comes back, it stands up, and the light it was waiting for scatters.
-        /// </summary>
-        void Wake(Sleeper s)
-        {
-            s.Awake = true;
-            if (!s.Img) return;
-
-            Tween.Tint(s.Img, Color.white, .28f);
-            Tween.Scale(s.Img.transform, 1f, .34f, Ease.OutBack);
-            Tween.Punch(s.Img.transform, .26f, .42f).Delay(.2f);
-            Burst.Sparks(_wire, s.At, Awake, 12, 170f, 22f, .62f);
-        }
-
-        /// <summary>
-        /// The moment the light reaches the door: a ring off the cottage and a gold pass
-        /// through the wordmark.
+        /// Reveals the video the frame it actually has something to draw, and not before.
         ///
         /// <para>
-        /// <b>This is the only sound the launch screen makes.</b> It used to chime once per
-        /// stop, pitched up the scale — eight of them inside two seconds, which is not a
-        /// melody, it is a machine gun, and it was the first thing anybody said about the
-        /// screen. A launch screen is two and a half seconds long and the music is already
-        /// playing; one arrival is all the punctuation it can carry.
+        /// <c>prepareCompleted</c> is not that moment — the player is ready but its texture can
+        /// still be blank for a frame, and a blank one drawn over the poster is a black flash
+        /// on the launch screen, which is the one thing the poster exists to prevent. Waiting
+        /// for a frame to have gone by is a two-term test and costs nothing.
+        /// </para>
+        /// </summary>
+        void ShowVideoOnceItHasAFrame()
+        {
+            if (_screen == null || _screen.enabled) return;
+            if (_video == null || !_video.isPlaying || _video.frame <= 0) return;
+
+            _screen.texture = _video.texture;
+            _screen.enabled = _screen.texture != null;
+        }
+
+        /// <summary>
+        /// Moves the fill to wherever the load has got to and keeps the two things that do not
+        /// depend on it — the sheen and the head's breath — running.
+        /// </summary>
+        void DrawBar()
+        {
+            if (_fillRT == null) return;
+
+            float inner = SplashCover.BarHeight - 8f;
+            float span = _barRT.sizeDelta.x - 8f;
+
+            // Never narrower than its own height while there is any progress at all: a lozenge
+            // squashed below its rounded ends reads as a scratch rather than as light.
+            float lit = _shown <= 0f ? 0f : Mathf.Max(inner, span * _shown);
+            _fillRT.sizeDelta = new Vector2(lit, inner);
+
+            // Only while the bar is still filling. A readout has one writer, and after the
+            // flare that writer is the tween: assigning here as well would stamp the ramp back
+            // over the white flash in the same frame it was raised.
+            if (!_flared) _fill.color = Color.Lerp(FillLow, FillHigh, _shown);
+
+            float breath = .80f + .20f * Mathf.Sin(Time.unscaledTime * 5.4f);
+            _headRT.anchoredPosition = new Vector2(4f + lit, 0f);
+            _headRT.sizeDelta = Vector2.one * (52f * breath);
+            _head.color = Pal.A(Pal.Radiance, (_shown <= 0f ? 0f : .75f) * breath);
+
+            // Swept in the fill's own space, so it is clipped to the lit part and starts off
+            // its left edge rather than appearing out of nothing.
+            float t = (Time.unscaledTime % SheenPeriod) / SheenPeriod;
+            _sheenRT.anchoredPosition =
+                new Vector2(Mathf.Lerp(-SheenWidth, lit, Ease.InOutSine(t)), 0f);
+            _sheen.color = new Color(1f, 1f, 1f, .34f * Mathf.Sin(t * Mathf.PI));
+        }
+
+        /// <summary>
+        /// The moment the bar fills: the light goes white for an instant and a ring leaves it.
+        ///
+        /// <para>
+        /// <b>This is the only sound the launch screen makes.</b> The screen it replaced chimed
+        /// once per stop, pitched up the scale — eight of them inside two seconds, which is not
+        /// a melody, and it was the first thing anybody said about it. A launch screen is two
+        /// and a half seconds long and the music is already playing; one arrival is all the
+        /// punctuation it can carry.
         /// </para>
         /// </summary>
         void Flare()
         {
-            var at = OnIsle(Hearth);
-            var ring = UIKit.Img("Flare", _wire, Art.Ring(128, 9f), Pal.A(Pal.Radiance, .9f),
-                                 Vector2.one * 90f, new Vector2(.5f, .5f), at);
+            var ring = UIKit.Img("Flare", _barRT, Art.Ring(128, 9f), Pal.A(Pal.Radiance, .85f),
+                                 Vector2.one * 60f, new Vector2(.5f, .5f), Vector2.zero);
             var rt = (RectTransform)ring.transform;
-            Tween.Run(.9f, Ease.OutCubic, t =>
+            Tween.Run(.8f, Ease.OutCubic, t =>
             {
                 if (!rt) return;
-                rt.sizeDelta = Vector2.one * Mathf.Lerp(90f, 820f, t);
-                ring.color = Pal.A(Pal.Radiance, .8f * (1f - t));
+                rt.sizeDelta = new Vector2(Mathf.Lerp(60f, _barRT.sizeDelta.x * 1.35f, t),
+                                           Mathf.Lerp(60f, 300f, t));
+                ring.color = Pal.A(Pal.Radiance, .7f * (1f - t));
             }, ring).OnDone(() => { if (ring) Destroy(ring.gameObject); });
 
-            for (int i = 0; i < _letters.Count; i++)
-            {
-                var t = _letters[i];
-                var home = _letterTint[i];
-                if (t == null) continue;
-                Tween.After(i * .035f, () =>
-                {
-                    if (!t) return;
-                    Tween.Tint(t, Pal.Radiance, .12f).OnDone(() =>
-                    {
-                        if (t) Tween.Tint(t, home, .4f);
-                    });
-                    Tween.Punch(t.transform, .22f, .3f);
-                }, t);
-            }
+            if (_fill != null)
+                Tween.Tint(_fill, Pal.Radiance, .12f)
+                     .OnDone(() => { if (_fill) Tween.Tint(_fill, FillHigh, .38f); });
 
             Audio.Sfx("chime2", .42f, 1.02f);
         }
@@ -640,14 +627,8 @@ namespace GlimmerGrove
         IEnumerator Run()
         {
             float started = Time.unscaledTime;
-            StartCoroutine(RotateFlavour());
 
             yield return LoadContent();                    // → .12
-
-            // The residents, now that the roster the content carries exists. See
-            // BuildSleepers for why they are not built with the rest of the screen.
-            BuildSleepers();
-
             yield return LoadGlobalAssets();               // → .82
 
             // generated shapes: real CPU work, spread over a few frames
@@ -776,65 +757,6 @@ namespace GlimmerGrove
             if (rules.IsFaulted) Debug.LogException(rules.Exception);
 
             _target = .12f;
-        }
-
-        IEnumerator RotateFlavour()
-        {
-            int i = 0;
-            while (true)
-            {
-                yield return new WaitForSecondsRealtime(1.05f);
-                if (_flavour == null) yield break;
-                i = (i + 1) % Flavour.Length;
-                var text = _flavour;
-                Tween.Tint(text, Pal.A(text.color, 0f), .2f).OnDone(() =>
-                {
-                    if (!text) return;
-                    text.text = Flavour[i];
-                    Tween.Tint(text, new Color(1f, .95f, .84f, .85f), .25f);
-                });
-            }
-        }
-    }
-
-    /// <summary>
-    /// Two copies of one tileable strip, slid sideways for ever.
-    ///
-    /// <para>
-    /// A component rather than a tween because the wrap is a fact about the pair — each
-    /// copy jumps a full width the moment it leaves the frame, and doing that from a
-    /// tween means owning both transforms' state inside a closure that outlives them.
-    /// Negative <paramref name="speed"/> scrolls the other way, which is how the near
-    /// bank and the far bank pull against each other.
-    /// </para>
-    /// </summary>
-    public sealed class MistDrift : MonoBehaviour
-    {
-        RectTransform _a, _b;
-        float _width, _speed;
-
-        public static MistDrift Attach(RectTransform a, RectTransform b, float width, float speed)
-        {
-            var d = a.gameObject.AddComponent<MistDrift>();
-            d._a = a; d._b = b; d._width = width; d._speed = speed;
-            return d;
-        }
-
-        void Update()
-        {
-            if (_a == null || _b == null) return;
-            float step = _speed * Time.unscaledDeltaTime;
-            Slide(_a, step);
-            Slide(_b, step);
-        }
-
-        void Slide(RectTransform rt, float step)
-        {
-            var p = rt.anchoredPosition;
-            p.x += step;
-            if (p.x <= -_width) p.x += _width * 2f;
-            else if (p.x >= _width) p.x -= _width * 2f;
-            rt.anchoredPosition = p;
         }
     }
 

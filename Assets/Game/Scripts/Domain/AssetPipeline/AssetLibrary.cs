@@ -37,6 +37,13 @@ namespace GlimmerGrove.AssetPipeline
         /// <summary>Art owned by the chapter currently being played.</summary>
         public const string ChapterScope = "chapter";
 
+        /// <summary>
+        /// The launch screen's picture. Its own scope rather than part of the global set,
+        /// because it is a full-screen texture for the one screen in the game that is shown
+        /// exactly once — see <see cref="Claim"/> for why it cannot use the ordinary path.
+        /// </summary>
+        public const string SplashScope = "splash";
+
         /// <summary>Companion portraits, held only while a screen is showing them.</summary>
         public const string CompanionScope = "companions";
 
@@ -417,6 +424,43 @@ namespace GlimmerGrove.AssetPipeline
             // longer tells the provider to free it.
             scope.Addresses.Remove(address);
             _owner.Remove(address);
+        }
+
+        /// <summary>
+        /// Puts an address into a scope <em>before</em> anything has loaded it, so that a
+        /// later synchronous <see cref="Get{T}"/> lands in that scope's cache rather than in
+        /// the global one — and is therefore freed by <see cref="ReleaseScope"/>.
+        ///
+        /// <para>
+        /// <b>This is the one case <see cref="EnsureScopeAsync"/> cannot serve.</b> A scope is
+        /// normally claimed and warmed in the same call, which is right for everything that can
+        /// wait a frame for its art. The launch screen cannot: it draws in the frame it is
+        /// built, before the loader it is about to start has run at all, so its picture is
+        /// fetched synchronously. Without this it would land in the global cache and stay
+        /// resident for the life of the process — a full-screen texture for a screen that is
+        /// shown once and never again.
+        /// </para>
+        /// <para>
+        /// The two ownership rules are <see cref="EnsureScopeAsync"/>'s, for its reasons:
+        /// something already global stays global, and an address another scope owns is left
+        /// alone. Claiming an address that is <em>already loaded</em> globally would be worse
+        /// than useless — the cached copy would be orphaned in a cache nothing reads again —
+        /// so it is refused rather than honoured.
+        /// </para>
+        /// </summary>
+        public static void Claim(string key, string address)
+        {
+            if (string.IsNullOrEmpty(key) || string.IsNullOrEmpty(address)) return;
+            if (_globalOne.ContainsKey(address) || _globalSets.ContainsKey(address)) return;
+            if (_owner.ContainsKey(address)) return;
+
+            if (!_scopes.TryGetValue(key, out var scope))
+            {
+                scope = new Scope();
+                _scopes[key] = scope;
+            }
+
+            if (scope.Addresses.Add(address)) _owner[address] = scope;
         }
 
         public static void ReleaseAllScopes()

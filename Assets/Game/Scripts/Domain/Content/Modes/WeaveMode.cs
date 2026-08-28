@@ -5,12 +5,13 @@ namespace GlimmerGrove.Content
 {
     /// <summary>
     /// Lightweave: join each crystal to the critter that wants its colour, without any two
-    /// channels crossing, threading every bead on the way.
+    /// channels crossing, threading every bead on the way and crossing no hedge.
     ///
     /// <para>
-    /// A level authors a grove size, how many pairs, how many beads, and optionally a seed. Where
-    /// any of it stands is <em>generated</em> — see <see cref="WeaveGenerator"/>, which carves the
-    /// solution first, so every board is solvable by construction rather than by hope.
+    /// A level authors a grove size, how many pairs, how many beads, how many hedges, and
+    /// optionally a seed. Where any of it stands is <em>generated</em> — see
+    /// <see cref="WeaveGenerator"/>, which grows the hedges and then carves the solution through
+    /// what is left, so every board is solvable by construction rather than by hope.
     /// </para>
     /// <para>
     /// <b>Par is the grove's own floor plus its decisions</b> — see <see cref="WeaveLayout.Par"/>.
@@ -50,6 +51,7 @@ namespace GlimmerGrove.Content
             int height = grove.height > 0 ? grove.height : 9;
             int pairs = grove.pairs > 0 ? grove.pairs : 4;
             int beads = grove.beads > 0 ? grove.beads : 0;
+            int hedges = grove.hedges > 0 ? grove.hedges : 0;
 
             if (width < 4 || width > 9 || height < 4 || height > 12)
             {
@@ -75,7 +77,19 @@ namespace GlimmerGrove.Content
                 return false;
             }
 
-            rules = new WeaveRules(width, height, pairs, beads, grove.seed);
+            // Refused rather than clamped, for the reason a bead count is: a grove quietly given
+            // fewer hedges than it authored is a rung one barrier easier than the ladder says,
+            // and nothing downstream would ever mention it.
+            if (hedges > WeaveGenerator.MostHedges(width, height))
+            {
+                problems.Add($"weave level '{id}' asks for {hedges} hedge(s) on a {width}x{height} " +
+                             $"grove; it is at most {WeaveGenerator.MostHedges(width, height)} — " +
+                             "every hedge takes a way out of the grove without taking any ground, " +
+                             "and enough of them leave a corridor with no decisions left in it");
+                return false;
+            }
+
+            rules = new WeaveRules(width, height, pairs, beads, hedges, grove.seed);
             return true;
         }
 
@@ -147,19 +161,22 @@ namespace GlimmerGrove.Content
         public override string RecordStem => "ui.rank.woven";
     }
 
-    /// <summary>A weave grove: its size, how many pairs and beads, and the deal that lays them out.</summary>
+    /// <summary>
+    /// A weave grove: its size, how many pairs, beads and hedges, and the deal that lays them out.
+    /// </summary>
     public sealed class WeaveRules : ILevelRules
     {
-        public readonly int Width, Height, PairCount, BeadCount, Seed;
+        public readonly int Width, Height, PairCount, BeadCount, HedgeCount, Seed;
 
         WeaveLayout _layout;
 
-        public WeaveRules(int width, int height, int pairs, int beads, int seed)
+        public WeaveRules(int width, int height, int pairs, int beads, int hedges, int seed)
         {
             Width = width;
             Height = height;
             PairCount = pairs;
             BeadCount = beads;
+            HedgeCount = hedges;
             Seed = seed;
         }
 
@@ -173,7 +190,8 @@ namespace GlimmerGrove.Content
         /// agree about which board they are talking about.
         /// </summary>
         public WeaveLayout LayoutFor(LevelId id)
-            => _layout ??= WeaveGenerator.Build(Width, Height, PairCount, SeedFor(id), BeadCount);
+            => _layout ??= WeaveGenerator.Build(Width, Height, PairCount, SeedFor(id), BeadCount,
+                                                HedgeCount);
 
         /// <summary>What this grove is graded against — see <c>WeaveLayout.Par</c>.</summary>
         public int Par(LevelId id) => LayoutFor(id).Par;

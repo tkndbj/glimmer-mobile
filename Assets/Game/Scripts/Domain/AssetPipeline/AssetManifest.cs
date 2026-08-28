@@ -37,6 +37,34 @@ namespace GlimmerGrove.AssetPipeline
         public static string Sfx(string key) => SfxRoot + key;
         public static string Music(string key) => MusicRoot + key;
 
+        // ---------------------------------------------------------------- splash
+        /// <summary>
+        /// The launch screen's picture, and the clip it is the first frame of.
+        ///
+        /// <para>
+        /// <b>Deliberately not in <see cref="GlobalAssets"/>.</b> That list is what the game
+        /// must hold for the whole session; this is a full-screen texture for the one screen
+        /// nobody ever returns to, so the launch screen claims it into a scope of its own and
+        /// drops it on the way out (<c>AssetLibrary.SplashScope</c>). It is named here anyway
+        /// because this is the one place that knows what the game loads — an address the
+        /// manifest does not name is one the audit calls dead weight, and one the build gate
+        /// cannot prove resolves.
+        /// </para>
+        /// <para>
+        /// The video is not an address at all. It is read from <c>StreamingAssets</c> by URL,
+        /// because it has to be playable before the asset pipeline has been started; it is
+        /// named beside its poster so the two cannot drift apart.
+        /// </para>
+        /// </summary>
+        public const string SplashBackdrop = BackdropRoot + "splash_cover";
+
+        /// <summary>The clip, relative to <c>StreamingAssets</c>. See <see cref="SplashBackdrop"/>.</summary>
+        public const string SplashVideoFile = "Video/splash.mp4";
+
+        /// <summary>What the launch screen loads, for the audit and the build gate.</summary>
+        public static List<AssetRequest> SplashAssets()
+            => new List<AssetRequest> { AssetRequest.Sprite(SplashBackdrop) };
+
         // ---------------------------------------------------------------- global
         static readonly string[] UiSprites =
         {
@@ -68,20 +96,22 @@ namespace GlimmerGrove.AssetPipeline
             // built into the bundle and preloaded at every launch.
             "Win/crown", "Win/shield", "Win/banner", "Win/window",
 
-            // The shop's containers, and the only art the whole storefront needs. Every
-            // product's picture is *composed* from these plus the game's own coin and gem
-            // — see `ShopArt` — for the reason the companion reveal is procedural: a
-            // storefront that grew a sprite per product would need an art order every time
-            // a price was retuned, and thirteen near-identical piles of coins is a texture
-            // budget spent on nothing.
+            // The storefront's two money ladders — one painted picture per rung — plus the
+            // pouch, which is only the coins tab's glyph. Every other card is still composed
+            // from art already on this list: a heart pack and a heart container out of the
+            // game's own heart and three of the potion bottles, so the shop's whole art order
+            // is these twelve. See `ShopArt` for why the ladders stopped being composed and
+            // why hearts did not.
             //
             // Global rather than a named scope, which is the same judgement `Win/*` above
-            // asked for and is deliberate here rather than lazy. Five 160px sprites is less
-            // than the potions already on this list, the shop is one tap from every screen
-            // in the game, and it is the one screen where a frame of white rectangles while
-            // a scope loads (invariant 7b) costs actual money.
-            "Shop/pouch", "Shop/chest_wood", "Shop/chest_iron", "Shop/chest_silver",
-            "Shop/chest_gold",
+            // asked for and is deliberate here rather than lazy. The shop is one tap from
+            // every screen in the game, and it is the one screen where a frame of white
+            // rectangles while a scope loads (invariant 7b) costs actual money.
+            "Shop/pouch",
+            "Shop/coins_1", "Shop/coins_2", "Shop/coins_3",
+            "Shop/coins_4", "Shop/coins_5", "Shop/coins_6",
+            "Shop/gems_1", "Shop/gems_2", "Shop/gems_3",
+            "Shop/gems_4", "Shop/gems_5", "Shop/gems_6",
         };
 
         /// <summary>Map furniture used by every chapter, unlike the strips themselves.</summary>
@@ -108,7 +138,6 @@ namespace GlimmerGrove.AssetPipeline
         static readonly string[] ScreenBackdrops =
         {
             "grove_far", "grove_near", "grove_light",
-            "splash_far", "splash_isle", "splash_mist",
             "home_sky", "home_ground", "home_deco",
             "map_sky", "map_ground", "map_deco",
             "streak_sky", "streak_ground", "streak_deco",

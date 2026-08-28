@@ -405,6 +405,14 @@ namespace GlimmerGrove.Modes
 
                     int next = Grove.Index(nx, ny);
                     if (seen[next]) continue;
+
+                    // A hedge is a wall to this walk exactly as it is to a finger. Missed here
+                    // and the bound stops being one: a pair walled away from its critter would
+                    // read as affordable, WeaveVerdict would keep the run alive on a grove that
+                    // cannot be finished, and the player would sit in front of a board that will
+                    // not end — invariant 20g's state, arrived at by arithmetic.
+                    if (!Grove.Open(at, next)) continue;
+
                     if (next != ends.Critter && !Free(pair, next)) continue;
 
                     seen[next] = true;

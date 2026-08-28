@@ -1,0 +1,142 @@
+{
+  "schemaVersion": 1,
+  "cases": [
+    {
+      "name": "one tile between two colours",
+      "why": "the inversion in one move: a tile that gathers all three bursts, and two of a colour together are worth nothing",
+      "rows": [
+        "......",
+        "..R...",
+        ".G*B..",
+        "......"
+      ],
+      "tiles": "GRB",
+      "par": 1,
+      "ways": 1,
+      "greedy": 1,
+      "proved": true,
+      "beds": 1,
+      "heartbeds": 0,
+      "room": 24,
+      "sprigs": 3
+    },
+    {
+      "name": "one tile opens four beds",
+      "why": "the ceiling the rules allow - the cell it lands on and the four beside it, and nothing can ever open six",
+      "rows": [
+        "..G..",
+        "..*..",
+        "G*.*G",
+        "..*..",
+        "..G.."
+      ],
+      "tiles": "RRRRB",
+      "par": 5,
+      "ways": 1,
+      "greedy": -1,
+      "proved": true,
+      "beds": 4,
+      "heartbeds": 0,
+      "room": 25,
+      "sprigs": 4
+    },
+    {
+      "name": "a tile already blooming is not counted again",
+      "why": "the bug the obvious implementation writes: asking whether a neighbour has all three except this colour takes away a channel it had from somewhere else",
+      "rows": [
+        ".G....",
+        "RBR...",
+        "..*...",
+        "......"
+      ],
+      "tiles": "RGB",
+      "par": 3,
+      "ways": 25,
+      "greedy": -1,
+      "proved": true,
+      "beds": 1,
+      "heartbeds": 0,
+      "room": 24,
+      "sprigs": 4
+    },
+    {
+      "name": "stone takes no tile and passes no light",
+      "why": "a bed beside stone has fewer neighbours to gather from, which is the whole of what stone does",
+      "rows": [
+        "#R....",
+        "..#G#.",
+        ".*....",
+        ".*#.#.",
+        "#.R..."
+      ],
+      "tiles": "RBRG",
+      "par": 4,
+      "ways": 2,
+      "greedy": -1,
+      "proved": true,
+      "beds": 2,
+      "heartbeds": 0,
+      "room": 24,
+      "sprigs": 3
+    },
+    {
+      "name": "a heartbed refuses every colour but its own",
+      "why": "the order of the basket becomes the puzzle: the wrong tile cannot be planted there at all, so it has to be composted past",
+      "rows": [
+        "......",
+        "..Bb..",
+        ".*###.",
+        "....R.",
+        "......"
+      ],
+      "tiles": "RBBGGR",
+      "par": 6,
+      "ways": 4,
+      "greedy": -1,
+      "proved": true,
+      "beds": 2,
+      "heartbeds": 1,
+      "room": 27,
+      "sprigs": 2
+    },
+    {
+      "name": "a bed walled off is proved unopenable",
+      "why": "a search that reported this as timed out rather than lost would ship a level nobody can finish",
+      "rows": [
+        "R.####",
+        "..####",
+        "####*#",
+        "######"
+      ],
+      "tiles": "RGB",
+      "par": 0,
+      "ways": 0,
+      "greedy": -1,
+      "proved": true,
+      "beds": 1,
+      "heartbeds": 0,
+      "room": 5,
+      "sprigs": 1
+    },
+    {
+      "name": "only a prism opens a pocket",
+      "why": "one open neighbour, so the bed and that neighbour carry two channels between them and never three",
+      "rows": [
+        "#.....",
+        "..#.#*",
+        ".#*...",
+        "..#.#.",
+        "#R.B.G"
+      ],
+      "tiles": "RGBPGR",
+      "par": 7,
+      "ways": 2,
+      "greedy": -1,
+      "proved": true,
+      "beds": 2,
+      "heartbeds": 0,
+      "room": 23,
+      "sprigs": 3
+    }
+  ]
+}

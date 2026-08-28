@@ -15,13 +15,48 @@ MonoBehaviour:
   m_GroupName: Glimmer Companions
   m_GUID: f4eb7df85616e954483c09e9f697d7dd
   m_SerializeEntries:
+  - m_GUID: 08bd93765b5343b46a16d8b54a76c753
+    m_Address: Art/Companions/Large
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 0fec594d953d4d60ae61beb585c4cfe5
     m_Address: Art/Companions/marrow
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 1190d8548b445cf4abb8108dcd2bb02d
+    m_Address: Art/Companions/Large/indigo
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 11e5174ab18821e4eb4343a95f67db7c
+    m_Address: Art/Companions/Large/tadpole
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 146d7a07943b8fd43a4547a7220fe5c4
+    m_Address: Art/Companions/Large/dewdrop
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 1a16a98460a2f02499dc01029b5ceecc
+    m_Address: Art/Companions/Large/puff
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 1b4629cf855d7b1409f4bd44e38084e9
+    m_Address: Art/Companions/Large/peep
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 2203660a18ea49e3865d7b3b9f3425f6
     m_Address: Art/Companions/bramble
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 235659161c5e31740aebc86bb815af1f
+    m_Address: Art/Companions/Large/pebble
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
@@ -50,6 +85,11 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 48cf0f99a34c7af42a1acef869e6f082
+    m_Address: Art/Companions/Large/sorrel
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 50e8c26b7dd14894ba421b5d4ae47679
     m_Address: Art/Companions/cinder
     m_ReadOnly: 0
@@ -62,6 +102,11 @@ MonoBehaviour:
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 5aeea80463a04fe7ba9c4d9f43e93d76
     m_Address: Art/Companions/tadpole
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 5bb592ce0614fab408ac4dd17d32614f
+    m_Address: Art/Companions/Large/rust
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
@@ -85,8 +130,38 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 63a6a355f828ebc43ac59e4192d3733b
+    m_Address: Art/Companions/Large/saffron
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 642c927aa9b641cca7b95737cb34d737
     m_Address: Art/Companions/coral
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 70c34023688471c47bdb77f0d7dad6b9
+    m_Address: Art/Companions/Large/boulder
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 71339208c9151b941bb4ec6b34caa8d9
+    m_Address: Art/Companions/Large/thorn
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 7775ac148626bfb4bb4c706f18319243
+    m_Address: Art/Companions/Large/olive
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 7f5bdeca2359a0747aa20f06377ffca5
+    m_Address: Art/Companions/Large/sprocket
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 84dd60dc118d307498ad58d03c2b8403
+    m_Address: Art/Companions/Large/flit
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
@@ -105,8 +180,18 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 88e6a6c71828d5b4f9fd17e64e48ad7e
+    m_Address: Art/Companions/Large/marrow
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 8a1e95fc957b49bb833fa638cc21d435
     m_Address: Art/Companions/wisp
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 8ca3320d1be499e429be04ddfd667983
+    m_Address: Art/Companions/Large/wisp
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
@@ -120,8 +205,18 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 9a130dd18a2275b4d8f9fa1c9f44d4a8
+    m_Address: Art/Companions/Large/plum
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 9d22640969914f5ba868c17ebc1eb613
     m_Address: Art/Companions/olive
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: a00cf137de7456c4fb4c1158eb97ef9e
+    m_Address: Art/Companions/Large/bramble
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
@@ -130,8 +225,23 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: a5d82b872188e62408d6028648f06f12
+    m_Address: Art/Companions/Large/monarch
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: a698cd61c442f7c469fe40789fa24808
+    m_Address: Art/Companions/Large/coral
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: a749f881ceb940968278efcedfbb1262
     m_Address: Art/Companions/pebble
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: b24a6941793299142887cfc403ad68fc
+    m_Address: Art/Companions/Large/clementine
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
@@ -140,8 +250,18 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: bb7b6a304d9c76f419e95d890b6ceabc
+    m_Address: Art/Companions/Large/shell
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: bc70633c4eb6494691a067b5432acef1
     m_Address: Art/Companions/plum
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: be744610a7470ab41a44776176d082ea
+    m_Address: Art/Companions/Large/quill
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
@@ -150,8 +270,18 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: d30ee0ca80f354c4cb9503c04c2e463b
+    m_Address: Art/Companions/Large/timber
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: d5e7cff6ed974cad93a5a49f1c4a2cd8
     m_Address: Art/Companions/quill
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: d96c390044972ec4b9a24f16eb9c9f28
+    m_Address: Art/Companions/Large/toadstool
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
@@ -160,8 +290,38 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: df2d9b56f01559742847d82a83c51458
+    m_Address: Art/Companions/Large/gourd
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: df60bc1dc6008b342b4b8ae3df778b48
+    m_Address: Art/Companions/Large/thistle
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: e0aa423a391a4d36995a9a17425a8157
     m_Address: Art/Companions/sprocket
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: e1bded1d5a71d4b4fb52312e37dcf04e
+    m_Address: Art/Companions/Large/frond
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: ea73bd62ca9f6fb4a91458d5b0ade31f
+    m_Address: Art/Companions/Large/button
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: ed519534284f74b4e87468c0710d9c6d
+    m_Address: Art/Companions/Large/cinder
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: f2eb7086b2be9cb4ab60b2464415cf3f
+    m_Address: Art/Companions/Large/fizz
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0

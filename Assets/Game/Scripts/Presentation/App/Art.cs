@@ -541,6 +541,67 @@ namespace GlimmerGrove
             });
         }
 
+        /// <summary>
+        /// One cell of hedge: a band of foliage that light cannot pass through.
+        ///
+        /// <para>
+        /// <b>One cell, not one hedge, and that is what lets a run be any length.</b> A hedge is
+        /// grown as a run of closed edges, so the grove draws one of these per edge and they abut.
+        /// The band therefore reaches the full width of the texture with no rounding at either
+        /// end, and the lobes repeat on a third of its width, so two side by side read as one
+        /// continuous hedge rather than as beads on a string. A single stretched sprite was the
+        /// alternative and it is worse in the way that matters: a run of two and a run of nine
+        /// would carry the same number of leaves at wildly different sizes.
+        /// </para>
+        /// <para>
+        /// <b>Lobes rather than a plain bar</b>, because a plain bar on this board is a
+        /// <em>channel</em> — that is exactly what a drawn channel looks like, a capsule of colour
+        /// laid along a line of cells. A barrier that reads as somebody's channel is the worst
+        /// possible confusion here, since one is ground you may never enter and the other is
+        /// ground you may not enter <em>yet</em>. The bumpy silhouette is the whole of what tells
+        /// them apart at a glance, and it is why this is generated rather than being a tinted
+        /// <see cref="Capsule"/>.
+        /// </para>
+        /// <para>
+        /// Drawn lying flat, along x. An upright hedge is this turned a quarter turn, which is one
+        /// sprite for both orientations — the same bargain <see cref="Wedge"/> makes for a wheel.
+        /// </para>
+        /// <para>
+        /// <b>The core has to be thick enough that two cells of it read as one hedge</b>, which is
+        /// the whole of what the numbers below were tuned for. At a third of the texture the lobes
+        /// pinched together at every cell boundary and a four-cell run came out as beads on a
+        /// string — the one silhouette this must not have, since a row of round things on the
+        /// ground is what a bead already is. Measured on the real board at the real size, which is
+        /// the only way to see it.
+        /// </para>
+        /// </summary>
+        public static Sprite Hedge(int size = 64)
+            => Make($"hedge{size}", size, size, (x, y) =>
+            {
+                float u = x / size, v = y / size;
+
+                // Full width, no rounding along u: the ends are where the next cell's hedge
+                // begins, and a rounded end there is a visible seam down the middle of a run.
+                float band = Cover(SdRoundBox(u, v, .5f, .5f, .5f, .22f, .0f) * size);
+
+                float lobes = 0f;
+                for (int i = 0; i < 3; i++)
+                {
+                    float cx = (i * 2f + 1f) / 6f;
+                    lobes = Mathf.Max(lobes, Lobe(u, v, cx, .68f, size));
+                    lobes = Mathf.Max(lobes, Lobe(u, v, cx, .32f, size));
+                }
+
+                return Mathf.Clamp01(Mathf.Max(band, lobes));
+            });
+
+        /// <summary>One leafy bulge of a hedge, measured in the texture's own 0..1 space.</summary>
+        static float Lobe(float u, float v, float cx, float cy, int size)
+        {
+            float dx = u - cx, dy = v - cy;
+            return Cover((Mathf.Sqrt(dx * dx + dy * dy) - .17f) * size);
+        }
+
         /// <summary>Hexagon, used for lamp haloes.</summary>
         public static Sprite Hex(int size = 128)
         {

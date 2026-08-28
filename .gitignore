@@ -107,3 +107,8 @@ firebase-debug.*.log
 # Regenerate with: Build Profiles > iOS > Build (the workspace is produced by the
 # post-build CocoaPods step; see IosWorkspaceGuard).
 /glimmer-ios-builds/
+
+# Python bytecode from the Tools scripts. They are run in place, so the caches land
+# beside the sources; none of it is content and none of it is checked.
+__pycache__/
+*.pyc

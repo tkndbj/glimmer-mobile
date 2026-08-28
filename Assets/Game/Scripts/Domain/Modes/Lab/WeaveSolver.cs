@@ -329,7 +329,16 @@ namespace GlimmerGrove.Modes
                     for (int s = 0; s < WeaveLayout.Steps.Length; s++)
                     {
                         int nx = x + WeaveLayout.Steps[s].dx, ny = y + WeaveLayout.Steps[s].dy;
-                        if (grove.Inside(nx, ny)) _neighbours[c * 4 + n++] = grove.Index(nx, ny);
+                        if (!grove.Inside(nx, ny)) continue;
+
+                        // A hedge is simply not a neighbour, which is the cheapest possible way
+                        // for the search to respect one: every walk, every flood fill and every
+                        // prune below reads this table, so there is no branch anywhere that could
+                        // be written without the barrier in mind.
+                        int next = grove.Index(nx, ny);
+                        if (!grove.Open(c, next)) continue;
+
+                        _neighbours[c * 4 + n++] = next;
                     }
                     _neighbourCount[c] = n;
                 }
@@ -353,7 +362,7 @@ namespace GlimmerGrove.Modes
                 if (n == 0) return;
 
                 for (int i = 0; i < n; i++)
-                    rest[0 * n + i] = _grove.Distance(beads[i], _critter[pair]);
+                    rest[0 * n + i] = _grove.Span(beads[i], _critter[pair]);
 
                 for (int mask = 1; mask < full; mask++)
                     for (int i = 0; i < n; i++)
@@ -368,7 +377,7 @@ namespace GlimmerGrove.Modes
                             int onward = rest[(mask & ~(1 << j)) * n + j];
                             if (onward == int.MaxValue) continue;
 
-                            int whole = _grove.Distance(beads[i], beads[j]) + onward;
+                            int whole = _grove.Span(beads[i], beads[j]) + onward;
                             if (whole < best) best = whole;
                         }
                         rest[mask * n + i] = best;
@@ -379,13 +388,17 @@ namespace GlimmerGrove.Modes
             /// The fewest further cells this pair could possibly need, standing on
             /// <paramref name="at"/> with <paramref name="left"/> of its beads still to thread.
             ///
-            /// Straight-line distances throughout, so it can never over-state what is left —
-            /// which is the whole requirement of a bound used to prune: one that guessed high
-            /// would discard arrangements that exist.
+            /// Shortest-walk distances throughout — <see cref="WeaveLayout.Span"/>, which is the
+            /// straight line on an open grove and goes round a hedge on a walled one. It can
+            /// never over-state what is left, which is the whole requirement of a bound used to
+            /// prune: one that guessed high would discard arrangements that exist. A Manhattan
+            /// distance would still be admissible here and would be a strictly weaker prune,
+            /// which on a hedged grove is the difference between a measurement and a budget
+            /// running out.
             /// </summary>
             int Ahead(int pair, int at, int left)
             {
-                if (left == 0) return _grove.Distance(at, _critter[pair]);
+                if (left == 0) return _grove.Span(at, _critter[pair]);
 
                 var beads = _beads[pair];
                 var rest = _rest[pair];
@@ -398,7 +411,7 @@ namespace GlimmerGrove.Modes
                     int onward = rest[(left & ~(1 << i)) * n + i];
                     if (onward == int.MaxValue) continue;
 
-                    int whole = _grove.Distance(at, beads[i]) + onward;
+                    int whole = _grove.Span(at, beads[i]) + onward;
                     if (whole < best) best = whole;
                 }
                 return best == int.MaxValue ? int.MaxValue : best;

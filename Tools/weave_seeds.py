@@ -29,20 +29,37 @@ They have disagreed before, over a float in the walk budget, and the disagreemen
 seeds and measures them on **both**, refusing any that do not agree. Run it on whatever a chapter
 ends up authoring before writing the numbers into a test.
 
+What is measured
+----------------
+`toll` is the reading a ladder climbs: `slack` (the least total detour any arrangement forces on
+the pairs, over and above every pair's own floor) plus `bite` (what the hedges add to those
+floors). A hedge raises the floors slack is measured against, so slack alone stops being
+comparable the moment a chapter grows one, and the sum is what stays comparable — on a grove with
+nothing grown the two are the same number. `ways` is how many arrangements land within a couple of
+cells of the best one. Toll climbs down a chapter; ways falls.
+
 Usage
 -----
-    # every usable board a shape deals, cheapest detour first — what a ladder is picked out of
+    # every usable board a shape deals, least demanding first — what a ladder is picked out of
     python Tools/weave_seeds.py pool --size 8x10 --pairs 6 --beads 5 --seeds 1..20000
 
     # sweep one shape for a band, and report every seed that lands in it
     python Tools/weave_seeds.py sweep --size 8x10 --pairs 6 --beads 5 \\
         --slack 10 --ways 2..30 --seeds 1..4000
 
-    # probe a shape without a band, to find out what slacks it can even produce
+    # the same for a hedged shape, banded on toll rather than on slack
+    python Tools/weave_seeds.py sweep --size 8x11 --pairs 6 --beads 6 --hedges 2 \\
+        --toll 18 --ways 2..60 --seeds 1..90000
+
+    # probe a shape without a band, to find out what it can even produce
     python Tools/weave_seeds.py survey --size 8x10 --pairs 6 --beads 5 --seeds 1..400
 
     # measure named seeds on both runtimes and refuse any that disagree
     python Tools/weave_seeds.py confirm --size 8x10 --pairs 6 --beads 5 --seeds 17,204,991
+
+High-toll boards are rare — budget tens of thousands of seeds a rung. And sweep *last*: any
+change to `WeaveGenerator` re-deals every hedged board, so a pool swept before a generator fix is
+worth nothing.
 """
 
 import argparse
@@ -65,6 +82,7 @@ AUTHORING = os.path.join(ROOT, "Assets", "Game", "Authoring")
 # reachable from here because this compiles by file path rather than by assembly.
 SOURCES = [
     os.path.join(DOMAIN, "Board", "Energy.cs"),
+    os.path.join(DOMAIN, "Modes", "Lab", "WeaveHedges.cs"),
     os.path.join(DOMAIN, "Modes", "Lab", "WeaveLayout.cs"),
     os.path.join(DOMAIN, "Modes", "Lab", "WeaveGenerator.cs"),
     os.path.join(DOMAIN, "Modes", "Lab", "WeaveSolver.cs"),
@@ -107,6 +125,7 @@ static class SeedHarness
 
         int w = int.Parse(head[0]), h = int.Parse(head[1]);
         int pairs = int.Parse(head[2]), beads = int.Parse(head[3]);
+        int hedges = head.Length > 4 ? int.Parse(head[4]) : 0;
 
         var outp = new StreamWriter(Console.OpenStandardOutput());
 
@@ -116,14 +135,16 @@ static class SeedHarness
             uint seed = uint.Parse(lines[i], CultureInfo.InvariantCulture);
 
             WeaveSeedHit hit;
-            if (!WeaveSeedSearch.TryMeasure(w, h, pairs, beads, seed, out hit))
+            if (!WeaveSeedSearch.TryMeasure(w, h, pairs, beads, seed, out hit,
+                                            WeaveSeedSearch.Cap, WeaveSeedSearch.Budget, hedges))
             {
                 outp.WriteLine(seed + " no");
                 continue;
             }
 
             outp.WriteLine(seed + " yes " + hit.Slack + " " + hit.Ways + " " + hit.Par
-                           + " " + hit.Reach + " " + hit.Nodes);
+                           + " " + hit.Reach + " " + hit.Bite + " " + hit.Bitten
+                           + " " + hit.Nodes);
         }
 
         outp.Flush();
@@ -176,31 +197,48 @@ def build(work, runtime):
 
 
 class Hit(object):
-    __slots__ = ("seed", "ok", "slack", "ways", "par", "reach", "nodes")
+    __slots__ = ("seed", "ok", "slack", "ways", "par", "reach", "bite", "bitten", "nodes")
 
     def __init__(self, line):
         f = line.split()
         self.seed = int(f[0])
         self.ok = f[1] == "yes"
         if self.ok:
-            self.slack, self.ways, self.par, self.reach, self.nodes = (int(x) for x in f[2:7])
+            (self.slack, self.ways, self.par, self.reach,
+             self.bite, self.bitten, self.nodes) = (int(x) for x in f[2:9])
         else:
-            self.slack = self.ways = self.par = self.reach = self.nodes = -1
+            self.slack = self.ways = self.par = self.reach = -1
+            self.bite = self.bitten = self.nodes = -1
 
     def __eq__(self, other):
-        return (self.ok, self.slack, self.ways, self.par, self.reach) == \
-               (other.ok, other.slack, other.ways, other.par, other.reach)
+        return (self.ok, self.slack, self.ways, self.par, self.reach, self.bite,
+                self.bitten) == \
+               (other.ok, other.slack, other.ways, other.par, other.reach, other.bite,
+                other.bitten)
+
+    @property
+    def toll(self):
+        """Total cells of light this grove forces above the plainest reading of it.
+
+        `slack` is the detour the pairs force on each other; `bite` is the detour the hedges
+        force on the pairs. A hedge moves work out of the first and into the floor the first is
+        measured against, so neither number alone is comparable between a hedged chapter and an
+        open one -- and the sum is. It is what a ladder should climb; see WeaveLadderTests.
+        """
+        return self.slack + self.bite
 
     def __str__(self):
         if not self.ok:
             return "seed %-6d refused" % self.seed
-        return ("seed %-6d slack %-4d ways %-5d par %-5d reach %-4d nodes %d"
-                % (self.seed, self.slack, self.ways, self.par, self.reach, self.nodes))
+        return ("seed %-6d toll %-4d slack %-4d bite %-4d bitten %-3d ways %-5d par %-5d "
+                "reach %-4d nodes %d"
+                % (self.seed, self.toll, self.slack, self.bite, self.bitten, self.ways, self.par,
+                   self.reach, self.nodes))
 
 
 def measure(run, work, shape, seeds, workers):
     """Every seed measured, in seed order. Split across processes because the search is the cost."""
-    width, height, pairs, beads = shape
+    width, height, pairs, beads, hedges = shape
     seeds = list(seeds)
     if not seeds:
         return []
@@ -211,7 +249,7 @@ def measure(run, work, shape, seeds, workers):
     def one(index):
         table = os.path.join(work, "seeds-%d-%d.txt" % (os.getpid(), index))
         io.open(table, "w", encoding="utf-8", newline="\n").write(
-            "%d %d %d %d\n" % (width, height, pairs, beads)
+            "%d %d %d %d %d\n" % (width, height, pairs, beads, hedges)
             + "".join("%d\n" % s for s in chunks[index]))
 
         result = subprocess.run(run + [table], capture_output=True, text=True)
@@ -255,17 +293,27 @@ def main():
     parser.add_argument("--size", type=shape_of, required=True, help="e.g. 8x10")
     parser.add_argument("--pairs", type=int, required=True)
     parser.add_argument("--beads", type=int, default=0)
+    parser.add_argument("--hedges", type=int, default=0,
+                        help="barriers grown between cells before the carve; a board whose "
+                             "hedges change no pair's shortest route is refused")
     parser.add_argument("--seeds", type=span, default=span("1..2000"))
     parser.add_argument("--slack", type=int, help="sweep: the exact detour this rung wants")
+    parser.add_argument("--toll", type=int,
+                        help="sweep: the exact slack+bite this rung wants, which is the reading "
+                             "that stays comparable once a chapter grows hedges")
     parser.add_argument("--ways", type=band, default=(1, 500),
                         help="sweep: acceptable near-best arrangement count, e.g. 2..30")
     parser.add_argument("--most", type=int, default=12, help="sweep: stop after this many hits")
+    parser.add_argument("--bitten", type=int, default=0,
+                        help="sweep/pool: fewest pairs the fence must send a longer way. `bite` "
+                             "is a sum and cannot tell one pair detouring ten cells from five "
+                             "detouring two; this is the reading that can")
     parser.add_argument("--runtime", choices=("net8", "mono"), default="net8")
     parser.add_argument("--jobs", type=int, default=max(1, (os.cpu_count() or 4) - 1))
     args = parser.parse_args()
 
     width, height = args.size
-    shape = (width, height, args.pairs, args.beads)
+    shape = (width, height, args.pairs, args.beads, args.hedges)
     work = tempfile.mkdtemp(prefix="glimmer-seeds-")
 
     if args.mode == "confirm":
@@ -294,15 +342,17 @@ def main():
     found = measure(run, work, shape, args.seeds, args.jobs)
     usable = [h for h in found if h.ok]
 
-    print("%dx%d  pairs %d  beads %d  on %s — %d of %d seed(s) usable"
-          % (width, height, args.pairs, args.beads, args.runtime, len(usable), len(found)))
+    print("%dx%d  pairs %d  beads %d  hedges %d  on %s — %d of %d seed(s) usable"
+          % (width, height, args.pairs, args.beads, args.hedges, args.runtime,
+             len(usable), len(found)))
 
     if args.mode == "pool":
         # Every usable board this shape deals, one per line, cheapest detour first. What a ladder
         # is actually picked out of: a band is a filter over this, and seeing the whole pool is
         # how you find out that a shape simply cannot produce the rung you had in mind.
-        for hit in sorted(usable, key=lambda h: (h.slack, h.ways)):
-            print("  " + str(hit))
+        for hit in sorted(usable, key=lambda h: (h.toll, h.ways)):
+            if hit.bitten >= args.bitten:
+                print("  " + str(hit))
         return 0
 
     if args.mode == "survey":
@@ -310,24 +360,34 @@ def main():
         # shape whose slack never climbs past four cannot carry a late rung however it is swept.
         spread = {}
         for h in usable:
-            spread.setdefault(h.slack, []).append(h)
+            spread.setdefault(h.toll, []).append(h)
 
-        for slack in sorted(spread):
-            group = spread[slack]
+        for toll in sorted(spread):
+            group = spread[toll]
             ways = sorted(h.ways for h in group)
             pars = sorted(h.par for h in group)
-            print("  slack %-4d %-5d seed(s)   ways %d..%d (median %d)   par %d..%d"
-                  % (slack, len(group), ways[0], ways[-1], ways[len(ways) // 2],
-                     pars[0], pars[-1]))
+            slacks = sorted(h.slack for h in group)
+            bitten = sorted(h.bitten for h in group)
+            print("  toll %-4d %-5d seed(s)   slack %d..%d   bitten %d..%d   "
+                  "ways %d..%d (median %d)   par %d..%d"
+                  % (toll, len(group), slacks[0], slacks[-1], bitten[0], bitten[-1],
+                     ways[0], ways[-1], ways[len(ways) // 2], pars[0], pars[-1]))
         return 0
 
-    if args.slack is None:
-        sys.exit("sweep needs --slack; run `survey` first to see what this shape produces")
+    if args.slack is None and args.toll is None:
+        sys.exit("sweep needs --slack or --toll; run `survey` first to see what this shape "
+                 "produces")
 
     low, high = args.ways
-    hits = [h for h in usable if h.slack == args.slack and low <= h.ways <= high][:args.most]
+    hits = [h for h in usable
+            if (args.slack is None or h.slack == args.slack)
+            and (args.toll is None or h.toll == args.toll)
+            and h.bitten >= args.bitten
+            and low <= h.ways <= high][:args.most]
 
-    print("want slack %d and %d..%d ways:" % (args.slack, low, high))
+    print("want %s and %d..%d ways:"
+          % ("slack %d" % args.slack if args.toll is None else "toll %d" % args.toll,
+             low, high))
     for hit in hits:
         print("  " + str(hit))
     if not hits:

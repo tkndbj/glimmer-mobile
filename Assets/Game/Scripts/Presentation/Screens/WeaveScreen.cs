@@ -653,10 +653,11 @@ namespace GlimmerGrove
         {
             if (Level == null || _view == null || _view.Run == null) return;
 
-            // The verb first and the bead second, which is teaching order rather than a
-            // preference: a player who has met neither has to know the mode is dragged before
-            // a ring on the ground can mean anything. Whether either is new is RunScreen's
-            // question — this says only what the grove holds.
+            // The verb first, which is teaching order rather than a preference: a player who has
+            // met none of these has to know the mode is dragged before anything on the ground can
+            // mean anything at all. Which of them is new is RunScreen's question — this says only
+            // what the grove holds, so a drop that puts hedges on an opening grove teaches them
+            // there with nothing to remember.
             Teach(into, Mechanic.WeaveJoin);
 
             // Second, and only on a grove that can actually be lost. It is a rule about a number
@@ -667,6 +668,14 @@ namespace GlimmerGrove
             // Ahead of the bead deliberately. Both are rules a board cannot show, and this is the
             // one that decides whether the run survives long enough for a ring to matter.
             if (_view.Run.Ink.Bounded) Teach(into, Mechanic.WeaveInk);
+
+            // The ground before the things standing on it. A hedge changes where a channel may go
+            // at all, so a player who has not been told what one is will read a bar on the board
+            // as another thing to be threaded and spend a drag finding out — and on this mode a
+            // spent drag is spent light. In practice it is the only one of the three a Wildhedge
+            // player has not met, and the chapter it is introduced in opens with a single hedge
+            // for exactly that reason.
+            if (_view.Run.Grove.HasHedges) Teach(into, Mechanic.WeaveHedge);
 
             if (_view.Run.Grove.HasBeads) Teach(into, Mechanic.WeaveBead);
         }
@@ -764,6 +773,23 @@ namespace GlimmerGrove
             // a number has to point at the number, or the player is left hunting the board for
             // something that was never on it.
             if (lesson.Equals(Mechanic.WeaveInk)) return ReadoutAt(InkReadout);
+
+            // A hedge is ringed and nothing is traced, which is the one lesson here that is
+            // deliberately not demonstrated. Every other trace in this mode shows a move the
+            // player could make; there is no move to show for a barrier, and a hand walking round
+            // one would be showing a *route* on a board whose routes are the puzzle. The board
+            // demonstrates it perfectly well by itself the first time a finger is pushed at one
+            // — see WeaveView.Walled, which is why that refusal had to be drawn at all.
+            if (lesson.Equals(Mechanic.WeaveHedge))
+            {
+                for (int h = 0; h < grove.Hedges.Count; h++)
+                {
+                    var bar = _view.HedgeAt(h);
+                    if (bar) return bar;
+                }
+
+                return null;
+            }
 
             if (lesson.Equals(Mechanic.WeaveBead))
             {

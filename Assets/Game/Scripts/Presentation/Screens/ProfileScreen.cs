@@ -33,6 +33,22 @@ namespace GlimmerGrove
         public override string Track => "mus_menu";
 
         const float CardWidth = 980f;
+
+        /// <summary>
+        /// What the account card is made of, top to bottom.
+        ///
+        /// <para>
+        /// <see cref="TitleRow"/> is the room <see cref="CardTitle"/> takes; the rest are the
+        /// rows themselves and the air after each. The card's height is the sum of whichever it
+        /// actually draws, so adding a row is one term here and one block there — rather than a
+        /// typed height and a second place to forget.
+        /// </para>
+        /// </summary>
+        const float TitleRow = 100f;
+        const float StatusH = 48f, AccountH = 36f, HintH = 78f;
+        const float ManageH = 110f, DeleteH = 68f;
+        const float AfterStatus = 12f, AfterAccount = 10f, AfterHint = 30f;
+        const float BetweenButtons = 18f, FootMargin = 32f;
         const float Gap = 28f;
         const float HeaderHeight = 250f;
 
@@ -616,44 +632,99 @@ namespace GlimmerGrove
             string account = linked ? CloudSaveService.AccountLabel : string.Empty;
             bool showAccount = !string.IsNullOrEmpty(account);
 
-            var card = Section("Account", showAccount ? 400f : 360f, 4);
+            // Drawn wherever a deletion could possibly succeed — which is wherever there is a
+            // backend, including the mismatched state. See AccountDeletion.Offered.
+            bool deletable = AccountDeletion.Offered(available);
+
+            // ------------------------------------------------------------------ measure
+            // Every row is stacked from the card's top edge and the card is sized to hold
+            // exactly what it draws — the same arrangement AccountOverlay uses, and for its
+            // reason: this card grows a line when the provider names the account and a button
+            // when deletion is offered, so a typed height is a height that ends up printing a
+            // sentence through a button. It already did: the guest hint was drawn tight against
+            // the button under it.
+            float height = TitleRow + StatusH + AfterStatus
+                         + (showAccount ? AccountH + AfterAccount : 0f)
+                         + HintH + AfterHint
+                         + (available ? ManageH + (deletable ? BetweenButtons + DeleteH : 0f) : 0f)
+                         + FootMargin;
+
+            var card = Section("Account", height, 4);
             CardTitle(card, "ui.profile.account", CardWidth);
 
-            float lift = showAccount ? 20f : 0f;
+            float cursor = TitleRow;
 
-            var glyph = UIKit.Img("Glyph", card, Art.S("Ui/ic_key"), Color.white,
-                                  new Vector2(76f, 76f), new Vector2(0f, .5f),
-                                  new Vector2(104f, 58f + lift + (showAccount ? 22f : 0f)));
-            glyph.preserveAspect = true;
-            UIKit.Halo(glyph.transform, linked ? Pal.Mint : Pal.Rose, 150f, .28f);
-
+            // --------------------------------------------------------------------- status
+            // Centred, and there is deliberately no key glyph beside it any more. The icon sat
+            // in the left margin with a coloured halo behind it and pushed every line on the
+            // card off-centre to make room, so the one sentence a player opens this screen to
+            // read — whether their grove is safe — was the only thing on the profile that was
+            // not centred. The status colour already says everything the halo said.
             UIKit.Titled("Status", card, Loc.Get(statusKey), 34,
                          !available ? new Color(1f, .95f, .86f, .6f) : linked ? Pal.Mint : Pal.Rose,
-                         TextAnchor.MiddleLeft, new Vector2(560f, 44f), new Vector2(0f, .5f),
-                         new Vector2(440f, 96f), 3f, 3f);
+                         TextAnchor.MiddleCenter, new Vector2(CardWidth - 120f, StatusH),
+                         new Vector2(.5f, 1f), new Vector2(0f, -(cursor + StatusH * .5f)), 3f, 3f);
+
+            cursor += StatusH + AfterStatus;
 
             // Shrinkable rather than wrapping: an address is one token, and a second line of it
             // reads as a second fact rather than as the same one continued.
             if (showAccount)
+            {
                 UIKit.Shrinkable(
                     UIKit.Titled("Account", card, account, 26, new Color(1f, .96f, .88f, .62f),
-                                 TextAnchor.MiddleLeft, new Vector2(560f, 34f), new Vector2(0f, .5f),
-                                 new Vector2(440f, 56f), 3f, 0f),
+                                 TextAnchor.MiddleCenter, new Vector2(CardWidth - 160f, AccountH),
+                                 new Vector2(.5f, 1f), new Vector2(0f, -(cursor + AccountH * .5f)),
+                                 3f, 0f),
                     18);
+
+                cursor += AccountH + AfterAccount;
+            }
 
             UIKit.Titled("Why", card, Loc.Get(mismatched ? "ui.profile.mismatch_hint"
                                              : linked ? "ui.profile.linked_hint" : "ui.profile.guest_hint"),
                          25, new Color(1f, .96f, .88f, .58f), TextAnchor.UpperCenter,
-                         new Vector2(800f, 62f), new Vector2(.5f, .5f), new Vector2(0f, showAccount ? 2f : 6f),
-                         3f, 0f, wrap: true);
+                         new Vector2(800f, HintH), new Vector2(.5f, 1f),
+                         new Vector2(0f, -(cursor + HintH * .5f)), 3f, 0f, wrap: true);
+
+            cursor += HintH + AfterHint;
 
             if (!available) return;
 
-            UIKit.TextButton("Manage", card, mismatched ? "btn_red" : linked ? "btn_blue" : "btn_green",
+            // btn_orange for the unfinished-switch state rather than btn_red. Red is the
+            // deletion's colour now, and two red buttons on one card — one that fixes an
+            // account and one that destroys it — is the worst possible place for that
+            // ambiguity.
+            UIKit.TextButton("Manage", card, mismatched ? "btn_orange" : linked ? "btn_blue" : "btn_green",
                              Loc.Get(mismatched ? "ui.profile.fix"
                                    : linked ? "ui.profile.manage" : "ui.profile.protect"), 34,
-                             new Vector2(460f, 110f), new Vector2(.5f, 0f), new Vector2(0f, 64f),
+                             new Vector2(460f, ManageH), new Vector2(.5f, 1f),
+                             new Vector2(0f, -(cursor + ManageH * .5f)),
                              () => Flow.Modal<AccountOverlay>());
+
+            cursor += ManageH;
+
+            if (!deletable) return;
+
+            cursor += BetweenButtons;
+
+            // ---------------------------------------------------------------- deletion
+            // Red, and the only red control in the game outside a defeat: it is the one action
+            // here that cannot be undone by anything — no store re-delivers an account, no
+            // archive restores it, no support path recovers it. It is still the smaller button
+            // of the two and it still sits underneath, because both stores require this to be
+            // *reachable* and neither asks it to compete with the button that protects a grove.
+            //
+            // It lives here rather than in Settings for the reason the account row does: this
+            // is the one card in the game about *who the player is*, and burying the control
+            // that ends an account three taps deep in a preferences panel is how the last one
+            // stayed unfound — and, for this one, how a review gets refused.
+            UIKit.Shrinkable(
+                UIKit.TextButton("Delete", card, "btn_red", Loc.Get("ui.profile.delete"), 26,
+                                 new Vector2(460f, DeleteH), new Vector2(.5f, 1f),
+                                 new Vector2(0f, -(cursor + DeleteH * .5f)),
+                                 () => Flow.Modal<DeleteAccountOverlay>()).Label,
+                16);
         }
 
         // -------------------------------------------------------------- chrome

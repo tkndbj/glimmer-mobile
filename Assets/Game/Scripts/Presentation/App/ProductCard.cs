@@ -46,11 +46,12 @@ namespace GlimmerGrove
         /// <para>
         /// <see cref="Decorated"/> is deliberately one flag rather than four. The seat, the
         /// spinning rays, the bonus ribbon and the badge seal all answer the same question —
-        /// <em>which of these should you be looking at</em> — and that question only exists on
-        /// a screen where somebody is choosing between shelves. A player who opened a card list
+        /// <em>how does this compare with the others</em> — and that question only exists on a
+        /// screen where somebody is choosing between shelves. A player who opened a card list
         /// to buy a specific number of gems has already chosen, so every one of them would be
         /// noise, and letting a caller take three of the four would be an invitation to invent
-        /// a fifth appearance nobody designed.
+        /// a fifth appearance nobody designed. That is what keeps the rarity light out of the
+        /// panel a lost run raises: it belongs to browsing, not to paying.
         /// </para>
         /// </summary>
         public readonly struct Look
@@ -107,11 +108,11 @@ namespace GlimmerGrove
 
             if (look.Decorated)
             {
-                // A gold seat behind the plate, lit only on the card worth pointing at. It is
-                // the first layer of FeatureBeacon's argument: the seat is the part visible
-                // from the far side of the screen, and the badge is what you read once you are
-                // already looking.
-                _glow = UIKit.Img("Seat", Root, Art.Glow(128, 1.8f), new Color(1f, .78f, .28f, 0f),
+                // The seat behind the plate: the layer visible from the far side of the
+                // screen, where the badge is what you read once you are already looking. Its
+                // colour and strength are the rung's — see ShopRarity — so it is built
+                // colourless and painted by Light on every draw.
+                _glow = UIKit.Img("Seat", Root, Art.Glow(128, 1.8f), new Color(1f, 1f, 1f, 0f),
                                   new Vector2(look.Width + 40f, look.Height - 10f),
                                   new Vector2(.5f, .5f), Vector2.zero);
                 _glow.raycastTarget = false;
@@ -213,6 +214,13 @@ namespace GlimmerGrove
                 Font(ProductCardBadges.TextFloor, kh));
         }
 
+        /// <summary>
+        /// The line under the headline figure when it is a unit label rather than an amount —
+        /// deliberately quiet, because it names what the number above it is and competing with
+        /// that number is the one thing it must not do.
+        /// </summary>
+        static readonly Color Unit = new Color(1f, .96f, .88f, .70f);
+
         /// <summary>A point size scaled with the card, never below something readable.</summary>
         static int Font(int reference, float k) => Mathf.Max(10, Mathf.RoundToInt(reference * k));
 
@@ -232,10 +240,11 @@ namespace GlimmerGrove
         /// store's own price.
         /// </summary>
         /// <param name="featured">
-        /// Whether this is the card worth pointing at. Motion is the loudest thing on a
-        /// scrolling page, so spending it on every card singles out none — the same argument
-        /// the map's rank mark makes about which tier gets rays. Ignored on an undecorated
-        /// card, which has nothing to light.
+        /// Whether this is the card worth pointing at. Every card now carries a light of its
+        /// own rung's colour (<see cref="ShopRarity"/>), so what this buys is a lift on top of
+        /// that plus the gold seat and gold edge — which matters because the featured card is
+        /// not always the dearest one. Ignored on an undecorated card, which has nothing to
+        /// light.
         /// </param>
         public void Draw(StoreProduct product, StoreOffer offer, bool featured)
         {
@@ -249,7 +258,8 @@ namespace GlimmerGrove
             _edge.sprite = Art.RoundOutline(_radius, featured ? 4f : 2f);
             _edge.color = featured ? Pal.A(Pal.Gold, .78f) : new Color(1f, .97f, .90f, .16f);
 
-            Light(featured);
+            // One rung, asked once, and drawn twice: the picture in front and the light behind.
+            Light(ShopRarity.Of(product), featured);
 
             ShopArt.Paint(_art, product);
 
@@ -264,6 +274,7 @@ namespace GlimmerGrove
                 _amount.color = Pal.A(Pal.Rose, 1f);
 
                 _sub.text = Loc.Get("ui.shop.capacity");
+                _sub.color = Unit;
             }
             else
             {
@@ -271,16 +282,25 @@ namespace GlimmerGrove
                 // gems and says the credits underneath, because gems are the scarcer of the two
                 // and the reason somebody is on this shelf.
                 bool gemLed = product.Gems > 0;
+                bool bundle = product.Gems > 0 && product.Credits > 0;
 
                 _amount.text = Compact.Number(gemLed ? product.Gems : product.Credits);
                 _amount.color = gemLed ? Pal.A(Pal.Bloom, 1f) : Pal.A(Pal.Gold, 1f);
 
-                _sub.text = product.Gems > 0 && product.Credits > 0
+                _sub.text = bundle
                     ? Loc.Format("ui.shop.plus_coins", Compact.Number(product.Credits))
                     : Loc.Get(gemLed ? "ui.shop.gems" : "ui.shop.coins");
-            }
 
-            _sub.color = new Color(1f, .96f, .88f, .70f);
+                // A currency is always drawn in its own colour, and on a bundle this line is a
+                // currency rather than a unit. That is the whole distinction: on every other
+                // card the line under the figure is the *label* for the figure — "GEMS" beneath
+                // a violet 8,500 — so colouring it violet too would say one thing twice and
+                // leave the card monochrome. A bundle's line is a *second amount in a second
+                // currency*, and the coins were being drawn in the same faint cream as a unit
+                // label, which is the one reading that makes an extra 42,000 credits look like
+                // small print. Gold, because that is what coins are everywhere else in the game.
+                _sub.color = bundle ? Pal.A(Pal.Gold, .95f) : Unit;
+            }
 
             PaintPrice(offer);
             PaintRibbon(product.BonusPercent);
@@ -309,7 +329,7 @@ namespace GlimmerGrove
             _edge.sprite = Art.RoundOutline(_radius, 2f);
             _edge.color = new Color(1f, .97f, .90f, .16f);
 
-            Light(false);
+            Light(ShopRarity.Of(good), false);
 
             ShopArt.PaintGood(_art, good);
 
@@ -321,7 +341,7 @@ namespace GlimmerGrove
 
             _sub.text = Loc.Get(good.Kind == StoreGoodKind.HeartBoost
                                 ? "ui.shop.boost_note" : "ui.shop.hearts");
-            _sub.color = new Color(1f, .96f, .88f, .70f);
+            _sub.color = Unit;
 
             // A short balance still shows the price. It used to replace it with "not enough
             // gems", which spends the one line the card has on a refusal and answers a question
@@ -394,28 +414,38 @@ namespace GlimmerGrove
         }
 
         /// <summary>
-        /// The card worth pointing at breathes and wears a fan of light; nothing else does.
+        /// Lights the seat and the fan of rays behind the plate, in the rung's own colour.
+        ///
+        /// <para>
+        /// Every card is lit and the rung decides how brightly — see <see cref="ShopRarity"/>
+        /// for why that replaced lighting one card and no others. What <paramref name="best"/>
+        /// still buys is a lift on top of whatever the rung asked for, so the featured card is
+        /// the brightest thing on its shelf even when it is not the dearest: the starter bundle
+        /// is the cheapest product in the shop and is the one card a player sees once.
+        /// </para>
         /// </summary>
         /// <remarks>
         /// The turn is <b>channelled</b>, which is what makes it safe on a recycled cell: a card
-        /// that scrolls off and comes back rebinding as a plain rung would otherwise leave the
-        /// previous row's rotation running against the same transform, and two of those a frame
-        /// out of step is the flicker <c>CompanionRevealOverlay</c> already had to name. Killing
-        /// the channel first means at most one turn exists per cell, whatever it is rebound to.
+        /// that scrolls off and comes back rebinding as a different rung would otherwise leave
+        /// the previous row's rotation running against the same transform, and two of those a
+        /// frame out of step is the flicker <c>CompanionRevealOverlay</c> already had to name.
+        /// Killing the channel first means at most one turn exists per cell, whatever it is
+        /// rebound to. It matters more than it did: this used to run on the one card that was
+        /// featured and now runs on all of them.
         /// </remarks>
-        void Light(bool best)
+        void Light(in ShopRarity.Look look, bool best)
         {
             if (!_glow || !_rays) return;
 
-            _glow.color = best ? new Color(1f, .78f, .28f, .30f) : new Color(1f, .78f, .28f, 0f);
-            _rays.color = best ? new Color(1f, .90f, .58f, .16f) : new Color(1f, 1f, 1f, 0f);
+            float lift = best ? 1.25f : 1f;
+
+            _glow.color = Pal.A(look.Colour, Mathf.Min(.50f, look.Seat * lift));
+            _rays.color = Pal.A(look.Colour, Mathf.Min(.24f, look.Rays * lift));
 
             Tween.KillChannel(_rays.transform, "spin");
             _rays.transform.localRotation = Quaternion.identity;
 
-            if (!best) return;
-
-            Tween.Run(60f, Ease.Linear, t =>
+            Tween.Run(look.Turn, Ease.Linear, t =>
             {
                 if (_rays) _rays.transform.localRotation = Quaternion.Euler(0, 0, t * 360f);
             }, _rays.transform, "spin").Loop(-1, false);

@@ -19,22 +19,47 @@ namespace GlimmerGrove.Modes
         /// <summary>How far apart the closest pair's two ends are. The placement bar's reading.</summary>
         public readonly int Reach;
 
+        /// <summary>
+        /// What the hedges cost: the grove's floor over the ways that are open, less the floor it
+        /// would have with nothing grown on it.
+        ///
+        /// Zero on an unhedged grove and, on a hedged one, the number that says the barriers are
+        /// doing work rather than standing there — see <see cref="WeaveLayout.HedgesBite"/>. It is
+        /// reported rather than merely enforced because it is the one reading that says *how much*
+        /// of a rung's difficulty came from its hedges and how much from its pairs.
+        /// </summary>
+        public readonly int Bite;
+
+        /// <summary>
+        /// How many of the pairs the fence sends a longer way —
+        /// <see cref="WeaveLayout.PairsBitten"/>.
+        ///
+        /// <see cref="Bite"/> is a sum, so it cannot tell one pair detouring ten cells from five
+        /// detouring two — and those are opposite boards. The first is one long line; the second
+        /// is a doorway everybody wants. The Wildhedge was authored on the sum alone and came out
+        /// entirely of the first kind.
+        /// </summary>
+        public readonly int Bitten;
+
         /// <summary>Positions the measurement examined. Reported so a scarce band says so.</summary>
         public readonly int Nodes;
 
-        public WeaveSeedHit(uint seed, int slack, int ways, int par, int reach, int nodes)
+        public WeaveSeedHit(uint seed, int slack, int ways, int par, int reach, int bite,
+                            int bitten, int nodes)
         {
             Seed = seed;
             Slack = slack;
             Ways = ways;
             Par = par;
             Reach = reach;
+            Bite = bite;
+            Bitten = bitten;
             Nodes = nodes;
         }
 
         public override string ToString()
             => "seed " + Seed + " slack " + Slack + " ways " + Ways + " par " + Par
-             + " reach " + Reach + " nodes " + Nodes;
+             + " reach " + Reach + " bite " + Bite + " bitten " + Bitten + " nodes " + Nodes;
     }
 
     /// <summary>
@@ -91,14 +116,24 @@ namespace GlimmerGrove.Modes
         /// Whether a dealt grove is one a ladder may use at all, before any band is considered.
         ///
         /// <para>
-        /// Two refusals, and both are boards that would look perfectly authored in the JSON. A
-        /// carve that leaves ground untouched has not spread its endpoints across the grove, so
-        /// its channels never have to get past each other. A grove short of the beads its rung
-        /// asked for has a difficulty nobody chose, silently one bead easier than the ladder says.
+        /// Four refusals, and every one of them is a board that would look perfectly authored in
+        /// the JSON. A carve that leaves ground untouched has not spread its endpoints across the
+        /// grove, so its channels never have to get past each other. A grove short of the beads or
+        /// the hedges its rung asked for has a difficulty nobody chose, silently a notch easier
+        /// than the ladder says. And a grove whose hedges change no pair's shortest route is
+        /// carrying scenery: the barriers are drawn, the player routes around them without
+        /// noticing, and the rung is a plain grove wearing a mechanic (invariant 5d) — as is one
+        /// whose fence reaches fewer channels than <see cref="WeaveGenerator.MinBitten"/> asks,
+        /// which is that same refusal for the case a sum over the pairs cannot see.
         /// </para>
         /// </summary>
-        public static bool Admissible(WeaveLayout grove, int beads)
-            => grove != null && grove.IsComplete && grove.Beads.Count >= beads;
+        public static bool Admissible(WeaveLayout grove, int beads, int hedges)
+            => grove != null && grove.IsComplete
+            && grove.Beads.Count >= beads
+            && grove.Hedges.Count >= hedges
+            && (hedges == 0
+                || (grove.HedgesBite
+                    && grove.PairsBitten >= WeaveGenerator.MinBitten(grove.Pairs.Count, hedges)));
 
         /// <summary>
         /// Deals one seed's board and measures it, or reports that it may not be believed.
@@ -107,12 +142,13 @@ namespace GlimmerGrove.Modes
         /// budget, whose near-best arrangements were not counted to the end, or that lets every
         /// pair take its shortest route at once (<see cref="WeaveGenerator.MinSlack"/>).</returns>
         public static bool TryMeasure(int width, int height, int pairs, int beads, uint seed,
-                                      out WeaveSeedHit hit, int cap = Cap, int budget = Budget)
+                                      out WeaveSeedHit hit, int cap = Cap, int budget = Budget,
+                                      int hedges = 0)
         {
             hit = default;
 
-            var grove = WeaveGenerator.Build(width, height, pairs, seed, beads);
-            if (!Admissible(grove, beads)) return false;
+            var grove = WeaveGenerator.Build(width, height, pairs, seed, beads, hedges);
+            if (!Admissible(grove, beads, hedges)) return false;
 
             var tally = WeaveSolver.Measure(grove, cap, budget);
             if (!tally.Solved || !tally.Exhausted) return false;
@@ -125,7 +161,9 @@ namespace GlimmerGrove.Modes
                 if (apart < reach) reach = apart;
             }
 
-            hit = new WeaveSeedHit(seed, tally.Slack, tally.Ways, grove.Par, reach, tally.Nodes);
+            hit = new WeaveSeedHit(seed, tally.Slack, tally.Ways, grove.Par, reach,
+                                   grove.StraightTotal - grove.UnhedgedTotal, grove.PairsBitten,
+                                   tally.Nodes);
             return true;
         }
 
@@ -145,13 +183,14 @@ namespace GlimmerGrove.Modes
         public static List<WeaveSeedHit> Sweep(int width, int height, int pairs, int beads,
                                                int wantSlack, int wantLow, int wantHigh,
                                                uint from = 1, uint to = 4000, int most = 12,
-                                               int cap = Cap, int budget = Budget)
+                                               int cap = Cap, int budget = Budget, int hedges = 0)
         {
             var hits = new List<WeaveSeedHit>();
 
             for (uint seed = from; seed <= to && hits.Count < most; seed++)
             {
-                if (!TryMeasure(width, height, pairs, beads, seed, out var hit, cap, budget))
+                if (!TryMeasure(width, height, pairs, beads, seed, out var hit, cap, budget,
+                                hedges))
                     continue;
 
                 if (hit.Slack != wantSlack) continue;

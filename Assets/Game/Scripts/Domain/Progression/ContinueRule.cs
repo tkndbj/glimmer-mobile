@@ -96,6 +96,18 @@ namespace GlimmerGrove.Progression
         public const int DefaultMotes = 6;
 
         /// <summary>
+        /// Tiles a grove's continue hands over.
+        ///
+        /// <para>
+        /// Six, on the same terms and for the same reason as a well's. A Groovekeeper run is
+        /// measured in tiles and a grove's par is a handful of them, so a fifteen here would be
+        /// two whole groves' worth — a continue that finishes the level rather than one that
+        /// finishes what the player had started. Six is a bed and the tiles it took to reach it.
+        /// </para>
+        /// </summary>
+        public const int DefaultTiles = 6;
+
+        /// <summary>
         /// Dearest a continue may be published at.
         ///
         /// A sanity bound rather than a design one, and it is deliberately far above anything
@@ -148,7 +160,8 @@ namespace GlimmerGrove.Progression
     /// </summary>
     public sealed class ContinueTable
     {
-        ContinueTable(bool enabled, long gems, long gemsStep, int turns, int ink, int motes)
+        ContinueTable(bool enabled, long gems, long gemsStep, int turns, int ink, int motes,
+                      int tiles)
         {
             Enabled = enabled;
             Gems = gems;
@@ -156,6 +169,7 @@ namespace GlimmerGrove.Progression
             Turns = turns;
             Ink = ink;
             Motes = motes;
+            Tiles = tiles;
         }
 
         /// <summary>
@@ -186,18 +200,21 @@ namespace GlimmerGrove.Progression
         /// <summary>Motes a well's continue hands over, on the same terms.</summary>
         public int Motes { get; }
 
+        /// <summary>Tiles a grove's continue hands over, on the same terms.</summary>
+        public int Tiles { get; }
+
         /// <summary>The rule that ships inside the build, and the floor under any content mistake.</summary>
         public static readonly ContinueTable Default =
             new ContinueTable(true,
                               ContinueLimits.DefaultGems, ContinueLimits.DefaultGemsStep,
                               ContinueLimits.DefaultTurns, ContinueLimits.DefaultInk,
-                              ContinueLimits.DefaultMotes);
+                              ContinueLimits.DefaultMotes, ContinueLimits.DefaultTiles);
 
         /// <summary>A rule with the feature switched off, for a file that asks for that.</summary>
         public static readonly ContinueTable Off =
             new ContinueTable(false, ContinueLimits.DefaultGems, ContinueLimits.DefaultGemsStep,
                               ContinueLimits.DefaultTurns, ContinueLimits.DefaultInk,
-                              ContinueLimits.DefaultMotes);
+                              ContinueLimits.DefaultMotes, ContinueLimits.DefaultTiles);
 
         /// <summary>
         /// What the next continue costs, given how many this run has already had.
@@ -241,6 +258,7 @@ namespace GlimmerGrove.Progression
             {
                 case ContinueUnit.Ink: return Ink;
                 case ContinueUnit.Motes: return Motes;
+                case ContinueUnit.Tiles: return Tiles;
                 default: return Turns;
             }
         }
@@ -266,6 +284,7 @@ namespace GlimmerGrove.Progression
             int turns = dto.turns < 0 ? ContinueLimits.DefaultTurns : dto.turns;
             int ink = dto.ink < 0 ? ContinueLimits.DefaultInk : dto.ink;
             int motes = dto.motes < 0 ? ContinueLimits.DefaultMotes : dto.motes;
+            int tiles = dto.tiles < 0 ? ContinueLimits.DefaultTiles : dto.tiles;
 
             // Zero is refused rather than clamped, and it is the one refusal here worth
             // stating: a continue that costs nothing is not a cheap continue, it is a move
@@ -296,8 +315,9 @@ namespace GlimmerGrove.Progression
             turns = Bound(turns, "turns", ContinueLimits.DefaultTurns, problems);
             ink = Bound(ink, "ink", ContinueLimits.DefaultInk, problems);
             motes = Bound(motes, "motes", ContinueLimits.DefaultMotes, problems);
+            tiles = Bound(tiles, "tiles", ContinueLimits.DefaultTiles, problems);
 
-            return new ContinueTable(true, gems, step, turns, ink, motes);
+            return new ContinueTable(true, gems, step, turns, ink, motes, tiles);
         }
 
         /// <summary>

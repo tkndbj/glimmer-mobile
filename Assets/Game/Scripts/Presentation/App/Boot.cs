@@ -48,6 +48,17 @@ namespace GlimmerGrove
 
             var canvas = BuildCanvas(root.transform);
 
+            // Made to apply itself before anything is built on it, and this is not tidiness.
+            // `CanvasScaler` sets the canvas's scale factor from `Canvas.willRenderCanvases`,
+            // which runs *after* every `Update` in the frame — and the splash screen is raised
+            // further down this same method. Left alone, the first frame the player ever sees
+            // is drawn at a scale factor of 1 and the second at the real one, so the whole
+            // interface arrives oversized and settles: a launch that visibly lurches, on every
+            // device whose screen is not exactly `RefWidth` wide and on no others. One forced
+            // update costs nothing here and is the only moment in the app's life where the gap
+            // between creating a canvas and drawing on it is a single statement.
+            Canvas.ForceUpdateCanvases();
+
             // Progress first: the splash and every screen after it read from it, and
             // it is cheap enough to be worth having ready before anything draws.
             SaveService.Load();

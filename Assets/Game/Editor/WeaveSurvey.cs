@@ -87,8 +87,8 @@ namespace GlimmerGrove.EditorTools
 
             var sb = new StringBuilder("[Glimmer] Lightweave survey\n");
             sb.AppendLine($"{"#",-4}{"level id",-26}{"size",-8}{"pairs",-7}{"beads",-7}" +
-                          $"{"par",-6}{"gold",-7}{"silver",-8}{"slack",-8}{"ways",-9}" +
-                          $"{"reach",-7}{"channels",-11}nodes");
+                          $"{"hedges",-8}{"par",-6}{"gold",-7}{"silver",-8}{"toll",-7}" +
+                          $"{"slack",-8}{"bite",-7}{"ways",-9}{"reach",-7}{"channels",-11}nodes");
 
             int order = 0, found = 0;
             foreach (var level in load.AllLevels())
@@ -115,11 +115,20 @@ namespace GlimmerGrove.EditorTools
                 string ways = tally.Exhausted ? tally.Ways.ToString() : tally.Ways + "+";
                 string slack = tally.Solved ? tally.Slack.ToString() : "?";
 
+                // What the hedges cost, and the reading that stays comparable across a chapter
+                // that grows them: a hedge moves forced detour out of `slack` and into the floor
+                // `slack` is measured against, so neither number alone can be held to climb down
+                // a ladder and their sum can. See WeaveLadderTests.
+                int bite = grove.StraightTotal - grove.UnhedgedTotal;
+                string toll = tally.Solved ? (tally.Slack + bite).ToString() : "?";
+                string fence = grove.Hedges.Count + "/" + grove.HedgeEdges;
+
                 sb.AppendLine(
                     $"{++order,-4}{level.Id,-26}{grove.Width + "x" + grove.Height,-8}" +
-                    $"{grove.Pairs.Count,-7}{grove.Beads.Count,-7}{tuning.Par,-6}" +
+                    $"{grove.Pairs.Count,-7}{grove.Beads.Count,-7}{fence,-8}{tuning.Par,-6}" +
                     $"{tuning.GoldThreshold,-7}{tuning.SilverThreshold,-8}" +
-                    $"{slack,-8}{ways,-9}{reach,-7}{shortest + ".." + longest,-11}{tally.Nodes}");
+                    $"{toll,-7}{slack,-8}{bite,-7}{ways,-9}{reach,-7}" +
+                    $"{shortest + ".." + longest,-11}{tally.Nodes}");
 
                 if (!grove.IsComplete)
                     sb.AppendLine($"     ^ the carve leaves {grove.Count - grove.SolutionLength} " +
@@ -128,6 +137,14 @@ namespace GlimmerGrove.EditorTools
                 if (grove.Beads.Count < rules.BeadCount)
                     sb.AppendLine($"     ^ asked for {rules.BeadCount} bead(s) and placed " +
                                   $"{grove.Beads.Count}");
+
+                if (grove.Hedges.Count < rules.HedgeCount)
+                    sb.AppendLine($"     ^ asked for {rules.HedgeCount} hedge(s) and grew " +
+                                  $"{grove.Hedges.Count}");
+
+                if (rules.HedgeCount > 0 && !grove.HedgesBite)
+                    sb.AppendLine("     ^ the hedges change no pair's shortest route, so they " +
+                                  "are scenery — re-seed with SeedSearch");
 
                 if (tally.Solved && tally.Slack < MinSlack)
                     sb.AppendLine("     ^ every pair can take its shortest route at once, so " +
@@ -141,13 +158,26 @@ namespace GlimmerGrove.EditorTools
             if (found == 0) { Debug.Log("[Glimmer] no Lightweave levels in this content"); return; }
 
             sb.AppendLine();
+            sb.AppendLine("toll  = slack + bite: how far past straight lines the whole grove has " +
+                          "to be drawn. This is the one a ladder climbs,");
+            sb.AppendLine("        down a chapter and across the join into the next, because it " +
+                          "is the only reading that means the same");
+            sb.AppendLine("        thing whether or not there are hedges on the board.");
             sb.AppendLine("slack = the least total detour any arrangement has, in cells, over " +
-                          "every pair's own shortest route.");
-            sb.AppendLine("It should climb down the chapter, and it must never be 0 — that is a " +
-                          "grove joined by drawing the obvious line at each critter.");
+                          "every pair's own floor. It must never be 0 — that");
+            sb.AppendLine("        is a grove joined by drawing the obvious line at each critter " +
+                          "-- but it is *not* what climbs: a hedge raises");
+            sb.AppendLine("        the floors slack is measured against, so it moves work out of " +
+                          "this number rather than into it.");
+            sb.AppendLine("bite  = what the hedges add to those floors. 0 on a grove with hedges " +
+                          "means they are scenery.");
+            sb.AppendLine("hedges= runs / distinct ways closed. A run is one hedge however long " +
+                          "it is; that is what the player sees.");
             sb.AppendLine("ways  = arrangements within " + WeaveSolver.Latitude + " cells of the " +
                           "best one, capped at " + Cap + "; '+' means the search hit a limit.");
-            sb.AppendLine("It should fall: many ways is forgiving, few is a grove you have to find.");
+            sb.AppendLine("        It should fall: many ways is forgiving, few is a grove you " +
+                          "have to find. Never compared across chapters — it is");
+            sb.AppendLine("        measured relative to each board's own best arrangement.");
             sb.AppendLine("reach = how far apart the closest pair's two ends are. Under " +
                           "WeaveGenerator.MinReach a pair is joined by a reflex.");
             Debug.Log(sb.ToString());

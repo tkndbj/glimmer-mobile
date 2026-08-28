@@ -411,6 +411,7 @@ namespace GlimmerGrove
             {
                 case ContinueUnit.Ink: return "ui.continue.ink_title";
                 case ContinueUnit.Motes: return "ui.continue.motes_title";
+                case ContinueUnit.Tiles: return "ui.continue.tiles_title";
                 default: return "ui.continue.turns_title";
             }
         }
@@ -421,6 +422,7 @@ namespace GlimmerGrove
             {
                 case ContinueUnit.Ink: return "ui.continue.ink_unit";
                 case ContinueUnit.Motes: return "ui.continue.motes_unit";
+                case ContinueUnit.Tiles: return "ui.continue.tiles_unit";
                 default: return "ui.continue.turns_unit";
             }
         }

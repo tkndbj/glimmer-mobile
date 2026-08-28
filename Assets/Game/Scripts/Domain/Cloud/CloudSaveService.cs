@@ -1130,6 +1130,128 @@ namespace GlimmerGrove.Cloud
             PlayerProgression.Invalidate();
         }
 
+        // ---------------------------------------------------------------- deleting
+        /// <summary>
+        /// Deletes this device's account — on the server, and then on the device.
+        ///
+        /// <para>
+        /// <b>Server first, device second, and never the other way round.</b> The local grove
+        /// is the only evidence left that the deletion was ever asked for: erase it first and a
+        /// refused call leaves a player with an empty phone and a full account, which is the
+        /// one outcome here that is worse than the deletion failing. So nothing local is
+        /// touched until the server has said the account is gone, and every failure this can
+        /// report is a failure that changed nothing at all — which is what
+        /// <see cref="AccountDeletion.Untouched"/> promises the panel.
+        /// </para>
+        /// <para>
+        /// <b>Under the sync latch for the whole of it.</b> A sync is pull → join → push, and
+        /// one already in flight would push the grove back into a document this call is in the
+        /// middle of deleting — recreating <c>players/{uid}</c> seconds after it went, under a
+        /// uid nothing can ever authenticate as again. That is the orphan the server's own
+        /// ordering cannot prevent, because it is the client that causes it. Holding the latch
+        /// across the erase and the swap closes it.
+        /// </para>
+        /// <para>
+        /// <b>What the device is left as.</b> A fresh anonymous account with an empty grove,
+        /// minted by the backend as part of the call. Not "signed out": there is no sign-in
+        /// screen in this game, so a device holding no account at all would be a state nothing
+        /// else in the codebase knows how to draw — see <c>AccountOverlay</c> on why there is
+        /// deliberately no sign-out button. A player who deletes their account is not leaving
+        /// the game, they are starting it again.
+        /// </para>
+        /// </summary>
+        /// <param name="credential">
+        /// The provider to re-authenticate against before deleting, for an account that has
+        /// one — see <see cref="AccountDeletion.Verdict.Reauthenticate"/>. Left invalid for a
+        /// guest, who has no provider and must not be locked out of their own deletion for it.
+        /// </param>
+        public static async Task<DeleteResult> DeleteAccountAsync(
+            LinkCredential credential = default, CancellationToken cancellation = default)
+        {
+            if (!IsAvailable)
+                return DeleteResult.Failed(AccountDeletion.Outcome.Failed, CloudFailure.Offline,
+                                           "no cloud backend");
+            if (!SaveService.IsLoaded)
+                return DeleteResult.Failed(AccountDeletion.Outcome.Failed, CloudFailure.Error,
+                                           "save not loaded");
+
+            // Read from the session rather than from the save, because the session is what the
+            // server will authenticate the call as. If the two disagree the backend refuses —
+            // it compares them itself — and that refusal is the right answer: a device caught
+            // between two accounts must not be allowed to guess which one to destroy.
+            string doomed = _backend.CurrentIdentity.UserId;
+            if (string.IsNullOrEmpty(doomed))
+                return DeleteResult.Failed(AccountDeletion.Outcome.Failed,
+                                           CloudFailure.Unauthenticated, "not signed in");
+
+            if (!await ClaimAsync(cancellation))
+                return DeleteResult.Failed(AccountDeletion.Outcome.Busy, CloudFailure.Busy,
+                                           "a sync is already running");
+
+            try
+            {
+                // --------------------------------------------------------- prove it is them
+                // Inside the latch and before anything is removed. A refusal here — a closed
+                // sheet, the wrong account, no network — has cost nothing at all, which is
+                // what lets every failure this method reports say "nothing has been deleted"
+                // and be telling the truth.
+                string appleCode = null;
+
+                if (credential.IsValid)
+                {
+                    var (proof, code) = await _backend.ReauthenticateAsync(credential, cancellation);
+                    if (!proof.Ok)
+                    {
+                        Debug.LogWarning($"[Account] delete not authorised: {proof.Failure} · {proof.Message}");
+                        return DeleteResult.From(proof);
+                    }
+
+                    appleCode = code;
+                }
+
+                var result = await _backend.DeleteAccountAsync(doomed, appleCode, cancellation);
+                if (!result.Ok)
+                {
+                    Debug.LogWarning($"[Account] delete refused: {result.Failure} · {result.Message}");
+                    return DeleteResult.From(result);
+                }
+
+                // ------------------------------------------------------------- the device
+                // The account is gone by here. Nothing below may report a failure, because
+                // there is nothing left to retry and telling a player their deletion did not
+                // work would be false.
+                SaveService.EraseAccount(doomed);
+
+                // Whoever the backend signed this device in as while it was deleting. Empty
+                // only if that sign-in failed — a flat network at the wrong moment — in which
+                // case the save simply names nobody until the next launch picks an account up,
+                // which is precisely the state a first install is in.
+                string fresh = _backend.CurrentIdentity.UserId;
+                if (!string.IsNullOrEmpty(fresh)) SaveService.SwitchTo(fresh, outgoingIsSafe: true);
+
+                AccountMismatched = false;
+                PlayerProgression.Invalidate();
+                SaveService.Flush();
+            }
+            finally
+            {
+                Release();
+            }
+
+            // Outside the latch, for RunScheduledSync's reason: a handler that repaints by
+            // asking for a sync would deadlock against a latch this call is still holding.
+            Raise(Synced);
+            Raise(IdentityChanged);
+
+            // The backoff belongs to the account that has just stopped existing. Left alone, a
+            // device that had been failing to sync would carry that penalty into a brand new
+            // grove and appear not to be saving.
+            ResetBackoff();
+            RequestSync();
+
+            return DeleteResult.Done();
+        }
+
         static void Raise(Action handler)
         {
             try { handler?.Invoke(); }

@@ -29,6 +29,12 @@ namespace GlimmerGrove
         /// <c>par x budgetFactor</c> every other mode is dealt, counted in motes.
         /// </summary>
         Motes = 2,
+
+        /// <summary>
+        /// Tiles in a grove's basket. Groovekeeper's turn is a tile, planted or composted, and
+        /// its budget is par plus the slack every mode with a countable mistake is dealt.
+        /// </summary>
+        Tiles = 3,
     }
 
     /// <summary>

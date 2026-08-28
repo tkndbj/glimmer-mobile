@@ -152,7 +152,12 @@ Two consequences worth holding on to:
 5. `Glimmer Grove ▸ Content ▸ Sync Manifest` — adopts the new chapter into
    `manifest.json`, picks an `order`, fills in its level list and derives its `mode`
    from the levels it holds. Run it after *every* content edit.
-6. `Glimmer Grove ▸ Validate Content`. It must report zero errors — builds refuse
+6. Cut the art (`make_chapter_art.py`, below), then `Glimmer Grove ▸ Addressables ▸
+   Sync All Assets` — **after** step 5 and never before it. A chapter's art is filed into
+   that chapter's bundle only once the manifest lists the chapter; sync earlier and it is
+   filed as global art, which resolves, validates and audits perfectly while being loaded at
+   launch and never released. See *Addressing* below.
+7. `Glimmer Grove ▸ Validate Content`. It must report zero errors — builds refuse
    to run otherwise.
 
 Nothing in `manifest.json` is written by hand. Sync assigns `order` from the
@@ -192,6 +197,15 @@ filed into the right bundle group on import. Nothing to remember, nothing to run
 unaddressed and draws as nothing, so anything that writes art while the Editor is
 shut ends by telling you to run `Glimmer Grove ▸ Addressables ▸ Sync All Assets`.
 The build gate's audit is what stops that ever shipping.
+
+**Sync the manifest before you sync the assets, and this is the one ordering that bites.**
+Which bundle a piece of art belongs in is derived from *which chapter claims it*, and a chapter
+claims nothing until the manifest lists it (`AddressableAddresses.ChapterOwnership`). Run the
+addressable sync first and a new chapter's strips and backdrops are filed as **global** art —
+loaded at launch and never released, which is precisely the bound invariant 7b exists to hold.
+Everything still resolves, `Validate Art` is green and the audit passes, because the art is
+addressed and present; it is simply in the wrong bundle. Re-running the sync after the manifest
+sync moves it, and there is no other symptom to notice.
 
 ### Cutting a chapter's art
 
@@ -630,7 +644,124 @@ goes as the column count to the power of par, so par 7 on a six-wide well is fou
 the same board: narrow the well or shorten the answer, and start it fuller rather than making it
 bigger.
 
-## What makes a glade hard
+## Lightweave levels
+
+`"mode": "weave"` on a manifest chapter entry says its levels are **groves**. A grove carries a
+`weave` block instead of a `rows` grid, and unlike a well there is almost nothing in it: the
+board is *generated* from the seed, so what a level authors is a shape and how much is grown on
+it.
+
+```json
+{
+  "id": "w03_the_first_hedge",
+  "mapX": 0.28,
+  "mapY": 0.06,
+  "weave": {
+    "width": 8,
+    "height": 10,
+    "pairs": 6,
+    "beads": 6,
+    "hedges": 1,
+    "seed": 12345
+  }
+}
+```
+
+**The rule in one paragraph.** Drag a channel from each crystal to the critter that wants its
+colour. No two channels may share a cell, every **bead** must be threaded by the channel drawn in
+its own colour and by no other, and no channel may cross a **hedge**. Where a channel goes is
+otherwise entirely the player's business. You win when every critter is awake and every bead is
+threaded; you lose when the light left cannot cover the cheapest possible finish.
+
+**What each field does:**
+
+| field | means |
+|-------|-------|
+| `width` `height` | 4..9 by 4..12. Bigger is *not* harder: more room means less contention |
+| `pairs` | 2..6, one per colour the light makes. Six is the ceiling because white is what being awake looks like |
+| `beads` | at most one per pair. A cell one channel must be threaded through, and a wall to the other five |
+| `hedges` | at most `(width + height) / 6`, never more than three. A barrier along the edge *between* two cells |
+| `seed` | the whole difficulty of the level. Never leave it out — an unseeded grove deals whatever its id hashes to |
+
+**Nothing about difficulty is authored.** Par is the sum of the pairs' own shortest routes plus a
+cell of looking for each pair, bead and hedge, and the three lines a run is measured against fall
+out of par exactly as they do everywhere else — three stars at `par x 1.20`, two at `par x 1.40`,
+and the grove is dealt `par x 1.60` **cells of ink**. Growing a hedge therefore raises par, both
+star lines and the ink together, with no number to edit: a floor is measured over the ways that
+are actually *open* (`WeaveLayout.Span`), so a barrier's cost is priced in before anybody is
+graded against it. Getting that wrong is invariant 22's stranded band — a three-star line under
+the best possible play is a band nobody can land in.
+
+**A hedge is a run, not a cell.** It grows from one side of the grove inward, at least two cells
+long and never all the way across, so it always leaves a way past its tip. That is deliberate and
+it is what makes one do any work: on open ground there are a great many shortest routes between
+two cells, so a barrier dropped in the middle is walked round for nothing. A run anchored at a
+side shuts every route that crosses it, which turns a field into two rooms with a doorway between
+them — and a doorway is the sharpest form of the only question this mode asks, *who yields*,
+because it is a thing the player can see before committing to anything.
+
+The generator grows the hedges **before** it carves, so the arrangement it draws respects them
+and a hedged board is solvable by construction rather than by check. It refuses a fence that
+seals anything off, and it refuses one that changes no pair's shortest route — a barrier the
+player routes around without noticing is scenery (invariant 5d).
+
+### What makes a weave hard
+
+Two readings, and **size is not one of them** — a bigger grove with the same six pairs is a
+*roomier* grove, and roomier is easier.
+
+- **`toll`** — how far past straight lines the whole board has to be drawn: the detour the pairs
+  force on each other (`slack`) plus the detour the hedges force on the pairs (`bite`). Zero
+  slack means there is an arrangement in which every pair goes as directly as it possibly could,
+  all at once — six drags and a celebration, which is what the mode's first chapter measured
+  before there was anything here to measure it with. It is meant to **climb** down a chapter and
+  across the join into the next one.
+- **`ways`** — how many arrangements land within a couple of cells of the best one, which is how
+  much of what a tidy player tries will actually work. It is meant to **fall**.
+
+Both come from `WeaveSolver`, whose search is exponential in the worst case, so neither is a build
+gate — a gate that times out on a slow machine fails builds nobody can reproduce.
+`Glimmer Grove ▸ Content ▸ Survey Lightweave` reports them for the shipped groves and
+`WeaveLadderTests` pins what the survey chose, which is where a regression actually fails
+something.
+
+**Why `toll` and not `slack` alone.** Slack is measured against each pair's own floor, and a hedge
+*raises that floor* — it moves forced detour out of the number and into the thing the number is
+measured against. So an open grove forcing sixteen and a hedged grove forcing ten over floors
+already six cells longer are asking for the same amount of drawing, and comparing their slacks
+says the second one is easier. The sum is what stays comparable, and it is identical to slack on
+any grove with nothing grown on it — which is why the two chapters authored before hedges existed
+are unmoved.
+
+**Choosing a seed.** `python Tools/weave_seeds.py` runs the shipped `WeaveSeedSearch` rather than
+a copy of it:
+
+```
+# what a shape can even produce, before picking a band
+python Tools/weave_seeds.py survey --size 8x10 --pairs 6 --beads 6 --hedges 2 --seeds 1..30000
+
+# every usable board a shape deals, cheapest first
+python Tools/weave_seeds.py pool   --size 8x10 --pairs 6 --beads 6 --hedges 2 --seeds 1..90000
+
+# the band a rung wants
+python Tools/weave_seeds.py sweep  --size 8x10 --pairs 6 --beads 6 --hedges 2 --toll 16 --ways 2..60
+
+# and always, before the numbers go into a test: both runtimes must agree
+python Tools/weave_seeds.py confirm --size 8x10 --pairs 6 --beads 6 --hedges 2 --seeds 17,204
+```
+
+A sweep **refuses** rather than reports: a board it could not measure to the end, one short of the
+beads or hedges its rung asked for, or one whose hedges are scenery is not a board a ladder may
+use. High-toll boards are rare — expect to sweep tens of thousands of seeds per rung — which is
+why the pool mode exists and why the sweep runs across every core.
+
+**`python Tools/verify/weave.py` is the gate that matters most for this mode.** A grove is
+generated on a desktop at authoring time and again on the player's phone, so "the same seed deals
+the same board everywhere" is the property the whole mode rests on and nothing else checks it. It
+builds every shipped grove on .NET 8 *and* on Unity's own Mono and diffs the boards, the beads,
+the hedges and the difficulty. Nothing that decides a cell may be a `float` — see *Hard-won facts*
+for the 1.3 that dealt two different opening groves.
+
 ## What makes a glade hard
 
 `Tools/verify/difficulty.py` answers this in numbers rather than in opinions, and it is

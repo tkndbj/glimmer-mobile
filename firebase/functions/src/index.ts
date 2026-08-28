@@ -51,6 +51,9 @@ import {
   ClaimOutcome, NameHolding, RENAME_COOLDOWN_SECONDS, claimName as claimName_, heldName, nameKey, publishableName,
 } from "./names";
 import { loadNameConfig } from "./blocklist";
+import {
+  AppleRevocationKeys, accountExists, deleteAccount as deleteAccount_, usableAppleKeys,
+} from "./account";
 import { reportName, ReportOutcome } from "./reports";
 import {
   WHEEL_MIN_PERCENT, applyWheelPercent, readWheelPosition, usableWheelConfig, wheelPercent,
@@ -84,6 +87,35 @@ const GOOGLE_PLAY_SERVICE_ACCOUNT = defineSecret("GOOGLE_PLAY_SERVICE_ACCOUNT");
  * as an empty signature that matches everything.
  */
 const LEVELPLAY_SECRET = defineSecret("LEVELPLAY_SECRET");
+
+/**
+ * Sign in with Apple, for revoking a grant when an account is deleted.
+ *
+ * <b>Four more secrets rather than reusing the three above, and that is not duplication.</b>
+ * `APPLE_KEY_ID` / `APPLE_ISSUER_ID` / `APPLE_PRIVATE_KEY` are the **App Store Server API**
+ * credentials — they sign questions about purchases and refunds. Sign in with Apple is a
+ * separate key, created under a separate heading in the developer portal, with a team id
+ * rather than an issuer id and a client id rather than nothing. Using one set for the other
+ * fails with `invalid_client`, which names neither and reads like a malformed request.
+ *
+ * All four absent is a supported state: deletion still happens, and the report says the
+ * revocation was skipped. That is deliberate — a deployment must never be unable to delete an
+ * account because a credential is missing.
+ */
+const APPLE_SIWA_KEY_ID = defineSecret("APPLE_SIWA_KEY_ID");
+const APPLE_SIWA_TEAM_ID = defineSecret("APPLE_SIWA_TEAM_ID");
+const APPLE_SIWA_CLIENT_ID = defineSecret("APPLE_SIWA_CLIENT_ID");
+const APPLE_SIWA_PRIVATE_KEY = defineSecret("APPLE_SIWA_PRIVATE_KEY");
+
+/** The four read together, or null when the deployment has not been given them. */
+function appleSignInKeys(): AppleRevocationKeys | null {
+  return usableAppleKeys({
+    keyId: configured(APPLE_SIWA_KEY_ID),
+    teamId: configured(APPLE_SIWA_TEAM_ID),
+    clientId: configured(APPLE_SIWA_CLIENT_ID),
+    privateKey: configured(APPLE_SIWA_PRIVATE_KEY),
+  });
+}
 
 const callOptions = { region: REGION, cors: false, enforceAppCheck: false } as const;
 
@@ -599,6 +631,23 @@ export const adReward = onRequest(
       return;
     }
 
+    // Nobody to pay. A verified callback for a deleted account is not an error and not a
+    // fault the network can fix by repeating it — the player asked for the account to be
+    // erased between starting the video and the callback arriving, which is a real if narrow
+    // window. Acknowledged rather than retried, because everything below writes with `set`
+    // and would otherwise recreate `grantLog` and the wallet under a uid that can never
+    // authenticate again: an orphan nothing reads, nothing cleans up and no query can find.
+    //
+    // One Auth lookup per confirmed view. Affordable exactly here and nowhere on the sync
+    // path — see `accountExists` for that distinction.
+    if (!(await accountExists(verdict.uid))) {
+      logger.warn("rewarded ad callback for a deleted account; nothing granted", {
+        uid: verdict.uid, eventId: verdict.eventId, placement: verdict.placement,
+      });
+      response.status(200).send(ackBody(eventId));
+      return;
+    }
+
     const db = getFirestore();
     const grantRef = db.doc(PATHS.grant(verdict.uid, adGrantId(verdict.eventId)));
 
@@ -810,10 +859,27 @@ export const redeemPurchase = onCall(
         if (claim.uid !== uid) {
           // A real transaction, already spent on another account. This is the replay
           // attack, and it is the reason the key is global.
+          //
+          // `already-exists` rather than `permission-denied`, and the distinction is the one
+          // refusal in this file that is **permanently** true. Invariant 13a's rule is that a
+          // claim must never be refused for a reason that will still hold tomorrow, because
+          // the client resubmits for ever — and everything else `redeemPurchase` refuses is
+          // temporary by design: a product missing from `config/products` is fixed by a seed, a
+          // bad signature by a retry against a redeployed function. This one can never change.
+          // The receipt document is never deleted (account deletion keeps it deliberately — see
+          // invariant 27) and `uid` is never rewritten, so no future state makes this caller the
+          // owner. Saying so in the error code is what lets the client stop asking.
+          //
+          // It matters more than a wasted call. On Google an unacknowledged purchase is
+          // auto-refunded after three days, and `sweepVoidedPurchases` then reverses the grant
+          // against `receipt.uid` — the account that *legitimately* paid. So a client that can
+          // never finish this transaction eventually costs the original buyer the currency they
+          // bought, on an account that did nothing wrong. Reachable by switching accounts, and
+          // now also by deleting one.
           logger.error("receipt replay across accounts refused", {
             uid, claimedBy: claim.uid, transactionId: purchase.transactionId,
           });
-          throw new HttpsError("permission-denied", "this purchase has already been redeemed");
+          throw new HttpsError("already-exists", "this purchase belongs to another account");
         }
 
         // Same player, same transaction: a retry. Report success without granting again,
@@ -1315,6 +1381,54 @@ export const withdrawGrove = onCall(callOptions, async (request): Promise<{ with
   await withdrawCard(uid);
   return { withdrawn: true };
 });
+
+/**
+ * Erases the calling account — every document this deployment holds for it, the Sign in with
+ * Apple grant, and the Firebase Auth user itself.
+ *
+ * <b>The caller can only ever delete itself.</b> There is no uid parameter: the account comes
+ * from the verified token and nothing in the request body can move it. That is what makes this
+ * safe to expose to every client in the world without a second authorisation of its own.
+ *
+ * <b>Idempotent, and the client depends on it.</b> A dropped reply is retried, and a retry
+ * runs the whole thing again against a mostly-empty account and reports success. See
+ * `account.ts` for why the auth user is the last thing removed and why that is what makes the
+ * retry safe rather than merely tolerable.
+ *
+ * <b>The reply is one boolean.</b> The full {@link DeletionReport} goes to the log, where
+ * support can read it; the client is told only that it worked, for `reportKeeperName`'s
+ * reason — `nameRetained` would tell a player their name had been reported, which is not
+ * something a deletion is entitled to disclose.
+ *
+ * <b>Secrets are declared even though a missing one is not an error</b>, because a function
+ * that names a secret gets it injected and one that does not cannot read it at all. All four
+ * absent means the revocation is skipped and the deletion still happens.
+ */
+export const deleteAccount = onCall(
+  {
+    ...callOptions,
+    secrets: [
+      APPLE_SIWA_KEY_ID, APPLE_SIWA_TEAM_ID, APPLE_SIWA_CLIENT_ID, APPLE_SIWA_PRIVATE_KEY,
+    ],
+  },
+  async (request): Promise<{ deleted: boolean }> => {
+    const uid = requireUid(request);
+
+    // Bounded before it is used. An authorization code is a short opaque string; anything
+    // longer is not one, and forwarding it to Apple would make this a way to post arbitrary
+    // bodies to a third party through our credentials.
+    const raw = (request.data as { appleAuthorizationCode?: unknown })?.appleAuthorizationCode;
+    const code = typeof raw === "string" && raw.length > 0 && raw.length <= 512 ? raw : undefined;
+
+    await deleteAccount_({
+      uid,
+      appleAuthorizationCode: code,
+      apple: appleSignInKeys() ?? undefined,
+    });
+
+    return { deleted: true };
+  }
+);
 
 /**
  * Rebuilds the boards and the published distribution of grove worth.

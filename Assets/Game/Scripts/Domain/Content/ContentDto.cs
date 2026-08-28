@@ -421,19 +421,62 @@ namespace GlimmerGrove.Content
         public bool IsAuthored => width > 0 || height > 0;
     }
 
-    /// <summary>Grovekeeper's ground, and how many tiles the run hands out.</summary>
+    /// <summary>
+    /// Groovekeeper's grove: the ground, the beds that have to bloom, and the procession of tiles
+    /// to do it with.
+    ///
+    /// <para>
+    /// <b>No par and no difficulty number, and that is the whole of why this mode stopped being a
+    /// prototype.</b> It used to author a tile <em>count</em> and roll its colours from a seed,
+    /// which is a board with no fixed future: par cannot be derived from one, so it authored no
+    /// goal, no star line and no fail state, and two players on the same level were not playing
+    /// the same board (invariant 26). Everything graded now derives from a search over these
+    /// three fields — see <c>KeeperSolver</c>.
+    /// </para>
+    /// </summary>
     [Serializable]
     public sealed class KeeperDto
     {
         public int width;
         public int height;
 
-        /// <summary>Tiles the run gets. This is the level - see <c>KeeperMode</c>.</summary>
-        public int tiles;
+        /// <summary>
+        /// The ground, one row per line and one letter per column: <c>.</c> bare ground,
+        /// <c>#</c> stone, <c>*</c> a bed, <c>r</c>/<c>g</c>/<c>b</c> a heartbed that only its own
+        /// colour may be planted on, and <c>R</c>/<c>G</c>/<c>B</c> a sprig already standing.
+        /// </summary>
+        public string[] rows;
 
+        /// <summary>
+        /// The ordered procession this grove deals, written in R, G, B and P for a prism. It
+        /// repeats, so it never needs to be longer than one lap — see <c>KeeperDeal</c>.
+        /// </summary>
+        public string tiles;
+
+        /// <summary>
+        /// Wasted tiles this grove forgives above par. Absent takes <c>KeeperRules.DefaultSpare</c>,
+        /// which is what every level ships with.
+        ///
+        /// A count rather than a factor, because a wrong tile costs about the same wherever it
+        /// happens — it is gone, and it has taken a cell of ground with it — while a fraction of
+        /// par gives a short grove almost no room at all. See <c>LevelTuning.Slack</c>.
+        /// </summary>
+        public int spare;
+
+        /// <summary>
+        /// <b>Retired.</b> A grove was dealt from a seed and is now authored. Kept only so
+        /// validation can name a stale one rather than JsonUtility silently discarding it and the
+        /// author believing a number that does nothing — the same tripwire
+        /// <see cref="ChapterDto.order"/> is.
+        /// </summary>
         public int seed;
 
-        public bool IsAuthored => tiles > 0 || width > 0 || height > 0;
+        /// <summary>
+        /// Whether this block was authored. <b>Never test the block itself for null</b> —
+        /// JsonUtility instantiates a [Serializable] class field on every level in the game, so
+        /// absence has to be a value a real block cannot hold.
+        /// </summary>
+        public bool IsAuthored => width > 0 || height > 0;
     }
 
     /// <summary>Lightweave's grove and its crystal hearts.</summary>
@@ -470,6 +513,26 @@ namespace GlimmerGrove.Content
         /// </para>
         /// </summary>
         public int beads;
+
+        /// <summary>
+        /// How many hedges to grow on the grove — barriers along the edge <em>between</em> two
+        /// cells that no channel may cross.
+        ///
+        /// <para>
+        /// Where they stand is generated, like the endpoints and the beads and for the same
+        /// reason: a hedge is only worth growing where it shuts a way somebody actually wanted,
+        /// and which ways those are is a fact about a board nobody has seen yet. The generator
+        /// grows them <em>before</em> it carves, so the arrangement it draws respects them by
+        /// construction, and it refuses a board whose hedges change no pair's shortest route --
+        /// see <c>WeaveGenerator.Fence</c> and <c>WeaveLayout.HedgesBite</c>.
+        /// </para>
+        /// <para>
+        /// Absent means none, which is what every grove of the first two chapters authors. A
+        /// hedge takes no ground and costs no cell: it removes a <em>way</em>, so a grove grows
+        /// rooms and doorways rather than obstacles, and par rises with it on its own.
+        /// </para>
+        /// </summary>
+        public int hedges;
 
         public bool IsAuthored => pairs > 0 || width > 0 || height > 0;
     }
@@ -923,6 +986,9 @@ namespace GlimmerGrove.Content
 
         /// <summary>Motes a well's continue hands over, on the same terms.</summary>
         public int motes = -1;
+
+        /// <summary>Tiles a grove's continue hands over, on the same terms.</summary>
+        public int tiles = -1;
     }
 
     /// <summary>

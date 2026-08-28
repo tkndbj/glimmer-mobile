@@ -87,6 +87,10 @@ namespace GlimmerGrove.EditorTools
             result.Registered = addresses.Count;
 
             var expected = AssetManifest.GlobalAssets();
+
+            // Loaded by the launch screen into a scope of its own rather than preloaded, so it
+            // is requested by the game and absent from the global list. See SplashAssets.
+            expected.AddRange(AssetManifest.SplashAssets());
             expected.AddRange(AssetManifest.AllChapterAssets(bodies));
 
             // Companion portraits are requested by a scope rather than at boot, which

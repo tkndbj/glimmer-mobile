@@ -86,6 +86,14 @@ namespace GlimmerGrove.Modes
         readonly int[][] _solution;
         readonly WeaveBead[] _beads;
 
+        /// <summary>
+        /// The barriers grown between cells, and the two questions they change the answer to.
+        ///
+        /// Never null: a grove with none carries an empty set rather than a null, so every reader
+        /// asks one question instead of two and there is no "no hedges" branch to forget.
+        /// </summary>
+        readonly WeaveHedges _hedges;
+
         /// <summary>Which pair owes the bead on each cell, -1 where there is none.</summary>
         readonly int[] _beadOwner;
 
@@ -96,13 +104,14 @@ namespace GlimmerGrove.Modes
         readonly int[] _straight;
 
         public WeaveLayout(int width, int height, WeavePair[] pairs, int[][] solution,
-                           WeaveBead[] beads = null)
+                           WeaveBead[] beads = null, WeaveHedge[] hedges = null)
         {
             Width = width;
             Height = height;
             _pairs = pairs;
             _solution = solution;
             _beads = beads ?? System.Array.Empty<WeaveBead>();
+            _hedges = new WeaveHedges(width, height, hedges);
 
             _beadOwner = new int[width * height];
             for (int i = 0; i < _beadOwner.Length; i++) _beadOwner[i] = -1;
@@ -144,6 +153,156 @@ namespace GlimmerGrove.Modes
 
         /// <summary>Whether any pair on this grove owes a bead. What decides the lesson and the readout.</summary>
         public bool HasBeads => _beads.Length > 0;
+
+        /// <summary>The hedges grown on this grove — see <see cref="WeaveHedge"/>.</summary>
+        public IReadOnlyList<WeaveHedge> Hedges => _hedges.All;
+
+        /// <summary>
+        /// Whether anything is grown on this grove. What decides the lesson.
+        ///
+        /// Deliberately not "walled off": nothing on a hedged grove ever is, and a fence that
+        /// sealed a pocket would be a board the carve could not fill — see
+        /// <see cref="WeaveHedges.AllReachable"/>, which the generator holds every fence to.
+        /// </summary>
+        public bool HasHedges => _hedges.Any;
+
+        /// <summary>How many distinct ways the hedges close. What a survey reports.</summary>
+        public int HedgeEdges => _hedges.Edges;
+
+        /// <summary>
+        /// The two cells one edge of a hedge stands between, or false past the end of the run.
+        ///
+        /// Everything that draws a hedge walks it through this rather than doing the arithmetic
+        /// again: a flat run that overshoots its row wraps onto the next one, which would put a
+        /// barrier on the far side of the grove where nothing is drawn. One place to get that
+        /// right, as with <see cref="Adjacent"/> for the rule itself.
+        /// </summary>
+        public bool HedgeEdge(WeaveHedge hedge, int step, out int a, out int b)
+            => _hedges.Edge(hedge, step, out a, out b);
+
+        /// <summary>
+        /// Whether a channel may step between two cells: orthogonal neighbours with no hedge
+        /// between them.
+        ///
+        /// <see cref="Adjacent"/> is the same question and is the name every caller already uses;
+        /// this exists for the one that has a direction rather than a step — a flood fill walking
+        /// outward, which would otherwise have to build the neighbour and ask about it.
+        /// </summary>
+        public bool Open(int a, int b) => _hedges.Open(a, b);
+
+        /// <summary>
+        /// The fewest steps between two cells over the ways that are open.
+        ///
+        /// <para>
+        /// <b>This, and not <see cref="Distance"/>, is what every floor in this mode is built
+        /// on.</b> A Manhattan distance walks straight through a hedge, so a hedged grove graded
+        /// against one would be graded against a floor no arrangement of it could reach — the
+        /// three-star line would sit below the best possible play and a band of the ladder would
+        /// silently stop existing (invariant 22's stranded band). On a grove with no hedges the
+        /// two are the same integer, which is what made the mechanic free for everything already
+        /// shipped.
+        /// </para>
+        /// </summary>
+        public int Span(int a, int b) => _hedges.Span(a, b);
+
+        /// <summary>
+        /// This grove with a different set of hedges on it — the same pairs, the same carved
+        /// routes, the same beads.
+        ///
+        /// <para>
+        /// It exists so "does this hedge do any work" can be <em>counted</em> rather than argued
+        /// about, which is invariant 5d's demand of any new mechanic. A hedge that changes no
+        /// pair's floor is decoration; taking one out and re-reading <see cref="StraightTotal"/>
+        /// says so in one integer, and taking them all out says whether the set as a whole is
+        /// pulling its weight. Both the generator's acceptance bar and the validator ask it.
+        /// </para>
+        /// <para>
+        /// A twin rather than a mutation: a layout is immutable and is shared by a run, a solver
+        /// and a view at the same time, so a "temporarily open this hedge" would be a fact about
+        /// the board changing underneath three readers that each cache from it.
+        /// </para>
+        /// </summary>
+        public WeaveLayout WithHedges(WeaveHedge[] hedges)
+            => new WeaveLayout(Width, Height, _pairs, _solution, _beads, hedges);
+
+        int _unhedged = -1;
+
+        /// <summary>
+        /// What <see cref="StraightTotal"/> would be with the hedges taken down — the light this
+        /// grove would need if nothing were grown on it.
+        ///
+        /// The difference between the two is exactly what the hedges cost the player, and it is
+        /// what the survey prints and the generator holds out for. Worked out once and kept,
+        /// because the twin it reads is thrown away immediately and building it per call would be
+        /// an all-pairs walk inside a ranking loop.
+        /// </summary>
+        public int UnhedgedTotal
+            => _unhedged >= 0 ? _unhedged
+             : _unhedged = HasHedges ? WithHedges(null).StraightTotal : StraightTotal;
+
+        /// <summary>
+        /// Whether the hedges force <em>anybody</em> a longer way than an open grove would.
+        ///
+        /// <para>
+        /// <b>Invariant 5d, counted, for this mechanic.</b> A barrier that changes no pair's floor
+        /// rejects no arrangement and is decoration — the player draws the line they were going to
+        /// draw and the hedge is scenery they never touch. This is that claim as one comparison of
+        /// two integers, and it is the generator's acceptance bar as well as the validator's
+        /// warning, so a grove cannot ship carrying hedges that do nothing.
+        /// </para>
+        /// <para>
+        /// It is deliberately a bar on the <em>set</em> rather than on each hedge, exactly as
+        /// <c>WeaveGenerator.MinSlack</c> is a bar on the pairs together. Two hedges can shut a
+        /// corridor that neither shuts alone, and refusing the pair for it would throw away the
+        /// most interesting thing this mechanic does.
+        /// </para>
+        /// </summary>
+        public bool HedgesBite => HasHedges && StraightTotal > UnhedgedTotal;
+
+        int _bitten = -1;
+
+        /// <summary>
+        /// How many pairs the fence actually sends a longer way than an open grove would.
+        ///
+        /// <para>
+        /// <b><see cref="HedgesBite"/> is a bar on the set, and that turned out to be a bar one
+        /// member can carry alone.</b> It asks whether the hedges lengthen <em>anybody</em>'s
+        /// floor, which one pair detouring two cells satisfies for a grove of six — and measured
+        /// on the Wildhedge as it shipped, that is exactly what happened: eight of its ten groves
+        /// lengthened the floor of precisely <b>one</b> pair, with three barriers drawn across
+        /// them. Five channels out of six were drawn as if the hedges were not there, which is
+        /// how a chapter can pass every check in this file and still be reported from play as
+        /// "it is like they are not there".
+        /// </para>
+        /// <para>
+        /// <b>A barrier is only the doorway it leaves, and a doorway is only a decision when more
+        /// than one channel wants it.</b> That is the whole of what this mechanic was for
+        /// (<see cref="WeaveHedges"/>) and it is a fact about how many pairs the fence reaches,
+        /// which no sum over the pairs can see. One pair sent the long way round is a longer line;
+        /// three pairs sent at the same gap is the mode's one question — who yields — asked by
+        /// something the player can see before they commit to anything.
+        /// </para>
+        /// <para>
+        /// Read per pair against this grove's own twin with nothing grown on it, so it is the
+        /// same comparison <see cref="UnhedgedTotal"/> makes and cannot drift from it. Worked out
+        /// once and kept, for that method's reason.
+        /// </para>
+        /// </summary>
+        public int PairsBitten
+        {
+            get
+            {
+                if (_bitten >= 0) return _bitten;
+                if (!HasHedges) return _bitten = 0;
+
+                var open = WithHedges(null);
+                int bitten = 0;
+                for (int p = 0; p < _pairs.Length; p++)
+                    if (Straight(p) > open.Straight(p)) bitten++;
+
+                return _bitten = bitten;
+            }
+        }
 
         /// <summary>The route the generator carved for a pair. The board's own proof it can be done.</summary>
         public IReadOnlyList<int> Solution(int pair) => _solution[pair];
@@ -245,6 +404,15 @@ namespace GlimmerGrove.Modes
                 if (EndpointAt(path[i]) >= 0) return null;
                 if (clearOfBeads && BeadOwner(path[i]) >= 0) return null;
             }
+
+            // A hedge refuses an elbow outright rather than bending it round. A demonstration
+            // that steps through a barrier is an *illegal* move shown to somebody being taught
+            // the rules, which reads as permission — the same reason an elbow over a stranger's
+            // crystal is refused two lines above. There are two elbows per pair and several
+            // pairs, so a grove nearly always still has one; where it does not, CoachRoute falls
+            // back to the carved walk, which respects every hedge by construction.
+            for (int i = 1; i < path.Count; i++)
+                if (!Adjacent(path[i - 1], path[i])) return null;
 
             return path.ToArray();
         }
@@ -388,7 +556,7 @@ namespace GlimmerGrove.Modes
             var beads = _beadsOf[pair];
 
             if (beads.Length == 0)
-                return _straight[pair] = Manhattan(ends.Heart, ends.Critter, Width) + 1;
+                return _straight[pair] = Span(ends.Heart, ends.Critter) + 1;
 
             // Held-Karp over this pair's beads. best[mask, last] is the shortest walk that has
             // left the crystal, threaded exactly the beads in mask, and is standing on beads[last].
@@ -397,7 +565,7 @@ namespace GlimmerGrove.Modes
             for (int i = 0; i < best.Length; i++) best[i] = int.MaxValue;
 
             for (int i = 0; i < n; i++)
-                best[(1 << i) * n + i] = Manhattan(ends.Heart, beads[i], Width);
+                best[(1 << i) * n + i] = Span(ends.Heart, beads[i]);
 
             for (int mask = 1; mask < full; mask++)
                 for (int last = 0; last < n; last++)
@@ -409,7 +577,7 @@ namespace GlimmerGrove.Modes
                     {
                         if ((mask & (1 << next)) != 0) continue;
 
-                        int step = here + Manhattan(beads[last], beads[next], Width);
+                        int step = here + Span(beads[last], beads[next]);
                         int at = (mask | (1 << next)) * n + next;
                         if (step < best[at]) best[at] = step;
                     }
@@ -421,7 +589,7 @@ namespace GlimmerGrove.Modes
                 int here = best[(full - 1) * n + last];
                 if (here == int.MaxValue) continue;
 
-                int whole = here + Manhattan(beads[last], ends.Critter, Width);
+                int whole = here + Span(beads[last], ends.Critter);
                 if (whole < shortest) shortest = whole;
             }
 
@@ -480,8 +648,17 @@ namespace GlimmerGrove.Modes
         /// nobody is asked to draw. It also made par a function of the grove's size alone, so
         /// two boards of wildly different difficulty at the same size were given the same clock.
         /// </para>
+        /// <para>
+        /// <b>A hedge counts twice over, and both halves are automatic.</b> It lifts
+        /// <see cref="StraightTotal"/>, because a floor is now measured over the ways that are
+        /// actually open (<see cref="Span"/>) — that is the light a barrier really costs, and it
+        /// is the generator's acceptance bar that every hedged grove pays it. And it is one more
+        /// thing to weigh up before the first channel goes down, exactly as a pair and a bead
+        /// are, so it takes a cell of looking like they do. Nothing about either is authored:
+        /// growing a hedge raises par, both star lines and the ink together.
+        /// </para>
         /// </summary>
-        public int Par => StraightTotal + _pairs.Length + _beads.Length;
+        public int Par => StraightTotal + _pairs.Length + _beads.Length + _hedges.Count;
 
         /// <summary>Whether a cell is one of the endpoints, of any pair.</summary>
         public int EndpointAt(int cell)
@@ -551,14 +728,14 @@ namespace GlimmerGrove.Modes
             int cell = _beads[bead].Cell;
             int x = cell % Width, y = cell / Width;
 
-            if (Plain(x - 1, y) && Plain(x + 1, y))
+            if (Threadable(cell, x - 1, y) && Threadable(cell, x + 1, y))
             {
                 from = Index(x - 1, y);
                 to = Index(x + 1, y);
                 return true;
             }
 
-            if (Plain(x, y - 1) && Plain(x, y + 1))
+            if (Threadable(cell, x, y - 1) && Threadable(cell, x, y + 1))
             {
                 from = Index(x, y - 1);
                 to = Index(x, y + 1);
@@ -568,12 +745,32 @@ namespace GlimmerGrove.Modes
             return false;
         }
 
-        /// <summary>Ground inside the grove that belongs to nobody before anything is drawn.</summary>
-        bool Plain(int x, int y) => Inside(x, y) && Reserved(Index(x, y)) < 0;
+        /// <summary>
+        /// Ground beside a bead that a demonstration may be traced from or to: inside the grove,
+        /// belonging to nobody, and with nothing grown between it and the bead.
+        ///
+        /// The last clause is what a hedged grove added. A stroke drawn across a barrier is a
+        /// movement the mode has no input for, shown while teaching what the input is — the same
+        /// fault the diagonal interpolation had before <see cref="CoachRoute"/> existed.
+        /// </summary>
+        bool Threadable(int bead, int x, int y)
+            => Inside(x, y) && Reserved(Index(x, y)) < 0 && Adjacent(bead, Index(x, y));
 
         public static readonly (int dx, int dy)[] Steps = { (0, -1), (1, 0), (0, 1), (-1, 0) };
 
-        /// <summary>Whether two cells are orthogonally adjacent — the only step a channel may take.</summary>
-        public bool Adjacent(int a, int b) => Manhattan(a, b, Width) == 1;
+        /// <summary>
+        /// Whether two cells are orthogonally adjacent with nothing grown between them — the only
+        /// step a channel may take.
+        ///
+        /// <para>
+        /// <b>This one method is where a hedge is enforced, and it is deliberately the only
+        /// one.</b> <c>WeaveBoard.IsLegal</c> walks a path through it, the view refuses a drag
+        /// through it, the demonstration is checked against it and the solver builds its
+        /// neighbour table from the same answer — so a barrier cannot be respected by the model
+        /// and forgotten by the input, which is the shape <c>WeaveBoard</c> already refuses for
+        /// the crossing rule.
+        /// </para>
+        /// </summary>
+        public bool Adjacent(int a, int b) => Manhattan(a, b, Width) == 1 && _hedges.Open(a, b);
     }
 }

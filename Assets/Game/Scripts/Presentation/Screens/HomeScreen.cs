@@ -323,9 +323,19 @@ namespace GlimmerGrove
             ResourcePill(row, 0f, Pal.Gold, null, Compact.Number(Profile.Coins), true,
                          () => Flow.Modal<AdOfferOverlay>(v => v.PlacementId = AdPlacement.CoinBonus),
                          ResourceSlots.Kind.Credits, Compact.Number);
+            // The gem shelf, not a "coming soon" panel. It said gems would arrive one day and
+            // was left behind when they did — they buy hearts, boosts, a continue on a lost run
+            // and a heart rescue, all shipped — so the one control on this row that promises
+            // something was the only one that did nothing, in hardcoded English that the loc
+            // gate could not see because it is not key-shaped.
+            //
+            // GemShopOverlay rather than the shop tab, and that is the same answer a lost run
+            // gets: it brings the shelf to the player instead of navigating, so the hub is
+            // still underneath when they close it. It also keeps the house rule this row
+            // exists to obey — a `+` beside a resource always opens that resource's panel,
+            // whatever the state of the world.
             ResourcePill(row, 318f, Pal.Bloom, "ic_gem", Compact.Number(Profile.Gems), false,
-                         () => Flow.Modal<ComingSoonOverlay>(v => v.Configure("Gems", "ic_gem",
-                             "Gems will unlock hints, skins and seasonal glades.")),
+                         () => Flow.Modal<GemShopOverlay>(),
                          ResourceSlots.Kind.Gems, Compact.Number);
         }
 
