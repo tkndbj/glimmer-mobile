@@ -409,12 +409,21 @@ namespace GlimmerGrove
                                   Vector2.one * 60f, new Vector2(0f, .5f), new Vector2(64f, 0f));
             glyph.preserveAspect = true;
 
+            // The label sits to the right of the glyph, and the offset has to carry half its
+            // own width because UIKit.Box *always* pivots at centre however it is anchored —
+            // the trap Corner() exists for, which cannot be used here because it reads an
+            // anchor y of .5 as "top" and would drop the line 30 units. Passing the margin
+            // straight through put this 400-wide box at -84..316 on a plate starting at 0, so
+            // the line hung off the left edge and ran underneath the heart. Shipped that way.
+            const float labelLeft = 116f, labelWidth = 400f;
+
             UIKit.Shrinkable(
                 UIKit.Titled("Was", row.transform,
                              Loc.Format("ui.shop.capacity_upgrade",
                                         Grant.CapacityWas, Wallet.MaxHearts),
                              34, Pal.Cream, TextAnchor.MiddleLeft,
-                             new Vector2(400f, 60f), new Vector2(0f, .5f), new Vector2(116f, 0f),
+                             new Vector2(labelWidth, 60f), new Vector2(0f, .5f),
+                             new Vector2(labelLeft + labelWidth * .5f, 0f),
                              3f, 3f), 20);
 
             var rt = (RectTransform)row.transform;

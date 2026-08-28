@@ -50,18 +50,35 @@ SCRIPT_ASMS = os.path.join(ROOT, "Library", "ScriptAssemblies")
 PACKAGE_CACHE = os.path.join(ROOT, "Library", "PackageCache")
 
 
+# Where the Editor keeps the reference assemblies and the Roslyn it ships with. macOS
+# buries the whole of Windows' `Editor/Data` under `Unity.app/Contents/Resources/Scripting`
+# and drops the .exe suffixes; everything below that root is laid out identically, which is
+# what lets one path decide the difference rather than a fork per tool.
+UNITY_ROOTS = (
+    "C:/Program Files/Unity/Hub/Editor/*/Editor/Data",
+    "/Applications/Unity/Hub/Editor/*/Unity.app/Contents/Resources/Scripting",
+)
+
+
 def unity_data():
     """The newest installed 6000.x editor's Data folder."""
-    hits = sorted(glob.glob("C:/Program Files/Unity/Hub/Editor/*/Editor/Data"))
-    if not hits:
-        sys.exit("no Unity install found under C:/Program Files/Unity/Hub/Editor")
-    return hits[-1]
+    for pattern in UNITY_ROOTS:
+        hits = sorted(glob.glob(pattern))
+        if hits:
+            return hits[-1]
+    sys.exit("no Unity install found under any of:\n  " + "\n  ".join(UNITY_ROOTS))
+
+
+def exe(name):
+    """A bundled executable's file name on this platform."""
+    return name + ".exe" if os.name == "nt" else name
 
 
 DATA = unity_data()
 ENGINE = os.path.join(DATA, "Managed", "UnityEngine")
-CSC = os.path.join(DATA, "DotNetSdk", "sdk", "8.0.318", "Roslyn", "bincore", "csc.dll")
-DOTNET = os.path.join(DATA, "DotNetSdk", "dotnet.exe")
+CSC = (sorted(glob.glob(os.path.join(DATA, "DotNetSdk", "sdk", "*", "Roslyn",
+                                    "bincore", "csc.dll"))) or [""])[-1]
+DOTNET = os.path.join(DATA, "DotNetSdk", exe("dotnet"))
 NETSTANDARD = os.path.join(DATA, "NetStandard", "ref", "2.1.0", "netstandard.dll")
 NETFX_SHIMS = os.path.join(DATA, "NetStandard", "compat", "2.1.0", "shims", "netfx")
 
