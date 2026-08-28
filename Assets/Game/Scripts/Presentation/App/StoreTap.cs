@@ -60,6 +60,10 @@ namespace GlimmerGrove
                     Say(host, ("ui.shop.already_owned", Pal.Mint));
                     return false;
 
+                case StoreOfferState.Included:
+                    Say(host, ("ui.shop.already_included", Pal.Mint));
+                    return false;
+
                 case StoreOfferState.AwaitingGrant:
                     Say(host, ("ui.shop.awaiting", Pal.Sun));
                     return false;

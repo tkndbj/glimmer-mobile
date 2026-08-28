@@ -162,6 +162,32 @@ namespace GlimmerGrove.Persistence
         public static bool WasRevoked(string productId)
             => !string.IsNullOrEmpty(productId) && _revoked.Contains(productId);
 
+        /// <summary>
+        /// True when this player's cap already reaches this container, so buying it would
+        /// hand over nothing.
+        ///
+        /// <para>
+        /// <b>The cap is the largest container held, never the sum</b>, so a player who owns
+        /// the 50 is not made better off by also buying the 10 — and a real-money product
+        /// that grants nothing is the one thing a shop must never sell. That is what this
+        /// answers, and it is deliberately asked of the <em>derived cap</em> rather than of
+        /// the held set: a bigger container, this very container, a ceiling that has been
+        /// lowered under a rung, and a free refill cap raised past one are four different
+        /// stories with one honest answer, and reading <see cref="RefillCap"/> gets all four
+        /// with no case analysis and no second rule to keep in step. A refund is covered for
+        /// the same reason — a revoked container contributes nothing to the cap, so the rung
+        /// under it becomes buyable again the moment the revocation lands.
+        /// </para>
+        /// <para>
+        /// It is true of a container the player <em>owns</em> as well, which is why
+        /// <c>StoreService.OfferFor</c> asks <see cref="IsHeld"/> first: those are two
+        /// different sentences on a card, and the one about a purchase they actually made is
+        /// the one they should be shown.
+        /// </para>
+        /// </summary>
+        public static bool Covers(StoreProduct product)
+            => product != null && product.IsContainer && RefillCap >= product.HeartCapacity;
+
         // ------------------------------------------------------------------ writing
         /// <summary>
         /// Records a container against a redeemed receipt, and says whether anything moved.

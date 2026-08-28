@@ -33,7 +33,7 @@ namespace GlimmerGrove
         ChapterDefinition _chapter;
         Text _moves, _lamps, _hintCount;
         StarRow _pips;
-        Btn _undo, _hint;
+        Btn _hint;
         bool _finished;
 
         /// <summary>
@@ -89,6 +89,28 @@ namespace GlimmerGrove
 
         public BoardView Board => _board;
         public LevelDefinition Level => _def;
+
+        /// <summary>
+        /// This screen gives up the bottom inset as well as the top.
+        ///
+        /// <para>
+        /// <b>The one thing anchored to the bottom here is the hint row, and it is padded
+        /// already.</b> Honouring the home indicator on top of that padding stacks one gap on
+        /// another, and what it leaves is a band of bare backdrop under the row — reported from
+        /// an iPhone, invisible on every device without an indicator, because on those two the
+        /// insets are zero and the wrong layout and the right one coincide. So the row is laid
+        /// out against the display and buys its own clearance: the button sits 81 units above
+        /// the edge at its lowest and the caption 53, where the pill reaches about 36. The
+        /// board's bottom margin is unchanged and now means the same distance on every device,
+        /// which is what it always read as.
+        /// </para>
+        /// <para>
+        /// The sides are still honoured. Nothing else on this screen is bottom-anchored, and
+        /// the other modes keep <c>RunScreen.SafeEdges</c> as it is — their rows are not
+        /// padded the same way.
+        /// </para>
+        /// </summary>
+        protected override SafeArea.Edges SafeEdges => SafeArea.Edges.Left | SafeArea.Edges.Right;
 
         protected override void Build()
         {
@@ -360,47 +382,64 @@ namespace GlimmerGrove
                             TextAnchor.MiddleCenter, new Vector2(30f, 30f),
                             new Vector2(.5f, .5f), new Vector2(x, 1f), 0f, 2f);
 
+        /// <summary>How tall the bottom row is. It stands on the display's bottom edge.</summary>
+        const float BottomBarHeight = 250f;
+
+        /// <summary>
+        /// The bottom row: the hint key, and nothing else.
+        ///
+        /// <para>
+        /// <b>It stands on the display's bottom edge on every device</b> — see
+        /// <see cref="SafeEdges"/> for why this screen gives up the bottom inset. The row
+        /// carries its own clear air instead: the button's centre is 165 units above the edge
+        /// and the caption's foot 53, both well clear of the home indicator's pill.
+        /// </para>
+        /// <para>
+        /// <b>Undo and restart used to stand either side of the hint and are gone.</b> A
+        /// restart is a forfeit — it abandons a staked run and is asked about
+        /// (<c>RunScreen.RestartLevel</c>) — so it belongs behind the header's key rather than
+        /// one tap from the board, where the two controls beside it cost nothing. Undo went
+        /// with it at the owner's decision: note that invariant 22 leans on it, since a
+        /// refunded turn is what made exploring a crossing free under a budget of
+        /// <c>par x 1.60</c>, so every committed turn now counts and the budget is that much
+        /// tighter. <see cref="BoardView.Undo"/> is untouched and simply has no caller.
+        /// </para>
+        /// </summary>
         void BuildBottomBar()
         {
-            var bar = UIKit.Box("BottomBar", Safe, new Vector2(0f, 250f), new Vector2(.5f, 0f), new Vector2(0f, 125f));
+            var bar = UIKit.Box("BottomBar", Safe, new Vector2(0f, BottomBarHeight),
+                                new Vector2(.5f, 0f), new Vector2(0f, BottomBarHeight * .5f));
             bar.anchorMin = new Vector2(0f, 0f); bar.anchorMax = new Vector2(1f, 0f);
-            bar.sizeDelta = new Vector2(0f, 250f);
+            bar.sizeDelta = new Vector2(0f, BottomBarHeight);
 
+            // Bleeds 40 above the bar so the gradient starts before the row does; the bar
+            // itself stands on the display, so there is nothing under it to cover.
             var shade = UIKit.Img("Shade", bar, Art.FadeUp(64), new Color(.02f, .05f, .08f, .5f));
             UIKit.StretchTo((RectTransform)shade.transform, 0, 0, 0, -40);
 
-            _undo = UIKit.IconButton("Undo", bar, "sq_blue", "ic_undo", new Vector2(150f, 150f),
-                                     new Vector2(.5f, .5f), new Vector2(-215f, 10f), () => _board.Undo());
             _hint = UIKit.IconButton("Hint", bar, "sq_orange", "ic_hint", new Vector2(168f, 168f),
-                                     new Vector2(.5f, .5f), new Vector2(0f, 10f), UseHint);
-            // Routed through RestartLevel rather than straight at the board, so this button
-            // and the pause menu's cannot disagree about what a restart resets — the clock
-            // was the first thing they would have.
-            UIKit.IconButton("Restart", bar, "sq_green", "ic_restart", new Vector2(150f, 150f),
-                             new Vector2(.5f, .5f), new Vector2(215f, 10f), RestartLevel);
+                                     new Vector2(.5f, .5f), new Vector2(0f, 40f), UseHint);
 
             var badge = UIKit.Img("Badge", _hint.transform, Art.Disc(64), Pal.Rose,
                                   new Vector2(58f, 58f), new Vector2(1f, 1f), new Vector2(-16f, -16f));
             _hintCount = UIKit.Titled("N", badge.transform, Wallet.Hints.Count.ToString(), 34,
                                       Pal.Cream, TextAnchor.MiddleCenter, outline: 0f, shadow: 2f);
 
-            Caption(bar, "undo", -215f);
-            Caption(bar, "hint", 0f);
-            Caption(bar, "reset", 215f);
+            Caption(bar, "hint", -54f);
 
             foreach (Transform c in bar)
             {
                 if (c.GetComponent<Btn>() == null) continue;
                 c.localScale = Vector3.zero;
-                Tween.Pop(c, 0f, .5f, .35f + Mathf.Abs(((RectTransform)c).anchoredPosition.x) * .0006f)
+                Tween.Pop(c, 0f, .5f, .35f)
                      .OnDone(() => { var b = c.GetComponent<Btn>(); if (b) b.Rehome(); });
             }
         }
 
-        static void Caption(Transform parent, string text, float x)
+        static void Caption(Transform parent, string text, float y)
             => UIKit.Titled("Cap_" + text, parent, text, 26, new Color(1f, .95f, .84f, .62f),
                             TextAnchor.MiddleCenter, new Vector2(220f, 36f), new Vector2(.5f, .5f),
-                            new Vector2(x, -84f), 3f, 0f);
+                            new Vector2(0f, y), 3f, 0f);
 
         // --------------------------------------------------------------- the stake clock
         /// <summary>
@@ -496,9 +535,8 @@ namespace GlimmerGrove
             // for. A fresh board is nought moves in, which projects to three stars and
             // reads as "already perfect" before the player has touched anything.
             if (_pips) _pips.SetInstant(PlayerProgress.Stars(_def.Id));
-            if (_undo) _undo.Interactable = _board != null && _board.CanUndo;
 
-            // Greyed on exactly the edges the other two are, which is why it is asked here:
+            // Greyed on exactly the edges the review key is, which is why it is asked here:
             // BoardView.Locked raises OnChanged, so a latch taken by a cascade reaches this.
             Teaching.Refresh();
             if (_hint)

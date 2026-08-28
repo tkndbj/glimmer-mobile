@@ -393,6 +393,14 @@ namespace GlimmerGrove
                     _price.color = Pal.A(Pal.Cream, .85f);
                     break;
 
+                // Grey like Owned, and a different word: the rung is included in what they
+                // hold rather than bought. See StoreOfferState.Included.
+                case StoreOfferState.Included:
+                    _priceFace.sprite = Art.S("Ui/btn_gray");
+                    _price.text = Loc.Get("ui.shop.included");
+                    _price.color = Pal.A(Pal.Cream, .85f);
+                    break;
+
                 case StoreOfferState.AwaitingGrant:
                     _priceFace.sprite = Art.S("Ui/btn_orange");
                     _price.text = Loc.Get("ui.shop.awaiting_short");

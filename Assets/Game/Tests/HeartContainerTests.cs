@@ -123,6 +123,66 @@ namespace GlimmerGrove.Tests
                                       "gg_heart_vessel_from_the_future");
         }
 
+        // --------------------------------------------------------- what is covered
+        /// <summary>
+        /// The rule the shop asks. A cap is the largest container held and never the sum, so
+        /// the rungs under the one somebody owns would take real money and change nothing
+        /// they can see — and neither store can refuse that for us, because the three are
+        /// separate non-consumables and both would happily charge for the 10.
+        /// </summary>
+        [Test]
+        public void ASmallerVesselIsCoveredByABiggerOneThatIsHeld()
+        {
+            HeartContainerLedger.Grant(Vessel("gg_heart_vessel_3"));
+
+            Assert.IsTrue(HeartContainerLedger.Covers(Vessel("gg_heart_vessel_1")));
+            Assert.IsTrue(HeartContainerLedger.Covers(Vessel("gg_heart_vessel_2")));
+            Assert.IsTrue(HeartContainerLedger.Covers(Vessel("gg_heart_vessel_3")));
+        }
+
+        [Test]
+        public void ABiggerVesselIsNotCoveredByASmallerOneThatIsHeld()
+        {
+            HeartContainerLedger.Grant(Vessel("gg_heart_vessel_1"));
+
+            Assert.IsTrue(HeartContainerLedger.Covers(Vessel("gg_heart_vessel_1")));
+            Assert.IsFalse(HeartContainerLedger.Covers(Vessel("gg_heart_vessel_2")),
+                           "the ladder above what somebody holds is still worth buying");
+            Assert.IsFalse(HeartContainerLedger.Covers(Vessel("gg_heart_vessel_3")));
+        }
+
+        [Test]
+        public void AFreshAccountIsCoveredByNothing()
+        {
+            foreach (var product in StoreRules.Catalog.Products)
+                if (product.IsContainer)
+                    Assert.IsFalse(HeartContainerLedger.Covers(product), product.Id);
+        }
+
+        /// <summary>
+        /// Asked of the derived cap rather than of the held set, so a refund puts the rungs
+        /// under a container back on sale the moment the revocation lands — with no second
+        /// rule to keep in step with <see cref="HeartContainerLedger.RefillCap"/>.
+        /// </summary>
+        [Test]
+        public void ARefundedVesselCoversNothing()
+        {
+            HeartContainerLedger.Grant(Vessel("gg_heart_vessel_3"));
+            HeartContainerLedger.ApplyServerRevocations(new[] { "gg_heart_vessel_3" });
+
+            Assert.IsFalse(HeartContainerLedger.Covers(Vessel("gg_heart_vessel_1")));
+            Assert.IsFalse(HeartContainerLedger.Covers(Vessel("gg_heart_vessel_3")));
+        }
+
+        [Test]
+        public void ACurrencyProductIsNeverCovered()
+        {
+            HeartContainerLedger.Grant(Vessel("gg_heart_vessel_3"));
+
+            Assert.IsFalse(HeartContainerLedger.Covers(StoreRules.Find("gg_gems_3")));
+            Assert.IsFalse(HeartContainerLedger.Covers(null));
+        }
+
         // ------------------------------------------------------------- idempotence
         /// <summary>
         /// The property the whole feature rests on. Applying a container twice is applying it

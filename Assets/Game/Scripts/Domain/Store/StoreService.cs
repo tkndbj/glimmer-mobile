@@ -49,6 +49,27 @@ namespace GlimmerGrove.Store
         /// <summary>A one-time product this account already holds.</summary>
         Owned,
 
+        /// <summary>
+        /// A heart container a bigger one already covers, so buying it would hand over
+        /// nothing.
+        ///
+        /// <para>
+        /// Its own state rather than <see cref="Owned"/>, because the two are different
+        /// sentences and only one of them is true: a player who bought the 50 does not own
+        /// the 10, and a card marked YOURS over a purchase they never made is the shop
+        /// telling them something they can check and find wrong. What they need to know is
+        /// that this rung is already included in what they hold — which is also the answer
+        /// to "why can I not buy it".
+        /// </para>
+        /// <para>
+        /// Drawn rather than hidden, for <see cref="Missing"/>'s reason read the other way
+        /// round: a ladder with a rung cut out of it reads as a shop that has lost something,
+        /// where the whole ladder with the lower rungs marked included reads as what it is —
+        /// a player at the top of it. See <c>HeartContainerLedger.Covers</c>.
+        /// </para>
+        /// </summary>
+        Included,
+
         /// <summary>Bought, paid for, and waiting on a connection to be credited.</summary>
         AwaitingGrant,
 
@@ -409,6 +430,14 @@ namespace GlimmerGrove.Store
             if (product.IsContainer && HeartContainerLedger.IsHeld(product.Id))
                 return new StoreOffer(StoreOfferState.Owned);
 
+            // A smaller vessel than the one they hold. The cap is the largest container held
+            // and never the sum, so this would take real money and change nothing a player
+            // can see — which is the one thing a shop must never sell, and it is not a state
+            // either store can refuse for us: these are three separate non-consumables, so
+            // both would happily charge for the 10 to somebody holding the 50.
+            if (HeartContainerLedger.Covers(product))
+                return new StoreOffer(StoreOfferState.Included);
+
             // A refunded container is buyable again, and the store's own receipt must not be
             // allowed to say otherwise: both stores keep a record of a refunded
             // non-consumable for a while, so trusting `Owned` here would leave the player
@@ -444,7 +473,8 @@ namespace GlimmerGrove.Store
             if (!offer.CanBuy)
             {
                 return StoreResult.Failed(
-                    offer.State == StoreOfferState.Owned ? StoreFailure.AlreadyOwned
+                    offer.State == StoreOfferState.Owned ||
+                    offer.State == StoreOfferState.Included ? StoreFailure.AlreadyOwned
                     : offer.State == StoreOfferState.AwaitingGrant ? StoreFailure.AwaitingGrant
                     : offer.State == StoreOfferState.Offline ? StoreFailure.NotConnected
                     : StoreFailure.UnknownProduct);

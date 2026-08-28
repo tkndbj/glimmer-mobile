@@ -3522,6 +3522,10 @@
       "text": "landmarks"
     },
     {
+      "key": "ui.shop.already_included",
+      "text": "Your bigger vessel already holds this much"
+    },
+    {
       "key": "ui.shop.already_owned",
       "text": "You already have this one"
     },
@@ -3644,6 +3648,10 @@
     {
       "key": "ui.shop.hearts_held",
       "text": "You are holding {0}"
+    },
+    {
+      "key": "ui.shop.included",
+      "text": "INCLUDED"
     },
     {
       "key": "ui.shop.need_gems",
