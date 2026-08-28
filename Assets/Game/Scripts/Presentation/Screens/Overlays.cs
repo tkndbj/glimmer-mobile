@@ -258,7 +258,24 @@ namespace GlimmerGrove
         /// </summary>
         const int RowPips = 5;
 
-        Btn _watch;
+        /// <summary>
+        /// Hearts for a video: the free way out, and always drawn above the paid one.
+        ///
+        /// <para>
+        /// A collaborator for <see cref="_rescue"/>'s reason and beside it — see
+        /// <see cref="HeartVideoFlow"/>, which is also where the argument lives for why tapping
+        /// it shows the video rather than an explanatory panel. What stays here is what only a
+        /// panel can answer: where the button goes, and what "back onto the board" means.
+        /// </para>
+        /// <para>
+        /// Built once per defeat and kept across rebuilds, exactly as the rescue is, because it
+        /// holds the one piece of state a redraw must not reset: whether a video is already on
+        /// its way up. This panel rebuilds on a gem balance the rescue cares about, a cloud sync
+        /// can move one at any moment, and a fresh flow would hand back an armed WATCH button
+        /// over a video already playing.
+        /// </para>
+        /// </summary>
+        HeartVideoFlow _video;
 
         /// <summary>
         /// Hearts for gems: the third way out, and the only one that costs money.
@@ -284,10 +301,7 @@ namespace GlimmerGrove
         /// only updated when the screen was reopened would tick down invisibly and the
         /// button would stay stale until they gave up on it.
         /// </summary>
-        void Update() => PaintWatch();
-
-        void PaintWatch()
-            => AdOfferButton.Paint(_watch, AdPlacement.HeartRefill, "ui.ads.hearts_cta");
+        void Update() => _video?.Paint();
 
 
         /// <summary>
@@ -320,19 +334,6 @@ namespace GlimmerGrove
         static string FreeKey(HeartPrice price)
             => price == HeartPrice.Replay ? "ui.defeat.free_replay" : "ui.defeat.free_glade";
 
-        static string ReasonKey(DefeatReason reason)
-        {
-            switch (reason)
-            {
-                case DefeatReason.ConduitLost: return "ui.defeat.conduit_reason";
-                case DefeatReason.OutOfTime: return "ui.defeat.time_reason";
-                case DefeatReason.OutOfInk: return "ui.defeat.ink_reason";
-                case DefeatReason.WellFlooded: return "ui.defeat.flood_reason";
-                case DefeatReason.OutOfMotes: return "ui.defeat.motes_reason";
-                default: return "ui.defeat.moves_reason";
-            }
-        }
-
         /// <summary>
         /// One sentence per distance, written out for the same reason
         /// <see cref="WinOverlay.RankKeys"/> is: a key assembled at runtime is a key the
@@ -361,8 +362,6 @@ namespace GlimmerGrove
             // see when the next is due instead of concluding the offer was a fluke.
             bool offering = !canRetry && RewardedAds.ShouldOffer(AdPlacement.HeartRefill);
 
-            _watch = null;
-
             // Once per defeat, never per paint: it decides the offer, counts the impression and
             // subscribes to the balance, none of which a redraw may do again.
             _rescue ??= new DefeatRescueFlow(this, Run.Level, HeartsLeft, canRetry,
@@ -376,11 +375,12 @@ namespace GlimmerGrove
             MakePanel(new Vector2(DefeatPanel.Width, stack.Height),
                       Loc.Get(TitleKey(Run.Reason)), dismissOnScrim: false);
 
-            // Body copy, drawn the way every other panel here draws it: wrapped, and
-            // with no outline or shadow. Those two are for headings sitting on a ribbon;
-            // on a 32pt sentence they smear the strokes together and it stops reading.
-            Body("Why", Loc.Get(ReasonKey(Run.Reason)), -186f, 150f);
-
+            // The sentence explaining the defeat used to sit here and no longer does. It
+            // restated the title directly above it — "OUT OF TURNS" over "the groove grew tired
+            // before the glade woke" — and was reported from play as noise at the one moment
+            // nobody is reading prose. What is left is the title, how close it was, and what to
+            // do about it. The offer panel that comes first already says why, as a subtitle
+            // under DEFEAT, where it reads as a reason rather than as the subject.
             BuildHowClose();
 
             // Five empty hearts under a run that cost none of them is a picture of a charge
@@ -388,8 +388,16 @@ namespace GlimmerGrove
             // contradicting itself. The row is replaced by the reason instead — the reason,
             // not a reason: which of the two clauses spared this run is what the player needs
             // to know, since one of them runs out after three boards and the other never does.
+            //
+            // Centred in the room it actually has rather than at a typed offset, because the
+            // near-miss slot above it is reserved on every defeat and filled on few — and in
+            // Pal.Moss rather than Pal.Mint, which is a board colour and was being asked to
+            // carry a whole sentence of unoutlined body copy across cream paper. See
+            // DefeatPanel.FreeCentre and Pal.Moss; both were reported from play.
             if (WasFree)
-                UIKit.Shrinkable(Body("Free", Loc.Get(FreeKey(Price)), -424f, 96f, Pal.Mint), 22);
+                UIKit.Shrinkable(Body("Free", Loc.Get(FreeKey(Price)),
+                                      -DefeatPanel.FreeCentre(Run.NearMiss),
+                                      DefeatPanel.FreeHeight, Pal.Moss), 22);
             else BuildHearts();
 
             if (stack.HasRetry)
@@ -403,20 +411,29 @@ namespace GlimmerGrove
             // Out of hearts. Which sentence depends on whether there is a way back in at all:
             // telling somebody to wait eight hours directly above a button that skips the wait
             // is how a panel reads as a trick.
+            //
+            // Drawn in the panel's own body colour rather than in red. Red is an alarm, and this
+            // is an instruction sitting directly above the two buttons that carry it out — the
+            // colour was saying "something is wrong" about the one part of the panel that is
+            // actually a way forward.
             if (stack.HasNote)
                 UIKit.Shrinkable(
                     Body("Wait", Loc.Get(stack.HasWatch || stack.HasRescue
                                              ? "ui.defeat.watch_for_hearts"
                                              : "ui.defeat.out_of_hearts"),
-                         -stack.Note, DefeatPanel.NoteHeight, Pal.Ember), 22);
+                         -stack.Note, DefeatPanel.NoteHeight), 22);
 
             if (stack.HasWatch)
             {
-                _watch = UIKit.TextButton("WatchAd", Panel, "btn_green", Loc.Get("ui.ads.hearts_cta"), 44,
-                                          new Vector2(620f, DefeatPanel.ActionHeight),
-                                          new Vector2(.5f, 1f), new Vector2(0f, -stack.Watch),
-                                          OfferHearts, "ic_play");
-                PaintWatch();
+                // Straight back onto the board once the prize is taken, exactly as the rescue's
+                // purchase is — and through the same method, so the two ways back cannot come to
+                // mean different things. Guarded for its own lifetime because the celebration
+                // outlives this panel: a player who backgrounds the app during the video can come
+                // back somewhere else entirely, and the hearts are theirs either way.
+                _video ??= new HeartVideoFlow(this, () => { if (this) BackToTheBoard(); });
+
+                _video.Draw(Panel, new Vector2(620f, DefeatPanel.ActionHeight),
+                            new Vector2(.5f, 1f), new Vector2(0f, -stack.Watch));
             }
 
             if (stack.HasRescue)
@@ -450,23 +467,6 @@ namespace GlimmerGrove
         /// </summary>
         void BackToTheBoard()
             => Close(() => { if (Screen) Screen.RetryAfterDefeat(); }, quiet: true);
-
-        /// <summary>
-        /// Opens the offer, and goes straight back into the run if it pays.
-        ///
-        /// Straight back in, rather than returning to a panel that has quietly grown a
-        /// retry button, because returning to the run is what the player agreed to watch a
-        /// video for. Making them find one more button afterwards is a tax on the thing we
-        /// just persuaded them to do.
-        /// </summary>
-        void OfferHearts()
-        {
-            Flow.Modal<AdOfferOverlay>(v =>
-            {
-                v.PlacementId = AdPlacement.HeartRefill;
-                v.Rewarded = () => Close(() => { if (Screen) Screen.RetryAfterDefeat(); });
-            });
-        }
 
         /// <summary>
         /// How close the run came, in the strongest form the evidence supports.
@@ -507,8 +507,9 @@ namespace GlimmerGrove
                     int at = Mathf.Clamp(Run.TurnsShort - 1, 0, NearMissKeys.Length - 1);
 
                     UIKit.Titled("Close", Panel, Loc.Get(NearMissKeys[at]), 46, Pal.Gold,
-                                 TextAnchor.MiddleCenter, new Vector2(720f, 74f),
-                                 new Vector2(.5f, 1f), new Vector2(0f, -300f),
+                                 TextAnchor.MiddleCenter,
+                                 new Vector2(720f, DefeatPanel.CloseHeight),
+                                 new Vector2(.5f, 1f), new Vector2(0f, -DefeatPanel.CloseCentre),
                                  outline: 3f, shadow: 3f);
                     return;
                 }
@@ -516,8 +517,10 @@ namespace GlimmerGrove
                 int index = Mathf.Clamp(Run.TurnsShort - 1, 0, NearMissKeys.Length - 1);
 
                 var line = UIKit.Titled("Close", Panel, Loc.Get(NearMissKeys[index]), 46, Pal.Gold,
-                                        TextAnchor.MiddleCenter, new Vector2(720f, 74f),
-                                        new Vector2(.5f, 1f), new Vector2(0f, -300f),
+                                        TextAnchor.MiddleCenter,
+                                        new Vector2(720f, DefeatPanel.CloseHeight),
+                                        new Vector2(.5f, 1f),
+                                        new Vector2(0f, -DefeatPanel.CloseCentre),
                                         outline: 3f, shadow: 3f);
 
                 // Landed rather than present. The panel springs in over half a second, so a
@@ -537,9 +540,24 @@ namespace GlimmerGrove
         }
 
         /// <summary>Wrapped, unadorned panel prose. Shared so both states line up.</summary>
+        /// <summary>
+        /// A paragraph on the panel's paper: wrapped, and with no outline or shadow. Those two
+        /// are for headings sitting on a ribbon; on a 32pt sentence they smear the strokes
+        /// together and it stops reading.
+        ///
+        /// <para>
+        /// <b>Middle-aligned, because <paramref name="y"/> is a centre.</b> Every number
+        /// <c>DefeatPanel</c> hands out is the centre of the room reserved for a row, and a
+        /// paragraph anchored to the top of that room sits high in it by however much shorter
+        /// than the room it happens to be — so the air above it and the air below it are never
+        /// the two halves of one gap, and both rows drawn through here were visibly closer to
+        /// what follows them than to what precedes them. Centring makes the reserved room mean
+        /// what it says whatever the line count and whatever the translation.
+        /// </para>
+        /// </summary>
         Text Body(string name, string text, float y, float height, Color? colour = null)
             => UIKit.Titled(name, Panel, text, 32, colour ?? new Color(.36f, .25f, .18f),
-                            TextAnchor.UpperCenter, new Vector2(680f, height),
+                            TextAnchor.MiddleCenter, new Vector2(680f, height),
                             new Vector2(.5f, 1f), new Vector2(0f, y),
                             outline: 0f, shadow: 0f, wrap: true);
 
@@ -569,7 +587,7 @@ namespace GlimmerGrove
             row.anchorMin = row.anchorMax = new Vector2(.5f, 1f);
             row.pivot = new Vector2(.5f, .5f);
             row.sizeDelta = new Vector2(600f, 120f);
-            row.anchoredPosition = new Vector2(0f, -400f);
+            row.anchoredPosition = new Vector2(0f, -DefeatPanel.HeartsCentre);
 
             const float step = 96f;
             int pips = Wallet.MaxHearts < RowPips ? Wallet.MaxHearts : RowPips;
@@ -638,7 +656,14 @@ namespace GlimmerGrove
     {
         Text _countdown;
         bool _offering;
-        Btn _watch;
+
+        /// <summary>
+        /// The video, and what it pays into. See <see cref="HeartVideoFlow"/> — the same free
+        /// way back the defeat panel draws, because a player who meets the explanatory panel in
+        /// one of the two places hearts are asked for and the celebration in the other has met
+        /// two features rather than one.
+        /// </summary>
+        HeartVideoFlow _video;
 
         protected override void Build()
         {
@@ -676,23 +701,14 @@ namespace GlimmerGrove
 
             if (stack.HasWatch)
             {
-                _watch = UIKit.TextButton("WatchAd", Panel, "btn_green", Loc.Get("ui.ads.hearts_cta"), 44,
-                                          new Vector2(560f, HeartGatePanel.ActionHeight),
-                                          new Vector2(.5f, 1f), new Vector2(0f, -stack.Watch),
-                                          () => Flow.Modal<AdOfferOverlay>(v =>
-                                          {
-                                              v.PlacementId = AdPlacement.HeartRefill;
+                // Closing once the prize has been taken rather than repainting: this panel
+                // exists to explain an empty heart bar, and once it is no longer empty it has
+                // nothing left to say. Guarded because the celebration outlives it — and it
+                // usually does, since Paint below closes this the moment the hearts land.
+                _video = new HeartVideoFlow(this, () => { if (this) Close(); });
 
-                                              // Closing on reward rather than repainting: this
-                                              // panel exists to explain an empty heart bar, and
-                                              // once it is no longer empty it has nothing to say.
-                                              v.Rewarded = () => Close();
-                                          }), "ic_play");
-
-                // The caption is a phrase rather than a word, and the captions that replace it
-                // while a video is fetched are longer still — so it is pinned to one line
-                // rather than left to best-fit, which would stack it. See UIKit.OneLine.
-                UIKit.OneLine(_watch, 24);
+                _video.Draw(Panel, new Vector2(560f, HeartGatePanel.ActionHeight),
+                            new Vector2(.5f, 1f), new Vector2(0f, -stack.Watch));
             }
 
             // Navigates rather than raising a shelf. See the class remarks: nothing is frozen
@@ -716,7 +732,7 @@ namespace GlimmerGrove
         {
             // The offer's own cooldown runs independently of the heart clock, so it is
             // repainted here too rather than only when the panel is built.
-            AdOfferButton.Paint(_watch, AdPlacement.HeartRefill, "ui.ads.hearts_cta");
+            _video?.Paint();
 
             if (!_countdown) return;
 

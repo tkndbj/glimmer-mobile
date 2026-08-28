@@ -1,5 +1,7 @@
 using System;
 using GlimmerGrove.Content;
+using GlimmerGrove.Layout;
+using GlimmerGrove.Persistence;
 using GlimmerGrove.Localization;
 using GlimmerGrove.Progression;
 using GlimmerGrove.Store;
@@ -60,21 +62,29 @@ namespace GlimmerGrove
         /// <summary>The offer was turned down, however that happened. The run is now lost.</summary>
         public Action Declined;
 
+        // A "restart level" button lived here for one revision and was taken out again. It
+        // charged the same heart declining charges, wrote the same record, and differed only in
+        // skipping the panel that follows — whose own first button then did exactly what it had
+        // just done. Two buttons with one outcome is the confusion this panel was being fixed
+        // for, one layer further down. The panel asks whether to pay; what to do instead is the
+        // defeat panel's whole job.
+
         // ------------------------------------------------------------------ geometry
-        // A cursor walking down the panel rather than absolute offsets, because the panel has
-        // two heights: the short-of-gems state carries a line the affordable one does not.
-        // Absolute offsets would mean that line drawn through a button on exactly one of the
-        // two branches — which is the failure AdOfferOverlay's layout was rewritten to avoid.
-        const float PanelW = 880f;
-        const float ContentW = 700f;
-        const float HeadRoom = 150f;
-        const float AmountH = 190f;
-        const float NoteH = 80f;
-        const float HeldH = 44f;
-        const float ShortH = 58f;
-        const float ButtonH = 148f;
-        const float GiveUpH = 96f;
-        const float FootRoom = 46f;
+        // A cursor walking down the panel rather than absolute offsets, because the panel now
+        // has four heights: the short-of-gems line and the restart button are each optional and
+        // they combine. Absolute offsets would mean a line drawn through a button on exactly one
+        // of the branches — which is the failure AdOfferOverlay's layout was rewritten to avoid.
+        //
+        // The numbers themselves live in ContinuePanel, in Domain, with the fit check that
+        // refused the first version of the banner for being ten units off the top of a 4:3
+        // canvas. See there.
+        const float PanelW = ContinuePanel.Width;
+        const float ContentW = ContinuePanel.ContentWidth;
+        const float HeadRoom = ContinuePanel.HeadRoom;
+        const float OfferH = ContinuePanel.OfferH;
+        const float ShortH = ContinuePanel.ShortH;
+        const float ButtonH = ContinuePanel.ButtonH;
+        const float GiveUpH = ContinuePanel.GiveUpH;
 
         /// <summary>What the offer's price can be met with right now. Re-read on every repaint.</summary>
         GemChoice _choice;
@@ -112,38 +122,48 @@ namespace GlimmerGrove
             // "more turns" line above it. The house rule the map nodes and the weave band
             // both landed on: whether two things overlap is arithmetic, so do the arithmetic.
             float y = HeadRoom;
-            float amountY = y + AmountH * .5f;   y += AmountH + 18f;
-            float noteY = y + NoteH * .5f;       y += NoteH + 10f;
-            float heldY = y + HeldH * .5f;       y += HeldH + 12f;
+            float offerY = y + OfferH * .5f;     y += OfferH + ContinuePanel.OfferGap;
 
             float shortY = 0f;
-            if (buying) { shortY = y + ShortH * .5f; y += ShortH + 8f; }
+            if (buying) { shortY = y + ShortH * .5f; y += ShortH + ContinuePanel.ShortGap; }
 
-            float buyY = y + ButtonH * .5f;      y += ButtonH + 16f;
-            float giveY = y + GiveUpH * .5f;     y += GiveUpH + FootRoom;
+            float buyY = y + ButtonH * .5f;      y += ButtonH + ContinuePanel.ButtonGap;
+            float giveY = y + GiveUpH * .5f;     y += GiveUpH + ContinuePanel.FootRoom;
 
             // Never dismissed by a stray tap on the scrim. The same judgement DefeatOverlay
             // makes and for a sharper reason: an accidental dismissal here does not close a
             // panel, it ends the run.
-            MakePanel(new Vector2(PanelW, y), Loc.Get(TitleKey(Offer.Unit)), dismissOnScrim: false);
+            MakePanel(new Vector2(PanelW, y), Loc.Get("ui.continue.title"), dismissOnScrim: false);
 
-            BuildAmount(amountY);
+            // Held back until the word above has landed and risen. Sequencing them is what makes
+            // the two read as one sentence — this happened, so: this question — and it is the
+            // whole reason the banner is worth animating at all.
+            var entrance = Panel.gameObject.AddComponent<CanvasGroup>();
+            entrance.alpha = 0f;
 
-            // What the purchase does, in the player's terms and read from the offer rather
-            // than written into the copy. The rule StreakInfoOverlay and AdOfferOverlay were
-            // both rebuilt around: a panel explaining the game is the first thing to rot when
-            // the game is retuned.
+            Tween.Run(ContinuePanel.PanelEnter, Ease.OutCubic, t =>
+            {
+                if (entrance) entrance.alpha = t;
+            }, entrance).Delay(ContinuePanel.PanelDelay)
+               .OnAbandon(() => { if (entrance) entrance.alpha = 1f; });
+
+            // The word first, so nobody has to infer from a price that they have lost. It was
+            // reported exactly that way — a panel offering gems, read as the cost of *finishing*
+            // the level rather than of undoing a defeat. The panel below it asks a question; this
+            // says what happened, and it is the one thing on screen that is not a choice.
+            BuildBanner(y);
+
+            // One sentence with the number in it, set large enough to be read at the moment
+            // somebody has just lost — which is not a moment anybody spends on a paragraph. It
+            // is built from the offer rather than written into the copy, so a retune of what a
+            // continue hands over cannot leave this saying something else.
             UIKit.Shrinkable(
-                UIKit.Titled("Note", Panel, Loc.Get(NoteKey(Offer.Unit)), 30,
-                             new Color(.36f, .25f, .18f), TextAnchor.UpperCenter,
-                             new Vector2(ContentW, NoteH), new Vector2(.5f, 1f),
-                             new Vector2(0f, -noteY), outline: 0f, shadow: 0f, wrap: true), 20);
-
-            UIKit.Shrinkable(
-                UIKit.Titled("Held", Panel, Loc.Format("ui.continue.held", Compact.Number(Profile.Gems)),
-                             26, new Color(.36f, .25f, .18f, .74f), TextAnchor.MiddleCenter,
-                             new Vector2(ContentW, HeldH), new Vector2(.5f, 1f),
-                             new Vector2(0f, -heldY), outline: 0f, shadow: 0f), 17);
+                UIKit.Titled("Offer", Panel,
+                             Loc.Format("ui.continue.offer", Offer.Amount,
+                                        Loc.Get(UnitKey(Offer.Unit))),
+                             38, new Color(.30f, .21f, .15f), TextAnchor.UpperCenter,
+                             new Vector2(ContentW, OfferH), new Vector2(.5f, 1f),
+                             new Vector2(0f, -offerY), outline: 0f, shadow: 0f, wrap: true), 26);
 
             if (buying)
                 UIKit.Shrinkable(
@@ -185,6 +205,66 @@ namespace GlimmerGrove
             PlayerProgression.Changed += OnBalanceChanged;
         }
 
+        /// <summary>
+        /// The word, and the one animation on this panel.
+        ///
+        /// <para>
+        /// It arrives at the middle of the screen — where the eye already is, because that is
+        /// where the board was — holds for a beat, and glides up to sit above the panel that is
+        /// arriving underneath it. Landing it in place immediately was tried and reads as a
+        /// header; travelling from where the run ended to where the question is being asked is
+        /// what makes the two feel like one sentence rather than two panels.
+        /// </para>
+        /// <para>
+        /// Where it comes to rest is <c>ContinuePanel.BannerCentre</c>'s, which counts the
+        /// panel's half-height, the ribbon standing proud of it and the gap — a modal is
+        /// centred, so all three are above the middle and all three have to be paid for.
+        /// </para>
+        /// </summary>
+        void BuildBanner(float panelHeight)
+        {
+            float rest = ContinuePanel.BannerCentre(panelHeight);
+
+            var word = UIKit.Titled("Defeat", Content, Loc.Get("ui.continue.defeat"), 84,
+                                    Pal.Rose, TextAnchor.MiddleCenter,
+                                    new Vector2(PanelW, ContinuePanel.BannerHeight),
+                                    new Vector2(.5f, .5f), Vector2.zero, 9f, 8f);
+            UIKit.Shrinkable(word, 44);
+            word.raycastTarget = false;
+
+            var rt = (RectTransform)word.transform;
+
+            // Under the reason, so the player is told what happened *and* why in one glance —
+            // and the why is the mode's own word for it, not a generic one.
+            var why = UIKit.Titled("Why", Content, Loc.Get(ReasonKey(Offer.Unit)), 30,
+                                   Pal.A(Pal.Cream, .78f), TextAnchor.MiddleCenter,
+                                   new Vector2(PanelW, 40f), new Vector2(.5f, .5f),
+                                   new Vector2(0f, -ContinuePanel.BannerHeight * .5f - 4f),
+                                   4f, 3f);
+            UIKit.Shrinkable(why, 20);
+            why.raycastTarget = false;
+            why.transform.SetParent(rt, false);
+
+            Tween.Run(ContinuePanel.BannerPop, Ease.OutBack, t =>
+            {
+                if (!word) return;
+                rt.localScale = Vector3.one * Mathf.LerpUnclamped(.4f, 1f, t);
+            }, word);
+
+            // Held where it landed before it moves, and taken up unhurriedly. Both were about a
+            // third quicker to begin with and were reported as too fast to register.
+            Tween.Run(ContinuePanel.BannerRise, Ease.InOutCubic, t =>
+            {
+                if (!word) return;
+                rt.anchoredPosition = new Vector2(0f, Mathf.Lerp(0f, rest, t));
+            }, word).Delay(ContinuePanel.BannerPop + ContinuePanel.BannerHold)
+               .OnAbandon(() => { if (word) rt.anchoredPosition = new Vector2(0f, rest); });
+
+            // No sound. Breaking glass over a lost run is a punishment noise, and this panel is
+            // an offer — it was the one thing on screen saying "you have been told off" while
+            // everything else was asking a question.
+        }
+
         void OnDestroy()
         {
             PlayerProgression.Changed -= OnBalanceChanged;
@@ -196,40 +276,6 @@ namespace GlimmerGrove
             Report(_paid);
         }
 
-        // ------------------------------------------------------------------ the amount
-        /// <summary>
-        /// What is being bought, said as a number, because it is the one thing on the panel
-        /// the player is actually deciding about.
-        ///
-        /// <para>
-        /// Drawn from generated art rather than an address, the house rule for anything a
-        /// ceremonial screen cannot afford to be missing: an <c>Image</c> whose sprite has not
-        /// arrived is a white rectangle, and this one sits behind the figure a purchase is
-        /// being made against.
-        /// </para>
-        /// </summary>
-        void BuildAmount(float y)
-        {
-            var box = UIKit.Box("Amount", Panel, new Vector2(ContentW, AmountH),
-                                new Vector2(.5f, 1f), new Vector2(0f, -y));
-
-            var glow = UIKit.Img("Glow", box, Art.Glow(160, 2.2f), Pal.A(Pal.Gold, .26f),
-                                 new Vector2(AmountH * 2.1f, AmountH * 1.5f),
-                                 new Vector2(.5f, .5f), Vector2.zero);
-            glow.raycastTarget = false;
-
-            UIKit.Shrinkable(
-                UIKit.Titled("Figure", box, "+" + Offer.Amount, 96, Pal.Gold,
-                             TextAnchor.MiddleCenter, new Vector2(ContentW, 118f),
-                             new Vector2(.5f, 1f), new Vector2(0f, -18f), 5f, 5f), 48);
-
-            UIKit.Shrinkable(
-                UIKit.Titled("Unit", box, Loc.Get(UnitKey(Offer.Unit)), 34, Pal.Cream,
-                             TextAnchor.MiddleCenter, new Vector2(ContentW, 46f),
-                             new Vector2(.5f, 1f), new Vector2(0f, -134f), 3f, 3f), 22);
-        }
-
-        // ------------------------------------------------------------------ the two answers
         /// <summary>
         /// Takes the gems and hands the allowance back.
         ///
@@ -254,7 +300,7 @@ namespace GlimmerGrove
                 // — the offer is still good, the player simply cannot meet it yet, and this
                 // panel already knows how to say that.
                 Audio.SfxVaried("back", .5f);
-                Repaint();
+                Rebuild();
                 return;
             }
 
@@ -286,7 +332,7 @@ namespace GlimmerGrove
         {
             if (_reported) return;
 
-            Flow.Modal<GemShopOverlay>(v => v.Bought = Repaint);
+            Flow.Modal<GemShopOverlay>(v => v.Bought = Rebuild);
         }
 
         // ------------------------------------------------------------------ repainting
@@ -301,41 +347,7 @@ namespace GlimmerGrove
             => GemPrice.ChoiceFor(Profile.Gems, Offer.Gems,
                                      StoreService.IsAvailable && StoreRules.Catalog.HasGems);
 
-        void OnBalanceChanged() => Repaint();
-
-        /// <summary>
-        /// Redraws the panel when what the player can do about the price has changed.
-        ///
-        /// <para>
-        /// A full <see cref="ModalView.Rebuild"/> rather than a set of label writes, because
-        /// the two states are different heights — the short one carries a line the affordable
-        /// one does not — and this project has already recorded what maintaining two sets of
-        /// coordinates costs. <c>Rebuild</c> is the redraw that does not replay the entrance,
-        /// so the panel does not pop and chime at somebody who just bought gems on top of it.
-        /// </para>
-        /// <para>
-        /// Guarded on the choice rather than on the balance: gems arriving that still do not
-        /// cover the price change nothing the player can act on, and a panel that flickers
-        /// every time a sync lands is a panel that looks broken.
-        /// </para>
-        /// </summary>
-        void Repaint()
-        {
-            if (!this || _reported || _spending) return;
-
-            var choice = Choice();
-            if (choice == _choice) return;
-
-            // An offer that has become unmeetable — the store went away while the panel was
-            // open — is left exactly as it is rather than rebuilt into a dead end. The player
-            // still has a way out, and the give-up button is it.
-            if (choice == GemChoice.Unavailable) return;
-
-            _choice = choice;
-            Rebuild();
-
-            if (choice == GemChoice.Spend) Audio.Sfx("star", .55f, 1.15f);
-        }
+        void OnBalanceChanged() => Rebuild();
 
         // ------------------------------------------------------------------ reporting
         /// <summary>
@@ -386,13 +398,31 @@ namespace GlimmerGrove
         /// missing in whichever language nobody tested — the rule <c>WinOverlay.RankKeys</c>
         /// states and <c>DefeatOverlay</c> follows.
         /// </summary>
-        static string TitleKey(ContinueUnit unit)
-            => unit == ContinueUnit.Ink ? "ui.continue.ink_title" : "ui.continue.turns_title";
+        /// <summary>
+        /// Why the run ended, in the unit the mode is measured in.
+        ///
+        /// This was the panel's <em>title</em> until the word above it took that job. It says the
+        /// same thing and now says it under "DEFEAT", where it reads as the reason rather than as
+        /// the subject.
+        /// </summary>
+        static string ReasonKey(ContinueUnit unit)
+        {
+            switch (unit)
+            {
+                case ContinueUnit.Ink: return "ui.continue.ink_title";
+                case ContinueUnit.Motes: return "ui.continue.motes_title";
+                default: return "ui.continue.turns_title";
+            }
+        }
 
         static string UnitKey(ContinueUnit unit)
-            => unit == ContinueUnit.Ink ? "ui.continue.ink_unit" : "ui.continue.turns_unit";
-
-        static string NoteKey(ContinueUnit unit)
-            => unit == ContinueUnit.Ink ? "ui.continue.ink_note" : "ui.continue.turns_note";
+        {
+            switch (unit)
+            {
+                case ContinueUnit.Ink: return "ui.continue.ink_unit";
+                case ContinueUnit.Motes: return "ui.continue.motes_unit";
+                default: return "ui.continue.turns_unit";
+            }
+        }
     }
 }

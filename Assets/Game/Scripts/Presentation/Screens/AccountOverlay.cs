@@ -185,8 +185,14 @@ namespace GlimmerGrove
                              : linked ? "ui.account.linked"
                              : "ui.account.guest";
 
+            // Moss rather than Mint, and every green on this panel is the same decision. Mint
+            // is a board colour — bright because everywhere else it is drawn on something dark
+            // — and every line here is unoutlined text on the cream panel paper, where it comes
+            // out at about 1.8:1 and has to be squinted at. This panel is the one place a
+            // player is told their grove is safe, so it is the last place a sentence should be
+            // hard to read. See Pal.Moss.
             _status = Line("Status", Loc.Get(statusKey), 34,
-                           linked || choosing ? Pal.Mint : available ? Pal.Rose
+                           linked || choosing ? Pal.Moss : available ? Pal.Rose
                                               : new Color(.52f, .40f, .31f, .9f),
                            StatusH, TextAnchor.MiddleCenter, 2f);
             Fit(_status, 26, 34);
@@ -229,7 +235,7 @@ namespace GlimmerGrove
             // they are leaving is kept — on the server and on this phone — and coming back
             // to it is one tap.
             if (choosing)
-                Fit(Line("Safe", Loc.Get("ui.account.switch_safe"), 26, Pal.Mint,
+                Fit(Line("Safe", Loc.Get("ui.account.switch_safe"), 26, Pal.Moss,
                          LineH, TextAnchor.MiddleCenter, 0f), 20, 26);
 
             // ------------------------------------------------------------------ buttons
@@ -383,7 +389,7 @@ namespace GlimmerGrove
 
             if (result.Ok)
             {
-                Say("ui.account.linked_ok", Pal.Mint);
+                Say("ui.account.linked_ok", Pal.Moss);
                 Audio.Sfx("chime2", .55f);
                 Tween.After(1.6f, () => { if (this != null) Close(); }, this);
                 yield break;
@@ -452,7 +458,7 @@ namespace GlimmerGrove
                     // ordinary mistake and this is what it looks like. Said rather than
                     // hidden: a switch that appears to do nothing reads as broken.
                     Audio.Sfx("chime2", .55f);
-                    Say("ui.account.same_account", Pal.Mint);
+                    Say("ui.account.same_account", Pal.Moss);
                     Tween.After(1.4f, () => { if (this != null) Settle(); }, this);
                     break;
 
@@ -463,13 +469,13 @@ namespace GlimmerGrove
                     // and the player has no way to tell whether they arrived at the grove they
                     // meant to until they have already left the other one.
                     _status.text = Loc.Format("ui.account.adopted_found", result.ClearedGlades);
-                    _status.color = Pal.Mint;
+                    _status.color = Pal.Moss;
                     Leave();
                     break;
 
                 case SwitchOutcome.Started:
                     Audio.Sfx("chime2", .55f);
-                    Say("ui.account.switched_new", Pal.Mint);
+                    Say("ui.account.switched_new", Pal.Moss);
                     Leave();
                     break;
 
@@ -478,7 +484,7 @@ namespace GlimmerGrove
                     // one thing the panel must not say: that they are starting fresh. It may
                     // be a grove of three chapters that simply has not arrived yet.
                     Audio.Sfx("chime2", .55f);
-                    Say("ui.account.switched_pending", Pal.Mint);
+                    Say("ui.account.switched_pending", Pal.Moss);
                     Leave();
                     break;
 

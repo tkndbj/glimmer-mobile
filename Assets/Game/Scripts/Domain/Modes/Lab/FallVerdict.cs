@@ -12,7 +12,7 @@ namespace GlimmerGrove.Modes
         /// <summary>A mote came to rest above the brim.</summary>
         Flooded = 2,
 
-        /// <summary>The supply cannot finish what is left standing.</summary>
+        /// <summary>The supply ran out with motes still standing.</summary>
         Starved = 3,
     }
 
@@ -33,14 +33,21 @@ namespace GlimmerGrove.Modes
     /// left to flood — and a run that has just flooded is not also reported as starved.
     /// </para>
     /// <para>
-    /// <b><see cref="FallEnding.Starved"/> is a lower bound and it has to be.</b> Ending a run
-    /// the player could still have won is the worst thing this mode could do, so the test is
-    /// not "does it look hard from here" but a fact about the rules: every channel any mote
-    /// ever gains comes from a drop, either by landing on it or by the wash a burst carries.
-    /// So a mote missing a channel that does not appear anywhere in the supply that is left can
-    /// never be finished, whatever the player does, and the well can never be emptied. That is
-    /// sound, it costs one walk of the board, and it is why a run that has become hopeless ends
-    /// there rather than making somebody spend six more motes to find out.
+    /// <b>A run ends when the supply runs out, and not one drop before.</b> There used to be a
+    /// second clause here and it was <em>sound</em>: every channel a mote ever gains comes from
+    /// a drop, so a mote missing a colour the remaining supply cannot deliver can never be
+    /// finished, and the well is provably unemptiable. It ended the run there rather than making
+    /// somebody spend the rest of their motes to find out.
+    /// </para>
+    /// <para>
+    /// <b>It was removed anyway, and being right is not the same as being wanted.</b> Reported
+    /// from play as a run that ended while the tray still had motes in it — which reads as the
+    /// game deciding on the player's behalf, and is indistinguishable from a bug unless you
+    /// already know the rule it is enforcing. A player who wants to spend their last three motes
+    /// on a board that cannot be won is entitled to; it costs them nothing they had not already
+    /// lost, and the alternative is being told "no" by something they cannot see. The proof
+    /// survives as <see cref="Deficit"/>, where it is still exactly the right question — how
+    /// much would have to be bought before a continue was usable room.
     /// </para>
     /// </summary>
     public readonly struct FallVerdict
@@ -53,12 +60,13 @@ namespace GlimmerGrove.Modes
         ///
         /// <para>
         /// <b>Not always nought, unlike a glade's</b>, and this is the reason a deficit exists
-        /// at all. A well is not only lost when the tray empties: it is also lost when what is
-        /// still to come cannot supply a channel some mote is missing. Handing over the
-        /// authored allowance alone would then put the player back on a board that is still
-        /// provably unfinishable and end the run again in the same frame, having taken their
-        /// gems. So the deficit is however many drops it takes for every channel still wanted
-        /// to come round again, and the authored figure is working room on top of that.
+        /// at all. A glade is lost when its counter reaches the budget and any turn makes it
+        /// playable again. A well runs dry at a moment that has nothing to do with what is
+        /// standing in it — so the motes that come next may be the wrong colours entirely, and
+        /// handing over the authored allowance alone would put the player back on a board that
+        /// still cannot be finished and end the run again a few drops later, having taken their
+        /// gems. So the deficit is however many drops it takes for every channel still wanted to
+        /// come round, and the authored figure is working room on top of that.
         /// </para>
         /// </summary>
         public readonly int Deficit;
@@ -97,10 +105,6 @@ namespace GlimmerGrove.Modes
             if (board.Flooded) return new FallVerdict(FallEnding.Flooded, RunContinueDeficit.None);
 
             if (!supply.Any)
-                return new FallVerdict(FallEnding.Starved, ShortfallFor(board, supply, deal, 1));
-
-            int missing = board.Wanted & ~Coming(supply, deal);
-            if (missing != Energy.None)
                 return new FallVerdict(FallEnding.Starved, ShortfallFor(board, supply, deal, 1));
 
             return new FallVerdict(FallEnding.Live, 0);

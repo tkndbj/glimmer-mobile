@@ -445,6 +445,50 @@ namespace GlimmerGrove
         /// <summary>Back to nothing played. Every path that hands out a fresh board calls it.</summary>
         protected void ResetPlayed() => Played = 0f;
 
+        // ------------------------------------------------------------ one frame of a run
+        /// <summary>
+        /// The mode's own half of "may this run advance": its board exists, nothing is over it,
+        /// no cascade or closing sequence owns it.
+        ///
+        /// <para>
+        /// <b>Abstract rather than virtual, and that is the whole of the fix.</b> This began as
+        /// <c>Tick(playable)</c>, a method each mode was expected to call every frame from its
+        /// own <c>Update</c> — which is the same "remember to consult the latch" shape it was
+        /// written to replace, with the remembering moved one step. Three modes out of four
+        /// never called it and nothing anywhere noticed, because a funnel you have to remember
+        /// to walk into is not a funnel. A default would have kept that: a mode that answered
+        /// nothing would compile, run, and quietly opt out. Answering is now a condition of
+        /// existing.
+        /// </para>
+        /// </summary>
+        protected internal abstract bool Runnable { get; }
+
+        /// <summary>
+        /// Told, every frame, whether this run is actually running — both halves answered.
+        ///
+        /// <para>
+        /// What a mode does with it is its own business and differs: a board sets the latch that
+        /// refuses input, and the classic glade also uses the frame to decide when a run has
+        /// been played with long enough to be owed for. What no mode decides is the
+        /// <em>answer</em>.
+        /// </para>
+        /// </summary>
+        protected internal abstract void Running(bool running);
+
+        /// <summary>
+        /// The frame, owned here so that no mode can be without one.
+        ///
+        /// <para>
+        /// <b>A mode must never declare its own <c>Update</c>.</b> Unity dispatches the message
+        /// to the most-derived declaration only, so one on a subclass silently replaces this and
+        /// takes the run's frame with it — the same hazard two members sharing a name caused
+        /// when <c>ModeScreen</c>'s <c>Resolve</c> coroutine hid <see cref="Resolve"/> and a won
+        /// grove was charged for at the next launch. The compiler cannot catch it, so
+        /// <c>RunFrameTests</c> does.
+        /// </para>
+        /// </summary>
+        void Update() => Running(Tick(Runnable));
+
         /// <summary>
         /// Gives a run one frame of play, if it is allowed one. Returns whether it got it, so a
         /// caller can skip everything else it does per running frame.
@@ -464,7 +508,12 @@ namespace GlimmerGrove
         /// begin at all.
         /// </para>
         /// </summary>
-        protected bool Tick(bool playable)
+        /// <summary>
+        /// <b>Private, and that is the enforcement.</b> A mode cannot advance its own run,
+        /// because it cannot reach the method that would let it — which is what "funnel" has to
+        /// mean if it is to mean anything. See <see cref="Update"/>.
+        /// </summary>
+        bool Tick(bool playable)
         {
             if (!playable || Hold.Held) return false;
 

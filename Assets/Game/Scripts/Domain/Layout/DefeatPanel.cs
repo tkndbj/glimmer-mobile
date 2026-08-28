@@ -91,7 +91,62 @@ namespace GlimmerGrove.Layout
         /// two states that already shipped are drawn where they always were.
         /// </para>
         /// </summary>
-        public const float StackTop = 486f;
+        /// <summary>
+        /// The rows above the buttons, as centres counted down from the panel's top.
+        ///
+        /// <para>
+        /// <b>They moved up when the reason line went.</b> The panel used to open with a
+        /// sentence explaining the defeat — "the groove grew tired before the glade woke" — which
+        /// restated the title underneath it and was reported from play as noise at the one moment
+        /// nobody is reading prose. Taking it out left a hundred and fifty units of nothing, so
+        /// everything below it came up by exactly that, and the numbers are named here rather
+        /// than typed into the overlay so the shift is one edit and the check below can see it.
+        /// </para>
+        /// </summary>
+        public const float CloseCentre = 150f, CloseHeight = 74f;
+        public const float HeartsCentre = 250f, HeartsHeight = 120f;
+
+        /// <summary>
+        /// Where the panel's paper is clear of its own title ribbon, and the top of the room a
+        /// row above the buttons has to itself.
+        ///
+        /// <para>
+        /// Measured rather than guessed. <c>ModalView.MakePanel</c> hangs a 130-tall ribbon at
+        /// +22 from the panel's top edge, so it reaches 43 units <em>down</em> into the paper;
+        /// the rest is the air any row would want under it. Anything centred in a region that
+        /// started at the panel's own edge would be centred partly behind the ribbon, which is
+        /// how a row ends up looking pushed down onto whatever is below it.
+        /// </para>
+        /// </summary>
+        public const float PaperTop = 70f;
+        public const float FreeHeight = 96f;
+
+        /// <summary>
+        /// The free-glade line's centre: the middle of whatever room is actually left between
+        /// the rows above it and the buttons below.
+        ///
+        /// <para>
+        /// <b>Derived rather than typed, because the room it has is not a constant.</b> The
+        /// near-miss line's slot is always reserved and only sometimes filled, so on the runs
+        /// that were not close — which is most of them, and all of the early ones this line is
+        /// written for — there are seventy-four units of empty paper above it that nothing was
+        /// using. A typed centre spent that void above the sentence and left the sentence
+        /// sitting on the try-again button, which is how it was reported: too close to the
+        /// button, with a hole over it.
+        /// </para>
+        /// <para>
+        /// The heart row this replaces is deliberately <em>not</em> derived the same way. It is
+        /// a row of icons rather than a paragraph, so it reads as a block placed on the panel
+        /// wherever it is put, and moving something that ships on every ordinary defeat to fix
+        /// a complaint about something else is how a panel acquires two problems.
+        /// </para>
+        /// </summary>
+        /// <param name="close">Whether the near-miss line is drawn above it.</param>
+        public static float FreeCentre(bool close)
+            => ((close ? CloseCentre + CloseHeight * .5f : PaperTop) + StackTop) * .5f;
+
+        /// <summary>Where the buttons begin, clear of every row above them.</summary>
+        public const float StackTop = 336f;
 
         /// <summary>The line that says why there is no retry button. Wrapped, so it is two deep.</summary>
         public const float NoteHeight = 130f;

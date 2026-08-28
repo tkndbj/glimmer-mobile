@@ -423,14 +423,19 @@ namespace GlimmerGrove
         /// <c>RunScreen.Hold</c>.
         /// </para>
         /// </summary>
-        void Update()
+        protected internal override bool Runnable
+            => _puzzle != null && _board != null && !_board.Locked && !_finished;
+
+        protected internal override void Running(bool running)
         {
             if (_puzzle == null) return;
 
-            Tick(_board != null && !_board.Locked && !_finished);
-
             // Polled rather than hooked, for the reason every edge on this screen is: a poll
             // cannot miss the edge, cannot fire twice, and leaves nothing to unsubscribe.
+            //
+            // Asked whatever the frame answered, because a run is owed for the moment a tile is
+            // turned — `Played` is the half that only accrues on frames the run was allowed,
+            // which is what keeps a lesson being read from committing anybody.
             if (!Committed && !_finished && (_puzzle.Moves > 0 || Played > CommitGraceSeconds))
                 Commit();
         }

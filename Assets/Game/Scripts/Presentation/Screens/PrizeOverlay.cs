@@ -1,3 +1,4 @@
+using System;
 using GlimmerGrove.Daily;
 using GlimmerGrove.Layout;
 using GlimmerGrove.Localization;
@@ -6,18 +7,36 @@ using UnityEngine;
 namespace GlimmerGrove
 {
     /// <summary>
-    /// What the wheel's video paid, handed over.
+    /// What a video paid, handed over.
     ///
     /// <para>
-    /// <b>A panel of its own rather than a third state of the wheel.</b> The wheel is a
-    /// question — spin, see the multiplier, decide whether it is worth thirty seconds — and by
-    /// the time this is raised the question has been answered and the video watched. Keeping
-    /// the two on one panel meant the payoff was a caption change on the button that had just
-    /// asked for the ad, under a wheel whose job was finished: the biggest moment in the
-    /// placement drawn as the smallest change on the screen. So the wheel steps out and this
-    /// arrives, which is the shape <c>ShopGrantOverlay</c> and <c>ChestOverlay</c> already use
-    /// for the other two places currency is handed over — one gesture the player recognises
-    /// wherever it happens.
+    /// <b>A panel of its own rather than a third state of whatever asked for the ad.</b> The
+    /// wheel is a question — spin, see the multiplier, decide whether it is worth thirty
+    /// seconds — and by the time this is raised the question has been answered and the video
+    /// watched. Keeping the two on one panel meant the payoff was a caption change on the
+    /// button that had just asked for the ad, under a wheel whose job was finished: the
+    /// biggest moment in the placement drawn as the smallest change on the screen. So the
+    /// wheel steps out and this arrives, which is the shape <c>ShopGrantOverlay</c> and
+    /// <c>ChestOverlay</c> already use for the other two places currency is handed over — one
+    /// gesture the player recognises wherever it happens.
+    /// </para>
+    /// <para>
+    /// <b>It is one panel for every placement that pays into a celebration, and the second one
+    /// is what generalised it.</b> A lost run with no hearts left offers a video, and the same
+    /// argument applies twice over: the reward used to be a caption change on the button of an
+    /// explanatory panel the player had not asked to see, at the one moment in a session when
+    /// the only thing they want is to be back on the board. What differs between the two
+    /// callers is a title, a colour, how loud the ending is and where COLLECT leads —
+    /// <see cref="TitleKey"/>, <see cref="Tint"/>, <see cref="Loud"/> and
+    /// <see cref="Collected"/> — and nothing else, which is why there is one of these rather
+    /// than two.
+    /// </para>
+    /// <para>
+    /// <b>It is raised through <c>Flow.Modal</c> by a caller that may already be gone</b>, and
+    /// that is deliberate: a player who backgrounds the app during a video can come back to a
+    /// different screen entirely, and the prize is theirs either way. Nothing here reaches back
+    /// into whoever asked for it — the way onward is the <see cref="Collected"/> callback, and
+    /// it fires however the panel ended.
     /// </para>
     /// <para>
     /// <b>Nothing here is load-bearing, and that is the design.</b> The grant is the server's
@@ -36,7 +55,7 @@ namespace GlimmerGrove
     /// flat placement amount, which has no opinion about multipliers.
     /// </para>
     /// </summary>
-    public sealed class WheelPrizeOverlay : ModalView
+    public sealed class PrizeOverlay : ModalView
     {
         /// <summary>
         /// What was won: the kind the placement pays, and the multiplied amount.
@@ -49,14 +68,62 @@ namespace GlimmerGrove
         /// </summary>
         public ChestDrop Drop { get; set; }
 
-        /// <summary>The winning slice's colour, so the celebration matches the wedge it came from.</summary>
+        /// <summary>
+        /// What the ribbon says. Written out by each caller rather than built from the
+        /// placement, so the loc gate can see every key — a concatenated one is invisible to
+        /// the scanner and ships missing (invariant 6).
+        ///
+        /// <para>
+        /// There is no default, and a panel raised without one dismisses itself rather than
+        /// drawing a ribbon with a raw key in it. Both callers live in this assembly, so the
+        /// omission is a compile away from being noticed and never reaches a player.
+        /// </para>
+        /// </summary>
+        public string TitleKey;
+
+        /// <summary>
+        /// The celebration's colour: the winning wedge's, or the resource's own.
+        ///
+        /// It is the caller's rather than <c>RewardArt.Tint(Drop.Kind)</c>'s, because the wheel
+        /// pays credits in the colour of the slice it stopped on and that is the whole point of
+        /// the wheel. Everything else hands over its resource's own tint and the two agree.
+        /// </summary>
         public Color Tint = Pal.Gold;
 
-        /// <summary>True when the slice paid more than the flat offer would have.</summary>
-        public bool IsBonus;
+        /// <summary>
+        /// How loud the ending is: confetti and a fuller spark burst.
+        ///
+        /// <para>
+        /// Not spent on every prize, which is the victory panel's rule for its star row —
+        /// spending it on most of them marks out none. The wheel raises it for a slice that
+        /// beat the flat offer; the heart refill raises it because being handed the game back
+        /// after being stopped is the moment it exists for.
+        /// </para>
+        /// </summary>
+        public bool Loud;
 
-        /// <summary>True when it was the best slice on the wheel. The loudest ending, once.</summary>
-        public bool IsTop;
+        /// <summary>The loudest ending there is. The wheel's top slice, and nothing else yet.</summary>
+        public bool Loudest;
+
+        /// <summary>
+        /// Where the panel leads once the prize has been taken, or null to simply close.
+        ///
+        /// <para>
+        /// <b>Raised exactly once, however the panel ended</b> — COLLECT, the back key, or the
+        /// screen underneath being torn down with this still open. That completeness is the
+        /// whole point of it and it is <c>AdOfferOverlay.Report</c>'s lesson: a panel with
+        /// several exits reports through none of them reliably, so the safe outcome goes on the
+        /// destroy and the one exception is declared (see <c>Onward</c>, which an ordinary close
+        /// runs early so the panel underneath leaves with this one).
+        /// </para>
+        /// <para>
+        /// It matters most where it is least visible. The heart refill leaves the panel
+        /// underneath stale — a defeat screen saying "you are out of hearts" over a wallet that
+        /// now holds two — so a dismissal has to lead onward exactly as a collect does. A
+        /// callback wired to the button alone would leave that player looking at a lie.
+        /// </para>
+        /// </summary>
+        public Action Collected;
 
         /// <summary>
         /// The pill snapshot taken before the reward was redeemed, handed over by the wheel.
@@ -87,17 +154,21 @@ namespace GlimmerGrove
 
         protected override void Build()
         {
-            // Nothing to hand over. Reachable only if a caller raised this with an empty drop,
-            // and a celebration of nothing is worse than no celebration.
-            if (!Drop.IsValid) { Flow.Dismiss(this); return; }
+            // Nothing to hand over, or nothing to head it with. Reachable only if a caller
+            // raised this with an empty drop or forgot its title, and a celebration of nothing
+            // is worse than no celebration — as is a ribbon carrying a raw loc key.
+            //
+            // Dismissed rather than closed, so Collected still fires from OnDestroy: a caller
+            // that was going to be led somewhere is led there whatever went wrong here.
+            if (!Drop.IsValid || string.IsNullOrEmpty(TitleKey)) { Flow.Dismiss(this); return; }
 
-            var stack = WheelPrizePanel.Of();
+            var stack = PrizePanel.Of();
 
             // Never dismissed by a stray tap on the scrim: this is the one screen that says
             // what a video was worth, and one flicked away by a thumb landing anywhere is one a
             // player can miss entirely. The back key still works throughout — see OnBack.
-            var panel = MakePanel(new Vector2(WheelPrizePanel.Width, stack.Height),
-                                  Loc.Get("ui.wheel.prize_title"), dismissOnScrim: false);
+            var panel = MakePanel(new Vector2(PrizePanel.Width, stack.Height),
+                                  Loc.Get(TitleKey), dismissOnScrim: false);
 
             BuildRays(panel, stack.CoinCentre);
             UIKit.Halo(panel, Tint, 640f, .26f,
@@ -134,7 +205,7 @@ namespace GlimmerGrove
             // already banked either way.
             _collect = UIKit.TextButton("Collect", panel, "btn_green",
                                         Loc.Get("ui.daily.collect"), 42,
-                                        new Vector2(520f, WheelPrizePanel.ButtonHeight),
+                                        new Vector2(520f, PrizePanel.ButtonHeight),
                                         new Vector2(.5f, 1f), new Vector2(0f, -stack.ButtonCentre),
                                         OnCollect);
 
@@ -205,7 +276,7 @@ namespace GlimmerGrove
             // A wash in the slice's own colour at the instant the panel lands. Peaked low: this
             // sits on top of a victory panel, and a white-out over one is a transition rather
             // than a flourish.
-            Flow.Flash(Pal.A(Tint, 1f), IsTop ? .30f : .18f, .52f);
+            Flow.Flash(Pal.A(Tint, 1f), Loudest ? .30f : .18f, .52f);
 
             Tween.After(ArriveAt, Arrive, this);
 
@@ -252,7 +323,7 @@ namespace GlimmerGrove
             Shockwave(0f, 1.9f, .52f, .80f);
             Shockwave(.10f, 2.6f, .62f, .42f);
 
-            Burst.Sparks(_coin, Vector2.zero, Tint, IsBonus ? 24 : 16, 400f, 30f, .74f);
+            Burst.Sparks(_coin, Vector2.zero, Tint, Loud ? 24 : 16, 400f, 30f, .74f);
             Audio.Sfx("chest", .58f);
         }
 
@@ -269,7 +340,7 @@ namespace GlimmerGrove
 
             var ring = UIKit.Img("Wave", _coin, Art.Ring(128, 8f),
                                  Pal.A(Pal.Lift(Tint, .4f), alpha),
-                                 Vector2.one * WheelPrizePanel.CoinSize * .9f,
+                                 Vector2.one * PrizePanel.CoinSize * .9f,
                                  new Vector2(.5f, .5f), Vector2.zero);
             ring.raycastTarget = false;
 
@@ -299,7 +370,7 @@ namespace GlimmerGrove
         {
             if (this == null || _collecting) return;
 
-            if (IsBonus) Burst.Confetti(Content, IsTop ? 54 : 34);
+            if (Loud) Burst.Confetti(Content, Loudest ? 54 : 34);
 
             Audio.Sfx("win", .55f);
 
@@ -322,7 +393,17 @@ namespace GlimmerGrove
 
             // Asked before the latch, so a panel with nowhere to fly to is still an ordinary
             // close — including its sound and its scale-out, which the cascade does not use.
-            if (Flight == null || from == null || !Flight.Add(Drop, from)) { Close(); return; }
+            if (Flight == null || from == null || !Flight.Add(Drop, from))
+            {
+                // Led onward at the top of the close rather than at the end of it, so the panel
+                // this was raised over goes at the same time. Half a second of a defeat screen
+                // still saying "you are out of hearts", over a wallet that now holds two, is the
+                // one frame of this feature a player could read as a bug — and COLLECT that
+                // visibly does nothing for a beat reads as a tap that missed.
+                Onward();
+                Close();
+                return;
+            }
 
             _collecting = true;
             Fly(from);
@@ -375,29 +456,49 @@ namespace GlimmerGrove
             return true;
         }
 
+        // ------------------------------------------------------------- leading onward
+        bool _reported;
+
         /// <summary>
-        /// Raises the celebration for a slice that has just been paid for.
+        /// Hands the player on, exactly once, however this panel ended.
         ///
         /// <para>
-        /// Static and taking everything it needs, because the wheel is usually gone by the time
-        /// this runs — a player who backgrounds the app during a video can come back to a
-        /// different screen entirely, and the prize is theirs either way. The panel is the only
-        /// thing that tells them so.
+        /// <c>AdOfferOverlay.Report</c>'s latch and for its reason: this panel has three exits —
+        /// COLLECT, the back key, and the screen underneath being destroyed with it open — and a
+        /// caller that hears twice is as broken as one that never hears. Putting it on the
+        /// destroy is what makes "exactly one, always" something the type enforces rather than
+        /// something the exits agree about.
+        /// </para>
+        /// <para>
+        /// Swallowed, because this runs during teardown: a caller that throws would leave the
+        /// rest of the destroy chain unrun.
         /// </para>
         /// </summary>
-        public static void Celebrate(ChestDrop drop, Color tint, bool isBonus, bool isTop,
-                                     RewardFlight flight)
-        {
-            if (!drop.IsValid) return;
+        void OnDestroy() => Onward();
 
-            Flow.Modal<WheelPrizeOverlay>(v =>
-            {
-                v.Drop = drop;
-                v.Tint = tint;
-                v.IsBonus = isBonus;
-                v.IsTop = isTop;
-                v.Flight = flight;
-            });
+        /// <summary>
+        /// Runs the way onward, exactly once.
+        ///
+        /// <para>
+        /// Called at the top of an ordinary close so the panel underneath leaves with this one,
+        /// and from <see cref="OnDestroy"/> for every other ending — the back key, and the screen
+        /// beneath being torn down with this open. A payout in flight is the one case that waits:
+        /// its tokens are landing on a readout that has to still be there, so the destroy is the
+        /// honest moment for it and the cascade's own callback is what gets there.
+        /// </para>
+        /// </summary>
+        void Onward()
+        {
+            if (_reported) return;
+            _reported = true;
+
+            var onward = Collected;
+            Collected = null;
+
+            // Swallowed, because this can run during teardown: a caller that throws would leave
+            // the rest of the destroy chain unrun.
+            try { onward?.Invoke(); }
+            catch (Exception e) { Debug.LogException(e); }
         }
     }
 }

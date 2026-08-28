@@ -145,6 +145,28 @@ namespace GlimmerGrove
         /// <summary>Refuses input while the run is over or a panel is up.</summary>
         public bool Locked { get; set; }
 
+        /// <summary>
+        /// The run has not been allowed to begin yet — the half of the answer no mode can see.
+        ///
+        /// <para>
+        /// A second latch rather than more uses of <see cref="Locked"/>, because that one has
+        /// several writers — every panel that goes over this board, and an intro tween or two —
+        /// and a board held for two reasons must release them independently, or whichever writes
+        /// <c>false</c> last cancels the other. That is the bug <c>RunHold</c> exists because of.
+        /// Written only by the screen, from <c>RunScreen.Running</c>.
+        /// </para>
+        /// </summary>
+        public bool Held { get; set; } = true;
+
+        /// <summary>
+        /// Whether anything at all is refusing input right now. Named apart from
+        /// <see cref="Blocked(int)"/>, which is what the grove <em>draws</em> when it refuses a
+        /// cell — two members with one name in one class is the trap this project has already
+        /// paid for once.
+        /// </summary>
+        bool Refusing => Locked || Held;
+
+
         public WeaveRun Run => _run;
 
         // Free ground is the thing the player is hunting, so it is the brighter of the two.
@@ -183,6 +205,12 @@ namespace GlimmerGrove
             _anyDrawn = false;
             _closing = false;
             Locked = false;
+
+            // Held until the screen says otherwise: a frame of a run the player has not been
+            // shown is a frame they did not get, and a grove is draggable from the frame it is
+            // built. This is the window a run could be committed in while the iris was still
+            // opening.
+            Held = true;
 
             Tween.KillAll(this);
 
@@ -359,7 +387,7 @@ namespace GlimmerGrove
         // ------------------------------------------------------------------ drawing
         public void OnPointerDown(PointerEventData e)
         {
-            if (Locked || _run == null) return;
+            if (Refusing || _run == null) return;
 
             int at = CellUnder(e.position);
             if (at < 0) return;
@@ -397,7 +425,7 @@ namespace GlimmerGrove
 
         public void OnDrag(PointerEventData e)
         {
-            if (Locked || _pair < 0 || _drawing.Count == 0) return;
+            if (Refusing || _pair < 0 || _drawing.Count == 0) return;
 
             int at = CellUnder(e.position);
             if (at < 0 || at == _drawing[_drawing.Count - 1]) return;
@@ -502,7 +530,7 @@ namespace GlimmerGrove
             // Guarded, because this is the one input path that did not check. A run lost mid-drag
             // locks the board, and the finger coming up afterwards would otherwise still lay a
             // channel on a board whose run is already over.
-            if (Locked) { Abandon(); return; }
+            if (Refusing) { Abandon(); return; }
 
             int pair = _pair;
             var path = new List<int>(_drawing);
@@ -609,7 +637,7 @@ namespace GlimmerGrove
         /// </summary>
         public bool Undo()
         {
-            if (Locked || _closing || _run == null || !_run.CanUndo) return false;
+            if (Refusing || _closing || _run == null || !_run.CanUndo) return false;
 
             // A drag in flight is dropped first. Undoing out from under a finger that is part
             // way through drawing over the very channel being restored is the one way these two

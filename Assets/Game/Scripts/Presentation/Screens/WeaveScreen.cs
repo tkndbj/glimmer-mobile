@@ -691,6 +691,14 @@ namespace GlimmerGrove
         /// closing sequence latches the view itself and hands nothing back, so teaching over it
         /// would unlatch a grove whose run is already decided.
         /// </summary>
+        protected internal override bool Runnable
+            => _view != null && !_view.Locked && !_finished && !_closing;
+
+        protected internal override void Running(bool running)
+        {
+            if (_view != null) _view.Held = !running;
+        }
+
         protected internal override bool Teachable
             => _view != null && !_view.Locked && !_finished && !_closing;
 

@@ -136,11 +136,11 @@ namespace GlimmerGrove
         /// tip arrives — which is a run they were charged for and never saw begin.
         /// </para>
         /// </summary>
-        void Update()
-        {
-            if (_view == null) return;
+        protected internal override bool Runnable => _view != null && _view.TakingInput;
 
-            _view.Held = !Tick(_view.TakingInput);
+        protected internal override void Running(bool running)
+        {
+            if (_view != null) _view.Held = !running;
         }
 
         // ------------------------------------------------------------------ the legend
@@ -460,7 +460,35 @@ namespace GlimmerGrove
         /// </summary>
         void Lose()
         {
-            if (_finished || Level == null) return;
+            var record = RecordLoss();
+            if (!record.HasValue) return;
+
+            var done = record.Value;
+
+            Flow.Modal<DefeatOverlay>(v =>
+            {
+                v.Screen = this;
+                v.Run = done.Run;
+                v.Streak = done.Streak;
+                v.HeartsLeft = done.HeartsLeft;
+                v.HeartWasCharged = done.HeartCharged;
+                v.Price = done.Price;
+            });
+        }
+
+        /// <summary>
+        /// Writes the run off, and hands back what happened so a caller can show it — or not.
+        ///
+        /// <para>
+        /// Split from the panel because two exits now share it and only one of them raises
+        /// anything. <c>RunLedger.Loss</c> still owns the heart, the streak, the chest count and
+        /// the analytics, so there is no second copy here of what losing a run does; this only
+        /// decides when.
+        /// </para>
+        /// </summary>
+        RunLedger.LossRecord? RecordLoss()
+        {
+            if (_finished || Level == null) return null;
             _finished = true;
 
             Resolve();
@@ -477,21 +505,11 @@ namespace GlimmerGrove
             // no notion of — a board is one lucky chain from finished or six drops from it,
             // depending on nothing anybody can be told in a sentence — so it is left at nought,
             // where RunOutcome.NearMiss reads it as "not close" and says nothing.
-            var done = RunLedger.Loss(Level, reason, Math.Max(1, run.Drops),
-                                      Time.unscaledTime - _startedAt, 0, route: 0,
-                                      stepsToSolution: 0,
-                                      lit: run.Started - run.Left, wanted: run.Started,
-                                      price: Price);
-
-            Flow.Modal<DefeatOverlay>(v =>
-            {
-                v.Screen = this;
-                v.Run = done.Run;
-                v.Streak = done.Streak;
-                v.HeartsLeft = done.HeartsLeft;
-                v.HeartWasCharged = done.HeartCharged;
-                v.Price = done.Price;
-            });
+            return RunLedger.Loss(Level, reason, Math.Max(1, run.Drops),
+                                  Time.unscaledTime - _startedAt, 0, route: 0,
+                                  stepsToSolution: 0,
+                                  lit: run.Started - run.Left, wanted: run.Started,
+                                  price: Price);
         }
 
         // ------------------------------------------------------------------ the lessons

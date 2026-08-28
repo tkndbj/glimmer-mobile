@@ -122,14 +122,72 @@ namespace GlimmerGrove.Tests
                                   $"shortest canvas holds {PanelStack.TallestPanel}");
 
         /// <summary>
-        /// The stack begins clear of the heart row and of the free-glade line that replaces it.
-        ///
-        /// The deeper of the two is the line, whose box is centred 424 down and is 96 tall.
-        /// Written out rather than derived, because those two numbers live in the panel and the
-        /// point of this case is to notice when one of them moves.
+        /// The stack begins clear of the heart row and of the free-glade line that replaces it,
+        /// in both the shapes the line can be drawn in.
         /// </summary>
         [Test]
         public void TheStackClearsWhateverIsDrawnAboveIt()
-            => Assert.GreaterOrEqual(DefeatPanel.StackTop, 424f + 96f * .5f);
+        {
+            Assert.GreaterOrEqual(DefeatPanel.StackTop,
+                                  DefeatPanel.HeartsCentre + DefeatPanel.HeartsHeight * .5f,
+                                  "the heart row is drawn into the buttons");
+
+            foreach (bool close in new[] { false, true })
+                Assert.GreaterOrEqual(DefeatPanel.StackTop,
+                                      DefeatPanel.FreeCentre(close) + DefeatPanel.FreeHeight * .5f,
+                                      $"the free-glade line is drawn into the buttons (close={close})");
+        }
+
+        /// <summary>
+        /// The free-glade line clears the near-miss line above it when both are drawn.
+        ///
+        /// The two coexist — a run can be both close and free, and the early glades this line
+        /// is written for are exactly where a near miss is most likely — so the line's room
+        /// begins under the near-miss slot rather than under the ribbon.
+        /// </summary>
+        [Test]
+        public void TheFreeLineClearsTheNearMissLineAboveIt()
+            => Assert.GreaterOrEqual(
+                   DefeatPanel.FreeCentre(close: true) - DefeatPanel.FreeHeight * .5f,
+                   DefeatPanel.CloseCentre + DefeatPanel.CloseHeight * .5f,
+                   "the free-glade line is drawn through the near-miss line");
+
+        /// <summary>
+        /// It is centred in the room it has, which is the whole point of deriving it.
+        ///
+        /// <para>
+        /// Stated as the property rather than as the number: the air above the line and the air
+        /// below it are the two halves of one gap. A typed centre passes a compile and fails
+        /// this, which is what happened — the line shipped 274 down with 74 units of unused
+        /// paper over it and 14 under it, and was reported as sitting on the try-again button.
+        /// </para>
+        /// </summary>
+        [Test]
+        public void TheFreeLineIsCentredInTheRoomItHas()
+        {
+            foreach (bool close in new[] { false, true })
+            {
+                float top = close ? DefeatPanel.CloseCentre + DefeatPanel.CloseHeight * .5f
+                                  : DefeatPanel.PaperTop;
+
+                float above = DefeatPanel.FreeCentre(close) - DefeatPanel.FreeHeight * .5f - top;
+                float below = DefeatPanel.StackTop
+                            - (DefeatPanel.FreeCentre(close) + DefeatPanel.FreeHeight * .5f);
+
+                Assert.AreEqual(above, below, .001f,
+                    $"the free-glade line has {above} above it and {below} below (close={close})");
+                Assert.Greater(above, 0f, $"there is no air around the free-glade line (close={close})");
+            }
+        }
+
+        /// <summary>
+        /// A run that was not close gives the line more room, not the same room lower down —
+        /// the near-miss slot is reserved on every defeat and filled on few, and the empty one
+        /// is the void the line used to be pushed under.
+        /// </summary>
+        [Test]
+        public void AnEmptyNearMissSlotIsGivenToTheFreeLine()
+            => Assert.Less(DefeatPanel.FreeCentre(close: false),
+                           DefeatPanel.FreeCentre(close: true));
     }
 }

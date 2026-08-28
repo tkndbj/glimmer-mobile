@@ -1177,7 +1177,11 @@ namespace GlimmerGrove
         /// </summary>
         IEnumerator Overflow()
         {
-            Audio.Sfx("shatter", .7f, .85f);
+            // A low thud rather than breaking glass. The shatter was the same sample the
+            // offer panel was playing a beat later, so a flood arrived as two crashes — and one
+            // crash for "you stacked a mote too high" is already more punishment noise than the
+            // mistake deserves. The shake and the red line are the report; this is its weight.
+            Audio.Sfx("pop", .55f, .55f);
             ShakeBoard(20f);
 
             if (_brimLine)

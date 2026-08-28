@@ -197,22 +197,32 @@ namespace GlimmerGrove.Tests
         }
 
         /// <summary>
-        /// The sound half of the fail state, and the reason it is a lower bound rather than a
-        /// guess: every channel any mote ever gains comes from a drop, so one missing a colour
-        /// the remaining supply cannot deliver can never be finished by anybody.
+        /// A run is never ended early, even when it is provably unwinnable.
+        ///
+        /// <para>
+        /// The proof is available and used to end the run here — a yellow wants blue, the two
+        /// motes still coming are red and green, so nothing anybody does can empty this well.
+        /// It was reported from play as a run ending while the tray still had motes in it, which
+        /// reads as the game deciding on the player's behalf. So the board stays open and the
+        /// supply is the only thing that ends it; the proof survives where it is still the right
+        /// question, which is how much a continue would have to hand over.
+        /// </para>
         /// </summary>
         [Test]
-        public void AWellIsStarvedWhileMotesRemainIfTheColourTheyWantHasGoneOutOfTheProcession()
+        public void AWellThatCannotBeWonIsStillPlayedToTheEndOfItsSupply()
         {
-            // A yellow wants blue. Two motes are dealt and both of them are the wrong colour.
             var run = new FallRun(Layout("RGB", ".....", ".....", ".....", ".....", ".....", "Y...."), 2);
 
             Assert.AreEqual(2, run.Supply.Left, "there are motes still to come");
-            Assert.AreEqual(FallEnding.Starved, run.Verdict.Ending,
-                            "and they are red and green, which yellow already holds");
+            Assert.AreEqual(FallEnding.Live, run.Verdict.Ending,
+                            "and the player is entitled to spend them");
 
-            Assert.AreEqual(1, run.Verdict.Deficit,
-                            "one more drop brings the procession round to blue");
+            run.Drop(1);
+            Assert.AreEqual(FallEnding.Live, run.Verdict.Ending, "still one to go");
+
+            run.Drop(2);
+            Assert.AreEqual(FallEnding.Starved, run.Verdict.Ending,
+                            "and now, and only now, the run is over");
         }
 
         [Test]

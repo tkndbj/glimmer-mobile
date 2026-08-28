@@ -545,53 +545,26 @@ namespace GlimmerGrove
         /// Shows the ad and pays for it.
         ///
         /// <para>
-        /// The impression is generated here, before the SDK is asked for anything, because
-        /// the nonce inside it has to reach the ad network as a custom parameter — it is
-        /// what the network's verification callback will name, and therefore what the
-        /// server will match a claim against. See <see cref="AdImpression"/>.
+        /// The five steps and their order live in <see cref="RewardedVideo.Watch"/>, which is
+        /// where the two orderings that matter are stated once — the impression is minted before
+        /// the SDK is asked for anything, and the pills are snapshotted before the reward is
+        /// redeemed. What is left here is the part only a panel can do: deciding whether it is
+        /// still standing, and what to say if nothing was paid.
         /// </para>
         /// </summary>
         async void Show()
         {
-            var impression = AdImpression.New(PlacementId);
+            var payment = await RewardedVideo.Watch(PlacementId);
 
-            try
-            {
-                var result = await RewardedAds.Provider.ShowAsync(impression);
+            // The overlay can be gone by now — a player who backgrounds the app during a video
+            // may come back to a different screen entirely. The reward is still banked.
+            if (this == null) return;
 
-                // Opened before the reward is redeemed, because it snapshots what the hub's
-                // pills read and Redeem is what moves them. Deriving that afterwards by
-                // subtracting the offer is wrong in the case that matters — a heart reward
-                // landing at the ceiling grants nothing, so the subtraction would rewind the
-                // pill below where it ever stood. It costs three reads on the path where
-                // nothing is paid, which is the cheapest thing on this screen.
-                var flight = RewardFlight.Begin();
+            if (payment.Paid) { _flight = payment.Flight; Paid(payment.Drop); return; }
 
-                // The overlay can be gone by now — a player who backgrounds the app during
-                // a video may come back to a different screen entirely. The reward is still
-                // banked, because Redeem does not touch the UI.
-                var drop = RewardedAds.Redeem(result);
-
-                if (this == null) return;
-
-                if (drop.IsValid) { _flight = flight; Paid(drop); return; }
-
-                _watching = false;
-                _status.text = AdOfferButton.Refusal(result.Outcome);
-                Repaint();
-            }
-            catch (Exception e)
-            {
-                // async void swallows exceptions, and an ad that throws must not leave the
-                // panel stuck on "opening" with a dead button.
-                Debug.LogException(e);
-
-                if (this == null) return;
-
-                _watching = false;
-                _status.text = Loc.Get("ui.ads.failed");
-                Repaint();
-            }
+            _watching = false;
+            _status.text = RewardedVideo.Refusal(payment);
+            Repaint();
         }
 
         /// <summary>

@@ -38,5 +38,12 @@ namespace GlimmerGrove
             Repaint();
             Audio.Sfx("rotate_a", .55f);
         }
+
+        protected internal override bool Runnable => _view != null;
+
+        protected internal override void Running(bool running)
+        {
+            if (_view != null) _view.Held = !running;
+        }
     }
 }

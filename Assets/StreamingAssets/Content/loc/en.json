@@ -1026,6 +1026,10 @@
       "text": "WATCH FOR HEARTS"
     },
     {
+      "key": "ui.ads.hearts_prize",
+      "text": "HEARTS RESTORED"
+    },
+    {
       "key": "ui.ads.hearts_title",
       "text": "REFILL HEARTS"
     },
@@ -1383,15 +1387,7 @@
     },
     {
       "key": "ui.continue.give_up",
-      "text": "Give up"
-    },
-    {
-      "key": "ui.continue.held",
-      "text": "You have {0} gems"
-    },
-    {
-      "key": "ui.continue.ink_note",
-      "text": "Keep every channel exactly where it is and carry on."
+      "text": "No thanks"
     },
     {
       "key": "ui.continue.ink_title",
@@ -1406,16 +1402,32 @@
       "text": "You need {0} gems for this"
     },
     {
-      "key": "ui.continue.turns_note",
-      "text": "Keep the board exactly as it is and carry on."
-    },
-    {
       "key": "ui.continue.turns_title",
       "text": "Out of turns"
     },
     {
       "key": "ui.continue.turns_unit",
       "text": "more turns"
+    },
+    {
+      "key": "ui.continue.title",
+      "text": "Carry on?"
+    },
+    {
+      "key": "ui.continue.defeat",
+      "text": "DEFEAT"
+    },
+    {
+      "key": "ui.continue.motes_title",
+      "text": "Out of motes"
+    },
+    {
+      "key": "ui.continue.motes_unit",
+      "text": "more motes"
+    },
+    {
+      "key": "ui.continue.offer",
+      "text": "You can get +{0} {1} and continue where you left off"
     },
     {
       "key": "ui.daily.all_open",
@@ -1466,10 +1478,6 @@
       "text": "+{0} hearts for {1} gems"
     },
     {
-      "key": "ui.defeat.conduit_reason",
-      "text": "That conduit was brittle and could not take another turn. Watch the number on them."
-    },
-    {
       "key": "ui.defeat.conduit_title",
       "text": "IT GAVE WAY"
     },
@@ -1486,24 +1494,12 @@
       "text": "THE WELL BRIMMED OVER"
     },
     {
-      "key": "ui.defeat.flood_reason",
-      "text": "A mote came to rest above the line. A colour a stack already holds has nowhere to go but upward."
-    },
-    {
       "key": "ui.defeat.get_gems",
       "text": "Get gems"
     },
     {
-      "key": "ui.defeat.ink_reason",
-      "text": "There is not enough light left to finish this groove. Draw straighter and undo early."
-    },
-    {
       "key": "ui.defeat.ink_title",
       "text": "THE LIGHT RAN OUT"
-    },
-    {
-      "key": "ui.defeat.moves_reason",
-      "text": "The groove grew tired before the glade woke. Fewer turns, more thinking."
     },
     {
       "key": "ui.defeat.moves_title",
@@ -1512,10 +1508,6 @@
     {
       "key": "ui.defeat.motes_title",
       "text": "THE LIGHT RAN OUT"
-    },
-    {
-      "key": "ui.defeat.motes_reason",
-      "text": "Nothing left to drop, and the well is not empty. Spend each mote where it finishes something."
     },
     {
       "key": "ui.defeat.near_one",
@@ -1527,15 +1519,11 @@
     },
     {
       "key": "ui.defeat.out_of_hearts",
-      "text": "No hearts left. Rest a while and the groove will wake you."
+      "text": "You are out of hearts. They come back on their own over time."
     },
     {
       "key": "ui.defeat.reason",
       "text": "The light touched a thornstone and the glade went dark."
-    },
-    {
-      "key": "ui.defeat.time_reason",
-      "text": "The clock ran out before the last lamp woke. The glade is waiting exactly as you left it."
     },
     {
       "key": "ui.defeat.time_title",
@@ -1551,7 +1539,7 @@
     },
     {
       "key": "ui.defeat.watch_for_hearts",
-      "text": "No hearts left — but a short video will wake the groove early."
+      "text": "You are out of hearts. Spend gems or watch a video to get hearts."
     },
     {
       "key": "ui.event.all_taken",
@@ -2247,7 +2235,7 @@
     },
     {
       "key": "ui.pause.glades",
-      "text": "GLADES"
+      "text": "LEVELS"
     },
     {
       "key": "ui.pause.home",
@@ -3839,7 +3827,7 @@
     },
     {
       "key": "ui.win.glades",
-      "text": "GLADES"
+      "text": "LEVELS"
     },
     {
       "key": "ui.win.golden",

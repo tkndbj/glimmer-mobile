@@ -97,6 +97,9 @@ namespace GlimmerGrove
         /// this screen has already been replaced — see <see cref="StillOnScreen"/>.
         /// </para>
         /// </summary>
+        /// <param name="lose">
+        /// Writes the run off and shows whatever the mode shows afterwards. The ordinary ending.
+        /// </param>
         public void OfferOrLose(Action lose)
         {
             if (lose == null || !_run) return;
@@ -121,6 +124,7 @@ namespace GlimmerGrove
                 v.Level = _run.StakeLevel;
                 v.Bought = amount => { if (StillOnScreen) Bought(amount); };
                 v.Declined = () => { if (!StillOnScreen) return; Done(); lose(); };
+
             });
         }
 

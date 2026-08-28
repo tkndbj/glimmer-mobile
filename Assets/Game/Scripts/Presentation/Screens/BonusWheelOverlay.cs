@@ -464,50 +464,25 @@ namespace GlimmerGrove
         /// server's to make (invariant 10d), and it is the server that independently recomputes
         /// which slice this spin landed on. <c>RewardedAds.Redeem</c> asks for the sync; the
         /// figure this panel shows is the same arithmetic run on the phone, which is why the two
-        /// agree without either telling the other anything.
+        /// agree without either telling the other anything. The show itself is
+        /// <see cref="RewardedVideo.Watch"/>, one copy for the three panels that need it.
         /// </para>
         /// </summary>
         async void Show()
         {
-            var impression = AdImpression.New(PlacementId);
+            var payment = await RewardedVideo.Watch(PlacementId);
 
-            try
-            {
-                var result = await RewardedAds.Provider.ShowAsync(impression);
+            // Asked before the liveness check, and deliberately: a prize that was paid for has
+            // to be shown to somebody, and Paid raises a panel of its own rather than repainting
+            // this one. The refusal branch below is the one that needs a panel to talk on, so it
+            // still gives up when this has gone.
+            if (payment.Paid) { Paid(payment.Drop, payment.Flight); return; }
 
-                // Opened before the reward is redeemed, because it snapshots what the pills
-                // underneath read and Redeem is what moves them.
-                var flight = RewardFlight.Begin();
+            if (this == null) return;
 
-                // The overlay can be gone by now — a player who backgrounds the app during a
-                // video may come back to a different screen entirely. The reward is still
-                // banked, because Redeem does not touch the UI.
-                var drop = RewardedAds.Redeem(result);
-
-                // Asked before the liveness check, and deliberately: a prize that was paid for
-                // has to be shown to somebody, and Paid raises a panel of its own rather than
-                // repainting this one. The refusal branches below are the ones that need a panel
-                // to talk on, so those still give up when it has gone.
-                if (drop.IsValid) { Paid(drop, flight); return; }
-
-                if (this == null) return;
-
-                _watching = false;
-                if (_status) _status.text = AdOfferButton.Refusal(result.Outcome);
-                Repaint();
-            }
-            catch (Exception e)
-            {
-                // async void swallows exceptions, and an ad that throws must not leave the panel
-                // stuck on "opening" with a dead button.
-                Debug.LogException(e);
-
-                if (this == null) return;
-
-                _watching = false;
-                if (_status) _status.text = Loc.Get("ui.ads.failed");
-                Repaint();
-            }
+            _watching = false;
+            if (_status) _status.text = RewardedVideo.Refusal(payment);
+            Repaint();
         }
 
         /// <summary>
@@ -521,7 +496,7 @@ namespace GlimmerGrove
         /// had just stopped on a thousand, and the thousand is what arrives.
         /// </para>
         /// <para>
-        /// <b>The payoff is a panel of its own</b> — see <see cref="WheelPrizeOverlay"/>. It used
+        /// <b>The payoff is a panel of its own</b> — see <see cref="PrizeOverlay"/>. It used
         /// to be a caption change on this button: the wheel stayed up with its question answered
         /// and its own COLLECT where WATCH had been, which drew the largest moment in the
         /// placement as the smallest change on the screen. The wheel asks; the celebration
@@ -543,8 +518,15 @@ namespace GlimmerGrove
             // that tells them what the video was worth. Nothing below this line is load-bearing
             // either — the grant is the server's (invariant 10d) and Redeem has already asked
             // for it.
-            WheelPrizeOverlay.Celebrate(prize, WheelPaint.For(_wheel, _landing), slice.IsBonus,
-                                        slice.Percent >= _wheel.TopPercent, flight);
+            Flow.Modal<PrizeOverlay>(v =>
+            {
+                v.Drop = prize;
+                v.TitleKey = "ui.wheel.prize_title";
+                v.Tint = WheelPaint.For(_wheel, _landing);
+                v.Loud = slice.IsBonus;
+                v.Loudest = slice.Percent >= _wheel.TopPercent;
+                v.Flight = flight;
+            });
 
             if (this == null) return;
 

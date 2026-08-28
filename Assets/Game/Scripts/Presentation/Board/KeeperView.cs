@@ -23,6 +23,13 @@ namespace GlimmerGrove
         public Action Changed { get; set; }
         public Action<string> Over { get; set; }
 
+        /// <summary>
+        /// The run has not been allowed to begin yet. Written only by the screen, from
+        /// <c>RunScreen.Running</c> — see <c>RunHold</c> for why a run has to be let go rather
+        /// than simply built.
+        /// </summary>
+        public bool Held { get; set; } = true;
+
         KeeperBoard _board;
         RectTransform _host, _grid, _tray;
         Image[] _tiles;
@@ -35,6 +42,7 @@ namespace GlimmerGrove
         public void Begin(RectTransform host, int width, int height, int tiles, uint seed)
         {
             _host = host;
+            Held = true;
             _board = new KeeperBoard(Mathf.Clamp(width, 5, 11),
                                      Mathf.Clamp(height, 5, 11),
                                      tiles > 0 ? tiles : 30, seed);
@@ -190,6 +198,7 @@ namespace GlimmerGrove
         // ------------------------------------------------------------------ placing
         void Place(int index)
         {
+            if (Held) return;
             if (!_board.CanPlace(index)) { Audio.Sfx("blocked", .45f); return; }
 
             int colour = _board.Next;

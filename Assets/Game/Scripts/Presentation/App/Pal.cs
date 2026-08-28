@@ -45,6 +45,29 @@ namespace GlimmerGrove
         public static readonly Color Mint = Hex("#7BD86A");
 
         /// <summary>
+        /// The green for a line that has to read as good news <em>on the cream panel paper</em>,
+        /// and <see cref="Amber"/>'s argument in the other direction.
+        ///
+        /// <para>
+        /// <see cref="Mint"/> cannot do this job and every one of its forty call sites explains
+        /// why: it is drawn on the board, on a halo, on a dark plate or as a fill, and it is
+        /// bright because all of those are dark. On cream it is a pale colour on a pale ground —
+        /// about 1.8:1 — so the defeat panel's "no heart was spent" line, which is 32pt body copy
+        /// with no outline and no shadow because that is what body copy is here, was the one
+        /// place in the game where a whole sentence had to be squinted at. Darkening it at the
+        /// call site with <c>Pal.A</c> would only have made it translucent; what it needed was a
+        /// different colour.
+        /// </para>
+        /// <para>
+        /// About 5.3:1 against the paper, which is a shade lighter than the body brown next to
+        /// it — enough to read as an aside rather than as the panel's subject, which is what the
+        /// line is. Named for the colour rather than for the one line using it, so the next
+        /// positive line on cream does not invent a second dark green a shade away from this one.
+        /// </para>
+        /// </summary>
+        public static readonly Color Moss = Hex("#2A7040");
+
+        /// <summary>
         /// The orange between <see cref="Gold"/> and <see cref="Rose"/>, for a line that has
         /// to read as an achievement on the cream panel paper.
         ///

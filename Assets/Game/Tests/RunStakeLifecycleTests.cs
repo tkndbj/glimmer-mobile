@@ -60,6 +60,11 @@ namespace GlimmerGrove.Tests
             protected override void Rewind() { }
             protected override void NoteAbandoned(string reason) => Abandonments.Add(reason);
 
+            // The run frame. A probe never runs one, but it still has to answer: the two members
+            // are abstract precisely so that nothing which is a run screen can decline to.
+            protected override bool Runnable => false;
+            protected override void Running(bool running) { }
+
             // The base class's own members, opened just wide enough to drive. Note what is
             // *not* reimplemented: the decision each of these reaches is still the base
             // class's, which is the whole point of testing here rather than in a mode.

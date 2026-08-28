@@ -1,5 +1,4 @@
 using System.Collections.Generic;
-using GlimmerGrove.Homestead;
 using GlimmerGrove.Localization;
 using GlimmerGrove.Persistence;
 using GlimmerGrove.Progression;
@@ -10,17 +9,15 @@ using UnityEngine.UI;
 namespace GlimmerGrove
 {
     /// <summary>
-    /// Where every keeper's grove stands: two boards, a standing, and a way into somebody
-    /// else's village.
+    /// Where every keeper's grove stands: two boards and a way into somebody else's
+    /// village.
     ///
     /// <para>
-    /// <b>The standing comes first and the list comes second, and that ordering is the whole
-    /// design.</b> A hundred rows is a hundred rows however many players there are, so on any
-    /// board worth having almost nobody is on it — and a screen that leads with a list the
-    /// player is not on has told them, at a glance, that this feature is not about them. The
-    /// percentile is about them, it is available to everybody from the first grove they buy
-    /// anything for, and it comes from one small document rather than from an ordering nothing
-    /// maintains. See <see cref="GroveRankTable"/>.
+    /// <b>The list is the screen.</b> The player's own standing used to be drawn above it in a
+    /// box of its own — their grove's worth and where that put them — and it is gone: the same
+    /// two numbers are on the profile, the row a player is looking for is lit in the list
+    /// (<see cref="Row.Bind"/>), and a panel restating what the screen below it already says is
+    /// a header the player scrolls past to reach the thing they came for.
     /// </para>
     /// <para>
     /// <b>Two boards and no third.</b> The global hundred is aspirational; a league board is
@@ -41,7 +38,13 @@ namespace GlimmerGrove
     {
         public override string Track => "mus_menu";
 
-        const float HeaderHeight = 470f;
+        /// <summary>
+        /// Everything above the list: the banner, the two tabs and the board caption. It was
+        /// 470 while the standing box stood between the banner and the tabs; removing that box
+        /// moves everything under it up by its own height, so this moves with them or the list
+        /// begins in a strip of empty sky.
+        /// </summary>
+        const float HeaderHeight = 312f;
         const float RowHeight = 132f;
 
         /// <summary>
@@ -56,7 +59,7 @@ namespace GlimmerGrove
 
         RectTransform _viewport;
         GridView _grid;
-        Text _standing, _empty, _boardCaption;
+        Text _empty, _boardCaption;
         Btn _globalTab, _leagueTab;
 
         LeaderboardBoard _board = LeaderboardBoard.None;
@@ -71,8 +74,7 @@ namespace GlimmerGrove
             // Finest groves by default, and deliberately: the league is where the player is
             // already standing — it is their own star rating, drawn over their own grove —
             // so opening onto it shows them what they mostly know. The global hundred is the
-            // aspirational half of the feature and the one worth arriving on, and the
-            // standing above it is what keeps the screen about the player either way.
+            // aspirational half of the feature and the one worth arriving on.
             if (string.IsNullOrEmpty(_boardId)) _boardId = LeaderboardBoard.Global;
 
             BuildList();
@@ -83,21 +85,19 @@ namespace GlimmerGrove
             // scope is usually warm and this repaints immediately.
             CompanionArt.OpenAsync(() => { if (this) Repaint(); });
 
-            // The distribution decides the one line the player is actually here for, so it is
-            // asked for on arrival rather than at boot: a player who never opens this screen
-            // should never pay for the read.
+            // Asked for on arrival rather than at boot, so a player who never opens this
+            // screen never pays for the read. Nothing here draws it any more — the profile is
+            // where the percentile is said — but this is still the screen a player reaches
+            // first, and the fetch is once a session however many times it is asked for.
             GroveBoard.BeginRanksRefresh();
 
-            GroveRanks.Changed += Repaint;
             GroveBoard.Published += OnPublished;
 
             Fetch();
-            PaintStanding();
         }
 
         void OnDestroy()
         {
-            GroveRanks.Changed -= Repaint;
             GroveBoard.Published -= OnPublished;
 
             if (Flow.Current is ProfileScreen || Flow.Current is CompanionScreen) return;
@@ -141,59 +141,13 @@ namespace GlimmerGrove
                              new Vector2(0f, 1f), new Vector2(92f, -104f),
                              () => Flow.Go<HomeScreen>());
 
-            BuildStanding(chrome);
             BuildTabs(chrome);
 
             _boardCaption = UIKit.Shrinkable(
                 UIKit.Titled("BoardCaption", chrome, string.Empty, 22,
                              new Color(1f, .96f, .88f, .62f), TextAnchor.MiddleCenter,
-                             new Vector2(900f, 30f), new Vector2(.5f, 1f), new Vector2(0f, -444f),
+                             new Vector2(900f, 30f), new Vector2(.5f, 1f), new Vector2(0f, -285f),
                              3f, 0f), 15);
-        }
-
-        /// <summary>
-        /// The player's own row, and the line that says where they stand.
-        ///
-        /// <para>
-        /// Drawn from the local derivation rather than from the published card, and
-        /// deliberately: a player who has just bought something must see it here immediately,
-        /// and the publish is debounced by ten seconds (<see cref="GrovePublishPolicy"/>). The
-        /// two agree for every honest player — the server recomputes the same summation from
-        /// the same sets — so the local number is a prediction that is almost always exactly
-        /// right, which is the same bargain every balance in this game already makes.
-        /// </para>
-        /// </summary>
-        void BuildStanding(Transform chrome)
-        {
-            var size = new Vector2(900f, 150f);
-            var box = UIKit.Img("Standing", chrome, Art.Round(28), new Color(.06f, .12f, .17f, .74f),
-                                size, new Vector2(.5f, 1f), new Vector2(0f, -246f));
-            var rt = (RectTransform)box.transform;
-
-            var edge = UIKit.Img("Edge", rt, Art.RoundOutline(28, 3f), new Color(1f, 1f, 1f, .13f));
-            UIKit.StretchTo((RectTransform)edge.transform, 0, 0, 0, 0);
-
-            var standing = GroveScore.Of(HomesteadCatalog.Current);
-
-            UIKit.Shrinkable(
-                UIKit.Titled("Worth", rt, Compact.Number(standing.Score), 46, Pal.Gold,
-                             TextAnchor.MiddleCenter, new Vector2(300f, 56f),
-                             new Vector2(0f, .5f), new Vector2(170f, 18f), 4f, 4f), 26);
-
-            UIKit.Shrinkable(
-                UIKit.Titled("WorthLabel", rt, Loc.Get("ui.grove.score").ToUpperInvariant(), 20,
-                             new Color(1f, .96f, .88f, .62f), TextAnchor.MiddleCenter,
-                             new Vector2(300f, 26f), new Vector2(0f, .5f), new Vector2(170f, -32f),
-                             3f, 0f), 14);
-
-            _standing = UIKit.Shrinkable(
-                UIKit.Titled("Standing", rt, string.Empty, 30, new Color(1f, .96f, .88f, .92f),
-                             TextAnchor.MiddleCenter, new Vector2(500f, 96f),
-                             new Vector2(1f, .5f), new Vector2(-270f, 0f), 3f, 2f), 18);
-            _standing.horizontalOverflow = HorizontalWrapMode.Wrap;
-
-            rt.localScale = Vector3.zero;
-            Tween.Pop(rt, 0f, .5f, .16f);
         }
 
         void BuildTabs(Transform chrome)
@@ -202,14 +156,14 @@ namespace GlimmerGrove
 
             _globalTab = UIKit.TextButton("Global", chrome, "btn_orange",
                                           Loc.Get("ui.board.global"), 28, size,
-                                          new Vector2(.5f, 1f), new Vector2(-158f, -374f),
+                                          new Vector2(.5f, 1f), new Vector2(-158f, -215f),
                                           () => Select(LeaderboardBoard.Global));
             UIKit.Shrinkable(_globalTab.Label, 18);
             UIKit.FitLabel(_globalTab);
 
             _leagueTab = UIKit.TextButton("League", chrome, Skins.Alternate,
                                           Loc.Get("ui.board.league"), 28, size,
-                                          new Vector2(.5f, 1f), new Vector2(158f, -374f),
+                                          new Vector2(.5f, 1f), new Vector2(158f, -215f),
                                           () => Select(GroveBoard.MyLeagueId()));
             UIKit.Shrinkable(_leagueTab.Label, 18);
             UIKit.FitLabel(_leagueTab);
@@ -293,73 +247,22 @@ namespace GlimmerGrove
             _grid?.Show(_board.Entries.Count);
             PaintEmpty();
             PaintCaption();
-            PaintStanding();
         }
 
         void OnPublished()
         {
             // Our own row may have moved, and the cached boards were dropped when the card
             // was published, so this is a real fetch rather than a redraw.
-            PaintStanding();
             Fetch();
         }
 
         void Repaint()
         {
             _grid?.Refresh();
-            PaintStanding();
             PaintCaption();
         }
 
         // ------------------------------------------------------------------ copy
-        /// <summary>
-        /// The line under the player's own worth, and it says exactly one true thing.
-        ///
-        /// <para>
-        /// Upward only, which is <see cref="LevelStats.IsWorthSaying"/>'s argument in the one
-        /// place it matters most: this screen exists to make somebody want to build, and being
-        /// told they are behind almost everybody is the single most reliable way to make them
-        /// stop. So a grove worth nothing gets an invitation rather than a percentile, and a
-        /// population too small to speak from gets silence rather than a number.
-        /// </para>
-        /// </summary>
-        void PaintStanding()
-        {
-            if (!_standing) return;
-
-            var standing = GroveScore.Of(HomesteadCatalog.Current);
-
-            if (!GroveBoard.IsAvailable)
-            {
-                _standing.text = Loc.Get("ui.board.offline");
-                return;
-            }
-
-            if (!GroveBoard.OptedIn)
-            {
-                _standing.text = Loc.Get("ui.board.opted_out");
-                return;
-            }
-
-            if (standing.Score < GrovePublishPolicy.Worth)
-            {
-                _standing.text = Loc.Get("ui.board.unranked");
-                return;
-            }
-
-            int rank = _board.RankOf(CloudState.UserId);
-            if (rank > 0)
-            {
-                _standing.text = Loc.Format("ui.board.placed", rank);
-                return;
-            }
-
-            int top = GroveRanks.Table.TopPercent(standing.Score);
-            _standing.text = top > 0
-                ? Loc.Format("ui.board.top_percent", top)
-                : Loc.Get("ui.board.building");
-        }
-
         void PaintCaption()
         {
             if (!_boardCaption) return;

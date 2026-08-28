@@ -4,7 +4,8 @@ using NUnit.Framework;
 namespace GlimmerGrove.Tests
 {
     /// <summary>
-    /// The wheel prize panel's arithmetic.
+    /// The prize panel's arithmetic — one geometry for every video that pays into a
+    /// celebration.
     ///
     /// <para>
     /// The same guard <c>WheelPanelTests</c> keeps over the wheel itself, and written for the
@@ -12,31 +13,31 @@ namespace GlimmerGrove.Tests
     /// through the one above it would be found by players rather than by us.
     /// </para>
     /// </summary>
-    public sealed class WheelPrizePanelTests
+    public sealed class PrizePanelTests
     {
         [Test]
         public void ThePanelFitsATabletHeldInPortrait()
-            => Assert.LessOrEqual(WheelPrizePanel.Tallest, PanelStack.TallestPanel,
-                                  $"the prize panel reaches {WheelPrizePanel.Tallest} and the " +
+            => Assert.LessOrEqual(PrizePanel.Tallest, PanelStack.TallestPanel,
+                                  $"the prize panel reaches {PrizePanel.Tallest} and the " +
                                   $"shortest canvas holds {PanelStack.TallestPanel}");
 
         /// <summary>Every row clears the one above it, read as boxes rather than as centres.</summary>
         [Test]
         public void NoRowIsDrawnThroughTheOneAboveIt()
         {
-            var s = WheelPrizePanel.Of();
+            var s = PrizePanel.Of();
 
             float coinHead = s.CoinCentre - s.CoinSize * .5f;
             float coinFoot = s.CoinCentre + s.CoinSize * .5f;
-            float amountHead = s.AmountCentre - WheelPrizePanel.AmountHeight * .5f;
-            float amountFoot = s.AmountCentre + WheelPrizePanel.AmountHeight * .5f;
-            float buttonHead = s.ButtonCentre - WheelPrizePanel.ButtonHeight * .5f;
+            float amountHead = s.AmountCentre - PrizePanel.AmountHeight * .5f;
+            float amountFoot = s.AmountCentre + PrizePanel.AmountHeight * .5f;
+            float buttonHead = s.ButtonCentre - PrizePanel.ButtonHeight * .5f;
 
-            Assert.GreaterOrEqual(coinHead, WheelPrizePanel.HeadRoom,
+            Assert.GreaterOrEqual(coinHead, PrizePanel.HeadRoom,
                                   "the coin is drawn up into the title ribbon");
             Assert.LessOrEqual(coinFoot, amountHead, "the figure is drawn over the coin");
             Assert.LessOrEqual(amountFoot, buttonHead, "the figure is drawn into the button");
-            Assert.LessOrEqual(s.ButtonCentre + WheelPrizePanel.ButtonHeight * .5f, s.Height,
+            Assert.LessOrEqual(s.ButtonCentre + PrizePanel.ButtonHeight * .5f, s.Height,
                                "the button is drawn off the bottom of the frame");
         }
 
@@ -48,12 +49,12 @@ namespace GlimmerGrove.Tests
         [Test]
         public void TheHeightIsTheSumOfWhatIsInIt()
         {
-            var s = WheelPrizePanel.Of();
+            var s = PrizePanel.Of();
 
-            float expected = WheelPrizePanel.HeadRoom
-                           + WheelPrizePanel.CoinSize + WheelPrizePanel.CoinFoot
-                           + WheelPrizePanel.AmountHeight + WheelPrizePanel.AmountFoot
-                           + WheelPrizePanel.ButtonHeight + WheelPrizePanel.FootRoom;
+            float expected = PrizePanel.HeadRoom
+                           + PrizePanel.CoinSize + PrizePanel.CoinFoot
+                           + PrizePanel.AmountHeight + PrizePanel.AmountFoot
+                           + PrizePanel.ButtonHeight + PrizePanel.FootRoom;
 
             Assert.AreEqual(expected, s.Height, .001f);
         }
@@ -62,8 +63,8 @@ namespace GlimmerGrove.Tests
         [Test]
         public void TheRowsFitInsideTheFrame()
         {
-            Assert.Less(WheelPrizePanel.ContentWidth, WheelPrizePanel.Width);
-            Assert.LessOrEqual(WheelPrizePanel.CoinSize, WheelPrizePanel.ContentWidth);
+            Assert.Less(PrizePanel.ContentWidth, PrizePanel.Width);
+            Assert.LessOrEqual(PrizePanel.CoinSize, PrizePanel.ContentWidth);
         }
 
         /// <summary>
@@ -72,6 +73,6 @@ namespace GlimmerGrove.Tests
         /// </summary>
         [Test]
         public void ItIsShorterThanTheWheelItFollows()
-            => Assert.Less(WheelPrizePanel.Tallest, WheelPanel.Tallest);
+            => Assert.Less(PrizePanel.Tallest, WheelPanel.Tallest);
     }
 }

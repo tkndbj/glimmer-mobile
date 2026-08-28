@@ -1,7 +1,7 @@
 namespace GlimmerGrove.Layout
 {
-    /// <summary>Where each part of the wheel's prize panel sits, measured from its top edge.</summary>
-    public readonly struct WheelPrizeStack
+    /// <summary>Where each part of a prize panel sits, measured from its top edge.</summary>
+    public readonly struct PrizeStack
     {
         /// <summary>The coin's centre, and how wide across it is drawn.</summary>
         public readonly float CoinCentre, CoinSize;
@@ -15,7 +15,7 @@ namespace GlimmerGrove.Layout
         /// <summary>How tall the panel has to be to hold all of it.</summary>
         public readonly float Height;
 
-        public WheelPrizeStack(float coinCentre, float coinSize, float amountCentre,
+        public PrizeStack(float coinCentre, float coinSize, float amountCentre,
                                float buttonCentre, float height)
         {
             CoinCentre = coinCentre;
@@ -27,14 +27,21 @@ namespace GlimmerGrove.Layout
     }
 
     /// <summary>
-    /// The prize panel's geometry: what the wheel's video actually paid, handed over.
+    /// The prize panel's geometry: what a video actually paid, handed over.
     ///
+    /// <para>
+    /// <b>One geometry for every placement that pays into a celebration</b>, which is now two —
+    /// the bonus wheel's multiplied credits, and the hearts a lost run is given back. They are
+    /// the same three rows carrying different currencies, so a second set of numbers would be a
+    /// second thing to keep under <see cref="PanelStack.TallestPanel"/> and a second place for a
+    /// row to start being drawn through the one above it.
+    /// </para>
     /// <para>
     /// <b>Here rather than beside the panel</b>, for <see cref="WheelPanel"/>'s reason and
     /// <c>ChapterMap</c>'s before it (invariant 8a): whether two things on a screen overlap is
     /// arithmetic, and arithmetic inside a <c>MonoBehaviour</c> is arithmetic nothing can
     /// check. This panel is three rows and every one of them is drawn every time, so the height
-    /// is a single derivation and <c>WheelPrizePanelTests</c> holds it under
+    /// is a single derivation and <c>PrizePanelTests</c> holds it under
     /// <see cref="PanelStack.TallestPanel"/> — the shortest canvas this game is drawn on, with
     /// the title ribbon's overhang counted at both ends because a modal is centred.
     /// </para>
@@ -47,7 +54,7 @@ namespace GlimmerGrove.Layout
     /// its own test passed on the arithmetic the panel did not use.
     /// </para>
     /// </summary>
-    public static class WheelPrizePanel
+    public static class PrizePanel
     {
         /// <summary>How wide the panel is, and how wide the rows inside it may be.</summary>
         public const float Width = 880f, ContentWidth = 720f;
@@ -79,7 +86,7 @@ namespace GlimmerGrove.Layout
         /// A cursor rather than absolute offsets, so a row inserted in the middle does not need
         /// every number below it edited by hand.
         /// </summary>
-        public static WheelPrizeStack Of()
+        public static PrizeStack Of()
         {
             float y = HeadRoom;
 
@@ -92,7 +99,7 @@ namespace GlimmerGrove.Layout
             float button = y + ButtonHeight * .5f;
             y += ButtonHeight + FootRoom;
 
-            return new WheelPrizeStack(coin, CoinSize, amount, button, y);
+            return new PrizeStack(coin, CoinSize, amount, button, y);
         }
 
         /// <summary>

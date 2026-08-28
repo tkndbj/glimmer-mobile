@@ -2189,15 +2189,18 @@ and a screenshot of the source.
   held from construction and released only after the last lesson closes, and `RunScreen.Tick`
   is the door a run may start or advance through. A mode *declares* what it teaches
   (`Lessons`, `Flavour`) and never sequences it.
-  <br>**It is a funnel with one caller, and that is a gap rather than a design.** `Tick` was
-  written so no mode could advance a run without `RunHold` being consulted, and it had two
-  callers while both the glade and the weave ran clocks. Removing the countdown (invariant 22)
-  removed the weave's `Update` wholesale, and Fall and Keeper never had one — so `PlayScreen`
-  is now the only mode that goes through it. Nothing is broken today, because every mode
-  latches its own board through `Latch` and the only reader of `Played` is the glade's
-  commit-grace. But the guarantee the funnel exists to give is not currently being given by
-  three modes out of four, and the next thing that hangs off `RunHold` will silently not apply
-  to them. Put a mode back through `Tick` before adding anything that reads it.
+  <br>**It was a funnel with one caller, and the fix was to stop asking modes to walk into it.**
+  `Tick` was a `protected` method each mode called from its own `Update`, which is the same
+  "remember to consult the latch" shape it was written to replace, with the remembering moved one
+  step. Three modes out of four never called it and nothing noticed — and two of those would take
+  input while the iris was still opening, long enough to commit a run and be charged a heart for a
+  board the player had not seen. `RunScreen` now owns `Update` and the two halves are **abstract**
+  (`Runnable`, `Running`), so a mode cannot decline to answer, and `Tick` is **private**, so it
+  cannot advance itself. A default would have kept the hole exactly where it was: a mode that
+  overrode nothing would compile, run, and opt out in silence. The one part no language can express
+  is that Unity dispatches `Update` to the most-derived declaration only, so a mode declaring one
+  silently steals the frame — `RunFrameTests` refuses that by reflection, the way `RunStakeTests`
+  refuses a mode declaring part of the stake.
 - **A reward that lands somewhere is worth more than one that is merely granted, and the
   cascade that does it exists once.** `RewardFlight` — the chest's collect, lifted out when the
   rewarded ad and then the shop's receipt needed the same thing, for the reason `TokenFlight` was
@@ -2215,6 +2218,40 @@ and a screenshot of the source.
   number exactly where it was rather than anywhere invented. A prize with no pill (seconds on a
   run, a hint) or a panel opened from anywhere but the hub adds nothing and simply closes: a
   reward that is already banked must never depend on an animation being able to run.
+- **A panel that explains a resource is the answer to a question, never a toll on the way to
+  playing — and what a video pays is a panel of its own.** `AdOfferOverlay` lists how hearts come
+  back, when the next one lands and how many videos the day has left, which is exactly right
+  behind the `+` beside the heart pill: that control means "tell me about this resource". It was
+  also what stood between a player who had just been stopped mid-session and the video that would
+  let them carry on — and it paid out by turning its own watch button into a COLLECT, drawing the
+  largest moment in the placement as the smallest change on the screen. Both halves are the fault
+  `PrizeOverlay` was built for one placement earlier (the bonus wheel, invariant 25) and it
+  generalises: the tap on a defeat panel's WATCH FOR HEARTS now shows the video, and what returns
+  is the celebration with COLLECT under it. `HeartVideoFlow` owns it, beside `DefeatRescueFlow`
+  and for that class's reason — the free way back and the paid one are two collaborators on one
+  panel rather than a sixth and seventh responsibility inside it. Three things about it are
+  load-bearing. The way onward is `PrizeOverlay.Collected`, raised **exactly once however the
+  panel ended**, because the hearts are banked by the redeem and the panel underneath is stale the
+  moment they are — a defeat screen still reading "you are out of hearts" over a wallet holding
+  two is the one frame of this a player could read as a bug, so a dismissal has to lead onward
+  just as a collect does. The button is the **only** thing left saying why a video is not
+  available, so it is painted through `AdOfferButton` on a timer rather than given a fixed
+  caption. And a refusal is a **toast**, not a row: a panel that derives its height from the rows
+  it draws (`DefeatPanel`) would need a fourth shape held under `PanelStack.TallestPanel` to carry
+  a sentence that only exists when nothing was paid.
+- **Showing a rewarded video is five steps in an order, and the order is the substance.**
+  `RewardedVideo.Watch` — mint the impression, show it, snapshot the pills, redeem, read the
+  refusal. Two of those orderings matter and neither is visible in a compile, a validator or a
+  screenshot: the impression is minted **before** the SDK is asked for anything, because the nonce
+  inside it has to reach the network as a custom parameter, and the pills are snapshotted
+  **before** the redeem, because deriving the snapshot afterwards by subtracting the offer is
+  wrong in the case that matters — a heart reward landing at the ceiling grants nothing, so the
+  subtraction rewinds a pill below where it ever stood. It had been written out three times
+  before it was written once (invariant 9a at the smallest scale it appears at). What stays with
+  each caller is the half only a `MonoBehaviour` can answer — whether it is still alive after the
+  await — and the asymmetry that follows: **a prize is raised before that check and a refusal
+  after it**, because the reward is banked whether or not anybody is still looking, while a
+  refusal is news about a button that no longer exists.
 - **A receipt has to show the transaction happening, not report that it happened.** The shop's
   thank-you panel was a chime, a stamp and two printed numbers, and it was defended as
   proportionate — a coin pack is a transaction, not a companion somebody saved for over weeks.
@@ -2352,6 +2389,31 @@ and a screenshot of the source.
   carrying it: the badge's text box was half again as wide as the maroon disc, so a two-word badge
   spilled onto the plate, where lettering coloured for a gold rim was drawn on the darkest thing
   on the card and disappeared.
+- **A row's position is a centre, so a paragraph in one must be centred too — and a slot that
+  is reserved and not filled belongs to the row below it.** Both halves were reported from play
+  about the same sentence, the defeat panel's "no heart was spent" line. `DefeatPanel` hands out
+  centres for the room each row gets, and `Body` was anchoring its text to the *top* of that
+  room, so a two-line sentence in a room sized for more sat high in it by the difference and the
+  air above it and below it were never the two halves of one gap. On top of that its centre was
+  typed, under a near-miss slot that is reserved on every defeat and filled on few — so on the
+  ordinary run there were seventy-four units of paper doing nothing above the line and fourteen
+  below it, which reads exactly as it was reported: sitting on the try-again button with a hole
+  over it. The fix is `DefeatPanel.FreeCentre(close)`, centred in the room that is actually
+  free, and `PaperTop` measured from the title ribbon's own geometry rather than guessed — a
+  region that starts at the panel's top edge is centred partly *behind* the ribbon. Anything
+  reserving room conditionally should ask what the unconditional case does with it.
+- **A colour is chosen against the ground it is drawn on, not against the palette.** `Pal.Mint`
+  is used forty times and every one of them is a halo, a fill, a board tint or a dark plate —
+  so it is bright, correctly. The one place it was asked to carry a *sentence on the cream
+  panel paper* it came out at about 1.8:1, on 32pt body copy that by house rule has no outline
+  and no shadow, and a whole paragraph had to be squinted at. `Pal.A` cannot fix that: it makes
+  a pale colour translucent, not darker. `Pal.Moss` is the dark green for good news on cream,
+  and it is `Pal.Amber`'s argument for the second time — named for the colour rather than for
+  the line using it, so the next one does not invent a third shade a step away. Two panels use
+  it and the second was found by looking rather than by grepping: the account panel's every
+  green, including "your progress is saved online", which is the one sentence in the game whose
+  whole job is to be believed. The tell for whether a panel is cream or dark is what its *other*
+  text is — a panel writing in `Pal.Cream` is a dark one, and Mint is right there.
 - **An asset scope is bounded by what is on screen**, and an in-flight guard is not
   `IsScopeLoaded` — that goes true the instant a load *starts*. Four grove scopes exist for
   four different bounds (the grove, one shelf, the shop's tab furniture, visiting).
