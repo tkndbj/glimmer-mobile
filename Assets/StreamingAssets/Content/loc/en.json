@@ -47,11 +47,11 @@
     },
     {
       "key": "level.c01_duskcap_hollow.name",
-      "text": "Duskcap Hollow"
+      "text": "Stillwater"
     },
     {
       "key": "level.c01_duskcap_hollow.tagline",
-      "text": "Wake the groove without waking the dark"
+      "text": "Two streams, and a pool between them"
     },
     {
       "key": "level.c01_first_light.name",
@@ -75,7 +75,7 @@
     },
     {
       "key": "level.c01_lantern_ring.tagline",
-      "text": "One ring of light around a sleeping dark"
+      "text": "One ring of light around a light of its own"
     },
     {
       "key": "level.c01_prism_heart.name",
@@ -91,7 +91,7 @@
     },
     {
       "key": "level.c01_sleeping_thicket.tagline",
-      "text": "Two streams, and a thicket between them"
+      "text": "Two streams, and a third between them"
     },
     {
       "key": "level.c01_thorn_hollow.name",
@@ -99,7 +99,7 @@
     },
     {
       "key": "level.c01_thorn_hollow.tagline",
-      "text": "Three streams, and conduits that will not last"
+      "text": "Two streams, and conduits that will not last"
     },
     {
       "key": "level.c01_three_springs.name",

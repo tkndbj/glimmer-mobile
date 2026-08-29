@@ -596,7 +596,7 @@ REWORDED = {
 
 BOARDS = [
     ("c01_first_light", g1, 10),
-    ("c01_twin_streams", g2, 18),
+    ("c01_twin_streams", g2, 22),
     ("c01_prism_heart", g3, 24),
     ("c01_thorn_hollow", g4, 30),
     ("c01_bound_roots", g5, 28),

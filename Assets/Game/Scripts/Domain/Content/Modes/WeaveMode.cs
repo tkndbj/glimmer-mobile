@@ -52,6 +52,7 @@ namespace GlimmerGrove.Content
             int pairs = grove.pairs > 0 ? grove.pairs : 4;
             int beads = grove.beads > 0 ? grove.beads : 0;
             int hedges = grove.hedges > 0 ? grove.hedges : 0;
+            int beadReach = grove.beadReach > 0 ? grove.beadReach : 0;
 
             if (width < 4 || width > 9 || height < 4 || height > 12)
             {
@@ -89,7 +90,29 @@ namespace GlimmerGrove.Content
                 return false;
             }
 
-            rules = new WeaveRules(width, height, pairs, beads, hedges, grove.seed);
+            // Refused rather than clamped, for the reason a bead count and a hedge count are: a
+            // grove quietly given a looser bar than it authored is a rung whose beads sit where
+            // the ladder says they may not, and nothing downstream would say so. The ceiling is
+            // the grove's own half-width, because a bead must stand that far from *both* ends and
+            // there is no cell on a narrower grove that can.
+            int room = (width < height ? width : height) / 2;
+            if (beadReach > room)
+            {
+                problems.Add($"weave level '{id}' asks every bead to stand {beadReach} cells from " +
+                             $"both its own ends on a {width}x{height} grove; it is at most " +
+                             $"{room} — past that no cell is far enough from both, and the grove " +
+                             "would be dealt with beads it could not place");
+                return false;
+            }
+
+            if (beadReach > 0 && beads <= 0)
+            {
+                problems.Add($"weave level '{id}' authors a bead reach of {beadReach} and no " +
+                             "beads to hold to it");
+                return false;
+            }
+
+            rules = new WeaveRules(width, height, pairs, beads, hedges, grove.seed, beadReach);
             return true;
         }
 
@@ -138,9 +161,19 @@ namespace GlimmerGrove.Content
         public override LevelTuning Tune(LevelDto dto, ILevelRules rules)
         {
             var grove = (WeaveRules)rules;
-            int par = grove.Par(LevelId.Parse(dto.id));
+            var id = LevelId.Parse(dto.id);
 
-            return new LevelTuning(par, LevelTuning.DefaultGoldFactor,
+            // Handed over as a search rather than run here — invariant 26d's rule, which
+            // Lightfall met first and this mode joined the moment its groves stopped being easy
+            // to deal. A weave's par means generating the board, and generating means carving
+            // until one passes the acceptance bar; the bar tightened when `w03_wildhedge` was
+            // re-dealt to make its hedges bite, so the boards that satisfy it are rarer and cost
+            // more attempts each. Measured on Unity's Mono, the ten Wildhedge groves take 965ms
+            // between them against 41ms for the Weftwood's ten — and this ran for all ten while
+            // the chapter body was parsing, which is the map opening, a screen that never asks
+            // what par is. Now it is asked by the run screen and the validator, once, and the
+            // memo in LevelTuning is what keeps it once.
+            return new LevelTuning(() => grove.Par(id), LevelTuning.DefaultGoldFactor,
                                    LevelTuning.DefaultSilverFactor,
                                    dto.budgetFactor);
         }
@@ -166,17 +199,19 @@ namespace GlimmerGrove.Content
     /// </summary>
     public sealed class WeaveRules : ILevelRules
     {
-        public readonly int Width, Height, PairCount, BeadCount, HedgeCount, Seed;
+        public readonly int Width, Height, PairCount, BeadCount, HedgeCount, BeadReach, Seed;
 
         WeaveLayout _layout;
 
-        public WeaveRules(int width, int height, int pairs, int beads, int hedges, int seed)
+        public WeaveRules(int width, int height, int pairs, int beads, int hedges, int seed,
+                          int beadReach = 0)
         {
             Width = width;
             Height = height;
             PairCount = pairs;
             BeadCount = beads;
             HedgeCount = hedges;
+            BeadReach = beadReach;
             Seed = seed;
         }
 
@@ -191,7 +226,7 @@ namespace GlimmerGrove.Content
         /// </summary>
         public WeaveLayout LayoutFor(LevelId id)
             => _layout ??= WeaveGenerator.Build(Width, Height, PairCount, SeedFor(id), BeadCount,
-                                                HedgeCount);
+                                                HedgeCount, BeadReach);
 
         /// <summary>What this grove is graded against — see <c>WeaveLayout.Par</c>.</summary>
         public int Par(LevelId id) => LayoutFor(id).Par;

@@ -459,6 +459,40 @@ class Board:
             total += self.group_turns(p)
         return total
 
+    def astray(self):
+        """How much of this board the player does *not* find already done.
+
+        Two counts of the board *as it is dealt*, against the same predicate `par` charges
+        on: critters already correctly lit, and turnable conduits already sitting on their
+        solution. A glade opening with a third of its wiring right and three of its critters
+        awake is somebody else's half-finished work, and every board here was authored
+        without anybody able to say by how much - which is how the worst of them shipped at
+        23 conduits of 40 and four critters awake.
+
+        `free` is the same set `par` counts: locked tiles are nobody's decision, and a tile
+        that is inert at every angle is already right at every angle, so counting either
+        would report a board's architecture as its head start.
+        """
+        rots = {p: c['rot'] for p, c in self.cells.items()}
+        comp, colour = self.solve_state(rots)
+
+        lit = 0
+        for p, c in self.cells.items():
+            if c['kind'] != 'lamp':
+                continue
+            have, want = self.energy(p, comp, colour), c['colour']
+            if (have != 0) if want == 0 else (have == want):
+                lit += 1
+
+        done = free = 0
+        for p, c in self.cells.items():
+            if c['locked'] or alike(self.mask(p), c['cross'], 1, c['gate']):
+                continue
+            free += 1
+            if owed(self.mask(p), c['rot'], c['cross'], c['gate']) == 0:
+                done += 1
+        return lit, done, free
+
     # ------------------------------------------------------------- authoring aids
     def spin(self, seed=1, bias=70, skip=()):
         """Give every free tile a start rotation, and dial par with `bias`.
@@ -616,12 +650,30 @@ class Board:
 
 
 def fit(make, target, seeds=range(1, 60), biases=range(-90, 100, 10)):
-    """The (seed, bias) whose par lands nearest `target`, and the board it makes.
+    """The board whose par lands nearest `target`, dealt as scrambled as that par allows.
 
-    `make` takes (seed, bias) and returns a finished Board. Par decides the clock and
-    the move budget, so a chapter's ramp is a set of numbers somebody chose - this is
-    how they get chosen rather than discovered. Boards that do not check are skipped,
-    so a fit can never hand back one that is unwinnable.
+    `make` takes (seed, bias) and returns a finished Board. Par decides the move budget and
+    both star lines, so a chapter's ramp is a set of numbers somebody chose - this is how
+    they get chosen rather than discovered. Boards that do not check are skipped, so a fit
+    can never hand back one that is unwinnable.
+
+    **Par cannot be the only thing ranked, and for a long time it was.** Hundreds of
+    (seed, bias) pairs hit any given par, and this walked `bias` from -90 upward and
+    returned the first - so it systematically handed back the board dealt *most* nearly
+    finished, because a negative bias is `spin`'s instruction to prefer leaving a tile
+    sitting on its solution. Reported from play as glades that "start half done", and it
+    was: of the forty shipped, thirty-four opened with a critter already awake or better
+    than a third of their conduits already right, the worst at 23 of 40 and four critters
+    lit. Nothing could see it - every one of those boards is solvable, correctly par'd and
+    passes every gate there is, because "how much of this is already done" was a question
+    nothing asked. Ranking `astray` behind the par distance costs nothing, is still
+    deterministic, and cleaned twenty-one of the forty with no change to their par at all.
+
+    What it cannot do is scramble a board its target forbids: par *is* the count of owed
+    turns, so a glade dealt with three quarters of its tiles wrong has a par near three
+    quarters of its tile count, and no seed can give it a shorter one. Where a shipped
+    target was too low to carry a scrambled board its target was raised, which is the other
+    half of the same fix and the reason several chapter ramps moved.
     """
     best = None
     for bias in biases:
@@ -630,10 +682,12 @@ def fit(make, target, seeds=range(1, 60), biases=range(-90, 100, 10)):
             if board.check()[0]:
                 continue
             gap = abs(board.par() - target)
-            if best is None or gap < best[0]:
-                best = (gap, seed, bias, board)
-            if gap == 0:
-                return best[1], best[2], best[3]
+            if best is not None and gap > best[0][0]:
+                continue                      # cannot win on par, so never pay for the reading
+            lit, done, _ = board.astray()
+            rank = (gap, lit, done)
+            if best is None or rank < best[0]:
+                best = (rank, seed, bias, board)
     if best is None:
         raise ValueError("no (seed, bias) produced a board that checks")
     return best[1], best[2], best[3]

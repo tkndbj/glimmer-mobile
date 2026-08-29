@@ -294,39 +294,22 @@ namespace GlimmerGrove.Modes
         /// </summary>
         public const int MinHedge = 2;
 
-        /// <summary>How many placements one hedge may be offered before the attempt is abandoned.</summary>
-        public const int HedgeTries = 40;
-
         /// <summary>
-        /// How many pairs the fence has to send a longer way, for the hedges to be doing the work
-        /// this mechanic exists for — <see cref="WeaveLayout.PairsBitten"/>.
+        /// The fewest cells a bead may add to its own pair's floor, on a grove that asks for a
+        /// bead reach at all.
         ///
         /// <para>
-        /// <b>The bar this joins was satisfiable by one pair, and that is what shipped.</b>
-        /// <see cref="WeaveLayout.HedgesBite"/> asks whether the barriers lengthen anybody's
-        /// floor, which is a sum over the grove, so one channel detouring two cells clears it for
-        /// a board of six. Measured on the Wildhedge as authored: eight of its ten groves reached
-        /// exactly one pair, three barriers apiece, five channels out of six drawn as though the
-        /// fence were not there. Every check in the mode passed and the chapter came back from
-        /// play as "it is like they are not there", which is precisely what it was.
-        /// </para>
-        /// <para>
-        /// <b>One more pair per barrier, because a barrier is worth what its doorway is worth.</b>
-        /// A hedge does not remove ground, it removes a way — so what it offers the board is a
-        /// gap, and a gap is only a decision when more than one channel wants it. One pair sent
-        /// round is a longer line and nothing else; two pairs at one gap is the mode's only
-        /// question, asked by something the player can see before committing to anything
-        /// (<see cref="MinReach"/>'s argument, for the ground rather than for the endpoints).
-        /// Growing a second barrier that reaches nobody new buys the board nothing, so each one
-        /// is made to pay for itself.
-        /// </para>
-        /// <para>
-        /// Never more than half the pairs. Past that the carve has to thread most of the grove
-        /// through the same gaps, the acceptance rate collapses, and what the generator falls back
-        /// on is a board meeting no bar at all — <see cref="MostHedges"/>'s failure exactly, and
-        /// worse than the plainer grove it was reaching past.
+        /// Off the corridor guarantees a detour of <b>two</b> — one cell out and one back — and
+        /// two was what 48 of the 60 beads on the shipped Wildhedge actually cost. That is the
+        /// arithmetic minimum wearing the shape of a rule, which is invariant 5d's complaint
+        /// exactly: a mechanic whose bar is met by every arrangement rejects none of them. Four
+        /// is a detour a player has to decide to take, and it is checked per bead rather than
+        /// summed, because six free beads and one expensive one is five channels of decoration
+        /// and a total that looks healthy.
         /// </para>
         /// </summary>
+        public const int MinBeadDetour = 4;
+
         public static int MinBitten(int pairs, int hedges)
         {
             if (hedges < 1) return 0;
@@ -336,7 +319,7 @@ namespace GlimmerGrove.Modes
         }
 
         public static WeaveLayout Build(int width, int height, int pairs, uint seed, int beads = 0,
-                                        int hedges = 0)
+                                        int hedges = 0, int beadReach = 0)
         {
             if (pairs < 1) pairs = 1;
             if (pairs > Palette.Length) pairs = Palette.Length;
@@ -354,7 +337,7 @@ namespace GlimmerGrove.Modes
 
             for (int attempt = 0; attempt < Attempts; attempt++)
             {
-                var candidate = Attempt(width, height, pairs, beads, hedges, rng);
+                var candidate = Attempt(width, height, pairs, beads, hedges, beadReach, rng);
                 if (candidate == null) continue;
 
                 // The cheap half first. A carve that did not reach every cell is refused before
@@ -371,9 +354,17 @@ namespace GlimmerGrove.Modes
                 bool fenced = hedges == 0
                            || (candidate.HedgesBite
                                && candidate.PairsBitten >= MinBitten(pairs, hedges));
+
+                // A grove that asks its beads to stand well clear of their own ends can fail to
+                // place one at all, because the carve it drew offers nowhere far enough out. That
+                // must refuse the attempt rather than deal a grove one bead short: a rung quietly
+                // given fewer beads than the ladder says is difficulty nobody chose, and nothing
+                // downstream would ever mention it -- WeaveMode.TryRead refuses the same thing at
+                // the other end for the same reason.
+                bool beaded = beadReach <= 0 || candidate.Beads.Count == beads;
                 bool contested = false;
 
-                if (full && fenced)
+                if (full && fenced && beaded)
                 {
                     bool taut = WeaveSolver.AnyTautSolution(candidate, out bool decided, BarBudget);
 
@@ -399,7 +390,7 @@ namespace GlimmerGrove.Modes
         }
 
         static WeaveLayout Attempt(int width, int height, int pairs, int beads, int hedges,
-                                   Roller rng)
+                                   int beadReach, Roller rng)
         {
             int count = width * height;
             var taken = new bool[count];
@@ -508,7 +499,7 @@ namespace GlimmerGrove.Modes
             }
 
             return new WeaveLayout(width, height, made, walks,
-                                   Thread(walls, made, walks, beads, rng), fence);
+                                   Thread(walls, made, walks, beads, beadReach, rng), fence);
         }
 
         /// <summary>
@@ -656,7 +647,7 @@ namespace GlimmerGrove.Modes
         /// </para>
         /// </summary>
         static WeaveBead[] Thread(WeaveHedges walls, WeavePair[] pairs, int[][] walks, int beads,
-                                  Roller rng)
+                                  int reach, Roller rng)
         {
             if (beads <= 0) return System.Array.Empty<WeaveBead>();
 
@@ -679,18 +670,82 @@ namespace GlimmerGrove.Modes
                     int cell = walk[step];
                     if (used.Contains(cell)) continue;
 
-                    if (walls.Span(heart, cell) + walls.Span(cell, critter) > direct)
-                        room.Add(cell);
+                    int toHeart = walls.Span(heart, cell);
+                    int toCritter = walls.Span(cell, critter);
+
+                    if (toHeart + toCritter <= direct) continue;
+
+                    // Nought is the rule as it stood, and it is kept rather than replaced so that
+                    // a grove authored before this bar existed is dealt from exactly the sequence
+                    // it was dealt from then -- the roller is consulted once per bead, over a
+                    // candidate list this clause would otherwise change, so a stricter default
+                    // would re-deal every board in the first two chapters. See WeaveDto.beadReach.
+                    if (reach > 0 && (toHeart < reach || toCritter < reach)) continue;
+
+                    room.Add(cell);
                 }
 
                 if (room.Count == 0) continue;
 
-                int chosen = room[rng.Next(room.Count)];
+                // The roll is taken either way, so turning the bar on moves a bead and moves
+                // nothing else: every endpoint, every walk and every hedge on the board is dealt
+                // from the same sequence it would have been. That is what makes the two readings
+                // of a seed comparable, and it is why the bar could be measured against the deal
+                // it replaces rather than against a different board.
+                int spun = room[rng.Next(room.Count)];
+                int chosen = reach > 0 ? Choicest(walls, heart, critter, direct, room) : spun;
+
                 used.Add(chosen);
                 placed.Add(new WeaveBead(chosen, pair));
             }
 
             return placed.ToArray();
+        }
+
+        /// <summary>
+        /// The most demanding cell a carve offers for a bead: the one whose detour is dearest,
+        /// and among those the one standing furthest from the nearer of the pair's own ends.
+        ///
+        /// <para>
+        /// <b>Choosing rather than rolling is what made a real bar affordable, and it is the
+        /// fault behind the whole mechanic reading as absent.</b> A bead was drawn uniformly from
+        /// every cell that merely lay off the direct corridor, so the usual draw was the usual
+        /// cell: two cells of detour, often one step from the crystal. Refusing those boards
+        /// instead of choosing better cells does not work — measured on 600 seeds of the opening
+        /// shape, demanding four cells of detour from all six beads left <em>no</em> board
+        /// standing, because six independent uniform draws all landing well is vanishingly rare.
+        /// Choosing costs nothing: the same carves now yield the same boards with every bead
+        /// placed at the worst cell its own channel allows.
+        /// </para>
+        /// <para>
+        /// Detour first and reach second, because detour is what the player pays and reach is
+        /// what stops them paying it by accident. Ties break on the lowest cell, which is
+        /// arbitrary and must be: it only has to be the <em>same</em> arbitrary answer on Mono,
+        /// .NET and IL2CPP, so it is an integer comparison and never a float.
+        /// </para>
+        /// </summary>
+        static int Choicest(WeaveHedges walls, int heart, int critter, int direct, List<int> room)
+        {
+            int chosen = room[0], bestDetour = -1, bestReach = -1;
+
+            for (int i = 0; i < room.Count; i++)
+            {
+                int cell = room[i];
+                int toHeart = walls.Span(heart, cell);
+                int toCritter = walls.Span(cell, critter);
+
+                int detour = toHeart + toCritter - direct;
+                int nearer = toHeart < toCritter ? toHeart : toCritter;
+
+                if (detour < bestDetour) continue;
+                if (detour == bestDetour && nearer <= bestReach) continue;
+
+                chosen = cell;
+                bestDetour = detour;
+                bestReach = nearer;
+            }
+
+            return chosen;
         }
 
         static int Gap(int a, int b, int width)

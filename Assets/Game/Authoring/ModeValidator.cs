@@ -513,6 +513,24 @@ namespace GlimmerGrove.Content
                     "that makes it a shared obstacle rather than one pair's detour — re-seed the " +
                     "level with Survey Lightweave's SeedSearch"));
 
+            // The same claim asked of *where* a bead landed rather than of how many landed, and
+            // it is the half that made the mechanic read as absent. Off the direct corridor was
+            // the only bar, and a cell one step to the side of the crystal clears it — so on all
+            // ten groves of the first Wildhedge cut a bead stood a single cell from its own end,
+            // and the player threaded it by starting the drag sideways. It came back from play
+            // twice as "it is next to the thing and I do not have to think about it", which is
+            // what a mechanic sounds like when it rejects no arrangement (invariant 5d).
+            // WeaveGenerator.Choicest is what fixed it and this is the audit of that, not a
+            // second opinion about it: a warning, for HedgesBite's reason a few lines up — the
+            // board is generated, so a build cannot be failed over a property of a seed.
+            if (grove.BeadReach > 0 && layout.Beads.Count > 0
+                && layout.BeadReach < grove.BeadReach)
+                issues.Add(new LevelIssue(LevelIssueSeverity.Warning,
+                    $"a bead on this grove stands {layout.BeadReach} cell(s) from its own pair's " +
+                    $"nearer end and this level asks for {grove.BeadReach}: a bead the hand " +
+                    "reaches on the way past asks the player nothing — re-seed the level with " +
+                    "Survey Lightweave's SeedSearch"));
+
             if (layout.Beads.Count < grove.BeadCount)
                 issues.Add(new LevelIssue(LevelIssueSeverity.Warning,
                     $"this grove asks for {grove.BeadCount} bead(s) and could only place " +

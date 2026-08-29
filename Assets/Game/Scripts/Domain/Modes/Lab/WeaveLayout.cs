@@ -304,6 +304,72 @@ namespace GlimmerGrove.Modes
             }
         }
 
+        int _beadReach = -1, _beadDetour = -1;
+
+        /// <summary>
+        /// The fewest cells any bead stands from the nearer of its own pair's ends.
+        ///
+        /// <para>
+        /// <b><see cref="WeaveGenerator.MinReach"/>'s argument, moved from the endpoints to the
+        /// ground between them.</b> A bead only had to lie off its pair's shortest corridor, which
+        /// a cell one step to the side of the crystal satisfies — so the mechanic was met by
+        /// starting the drag sideways, and it asked the player nothing. Measured on the ten groves
+        /// that shipped, <em>every one</em> carried a bead standing a single cell from its own
+        /// crystal or critter. A bead the hand reaches on the way past is decoration exactly as a
+        /// hedge that bends nobody is (invariant 5d), and the difference is that this one is felt:
+        /// it was reported from play twice as "the mechanic may as well not be there".
+        /// </para>
+        /// </summary>
+        public int BeadReach
+        {
+            get
+            {
+                if (_beadReach >= 0) return _beadReach;
+                if (_beads.Length == 0) return _beadReach = 0;
+
+                int worst = int.MaxValue;
+                for (int i = 0; i < _beads.Length; i++)
+                {
+                    var ends = _pairs[_beads[i].Pair];
+                    int toHeart = Span(_beads[i].Cell, ends.Heart);
+                    int toCritter = Span(_beads[i].Cell, ends.Critter);
+                    int nearer = toHeart < toCritter ? toHeart : toCritter;
+                    if (nearer < worst) worst = nearer;
+                }
+
+                return _beadReach = worst;
+            }
+        }
+
+        /// <summary>
+        /// What the beads add, all told, to the pairs' floors.
+        ///
+        /// <para>
+        /// Reach says a bead is not next to an endpoint; this says threading it actually costs
+        /// something. They are different questions and a board can pass one and fail the other —
+        /// a bead three cells along a route and one to the side is a long way from both ends and
+        /// still only two cells of detour. Both are needed, which is why both are counted.
+        /// </para>
+        /// </summary>
+        public int BeadDetour
+        {
+            get
+            {
+                if (_beadDetour >= 0) return _beadDetour;
+
+                int total = 0;
+                for (int i = 0; i < _beads.Length; i++)
+                {
+                    var ends = _pairs[_beads[i].Pair];
+                    total += Span(_beads[i].Cell, ends.Heart)
+                           + Span(_beads[i].Cell, ends.Critter)
+                           - Span(ends.Heart, ends.Critter);
+                }
+
+                return _beadDetour = total;
+            }
+        }
+
         /// <summary>The route the generator carved for a pair. The board's own proof it can be done.</summary>
         public IReadOnlyList<int> Solution(int pair) => _solution[pair];
 
@@ -338,8 +404,19 @@ namespace GlimmerGrove.Modes
         /// Both elbows are tried and one that passes through another pair's crystal or critter
         /// is refused, because that is a demonstration of an <em>illegal</em> move, which is
         /// worse than an impossible one — impossible reads as decoration, illegal reads as
-        /// permission. A pair with no clean elbow is skipped rather than bent around, and if no
-        /// pair on the board has one the carved route is the fallback: winding, but true.
+        /// permission. A pair with no clean elbow is skipped rather than bent around.
+        /// </para>
+        /// <para>
+        /// <b>And where no pair on the board has one, the answer is the straightest route the
+        /// board does have, not the carved walk.</b> The carved walk was the fallback and it is
+        /// wrong twice: it wanders, which is the whole reason the elbow replaced it, and it is
+        /// the <em>solution</em>, so a board with no clean elbow quietly demonstrated its own
+        /// answer. That could not happen while every shipped grove was open ground, and
+        /// `w03_the_wildhedge_knot` reached it the moment three hedges were grown on it — four
+        /// corners of the carved route, on the finale of a chapter, with nothing to say so but a
+        /// test written for a different reason. <see cref="Detour"/> is what runs instead, and
+        /// the carved walk is kept only for a board that has no legal route at all, which no
+        /// solvable grove is.
         /// </para>
         /// </summary>
         public int[] CoachRoute()
@@ -366,6 +443,34 @@ namespace GlimmerGrove.Modes
 
                     chosen = elbow;
                     fewest = span;
+                }
+            }
+
+            // A hedged grove can leave every pair without a single clean elbow — three barriers
+            // on nine-by-ten ground was enough on `w03_the_wildhedge_knot` — and the carved walk
+            // below is the wrong answer to that twice over: it wanders, which is the whole reason
+            // the elbow replaced it, and it *is* the solution, which a demonstration must never
+            // hand over. So before falling back, ask the board for the least-cornered legal route
+            // it actually has. On a grove with a clean elbow this never runs, because an elbow
+            // turns once and nothing legal turns less.
+            for (int pass = 0; pass < 2 && chosen == null; pass++)
+            {
+                bool avoidBeads = pass == 0;
+                int straightest = int.MaxValue;
+                int shortest = int.MaxValue;
+
+                for (int p = 0; p < _pairs.Length; p++)
+                {
+                    var route = Detour(p, avoidBeads);
+                    if (route == null) continue;
+
+                    int bends = Corners(route).Length - 2;
+                    if (bends > straightest) continue;
+                    if (bends == straightest && route.Length >= shortest) continue;
+
+                    chosen = route;
+                    straightest = bends;
+                    shortest = route.Length;
                 }
             }
 
@@ -409,12 +514,91 @@ namespace GlimmerGrove.Modes
             // that steps through a barrier is an *illegal* move shown to somebody being taught
             // the rules, which reads as permission — the same reason an elbow over a stranger's
             // crystal is refused two lines above. There are two elbows per pair and several
-            // pairs, so a grove nearly always still has one; where it does not, CoachRoute falls
-            // back to the carved walk, which respects every hedge by construction.
+            // pairs, so a grove nearly always still has one; where it does not, CoachRoute asks
+            // Detour for the least-cornered route that respects every hedge instead.
             for (int i = 1; i < path.Count; i++)
                 if (!Adjacent(path[i - 1], path[i])) return null;
 
             return path.ToArray();
+        }
+
+        /// <summary>
+        /// The least-cornered legal route between a pair's ends, or null if it has none.
+        ///
+        /// <para>
+        /// The elbow above is what a demonstration wants and this is what a hedged grove
+        /// sometimes leaves. It is the same promise made as cheaply as the board allows: fewest
+        /// corners first, then fewest cells, so on open ground it can only ever return the elbow
+        /// the pass before it already found, and around a barrier it returns the straightest
+        /// thing a finger could actually do. It refuses everything that pass refuses — a
+        /// stranger's endpoint, a hedge, and a bead when one is not wanted — because a
+        /// demonstration of an illegal move reads as permission whatever route it took.
+        /// </para>
+        /// <para>
+        /// A turn costs more than the whole grove could cost in cells, so the search cannot buy
+        /// a shorter route with an extra corner. Dijkstra over (cell, heading) rather than a
+        /// plain walk for exactly that reason: the cheapest way *to a cell* depends on which way
+        /// the hand was already going when it got there.
+        /// </para>
+        /// </summary>
+        int[] Detour(int pair, bool clearOfBeads)
+        {
+            var ends = _pairs[pair];
+            int start = ends.Heart, goal = ends.Critter;
+            if (start == goal) return null;
+
+            // Four headings, plus one for "has not moved yet", which turns for free.
+            const int Headings = 5;
+            int states = Count * Headings;
+            long turn = Count + 1;
+
+            var best = new long[states];
+            var from = new int[states];
+            var settled = new bool[states];
+            for (int i = 0; i < states; i++) { best[i] = long.MaxValue; from[i] = -1; }
+
+            best[start * Headings + 4] = 0;
+
+            while (true)
+            {
+                int cur = -1;
+                long low = long.MaxValue;
+                for (int i = 0; i < states; i++)
+                    if (!settled[i] && best[i] < low) { low = best[i]; cur = i; }
+
+                if (cur < 0) return null;
+                settled[cur] = true;
+
+                int cell = cur / Headings, heading = cur % Headings;
+                if (cell == goal) return Retrace(from, cur, Headings);
+
+                for (int d = 0; d < 4; d++)
+                {
+                    int x = cell % Width + (d == 0 ? 1 : d == 1 ? -1 : 0);
+                    int y = cell / Width + (d == 2 ? 1 : d == 3 ? -1 : 0);
+                    if (!Inside(x, y)) continue;
+
+                    int next = Index(x, y);
+                    if (!Adjacent(cell, next)) continue;
+                    if (next != goal && EndpointAt(next) >= 0) continue;
+                    if (next != goal && clearOfBeads && BeadOwner(next) >= 0) continue;
+
+                    long cost = low + 1 + (heading != 4 && heading != d ? turn : 0);
+                    int to = next * Headings + d;
+                    if (cost >= best[to]) continue;
+
+                    best[to] = cost;
+                    from[to] = cur;
+                }
+            }
+        }
+
+        static int[] Retrace(int[] from, int state, int headings)
+        {
+            var back = new List<int>();
+            for (int at = state; at >= 0; at = from[at]) back.Add(at / headings);
+            back.Reverse();
+            return back.ToArray();
         }
 
         /// <summary>

@@ -41,11 +41,33 @@ namespace GlimmerGrove.Modes
         /// </summary>
         public readonly int Bitten;
 
+        /// <summary>
+        /// The fewest cells any bead stands from the nearer of its own pair's ends —
+        /// <see cref="WeaveLayout.BeadReach"/>.
+        ///
+        /// <see cref="Reach"/> is the same question about the endpoints and it has been enforced
+        /// since the mode shipped; this one had no bar at all, so every grove of the first
+        /// Wildhedge cut carried a bead one cell from its own crystal. A ladder is banded on it
+        /// for the same reason it is banded on <see cref="Bitten"/>: both are the difference
+        /// between a mechanic and a picture of one.
+        /// </summary>
+        public readonly int BeadReach;
+
+        /// <summary>
+        /// What the beads add, all told, to the pairs' floors —
+        /// <see cref="WeaveLayout.BeadDetour"/>.
+        ///
+        /// Standing far out and costing something are different questions, and
+        /// <see cref="BeadReach"/> answers only the first. This is <see cref="Bite"/>'s reading
+        /// for the other mechanic on the board.
+        /// </summary>
+        public readonly int BeadDetour;
+
         /// <summary>Positions the measurement examined. Reported so a scarce band says so.</summary>
         public readonly int Nodes;
 
         public WeaveSeedHit(uint seed, int slack, int ways, int par, int reach, int bite,
-                            int bitten, int nodes)
+                            int bitten, int beadReach, int beadDetour, int nodes)
         {
             Seed = seed;
             Slack = slack;
@@ -54,12 +76,15 @@ namespace GlimmerGrove.Modes
             Reach = reach;
             Bite = bite;
             Bitten = bitten;
+            BeadReach = beadReach;
+            BeadDetour = beadDetour;
             Nodes = nodes;
         }
 
         public override string ToString()
             => "seed " + Seed + " slack " + Slack + " ways " + Ways + " par " + Par
-             + " reach " + Reach + " bite " + Bite + " bitten " + Bitten + " nodes " + Nodes;
+             + " reach " + Reach + " bite " + Bite + " bitten " + Bitten
+             + " beadReach " + BeadReach + " beadDetour " + BeadDetour + " nodes " + Nodes;
     }
 
     /// <summary>
@@ -143,11 +168,11 @@ namespace GlimmerGrove.Modes
         /// pair take its shortest route at once (<see cref="WeaveGenerator.MinSlack"/>).</returns>
         public static bool TryMeasure(int width, int height, int pairs, int beads, uint seed,
                                       out WeaveSeedHit hit, int cap = Cap, int budget = Budget,
-                                      int hedges = 0)
+                                      int hedges = 0, int beadReach = 0)
         {
             hit = default;
 
-            var grove = WeaveGenerator.Build(width, height, pairs, seed, beads, hedges);
+            var grove = WeaveGenerator.Build(width, height, pairs, seed, beads, hedges, beadReach);
             if (!Admissible(grove, beads, hedges)) return false;
 
             var tally = WeaveSolver.Measure(grove, cap, budget);
@@ -163,7 +188,7 @@ namespace GlimmerGrove.Modes
 
             hit = new WeaveSeedHit(seed, tally.Slack, tally.Ways, grove.Par, reach,
                                    grove.StraightTotal - grove.UnhedgedTotal, grove.PairsBitten,
-                                   tally.Nodes);
+                                   grove.BeadReach, grove.BeadDetour, tally.Nodes);
             return true;
         }
 
@@ -183,14 +208,15 @@ namespace GlimmerGrove.Modes
         public static List<WeaveSeedHit> Sweep(int width, int height, int pairs, int beads,
                                                int wantSlack, int wantLow, int wantHigh,
                                                uint from = 1, uint to = 4000, int most = 12,
-                                               int cap = Cap, int budget = Budget, int hedges = 0)
+                                               int cap = Cap, int budget = Budget, int hedges = 0,
+                                               int beadReach = 0)
         {
             var hits = new List<WeaveSeedHit>();
 
             for (uint seed = from; seed <= to && hits.Count < most; seed++)
             {
                 if (!TryMeasure(width, height, pairs, beads, seed, out var hit, cap, budget,
-                                hedges))
+                                hedges, beadReach))
                     continue;
 
                 if (hit.Slack != wantSlack) continue;

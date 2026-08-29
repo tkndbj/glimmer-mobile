@@ -126,6 +126,7 @@ static class SeedHarness
         int w = int.Parse(head[0]), h = int.Parse(head[1]);
         int pairs = int.Parse(head[2]), beads = int.Parse(head[3]);
         int hedges = head.Length > 4 ? int.Parse(head[4]) : 0;
+        int beadReach = head.Length > 5 ? int.Parse(head[5]) : 0;
 
         var outp = new StreamWriter(Console.OpenStandardOutput());
 
@@ -136,7 +137,8 @@ static class SeedHarness
 
             WeaveSeedHit hit;
             if (!WeaveSeedSearch.TryMeasure(w, h, pairs, beads, seed, out hit,
-                                            WeaveSeedSearch.Cap, WeaveSeedSearch.Budget, hedges))
+                                            WeaveSeedSearch.Cap, WeaveSeedSearch.Budget, hedges,
+                                            beadReach))
             {
                 outp.WriteLine(seed + " no");
                 continue;
@@ -144,6 +146,7 @@ static class SeedHarness
 
             outp.WriteLine(seed + " yes " + hit.Slack + " " + hit.Ways + " " + hit.Par
                            + " " + hit.Reach + " " + hit.Bite + " " + hit.Bitten
+                           + " " + hit.BeadReach + " " + hit.BeadDetour
                            + " " + hit.Nodes);
         }
 
@@ -197,24 +200,26 @@ def build(work, runtime):
 
 
 class Hit(object):
-    __slots__ = ("seed", "ok", "slack", "ways", "par", "reach", "bite", "bitten", "nodes")
+    __slots__ = ("seed", "ok", "slack", "ways", "par", "reach", "bite", "bitten",
+                 "bead_reach", "bead_detour", "nodes")
 
     def __init__(self, line):
         f = line.split()
         self.seed = int(f[0])
         self.ok = f[1] == "yes"
         if self.ok:
-            (self.slack, self.ways, self.par, self.reach,
-             self.bite, self.bitten, self.nodes) = (int(x) for x in f[2:9])
+            (self.slack, self.ways, self.par, self.reach, self.bite, self.bitten,
+             self.bead_reach, self.bead_detour, self.nodes) = (int(x) for x in f[2:11])
         else:
             self.slack = self.ways = self.par = self.reach = -1
             self.bite = self.bitten = self.nodes = -1
+            self.bead_reach = self.bead_detour = -1
 
     def __eq__(self, other):
         return (self.ok, self.slack, self.ways, self.par, self.reach, self.bite,
-                self.bitten) == \
+                self.bitten, self.bead_reach, self.bead_detour) == \
                (other.ok, other.slack, other.ways, other.par, other.reach, other.bite,
-                other.bitten)
+                other.bitten, other.bead_reach, other.bead_detour)
 
     @property
     def toll(self):
@@ -231,14 +236,14 @@ class Hit(object):
         if not self.ok:
             return "seed %-6d refused" % self.seed
         return ("seed %-6d toll %-4d slack %-4d bite %-4d bitten %-3d ways %-5d par %-5d "
-                "reach %-4d nodes %d"
+                "reach %-4d bead %d/%-3d nodes %d"
                 % (self.seed, self.toll, self.slack, self.bite, self.bitten, self.ways, self.par,
-                   self.reach, self.nodes))
+                   self.reach, self.bead_reach, self.bead_detour, self.nodes))
 
 
 def measure(run, work, shape, seeds, workers):
     """Every seed measured, in seed order. Split across processes because the search is the cost."""
-    width, height, pairs, beads, hedges = shape
+    width, height, pairs, beads, hedges, bead_reach = shape
     seeds = list(seeds)
     if not seeds:
         return []
@@ -249,7 +254,7 @@ def measure(run, work, shape, seeds, workers):
     def one(index):
         table = os.path.join(work, "seeds-%d-%d.txt" % (os.getpid(), index))
         io.open(table, "w", encoding="utf-8", newline="\n").write(
-            "%d %d %d %d %d\n" % (width, height, pairs, beads, hedges)
+            "%d %d %d %d %d %d\n" % (width, height, pairs, beads, hedges, bead_reach)
             + "".join("%d\n" % s for s in chunks[index]))
 
         result = subprocess.run(run + [table], capture_output=True, text=True)
@@ -293,6 +298,10 @@ def main():
     parser.add_argument("--size", type=shape_of, required=True, help="e.g. 8x10")
     parser.add_argument("--pairs", type=int, required=True)
     parser.add_argument("--beads", type=int, default=0)
+    parser.add_argument("--bead-reach", type=int, default=0, dest="bead_reach",
+                        help="fewest cells a bead may stand from either of its own pair's ends; "
+                             "0 is the rule as it stood, which only kept a bead off the direct "
+                             "corridor and let one sit beside the crystal")
     parser.add_argument("--hedges", type=int, default=0,
                         help="barriers grown between cells before the carve; a board whose "
                              "hedges change no pair's shortest route is refused")
@@ -313,7 +322,7 @@ def main():
     args = parser.parse_args()
 
     width, height = args.size
-    shape = (width, height, args.pairs, args.beads, args.hedges)
+    shape = (width, height, args.pairs, args.beads, args.hedges, args.bead_reach)
     work = tempfile.mkdtemp(prefix="glimmer-seeds-")
 
     if args.mode == "confirm":

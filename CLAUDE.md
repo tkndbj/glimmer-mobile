@@ -119,6 +119,40 @@ What that means in practice here:
     networks, but such a rotation leaves an arm dangling elsewhere, so it is not a board
     anybody reaches. A chapter was authored to it and came out reading like a dot-to-dot.
 
+5g. **A board is graded on its solution and met as it is dealt, and only the first of those
+   was ever measured.** Reported from play as two glades that "start half done", and it was
+   thirty-four of the forty. `fit` picks a board by par and nothing else — but hundreds of
+   (seed, bias) pairs hit any given par, and it walked `bias` from -90 upward and took the
+   first, so it systematically returned the board dealt *most* nearly finished; a negative
+   bias is `Board.spin`'s instruction to **prefer** leaving a tile sitting on its solution.
+   The worst opened with 23 of its 40 turnable conduits already right and four glades opened
+   with critters already awake. Nothing could see it, and that is the part worth keeping: a
+   part-solved board is solvable, correctly par'd, has one winning arrangement, mates every
+   arm and passes every gate in this repository — because "how much of this is already done"
+   was a question nothing asked. Invariant 5d's fault (a rule that rejects nothing is
+   decoration) in the one place nobody thought to look, which is the board's *opening
+   position* rather than its solution.
+   <br>`Board.astray` is the reading — critters already lit, conduits already right, over the
+   same set `par` charges on — and `fit` now ranks it behind the par distance, which is
+   deterministic, costs nothing and cleaned twenty-one of the forty **without moving their par
+   at all**. `difficulty.py` prints it as `dealt`, beside the readings about the solution.
+   <br>**The other nineteen needed a longer board, and that is arithmetic rather than a
+   choice.** Par *is* the count of owed turns, so a glade dealt with three quarters of its
+   tiles wrong has a par near three quarters of its tile count and no seed can give it a
+   shorter one: the shipped par ceiling on those boards was what forbade a scrambled deal.
+   Their targets were raised to the shortest one that carries a clean deal — 19 rungs, most by
+   one to five turns, the worst (`c02_braided_water`) by fourteen — and **nothing but the `/n`
+   rotations moved in any of the forty**: every arm, colour, crossing, briar, brittle marker
+   and taproot rune is byte-identical, `wins` is still 1 on every board and every mechanic
+   still bites. Nothing anybody earned moved either, because `LevelRecord.Stars` is stored and
+   only promoted (invariant 22) and credits derive from the star ledger (invariant 9).
+   <br>The one thing this cost is that **par ramps flatten**, and the reason is worth stating:
+   a chapter's par dips were, in several cases, not a taproot charging once but a board being
+   dealt partly solved. Mill Vale's dip at `c02_braided_water` was the second kind and is gone.
+   Before authoring a par ramp, note that a properly dealt board's par is roughly 1.2–1.35× its
+   turnable tile count, so the ramp is mostly a fact about board size and only the taproots
+   genuinely buy a dip.
+
 5e. **A briar's thorns mate across the divide, and that is why `Puzzle.Matters` has a
    second clause.** Every other tile on this board conducts along every arm it draws; a briar
    draws four and conducts two, so `Puzzle.Live` exists and the light walks it while the
@@ -1588,6 +1622,18 @@ What that means in practice here:
     *prove* a hard board, since a board with no par cannot be graded at all. Cost goes as the
     column count to the power of par, so par 7 on a six-wide well is four times par 6 on the
     same board: the cheap fixes are a narrower well or a shorter answer, never a bigger one.
+    <br>**Lightweave joined it later, and how it got there is the general lesson.** A weave's par
+    means *generating* the grove, and generating means carving until one passes the acceptance
+    bar — so par is cheap exactly while good boards are common. When `w03_wildhedge` was re-dealt
+    to make its hedges bite on more than one channel, the bar tightened from about 1.1% of seeds
+    to 0.3%, and the cost of a board rose with it: measured on Unity's Mono, the Wildhedge's ten
+    groves take **965ms** between them against **41ms** for the Weftwood's and **19ms** for the
+    Nightloom's, with one grove alone at 201ms. `WeaveMode.Tune` was resolving par eagerly, so all
+    ten were built while the chapter body parsed — which is the map opening, the one screen that
+    never asks what par is. Nothing about that is visible in a compile, a validator or a test; it
+    is a lag on a screen, and it arrived from a change to *difficulty*. The reading to keep is
+    that **a mode's par can stop being cheap without its code changing**, so anything deriving par
+    from a search should be handed over as one from the start.
 
 28. **A mode that cannot be lost is a prototype, and Groovekeeper was the second one.**
     Invariant 26 arrived at again by the same route and answered the same way. It dealt random
@@ -1753,7 +1799,10 @@ scripts fail to compile. Do not guess — verify offline:
   *What makes a glade hard* in `CONTENT.md`. It enumerates rotations of a grid of conduits,
   so it reports glades and names the other modes as skipped rather than stopping on them —
   it used to die on a `KeyError` at the first non-glade chapter, which was every run since
-  the Hollow shipped.
+  the Hollow shipped. `dealt` is the one column about the board as the player *meets* it
+  rather than about its solution — conduits already right over turnable ones, plus any
+  critters already awake. It is invariant 5g's reading and the only one there that a player
+  meets in the first second.
 - **Shop art check:** `python Tools/make_shop_art.py --check` proves the twelve coin and gem
   pictures on disk are what the tool would cut. It needs the source packs (see the
   art-source-packs note) because the sheets live outside the repo. **It proves reproducibility
@@ -2112,15 +2161,15 @@ re-reading before changing something, it is in one of those two sections and not
 | Chapter | Mode | Levels | Par range | `budgetFactor` | Subject |
 |---|---|---|---|---|---|
 | `c01_shallows` | glade | 10 | 10–50 | none, then default | the verb, then colour, blending, rooted stone, brittle stone, taproots, pockets of colour |
-| `c02_millvale` | glade | 10 | 36–63 | default 1.60 | the crossing |
+| `c02_millvale` | glade | 10 | 41–63 | default 1.60 | the crossing |
 | `c03_amberwood` | glade | 10 | 44–70 | default 1.60 | colour as the subject; no new rule |
-| `c04_nightbriar` | glade | 10 | 42–69 | default 1.60 | the briar |
+| `c04_nightbriar` | glade | 10 | 44–69 | default 1.60 | the briar |
 | `f01_lightfall` | fall | 10 | 2–6 drops | none, then default 1.60 (motes) | the cook, then the chain; motes 3 → 30, headroom 4 → 2, `ways` never above 8 |
 | `k01_grovekeeper` | keeper | 10 | 2–8 tiles | none, then par + 5 (tiles) | the inversion, then stone, the heartbed and the prism; beds 2 → 4, `ways` 2 → 2 with a 1 at the fifth |
 | `h01_emberfall` | hollow | 10 | 1–2 sparks | — | ladder is *how few openings win*: 7,8,6,4,2,3,4,1,4,1 |
 | `w01_lightweave` | weave | 10 | 19–64 | default 1.60 (ink) | pairs 3→6, beads 0→5; slack 2 → 8 and ways 230 → 2 |
 | `w02_nightloom` | weave | 10 | 63–74 | default 1.60 (ink) | six pairs throughout, beads 5→6; slack 8 → 16 and ways 305 → 7 |
-| `w03_wildhedge` | weave | 10 | 75–91 | default 1.60 (ink) | the hedge; six pairs and six rings throughout, hedges 1 → 3; toll 16 → 28 and ways 478 → 31 |
+| `w03_wildhedge` | weave | 10 | 75–89 | default 1.60 (ink) | the hedge; six pairs and six rings throughout, hedges 1 → 3; toll 16 → 28 and ways 137 → 11 |
 
 **No level authors a difficulty number except the first glade in the game, and no chapter authors
 a clock** (invariant 22). Par is derived from the board; both star lines and the losing line are
@@ -2130,8 +2179,12 @@ per-chapter budget ramp was tried and removed — the budget is a fail line, and
 boards' job (invariant 5d).
 
 Par is **never** monotonic within a chapter — par is length, not difficulty, and ten rising
-numbers read as a treadmill. A chapter's dip is usually its taproot board (one tap moves
-several conduits and par charges once). The Shallows dips at glades five and nine.
+numbers read as a treadmill. A chapter's dip is its taproot board (one tap moves several
+conduits and par charges once): the Shallows dips at glades five and nine, the Amberwood at
+`c03_rootbound` and the Nightbriar at `c04_rootbriar`. Mill Vale's dip used to be
+`c02_braided_water` and is not any more, which is invariant 5g's lesson — that dip was the
+board being dealt partly solved rather than a root charging once, and par is now roughly
+1.2–1.35× a board's turnable tile count on every glade in the game.
 
 **The first glade in the game cannot be lost, and that is the one place `budgetFactor: -1`
 is used.** Both star lines are derived from par and neither is authorable — three stars is
@@ -2243,14 +2296,19 @@ its third grove, toll 2 → 8. The Nightloom asks. It opens on what the Weftwood
 colours, five rings, and eight cells of forced detour on its very first board — and climbs to
 sixteen, twice anything the Weftwood ever forced, with a sixth ring from its fifth grove on. The
 Wildhedge brings the **hedge** and is the first chapter of the mode to add a rule since the ring:
-one barrier on its opening grove, two by its third and three from its sixth, six pairs and six
-rings throughout, and the rooms the hedges make are what the ladder climbs on. It opens at the
+one barrier on its opening two groves, two on its third and three from its fourth, six pairs and
+six rings throughout, and the rooms the hedges make are what the ladder climbs on. It opens at the
 toll the Nightloom closed on, which is the same join the Nightloom made with the Weftwood, and it
-is the first chapter of this mode to open at full strength *and* teach something. **All ten were
-played through on device by the owner on 2026-08-28 and reported fine**, which is what the ladder's
-numbers could not answer on their own: whether a doorway reads as a decision or as a bottleneck,
-and whether that join still lands now that a rule is being taught on the first board. Nothing about the second or third chapter is code beyond the mechanic itself: a JSON
-body, a manifest entry, strings and its own map art.
+is the first chapter of this mode to open at full strength *and* teach something.
+<br>**The ten groves shipping today have not been played, and the reason is worth keeping.** A
+first cut of the chapter was played through on device by the owner on 2026-08-28 and reported
+*too easy* — "as if the mechanics are not there" — which is invariant 5d arriving from the only
+instrument that can see it, since every board was solvable, every hedge bit and every number
+climbed. So all ten were re-dealt the same day against a tighter objective, and what the ladder's
+numbers still cannot answer on their own is what the first playthrough was for: whether a doorway
+reads as a decision or as a bottleneck, and whether the join with the Nightloom still lands now
+that a rule is being taught on the first board. Nothing about the second or third chapter is code
+beyond the mechanic itself: a JSON body, a manifest entry, strings and its own map art.
 <br>`WeaveLadderTests` holds *every* chapter to one set of rules rather than one copy per chapter,
 and `EveryChapterAsksMoreOfEveryGroveThanTheOneBeforeIt` is the cross-chapter claim — on **toll**,
 colours and size, which are the readings that mean the same thing in all three. It used to be on
@@ -2673,6 +2731,19 @@ and a screenshot of the source.
   *illegal* demonstration reads as permission, where an impossible one only reads as decoration.
   The ink is the same `Link`/`Knuckle` pair a real channel is drawn from, because a dotted trail
   is a path marker — the thing a map draws — and the lesson is that the player draws.
+  <br>**And the fallback under it was the carved walk, which is the one route a demonstration may
+  never be.** An elbow is refused by a hedge outright (bending it round a barrier would be the
+  illegal move above), so a grove where no pair has a clean one fell straight through to the
+  generator's solution — wandering, which is what the elbow replaced, *and* the answer, handed
+  over. Nothing could reach that state while every shipped grove was open ground, and
+  `w03_the_wildhedge_knot` reached it the moment three hedges were grown on it: four corners,
+  on a chapter finale, found only because `TheDemonstratedRouteStepsTheWayAFingerCan` happened to
+  bound the turns. `WeaveLayout.Detour` is what runs instead — fewest corners first, then fewest
+  cells, over (cell, heading) because the cheapest way *to* a cell depends on which way the hand
+  was already going. It is exact, so it can only ever return the elbow on open ground, and its
+  two corners on that finale are the floor rather than a concession. The test bound is therefore
+  one corner where there are no hedges and two where there are: a hedged grove earns the step
+  round a barrier, and a third corner means re-seed the grove rather than widen the rule.
 - **Celebrate once.** The board already flashes, sounds and (for a glade) throws confetti when
   it solves; the win panel adds no fanfare, no confetti and no haptic. `Handheld.Vibrate` is
   one fixed-length buzz on Android, so a second one cannot be made lighter than the first.

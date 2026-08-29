@@ -534,6 +534,31 @@ namespace GlimmerGrove.Content
         /// </summary>
         public int hedges;
 
+        /// <summary>
+        /// The fewest cells a bead may stand from either of its own pair's ends.
+        ///
+        /// <para>
+        /// <b>The bar that was missing, and the one the mode was reported on twice.</b> A bead
+        /// only ever had to lie off its pair's shortest corridor, and one step to the side of the
+        /// crystal does that — so on all ten groves of the first Wildhedge cut a bead stood a
+        /// single cell from its own crystal or critter, and threading it was something the hand
+        /// did on the way past. This is <c>WeaveGenerator.MinReach</c>'s rule about where
+        /// endpoints may stand, applied to where a bead may. A grove asking for one also has
+        /// every bead held to <c>WeaveGenerator.MinBeadDetour</c>, because standing far out and
+        /// costing nothing are not the same thing.
+        /// </para>
+        /// <para>
+        /// <b>Absent means the rule as it stood, and that is deliberate rather than lazy.</b> The
+        /// roller is consulted once per bead over the list of cells that qualify, so tightening
+        /// the bar by default would change which cell every bead lands on, which changes the
+        /// rolls, which re-deals every board in the mode — including twenty groves already
+        /// shipped, played and pinned. A level that wants the bar says so; the two chapters that
+        /// predate it are dealt from the sequence they were always dealt from, and
+        /// <c>WeaveLadderTests</c> proves it board for board.
+        /// </para>
+        /// </summary>
+        public int beadReach;
+
         public bool IsAuthored => pairs > 0 || width > 0 || height > 0;
     }
 

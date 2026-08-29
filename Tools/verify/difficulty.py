@@ -352,11 +352,19 @@ class Reading:
 
         varies = varying(self.solutions)
         slack = varying(wins)
+        # How much of the glade the player is handed already finished. Every other reading
+        # here is about the board's *solution*; this one is about the board as it is
+        # *dealt*, and it is the only fault in this file that a player meets in the first
+        # second. It was reported from play as glades that "start half done" - thirty-four
+        # of the forty opened with a critter already awake or better than a third of their
+        # conduits already right, and nothing anywhere could say so, because a
+        # part-solved board is solvable, correctly par'd and passes every gate there is.
+        lit, done, free = self.b.astray()
         return dict(solutions=len(self.solutions), capped=self.capped, wins=len(wins),
                     colour_only=only_colour,
                     decided=sorted(varies - slack), slack=sorted(slack),
                     open=sorted(self.settled()), glance=sorted(self.glanced()),
-                    tiles=len(self.pts))
+                    tiles=len(self.pts), dealt=(lit, done, free))
 
 
 # ------------------------------------------------------------------- reporting
@@ -397,9 +405,11 @@ def line(lid, a):
     if a["roots"]:
         gain = a["bare"]["solutions"] - r["solutions"] if a["bare"] else 0
         marks.append(f"root -{gain}")
+    lit, done, free = r['dealt']
     return (f"  {lid:<28} par {a['par']:>3}  arms {sol:>5}  wins {r['wins']:>3}  "
             f"glance {len(r['glance']):>3}/{r['tiles']:<3} open {len(r['open']):>2}  "
-            f"decided {len(r['decided']):>2}  colour {r['colour_only']:>4}   "
+            f"decided {len(r['decided']):>2}  colour {r['colour_only']:>4}  "
+            f"dealt {done:>2}/{free:<3}{'' if not lit else f' +{lit} lit'} "
             + "  ".join(marks))
 
 

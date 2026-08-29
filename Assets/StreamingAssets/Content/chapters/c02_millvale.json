@@ -21,12 +21,12 @@
       "accent": "#7ED957",
       "slate": "#16301C",
       "rows": [
-        "-ES/1 -ESW/0 @W#R/1 -ES/2 -ESW/0 -SW/2",
-        "-NS/0 @N#R/0 @S#R/1 -NS/0 @N#R/0 @N#R/2",
-        "*NE#R/3 -EW/0 -NEW/0 =NW+ES/1 -ESW/3 -SW/3",
-        "@S#B/2 @S#B/3 @S#B/0 -NS/0 @N#B/2 @N#B/1",
-        "-NS/1 -NS/1 -NS/0 -NS/1 @S#B/1 @S#B/0",
-        "-NE/2 -NEW/0 -NEW/0 *NEW#B/0 -NEW/0 -NW/3"
+        "-ES/2 -ESW/0 @W#R/2 -ES/1 -ESW/2 -SW/3",
+        "-NS/1 @N#R/0 @S#R/0 -NS/1 @N#R/2 @N#R/0",
+        "*NE#R/1 -EW/1 -NEW/2 =NW+ES/1 -ESW/0 -SW/0",
+        "@S#B/0 @S#B/3 @S#B/2 -NS/0 @N#B/1 @N#B/2",
+        "-NS/1 -NS/0 -NS/1 -NS/1 @S#B/3 @S#B/2",
+        "-NE/3 -NEW/3 -NEW/3 *NEW#B/3 -NEW/2 -NW/0"
       ]
     },
     {
@@ -39,13 +39,13 @@
       "slate": "#0E2A3A",
       "backdrop": "c02_play_1",
       "rows": [
-        "*E#R/2 -ESW/0 -EW/1 -EW/1 -ESW/0 -SW/2",
-        "-ES/1 =NE+SW/1 -ESW/2 -SW/2 @N#R/2 -NS/0",
-        "-NS/1 -NS/1 @N#R/2 -NS/0 @E#R/2 -NSW/3",
-        "-NS/1 -NES/3 -EW/0 =NE+SW/1 -SW/3 -NS/0",
-        "*NS#B/1 -NES/2 @W#B/0 -NS/1 -NS/0 @N#R/1",
-        "-NS/0 -NE/0 @W#B/1 -NE/0 =NE+SW/1 -SW/3",
-        "-NE/3 -EW/1 -EW/0 @W#B/2 @N#B/1 @N#R/2"
+        "*E#R/2 -ESW/0 -EW/1 -EW/0 -ESW/3 -SW/3",
+        "-ES/1 =NE+SW/1 -ESW/0 -SW/2 @N#R/3 -NS/1",
+        "-NS/0 -NS/1 @N#R/1 -NS/1 @E#R/0 -NSW/3",
+        "-NS/1 -NES/3 -EW/1 =NE+SW/1 -SW/1 -NS/1",
+        "*NS#B/1 -NES/2 @W#B/0 -NS/1 -NS/1 @N#R/0",
+        "-NS/1 -NE/3 @W#B/3 -NE/3 =NE+SW/1 -SW/3",
+        "-NE/2 -EW/1 -EW/1 @W#B/3 @N#B/2 @N#R/1"
       ]
     },
     {
@@ -58,12 +58,12 @@
       "slate": "#1E1A38",
       "backdrop": "c02_play_2",
       "rows": [
-        "-ES/0 -SW/3 @E#R/2 -SW/1 -ES/0 @W#R/0 @S#A/0",
-        "@N#A/0 *NES#R/2 -ESW/0 -NEW/0 -NEW/0 -ESW/2 -NW/1",
-        "@S#A/2 -NES/0 =NW+ES/1 *ESW#G/0 @SW#G/0 -NES/0 @W#R/0",
-        "-NE/0 -NSW/2 @NE#G/2 -NEW/1 =ES+NW/1 -NSW/0 @S#R/0",
-        "@E#R/0 -NEW/2 -ESW/3 -ESW/2 -NEW/0 -NSW/0 -NS/0",
-        "@E#A/0 -EW/0 -NW/1 -NE/0 @W#R/1 -NE/1 -NW/1"
+        "-ES/2 -SW/0 @E#R/2 -SW/1 -ES/2 @W#R/3 @S#A/3",
+        "@N#A/1 *NES#R/0 -ESW/0 -NEW/3 -NEW/2 -ESW/0 -NW/0",
+        "@S#A/1 -NES/1 =NW+ES/1 *ESW#G/3 @SW#G/0 -NES/3 @W#R/0",
+        "-NE/0 -NSW/3 @NE#G/2 -NEW/0 =ES+NW/1 -NSW/2 @S#R/0",
+        "@E#R/3 -NEW/0 -ESW/1 -ESW/3 -NEW/3 -NSW/2 -NS/1",
+        "@E#A/3 -EW/1 -NW/3 -NE/3 @W#R/2 -NE/0 -NW/3"
       ]
     },
     {
@@ -76,12 +76,12 @@
       "slate": "#33220F",
       "backdrop": "c02_play_3",
       "rows": [
-        "-ES/2 -SW/1 @E#R/0 -ESW/3 @W#R/0 -ES/0 @W#A/3",
-        "@N#R/2 *NE#R/0 -ESW/0 -NEW/0 -ESW/2 -NEW/2 @W#R/0",
-        "@E#G/1 -ESW/0 =NE+SW/1~2 -SW/0 -NS/0 @S#G/2 @S#G/1",
-        "@E#G/3 -NSW/3 -NS/1 -NE/1 =NW+ES/1~2 -NSW/0 -NS/1",
-        "-ES/3 *NEW#G/0 -NEW/3 -ESW/0 -NEW/2 -NEW/1 -NSW/2",
-        "-NE/1 -EW/1 @W#G/1 -NE/0 @W#A/1 @E#A/0 -NW/1"
+        "-ES/2 -SW/0 @E#R/3 -ESW/2 @W#R/3 -ES/3 @W#A/3",
+        "@N#R/1 *NE#R/1 -ESW/0 -NEW/2 -ESW/3 -NEW/1 @W#R/0",
+        "@E#G/2 -ESW/1 =NE+SW/1~2 -SW/1 -NS/0 @S#G/0 @S#G/0",
+        "@E#G/0 -NSW/0 -NS/1 -NE/3 =NW+ES/1~2 -NSW/0 -NS/1",
+        "-ES/3 *NEW#G/2 -NEW/0 -ESW/1 -NEW/1 -NEW/0 -NSW/2",
+        "-NE/3 -EW/1 @W#G/3 -NE/3 @W#A/3 @E#A/3 -NW/2"
       ]
     },
     {
@@ -94,13 +94,13 @@
       "slate": "#10262B",
       "backdrop": "c02_play_4",
       "rows": [
-        "-ES/1 -SW/0 @E#R/1 -ESW/2 @W#R/0 -ES/0 -SW/3",
-        "@N#A/0 *NE#R/0 -ESW/1 -NEW/0 -ESW/0 -NSW/2 @N#A/2",
-        "@E#B/3 -ESW/0 =NE+SW/1&A -SW/0 @N#R/3 -NES/3 @W#R/0",
-        "@E#A/2 -NSW/3 -NE/0 =NE+SW/1 -SW/2 -NES/1 @W#A/0",
-        "@E#B/1 -NSW/1 @S#B/0 -NE/3 =NE+SW/1&A -NEW/0 @W#R/0",
-        "@S#A/2 -NES/0 -NEW/0 -ESW/0 -NEW/0 *EW#B/0 -SW/0",
-        "-NE/0 -NW/0 @E#B/0 -NEW/1 @W#B/2 @E#A/0 -NW/0"
+        "-ES/2 -SW/0 @E#R/2 -ESW/1 @W#R/2 -ES/3 -SW/3",
+        "@N#A/1 *NE#R/0 -ESW/0 -NEW/3 -ESW/2 -NSW/0 @N#A/0",
+        "@E#B/1 -ESW/1 =NE+SW/1&A -SW/3 @N#R/0 -NES/3 @W#R/0",
+        "@E#A/0 -NSW/3 -NE/2 =NE+SW/1 -SW/1 -NES/2 @W#A/0",
+        "@E#B/3 -NSW/0 @S#B/1 -NE/3 =NE+SW/1&A -NEW/2 @W#R/3",
+        "@S#A/3 -NES/3 -NEW/3 -ESW/3 -NEW/2 *EW#B/0 -SW/3",
+        "-NE/0 -NW/2 @E#B/3 -NEW/1 @W#B/3 @E#A/0 -NW/0"
       ]
     },
     {
@@ -132,13 +132,13 @@
       "slate": "#14251A",
       "backdrop": "c02_play_6",
       "rows": [
-        "-ES/0 -SW/0 @E#R/0 -ESW/0 @W#R/0 -ES/0 -SW/0",
-        "@N#A/1 *NES#R/2 -ESW/2 -NEW/2 -ESW/2 -NSW/0 @N#A/1",
-        "@S#R/3 -NES/0 =NW+ES/1 -ESW/2 =NE+SW/1 -NSW/0 @S#R/0",
-        "-NES/1 -NSW/3 -NES/0 @NSW#G/0 *NS#G/0 -NES/0 -NSW/2",
-        "@N#R/0 -NES/2 =SW+NE/1 -NEW/1 @NW#G/2 -NS/1 @N#R/0",
-        "@S#A/2 -NES/0 -NEW/1 -ESW/0 -EW/0 -NEW/3 -SW/3",
-        "-NE/3 -NW/0 @E#R/0 -NEW/2 @W#R/1 @E#A/2 -NW/0"
+        "-ES/3 -SW/0 @E#R/3 -ESW/1 @W#R/0 -ES/1 -SW/3",
+        "@N#A/3 *NES#R/2 -ESW/0 -NEW/0 -ESW/2 -NSW/1 @N#A/3",
+        "@S#R/3 -NES/3 =NW+ES/1 -ESW/3 =NE+SW/1 -NSW/1 @S#R/3",
+        "-NES/0 -NSW/1 -NES/3 @NSW#G/1 *NS#G/1 -NES/2 -NSW/0",
+        "@N#R/0 -NES/3 =SW+NE/1 -NEW/0 @NW#G/1 -NS/0 @N#R/3",
+        "@S#A/3 -NES/2 -NEW/0 -ESW/0 -EW/1 -NEW/0 -SW/3",
+        "-NE/1 -NW/1 @E#R/3 -NEW/1 @W#R/0 @E#A/2 -NW/0"
       ]
     },
     {
@@ -151,13 +151,13 @@
       "slate": "#2A2A24",
       "backdrop": "c02_play_7",
       "rows": [
-        "*ES#R/1 -ESW/0 -ESW/1 -ESW/2 -ESW/1 -ESW/2 -SW/3",
-        "@N#R/0 -NS/0 @N#R/1 -NS/0 @N#A/0 -NS/0 @N#R/2",
-        "-ES/3 =NS+EW/0! -EW/0 =NS+EW/0! -ESW/3 =NE+SW/1 -SW/1",
-        "*NS#G/0 -NES/3 @W#R/0 -NS/0 @N#G/2 -NS/1 -NS/1",
-        "-NES/1 =NS+EW/0! -EW/0 =NS+EW/0! -EW/1 =NW+ES/1 -NSW/0",
-        "@N#G/2 -NES/1 @W#R/0 -NES/2 @W#A/0 -NS/1 @N#R/0",
-        "@E#R/2 -NEW/2 @W#A/3 -NE/1 @W#R/2 -NE/0 @W#A/2"
+        "*ES#R/1 -ESW/3 -ESW/2 -ESW/3 -ESW/3 -ESW/0 -SW/3",
+        "@N#R/2 -NS/0 @N#R/3 -NS/1 @N#A/3 -NS/1 @N#R/2",
+        "-ES/0 =NS+EW/0! -EW/0 =NS+EW/0! -ESW/3 =NE+SW/1 -SW/2",
+        "*NS#G/1 -NES/1 @W#R/3 -NS/0 @N#G/3 -NS/1 -NS/0",
+        "-NES/3 =NS+EW/0! -EW/1 =NS+EW/0! -EW/1 =NW+ES/1 -NSW/2",
+        "@N#G/2 -NES/2 @W#R/0 -NES/3 @W#A/1 -NS/1 @N#R/3",
+        "@E#R/2 -NEW/3 @W#A/2 -NE/0 @W#R/2 -NE/1 @W#A/3"
       ]
     },
     {
@@ -170,13 +170,13 @@
       "slate": "#332812",
       "backdrop": "c02_play_8",
       "rows": [
-        "*ES#R/2 -ESW/0 -SW/2 -ES/3 -ESW/1 -ESW/0 -ESW/2 -SW/0",
-        "-NS/1 @N#Y/0 -NS/0 -NS/0 @N#Y/0 @N#A/2 @N#Y/0 @N#A/1",
-        "*N#G/2 -ES/0 =NE+SW/1 -NW/1 -ES/0 -EW/0 @W#R/3 @S#G/1",
-        "-ES/2 -NW/0 -NS/1 -ES/3 =NW+ES/1 -SW/0 -ES/3 -NW/2",
-        "*NE#R/3 @W#R/0 -NES/1 -NW/0 -NS/0 -NE/0 =NW+ES/1 -SW/1",
-        "@S#G/0 @S#G/0 @N#R/0 @S#G/2 -NS/0 @E#B/0 -NSW/0 -NS/1",
-        "-NE/0 -NEW/0 -EW/0 -NEW/3 *NW#G/1 @E#B/0 -NEW/2 *NW#B/0"
+        "*ES#R/2 -ESW/0 -SW/3 -ES/2 -ESW/3 -ESW/3 -ESW/3 -SW/0",
+        "-NS/1 @N#Y/1 -NS/0 -NS/0 @N#Y/3 @N#A/1 @N#Y/0 @N#A/1",
+        "*N#G/2 -ES/1 =NE+SW/1 -NW/1 -ES/0 -EW/1 @W#R/3 @S#G/0",
+        "-ES/0 -NW/0 -NS/1 -ES/3 =NW+ES/1 -SW/0 -ES/1 -NW/3",
+        "*NE#R/3 @W#R/2 -NES/0 -NW/1 -NS/1 -NE/0 =NW+ES/1 -SW/3",
+        "@S#G/3 @S#G/3 @N#R/3 @S#G/3 -NS/1 @E#B/3 -NSW/2 -NS/0",
+        "-NE/2 -NEW/3 -EW/1 -NEW/3 *NW#G/2 @E#B/0 -NEW/3 *NW#B/0"
       ]
     },
     {
@@ -189,13 +189,13 @@
       "slate": "#3A1A18",
       "backdrop": "c02_play_9",
       "rows": [
-        "*E#R/0 -ESW/2 -EW/1 -EW/0 -ESW/1 -ESW/1 -ESW/0 -W/1",
-        "-ES/2 =NE+SW/1&A -EW/0 -SW/0 @N#R/3 @N#A/0 @N#A/0 *S#R/3",
-        "-NS/1 -NES/0 -ESW/3 =NE+SW/1~2 -SW/1 @S#R/3 -ES/0 -NSW/2",
-        "-NS/1 @N#B/0 @N#B/1 -NS/0 -NE/2 -NSW/2 @N#M/3 *NS#B/0",
-        "-NS/0 @ES#G/0 *SW#G/2 -NE/0 -EW/0 =NE+SW/1~2 -SW/0 @N#M/2",
-        "-NS/0 @NE#G/1 =NW+ES/1 -SW/1 @S#B/1 -NE/1 =NE+SW/1&A -SW/1",
-        "*NE#B/2 -EW/1 -NEW/0 -NEW/1 -NEW/3 -EW/0 -NW/0 @N#R/0"
+        "*E#R/2 -ESW/1 -EW/1 -EW/1 -ESW/0 -ESW/1 -ESW/3 -W/2",
+        "-ES/0 =NE+SW/1&A -EW/0 -SW/3 @N#R/2 @N#A/1 @N#A/3 *S#R/2",
+        "-NS/0 -NES/3 -ESW/1 =NE+SW/1~2 -SW/3 @S#R/3 -ES/3 -NSW/0",
+        "-NS/0 @N#B/3 @N#B/2 -NS/0 -NE/3 -NSW/2 @N#M/0 *NS#B/0",
+        "-NS/1 @ES#G/2 *SW#G/3 -NE/2 -EW/1 =NE+SW/1~2 -SW/3 @N#M/2",
+        "-NS/0 @NE#G/0 =NW+ES/1 -SW/3 @S#B/1 -NE/2 =NE+SW/1&A -SW/1",
+        "*NE#B/3 -EW/0 -NEW/0 -NEW/3 -NEW/0 -EW/0 -NW/3 @N#R/2"
       ]
     }
   ]

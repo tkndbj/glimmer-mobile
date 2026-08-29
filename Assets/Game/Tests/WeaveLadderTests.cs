@@ -994,7 +994,11 @@ namespace GlimmerGrove.Tests
                     Assert.AreEqual(-1, grove.EndpointAt(walk[i]),
                                     $"'{rung.Id}' runs over an endpoint at step {i}");
 
-                // One corner. A demonstration that wanders teaches that the mode is fiddly.
+                // One corner on open ground, and at most one more where hedges stand. A
+                // demonstration that wanders teaches that the mode is fiddly, so the bound stays
+                // exactly as tight as it was on the two chapters with no barriers; a hedged grove
+                // is allowed the one extra corner it takes to step round one, and a grove needing
+                // a third is one to re-seed rather than one to admit.
                 int turns = 0;
                 for (int i = 1; i < walk.Length - 1; i++)
                 {
@@ -1005,7 +1009,9 @@ namespace GlimmerGrove.Tests
                     if (ax != bx || ay != by) turns++;
                 }
 
-                Assert.LessOrEqual(turns, 1, $"'{rung.Id}' turns {turns} times");
+                int allowed = grove.Hedges.Count == 0 ? 1 : 2;
+                Assert.LessOrEqual(turns, allowed,
+                                   $"'{rung.Id}' turns {turns} times against {grove.Hedges.Count} hedge(s)");
 
                 // The corners are the ends and the turn, and nothing else — a stroke drawn
                 // from them must be the same shape as the route they came from.
@@ -1013,6 +1019,14 @@ namespace GlimmerGrove.Tests
                 Assert.AreEqual(turns + 2, bends.Length, $"'{rung.Id}' collapsed to {bends.Length} corners");
                 Assert.AreEqual(walk[0], bends[0], $"'{rung.Id}' lost its start");
                 Assert.AreEqual(walk[walk.Length - 1], bends[bends.Length - 1], $"'{rung.Id}' lost its end");
+
+                // And never the carved route, which is the one thing a demonstration must not be
+                // — it is where the answer lives. That is not hypothetical: the fallback used to
+                // trace it, silently, on any grove leaving no pair a clean elbow, and
+                // `w03_the_wildhedge_knot` became the first such grove the moment it grew three
+                // hedges. Nothing in the assertions above would have said so.
+                CollectionAssert.AreNotEqual(grove.Solution(pair), walk,
+                                             $"'{rung.Id}' demonstrates its own carved solution");
 
                 // Whether it also clears every ring is not asserted here, and that is deliberate:
                 // it depends on whether *this* board leaves a choice, which is a fact about how

@@ -558,15 +558,15 @@ TEXT = {
 }
 
 BOARDS = [
-    ("c02_two_ways_over", g1, 36),
+    ("c02_two_ways_over", g1, 41),
     ("c02_the_millrace", g2, 48),
-    ("c02_under_the_boughs", g3, 41),
+    ("c02_under_the_boughs", g3, 48),
     ("c02_the_old_weir", g4, 52),
-    ("c02_braided_water", g5, 43),
+    ("c02_braided_water", g5, 57),
     ("c02_the_wheelhouse", g6, 58),
-    ("c02_hollow_ford", g7, 49),
+    ("c02_hollow_ford", g7, 60),
     ("c02_stonebridge", g8, 55),
-    ("c02_three_bridges", g9, 51),
+    ("c02_three_bridges", g9, 62),
     ("c02_the_millers_knot", g10, 63),
 ]
 

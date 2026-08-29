@@ -566,13 +566,13 @@ TEXT = {
 BOARDS = [
     ("c03_amberlight", "Amberlight", g1, 44),
     ("c03_two_lights", "Two Lights, One Lane", g2, 50),
-    ("c03_the_verdigris", "The Verdigris", g3, 46),
+    ("c03_the_verdigris", "The Verdigris", g3, 47),
     ("c03_foxfire", "Foxfire", g4, 53),
     ("c03_the_quiet_hollow", "The Quiet Hollow", g5, 57),
-    ("c03_rootbound", "Rootbound Amber", g6, 45),
-    ("c03_three_springs", "Three Coloured Springs", g7, 62),
+    ("c03_rootbound", "Rootbound Amber", g6, 54),
+    ("c03_three_springs", "Three Coloured Springs", g7, 64),
     ("c03_under_the_lanterns", "Under the Lanterns", g8, 58),
-    ("c03_the_ashen_path", "The Ashen Path", g9, 55),
+    ("c03_the_ashen_path", "The Ashen Path", g9, 59),
     ("c03_the_amberwood_knot", "The Amberwood Knot", g10, 70),
 ]
 

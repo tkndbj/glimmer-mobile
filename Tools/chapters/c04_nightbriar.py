@@ -564,15 +564,15 @@ TEXT = {
 # the taproot glade is the low point precisely because one tap moves two brambles and par
 # charges for it once, which is the thing that glade is about.
 BOARDS = [
-    ("c04_thornlight", g1, 42),
-    ("c04_the_shut_way", g2, 47),
-    ("c04_nightfall", g3, 44),
-    ("c04_bramble_and_bridge", g4, 52),
-    ("c04_the_hollow_gate", g5, 49),
-    ("c04_rootbriar", g6, 45),
+    ("c04_thornlight", g1, 44),
+    ("c04_the_shut_way", g2, 49),
+    ("c04_nightfall", g3, 45),
+    ("c04_bramble_and_bridge", g4, 55),
+    ("c04_the_hollow_gate", g5, 53),
+    ("c04_rootbriar", g6, 48),
     ("c04_three_thorns", g7, 58),
-    ("c04_the_long_dark", g8, 54),
-    ("c04_wick_and_wane", g9, 51),
+    ("c04_the_long_dark", g8, 59),
+    ("c04_wick_and_wane", g9, 53),
     ("c04_the_nightbriar_knot", g10, 69),
 ]
 
