@@ -1,4 +1,4 @@
-namespace GlimmerGrove.Modes
+﻿namespace GlimmerGrove.Modes
 {
     /// <summary>
     /// How long everything in a grove takes, and where the satchel sits under it.
@@ -19,16 +19,51 @@ namespace GlimmerGrove.Modes
     public static class BudTempo
     {
         /// <summary>A bud opening, before its pollen reaches anything.</summary>
-        public const float Burst = .16f;
+        public const float Burst = .22f;
 
-        /// <summary>The most the whole chain after one tap may take.</summary>
-        public const float Ceiling = 3.60f;
+        /// <summary>
+        /// The most the whole chain after one tap may take.
+        ///
+        /// <para>
+        /// <b>Doubled, and it is the answer to the one complaint this mode kept getting.</b>
+        /// Reported as <em>"the animations happen too fast"</em>, and the number that caused it
+        /// is this one: every single thing a wave draws — the wind-up, the ripple, the petals,
+        /// the fall, the colour landing — is a fraction of <see cref="Wave"/>, which is this
+        /// divided by the chain. At 3.60s the shipped finale's eight-wave tap gave each wave
+        /// .45s, out of which the wind-up got .18s and the burst .27s; the petals of a burst
+        /// were on screen for half a second and the whole grove fell in .167s, which is a
+        /// teleport rather than a fall. Nothing was wrong with any one effect and none of them
+        /// had time to be seen.
+        /// </para>
+        /// <para>
+        /// The bound itself is not negotiable and has not moved in kind — a chain must still
+        /// end, the rate must still give way, and a nine-wave cascade must still not be a
+        /// nine-second freeze. What moved is where it sits: this is a mode commissioned to be
+        /// generous (invariant 20k), its biggest chain is the best thing that happens in it,
+        /// and the ceiling was set where a cascade could not be watched. Seven seconds for the
+        /// deepest chain the ladder distinguishes is a carnival; 3.6 was a flicker.
+        /// </para>
+        /// </summary>
+        public const float Ceiling = 8.00f;
 
-        /// <summary>One wave at its full length, when there is room for it.</summary>
-        public const float WaveFull = .62f;
+        /// <summary>
+        /// One wave at its full length, when there is room for it.
+        ///
+        /// <para>
+        /// <b>Raised a second time, and the second raise bought a different thing from the
+        /// first.</b> The first was about whether a gesture could be <em>seen</em>; this one is
+        /// about whether a wave can be dealt <em>one flower at a time</em>. A wave of thirteen
+        /// is thirteen separate things as far as the player is concerned, and the ripple that
+        /// deals them (<see cref="Spread"/>) has to fit inside the burn alongside the hold and
+        /// the fall. At a .55s burn there was no room: the ripple was squeezed until most of the
+        /// wave went off together, which is the flat flicker the stagger exists to prevent. At
+        /// .70s the thirteen are genuinely sequential and the grove still lands on time.
+        /// </para>
+        /// </summary>
+        public const float WaveFull = 1.10f;
 
         /// <summary>And the floor under it, however far the chain runs.</summary>
-        public const float MinWave = .26f;
+        public const float MinWave = .46f;
 
         // ------------------------------------------------------------------ the charge
         /// <summary>
@@ -52,9 +87,9 @@ namespace GlimmerGrove.Modes
         /// </summary>
         public static float Charge(float wave)
         {
-            float charge = wave * .40f;
-            if (charge < .11f) charge = .11f;
-            return charge > .28f ? .28f : charge;
+            float charge = wave * .42f;
+            if (charge < .14f) charge = .14f;
+            return charge > .40f ? .40f : charge;
         }
 
         /// <summary>And how long is left of the wave once the charge has had its share.</summary>
@@ -242,7 +277,7 @@ namespace GlimmerGrove.Modes
         {
             if (wave < 1) return 0f;
 
-            float heave = .022f + (wave - 1) * .020f;
+            float heave = .026f + (wave - 1) * .022f;
             return heave > .085f ? .085f : heave;
         }
 
@@ -282,23 +317,76 @@ namespace GlimmerGrove.Modes
         /// </summary>
         public static float StaggerStep(float beat)
         {
-            float step = beat * .11f;
-            if (step < .016f) step = .016f;
-            return step > .062f ? .062f : step;
+            float step = beat * .155f;
+            if (step < .024f) step = .024f;
+            return step > .115f ? .115f : step;
         }
 
-        /// <summary>Where the nth flower of a wave of this many falls inside that ripple.</summary>
+        /// <summary>
+        /// How much of a wave the ripple is allowed to take.
+        ///
+        /// It may never reach the whole of it, or a long wave would still be going off when the
+        /// next one started and the chain would stop reading as waves at all — which is the one
+        /// thing the stagger was added to improve.
+        /// </summary>
+        public const float Spread = .62f;
+
+        /// <summary>
+        /// And how much of it a wave's <em>cocoons</em> may take, which is nearly all of it.
+        ///
+        /// <para>
+        /// <b>A critter getting out is the one thing in this mode that may not share a frame
+        /// with another of itself.</b> Everything else a wave deals is a variation on the same
+        /// event — thirteen flowers bursting is one gesture said thirteen times, and a ripple
+        /// through it reads as a sweep. Four cocoons opening is four separate payoffs, each with
+        /// its own note, halo, shockwave and creature, and dealt inside a third of a second they
+        /// are one indistinguishable pile of gold.
+        /// </para>
+        /// <para>
+        /// So they get their own, wider allowance. It stops short of the whole beat rather than
+        /// running past it, which is what keeps the greeting bounded: a ripple that outlived its
+        /// wave would go on opening cocoons after the chain that opened them had finished, and
+        /// the last of them would arrive over the word at the end.
+        /// </para>
+        /// </summary>
+        public const float GreetSpread = .95f;
+
+        /// <summary>
+        /// Where the nth flower of a wave of this many falls inside that ripple.
+        ///
+        /// <para>
+        /// <b>The step gives way before the allowance does, and the version that clamped the
+        /// other way round was silently drawing most of a wave at once.</b> It used to be
+        /// <c>min(nth × step, most)</c> — so on a wave of thirteen the first four were dealt
+        /// apart and the remaining nine all landed on the cap, in the same frame, which is
+        /// exactly the flat flicker this function exists to break up and it got worse the bigger
+        /// the wave got. The fix is to shorten the *step* until the whole set fits, so every
+        /// flower of every wave is dealt at a distinct moment and the last one lands on the
+        /// allowance rather than nine of them piling onto it.
+        /// </para>
+        /// <para>
+        /// It reads as one long ripple on a big wave and as three clear beats on a small one,
+        /// which is the right way round: a wave of three is three things the player can count,
+        /// and a wave of thirteen is a wave.
+        /// </para>
+        /// </summary>
         public static float StaggerAt(int nth, int inWave, float beat)
+            => StaggerAt(nth, inWave, beat, Spread);
+
+        /// <summary>The same ripple over a share of the beat the caller chooses.</summary>
+        public static float StaggerAt(int nth, int inWave, float beat, float spread)
         {
             if (nth <= 0 || inWave <= 1) return 0f;
+            if (nth >= inWave) nth = inWave - 1;
+            if (spread < 0f) spread = 0f; else if (spread > 1f) spread = 1f;
 
+            float most = beat * spread;
             float step = StaggerStep(beat);
-            float delay = nth * step;
 
-            // The ripple may never eat the beat it lives in, or a long wave would still be
-            // going off when the next one starts and the chain would stop reading as waves.
-            float most = beat * .45f;
-            return delay > most ? most : delay;
+            float fit = most / (inWave - 1);
+            if (step > fit) step = fit;
+
+            return step * nth;
         }
 
         // ------------------------------------------------------------------ one burst
@@ -311,23 +399,23 @@ namespace GlimmerGrove.Modes
         /// </summary>
         public static float Shrapnel(float wave)
         {
-            float life = Burn(wave) * 1.9f;
-            return life < .42f ? .42f : life;
+            float life = Burn(wave) * 2.1f;
+            return life < .62f ? .62f : life;
         }
 
         // ------------------------------------------------------------------ the chain
         /// <summary>How long a bolt takes to lash from a burst to the flower beside it.</summary>
         public static float Strike(float wave)
         {
-            float strike = Burn(wave) * .34f;
-            return strike < .07f ? .07f : strike;
+            float strike = Burn(wave) * .36f;
+            return strike < .10f ? .10f : strike;
         }
 
         /// <summary>And how long it lingers after it has landed.</summary>
         public static float Linger(float wave)
         {
-            float hold = Burn(wave) * .26f;
-            return hold < .06f ? .06f : hold;
+            float hold = Burn(wave) * .30f;
+            return hold < .09f ? .09f : hold;
         }
 
         /// <summary>
@@ -340,8 +428,8 @@ namespace GlimmerGrove.Modes
         {
             if (waves < BudChain.CountFrom) return 0f;
 
-            float bloom = .05f + (waves - BudChain.CountFrom) * .045f;
-            return bloom > .26f ? .26f : bloom;
+            float bloom = .06f + (waves - BudChain.CountFrom) * .055f;
+            return bloom > .28f ? .28f : bloom;
         }
 
         /// <summary>How long a chain of this many waves runs for.</summary>
@@ -365,7 +453,27 @@ namespace GlimmerGrove.Modes
         public static float CountPop(int waves)
         {
             float wave = Wave(waves) * .8f;
-            return wave < .18f ? wave : .18f;
+            return wave < .26f ? wave : .26f;
+        }
+
+        /// <summary>
+        /// How long the grove is given to land after the last wave, before anything else is
+        /// allowed to happen to it.
+        ///
+        /// <para>
+        /// <b>The beat before a celebration is part of the celebration.</b> The word used to
+        /// slam in while the last flowers were still in the air and the whole board was
+        /// repainted underneath it in the same frame — reported as the board resetting
+        /// suddenly. This is the hold and the fall of the wave that has just ended, which is
+        /// exactly how long the grove needs, so it is derived rather than chosen: a shorter
+        /// board settles sooner and a deeper chain is not made to wait for a grove that has
+        /// already stopped moving.
+        /// </para>
+        /// </summary>
+        public static float Landing(int waves)
+        {
+            float burn = Burn(Wave(waves));
+            return Settle(burn) + Rain(burn);
         }
 
         /// <summary>
@@ -375,7 +483,7 @@ namespace GlimmerGrove.Modes
         /// chain doing something; this is the game telling the player what they did, and a
         /// congratulation that leaves before it has been read is not one.
         /// </summary>
-        public const float Fanfare = 1.15f;
+        public const float Fanfare = 1.60f;
 
         /// <summary>From this many waves a chain is worth a flash and a haptic.</summary>
         public const int BigFrom = 4;
@@ -385,8 +493,8 @@ namespace GlimmerGrove.Modes
         {
             if (waves < BudChain.CountFrom) return 0f;
 
-            float amount = 3f + (waves - BudChain.CountFrom) * 3.2f;
-            return amount > 22f ? 22f : amount;
+            float amount = 4f + (waves - BudChain.CountFrom) * 3.6f;
+            return amount > 26f ? 26f : amount;
         }
 
         /// <summary>What a burst's note is pitched at, climbing through a chain.</summary>
@@ -399,7 +507,7 @@ namespace GlimmerGrove.Modes
         }
 
         /// <summary>The grove arriving, middle outward.</summary>
-        public const float Entrance = .70f;
+        public const float Entrance = .90f;
 
         public static float EntranceDelay(int x, int y, int width, int height)
         {
@@ -418,7 +526,7 @@ namespace GlimmerGrove.Modes
         }
 
         /// <summary>The grove's own celebration when the last critter is out.</summary>
-        public const float Hush = .70f;
+        public const float Hush = .95f;
 
         // ------------------------------------------------------------------ the grove falling
         /// <summary>
@@ -427,11 +535,51 @@ namespace GlimmerGrove.Modes
         /// The grove has to be back on the ground before the next wave charges, or two waves are
         /// moving the same flowers at once — the bug this mode has paid for twice.
         /// </summary>
+        /// <remarks>
+        /// <b>A share of the burn and nothing else, which is a correctness change as much as a
+        /// pacing one.</b> It used to carry a floor of .12s, and a floor on a fraction of
+        /// something can exceed the thing it is a fraction of: at the shortest beats the floor
+        /// won, the grove was still falling when the next wave charged, and two gestures were
+        /// on one transform — which is the exact fault this mode has paid for twice.
+        /// <c>TheGroveIsBackOnTheGroundBeforeItsOwnWaveEnds</c> is the line under it now, and it
+        /// could not have been written while the floor was there.
+        /// </remarks>
         public static float Rain(float burn)
         {
-            float over = burn * .62f;
-            if (over < .12f) over = .12f;
-            return over > .34f ? .34f : over;
+            if (burn < 0f) burn = 0f;
+
+            float over = (burn - Settle(burn)) * .92f;
+            return over > .48f ? .48f : over;
+        }
+
+        /// <summary>
+        /// How long a wave's bursts are left standing on their own before the grove comes down
+        /// on top of them.
+        ///
+        /// <para>
+        /// <b>The beat that made a cascade read as one thing collapsing rather than as two
+        /// things happening at once.</b> The fall used to be dealt in the same frame as the
+        /// bursts it was falling into, so the flower above a burst started moving while the
+        /// burst was still opening — and the player, who is watching the thing they caused,
+        /// had it covered by the consequence of it before they had seen it. A tenth of a second
+        /// of nothing is enough: the bunch goes, it is alone for an instant, and <em>then</em>
+        /// the grove drops.
+        /// </para>
+        /// <para>
+        /// It is taken out of the fall's own allowance rather than added beside it, which is
+        /// <see cref="Rainfall"/>'s lesson in the one place that had not learned it: a hold
+        /// added to a duration that was already the whole of the wave is a grove still falling
+        /// when the next wave charges, which is two gestures on one transform and the fault this
+        /// mode's view has paid for twice. <c>TheGroveIsBackOnTheGroundBeforeItsOwnWaveEnds</c>
+        /// holds the pair together.
+        /// </para>
+        /// </summary>
+        public static float Settle(float burn)
+        {
+            if (burn < 0f) burn = 0f;
+
+            float hold = burn * .30f;
+            return hold > .26f ? .26f : hold;
         }
 
         /// <summary>
@@ -447,7 +595,7 @@ namespace GlimmerGrove.Modes
             if (over < 0f) over = 0f;
             if (rows < 1f) rows = 1f;
 
-            float share = over * (.55f + .16f * rows);
+            float share = over * (.42f + .15f * rows);
             return share > over ? over : share;
         }
 
@@ -456,9 +604,14 @@ namespace GlimmerGrove.Modes
         {
             if (nth <= 0) return 0f;
 
-            float step = over * .06f;
-            float delay = (nth % 6) * step;
-            return delay > over * .30f ? over * .30f : delay;
+            // Eight rather than six, because the widest shipped grove is eight columns and a
+            // wrap shorter than the board deals two columns at once for no reason the player
+            // can see. The share is bigger for the same reason the burst ripple's is: a grove
+            // that comes down in one sheet is one event, and a grove that comes down column by
+            // column is a grove.
+            float step = over * .075f;
+            float delay = (nth % 8) * step;
+            return delay > over * .45f ? over * .45f : delay;
         }
 
         /// <summary>
@@ -476,11 +629,28 @@ namespace GlimmerGrove.Modes
         /// does.
         /// </para>
         /// </summary>
+        /// <remarks>
+        /// <b>The fall is chosen first and the ripple gives way, and it used to be the other way
+        /// round.</b> A piece's wait was taken out of the allowance and whatever was left became
+        /// its fall — so the same drop, over the same distance, took up to <em>45% less time</em>
+        /// depending only on which column it happened to be in. That is a board whose pieces fall
+        /// at several different speeds inside one wave, and it was reported as the fall being
+        /// sudden and stuttery: at the far end of the ripple a five-row drop was covering a third
+        /// of a cell per frame. How long a thing takes to fall is a fact about how far it is
+        /// falling and nothing else, so <see cref="FallOver"/> is asked first and the ripple is
+        /// trimmed to fit in what is left. A tall drop therefore rides at the front of the wave
+        /// with no wait at all, which is right — it has the furthest to come.
+        /// </remarks>
         public static void Rainfall(int nth, float rows, float over,
                                     out float delay, out float fall)
         {
+            fall = FallOver(over, rows);
+
+            float room = over - fall;
+            if (room < 0f) room = 0f;
+
             delay = RainAt(nth, over);
-            fall = FallOver(over - delay, rows);
+            if (delay > room) delay = room;
         }
 
         // ------------------------------------------------------- what would pop, breathing
@@ -538,7 +708,15 @@ namespace GlimmerGrove.Modes
         /// there while the creature is swelling inside it.
         /// </para>
         /// </summary>
-        public const float FreedHold = .52f, FreedGreet = .34f;
+        /// <remarks>
+        /// Lengthened with <see cref="Ceiling"/> and by the same fraction. These are the one
+        /// set of durations in this file that are constants rather than shares of the beat —
+        /// deliberately, because what a creature getting out is worth does not depend on how
+        /// deep the chain that freed them happened to run — but a constant beside a beat that
+        /// has moved is a constant that has quietly changed its meaning, and the greeting was
+        /// tuned to be the slowest thing on the board.
+        /// </remarks>
+        public const float FreedHold = .66f, FreedGreet = .44f;
 
         /// <summary>
         /// How wide the greeting ring is at rest, and where it closes in from.
@@ -551,7 +729,7 @@ namespace GlimmerGrove.Modes
         /// off here</em> rather than <em>this one</em>.
         /// </para>
         /// </summary>
-        public const float FreedRing = .95f, FreedRingFrom = 2.10f;
+        public const float FreedRing = 1.15f, FreedRingFrom = 2.10f;
 
         /// <summary>How much of the greeting the ring spends closing, and how long it outlives it.</summary>
         public const float FreedRingClose = .34f, FreedRingOver = 1.25f;
@@ -590,7 +768,7 @@ namespace GlimmerGrove.Modes
         /// grove cannot reach.
         /// </para>
         /// </summary>
-        public const float FreedFlight = .46f, FreedLand = .55f;
+        public const float FreedLeave = .46f;
 
         // ------------------------------------------------------------------ the hint
         /// <summary>How long the mark takes to arrive on the flower it is pointing at.</summary>

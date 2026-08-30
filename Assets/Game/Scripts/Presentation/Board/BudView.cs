@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections;
 using System.Collections.Generic;
 using GlimmerGrove.Localization;
@@ -245,6 +245,23 @@ namespace GlimmerGrove
             Enter();
         }
 
+        /// <summary>
+        /// How far the board's plate stands out past the grid itself, which is what the player
+        /// sees as the edge of the grove and therefore where the clip has to be.
+        ///
+        /// <para>
+        /// <b>It was a derived <em>overhang</em> instead — room left above the top row so a
+        /// flower there could reach its full wind-up without being cut — and that is the wrong
+        /// trade.</b> A quarter of a cell is invisible when a flower is swelling in it and
+        /// perfectly visible when a flower is falling through it, which is exactly what came
+        /// back: <em>"I still see them coming out of the grid slightly"</em>. So the clip sits on
+        /// the plate's own lip, nothing enters the board from anywhere the player can see, and
+        /// what it costs is about a tenth off the top of a top-row flower at the deepest
+        /// wind-up — a moment, on one row, against something that was happening on every fall.
+        /// </para>
+        /// </summary>
+        const float PlateLip = 13f;
+
         void BuildGround()
         {
             float w = _layout.Width * _cell, h = _layout.Height * _cell;
@@ -257,8 +274,35 @@ namespace GlimmerGrove
             UIKit.Img("Edge", _plate, Art.RoundOutline(30, 3f), new Color(.86f, 1f, .74f, .14f),
                       new Vector2(w + 26f, h + 26f), new Vector2(.5f, .5f), Vector2.zero);
 
-            _field = UIKit.Node("Buds", _grid);
-            UIKit.StretchTo(_field, 0f, 0f, 0f, 0f);
+            // **The grove is clipped to itself, so nothing is ever seen falling in from
+            // outside it.** A flower that grew back enters from `Grown() x _cell` above the cell
+            // it lands in — three, four, five cells above the top row on a column that lost that
+            // many — and it was drawn the whole way, hanging in the air over the board with
+            // nothing under it. `_grid` is the whole screen below the band, so masking that
+            // clips nothing; the mask has to be a node the size of the board.
+            //
+            // **It is deliberately not the same rect as the board**, and the margins are not
+            // symmetric because what they are for is not. Above, it stops a little over a
+            // quarter of a cell past the top row, which is the least that lets a top-row flower
+            // reach its full wind-up (a flower is drawn at .78 of `_size` and swells to 2.20, so
+            // it overhangs its own cell by .29 of one) and the most that still hides an entry.
+            // At the sides and below there is nothing to hide, so they are generous and no
+            // gesture is ever cut there at all.
+            //
+            // Only the *field* is masked. `_fx` and `_residents` are siblings of it, so a
+            // burst's petals, its rings, the fireworks and a freed critter all still cross the
+            // edge of the board — which they must, since leaving the board is the whole of what
+            // makes the fireworks read as fireworks.
+            float skirt = _cell * 1.5f;
+            float lift = (skirt - PlateLip) * .5f;
+
+            var clip = UIKit.Box("Field", _grid,
+                                 new Vector2(w + _cell * 2.4f, h + PlateLip + skirt),
+                                 new Vector2(.5f, .5f), new Vector2(0f, -lift));
+            clip.gameObject.AddComponent<RectMask2D>();
+
+            _field = UIKit.Box("Buds", clip, new Vector2(w, h), new Vector2(.5f, .5f),
+                               new Vector2(0f, lift));
 
             // **Freed critters stand above the grove rather than in it.** See `Free`: a critter
             // the player has let out is not a tenant of a cell any more, so it is drawn on its
@@ -844,14 +888,22 @@ namespace GlimmerGrove
         {
             var where = Where(index);
 
-            Audio.Sfx("shatter", .62f, .74f);
-            Audio.Sfx("burst", .55f, .70f, .05f);
+            // **Two blops a fifth apart, and nothing that breaks.** This played `shatter` —
+            // "DESTRUCTION Break Impact Wood", the one genuinely destructive sample in the pack
+            // — over the top of a low `burst`, and it was reported exactly as it sounds:
+            // metallic, explosive, and nothing like the rest of this game. A white flower going
+            // off is the biggest thing in the mode and it still has to be made of the same
+            // material as everything else, so it is the mode's own burst note struck twice: low,
+            // then a fifth above it a beat later. Two notes of one instrument, which is the
+            // reuse `sfx.tsv`'s head describes, and it is bigger than an ordinary burst by being
+            // *lower* and *doubled* rather than by being a different kind of sound.
+            Audio.Sfx("burst", .62f, .56f);
+            Audio.Sfx("burst", .42f, .84f, .07f);
 
             Flow.Flash(Pal.A(Color.white, .22f), .10f, .40f);
             Shockwave(where, Color.white, _size * 4.6f, .40f);
             Shockwave(where, Pal.Gold, _size * 3.2f, .30f);
-            Rays(where, Color.white, .26f, index, 1.8f);
-            Burst.Sparks(_fx, where, Color.white, 26, 380f, 22f, .7f);
+            Burst.Sparks(_fx, where, Color.white, 18, 340f, 18f, .7f);
 
             if (_grid) { Tween.Shake(_grid, 16f, .34f); Tween.Punch(_grid, .06f, .40f); }
         }
@@ -965,14 +1017,41 @@ namespace GlimmerGrove
                 // flowers — read as one flat flicker. A few tens of milliseconds apart is
                 // enough to count them, and `BudTempo` bounds the whole ripple to a fraction
                 // of the beat so the wave still ends when it said it would.
-                int nth = 0;
+                // **Each kind of thing is rippled across its own count, and that is a
+                // correctness fix as much as a pacing one.** All four used to be dealt against
+                // `inWave` — the number of *bursts* — so a wave washing twenty flowers ran its
+                // index past the end of a ripple built for thirteen, and a wave freeing four
+                // critters fired all four in the same frame because `Free` was never given a
+                // delay at all. On the chapter's finale, whose opening tap frees ten at once,
+                // that is the single loudest moment in the mode played as one chord.
+                //
+                // Counted first, because how far apart to deal them depends on how many there
+                // are: `BudTempo.StaggerAt` shortens the step until the whole set fits its
+                // allowance, so a wave of three is three clear beats and a wave of thirteen is
+                // one long ripple, and neither is a clump.
+                int cracks = 0, frees = 0, sends = 0;
+                for (int i = 0; i < pulses.Length; i++)
+                {
+                    if (pulses[i].Wave != wave) continue;
+                    if (pulses[i].Kind == BudPulseKind.Crack) cracks++;
+                    else if (pulses[i].Kind == BudPulseKind.Freed) frees++;
+                }
+                for (int i = 0; i < washes.Length; i++) if (washes[i].Wave == wave) sends++;
+
+                int nth = 0, crack = 0, freed = 0;
                 for (int i = 0; i < pulses.Length; i++)
                 {
                     if (pulses[i].Wave != wave) continue;
 
                     if (pulses[i].Kind == BudPulseKind.Freed)
                     {
-                        Free(pulses[i].Cell, burn);
+                        // **A critter getting out is the thing the level is for, so two of them
+                        // may never happen at once.** This is the one ripple where the delay is
+                        // doing more than pacing: each of these carries a sound, a halo, a
+                        // shockwave and a creature, and four on one frame is four of everything
+                        // over the top of each other with no one of them legible.
+                        Free(pulses[i].Cell, burn,
+                             BudTempo.StaggerAt(freed++, frees, burn, BudTempo.GreetSpread));
                         continue;
                     }
 
@@ -981,7 +1060,7 @@ namespace GlimmerGrove
                         // Held back behind the bunch that did it, exactly as a wash is: a shell
                         // that splinters before the flower beside it has gone off reads as the
                         // cocoon having done it to itself.
-                        Crack(pulses[i].Cell, burn, BudTempo.StaggerAt(nth, inWave, burn));
+                        Crack(pulses[i].Cell, burn, BudTempo.StaggerAt(crack++, cracks, burn));
                         continue;
                     }
 
@@ -991,13 +1070,13 @@ namespace GlimmerGrove
                 }
 
                 // Colour lands on the flowers around the bunch a beat after it goes off, held
-                // back by the same ripple, so a flower never turns before the bunch that turned
-                // it has burst.
+                // back by a ripple of its own, so a flower never turns before the bunch that
+                // turned it has burst.
                 int sent = 0;
                 for (int i = 0; i < washes.Length; i++)
                 {
                     if (washes[i].Wave != wave) continue;
-                    Land(washes[i], beat, BudTempo.StaggerAt(sent++, inWave, burn));
+                    Land(washes[i], beat, BudTempo.StaggerAt(sent++, sends, burn));
                 }
 
                 if (inWave > 0)
@@ -1060,11 +1139,26 @@ namespace GlimmerGrove
             // put it: growing happens once, after the chain has stopped (see BudBoard.Grow).
             Rain(drops, chain.Waves, burn);
 
+            // **And the grove is allowed to land before anything else happens to it.** The word
+            // used to slam in while the last flowers were still in the air and every cell was
+            // repainted underneath it in the same frame, which is the "the board resets so
+            // suddenly" this was reported as. It is the glade's hush (`GladeFanfare`) arrived at
+            // from the other end: the beat before a celebration is part of the celebration.
+            yield return new WaitForSecondsRealtime(BudTempo.Landing(chain.Waves));
+            if (!this) yield break;
+
             // The last wave lifted its own bunch and there is no wave after it to tidy up, so
             // the settled board would keep that stacking for the rest of the run.
             RestoreDepth();
 
-            for (int i = 0; i < _cells.Length; i++) PaintCell(i, true);
+            // **Not animated, and that word is doing the work.** `PaintCell(i, true)` skips its
+            // own "nothing changed" guard, so this loop used to kill every tween on every flower
+            // and snap every scale back to one — thirty-six cells, in a frame, most of which
+            // were already correct. Every white flower's breath and every "this one pops" hint
+            // died at once and `PaintPops` restarted them from nothing, which is a whole board
+            // flinching at the moment it should be settling. Asked without `animate`, a cell
+            // whose colour has not moved is left exactly as it is.
+            for (int i = 0; i < _cells.Length; i++) PaintCell(i, false);
             PaintBand();
             PaintPops();
             Changed?.Invoke();
@@ -1284,9 +1378,12 @@ namespace GlimmerGrove
                     if (!this) return;
 
                     // And it goes off where it got to.
+                    // **A firework is a round pop of light.** It used to go off as a starburst
+                    // of straight rays, which is a spotlight rather than a firework and read as
+                    // exactly that against a board of soft round shapes.
+                    Flare(to, paint, climb * .8f);
                     Shockwave(to, paint, _size * 2.2f, climb * 1.1f);
                     Burst.Sparks(_fx, to, paint, 12, 300f, 16f, climb * 1.4f);
-                    Rays(to, paint, climb * .55f, i, .8f);
                     Audio.Sfx("star", .26f, 1.25f + i * .06f);
                 });
             }
@@ -1301,28 +1398,27 @@ namespace GlimmerGrove
         /// </summary>
         void Backlight(Color tint, float burn)
         {
-            var sprite = Art.Rays(256, 20);
+            var sprite = Art.Glow(256, 1.5f);
             if (sprite == null || _grid == null) return;
 
-            float reach = Mathf.Max(_layout.Width, _layout.Height) * _cell * 3.1f;
+            float reach = Mathf.Max(_layout.Width, _layout.Height) * _cell * 2.9f;
 
-            var star = UIKit.Img("Backlight", _grid, sprite, Pal.A(tint, 0f),
+            var glow = UIKit.Img("Backlight", _grid, sprite, Pal.A(tint, 0f),
                                  Vector2.one * reach, new Vector2(.5f, .5f), Vector2.zero);
-            star.raycastTarget = false;
-            star.transform.SetAsFirstSibling();
+            glow.raycastTarget = false;
+            glow.transform.SetAsFirstSibling();
 
-            var rt = (RectTransform)star.transform;
+            var rt = (RectTransform)glow.transform;
             float over = Mathf.Max(burn * 1.6f, .45f);
 
             Tween.Run(over, Ease.OutQuad, t =>
             {
-                if (!star) return;
-                rt.localRotation = Quaternion.Euler(0, 0, 26f * t);
-                rt.localScale = Vector3.one * Mathf.Lerp(.72f, 1.08f, t);
+                if (!glow) return;
+                rt.localScale = Vector3.one * Mathf.Lerp(.62f, 1.10f, t);
 
                 float a = t < .18f ? t / .18f : 1f - (t - .18f) / .82f;
-                star.color = Pal.A(tint, a * .34f);
-            }, star).OnDone(() => { if (star) Destroy(star.gameObject); });
+                glow.color = Pal.A(tint, a * .40f);
+            }, glow).OnDone(() => { if (glow) Destroy(glow.gameObject); });
         }
 
         /// <summary>
@@ -1406,41 +1502,83 @@ namespace GlimmerGrove
         /// <c>BudBand</c>.
         /// </para>
         /// </summary>
-        void FlyToCount(int index)
+        /// <summary>
+        /// The shine: a soft swell of light behind a critter that has just got out.
+        ///
+        /// <para>
+        /// It is the one thing added to this beat while four were taken out of it, and it is
+        /// what the ring around them cannot do on its own: a ring says <em>this one</em>, and
+        /// light says <em>this one is worth something</em>. Behind the creature rather than over
+        /// them, and gone before the pump ends, so it lifts them off the board without ever
+        /// being a second thing to look at.
+        /// </para>
+        /// </summary>
+        void Shine(int index, Vector2 where)
+        {
+            var sprite = Art.Glow(192, 1.6f);
+            if (sprite == null || _residents == null) return;
+
+            var glow = UIKit.Img("Shine", _residents, sprite, Pal.A(Pal.Cream, 0f),
+                                 Vector2.one * _size * 2.2f, new Vector2(.5f, .5f), where);
+            glow.raycastTarget = false;
+            glow.transform.SetAsFirstSibling();
+
+            var rt = (RectTransform)glow.transform;
+            float over = BudTempo.FreedHold + BudTempo.FreedGreet;
+
+            Tween.Run(over, Ease.OutQuad, t =>
+            {
+                if (!glow) return;
+                rt.localScale = Vector3.one * Mathf.Lerp(.45f, 1.15f, t);
+
+                float a = t < .22f ? t / .22f : 1f - (t - .22f) / .78f;
+                glow.color = Pal.A(Pal.Cream, a * .70f);
+            }, glow).OnDone(() => { if (glow) Destroy(glow.gameObject); });
+        }
+
+        /// <summary>
+        /// And they are gone from the spot they came out on.
+        ///
+        /// <para>
+        /// <b>This replaced a flight to the counter, and the flight was a critter falling off
+        /// the bottom of the grove.</b> The readouts sit <em>under</em> the board
+        /// (<c>BudBand</c>), so "they fly to where the score is kept" meant an arc that rose a
+        /// little and then travelled the whole height of the grove downward — reported, twice,
+        /// as the critters falling. The idea was that a number changing on its own becomes
+        /// somewhere the reward visibly went; what it actually bought was the one motion this
+        /// mode must never draw.
+        /// </para>
+        /// <para>
+        /// So they leave where they arrived: they swell a little and fade, and the counter is
+        /// punched as they go, which keeps the connection without anything crossing the screen.
+        /// The square they leave is filled by the grove falling into it a beat later, and that
+        /// is what says the slot is free — better than a creature vacating it, because the
+        /// player is watching the board rather than the number.
+        /// </para>
+        /// </summary>
+        void Vanish(int index)
         {
             if (_freed == null || index < 0 || index >= _freed.Length) return;
 
             var critter = _freed[index];
-            if (!critter || _left == null || _residents == null) return;
+            if (!critter) return;
 
-            // Off the books the moment it leaves, so nothing counts it as standing in the grove.
+            // Off the books the moment it goes, so nothing counts it as standing in the grove.
             _freed[index] = null;
 
             var crt = (RectTransform)critter.transform;
 
-            // The breath borrows the scale this is about to move, and a borrowed value handed
-            // back mid-flight would drop the critter back to resting size on the counter.
+            // Both borrow the scale this is about to write, and a borrowed value handed back
+            // mid-fade would snap the critter back to resting size as it disappeared.
             Tween.KillChannel(crt, "breathe");
             Tween.KillChannel(crt, PumpChannel);
 
-            var from = crt.anchoredPosition;
-            var to = (Vector2)_residents.InverseTransformPoint(_left.transform.position);
-            float lift = _cell * .55f;
-
-            crt.SetAsLastSibling();
-
-            Tween.Run(BudTempo.FreedFlight, Ease.InQuad, t =>
+            Tween.Run(BudTempo.FreedLeave, Ease.OutQuad, t =>
             {
                 if (!critter) return;
 
-                // Thrown rather than slid: a straight line between two points on a screen reads
-                // as a cursor moving, and an arc reads as something being carried.
-                var at = Vector2.Lerp(from, to, t);
-                at.y += Mathf.Sin(t * Mathf.PI) * lift;
-
-                crt.anchoredPosition = at;
-                crt.localScale = Vector3.one * Mathf.Lerp(FreedScale, BudTempo.FreedLand, t);
-                critter.color = new Color(1f, 1f, 1f, t < .82f ? 1f : 1f - (t - .82f) / .18f);
+                crt.localScale = Vector3.one * (FreedScale * (1f + t * .42f));
+                critter.color = new Color(1f, 1f, 1f, 1f - t * t);
             }, critter).OnDone(() =>
             {
                 if (critter) Destroy(critter.gameObject);
@@ -1555,6 +1693,23 @@ namespace GlimmerGrove
 
             float over = BudTempo.Rain(burn);
 
+            // **The bursts are left alone for a beat first.** The grove used to start falling
+            // in the frame its own wave went off, so the flower above a burst was already
+            // moving while the burst was still opening — the player's own doing, covered by the
+            // consequence of it before they had seen it. `BudTempo.Settle` takes this out of the
+            // fall's allowance rather than adding it beside one, so the grove is still back on
+            // the ground before the next wave charges.
+            float hold = BudTempo.Settle(burn);
+
+            // How many are coming down, counted before any of them is dealt, because which of
+            // them are struck depends on how many there are — see `BudChorus`.
+            int falling = 0;
+            for (int i = 0; i < drops.Length; i++)
+                if (drops[i].Wave == wave && drops[i].Cell >= 0 && drops[i].Cell < _cells.Length)
+                    falling++;
+
+            int nth = 0;
+
             for (int i = 0; i < drops.Length; i++)
             {
                 var drop = drops[i];
@@ -1569,7 +1724,8 @@ namespace GlimmerGrove
                     ? Grown(drops, wave, column) * _cell
                     : Where(drop.From).y - Where(drop.Cell).y;
 
-                Land(drop, above, over, column);
+                Land(drop, above, over, column, hold, nth, falling);
+                nth++;
             }
         }
 
@@ -1612,7 +1768,8 @@ namespace GlimmerGrove
         /// left the first fall wherever the second caught it.
         /// </para>
         /// </summary>
-        void Land(BudDrop drop, float above, float over, int column)
+        void Land(BudDrop drop, float above, float over, int column,
+                  float hold = 0f, int nth = 0, int of = 1)
         {
             var cell = _cells[drop.Cell];
             if (cell?.Rt == null || cell.Piece == null) return;
@@ -1626,29 +1783,139 @@ namespace GlimmerGrove
             float rows = Mathf.Abs(above) / Mathf.Max(1f, _cell);
             BudTempo.Rainfall(column, rows, over, out float delay, out float fall);
 
-            Action rest = () => { if (piece) piece.anchoredPosition = Vector2.zero; };
-
-            Tween.Run(fall, Ease.OutQuad, t =>
+            Action rest = () =>
             {
                 if (!piece) return;
-                piece.anchoredPosition = new Vector2(0f, Mathf.Lerp(above, 0f, t));
-            }, piece, FallChannel).Delay(delay).OnAbandon(rest).OnDone(() =>
-            {
-                rest();
+                piece.anchoredPosition = Vector2.zero;
+                piece.localScale = Vector3.one;
+            };
 
-                // A little squash where it lands, which is the whole of what makes a falling
-                // board feel like it has weight.
-                if (cell.Rt) Tween.Punch(cell.Rt, .16f, over * .8f);
+            // **A fall accelerates, and this is the curve the mode was most obviously wrong
+            // about.** It was `OutQuad` - a piece that leaves fast and *decelerates* into the
+            // ground, which is the one shape a falling thing cannot have. Nothing here is
+            // pushed; it is dropped, so it gathers speed all the way down and stops dead. Read
+            // beside the landing squash below, that swap alone is most of what separates a
+            // board with weight from a board whose contents slide about.
+            //
+            // How far it has to travel decides how hard it lands and how much it stretches on
+            // the way, so a flower falling the height of the grove arrives like one and a
+            // flower nudged down a single row does not.
+            float lean = Mathf.Min(.26f, rows * .060f);
+
+            // **The landing of the *previous* fall into this cell is ended first, and that is
+            // not tidying.** A squash outlives the wave that threw it by design — it is the
+            // ground pushing back, so it settles after the piece has stopped — and this fall
+            // writes the same `localScale` from a different channel. Two tweens on one value is
+            // a bug however different their channels are, and this pair genuinely overlaps: a
+            // cell that receives a fall, bursts on the next wave and receives another is an
+            // ordinary thing for a cascade to do. Killing it hands the resting scale back
+            // before the stretch below borrows it.
+            Tween.KillChannel(piece, SquashChannel);
+
+            // **Gentler than gravity, and that is a drawing decision rather than a physical
+            // one.** `InQuad` is what a falling thing really does and it peaks at twice its own
+            // average speed, so the last frames of a five-row drop cover a third of a cell each
+            // and the eye reads it as skipping rather than as falling. `t^1.5` peaks at one and
+            // a half times instead: still unmistakably accelerating, never fast enough to tear.
+            // Shaped here with `Ease.Linear` rather than added to `Ease`, because it exists for
+            // this one gesture and naming it in the shared set would invite it into others.
+            Tween.Run(fall, Ease.Linear, t =>
+            {
+                if (!piece) return;
+
+                float drop = t * Mathf.Sqrt(t);
+                piece.anchoredPosition = new Vector2(0f, Mathf.LerpUnclamped(above, 0f, drop));
+
+                // Drawn out along the way it is travelling, and most drawn out where it is
+                // fastest. It is a small number on purpose - enough that the eye reads speed,
+                // never enough to be caught looking at.
+                float pull = lean * drop;
+                piece.localScale = new Vector3(1f - pull * .45f, 1f + pull, 1f);
+            }, piece, FallChannel).Delay(hold + delay).OnAbandon(rest).OnDone(() =>
+            {
+                if (!piece) return;
+                piece.anchoredPosition = Vector2.zero;
+
+                // And the landing, which is the beat the old punch was standing in for. A
+                // wobble says "something touched this"; a squash and a spring say "this had
+                // weight and the ground stopped it".
+                Squash(piece, lean, over);
+
+                // **And it is heard.** A board that falls in silence is a board that is being
+                // rearranged rather than one where things are dropping onto other things, and
+                // this is the cheapest half of making a fall feel like one. Which pieces are
+                // struck and at what note is `BudChorus`, in Domain, because "voice five of the
+                // twenty and space them evenly" is a rule that is wrong for a year without
+                // anybody being able to say why the board sounds thin.
+                if (BudChorus.Voiced(nth, of))
+                    Audio.Sfx("pop", .22f, BudChorus.Pitch(nth, of), .03f);
             });
 
             // **After the tween is registered, not before.** Registering supersedes whatever
             // fall was still running on this cell, and a superseded fall *lands* — so lifting
             // the piece first would be undone by the very kill that makes this one safe.
             piece.anchoredPosition = new Vector2(0f, above);
+            piece.localScale = Vector3.one;
         }
 
         /// <summary>The channel a falling piece runs on, so one fall supersedes another.</summary>
         const string FallChannel = "budfall";
+
+        /// <summary>And the channel its landing runs on, so one landing supersedes another.</summary>
+        const string SquashChannel = "budsquash";
+
+        /// <summary>
+        /// A piece arriving: flattened by what it was carrying, then sprung back past square
+        /// and settled.
+        ///
+        /// <para>
+        /// <b>The single most valuable half-second in a falling board, and it costs nothing.</b>
+        /// Every game of this shape does it and it is the reason their boards feel solid where
+        /// this one felt like paper: a shape that arrives at exactly its resting size has not
+        /// been <em>stopped</em> by anything, it has simply finished moving. Squashing on the
+        /// frame it lands and springing out of it is the ground pushing back.
+        /// </para>
+        /// <para>
+        /// <b>It writes <c>Cell.Piece</c>'s scale and nothing else in this file does</b>, which
+        /// is what makes it safe beside the wind-up and the wash - both of those write the
+        /// <em>cell's</em> scale, and two tweens on one value is a bug however different their
+        /// channels are. It runs on a channel of its own so a second landing supersedes the
+        /// first, and it declares where an interrupted one goes, because it borrows a resting
+        /// value rather than travelling to a new one.
+        /// </para>
+        /// <para>
+        /// The spring reads the squashed size <em>before</em> it registers, deliberately:
+        /// registering supersedes the squash on this channel and a superseded one is put back
+        /// to square, so a line that read it afterwards would spring from nothing every time.
+        /// </para>
+        /// </summary>
+        void Squash(RectTransform piece, float force, float over)
+        {
+            if (piece == null) return;
+
+            float squash = Mathf.Clamp(force, .07f, .26f);
+            float down = Mathf.Max(.055f, over * .26f);
+            float up = Mathf.Max(.16f, over * .74f);
+
+            Action rest = () => { if (piece) piece.localScale = Vector3.one; };
+
+            Tween.Run(down, Ease.OutQuad, t =>
+            {
+                if (!piece) return;
+                float s = squash * t;
+                piece.localScale = new Vector3(1f + s * .8f, 1f - s, 1f);
+            }, piece, SquashChannel).OnAbandon(rest).OnDone(() =>
+            {
+                if (!piece) return;
+
+                var from = piece.localScale;
+                Tween.Run(up, Ease.OutBack, t =>
+                {
+                    if (!piece) return;
+                    piece.localScale = Vector3.LerpUnclamped(from, Vector3.one, t);
+                }, piece, SquashChannel).OnAbandon(rest);
+            });
+        }
 
         // ------------------------------------------------------------------ what would pop
         /// <summary>
@@ -1915,25 +2182,34 @@ namespace GlimmerGrove
             if (cell.Rt) { cell.Rt.localRotation = Quaternion.identity; cell.Rt.localScale = Vector3.one; }
 
             ThrowFlower(cell, tint, swollen, turned);
-            Petals(where, tint, BudTempo.Shrapnel(beat), index, force);
 
             float life = BudTempo.Shrapnel(beat);
-            float hot = Mathf.Min(life * .28f, .18f);
+            // The cap was .18s, which was the whole of what a burst's core was ever allowed
+            // to be. It was set when a wave lasted .27s and a flash that outlived its own wave
+            // was a real hazard; the wave is more than twice that now, so the cap was the one
+            // thing still holding the loudest instant in the mode to a sixth of a second.
+            float hot = Mathf.Min(life * .28f, .32f);
 
-            // The flash. White rather than tinted for the first instant, because a burst is
-            // brighter than any colour on this board and reading it as light rather than as
-            // paint is what makes it feel like something went off.
-            var core = UIKit.Img("Flash", _fx, Art.Flash(256, 12), Color.white,
-                                 Vector2.one * _size * 1.30f * force, new Vector2(.5f, .5f),
+            // **The hot core, and it is round.** It was `Art.Flash`, which draws a
+            // twelve-pointed spiky star — so every burst on the board fired a little searchlight,
+            // and thirteen of them in a wave read as exactly that. A burst here is *light*, and
+            // light at this size is a bright centre with a fast falloff: `Art.Glow` at a high
+            // power is that, and it sits over the wide soft bloom below to make the two-layer
+            // core every game of this genre draws. Nothing spiky, nothing with a straight edge
+            // in it, and nothing that needs to spin to look alive.
+            //
+            // White rather than tinted for the first instant, because a burst is brighter than
+            // any colour on this board and reading it as light rather than as paint is what
+            // makes it feel like something went off.
+            var core = UIKit.Img("Flash", _fx, Art.Glow(256, 3.4f), Color.white,
+                                 Vector2.one * _size * 1.55f * force, new Vector2(.5f, .5f),
                                  where);
             var crt = (RectTransform)core.transform;
-            float spin = 40f + (index % 7) * 9f;
 
             Tween.Run(hot, Ease.OutQuint, t =>
             {
                 if (!core) return;
-                crt.localScale = Vector3.one * Mathf.Lerp(.22f, 1.5f, t);
-                crt.localRotation = Quaternion.Euler(0, 0, spin * t);
+                crt.localScale = Vector3.one * Mathf.Lerp(.20f, 1.45f, t);
                 // **White for two frames and then the flower's own colour, not a lightened
                 // one.** `Pal.Lift(tint, .3f)` plus a slow lerp was still nearly white by the
                 // time the eye got there, and a wave of thirteen washed the board out — losing
@@ -1957,10 +2233,6 @@ namespace GlimmerGrove
                 flare.color = Pal.A(tint, .78f * (1f - t) * (1f - t));
             }, flare).OnDone(() => { if (flare) Destroy(flare.gameObject); });
 
-            // The rays, which are the loud half of the flash: a hard star that snaps out and is
-            // gone inside a fifth of a second, so the burst has an edge rather than a glow.
-            Rays(where, tint, hot * 2.2f, index, force);
-
             Shockwave(where, tint, _size * 3.1f * force, life * .85f);
 
             // A second ring chasing the first, from five alike upward. It is the cheapest thing
@@ -1973,10 +2245,8 @@ namespace GlimmerGrove
                                         life * .95f);
                 }, this);
 
-            if (prism) Prism(where, life);
-
-            Burst.Sparks(_fx, where, tint, Mathf.RoundToInt(13f * force), 240f * force, 18f, life);
-            Embers(where, tint, life, index);
+            Burst.Sparks(_fx, where, tint, Mathf.RoundToInt(8f * force), 210f * force, 14f,
+                         life * .8f);
 
             // Budburst's own slot, and it had to be: this is struck thirteen times in a wave
             // and pitched up through a chain, where `pop` is a wooden clunk eight other things
@@ -1990,33 +2260,11 @@ namespace GlimmerGrove
             Audio.Sfx("burst", weight, BudTempo.Pitch(wave + 1) * drop);
 
             if (blast == BudBlast.Huge) Audio.Sfx("pop2", .34f, .78f, .04f);
-            if (prism) Audio.Sfx("chime2", .40f, 1.18f, .06f);
-        }
-
-        /// <summary>
-        /// The one burst nothing else in this mode draws: a bunch of <em>white</em> going off.
-        ///
-        /// White holds every channel, so it is the only flower whose state the player can no
-        /// longer change — three of them touching is the ceiling of the mode reached, and it is
-        /// worth a shape of its own for <c>Art.HexRing</c>'s reason one mode over: a state that
-        /// is a <em>rule</em> rather than a colour cannot be told apart by colour.
-        /// </summary>
-        void Prism(Vector2 at, float life)
-        {
-            var sprite = Art.PrismRing(256, 14f);
-            if (sprite == null) return;
-
-            var ring = UIKit.Img("Prism", _fx, sprite, Color.white,
-                                 Vector2.one * _size * .8f, new Vector2(.5f, .5f), at);
-            var rt = (RectTransform)ring.transform;
-
-            Tween.Run(Mathf.Max(life * 1.1f, .34f), Ease.OutQuint, t =>
-            {
-                if (!ring) return;
-                rt.localScale = Vector3.one * Mathf.Lerp(.4f, 5.2f, t);
-                rt.localRotation = Quaternion.Euler(0, 0, 90f * t);
-                ring.color = new Color(1f, 1f, 1f, (1f - t) * (1f - t));
-            }, ring).OnDone(() => { if (ring) Destroy(ring.gameObject); });
+            // A bunch of white, which is the ceiling of the mode reached. It was a bell, and
+            // a bell is the one thing this board must not sound like — every other voice in the
+            // grove is a struck block or a pop. It is `free`'s wooden pop taken up an octave
+            // instead: the brightest blip in the set, and still the same instrument.
+            if (prism) Audio.Sfx("free", .40f, 1.62f, .06f);
         }
 
         /// <summary>
@@ -2100,7 +2348,10 @@ namespace GlimmerGrove
             Shockwave(where, Pal.Rope, _size * 1.9f, life * .7f);
             Burst.Sparks(_fx, where, Pal.Rope, 7, 150f, 14f, life * .8f);
 
-            Audio.Sfx("shatter", .30f, .82f);
+            // A shell taking a crack, and it is not the shell breaking — that is `Free`. The
+            // wood-break sample that used to play here went with the white flower's, for the
+            // same reason: there is nothing in this grove made of anything that shatters.
+            Audio.Sfx("pop", .30f, .74f);
         }
 
         /// <summary>
@@ -2138,90 +2389,6 @@ namespace GlimmerGrove
         }
 
         /// <summary>
-        /// The flower coming apart into its own petals — the body of a burst, and the thing a
-        /// plume of smoke was standing in for.
-        ///
-        /// <para>
-        /// Six of them, thrown out on an even ring with a little scatter, spinning hard, pulled
-        /// down as they go so they <em>fall</em> rather than drift. Drawn from <c>Art.Leaf</c>
-        /// in the flower's own colour: generated, so there is no address to miss and nothing to
-        /// draw as a white rectangle, and a leaf is the one shape in this game's kit that reads
-        /// as a torn-off piece of a flower at forty pixels.
-        /// </para>
-        /// <para>
-        /// Two of the six are drawn white and land last, which is what stops six identical
-        /// shapes reading as a mechanism.
-        /// </para>
-        /// </summary>
-        void Petals(Vector2 at, Color tint, float life, int index, float force)
-        {
-            var sprite = Art.Leaf(96);
-            if (sprite == null) return;
-
-            // More of them the bigger the bunch was, and thrown further. Six is a flower coming
-            // apart; ten thrown half again as far is a flower coming apart in a crowd.
-            int count = Mathf.RoundToInt(6f * force);
-            for (int i = 0; i < count; i++)
-            {
-                bool pale = (index + i) % 3 == 0;
-
-                float ang = (i / (float)count) * Mathf.PI * 2f + (index % 5) * .21f;
-                var dir = new Vector2(Mathf.Cos(ang), Mathf.Sin(ang));
-
-                float reach = _size * (.95f + (i % 3) * .26f) * force;
-                float drop = _size * (.75f + (i % 2) * .35f);
-                float spin = (i % 2 == 0 ? 1f : -1f) * (300f + i * 70f);
-                float size = _size * (pale ? .38f : .48f);
-                var paint = pale ? Pal.Lift(tint, .75f) : tint;
-
-                var petal = UIKit.Img("Petal", _fx, sprite, paint,
-                                      new Vector2(size * .72f, size), new Vector2(.5f, .5f), at);
-                var rt = (RectTransform)petal.transform;
-                rt.localRotation = Quaternion.Euler(0, 0, ang * Mathf.Rad2Deg);
-
-                float over = life * (pale ? 1.15f : 1f);
-                Tween.Run(over, Ease.OutQuad, t =>
-                {
-                    if (!petal) return;
-
-                    // Out fast and down under gravity, which is what makes six shapes read as
-                    // debris rather than as a ring opening.
-                    rt.anchoredPosition = at + dir * reach * t
-                                        + new Vector2(0f, -drop * t * t);
-                    rt.localRotation = Quaternion.Euler(0, 0, ang * Mathf.Rad2Deg + spin * t);
-                    rt.localScale = Vector3.one * (1f - t * .35f);
-                    petal.color = Pal.A(paint, 1f - t * t);
-                }, petal).OnDone(() => { if (petal) Destroy(petal.gameObject); });
-            }
-        }
-
-        /// <summary>
-        /// The star a burst throws: hard rays, out and gone, over before the petals have landed.
-        ///
-        /// It is what gives the burst its *edge*. The bloom underneath says how big and the ring
-        /// says how far; without something with a straight line in it the whole event is round
-        /// and soft, which is the shape of a puff rather than of a bang.
-        /// </summary>
-        void Rays(Vector2 at, Color tint, float life, int index, float force = 1f)
-        {
-            var sprite = Art.Rays(256, 16);
-            if (sprite == null) return;
-
-            var star = UIKit.Img("Rays", _fx, sprite, Pal.A(Color.white, .95f),
-                                 Vector2.one * _size * 2.6f * force, new Vector2(.5f, .5f), at);
-            var rt = (RectTransform)star.transform;
-            rt.localRotation = Quaternion.Euler(0, 0, (index % 6) * 15f);
-
-            Tween.Run(Mathf.Max(life, .12f), Ease.OutQuint, t =>
-            {
-                if (!star) return;
-                rt.localScale = Vector3.one * Mathf.Lerp(.25f, 1.35f, t);
-                star.color = Pal.A(Color.Lerp(Color.white, tint, Mathf.Min(1f, t * 4f)),
-                                   .95f * (1f - t) * (1f - t));
-            }, star).OnDone(() => { if (star) Destroy(star.gameObject); });
-        }
-
-        /// <summary>
         /// The flower coming apart, which is the tenth of a second the burst used to skip.
         ///
         /// It is drawn on the flower's own <c>Image</c> rather than on a copy, so there is
@@ -2255,12 +2422,27 @@ namespace GlimmerGrove
             if (cell.Glow) cell.Glow.color = new Color(1, 1, 1, 0f);
             cell.Drawn = Energy.None;
 
-            Tween.Run(.11f, Ease.OutQuad, t =>
+            // **It tears free rather than fading out, and it takes long enough to see.** At
+            // .11s and a uniform grow this was a flower blinking off: the wind-up spent a third
+            // of a second building to it and then nothing came of it. Now it is thrown - pulled
+            // long as it leaves, released past its own size on an out-back so the shape
+            // overshoots the way a thing under pressure does, whipped round harder than the
+            // wind-up left it, and gone. The alpha is held back deliberately: it stays fully
+            // lit until the shape has finished moving, so the last thing the eye keeps is the
+            // flower at its largest rather than a ghost of it.
+            Tween.Run(BudTempo.Burst, Ease.OutBack, t =>
             {
                 if (!bud) return;
-                brt.localScale = Vector3.one * (from * (1f + t * .75f));
-                brt.localRotation = Quaternion.Euler(0, 0, turned + t * 70f);
-                bud.color = Pal.A(Color.Lerp(tint, Color.white, t), 1f - t);
+
+                float grow = from * (1f + t * 1.05f);
+                float draw = .22f * Mathf.Sin(Mathf.Clamp01(t) * Mathf.PI);
+                brt.localScale = new Vector3(grow * (1f + draw), grow * (1f - draw * .7f), 1f);
+                brt.localRotation = Quaternion.Euler(0, 0, turned + t * 130f);
+                // Clamped because `OutBack` overshoots past one on purpose, and an alpha is
+                // the one thing here that must not follow it out.
+                float u = Mathf.Clamp01(t);
+                bud.color = Pal.A(Color.Lerp(tint, Color.white, Mathf.Min(1f, t * 2.2f)),
+                                  1f - u * u * u);
             }, bud).OnDone(() =>
             {
                 if (!bud) return;
@@ -2268,45 +2450,6 @@ namespace GlimmerGrove
                 brt.localRotation = Quaternion.identity;
                 bud.color = new Color(1, 1, 1, 0f);
             });
-        }
-
-        /// <summary>
-        /// The glints that lift out of a burst once the fire has gone.
-        ///
-        /// Small, few and slow — they are the only part of an explosion here that outlives its
-        /// own beat, and they are what stops a cell that has just gone off from being a hole in
-        /// the grove while the rest of the chain runs.
-        /// </summary>
-        void Embers(Vector2 where, Color tint, float life, int index)
-        {
-            var sprite = Art.Glint(96, 4);
-            if (sprite == null) return;
-
-            for (int i = 0; i < 3; i++)
-            {
-                float lean = ((index + i * 7) % 5 - 2) * .28f;
-                float size = _size * (.30f + (i % 2) * .10f);
-                float rise = _size * (.9f + i * .28f);
-                float turn = 90f + i * 60f;
-
-                var glint = UIKit.Img("Ember", _fx, sprite, Pal.A(Pal.Lift(tint, .55f), 0f),
-                                      Vector2.one * size, new Vector2(.5f, .5f), where);
-                var rt = (RectTransform)glint.transform;
-
-                Tween.Run(life * 1.5f, Ease.OutQuad, t =>
-                {
-                    if (!glint) return;
-                    rt.anchoredPosition = where + new Vector2(lean * _size * t, rise * t);
-                    rt.localRotation = Quaternion.Euler(0, 0, turn * t);
-                    rt.localScale = Vector3.one * Mathf.Lerp(.5f, 1.05f, Mathf.Min(1f, t * 3f));
-
-                    // In fast, out slow, so it reads as a spark catching the light rather than
-                    // as a shape that was always there and is now leaving.
-                    float a = t < .18f ? t / .18f : 1f - (t - .18f) / .82f;
-                    glint.color = Pal.A(Pal.Lift(tint, .55f), a * .9f);
-                }, glint).Delay(i * life * .12f)
-                         .OnDone(() => { if (glint) Destroy(glint.gameObject); });
-            }
         }
 
         /// <summary>
@@ -2361,7 +2504,7 @@ namespace GlimmerGrove
             Tween.After(strike, () =>
             {
                 if (!this) return;
-                Flare(Where(wash.Cell), tint, BudTempo.Linger(beat), wash.Cell);
+                Flare(Where(wash.Cell), tint, BudTempo.Linger(beat));
                 Turn(wash.Cell, cell, tint, strike);
             }, this);
         }
@@ -2375,23 +2518,23 @@ namespace GlimmerGrove
         /// burst's flash and gone faster, because this flower did not go off — something
         /// reached it.
         /// </summary>
-        void Flare(Vector2 at, Color tint, float life, int index)
+        void Flare(Vector2 at, Color tint, float life)
         {
-            var sprite = Art.Flash(128, 10);
+            // Round, for the core's reason: this was a ten-pointed star flipped and rotated by
+            // index, so a wave washing twenty flowers drew twenty little searchlights at
+            // twenty angles. What it has to say is "colour arrived here", and a soft swell of
+            // that colour says it without adding a shape to the board.
+            var sprite = Art.Glow(128, 2.6f);
             if (sprite == null) return;
 
-            var fork = UIKit.Img("Fork", _fx, sprite, Pal.A(Pal.Lift(tint, .45f), .95f),
-                                 Vector2.one * _size * .86f, new Vector2(.5f, .5f), at);
+            var fork = UIKit.Img("Flare", _fx, sprite, Pal.A(Pal.Lift(tint, .45f), .95f),
+                                 Vector2.one * _size * 1.05f, new Vector2(.5f, .5f), at);
             var rt = (RectTransform)fork.transform;
-            rt.localRotation = Quaternion.Euler(0, 0, (index % 4) * 90f);
-
-            float flip = (index % 2) == 0 ? 1f : -1f;
-            rt.localScale = new Vector3(flip, 1f, 1f);
 
             Tween.Run(Mathf.Max(life * 1.4f, .10f), Ease.OutQuad, t =>
             {
                 if (!fork) return;
-                rt.localScale = new Vector3(flip * (1f + t * .35f), 1f + t * .35f, 1f);
+                rt.localScale = Vector3.one * Mathf.Lerp(.42f, 1.25f, t);
                 fork.color = Pal.A(Color.Lerp(Pal.Lift(tint, .45f), tint, t), .95f * (1f - t));
             }, fork).OnDone(() => { if (fork) Destroy(fork.gameObject); });
         }
@@ -2412,13 +2555,34 @@ namespace GlimmerGrove
             var bud = cell.Bud;
             var real = bud.color;
 
-            Tween.Run(Mathf.Max(over * .9f, .09f), Ease.OutQuad, t =>
+            Tween.Run(Mathf.Max(over * 1.7f, .20f), Ease.OutCubic, t =>
             {
                 if (!bud) return;
                 bud.color = Color.Lerp(Pal.Lift(tint, .85f), real, t);
             }, bud).OnDone(() => { if (bud) bud.color = real; });
 
-            Tween.Punch(cell.Rt, .34f, Mathf.Max(over, .12f));
+            // **A swell rather than a wobble, and it stays on the punch channel for a reason.**
+            // `Tween.Punch` is a damped sine through three half-cycles, which is right for a
+            // control being pressed and wrong for a flower being *changed* - a thing that
+            // shivers has been disturbed, where a thing that swells and settles has become
+            // something. It is deliberately still registered as "punch", because `Wind` kills
+            // that channel before a wind-up takes the same transform over, and this gesture is
+            // the whole reason it does: two tweens on one value is a bug however different
+            // their channels are, and a wash caught mid-flight by the next wave used to hand
+            // its own half-swollen scale back as the flower's resting size.
+            var rt = cell.Rt;
+            if (rt)
+            {
+                float pop = Mathf.Max(over * 1.5f, .26f);
+
+                Tween.Run(pop, Ease.Linear, t =>
+                {
+                    if (!rt) return;
+                    float s = 1f + .30f * Mathf.Sin(Mathf.Clamp01(t) * Mathf.PI);
+                    rt.localScale = new Vector3(s, s, 1f);
+                }, rt, "punch").OnAbandon(() => { if (rt) rt.localScale = Vector3.one; });
+            }
+
             Audio.Sfx("tick", .16f, .94f + Bright(tint) * .52f);
         }
 
@@ -2444,8 +2608,14 @@ namespace GlimmerGrove
         /// the same colour, in pieces.
         /// </para>
         /// </summary>
-        void Free(int index, float beat)
+        void Free(int index, float beat, float delay = 0f)
         {
+            if (delay > 0f)
+            {
+                Tween.After(delay, () => { if (this) Free(index, beat, 0f); }, this);
+                return;
+            }
+
             var where = Where(index);
             var cell = _cells[index];
 
@@ -2453,9 +2623,6 @@ namespace GlimmerGrove
             if (cell.Glow) cell.Glow.color = new Color(1, 1, 1, 0f);
 
             float life = Mathf.Max(beat * 2.4f, .55f);
-
-            // The star behind everything, drawn first so the shell breaks in front of it.
-            Ray(where, life);
 
             // The shell: it swells, whitens, and is gone in a fifth of a second — the chips are
             // what carries the rest.
@@ -2502,66 +2669,66 @@ namespace GlimmerGrove
                 var critter = Resident(index, where);
                 var crt = (RectTransform)critter.transform;
 
-                float leap = life * .52f;
-                float top = _cell * .62f;
+                // **They do not travel. At all.**
+                //
+                // Three versions of this have been wrong and every one of them was wrong for
+                // the same reason: the critter was given somewhere to *go*. First it leapt out
+                // and fell back onto the square, bouncing past it on an `OutBack`. Then it rose
+                // out of the shell and stood there — better, but it still travelled, and it
+                // still ended by flying all the way down to the counter under the board, which
+                // is a critter falling off the bottom of the grove.
+                //
+                // **A creature getting out is a moment, not a journey.** It appears where the
+                // cocoon was, swells, shines, and is gone from that spot — and the grove drops a
+                // flower into the square it left, which is the thing that actually says the
+                // slot is free again. Nothing moves across the screen, so there is nothing that
+                // can read as falling, and the gesture is four beats the player can follow
+                // instead of a shape wandering about.
+                //
+                // Only the **scale** is animated, and it is the only thing that may overshoot:
+                // a size springing past itself is a pop, and a position springing past itself
+                // is a drop.
+                float pop = Mathf.Min(life * .26f, .40f);
+                crt.anchoredPosition = where;
 
-                Tween.Run(leap, Ease.OutQuad, t =>
+                Tween.Run(pop, Ease.OutBack, t =>
                 {
                     if (!critter) return;
 
-                    // Up and out, with a wobble, growing past where it will end up.
-                    float lift = Mathf.Sin(t * Mathf.PI * .5f);
-                    crt.anchoredPosition = where + new Vector2(Mathf.Sin(t * 9f) * _cell * .09f,
-                                                               lift * top);
-                    crt.localScale = Vector3.one * Mathf.Lerp(1f, FreedScale * 1.30f, lift);
-                    crt.localRotation = Quaternion.Euler(0, 0, Mathf.Sin(t * 7f) * 12f);
+                    crt.localScale = Vector3.one * Mathf.LerpUnclamped(.28f, FreedScale, t);
                     critter.color = Color.white;
                 }, critter).OnDone(() =>
                 {
                     if (!this || !critter) return;
 
-                    var from = crt.anchoredPosition;
-                    float scale = crt.localScale.x;
+                    // Put back exactly rather than left wherever the curve stopped, because
+                    // what happens next borrows this scale.
+                    crt.localScale = Vector3.one * FreedScale;
+                    crt.localRotation = Quaternion.identity;
 
-                    Tween.Run(life * .48f, Ease.OutBack, t =>
-                    {
-                        if (!critter) return;
-                        crt.anchoredPosition = Vector2.Lerp(from, where, t);
-                        crt.localScale = Vector3.one * Mathf.Lerp(scale, FreedScale, t);
-                        crt.localRotation = Quaternion.Euler(0, 0, (1f - t) * Mathf.Sin(t * 7f) * 10f);
-                    }, critter).OnDone(() =>
-                    {
-                        if (!this || !critter) return;
+                    // **And here is the moment the level was for, said once and plainly.**
+                    // Everything before this is the shell coming apart — light, chips, a
+                    // shockwave — and none of it is *about the critter*: it is about the cocoon
+                    // it was in, and the creature arrives in the middle of it as one more thing
+                    // moving. So the noise stops, a ring closes around them and they pump inside
+                    // it. It was reported as not being visible at all, which is what happens
+                    // when the payoff is drawn in the same register as the packaging.
+                    Circle(index, where);
 
-                        // Landed. Everything is put back exactly rather than left wherever the
-                        // curve stopped, because what happens next borrows this scale.
-                        crt.anchoredPosition = where;
-                        crt.localScale = Vector3.one * FreedScale;
-                        crt.localRotation = Quaternion.identity;
+                    // The shine: a soft swell of light behind them, so the beat where they
+                    // are the only thing moving is also the brightest thing on the board.
+                    Shine(index, where);
 
-                        // **And here is the moment the level was for, said once and plainly.**
-                        // Everything before this is the shell coming apart — light, chips, a
-                        // shockwave, a leap — and none of it is *about the critter*: it is about
-                        // the cocoon it was in, and the creature arrives in the middle of it as
-                        // one more thing moving. So the noise stops, a ring closes around them
-                        // and they pump inside it. It was reported as not being visible at all,
-                        // which is what happens when the payoff is drawn in the same register as
-                        // the packaging.
-                        Circle(index, where);
-
-                        // And then they go where the score is kept — chained off the pump rather
-                        // than timed to match it, so the idle breath a finished pump would start
-                        // can never be driving the scale the flight is writing. See `FlyToCount`.
-                        Pump(critter, BudTempo.FreedHold, index, BudTempo.FreedGreet,
-                             () => FlyToCount(index));
-                    });
+                    // And then they are gone from that spot, chained off the pump rather than
+                    // timed to match it, so the idle breath a finished pump would start can
+                    // never be driving the scale the fade is writing. See `Vanish`.
+                    Pump(critter, BudTempo.FreedHold, index, BudTempo.FreedGreet,
+                         () => Vanish(index));
                 });
             }
 
-            Shockwave(where, Pal.Gold, _size * 3.8f, life * .8f);
-            Shockwave(where, Pal.Cream, _size * 2.6f, life * .55f);
-            Burst.Sparks(_fx, where, Pal.Gold, 18, 250f, 24f, life * .9f);
-            Embers(where, Pal.Gold, life, index);
+            Shockwave(where, Pal.Gold, _size * 3.4f, life * .7f);
+            Burst.Sparks(_fx, where, Pal.Gold, 12, 230f, 18f, life * .8f);
 
             var halo = UIKit.Img("Freed", _fx, Art.Glow(256, 1.8f), Pal.A(Pal.Gold, .85f),
                                  Vector2.one * _size * 2.4f, new Vector2(.5f, .5f), where);
@@ -2620,28 +2787,6 @@ namespace GlimmerGrove
                     chip.color = new Color(.94f, .90f, .74f, 1f - t * t);
                 }, chip).OnDone(() => { if (chip) Destroy(chip.gameObject); });
             }
-        }
-
-        /// <summary>The star a freed critter comes out of, spun slowly so its rays sweep.</summary>
-        void Ray(Vector2 at, float life)
-        {
-            var sprite = Art.Rays(256, 16);
-            if (sprite == null) return;
-
-            var ray = UIKit.Img("Ray", _fx, sprite, Pal.A(Pal.Cream, 0f),
-                                Vector2.one * _size * 3.4f, new Vector2(.5f, .5f), at);
-            ray.transform.SetAsFirstSibling();
-
-            var rt = (RectTransform)ray.transform;
-            Tween.Run(life, Ease.OutQuad, t =>
-            {
-                if (!ray) return;
-                rt.localScale = Vector3.one * Mathf.Lerp(.30f, 1.25f, t);
-                rt.localRotation = Quaternion.Euler(0, 0, 26f * t);
-
-                float a = t < .14f ? t / .14f : 1f - (t - .14f) / .86f;
-                ray.color = Pal.A(Pal.Cream, a * .95f);
-            }, ray).OnDone(() => { if (ray) Destroy(ray.gameObject); });
         }
 
         /// <summary>
@@ -2742,8 +2887,8 @@ namespace GlimmerGrove
 
             var word = Word();
             word.text = Loc.Get(wordKey);
-            word.fontSize = BudChain.WordPointsFor(waves);
             word.color = tint;
+            float slam = Fit(word, BudChain.WordPointsFor(waves));
 
             var rt = (RectTransform)word.transform;
             rt.gameObject.SetActive(true);
@@ -2767,15 +2912,22 @@ namespace GlimmerGrove
                 halo.color = Pal.A(tint, a * (.30f + rung * .06f));
             }, halo).OnDone(() => { if (halo) Destroy(halo.gameObject); });
 
-            // A ring thrown out from behind the word, so it arrives *out of* something.
+            // A ring thrown out from behind the word, so it arrives *out of* something - and
+            // a second one chasing it a beat later, which is `Split`'s trick at grove scale:
+            // one ring is an arrival and two is an arrival that had somewhere to go.
             Shockwave(Vector2.zero, tint, _size * (4.5f + rung * 1.6f), .55f);
+            Tween.After(.14f, () =>
+            {
+                if (this) Shockwave(Vector2.zero, Pal.Lift(tint, .45f),
+                                    _size * (6.5f + rung * 2.2f), .78f);
+            }, this);
 
             // The slam. In from oversize and past its resting size, which is the one motion that
             // reads as impact rather than as an entrance.
             Tween.Run(.34f, Ease.OutQuint, t =>
             {
                 if (!word) return;
-                float k = Mathf.Lerp(1.85f, 1f, t) + Mathf.Sin(t * Mathf.PI) * .12f;
+                float k = Mathf.Lerp(slam, 1f, t) + Mathf.Sin(t * Mathf.PI) * .12f;
                 rt.localScale = Vector3.one * k;
                 rt.localRotation = Quaternion.Euler(0, 0, (1f - t) * (rung % 2 == 0 ? 7f : -7f));
                 word.color = Color.Lerp(Color.white, tint, t);
@@ -2784,7 +2936,18 @@ namespace GlimmerGrove
                 if (!word) return;
                 rt.localScale = Vector3.one;
                 rt.localRotation = Quaternion.identity;
+
+                // **It holds for well over a second, so it may not hold still.** The slam is
+                // over in a third of a second and everything else on screen is settling; a word
+                // frozen at rest for the remaining beat stops being the loudest thing on the
+                // board and starts being a caption. One slow breath keeps it alive without
+                // competing with the grove underneath, and it is the only motion left running
+                // by then, so nothing is borrowing the scale it borrows.
                 Tween.Punch(rt, .10f, .40f);
+                Tween.After(.44f, () =>
+                {
+                    if (this && rt) Tween.Breathe(rt, .035f, .95f);
+                }, this);
             });
 
             Flow.Flash(Pal.A(new Color(1f, .96f, .82f), .16f + rung * .07f), .16f, .44f);
@@ -2799,14 +2962,84 @@ namespace GlimmerGrove
             Audio.Sfx("win", weight, 1f + rung * .07f);
             Audio.Sfx("star", .40f + rung * .08f, 1f + rung * .05f, .10f);
 
-            // The top rung is the one a player tells somebody about, so it gets the thing
-            // nothing else in this mode gets.
-            if (rung >= 3) Burst.Confetti(_fx, 40);
+            // The top two rungs get the thing nothing else in this mode gets, and how much of
+            // it is the rung. It used to be the top rung alone, which on a chapter whose groves
+            // mostly run two and three waves meant almost nobody ever saw any.
+            if (rung >= 2) Burst.Confetti(_fx, 26 + rung * 14);
 
             yield return new WaitForSecondsRealtime(BudTempo.Fanfare);
             if (!this) yield break;
 
             HideWord();
+        }
+
+        /// <summary>The most the word ever slams in at, when the word is short enough for it.</summary>
+        const float WordSlam = 1.85f;
+
+        /// <summary>And the least, below which an entrance stops being one.</summary>
+        const float WordSlamLeast = 1.12f;
+
+        /// <summary>
+        /// How much of the screen the word is allowed to take at rest, leaving the remainder for
+        /// the slam to be drawn in.
+        /// </summary>
+        const float WordShare = .80f;
+
+        /// <summary>
+        /// Sizes the word to the screen and answers how hard it may slam in.
+        ///
+        /// <para>
+        /// <b>LEGENDARY ran off both edges, and it was over before the slam was involved:</b>
+        /// measured against the game's own font, the top rung's 194 points draw it
+        /// <b>1195px</b> wide on a canvas that has 1024 to give. AMAZING fitted at rest and
+        /// overflowed at 1.85. Two things had to be true for that — the label was built as wide
+        /// as the <em>grove</em> plus a margin, so on a five-wide board the box was narrower
+        /// than the phone, and the ladder hands out points by rung without knowing how many
+        /// letters the word has or what language it is in.
+        /// </para>
+        /// <para>
+        /// <b>The resting size is fitted first and the slam takes what is left, which is the
+        /// order that matters.</b> Shrinking the font until the <em>slam</em> fits is the
+        /// obvious reading and it is the wrong trade: it takes LEGENDARY down to 102 points to
+        /// buy an 85% overshoot nobody asked for, when the resting word is the thing actually
+        /// being read. Fitted this way it stays at 132 and slams at 1.26 — measured, along with
+        /// GREAT and EPIC keeping the full 1.85 because they are short enough to have it.
+        /// </para>
+        /// <para>
+        /// The authored size is therefore a <b>ceiling</b> rather than an instruction, and every
+        /// number comes off the font at run time (<c>preferredWidth</c>) rather than out of a
+        /// constant — which is what makes it safe in a language where the word for LEGENDARY is
+        /// twice as long. <c>UIKit.Squeeze</c>'s bargain, which the buttons already make.
+        /// </para>
+        /// </summary>
+        float Fit(Text word, int points)
+        {
+            if (word == null) return WordSlam;
+
+            var rt = (RectTransform)word.transform;
+            float room = (_grid != null ? _grid.rect.width : 1080f) - 56f;
+            if (room < 120f) room = 120f;
+
+            rt.sizeDelta = new Vector2(room, rt.sizeDelta.y);
+
+            // Best-fit would override the size chosen below at draw time, a frame or two later,
+            // once the dynamic font's texture had been regenerated - which is the caption
+            // arriving crushed and then springing out that `UIKit.OneLine` exists to prevent.
+            word.resizeTextForBestFit = false;
+            word.horizontalOverflow = HorizontalWrapMode.Overflow;
+            word.fontSize = points;
+
+            float rest = word.preferredWidth;
+            float want = room * WordShare;
+
+            if (rest > want && rest > 1f)
+            {
+                word.fontSize = Mathf.Max(40, Mathf.FloorToInt(points * want / rest));
+                rest = word.preferredWidth;
+            }
+
+            if (rest <= 1f) return WordSlam;
+            return Mathf.Clamp(room / rest, WordSlamLeast, WordSlam);
         }
 
         Text _word;
@@ -2837,6 +3070,13 @@ namespace GlimmerGrove
 
             var text = _word;
             var rt = (RectTransform)text.transform;
+
+            // **The breathe is killed before anything reads or writes this scale.** The hold
+            // leaves one running on this very transform, and the exit below writes the same
+            // value from a different owner - two tweens on one value, which is a bug however
+            // different their channels are. Killing it hands the resting scale back first, so
+            // the exit starts from square rather than from wherever the breath had reached.
+            Tween.KillChannel(rt, "breathe");
 
             // Up and out rather than simply fading, so the last thing the grove does is move.
             Tween.Run(.30f, Ease.InQuad, t =>

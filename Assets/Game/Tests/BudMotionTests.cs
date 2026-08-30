@@ -1,4 +1,4 @@
-using GlimmerGrove.Modes;
+﻿using GlimmerGrove.Modes;
 using NUnit.Framework;
 
 namespace GlimmerGrove.Tests
@@ -57,6 +57,74 @@ namespace GlimmerGrove.Tests
                 Assert.GreaterOrEqual(BudTempo.Wave(waves), BudTempo.MinWave - .0001f);
         }
 
+        /// <summary>
+        /// <b>And every chain the shipped chapter actually produces is watchable, which is the
+        /// bar the mode failed and the reason the ceiling moved.</b>
+        ///
+        /// <para>
+        /// Reported as <em>"the animations happen too fast"</em>. The floor above was doing its
+        /// job and was the wrong bar: <c>MinWave</c> asks whether a wave can be <em>told
+        /// apart</em> from the one before it, and what a carnival needs is whether each of the
+        /// things inside a wave can be <em>watched</em>. Every one of them is a fraction of the
+        /// beat, so the beat is the number that decides it. <c>b01_thicket</c>'s finale opens on
+        /// an eight-wave tap and every grove in the chapter runs three or more, so those are the
+        /// depths the bar has to hold at — a bound satisfied only by chains the boards never
+        /// reach is the mistake this mode has made twice already, in <c>BudTempo</c>'s first
+        /// swell ladder and in <c>BudSpectacle</c>'s first rungs.
+        /// </para>
+        /// <para>
+        /// A third of a second of wind-up is about the shortest gesture a player registers as
+        /// deliberate rather than as a glitch, and it is asserted on the <em>deepest</em> chain
+        /// because that is the one the division squeezes hardest.
+        /// </para>
+        /// </summary>
+        [Test]
+        public void EveryChainTheShippedChapterReachesIsSlowEnoughToBeWatched()
+        {
+            // The finale's opening tap, which is the deepest thing anybody meets.
+            const int Deepest = 8;
+
+            for (int waves = 1; waves <= Deepest; waves++)
+            {
+                float beat = BudTempo.Wave(waves);
+
+                Assert.GreaterOrEqual(beat, .80f,
+                                      $"a {waves}-wave chain deals each wave {beat:0.000}s, " +
+                                      "which is what every effect inside it is a fraction of");
+                Assert.GreaterOrEqual(BudTempo.Charge(beat), .30f,
+                                      $"a {waves}-wave chain winds up in " +
+                                      $"{BudTempo.Charge(beat):0.000}s, which is a flicker " +
+                                      "rather than a bunch pointing at itself");
+                Assert.GreaterOrEqual(BudTempo.Burn(beat), .40f,
+                                      $"a {waves}-wave chain leaves {BudTempo.Burn(beat):0.000}s " +
+                                      "for the burst, the ripple, the wash and the fall");
+            }
+        }
+
+        /// <summary>
+        /// And the bound is still a bound. A deep chain has to end — the ceiling moved because
+        /// it was set where a cascade could not be watched, not because a cascade is allowed to
+        /// run forever, and a mode that freezes the board for ten seconds is a mode nobody taps
+        /// twice.
+        /// </summary>
+        [Test]
+        public void AndTheLongestChainStillEndsWhileAnyoneIsStillWatching()
+        {
+            Assert.LessOrEqual(BudTempo.Cascade(BudChain.Most), 8.5f,
+                               $"the deepest chain the ladder distinguishes runs for " +
+                               $"{BudTempo.Cascade(BudChain.Most):0.00}s");
+            // Everything the player waits through, not only the part named "cascade": the
+            // chain, the beat the grove is given to land in, and the word over the top of it.
+            float whole = BudTempo.Cascade(BudChain.Most)
+                        + BudTempo.Landing(BudChain.Most)
+                        + BudTempo.Fanfare;
+
+            Assert.LessOrEqual(whole, 11f,
+                               $"the deepest chain, its landing and the word come to {whole:0.00}s");
+            Assert.Greater(BudTempo.Landing(BudChain.Most), 0f,
+                           "the word arrives while the grove is still in the air");
+        }
+
         // ------------------------------------------------------------------ inside one wave
         /// <summary>
         /// <b>The ripple may never eat the beat it lives in.</b> Everything in one wave goes off
@@ -95,6 +163,94 @@ namespace GlimmerGrove.Tests
                 float at = BudTempo.StaggerAt(nth, 8, beat);
                 Assert.GreaterOrEqual(at, last, "the ripple never runs backwards");
                 last = at;
+            }
+        }
+
+        /// <summary>
+        /// <b>And no two flowers of a wave are ever dealt in the same frame, however many there
+        /// are.</b>
+        ///
+        /// <para>
+        /// This is the property the ripple was written for and did not have. It clamped
+        /// <c>nth × step</c> to an allowance, so past the point where the two crossed <em>every
+        /// remaining flower landed on the allowance</em> — a wave of thirteen was dealt as four
+        /// beats and then nine at once, and the bigger the wave the more of it went off
+        /// together, which is precisely backwards. Nothing caught it because the old checks
+        /// asked only that the ripple was ordered and that it ended inside its beat, and both
+        /// of those are true of a clump.
+        /// </para>
+        /// </summary>
+        [Test]
+        public void EveryFlowerOfAWaveIsDealtAtItsOwnMoment()
+        {
+            for (int waves = 1; waves <= BudChain.Most; waves++)
+            {
+                float beat = BudTempo.Wave(waves);
+
+                for (int inWave = 2; inWave <= 40; inWave++)
+                {
+                    float last = BudTempo.StaggerAt(0, inWave, beat);
+
+                    for (int nth = 1; nth < inWave; nth++)
+                    {
+                        float at = BudTempo.StaggerAt(nth, inWave, beat);
+
+                        Assert.Greater(at, last,
+                                       $"in a {waves}-wave chain the {nth}th of {inWave} is " +
+                                       $"dealt at the same instant as the one before it " +
+                                       $"({at:0.0000}s)");
+                        last = at;
+                    }
+
+                    Assert.LessOrEqual(last, beat * BudTempo.Spread + .0001f,
+                                       $"a wave of {inWave} spreads past its own allowance");
+                }
+            }
+        }
+
+        /// <summary>
+        /// <b>And the cocoons of a wave are dealt further apart than its flowers, but still
+        /// inside the wave.</b>
+        ///
+        /// <para>
+        /// Four cocoons opening is four separate payoffs rather than one gesture said four
+        /// times, so they get a wider allowance than the bursts do — but a ripple that could
+        /// reach the whole beat would go on opening cocoons after the chain that opened them had
+        /// ended, and the last of them would arrive over the word at the end. Both halves are
+        /// the point; either one alone is satisfiable by a rule that is wrong.
+        /// </para>
+        /// </summary>
+        [Test]
+        public void CocoonsAreDealtFurtherApartThanFlowersAndStillInsideTheWave()
+        {
+            Assert.Greater(BudTempo.GreetSpread, BudTempo.Spread,
+                           "a cocoon opening is dealt no further from the next than a flower is");
+            Assert.Less(BudTempo.GreetSpread, 1f,
+                        "a wave's cocoons can still be opening after the wave has ended");
+
+            for (int waves = 1; waves <= BudChain.Most; waves++)
+            {
+                float beat = BudTempo.Wave(waves);
+
+                for (int of = 2; of <= 16; of++)
+                {
+                    float last = 0f;
+
+                    for (int nth = 1; nth < of; nth++)
+                    {
+                        float at = BudTempo.StaggerAt(nth, of, beat, BudTempo.GreetSpread);
+
+                        Assert.Greater(at, last,
+                                       $"cocoon {nth} of {of} opens with the one before it");
+                        Assert.Less(at, beat,
+                                    $"cocoon {nth} of {of} opens after its own wave has ended");
+                        last = at;
+                    }
+
+                    Assert.GreaterOrEqual(
+                        last, BudTempo.StaggerAt(of - 1, of, beat) - .0001f,
+                        $"a wave of {of} cocoons is packed tighter than a wave of {of} flowers");
+                }
             }
         }
 
@@ -418,6 +574,84 @@ namespace GlimmerGrove.Tests
                                        $"a {waves}-wave chain drops a piece {rows} rows down " +
                                        $"as the {nth}th of its ripple, and it is still moving " +
                                        $"{delay + fall - over:0.000}s after the fall is over");
+                }
+            }
+        }
+
+        /// <summary>
+        /// <b>And the whole grove is on the ground before the wave that dropped it ends.</b>
+        ///
+        /// <para>
+        /// This is the promise <c>BudTempo.Rain</c>'s own remarks make and nothing checked it —
+        /// which mattered, because <c>Rain</c> was written as a fraction of the burn <em>with a
+        /// floor under it</em>, and a floor on a fraction of something can exceed the thing it
+        /// is a fraction of. At the shortest beats the floor won: the grove was still falling
+        /// when the next wave charged, so two gestures were on the same transforms, which is
+        /// the fault this mode's view has paid for twice and the one that left flowers hanging
+        /// between two squares for the rest of a run.
+        /// </para>
+        /// <para>
+        /// The check above is one step downstream of this — it holds the <em>ripple</em> inside
+        /// the allowance, and this holds the allowance inside the wave. Both are needed and
+        /// neither implies the other.
+        /// </para>
+        /// </summary>
+        [Test]
+        public void TheGroveIsBackOnTheGroundBeforeItsOwnWaveEnds()
+        {
+            for (int waves = 1; waves <= 40; waves++)
+            {
+                float burn = BudTempo.Burn(BudTempo.Wave(waves));
+
+                float hold = BudTempo.Settle(burn);
+
+                Assert.LessOrEqual(hold + BudTempo.Rain(burn), burn + .0001f,
+                                   $"a {waves}-wave chain burns for {burn:0.000}s and spends " +
+                                   $"{hold:0.000}s holding plus {BudTempo.Rain(burn):0.000}s " +
+                                   "falling");
+                Assert.Greater(BudTempo.Rain(burn), 0f,
+                               $"a {waves}-wave chain gives the grove no time to fall at all");
+                Assert.Greater(hold, 0f,
+                               $"a {waves}-wave chain drops the grove into its own bursts in " +
+                               "the frame they go off");
+            }
+        }
+
+        /// <summary>
+        /// <b>And the same drop takes the same time wherever it sits in the ripple.</b>
+        ///
+        /// <para>
+        /// The wait used to be taken out of the allowance and whatever was left became the fall,
+        /// so one piece falling four rows took up to <em>45% less time</em> than another falling
+        /// four rows in the same wave — for no reason except which column it was in. A board
+        /// whose pieces fall at several speeds at once does not read as a board falling; it was
+        /// reported as the fall being sudden and stuttery, and at the far end of the ripple a
+        /// five-row drop really was covering about a third of a cell per frame.
+        /// </para>
+        /// <para>
+        /// How long a thing takes to fall is a fact about how far it is falling and nothing
+        /// else. The ripple is what gives way now, which is why this can be asserted as exact
+        /// equality rather than as a tolerance.
+        /// </para>
+        /// </summary>
+        [Test]
+        public void ADropOfTheSameHeightTakesTheSameTimeWhereverItIsInTheRipple()
+        {
+            for (int waves = 1; waves <= BudChain.Most; waves++)
+            {
+                float over = BudTempo.Rain(BudTempo.Burn(BudTempo.Wave(waves)));
+
+                for (int rows = 1; rows <= 12; rows++)
+                {
+                    BudTempo.Rainfall(0, rows, over, out _, out float first);
+
+                    for (int nth = 1; nth < 24; nth++)
+                    {
+                        BudTempo.Rainfall(nth, rows, over, out _, out float fall);
+                        Assert.AreEqual(first, fall, .0001f,
+                                        $"a {rows}-row drop takes {fall:0.000}s as the {nth}th " +
+                                        $"of its wave and {first:0.000}s as the first");
+                    }
                 }
             }
         }

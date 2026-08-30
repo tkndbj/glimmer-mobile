@@ -1,4 +1,4 @@
-using GlimmerGrove.Modes;
+﻿using GlimmerGrove.Modes;
 using NUnit.Framework;
 
 namespace GlimmerGrove.Tests
@@ -80,6 +80,23 @@ namespace GlimmerGrove.Tests
             Assert.LessOrEqual(BudSpectacle.FireworksFrom, 3);
             Assert.Greater(BudSpectacle.Of(1).Ripple, 0f,
                            "even a one-wave tap makes the rest of the grove move");
+
+            // **And the commonest tap of all draws more than the two things every tap draws.**
+            // The rungs above are a ceiling on where the ladder may start; this is a floor
+            // under what a *single* wave is worth, which is the case the ladder kept missing.
+            // A one-wave tap is most of what happens in this mode and it used to be a burst and
+            // a jolt — so the first genuinely new kind of thing arrived on a chain that half
+            // the groves never produce, and the escalation was real and nobody saw it.
+            Assert.GreaterOrEqual(BudSpectacle.Of(1).Kinds, 3,
+                                  "a one-wave tap draws only the burst and the jolt, which is " +
+                                  "the commonest thing in the mode drawn as the quietest");
+            Assert.Greater(BudSpectacle.Of(1).Tint, 0f,
+                           "a single tap does not take the board in its own colour");
+
+            // Every kind is on by a depth the shipped groves genuinely reach, rather than at
+            // the top of a ladder built for chains that hardly happen.
+            Assert.LessOrEqual(BudSpectacle.ConfettiFrom, 4,
+                               "the last rung lands past what most taps in this mode run");
         }
 
         /// <summary>

@@ -1,4 +1,4 @@
-namespace GlimmerGrove.Modes
+﻿namespace GlimmerGrove.Modes
 {
     /// <summary>
     /// What is drawn on top of a wave, as a function of how far into the chain it is.
@@ -89,7 +89,19 @@ namespace GlimmerGrove.Modes
     public static class BudSpectacle
     {
         /// <summary>The wave each new kind of thing arrives on.</summary>
-        public const int SweepFrom = 2, FireworksFrom = 3, RaysFrom = 4, ConfettiFrom = 5;
+        /// <remarks>
+        /// <b>Every rung moved down one, and the argument is the one this ladder was built on
+        /// in the first place.</b> It was written to stop the escalation being spent on waves
+        /// nobody reaches — and it still was: most taps in this mode run <em>one</em> wave, so
+        /// the commonest thing that happens in Budburst drew a burst and a jolt and nothing
+        /// else, and the first genuinely new kind of thing arrived on a chain that half the
+        /// groves never produce. A single tap now takes the board in its own colour, two waves
+        /// send fireworks up over the grove, three light it from behind and four bring
+        /// confetti. The shape of the ladder is untouched — one new kind per rung, nothing ever
+        /// taken away, every kind on by the top — it has simply been slid onto the waves the
+        /// mode actually plays.
+        /// </remarks>
+        public const int SweepFrom = 1, FireworksFrom = 2, RaysFrom = 3, ConfettiFrom = 4;
 
         /// <summary>The most kinds any wave draws at once. Every rung, and the burst.</summary>
         public const int MostKinds = 6;
@@ -101,11 +113,11 @@ namespace GlimmerGrove.Modes
             float ripple = .34f + (wave - 1) * .16f;
             if (ripple > 1f) ripple = 1f;
 
-            float tint = wave < SweepFrom ? 0f : .06f + (wave - SweepFrom) * .035f;
-            if (tint > .22f) tint = .22f;
+            float tint = wave < SweepFrom ? 0f : .07f + (wave - SweepFrom) * .035f;
+            if (tint > .24f) tint = .24f;
 
-            int rockets = wave < FireworksFrom ? 0 : 2 + (wave - FireworksFrom);
-            if (rockets > 6) rockets = 6;
+            int rockets = wave < FireworksFrom ? 0 : 3 + (wave - FireworksFrom);
+            if (rockets > 8) rockets = 8;
 
             return new BudLayers(wave >= SweepFrom, wave >= FireworksFrom, wave >= RaysFrom,
                                  wave >= ConfettiFrom, ripple, tint, rockets);
@@ -122,9 +134,8 @@ namespace GlimmerGrove.Modes
         /// </summary>
         public static float RippleOver(float burn)
         {
-            float over = burn * .55f;
-            if (over < .10f) over = .10f;
-            return over > .30f ? .30f : over;
+            float over = burn * .62f;
+            return over > .42f ? .42f : over;
         }
 
         /// <summary>

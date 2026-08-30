@@ -2697,10 +2697,11 @@ where the flowers are rotating"*, which is precisely what it was. The bolt is go
 is anchored on the cell it belongs to, which is why nothing else in the file could have been wrong
 about a position.
 
-**The whole effect set is generated, and it took three attempts to get there.** `Art.Flash`,
-`Art.Wave`, `Art.Glint`, `Art.Bloom`, `Art.Leaf`, `Art.Rays`, `Art.Glow` and `Art.Crystal` — no
-addresses, no bundle, no preload, and every shape a coverage mask that takes the exact colour of
-the flower that went off. Two cuts from a licensed VFX pack were shipped and thrown away first: the
+**The whole effect set is generated, and it took three attempts to get there.** `Art.Glow`,
+`Art.Wave`, `Art.Glint`, `Art.Bloom` and `Art.Crystal` — no addresses, no bundle, no preload, and
+every shape a coverage mask that takes the exact colour of the flower that went off. (`Art.Flash`,
+`Art.Leaf` and `Art.Rays` were in this list and are not any more — see *more layers is not more
+quality* below.) Two cuts from a licensed VFX pack were shipped and thrown away first: the
 first took the pack's *shader utility maps* by mistake (a colour ramp drawn as a flare, a bubble
 mask as a lightning bolt, a noise field as a shockwave — all of which loaded, addressed, audited
 and drew), and the second was a correct cut of a real fire flipbook that still came back from play
@@ -2787,14 +2788,33 @@ half again as wide as its square, so stacking order is visible on a settled boar
 fire flipbook was cut from the pack and drawn over every burst; it came back as *"when I burst
 buds a smoke/dust comes out — what is that?"*, which is an exactly correct reading of a plume
 authored for the scale of a rocket exhaust, shrunk onto a 170-point cell and drawn thirteen times
-in one wave. What replaced it is the flower **coming apart into its own petals** — six `Art.Leaf`
-shapes in its colour, thrown out and falling — under a hard white **flash**, inside a **ring**,
-with a **starburst of rays** for an edge and glints over the top. Every one of those is a shape
-with a clean line at cell size, and it is what this genre actually ships: Royal Match and Toy
-Blast burst in shards and light and have no smoke anywhere near the board.
+in one wave. What replaced it was the flower coming apart into six `Art.Leaf` petals under a
+hard `Art.Flash` star, inside a ring, with an `Art.Rays` starburst for an edge, glints, embers and
+a prism ring on top — and **every one of those has now been deleted too**, for a reason worth more
+than the one that removed the smoke.
 
-**A freed critter is celebrated where it was earned and then flies to the counter, and the middle
-of that sentence is what took three goes to get right.** It used to leap out and fade to nothing
+**More layers is not more quality, and this file taught me that the expensive way.** Asked for
+*"a carnival of animations, stunning, like real mobile games"*, the answer here was to keep
+**adding kinds of thing**: petals, rays, embers, a backlight, fireworks, confetti, a prism ring. It
+came back as *"I don't want a meshed up random animation"*, and that is the correct reading of what
+was built — the burst had become eight things going off at once, none of which owned the moment.
+A premium burst in this genre is **four gestures done properly**: the piece itself popping out with
+a squash, a hot round core, a wide soft bloom in the piece's colour, one clean expanding ring, and
+a handful of round sparkles over it. That is what Royal Match draws, and the difference between it
+and what was here is not effort or count — it is that every one of its shapes is **round and
+soft-edged**, so the board never grows a hard line that was not already part of it.
+<br>**Which is what "the spotlight effects are weird" was about, and it was a shape rather than a
+motion.** `Art.Flash` draws a **twelve-pointed spiky star** and `Art.Rays` a starburst of straight
+beams, so every burst fired a little searchlight and thirteen of them in a wave read as exactly
+that. Both are gone from this mode: the core is `Art.Glow` at a high power (a bright centre with a
+fast falloff) over the wide soft bloom, which is the two-layer light every game of this shape
+draws, and a firework goes off as a round pop rather than as a star. The rule to keep, because it
+generalises past this mode: **on a board of round soft shapes, anything with a straight edge in it
+reads as lighting equipment rather than as light.**
+
+**A freed critter is celebrated where it was earned and is gone from that spot, and it took four
+goes to get there — every wrong one had the creature *travelling*.** It used to leap out and fade
+to nothing
 over the last third of its animation, so a grove where everybody had been freed was an empty field
 — the thing the player spent the level earning was the one thing not on screen at the end. The
 answer to that was to make it *stay*, standing on its own cell for the rest of the run, and that is
@@ -2807,27 +2827,37 @@ place the board is allowed to rearrange. (`Wind` turns a whole tile, so when the
 on that square later burst, the creature went round with the scenery.)
 <br>The obvious fix — make the square a **post** the grove may not move — was built, mirrored into
 `bud.py` and measured against the shipped ten, and it is recorded above because it must not be
-tried again: it takes the cascades out of the boards. So the reward moves instead. The shell breaks,
-the critter leaps clear and settles, and *then*, alone, a ring closes **inward** onto it
+tried again: it takes the cascades out of the boards. So the creature leaves instead, and **where
+it went is the whole history of this animation**. It leapt out and fell back onto the square,
+bouncing past it on an `OutBack` — reported as falling. It was made to rise out of the shell and
+stand — better, and still travelling, and it still ended by **flying to the critters readout**,
+which sits *under* the board (`BudBand`): so "it flies to where the score is kept" meant an arc
+that rose a little and then crossed the whole height of the grove downward, and it was reported as
+critters falling for the second time. The idea behind the flight was sound — a number that changes
+on its own becomes somewhere the reward visibly *went* — and it is not worth that.
+<br>So nothing moves. The shell breaks; the creature **appears where the cocoon was**, swells on an
+`OutBack`, and is the only thing on the board that is moving while a ring closes **inward** onto it
 (`BudView.Circle` — every other ring in this mode expands, which says *something went off here*;
-closing says *this one*) while it pumps inside it (`BudView.Pump`, one half-sine, no oscillation).
-Then it flies on an arc to the **critters readout**, shrinking, and the counter is punched as it
-lands. The number itself was already the model's and had already ticked; what the flight buys is
-that a number which changed on its own becomes somewhere the reward visibly *went*.
-<br>Three things about it are load-bearing. The greeting lands **after** the shell's own noise has
-finished — a cocoon opening draws a star, the shell whitening, six chips, two shockwaves, sparks,
-three embers and a halo, and the creature used to arrive in the middle of all of it as a ninth thing
-moving, which is why it was reported as *no emphasis at all* on a build drawing eight separate
-effects. The flight is **chained off the pump's own completion** rather than timed to match it,
-because a finished pump restarts an idle breathe and a breathe borrows the scale the flight is
-writing: timed alongside, the critter arrived at the counter at full size with a breath still
-driving it — measured, and it is the two-tweens-on-one-value fault in freshly written code. And
-the destination is read off the live readout **through the world and converted back**, never
-computed from `BudBand`'s numbers, because the grid and the band are different nodes and a second
-copy of where the counter is would be a second thing to keep in step.
+closing says *this one*) and a soft glow swells behind it (`BudView.Shine`). It pumps
+(`BudView.Pump`, one half-sine, no oscillation) and then fades from that spot, and the counter is
+punched as it goes. **Only its scale is ever animated**, which is the rule the four attempts were
+converging on: a size springing past itself is a pop and a position springing past itself is a
+drop, and this mode may never draw the second. What says the square is free again is the grove
+dropping a flower into it a beat later, which is better than a creature vacating it because the
+player is watching the board rather than the number.
+<br>Two things about it are load-bearing. The greeting lands **after** the shell's own noise has
+finished — a cocoon opening used to draw a star, the shell whitening, six chips, two shockwaves,
+sparks, three embers and a halo, and the creature arrived in the middle of all of it as a ninth
+thing moving, which is why it was reported as *no emphasis at all* on a build drawing eight
+separate effects; that list is now the shell, six chips, one shockwave, sparks and a halo. And the
+leaving is **chained off the pump's own completion** rather than timed to match it, because a
+finished pump restarts an idle breathe and a breathe borrows the scale the fade is writing — timed
+alongside, the critter faded at full size with a breath still driving it, which is the
+two-tweens-on-one-value fault in freshly written code.
 <br>The finish changed with it: the grove used to end with the freed critters hopping one after
-another, and there are none standing, so `Triumph` punches the readout they all flew to —
-`BudTempo.CheerAt` is retired with them.
+another, and there are none standing, so `Triumph` punches the readout instead —
+`BudTempo.CheerAt` is retired with them, and `FlyToCount`, `FreedFlight` and `FreedLand` went with
+the flight.
 
 **Budburst's two sounds are its own slots, and both were picked by ear after the measurements had
 narrowed the field.** `burst` rather than `pop`, because `pop` is a wooden clunk eight other
@@ -2973,23 +3003,183 @@ exactly those words. A number going up is not something anybody sees; a thing th
 before is. So `BudSpectacle` switches a whole new kind of thing on at each wave and keeps the ones
 before it:
 
-* **wave 1** — the burst, and the *rest of the grove jolting under it*: every other flower is
-  knocked, in order, outward from where the wave went off and harder the nearer it was. This is
-  the one that makes a small chain feel big, and it costs nothing;
-* **wave 2** — a ring of the wave's **own colour** thrown right across the board, and the screen
-  taking that colour rather than white, so what floods the screen says *which* colour is running;
-* **wave 3** — **fireworks**: sparks arc up out of the grove and go off above it. The first thing
+* **wave 1** — the burst; the *rest of the grove jolting under it* — every other flower knocked,
+  in order, outward from where the wave went off and harder the nearer it was — and a ring of the
+  wave's **own colour** thrown right across the board, with the screen taking that colour rather
+  than white, so what floods the screen says *which* colour is running;
+* **wave 2** — **fireworks**: sparks arc up out of the grove and go off above it. The first thing
   in this mode that leaves the board, so it is unmistakable without comparing it to anything;
-* **wave 4** — a **star lit behind the whole board**, the only layer drawn under the grove rather
+* **wave 3** — a **star lit behind the whole board**, the only layer drawn under the grove rather
   than over it;
-* **wave 5** — confetti.
+* **wave 4** — confetti.
 
-A five-wave chain is therefore six different events arriving one after another rather than the
-same event five times a little louder. Two rules keep it honest and both are tested: **nothing is
+A four-wave chain is therefore six different events arriving one after another rather than the
+same event four times a little louder. Two rules keep it honest and both are tested: **nothing is
 ever taken away again** (a layer switching off would read as the chain running out of steam
-exactly when it is running hardest), and the first three rungs land on waves ordinary play
-actually reaches — most taps run one or two, which is the mistake `BudTempo`'s first swell ladder
-made by spreading its range over nine.
+exactly when it is running hardest), and every rung lands on a wave ordinary play actually
+reaches — which is the mistake `BudTempo`'s first swell ladder made by spreading its range over
+nine, and which **this ladder made too, in its first cut, at the one rung nobody thought to
+check**. The bar it was written against was "the *second* wave is the commonest chain", so the
+first new kind of thing arrived at wave two and a **one**-wave tap — which is most of what
+happens in this mode — drew a burst and a jolt and nothing else. Every rung has moved down one.
+`BudSpectacleTests` now holds a floor under what a single tap is worth as well as a ceiling on
+where the ladder may start, because a ceiling alone cannot say that the commonest thing in the
+mode is drawn as the quietest.
+
+**The whole mode was played at roughly double speed, and one number was doing it.** Reported as
+*"the animations happen too fast, and I don't like their style"*, and the two halves of that have
+two different answers. The speed is `BudTempo.Ceiling`: **every** duration in this mode — the
+wind-up, the ripple, the petals, the shockwaves, the wash, the fall, the jolt — is a fraction of
+`Wave`, which is the ceiling divided by the chain, so one constant sets the pace of everything.
+At 3.60s the finale's eight-wave tap dealt each wave .45s: a .18s wind-up, a .27s burst, petals on
+screen for half a second and the entire grove falling in **.167s**, which is not a fall, it is a
+teleport. Nothing was wrong with any single effect and not one of them had time to be seen. It is
+8.00s now (`WaveFull` 1.10, `MinWave` .46), and the shape of the change is worth keeping: waves
+one to *seven* now get the full beat where the old ceiling started compressing at five, so a chain
+no longer accelerates away from the player exactly as it gets more worth watching. A one-wave tap
+— most taps — runs 1.10s; the deepest chain the ladder distinguishes runs 8.00s and 9.60s with the
+word after it, and `AndTheLongestChainStillEndsWhileAnyoneIsStillWatching` is the line under that.
+The bound has not changed in kind: a chain must still end, the rate still gives way, and a
+nine-wave cascade must still not be a nine-second freeze. It was simply set where a cascade could
+not be watched, on **the one mode in this game commissioned to be generous** (invariant 20k).
+<br>It was raised **twice**, and the second raise bought something the first did not. The first
+was about whether a gesture could be *seen*; the second was about whether a wave could be dealt
+**one flower at a time**, which needs room inside the burn for the ripple, the hold and the fall
+all three. At a .55s burn there was none.
+
+**A wave is dealt one thing at a time, and the ripple that does it was clumping.** `StaggerAt` was
+`min(nth x step, most)` — so on a wave of thirteen the first four were dealt apart and the
+remaining **nine landed on the cap, in the same frame**. The bigger the wave, the more of it went
+off at once, which is precisely the flat flicker the stagger was added to break up, and nothing
+caught it because the checks asked only that the ripple was *ordered* and that it *ended inside
+its beat*, and both of those are true of a clump. It now shortens the **step** until the whole set
+fits, so every flower of every wave is dealt at a distinct moment: thirteen go 36ms apart, three
+go 109ms apart, and `EveryFlowerOfAWaveIsDealtAtItsOwnMoment` is the line under it.
+<br>Two more things were dealt against the *burst* count and should never have been. A wave's
+**washes** ran their index past the end of a ripple built for a smaller set, and its **cocoons**
+were given no delay at all — so a tap freeing four critters fired four notes, four halos, four
+shockwaves and four creatures on one frame, which is the single loudest moment in the mode played
+as one chord. Each kind now ripples across its own count, and cocoons get a **wider** allowance
+than flowers (`GreetSpread` .95 against `Spread` .62): thirteen flowers bursting is one gesture
+said thirteen times and reads as a sweep, where four cocoons opening is four separate payoffs.
+
+**And the grove is clipped to itself.** A flower that grew back enters from `Grown() x _cell` above
+the cell it lands in — three, four, five cells above the top row — and it was drawn the whole way,
+hanging over the board with nothing under it. A `RectMask2D` on a node the size of the board fixes
+it (`_grid` is the whole screen below the band, so masking *that* clips nothing). The margins are
+**not symmetric**, because what they are for is not: at the sides and below there is nothing to
+hide, so they are generous and no gesture is ever cut there, and above the clip sits on
+`BudView.PlateLip` — the 13 units the board's own plate stands out past the grid, which is what
+the player reads as the edge of the grove.
+<br>**That top margin was first set to the wind-up's overhang and that is the wrong trade.** A
+flower swells to 2.20 and so reaches about .29 of a cell past its own square, and leaving room for
+it meant leaving room for a falling flower too — which came back as *"I still see them coming out
+of the grid slightly"*. A quarter of a cell is invisible when a flower is swelling in it and
+perfectly visible when a flower is falling through it. The clip is tight now and what it costs is
+about a tenth off the top of a top-row flower at the deepest wind-up: a moment, on one row,
+against something that was happening on every fall.
+<br>**Only the field is masked**: `_fx` and `_residents` are siblings of it, so rings, sparkles,
+fireworks and freed critters all still cross the edge of the board, which they must, since leaving
+the board is the whole of what makes the fireworks read as fireworks.
+
+**Nothing in this grove is made of anything that shatters.** The white flower's detonation played
+`shatter` — *DESTRUCTION Break Impact Wood*, the one genuinely destructive sample in the pack —
+over a low `burst`, and it was reported exactly as it sounds: metallic, explosive, and nothing
+like the rest of the game. A bunch of white played a **bell**, which is the one thing this board
+must not sound like when every other voice in it is a struck block or a pop. Both are gone: the
+white flower is the mode's own burst note struck twice, low and then a fifth above it, and a bunch
+of white is `free`'s wooden pop an octave up. Bigger by being **lower and doubled** rather than by
+being a different kind of sound — which is `sfx.tsv`'s whole argument, that a small palette of
+materials is what makes a set sound like one place.
+
+**A fall's duration is a fact about its height and nothing else, and it was a fact about its
+column.** `Rainfall` took the piece's wait out of the wave's allowance and gave it whatever was
+left — so the same drop, over the same distance, took up to **45% less time** depending only on
+where in the ripple it sat, and a board whose pieces fall at several speeds at once does not read
+as a board falling. Reported as the fall being sudden and stuttery, and it measures out exactly
+like that: at the far end of the ripple a six-row drop was covering **81 pixels a frame**, most of
+a cell. `FallOver` is asked first now and the ripple is trimmed into what is left, so a tall drop
+rides at the front of the wave with no wait at all — which is right, it has the furthest to come —
+and `ADropOfTheSameHeightTakesTheSameTimeWhereverItIsInTheRipple` asserts it as exact equality
+rather than as a tolerance.
+<br>**And the curve is gentler than gravity, which is a drawing decision rather than a physical
+one.** `InQuad` is what a falling thing really does and it peaks at twice its own average speed;
+`t^1.5` peaks at one and a half times. Together with the fix above that takes the worst drop on
+the shipped boards from 81 pixels a frame to **33**, still unmistakably accelerating and never
+fast enough to tear.
+
+**The grove is allowed to land before the word arrives** (`BudTempo.Landing`). The celebration used
+to begin while the last flowers were still in the air *and* every cell was repainted underneath it
+in the same frame — reported as the board resetting suddenly. Two separate faults sat on that one
+line. The wait was simply missing, and it is derived rather than chosen: it is the hold and the
+fall of the wave that has just ended, so a shorter board settles sooner. And the repaint asked for
+`animate: true`, which **skips `PaintCell`'s own "nothing changed" guard** — so a loop meant to
+tidy up a few stale cells was killing every tween on all thirty-six, snapping every scale back to
+one and taking every white flower's breath and every "this one pops" hint with it, for
+`PaintPops` to start again from nothing a frame later. That is a whole board flinching at the
+moment it should be settling. Asked without `animate`, a cell whose colour has not moved is left
+exactly as it is.
+
+**And the word is fitted to the screen rather than to the grove.** LEGENDARY ran off both edges,
+and it was over before the slam was involved: measured against the game's own font, the top rung's
+194 points draw it **1195px** wide on a canvas with 1024 to give, and AMAZING fitted at rest and
+overflowed at 1.85. The label had been built as wide as the *grove* plus a margin, so on a
+five-wide board the box was narrower than the phone, and the ladder hands out points by rung
+without knowing how many letters the word has or what language it is in. The authored size is a
+**ceiling** now, the real width comes off the font at run time, and — the part that decides how it
+looks — **the resting size is fitted first and the slam takes what is left**. Shrinking the font
+until the slam fits is the obvious reading and it is the wrong trade: it takes LEGENDARY to 102
+points to buy an 85% overshoot nobody asked for, when the resting word is the thing being read.
+Fitted this way it stays at 132 and slams at 1.26, while GREAT and EPIC keep the full 1.85 because
+they are short enough to have it.
+
+**And the grove is heard landing.** A board that falls in silence is being rearranged rather than
+dropping things onto other things. The naive version is unlistenable and would not even play: a
+deep wave drops twenty-odd pieces, which is twenty identical clunks in half a second *and* more
+voices than `Audio.PlayOne`'s ten-voice pool holds, so the tail would be dropped by the mixer and
+which pieces went quiet would depend on nothing the player can see. `BudChorus` is the rule —
+at most five of a wave are struck, **spread evenly across it rather than taken off the front**
+(the first five of twenty sounds like a five-piece wave followed by silence, so the bigger the
+fall the earlier it appears to stop, which is exactly backwards), each on its own step of a
+pentatonic run so no two can land a semitone apart. In Domain, because a rule that decides which
+of twenty things is *skipped* is wrong for a year without anybody being able to say why the board
+sounds thin.
+
+**A freed critter rises and stays up; it never comes back down.** It was two beats — a leap that
+threw them .62 of a cell into the air, then a settle that brought them back on an `OutBack`, so
+they dropped *past* the square and bounced. That is a fall, it was reported as one, and nothing in
+this mode should read as a creature being dropped least of all at the one moment the whole level
+is for. It is one motion now and the position curve is **monotone by construction** (`OutCubic`
+never overshoots, so there is no `t` at which they are moving downward): they ease up out of the
+shell breaking in front of them and stop where they will stand. The **scale** still overshoots,
+because a size springing past itself is a pop and a position springing past itself is a drop, and
+only one of those was ever wanted — the leap was never buying anything the pop does not.
+
+**And the bunch is wired together while it charges.** Three flowers spinning in three places on a
+
+**The style was three curves, and the fall was the one that was actually wrong.** A falling piece
+ran on `OutQuad` — it left fast and *decelerated* into the ground, which is the one shape a
+falling thing cannot have — and it arrived at exactly its resting size, which is a thing that has
+finished moving rather than a thing the ground has stopped. It now accelerates (`InQuad`), is
+drawn out along the way it is travelling in proportion to how far it has to come, and **lands with
+a squash and a spring** (`BudView.Squash`). That last one is the cheapest half-second in a board
+game of this shape and is most of what separates a board with weight from a board whose contents
+slide about. Two smaller ones went with it. A burst used to fade its flower out over .11s with a
+uniform grow, so a wind-up that had spent a third of a second building came to nothing; it now
+*tears free* — pulled long, released past its own size on an out-back, whipped round, alpha held
+back so the last thing the eye keeps is the flower at its largest. And colour landing on a flower
+was a `Tween.Punch`, which is a damped sine through three half-cycles: a thing that shivers has
+been *disturbed*, where a thing that swells and settles has *become something*.
+
+**And a burst is left alone for a beat before the grove falls into it** (`BudTempo.Settle`). The
+fall used to be dealt in the same frame as the bursts it was falling into, so the player's own
+doing was covered by the consequence of it before they had seen it. The hold is taken **out of**
+the fall's allowance rather than added beside it — `Rainfall`'s lesson in the one place that had
+not learned it, since a hold added to a duration that is already the whole of the wave is a grove
+still falling when the next wave charges, which is two gestures on one transform and the fault
+this view has paid for twice. `TheGroveIsBackOnTheGroundBeforeItsOwnWaveEnds` holds the pair
+together, and writing it found a live bug: `Rain` was a fraction of the burn **with a floor under
+it**, and a floor on a fraction of something can exceed the thing it is a fraction of.
 
 **And the bunch is wired together while it charges.** Three flowers spinning in three places on a
 grid of fifty is three things happening; a line of light between them is one thing about to
