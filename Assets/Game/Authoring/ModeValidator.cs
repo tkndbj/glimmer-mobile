@@ -478,6 +478,20 @@ namespace GlimmerGrove.Content
             Reachable(layout, issues);
             Settled(layout, issues);
 
+            // **Old wood is retired from this mode.** The parser still understands `#` — the
+            // character is shared vocabulary with Groovekeeper and a second rule about it would
+            // be a second thing to keep in step — but a barrier is the one object here that can
+            // only ever make a chain *shorter*, and a mode whose whole product is the chain has
+            // nothing to gain from one. Warned rather than refused, because the refusal belongs
+            // to whoever is authoring rather than to the parser (`bud_wood` is a retired lesson
+            // id and must never be reused).
+            if (layout.Stones > 0)
+                issues.Add(new LevelIssue(LevelIssueSeverity.Warning,
+                    $"this grove stands {layout.Stones} cell(s) of old wood on it. Budburst does " +
+                    "not use it: a chain stops dead at a barrier, so the only thing wood can do " +
+                    "to a cascade is cut it short, which is the opposite of what this mode is " +
+                    "for. Use bare ground, or a cocoon"));
+
             var survey = BudSolver.Survey(layout);
 
             if (!survey.Proved)

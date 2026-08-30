@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using GlimmerGrove.Modes;
 using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.UI;
@@ -622,28 +623,57 @@ namespace GlimmerGrove
                 _shownEnergy = energy;
                 for (int k = 0; k < _armLit.Count; k++)
                 {
-                    int flow = _armStrand[k] == 0 ? onStrand0 : onStrand1;
-                    bool armLit = flow != 0;
-                    var armCol = Pal.EnergyColour(flow);
-
-                    var lay = _armLit[k]; var glow = _armGlow[k];
-                    Tween.Tint(lay, armLit ? Pal.A(Pal.Lift(armCol, .35f), 1f) : Pal.A(armCol, 0f), dur, Ease.OutQuad).Delay(delay);
-                    Tween.Tint(glow, armLit ? Pal.A(armCol, .5f) : Pal.A(armCol, 0f), dur * 1.4f, Ease.OutQuad).Delay(delay);
+                    ArmRest(k, out var armLit, out var armGlow);
+                    Tween.Tint(_armLit[k], armLit, dur, Ease.OutQuad).Delay(delay);
+                    Tween.Tint(_armGlow[k], armGlow, dur * 1.4f, Ease.OutQuad).Delay(delay);
                 }
 
                 // A crossing has no hub, because a hub is this board's word for a junction.
                 if (_hubLit)
                 {
-                    bool lit = onStrand0 != 0;
-                    var col = Pal.EnergyColour(onStrand0);
-                    Tween.Tint(_hubLit, lit ? Pal.A(Pal.Lift(col, .55f), 1f) : Pal.A(col, 0f), dur, Ease.OutQuad).Delay(delay);
-                    Tween.Tint(_hubGlow, lit ? Pal.A(col, .62f) : Pal.A(col, 0f), dur * 1.4f, Ease.OutQuad).Delay(delay);
+                    HubRest(out var hubLit, out var hubGlow);
+                    Tween.Tint(_hubLit, hubLit, dur, Ease.OutQuad).Delay(delay);
+                    Tween.Tint(_hubGlow, hubGlow, dur * 1.4f, Ease.OutQuad).Delay(delay);
                 }
             }
 
             if (_p.C[_i].kind == Kind.Lamp) ApplyLamp(animate, delay);
 
             PaintFragility(animate);
+        }
+
+        /// <summary>
+        /// What one arm's two layers rest at, given the light currently reaching the tile.
+        ///
+        /// <para>
+        /// <b>Extracted because the fanfare needs the same answer, and reading it off the
+        /// layer would have been wrong.</b> A surge takes the arm somewhere bright and has to
+        /// put it back, and the obvious way to know where back is — the colour the layer is
+        /// wearing when the pulse arrives — is a colour still being tweened towards from the
+        /// turn that won the glade. Superseding that tween would then strand the arm at
+        /// whatever fraction it had reached, for ever, on the one board where the player is
+        /// looking hardest. Derived from the model instead, so a pulse lands the arm exactly
+        /// where a repaint would have, whenever it happens to arrive. Invariant 9a at the
+        /// smallest scale it appears at.
+        /// </para>
+        /// </summary>
+        void ArmRest(int k, out Color lit, out Color glow)
+        {
+            int flow = _p.EnergyOn(_i, _armStrand[k]);
+            var col = Pal.EnergyColour(flow);
+
+            lit = flow != 0 ? Pal.A(Pal.Lift(col, .35f), 1f) : Pal.A(col, 0f);
+            glow = flow != 0 ? Pal.A(col, .5f) : Pal.A(col, 0f);
+        }
+
+        /// <summary>The same, for the hub disc. Never asked of a crossing, which has none.</summary>
+        void HubRest(out Color lit, out Color glow)
+        {
+            int flow = _p.EnergyOn(_i, 0);
+            var col = Pal.EnergyColour(flow);
+
+            lit = flow != 0 ? Pal.A(Pal.Lift(col, .55f), 1f) : Pal.A(col, 0f);
+            glow = flow != 0 ? Pal.A(col, .62f) : Pal.A(col, 0f);
         }
 
         void ApplyLamp(bool animate, float delay)
@@ -709,7 +739,10 @@ namespace GlimmerGrove
         /// <summary>Slow travelling shimmer so live conduits feel like flowing light.</summary>
         void Update()
         {
-            if (_shownEnergy <= 0 || _armLit.Count == 0) return;
+            // The fanfare drives arm width itself, and this writes it every frame — so the
+            // idle shimmer has to stand down or the surge simply never appears. See
+            // <see cref="Festive"/>.
+            if (Festive || _shownEnergy <= 0 || _armLit.Count == 0) return;
             float phase = Time.unscaledTime * 2.6f - Mathf.Max(0, _p.Depth[_i]) * .55f;
             float k = .84f + .16f * Mathf.Sin(phase);
             for (int i = 0; i < _armLit.Count; i++)
@@ -721,7 +754,418 @@ namespace GlimmerGrove
             if (_hubLit) _hubLit.transform.localScale = Vector3.one * (.92f + .12f * Mathf.Sin(phase));
         }
 
-        /// <summary>Victory sweep: everything flares once, ordered by distance.</summary>
+        // ------------------------------------------------------------ the fanfare
+        /// <summary>
+        /// Whether the board's own celebration owns this tile's painting.
+        ///
+        /// <para>
+        /// Set once, by <c>BoardView.Celebrate</c>, and never cleared — the only ways out of a
+        /// solved board are the victory panel and leaving the screen. It exists because
+        /// <see cref="Update"/> writes every lit arm's width every frame for the idle shimmer,
+        /// which would fight the surge for the same value and win, forty times a second. The
+        /// alternative — folding the surge into the shimmer as an amplitude — was tried and is
+        /// worse: it makes an idle effect carry a beat of a sequence it knows nothing about.
+        /// </para>
+        /// </summary>
+        public bool Festive { get; set; }
+
+        /// <summary>
+        /// A pulse: nought to full over the first fraction of a beat, then a long decay.
+        ///
+        /// <para>
+        /// Light arriving is the one gesture in this mode that must never be symmetrical. An
+        /// even rise and fall reads as a thing being <em>faded</em> in and out — deliberate,
+        /// applied from outside — where a sharp attack and a slow tail reads as something that
+        /// happened and is now dying away, which is what the player is being told: the light
+        /// got here.
+        /// </para>
+        /// </summary>
+        static float Pulse(float t)
+        {
+            const float Attack = .16f;
+            t = Mathf.Clamp01(t);
+
+            if (t < Attack) return Mathf.Sin(t / Attack * Mathf.PI * .5f);
+
+            float fall = (t - Attack) / (1f - Attack);
+            return (1f - fall) * (1f - fall);
+        }
+
+        /// <summary>
+        /// The light reaching this tile: every lit arm floods white and swells, then settles
+        /// back into the colour it carries.
+        ///
+        /// <para>
+        /// <b>This is the whole of why the celebration is worth having.</b> A sweep laid across
+        /// the board — left to right, or outward from the middle — is a decoration that could
+        /// play over any grid. Walking the light out along the network the player just finished
+        /// wiring is the board <em>showing them what they built</em>: the route it takes is the
+        /// route they made, and a glade solved a different way lights up differently.
+        /// </para>
+        /// <para>
+        /// Every layer is returned to <see cref="ArmRest"/> rather than to whatever it was
+        /// wearing, and it runs on the <c>tint</c> channel deliberately — so a repaint still in
+        /// flight from the winning turn is superseded rather than racing this, and lands where
+        /// it was going anyway.
+        /// </para>
+        /// </summary>
+        public void Surge(float delay, float ring)
+        {
+            // Long enough to still be dying away as the next ring lights, which is what makes
+            // the wave read as one travelling thing rather than as a row of separate blinks.
+            float life = Mathf.Clamp(ring * 4.2f, .34f, .70f);
+
+            Tween.After(delay, () =>
+            {
+                if (this == null) return;
+
+                var col = Pal.EnergyColour(Mathf.Max(1, _p.Energy(_i)));
+                var hot = Pal.A(Pal.Lift(col, .88f), 1f);
+
+                Ripple(Pal.A(Pal.Lift(col, .55f), .9f), 1.35f);
+
+                for (int k = 0; k < _armLit.Count; k++)
+                {
+                    ArmRest(k, out var rest, out var glowRest);
+                    if (rest.a <= .01f) continue;          // a dark arm has nothing to carry
+
+                    var lay = _armLit[k];
+                    var glow = _armGlow[k];
+                    if (!lay) continue;
+
+                    var lrt = (RectTransform)lay.transform;
+                    var glowHot = Pal.A(Pal.Lift(col, .7f), .95f);
+
+                    Tween.Run(life, Ease.Linear, t =>
+                    {
+                        if (!lay) return;
+                        float p = Pulse(t);
+                        lay.color = Color.LerpUnclamped(rest, hot, p);
+
+                        var s = lrt.localScale;
+                        s.x = 1f + p * .95f;
+                        lrt.localScale = s;
+
+                        if (glow) glow.color = Color.LerpUnclamped(glowRest, glowHot, p);
+                    }, lay, "tint");
+                }
+
+                if (_hubLit)
+                {
+                    HubRest(out var hubRest, out var hubGlowRest);
+                    if (hubRest.a > .01f)
+                    {
+                        var hubHot = Pal.A(Pal.Lift(col, .92f), 1f);
+                        var hubGlowHot = Pal.A(Pal.Lift(col, .6f), 1f);
+                        var hrt = _hubLit.transform;
+
+                        Tween.Run(life, Ease.Linear, t =>
+                        {
+                            if (!_hubLit) return;
+                            float p = Pulse(t);
+                            _hubLit.color = Color.LerpUnclamped(hubRest, hubHot, p);
+                            hrt.localScale = Vector3.one * (1f + p * .55f);
+                            if (_hubGlow) _hubGlow.color = Color.LerpUnclamped(hubGlowRest, hubGlowHot, p);
+                        }, _hubLit, "tint");
+                    }
+                }
+
+                SurgeCrystal(col, life);
+            }, this);
+        }
+
+        /// <summary>
+        /// The heart-crystal's share of the surge — the one tile the light leaves rather than
+        /// arrives at, so it flares hardest and throws sparks.
+        ///
+        /// The idle breath is killed rather than run alongside: both write the same scale, and
+        /// two tweens on one value is the fault <c>Tween.Breathe</c>'s own remarks describe.
+        /// </summary>
+        void SurgeCrystal(Color col, float life)
+        {
+            if (!_crystal) return;
+
+            Tween.KillChannel(_crystal.transform, "breathe");
+            Tween.Punch(_crystal.transform, .34f, life);
+
+            if (_crystalGlow)
+            {
+                var glowRest = Pal.A(col, .45f);
+                var glowHot = Pal.A(Pal.Lift(col, .75f), 1f);
+                var grt = _crystalGlow.transform;
+
+                Tween.Run(life, Ease.Linear, t =>
+                {
+                    if (!_crystalGlow) return;
+                    float p = Pulse(t);
+                    _crystalGlow.color = Color.LerpUnclamped(glowRest, glowHot, p);
+                    grt.localScale = Vector3.one * (1f + p * .55f);
+                }, _crystalGlow, "pulse");
+            }
+
+            Burst.Sparks(_fixture, Vector2.zero, col, 12, _size * 1.5f, _size * .2f, .55f);
+        }
+
+        /// <summary>
+        /// A critter answering the light that just reached it: it flinches where it stands,
+        /// puts a ring out in its own colour and throws sparks. <b>It does not leave the
+        /// ground</b> — see <see cref="Cheer"/>, which owns the sequence's only jump.
+        ///
+        /// <para>
+        /// <b>It rides the surge rather than following it</b>, which is the difference between
+        /// the wave <em>waking</em> the critters and merely preceding them. So the order the
+        /// grove comes alive in is the order the light reaches it in — a fact about the board
+        /// the player solved, and different every glade. That is carried entirely by
+        /// <paramref name="delay"/>: the moment lands because it is on the beat the light
+        /// arrives, never because of how big the gesture is.
+        /// </para>
+        /// <para>
+        /// The shiver is on the critter alone rather than on the fixture, so the ring it wears
+        /// stays level and keeps saying what colour woke it.
+        /// </para>
+        /// </summary>
+        public void Wake(float delay) => Rejoice(delay, rise: 0f, wobble: 11f);
+
+        /// <summary>
+        /// The unison leap at the bloom: everybody who lives here leaves the ground together,
+        /// and it is <b>the only jump in the sequence</b>.
+        ///
+        /// <para>
+        /// <b>The wake used to jump too, and that was wrong.</b> The reasoning for it was that
+        /// the surge teaches the player to read a leap as "this critter is awake", so the finale
+        /// would be that same sentence said by the whole grove at once — which only works while
+        /// it is recognisably the same sentence. In play it is not read that way at all: two
+        /// leaps a second apart from the same creature read as <em>one gesture stuttering</em>,
+        /// exactly as the confetti firing on the board and again on the panel did, and for the
+        /// same reason. Repeating a gesture does not reinforce it, it spends it.
+        /// </para>
+        /// <para>
+        /// So the two moments are now two different gestures. The wake is a flinch in place —
+        /// a squash, a shiver, a ring and sparks — which says <em>the light got to me</em>
+        /// without leaving the tile; the leap is saved for the bloom, where it is the one thing
+        /// the whole grove does together. Losing the first jump costs the surge nothing, because
+        /// what made that moment legible was never the height: it was arriving on the beat the
+        /// light did.
+        /// </para>
+        /// </summary>
+        public void Cheer(float delay)
+        {
+            if (!_critter) return;
+
+            Rejoice(delay, rise: .50f, wobble: 26f);
+
+            Tween.After(delay + GladeFanfare.Leap * .5f, () =>
+            {
+                if (this == null) return;
+                Shine(Pal.Radiance, _size * .9f, 3.4f, GladeFanfare.Bloom * .8f);
+                Glints(Pal.Radiance, 4, _size * .8f);
+            }, this);
+        }
+
+        /// <summary>
+        /// The shared body of the two: a ring, a squash, a shiver, sparks and twinkles — plus a
+        /// leap, when it is asked for one.
+        ///
+        /// <para>
+        /// One method with the jump made optional rather than two, because everything except
+        /// the jump is identical and a second copy is a second thing to keep in step. See
+        /// <see cref="Cheer"/> for why only the finale asks.
+        /// </para>
+        /// </summary>
+        void Rejoice(float delay, float rise, float wobble)
+        {
+            if (!_critter || !_fixture) return;
+
+            Tween.After(delay, () =>
+            {
+                if (this == null || !_fixture || !_critter) return;
+
+                var col = HaloColour();
+                Shine(col, _size * .78f, 2.7f, GladeFanfare.Pump);
+
+                if (rise > 0f)
+                {
+                    // The channel is killed *before* the rest value is read, and that ordering
+                    // is the whole of it — <see cref="Tween.Punch"/>'s remarks. Only the bloom
+                    // leaps now, so nothing can actually be in flight here; it is kept because
+                    // a gesture that reads its target's resting value is one call site away
+                    // from superseding itself at any time, and the failure is silent and
+                    // permanent — a critter left hanging above its own tile for the rest of the
+                    // run.
+                    Tween.KillChannel(_fixture, "leap");
+                    var home = _fixture.anchoredPosition;
+                    float up = _size * rise;
+                    System.Action rest = () => { if (_fixture) _fixture.anchoredPosition = home; };
+
+                    Tween.Run(GladeFanfare.Pump, Ease.Linear, t =>
+                    {
+                        if (!_fixture) return;
+                        _fixture.anchoredPosition = home + new Vector2(0f, up * Hop(t));
+                    }, _fixture, "leap").OnDone(rest).OnAbandon(rest);
+                }
+
+                Tween.Punch(_critter.transform, .34f, GladeFanfare.Pump * .85f);
+
+                var crt = (RectTransform)_critter.transform;
+                Tween.KillChannel(crt, "wobble");
+                System.Action level = () => { if (crt) crt.localRotation = Quaternion.identity; };
+                Tween.Run(GladeFanfare.Pump, Ease.Linear, t =>
+                {
+                    if (!crt) return;
+                    float damp = 1f - t;
+                    crt.localRotation = Quaternion.Euler(0, 0, Mathf.Sin(t * Mathf.PI * 3f) * wobble * damp);
+                }, crt, "wobble").OnDone(level).OnAbandon(level);
+
+                Burst.Sparks(_fixture, Vector2.zero, col, 14, _size * 1.6f, _size * .22f, .62f);
+                Glints(col, 3, _size * .55f);
+            }, this);
+        }
+
+        /// <summary>
+        /// Every conduit going white at the bloom, so the grove is one sheet of light for a
+        /// beat before it settles into its colours again.
+        /// </summary>
+        public void FinaleFlare(float delay)
+        {
+            Tween.After(delay, () =>
+            {
+                if (this == null) return;
+
+                var col = Pal.EnergyColour(Mathf.Max(1, _p.Energy(_i)));
+                Ripple(Pal.A(Pal.Radiance, .95f), 1.5f);
+                Tween.Punch(_rotor, .18f, .5f);
+
+                for (int k = 0; k < _armLit.Count; k++)
+                {
+                    ArmRest(k, out var rest, out var glowRest);
+                    if (rest.a <= .01f) continue;
+
+                    var lay = _armLit[k];
+                    var glow = _armGlow[k];
+                    if (!lay) continue;
+                    var lrt = (RectTransform)lay.transform;
+
+                    Tween.Run(GladeFanfare.Bloom * .9f, Ease.Linear, t =>
+                    {
+                        if (!lay) return;
+                        float p = Pulse(t);
+                        lay.color = Color.LerpUnclamped(rest, Pal.A(Color.white, 1f), p);
+
+                        var s = lrt.localScale;
+                        s.x = 1f + p * .7f;
+                        lrt.localScale = s;
+
+                        if (glow) glow.color = Color.LerpUnclamped(glowRest, Pal.A(Pal.Lift(col, .8f), 1f), p);
+                    }, lay, "tint");
+                }
+
+                if (_hubLit)
+                {
+                    HubRest(out var hubRest, out var hubGlowRest);
+                    if (hubRest.a > .01f)
+                    {
+                        Tween.Run(GladeFanfare.Bloom * .9f, Ease.Linear, t =>
+                        {
+                            if (!_hubLit) return;
+                            float p = Pulse(t);
+                            _hubLit.color = Color.LerpUnclamped(hubRest, Pal.A(Color.white, 1f), p);
+                            _hubLit.transform.localScale = Vector3.one * (1f + p * .45f);
+                            if (_hubGlow) _hubGlow.color = Color.LerpUnclamped(hubGlowRest, Pal.A(Pal.Lift(col, .7f), 1f), p);
+                        }, _hubLit, "tint");
+                    }
+                }
+
+                if (_crystal) SurgeCrystal(col, GladeFanfare.Bloom * .8f);
+            }, this);
+        }
+
+        /// <summary>
+        /// The arc of a leap: up fast, over the top, and down for longer than it went up.
+        ///
+        /// The split is <see cref="GladeFanfare.Leap"/>'s, so the one number that decides
+        /// whether a jump reads as weight or as a snap is in Domain with a test on it rather
+        /// than buried in a lerp.
+        /// </summary>
+        static float Hop(float t)
+        {
+            float peak = GladeFanfare.Leap / GladeFanfare.Pump;
+            t = Mathf.Clamp01(t);
+
+            if (t <= peak)
+            {
+                float u = t / peak;
+                return 1f - (1f - u) * (1f - u);          // out-quad up: quick off the ground
+            }
+
+            float v = (t - peak) / (1f - peak);
+            return (1f - v * v) * (1f - v * .18f);        // in-quad down, landing heavy
+        }
+
+        /// <summary>An expanding ring off this tile, in a colour. Destroyed when it has faded.</summary>
+        void Shine(Color colour, float from, float to, float life)
+        {
+            var ring = UIKit.Img("Shine", _fixture, Art.Ring(128, 7f), Pal.A(Pal.Lift(colour, .45f), .95f),
+                                 Vector2.one * from, new Vector2(.5f, .5f), Vector2.zero);
+            var rt = (RectTransform)ring.transform;
+            var peak = Pal.A(Pal.Lift(colour, .45f), .95f);
+
+            Tween.Run(life, Ease.OutCubic, t =>
+            {
+                if (!rt) return;
+                rt.localScale = Vector3.one * Mathf.Lerp(.75f, to, t);
+                ring.color = Pal.A(peak, peak.a * (1f - t) * (1f - t));
+            }, ring).OnDone(() => { if (ring) Destroy(ring.gameObject); });
+        }
+
+        /// <summary>
+        /// A few twinkles popping around the tile.
+        ///
+        /// <see cref="Art.Glint"/> rather than <see cref="Art.Spark"/> on purpose: the sparks
+        /// thrown by <c>Burst</c> are already in the air at this moment, and the two shapes
+        /// exist so that debris and a catch of light can be told apart at a glance rather than
+        /// by size — see the remarks on <c>Art.Glint</c>.
+        /// </summary>
+        void Glints(Color colour, int count, float spread)
+        {
+            for (int k = 0; k < count; k++)
+            {
+                float ang = Random.value * Mathf.PI * 2f;
+                var at = new Vector2(Mathf.Cos(ang), Mathf.Sin(ang)) * spread * Random.Range(.45f, 1f);
+                float size = _size * Random.Range(.26f, .44f);
+                float wait = k * .085f;
+
+                Tween.After(wait, () =>
+                {
+                    if (this == null || !_fixture) return;
+
+                    var img = UIKit.Img("Glint", _fixture, Art.Glint(96), Pal.A(Pal.Lift(colour, .8f), 0f),
+                                        Vector2.one * size, new Vector2(.5f, .5f), at);
+                    var rt = (RectTransform)img.transform;
+                    float spin = Random.Range(-60f, 60f);
+
+                    Tween.Run(.46f, Ease.Linear, t =>
+                    {
+                        if (!rt) return;
+                        float p = Pulse(t);
+                        rt.localScale = Vector3.one * (.35f + p * .95f);
+                        rt.localRotation = Quaternion.Euler(0, 0, spin * t);
+                        img.color = Pal.A(Pal.Lift(colour, .8f), p);
+                    }, img).OnDone(() => { if (img) Destroy(img.gameObject); });
+                }, this);
+            }
+        }
+
+        /// <summary>
+        /// The old victory sweep: everything flares once, ordered by distance.
+        ///
+        /// <para>
+        /// <b>Kept, and no longer called by the glade.</b> It is one beat — every tile brightens
+        /// and settles — which is what the celebration was in its entirety, and
+        /// <see cref="Surge"/> replaces it with a wave that travels. It stays because it is the
+        /// right size for a board that has to acknowledge something without making a moment of
+        /// it, which is what a second mode reusing this tile would want.
+        /// </para>
+        /// </summary>
         public void Flare(float delay)
         {
             var col = Pal.EnergyColour(Mathf.Max(1, _p.Energy(_i)));

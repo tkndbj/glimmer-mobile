@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using GlimmerGrove.Modes;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -51,6 +52,26 @@ namespace GlimmerGrove
         }
 
         public Action OnChanged;
+
+        /// <summary>
+        /// The glade is solved and the celebration is <em>beginning</em>.
+        ///
+        /// <para>
+        /// <b>Separate from <see cref="OnSolved"/> because the two are seconds apart, and the
+        /// run stops being owed for at the first of them.</b> A run is written down as owed
+        /// (<c>RunGuard</c>) from the moment it is committed until the screen resolves it, and
+        /// the screen used to resolve when the panel was raised — so for the whole length of
+        /// the celebration the board was won and the ledger still said the player was in the
+        /// middle of a run. A process killed there charged a heart at the next launch for a
+        /// glade they had finished, and backing out of the screen forfeited it, which took the
+        /// heart immediately. Neither is new, and both got worse when the celebration grew from
+        /// two seconds to three and a half: a window is a window, and the honest place to close
+        /// it is the instant the outcome is known rather than the instant it is announced.
+        /// </para>
+        /// </summary>
+        public Action OnWon;
+
+        /// <summary>The celebration has played out and the panel may be raised.</summary>
         public Action OnSolved;
 
         /// <summary>
@@ -438,13 +459,31 @@ namespace GlimmerGrove
         }
 
         /// <summary>
-        /// The board's own solve: every conduit flares, the screen washes, the fanfare plays.
+        /// The board's own solve, in five beats: the grove holds its breath, the light walks
+        /// the network out from the crystals waking every critter it reaches, everybody leaps
+        /// at once under a shockwave, and it settles before the panel arrives.
         ///
+        /// <para>
+        /// <b>The choreography is the board's own shape, and that is the point of it.</b> What
+        /// this replaced was one beat — every tile brightening at a delay proportional to its
+        /// depth — which is a sweep, and a sweep could be played over any grid at all. Walking
+        /// the light along the network shows the player <em>the thing they just built</em>: the
+        /// route is the route they wired, the order the critters wake in is the order their
+        /// solution feeds them, and two players who finish the same glade differently get
+        /// visibly different celebrations. Nothing else in the mode can say that.
+        /// </para>
+        /// <para>
+        /// <b>Every duration comes from <see cref="GladeFanfare"/>.</b> The sequence's length is
+        /// a function of the board — a fifteen-ring grove has more to walk than a four-ring one
+        /// — so it is exactly the shape that turns into a wait without a bound, and bounds
+        /// written as constants beside the paint are bounds nothing can check. See the remarks
+        /// there and <c>GladeFanfareTests</c>.
+        /// </para>
         /// <para>
         /// No confetti and no haptic, by request. Both used to fire here and again on the
         /// victory panel a second later, which a player reads as one celebration stuttering
-        /// rather than as two — so removing them from one place only would have left the effect
-        /// looking half-deleted. The light and the fanfare carry the moment on their own.
+        /// rather than as two. What carries the moment instead is light, which is what this
+        /// mode is about.
         /// </para>
         /// </summary>
         void Celebrate()
@@ -452,21 +491,202 @@ namespace GlimmerGrove
             if (_celebrating) return;
             _celebrating = true;
             Locked = true;
-            Audio.Duck(.3f, 2.2f);
 
-            int maxDepth = 0;
-            foreach (var t in _tiles) maxDepth = Mathf.Max(maxDepth, Mathf.Max(0, P.Depth[t.Index]));
-            foreach (var t in _tiles) t.Flare(.18f + Mathf.Max(0, P.Depth[t.Index]) * .045f);
+            // First, before a frame of it has been drawn. See OnWon.
+            OnWon?.Invoke();
 
-            float sweep = .18f + maxDepth * .045f;
-            Tween.After(sweep * .55f, () =>
+            int rings = 1;
+            foreach (var t in _tiles) rings = Mathf.Max(rings, Mathf.Max(0, P.Depth[t.Index]) + 1);
+
+            Audio.Duck(.32f, GladeFanfare.Total(rings) + .4f);
+
+            // From here the fanfare owns every tile's painting - see TileView.Festive.
+            foreach (var t in _tiles) t.Festive = true;
+
+            var cue = new Cue(this);
+            cue.With(Hush);
+            cue.Then(GladeFanfare.Hush, () => Surge(rings));
+            cue.Then(GladeFanfare.Surge(rings) + GladeFanfare.Tail, Bloom);
+            cue.Then(GladeFanfare.Bloom + GladeFanfare.Settle, () => OnSolved?.Invoke());
+        }
+
+        /// <summary>
+        /// The held breath. The grove draws in slightly and dims, which is the only moment in
+        /// the mode where the board gets quieter — see <see cref="GladeFanfare.Hush"/> for why
+        /// a celebration needs somewhere to arrive from.
+        /// </summary>
+        void Hush()
+        {
+            Audio.SfxVaried("whoosh", .30f, .05f);
+
+            float draw = GladeFanfare.Hush * .95f;
+            Tween.Scale(_floor.transform, HushScale, draw, Ease.OutCubic);
+            Tween.Scale(_grid, HushScale, draw, Ease.OutCubic);
+            if (_floor) Tween.Tint(_floor, Pal.A(_theme.Floor, _theme.Floor.a * .78f), draw);
+        }
+
+        /// <summary>How far the grove draws in before the light moves. Small enough to be felt rather than seen.</summary>
+        const float HushScale = .968f;
+
+        /// <summary>
+        /// The light walking the network, one depth ring at a time, waking what it reaches.
+        ///
+        /// <para>
+        /// Bucketed by <see cref="Puzzle.Depth"/>, which is steps from the nearest crystal along
+        /// the live network — so this is not a distance across the screen and two tiles side by
+        /// side can be many rings apart. That is the whole reading: the wave goes the way the
+        /// light goes.
+        /// </para>
+        /// <para>
+        /// A ring is a ripple rather than a frame (<see cref="GladeFanfare.StaggerAt"/>), and
+        /// the notes are strided rather than one per ring, because a deep grove walks more rings
+        /// inside the ceiling than <c>Audio.PlayOne</c> has voices to sound them with.
+        /// </para>
+        /// </summary>
+        void Surge(int rings)
+        {
+            float ring = GladeFanfare.Ring(rings);
+            int stride = GladeFanfare.NoteStride(rings);
+
+            var byDepth = new List<TileView>[rings];
+            foreach (var t in _tiles)
             {
-                Flow.Flash(new Color(1f, .96f, .82f), .55f, .7f);
-                Audio.Sfx("win", .85f);
-            }, this);
+                int d = Mathf.Clamp(Mathf.Max(0, P.Depth[t.Index]), 0, rings - 1);
+                if (byDepth[d] == null) byDepth[d] = new List<TileView>();
+                byDepth[d].Add(t);
+            }
 
-            Tween.Punch(_floor.transform, .045f, .8f);
-            Tween.After(sweep + 1.15f, () => OnSolved?.Invoke(), this);
+            int woken = 0;
+            for (int d = 0; d < rings; d++)
+            {
+                var here = byDepth[d];
+                if (here == null) continue;
+
+                float at = GladeFanfare.RingAt(d, rings);
+                float pitch = GladeFanfare.Pitch(d, rings);
+
+                for (int k = 0; k < here.Count; k++)
+                {
+                    var tile = here[k];
+                    float delay = at + GladeFanfare.StaggerAt(k, here.Count, ring);
+                    tile.Surge(delay, ring);
+
+                    if (!tile.IsLamp) continue;
+
+                    // A beat after the light gets there, so the flinch reads as an answer to it
+                    // rather than as the same event drawn twice. It does not leap — the one
+                    // jump in the sequence belongs to the bloom, see TileView.Cheer.
+                    tile.Wake(delay + ring * .4f);
+
+                    // Louder as the grove goes on as well as higher, which is Refresh's rule
+                    // for a phrase: pitch alone reads as a different sound, pitch and weight
+                    // together read as the same sound arriving harder.
+                    Audio.Sfx("star", .40f + Mathf.Min(woken, 6) * .028f, pitch * 1.12f,
+                              delay + ring * .4f);
+                    woken++;
+                }
+
+                if (d % stride == 0) Audio.Sfx("lit", .34f, pitch, at);
+            }
+        }
+
+        /// <summary>
+        /// The crescendo: every critter leaves the ground together, every conduit goes white,
+        /// and two rings cross the grove out of its middle.
+        ///
+        /// <para>
+        /// The shockwaves are hung on <see cref="Flow.Effects"/> rather than on the floor, so
+        /// they pass <em>over</em> the grove. Behind it they would be hidden by the floor plate
+        /// on every board wide enough to matter, which is every board — the one place a ring is
+        /// worth drawing is across the thing it is celebrating. The rays are the opposite and go
+        /// behind, because a fan of light over the critters would wash out the leap.
+        /// </para>
+        /// </summary>
+        void Bloom()
+        {
+            foreach (var t in _tiles)
+            {
+                if (t.IsLamp) t.Cheer(0f);
+                else t.FinaleFlare(0f);
+            }
+
+            Glory();
+            Shockwave(Pal.Radiance, 0f);
+            Shockwave(Pal.Gold, GladeFanfare.WaveGap);
+
+            Flow.Flash(new Color(1f, .96f, .82f), .62f, .75f);
+            Audio.Sfx("win", .90f);
+            Audio.Sfx("burst", .50f, .82f);
+
+            // Back out of the hush, overshooting through the rest scale rather than easing on
+            // to it - the grove has been held in and this is it being let go.
+            //
+            // The thump is a shake rather than a punch, and that is not a taste: a punch reads
+            // the transform's current scale as the size to squash around, so a punch fired
+            // beside this would take a scale still tweening out of the hush as its rest and
+            // leave the grove a few percent small for the rest of the run. A shake borrows the
+            // *position*, which nothing else here is writing.
+            Tween.Scale(_floor.transform, 1f, .55f, Ease.OutBack);
+            Tween.Scale(_grid, 1f, .55f, Ease.OutBack);
+            if (_floor) Tween.Tint(_floor, _theme.Floor, .5f);
+            Tween.Shake((RectTransform)_floor.transform, 6f, .5f);
+        }
+
+        /// <summary>A ring of light crossing the grove, over the top of it.</summary>
+        void Shockwave(Color colour, float delay)
+        {
+            var host = Flow.Effects;
+            if (host == null) return;
+
+            float reach = Mathf.Max(P.W_, P.H_) * _pitch * 2.6f;
+            var ring = UIKit.Img("Shockwave", host, Art.Wave(256, 7f), Pal.A(colour, 0f),
+                                 Vector2.one * reach, new Vector2(.5f, .5f), Centre(host));
+            var rt = (RectTransform)ring.transform;
+            rt.localScale = Vector3.one * .08f;
+
+            Tween.Run(GladeFanfare.WaveCross, Ease.OutQuint, t =>
+            {
+                if (!rt) return;
+                rt.localScale = Vector3.one * Mathf.Lerp(.08f, 1f, t);
+
+                // In fast, out over the whole crossing: a ring that faded evenly would be at
+                // its brightest in the middle of the board, where it hides the leap.
+                float a = t < .10f ? t / .10f : 1f - (t - .10f) / .90f;
+                ring.color = Pal.A(colour, a * a * .85f);
+            }, ring).Delay(delay).OnDone(() => { if (ring) Destroy(ring.gameObject); });
+        }
+
+        /// <summary>
+        /// The fan of light behind the grove. A child of the floor, so it draws over the plate
+        /// and under the tiles — the grove is lit from behind rather than covered.
+        /// </summary>
+        void Glory()
+        {
+            if (!_floor) return;
+
+            float reach = Mathf.Max(P.W_, P.H_) * _pitch * 2.3f;
+            var rays = UIKit.Img("Glory", _floor.transform, Art.Rays(256, 16), Pal.A(Pal.Radiance, 0f),
+                                 Vector2.one * reach, new Vector2(.5f, .5f), Vector2.zero);
+            rays.transform.SetAsFirstSibling();
+            var rt = (RectTransform)rays.transform;
+
+            float life = GladeFanfare.Bloom + GladeFanfare.Settle;
+            Tween.Run(life, Ease.Linear, t =>
+            {
+                if (!rt) return;
+                rt.localRotation = Quaternion.Euler(0, 0, -22f * t);
+                rt.localScale = Vector3.one * Mathf.Lerp(.55f, 1.18f, Ease.OutCubic(t));
+
+                float a = t < .16f ? t / .16f : 1f - (t - .16f) / .84f;
+                rays.color = Pal.A(Pal.Radiance, a * .34f);
+            }, rays).OnDone(() => { if (rays) Destroy(rays.gameObject); });
+        }
+
+        /// <summary>The middle of the board, in some other layer's space.</summary>
+        Vector2 Centre(RectTransform into)
+        {
+            var world = _grid.TransformPoint(_grid.rect.center);
+            return into.InverseTransformPoint(world);
         }
 
         /// <summary>Re-read the model and snap every tile to it, after a bulk change.</summary>

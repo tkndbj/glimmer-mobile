@@ -121,13 +121,22 @@
     },
     {
       "id": "b01_thicket",
-      "version": 1,
+      "version": 3,
       "order": 70,
       "disabled": false,
       "minAppVersion": 0,
       "mode": "bud",
       "levels": [
-        "b01_firstburst"
+        "b01_firstburst",
+        "b01_catchalight",
+        "b01_twiceknocked",
+        "b01_sunspill",
+        "b01_dewfall",
+        "b01_widewild",
+        "b01_honeylight",
+        "b01_wildwaking",
+        "b01_everbloom",
+        "b01_thicketheart"
       ]
     }
   ],
@@ -151,30 +160,12 @@
         "c01_grovekeepers_knot"
       ],
       "milestones": [
-        {
-          "goal": 1,
-          "credits": 60
-        },
-        {
-          "goal": 2,
-          "credits": 90
-        },
-        {
-          "goal": 4,
-          "credits": 250
-        },
-        {
-          "goal": 6,
-          "credits": 400
-        },
-        {
-          "goal": 8,
-          "credits": 600
-        },
-        {
-          "goal": 10,
-          "credits": 1000
-        }
+        { "goal": 1, "credits": 60 },
+        { "goal": 2, "credits": 90 },
+        { "goal": 4, "credits": 250 },
+        { "goal": 6, "credits": 400 },
+        { "goal": 8, "credits": 600 },
+        { "goal": 10, "credits": 1000 }
       ]
     }
   ],

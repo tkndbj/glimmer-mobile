@@ -518,6 +518,78 @@
       "text": "Tap a flower. Watch it run."
     },
     {
+      "key": "level.b01_catchalight.name",
+      "text": "Catch Alight"
+    },
+    {
+      "key": "level.b01_catchalight.tagline",
+      "text": "One tap, and the whole hedge goes."
+    },
+    {
+      "key": "level.b01_twiceknocked.name",
+      "text": "Twice Knocked"
+    },
+    {
+      "key": "level.b01_twiceknocked.tagline",
+      "text": "A second ring takes a second burst."
+    },
+    {
+      "key": "level.b01_thicketheart.name",
+      "text": "The Thicket's Heart"
+    },
+    {
+      "key": "level.b01_thicketheart.tagline",
+      "text": "Everything this grove can do, at once."
+    },
+    {
+      "key": "level.b01_widewild.name",
+      "text": "The Wide Wild"
+    },
+    {
+      "key": "level.b01_widewild.tagline",
+      "text": "Room enough for something enormous."
+    },
+    {
+      "key": "level.b01_wildwaking.name",
+      "text": "Wild Waking"
+    },
+    {
+      "key": "level.b01_wildwaking.tagline",
+      "text": "One tap. Six of them out."
+    },
+    {
+      "key": "level.b01_honeylight.name",
+      "text": "Honeylight"
+    },
+    {
+      "key": "level.b01_honeylight.tagline",
+      "text": "Seven, and the light is already moving."
+    },
+    {
+      "key": "level.b01_everbloom.name",
+      "text": "Everbloom"
+    },
+    {
+      "key": "level.b01_everbloom.tagline",
+      "text": "Eight shut in, and the grove is full."
+    },
+    {
+      "key": "level.b01_sunspill.name",
+      "text": "Sun Spill"
+    },
+    {
+      "key": "level.b01_sunspill.tagline",
+      "text": "Warm ground. Everything wants to go."
+    },
+    {
+      "key": "level.b01_dewfall.name",
+      "text": "Dewfall"
+    },
+    {
+      "key": "level.b01_dewfall.tagline",
+      "text": "Six shut in, and the grove is willing."
+    },
+    {
       "key": "mode.cap.best",
       "text": "best chain"
     },
@@ -692,6 +764,18 @@
     {
       "key": "mode.bud.multiplier",
       "text": "x{0}"
+    },
+    {
+      "key": "mode.bud.hint",
+      "text": "hint"
+    },
+    {
+      "key": "mode.bud.hint_used",
+      "text": "here — and watch what it sets off"
+    },
+    {
+      "key": "mode.bud.hint_nothing",
+      "text": "nothing on this grove would take the colour in your hand"
     },
     {
       "key": "store.good.boost_day",

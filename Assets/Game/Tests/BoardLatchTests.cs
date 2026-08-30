@@ -257,5 +257,86 @@ namespace GlimmerGrove.Tests
             board.Locked = true;
             Assert.AreEqual(before + 1, bar.Events, "and repeating it is still one");
         }
+
+        // ------------------------------------------------------------- the fanfare
+        /// <summary>
+        /// Solves the board by turning every conduit the one quarter it owes, and returns the
+        /// two beats of the win in the order the board raised them.
+        /// </summary>
+        (bool won, bool solved) Fanfare(int conduits, out float gap)
+        {
+            var board = Board(conduits, out var puzzle);
+            board.Build((RectTransform)board.transform, puzzle, Pal.BoardTheme.From(Color.gray));
+            Settle();
+
+            float wonAt = -1f, solvedAt = -1f, now = 0f;
+            board.OnWon = () => { if (wonAt < 0f) wonAt = now; };
+            board.OnSolved = () => { if (solvedAt < 0f) solvedAt = now; };
+
+            for (int i = 0; i < conduits; i++)
+            {
+                board.Locked = false;
+                board.OnTileTapped(board.GetComponentsInChildren<TileView>()[i + 1]);
+            }
+
+            // Long enough for the whole sequence on any board this fixture builds.
+            for (int f = 0; f < Mathf.CeilToInt(8f / .02f); f++)
+            {
+                Tween.Inst.Tick(.02f, .02f);
+                now += .02f;
+            }
+
+            gap = solvedAt - wonAt;
+            return (wonAt >= 0f, solvedAt >= 0f);
+        }
+
+        /// <summary>
+        /// <b>The win is announced twice, and the first one is what protects the heart.</b>
+        ///
+        /// <para>
+        /// A run is written down as owed from the moment it is committed until the screen
+        /// resolves it, and the screen resolves on <c>OnSolved</c> — which the board does not
+        /// raise until the celebration has played out. So for the whole of that celebration a
+        /// solved glade was still recorded as a run in progress: a process killed there charged
+        /// a heart at the next launch, and backing out of the screen forfeited a board the
+        /// player had beaten. <c>OnWon</c> is the same news delivered when it becomes true
+        /// rather than when it is finished being said, and <c>PlayScreen.Settled</c> is what
+        /// listens.
+        /// </para>
+        /// <para>
+        /// It asserts the <em>order</em> and a real gap rather than a duration, because the
+        /// duration is <c>GladeFanfare</c>'s and is proved there. What this fixture can see and
+        /// that one cannot is that the board actually raises both, on a real board, from a real
+        /// solve.
+        /// </para>
+        /// </summary>
+        [Test]
+        public void ASolvedGladeSaysSoBeforeItFinishesCelebrating()
+        {
+            var beats = Fanfare(2, out float gap);
+
+            Assert.IsTrue(beats.won, "the board never said it had been won");
+            Assert.IsTrue(beats.solved, "the celebration never reached the panel");
+            Assert.Greater(gap, .5f,
+                           "the two beats landed together, so the window OnWon exists to close " +
+                           $"is still open (gap {gap:0.00}s)");
+        }
+
+        /// <summary>
+        /// And the gap is the celebration, so it grows with the board — a deeper grove has more
+        /// network to walk. The point of the pair is that the heart is safe for all of it,
+        /// whatever it costs.
+        /// </summary>
+        [Test]
+        public void AndTheGapIsTheCelebrationItself()
+        {
+            Fanfare(2, out float shallow);
+            TearDown();
+            Fanfare(6, out float deeper);
+
+            Assert.GreaterOrEqual(deeper, shallow - .05f,
+                                  $"a longer board celebrated for less ({deeper:0.00}s " +
+                                  $"against {shallow:0.00}s)");
+        }
     }
 }

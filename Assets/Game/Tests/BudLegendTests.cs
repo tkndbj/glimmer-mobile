@@ -162,6 +162,30 @@ namespace GlimmerGrove.Tests
                            "size a thumb can hit");
         }
 
+        // ------------------------------------------------------------------ the key row
+        /// <summary>
+        /// The hint key clears the band above it and its caption clears the key.
+        ///
+        /// <b>Whether two things on a screen overlap is arithmetic</b> (invariant 8a's rule, for
+        /// the fourth time in this file), and this row arrived under a band that was already the
+        /// tightest thing on the screen: the grove's floor is now <em>derived</em> from the row's
+        /// height rather than typed beside it, which is what stops a taller key being drawn
+        /// through the taps counter.
+        /// </summary>
+        [Test]
+        public void TheHintKeyClearsTheBandAndItsOwnCaption()
+        {
+            Assert.IsTrue(BudBand.Clears,
+                          $"the key row is {BudBand.KeyBarHeight:0} tall with its key centred at " +
+                          $"{BudBand.KeyCentre:0} and its caption at {BudBand.KeyCaption:0}, " +
+                          $"under a band of {BudBand.BandHeight:0} standing at " +
+                          $"{BudBand.BoardFloor:0}");
+
+            Assert.AreEqual(BudBand.KeyBarHeight + BudBand.KeyClear, BudBand.BoardFloor, .001f,
+                            "the grove's floor is derived from the row under it rather than " +
+                            "typed, so the two cannot come to disagree");
+        }
+
         // ------------------------------------------------------------------ the flower
         /// <summary>
         /// One silhouette for every colour but white, which is the whole of the change the

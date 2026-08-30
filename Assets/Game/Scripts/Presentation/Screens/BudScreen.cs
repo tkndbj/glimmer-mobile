@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using GlimmerGrove.Ads;
 using GlimmerGrove.Analytics;
 using GlimmerGrove.Content;
 using GlimmerGrove.Localization;
@@ -7,6 +8,7 @@ using GlimmerGrove.Modes;
 using GlimmerGrove.Persistence;
 using GlimmerGrove.Progression;
 using UnityEngine;
+using UnityEngine.UI;
 
 namespace GlimmerGrove
 {
@@ -28,12 +30,32 @@ namespace GlimmerGrove
         bool _finished, _closing;
         float _startedAt;
 
+        Btn _hint;
+        Text _hintCount;
+
+        /// <summary>What the key was last painted as. This runs every frame — see Running.</summary>
+        bool _hintLive = true;
+
+        /// <summary>Hints spent on this run, for <c>RunOutcome.HintsUsed</c>.</summary>
+        int _hintsThisRun;
+
         BudRules Rules => Level != null ? Level.RulesAs<BudRules>() : null;
 
         protected override Vector4 HostInset
             => new Vector4(24f, BudBand.BoardFloor, 24f, BudBand.BoardCeiling);
 
         protected override HeaderKey RightKey => new HeaderKey("ic_pause", Pause);
+
+        protected override void Build()
+        {
+            // The pool refills on a clock, so the badge cannot be painted once when the grove was
+            // built — an eight-hour wait can land while somebody is staring at a board. An event
+            // rather than a poll in Update, because it fires perhaps twice in a session.
+            Wallet.HintsChanged += OnHintsChanged;
+            base.Build();
+        }
+
+        void OnDestroy() => Wallet.HintsChanged -= OnHintsChanged;
 
         void Pause()
         {
@@ -63,6 +85,9 @@ namespace GlimmerGrove
 
             _view.Begin(Host, rules.Layout, Budget);
             BuildLegend();
+            BuildKeyRow();
+
+            _hintsThisRun = 0;
 
             _startedAt = Time.unscaledTime;
             PlayerProgress.NoteOpened(Level.Id);
@@ -73,6 +98,207 @@ namespace GlimmerGrove
         {
             Repaint();
             Teaching.Refresh();
+            PaintHint();
+        }
+
+        // ------------------------------------------------------------------ the hint
+        /// <summary>
+        /// The row under the grove: the hint key, and nothing else.
+        ///
+        /// <para>
+        /// <b>A grove gets a hint for the same reason a glade does, and it buys something
+        /// different.</b> Everywhere else a hint is a way past a board that has stopped somebody.
+        /// Nothing here is meant to stop anybody (invariant 20k), so what this one sells is the
+        /// <em>big</em> version of a move they could have made anyway — see
+        /// <c>BudTempo.HintRipple</c>, which is why the mark comes with the cascade it would set
+        /// off rather than with a ring and nothing else.
+        /// </para>
+        /// <para>
+        /// The pool, the eight-hour clock, the ceiling and the video are all account-wide and
+        /// already exist (<c>Hints</c>, <c>HintRules</c>, <c>AdPlacement.HintRefill</c>), so a
+        /// second mode joining them costs <b>no save schema version, no merge rule and no server
+        /// work</b> — the hints somebody has are the hints they have, wherever they spend them.
+        /// </para>
+        /// <para>
+        /// Built on <see cref="Safe"/> rather than on the board host, so a restart or a retry
+        /// rebuilds the grove and leaves the row exactly where it was.
+        /// </para>
+        /// </summary>
+        void BuildKeyRow()
+        {
+            if (_hint) return;
+
+            var bar = UIKit.Box("KeyRow", Safe, new Vector2(0f, BudBand.KeyBarHeight),
+                                new Vector2(.5f, 0f),
+                                new Vector2(0f, BudBand.KeyBarHeight * .5f));
+            bar.anchorMin = new Vector2(0f, 0f);
+            bar.anchorMax = new Vector2(1f, 0f);
+            bar.sizeDelta = new Vector2(0f, BudBand.KeyBarHeight);
+
+            _hint = UIKit.IconButton("Hint", bar, "sq_orange", "ic_hint",
+                                     Vector2.one * BudBand.KeySize, new Vector2(.5f, 0f),
+                                     new Vector2(0f, BudBand.KeyCentre), UseHint);
+
+            var badge = UIKit.Img("Badge", _hint.transform, Art.Disc(64), Pal.Rose,
+                                  new Vector2(56f, 56f), new Vector2(1f, 1f),
+                                  new Vector2(-14f, -14f));
+            _hintCount = UIKit.Titled("N", badge.transform, Wallet.Hints.Count.ToString(), 32,
+                                      Pal.Cream, TextAnchor.MiddleCenter, outline: 0f, shadow: 2f);
+
+            UIKit.Titled("Cap", bar, Loc.Get("mode.bud.hint"), 26,
+                         new Color(1f, .95f, .84f, .62f), TextAnchor.MiddleCenter,
+                         new Vector2(260f, 36f), new Vector2(.5f, 0f),
+                         new Vector2(0f, BudBand.KeyCaption), 3f, 0f);
+
+            _hint.transform.localScale = Vector3.zero;
+            Tween.Pop(_hint.transform, 0f, .5f, .35f)
+                 .OnDone(() => { if (_hint) _hint.Rehome(); });
+
+            PaintHint();
+        }
+
+        /// <summary>
+        /// The key and its badge, repainted.
+        ///
+        /// <b>Live whenever the board is taking input</b> — not when there is a hint to give, and
+        /// never mind what the pool holds. Both refusals are sentences worth reading
+        /// (<see cref="UseHint"/> owns them) and one of them is the way to the offer panel, so
+        /// greying the key would hide the very control a player with an empty pool needs.
+        /// </summary>
+        void PaintHint()
+        {
+            if (!_hint) return;
+
+            // `Playable` rather than `TakingInput`, which is the half that also asks whether the
+            // run has been allowed to begin. A key live while a first-timer is still reading a
+            // lesson answers "nothing on this grove would take the colour in your hand", which is
+            // a refusal about the wrong thing.
+            bool live = _view != null && _view.Playable && !_finished && !_closing;
+            if (live != _hintLive)
+            {
+                _hintLive = live;
+                _hint.Interactable = live;
+            }
+
+            if (!_hintCount) return;
+
+            var hints = Wallet.Hints;
+
+            // A question mark rather than a nought, for <c>PlayScreen</c>'s reason: "0" reads as
+            // a spent control and invites nobody to press it, where "?" is the state the key is
+            // actually in — there is nothing in the pool, and this is where you find out when
+            // there will be.
+            string text = hints.CanSpend ? hints.Count.ToString()
+                                         : Loc.Get("ui.play.hint_none");
+
+            if (_hintCount.text == text) return;
+
+            _hintCount.text = text;
+            Tween.Punch(_hintCount.transform, .22f, .3f);
+        }
+
+        void OnHintsChanged(Hints hints)
+        {
+            if (this == null) return;
+            PaintHint();
+        }
+
+        /// <summary>
+        /// The key's one handler: mark a flower, open the offer, or say why neither is happening.
+        ///
+        /// Which of the three is <see cref="HintPrompt.OnTap"/>, shared with the glades so the
+        /// rule is provable offline and this method is only the doing. The board is asked before
+        /// the pool, which is the safety: a grove with no legal tap left cannot cost anybody a
+        /// hint, and nobody is sold a video for one that could not have been spent.
+        /// </summary>
+        void UseHint()
+        {
+            if (_view == null || _finished || _closing) return;
+
+            switch (HintPrompt.OnTap(_view.CanHint, Wallet.Hints.CanSpend))
+            {
+                case HintTap.NothingToReveal:
+                    Scenery.Toast(Content, Loc.Get("mode.bud.hint_nothing"), Pal.Parchment, 1.6f);
+                    return;
+
+                case HintTap.Offer:
+                    OfferHint();
+                    return;
+            }
+
+            if (!_view.Hint(HintTaken)) return;
+
+            Wallet.TrySpendHint();
+            _hintsThisRun++;
+
+            LevelAnalytics.TrackHintUsed(Level, Wallet.Hints.Count, _view.Run.Spent);
+            Scenery.Toast(Content, Loc.Get("mode.bud.hint_used"), Pal.Gold, 1.6f);
+            PaintHint();
+        }
+
+        /// <summary>
+        /// The mark has gone — taken, or timed out. If that was the player's last hint, the
+        /// offer follows it.
+        ///
+        /// <para>
+        /// Raised when the mark <em>goes</em> rather than when it arrives, which is where this
+        /// mode differs from <c>PlayScreen</c> and has to. A glade's hint is consumed by its own
+        /// reveal: the conduit turns, the advice is spent, and the moment after it is idle. A
+        /// grove's hint leaves a mark the player still has to act on, so a panel thrown up then
+        /// would cover the one thing they had just paid for.
+        /// </para>
+        /// </summary>
+        void HintTaken()
+        {
+            if (this == null) return;
+
+            bool live = !_finished && !_closing && _view != null && _view.Playable;
+
+            if (!HintPrompt.OffersAfterSpending(live, Wallet.Hints.CanSpend,
+                                                RewardedAds.ShouldOffer(AdPlacement.HintRefill)))
+                return;
+
+            OfferHint();
+        }
+
+        /// <summary>
+        /// The pool is empty. Open the panel that says so, offers a video for one, and carries
+        /// the countdown either way.
+        ///
+        /// The board is latched behind it exactly as it is for the continue offer, and for the
+        /// same reason: the stake clock only accrues on an unlatched board, so a player reading
+        /// the panel or watching thirty seconds of video is not charged the time.
+        /// </summary>
+        void OfferHint()
+        {
+            bool wasLocked = _view != null && _view.Locked;
+            if (_view != null) _view.Locked = true;
+
+            // Both handlers, and they must both hand the board back: AdOfferOverlay raises
+            // exactly one of Rewarded and Dismissed, so unlocking in only one of them leaves
+            // somebody who actually watched the video sitting on a frozen grove.
+            Flow.Modal<AdOfferOverlay>(v =>
+            {
+                v.PlacementId = AdPlacement.HintRefill;
+                v.Rewarded = () => CloseHintOffer(wasLocked);
+                v.Dismissed = () => CloseHintOffer(wasLocked);
+            });
+        }
+
+        /// <summary>
+        /// Hands the board back after the offer, however it went away.
+        ///
+        /// Restores the latch to what it was rather than clearing it, so an offer raised over an
+        /// already-locked board does not quietly unfreeze a run frozen for another reason.
+        /// </summary>
+        void CloseHintOffer(bool wasLocked)
+        {
+            if (this == null) return;
+
+            if (_view != null && !wasLocked && !_finished && !_closing) _view.Locked = false;
+
+            PaintHint();
+            Repaint();
         }
 
         // ------------------------------------------------------------------ the legend
@@ -203,6 +429,14 @@ namespace GlimmerGrove
         protected internal override void Running(bool running)
         {
             if (_view != null) _view.Held = !running;
+
+            // **And the key is repainted here, which is the bug this line fixes.** `Held` is
+            // written every frame from this method and by nothing else, so a key painted once
+            // when the row was built was painted while the run was still held — and stayed grey
+            // for the life of the screen, because no event this screen listens to fires when the
+            // hold lifts. It was reported as the hint never working at all. `PaintHint` is a
+            // comparison and two assignments, and it now runs on the one frame that knows.
+            PaintHint();
         }
 
         protected override void Readouts(List<Readout> into)
@@ -253,6 +487,7 @@ namespace GlimmerGrove
             _view.Begin(Host, Rules.Layout, Budget);
             Audio.Sfx("rotate_a", .55f);
 
+            _hintsThisRun = 0;
             _startedAt = Time.unscaledTime;
             ResetPlayed();
             Continue.Reset();
@@ -268,11 +503,13 @@ namespace GlimmerGrove
             Resolve();
             Continue.Reset();
 
+            _hintsThisRun = 0;
             _startedAt = Time.unscaledTime;
             ResetPlayed();
 
             _view.Begin(Host, Rules.Layout, Budget);
             Repaint();
+            PaintHint();
         }
 
         public override bool OnBack()
@@ -330,7 +567,7 @@ namespace GlimmerGrove
             int stars = Level.Tuning.StarsFor(taps);
 
             var done = RunLedger.Win(Level, stars, taps,
-                                     Time.unscaledTime - _startedAt, 0,
+                                     Time.unscaledTime - _startedAt, _hintsThisRun,
                                      route: 0,
                                      lit: run.Critters, wanted: run.Critters);
 
@@ -393,7 +630,7 @@ namespace GlimmerGrove
                        ? DefeatReason.Barren : DefeatReason.OutOfTaps;
 
             return RunLedger.Loss(Level, reason, Math.Max(1, run.Spent),
-                                  Time.unscaledTime - _startedAt, 0, route: 0,
+                                  Time.unscaledTime - _startedAt, _hintsThisRun, route: 0,
                                   stepsToSolution: 0,
                                   lit: run.Critters - run.Left, wanted: run.Critters,
                                   price: Price);
@@ -411,6 +648,7 @@ namespace GlimmerGrove
             var cocoon = _view.CocoonAnchor;
             if (cocoon != null) into.Add(Lesson.At(Mechanic.BudCocoon, cocoon));
 
+
             if (run.Satchel.Bounded)
                 into.Add(Lesson.At(Mechanic.BudSatchel, ReadoutAt(TapsReadout)));
         }
@@ -426,6 +664,7 @@ namespace GlimmerGrove
             if (!latched && (_finished || _closing)) return;
 
             _view.Locked = latched;
+            PaintHint();
         }
     }
 }

@@ -3,7 +3,29 @@ using System.Collections.Generic;
 
 namespace GlimmerGrove.Modes
 {
-    /// <summary>One cell going off, and which wave of the chain did it.</summary>
+    /// <summary>What one cell did on the wave it did it.</summary>
+    public enum BudPulseKind
+    {
+        /// <summary>A flower going off as part of a bunch.</summary>
+        Burst = 0,
+
+        /// <summary>
+        /// A cocoon taking a crack and holding.
+        ///
+        /// <b>It was reported by nothing at all, and that is why it is here.</b> A cocoon that
+        /// takes its first of two cracks changed one ring's alpha on the next repaint — so the
+        /// single most encouraging thing that can happen short of freeing somebody (you got
+        /// halfway) arrived as a colour appearing quietly behind thirteen flowers going off. A
+        /// wave the player cannot see is a wave that pays out nothing, which is this mode's
+        /// whole argument, and the view cannot draw one it is never told about.
+        /// </summary>
+        Crack = 1,
+
+        /// <summary>A cocoon opening and the critter coming out.</summary>
+        Freed = 2,
+    }
+
+    /// <summary>One cell doing something, and which wave of the chain did it.</summary>
     public readonly struct BudPulse
     {
         public readonly int Cell;
@@ -11,19 +33,36 @@ namespace GlimmerGrove.Modes
         /// <summary>0 for the bunch the tap made, 1 for what that set off, and so on.</summary>
         public readonly int Wave;
 
-        /// <summary>The colour it went off in. <c>Energy.None</c> on a cocoon opening.</summary>
+        /// <summary>The colour it went off in. <c>Energy.None</c> on anything but a burst.</summary>
         public readonly int Colour;
 
-        /// <summary>Whether this was a cocoon opening rather than a flower bursting.</summary>
-        public readonly bool Freed;
+        public readonly BudPulseKind Kind;
 
-        public BudPulse(int cell, int wave, int colour, bool freed)
+        /// <summary>
+        /// How many flowers were in the bunch this one belonged to. 0 on a cocoon.
+        ///
+        /// <b>Reported rather than counted back, for the reason every other reading here is.</b>
+        /// A bunch is a connected blob of one colour, so working its size out from the pulses
+        /// would mean a flood fill over a board that has already moved on — <c>BudWash</c>'s
+        /// paragraph, in the other direction. It decides how loud one burst is drawn
+        /// (<c>BudChain.Blast</c>), and three alike going off is a different event from nine.
+        /// </summary>
+        public readonly int Bunch;
+
+        public BudPulse(int cell, int wave, int colour, BudPulseKind kind, int bunch = 0)
         {
             Cell = cell;
             Wave = wave;
             Colour = colour;
-            Freed = freed;
+            Kind = kind;
+            Bunch = bunch;
         }
+
+        /// <summary>Whether this was a cocoon opening rather than a flower bursting.</summary>
+        public bool Freed => Kind == BudPulseKind.Freed;
+
+        /// <summary>Whether this was a cocoon taking a crack and holding.</summary>
+        public bool Cracked => Kind == BudPulseKind.Crack;
     }
 
     /// <summary>
@@ -330,7 +369,8 @@ namespace GlimmerGrove.Modes
 
                     for (int k = 0; k < _bunch.Count; k++) _queue.Add(_bunch[k]);
                     for (int k = 0; k < _bunch.Count; k++)
-                        pulses?.Add(new BudPulse(_bunch[k], waves, colour, false));
+                        pulses?.Add(new BudPulse(_bunch[k], waves, colour,
+                                                 BudPulseKind.Burst, _bunch.Count));
                 }
 
                 if (!any) break;
@@ -348,12 +388,17 @@ namespace GlimmerGrove.Modes
                     int at = _cracked[k];
                     _value[at]--;
 
-                    if (_value[at] > 0) { cracked++; continue; }
+                    if (_value[at] > 0)
+                    {
+                        cracked++;
+                        pulses?.Add(new BudPulse(at, waves, Energy.None, BudPulseKind.Crack));
+                        continue;
+                    }
 
                     _ground[at] = BudGround.Bare;
                     _value[at] = Energy.None;
                     freed++;
-                    pulses?.Add(new BudPulse(at, waves, Energy.None, true));
+                    pulses?.Add(new BudPulse(at, waves, Energy.None, BudPulseKind.Freed));
                 }
 
                 // Then the colour goes out. A flower touched by two bunches at once takes both,

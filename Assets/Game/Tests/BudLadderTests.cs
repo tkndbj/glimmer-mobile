@@ -45,12 +45,12 @@ namespace GlimmerGrove.Tests
         {
             public readonly string Id, Colours;
             public readonly string[] Rows;
-            public readonly int Par, Ways, Careless, Nodes;
+            public readonly int Par, Ways, Careless, Nodes, Spare;
             public readonly int Flowers, Cocoons;
             public readonly int BestAt, BestBurst, BestWaves, BestFreed;
 
             public Rung(string id, string colours, int par, int ways, int careless, int nodes,
-                        int flowers, int cocoons,
+                        int spare, int flowers, int cocoons,
                         int bestAt, int bestBurst, int bestWaves, int bestFreed,
                         params string[] rows)
             {
@@ -60,6 +60,7 @@ namespace GlimmerGrove.Tests
                 Ways = ways;
                 Careless = careless;
                 Nodes = nodes;
+                Spare = spare;
                 Flowers = flowers;
                 Cocoons = cocoons;
                 BestAt = bestAt;
@@ -68,6 +69,8 @@ namespace GlimmerGrove.Tests
                 BestFreed = bestFreed;
                 Rows = rows;
             }
+
+            public int Satchel => Par + Spare;
 
             public BudLayout Layout()
             {
@@ -92,6 +95,7 @@ namespace GlimmerGrove.Tests
         {
             new Rung("b01_firstburst", "GBR",
                      par: 3, ways: 12, careless: 4, nodes: 7903,
+                     spare: 5,
                      flowers: 36, cocoons: 4,
                      bestAt: 33, bestBurst: 13, bestWaves: 3, bestFreed: 3,
                      "GYRYBBR",
@@ -100,6 +104,121 @@ namespace GlimmerGrove.Tests
                      "GRoYoGY",
                      "BBCRYRR",
                      ".GGRYG."),
+
+            new Rung("b01_catchalight", "GBR",
+                     par: 3, ways: 287, careless: 3, nodes: 5610,
+                     spare: 5,
+                     flowers: 38, cocoons: 4,
+                     bestAt: 10, bestBurst: 20, bestWaves: 5, bestFreed: 3,
+                     "GYYGBYB",
+                     "RGoRoYR",
+                     "BBGYYGY",
+                     "YYoGoRR",
+                     "GBBRGGY",
+                     "GRYYRYR"),
+
+            new Rung("b01_twiceknocked", "BRG",
+                     par: 3, ways: 6, careless: 3, nodes: 4545,
+                     spare: 5,
+                     flowers: 37, cocoons: 5,
+                     bestAt: 14, bestBurst: 7, bestWaves: 2, bestFreed: 2,
+                     "GGCMBYY",
+                     "CoCYGoM",
+                     "GYMYMMC",
+                     "CCMOGGC",
+                     "BBRBBYB",
+                     "CoMCCoB"),
+
+            new Rung("b01_sunspill", "GRB",
+                     par: 3, ways: 138, careless: 4, nodes: 7895,
+                     spare: 5,
+                     flowers: 44, cocoons: 5,
+                     bestAt: 41, bestBurst: 26, bestWaves: 6, bestFreed: 4,
+                     "GRRYYMM",
+                     "YMoBoRR",
+                     "YCCMMCC",
+                     "MYROBGR",
+                     "MYMCCGB",
+                     "CCoGoCB",
+                     "GGCCGCY"),
+
+            new Rung("b01_dewfall", "RGBRB",
+                     par: 3, ways: 8, careless: 5, nodes: 7055,
+                     spare: 5,
+                     flowers: 43, cocoons: 6,
+                     bestAt: 2, bestBurst: 23, bestWaves: 7, bestFreed: 4,
+                     "MMBYYMM",
+                     "YoMCCoB",
+                     "YRMGGBC",
+                     "GOYBBOC",
+                     "MMYMMBR",
+                     "GoRBYoR",
+                     "MGGBMMY"),
+
+            new Rung("b01_widewild", "RGBG",
+                     par: 3, ways: 13, careless: 3, nodes: 13311,
+                     spare: 5,
+                     flowers: 50, cocoons: 6,
+                     bestAt: 28, bestBurst: 29, bestWaves: 9, bestFreed: 5,
+                     "BMBBCGCM",
+                     "BoCGYCoM",
+                     "CCMGYCRR",
+                     "GGoMBoMM",
+                     "BBGMBRRG",
+                     "YoYYMBoG",
+                     "YMCCMBCB"),
+
+            new Rung("b01_honeylight", "BRGR",
+                     par: 3, ways: 4, careless: 3, nodes: 9418,
+                     spare: 5,
+                     flowers: 49, cocoons: 7,
+                     bestAt: 42, bestBurst: 13, bestWaves: 4, bestFreed: 4,
+                     "BRRYMYRY",
+                     "BoMYMYoY",
+                     "RCYCYMCC",
+                     "BCoOoYMM",
+                     "RMMYRYBB",
+                     "CoRYMRoR",
+                     "BBMCMYYR"),
+
+            new Rung("b01_wildwaking", "RBG",
+                     par: 3, ways: 2, careless: 4, nodes: 8646,
+                     spare: 5,
+                     flowers: 48, cocoons: 8,
+                     bestAt: 23, bestBurst: 23, bestWaves: 5, bestFreed: 6,
+                     "GORBYYOY",
+                     "YMMBRRYR",
+                     "YRoYGoYG",
+                     "MMRMRBBG",
+                     "YGoYRoRY",
+                     "YGYGYYRY",
+                     "RBBooMBM"),
+
+            new Rung("b01_everbloom", "RGBRB",
+                     par: 3, ways: 2, careless: 4, nodes: 6006,
+                     spare: 5,
+                     flowers: 48, cocoons: 8,
+                     bestAt: 9, bestBurst: 9, bestWaves: 3, bestFreed: 2,
+                     "RRoYYoRY",
+                     "MBBRRCRY",
+                     "MOYCMMOC",
+                     "RMMCBYMM",
+                     "RORYBYOR",
+                     "MYRYRMMR",
+                     "MYoMMoYY"),
+
+            new Rung("b01_thicketheart", "GRB",
+                     par: 3, ways: 7, careless: 3, nodes: 9784,
+                     spare: 5,
+                     flowers: 48, cocoons: 8,
+                     bestAt: 22, bestBurst: 25, bestWaves: 7, bestFreed: 5,
+                     "GoGGCRoR",
+                     "GCCYGCGG",
+                     "CBOYGOBR",
+                     "GGYGCYCR",
+                     "CCOGCOCG",
+                     "YBCBBCBB",
+                     "RoRGGCoY"),
         };
 
         [Test]
@@ -120,8 +239,7 @@ namespace GlimmerGrove.Tests
                 Assert.AreEqual(rung.Flowers, layout.Flowers, rung.Id + " (flowers)");
                 Assert.AreEqual(rung.Cocoons, layout.Cocoons, rung.Id + " (cocoons)");
 
-                Assert.AreEqual(rung.Careless,
-                                BudSolver.Careless(layout, rung.Par + BudRules.DefaultSpare),
+                Assert.AreEqual(rung.Careless, BudSolver.Careless(layout, rung.Satchel),
                                 rung.Id + " (careless)");
 
                 // The node cost is pinned rather than merely bounded, because it is the reading
@@ -174,27 +292,97 @@ namespace GlimmerGrove.Tests
         ///
         /// This is the mode's brief read as an assertion (invariant 20k): a grove a player who
         /// never looks ahead cannot finish is asking for more than the mode promises. It is the
-        /// one gate here that is deliberately the opposite way round from every other mode's.
+        /// one gate here that is deliberately the opposite way round from every other mode's, and
+        /// it holds on <b>every</b> rung — nobody is meant to lose a grove in this chapter.
         /// </summary>
         [Test]
-        public void ACarelessPlayerFinishesEveryGroveAndStillScoresThreeStars()
+        public void ACarelessPlayerFinishesEveryGrove()
         {
             foreach (var rung in Ladder)
             {
                 var layout = rung.Layout();
-                int satchel = rung.Par + BudRules.DefaultSpare;
-                int careless = BudSolver.Careless(layout, satchel);
+                int careless = BudSolver.Careless(layout, rung.Satchel);
 
                 Assert.Greater(careless, 0,
                                rung.Id + ": a player who always taps whatever sets off the " +
                                "biggest chain never finishes this grove");
 
-                Assert.LessOrEqual(careless, satchel, rung.Id + ": and they run out of taps");
+                Assert.LessOrEqual(careless, rung.Satchel,
+                                   rung.Id + ": and they run out of taps");
+            }
+        }
 
-                var tuning = new LevelTuning(rung.Par, 0f, 0f);
-                Assert.LessOrEqual(careless, tuning.GoldThreshold,
-                                   rung.Id + ": a careless play scores under three stars, which " +
-                                   "is more than this mode promises");
+        /// <summary>
+        /// And the chapter asks for more as it goes, in the one dial it has.
+        ///
+        /// <para>
+        /// <b>Par is 3 on every grove here and cannot be anything else</b>, so the ramp is not
+        /// par and it is not the satchel either — every grove is dealt <c>par + 5</c>, which is
+        /// eight taps for a three-tap answer, on a mode commissioned to be generous (invariant
+        /// 20k). What climbs is <b>how many are shut in</b>, and with it how much grove there is
+        /// and how many cocoons need two cracks rather than one. Freeing seven with the same
+        /// eight taps is more to do than freeing four, and it is more to do without ever being
+        /// tighter.
+        /// </para>
+        /// <para>
+        /// <b>An earlier version ramped `greedy` instead</b> — whether a thoughtless run still
+        /// scored three stars, true early and false late — and it is gone. It was a ramp built
+        /// out of *withholding the reward*, which on this mode is the wrong lever twice over,
+        /// and it forced the board sweep toward layouts whose biggest chain is a trap.
+        /// </para>
+        /// </summary>
+        [Test]
+        public void TheChapterAsksForMoreAsItGoes()
+        {
+            int shut = 0;
+
+            foreach (var rung in Ladder)
+            {
+                Assert.GreaterOrEqual(rung.Cocoons, shut,
+                                      rung.Id + " holds " + rung.Cocoons + " shut in, fewer " +
+                                      "than the grove before it — the one dial this chapter " +
+                                      "ramps on cannot go backwards");
+                shut = rung.Cocoons;
+            }
+
+            Assert.Greater(Ladder[Ladder.Length - 1].Cocoons, Ladder[0].Cocoons,
+                           "and the last grove asks for more than the first, or there is no " +
+                           "ramp in the chapter at all");
+        }
+
+        /// <summary>
+        /// Every grove can go off <b>hard</b>, which is the one thing this mode is actually for.
+        ///
+        /// <para>
+        /// <b>The failure this catches is the one that was shipped and reported.</b> A board can
+        /// be solvable, correctly par'd, fully validated and completely flat — a grove whose best
+        /// play is three separate one-wave taps passes every other check in this repository and
+        /// has the mode taken out of it. So the sweep held out for a cascade on every rung, and
+        /// this is what stops a later re-deal quietly losing one.
+        /// </para>
+        /// </summary>
+        [Test]
+        public void AndEveryGroveCanStillGoOffHard()
+        {
+            foreach (var rung in Ladder)
+            {
+                var layout = rung.Layout();
+                var board = new BudBoard(layout);
+                int colour = layout.Deal.At(0);
+                int best = 0;
+
+                for (int i = 0; i < layout.Count; i++)
+                {
+                    if (!board.CanTap(i, colour)) continue;
+
+                    var chain = board.Preview(i, colour);
+                    if (chain.Waves > best) best = chain.Waves;
+                }
+
+                Assert.GreaterOrEqual(best, 2,
+                                      rung.Id + ": the best opening tap on this grove runs " +
+                                      best + " wave(s). A grove whose first tap cannot set off a " +
+                                      "chain is this mode with the payout removed");
             }
         }
 
@@ -250,6 +438,11 @@ namespace GlimmerGrove.Tests
 
                 CollectionAssert.AreEqual(rung.Rows, shipped.Written(), rung.Id + " (board)");
                 Assert.AreEqual(rung.Colours, shipped.Deal.Written(), rung.Id + " (basket)");
+                Assert.AreEqual(rung.Spare, rules.Spare, rung.Id + " (spare)");
+
+                Assert.AreEqual(0, shipped.Stones,
+                                rung.Id + ": old wood is retired from this mode — a barrier can " +
+                                "only ever make a chain shorter (`bud_wood` is a spent lesson id)");
             }
         }
     }

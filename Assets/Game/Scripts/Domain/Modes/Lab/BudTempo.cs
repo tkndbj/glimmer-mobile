@@ -64,6 +64,209 @@ namespace GlimmerGrove.Modes
             return burn < .06f ? .06f : burn;
         }
 
+        // ------------------------------------------------------- the shape of a wind-up
+        /// <summary>
+        /// <b>A chain escalates in amplitude, never in duration, and that is forced rather than
+        /// chosen.</b>
+        ///
+        /// <para>
+        /// The obvious way to make a deep chain feel bigger is to give its later waves more
+        /// time. It is not available here and it is worth understanding why: <see cref="Wave"/>
+        /// divides <see cref="Ceiling"/> across the whole chain, so every wave of a nine-wave
+        /// cascade is <em>shorter</em> than the single wave of an ordinary tap. Lengthening the
+        /// late ones would either break the ceiling — a nine-second freeze, which is what the
+        /// ceiling exists to prevent — or steal from the early ones, which is a chain that
+        /// starts blurred and ends legible, exactly backwards.
+        /// </para>
+        /// <para>
+        /// So what grows is how far a flower travels, not how long it takes: each wave winds up
+        /// <em>bigger</em> than the last in the same or less time, which reads as accelerating
+        /// rather than as dragging. Everything below is amplitude for that reason.
+        /// </para>
+        /// </summary>
+        /// <remarks>
+        /// <b>Front-loaded onto the first three waves, because that is the whole chain the mode
+        /// ships.</b> <c>b01_thicket</c> is one board whose best opening tap runs three waves,
+        /// and most taps run one or two — so a ladder that spread its range over nine spent
+        /// almost all of it on waves nobody reaches. The first version did exactly that and the
+        /// escalation was invisible in play.
+        /// </remarks>
+        public const float SwellFrom = .62f;
+
+        /// <summary>How much more each wave of a chain swells than the one before it.</summary>
+        public const float SwellStep = .22f;
+
+        /// <summary>
+        /// And the ceiling on it.
+        ///
+        /// <para>
+        /// A flower is drawn at about .72 of its cell, so a scale of 2.20 makes it a half again
+        /// wider than the cell it stands in. That overlap is wanted — a bunch is three or more
+        /// flowers <em>touching</em>, so they swell into each other and the bunch reads as one
+        /// thing under pressure rather than three things growing — but past this it stops being
+        /// a bunch crowding and starts being a grid that has lost its shape.
+        /// </para>
+        /// </summary>
+        public const float SwellMost = 1.20f;
+
+        /// <summary>How much bigger a flower gets at the top of its wind-up, on this wave.</summary>
+        public static float Swell(int wave)
+        {
+            if (wave < 1) wave = 1;
+
+            float swell = SwellFrom + (wave - 1) * SwellStep;
+            return swell > SwellMost ? SwellMost : swell;
+        }
+
+        /// <summary>
+        /// How far a flower dips <em>before</em> it swells.
+        ///
+        /// <para>
+        /// <b>The anticipation, and it is what separates "about to explode" from "getting
+        /// bigger".</b> A shape that only ever grows is being inflated by something outside it;
+        /// a shape that gathers itself first is doing it on purpose. It costs a fraction of a
+        /// beat that the wind-up was spending on its slowest, least interesting part anyway —
+        /// the first sliver of an accelerating curve, where almost nothing is happening.
+        /// </para>
+        /// <para>
+        /// Constant across the chain while <see cref="Swell"/> escalates, so there is exactly
+        /// one thing growing wave to wave. The crouch is the <em>tell</em>: it means the same
+        /// thing every time it happens, which is what lets it be read at a glance on the ninth
+        /// wave as well as on the first.
+        /// </para>
+        /// </summary>
+        public const float Recoil = .20f;
+
+        /// <summary>The share of a wind-up spent gathering, before it starts to grow.</summary>
+        public const float Crouch = .26f;
+
+        /// <summary>
+        /// Where the growing stops and the <b>hold</b> begins, as a share of the wind-up.
+        ///
+        /// <para>
+        /// <b>This is the fix for the thing that made the first version of all this invisible,
+        /// and it is worth stating exactly.</b> The curve accelerated — <c>v²</c> — all the way
+        /// to the burst, which sounds right and is wrong: an accelerating curve is near its
+        /// destination only at the very end, so measured over the charge, a flower was within 5%
+        /// of its peak size for <b>3% of the beat, about 1.6 frames at 60fps</b>. The peak was a
+        /// flash, not a state. Raising <see cref="SwellFrom"/> against that changes the number
+        /// nobody can see and nothing else, which is precisely what it did: reported from play as
+        /// no change at all, on a build that was running the new code.
+        /// </para>
+        /// <para>
+        /// So the flower now <em>arrives</em> at full size and <em>sits there</em> — decelerating
+        /// into the hold rather than accelerating past it — and spends about a third of its
+        /// wind-up at peak instead of a frame and a half. That is what makes a size legible. The
+        /// anticipation is carried by the crouch, which is what an anticipation is for; asking
+        /// the growth curve to do it as well is what cost the dwell.
+        /// </para>
+        /// </summary>
+        public const float Peak = .66f;
+
+        /// <summary>
+        /// The scale a winding flower is drawn at, a fraction <paramref name="t"/> of the way
+        /// through its charge on this <paramref name="wave"/>.
+        ///
+        /// <para>
+        /// One function rather than a curve in the view, for <c>GladeFanfare.Hop</c>'s reason:
+        /// the numbers that decide whether a gesture reads as a build or as a wobble are worth
+        /// having a test on. Three phases — it gathers to <c>1 - Recoil</c>, springs out to
+        /// <c>1 + Swell(wave)</c>, and holds there until it goes off. See <see cref="Peak"/> for
+        /// why the hold is the part that matters.
+        /// </para>
+        /// </summary>
+        public static float WindScale(float t, int wave)
+        {
+            if (t < 0f) t = 0f; else if (t > 1f) t = 1f;
+
+            if (t <= Crouch)
+            {
+                // Out-quad down: it gathers quickly and is already waiting by the time the
+                // growth takes over, so the two phases never look like one soft wobble.
+                float u = t / Crouch;
+                return 1f - Recoil * (1f - (1f - u) * (1f - u));
+            }
+
+            float full = 1f + Swell(wave);
+            if (t >= Peak) return full;
+
+            // Out-quad up: off the mark hard and easing into the hold, so the size is reached
+            // early and kept rather than touched on the last frame.
+            float v = (t - Crouch) / (Peak - Crouch);
+            return (1f - Recoil) + (Swell(wave) + Recoil) * (1f - (1f - v) * (1f - v));
+        }
+
+        /// <summary>
+        /// How far toward white a winding flower is taken, a fraction <paramref name="t"/>
+        /// through its charge.
+        ///
+        /// <para>
+        /// Capped at <see cref="Matched"/> until the flower has stopped growing, and only then
+        /// pushed to <see cref="Critical"/>. The cap is the older rule and its reasoning is
+        /// unchanged: the charge exists to show <em>which</em> flowers matched, and a bunch that
+        /// goes fully white has thrown that away in the fraction of a second it was meant to be
+        /// saying it. What the hold adds is somewhere safe to spend the rest — by then the
+        /// player has had the whole crouch and spring to read the colour, so the last stretch is
+        /// free to say "and now it is going to go off".
+        /// </para>
+        /// </summary>
+        public static float WindWhite(float t)
+        {
+            if (t < 0f) t = 0f; else if (t > 1f) t = 1f;
+
+            if (t <= Peak) return Matched * (t / Peak) * (t / Peak);
+
+            float v = (t - Peak) / (1f - Peak);
+            return Matched + (Critical - Matched) * v;
+        }
+
+        /// <summary>How white a flower is by the time it has finished growing.</summary>
+        public const float Matched = .62f;
+
+        /// <summary>And by the time it goes off.</summary>
+        public const float Critical = .92f;
+
+        /// <summary>
+        /// How hard the whole thicket heaves on a wave this far along.
+        ///
+        /// <para>
+        /// The chain's escalation said at grove scale rather than at flower scale, and the half
+        /// that was missing: the board's answer to a wave was a shake plus a punch of between
+        /// 1.2% and 3.6%, which is under the threshold at which a scale change on a whole screen
+        /// is noticed at all. A player watching thirteen flowers go off has no attention left for
+        /// a 2% nudge on one of them, so the thing that has to grow is the thing they cannot
+        /// avoid looking at.
+        /// </para>
+        /// </summary>
+        public static float Heave(int wave)
+        {
+            if (wave < 1) return 0f;
+
+            float heave = .022f + (wave - 1) * .020f;
+            return heave > .085f ? .085f : heave;
+        }
+
+        /// <summary>How far a flower spins through its wind-up, in degrees, on this wave.</summary>
+        public static float WindSpin(int wave)
+        {
+            if (wave < 1) wave = 1;
+
+            float spin = SpinFrom + (wave - 1) * SpinStep;
+            return spin > SpinMost ? SpinMost : spin;
+        }
+
+        /// <summary>A little over one turn, which is what reads as a wind-up rather than a twitch.</summary>
+        public const float SpinFrom = 420f;
+
+        /// <summary>Faster every wave, for <see cref="SwellFrom"/>'s reason — amplitude, not time.</summary>
+        public const float SpinStep = 80f;
+
+        /// <summary>
+        /// And the ceiling. Past about two turns inside a tenth of a second a spin stops being a
+        /// direction and becomes a flicker, which says nothing at all.
+        /// </summary>
+        public const float SpinMost = 760f;
+
         // ------------------------------------------------------------------ inside one wave
         /// <summary>
         /// How long apart two flowers of the <em>same</em> wave go off.
@@ -216,5 +419,50 @@ namespace GlimmerGrove.Modes
 
         /// <summary>The grove's own celebration when the last critter is out.</summary>
         public const float Hush = .70f;
+
+        // ------------------------------------------------------------------ the hint
+        /// <summary>How long the mark takes to arrive on the flower it is pointing at.</summary>
+        public const float HintArrive = .42f;
+
+        /// <summary>
+        /// How long the ripple that shows what the tap would set off takes to cross the grove.
+        ///
+        /// <b>The mark says where and the ripple says how much, and the second is what a hint on
+        /// this mode is actually worth.</b> Everywhere else a hint is a way past a board that has
+        /// stopped somebody; here the boards do not stop anybody (invariant 20k), so what a hint
+        /// buys is the <em>big</em> version of a move they could have made anyway. Showing only
+        /// the cell would sell the smaller half of that.
+        /// </summary>
+        public const float HintRipple = .55f;
+
+        /// <summary>
+        /// How long the mark stands before it gives up and the hint is counted as taken.
+        ///
+        /// Long enough to think with and short enough that a phone put down mid-level is not
+        /// still being pointed at when it comes back. It is not a deadline on anything: the mark
+        /// going away costs nothing and the tap it named is still there.
+        /// </summary>
+        public const float HintHold = 12f;
+
+        /// <summary>One breath of the ring around a marked flower.</summary>
+        public const float HintPulse = 1.05f;
+
+        // ------------------------------------------------------------------ the finish
+        /// <summary>
+        /// How long the rings take to cross the grove when the last critter is out.
+        ///
+        /// Inside <see cref="Hush"/> on purpose: the finale is a beat the player is already
+        /// waiting through, so everything in it has to fit rather than lengthen it.
+        /// </summary>
+        public const float Sweep = .52f;
+
+        /// <summary>Where the nth of this many freed critters leaps, inside the hush.</summary>
+        public static float CheerAt(int nth, int of)
+        {
+            if (nth <= 0 || of <= 1) return 0f;
+
+            float step = Hush * .42f / (of - 1);
+            return nth * step;
+        }
     }
 }

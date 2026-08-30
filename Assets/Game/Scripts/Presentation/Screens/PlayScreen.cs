@@ -34,7 +34,26 @@ namespace GlimmerGrove
         Text _moves, _lamps, _hintCount;
         StarRow _pips;
         Btn _hint;
+
+        /// <summary>
+        /// The run is over — set the instant the board is solved rather than when the panel is
+        /// raised. See <see cref="Settled"/>.
+        /// </summary>
         bool _finished;
+
+        /// <summary>
+        /// Whether the win has been written down: the record, the chests, the streak, the
+        /// reward and the analytics.
+        ///
+        /// <para>
+        /// Separate from <see cref="_finished"/> because the two now happen seconds apart, and
+        /// only one of them may ever happen twice. <c>Finish</c> used to guard on
+        /// <c>_finished</c> and that was the same flag, so moving the flag earlier would have
+        /// made the whole payout unreachable — a solved glade with no stars, no credits and no
+        /// panel. Two facts, two fields.
+        /// </para>
+        /// </summary>
+        bool _awarded;
 
         /// <summary>
         /// Hints spent on this run, for <see cref="RunOutcome.HintsUsed"/> and the flawless
@@ -177,8 +196,18 @@ namespace GlimmerGrove
 
         void BuildResolved()
         {
-            Scenery.Cover(Content, "Bg/" + _def.Presentation.ResolveBackdrop(_chapter), 0f, .22f);
-            Fireflies.Spawn(Content, 18, new Color(1f, .97f, .86f), 5f, 18f);
+            // A vignette that frames rather than darkens, for `ModeScreen`'s reason: the
+            // backdrops are graded in daylight now, and .22 of a dark navy over a bright picture
+            // is how a cheerful sky arrives on the phone looking like dusk again. The board is
+            // what a tile is read against — `Pal.BoardTheme.From` draws its floor at .87 alpha —
+            // so brightening what is behind it widens that separation rather than closing it.
+            Scenery.Cover(Content, "Bg/" + _def.Presentation.ResolveBackdrop(_chapter), 0f, .14f);
+
+            // In the glade's own colour rather than near-white. A warm white mote was the right
+            // choice over a dusk backdrop and is invisible over a daylight one; the accent is
+            // saturated by authorship, so it reads on any sky this chapter can be graded to.
+            Fireflies.Spawn(Content, 18, Pal.A(_def.Presentation.ResolveAccent(_chapter), .85f),
+                            5f, 18f);
 
             BuildTopBar();
             BuildStatus();
@@ -194,6 +223,7 @@ namespace GlimmerGrove
 
             _board = _boardHost.gameObject.AddComponent<BoardView>();
             _board.OnChanged = Refresh;
+            _board.OnWon = Settled;
             _board.OnSolved = Finish;
             _board.OnDefeated = Defeat;
 
@@ -749,14 +779,43 @@ namespace GlimmerGrove
                                           Time.unscaledTime - _startedAt, reason);
         }
 
-        void Finish()
+        /// <summary>
+        /// The glade is solved, and the celebration is about to run.
+        ///
+        /// <para>
+        /// <b>The run stops being owed for here, not when the panel arrives.</b> Winning is what
+        /// pays for a run, and the board knows it has been won three and a half seconds before
+        /// it says so out loud — so resolving on the announcement left a window in which a
+        /// player who had finished a glade was still recorded as mid-run. A process killed in it
+        /// charged a heart at the next launch (<c>RunGuard</c>); backing out of the screen
+        /// forfeited a won run and charged one immediately. Both were live before the
+        /// celebration grew, and the fix is not a shorter celebration — it is closing the window
+        /// where the outcome is <em>known</em> rather than where it is announced.
+        /// </para>
+        /// <para>
+        /// <c>_finished</c> is set here for the same reason and does the same work everywhere it
+        /// is read: every control the screen offers is dead, no turn commits, no panel unlatches
+        /// the board, and <c>RunOver</c> is true — so <c>ConfirmForfeit</c> lets the player leave
+        /// without a question and without a charge, which is the correct answer for a board they
+        /// have beaten.
+        /// </para>
+        /// </summary>
+        void Settled()
         {
             if (_finished) return;
             _finished = true;
-
-            // Paid for by winning it. Cleared before anything else, so a crash during the
-            // celebration cannot charge for a run the player actually solved.
             Resolve();
+        }
+
+        void Finish()
+        {
+            if (_awarded) return;
+            _awarded = true;
+
+            // Both idempotent, and both are reached already on every ordinary win — Settled
+            // ran when the board was solved. Called again rather than assumed, because a mode
+            // that ever raises OnSolved without OnWon must still be accounted for exactly once.
+            Settled();
 
             int moves = _puzzle.Moves;
             int stars = _puzzle.StarsFor(Mathf.Max(1, moves));
@@ -907,6 +966,12 @@ namespace GlimmerGrove
         public override void RetryAfterDefeat()
         {
             _finished = false;
+
+            // Cleared with it, or a glade won on the retry would celebrate and pay nothing.
+            // Only reachable after a defeat, where it was never set — but the two are one
+            // fact about "is this run over", and a reset that puts back half of it is the
+            // shape that bites the first time a second path reaches here.
+            _awarded = false;
             _startedAt = Time.unscaledTime;
 
             _board.Restart();

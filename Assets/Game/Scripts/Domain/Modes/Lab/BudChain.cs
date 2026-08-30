@@ -1,5 +1,18 @@
 namespace GlimmerGrove.Modes
 {
+    /// <summary>How big one bunch going off is. See <see cref="BudChain.Blast"/>.</summary>
+    public enum BudBlast
+    {
+        /// <summary>Three or four: the rule being met.</summary>
+        Small = 0,
+
+        /// <summary>Five or more: worth a bigger ring and a lower note.</summary>
+        Big = 1,
+
+        /// <summary>Eight or more: the thing a player tells somebody about.</summary>
+        Huge = 2,
+    }
+
     /// <summary>
     /// How loudly a chain is celebrated, as a function of how far it ran.
     ///
@@ -91,6 +104,48 @@ namespace GlimmerGrove.Modes
             if (waves <= 3) return 1;
             if (waves <= 5) return 2;
             return 3;
+        }
+
+        // ------------------------------------------------------------------ one bunch
+        /// <summary>
+        /// How loud one bunch going off is drawn, as a function of how many flowers were in it.
+        ///
+        /// <para>
+        /// <b>Three alike is the rule and nine alike is the reward, and the mode drew them
+        /// identically.</b> Every burst used the same six petals, the same ring and the same
+        /// note, so the difference between scraping a bunch together and setting off a third of
+        /// the grove at once was a number that appeared afterwards. That is <c>FallChain</c>'s
+        /// complaint about confetti — <em>a celebration should say how good, not that something
+        /// was good</em> — one level further down, at the single burst rather than at the chain.
+        /// </para>
+        /// <para>
+        /// Two thresholds and no more. A bunch is at least <see cref="BudLayout.Bunch"/>, the
+        /// shipped groves run bunches of three to about a dozen, and three rungs across that is
+        /// a step somebody can see; a rung per flower would be a ramp nobody could read and
+        /// eight numbers to retune.
+        /// </para>
+        /// </summary>
+        public static BudBlast Blast(int bunch)
+        {
+            if (bunch >= HugeFrom) return BudBlast.Huge;
+            return bunch >= BigFrom ? BudBlast.Big : BudBlast.Small;
+        }
+
+        /// <summary>Where a bunch stops being the rule being met and starts being an event.</summary>
+        public const int BigFrom = 5, HugeFrom = 8;
+
+        /// <summary>
+        /// How much bigger than an ordinary burst this one is drawn — its rings, its petals and
+        /// its reach, all off one number so a rung cannot be half-applied.
+        /// </summary>
+        public static float Force(BudBlast blast)
+        {
+            switch (blast)
+            {
+                case BudBlast.Huge: return 2f;
+                case BudBlast.Big: return 1.45f;
+                default: return 1f;
+            }
         }
 
         /// <summary>How big the running count is drawn, in points.</summary>

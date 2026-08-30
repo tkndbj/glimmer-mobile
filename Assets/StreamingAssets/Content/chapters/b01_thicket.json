@@ -16,7 +16,7 @@
     {
       "id": "b01_firstburst",
       "mapX": 0.3,
-      "mapY": 0.08,
+      "mapY": 0.055,
       "bud": {
         "width": 7,
         "height": 6,
@@ -29,6 +29,175 @@
           ".GGRYG."
         ],
         "colours": "GBR"
+      }
+    },
+    {
+      "id": "b01_catchalight",
+      "mapX": 0.72,
+      "mapY": 0.14,
+      "bud": {
+        "width": 7,
+        "height": 6,
+        "rows": [
+          "GYYGBYB",
+          "RGoRoYR",
+          "BBGYYGY",
+          "YYoGoRR",
+          "GBBRGGY",
+          "GRYYRYR"
+        ],
+        "colours": "GBR"
+      }
+    },
+    {
+      "id": "b01_twiceknocked",
+      "mapX": 0.26,
+      "mapY": 0.225,
+      "bud": {
+        "width": 7,
+        "height": 6,
+        "rows": [
+          "GGCMBYY",
+          "CoCYGoM",
+          "GYMYMMC",
+          "CCMOGGC",
+          "BBRBBYB",
+          "CoMCCoB"
+        ],
+        "colours": "BRG"
+      }
+    },
+    {
+      "id": "b01_sunspill",
+      "mapX": 0.7,
+      "mapY": 0.31,
+      "bud": {
+        "width": 7,
+        "height": 7,
+        "rows": [
+          "GRRYYMM",
+          "YMoBoRR",
+          "YCCMMCC",
+          "MYROBGR",
+          "MYMCCGB",
+          "CCoGoCB",
+          "GGCCGCY"
+        ],
+        "colours": "GRB"
+      }
+    },
+    {
+      "id": "b01_dewfall",
+      "mapX": 0.28,
+      "mapY": 0.395,
+      "bud": {
+        "width": 7,
+        "height": 7,
+        "rows": [
+          "MMBYYMM",
+          "YoMCCoB",
+          "YRMGGBC",
+          "GOYBBOC",
+          "MMYMMBR",
+          "GoRBYoR",
+          "MGGBMMY"
+        ],
+        "colours": "RGBRB"
+      }
+    },
+    {
+      "id": "b01_widewild",
+      "mapX": 0.74,
+      "mapY": 0.48,
+      "bud": {
+        "width": 8,
+        "height": 7,
+        "rows": [
+          "BMBBCGCM",
+          "BoCGYCoM",
+          "CCMGYCRR",
+          "GGoMBoMM",
+          "BBGMBRRG",
+          "YoYYMBoG",
+          "YMCCMBCB"
+        ],
+        "colours": "RGBG"
+      }
+    },
+    {
+      "id": "b01_honeylight",
+      "mapX": 0.3,
+      "mapY": 0.56,
+      "bud": {
+        "width": 8,
+        "height": 7,
+        "rows": [
+          "BRRYMYRY",
+          "BoMYMYoY",
+          "RCYCYMCC",
+          "BCoOoYMM",
+          "RMMYRYBB",
+          "CoRYMRoR",
+          "BBMCMYYR"
+        ],
+        "colours": "BRGR"
+      }
+    },
+    {
+      "id": "b01_wildwaking",
+      "mapX": 0.68,
+      "mapY": 0.645,
+      "bud": {
+        "width": 8,
+        "height": 7,
+        "rows": [
+          "GORBYYOY",
+          "YMMBRRYR",
+          "YRoYGoYG",
+          "MMRMRBBG",
+          "YGoYRoRY",
+          "YGYGYYRY",
+          "RBBooMBM"
+        ],
+        "colours": "RBG"
+      }
+    },
+    {
+      "id": "b01_everbloom",
+      "mapX": 0.26,
+      "mapY": 0.73,
+      "bud": {
+        "width": 8,
+        "height": 7,
+        "rows": [
+          "RRoYYoRY",
+          "MBBRRCRY",
+          "MOYCMMOC",
+          "RMMCBYMM",
+          "RORYBYOR",
+          "MYRYRMMR",
+          "MYoMMoYY"
+        ],
+        "colours": "RGBRB"
+      }
+    },
+    {
+      "id": "b01_thicketheart",
+      "mapX": 0.72,
+      "mapY": 0.815,
+      "bud": {
+        "width": 8,
+        "height": 7,
+        "rows": [
+          "GoGGCRoR",
+          "GCCYGCGG",
+          "CBOYGOBR",
+          "GGYGCYCR",
+          "CCOGCOCG",
+          "YBCBBCBB",
+          "RoRGGCoY"
+        ],
+        "colours": "GRB"
       }
     }
   ]

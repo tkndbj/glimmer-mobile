@@ -357,6 +357,53 @@ namespace GlimmerGrove.Tests
             Assert.AreEqual(standing - run.Board.Flowers, run.Burst);
         }
 
+        // ------------------------------------------------------------------ what it reports
+        /// <summary>
+        /// A cocoon taking a crack and holding says so, and a bunch says how big it was.
+        ///
+        /// <para>
+        /// <b>Both are things the view cannot work out for itself.</b> A bunch is a connected
+        /// blob on a board that has already moved on by the time anything is drawn, and a crack
+        /// used to be reported by nothing at all — so the most encouraging thing short of freeing
+        /// somebody arrived as one ring's alpha changing on the next repaint.
+        /// </para>
+        /// </summary>
+        [Test]
+        public void ABunchSaysHowBigItWasAndAHeldCocoonSaysItCracked()
+        {
+            // A tough cocoon (two cracks) beside a row of three that the tap completes.
+            var layout = Grove(new[] { "YYR.", "..O.", "....", "...." }, "G");
+            var board = new BudBoard(layout);
+            var pulses = new List<BudPulse>();
+
+            // Green onto the red makes a third yellow in the row: they burst, and the cocoon
+            // under the last of them takes one of its two cracks.
+            var chain = board.Tap(At(layout, 2, 0), Energy.G, pulses);
+
+            Assert.AreEqual(3, chain.Burst);
+            Assert.AreEqual(1, chain.Cracked);
+            Assert.AreEqual(0, chain.Freed, "one crack of two leaves the critter shut in");
+
+            int cracks = 0, bursts = 0;
+            foreach (var pulse in pulses)
+            {
+                if (pulse.Kind == BudPulseKind.Crack)
+                {
+                    cracks++;
+                    Assert.AreEqual(At(layout, 2, 1), pulse.Cell);
+                }
+                else if (pulse.Kind == BudPulseKind.Burst)
+                {
+                    bursts++;
+                    Assert.AreEqual(3, pulse.Bunch,
+                                    "every flower of the bunch reports the bunch it was in");
+                }
+            }
+
+            Assert.AreEqual(1, cracks, "the crack is reported once, however many bunches hit it");
+            Assert.AreEqual(3, bursts);
+        }
+
         [Test]
         public void TheColourInHandIsTheOneTheBasketIsUpTo()
         {

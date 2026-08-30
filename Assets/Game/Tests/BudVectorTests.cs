@@ -207,11 +207,17 @@ namespace GlimmerGrove.Tests
 
                     // The pulses are what the view animates, so a chain that reported thirteen
                     // bursts and handed back four would draw less than a third of what happened.
-                    int bursts = 0, frees = 0;
-                    foreach (var pulse in pulses) { if (pulse.Freed) frees++; else bursts++; }
+                    int bursts = 0, frees = 0, cracks = 0;
+                    foreach (var pulse in pulses)
+                    {
+                        if (pulse.Kind == BudPulseKind.Freed) frees++;
+                        else if (pulse.Kind == BudPulseKind.Crack) cracks++;
+                        else bursts++;
+                    }
 
                     Assert.AreEqual(chain.Burst, bursts, why + " (pulses burst)");
                     Assert.AreEqual(chain.Freed, frees, why + " (pulses freed)");
+                    Assert.AreEqual(chain.Cracked, cracks, why + " (pulses cracked)");
                 }
             }
         }

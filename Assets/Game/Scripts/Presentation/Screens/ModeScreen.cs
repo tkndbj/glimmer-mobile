@@ -169,7 +169,13 @@ namespace GlimmerGrove
             _ = AssetLibrary.EnsureChapterAsync(body);
             if (!this) yield break;
 
-            Scenery.Cover(Content, "Bg/" + Level.Presentation.ResolveBackdrop(Chapter), .16f, .34f);
+            // No shade, and a vignette that frames rather than darkens. The backdrops are
+            // graded in daylight now (`make_chapter_art.daylight`), and a dark wash over a
+            // bright picture does not make it a calm bright picture — it makes it a dull one,
+            // which is what the .16 and .34 here were doing to every board in every mode. What
+            // keeps the readouts legible is the header's own `FadeUp`, which is aimed at the
+            // band they sit in rather than at the whole screen. See `BuildHeader`.
+            Scenery.Cover(Content, "Bg/" + Level.Presentation.ResolveBackdrop(Chapter), 0f, .14f);
             Fireflies.Spawn(Content, 10, Pal.A(ModeLooks.Of(Level.Mode).Accent, .9f), 4f, 14f);
 
             BuildHeader();
@@ -211,6 +217,18 @@ namespace GlimmerGrove
 
         /// <summary>How tall the header band is, and where the readout row sits under it.</summary>
         const float BarHeight = 210f, ReadoutsY = 282f;
+
+        /// <summary>
+        /// How far the header's shade reaches below the bar, in canvas units.
+        ///
+        /// Derived rather than typed: the readout row is 100 tall centred at
+        /// <see cref="ReadoutsY"/>, so its foot is at <c>ReadoutsY + 50</c> measured down from
+        /// the safe area's top edge, and the shade has to clear that by a little or the gradient
+        /// runs out exactly where the captions are. A typed number here is the fault
+        /// <c>PanelStack</c> exists to prevent, one screen over — a row moves and the thing
+        /// meant to sit behind it does not.
+        /// </summary>
+        const float ShadeDrop = ReadoutsY + 50f + 40f - BarHeight;
 
         /// <summary>
         /// The key in the header's right-hand corner: what it is, and what pressing it does.
@@ -266,8 +284,14 @@ namespace GlimmerGrove
             bar.anchorMax = new Vector2(1f, 1f);
             bar.sizeDelta = new Vector2(0f, BarHeight);
 
+            // Rotated, so it is opaque along the top edge and gone by its bottom one. It reaches
+            // `ShadeDrop` below the bar rather than the 40 it used to, and that is what pays for
+            // the backdrop no longer being dimmed as a whole: the readouts are bare text — a
+            // 58pt value and a 22pt caption at 55% white, with no pill under them, unlike the
+            // glade's — so they are the one thing on this screen that needs the sky behind it
+            // held down, and they are the only thing that now gets it.
             var shade = UIKit.Img("Shade", bar, Art.FadeUp(64), new Color(.02f, .04f, .08f, .58f));
-            UIKit.StretchTo((RectTransform)shade.transform, 0, -40, 0, 0);
+            UIKit.StretchTo((RectTransform)shade.transform, 0, -ShadeDrop, 0, 0);
             ((RectTransform)shade.transform).localRotation = Quaternion.Euler(0, 0, 180f);
 
             UIKit.IconButton("Back", bar, Skins.Nav, "ic_left", new Vector2(118f, 118f),

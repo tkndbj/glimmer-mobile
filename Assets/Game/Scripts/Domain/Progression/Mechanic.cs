@@ -106,6 +106,14 @@ namespace GlimmerGrove.Progression
         /// </summary>
         public static readonly Mechanic BudSatchel = new Mechanic("bud_satchel");
 
+        // **`bud_wood` is a retired lesson id and must never be reused.** Old wood was
+        // authored across most of the Thicket for one drop and taken out again, because a
+        // barrier is the one object that can only ever make a chain *shorter* — and a mode whose
+        // whole product is the chain has nothing to gain from it. It was reported the way it
+        // deserved: the mechanic contradicts the idea. The parser still understands `#`, because
+        // the character is shared vocabulary with Groovekeeper and refusing it would be a
+        // second rule to keep in step; `BudValidator` warns on a grove that authors one.
+
         /// <summary>
         /// Lightfall's verb: a mote dropped onto another adds its colour rather than matching
         /// it, and one holding all three bursts.

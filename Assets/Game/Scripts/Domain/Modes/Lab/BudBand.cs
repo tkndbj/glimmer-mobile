@@ -21,15 +21,52 @@ namespace GlimmerGrove.Modes
         /// <summary>How much room the band takes at the foot of the board.</summary>
         public const float BandHeight = 132f;
 
-        /// <summary>How much of the host the grove itself may use, measured from the bottom.</summary>
-        public const float BoardFloor = 210f;
+        // ------------------------------------------------------------------ the key row
+        /// <summary>
+        /// How tall the row under the grove is, where its key sits in it, and where the caption
+        /// under that sits.
+        ///
+        /// <para>
+        /// <b>One key, and it is the hint.</b> <c>PlayScreen</c>'s row is the same shape and the
+        /// same numbers for the same reason — a glade's undo and restart used to stand either
+        /// side of it and were taken away, because a restart is a forfeit and belongs behind a
+        /// deliberate tap rather than under a thumb that is already reaching across the board.
+        /// A grove has no undo to lose.
+        /// </para>
+        /// <para>
+        /// The row stands inside the safe area rather than on the display's edge, unlike the
+        /// glade's: this mode keeps its bottom inset because the band above it is already the
+        /// tightest thing on the screen, and giving up the inset here would buy the grove
+        /// nothing it does not already have.
+        /// </para>
+        /// </summary>
+        public const float KeyBarHeight = 250f;
+
+        public const float KeySize = 156f, KeyCentre = 158f, KeyCaption = 50f;
+
+        /// <summary>The clear air between the key row and the foot of the band above it.</summary>
+        public const float KeyClear = 18f;
+
+        /// <summary>
+        /// How much of the host the grove itself may use, measured from the bottom.
+        ///
+        /// Derived from the key row rather than typed, for <c>PanelStack</c>'s reason: the number
+        /// that says where the board stops and the number that says where the row under it
+        /// begins are one number, and two copies of it is how a key comes to be drawn through a
+        /// grid.
+        /// </summary>
+        public static float BoardFloor => KeyBarHeight + KeyClear;
 
         public const float PlateHeight = 108f, PlateWidth = 660f;
         public const float BottomClearance = 24f;
 
-        /// <summary>The plate fits inside its band, and the grove clears the plate.</summary>
+        /// <summary>The plate fits inside its band, the grove clears the plate, and the key row
+        /// clears both.</summary>
         public static bool Clears => PlateHeight <= BandHeight
-                                  && BoardFloor >= BandHeight + BottomClearance;
+                                  && BoardFloor >= BandHeight + BottomClearance
+                                  && KeyCentre + KeySize * .5f < KeyBarHeight
+                                  && KeyCaption > 0f
+                                  && KeyCaption + 18f < KeyCentre - KeySize * .5f;
 
         /// <summary>The colour in hand, and the two behind it.</summary>
         public const int Lookahead = 2;

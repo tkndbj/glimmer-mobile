@@ -1705,6 +1705,20 @@ What that means in practice here:
     *prove* a hard board, since a board with no par cannot be graded at all. Cost goes as the
     column count to the power of par, so par 7 on a six-wide well is four times par 6 on the
     same board: the cheap fixes are a narrower well or a shorter answer, never a bigger one.
+    <br>**And the same cost curve puts a ceiling on par, which decides where a chapter's ramp
+    can live.** Budburst's first chapter is ten groves and every one of them is **par 3**, not by
+    preference: cost goes as the flower count to the power of par, so a par-4 grove big enough to
+    cascade is refused by `BudValidator`'s node ceiling, and a par-4 grove small enough to prove
+    comes back — measured, thousands of seeds — at twenty flowers with a **one-wave** best tap.
+    That board is solvable, correctly par'd, fully validated and has the mode taken out of it,
+    which is invariant 20j's third test failed by arithmetic rather than by design. So the ramp
+    was spent on what does not multiply the search: board size, how many are shut in, how many
+    need two cracks, old wood, `spare`, and whether a careless run still scores three stars. The
+    generalisation is worth stating before the next searched mode authors a chapter — **a mode
+    whose par is found by search has a ceiling on par, and the ceiling is lower the more the mode
+    puts on the board.** Find it before designing a ladder around par, because CONTENT.md's rule
+    that *par is length, not difficulty* stops being a preference there and becomes the only
+    option.
     <br>**Lightweave joined it later, and how it got there is the general lesson — kept
     although the mode is not, because it is the only recorded case of a mode's par becoming
     expensive without its code changing.** A weave's par
@@ -2037,6 +2051,20 @@ Builds are gated: `ContentBuildGate` fails the build on any content error.
   orientation"), and it caught the first cut of `c01_bound_roots`. `c01_shallows.py`'s
   `taproot()` now asserts a period above one where the board is authored; the same trap is
   waiting for any chapter that hangs a fourth stub off a hub it meant to bind.
+- **A licensed pack's preview sheets carry the vendor's own dummy lettering, and grading it
+  makes it *less* obvious rather than more.** `craftpix-net-858776-level-game-assets/PNG/
+  Backgrounds/1.png` is a flat panel with two blocks of placeholder text on it, and it was what
+  the Hollow's only board backdrop was cut from. Reduced to luminance, blurred by 7px and graded,
+  the words came through as two dark smudges that read as *something painted* — so a
+  glance at the file says "a bit odd" rather than "that is text", and nothing else says anything
+  at all: it imports, it addresses, `AddressableAudit` passes, `Validate Art` passes, and the
+  content gates never open a PNG. There is no check that could catch it, for the same reason
+  `--contact` exists in `make_shop_art.py` and `make_sfx.py`: a bad *cut* is a statistic and a
+  bad *source* is a judgement. It reached no player only because `h01_emberfall` is not in the
+  manifest, and the same pack's `Backgrounds/2.png` (the one it was nearly replaced with) has the
+  same lettering on its houses. **Look at a source at the size the game draws it before naming it
+  in `chapter_art.tsv`**, and prefer a pack's `layers/` art to its `_preview` sheets — the layers
+  are what the pack is *for*, and the previews are what it is advertised with.
 - **A VFX pack's `Textures/` folder is two different things with one naming scheme, and
   picking wrong is invisible everywhere.** Half of it is what a particle *draws* — a flash, a
   flare, a lightning trail, a fire flipbook. The other half is what its shaders *sample* — noise
@@ -2232,13 +2260,14 @@ Everything here runs without Unity unless it says otherwise.
   than leaving four numbers that have to agree.
 - `Tools/hollow/` — the Hollow's rule mirror, board generator and `build_chapter.py`. The
   mirror is never authoritative; the shipping C# solver is what `Validate Content` runs.
-- `Tools/chapters/b01_thicket.py` — the Thicket's one board and basket, and the strings Budburst
-  needs. The layout is composed by hand and only the **basket** is swept, which is the cheap half
-  of the search and the half that decides how a board plays.
-  It `--check`s itself against what is shipped, and it is also what retired Ripplewake's strings.
-  The strings live in the chapter file rather than a `*_strings.py` only because there is one
-  level; the moment a second chapter exists they move out, because a mode's own strings outlive
-  any one chapter.
+- `Tools/chapters/b01_thicket.py` — the Thicket's ten groves, and `b01_strings.py` for the
+  strings that belong to the mode rather than to a level (they lived in the chapter file while it
+  was one level; a mode's vocabulary outlives any chapter). Both `--check` themselves against what
+  is shipped, and `b01_strings.py` is also what retired Ripplewake's. Every layout is drawn by
+  hand and only the **fill** is swept — which colour stands where, and which basket the grove is
+  dealt — which is the cheap half of the search and the half that decides how a board plays. The
+  sweeper lays a grove in *pairs* on purpose: two alike touching is one wash from bursting, so a
+  grove made of them cascades.
 - `Tools/render_wheel.py` — draws the bonus wheel exactly as `WheelFace` does, without Unity.
   `render_grove.py`'s argument for the one other object here whose quality is only visible as a
   picture: everything provable about the wheel is proved, and none of it can say whether the
@@ -2252,6 +2281,12 @@ Everything here runs without Unity unless it says otherwise.
   because a piece id is in save files twice over.
 - `Tools/make_chapter_art.py` + `chapter_art.tsv` — map strips and per-level backdrops, graded
   from the chapter's own JSON colours, so retuning a level's `accent` regrades its backdrop.
+  **Two ramps, and they are not interchangeable.** `night` is what a *map* is graded with,
+  because a map is the thing being looked at; `daylight` is what a *board backdrop* is graded
+  with, because a board is drawn over it. `--only maps|backdrops` is what keeps a re-grade of
+  one from silently re-cutting the other, and `-` in the map column says a chapter's strips are
+  not this tool's to cut at all — four chapters share one hand-made set, and a row obliged to
+  name *some* map source would overwrite it the first time anybody ran without the flag.
 - `Tools/make_shop_art.py` — the shop's two money ladders, six painted pictures each, cut out
   of two licensed sheets. The background is keyed by **chroma rather than brightness**: both
   sheets put a soft coloured halo behind every object, and the halo overlaps the objects in
@@ -2326,7 +2361,7 @@ re-reading before changing something, it is in one of those two sections and not
 | `f01_lightfall` | fall | 10 | 2–6 drops | none, then default 1.60 (motes) | the cook, then the chain; motes 3 → 30, headroom 4 → 2, `ways` never above 8 |
 | `k01_grovekeeper` | keeper | 10 | 2–8 tiles | none, then par + 5 (tiles) | the inversion, then stone, the heartbed and the prism; beds 2 → 4, `ways` 2 → 2 with a 1 at the fifth |
 | `h01_emberfall` | hollow | 10 | 1–2 sparks | — | ladder is *how few openings win*: 7,8,6,4,2,3,4,1,4,1 |
-| `b01_thicket` | bud | 1 | 3 taps | par + 5 (taps) | one board, to find out whether the verb lands; deals `GBR`, best opening tap is 3 waves / 13 flowers / 3 critters |
+| `b01_thicket` | bud | 10 | 3 taps | par + 5 (taps) | the chain, then the tough cocoon; flowers 36 → 50, critters 4 → 8, every grove's best tap a cascade |
 
 **No level authors a difficulty number except the first glade in the game, and no chapter authors
 a clock** (invariant 22). Par is derived from the board; both star lines and the losing line are
@@ -2357,6 +2392,85 @@ against it; `Tools/make_chapter_art.py` reads names and colours out of the chapt
 and **scales a source to whole strips** rather than stretching to them, which is what decides
 a chapter's strip count (Shallows 6, Mill Vale 4, Amberwood 5, Nightbriar 6).
 
+**A board backdrop is graded in daylight, and the board is what makes that safe.** Every one of
+the forty-one shipped backdrops used to arrive at a mean luminance between 28 and 105 out of
+255 — a dusk grade, then a top-down wash to 42%, then a vignette pulling the corners toward a
+deepened slate, and then, on the phone, a dark shade and a second vignette on top of that. The
+result was reported exactly as it was: every level of every mode is dark. Nothing was wrong with
+any one of those numbers and the picture they made together was never looked at.
+<br>The reason it can simply be reversed is that **the backdrop is not what a tile is read
+against**. Every mode draws its board on an opaque plate — `Pal.BoardTheme.From` at .87 alpha for
+a glade, an `Art.Round` plate at .70 to .78 for the other four — so brightening what is behind it
+*widens* the separation rather than closing it, which is the opposite of the usual worry.
+The two
+screens gave up their shade entirely and most of their vignette with it — a dark wash over a
+bright picture does not make a calm bright picture, it makes a dull one.
+<br>**Brightening it was only half, and the half that was left is why the game still read as one
+colour.** The first answer, `daylight`, re-lit the slate in HSV and carried the accent through the
+mid — correct about brightness and still a **duotone**: the source was reduced to luminance and
+mapped back through a slate-to-accent ramp, so every pixel of every backdrop held exactly one hue.
+Most authored accents here are gold (`#FFC93C`, `#FFC24A`, `#FFD75E`), so most boards in the game
+were a painting seen through an amber gel, and it was reported as one — *is there a yellow overlay
+on the background?* There was not. Nothing in `Scenery` tints anything; the colour was being
+destroyed in the art tool before a screen could show it.
+<br>**The second answer was rejected and then asked for, and the difference between those two
+moments is the whole lesson.** It kept the picture's own hues but rotated them all onto the level's
+accent — and shown unasked, over art the owner liked, it was correctly read as another tint: *why
+did you change the background itself?* The tint came out, the art arrived in its own colours, and
+*then* the ask was made — make them pink, purple, various cheerful colours. Same code, opposite
+verdict. **A recolouring is a tint when it is substituted for the change that was asked for, and a
+feature when it is the change that was asked for.** Nothing about the pixels decides which.
+<br>So `vivid` turns a backdrop onto its level's accent, and the spread is free because it is
+already authored: the forty glades carry gold, blue, hot pink, periwinkle, teal, mint, rose,
+violet, coral and orchid between them, so the colours come out of the chapter files with no second
+place to edit (invariant 5a's argument, for a picture). Three rules make it keep the painting
+rather than replace it, and each was arrived at by getting it wrong first:
+<br>— **A constant offset, never a pull toward a target.** Rotating each hue a *fraction* of the
+way to one destination collapses the variety toward that destination: a brown trunk and a blue sky
+both come out amber-ish, which is the duotone arriving by a slower road.
+<br>— **Saturation is a multiply, with no floor and no cap.** A floor lifts the least saturated
+pixels most, so a white cloud is pushed up to meet its blue sky and the clouds stop reading; a cap
+pulls the sky down to meet the clouds and does the same from the other side. Both flatten exactly
+the contrast the picture was bought for. The gain is chosen per source to reach
+`SATURATION_TARGET`, because the packs are not equally colourful.
+<br>— **`CLOUD_BLEACH` moves the pale end down, which is the same gap opened from the other
+side.** A gamma on saturation above 1 pulls the least saturated pixels hardest and leaves the most
+saturated nearly alone, so a sky's clouds whiten and its blue does not. It is the exact inverse of
+the floor above and is safe for the reason the floor is not: it is a curve rather than a clamp, so
+nothing is collapsed onto one value and a cloud stays as much paler than its sky as the pack
+painted it, only more so. It is applied **before** `saturation_gain` measures the picture, so the
+gain scales the whole thing back to target and bleaching the clouds costs the backdrop none of its
+overall colour — the two work against each other on the mean and together on the gap.
+<br>— **The brightness lift runs in V alone, never on the three RGB channels.** A per-channel gamma
+raises the *smallest* channel proportionally most, so it lifts a colour toward grey as a side
+effect of lifting it toward light. That is what turned `c04_nightbriar`'s dungeon interior (mean V
+.25) into pale mud, which reads *dimmer* than the cave did because it lost its colour as well as
+its contrast. Lifting V leaves hue and saturation untouched, so the same cave comes up a real
+purple — and it is why `BG_FLOOR_LUMA` can be 150, where the RGB version had to be held at 112.
+<br>**What a chapter still shares is its source's *picture*, and only its colour varies.** Nine of
+the Shallows' backdrops are one sky in nine colours; the fix for wanting nine skies is more sources
+in `chapter_art.tsv`, and it is a decision about art rather than about this code.
+<br>**And removing the tint uncovered a bug the tint had been hiding for as long as it existed.**
+Three of the eight sources named in `chapter_art.tsv` are *overlay layers* out of layered packs —
+71% and 75% transparent — opened with `Image.open(...).convert("RGB")`, which drops alpha and
+leaves whatever RGB sat under it. Most of two chapters was undefined white paper with a few
+branches on it. The duotone could not show it because it threw the colour away and remapped
+luminance, so a hole came out as a perfectly plausible ramp value; every gate in the repository was
+green, because none of them opens a PNG. `make_chapter_art.opened` composites instead of
+flattening, a source may now be a `+`-joined **stack** of layers (what a layered pack is for, and
+what `Scenery.Layered` already does with the same art at runtime), and it **errors** on a stack
+whose bottom layer is not opaque. The general lesson is the one this file already records twice for
+art: a bad *cut* is a statistic and a bad *source* is a judgement — look at a source at the size the
+game draws it, and be suspicious of a grade that would look fine either way.
+<br>What is still dark is the **board plate**, deliberately and separately: the tiles, motes and
+flowers drawn on it are bright saturated shapes, so their ground is what the backdrop is now free
+*not* to be. Anything tempted to lighten it is changing a contrast ratio in five modes at once and
+should be judged against real boards rather than against this paragraph.
+<br>What pays for the readouts is `ModeScreen.ShadeDrop`: the header's own `FadeUp` now reaches
+the band the numbers sit in, because they are the one thing on that screen drawn as bare text
+with no pill under it. It is derived from `ReadoutsY` rather than typed, for `PanelStack`'s
+reason.
+
 ### The board's vocabulary
 
 One verb — turn a conduit, light a critter — with modifiers, and no second solver:
@@ -2383,6 +2497,51 @@ rather than stopping on it, which it did not always do — see *Verifying*.
 **Classic glade** — `PlayScreen`. Turn conduits, light every critter. The move budget is the
 only fail state (invariant 22) at `par × 1.60`, and `Undo` refunds a move, so exploring a
 crossing that reads the same half a turn round costs nothing.
+
+**The solve is five beats, and the choreography is the board's own shape.** A **hush** — the
+grove draws in and dims, the only moment in the mode where it gets quieter, and the beat most
+often left out because it looks like nothing happening; without it the celebration begins while
+the player is still reading their own last move. Then the **surge**: the light walks out from the
+heart-crystals along `Puzzle.Depth`, one ring at a time, each lit arm flooding white and swelling
+before settling back into its colour. A critter **flinches where it stands** as the wave reaches
+it — a squash, a shiver, a ring in its own colour, sparks — so the order the grove comes alive in
+is the order the player's own wiring feeds it. Then the **bloom** — every critter **leaps at
+once**, every conduit goes white, two rings cross the grove over the top of it and a fan of light
+turns behind it. Then it **settles** before the panel covers it.
+
+**The jump belongs to the bloom and nowhere else.** The wake used to leap too, on the reasoning
+that the surge teaches a leap to mean "this critter is awake" so the finale would be that sentence
+said by the whole grove at once. Reported from play as the critters doing *two different jumps*,
+which is what it was: repeating a gesture a second later does not reinforce it, it spends it —
+the confetti-on-the-board-and-again-on-the-panel fault, one mode over. Two moments now get two
+gestures, and the surge lost nothing, because what made that beat land was never the height. It
+was arriving on the beat the light did.
+
+What that replaced was one beat: every tile brightening at a delay proportional to its depth,
+which is a *sweep*, and a sweep could be played over any grid at all. Walking the network shows
+the player the thing they just built — two people who finish the same glade differently get
+visibly different celebrations, and nothing else in the mode can say that. **No confetti and no
+haptic**, unchanged and by request; what carries it is light, which is what the mode is about.
+
+**Every duration is `GladeFanfare` (Domain), because the length is a function of the board.** A
+fifteen-ring grove has more network to walk than a four-ring one, so this is exactly the shape
+that becomes a wait without a bound — and a bound written as a constant beside the paint is a
+bound nothing can check. The rate gives way (`SurgeCeiling` 1.35s) and a floor stops it becoming
+a blur (`MinRing` 0.05s); where they meet the floor wins, for `BudTempo`'s reason. The deepest
+shipped glade is **15 rings** (`c02_stonebridge`), so a real board runs 2.7–3.5s and
+`GladeFanfareTests` asserts the whole thing stays inside `Longest` out to 32.
+
+**A won glade says so twice, and the first one is what protects the heart.** `BoardView.OnWon`
+fires the instant the model settles; `OnSolved` fires when the celebration ends. A run is written
+down as owed until the screen resolves it, and the screen used to resolve on the second — so for
+the whole celebration a solved glade was recorded as a run in progress: a process killed there
+charged a heart at the next launch, and backing out forfeited a board the player had beaten. Both
+were live before this and both got worse when the sequence grew, and the fix is not a shorter
+celebration — it is closing the window where the outcome is *known* rather than where it is
+announced. `PlayScreen._finished` moves with it (so every control is dead and `RunOver` is true),
+and `_awarded` is the second field that keeps the payout exactly once: `Finish` used to guard on
+`_finished`, so moving that flag earlier without splitting it would have made the entire payout
+unreachable — a solved glade with no stars, no credits and no panel.
 
 **Lightfall** (`FallScreen`) — a well of coloured motes that has to be emptied, and an ordered
 procession to empty it with. Tap a column: the mote either **enriches** the top of that column
@@ -2513,6 +2672,64 @@ note, the one it already plays when somebody commits to a level from the map —
 had no moment of its own, so the one thing the player *did* was the one thing with no animation
 against it.
 
+**A chain escalates in amplitude, never in duration, and that is forced rather than chosen.** The
+obvious way to make a deep chain feel bigger is to give its later waves more time, and it is not
+available: `BudTempo.Wave` divides `Ceiling` across the whole chain, so every wave of a nine-wave
+cascade is *shorter* than the single wave of an ordinary tap. Lengthening the late ones either
+breaks the ceiling — the nine-second freeze it exists to prevent — or steals from the early ones,
+which is a chain that starts blurred and ends legible, exactly backwards. So what grows is how far
+a flower **travels**: `BudTempo.Swell` takes each wave's wind-up from 1.62 to a capped 2.20, and
+`WindSpin` from 420° to 760°, in the same time or less. That reads as accelerating rather than as
+dragging, and it is the only axis the ceiling leaves open.
+
+**A peak reached on the last frame is a flash, not a size — and that is why the first cut of this
+was invisible.** It shipped as one accelerating curve (`v²`) running to the burst, which sounds
+right and is wrong: an accelerating curve is near its destination only at the very end, so a
+flower was within 5% of its peak for **3% of the beat, about 1.6 frames at 60fps** — *less* dwell
+than the flat curve it replaced. Raising the swell against that changes a number nobody can see,
+and it was reported from play as no change at all, on a build genuinely running it. So the flower
+now **arrives early and holds**: out-quad out to full size by `Peak` (.66), then motionless until
+it goes off, which is 44% of the wind-up at peak instead of 8%. The generalisable form: when a
+gesture is not landing, measure how long it is *legible* before touching how big it is.
+`BudMotionTests.AFlowerHoldsItsFullSizeLongEnoughToBeSeen` holds a line under the dwell rather than
+under the curve shape, because dwell is what was actually wrong.
+
+**And it gathers before it grows, which is the difference between "about to explode" and "getting
+bigger".** A shape that only ever rises is being inflated by something outside it; one that crouches
+first is doing it on purpose. `WindScale` is three phases — a quick out-quad dip to `1 - Recoil`,
+the spring out, then the hold — in Domain for `GladeFanfare.Hop`'s reason. The crouch is
+deliberately **constant** while the swell escalates: it is the *tell*, so it has to mean the same
+thing on the ninth wave as on the first, and exactly one thing should be growing. `WindWhite`
+follows the same phases, holding the flower at `Matched` (.62 toward white) while it is still
+growing — the charge's job is to say *which* flowers matched, and a bunch that goes white has
+stopped saying it — and spending the rest to `Critical` during the hold, where it is free to.
+
+**A ladder has to be spent on the waves the mode actually reaches.** `b01_thicket` is one board
+whose best opening tap runs three waves and most taps run one or two, so the first ladder — nine
+waves from 1.46 to 1.82 — put almost all of its range past anything a player sees, and moved wave
+one by 9%. It is front-loaded now: +0.22 a wave, so waves one to three span 1.62 → 2.06.
+`TheLadderIsSpentOnTheWavesTheShippedBoardReaches` is the guard, and it is worth keeping when the
+mode grows past one chapter.
+
+**The chain is also said at grove scale, because a 2% nudge is not.** A wave's answer from the
+board was a shake plus a punch on the plate of 1.2%–3.6%, which is under the size at which a scale
+change on a whole screen is noticed — a player watching thirteen flowers go off has no attention
+spare for it. `BudTempo.Heave` climbs 2.2% → 8.5% and punches `_grid` rather than `_plate`, so the
+flowers move with the ground they stand on; a plate swelling behind a static grid is a border
+thickening, not a board reacting. It is safe beside the shake because that borrows the *position*
+and this the *scale* — the same pairing rule two sections up.
+
+Two things the bigger swell broke that the small one hid, and both are the same fault. The burst
+used to snap the cell back to square before throwing the flower, which at 1.34 was a twitch and at
+1.82 is the flower visibly **deflating on the frame it explodes**; the wind-up's size and angle are
+now handed to `ThrowFlower` so the growth carries through. And `Turn`'s punch on a washed flower is
+still running when the next wave winds that flower up — two tweens on one value, so the punch
+borrowed a mid-wind-up scale and handed *that* back as rest, leaving it permanently oversized.
+`Wind` kills the punch channel first. A flower is also lifted over its neighbours while it is
+bigger than its own square and put back by `RestoreDepth` in one ascending pass, never by
+remembering an index — `SetSiblingIndex` inserts (`GroveFieldView`'s lesson), and a cell's glow is
+half again as wide as its square, so stacking order is visible on a settled board too.
+
 **A burst is a silhouette event, never a volume one, and that is what the smoke taught.** A real
 fire flipbook was cut from the pack and drawn over every burst; it came back as *"when I burst
 buds a smoke/dust comes out — what is that?"*, which is an exactly correct reading of a plume
@@ -2595,13 +2812,37 @@ time it looks. Giving each statement its own edge does that work in the layout, 
 *read* as three facts rather than parsed as one. The gap went up with it, because three cards
 eight units apart read as one card with seams in it, which is the worst of both.
 
-**One chapter, one level, on purpose.** `b01_thicket` ships a single board because the two modes
-before this one were built out to five and ten levels and then thrown away — what decides a mode
-is whether the verb lands, and no number answers that. Thirty-six flowers in five colours with
-four cocoons set into them: par 3, and the best opening tap runs **three waves, bursts thirteen of
-the thirty-six flowers and frees three of the four critters at once**. A player who just taps
-whatever looks biggest finishes in 4, which is still a three-star run, and that is the bar rather
-than a difficulty reading (invariant 20k).
+**The Thicket is ten groves and every one of them is par 3, which is arithmetic rather than
+laziness.** The mode shipped as one board on purpose — two modes before it were built out to five
+and ten levels and thrown away, and what decides a mode is whether the verb lands (invariant 20j).
+It landed, so the chapter was filled out; and filling it out found the ceiling described in
+invariant 26d. Cost goes as the flower count to the power of par, so a par-4 grove big enough to
+cascade is refused by `BudValidator`'s node ceiling, and a par-4 grove small enough to prove comes
+back at twenty flowers with a **one-wave** best tap — a board that validates perfectly with the
+mode taken out of it. So par stays where the cascades are and **the ramp is one dial**: how many
+are shut in (4 to 8, and how many need two cracks rather than one), and with it how much grove
+there is (36 flowers to 50). Every grove is dealt `par + 5`, which is eight taps for a three-tap
+answer, and it stays eight on the tenth: freeing eight critters with the same allowance is more
+to do than freeing four **without ever being tighter**, which is the only kind of harder this
+mode is allowed to get (invariant 20k).
+
+**Two dials were tried and thrown away, and both for the same reason.** `spare` came down from
+five to three across the chapter, and `greedy` — whether a thoughtless run still scored three
+stars — was true early and false late. Both are ramps built out of *withholding*, on a mode
+commissioned to be generous; worse, ramping `greedy` forced the board sweep toward layouts whose
+biggest chain is a trap, which is exactly backwards. **Old wood went with them**, and it is the
+clearest case: a barrier is the one object in this mode that can only ever make a chain
+*shorter*, so it was authored across most of the chapter for one drop and taken out again. `#`
+still parses, because the character is shared vocabulary with Groovekeeper, and `BudValidator`
+warns on a grove that stands any. `bud_wood` is a **spent lesson id**.
+
+**The loudest thing in it is `b01_widewild`**, whose best opening tap runs **nine waves, bursts
+twenty-nine of fifty flowers and frees five critters at once** — and the sweep held out for a
+cascade on every rung, because a grove whose best play is three separate one-wave taps passes
+every other check in this repository with the mode taken out of it. Only the *fill* was searched:
+every layout is drawn by hand and what was hunted is which colour stands where and which basket
+the grove is dealt, which is `b01_firstburst`'s bargain kept for the other nine
+(`Tools/chapters/b01_thicket.py`).
 
 **Par 3 rather than par 2, and the reason generalises.** The layout's first basket gave par 2, and
 at par 2 both star lines round onto 3 — `ceil(2 × 1.20)` and `ceil(2 × 1.40)` are the same integer
@@ -2618,6 +2859,75 @@ a par: two copies can agree exactly about how many taps a grove costs and still 
 far the chain ran. **`BudLadderTests` is the half of that guard which runs offline** — the vector
 fixture needs the Editor, so the rule drifted once and only the build gate noticed; see the
 hard-won fact about a vector file only the Editor can read.
+
+**A grove has a hint key, and it buys something a glade's does not.** Everywhere else a hint is
+a way past a board that has stopped somebody; nothing here is meant to stop anybody, so what this
+one sells is the **big** version of a move they could have found anyway — the marked flower, the
+colour it would become floating over it, and a ripple across every cell the tap would reach, in
+the order the chain would reach them. `BudHint` finds it: every opening tap that still finishes
+the grove inside the taps that are left, and among those the one that goes off hardest, by the
+same ranking `BudSolver.Careless` uses. Correct first — a hint that quietly costs somebody the
+level is the one thing it must never be — and loud second, which on a mode with hundreds of
+shortest plays is not a nicety. It is node-bounded and degrades to the biggest chain going rather
+than stalling (60,000 positions, half what par is allowed; measured at 34ms on the shipped board).
+The mark **points and does not play**: taking the tap for the player would spend a tap out of
+their satchel on their behalf, which is the difference between a hint and a move. And the
+empty-pool offer is raised when the mark *goes* rather than when it arrives, which is where this
+differs from `PlayScreen` and has to — a glade's hint is consumed by its own reveal, where a
+grove's leaves advice the player still has to act on, and a panel thrown up over it covers the one
+thing they paid for.
+
+**A chain escalates in _kinds_ of thing, and the version that escalated in amounts did not
+work.** Every wave used to draw the same event — petals, a flash, a ring, sparks — with the
+escalation carried entirely by numbers: a bigger swell, a harder shake, a brighter flash, a larger
+ring. Played through seven levels that reads as **no change at all**, and it was reported in
+exactly those words. A number going up is not something anybody sees; a thing that was not there
+before is. So `BudSpectacle` switches a whole new kind of thing on at each wave and keeps the ones
+before it:
+
+* **wave 1** — the burst, and the *rest of the grove jolting under it*: every other flower is
+  knocked, in order, outward from where the wave went off and harder the nearer it was. This is
+  the one that makes a small chain feel big, and it costs nothing;
+* **wave 2** — a ring of the wave's **own colour** thrown right across the board, and the screen
+  taking that colour rather than white, so what floods the screen says *which* colour is running;
+* **wave 3** — **fireworks**: sparks arc up out of the grove and go off above it. The first thing
+  in this mode that leaves the board, so it is unmistakable without comparing it to anything;
+* **wave 4** — a **star lit behind the whole board**, the only layer drawn under the grove rather
+  than over it;
+* **wave 5** — confetti.
+
+A five-wave chain is therefore six different events arriving one after another rather than the
+same event five times a little louder. Two rules keep it honest and both are tested: **nothing is
+ever taken away again** (a layer switching off would read as the chain running out of steam
+exactly when it is running hardest), and the first three rungs land on waves ordinary play
+actually reaches — most taps run one or two, which is the mistake `BudTempo`'s first swell ladder
+made by spreading its range over nine.
+
+**And the bunch is wired together while it charges.** Three flowers spinning in three places on a
+grid of fifty is three things happening; a line of light between them is one thing about to
+happen. It is drawn strictly from the pulses — two cells the model says burst *in this wave, in
+the same bunch* — which is the only reason it is safe to draw a line between two cells at all
+here: a bolt that asked `Run.Board` which neighbour was bare once fired out of blank soil, because
+the model settles the entire chain before a frame is drawn.
+
+**A burst also says how big it was.** Three alike is the rule being met and nine alike is a third
+of the grove going at once, and both used to draw the same six petals and the same note.
+`BudChain.Blast` grades a bunch at five and at eight; the rungs scale the petals, the rays, the
+reach and the sparks off one number, add a **second ring chasing the first** (which reads as
+*more* rather than as *bigger*), and drop the note lower as the bunch gets fatter — deliberately
+the opposite of the chain's own ladder, which climbs, so a fat single bunch and a deep chain stay
+two readings. A bunch of **white** gets the one shape nothing else draws, because white holds
+every channel and is the only flower whose state the player can no longer change. And **every
+tap** throws a ring of the colour it is *making*, because the commonest event in the mode is a tap
+that sets off nothing at all and it was answered by a spin under the player's own thumb.
+
+**And a cocoon that cracks and holds now says so.** It was drawn by nothing at all: a cocoon
+taking the first of its two cracks changed one ring's alpha on the next repaint, so the most
+encouraging thing that can happen short of freeing somebody arrived as a colour appearing quietly
+behind thirteen flowers going off. `BudPulseKind.Crack` is the model saying it and `BudView.Crack`
+is what it says — the shell jolts, splinters come off it, the ring flares — deliberately smaller
+than freeing one in every dimension and pitched under it, so the two are one gesture at two
+strengths.
 
 **Two retired modes sit behind this one** and both are worth knowing about before designing a
 third — see invariant 20j. Lightweave shipped three chapters and rejected almost nothing;
@@ -2649,7 +2959,13 @@ Free play collects about **593 credits and 6 gems a day**; `Tools/verify/content
   10, 20 or 50 permanently (invariant 18d), derived from `heartContainersOwned` and read by
   every screen through `Wallet.MaxHearts`.
 - **Hints** — pool of 3 account-wide, one back every 8h, ceiling equals the cap (a granted
-  hint at a full pool is refused, not clamped). A hint charges no moves.
+  hint at a full pool is refused, not clamped). A hint charges no moves. Spent in **two modes**
+  and they buy different things: a glade's turns the conduit (`BoardView.Hint`), a grove's
+  *marks a flower* and shows the cascade tapping it would set off (`BudHint`, `BudView.Hint`) —
+  because nothing in Budburst is meant to stop anybody, so what a hint sells there is the big
+  version of a move they could have found anyway. Neither costs the save file, the wire or the
+  server anything: the pool, the clock, the ceiling and the video are account-wide and already
+  existed, so the second mode joining them was one predicate and a key.
 - **Streak** — a 7-night lap that wraps: 500 credits, 1 heart, 5 gems, 2 hearts, a 12h boost,
   3 hearts, 10 gems.
 - **Ads** — four placements, all opt-in, no interstitials: `heart_refill` 2 hearts,
@@ -2786,7 +3102,16 @@ a failure that arrives in the first minute after a deploy.
     two synthetic callbacks on one account drew slices 2 and 7 and were granted 300 and 1,000,
     the index advanced once per paid view, and a retried callback paid nothing and did not turn
     the wheel again.
-13. **Measure the continue.** 20 gems for +15 turns was reasoned about, never played against
+13. **Measure the Budburst ramp.** Its ten groves are all par 3 and dealt eight taps each, so
+    the whole ramp is how many are shut in (4 → 8). That has not been played against, and the mode
+    is the one commissioned against a *feeling* rather than a difficulty (invariant 20k) — so the
+    reading that matters is not the clear rate (it should be ~100%) but the **three-star rate**,
+    which should stay high throughout and dip only a little at the end. Three dials that would
+    have moved it were tried and removed for being ramps built out of withholding (`spare`,
+    `greedy`, old wood), so if the chapter turns out to be flat the fix is **more to free**, not
+    less to spend. `spare` is authored per level if it is ever needed, so a retune is a content
+    drop and no store review.
+14. **Measure the continue.** 20 gems for +15 turns was reasoned about, never played against
     (invariant 23), and it is the second number after the move budget most likely to be wrong:
     too dear and a defeat is a dead end, too cheap and the fail state stops meaning anything.
     `continue_offered` / `continue_bought` are the funnel; the ratio and the distribution of
@@ -2850,6 +3175,23 @@ and a screenshot of the source.
   of zero for ever). `Tw.OnAbandon` is where a tween declares the answer — hand it back, or
   land on it — and `KillChannel` honours it. Anything moving a value somewhere new declares
   nothing and is still left where it got to, which is what keeps a cross-fade a cross-fade.
+- **The corollary, and the half a channel cannot save you from: two tweens on one value are
+  a bug however different their channels are.** A channel decides what *supersedes* what; it
+  says nothing about what they write. `Punch` and `Scale` sit on different channels and both
+  write `localScale`, so a punch fired beside a scale reads a value the scale is still moving
+  as the size to squash around and lands the target a few percent off, for ever — which is
+  what the glade's bloom did to the whole grove until the punch became a `Shake`, because a
+  shake borrows the *position* and nothing else there writes one. The same pairing is why
+  `Tween.Breathe`'s remarks tell two callers to kill a breathe before punching. Two rules
+  follow: before adding motion to something already moving, ask which *value* each tween
+  writes rather than which channel it is on — and when a gesture can supersede itself, kill
+  its channel **before** reading the rest value, or the restore has not happened yet and you
+  capture mid-flight. The glade's critters cost exactly that: a critter woken on the last ring
+  of the surge was still in the air when the bloom asked the whole grove to leap, so reading
+  the fixture then took a mid-air position as the ground and left it hanging over its own tile
+  for the rest of the run. The overlap is gone — only the bloom leaps now, for an unrelated
+  reason — and the kill stays, because a gesture that reads its target's resting value is one
+  call site away from superseding itself again and this failure is silent and permanent.
 - **A panel with several exits reports through none of them reliably.** Put the safe outcome
   on `OnDestroy` and make the exception the thing somebody declares — `AdOfferOverlay.Dismissed`,
   the pause menu's unlatch, `BoardView.Locked` as a property that raises `OnChanged`,
@@ -2950,6 +3292,15 @@ and a screenshot of the source.
   on the last landing** — one sound and one flourish, for the reason the buzz was removed below.
 - **Repaint from an event, never from a callback on the panel that changed something.**
   `CompanionLedger.Changed`, `CloudSaveService.IdentityChanged`, `GameSettings.Changed`.
+- **A control whose liveness depends on a per-frame fact has to be repainted on that frame, and
+  "there is an event for it" is not the same thing.** Budburst's hint key was painted once when
+  its row was built and never again: it is live while the run is *running*, which is
+  `RunScreen.Running(bool)`'s answer and is written every frame by that method and by nothing
+  else — so the key was painted while the run was still held by the opening iris and stayed grey
+  for the life of the screen. Every event the screen *did* listen to (the wallet, the board's own
+  `Changed`, the latch) fires for a different reason, so none of them ever corrected it. It
+  reached play as "the hint button never works", which is the failure a dead control always
+  reads as. The repaint is a comparison and two assignments; put it on the frame that knows.
 - **`UIKit.Box` pivots centre.** Anchoring a child to an edge puts half of it outside, and
   growing a panel puts half the new room above the art.
 - **Measure a painted shape's face rather than centring on its sprite.** `PillFaceLift`,
@@ -2975,9 +3326,11 @@ and a screenshot of the source.
   camera cutout is a worse picture than the cutout. iOS reports its inset a frame or two after
   a cold start, so the node re-fits itself rather than reading the value once in `Build`.
 - **Timing rules live in Domain and are tested** — `Cue`, `TweenCycle`, `GroveGrowth`,
-  `GroveUnveil`, `BudTempo`, `CoachStroke`. Every sequence is bounded and **the rate gives
-  way**, so a bigger board is never a longer wait. Motion is the one subsystem whose failures
-  show up only in play, which is why the arithmetic has to be reachable without an Editor.
+  `GroveUnveil`, `BudTempo`, `GladeFanfare`, `CoachStroke`. Every sequence is bounded and **the
+  rate gives way**, so a bigger board is never a longer wait. Motion is the one subsystem whose
+  failures show up only in play, which is why the arithmetic has to be reachable without an
+  Editor. `GladeFanfare` is the one whose length is a function of the *board* rather than of a
+  chain the player caused, so it is the one where the bound is doing the most work.
 - **A lesson is declared as a fact about the board, never as a fact about the player.** A mode
   fills `RunScreen.Lessons` with everything its board teaches, and `RunScreen` asks `TipLedger`
   which of it is new. That split is what let the "show me again" key in a run's header cost one
