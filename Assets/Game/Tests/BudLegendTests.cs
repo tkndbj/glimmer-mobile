@@ -186,6 +186,47 @@ namespace GlimmerGrove.Tests
                             "typed, so the two cannot come to disagree");
         }
 
+        /// <summary>
+        /// The colour in hand, its seat and the queue behind it all fit the plate they are
+        /// drawn on.
+        ///
+        /// <para>
+        /// <c>QueueFits</c> and <c>ReadoutsFit</c> were written with the band and then asked by
+        /// nobody, which is a predicate rather than a check — and the band's numbers have since
+        /// moved twice. The chip in hand was drawn <em>smaller than a flower on the board</em>
+        /// and was reported as hard to see; growing it spends room in both directions at once,
+        /// which is exactly the arithmetic this class exists to hold rather than argue about.
+        /// </para>
+        /// </summary>
+        [Test]
+        public void TheColourInHandFitsItsPlateAndClearsEverythingBesideIt()
+        {
+            Assert.IsTrue(BudBand.HandFits,
+                          $"the colour in hand is {BudBand.HandSize:0} in a seat of " +
+                          $"{BudBand.HandSeat:0}, on a plate {BudBand.PlateHeight:0} tall and " +
+                          $"{BudBand.PlateWidth:0} wide, centred at {BudBand.HandX:0}");
+
+            Assert.IsTrue(BudBand.QueueFits,
+                          $"the queue starts at {BudBand.QueueCentre(0):0} and the seat in hand " +
+                          $"reaches {BudBand.HandX + BudBand.HandSeat * .5f:0}");
+
+            Assert.IsTrue(BudBand.ReadoutsFit,
+                          $"the taps counter at {BudBand.TapsX:0} and the critters counter at " +
+                          $"{BudBand.CrittersX:0} do not both fit a plate {BudBand.PlateWidth:0} wide");
+        }
+
+        /// <summary>
+        /// And it is the biggest thing on the band, which is the hierarchy the band is for:
+        /// what is in hand, then what is behind it.
+        /// </summary>
+        [Test]
+        public void AndWhatIsInHandIsDrawnLargerThanWhatIsBehindIt()
+        {
+            Assert.Greater(BudBand.HandSize, BudBand.QueueSize * 2f,
+                           "the colour in hand has to be unmistakable against the lookahead — " +
+                           "it is the only thing the next tap is decided with");
+        }
+
         // ------------------------------------------------------------------ the flower
         /// <summary>
         /// One silhouette for every colour but white, which is the whole of the change the

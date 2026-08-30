@@ -126,6 +126,7 @@ namespace GlimmerGrove.Modes
 
             readonly BudGround[][] _groundAt;
             readonly int[][] _valueAt;
+            readonly int[] _grownAt;
 
             readonly HashSet<string> _seen = new HashSet<string>();
             readonly char[] _key;
@@ -148,7 +149,8 @@ namespace GlimmerGrove.Modes
                     _valueAt[i] = new int[layout.Count];
                 }
 
-                _key = new char[layout.Count + 3];
+                _grownAt = new int[depth];
+                _key = new char[layout.Count + 4];
             }
 
             public BudSurvey Run()
@@ -193,7 +195,7 @@ namespace GlimmerGrove.Modes
                 // Every remaining cocoon needs at least one burst beside it, and one tap's chain
                 // can reach several — so the only floor that is always true is "at least one more
                 // tap", which is what the loop above already charges.
-                _board.Save(_groundAt[spent], _valueAt[spent]);
+                _board.Save(_groundAt[spent], _valueAt[spent], out _grownAt[spent]);
 
                 int colour = _layout.Deal.At(spent);
 
@@ -203,7 +205,7 @@ namespace GlimmerGrove.Modes
 
                     _board.Tap(i, colour, null);
                     Walk(spent + 1);
-                    _board.Restore(_groundAt[spent], _valueAt[spent]);
+                    _board.Restore(_groundAt[spent], _valueAt[spent], _grownAt[spent]);
 
                     if (_budgetSpent) return;
                 }

@@ -386,6 +386,64 @@ namespace GlimmerGrove.Tests
                 Assert.LessOrEqual(BudTempo.WindSpin(wave), BudTempo.SpinMost + .0001f);
         }
 
+        // ------------------------------------------------------------------ the grove falling
+        /// <summary>
+        /// <b>Every piece is standing still again before the wave that threw it ends.</b>
+        ///
+        /// <para>
+        /// The stagger used to be added to a duration that was already the wave's whole
+        /// allowance, so a piece late in the ripple was still travelling a third of a wave after
+        /// the wave was over — and the next wave's bursts then killed it where it stood, because
+        /// everything that touches a flower kills the tween that was moving it. That is what
+        /// left flowers hanging between two squares for the rest of the run. The drawing is
+        /// fixed where it belongs (one transform per cell, and a fall that declares where an
+        /// interrupted one lands), and this holds the arithmetic that made it likely.
+        /// </para>
+        /// </summary>
+        [Test]
+        public void EveryPieceIsBackOnTheGroundBeforeTheWaveThatDroppedItEnds()
+        {
+            for (int waves = 1; waves <= BudChain.Most; waves++)
+            {
+                float burn = BudTempo.Burn(BudTempo.Wave(waves));
+                float over = BudTempo.Rain(burn);
+
+                for (int nth = 0; nth < 24; nth++)
+                for (int rows = 1; rows <= 12; rows++)
+                {
+                    BudTempo.Rainfall(nth, rows, over, out float delay, out float fall);
+
+                    Assert.GreaterOrEqual(fall, 0f);
+                    Assert.LessOrEqual(delay + fall, over + .0001f,
+                                       $"a {waves}-wave chain drops a piece {rows} rows down " +
+                                       $"as the {nth}th of its ripple, and it is still moving " +
+                                       $"{delay + fall - over:0.000}s after the fall is over");
+                }
+            }
+        }
+
+        /// <summary>
+        /// And a taller fall still takes longer, which is the whole of what makes a board feel
+        /// heavy — bounding the ripple must not flatten that into one speed.
+        /// </summary>
+        [Test]
+        public void AndATallerFallStillTakesLonger()
+        {
+            float over = BudTempo.Rain(BudTempo.Burn(BudTempo.Wave(3)));
+
+            for (int nth = 0; nth < 12; nth++)
+            {
+                float last = -1f;
+
+                for (int rows = 1; rows <= 6; rows++)
+                {
+                    BudTempo.Rainfall(nth, rows, over, out _, out float fall);
+                    Assert.GreaterOrEqual(fall, last, "a taller fall is quicker than a short one");
+                    last = fall;
+                }
+            }
+        }
+
         // ------------------------------------------------------------------ the chain
         [Test]
         public void ABoltLandsWellInsideTheBeatThatThrewIt()

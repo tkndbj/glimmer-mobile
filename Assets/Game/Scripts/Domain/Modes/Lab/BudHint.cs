@@ -166,6 +166,7 @@ namespace GlimmerGrove.Modes
 
             readonly BudGround[][] _groundAt;
             readonly int[][] _valueAt;
+            readonly int[] _grownAt;
 
             readonly HashSet<string> _seen = new HashSet<string>();
             readonly char[] _key;
@@ -188,7 +189,8 @@ namespace GlimmerGrove.Modes
                     _valueAt[i] = new int[board.Count];
                 }
 
-                _key = new char[board.Count + 3];
+                _grownAt = new int[depth];
+                _key = new char[board.Count + 4];
             }
 
             public BudSpot Run(int spent, int ceiling)
@@ -200,7 +202,7 @@ namespace GlimmerGrove.Modes
                     var chosen = BudChainResult.Nothing;
                     int hand = _deal.At(spent);
 
-                    _board.Save(_groundAt[0], _valueAt[0]);
+                    _board.Save(_groundAt[0], _valueAt[0], out _grownAt[0]);
 
                     for (int i = 0; i < _board.Count; i++)
                     {
@@ -211,7 +213,7 @@ namespace GlimmerGrove.Modes
 
                         _seen.Clear();
                         bool wins = Reaches(spent + 1, limit - 1, 1);
-                        _board.Restore(_groundAt[0], _valueAt[0]);
+                        _board.Restore(_groundAt[0], _valueAt[0], _grownAt[0]);
 
                         if (wins && (!best.Any || Better(chain, chosen)))
                         {
@@ -241,7 +243,7 @@ namespace GlimmerGrove.Modes
                 if (left <= 0 || depth >= _groundAt.Length) return false;
                 if (!Fresh(spent, left)) return false;
 
-                _board.Save(_groundAt[depth], _valueAt[depth]);
+                _board.Save(_groundAt[depth], _valueAt[depth], out _grownAt[depth]);
                 int hand = _deal.At(spent);
 
                 for (int i = 0; i < _board.Count; i++)
@@ -250,7 +252,7 @@ namespace GlimmerGrove.Modes
 
                     _board.Tap(i, hand, null);
                     bool won = Reaches(spent + 1, left - 1, depth + 1);
-                    _board.Restore(_groundAt[depth], _valueAt[depth]);
+                    _board.Restore(_groundAt[depth], _valueAt[depth], _grownAt[depth]);
 
                     if (won) return true;
                     if (_exhausted) return false;

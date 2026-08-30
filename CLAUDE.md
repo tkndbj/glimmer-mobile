@@ -1133,6 +1133,44 @@ What that means in practice here:
    `ripple_lily`). An id travels into the manifest, analytics and the save file exactly as a level
    id does.
 
+20l. **"Brain-dead" is a property of what the player has to *work out*, not of how hard the
+   board is — and every cheap way to make a mode easier misses that.** Budburst was commissioned
+   as chill, was tuned three times toward chill, and came back each time as *"you still have to
+   think quite hard"*. Nothing about the boards was wrong: par was 3, the satchel was eight taps
+   for a three-tap answer, a thoughtless player cleared every grove. What was wrong is that
+   **the match was invisible until you made it**. Every game of this shape — Royal Match, Candy
+   Crush — *shows* the player the matches and asks them to pick one; this one made them work out,
+   in their head, which cell the colour in hand would turn into a third of something, which is a
+   simulation task and no amount of generosity in the numbers touches it.
+   <br>Four rules answered it and they are one idea, gated on one field: a grove with a
+   <b>strip</b> (`regrow`) is **living**, and one without is **still** — the shape this mode
+   shipped with, kept because eight vector cases pin the base rule in isolation from everything
+   built on top of it.
+   <br>**The board says which taps pop.** `BudRun.Pops` is one preview per flower and
+   `BudView.PaintPops` breathes them. The choice is untouched — most groves offer several and
+   they differ enormously in size — and what is gone is the arithmetic in front of all of them.
+   This is the change; the other three are what make the answer worth looking at.
+   <br>**It falls, and it grows.** What bursts leaves a hole, everything above slides into it,
+   and once the chain has stopped the holes fill from the strip. The board never thins, so the
+   fortieth tap is dealt as good a grove as the first — which is the half of regrowth that
+   actually mattered, and the reason chains stopped getting rarer as a level went on.
+   <br>**White is the bomb.** It holds every channel, so it could never be mixed into: it was a
+   dead cell and a mistake the player had made, the one state in the mode that punished them for
+   playing it well. Tapping it now clears the square around it. The trap became the reward and
+   the board gained an obvious, spectacular button, at the cost of no new object at all.
+   <br>**And one flower ripens between taps**, always beside somebody still shut in, so the grove
+   leans toward the player rather than drifting away from them.
+   <br>**Two of those nearly cost properties this file exists to protect, and both failures are
+   the same failure.** Growing *inside* the chain destroys the termination proof — a wave used to
+   remove at least three flowers from a board that never gained any, and a repeating strip can
+   resonate with a grove for ever. Measured on the first cut: **two thirds of opening taps ran
+   straight into the wave ceiling and par collapsed to one**. So the chain falls and the grove
+   grows afterwards, which restores the proof exactly. And what grows may never *make* a bunch —
+   a hole takes the first colour off the strip that leaves the grove settled — or the player is
+   handed a cascade they did not cause, which is what `BudValidator.Settled` refuses of an
+   authored board and had no reason to be less true at rest. **Before adding a rule that puts
+   something on the board, ask what used to bound the loop.**
+
 20k. **A mode may be built to be *easy*, and then two of this file's own rules invert.** Budburst
    is the first mode here commissioned against a feeling rather than a difficulty: *chill,
    hypnotic, one tap and something enormous happens* — the register Royal Match and Toy Blast play
@@ -2361,7 +2399,7 @@ re-reading before changing something, it is in one of those two sections and not
 | `f01_lightfall` | fall | 10 | 2–6 drops | none, then default 1.60 (motes) | the cook, then the chain; motes 3 → 30, headroom 4 → 2, `ways` never above 8 |
 | `k01_grovekeeper` | keeper | 10 | 2–8 tiles | none, then par + 5 (tiles) | the inversion, then stone, the heartbed and the prism; beds 2 → 4, `ways` 2 → 2 with a 1 at the fifth |
 | `h01_emberfall` | hollow | 10 | 1–2 sparks | — | ladder is *how few openings win*: 7,8,6,4,2,3,4,1,4,1 |
-| `b01_thicket` | bud | 10 | 3 taps | par + 5 (taps) | the chain, then the tough cocoon; flowers 36 → 50, critters 4 → 8, every grove's best tap a cascade |
+| `b01_thicket` | bud | 10 | 3 taps | par + 5 (taps) | every grove *living* (invariant 20l); 5x5 → 8x7, flowers 22 → 49, critters 3 → 12, opening tap 3 waves → 8 |
 
 **No level authors a difficulty number except the first glade in the game, and no chapter authors
 a clock** (invariant 22). Par is derived from the board; both star lines and the losing line are
@@ -2597,6 +2635,21 @@ one colour bursts**, washing its colour into every flower it touches. Which make
 Which makes more. A cocoon beside any burst takes a crack, and one out of cracks opens. Free every
 critter before the taps run out.
 
+**A grove is *living*, which is four rules gated on one field** (`regrow`, the strip new
+flowers grow from — see invariant 20l). It **falls and grows**: what bursts leaves a hole,
+everything above slides into it, and once the chain has stopped the holes fill, so the board
+never thins out. Its **white flowers are bombs**: white can never be mixed into, so it used to be
+a dead cell and a mistake — tapping it now clears the square around it. And **one flower ripens
+between taps**, always beside somebody still shut in. A grove with no strip is *still* and does
+none of it, which is how the mode shipped and is what keeps eight vector cases pinning the base
+rule on its own.
+
+**And the board says which taps pop.** Every flower a tap would set something off on breathes,
+gently. That is the single change that took the arithmetic out of the mode, and it was reported
+into existence: three tunings toward "chill" all missed, because what was hard was never the
+boards — it was that the match was invisible until you made it. The choice is untouched; the sum
+in front of it is gone.
+
 **The mix is the whole design decision, and it is why this mode is chill rather than clever.**
 Mixing only ever *adds* channels, so every tap drives the board toward white and toward a burst:
 the grove wants to go off, and the player is only choosing where. There is nothing to work
@@ -2740,13 +2793,41 @@ with a **starburst of rays** for an edge and glints over the top. Every one of t
 with a clean line at cell size, and it is what this genre actually ships: Royal Match and Toy
 Blast burst in shards and light and have no smoke anywhere near the board.
 
-**A freed critter stays on the board, and that is the reward being visible.** It used to leap out
-of the shell and fade to nothing over the last third of its animation, so a grove where everybody
-had been freed was an empty field — the thing the player spent the level earning was the one thing
-not on screen at the end. It now jumps clear, settles back onto its own cell at `FreedScale`, and
-breathes there for the rest of the run. Two tweens rather than one, because a single eased curve
-across both halves reads as a float rather than as getting out: the leap is fast and overshoots,
-the settle is slower and lands.
+**A freed critter is celebrated where it was earned and then flies to the counter, and the middle
+of that sentence is what took three goes to get right.** It used to leap out and fade to nothing
+over the last third of its animation, so a grove where everybody had been freed was an empty field
+— the thing the player spent the level earning was the one thing not on screen at the end. The
+answer to that was to make it *stay*, standing on its own cell for the rest of the run, and that is
+the version that shipped and was wrong for a reason nothing in the mode could see: **freeing empties
+that square in the model.** It has to — the grove falls into the hole and that is where a chain gets
+its compounding from — so a critter standing there is standing exactly where a flower is about to
+come to rest. It was reported three times over, as critters falling, as flowers falling through
+them, and as critters *turning*, and all three are one fault: the reward was being kept in the one
+place the board is allowed to rearrange. (`Wind` turns a whole tile, so when the flower that landed
+on that square later burst, the creature went round with the scenery.)
+<br>The obvious fix — make the square a **post** the grove may not move — was built, mirrored into
+`bud.py` and measured against the shipped ten, and it is recorded above because it must not be
+tried again: it takes the cascades out of the boards. So the reward moves instead. The shell breaks,
+the critter leaps clear and settles, and *then*, alone, a ring closes **inward** onto it
+(`BudView.Circle` — every other ring in this mode expands, which says *something went off here*;
+closing says *this one*) while it pumps inside it (`BudView.Pump`, one half-sine, no oscillation).
+Then it flies on an arc to the **critters readout**, shrinking, and the counter is punched as it
+lands. The number itself was already the model's and had already ticked; what the flight buys is
+that a number which changed on its own becomes somewhere the reward visibly *went*.
+<br>Three things about it are load-bearing. The greeting lands **after** the shell's own noise has
+finished — a cocoon opening draws a star, the shell whitening, six chips, two shockwaves, sparks,
+three embers and a halo, and the creature used to arrive in the middle of all of it as a ninth thing
+moving, which is why it was reported as *no emphasis at all* on a build drawing eight separate
+effects. The flight is **chained off the pump's own completion** rather than timed to match it,
+because a finished pump restarts an idle breathe and a breathe borrows the scale the flight is
+writing: timed alongside, the critter arrived at the counter at full size with a breath still
+driving it — measured, and it is the two-tweens-on-one-value fault in freshly written code. And
+the destination is read off the live readout **through the world and converted back**, never
+computed from `BudBand`'s numbers, because the grid and the band are different nodes and a second
+copy of where the counter is would be a second thing to keep in step.
+<br>The finish changed with it: the grove used to end with the freed critters hopping one after
+another, and there are none standing, so `Triumph` punches the readout they all flew to —
+`BudTempo.CheerAt` is retired with them.
 
 **Budburst's two sounds are its own slots, and both were picked by ear after the measurements had
 narrowed the field.** `burst` rather than `pop`, because `pop` is a wooden clunk eight other
@@ -2815,16 +2896,23 @@ eight units apart read as one card with seams in it, which is the worst of both.
 **The Thicket is ten groves and every one of them is par 3, which is arithmetic rather than
 laziness.** The mode shipped as one board on purpose — two modes before it were built out to five
 and ten levels and thrown away, and what decides a mode is whether the verb lands (invariant 20j).
-It landed, so the chapter was filled out; and filling it out found the ceiling described in
+It landed, so the chapter was filled out — twice, because the first fill was not chill enough
+and the reason was not the boards (invariant 20l). Filling it out found the ceiling described in
 invariant 26d. Cost goes as the flower count to the power of par, so a par-4 grove big enough to
 cascade is refused by `BudValidator`'s node ceiling, and a par-4 grove small enough to prove comes
 back at twenty flowers with a **one-wave** best tap — a board that validates perfectly with the
 mode taken out of it. So par stays where the cascades are and **the ramp is one dial**: how many
-are shut in (4 to 8, and how many need two cracks rather than one), and with it how much grove
-there is (36 flowers to 50). Every grove is dealt `par + 5`, which is eight taps for a three-tap
-answer, and it stays eight on the tenth: freeing eight critters with the same allowance is more
-to do than freeing four **without ever being tighter**, which is the only kind of harder this
-mode is allowed to get (invariant 20k).
+are shut in — **3, 4, 5, 6, 6, 6, 7, 8, 9, 12** — and with it how much grove there is (a 5x5 with
+22 flowers up to an 8x7 with 49). Every grove is dealt `par + 5`, which is eight taps for a
+three-tap answer, and it stays eight on the twelfth-cocoon finale: freeing twelve critters with
+the same allowance is more to do than freeing three **without ever being tighter**, which is the
+only kind of harder this mode is allowed to get (invariant 20k). A careless player scores three
+stars on all ten.
+
+**The first grove is twenty-two flowers in four colours with three critters in it**, and that is
+the other half of what was wrong: the old opening board was thirty-six flowers in five colours,
+which is a wall of stuff to meet a mode in. It is small enough to read at a glance and its one
+marked tap already runs three waves.
 
 **Two dials were tried and thrown away, and both for the same reason.** `spare` came down from
 five to three across the chapter, and `greedy` — whether a thoughtless run still scored three
@@ -2836,13 +2924,13 @@ clearest case: a barrier is the one object in this mode that can only ever make 
 still parses, because the character is shared vocabulary with Groovekeeper, and `BudValidator`
 warns on a grove that stands any. `bud_wood` is a **spent lesson id**.
 
-**The loudest thing in it is `b01_widewild`**, whose best opening tap runs **nine waves, bursts
-twenty-nine of fifty flowers and frees five critters at once** — and the sweep held out for a
+**The loudest thing in it is the finale**, whose opening tap runs **eight waves, bursts
+twenty-seven flowers and frees ten of its twelve critters at once** — and the sweep held out for a
 cascade on every rung, because a grove whose best play is three separate one-wave taps passes
 every other check in this repository with the mode taken out of it. Only the *fill* was searched:
-every layout is drawn by hand and what was hunted is which colour stands where and which basket
-the grove is dealt, which is `b01_firstburst`'s bargain kept for the other nine
-(`Tools/chapters/b01_thicket.py`).
+every layout is drawn by hand and what was hunted is which colour stands where, which basket the
+grove is dealt and **which strip it grows from**, which is `b01_firstburst`'s bargain kept for the
+other nine (`Tools/chapters/b01_thicket.py`).
 
 **Par 3 rather than par 2, and the reason generalises.** The layout's first basket gave par 2, and
 at par 2 both star lines round onto 3 — `ceil(2 × 1.20)` and `ceil(2 × 1.40)` are the same integer
@@ -2928,6 +3016,29 @@ behind thirteen flowers going off. `BudPulseKind.Crack` is the model saying it a
 is what it says — the shell jolts, splinters come off it, the ring flares — deliberately smaller
 than freeing one in every dimension and pitched under it, so the two are one gesture at two
 strengths.
+
+**Freed critters stand in the grove and the grove still falls through their square, and that is
+measured rather than preferred.** Reported twice as flowers falling into the slot a critter is
+standing in. The obvious fix — a freed cocoon leaves a **post** the grove may not move (old wood's
+behaviour with a creature drawn on it) — was built on a branch, mirrored into `bud.py` and run
+against the shipped ten. It takes the mode out of the boards, because a chain compounds *because*
+the grove falls into the hole a burst makes and a post permanently fragments its column:
+
+| grove | as shipped (best opening tap) | with critters as posts |
+|---|---|---|
+| `b01_twiceknocked` | 5 waves, 16 flowers, 4 freed | **1 wave, 3 flowers, 1 freed** |
+| `b01_dewfall` | 7 waves, 22 flowers, 5 freed | 2 waves, 9 flowers, 2 freed |
+| `b01_everbloom` | 6 waves, 25 flowers, 7 freed | 3 waves, 12 flowers, 3 freed |
+| `b01_thicketheart` | 8 waves, 27 flowers, 10 freed | 3 waves, 9 flowers, 4 freed |
+
+`b01_sunspill` also collapses to par 2 with one winning play and `b01_thicketheart` stops being
+provable inside `BudValidator`'s node ceiling, so two of the ten fail the build gate outright. That
+half is a re-sweep; the cascade collapse is **not** — about 1,200 (basket, strip) pairs were swept
+on `b01_sunspill`'s layout under the post rule and **not one** produced an opening tap of even three
+waves. It is the rule rather than the fill, and its shape is the wrong way round for this mode: the
+more critters a player frees, the worse their grove gets at cascading. If it is ever wanted anyway,
+the layouts have to change with it — cocoons low in their columns, so a post sits near the floor and
+the column above it can still compact — and that is ten hand-drawn boards, not a sweep.
 
 **Two retired modes sit behind this one** and both are worth knowing about before designing a
 third — see invariant 20j. Lightweave shipped three chapters and rejected almost nothing;
@@ -3192,6 +3303,67 @@ and a screenshot of the source.
   for the rest of the run. The overlap is gone — only the bloom leaps now, for an unrelated
   reason — and the kill stays, because a gesture that reads its target's resting value is one
   call site away from superseding itself again and this failure is silent and permanent.
+- **And the same rule from the other side: one tween moving several transforms must be owned by
+  one they all hang from.** A tween dies with its owner and is killed by its owner, so a tween
+  that moves five objects while naming one of them as its owner is four objects nothing can
+  reach. Budburst's fall was exactly that — the flower, its heart, its glow, the cocoon and the
+  critter inside it, all moved by a tween owned by whichever of the two pictures was falling —
+  and *everything* in that file that repaints a flower kills that owner outright
+  (`PaintCell` and `ThrowFlower` both call `Tween.KillAll(cell.Bud)`, correctly, to stop a
+  breath). A killed tween never reaches its `OnDone`, so a flower that fell into a cell and then
+  burst on the next wave, or one still falling when the chain's closing repaint ran, left all
+  five pictures hanging between two squares for the rest of the run. It was reported from play as
+  flowers getting stuck half way, and nothing here could have caught it: the board, the par and
+  every gate are exactly right and only the drawing is wrong. The fix is a **`Cell.Piece`** node
+  that holds everything that travels, so a fall moves one transform that nothing else animates —
+  and the ground, the hit target and the `Btn` stay where the layout put them, which is what a
+  falling board must not lose. Two smaller things went with it, both general. A fall is
+  `OnAbandon`'s *second* kind — it arrives at a resting state it knows absolutely — so it declares
+  where an interrupted one lands rather than being left mid-air; and the offset is taken **after**
+  the tween is registered, because registering supersedes the fall already running there and a
+  superseded fall lands, which would undo a lift taken first.
+- **A stagger and a duration are one bound, not two.** `BudTempo.Rain` promises the grove is back
+  on the ground before the next wave charges and `FallOver` kept a fall inside that allowance —
+  but the ripple's delay was *added* to the result, so a piece late in the ripple was still
+  travelling a third of a wave after the wave that threw it had ended, which is two waves moving
+  the same flowers at once and is what made the stranding above so easy to hit. `BudTempo.Rainfall`
+  hands back both halves and spends the delay out of the fall rather than beside it, so a late
+  piece falls *faster* rather than later. It is in Domain and has a test, for the reason every
+  timing rule here is: motion is the one subsystem whose failures only show up in play.
+- **A reward the player has earned must not be kept where the board is allowed to rearrange.**
+  Budburst frees a critter by *emptying* its square — the model turns it to bare ground, which is
+  the whole point, because the grove then falls into the hole. The critter was drawn as a child
+  of that cell, so everything the board did next was done to it: the flower landing on its square
+  took it down with the fall, `PaintCell` was free to paint a sleeping critter straight over
+  somebody who had just got out, and when that flower later burst, `Wind` — which turns the whole
+  tile — span the creature round with the scenery. Reported as critters falling, as flowers
+  falling through them, and as critters rotating; one fault, three sentences. `BudView._freed`
+  and the `Freed` layer are the fix: a critter that is out is a **resident of the grove**, drawn
+  above the field and below the fireworks, standing at the square it was let out on for the rest
+  of the run. Nothing that falls can reach it. The general form is worth having before the next
+  mode does this: **ask what the model does to a square after the thing that made it special has
+  happened** — here it is emptied, which is exactly the case where "draw it in the cell" stops
+  being true and nothing says so.
+- **What answers an event and what stands as an invitation are different gestures, and a punch is
+  not the small one.** `Tween.Punch` is a damped sine through three half-cycles — a *wobble* —
+  which is right for a control being pressed and wrong for a creature acknowledging something
+  that happened near it. A freed critter answers a wave with `BudView.Pump`: one half-sine out
+  and back, no overshoot at either end, at `BudTempo.FreedPump`. It kills the breathe before it
+  starts and restarts it after, and it never reads the target's scale — a freed critter's rest is
+  `FreedScale` and is *known*, which is stricter than the "kill the breathe before you read"
+  rule this file already carries twice.
+- **A payoff drawn in the same register as its packaging cannot be seen, however much of it there
+  is.** A cocoon opening in Budburst draws a star behind it, the shell whitening and going, six
+  chips of shell, two shockwaves, sparks, three embers and a gold halo — and the creature the
+  whole level was for arrived in the middle of all of that as one more thing moving. Reported as
+  *no emphasis at all*, on a build drawing eight separate effects, which is the useful part: the
+  answer was never another effect. It is a beat where the creature is **the only thing moving** —
+  `BudView.Circle` closes a ring *inward* onto them (every other ring in the mode expands, which
+  says *something went off here*; closing says *this one*) and `Pump` swells them inside it, both
+  after the shell's own noise has finished and both slower and larger than the pulse the same
+  critter answers a later wave with. Before adding to a celebration, ask what else is on screen
+  in that quarter-second; if the answer is "eight things", the fix is a silence rather than a
+  ninth.
 - **A panel with several exits reports through none of them reliably.** Put the safe outcome
   on `OnDestroy` and make the exception the thing somebody declares — `AdOfferOverlay.Dismissed`,
   the pause menu's unlatch, `BoardView.Locked` as a property that raises `OnChanged`,

@@ -19,9 +19,22 @@ ever added, so the settle terminates and the search does too.
 
 **Par is the fewest taps that free every critter.** Not "clear every flower": branching is the
 flower count, so that goal cost tens of thousands of positions and often could not be proved.
+
+**Four rules arrived together and all four are here.** A grove *falls* and *grows*: what bursts
+leaves a hole, everything above slides into it, and new flowers arrive along the top from an
+authored strip - so a chain compounds instead of thinning the board out. A *white* flower is a
+bomb rather than a dead cell: tapping it clears the three-by-three around it. And one flower
+*creeps* between taps - the palest one standing beside a cocoon takes the colour just spent, so
+the grove always leans a little further toward going off, and always beside somebody who needs
+freeing. Every one of them is a pure function of the position and the tap, so par is still
+searchable and two players on the same grove still meet the same board.
 """
 import sys
 from collections import deque
+
+#: Mirrors `BudLayout.MostWaves` - the bound a regrowing grove needs and a fixed
+#: one does not. See the C# for why.
+MOST_WAVES = 14
 
 EMPTY, STONE = ".", "#"
 COCOON = {"o": 1, "O": 2}
@@ -31,8 +44,12 @@ LETTER = {R: "R", G: "G", B: "B", R | G: "Y", R | B: "M", G | B: "C", ALL: "W"}
 MASK = {v: k for k, v in LETTER.items()}
 
 
+def channels(mask):
+    return (1 if mask & R else 0) + (1 if mask & G else 0) + (1 if mask & B else 0)
+
+
 class Grove(object):
-    def __init__(self, rows, deal):
+    def __init__(self, rows, deal, regrow=None):
         rows = list(rows)
         self.h = len(rows); self.w = len(rows[0])
         self.ground = []
@@ -54,6 +71,10 @@ class Grove(object):
         if any(m not in (R, G, B) for m in self.deal):
             raise ValueError("a grove is dealt pure colour; blends come from mixing")
 
+        # A strip may deal blends where a basket may not: a basket is what the player decides
+        # with, and a strip is scenery. See `BudDeal.TryParse`'s `pure` argument.
+        self.regrow = [MASK[c] for c in regrow] if regrow else None
+
     def beside(self, i):
         x, y = i % self.w, i // self.w
         out = []
@@ -66,19 +87,26 @@ class Grove(object):
     def at(self, spent):
         return self.deal[spent % len(self.deal)]
 
+    def grows(self, taken):
+        return self.regrow[taken % len(self.regrow)]
+
 
 class Board(object):
-    def __init__(self, g, ground=None, colour=None, spent=0):
+    def __init__(self, g, ground=None, colour=None, spent=0, grown=0):
         self.g = g
         self.ground = list(ground if ground is not None else g.ground)
         self.colour = list(colour if colour is not None else g.colour)
         self.spent = spent
+        self.grown = grown
 
     def copy(self):
-        return Board(self.g, self.ground, self.colour, self.spent)
+        return Board(self.g, self.ground, self.colour, self.spent, self.grown)
 
     def key(self):
-        return (self.spent % len(self.g.deal),
+        # Where the strip is up to is part of the position: two groves that look the same but
+        # have taken a different number of flowers off it will grow different ones next.
+        lap = self.grown % len(self.g.regrow) if self.g.regrow else 0
+        return (self.spent % len(self.g.deal), lap,
                 tuple(self.ground), tuple(self.colour))
 
     @property
@@ -110,9 +138,15 @@ class Board(object):
                 out.append((col, blob))
         return out
 
+    def is_bomb(self, i):
+        # Gated with falling, growing and the creep: the strip is what says a grove is alive.
+        return bool(self.g.regrow) and self.ground[i] == "f" and self.colour[i] == ALL
+
     def can_tap(self, i):
         if self.ground[i] != "f":
             return False
+        if self.is_bomb(i):
+            return True
         return (self.colour[i] | self.g.at(self.spent)) != self.colour[i]
 
     def any_move(self):
@@ -122,6 +156,9 @@ class Board(object):
         so a grove of nothing but white has flowers on it and no legal tap in it. It asks about
         the whole basket because the basket repeats for ever.
         """
+        for i in range(self.g.count):
+            if self.is_bomb(i):
+                return True
         for colour in set(self.g.deal):
             for i in range(self.g.count):
                 if self.ground[i] == "f" and (self.colour[i] | colour) != self.colour[i]:
@@ -133,14 +170,132 @@ class Board(object):
         if not self.can_tap(i):
             return (0, 0, 0, 0)
 
-        self.colour[i] |= self.g.at(self.spent)
-        self.spent += 1
-        return self.settle()
+        spent = self.g.at(self.spent)
 
-    def settle(self):
+        if self.is_bomb(i):
+            self.spent += 1
+            return self.bomb(i)
+
+        self.colour[i] |= spent
+        self.spent += 1
+        return self.settle(spent)
+
+    def bomb(self, i):
+        """A white flower going off: the three-by-three around it bursts at once."""
+        x, y = i % self.g.w, i // self.g.w
+        blast = []
+        for dy in (-1, 0, 1):
+            for dx in (-1, 0, 1):
+                a, b = x + dx, y + dy
+                if 0 <= a < self.g.w and 0 <= b < self.g.h:
+                    at = b * self.g.w + a
+                    if self.ground[at] == "f":
+                        blast.append(at)
+
+        hit = []
+        for a in blast:
+            for n in self.g.beside(a):
+                if self.ground[n] == "c" and n not in hit:
+                    hit.append(n)
+
+        burst = 0
+        for a in blast:
+            self.ground[a] = EMPTY; self.colour[a] = 0; burst += 1
+
+        freed = cracked = 0
+        for n in hit:
+            self.colour[n] -= 1
+            if self.colour[n] > 0:
+                cracked += 1
+            else:
+                self.ground[n] = EMPTY; self.colour[n] = 0; freed += 1
+
+        self.fall()
+        b2, w2, f2, c2 = self.settle(0)
+        return (burst + b2, 1 + w2, freed + f2, cracked + c2)
+
+    def fall(self):
+        """Everything slides down into the holes under it. Inside a chain; nothing is added.
+
+        Gated on the strip with `grow`: falling and growing are one rule, so a grove either has
+        both or neither. Mirrors `BudBoard.Fall`.
+        """
+        if not self.g.regrow:
+            return
+        for x in range(self.g.w):
+            floor = self.g.h - 1
+            for y in range(self.g.h - 1, -1, -1):
+                at = y * self.g.w + x
+                if self.ground[at] == EMPTY:
+                    continue
+                to = floor * self.g.w + x
+                floor -= 1
+                if to == at:
+                    continue
+                self.ground[to] = self.ground[at]; self.colour[to] = self.colour[at]
+                self.ground[at] = EMPTY; self.colour[at] = 0
+
+    def joins_a_bunch(self, cell):
+        col = self.colour[cell]
+        seen, blob, q = {cell}, 0, [cell]
+        while q:
+            a = q.pop(); blob += 1
+            for nb in self.g.beside(a):
+                if nb in seen: continue
+                if self.ground[nb] == "f" and self.colour[nb] == col:
+                    seen.add(nb); q.append(nb)
+        return blob >= 3
+
+    def grow(self):
+        """New flowers fill the holes once the chain has stopped, and never make a bunch.
+
+        Mirrors `BudBoard.Grow`. Growing *inside* the chain destroys the termination argument -
+        a repeating strip can resonate with the grove for ever - so it happens once, afterwards.
+        """
+        if not self.g.regrow:
+            return
+        for y in range(self.g.h - 1, -1, -1):
+            for x in range(self.g.w):
+                at = y * self.g.w + x
+                if self.ground[at] != EMPTY:
+                    continue
+                self.ground[at] = "f"
+                for _ in range(len(self.g.regrow)):
+                    self.colour[at] = self.g.grows(self.grown)
+                    if not self.joins_a_bunch(at):
+                        break
+                    self.grown += 1
+                self.grown += 1
+
+    def creep(self, spent):
+        """The palest flower beside a shut cocoon takes the colour just spent. Exactly one."""
+        if not spent or not self.g.regrow:
+            return
+        best, palest = None, 99
+        for i in range(self.g.count):
+            if self.ground[i] != "c":
+                continue
+            for at in self.g.beside(i):
+                if self.ground[at] != "f":
+                    continue
+                if (self.colour[at] | spent) == self.colour[at]:
+                    continue
+                if channels(self.colour[at]) >= palest:
+                    continue
+                palest, best = channels(self.colour[at]), at
+        if best is None:
+            return
+        was = self.colour[best]
+        self.colour[best] |= spent
+        if self.joins_a_bunch(best):
+            self.colour[best] = was
+
+    def settle(self, spent):
         burst = waves = freed = cracked = 0
 
-        while True:
+        # Mirrors `BudLayout.MostWaves`. Once a grove regrows, a chain is no longer bounded by
+        # the board it started on - a repeating strip can resonate with the grove for ever.
+        while waves < MOST_WAVES:
             blobs = self.groups()
             if not blobs:
                 break
@@ -171,8 +326,11 @@ class Board(object):
                 if self.ground[n] == "f":
                     self.colour[n] |= col
 
+            self.fall()
             waves += 1
 
+        self.grow()
+        self.creep(spent)
         return (burst, waves, freed, cracked)
 
     def draw(self):
@@ -205,8 +363,8 @@ def over(par, hundredths):
     return (par * hundredths + 99) // 100
 
 
-def search(rows, deal):
-    g = Grove(rows, deal)
+def search(rows, deal, regrow=None):
+    g = Grove(rows, deal, regrow)
     start = Board(g)
     if start.done:
         return (0, 0, 0, True)
@@ -244,8 +402,8 @@ def search(rows, deal):
     return (0, 0, st["n"], False)
 
 
-def careless(rows, deal, budget):
-    g = Grove(rows, deal); b = Board(g)
+def careless(rows, deal, budget, regrow=None):
+    g = Grove(rows, deal, regrow); b = Board(g)
     for spent in range(budget):
         if b.done: return spent
         best, gain = None, None
@@ -259,8 +417,8 @@ def careless(rows, deal, budget):
     return budget if b.done else -1
 
 
-def biggest(rows, deal):
-    g = Grove(rows, deal); b = Board(g); best = (0, 0, 0, 0); where = None
+def biggest(rows, deal, regrow=None):
+    g = Grove(rows, deal, regrow); b = Board(g); best = (0, 0, 0, 0); where = None
     for i in range(g.count):
         if not b.can_tap(i): continue
         p = b.copy(); s = p.tap(i)
@@ -268,13 +426,13 @@ def biggest(rows, deal):
     return best, where
 
 
-def survey(rows, deal):
-    g = Grove(rows, deal)
-    par, ways, nodes, proved = search(rows, deal)
-    best, where = biggest(rows, deal)
+def survey(rows, deal, regrow=None):
+    g = Grove(rows, deal, regrow)
+    par, ways, nodes, proved = search(rows, deal, regrow)
+    best, where = biggest(rows, deal, regrow)
     return dict(w=g.w, h=g.h, flowers=Board(g).flowers, cocoons=Board(g).shut,
                 par=par, ways=ways, nodes=nodes, proved=proved,
-                careless=careless(rows, deal, par + 5) if proved and par else -1,
+                careless=careless(rows, deal, par + 5, regrow) if proved and par else -1,
                 bestBurst=best[0], bestWaves=best[1], bestFreed=best[2], bestAt=where)
 
 

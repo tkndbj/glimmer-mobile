@@ -45,6 +45,16 @@ namespace GlimmerGrove.Tests
             /// <summary>The basket, in pure colour letters. See <c>BudDeal</c>.</summary>
             public string colours;
 
+            /// <summary>
+            /// The strip a living grove grows from. Absent is a <em>still</em> grove — one that
+            /// does not fall, does not grow, has no bomb and no creep.
+            ///
+            /// <b>Both shapes are in this file on purpose.</b> The eight still cases pin the base
+            /// rule — mix, burst, wash — in isolation from everything built on top of it, which
+            /// is exactly what a vector file is for; the living ones pin what was built on top.
+            /// </summary>
+            public string regrow;
+
             public int par;
             public int ways;
             public int nodes;
@@ -62,6 +72,8 @@ namespace GlimmerGrove.Tests
             public int bestFreed;
 
             public VectorBeat[] beats;
+
+
         }
 
         [Serializable]
@@ -103,11 +115,19 @@ namespace GlimmerGrove.Tests
             Assert.IsTrue(BudDeal.TryParse(test.colours, out var deal, out string dealError),
                           test.name + ": " + dealError);
 
+            // A strip may deal blends where a basket may not: a basket is what the player
+            // decides with, and a strip is scenery. See BudDeal.TryParse's `pure` argument.
+            BudDeal strip = null;
+            if (!string.IsNullOrEmpty(test.regrow))
+                Assert.IsTrue(BudDeal.TryParse(test.regrow, out strip, out string growError,
+                                               pure: false),
+                              test.name + ": " + growError);
+
             Assert.IsTrue(BudLayout.TryReadRows(test.rows, width, test.rows.Length,
                                                 out var ground, out var value, out string error),
                           test.name + ": " + error);
 
-            return new BudLayout(width, test.rows.Length, ground, value, deal);
+            return new BudLayout(width, test.rows.Length, ground, value, deal, strip);
         }
 
         /// <summary>

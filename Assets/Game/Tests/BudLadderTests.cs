@@ -43,19 +43,21 @@ namespace GlimmerGrove.Tests
         /// <summary>One authored rung: its board, its basket, and what that grove measured.</summary>
         sealed class Rung
         {
-            public readonly string Id, Colours;
+            public readonly string Id, Colours, Regrow;
             public readonly string[] Rows;
             public readonly int Par, Ways, Careless, Nodes, Spare;
             public readonly int Flowers, Cocoons;
             public readonly int BestAt, BestBurst, BestWaves, BestFreed;
 
-            public Rung(string id, string colours, int par, int ways, int careless, int nodes,
+            public Rung(string id, string colours, string regrow,
+                        int par, int ways, int careless, int nodes,
                         int spare, int flowers, int cocoons,
                         int bestAt, int bestBurst, int bestWaves, int bestFreed,
                         params string[] rows)
             {
                 Id = id;
                 Colours = colours;
+                Regrow = regrow;
                 Par = par;
                 Ways = ways;
                 Careless = careless;
@@ -77,13 +79,21 @@ namespace GlimmerGrove.Tests
                 Assert.IsTrue(BudDeal.TryParse(Colours, out var deal, out string dealError),
                               Id + ": " + dealError);
 
+                // A strip may deal blends where a basket may not: a basket is what the player
+                // decides with, and a strip is scenery. See BudDeal.TryParse's `pure` argument.
+                BudDeal strip = null;
+                if (!string.IsNullOrEmpty(Regrow))
+                    Assert.IsTrue(BudDeal.TryParse(Regrow, out strip, out string growError,
+                                                   pure: false),
+                                  Id + ": " + growError);
+
                 int width = Rows[0].Length;
                 Assert.IsTrue(BudLayout.TryReadRows(Rows, width, Rows.Length,
                                                     out var ground, out var value,
                                                     out string error),
                               Id + ": " + error);
 
-                return new BudLayout(width, Rows.Length, ground, value, deal);
+                return new BudLayout(width, Rows.Length, ground, value, deal, strip);
             }
         }
 
@@ -93,132 +103,129 @@ namespace GlimmerGrove.Tests
         /// </summary>
         static readonly Rung[] Ladder =
         {
-            new Rung("b01_firstburst", "GBR",
-                     par: 3, ways: 12, careless: 4, nodes: 7903,
+            new Rung("b01_firstburst", "RGB", "RGBYMCW",
+                     par: 3, ways: 80, careless: 3, nodes: 1989,
                      spare: 5,
-                     flowers: 36, cocoons: 4,
-                     bestAt: 33, bestBurst: 13, bestWaves: 3, bestFreed: 3,
-                     "GYRYBBR",
-                     "BRoBoYG",
-                     "RBCRGRY",
-                     "GRoYoGY",
-                     "BBCRYRR",
-                     ".GGRYG."),
+                     flowers: 22, cocoons: 3,
+                     bestAt: 10, bestBurst: 10, bestWaves: 3, bestFreed: 2,
+                     "MRMGG",
+                     "MoMRR",
+                     "BRRGG",
+                     "RBBoB",
+                     "RMoRB"),
 
-            new Rung("b01_catchalight", "GBR",
-                     par: 3, ways: 287, careless: 3, nodes: 5610,
+            new Rung("b01_catchalight", "RBG", "RGBYM",
+                     par: 3, ways: 54, careless: 3, nodes: 7936,
                      spare: 5,
-                     flowers: 38, cocoons: 4,
-                     bestAt: 10, bestBurst: 20, bestWaves: 5, bestFreed: 3,
-                     "GYYGBYB",
-                     "RGoRoYR",
-                     "BBGYYGY",
-                     "YYoGoRR",
-                     "GBBRGGY",
-                     "GRYYRYR"),
+                     flowers: 32, cocoons: 4,
+                     bestAt: 17, bestBurst: 13, bestWaves: 4, bestFreed: 2,
+                     "BBYRYG",
+                     "GoBGoR",
+                     "BBRGRG",
+                     "RRBBYY",
+                     "BoGGoG",
+                     "GGRYBB"),
 
-            new Rung("b01_twiceknocked", "BRG",
-                     par: 3, ways: 6, careless: 3, nodes: 4545,
+            new Rung("b01_twiceknocked", "RBG", "RGBYMCW",
+                     par: 3, ways: 87, careless: 3, nodes: 5310,
                      spare: 5,
-                     flowers: 37, cocoons: 5,
-                     bestAt: 14, bestBurst: 7, bestWaves: 2, bestFreed: 2,
-                     "GGCMBYY",
-                     "CoCYGoM",
-                     "GYMYMMC",
-                     "CCMOGGC",
-                     "BBRBBYB",
-                     "CoMCCoB"),
+                     flowers: 31, cocoons: 5,
+                     bestAt: 23, bestBurst: 16, bestWaves: 5, bestFreed: 4,
+                     "RGGYBB",
+                     "RoRRoR",
+                     "GYBYYB",
+                     "RYORBG",
+                     "BBRGBY",
+                     "YoYRoY"),
 
-            new Rung("b01_sunspill", "GRB",
-                     par: 3, ways: 138, careless: 4, nodes: 7895,
+            new Rung("b01_sunspill", "RBG", "RGBYMC",
+                     par: 3, ways: 129, careless: 3, nodes: 3761,
                      spare: 5,
-                     flowers: 44, cocoons: 5,
-                     bestAt: 41, bestBurst: 26, bestWaves: 6, bestFreed: 4,
-                     "GRRYYMM",
-                     "YMoBoRR",
-                     "YCCMMCC",
-                     "MYROBGR",
-                     "MYMCCGB",
-                     "CCoGoCB",
-                     "GGCCGCY"),
+                     flowers: 30, cocoons: 6,
+                     bestAt: 23, bestBurst: 20, bestWaves: 4, bestFreed: 5,
+                     "YYMYRR",
+                     "RoMYoB",
+                     "RBBRYG",
+                     "YOGGOG",
+                     "BGRRYY",
+                     "BoMMoR"),
 
-            new Rung("b01_dewfall", "RGBRB",
-                     par: 3, ways: 8, careless: 5, nodes: 7055,
+            new Rung("b01_dewfall", "GBR", "RGBYMC",
+                     par: 3, ways: 102, careless: 4, nodes: 5734,
+                     spare: 5,
+                     flowers: 36, cocoons: 6,
+                     bestAt: 28, bestBurst: 22, bestWaves: 7, bestFreed: 5,
+                     "MMCGRCR",
+                     "CoCGBoR",
+                     "CMRCBGG",
+                     "BMOMOCM",
+                     "BCBRBBM",
+                     "CoBMMoG"),
+
+            new Rung("b01_widewild", "BGR", "RYGMBC",
+                     par: 3, ways: 109, careless: 3, nodes: 15451,
                      spare: 5,
                      flowers: 43, cocoons: 6,
-                     bestAt: 2, bestBurst: 23, bestWaves: 7, bestFreed: 4,
-                     "MMBYYMM",
-                     "YoMCCoB",
-                     "YRMGGBC",
-                     "GOYBBOC",
-                     "MMYMMBR",
-                     "GoRBYoR",
-                     "MGGBMMY"),
+                     bestAt: 44, bestBurst: 15, bestWaves: 4, bestFreed: 4,
+                     "RRMBCCM",
+                     "GoBRRoC",
+                     "RGBCCGG",
+                     "BROBOBB",
+                     "BRBRRGG",
+                     "CoBGGoR",
+                     "CRRMMGG"),
 
-            new Rung("b01_widewild", "RGBG",
-                     par: 3, ways: 13, careless: 3, nodes: 13311,
-                     spare: 5,
-                     flowers: 50, cocoons: 6,
-                     bestAt: 28, bestBurst: 29, bestWaves: 9, bestFreed: 5,
-                     "BMBBCGCM",
-                     "BoCGYCoM",
-                     "CCMGYCRR",
-                     "GGoMBoMM",
-                     "BBGMBRRG",
-                     "YoYYMBoG",
-                     "YMCCMBCB"),
-
-            new Rung("b01_honeylight", "BRGR",
-                     par: 3, ways: 4, careless: 3, nodes: 9418,
+            new Rung("b01_honeylight", "GBR", "RGBYMC",
+                     par: 3, ways: 185, careless: 3, nodes: 13514,
                      spare: 5,
                      flowers: 49, cocoons: 7,
-                     bestAt: 42, bestBurst: 13, bestWaves: 4, bestFreed: 4,
-                     "BRRYMYRY",
-                     "BoMYMYoY",
-                     "RCYCYMCC",
-                     "BCoOoYMM",
-                     "RMMYRYBB",
-                     "CoRYMRoR",
-                     "BBMCMYYR"),
+                     bestAt: 12, bestBurst: 10, bestWaves: 3, bestFreed: 1,
+                     "CGCGCGGY",
+                     "CoRRBCoY",
+                     "GBBYGCBG",
+                     "YYGOOYBG",
+                     "GRRGGCYY",
+                     "GoBBYGoG",
+                     "BBRoYGCC"),
 
-            new Rung("b01_wildwaking", "RBG",
-                     par: 3, ways: 2, careless: 4, nodes: 8646,
+            new Rung("b01_wildwaking", "BRGR", "RYGMBC",
+                     par: 3, ways: 86, careless: 3, nodes: 14882,
                      spare: 5,
                      flowers: 48, cocoons: 8,
-                     bestAt: 23, bestBurst: 23, bestWaves: 5, bestFreed: 6,
-                     "GORBYYOY",
-                     "YMMBRRYR",
-                     "YRoYGoYG",
-                     "MMRMRBBG",
-                     "YGoYRoRY",
-                     "YGYGYYRY",
-                     "RBBooMBM"),
+                     bestAt: 31, bestBurst: 17, bestWaves: 4, bestFreed: 3,
+                     "YBRRMYGM",
+                     "YoYBYRoM",
+                     "RMRBYRGR",
+                     "RMORROGR",
+                     "YBBGGBBM",
+                     "YoGBBRoM",
+                     "MMYooMRR"),
 
-            new Rung("b01_everbloom", "RGBRB",
-                     par: 3, ways: 2, careless: 4, nodes: 6006,
+            new Rung("b01_everbloom", "GRB", "RGBYMCW",
+                     par: 3, ways: 99, careless: 3, nodes: 15425,
                      spare: 5,
-                     flowers: 48, cocoons: 8,
-                     bestAt: 9, bestBurst: 9, bestWaves: 3, bestFreed: 2,
-                     "RRoYYoRY",
-                     "MBBRRCRY",
-                     "MOYCMMOC",
-                     "RMMCBYMM",
-                     "RORYBYOR",
-                     "MYRYRMMR",
-                     "MYoMMoYY"),
+                     flowers: 47, cocoons: 9,
+                     bestAt: 45, bestBurst: 25, bestWaves: 6, bestFreed: 7,
+                     "YoGYMBoR",
+                     "MYGYMBMR",
+                     "RBOGYOGG",
+                     "RBMGMGMR",
+                     "GYOBMOGR",
+                     "MYGYYRRB",
+                     "MoRMoGoB"),
 
-            new Rung("b01_thicketheart", "GRB",
-                     par: 3, ways: 7, careless: 3, nodes: 9784,
+            new Rung("b01_thicketheart", "RGB", "RGBYM",
+                     par: 3, ways: 61, careless: 3, nodes: 12038,
                      spare: 5,
-                     flowers: 48, cocoons: 8,
-                     bestAt: 22, bestBurst: 25, bestWaves: 7, bestFreed: 5,
-                     "GoGGCRoR",
-                     "GCCYGCGG",
-                     "CBOYGOBR",
-                     "GGYGCYCR",
-                     "CCOGCOCG",
-                     "YBCBBCBB",
-                     "RoRGGCoY"),
+                     flowers: 44, cocoons: 12,
+                     bestAt: 18, bestBurst: 27, bestWaves: 8, bestFreed: 10,
+                     "YoRGCBoR",
+                     "YCCGBGBR",
+                     "COGooGOM",
+                     "BBYYBBRM",
+                     "MOGooCOB",
+                     "RYYMYRMY",
+                     "YoCCRBoY"),
         };
 
         [Test]
@@ -438,6 +445,13 @@ namespace GlimmerGrove.Tests
 
                 CollectionAssert.AreEqual(rung.Rows, shipped.Written(), rung.Id + " (board)");
                 Assert.AreEqual(rung.Colours, shipped.Deal.Written(), rung.Id + " (basket)");
+                Assert.AreEqual(rung.Regrow,
+                                shipped.Regrow == null ? "" : shipped.Regrow.Written(),
+                                rung.Id + " (strip)");
+                Assert.IsTrue(shipped.Grows,
+                              rung.Id + ": every grove in this chapter is a living one — it " +
+                              "falls, it grows, its white flowers are bombs and one flower " +
+                              "ripens between taps (invariant 20l)");
                 Assert.AreEqual(rung.Spare, rules.Spare, rung.Id + " (spare)");
 
                 Assert.AreEqual(0, shipped.Stones,

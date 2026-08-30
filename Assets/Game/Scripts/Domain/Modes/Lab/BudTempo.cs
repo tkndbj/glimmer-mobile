@@ -420,6 +420,178 @@ namespace GlimmerGrove.Modes
         /// <summary>The grove's own celebration when the last critter is out.</summary>
         public const float Hush = .70f;
 
+        // ------------------------------------------------------------------ the grove falling
+        /// <summary>
+        /// How long a wave's fall is given, inside the beat that threw it.
+        ///
+        /// The grove has to be back on the ground before the next wave charges, or two waves are
+        /// moving the same flowers at once — the bug this mode has paid for twice.
+        /// </summary>
+        public static float Rain(float burn)
+        {
+            float over = burn * .62f;
+            if (over < .12f) over = .12f;
+            return over > .34f ? .34f : over;
+        }
+
+        /// <summary>
+        /// And how long one piece takes, given how many rows it has to travel.
+        ///
+        /// <b>Taller falls take longer, which is the whole of what makes a board feel heavy.</b>
+        /// A flower dropping five rows and one dropping a single row in the same time reads as
+        /// teleporting, and it is the commonest reason a falling board looks cheap. Bounded by
+        /// the wave either way.
+        /// </summary>
+        public static float FallOver(float over, float rows)
+        {
+            if (over < 0f) over = 0f;
+            if (rows < 1f) rows = 1f;
+
+            float share = over * (.55f + .16f * rows);
+            return share > over ? over : share;
+        }
+
+        /// <summary>Where one piece falls inside the wave's own ripple, so a column is not a wall.</summary>
+        public static float RainAt(int nth, float over)
+        {
+            if (nth <= 0) return 0f;
+
+            float step = over * .06f;
+            float delay = (nth % 6) * step;
+            return delay > over * .30f ? over * .30f : delay;
+        }
+
+        /// <summary>
+        /// The whole of one piece's fall: when it starts, and how long it then takes.
+        ///
+        /// <para>
+        /// <b>The two halves have to be bounded together, and they were not.</b>
+        /// <see cref="Rain"/> promises the grove is back on the ground before the next wave
+        /// charges, and <see cref="FallOver"/> keeps a fall inside that allowance — but the
+        /// ripple's delay was <em>added</em> to the result, so a piece late in the ripple
+        /// finished a third of a wave past the bound the comment claimed. That is two waves
+        /// moving the same flowers at once, which is the fault this mode has paid for twice.
+        /// A piece falls in what is left of the wave after its own wait, so a late one falls
+        /// faster rather than later, and the sum is the wave's allowance whatever the ripple
+        /// does.
+        /// </para>
+        /// </summary>
+        public static void Rainfall(int nth, float rows, float over,
+                                    out float delay, out float fall)
+        {
+            delay = RainAt(nth, over);
+            fall = FallOver(over - delay, rows);
+        }
+
+        // ------------------------------------------------------- what would pop, breathing
+        /// <summary>
+        /// How much a flower that would set something off swells, and how slowly.
+        ///
+        /// <b>The smallest motion in the mode, deliberately.</b> It is drawn on many flowers at
+        /// once and it must never compete with anything that is actually happening — it is a
+        /// standing invitation rather than an event, so it is quieter than the white flower's
+        /// breath and far quieter than a wind-up.
+        /// </summary>
+        public const float PopsSwell = .055f, PopsBreath = 1.7f;
+
+        // ------------------------------------------------------- what a freed critter answers with
+        /// <summary>
+        /// How far a critter that is already out swells when a wave goes off near it.
+        ///
+        /// <para>
+        /// <b>One pulse, and it is the only gesture a freed critter gets.</b> It used to be a
+        /// punch — a damped sine through three half-cycles, which is a <em>wobble</em> — on a
+        /// critter that was still a child of its cell, so a wave that burst the flower which had
+        /// fallen onto its square span it right round with the cell as well (`BudView.Wind` turns
+        /// the whole tile). A creature the player has just let out being spun by the scenery is
+        /// the one thing on this board that should look settled, and it was the least settled
+        /// thing on it. So the rotation is gone with the cell, and what is left is a single
+        /// swell and back: the grove is saying *they are still there* rather than shaking them.
+        /// </para>
+        /// <para>
+        /// Bigger than a flower's breath (<see cref="PopsSwell"/>) because it answers an event
+        /// rather than standing as an invitation, and smaller than a wind-up because a critter
+        /// that is out has nothing left to be decided about it.
+        /// </para>
+        /// </summary>
+        public const float FreedPump = .20f;
+
+        // ------------------------------------------------------------ and the moment they get out
+        /// <summary>
+        /// The greeting: how long a critter that has just been freed is held apart from the noise
+        /// of the shell breaking, how far they swell in it, and the ring that closes around them.
+        ///
+        /// <para>
+        /// <b>The payoff was drawn in the same register as the packaging, so it could not be
+        /// seen.</b> Everything a cocoon opening draws — the star behind it, the shell whitening
+        /// and going, the chips, two shockwaves, sparks, embers, a halo — is about the
+        /// <em>cocoon</em>, and the creature arrived in the middle of all of it as one more thing
+        /// moving. It was reported as no emphasis at all, on a build that was drawing eight
+        /// separate effects. What was missing is not another effect: it is a beat where the
+        /// creature is the only thing moving.
+        /// </para>
+        /// <para>
+        /// So the greeting is deliberately <b>bigger and slower than the wave-answer pulse</b>
+        /// (<see cref="FreedPump"/>) and lands after the shell's own noise has finished, which is
+        /// what makes one gesture read as an event and the other as an acknowledgement. The ring
+        /// closes <em>inward</em> over the first third and holds for the rest, so it is still
+        /// there while the creature is swelling inside it.
+        /// </para>
+        /// </summary>
+        public const float FreedHold = .52f, FreedGreet = .34f;
+
+        /// <summary>
+        /// How wide the greeting ring is at rest, and where it closes in from.
+        ///
+        /// <para>
+        /// <b>It hugs the creature rather than the cell.</b> A critter is drawn at .46 of a cell
+        /// and stands at <c>FreedScale</c>, so it is a little over half a cell wide; a ring much
+        /// past this one reaches into the squares beside it and is read as a shockwave — which
+        /// this mode already draws two of on the same frame, and which says <em>something went
+        /// off here</em> rather than <em>this one</em>.
+        /// </para>
+        /// </summary>
+        public const float FreedRing = .95f, FreedRingFrom = 2.10f;
+
+        /// <summary>How much of the greeting the ring spends closing, and how long it outlives it.</summary>
+        public const float FreedRingClose = .34f, FreedRingOver = 1.25f;
+
+        /// <summary>
+        /// And how much of the creature's own swell the ring takes while it holds.
+        ///
+        /// <para>
+        /// <b>A share rather than the whole of it, because only one thing may be growing.</b>
+        /// Given the full <see cref="FreedGreet"/> the ring closed in and then went most of the
+        /// way back out — measured, from 2.10 down to 1.09 and back to 1.32 — which reads as a
+        /// bounce, and a bounce is the ring competing with the creature it is drawn around
+        /// rather than holding it.
+        /// </para>
+        /// </summary>
+        public const float FreedRingSwell = FreedGreet * .35f;
+
+        /// <summary>
+        /// And how long they take to reach the counter, and how small they are when they get
+        /// there.
+        ///
+        /// <para>
+        /// <b>A critter that is out does not stay in a square, because a square is the one thing
+        /// the grove is allowed to rearrange.</b> Freeing empties that cell in the model — which
+        /// is the whole point, since the grove then falls into it and the chain compounds — so
+        /// anything left standing there is standing where a flower is about to come to rest. The
+        /// alternative was to make the square a post the grove may not move, and it was built and
+        /// measured: it takes the cascades out of the boards, because a chain compounds *by*
+        /// falling into the hole a burst makes. See <c>CLAUDE.md</c> for the table.
+        /// </para>
+        /// <para>
+        /// So they leave, and where they go is the answer to the only question the board is
+        /// keeping score of: the critters readout. It ticks for them anyway, so the flight makes
+        /// a number that was already changing into somewhere the reward visibly <em>went</em> —
+        /// which is what the old row of standing critters was for, moved somewhere the falling
+        /// grove cannot reach.
+        /// </para>
+        /// </summary>
+        public const float FreedFlight = .46f, FreedLand = .55f;
+
         // ------------------------------------------------------------------ the hint
         /// <summary>How long the mark takes to arrive on the flower it is pointing at.</summary>
         public const float HintArrive = .42f;
@@ -455,14 +627,5 @@ namespace GlimmerGrove.Modes
         /// waiting through, so everything in it has to fit rather than lengthen it.
         /// </summary>
         public const float Sweep = .52f;
-
-        /// <summary>Where the nth of this many freed critters leaps, inside the hush.</summary>
-        public static float CheerAt(int nth, int of)
-        {
-            if (nth <= 0 || of <= 1) return 0f;
-
-            float step = Hush * .42f / (of - 1);
-            return nth * step;
-        }
     }
 }

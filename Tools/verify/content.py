@@ -212,13 +212,15 @@ def check_bud(lid, chapter_id, level, block):
                       % (lid, bud.MIN_SIDE, bud.MAX_SIDE, w))
         return empty
 
+    regrow = (block.get('regrow') or '') or None
+
     if not (bud.MIN_SIDE <= h <= bud.MAX_SIDE):
         errors.append("%s: a grove is %d..%d tall; this one says %d"
                       % (lid, bud.MIN_SIDE, bud.MAX_SIDE, h))
         return empty
 
     try:
-        grove = bud.Grove(rows, deal)
+        grove = bud.Grove(rows, deal, regrow)
     except (ValueError, KeyError, IndexError) as bad:
         errors.append("%s: %s" % (lid, bad))
         return empty
@@ -260,7 +262,7 @@ def check_bud(lid, chapter_id, level, block):
                       "ever grows one - so no chain can ever crack it"
                       % (lid, i % grove.w, i // grove.w))
 
-    par, ways, nodes, proved = bud.search(rows, deal)
+    par, ways, nodes, proved = bud.search(rows, deal, regrow)
 
     if not proved:
         errors.append("%s: this grove could not be proved inside %d positions (it looked at "
@@ -308,7 +310,7 @@ def check_bud(lid, chapter_id, level, block):
                         "so this grove is a puzzle rather than a place to make a mess"
                         % (lid, par))
 
-    careless = bud.careless(rows, deal, budget or (par + bud.DEFAULT_SPARE))
+    careless = bud.careless(rows, deal, budget or (par + bud.DEFAULT_SPARE), regrow)
     if careless < 0:
         warnings.append("%s: a player who always taps whatever sets off the biggest chain never "
                         "finishes this grove, which is the bar this mode is held to" % lid)
@@ -323,7 +325,7 @@ def check_bud(lid, chapter_id, level, block):
                 buds=start.flowers, cocoons=start.shut,
                 ready=len(set(grove.colour[i] for i in range(grove.count)
                               if grove.ground[i] == "f")),
-                deal=deal)
+                deal=deal, grow=regrow or '')
 
 
 #: Where a well stops being cheap to prove, and where it stops being shippable. Mirrors
@@ -2022,6 +2024,11 @@ def run_bud_vectors():
     chain, a cocoon taking every crack of a wave at once, and a tap that mixes nothing being
     allowed to spend a colour.
 
+    Half the cases carry a `regrow` strip and half do not, and the split is the point: a grove
+    with a strip is *living* - it falls, it grows, its white flowers are bombs and one flower
+    ripens between taps - and one without is *still*, which is how this mode shipped. The still
+    cases go on pinning the base rule in isolation from everything built on top of it.
+
     Every case with a par also carries the taps of one shortest play and what each one came to,
     which is the half par alone cannot pin: two copies can agree exactly about how many taps a
     grove costs and still disagree about how far the chain ran.
@@ -2036,14 +2043,15 @@ def run_bud_vectors():
     for case in cases:
         name = case.get("name", "?")
         try:
-            grove = bud.Grove(case["rows"], case["colours"])
+            grove = bud.Grove(case["rows"], case["colours"], case.get("regrow") or None)
         except (ValueError, KeyError, IndexError) as why:
             bad.append("%s: %s" % (name, why))
             continue
 
+        strip = case.get("regrow") or None
         start = bud.Board(grove)
-        par, ways, _, proved = bud.search(case["rows"], case["colours"])
-        best, _where = bud.biggest(case["rows"], case["colours"])
+        par, ways, _, proved = bud.search(case["rows"], case["colours"], strip)
+        best, _where = bud.biggest(case["rows"], case["colours"], strip)
 
         for label, got, want in (("proved", proved, case["proved"]),
                                  ("par", par, case["par"]),
@@ -2060,7 +2068,7 @@ def run_bud_vectors():
                 bad.append("%s: ways is %r, vectors say %r" % (name, ways, case["ways"]))
 
             careless = bud.careless(case["rows"], case["colours"],
-                                    case["par"] + bud.DEFAULT_SPARE)
+                                    case["par"] + bud.DEFAULT_SPARE, strip)
             if careless != case["careless"]:
                 bad.append("%s: careless is %r, vectors say %r"
                            % (name, careless, case["careless"]))

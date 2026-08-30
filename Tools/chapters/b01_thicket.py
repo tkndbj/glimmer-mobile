@@ -84,12 +84,13 @@ WHERE = [(0.30, 0.055), (0.72, 0.140), (0.26, 0.225), (0.70, 0.310), (0.28, 0.39
 class Grove(object):
     """One authored level: a permanent id, a name, a line, a board and a basket."""
 
-    def __init__(self, lid, name, tagline, rows, colours, spare=0):
+    def __init__(self, lid, name, tagline, rows, colours, regrow=None, spare=0):
         self.id = lid
         self.name = name
         self.tagline = tagline
         self.rows = rows
         self.colours = colours
+        self.regrow = regrow
         self.spare = spare
 
     @property
@@ -98,7 +99,7 @@ class Grove(object):
 
     def survey(self):
         if not hasattr(self, "_survey"):
-            self._survey = bud.survey(self.rows, self.colours)
+            self._survey = bud.survey(self.rows, self.colours, self.regrow)
         return self._survey
 
     @property
@@ -112,6 +113,8 @@ class Grove(object):
             "rows": list(self.rows),
             "colours": self.colours,
         }
+        if self.regrow:
+            block["regrow"] = self.regrow
         if self.spare:
             block["spare"] = self.spare
 
@@ -125,152 +128,149 @@ class Grove(object):
 
 GROVES = []
 
-#: 1. the verb, and the board this mode was proved on. par 3, satchel 8, three stars at 4, ways 12, greedy 4;
-#: the best opening tap runs 3 wave(s), bursts 13 and frees 3.
+#: 1. the verb, on the smallest grove in the game. par 3, satchel 8, three stars at 4, ways 80, greedy 3;
+#: the best opening tap runs 3 wave(s), bursts 10 and frees 2.
 GROVES.append(Grove(
     "b01_firstburst", "First Burst",
     "Tap a flower. Watch it run.",
     [
-        "GYRYBBR",
-        "BRoBoYG",
-        "RBCRGRY",
-        "GRoYoGY",
-        "BBCRYRR",
-        ".GGRYG.",
-    ], "GBR"))
+        "MRMGG",
+        "MoMRR",
+        "BRRGG",
+        "RBBoB",
+        "RMoRB",
+    ], "RGB", "RGBYMCW"))
 
-#: 2. the chain, said as loudly as a second board can say it - five waves off the first tap. par 3, satchel 8, three stars at 4, ways 287, greedy 3;
-#: the best opening tap runs 5 wave(s), bursts 20 and frees 3.
+#: 2. a little more grove, one more shut in. par 3, satchel 8, three stars at 4, ways 54, greedy 3;
+#: the best opening tap runs 4 wave(s), bursts 13 and frees 2.
 GROVES.append(Grove(
     "b01_catchalight", "Catch Alight",
-    "One tap, and the whole hedge goes.",
+    "One tap, and it keeps going.",
     [
-        "GYYGBYB",
-        "RGoRoYR",
-        "BBGYYGY",
-        "YYoGoRR",
-        "GBBRGGY",
-        "GRYYRYR",
-    ], "GBR"))
+        "BBYRYG",
+        "GoBGoR",
+        "BBRGRG",
+        "RRBBYY",
+        "BoGGoG",
+        "GGRYBB",
+    ], "RBG", "RGBYM"))
 
-#: 3. the tough cocoon - and the deepest chain in the chapter, nine waves, for whoever finds it. par 3, satchel 8, three stars at 4, ways 6, greedy 3;
-#: the best opening tap runs 2 wave(s), bursts 7 and frees 2.
+#: 3. the tough cocoon. par 3, satchel 8, three stars at 4, ways 87, greedy 3;
+#: the best opening tap runs 5 wave(s), bursts 16 and frees 4.
 GROVES.append(Grove(
     "b01_twiceknocked", "Twice Knocked",
     "A second ring takes a second burst.",
     [
-        "GGCMBYY",
-        "CoCYGoM",
-        "GYMYMMC",
-        "CCMOGGC",
-        "BBRBBYB",
-        "CoMCCoB",
-    ], "BRG"))
+        "RGGYBB",
+        "RoRRoR",
+        "GYBYYB",
+        "RYORBG",
+        "BBRGBY",
+        "YoYRoY",
+    ], "RBG", "RGBYMCW"))
 
-#: 4. a wider grove, and the most forgiving board in the chapter - 138 shortest plays. par 3, satchel 8, three stars at 4, ways 138, greedy 4;
-#: the best opening tap runs 6 wave(s), bursts 26 and frees 4.
+#: 4. six shut in, and the most forgiving board in the chapter. par 3, satchel 8, three stars at 4, ways 129, greedy 3;
+#: the best opening tap runs 4 wave(s), bursts 20 and frees 5.
 GROVES.append(Grove(
     "b01_sunspill", "Sun Spill",
     "Warm ground. Everything wants to go.",
     [
-        "GRRYYMM",
-        "YMoBoRR",
-        "YCCMMCC",
-        "MYROBGR",
-        "MYMCCGB",
-        "CCoGoCB",
-        "GGCCGCY",
-    ], "GRB"))
+        "YYMYRR",
+        "RoMYoB",
+        "RBBRYG",
+        "YOGGOG",
+        "BGRRYY",
+        "BoMMoR",
+    ], "RBG", "RGBYMC"))
 
-#: 5. two tough cocoons, and an opening tap that runs seven waves. par 3, satchel 8, three stars at 4, ways 8, greedy 5;
-#: the best opening tap runs 7 wave(s), bursts 23 and frees 4.
+#: 5. seven waves off the opening tap. par 3, satchel 8, three stars at 4, ways 102, greedy 4;
+#: the best opening tap runs 7 wave(s), bursts 22 and frees 5.
 GROVES.append(Grove(
     "b01_dewfall", "Dewfall",
     "Six shut in, and the grove is willing.",
     [
-        "MMBYYMM",
-        "YoMCCoB",
-        "YRMGGBC",
-        "GOYBBOC",
-        "MMYMMBR",
-        "GoRBYoR",
-        "MGGBMMY",
-    ], "RGBRB"))
+        "MMCGRCR",
+        "CoCGBoR",
+        "CMRCBGG",
+        "BMOMOCM",
+        "BCBRBBM",
+        "CoBMMoG",
+    ], "GBR", "RGBYMC"))
 
-#: 6. the showpiece, and the loudest board in the chapter. par 3, satchel 8, three stars at 4, ways 13, greedy 3;
-#: the best opening tap runs 9 wave(s), bursts 29 and frees 5.
+#: 6. seven by seven. par 3, satchel 8, three stars at 4, ways 109, greedy 3;
+#: the best opening tap runs 4 wave(s), bursts 15 and frees 4.
 GROVES.append(Grove(
     "b01_widewild", "The Wide Wild",
     "Room enough for something enormous.",
     [
-        "BMBBCGCM",
-        "BoCGYCoM",
-        "CCMGYCRR",
-        "GGoMBoMM",
-        "BBGMBRRG",
-        "YoYYMBoG",
-        "YMCCMBCB",
-    ], "RGBG"))
+        "RRMBCCM",
+        "GoBRRoC",
+        "RGBCCGG",
+        "BROBOBB",
+        "BRBRRGG",
+        "CoBGGoR",
+        "CRRMMGG",
+    ], "BGR", "RYGMBC"))
 
-#: 7. seven shut in on the biggest grove yet. par 3, satchel 8, three stars at 4, ways 4, greedy 3;
-#: the best opening tap runs 4 wave(s), bursts 13 and frees 4.
+#: 7. the biggest grove yet. par 3, satchel 8, three stars at 4, ways 185, greedy 3;
+#: the best opening tap runs 3 wave(s), bursts 10 and frees 1.
 GROVES.append(Grove(
     "b01_honeylight", "Honeylight",
     "Seven, and the light is already moving.",
     [
-        "BRRYMYRY",
-        "BoMYMYoY",
-        "RCYCYMCC",
-        "BCoOoYMM",
-        "RMMYRYBB",
-        "CoRYMRoR",
-        "BBMCMYYR",
-    ], "BRGR"))
+        "CGCGCGGY",
+        "CoRRBCoY",
+        "GBBYGCBG",
+        "YYGOOYBG",
+        "GRRGGCYY",
+        "GoBBYGoG",
+        "BBRoYGCC",
+    ], "GBR", "RGBYMC"))
 
-#: 8. eight shut in, and an opening tap that frees six of them at once. par 3, satchel 8, three stars at 4, ways 2, greedy 4;
-#: the best opening tap runs 5 wave(s), bursts 23 and frees 6.
+#: 8. a ten-wave best play. par 3, satchel 8, three stars at 4, ways 86, greedy 3;
+#: the best opening tap runs 4 wave(s), bursts 17 and frees 3.
 GROVES.append(Grove(
     "b01_wildwaking", "Wild Waking",
-    "One tap. Six of them out.",
+    "Eight shut in. Wake them.",
     [
-        "GORBYYOY",
-        "YMMBRRYR",
-        "YRoYGoYG",
-        "MMRMRBBG",
-        "YGoYRoRY",
-        "YGYGYYRY",
-        "RBBooMBM",
-    ], "RBG"))
+        "YBRRMYGM",
+        "YoYBYRoM",
+        "RMRBYRGR",
+        "RMORROGR",
+        "YBBGGBBM",
+        "YoGBBRoM",
+        "MMYooMRR",
+    ], "BRGR", "RYGMBC"))
 
-#: 9. four of the eight take two cracks. par 3, satchel 8, three stars at 4, ways 2, greedy 4;
-#: the best opening tap runs 3 wave(s), bursts 9 and frees 2.
+#: 9. the opening tap frees seven of the nine. par 3, satchel 8, three stars at 4, ways 99, greedy 3;
+#: the best opening tap runs 6 wave(s), bursts 25 and frees 7.
 GROVES.append(Grove(
     "b01_everbloom", "Everbloom",
-    "Eight shut in, and the grove is full.",
+    "Nine shut in, and the grove is full.",
     [
-        "RRoYYoRY",
-        "MBBRRCRY",
-        "MOYCMMOC",
-        "RMMCBYMM",
-        "RORYBYOR",
-        "MYRYRMMR",
-        "MYoMMoYY",
-    ], "RGBRB"))
+        "YoGYMBoR",
+        "MYGYMBMR",
+        "RBOGYOGG",
+        "RBMGMGMR",
+        "GYOBMOGR",
+        "MYGYYRRB",
+        "MoRMoGoB",
+    ], "GRB", "RGBYMCW"))
 
-#: 10. the finale: seven waves, twenty-five flowers and five critters off the first tap. par 3, satchel 8, three stars at 4, ways 7, greedy 3;
-#: the best opening tap runs 7 wave(s), bursts 25 and frees 5.
+#: 10. the finale: eight waves, twenty-seven flowers and ten critters off the opening tap. par 3, satchel 8, three stars at 4, ways 61, greedy 3;
+#: the best opening tap runs 8 wave(s), bursts 27 and frees 10.
 GROVES.append(Grove(
     "b01_thicketheart", "The Thicket's Heart",
     "Everything this grove can do, at once.",
     [
-        "GoGGCRoR",
-        "GCCYGCGG",
-        "CBOYGOBR",
-        "GGYGCYCR",
-        "CCOGCOCG",
-        "YBCBBCBB",
-        "RoRGGCoY",
-    ], "GRB"))
+        "YoRGCBoR",
+        "YCCGBGBR",
+        "COGooGOM",
+        "BBYYBBRM",
+        "MOGooCOB",
+        "RYYMYRMY",
+        "YoCCRBoY",
+    ], "RGB", "RGBYM"))
 
 # ---------------------------------------------------------------------------- writing it out
 def chapter_json():

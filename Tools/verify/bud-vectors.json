@@ -280,6 +280,231 @@
           "shut": 0
         }
       ]
+    },
+    {
+      "name": "a burst leaves a hole and the grove falls into it",
+      "why": "green onto the red makes three yellows, they go, and everything standing above them comes down a row. Falling happens inside the chain, which is where the compounding comes from",
+      "rows": [
+        "BGBG",
+        "CMCM",
+        "YYRB",
+        "GBOM"
+      ],
+      "colours": "G",
+      "regrow": "YBGCM",
+      "par": 1,
+      "ways": 1,
+      "nodes": 9,
+      "proved": true,
+      "careless": 1,
+      "flowers": 15,
+      "cocoons": 1,
+      "tough": 1,
+      "stones": 0,
+      "bestBurst": 14,
+      "bestWaves": 3,
+      "bestFreed": 1,
+      "beats": [
+        {
+          "tap": 10,
+          "allowed": true,
+          "burst": 14,
+          "waves": 3,
+          "freed": 1,
+          "cracked": 1,
+          "flowersLeft": 16,
+          "shut": 0
+        }
+      ]
+    },
+    {
+      "name": "what grows never makes a bunch",
+      "why": "a hole takes the first colour off the strip that does not put three alike together, so the grove at rest is always settled - the rule every level is authored to, now true after every tap as well as before the first",
+      "rows": [
+        "BGBG",
+        "CMCM",
+        "YYRB",
+        "GBOM"
+      ],
+      "colours": "G",
+      "regrow": "MMMMBC",
+      "par": 1,
+      "ways": 1,
+      "nodes": 9,
+      "proved": true,
+      "careless": 1,
+      "flowers": 15,
+      "cocoons": 1,
+      "tough": 1,
+      "stones": 0,
+      "bestBurst": 14,
+      "bestWaves": 3,
+      "bestFreed": 1,
+      "beats": [
+        {
+          "tap": 10,
+          "allowed": true,
+          "burst": 14,
+          "waves": 3,
+          "freed": 1,
+          "cracked": 1,
+          "flowersLeft": 16,
+          "shut": 0
+        }
+      ]
+    },
+    {
+      "name": "a white flower is a bomb",
+      "why": "white holds every channel, so it can never be mixed into - it used to be a dead cell and a mistake the player had made. Tapping it now clears the square around it, which turns the trap into the reward and gives every grove one obvious button",
+      "rows": [
+        "BGBG",
+        "CWCM",
+        "YGRB",
+        "GBoM"
+      ],
+      "colours": "R",
+      "regrow": "YBGCM",
+      "par": 1,
+      "ways": 2,
+      "nodes": 12,
+      "proved": true,
+      "careless": 1,
+      "flowers": 15,
+      "cocoons": 1,
+      "tough": 0,
+      "stones": 0,
+      "bestBurst": 9,
+      "bestWaves": 1,
+      "bestFreed": 1,
+      "beats": [
+        {
+          "tap": 5,
+          "allowed": true,
+          "burst": 9,
+          "waves": 1,
+          "freed": 1,
+          "cracked": 0,
+          "flowersLeft": 16,
+          "shut": 0
+        }
+      ]
+    },
+    {
+      "name": "a still grove has none of it",
+      "why": "the same board with no strip: white cannot be tapped, nothing falls and nothing grows. Falling, growing, the bomb and the creep are one rule and a grove either has all of it or none",
+      "rows": [
+        "BGBG",
+        "CWCM",
+        "YGRB",
+        "GBoM"
+      ],
+      "colours": "R",
+      "par": 1,
+      "ways": 1,
+      "nodes": 11,
+      "proved": true,
+      "careless": 1,
+      "flowers": 15,
+      "cocoons": 1,
+      "tough": 0,
+      "stones": 0,
+      "bestBurst": 3,
+      "bestWaves": 1,
+      "bestFreed": 1,
+      "beats": [
+        {
+          "tap": 5,
+          "allowed": false,
+          "burst": 0,
+          "waves": 0,
+          "freed": 0,
+          "cracked": 0,
+          "flowersLeft": 15,
+          "shut": 1
+        }
+      ]
+    },
+    {
+      "name": "one flower ripens beside a cocoon between taps",
+      "why": "the palest flower standing next to somebody still shut in takes the colour just spent, so the grove leans a little further toward going off every turn - and always where a burst would be worth something. The cocoon here takes two cracks, so it is still shut when the creep looks",
+      "rows": [
+        "BGBG",
+        "CMCM",
+        "YYRB",
+        "GBOM"
+      ],
+      "colours": "G",
+      "regrow": "YBGCM",
+      "par": 1,
+      "ways": 1,
+      "nodes": 9,
+      "proved": true,
+      "careless": 1,
+      "flowers": 15,
+      "cocoons": 1,
+      "tough": 1,
+      "stones": 0,
+      "bestBurst": 14,
+      "bestWaves": 3,
+      "bestFreed": 1,
+      "beats": [
+        {
+          "tap": 10,
+          "allowed": true,
+          "burst": 14,
+          "waves": 3,
+          "freed": 1,
+          "cracked": 1,
+          "flowersLeft": 16,
+          "shut": 0
+        }
+      ]
+    },
+    {
+      "name": "and the holes fill from the strip once the chain has stopped",
+      "why": "the grove is full again at rest, so the fortieth tap is dealt as good a board as the first. Growing happens after the chain and never inside it, which is what keeps a cascade provably finite",
+      "rows": [
+        "BGBG",
+        "CMCM",
+        "YYRB",
+        "GBOM"
+      ],
+      "colours": "G",
+      "regrow": "YBGCM",
+      "par": 1,
+      "ways": 1,
+      "nodes": 9,
+      "proved": true,
+      "careless": 1,
+      "flowers": 15,
+      "cocoons": 1,
+      "tough": 1,
+      "stones": 0,
+      "bestBurst": 14,
+      "bestWaves": 3,
+      "bestFreed": 1,
+      "beats": [
+        {
+          "tap": 10,
+          "allowed": true,
+          "burst": 14,
+          "waves": 3,
+          "freed": 1,
+          "cracked": 1,
+          "flowersLeft": 16,
+          "shut": 0
+        },
+        {
+          "tap": 0,
+          "allowed": true,
+          "burst": 0,
+          "waves": 0,
+          "freed": 0,
+          "cracked": 0,
+          "flowersLeft": 16,
+          "shut": 0
+        }
+      ]
     }
   ]
 }

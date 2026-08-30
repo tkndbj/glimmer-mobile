@@ -63,23 +63,36 @@ namespace GlimmerGrove.Modes
         /// <summary>What the colour in hand would turn this flower into.</summary>
         public int Mixed(int cell) => Board.Mixed(cell, Next);
 
+        /// <summary>
+        /// Whether tapping this cell would set anything off at all.
+        ///
+        /// <b>This is what the board draws a halo on, and it is the single change that took the
+        /// arithmetic out of the mode.</b> Every other game of this shape shows the player the
+        /// matches and asks them to pick one; Budburst made them work out, in their head, which
+        /// cell the colour in hand would turn into a third of something. Now the grove says which
+        /// taps pop and the player picks — the choice is still theirs, and it is a choice between
+        /// visible things.
+        /// </summary>
+        public bool Pops(int cell) => CanTap(cell) && Board.Preview(cell, Next).Any;
+
         public BudChainResult Preview(int cell) => Board.Preview(cell, Next, null, null);
 
         public BudChainResult Preview(int cell, List<BudPulse> pulses,
-                                      List<BudWash> washes = null)
-            => Board.Preview(cell, Next, pulses, washes);
+                                      List<BudWash> washes = null, List<BudDrop> drops = null)
+            => Board.Preview(cell, Next, pulses, washes, drops);
 
         public BudChainResult Tap(int cell, List<BudPulse> pulses,
-                                  List<BudWash> washes = null)
+                                  List<BudWash> washes = null, List<BudDrop> drops = null)
         {
             if (!CanTap(cell))
             {
                 pulses?.Clear();
                 washes?.Clear();
+                drops?.Clear();
                 return BudChainResult.Nothing;
             }
 
-            var chain = Board.Tap(cell, Next, pulses ?? _pulses, washes);
+            var chain = Board.Tap(cell, Next, pulses ?? _pulses, washes, drops);
             Satchel.Take();
 
             Burst += chain.Burst;

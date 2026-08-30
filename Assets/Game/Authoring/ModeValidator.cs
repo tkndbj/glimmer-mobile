@@ -482,15 +482,33 @@ namespace GlimmerGrove.Content
             // character is shared vocabulary with Groovekeeper and a second rule about it would
             // be a second thing to keep in step — but a barrier is the one object here that can
             // only ever make a chain *shorter*, and a mode whose whole product is the chain has
-            // nothing to gain from one. Warned rather than refused, because the refusal belongs
-            // to whoever is authoring rather than to the parser (`bud_wood` is a retired lesson
-            // id and must never be reused).
+            // nothing to gain from one. Warned on a still grove, because the refusal belongs to
+            // whoever is authoring; **refused outright on a living one**, because there it is not
+            // a taste at all — everything on a living grove falls, and a barrier that fell would
+            // be a wall sliding down the board.
             if (layout.Stones > 0)
-                issues.Add(new LevelIssue(LevelIssueSeverity.Warning,
+                issues.Add(new LevelIssue(
+                    layout.Grows ? LevelIssueSeverity.Error : LevelIssueSeverity.Warning,
                     $"this grove stands {layout.Stones} cell(s) of old wood on it. Budburst does " +
                     "not use it: a chain stops dead at a barrier, so the only thing wood can do " +
                     "to a cascade is cut it short, which is the opposite of what this mode is " +
-                    "for. Use bare ground, or a cocoon"));
+                    "for — and on a grove that falls there is nothing for it to stand on. Use a " +
+                    "flower, or a cocoon"));
+
+            // **A living grove is a full rectangle**, and that is not tidiness. Everything falls
+            // into the holes under it and new flowers grow into whatever is left, so an authored
+            // hole is a hole that exists for exactly as long as it takes the player to tap once —
+            // it is drawn on the opening board, and then it is gone for ever. A board whose
+            // shape only survives its own first frame is a board nobody authored.
+            if (layout.Grows)
+            {
+                int gaps = layout.Count - layout.Flowers - layout.Cocoons - layout.Stones;
+                if (gaps > 0)
+                    issues.Add(new LevelIssue(LevelIssueSeverity.Error,
+                        $"this grove leaves {gaps} cell(s) of bare ground, and it is a grove that " +
+                        "grows: the first chain fills every one of them and they never come back. " +
+                        "A living grove is authored as a full rectangle"));
+            }
 
             var survey = BudSolver.Survey(layout);
 

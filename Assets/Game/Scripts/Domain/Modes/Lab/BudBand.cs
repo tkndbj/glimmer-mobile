@@ -57,7 +57,7 @@ namespace GlimmerGrove.Modes
         /// </summary>
         public static float BoardFloor => KeyBarHeight + KeyClear;
 
-        public const float PlateHeight = 108f, PlateWidth = 660f;
+        public const float PlateHeight = 124f, PlateWidth = 660f;
         public const float BottomClearance = 24f;
 
         /// <summary>The plate fits inside its band, the grove clears the plate, and the key row
@@ -71,20 +71,46 @@ namespace GlimmerGrove.Modes
         /// <summary>The colour in hand, and the two behind it.</summary>
         public const int Lookahead = 2;
 
-        public const float HandSize = 70f, QueueSize = 34f;
-        public const float HandX = -230f, QueueX = -158f, QueueGap = 44f;
+        /// <summary>
+        /// How big the colour in hand is drawn, and where it sits.
+        ///
+        /// <para>
+        /// <b>It is the largest single thing on the band on purpose, and it was the smallest.</b>
+        /// At 70 it was drawn <em>smaller than a flower on the board</em> — a grove eight wide on
+        /// this canvas draws its flowers at about 97 — so the one piece of information the whole
+        /// turn is decided by was the hardest thing on the screen to read, which is how it was
+        /// reported. It is now the size of a board flower and a little over, which is the honest
+        /// hierarchy: what is in hand, then what is behind it, then the counts.
+        /// </para>
+        /// <para>
+        /// Growing it spends room in two directions and both are checked rather than eyeballed —
+        /// <see cref="HandFits"/> for the plate it sits in, <see cref="QueueFits"/> for the
+        /// lookahead beside it. The plate grew with it, because a seat hanging over the edge of
+        /// its own plate is the fault <c>ProductCardBadges</c> is named after.
+        /// </para>
+        /// </summary>
+        public const float HandSize = 100f, QueueSize = 34f;
+
+        /// <summary>The ring around the colour in hand, which is what has to fit the plate.</summary>
+        public const float HandSeat = HandSize + 12f;
+
+        public const float HandX = -248f, QueueX = -158f, QueueGap = 44f;
 
         public static float QueueCentre(int n) => QueueX + n * QueueGap;
 
         public const float TapsX = -20f, CrittersX = 190f;
         public const float PipSize = 96f, LabelDrop = -34f;
 
+        /// <summary>The colour in hand, seat and all, stands inside the plate it is drawn on.</summary>
+        public static bool HandFits => HandSeat < PlateHeight
+                                    && HandX - HandSeat * .5f > -PlateWidth * .5f;
+
         /// <summary>The queue reads left to right and clears the colour in hand.</summary>
         public static bool QueueFits
         {
             get
             {
-                float handRight = HandX + HandSize * .5f;
+                float handRight = HandX + HandSeat * .5f;
                 float first = QueueCentre(0) - QueueSize * .5f;
                 float last = QueueCentre(Lookahead - 1) + QueueSize * .5f;
 

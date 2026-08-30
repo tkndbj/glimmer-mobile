@@ -56,7 +56,27 @@ namespace GlimmerGrove.Modes
             return new string(chars);
         }
 
-        public static bool TryParse(string authored, out BudDeal deal, out string error)
+        /// <summary>
+        /// Reads a basket, or the strip a grove grows from.
+        ///
+        /// <para>
+        /// <b><paramref name="pure"/> is the whole difference between the two, and it is a
+        /// difference about choice rather than about colour.</b> A basket is what the player is
+        /// handed and therefore what they decide with, so it is pure — every blend on the board
+        /// has to be one somebody made, which is the mode's one idea. A strip is <em>scenery</em>:
+        /// nobody chooses what grows back, so it may be anything.
+        /// </para>
+        /// <para>
+        /// It is also what keeps the grove playable. A strip of three pure colours refilling a
+        /// four-colour board matches itself constantly — measured, two thirds of opening taps ran
+        /// straight into <see cref="BudLayout.MostWaves"/>, which is a cascade that never stops
+        /// and a par of one. A strip that deals blends as well spreads the board out, so a
+        /// cascade runs a few waves and stops because it has run out of matches rather than
+        /// because it hit a ceiling.
+        /// </para>
+        /// </summary>
+        public static bool TryParse(string authored, out BudDeal deal, out string error,
+                                    bool pure = true)
         {
             deal = null;
             error = null;
@@ -81,7 +101,7 @@ namespace GlimmerGrove.Modes
                     return false;
                 }
 
-                if (mask != Energy.R && mask != Energy.G && mask != Energy.B)
+                if (pure && mask != Energy.R && mask != Energy.G && mask != Energy.B)
                 {
                     error = "'" + c + "' at " + i + " is a blend. A grove is dealt pure colour, " +
                             "so that every blend on the board is one the player made";
@@ -123,6 +143,7 @@ namespace GlimmerGrove.Modes
 
         /// <summary>Old wood. Nothing grows on it and no burst crosses it.</summary>
         Stone = 3,
+
     }
 
     /// <summary>
@@ -137,6 +158,27 @@ namespace GlimmerGrove.Modes
         /// <summary>How many alike have to be touching before they go off.</summary>
         public const int Bunch = 3;
 
+        /// <summary>
+        /// The most waves one tap may run, and it is a <b>safety bound rather than a tuning</b>.
+        ///
+        /// <para>
+        /// Before the grove regrew, a chain could not run away: every wave took at least three
+        /// flowers off a board that never gained any, so the settle was bounded by the grove it
+        /// started on. Regrowth removes that argument entirely — new flowers arrive from a
+        /// <em>repeating</em> strip, so a grove and a strip that happen to resonate could go off,
+        /// refill into another bunch, and do it again for ever. That is not a theoretical worry
+        /// about randomness: the strip is deterministic, which is exactly what makes a loop
+        /// reproducible rather than unlikely.
+        /// </para>
+        /// <para>
+        /// So the loop stops here and the grove is left as it stands. It is set far above
+        /// anything play produces — the deepest chain in the shipped chapter is nine — so it is a
+        /// backstop nobody reaches rather than a ceiling anybody plays against, and it bounds the
+        /// solver and the animation at the same time.
+        /// </para>
+        /// </summary>
+        public const int MostWaves = 14;
+
         /// <summary>The most cracks a cocoon may take before the critter is out.</summary>
         public const int ToughestCocoon = 2;
 
@@ -147,7 +189,21 @@ namespace GlimmerGrove.Modes
 
         public readonly BudDeal Deal;
 
-        public BudLayout(int width, int height, BudGround[] ground, int[] value, BudDeal deal)
+        /// <summary>
+        /// What grows into the holes, or null on a grove that does not regrow.
+        ///
+        /// <b>The single most important field on a Budburst level.</b> With it, a burst is
+        /// followed by everything above sliding down and new flowers arriving along the top — so
+        /// the grove never thins, a chain can set off the flowers that fall into its own hole, and
+        /// cascades compound instead of running out. Without it a grove only ever loses flowers,
+        /// which is how this mode shipped first and is why both shapes still parse.
+        /// </summary>
+        public readonly BudDeal Regrow;
+
+        public bool Grows => Regrow != null;
+
+        public BudLayout(int width, int height, BudGround[] ground, int[] value, BudDeal deal,
+                         BudDeal regrow = null)
         {
             if (width < MinWidth || width > MaxWidth)
                 throw new ArgumentOutOfRangeException(nameof(width));
@@ -157,6 +213,7 @@ namespace GlimmerGrove.Modes
             Width = width;
             Height = height;
             Deal = deal ?? throw new ArgumentNullException(nameof(deal));
+            Regrow = regrow;
 
             int n = width * height;
             _ground = new BudGround[n];

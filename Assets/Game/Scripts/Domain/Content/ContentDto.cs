@@ -514,6 +514,26 @@ namespace GlimmerGrove.Content
         public string colours;
 
         /// <summary>
+        /// The ordered strip new flowers grow from, written in <c>R</c>, <c>G</c> and <c>B</c>.
+        /// It repeats, exactly as <see cref="colours"/> does.
+        ///
+        /// <para>
+        /// <b>Its presence is what makes a grove a growing one.</b> A grove with a strip never
+        /// thins out: what bursts leaves a hole, everything above slides down into it, and new
+        /// flowers grow in along the top. That is the whole reason cascades compound here rather
+        /// than getting rarer as the board empties, and it is why a growing grove authors no bare
+        /// ground and no old wood — every cell is filled and everything falls.
+        /// </para>
+        /// <para>
+        /// Absent leaves the grove as it was: a fixed board that only ever loses flowers. Both
+        /// shapes parse and both are proved, because the first chapter was authored one way
+        /// before it was authored the other and a level format that cannot read what it shipped
+        /// last month is a format nobody can roll back.
+        /// </para>
+        /// </summary>
+        public string regrow;
+
+        /// <summary>
         /// Wasted taps this grove forgives above par. Absent takes <c>BudRules.DefaultSpare</c>.
         ///
         /// A count rather than a factor, for <see cref="KeeperDto.spare"/>'s reason: a wasted tap

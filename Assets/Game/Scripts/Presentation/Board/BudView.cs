@@ -87,13 +87,35 @@ namespace GlimmerGrove
 
         // ------------------------------------------------------------------ the furniture
         BudLayout _layout;
-        RectTransform _host, _grid, _field, _fx, _tray, _plate;
+        RectTransform _host, _grid, _field, _residents, _fx, _tray, _plate;
         Text _count, _left, _chain;
 
         Cell[] _cells;
 
+        /// <summary>
+        /// Who is out, standing where they were let out, by the cell they came from.
+        ///
+        /// <para>
+        /// <b>A freed critter is a resident of the grove and no longer part of a cell, and that
+        /// is the whole of why it is kept here.</b> Freeing one leaves its square <em>bare</em> in
+        /// the model, so the grove immediately falls into it — and while the critter was drawn as
+        /// a child of that cell, the flower landing on it took the critter down with it and
+        /// <see cref="PaintCell"/> was free to paint a sleeping critter straight over the top of
+        /// somebody the player had just let out. It was reported as critters falling and as
+        /// flowers falling through them, and both are the same fault: the reward was being kept
+        /// in the one place the board is allowed to rearrange.
+        /// </para>
+        /// <para>
+        /// One per cell, because a cocoon can fall into a square somebody has already been freed
+        /// from and be opened there too; the second one replaces the first rather than standing
+        /// inside it.
+        /// </para>
+        /// </summary>
+        Image[] _freed;
+
         readonly List<BudPulse> _pulses = new List<BudPulse>(64);
         readonly List<BudWash> _washes = new List<BudWash>(64);
+        readonly List<BudDrop> _drops = new List<BudDrop>(64);
         readonly List<BudPulse> _peek = new List<BudPulse>(64);
         readonly List<int> _beside = new List<int>(4);
 
@@ -121,8 +143,39 @@ namespace GlimmerGrove
         sealed class Cell
         {
             public RectTransform Rt;
+
+            /// <summary>
+            /// Everything that <em>travels</em> when the grove falls, under one transform.
+            ///
+            /// <para>
+            /// <b>A fall moves this and nothing else, and that is the whole of why it lands.</b>
+            /// The five pictures standing in a cell — the flower, its heart, its glow, the
+            /// cocoon and the critter inside it — used to be moved one by one by a tween owned
+            /// by whichever of them was falling. Everything else in this file that touches a
+            /// flower kills that owner outright (<see cref="PaintCell"/> and
+            /// <see cref="ThrowFlower"/> both call <c>Tween.KillAll(cell.Bud)</c>), and a killed
+            /// tween never reaches its <c>OnDone</c> — so a flower that fell into a cell and
+            /// burst on the next wave, or one still falling when the chain's last repaint ran,
+            /// left all five pictures stranded at whatever offset the interruption caught them
+            /// holding, for the rest of the run. That is the "flowers get stuck half way" this
+            /// replaces, and it was reported from play because nothing here could see it: the
+            /// board, the par and every gate are exactly right, and only the drawing is wrong.
+            /// </para>
+            /// <para>
+            /// One transform, owned by nobody else, is what makes the rule statable: the fall
+            /// supersedes itself on its own channel, and it declares where an interrupted one
+            /// lands (<see cref="Tw.OnAbandon"/>) rather than being abandoned mid-air. The cell's
+            /// own square — its ground tint, its hit target and its <c>Btn</c> — stays exactly
+            /// where the layout put it, which is the one thing a falling board must not lose.
+            /// </para>
+            /// </summary>
+            public RectTransform Piece;
+
             public Image Soil, Bud, Halo, Glow, Pod, Critter, Ring;
             public int Drawn = -1;
+
+            /// <summary>Whether this flower is currently breathing because a tap on it pops.</summary>
+            public bool Pops;
         }
 
         // ------------------------------------------------------------------ colour
@@ -207,10 +260,18 @@ namespace GlimmerGrove
             _field = UIKit.Node("Buds", _grid);
             UIKit.StretchTo(_field, 0f, 0f, 0f, 0f);
 
+            // **Freed critters stand above the grove rather than in it.** See `Free`: a critter
+            // the player has let out is not a tenant of a cell any more, so it is drawn on its
+            // own layer over the field and under the fireworks — where nothing that falls can
+            // drag it, cover it, or paint over it.
+            _residents = UIKit.Node("Freed", _grid);
+            UIKit.StretchTo(_residents, 0f, 0f, 0f, 0f);
+
             _fx = UIKit.Node("Fx", _grid);
             UIKit.StretchTo(_fx, 0f, 0f, 0f, 0f);
 
             _cells = new Cell[_layout.Count];
+            _freed = new Image[_layout.Count];
             for (int i = 0; i < _cells.Length; i++) _cells[i] = BuildCell(_field, i);
         }
 
@@ -244,46 +305,50 @@ namespace GlimmerGrove
                                       Vector2.zero);
             }
 
-            if (kind == BudGround.Flower)
+            // **Every cell that is not old wood can draw either a flower or a cocoon, and on a
+            // living grove it has to.** A cell used to be built as one thing for ever, which was
+            // fine while nothing ever moved. Now the grove falls: a cocoon slides down into a
+            // square that was dealt a flower, and a flower falls into one that held a cocoon. A
+            // cell built as only one of the two would simply not draw what landed in it — an
+            // invisible critter standing on the board, which is a bug nothing else here could
+            // catch. Both sets are built and <see cref="PaintCell"/> shows whichever the board
+            // says is standing there.
+            if (kind != BudGround.Stone)
             {
-                cell.Glow = UIKit.Img("Glow", root, Art.Glow(128, 2.2f), new Color(1, 1, 1, 0f),
+                // Everything below stands on this rather than on the cell, so a fall is one
+                // transform moving and the square underneath it never does. See `Cell.Piece`.
+                cell.Piece = UIKit.Node("Piece", root);
+
+                cell.Glow = UIKit.Img("Glow", cell.Piece, Art.Glow(128, 2.2f), new Color(1, 1, 1, 0f),
                                       Vector2.one * _size * 1.5f, new Vector2(.5f, .5f),
                                       Vector2.zero);
 
-                cell.Bud = UIKit.Img("Flower", root, Bloom(Energy.None), Color.white,
+                cell.Bud = UIKit.Img("Flower", cell.Piece, Bloom(Energy.None), new Color(1, 1, 1, 0f),
                                      Vector2.one * _size * .78f, new Vector2(.5f, .5f),
                                      Vector2.zero);
 
                 // The heart of the flower, drawn in the same colour but brighter. It is what
                 // makes a dark blend still read as a flower rather than as a hole.
-                cell.Halo = UIKit.Img("Heart", root, Art.Disc(96), Color.white,
+                cell.Halo = UIKit.Img("Heart", cell.Piece, Art.Disc(96), new Color(1, 1, 1, 0f),
                                       Vector2.one * _size * .22f, new Vector2(.5f, .5f),
                                       Vector2.zero);
-            }
-            else if (kind == BudGround.Cocoon)
-            {
-                cell.Glow = UIKit.Img("Glow", root, Art.Glow(128, 2.2f), Pal.A(Pal.Rope, .18f),
-                                      Vector2.one * _size * 1.5f, new Vector2(.5f, .5f),
-                                      Vector2.zero);
 
-                cell.Pod = UIKit.Img("Cocoon", root, Art.Crystal(128),
-                                     new Color(.84f, .78f, .60f, 1f),
+                cell.Pod = UIKit.Img("Cocoon", cell.Piece, Art.Crystal(128), new Color(1, 1, 1, 0f),
                                      Vector2.one * _size * .94f, new Vector2(.5f, .5f),
                                      Vector2.zero);
 
                 // The critter inside, drawn small and dim and asleep - and it is a *real*
                 // critter, the same flipbook the glades and the roster use, so what comes out at
                 // the end is somebody the player already knows.
-                cell.Critter = UIKit.Img("Critter", root, null, Pal.A(Pal.Dormant, .95f),
+                cell.Critter = UIKit.Img("Critter", cell.Piece, null, new Color(1, 1, 1, 0f),
                                          Vector2.one * _size * .46f, new Vector2(.5f, .5f),
                                          Vector2.zero);
                 CritterArt(cell.Critter, index, false);
+                cell.Critter.color = new Color(1, 1, 1, 0f);
 
-                cell.Ring = UIKit.Img("Cracks", root, Art.Ring(128, 6f), new Color(1, 1, 1, 0f),
+                cell.Ring = UIKit.Img("Cracks", cell.Piece, Art.Ring(128, 6f), new Color(1, 1, 1, 0f),
                                       Vector2.one * _size * 1.06f, new Vector2(.5f, .5f),
                                       Vector2.zero);
-
-                Tween.Breathe(cell.Critter.transform, .07f, 2.6f, index * .19f);
             }
 
             var hit = root.gameObject.AddComponent<Image>();
@@ -358,7 +423,7 @@ namespace GlimmerGrove
             // The colour in hand, and the two behind it.
             var seat = UIKit.Img("Seat", plate.transform, Art.RoundOutline(16, 3f),
                                  new Color(1, 1, 1, .22f),
-                                 Vector2.one * (BudBand.HandSize + 14f), new Vector2(.5f, .5f),
+                                 Vector2.one * BudBand.HandSeat, new Vector2(.5f, .5f),
                                  new Vector2(BudBand.HandX, 0f));
 
             _handChip = UIKit.Img("Hand", seat.transform, Bloom(Energy.None), Color.white,
@@ -448,64 +513,82 @@ namespace GlimmerGrove
         {
             for (int i = 0; i < _cells.Length; i++) PaintCell(i, false);
             PaintBand();
+            PaintPops();
         }
 
         void PaintCell(int index, bool animate)
         {
             var cell = _cells[index];
+            if (cell?.Bud == null) return;
+
             var board = Run.Board;
 
-            if (cell.Bud != null)
+            // **What is standing here is asked of the board, not of how the cell was built.** On
+            // a living grove a cocoon slides into a square that was dealt a flower, so the cell's
+            // own history says nothing about what it should be drawing.
+            bool flower = board.IsFlower(index);
+            bool shut = board.IsCocoon(index);
+
+            if (cell.Pod)
             {
-                bool there = board.IsFlower(index);
-                int colour = there ? board.ValueAt(index) : Energy.None;
+                cell.Pod.color = shut
+                    ? new Color(.84f, .78f, .60f, board.ValueAt(index) > 1 ? 1f : .86f)
+                    : new Color(1, 1, 1, 0f);
 
-                if (cell.Drawn == colour && !animate) return;
-                cell.Drawn = colour;
+                if (cell.Ring)
+                    cell.Ring.color = shut && board.ValueAt(index) > 1
+                        ? Pal.A(Pal.Rope, .78f) : new Color(1, 1, 1, 0f);
 
-                if (!there)
+                if (cell.Critter)
                 {
-                    cell.Bud.color = new Color(1, 1, 1, 0f);
-                    if (cell.Halo) cell.Halo.color = new Color(1, 1, 1, 0f);
-                    if (cell.Glow) cell.Glow.color = new Color(1, 1, 1, 0f);
-                    Tween.KillAll(cell.Bud);
-                    return;
+                    bool wasShut = cell.Critter.color.a > .01f;
+                    cell.Critter.color = shut ? Pal.A(Pal.Dormant, .95f) : new Color(1, 1, 1, 0f);
+
+                    if (shut && !wasShut)
+                    {
+                        CritterArt(cell.Critter, index, false);
+                        cell.Critter.color = Pal.A(Pal.Dormant, .95f);
+                        Tween.Breathe(cell.Critter.transform, .07f, 2.6f, index * .19f);
+                    }
                 }
+            }
 
-                var tint = Petal(colour);
+            int colour = flower ? board.ValueAt(index) : Energy.None;
+            int drawn = shut ? -2 - board.ValueAt(index) : colour;
 
-                cell.Bud.sprite = Bloom(colour);
-                cell.Bud.color = tint;
-                if (cell.Halo) cell.Halo.color = Pal.Lift(tint, .55f);
-                if (cell.Glow) cell.Glow.color = Pal.A(tint, colour == Energy.All ? .34f : .14f);
+            if (cell.Drawn == drawn && !animate) return;
+            cell.Drawn = drawn;
 
-                // White is one channel from nothing left to add, so it is the flower a player
-                // should be looking at. It is the only one that moves while nobody is tapping.
+            if (!flower)
+            {
+                cell.Bud.color = new Color(1, 1, 1, 0f);
+                if (cell.Halo) cell.Halo.color = new Color(1, 1, 1, 0f);
+                if (cell.Glow)
+                    cell.Glow.color = shut ? Pal.A(Pal.Rope, .18f) : new Color(1, 1, 1, 0f);
+
                 Tween.KillAll(cell.Bud);
-                if (colour == Energy.All)
-                    Tween.Breathe(cell.Bud.transform, .08f, 1.6f, index * .13f);
-                else
-                    cell.Bud.transform.localScale = Vector3.one;
-
+                cell.Pops = false;
                 return;
             }
 
-            if (cell.Pod != null)
-            {
-                bool shut = board.IsCocoon(index);
+            var tint = Petal(colour);
 
-                if (!shut)
-                {
-                    cell.Pod.color = new Color(1, 1, 1, 0f);
-                    if (cell.Ring) cell.Ring.color = new Color(1, 1, 1, 0f);
-                    if (cell.Glow) cell.Glow.color = new Color(1, 1, 1, 0f);
-                    return;
-                }
+            cell.Bud.sprite = Bloom(colour);
+            cell.Bud.color = tint;
+            if (cell.Halo) cell.Halo.color = Pal.Lift(tint, .55f);
+            if (cell.Glow) cell.Glow.color = Pal.A(tint, colour == Energy.All ? .34f : .14f);
 
-                int cracks = board.ValueAt(index);
-                cell.Pod.color = new Color(.84f, .78f, .60f, cracks > 1 ? 1f : .86f);
-                if (cell.Ring) cell.Ring.color = Pal.A(Pal.Rope, cracks > 1 ? .78f : 0f);
-            }
+            // White holds every channel, so on a living grove it is the bomb — the loudest thing
+            // on the board and the only one that moves while nobody is tapping.
+            // KillAll takes the "this one pops" breath with it, so the flag has to come off too
+            // or PaintPops will think it is still running and never restart it.
+            Tween.KillAll(cell.Bud);
+            cell.Pops = false;
+
+            if (colour == Energy.All)
+                Tween.Breathe(cell.Bud.transform, .11f, 1.35f, index * .13f);
+            else
+                cell.Bud.transform.localScale = Vector3.one;
         }
 
         void PaintBand()
@@ -647,8 +730,9 @@ namespace GlimmerGrove
             // by the frame after it this flower may be bare ground and the colour in hand has
             // moved on — the same trap that fired a bolt of lightning out of blank soil.
             int made = Run.Mixed(index);
+            bool bomb = Run.Board.IsBomb(index);
 
-            var chain = Run.Tap(index, _pulses, _washes);
+            var chain = Run.Tap(index, _pulses, _washes, _drops);
 
             if (!_committed)
             {
@@ -659,8 +743,11 @@ namespace GlimmerGrove
             _busy = true;
             HideGhost();
 
-            Struck(index, made);
-            StartCoroutine(PlayChain(chain, ToPulses(_pulses), ToWashes(_washes)));
+            if (bomb) Detonate(index);
+            else Struck(index, made);
+
+            StartCoroutine(PlayChain(chain, ToPulses(_pulses), ToWashes(_washes),
+                                     ToDrops(_drops)));
         }
 
         /// <summary>
@@ -738,6 +825,37 @@ namespace GlimmerGrove
             return copy;
         }
 
+        static BudDrop[] ToDrops(List<BudDrop> from)
+        {
+            var copy = new BudDrop[from.Count];
+            for (int i = 0; i < from.Count; i++) copy[i] = from[i];
+            return copy;
+        }
+
+        /// <summary>
+        /// A white flower being set off, which is the loudest single tap in the mode.
+        ///
+        /// <b>It has to read as a different act from mixing</b>, because it is one: nothing is
+        /// added, a block is cleared. So the flower does not spin and brighten — it flashes white
+        /// and throws a hard ring out across the three cells around it, before the bursts
+        /// themselves land a frame later.
+        /// </summary>
+        void Detonate(int index)
+        {
+            var where = Where(index);
+
+            Audio.Sfx("shatter", .62f, .74f);
+            Audio.Sfx("burst", .55f, .70f, .05f);
+
+            Flow.Flash(Pal.A(Color.white, .22f), .10f, .40f);
+            Shockwave(where, Color.white, _size * 4.6f, .40f);
+            Shockwave(where, Pal.Gold, _size * 3.2f, .30f);
+            Rays(where, Color.white, .26f, index, 1.8f);
+            Burst.Sparks(_fx, where, Color.white, 26, 380f, 22f, .7f);
+
+            if (_grid) { Tween.Shake(_grid, 16f, .34f); Tween.Punch(_grid, .06f, .40f); }
+        }
+
         /// <summary>
         /// A tap that cannot be honoured, said rather than swallowed. It matters most on a cocoon,
         /// which is the one cell a player is certain to try.
@@ -774,7 +892,8 @@ namespace GlimmerGrove
         /// taking nine times as long as a one-wave one — and floored by it, because a chain the eye
         /// cannot follow pays out nothing.
         /// </summary>
-        IEnumerator PlayChain(BudChainResult chain, BudPulse[] pulses, BudWash[] washes)
+        IEnumerator PlayChain(BudChainResult chain, BudPulse[] pulses, BudWash[] washes,
+                              BudDrop[] drops)
         {
             float beat = BudTempo.Wave(Mathf.Max(1, chain.Waves));
             int shown = 0;
@@ -898,7 +1017,6 @@ namespace GlimmerGrove
                     if (layers.Fireworks) Fireworks(heart, waveTint, layers.Rockets, burn);
                     if (layers.Rays) Backlight(waveTint, burn);
                     if (layers.Confetti) Burst.Confetti(_fx, 18 + shown * 6);
-                    Cheer(burn);
 
                     float shake = BudTempo.Shake(shown);
                     if (shake > 0f && _grid) Tween.Shake(_grid, shake, burn * .9f);
@@ -925,6 +1043,12 @@ namespace GlimmerGrove
                     if (_grid) Tween.Punch(_grid, BudTempo.Heave(shown), burn * .85f);
                 }
 
+                // **And the grove falls into the holes it just made.** Held back behind the
+                // bursts of its own wave, so the player watches the flowers go and *then* watches
+                // what was above them come down — which is the beat that makes a cascade read as
+                // one thing collapsing rather than as two unrelated events.
+                Rain(drops, wave, burn);
+
                 PaintBand();
                 Changed?.Invoke();
 
@@ -932,12 +1056,17 @@ namespace GlimmerGrove
                 if (!this) yield break;
             }
 
+            // What grew back arrives on the wave after the last one, which is where the model
+            // put it: growing happens once, after the chain has stopped (see BudBoard.Grow).
+            Rain(drops, chain.Waves, burn);
+
             // The last wave lifted its own bunch and there is no wave after it to tidy up, so
             // the settled board would keep that stacking for the rest of the run.
             RestoreDepth();
 
             for (int i = 0; i < _cells.Length; i++) PaintCell(i, true);
             PaintBand();
+            PaintPops();
             Changed?.Invoke();
 
             string word = BudChain.WordKey(chain.Waves);
@@ -1197,25 +1326,387 @@ namespace GlimmerGrove
         }
 
         /// <summary>
-        /// Everybody already out hops as the next wave goes off.
+        /// One clean swell and back, on something that is otherwise breathing.
         ///
-        /// <b>The critters are what the level is for, and they were furniture the moment they
-        /// landed.</b> A grove that has freed three of six spends the rest of the run with three
-        /// creatures standing perfectly still through everything the player does. One hop costs
-        /// nothing and it is the board saying they are watching too.
+        /// <para>
+        /// <b>The breath is killed before the rest scale is read, and started again after.</b>
+        /// A breathe <em>borrows</em> a scale for as long as it runs, so a gesture that reads its
+        /// target's size while one is in flight captures mid-breath and hands that back as the
+        /// resting size for ever — the fault this file has paid for twice, and the reason
+        /// <c>Tween.Breathe</c>'s own remarks tell its callers to kill it first. Here the rest is
+        /// not read at all: a freed critter's size is <see cref="FreedScale"/> and is known, which
+        /// is stricter again.
+        /// </para>
         /// </summary>
-        void Cheer(float burn)
+        /// <param name="then">
+        /// What happens when it lands, <em>instead</em> of settling back into a breath — and it
+        /// is a parameter rather than something the caller schedules alongside because those two
+        /// are not the same thing. A breathe borrows the scale this tween is writing, so a
+        /// caller that timed its own follow-on to the same duration would race the restart and
+        /// sometimes lose: measured, the greeting's flight to the counter left the critter
+        /// arriving at full size with an idle breath still driving it, because the breath was
+        /// started by an <c>OnDone</c> a frame after the flight had begun. Chained, there is no
+        /// ordering left to get wrong.
+        /// </param>
+        void Pump(Image who, float over, int seed, float swell = BudTempo.FreedPump,
+                  Action then = null)
+        {
+            if (!who) return;
+
+            var tr = who.transform;
+
+            Tween.KillChannel(tr, "breathe");
+            Tween.KillChannel(tr, PumpChannel);
+
+            Action rest = () =>
+            {
+                if (!who) return;
+                tr.localScale = Vector3.one * FreedScale;
+            };
+
+            rest();
+
+            Tween.Run(over, Ease.Linear, t =>
+            {
+                if (!who) return;
+
+                // A half-sine: out and back exactly once, with no overshoot at either end.
+                tr.localScale = Vector3.one * FreedScale * (1f + Mathf.Sin(t * Mathf.PI) * swell);
+            }, who, PumpChannel).OnAbandon(rest).OnDone(() =>
+            {
+                rest();
+                if (!this || !who) return;
+
+                if (then != null) then();
+                else Tween.Breathe(tr, .055f, 2.9f, seed * .21f);
+            });
+        }
+
+        /// <summary>The channel a freed critter's pulse runs on, so one supersedes another.</summary>
+        const string PumpChannel = "budpump";
+
+        /// <summary>
+        /// The critter leaving the grove for the counter that is keeping score of them.
+        ///
+        /// <para>
+        /// <b>They cannot stay, and the reason is the model rather than the drawing.</b> Freeing
+        /// empties that square — which is the point, because the grove falls into it and that is
+        /// where a chain gets its compounding from — so a critter left standing there is standing
+        /// exactly where a flower is about to come to rest. Blocking the square instead was built
+        /// and measured, and it takes the cascades out of the boards (see
+        /// <c>BudTempo.FreedFlight</c>). So the reward *moves*: it is celebrated where it was
+        /// earned, and then it flies to the readout that has been counting it all along.
+        /// </para>
+        /// <para>
+        /// <b>Across two coordinate spaces, which is the one thing here that cannot be typed.</b>
+        /// The critter stands on the grid and the readout sits on the band, and the band is a
+        /// different node inset by its own height — so the destination is read off the live
+        /// object through the world and converted back, never computed from the layout numbers.
+        /// A second copy of where the counter is would be a second thing to keep in step with
+        /// <c>BudBand</c>.
+        /// </para>
+        /// </summary>
+        void FlyToCount(int index)
+        {
+            if (_freed == null || index < 0 || index >= _freed.Length) return;
+
+            var critter = _freed[index];
+            if (!critter || _left == null || _residents == null) return;
+
+            // Off the books the moment it leaves, so nothing counts it as standing in the grove.
+            _freed[index] = null;
+
+            var crt = (RectTransform)critter.transform;
+
+            // The breath borrows the scale this is about to move, and a borrowed value handed
+            // back mid-flight would drop the critter back to resting size on the counter.
+            Tween.KillChannel(crt, "breathe");
+            Tween.KillChannel(crt, PumpChannel);
+
+            var from = crt.anchoredPosition;
+            var to = (Vector2)_residents.InverseTransformPoint(_left.transform.position);
+            float lift = _cell * .55f;
+
+            crt.SetAsLastSibling();
+
+            Tween.Run(BudTempo.FreedFlight, Ease.InQuad, t =>
+            {
+                if (!critter) return;
+
+                // Thrown rather than slid: a straight line between two points on a screen reads
+                // as a cursor moving, and an arc reads as something being carried.
+                var at = Vector2.Lerp(from, to, t);
+                at.y += Mathf.Sin(t * Mathf.PI) * lift;
+
+                crt.anchoredPosition = at;
+                crt.localScale = Vector3.one * Mathf.Lerp(FreedScale, BudTempo.FreedLand, t);
+                critter.color = new Color(1f, 1f, 1f, t < .82f ? 1f : 1f - (t - .82f) / .18f);
+            }, critter).OnDone(() =>
+            {
+                if (critter) Destroy(critter.gameObject);
+                if (this) Landed();
+            });
+        }
+
+        /// <summary>
+        /// The counter answering a critter arriving on it.
+        ///
+        /// The number itself is the model's and has already moved — it ticks when the wave that
+        /// freed them resolves, which is a beat earlier. What this adds is the counter being
+        /// visibly <em>landed on</em>, so a number that changed on its own becomes somewhere the
+        /// reward went.
+        /// </summary>
+        void Landed()
+        {
+            if (_left) Tween.Punch(_left.transform, .30f, .34f);
+
+            if (_tray && _left)
+                Burst.Sparks(_tray, _tray.InverseTransformPoint(_left.transform.position),
+                             Pal.Gold, 7, 130f, 12f, .42f);
+
+            Audio.Sfx("tick", .20f, 1.34f);
+        }
+
+        /// <summary>
+        /// The ring that closes around a critter the moment they are out.
+        ///
+        /// <para>
+        /// <b>It comes *in* rather than going out, and that is the whole difference between this
+        /// and every other ring in the mode.</b> A shockwave leaves — it starts small, runs past
+        /// the edge of the cell and fades, which says <em>something went off here</em>. This one
+        /// starts wide and closes onto the creature, which says <em>this one</em>. Drawn on the
+        /// residents layer so the grove falls behind it, in the same gold the freed critter's own
+        /// light uses, and it is the last thing left standing when the shell's noise has gone.
+        /// </para>
+        /// <para>
+        /// It holds a moment at the critter's own size, breathing with the pump rather than
+        /// against it — one gesture in two shapes — and then fades where it stands. A ring that
+        /// snapped away would take the eye with it, which is exactly the frame the player is
+        /// meant to be looking at the creature in.
+        /// </para>
+        /// </summary>
+        void Circle(int index, Vector2 where)
+        {
+            var sprite = Art.Ring(160, 9f);
+            if (sprite == null || _residents == null) return;
+
+            float size = _size * BudTempo.FreedRing;
+
+            var ring = UIKit.Img("Greeting" + index, _residents, sprite, Pal.A(Pal.Gold, 0f),
+                                 Vector2.one * size, new Vector2(.5f, .5f), where);
+            var rt = (RectTransform)ring.transform;
+
+            // Behind everybody who is out, so a creature swelling inside its own ring is never
+            // drawn through it. Residents do not overlap, so one index is enough.
+            rt.SetAsFirstSibling();
+
+            Tween.Run(BudTempo.FreedHold * BudTempo.FreedRingOver, Ease.OutQuad, t =>
+            {
+                if (!ring) return;
+
+                // In from wide, held, then gone — and the swell it holds at is the pump's own,
+                // so the ring and the creature inside it are one gesture rather than two.
+                float close = Mathf.Min(1f, t / BudTempo.FreedRingClose);
+                float ease = 1f - (1f - close) * (1f - close);
+                float held = Mathf.Max(0f, (t - BudTempo.FreedRingClose)
+                                         / (1f - BudTempo.FreedRingClose));
+
+                rt.localScale = Vector3.one
+                              * (Mathf.Lerp(BudTempo.FreedRingFrom, 1f, ease)
+                                 + Mathf.Sin(held * Mathf.PI) * BudTempo.FreedRingSwell);
+
+                ring.color = Pal.A(Pal.Gold, Mathf.Min(1f, ease * 1.6f) * (1f - held * held));
+            }, ring).OnDone(() => { if (ring) Destroy(ring.gameObject); });
+        }
+
+        // ------------------------------------------------------------------ the grove falling
+        /// <summary>
+        /// Everything that moved on this wave, sliding down into the holes under it.
+        ///
+        /// <para>
+        /// <b>The cells never move; what is drawn in them does.</b> A cell is a fixed square of
+        /// the grid with a flower or a cocoon standing in it, so a fall is not a cell changing
+        /// position — it is the <em>picture</em> being handed from one cell to the next, and then
+        /// the receiving cell animating its own <see cref="Cell.Piece"/> in from where it came.
+        /// That is what keeps the ground, the hit target and the <c>Btn</c> exactly where the
+        /// layout put them, which is the one thing a falling board must not lose.
+        /// </para>
+        /// <para>
+        /// <b>A column falls as a column, and the further it falls the longer it takes</b> — a
+        /// flower that drops five rows and one that drops one row cannot take the same time
+        /// without the tall one reading as teleporting, and two pieces of one column that start
+        /// at different moments read as a shower rather than as a board collapsing. So the
+        /// ripple is over <em>columns</em> and never over the order the model happened to list
+        /// the drops in, which is what it used to be.
+        /// </para>
+        /// <para>
+        /// <b>And what grew travels the height of its own hole.</b> Every new flower in a column
+        /// enters from over the top of the grove, stacked in the order it will land, so a column
+        /// that lost three moves three squares' worth of new flowers down by three squares —
+        /// which is one distance for the whole column rather than one per row. The old
+        /// arithmetic negated the grove's own origin, so on a seven-high board the top row's new
+        /// flower rose <em>up</em> into place from three squares below and only the bottom rows
+        /// fell at all.
+        /// </para>
+        /// </summary>
+        void Rain(BudDrop[] drops, int wave, float burn)
+        {
+            if (drops == null || _cells == null) return;
+
+            float over = BudTempo.Rain(burn);
+
+            for (int i = 0; i < drops.Length; i++)
+            {
+                var drop = drops[i];
+                if (drop.Wave != wave) continue;
+                if (drop.Cell < 0 || drop.Cell >= _cells.Length) continue;
+
+                int column = drop.Cell % _layout.Width;
+
+                // Where it is coming from: the cell above it, or from over the top of the grove
+                // for a flower that has just grown, which travels as far as its column is deep.
+                float above = drop.Grew
+                    ? Grown(drops, wave, column) * _cell
+                    : Where(drop.From).y - Where(drop.Cell).y;
+
+                Land(drop, above, over, column);
+            }
+        }
+
+        /// <summary>
+        /// How many flowers grew into one column on this wave, which is how far every one of
+        /// them falls.
+        ///
+        /// <para>
+        /// A hole is always at the top of its column — the grove falls first and grows into what
+        /// is left — so the new flowers of one column enter as a block from above the grove and
+        /// come down together. Each therefore travels the same distance: the height of the hole
+        /// the column lost, whatever row inside it any one of them ends up on.
+        /// </para>
+        /// </summary>
+        int Grown(BudDrop[] drops, int wave, int column)
+        {
+            int count = 0;
+
+            for (int i = 0; i < drops.Length; i++)
+                if (drops[i].Wave == wave && drops[i].Grew
+                    && drops[i].Cell >= 0 && drops[i].Cell % _layout.Width == column) count++;
+
+            return count < 1 ? 1 : count;
+        }
+
+        /// <summary>
+        /// One thing arriving in a cell, dropped in from <paramref name="above"/>.
+        ///
+        /// <para>
+        /// <b>The offset is taken the instant the picture is handed over, not when the tween
+        /// starts.</b> <see cref="PaintCell"/> draws what has landed straight away, so a piece
+        /// left sitting at its destination for the length of its stagger and only then lifted to
+        /// where it fell from is a flower that appears, jumps back up and falls again.
+        /// </para>
+        /// <para>
+        /// <b>And an interrupted fall lands rather than being abandoned.</b> A fall arrives at a
+        /// resting state it knows absolutely — the cell it belongs to — so it is
+        /// <see cref="Tw.OnAbandon"/>'s second kind: it declares where a superseded one goes and
+        /// <c>KillChannel</c> puts it there. Without that, a wave dropping twice into one cell
+        /// left the first fall wherever the second caught it.
+        /// </para>
+        /// </summary>
+        void Land(BudDrop drop, float above, float over, int column)
+        {
+            var cell = _cells[drop.Cell];
+            if (cell?.Rt == null || cell.Piece == null) return;
+
+            PaintCell(drop.Cell, true);
+
+            var piece = cell.Piece;
+
+            // Bounded *with* its stagger rather than beside it — see `BudTempo.Rainfall`, which
+            // is where that arithmetic lives so it can be proved without an Editor.
+            float rows = Mathf.Abs(above) / Mathf.Max(1f, _cell);
+            BudTempo.Rainfall(column, rows, over, out float delay, out float fall);
+
+            Action rest = () => { if (piece) piece.anchoredPosition = Vector2.zero; };
+
+            Tween.Run(fall, Ease.OutQuad, t =>
+            {
+                if (!piece) return;
+                piece.anchoredPosition = new Vector2(0f, Mathf.Lerp(above, 0f, t));
+            }, piece, FallChannel).Delay(delay).OnAbandon(rest).OnDone(() =>
+            {
+                rest();
+
+                // A little squash where it lands, which is the whole of what makes a falling
+                // board feel like it has weight.
+                if (cell.Rt) Tween.Punch(cell.Rt, .16f, over * .8f);
+            });
+
+            // **After the tween is registered, not before.** Registering supersedes whatever
+            // fall was still running on this cell, and a superseded fall *lands* — so lifting
+            // the piece first would be undone by the very kill that makes this one safe.
+            piece.anchoredPosition = new Vector2(0f, above);
+        }
+
+        /// <summary>The channel a falling piece runs on, so one fall supersedes another.</summary>
+        const string FallChannel = "budfall";
+
+        // ------------------------------------------------------------------ what would pop
+        /// <summary>
+        /// Every flower a tap would set something off on, breathing.
+        ///
+        /// <para>
+        /// <b>This is the single change that took the arithmetic out of the mode.</b> Every game
+        /// of this shape shows the player the matches and asks them to <em>pick</em>; Budburst
+        /// made them work out, in their head, which cell the colour in hand would turn into a
+        /// third of something — and then reported back, correctly, that it did not feel
+        /// brain-dead. The board now says which taps pop. The choice is still entirely theirs,
+        /// because most groves offer several and they differ enormously in size; what has gone is
+        /// the sum they had to do before they could see any of them.
+        /// </para>
+        /// <para>
+        /// <b>Recomputed only when the board or the colour in hand moves</b>, never per frame: it
+        /// is one full preview per flower, which settles a whole chain each. Fifty of those is
+        /// nothing once per tap and is a stall every frame.
+        /// </para>
+        /// </summary>
+        void PaintPops()
         {
             if (_cells == null || Run == null) return;
 
+            bool live = Playable;
+
             for (int i = 0; i < _cells.Length; i++)
             {
-                var critter = _cells[i].Critter;
-                if (!critter || Run.Board.IsCocoon(i)) continue;
+                var cell = _cells[i];
+                if (cell?.Bud == null) continue;
 
-                Tween.Punch(critter.transform, .16f, Mathf.Max(burn * .7f, .22f));
+                // White is skipped: it breathes on its own account in PaintCell, harder, and
+                // it always pops — it is the bomb. Two breaths on one transform is the bug this
+                // file has paid for twice.
+                if (cell.Drawn == Energy.All) continue;
+
+                bool pops = live && Run.Pops(i);
+                if (pops == cell.Pops) continue;
+
+                cell.Pops = pops;
+                var rt = (RectTransform)cell.Bud.transform;
+
+                if (!pops)
+                {
+                    Tween.KillChannel(rt, PopsChannel);
+                    rt.localScale = Vector3.one;
+                    continue;
+                }
+
+                // A slow, small breath. It has to be readable across a board of fifty and it has
+                // to be quieter than anything that is actually happening, so it is the smallest
+                // motion in the mode.
+                Tween.Breathe(rt, BudTempo.PopsSwell, BudTempo.PopsBreath, i * .11f);
             }
         }
+
+        /// <summary>The channel the "this one pops" breath runs on.</summary>
+        const string PopsChannel = "breathe";
 
         /// <summary>The channel a cell's own spin runs on, so one spin supersedes another.</summary>
         const string SpinChannel = "budspin";
@@ -1228,6 +1719,39 @@ namespace GlimmerGrove
         /// little over half a cell wide and a grove of four freed ones stays a grid.
         /// </summary>
         const float FreedScale = 1.24f;
+
+        /// <summary>
+        /// The critter that has just come out of the cocoon on <paramref name="index"/>, standing
+        /// in the grove rather than in the cell.
+        ///
+        /// <para>
+        /// It wears the same flipbook the cell's sleeping one wore, because it <em>is</em> that
+        /// critter — the identity is a fact about the square it was shut in on, so a player who
+        /// watched a particular creature sleeping there sees that creature get out. The cell's own
+        /// critter is put away in the same breath: <see cref="PaintCell"/> hides it whenever the
+        /// square is not a cocoon, but the square is bare for a frame or two before the grove
+        /// falls into it and two of the same critter is exactly the moment somebody looks.
+        /// </para>
+        /// </summary>
+        Image Resident(int index, Vector2 where)
+        {
+            if (_freed[index]) Destroy(_freed[index].gameObject);
+
+            var cell = _cells[index];
+            if (cell.Critter)
+            {
+                Tween.KillAll(cell.Critter);
+                Tween.KillChannel(cell.Critter.transform, "breathe");
+                cell.Critter.color = new Color(1, 1, 1, 0f);
+            }
+
+            var critter = UIKit.Img("Freed" + index, _residents, null, Color.white,
+                                    Vector2.one * _size * .46f, new Vector2(.5f, .5f), where);
+            CritterArt(critter, index, awake: true);
+
+            _freed[index] = critter;
+            return critter;
+        }
 
         /// <summary>
         /// A flower winding up: spinning faster and faster in place, swelling, going white.
@@ -1961,21 +2485,22 @@ namespace GlimmerGrove
             // It used to leap out and fade to nothing over the last third of the animation, so
             // a grove that had freed everybody was an empty field: the thing the player spent
             // the level earning was the one thing not on the board at the end. Now it jumps
-            // clear of the shell, settles back onto its own cell a little larger than it was
-            // shut in, and breathes there for the rest of the run.
+            // clear of the shell, settles back onto the square it was let out on a little larger
+            // than it was shut in, and breathes there for the rest of the run.
+            //
+            // **And it leaves the cell to do it.** Freeing empties that square in the model, so
+            // the grove falls into it within the same wave — and while the critter was a child of
+            // the cell, the flower landing on it dragged the critter down and `PaintCell` could
+            // paint a sleeping one straight over somebody the player had just let out. So it
+            // stands on `_residents` at the position it was freed at: nothing that falls can move
+            // it, cover it, or repaint it, and the grove comes down behind it. See `_freed`.
             //
             // Two beats rather than one, because a single tween cannot do both halves: the
             // leap is fast and overshoots, the settle is slower and lands. One eased curve
             // across the whole thing reads as a float rather than as getting out.
-            if (cell.Critter)
             {
-                var critter = cell.Critter;
+                var critter = Resident(index, where);
                 var crt = (RectTransform)critter.transform;
-
-                Tween.KillAll(critter);
-                Tween.KillChannel(crt, "breathe");
-                CritterArt(critter, index, awake: true);
-                critter.transform.SetAsLastSibling();
 
                 float leap = life * .52f;
                 float top = _cell * .62f;
@@ -1986,7 +2511,8 @@ namespace GlimmerGrove
 
                     // Up and out, with a wobble, growing past where it will end up.
                     float lift = Mathf.Sin(t * Mathf.PI * .5f);
-                    crt.anchoredPosition = new Vector2(Mathf.Sin(t * 9f) * _cell * .09f, lift * top);
+                    crt.anchoredPosition = where + new Vector2(Mathf.Sin(t * 9f) * _cell * .09f,
+                                                               lift * top);
                     crt.localScale = Vector3.one * Mathf.Lerp(1f, FreedScale * 1.30f, lift);
                     crt.localRotation = Quaternion.Euler(0, 0, Mathf.Sin(t * 7f) * 12f);
                     critter.color = Color.white;
@@ -2000,7 +2526,7 @@ namespace GlimmerGrove
                     Tween.Run(life * .48f, Ease.OutBack, t =>
                     {
                         if (!critter) return;
-                        crt.anchoredPosition = Vector2.Lerp(from, Vector2.zero, t);
+                        crt.anchoredPosition = Vector2.Lerp(from, where, t);
                         crt.localScale = Vector3.one * Mathf.Lerp(scale, FreedScale, t);
                         crt.localRotation = Quaternion.Euler(0, 0, (1f - t) * Mathf.Sin(t * 7f) * 10f);
                     }, critter).OnDone(() =>
@@ -2009,11 +2535,25 @@ namespace GlimmerGrove
 
                         // Landed. Everything is put back exactly rather than left wherever the
                         // curve stopped, because what happens next borrows this scale.
-                        crt.anchoredPosition = Vector2.zero;
+                        crt.anchoredPosition = where;
                         crt.localScale = Vector3.one * FreedScale;
                         crt.localRotation = Quaternion.identity;
 
-                        Tween.Breathe(crt, .055f, 2.9f, index * .21f);
+                        // **And here is the moment the level was for, said once and plainly.**
+                        // Everything before this is the shell coming apart — light, chips, a
+                        // shockwave, a leap — and none of it is *about the critter*: it is about
+                        // the cocoon it was in, and the creature arrives in the middle of it as
+                        // one more thing moving. So the noise stops, a ring closes around them
+                        // and they pump inside it. It was reported as not being visible at all,
+                        // which is what happens when the payoff is drawn in the same register as
+                        // the packaging.
+                        Circle(index, where);
+
+                        // And then they go where the score is kept — chained off the pump rather
+                        // than timed to match it, so the idle breath a finished pump would start
+                        // can never be driving the scale the flight is writing. See `FlyToCount`.
+                        Pump(critter, BudTempo.FreedHold, index, BudTempo.FreedGreet,
+                             () => FlyToCount(index));
                     });
                 });
             }
@@ -2618,77 +3158,20 @@ namespace GlimmerGrove
                 Tween.Punch(_cells[i].Rt, .22f, .34f).Delay(delay);
             }
 
-            // And everybody who was freed cheers, one after another. They are the thing the
-            // level was for and they are standing on the board already (see `Free`), so the
-            // finish costs nothing to say with them — where a sweep over the tiles says it with
-            // the scenery.
-            int freed = 0;
-            for (int i = 0; i < _cells.Length; i++)
-                if (_cells[i].Critter && !Run.Board.IsCocoon(i)) freed++;
-
-            int nth = 0;
-            for (int i = 0; i < _cells.Length; i++)
-            {
-                if (!_cells[i].Critter || Run.Board.IsCocoon(i)) continue;
-                Cheer(i, BudTempo.CheerAt(nth++, freed));
-            }
-
+            // And the counter answers, because that is where everybody went.
+            //
+            // The finish used to be said with the freed critters standing on the board, one hop
+            // after another — and there are none standing any more, deliberately: a critter left
+            // in a square is a critter standing where the grove is about to drop a flower (see
+            // `FlyToCount`). The readout they each flew to is the one thing on this screen that
+            // holds all of them at once, so it is what the grove finishes on.
+            if (_left) Tween.Punch(_left.transform, .34f, .46f);
             if (_plate) Tween.Punch(_plate, .06f, .5f);
 
             yield return new WaitForSecondsRealtime(BudTempo.Hush);
             if (!this) yield break;
 
             Solved?.Invoke();
-        }
-
-        /// <summary>
-        /// One freed critter jumping for the finish.
-        ///
-        /// <para>
-        /// It borrows nothing: <see cref="Free"/> left the critter breathing at
-        /// <see cref="FreedScale"/> and this kills that channel before it reads anything, which
-        /// is the rule this file has already paid for twice — a gesture that reads its target's
-        /// resting value while another tween is moving it captures mid-flight and hands the
-        /// wrong rest back for ever.
-        /// </para>
-        /// </summary>
-        void Cheer(int index, float delay)
-        {
-            var critter = _cells[index].Critter;
-            if (!critter) return;
-
-            var crt = (RectTransform)critter.transform;
-
-            Tween.After(delay, () =>
-            {
-                if (!this || !critter) return;
-
-                Tween.KillChannel(crt, "breathe");
-                crt.anchoredPosition = Vector2.zero;
-                crt.localScale = Vector3.one * FreedScale;
-
-                float top = _cell * .40f;
-
-                Tween.Run(.44f, Ease.OutQuad, t =>
-                {
-                    if (!critter) return;
-
-                    float hop = Mathf.Sin(t * Mathf.PI);
-                    crt.anchoredPosition = new Vector2(0f, hop * top);
-                    crt.localScale = Vector3.one * FreedScale * (1f + hop * .18f);
-                    crt.localRotation = Quaternion.Euler(0, 0, Mathf.Sin(t * Mathf.PI * 2f) * 14f);
-                }, critter).OnDone(() =>
-                {
-                    if (!this || !critter) return;
-
-                    crt.anchoredPosition = Vector2.zero;
-                    crt.localScale = Vector3.one * FreedScale;
-                    crt.localRotation = Quaternion.identity;
-                    Tween.Breathe(crt, .055f, 2.9f, index * .21f);
-                });
-
-                Burst.Sparks(_fx, Where(index), Pal.Gold, 8, 160f, 14f, .5f);
-            }, this);
         }
 
         // ------------------------------------------------------------------ one more go
@@ -2710,8 +3193,20 @@ namespace GlimmerGrove
         }
 
         // ------------------------------------------------------------------ housekeeping
+        bool _wasPlayable;
+
         void Update()
         {
+            // The halos are a fact about whether the run is *running*, which is written every
+            // frame by RunScreen and by nothing else — the same edge the hint key was painted on
+            // the wrong side of. Watched rather than recomputed: PaintPops is a full preview per
+            // flower, which is nothing once and a stall every frame.
+            if (Playable != _wasPlayable)
+            {
+                _wasPlayable = Playable;
+                PaintPops();
+            }
+
             if (_hovered < 0) return;
 
             if (!Playable) { HideGhost(); return; }

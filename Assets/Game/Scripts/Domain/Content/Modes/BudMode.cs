@@ -55,6 +55,14 @@ namespace GlimmerGrove.Content
                 return false;
             }
 
+            BudDeal regrow = null;
+            if (!string.IsNullOrEmpty(grove.regrow)
+                && !BudDeal.TryParse(grove.regrow, out regrow, out string growError, pure: false))
+            {
+                problems.Add($"{id}: the strip new flowers grow from — {growError}");
+                return false;
+            }
+
             if (!BudLayout.TryReadRows(grove.rows, width, height,
                                        out var ground, out var value, out string error))
             {
@@ -62,7 +70,7 @@ namespace GlimmerGrove.Content
                 return false;
             }
 
-            var layout = new BudLayout(width, height, ground, value, deal);
+            var layout = new BudLayout(width, height, ground, value, deal, regrow);
 
             // Two refusals rather than one, because they read as completely different mistakes to
             // whoever wrote the file — and the search would report both as "this cannot be
