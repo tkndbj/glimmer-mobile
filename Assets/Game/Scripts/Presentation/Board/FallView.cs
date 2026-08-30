@@ -58,7 +58,7 @@ namespace GlimmerGrove
         /// <summary>
         /// The closing cascade has begun, so nothing else may end this run.
         ///
-        /// <c>WeaveView.Finishing</c>'s rule, and it earns its place here for the same reason:
+        /// <c>KeeperView.Finishing</c>'s rule, and it earns its place here for the same reason:
         /// the run is decided when the last mote bursts and the panel opens a beat later while
         /// the chain plays out, so everything that could still end a run has to stop at the
         /// first of those two moments rather than the second.
@@ -651,7 +651,9 @@ namespace GlimmerGrove
             float fall = FallTempo.Fall(row + 2);
 
             var rt = falling.Rt;
-            Audio.Sfx("whoosh", .30f, 1.35f);
+            // No sound on the way down. It landing is the event, and it has one - a drop
+            // that spoke twice was a sweep pitched up by a third over a wooden knock, on
+            // the action this mode repeats more than any other.
             Tween.Run(fall, Ease.InQuad, t =>
             {
                 if (!rt) return;
@@ -937,7 +939,6 @@ namespace GlimmerGrove
             Flow.Flash(Pal.A(tint, .46f), .34f, .40f);
             ShakeBoard(FallTempo.Shake(waves) * 1.5f);
             Burst.Sparks(_fx, Vector2.zero, tint, 20, 420f, 26f, .8f);
-            Haptic.Tap();
             Audio.Sfx("win", .8f, 1f + FallChain.Tier(waves) * .05f);
 
             yield return new WaitForSecondsRealtime(FallTempo.Fanfare * .62f);
@@ -1123,7 +1124,7 @@ namespace GlimmerGrove
         // ------------------------------------------------------------------ endings
         /// <summary>
         /// Reads the run and reports it, once. Called on the edges that can end one and never
-        /// from a poll — this is the same argument <c>WeaveScreen.OnChanged</c> makes, and it
+        /// from a poll — this is the same argument <c>RippleScreen.OnChanged</c> makes, and it
         /// matters more here because the verdict walks the board.
         /// </summary>
         void Settle()

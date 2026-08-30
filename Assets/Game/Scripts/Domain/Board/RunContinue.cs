@@ -21,7 +21,12 @@ namespace GlimmerGrove
         /// <summary>Turns on a glade's move budget (invariant 22).</summary>
         Turns = 0,
 
-        /// <summary>Cells of light in a weave's pot of ink (invariant 22b).</summary>
+        /// <summary>
+        /// <b>Retired.</b> Cells of light in a Lightweave pot of ink. The mode is gone; the
+        /// member stays because the ordinal reaches analytics on every continue ever bought,
+        /// so re-pointing it at another unit would silently re-label that history — the same
+        /// rule <c>DefeatReason.OutOfInk</c> is kept under.
+        /// </summary>
         Ink = 1,
 
         /// <summary>
@@ -35,6 +40,9 @@ namespace GlimmerGrove
         /// its budget is par plus the slack every mode with a countable mistake is dealt.
         /// </summary>
         Tiles = 3,
+
+        /// <summary>Taps in a thicket's satchel (<c>BudSatchel</c>).</summary>
+        Taps = 4,
     }
 
     /// <summary>

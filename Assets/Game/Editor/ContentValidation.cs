@@ -983,7 +983,7 @@ namespace GlimmerGrove.EditorTools
             if (!verbose) return;
 
             Debug.Log($"[Glimmer] continue: {carryOn.Gems} gem(s) for +{carryOn.Turns} turn(s) " +
-                      $"on a glade, +{carryOn.Ink} cell(s) of ink on a weave" +
+                      $"on a glade, +{carryOn.Taps} tap(s) on a thicket" +
                       (carryOn.GemsStep > 0L
                            ? $"; +{carryOn.GemsStep} each time, so a third on one run costs " +
                              carryOn.PriceFor(2)

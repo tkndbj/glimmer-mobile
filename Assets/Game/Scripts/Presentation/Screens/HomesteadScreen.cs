@@ -816,7 +816,6 @@ namespace GlimmerGrove
             // The press has already happened by the time this fires, so the player gets no
             // feedback from the button they did not touch. This is the whole acknowledgement
             // that the hold worked, and without it a long press feels like a tap that failed.
-            Haptic.Tap();
             Audio.SfxVaried("tick", .5f);
         }
 
@@ -989,7 +988,6 @@ namespace GlimmerGrove
                 _editCol = _dropCol;
                 _editRow = _dropRow;
 
-                Haptic.Tap();
                 Audio.SfxVaried("tick", .62f);
             }
 
@@ -1000,7 +998,7 @@ namespace GlimmerGrove
 
         void FlipHere()
         {
-            if (_editing && HomesteadLayout.Flip(HomesteadCatalog.Current, EditSlot)) Haptic.Tap();
+            if (_editing) HomesteadLayout.Flip(HomesteadCatalog.Current, EditSlot);
         }
 
         void EnsureGhost()

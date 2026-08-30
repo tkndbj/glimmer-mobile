@@ -1296,7 +1296,7 @@ namespace GlimmerGrove
             if (Time.unscaledTime - _pokedAt < SparkGap) return;
             _pokedAt = Time.unscaledTime;
 
-            Audio.SfxVaried("pop", .5f, .18f);
+            Audio.SfxVaried("poke", .5f, .18f);
             Burst.Sparks(_hero.transform, new Vector2(0f, 40f), Pal.Gold, 8, 150f, 22f, .6f);
         }
 

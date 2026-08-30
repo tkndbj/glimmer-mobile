@@ -273,7 +273,6 @@ namespace GlimmerGrove
 
             Audio.Sfx("shatter", .8f, 1.1f);
             Audio.Duck(.3f, 1.4f);
-            Haptic.Tap();
             Flow.Flash(new Color(.78f, .62f, .40f), .38f, .6f);
             Tween.Punch(_floor.transform, .07f, .5f);
 
@@ -349,7 +348,6 @@ namespace GlimmerGrove
             if (woken.Count >= 2 && !P.Won)
             {
                 Tween.Punch(_floor.transform, .010f * Mathf.Min(woken.Count, 5), .45f);
-                if (woken.Count >= 3) Haptic.Tap();
             }
 
             if (P.Won) Celebrate();
@@ -370,7 +368,6 @@ namespace GlimmerGrove
             _lost = true;
             Locked = true;
 
-            Haptic.Tap();
             Audio.Duck(.3f, 1.4f);
             Audio.Sfx("pop2", .4f, .6f, .12f);
 

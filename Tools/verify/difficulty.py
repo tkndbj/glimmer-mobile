@@ -448,8 +448,8 @@ def main():
         doc = json.load(io.open(os.path.join(CHAPTERS, f), encoding="utf-8"))
 
         # Everything here enumerates rotations of a grid of conduits, so it has an answer
-        # for a glade and none at all for a hollow, a fall or a weave - those are searched
-        # or generated and have their own instruments (`HollowSolver`, `Survey Lightweave`).
+        # for a glade and none at all for a well, a groove or a thicket - each of those is
+        # searched and has its own readings, printed by `content.py` beside its par.
         # Said out loud rather than skipped silently: a chapter quietly missing from a report
         # somebody is using to judge difficulty is worse than one that says why it is absent.
         # It used to read `level["width"]` unguarded and stop the whole run on a KeyError at

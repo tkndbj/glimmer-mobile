@@ -270,7 +270,8 @@ namespace GlimmerGrove
             Tween.Scale(list, Vector3.one, EntryTime, Ease.OutBack);
             Tween.Fade(group, 1f, EntryTime * .6f, Ease.OutQuad);
 
-            Audio.Sfx("click", .4f);
+            // No sound here: the button that opened this list already spoke on pointer
+            // down, and a second click as the list unrolls is one tap making two noises.
         }
 
         static void Row(RectTransform parent, GameMode mode, bool selected, float y, Action tap)

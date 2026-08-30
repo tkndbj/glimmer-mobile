@@ -51,7 +51,7 @@ CONTACT_RGBA = (5, 20, 31, 115)
 # ModeLook.Wash, per mode. White is "no wash", which is what the glade takes.
 WASHES = {
     "glade": (255, 255, 255),
-    "weave": (204, 250, 255),
+    "ripple": (204, 245, 255),
     "fall": (255, 214, 204),
     "keeper": (214, 255, 224),
 }

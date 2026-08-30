@@ -59,7 +59,7 @@ namespace GlimmerGrove.Layout
     ///
     /// <para>
     /// <b>Here rather than beside the screen, for <c>ChapterMap</c>'s reason</b> (invariant 8a),
-    /// which <c>PanelStack</c>, <c>ReadoutRow</c> and <c>WeaveBand</c> have already earned:
+    /// which <c>PanelStack</c>, <c>ReadoutRow</c> and <c>RippleBand</c> have already earned:
     /// whether two things on a screen overlap is arithmetic, and arithmetic inside a
     /// <c>MonoBehaviour</c> is arithmetic nothing can check. It earns it harder than any of
     /// them, because the thing the bar must not collide with is <em>painted into a texture</em>

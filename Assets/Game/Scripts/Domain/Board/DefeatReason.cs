@@ -33,17 +33,10 @@ namespace GlimmerGrove
         OutOfTime = 2,
 
         /// <summary>
-        /// A weave ran out of light with the grove unfinished.
-        ///
-        /// <para>
-        /// Its own value rather than <see cref="OutOfMoves"/>, for the reason this enum exists
-        /// at all: the two cost the same heart and want different fixes. A glade draining hearts
-        /// on its budget is a board asking for too many turns; a weave draining them on ink is
-        /// either a grove forcing more detour than it was dealt light for or a mode teaching
-        /// badly — and a single count could not tell you which. It covers both ways a weave
-        /// ends, running dry and being left with no move it can afford, because from the
-        /// player's side those are one thing: there is not enough light left to finish.
-        /// </para>
+        /// <b>Retired.</b> A Lightweave grove ran out of light. The mode is gone; the member
+        /// stays because these values are permanent — analytics keys on them, so every defeat
+        /// row ever written carries a 3 and re-pointing it at some other ending would silently
+        /// re-label history. Retired in place, exactly as <see cref="OutOfTime"/> is.
         /// </summary>
         OutOfInk = 3,
 
@@ -89,5 +82,17 @@ namespace GlimmerGrove
         /// <c>KeeperVerdict</c>.
         /// </summary>
         Overgrown = 7,
+
+        /// <summary>
+        /// A thicket ran out of taps with a critter still shut in. A shortage, so it is always
+        /// worth a continue: more taps is exactly what it is short of.
+        /// </summary>
+        OutOfTaps = 8,
+
+        /// <summary>
+        /// A thicket with no bud left to tap. Nothing here ever grows one back, so no number of
+        /// taps helps — the mirror of a well flooding and a grove overgrowing.
+        /// </summary>
+        Barren = 9,
     }
 }

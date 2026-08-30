@@ -409,9 +409,12 @@ namespace GlimmerGrove
         {
             switch (unit)
             {
-                case ContinueUnit.Ink: return "ui.continue.ink_title";
+                // ContinueUnit.Ink is retired with Lightweave and deliberately absent: the
+                // ordinal stays so analytics keep meaning what they meant, and a mode nothing
+                // can play never reaches here.
                 case ContinueUnit.Motes: return "ui.continue.motes_title";
                 case ContinueUnit.Tiles: return "ui.continue.tiles_title";
+                case ContinueUnit.Taps: return "ui.continue.taps_title";
                 default: return "ui.continue.turns_title";
             }
         }
@@ -420,9 +423,9 @@ namespace GlimmerGrove
         {
             switch (unit)
             {
-                case ContinueUnit.Ink: return "ui.continue.ink_unit";
                 case ContinueUnit.Motes: return "ui.continue.motes_unit";
                 case ContinueUnit.Tiles: return "ui.continue.tiles_unit";
+                case ContinueUnit.Taps: return "ui.continue.taps_unit";
                 default: return "ui.continue.turns_unit";
             }
         }

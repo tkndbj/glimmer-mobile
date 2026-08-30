@@ -1,19 +1,28 @@
 {
   "schemaVersion": 1,
-
   "maxLevel": 500,
-
-  "xpToNext": [100, 150, 200, 260, 330, 410, 500, 600, 710, 830, 960, 1100],
+  "xpToNext": [
+    100,
+    150,
+    200,
+    260,
+    330,
+    410,
+    500,
+    600,
+    710,
+    830,
+    960,
+    1100
+  ],
   "tailXpToNext": 1250,
   "tailXpIncrement": 150,
-
   "rewards": {
     "xpFirstClear": 60,
     "xpPerStar": 30,
     "creditsFirstClear": 80,
     "creditsPerStar": 40
   },
-
   "chapterRewards": [
     {
       "chapterId": "c01_shallows",
@@ -23,58 +32,144 @@
       "creditsPerStar": 25
     }
   ],
-
   "daily": {
     "runsPerChest": 3,
-
     "chests": [
       {
-        "guaranteed": [ { "kind": "credits", "min": 60, "max": 90 } ],
+        "guaranteed": [
+          {
+            "kind": "credits",
+            "min": 60,
+            "max": 90
+          }
+        ],
         "options": [
-          { "kind": "credits", "min": 40, "max": 70, "weight": 45 },
-          { "kind": "hearts",  "min": 1,  "max": 1,  "weight": 30 },
-          { "kind": "gems",    "min": 1,  "max": 1,  "weight": 25 }
+          {
+            "kind": "credits",
+            "min": 40,
+            "max": 70,
+            "weight": 45
+          },
+          {
+            "kind": "hearts",
+            "min": 1,
+            "max": 1,
+            "weight": 30
+          },
+          {
+            "kind": "gems",
+            "min": 1,
+            "max": 1,
+            "weight": 25
+          }
         ]
       },
       {
-        "guaranteed": [ { "kind": "credits", "min": 110, "max": 160 } ],
+        "guaranteed": [
+          {
+            "kind": "credits",
+            "min": 110,
+            "max": 160
+          }
+        ],
         "options": [
-          { "kind": "credits",     "min": 80, "max": 130, "weight": 45 },
-          { "kind": "gems",        "min": 2,  "max": 3,   "weight": 40 },
-          { "kind": "heart_boost", "min": 24, "max": 24,  "weight": 15 }
+          {
+            "kind": "credits",
+            "min": 80,
+            "max": 130,
+            "weight": 45
+          },
+          {
+            "kind": "gems",
+            "min": 2,
+            "max": 3,
+            "weight": 40
+          },
+          {
+            "kind": "heart_boost",
+            "min": 24,
+            "max": 24,
+            "weight": 15
+          }
         ]
       },
       {
-        "guaranteed": [ { "kind": "credits", "min": 200, "max": 280 } ],
+        "guaranteed": [
+          {
+            "kind": "credits",
+            "min": 200,
+            "max": 280
+          }
+        ],
         "options": [
-          { "kind": "gems",        "min": 4,  "max": 6,  "weight": 62 },
-          { "kind": "heart_boost", "min": 24, "max": 24, "weight": 38 }
+          {
+            "kind": "gems",
+            "min": 4,
+            "max": 6,
+            "weight": 62
+          },
+          {
+            "kind": "heart_boost",
+            "min": 24,
+            "max": 24,
+            "weight": 38
+          }
         ]
       }
     ]
   },
-
   "golden": {
     "bands": [
-      { "percent": 100, "weight": 80 },
-      { "percent": 150, "weight": 13 },
-      { "percent": 250, "weight": 6 },
-      { "percent": 500, "weight": 1 }
+      {
+        "percent": 100,
+        "weight": 80
+      },
+      {
+        "percent": 150,
+        "weight": 13
+      },
+      {
+        "percent": 250,
+        "weight": 6
+      },
+      {
+        "percent": 500,
+        "weight": 1
+      }
     ]
   },
-
   "streak": {
     "rungs": [
-      { "kind": "credits",     "amount": 500 },
-      { "kind": "hearts",      "amount": 1 },
-      { "kind": "gems",        "amount": 5 },
-      { "kind": "hearts",      "amount": 2 },
-      { "kind": "heart_boost", "amount": 12 },
-      { "kind": "hearts",      "amount": 3 },
-      { "kind": "gems",        "amount": 10 }
+      {
+        "kind": "credits",
+        "amount": 500
+      },
+      {
+        "kind": "hearts",
+        "amount": 1
+      },
+      {
+        "kind": "gems",
+        "amount": 5
+      },
+      {
+        "kind": "hearts",
+        "amount": 2
+      },
+      {
+        "kind": "heart_boost",
+        "amount": 12
+      },
+      {
+        "kind": "hearts",
+        "amount": 3
+      },
+      {
+        "kind": "gems",
+        "amount": 10
+      }
     ]
   },
-
   "hearts": {
     "refillCap": 5,
     "ceiling": 50,
@@ -86,84 +181,240 @@
     "rescueHearts": 2,
     "graceLevels": 3
   },
-
   "hints": {
     "refillCap": 3,
     "ceiling": 3,
     "refillSeconds": 28800
   },
-
   "chapterGate": {
     "starsPerLevel": 2
   },
-
   "continueRun": {
     "enabled": 1,
     "gems": 20,
     "gemsStep": 0,
     "turns": 15,
-    "ink": 20
+    "taps": 4
   },
-
   "prompts": {
     "chapterBudget": 2,
     "purchaseBudget": 3,
     "quietHours": 48
   },
-
   "ads": {
     "cooldownSeconds": 45,
-
     "placements": [
-      { "id": "heart_refill", "kind": "hearts",   "amount": 2,   "dailyCap": 20 },
-      { "id": "coin_bonus",   "kind": "credits",  "amount": 1000, "dailyCap": 12 },
-      { "id": "win_bonus",    "kind": "credits",  "amount": 200, "dailyCap": 6 },
-      { "id": "hint_refill",  "kind": "hints",    "amount": 1,   "dailyCap": 10 }
+      {
+        "id": "heart_refill",
+        "kind": "hearts",
+        "amount": 2,
+        "dailyCap": 20
+      },
+      {
+        "id": "coin_bonus",
+        "kind": "credits",
+        "amount": 1000,
+        "dailyCap": 12
+      },
+      {
+        "id": "win_bonus",
+        "kind": "credits",
+        "amount": 200,
+        "dailyCap": 6
+      },
+      {
+        "id": "hint_refill",
+        "kind": "hints",
+        "amount": 1,
+        "dailyCap": 10
+      }
     ],
-
     "wheel": {
       "slices": [
-        { "percent": 100 },
-        { "percent": 200 },
-        { "percent": 150 },
-        { "percent": 300 },
-        { "percent": 100 },
-        { "percent": 250 },
-        { "percent": 150 },
-        { "percent": 500 }
+        {
+          "percent": 100
+        },
+        {
+          "percent": 200
+        },
+        {
+          "percent": 150
+        },
+        {
+          "percent": 300
+        },
+        {
+          "percent": 100
+        },
+        {
+          "percent": 250
+        },
+        {
+          "percent": 150
+        },
+        {
+          "percent": 500
+        }
       ]
     }
   },
-
   "store": {
     "products": [
-      { "id": "gg_gems_1", "kind": "consumable", "shelf": "gems", "gems": 100,  "referenceUsdCents": 99 },
-      { "id": "gg_gems_2", "kind": "consumable", "shelf": "gems", "gems": 340,  "referenceUsdCents": 299 },
-      { "id": "gg_gems_3", "kind": "consumable", "shelf": "gems", "gems": 750,  "referenceUsdCents": 599, "badge": "popular" },
-      { "id": "gg_gems_4", "kind": "consumable", "shelf": "gems", "gems": 1700, "referenceUsdCents": 1299 },
-      { "id": "gg_gems_5", "kind": "consumable", "shelf": "gems", "gems": 3900, "referenceUsdCents": 2499 },
-      { "id": "gg_gems_6", "kind": "consumable", "shelf": "gems", "gems": 8500, "referenceUsdCents": 4999, "badge": "best_value" },
-
-      { "id": "gg_coins_1", "kind": "consumable", "shelf": "coins", "credits": 2500,  "referenceUsdCents": 199 },
-      { "id": "gg_coins_2", "kind": "consumable", "shelf": "coins", "credits": 9000,  "referenceUsdCents": 599, "badge": "popular" },
-      { "id": "gg_coins_3", "kind": "consumable", "shelf": "coins", "credits": 26000, "referenceUsdCents": 1499 },
-      { "id": "gg_coins_4", "kind": "consumable", "shelf": "coins", "credits": 75000, "referenceUsdCents": 3999, "badge": "best_value" },
-
-      { "id": "gg_bundle_starter", "kind": "nonconsumable", "shelf": "bundles", "credits": 7500,  "gems": 500,  "referenceUsdCents": 299, "badge": "starter" },
-      { "id": "gg_bundle_keeper",  "kind": "consumable",    "shelf": "bundles", "credits": 12000, "gems": 700,  "referenceUsdCents": 999 },
-      { "id": "gg_bundle_grove",   "kind": "consumable",    "shelf": "bundles", "credits": 42000, "gems": 2200, "referenceUsdCents": 2999, "badge": "best_value" },
-
-      { "id": "gg_heart_vessel_1", "kind": "nonconsumable", "shelf": "supplies", "heartCapacity": 10, "referenceUsdCents": 1999 },
-      { "id": "gg_heart_vessel_2", "kind": "nonconsumable", "shelf": "supplies", "heartCapacity": 20, "referenceUsdCents": 2999, "badge": "popular" },
-      { "id": "gg_heart_vessel_3", "kind": "nonconsumable", "shelf": "supplies", "heartCapacity": 50, "referenceUsdCents": 3999, "badge": "best_value" }
+      {
+        "id": "gg_gems_1",
+        "kind": "consumable",
+        "shelf": "gems",
+        "gems": 100,
+        "referenceUsdCents": 99
+      },
+      {
+        "id": "gg_gems_2",
+        "kind": "consumable",
+        "shelf": "gems",
+        "gems": 340,
+        "referenceUsdCents": 299
+      },
+      {
+        "id": "gg_gems_3",
+        "kind": "consumable",
+        "shelf": "gems",
+        "gems": 750,
+        "referenceUsdCents": 599,
+        "badge": "popular"
+      },
+      {
+        "id": "gg_gems_4",
+        "kind": "consumable",
+        "shelf": "gems",
+        "gems": 1700,
+        "referenceUsdCents": 1299
+      },
+      {
+        "id": "gg_gems_5",
+        "kind": "consumable",
+        "shelf": "gems",
+        "gems": 3900,
+        "referenceUsdCents": 2499
+      },
+      {
+        "id": "gg_gems_6",
+        "kind": "consumable",
+        "shelf": "gems",
+        "gems": 8500,
+        "referenceUsdCents": 4999,
+        "badge": "best_value"
+      },
+      {
+        "id": "gg_coins_1",
+        "kind": "consumable",
+        "shelf": "coins",
+        "credits": 2500,
+        "referenceUsdCents": 199
+      },
+      {
+        "id": "gg_coins_2",
+        "kind": "consumable",
+        "shelf": "coins",
+        "credits": 9000,
+        "referenceUsdCents": 599,
+        "badge": "popular"
+      },
+      {
+        "id": "gg_coins_3",
+        "kind": "consumable",
+        "shelf": "coins",
+        "credits": 26000,
+        "referenceUsdCents": 1499
+      },
+      {
+        "id": "gg_coins_4",
+        "kind": "consumable",
+        "shelf": "coins",
+        "credits": 75000,
+        "referenceUsdCents": 3999,
+        "badge": "best_value"
+      },
+      {
+        "id": "gg_bundle_starter",
+        "kind": "nonconsumable",
+        "shelf": "bundles",
+        "credits": 7500,
+        "gems": 500,
+        "referenceUsdCents": 299,
+        "badge": "starter"
+      },
+      {
+        "id": "gg_bundle_keeper",
+        "kind": "consumable",
+        "shelf": "bundles",
+        "credits": 12000,
+        "gems": 700,
+        "referenceUsdCents": 999
+      },
+      {
+        "id": "gg_bundle_grove",
+        "kind": "consumable",
+        "shelf": "bundles",
+        "credits": 42000,
+        "gems": 2200,
+        "referenceUsdCents": 2999,
+        "badge": "best_value"
+      },
+      {
+        "id": "gg_heart_vessel_1",
+        "kind": "nonconsumable",
+        "shelf": "supplies",
+        "heartCapacity": 10,
+        "referenceUsdCents": 1999
+      },
+      {
+        "id": "gg_heart_vessel_2",
+        "kind": "nonconsumable",
+        "shelf": "supplies",
+        "heartCapacity": 20,
+        "referenceUsdCents": 2999,
+        "badge": "popular"
+      },
+      {
+        "id": "gg_heart_vessel_3",
+        "kind": "nonconsumable",
+        "shelf": "supplies",
+        "heartCapacity": 50,
+        "referenceUsdCents": 3999,
+        "badge": "best_value"
+      }
     ],
-
     "goods": [
-      { "id": "hearts_five",     "kind": "hearts",      "amount": 5,  "gems": 50 },
-      { "id": "hearts_fifteen",  "kind": "hearts",      "amount": 15, "gems": 125 },
-      { "id": "hearts_forty",    "kind": "hearts",      "amount": 40, "gems": 280 },
-      { "id": "boost_day",       "kind": "heart_boost", "amount": 24, "gems": 30 },
-      { "id": "boost_three_day", "kind": "heart_boost", "amount": 72, "gems": 75 }
+      {
+        "id": "hearts_five",
+        "kind": "hearts",
+        "amount": 5,
+        "gems": 50
+      },
+      {
+        "id": "hearts_fifteen",
+        "kind": "hearts",
+        "amount": 15,
+        "gems": 125
+      },
+      {
+        "id": "hearts_forty",
+        "kind": "hearts",
+        "amount": 40,
+        "gems": 280
+      },
+      {
+        "id": "boost_day",
+        "kind": "heart_boost",
+        "amount": 24,
+        "gems": 30
+      },
+      {
+        "id": "boost_three_day",
+        "kind": "heart_boost",
+        "amount": 72,
+        "gems": 75
+      }
     ]
   }
 }

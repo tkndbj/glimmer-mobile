@@ -59,7 +59,7 @@ namespace GlimmerGrove.Content
             new GladeValidator(),
             new FallValidator(),
             new KeeperValidator(),
-            new WeaveValidator(),
+            new BudValidator(),
         };
 
         public static IReadOnlyList<ModeValidator> All => _all;
@@ -428,166 +428,158 @@ namespace GlimmerGrove.Content
     }
 
     /// <summary>
-    /// Lightweave. A weave board is <em>generated</em>, so unlike a glade there is nothing in the
-    /// file to read: every check here has to deal the board and look at what came out.
+    /// Budburst. The whole grove is in the file, so everything about it can be read — but
+    /// whether the chains can be made to reach every cocoon is not, and that is what most of this
+    /// proves.
+    ///
+    /// <para>
+    /// <b>Two of its checks are the house rules read backwards, and that is deliberate.</b>
+    /// Everywhere else a board almost anything finishes is a warning (invariant 5d) and a
+    /// careless player finishing is a warning too. This mode's brief is a board almost anything
+    /// finishes: the star line is where the skill lives, and the thing worth refusing is a
+    /// grove that a player who just taps the biggest thing <em>cannot</em> finish.
+    /// </para>
     /// </summary>
-    sealed class WeaveValidator : ModeValidator
+    sealed class BudValidator : ModeValidator
     {
-        public override GameMode Mode => GameMode.Weave;
+        public override GameMode Mode => GameMode.Bud;
+
+        /// <summary>
+        /// Where a grove stops being cheap to prove, and where it stops being shippable. About
+        /// the <em>player's</em> device: the search runs once per level, on the phone, when
+        /// somebody opens it (invariant 26d).
+        /// </summary>
+        const int NodeWarning = 20_000, NodeCeiling = 60_000;
+
+        /// <summary>
+        /// A grove with only one shortest play is a puzzle, and a puzzle is what this mode is
+        /// deliberately not. Warned rather than refused: an opening level may legitimately have
+        /// one obvious best tap.
+        /// </summary>
+        const int TooFewWays = 2;
 
         public override void Validate(LevelDefinition level, List<LevelIssue> issues)
         {
-            var grove = (WeaveRules)level.Rules;
-            var layout = grove.LayoutFor(level.Id);
+            var grove = (BudRules)level.Rules;
+            var layout = grove.Layout;
 
-            // The board carries its own proof, so the validator plays it rather than trusting it.
-            // Played all the way to IsSolved, which is what proves the beads too: a bead the
-            // carved route does not thread is a board its own solution cannot finish.
-            // A board rather than a run: the validator is proving a grove can be finished, not
-            // playing one, so it neither spends light nor writes down a stroke.
-            var board = new WeaveBoard(layout);
-            if (!board.DrawSolution())
+            // Room above par is `spare`, in taps, so a budgetFactor on a grove is a number that
+            // does nothing. Refused rather than ignored, for ChapterDto.order's reason. A negative
+            // factor still means "cannot be lost", which is what an opening level authors.
+            if (level.Tuning.BudgetFactorIsIgnored)
                 issues.Add(new LevelIssue(LevelIssueSeverity.Error,
-                    "this grove's own solution does not join every pair and thread every bead " +
-                    "without crossing, so the generator produced a board nobody can finish"));
+                    $"this grove authors budgetFactor {level.Tuning.BudgetFactor:0.##}, which " +
+                    "does nothing: room above par is 'spare', counted in taps. Use 'spare', or a " +
+                    "negative budgetFactor if it is meant to be unlosable"));
 
-            // The same three-line check every glade gets, asked of a mode that now has a fail
-            // line to get wrong. Shared rather than restated: a second copy of "is this ladder
-            // ordered" is a second thing to keep in step with LevelTuning (invariant 9a).
+            // Two things are checkable by *looking*, and both would otherwise come back from the
+            // search as "nobody can finish this" — which is true and tells the author nothing
+            // about what to move.
+            Reachable(layout, issues);
+            Settled(layout, issues);
+
+            var survey = BudSolver.Survey(layout);
+
+            if (!survey.Proved)
+            {
+                issues.Add(new LevelIssue(LevelIssueSeverity.Error,
+                    $"this grove could not be proved inside {BudSolver.NodeBudget} positions " +
+                    $"(it looked at {survey.Nodes}) or within {BudSolver.MaxTaps} taps. It may be " +
+                    "unsolvable, or simply too expensive to prove — either way it cannot ship, " +
+                    "because the player's device runs the same search to work out par"));
+                return;
+            }
+
+            if (!survey.IsSolvable)
+            {
+                issues.Add(new LevelIssue(LevelIssueSeverity.Error,
+                    "no order of taps frees every critter on this grove, so nobody can finish " +
+                    "it — every play was searched and none won"));
+                return;
+            }
+
+            if (survey.Nodes > NodeCeiling)
+                issues.Add(new LevelIssue(LevelIssueSeverity.Error,
+                    $"proving this grove took {survey.Nodes} positions, above the {NodeCeiling} " +
+                    "a level may cost. The player's device runs this same search when somebody " +
+                    "opens the level. Cost goes as the bud count to the power of par, so the " +
+                    "cheapest fix is a shorter answer — a cocoon nearer the powder"));
+            else if (survey.Nodes > NodeWarning)
+                issues.Add(new LevelIssue(LevelIssueSeverity.Warning,
+                    $"proving this grove took {survey.Nodes} positions against the " +
+                    $"{NodeWarning} a level is expected to cost (the refusal is at {NodeCeiling})"));
+
+            // The same three-line check every mode with a fail line gets. Shared rather than
+            // restated: a second copy of "is this ladder ordered" is a second thing to keep in
+            // step with LevelTuning (invariant 9a).
             LevelValidator.CheckStarBands(level, issues);
 
-            // What no glade has to prove, because a glade's par *is* its minimum: a weave's is
-            // the sum of the pairs' own floors plus an allowance, and the arrangement the player
-            // actually has to draw costs that floor plus whatever detour the board forces. So
-            // the ink has to cover the floor before anything else — a grove whose cheapest
-            // possible finish is dearer than the light it is dealt cannot be won by anybody, and
-            // it would look perfectly authored in the file.
-            //
-            // The forced detour is deliberately not asked for here: it is WeaveSolver's
-            // exponential search, which is an authoring instrument and never a gate (the seed
-            // sweep and WeaveLadderTests are where it runs). This is the half that is cheap and
-            // certain.
-            if (level.Tuning.HasBudget && layout.StraightTotal > level.Tuning.MoveBudget)
+            // Invariant 5d, read backwards. One shortest play is a grove that has to be solved
+            // rather than played.
+            if (survey.Ways < TooFewWays)
+                issues.Add(new LevelIssue(LevelIssueSeverity.Warning,
+                    $"there is only one play of {survey.Par} taps that frees every critter here, " +
+                    "so this grove is a puzzle rather than a place to make a mess. Add a bud, " +
+                    "ripen one, or move a cocoon so more than one chain reaches it"));
+
+            // And the bar this mode actually has. A player who never looks past this tap is the
+            // player this mode is for, and a grove they cannot finish inside the satchel is
+            // asking for more than the mode promises.
+            int careless = BudSolver.Careless(layout, level.Tuning.MoveBudget);
+
+            if (careless < 0)
+                issues.Add(new LevelIssue(LevelIssueSeverity.Warning,
+                    "a player who always taps whatever sets off the biggest chain never finishes " +
+                    "this grove. That is the bar this mode is held to rather than a difficulty " +
+                    "reading — everywhere else it would be a compliment, and here it means the " +
+                    "board is asking to be solved"));
+            else if (careless > level.Tuning.MoveBudget)
+                issues.Add(new LevelIssue(LevelIssueSeverity.Warning,
+                    $"a careless player takes {careless} taps against a satchel of " +
+                    $"{level.Tuning.MoveBudget}, so they run out"));
+        }
+
+        /// <summary>
+        /// A cocoon nothing can ever burst beside is a critter nobody can free, and saying which
+        /// one is worth far more than the search's own verdict.
+        /// </summary>
+        static void Reachable(BudLayout layout, List<LevelIssue> issues)
+        {
+            var beside = new List<int>(4);
+
+            for (int i = 0; i < layout.Count; i++)
+            {
+                if (!layout.IsCocoon(i)) continue;
+
+                // A cocoon is cracked by a burst on a cell beside it, and a burst can only ever
+                // happen where a flower is standing now — nothing here grows one back.
+                bool reachable = false;
+                layout.Beside(i, beside);
+                for (int j = 0; j < beside.Count; j++)
+                    if (layout.IsFlower(beside[j])) { reachable = true; break; }
+
+                if (reachable) continue;
+
+                int x = i % layout.Width, y = i / layout.Width;
                 issues.Add(new LevelIssue(LevelIssueSeverity.Error,
-                    $"this grove is dealt {level.Tuning.MoveBudget} cells of ink and its pairs " +
-                    $"cannot be joined in fewer than {layout.StraightTotal} even with nobody in " +
-                    "anybody's way, so no arrangement of it can be drawn — lower the pair count " +
-                    "or raise budgetFactor"));
+                    $"the cocoon at {x},{y} has no flower beside it, and nothing in a grove ever " +
+                    "grows one — so no bunch can ever crack it and that critter can never be " +
+                    "freed"));
+            }
+        }
 
-            // A grove that could not be walled the way its rung asked is a rung one barrier
-            // easier than the ladder claims, and nothing else anywhere would say so — the board
-            // is still perfectly solvable, still full, still measured. The same silent failure a
-            // short bead count is, and it is reported the same way.
-            if (layout.Hedges.Count < grove.HedgeCount)
-                issues.Add(new LevelIssue(LevelIssueSeverity.Warning,
-                    $"this grove asks for {grove.HedgeCount} hedge(s) and could only grow " +
-                    $"{layout.Hedges.Count}: a hedge has to reach a side of the grove, leave a " +
-                    "way past its tip and seal nothing off, and this seed's attempts could not " +
-                    "place that many — re-seed it with Survey Lightweave's SeedSearch"));
+        /// <summary>
+        /// A grove has to be authored settled. Three alike already touching would go off before
+        /// anybody had touched the board, which is a level that plays itself.
+        /// </summary>
+        static void Settled(BudLayout layout, List<LevelIssue> issues)
+        {
+            if (!new BudBoard(layout).AnyBunch()) return;
 
-            // Invariant 5d, counted, for this mechanic. A barrier that changes no pair's shortest
-            // route rejects no arrangement: the player draws the line they were going to draw and
-            // never touches it, and the rung is a plain grove wearing a mechanic. The generator
-            // holds out for a fence that bites, so this is the audit of that rather than a second
-            // opinion about it — and it is a warning for the reason nothing else here is a gate,
-            // that the board is generated and a build cannot be failed over a property of a seed.
-            if (grove.HedgeCount > 0 && !layout.HedgesBite)
-                issues.Add(new LevelIssue(LevelIssueSeverity.Warning,
-                    $"the {layout.Hedges.Count} hedge(s) on this grove change no pair's shortest " +
-                    "route, so they are scenery: every channel can be drawn exactly as it would " +
-                    "have been on open ground — re-seed the level, or grow one more"));
-
-            // The same claim asked of how many channels rather than of the sum, which is the half
-            // that was missing while the Wildhedge was authored. HedgesBite is a total over the
-            // grove, so one pair detouring two cells satisfies it for a board of six — and that
-            // is exactly what shipped: eight of the chapter's ten groves reached precisely one
-            // pair, three barriers apiece, five channels drawn as though the fence were not
-            // there. It passed every check in this file and came back from play as "it is like
-            // they are not there". A barrier's whole value is the gap it leaves, and a gap is
-            // only a decision when more than one channel wants it — see WeaveGenerator.MinBitten.
-            int wantedBitten = WeaveGenerator.MinBitten(grove.PairCount, grove.HedgeCount);
-            if (layout.PairsBitten < wantedBitten)
-                issues.Add(new LevelIssue(LevelIssueSeverity.Warning,
-                    $"the fence on this grove sends {layout.PairsBitten} of its " +
-                    $"{grove.PairCount} channels a longer way and {wantedBitten} is the fewest " +
-                    "that makes it a shared obstacle rather than one pair's detour — re-seed the " +
-                    "level with Survey Lightweave's SeedSearch"));
-
-            // The same claim asked of *where* a bead landed rather than of how many landed, and
-            // it is the half that made the mechanic read as absent. Off the direct corridor was
-            // the only bar, and a cell one step to the side of the crystal clears it — so on all
-            // ten groves of the first Wildhedge cut a bead stood a single cell from its own end,
-            // and the player threaded it by starting the drag sideways. It came back from play
-            // twice as "it is next to the thing and I do not have to think about it", which is
-            // what a mechanic sounds like when it rejects no arrangement (invariant 5d).
-            // WeaveGenerator.Choicest is what fixed it and this is the audit of that, not a
-            // second opinion about it: a warning, for HedgesBite's reason a few lines up — the
-            // board is generated, so a build cannot be failed over a property of a seed.
-            if (grove.BeadReach > 0 && layout.Beads.Count > 0
-                && layout.BeadReach < grove.BeadReach)
-                issues.Add(new LevelIssue(LevelIssueSeverity.Warning,
-                    $"a bead on this grove stands {layout.BeadReach} cell(s) from its own pair's " +
-                    $"nearer end and this level asks for {grove.BeadReach}: a bead the hand " +
-                    "reaches on the way past asks the player nothing — re-seed the level with " +
-                    "Survey Lightweave's SeedSearch"));
-
-            if (layout.Beads.Count < grove.BeadCount)
-                issues.Add(new LevelIssue(LevelIssueSeverity.Warning,
-                    $"this grove asks for {grove.BeadCount} bead(s) and could only place " +
-                    $"{layout.Beads.Count}: a bead is only worth placing on a cell off every " +
-                    "shortest route between its pair's ends, and this seed's carved routes did " +
-                    "not offer that many — re-seed it with Survey Lightweave's SeedSearch"));
-
-            // Never seen on the shipped shape — the generator holds out for a carve that reaches
-            // every cell and finds one within a handful of attempts. It is here for the size
-            // somebody authors later that cannot be filled, where the fallback is a board whose
-            // endpoints all sit in their own quiet corner.
-            if (layout.Coverage < WeaveGenerator.MinCoverage)
-                issues.Add(new LevelIssue(LevelIssueSeverity.Warning,
-                    $"the carve covers {layout.Coverage:P0} of this grove, leaving " +
-                    $"{layout.Count - layout.SolutionLength} cell(s) untouched; under " +
-                    $"{WeaveGenerator.MinCoverage:P0} the endpoints stop being spread across the " +
-                    "grove and the channels stop having to get past each other"));
-
-            // The acceptance bar, asked again of the board that actually shipped. It is the same
-            // predicate the generator held out for rather than a second opinion about it, which
-            // is the point: a grove that has drifted past the bar is one the generator could not
-            // satisfy and settled for, and that is worth saying out loud rather than inferring
-            // from a difficulty survey somebody has to remember to run.
-            //
-            // A warning rather than an error, for the reason nothing else here is a gate: the
-            // board is generated, so a build cannot be failed over a number that is a property of
-            // a seed somebody would then have to guess their way out of.
-            bool taut = WeaveSolver.AnyTautSolution(layout, out bool decided);
-            if (decided && taut)
-                issues.Add(new LevelIssue(LevelIssueSeverity.Warning,
-                    "every pair of this grove can take its own shortest route at once, so it is " +
-                    "finished by drawing the obvious line at each critter in turn and asks the " +
-                    "player nothing — re-seed the level with Survey Lightweave's SeedSearch, " +
-                    "which holds a candidate to the exact bar"));
-
-            // Whether the grading can be missed at all, which is a question only this mode has to
-            // ask and which nothing was asking. Two channels may never share a cell, so a run
-            // that never redraws cannot spend more light than the grove has ground — and if the
-            // three-star line sits above that number, every completion takes three stars however
-            // sloppily it is drawn. It is invariant 22's stranded band from the other end: there
-            // the bottom rung could not be landed in, here the top one cannot be missed.
-            //
-            // Measured when it was written: true of twenty-eight of the thirty groves the mode
-            // ships, and of all ten of the Wildhedge's. That is a property of par against the
-            // grove's size rather than of a seed — the star lines are par x 1.20 and 1.40, par is
-            // roughly four fifths of the grove plus a cell of looking per decision, so the line
-            // clears the whole board on anything much above a beginner's grove. So it is reported
-            // once per level and cannot be re-seeded away: what moves it is the shape of the
-            // grove, or WeaveLayout.Par's allowance, and both are decisions somebody has to take
-            // deliberately rather than a number to guess at.
-            if (level.Tuning.GoldThreshold >= layout.Count)
-                issues.Add(new LevelIssue(LevelIssueSeverity.Warning,
-                    $"three stars is dealt at {level.Tuning.GoldThreshold} cells of ink on a " +
-                    $"grove of {layout.Count} cells, and no two channels may share one — so a " +
-                    "run that does not redraw cannot spend enough light to miss it, whatever it " +
-                    "draws. The grading of this grove is decoration: give it fewer pairs' worth " +
-                    "of floor, or a smaller grove"));
+            issues.Add(new LevelIssue(LevelIssueSeverity.Error,
+                $"this grove already has {BudLayout.Bunch} or more alike touching, so it would " +
+                "go off before the player had done anything. Author it settled — every bunch on " +
+                "the board should be one somebody made"));
         }
     }
 }

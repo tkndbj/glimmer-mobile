@@ -18,7 +18,7 @@ namespace GlimmerGrove.Tests
     /// board the mode exists for is still the board the mode exists for.
     /// </para>
     /// <para>
-    /// Held to one set of rules rather than one copy per level, for <c>WeaveLadderTests</c>'
+    /// Held to one set of rules rather than one copy per level, for <c>RippleLadderTests</c>'
     /// reason: a claim written out ten times is a claim nine of which will be edited and one of
     /// which will not.
     /// </para>

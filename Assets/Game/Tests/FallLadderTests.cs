@@ -19,7 +19,7 @@ namespace GlimmerGrove.Tests
     /// stop being a ladder, and the first anybody would know is the retention curve.
     /// </para>
     /// <para>
-    /// So it is pinned twice over, exactly as Lightweave's is.
+    /// So it is pinned twice over, exactly as the other modes' are.
     /// <see cref="TheLadderStillMeasuresWhatItWasAuthoredFor"/> runs the shipped solver against
     /// the numbers the sweep measured, and <see cref="TheShippedChapterAuthorsExactlyThisLadder"/>
     /// proves the content file still holds those boards. Either half alone is half a guard — the

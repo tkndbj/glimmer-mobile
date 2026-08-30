@@ -14,7 +14,7 @@ namespace GlimmerGrove.Tests
     /// perfectly in the source, and the Editor is usually not running.
     /// </para>
     /// <para>
-    /// The gesture is only ever shown once in a player's life, on the two lessons a Lightweave
+    /// The gesture is only ever shown once in a player's life, on the lessons a
     /// board cannot demonstrate for itself. There is no second showing to catch it at.
     /// </para>
     /// </summary>

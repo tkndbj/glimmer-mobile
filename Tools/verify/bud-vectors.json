@@ -1,0 +1,285 @@
+{
+  "schemaVersion": 2,
+  "cases": [
+    {
+      "name": "the mix is the move",
+      "why": "red with green in hand becomes yellow, and joins the two yellows beside it. Nothing was three alike before the tap and three alike is what a bunch is",
+      "rows": [
+        ".Y....",
+        "YR....",
+        "..o...",
+        "......"
+      ],
+      "colours": "G",
+      "par": 0,
+      "ways": 0,
+      "nodes": 16,
+      "proved": false,
+      "careless": -1,
+      "flowers": 3,
+      "cocoons": 1,
+      "tough": 0,
+      "stones": 0,
+      "bestBurst": 3,
+      "bestWaves": 1,
+      "bestFreed": 0,
+      "beats": [
+        {
+          "tap": 7,
+          "allowed": true,
+          "burst": 3,
+          "waves": 1,
+          "freed": 0,
+          "cracked": 0,
+          "flowersLeft": 0,
+          "shut": 1
+        }
+      ]
+    },
+    {
+      "name": "a bunch of two is not a bunch",
+      "why": "three is the bar. Two alike touching sit there for ever, which is what makes a grove a place to build rather than a row of buttons",
+      "rows": [
+        "RG....",
+        "G.....",
+        "..o...",
+        "......"
+      ],
+      "colours": "G",
+      "par": 0,
+      "ways": 0,
+      "nodes": 16,
+      "proved": false,
+      "careless": -1,
+      "flowers": 3,
+      "cocoons": 1,
+      "tough": 0,
+      "stones": 0,
+      "bestBurst": 0,
+      "bestWaves": 0,
+      "bestFreed": 0,
+      "beats": [
+        {
+          "tap": 0,
+          "allowed": true,
+          "burst": 0,
+          "waves": 0,
+          "freed": 0,
+          "cracked": 0,
+          "flowersLeft": 3,
+          "shut": 1
+        }
+      ]
+    },
+    {
+      "name": "a burst washes its colour into everything it touches",
+      "why": "the chain, and the one rule a loose transcription drops. Without the wash a tap is one pop and the reds beside the yellows are never reached",
+      "rows": [
+        "YYR.R.",
+        "..R.R.",
+        "..o...",
+        "......"
+      ],
+      "colours": "G",
+      "par": 2,
+      "ways": 1,
+      "nodes": 21,
+      "proved": true,
+      "careless": -1,
+      "flowers": 6,
+      "cocoons": 1,
+      "tough": 0,
+      "stones": 0,
+      "bestBurst": 3,
+      "bestWaves": 1,
+      "bestFreed": 0,
+      "beats": [
+        {
+          "tap": 2,
+          "allowed": true,
+          "burst": 3,
+          "waves": 1,
+          "freed": 0,
+          "cracked": 0,
+          "flowersLeft": 3,
+          "shut": 1
+        }
+      ]
+    },
+    {
+      "name": "old wood carries nothing",
+      "why": "a bunch never crosses it and a wash never crosses it, which is what makes a stone worth putting down at all",
+      "rows": [
+        "YY#YY.",
+        "..#...",
+        "..o...",
+        "......"
+      ],
+      "colours": "G",
+      "par": 0,
+      "ways": 0,
+      "nodes": 0,
+      "proved": true,
+      "careless": -1,
+      "flowers": 4,
+      "cocoons": 1,
+      "tough": 0,
+      "stones": 2,
+      "bestBurst": 0,
+      "bestWaves": 0,
+      "bestFreed": 0,
+      "beats": []
+    },
+    {
+      "name": "a tough cocoon takes two waves",
+      "why": "one crack per cocoon per wave, however many bunches of that wave touched it. A copy that cracked once per bunch would open this one in a single tap",
+      "rows": [
+        "YYR...",
+        "R.O...",
+        "RRR...",
+        "......"
+      ],
+      "colours": "G",
+      "par": 4,
+      "ways": 1,
+      "nodes": 83,
+      "proved": true,
+      "careless": -1,
+      "flowers": 7,
+      "cocoons": 1,
+      "tough": 1,
+      "stones": 0,
+      "bestBurst": 7,
+      "bestWaves": 1,
+      "bestFreed": 0,
+      "beats": [
+        {
+          "tap": 2,
+          "allowed": true,
+          "burst": 7,
+          "waves": 1,
+          "freed": 0,
+          "cracked": 1,
+          "flowersLeft": 0,
+          "shut": 1
+        }
+      ]
+    },
+    {
+      "name": "a tap that mixes nothing is refused",
+      "why": "white takes no more colour, so tapping it would spend a colour and leave the grove exactly as it was - the one move a player makes by accident and never means to",
+      "rows": [
+        "W.....",
+        "......",
+        "..o..R",
+        ".....R"
+      ],
+      "colours": "G",
+      "par": 0,
+      "ways": 0,
+      "nodes": 38,
+      "proved": false,
+      "careless": -1,
+      "flowers": 3,
+      "cocoons": 1,
+      "tough": 0,
+      "stones": 0,
+      "bestBurst": 0,
+      "bestWaves": 0,
+      "bestFreed": 0,
+      "beats": [
+        {
+          "tap": 0,
+          "allowed": false,
+          "burst": 0,
+          "waves": 0,
+          "freed": 0,
+          "cracked": 0,
+          "flowersLeft": 3,
+          "shut": 1
+        }
+      ]
+    },
+    {
+      "name": "a grove nothing can be mixed into is proved lost, not merely unproved",
+      "why": "white holds every channel, so a grove of white has flowers on it and no legal tap in it - which is a board that can be neither won nor ended unless something says so. A copy asking 'any flower left' instead of 'any move left' reads this as live",
+      "rows": [
+        "WW....",
+        "W.....",
+        "..o...",
+        "......"
+      ],
+      "colours": "G",
+      "par": 0,
+      "ways": 0,
+      "nodes": 0,
+      "proved": true,
+      "careless": -1,
+      "flowers": 3,
+      "cocoons": 1,
+      "tough": 0,
+      "stones": 0,
+      "bestBurst": 0,
+      "bestWaves": 0,
+      "bestFreed": 0,
+      "beats": []
+    },
+    {
+      "name": "the shipped grove",
+      "why": "the board the mode ships on, replayed tap for tap, so any change to the mix, the wash or the crack shows up here as this level moving",
+      "rows": [
+        "GYRYBBR",
+        "BRoBoYG",
+        "RBCRGRY",
+        "GRoYoGY",
+        "BBCRYRR",
+        ".GGRYG."
+      ],
+      "colours": "GBR",
+      "par": 3,
+      "ways": 12,
+      "nodes": 7903,
+      "proved": true,
+      "careless": 4,
+      "flowers": 36,
+      "cocoons": 4,
+      "tough": 0,
+      "stones": 0,
+      "bestBurst": 13,
+      "bestWaves": 3,
+      "bestFreed": 3,
+      "beats": [
+        {
+          "tap": 2,
+          "allowed": true,
+          "burst": 3,
+          "waves": 1,
+          "freed": 1,
+          "cracked": 0,
+          "flowersLeft": 33,
+          "shut": 3
+        },
+        {
+          "tap": 0,
+          "allowed": true,
+          "burst": 0,
+          "waves": 0,
+          "freed": 0,
+          "cracked": 0,
+          "flowersLeft": 33,
+          "shut": 3
+        },
+        {
+          "tap": 26,
+          "allowed": true,
+          "burst": 13,
+          "waves": 3,
+          "freed": 3,
+          "cracked": 0,
+          "flowersLeft": 20,
+          "shut": 0
+        }
+      ]
+    }
+  ]
+}

@@ -245,8 +245,8 @@ namespace GlimmerGrove.Tests
             }, 1);
             builder.Add(new ManifestChapterDto
             {
-                id = "w01_weave", order = 30, version = 1, mode = "weave",
-                levels = new[] { "weave_a" },
+                id = "b01_thicket", order = 30, version = 1, mode = "bud",
+                levels = new[] { "thicket_a" },
             }, 1);
             return builder.Build();
         }
@@ -403,13 +403,13 @@ namespace GlimmerGrove.Tests
         [Test]
         public void AModeIsNeverGatedOnAnotherModesStars()
         {
-            // Invariant 20a. The weave chapter is the first of its own mode, so it is open to
+            // Invariant 20a. The thicket chapter is the first of its own mode, so it is open to
             // a player who has not touched the ordinary game at all.
             var index = TwoChapters();
             Holding();
 
-            Assert.IsTrue(LevelUnlock.IsChapterUnlocked(index, ChapterId.Parse("w01_weave")));
-            Assert.IsTrue(LevelUnlock.IsUnlocked(index, LevelId.Parse("weave_a")));
+            Assert.IsTrue(LevelUnlock.IsChapterUnlocked(index, ChapterId.Parse("b01_thicket")));
+            Assert.IsTrue(LevelUnlock.IsUnlocked(index, LevelId.Parse("thicket_a")));
         }
 
         [Test]

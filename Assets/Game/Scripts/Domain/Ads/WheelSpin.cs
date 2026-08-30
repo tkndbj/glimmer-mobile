@@ -8,7 +8,7 @@ namespace GlimmerGrove.Ads
     ///
     /// <para>
     /// <b>Why this is in Domain and has a test.</b> It is the house rule every timing rule in
-    /// this game follows — <c>Cue</c>, <c>GroveGrowth</c>, <c>WeaveTempo</c>, <c>CoachStroke</c>
+    /// this game follows — <c>Cue</c>, <c>GroveGrowth</c>, <c>RippleTempo</c>, <c>CoachStroke</c>
     /// — and it earns it more than most, because the one thing a wheel must never do is stop
     /// somewhere other than where it said it would. That is not a feel question: the slice is
     /// what the server is granting, so a wheel resting half a degree into its neighbour is the

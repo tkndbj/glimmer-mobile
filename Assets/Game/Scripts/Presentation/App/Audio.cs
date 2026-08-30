@@ -81,12 +81,60 @@ namespace GlimmerGrove
             var clip = Clip(AssetManifest.Sfx(name));
             if (clip == null) return;
             var v = _voices[_next];
+            // A hush left running on this voice would keep writing its volume down while
+            // the new sound plays on it. See Hush.
+            Tween.KillChannel(this, HushChannel(_next));
             _next = (_next + 1) % Voices;
             v.Stop();
             v.clip = clip;
             v.volume = Mathf.Clamp01(volume) * .9f;
             v.pitch = Mathf.Clamp(pitch, .25f, 3f);
             v.Play();
+        }
+
+        static string HushChannel(int voice) => "hush" + voice;
+
+        /// <summary>
+        /// Cut a sound that is still ringing, over a fade short enough not to click.
+        ///
+        /// <para>
+        /// This exists for one shape, and it is a shape the interface has everywhere: a
+        /// button makes a noise on pointer *down*, and the thing it opens makes its own a
+        /// moment later on pointer *up*. That is two sounds for one tap, and it was
+        /// reported as exactly that — "when I click on menu button multiple sounds appear".
+        /// </para>
+        /// <para>
+        /// <b>Why this rather than silencing the button.</b> The idiom already in the
+        /// codebase is <c>Btn.ClickSfx = null</c>, and five call sites use it. Applying it
+        /// to every control that opens a panel means finding all of them and remembering it
+        /// on the next one — a step somebody has to remember, which is the failure mode the
+        /// importer hook exists to avoid one folder over. A panel opening is a single place,
+        /// so the rule lives there and covers all twenty-five modals and every one added
+        /// later.
+        /// </para>
+        /// <para>
+        /// The fade is what makes it safe: a voice stopped mid-waveform steps to zero, and a
+        /// step is a click — which would be a worse artefact than the doubled sound it is
+        /// removing. 50 ms is below the ear's threshold for a fade and far above the step.
+        /// </para>
+        /// </summary>
+        public static void Hush(string name, float fade = .05f)
+        {
+            if (I == null) return;
+            var clip = Clip(AssetManifest.Sfx(name));
+            if (clip == null) return;
+
+            for (int i = 0; i < Voices; i++)
+            {
+                var v = I._voices[i];
+                if (v == null || !v.isPlaying || v.clip != clip) continue;
+
+                var voice = v;
+                float from = voice.volume;
+                Tween.Run(fade, Ease.Linear, t => { if (voice) voice.volume = from * (1f - t); },
+                          I, HushChannel(i))
+                     .OnDone(() => { if (voice) voice.Stop(); });
+            }
         }
 
         // -------------------------------------------------------------- music

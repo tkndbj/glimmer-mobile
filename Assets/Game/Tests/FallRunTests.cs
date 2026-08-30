@@ -10,7 +10,7 @@ namespace GlimmerGrove.Tests
     /// of all that is allowed to take.
     ///
     /// <para>
-    /// Split from the board's own rules for <c>WeaveRun</c>'s reason. All of this lived inside
+    /// Split from the board's own rules for <c>RippleRun</c>'s reason. All of this lived inside
     /// <c>FallBoard</c> once, and one change turned that class into a puzzle model with an
     /// economy and a fail state in it — after which none of the three could be proved without
     /// building a well. Every case here is integers.

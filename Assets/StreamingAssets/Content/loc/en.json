@@ -26,16 +26,8 @@
       "text": "The Clearing"
     },
     {
-      "key": "chapter.w01_lightweave.name",
-      "text": "The Weftwood"
-    },
-    {
-      "key": "chapter.w02_nightloom.name",
-      "text": "The Nightloom"
-    },
-    {
-      "key": "chapter.w03_wildhedge.name",
-      "text": "The Wildhedge"
+      "key": "chapter.b01_thicket.name",
+      "text": "The Thicket"
     },
     {
       "key": "level.c01_bound_roots.name",
@@ -518,252 +510,12 @@
       "text": "One colour each, and a long way to carry it"
     },
     {
-      "key": "level.w01_close_quarters.name",
-      "text": "Close Quarters"
+      "key": "level.b01_firstburst.name",
+      "text": "First Burst"
     },
     {
-      "key": "level.w01_close_quarters.tagline",
-      "text": "Five channels, and few ways past."
-    },
-    {
-      "key": "level.w01_first_weave.name",
-      "text": "First Weave"
-    },
-    {
-      "key": "level.w01_first_weave.tagline",
-      "text": "Three channels, and room to think."
-    },
-    {
-      "key": "level.w01_five_lanterns.name",
-      "text": "Five Lanterns"
-    },
-    {
-      "key": "level.w01_five_lanterns.tagline",
-      "text": "Five channels, one groove."
-    },
-    {
-      "key": "level.w01_six_sleepers.name",
-      "text": "Six Sleepers"
-    },
-    {
-      "key": "level.w01_six_sleepers.tagline",
-      "text": "Every colour the light makes."
-    },
-    {
-      "key": "level.w01_the_long_skein.name",
-      "text": "The Long Skein"
-    },
-    {
-      "key": "level.w01_the_long_skein.tagline",
-      "text": "Three rings, and less room than it looks."
-    },
-    {
-      "key": "level.w01_the_shuttle.name",
-      "text": "The Shuttle"
-    },
-    {
-      "key": "level.w01_the_shuttle.tagline",
-      "text": "Thread the ring."
-    },
-    {
-      "key": "level.w01_the_tangle.name",
-      "text": "The Tangle"
-    },
-    {
-      "key": "level.w01_the_tangle.tagline",
-      "text": "Six channels, and few ways through."
-    },
-    {
-      "key": "level.w01_the_weftwood_knot.name",
-      "text": "The Weftwood Knot"
-    },
-    {
-      "key": "level.w01_the_weftwood_knot.tagline",
-      "text": "The whole weave, and one way through."
-    },
-    {
-      "key": "level.w01_tight_warp.name",
-      "text": "Tight Warp"
-    },
-    {
-      "key": "level.w01_tight_warp.tagline",
-      "text": "Two rings, four channels."
-    },
-    {
-      "key": "level.w01_two_threads.name",
-      "text": "Two Threads"
-    },
-    {
-      "key": "level.w01_two_threads.tagline",
-      "text": "A fourth colour joins."
-    },
-    {
-      "key": "level.w02_dusk_threads.name",
-      "text": "Dusk Threads"
-    },
-    {
-      "key": "level.w02_dusk_threads.tagline",
-      "text": "Six channels, and none of them free."
-    },
-    {
-      "key": "level.w02_six_rings.name",
-      "text": "Six Rings"
-    },
-    {
-      "key": "level.w02_six_rings.tagline",
-      "text": "A ring on every channel."
-    },
-    {
-      "key": "level.w02_spindlewood.name",
-      "text": "Spindlewood"
-    },
-    {
-      "key": "level.w02_spindlewood.tagline",
-      "text": "A wider groove, and six rings in it."
-    },
-    {
-      "key": "level.w02_the_long_way_round.name",
-      "text": "The Long Way Round"
-    },
-    {
-      "key": "level.w02_the_long_way_round.tagline",
-      "text": "The furthest out of their way yet."
-    },
-    {
-      "key": "level.w02_the_narrow_loom.name",
-      "text": "The Narrow Loom"
-    },
-    {
-      "key": "level.w02_the_narrow_loom.tagline",
-      "text": "A tighter frame, and the same six."
-    },
-    {
-      "key": "level.w02_the_nightloom_knot.name",
-      "text": "The Nightloom Knot"
-    },
-    {
-      "key": "level.w02_the_nightloom_knot.tagline",
-      "text": "The whole loom, and the longest way round."
-    },
-    {
-      "key": "level.w02_the_pinch.name",
-      "text": "The Pinch"
-    },
-    {
-      "key": "level.w02_the_pinch.tagline",
-      "text": "One gap, and everybody wants it."
-    },
-    {
-      "key": "level.w02_the_shuttered_loom.name",
-      "text": "The Shuttered Loom"
-    },
-    {
-      "key": "level.w02_the_shuttered_loom.tagline",
-      "text": "Six rings, and hardly a way past."
-    },
-    {
-      "key": "level.w02_thread_the_dark.name",
-      "text": "Thread the Dark"
-    },
-    {
-      "key": "level.w02_thread_the_dark.tagline",
-      "text": "Very few arrangements, and one that is best."
-    },
-    {
-      "key": "level.w02_who_yields.name",
-      "text": "Who Yields"
-    },
-    {
-      "key": "level.w02_who_yields.tagline",
-      "text": "Somebody gives way."
-    },
-    {
-      "key": "level.w03_hedgerows.name",
-      "text": "Hedgerows"
-    },
-    {
-      "key": "level.w03_hedgerows.tagline",
-      "text": "Three barriers, and less room than it looks."
-    },
-    {
-      "key": "level.w03_narrow_ways.name",
-      "text": "Narrow Ways"
-    },
-    {
-      "key": "level.w03_narrow_ways.tagline",
-      "text": "Every route is somebody else's route."
-    },
-    {
-      "key": "level.w03_the_first_hedge.name",
-      "text": "The First Hedge"
-    },
-    {
-      "key": "level.w03_the_first_hedge.tagline",
-      "text": "Something has grown across the groove."
-    },
-    {
-      "key": "level.w03_the_green_gate.name",
-      "text": "The Green Gate"
-    },
-    {
-      "key": "level.w03_the_green_gate.tagline",
-      "text": "Everything has to come through here."
-    },
-    {
-      "key": "level.w03_the_long_way_out.name",
-      "text": "The Long Way Out"
-    },
-    {
-      "key": "level.w03_the_long_way_out.tagline",
-      "text": "Around, and then around again."
-    },
-    {
-      "key": "level.w03_the_maze_of_leaves.name",
-      "text": "The Maze of Leaves"
-    },
-    {
-      "key": "level.w03_the_maze_of_leaves.tagline",
-      "text": "Find the one way round that suits everybody."
-    },
-    {
-      "key": "level.w03_the_walled_garden.name",
-      "text": "The Walled Garden"
-    },
-    {
-      "key": "level.w03_the_walled_garden.tagline",
-      "text": "Rooms, doors, and six colours."
-    },
-    {
-      "key": "level.w03_the_wildhedge_knot.name",
-      "text": "The Wildhedge Knot"
-    },
-    {
-      "key": "level.w03_the_wildhedge_knot.tagline",
-      "text": "Every hedge, every ring, and no room to spare."
-    },
-    {
-      "key": "level.w03_thicket.name",
-      "text": "Thicket"
-    },
-    {
-      "key": "level.w03_thicket.tagline",
-      "text": "Hardly a straight line left in it."
-    },
-    {
-      "key": "level.w03_two_rooms.name",
-      "text": "Two Rooms"
-    },
-    {
-      "key": "level.w03_two_rooms.tagline",
-      "text": "The groove is not one place any more."
-    },
-    {
-      "key": "mode.cap.asleep",
-      "text": "ASLEEP"
-    },
-    {
-      "key": "mode.cap.beads",
-      "text": "RINGS"
+      "key": "level.b01_firstburst.tagline",
+      "text": "Tap a flower. Watch it run."
     },
     {
       "key": "mode.cap.best",
@@ -776,18 +528,6 @@
     {
       "key": "mode.cap.height",
       "text": "height"
-    },
-    {
-      "key": "mode.cap.ink",
-      "text": "light left"
-    },
-    {
-      "key": "mode.cap.ink_free",
-      "text": "free"
-    },
-    {
-      "key": "mode.cap.joined",
-      "text": "awake"
     },
     {
       "key": "mode.cap.lives",
@@ -810,12 +550,20 @@
       "text": "tiles left"
     },
     {
+      "key": "mode.cap.taps",
+      "text": "taps left"
+    },
+    {
       "key": "mode.cap.motes",
       "text": "motes left"
     },
     {
       "key": "mode.cap.chain",
       "text": "best chain"
+    },
+    {
+      "key": "mode.cap.critters",
+      "text": "still shut in"
     },
     {
       "key": "mode.cap.flourish",
@@ -902,24 +650,48 @@
       "text": "GLORIOUS!"
     },
     {
-      "key": "mode.weave.name",
-      "text": "Lightweave"
+      "key": "mode.keeper.adrift",
+      "text": "Tiles go beside the groove - tap next to something already growing."
     },
     {
-      "key": "mode.weave.over",
-      "text": "The groove went dark. {0} served."
+      "key": "mode.bud.name",
+      "text": "Budburst"
     },
     {
-      "key": "mode.weave.tagline",
-      "text": "Draw the light. Wake the groove."
+      "key": "mode.bud.tagline",
+      "text": "One tap, and it runs."
     },
     {
-      "key": "mode.weave.unthreaded",
-      "text": "Every critter is awake, but {0} rings are still waiting for their colour. Tap a channel to take it back and send it through."
+      "key": "mode.bud.taps",
+      "text": "TAPS"
     },
     {
-      "key": "mode.weave.unthreaded_one",
-      "text": "Every critter is awake, but one ring is still waiting for its colour. Tap that channel to take it back and send it through."
+      "key": "mode.bud.taps_free",
+      "text": "free"
+    },
+    {
+      "key": "mode.bud.critters",
+      "text": "CRITTERS"
+    },
+    {
+      "key": "mode.bud.chain_legendary",
+      "text": "LEGENDARY!"
+    },
+    {
+      "key": "mode.bud.chain_great",
+      "text": "GREAT!"
+    },
+    {
+      "key": "mode.bud.chain_amazing",
+      "text": "AMAZING!"
+    },
+    {
+      "key": "mode.bud.chain_epic",
+      "text": "EPIC!"
+    },
+    {
+      "key": "mode.bud.multiplier",
+      "text": "x{0}"
     },
     {
       "key": "store.good.boost_day",
@@ -1570,14 +1342,6 @@
       "text": "No thanks"
     },
     {
-      "key": "ui.continue.ink_title",
-      "text": "Out of light"
-    },
-    {
-      "key": "ui.continue.ink_unit",
-      "text": "more light"
-    },
-    {
       "key": "ui.continue.short",
       "text": "You need {0} gems for this"
     },
@@ -1600,6 +1364,14 @@
     {
       "key": "ui.continue.tiles_unit",
       "text": "more tiles"
+    },
+    {
+      "key": "ui.continue.taps_title",
+      "text": "Out of taps"
+    },
+    {
+      "key": "ui.continue.taps_unit",
+      "text": "more taps"
     },
     {
       "key": "ui.continue.defeat",
@@ -1666,6 +1438,10 @@
       "text": "+{0} hearts for {1} gems"
     },
     {
+      "key": "ui.defeat.barren_title",
+      "text": "NOTHING LEFT TO TAP"
+    },
+    {
       "key": "ui.defeat.conduit_title",
       "text": "IT GAVE WAY"
     },
@@ -1684,10 +1460,6 @@
     {
       "key": "ui.defeat.get_gems",
       "text": "Get gems"
-    },
-    {
-      "key": "ui.defeat.ink_title",
-      "text": "THE LIGHT RAN OUT"
     },
     {
       "key": "ui.defeat.moves_title",
@@ -1732,6 +1504,10 @@
     {
       "key": "ui.defeat.try_again",
       "text": "TRY AGAIN"
+    },
+    {
+      "key": "ui.defeat.taps_title",
+      "text": "OUT OF TAPS"
     },
     {
       "key": "ui.defeat.watch_for_hearts",
@@ -3382,12 +3158,12 @@
       "text": "{0} tile"
     },
     {
-      "key": "ui.rank.woven",
-      "text": "woven with {0}"
+      "key": "ui.rank.taps",
+      "text": "{0} taps"
     },
     {
-      "key": "ui.rank.woven_one",
-      "text": "woven with {0}"
+      "key": "ui.rank.taps_one",
+      "text": "{0} tap"
     },
     {
       "key": "ui.rank.motes",
@@ -3882,6 +3658,30 @@
       "text": "BRAMBLE"
     },
     {
+      "key": "ui.tip.bud_chain.title",
+      "text": "MIX, THEN THREE"
+    },
+    {
+      "key": "ui.tip.bud_chain.body",
+      "text": "The colour in your hand MIXES into whatever flower you tap - red with green in hand turns yellow.\n\nGet three of one colour touching and they burst, splashing that colour into every flower around them. Which makes more threes. Which makes more."
+    },
+    {
+      "key": "ui.tip.bud_cocoon.title",
+      "text": "FREE THEM ALL"
+    },
+    {
+      "key": "ui.tip.bud_cocoon.body",
+      "text": "A critter is shut in until a burst goes off right beside it.\n\nYou cannot tap a cocoon open - you have to set something off next to it. The ones drawn with a second ring take two."
+    },
+    {
+      "key": "ui.tip.bud_satchel.title",
+      "text": "COUNT YOUR TAPS"
+    },
+    {
+      "key": "ui.tip.bud_satchel.body",
+      "text": "This grove is dealt so many taps and no more.\n\nThere is no undo, and nothing grows back - so the fewer taps you free everyone in, the more stars you keep."
+    },
+    {
       "key": "ui.tip.crossing.body",
       "text": "Two flows pass through this tile and never meet. It wears no hub, and that is how you tell it from a junction: follow each strand with your eye, because light that enters by one arm can only leave by the arm that shares its strand."
     },
@@ -3984,38 +3784,6 @@
     {
       "key": "ui.tip.rooted.title",
       "text": "ROOTED"
-    },
-    {
-      "key": "ui.tip.weave_bead.body",
-      "text": "A ring must be threaded by the colour it is drawn in, and no other colour may enter it."
-    },
-    {
-      "key": "ui.tip.weave_bead.title",
-      "text": "THREAD THE RINGS"
-    },
-    {
-      "key": "ui.tip.weave_hedge.body",
-      "text": "A hedge grows along the edge between two cells. No channel may cross one.\n\nThe gap at its end is the only way past, and every colour wants it."
-    },
-    {
-      "key": "ui.tip.weave_hedge.title",
-      "text": "MIND THE HEDGES"
-    },
-    {
-      "key": "ui.tip.weave_ink.body",
-      "text": "Every channel spends light, and taking one back does not give it back.\n\nUndo returns a channel and its light — twice a groove."
-    },
-    {
-      "key": "ui.tip.weave_ink.title",
-      "text": "MIND THE INK"
-    },
-    {
-      "key": "ui.tip.weave_join.body",
-      "text": "Drag from a crystal to the critter that wants its colour.\n\nNo two channels may ever cross."
-    },
-    {
-      "key": "ui.tip.weave_join.title",
-      "text": "DRAW THE LIGHT"
     },
     {
       "key": "ui.tip.keeper_bloom.title",

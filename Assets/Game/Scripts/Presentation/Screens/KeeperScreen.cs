@@ -45,6 +45,14 @@ namespace GlimmerGrove
         bool _finished, _closing;
         float _startedAt;
 
+        /// <summary>
+        /// Whether this run still owes a first-timer the pointer at the opening bed, and the
+        /// moment the last notice was raised. See <see cref="Unreachable"/> and
+        /// <see cref="Running"/>.
+        /// </summary>
+        bool _coaching;
+        float _noticeUntil;
+
         KeeperRules Rules => Level != null ? Level.RulesAs<KeeperRules>() : null;
 
         /// <summary>
@@ -92,6 +100,7 @@ namespace GlimmerGrove
             _view.Solved = Solve;
             _view.Lost = Concede;
             _view.Committed = Commit;
+            _view.Unreachable = Unreachable;
 
             // The run is decided when the last bed opens and the panel arrives a beat later while
             // the flowers are still opening. Everything that could still end the run has to stop
@@ -102,6 +111,12 @@ namespace GlimmerGrove
             _closing = false;
 
             _view.Begin(Host, rules.Layout, Budget);
+
+            // Asked here because here is the last moment the answer is still "never": the
+            // lessons run from OnPresented, a beat later, and showing one is what marks it.
+            // A player meeting the bloom rule for the first time is by construction on their
+            // first grove of this mode, so this needs no reading of chapter order to say so.
+            _coaching = !TipLedger.HasSeen(Mechanic.KeeperBloom);
 
             _startedAt = Time.unscaledTime;
 
@@ -129,6 +144,50 @@ namespace GlimmerGrove
         protected internal override void Running(bool running)
         {
             if (_view != null) _view.Held = !running;
+
+            // The first frame a run is allowed to advance is the first frame after the last
+            // lesson closed, which is exactly when the pointer is owed — and reading it from
+            // here rather than from the tip's own dismissal means it cannot be raised over a
+            // pause menu, a defeat panel or a board that is still arriving. All three are
+            // states where this run is not running.
+            if (!running || !_coaching) return;
+
+            _coaching = false;
+            if (_view != null) _view.CoachTap();
+        }
+
+        // ------------------------------------------------------------------ the one refusal
+        /// <summary>How long the notice stands, and the beat before a second tap may raise another.</summary>
+        const float NoticeHold = 3f, NoticeRest = 1f;
+
+        /// <summary>
+        /// Says the rule the board cannot show: a tile goes beside the groove, never on its own.
+        ///
+        /// <para>
+        /// Raised only for that one refusal — every other way a tap is turned down is written on
+        /// the cell that turned it down, and <c>KeeperBoard.Adrift</c> is what tells them apart.
+        /// The bloom lesson has always said it, but a lesson is offered once in a player's life
+        /// and this is the moment they are asking.
+        /// </para>
+        /// <para>
+        /// Rate-limited rather than stacked: a player tapping about the board would otherwise
+        /// pile several copies of one sentence on top of each other, which is a screen shouting
+        /// rather than a screen answering. Held off for a beat past the fade, so a second tap
+        /// after the first notice has gone gets a fresh one instead of silence.
+        /// </para>
+        /// <para>
+        /// Placed from the top of the <em>board's own room</em> rather than from a typed centre,
+        /// which is what keeps it clear of the readouts above it by construction: the board
+        /// begins where they stop. See <c>KeeperBand.NoticeDrop</c>.
+        /// </para>
+        /// </summary>
+        void Unreachable()
+        {
+            if (Time.unscaledTime < _noticeUntil) return;
+            _noticeUntil = Time.unscaledTime + NoticeHold + NoticeRest;
+
+            Scenery.Toast(Safe, Loc.Get("mode.keeper.adrift"), Pal.Cream, NoticeHold,
+                          new Vector2(.5f, 1f), -(HostInset.w + KeeperBand.NoticeDrop));
         }
 
         // ------------------------------------------------------------------ readouts
@@ -308,7 +367,13 @@ namespace GlimmerGrove
                                      route: 0,
                                      lit: run.Beds, wanted: run.Beds);
 
-            Audio.Sfx("win", .9f);
+            // No fanfare here: the board already played one. `*View.Triumph` sounds `win`
+            // and then waits a beat before handing control back, so a copy at this point is
+            // the same clip twice a third of a second apart - which is a flam and 6 dB, not a
+            // bigger celebration. It is the fault `FallView.Overflow` names for the losing
+            // path ("a flood arrived as two crashes") on the winning one, and the house rule
+            // is to celebrate once: the glade has only ever sounded it from `BoardView`, and
+            // `WinOverlay` deliberately adds nothing.
             Flow.Flash(new Color(1f, .99f, .92f), .5f, .5f);
             Burst.Confetti(Content, 60);
 

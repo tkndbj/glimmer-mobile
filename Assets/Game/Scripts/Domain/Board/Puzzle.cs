@@ -159,7 +159,7 @@ namespace GlimmerGrove
         /// </para>
         /// <para>
         /// Cleared by <see cref="Reset"/> along with the move count, because a restart is a
-        /// new run and not a continuation of this one — the same rule <c>WeaveInk.Reset</c>
+        /// new run and not a continuation of this one — the same rule <c>RippleRun</c>'s rebuild
         /// follows for a fresh pot of light, and the reason the restart key is priced like any
         /// other abandonment (<c>RunScreen.RestartLevel</c>).
         /// </para>

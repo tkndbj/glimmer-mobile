@@ -126,10 +126,70 @@ namespace GlimmerGrove.EditorTools
                                       "which the game requests; run Addressables ▸ Sync All Assets");
             }
 
+            CheckEntriesStillExist(settings, result);
             CheckGrouping(expected, bodies, groupOf, result);
             CheckUnreachable(addresses, expected, result);
 
             return result;
+        }
+
+        /// <summary>
+        /// Every registered entry still points at an asset that is really there.
+        ///
+        /// <para>
+        /// <b>This is the half the audit was missing, and it cost an Android build.</b>
+        /// Everything above proves that what the game <em>requests</em> resolves — which says
+        /// nothing whatever about an entry pointing at a file that has been deleted, because
+        /// nothing requests it any more. The game does not care. The bundle builder does:
+        /// <c>BundleBuildContent</c> throws <c>Asset '…' is not a valid Asset or Scene</c> the
+        /// moment it walks the group, so the build dies in <c>BuildPlayer</c> before a line of
+        /// the player is written, and the only clue is one file name in a stack trace full of
+        /// package internals.
+        /// </para>
+        /// <para>
+        /// It happened by deleting a folder of art the game had stopped drawing. Every other
+        /// gate in this repository stayed green — the compile, the tests, <c>Validate Content</c>,
+        /// <c>Validate Art</c> and this audit's own 484 resolving addresses — because all of them
+        /// look outward from what the game asks for, and this is the one question that has to be
+        /// asked from the other end. An <b>error</b> rather than a warning, for
+        /// <c>ManifestSync.SurvivesRoundTrip</c>'s reason: a warning printed beside a green tick
+        /// is a warning nobody reads, and this one is the difference between a build and no
+        /// build.
+        /// </para>
+        /// </summary>
+        static void CheckEntriesStillExist(AddressableAssetSettings settings, Result result)
+        {
+            var gone = new List<string>();
+
+            foreach (var group in settings.groups)
+            {
+                if (group == null) continue;
+
+                foreach (var entry in group.entries)
+                {
+                    if (entry == null) continue;
+
+                    string path = AssetDatabase.GUIDToAssetPath(entry.guid);
+                    if (AddressableRegistry.StillThere(path)) continue;
+
+                    gone.Add(string.IsNullOrEmpty(path)
+                             ? $"'{entry.address}' (in {group.Name})"
+                             : $"'{entry.address}' -> {path}");
+                }
+            }
+
+            if (gone.Count == 0) return;
+
+            // Named rather than counted, up to a handful: the build's own message names exactly
+            // one of them, so the whole list is the thing this adds.
+            int shown = gone.Count < 6 ? gone.Count : 6;
+            string names = string.Join(", ", gone.GetRange(0, shown));
+            string more = gone.Count > shown ? $" and {gone.Count - shown} more" : string.Empty;
+
+            result.Errors.Add(
+                $"{gone.Count} addressed asset(s) no longer exist and will fail the bundle " +
+                $"build with \"is not a valid Asset or Scene\": {names}{more}. " +
+                "Run Addressables ▸ Sync All Assets");
         }
 
         /// <summary>

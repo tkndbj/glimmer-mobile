@@ -41,7 +41,7 @@ namespace GlimmerGrove.Modes
     /// to say which happened, never because they are worth different amounts.
     /// </para>
     /// <para>
-    /// Pure integers and no policy at all, for <c>WeaveInk</c>'s reason: where the budget comes
+    /// Pure integers and no policy at all, for <c>RippleSatchel</c>'s reason: where the budget comes
     /// from is <c>KeeperMode.Tune</c>'s business, when a run is lost is
     /// <see cref="KeeperVerdict"/>'s, and what the player sees is the screen's.
     /// </para>

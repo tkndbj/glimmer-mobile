@@ -462,7 +462,12 @@ namespace GlimmerGrove
 
             rt.localScale = Vector3.zero;
             Tween.Scale(rt, 1f, .5f, Ease.OutBack).Delay(.12f);
-            Audio.Sfx("chime2", .5f, 1.05f);
+
+            // Its own sound rather than the panel one, because this builds its own bubble
+            // rather than calling MakePanel — so nothing else would speak for it. The hush is
+            // for the lessons key in a run's header, which is a button like any other.
+            Audio.Hush("click");
+            Audio.Sfx("tip", .5f);
         }
 
         /// <summary>

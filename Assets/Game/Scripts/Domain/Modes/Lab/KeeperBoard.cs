@@ -238,8 +238,36 @@ namespace GlimmerGrove.Modes
         /// the worst thing a puzzle can hand somebody, and the bed wears its colour where anyone
         /// can see it.
         /// </para>
+        /// <para>
+        /// Split so that <see cref="Adrift"/> can be the same rules with the reach inverted
+        /// rather than a second list of them.
+        /// </para>
         /// </summary>
-        public bool CanPlant(int colour, int index)
+        public bool CanPlant(int colour, int index) => Accepts(colour, index) && Touching(index);
+
+        /// <summary>
+        /// Whether the <em>only</em> thing standing between this tile and this cell is that the
+        /// cell is not beside anything yet.
+        ///
+        /// <para>
+        /// The one refusal this board cannot answer for itself. Every other way a tap is turned
+        /// down is written on the cell that turned it down — stone is drawn as a rock, an
+        /// occupied cell already holds a tile, and a heartbed wears the colour it is holding out
+        /// for and flares it. Bare ground away from the grove looks exactly like bare ground
+        /// beside it, so a shake there is a button that did nothing, and the rule has to be said
+        /// in words (see <c>KeeperView.Refuse</c>).
+        /// </para>
+        /// <para>
+        /// Expressed as <see cref="Accepts"/> without <see cref="Touching"/> rather than as its
+        /// own list of clauses, so it cannot come to disagree with <see cref="CanPlant"/> about
+        /// what else would have refused — a second copy of those three rules is a second place
+        /// for a heartbed's refusal to be reported as a reach.
+        /// </para>
+        /// </summary>
+        public bool Adrift(int colour, int index) => Accepts(colour, index) && !Touching(index);
+
+        /// <summary>Everything a planting is refused for except how far it is from the grove.</summary>
+        bool Accepts(int colour, int index)
         {
             if (colour == Energy.None) return false;
             if (index < 0 || index >= _cells.Length) return false;
@@ -249,7 +277,7 @@ namespace GlimmerGrove.Modes
             if (Layout.IsBed(index) && wants != Energy.None && (colour & wants) != wants)
                 return false;
 
-            return Touching(index);
+            return true;
         }
 
         /// <summary>Whether anything at all is standing next to this cell.</summary>

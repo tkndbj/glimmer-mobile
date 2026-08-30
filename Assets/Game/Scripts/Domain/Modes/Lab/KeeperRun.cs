@@ -10,7 +10,7 @@ namespace GlimmerGrove.Modes
     /// <b>It is small on purpose.</b> All of this lived inside <c>KeeperBoard</c> once, and one
     /// change turned that class into a puzzle model with an economy and a fail state in it —
     /// after which none of the three could be tested without building a grove. <c>FallRun</c> and
-    /// <c>WeaveRun</c> are the same split for the same reason, and it is what makes "a tile is
+    /// <c>RippleRun</c> are the same split for the same reason, and it is what makes "a tile is
     /// taken exactly once per landed planting" and "a lost run is only ever ended once"
     /// arithmetic over integers rather than a claim about a screen.
     /// </para>

@@ -41,7 +41,9 @@ namespace GlimmerGrove
             Tween.After(delay, () =>
             {
                 if (host == null) return;
-                Audio.Sfx("bell", .5f, 1.05f);
+                // Silent. This lands on top of whichever panel ended the run, a beat after
+                // that panel has already had its say - so its chime arrived as an extra
+                // ending on a screen that had finished. The toast slides in and is read.
 
                 // Says so when the night put something aside. Rungs are collected by hand
                 // now, so a player who is only told "six days running" has no way to know
@@ -106,7 +108,13 @@ namespace GlimmerGrove
             {
                 Panel.localScale = Vector3.zero;
                 Tween.Scale(Panel, 1f, .5f, Ease.OutBack);
-                Audio.Sfx("chime", .45f, 1.1f);
+
+                // One sound for one tap. The button that opened this panel spoke on pointer
+                // down and this fires on pointer up, so without the hush a menu arrives as
+                // two noises a tenth of a second apart — reported as exactly that. See
+                // Audio.Hush for why the rule lives here rather than on every button.
+                Audio.Hush("click");
+                Audio.Sfx("menu", .55f);
             }
 
             return Panel;
@@ -314,11 +322,15 @@ namespace GlimmerGrove
             {
                 case DefeatReason.ConduitLost: return "ui.defeat.conduit_title";
                 case DefeatReason.OutOfTime: return "ui.defeat.time_title";
-                case DefeatReason.OutOfInk: return "ui.defeat.ink_title";
+                // DefeatReason.OutOfInk is retired with Lightweave and deliberately absent: the
+                // ordinal stays so every defeat row ever written keeps meaning what it meant,
+                // and a mode nothing can play never reaches here.
                 case DefeatReason.WellFlooded: return "ui.defeat.flood_title";
                 case DefeatReason.OutOfMotes: return "ui.defeat.motes_title";
                 case DefeatReason.Overgrown: return "ui.defeat.overgrown_title";
                 case DefeatReason.OutOfTiles: return "ui.defeat.tiles_title";
+                case DefeatReason.OutOfTaps: return "ui.defeat.taps_title";
+                case DefeatReason.Barren: return "ui.defeat.barren_title";
                 default: return "ui.defeat.moves_title";
             }
         }
@@ -812,9 +824,11 @@ namespace GlimmerGrove
                              });
 
             var row = UIKit.Box("Toggles", Panel, new Vector2(600f, 150f), new Vector2(.5f, 0f), new Vector2(0f, 128f));
-            Toggle(row, "ic_music", new Vector2(-150f, 0f), () => GameSettings.MusicOn, GameSettings.SetMusic);
-            Toggle(row, "ic_audio", new Vector2(0f, 0f), () => GameSettings.SfxOn, on => { GameSettings.SetSfx(on); if (on) Audio.Sfx("chime", .5f); });
-            Toggle(row, "ic_gear", new Vector2(150f, 0f), () => GameSettings.HapticsOn, GameSettings.SetHaptics);
+            // Two, straddling the middle rather than taking the outer thirds — ReadoutRow's
+            // rule, because a gap in the centre of a row of two reads as a third control that
+            // failed to draw. The buzz used to be the third and is gone: see Haptic's removal.
+            Toggle(row, "ic_music", new Vector2(-110f, 0f), () => GameSettings.MusicOn, GameSettings.SetMusic);
+            Toggle(row, "ic_audio", new Vector2(110f, 0f), () => GameSettings.SfxOn, on => { GameSettings.SetSfx(on); if (on) Audio.Sfx("chime", .5f); });
 
             UIKit.Titled("Hint", Panel, Loc.Get("ui.settings.toggle_row"), 26, new Color(.42f, .30f, .22f, .8f),
                          TextAnchor.MiddleCenter, new Vector2(600f, 40f), new Vector2(.5f, 0f), new Vector2(0f, 46f), 0f, 0f);
@@ -922,14 +936,12 @@ namespace GlimmerGrove
             MakePanel(new Vector2(860f, height), Loc.Get("ui.settings.title"));
 
             var row = UIKit.Box("Toggles", Panel, new Vector2(700f, 200f), new Vector2(.5f, 1f), new Vector2(0f, -260f));
-            Toggle(row, "ic_music", new Vector2(-190f, 0f), () => GameSettings.MusicOn, GameSettings.SetMusic);
-            Toggle(row, "ic_audio", new Vector2(0f, 0f), () => GameSettings.SfxOn,
+            Toggle(row, "ic_music", new Vector2(-140f, 0f), () => GameSettings.MusicOn, GameSettings.SetMusic);
+            Toggle(row, "ic_audio", new Vector2(140f, 0f), () => GameSettings.SfxOn,
                    on => { GameSettings.SetSfx(on); if (on) Audio.Sfx("chime", .5f); });
-            Toggle(row, "ic_gear", new Vector2(190f, 0f), () => GameSettings.HapticsOn, GameSettings.SetHaptics);
 
-            Caption(row, "ui.settings.music", -190f);
-            Caption(row, "ui.settings.sound", 0f);
-            Caption(row, "ui.settings.buzz", 190f);
+            Caption(row, "ui.settings.music", -140f);
+            Caption(row, "ui.settings.sound", 140f);
 
             UIKit.Titled("Ver", Panel, Loc.Format("ui.settings.version", Application.version), 28, new Color(.44f, .32f, .24f),
                          TextAnchor.MiddleCenter, new Vector2(700f, 40f), new Vector2(.5f, 1f),

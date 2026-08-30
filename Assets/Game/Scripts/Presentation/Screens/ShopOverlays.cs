@@ -442,7 +442,7 @@ namespace GlimmerGrove
             var chip = Payout.Chip("Chip" + kind, panel, new Vector2(.5f, 1f), new Vector2(0f, -y),
                                    RewardArt.Icon(kind), RewardArt.Tint(kind),
                                    n => "+" + Compact.Number(n), amount,
-                                   token, tokenTint, "coin");
+                                   token, tokenTint, sfx: "coin");
 
             // Credits have no sprite of their own — they are the spinning flipbook — and this
             // is the call that also covers the frames not having arrived. See RewardArt.Glyph.
@@ -569,7 +569,6 @@ namespace GlimmerGrove
 
             Burst.Confetti(Content, 44);
             Audio.Sfx("win", .55f);
-            Haptic.Tap();
 
             if (_art) { _art.localScale = Vector3.one; Tween.Punch(_art, .12f, .38f); }
         }

@@ -46,7 +46,7 @@ namespace GlimmerGrove.Layout
     ///
     /// <para>
     /// <b>In Domain because whether two things on a screen overlap is arithmetic.</b> That is
-    /// the house rule <c>ChapterMap</c>, <c>WeaveBand</c>, <c>ReadoutRow</c> and
+    /// the house rule <c>ChapterMap</c>, <c>RippleBand</c>, <c>ReadoutRow</c> and
     /// <c>PanelStack</c> each earned the hard way, and this panel is the tallest thing added
     /// to the game in a while: a 560-unit wheel with four rows around it. Left in the overlay
     /// it would be five constants and a cursor that no test can reach, which is exactly the

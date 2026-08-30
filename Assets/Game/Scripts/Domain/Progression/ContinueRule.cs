@@ -59,7 +59,7 @@ namespace GlimmerGrove.Progression
         public const int DefaultTurns = 15;
 
         /// <summary>
-        /// Cells of light a weave's continue hands over.
+        /// <b>Retired.</b> Cells of light a Lightweave continue handed over.
         ///
         /// <para>
         /// The same fraction of the same budget, in the unit the mode is graded in
@@ -106,6 +106,7 @@ namespace GlimmerGrove.Progression
         /// </para>
         /// </summary>
         public const int DefaultTiles = 6;
+        public const int DefaultTaps = 4;
 
         /// <summary>
         /// Dearest a continue may be published at.
@@ -161,7 +162,7 @@ namespace GlimmerGrove.Progression
     public sealed class ContinueTable
     {
         ContinueTable(bool enabled, long gems, long gemsStep, int turns, int ink, int motes,
-                      int tiles)
+                      int tiles, int taps)
         {
             Enabled = enabled;
             Gems = gems;
@@ -170,6 +171,7 @@ namespace GlimmerGrove.Progression
             Ink = ink;
             Motes = motes;
             Tiles = tiles;
+            Taps = taps;
         }
 
         /// <summary>
@@ -194,7 +196,7 @@ namespace GlimmerGrove.Progression
         /// <summary>Turns a glade's continue hands over, above whatever it took to un-lose it.</summary>
         public int Turns { get; }
 
-        /// <summary>Cells of light a weave's continue hands over, on the same terms.</summary>
+        /// <summary><b>Retired.</b> See <see cref="ContinueUnit.Ink"/>.</summary>
         public int Ink { get; }
 
         /// <summary>Motes a well's continue hands over, on the same terms.</summary>
@@ -203,18 +205,23 @@ namespace GlimmerGrove.Progression
         /// <summary>Tiles a grove's continue hands over, on the same terms.</summary>
         public int Tiles { get; }
 
+        /// <summary>Taps a thicket's continue hands over, above whatever it took to un-lose it.</summary>
+        public int Taps { get; }
+
         /// <summary>The rule that ships inside the build, and the floor under any content mistake.</summary>
         public static readonly ContinueTable Default =
             new ContinueTable(true,
                               ContinueLimits.DefaultGems, ContinueLimits.DefaultGemsStep,
                               ContinueLimits.DefaultTurns, ContinueLimits.DefaultInk,
-                              ContinueLimits.DefaultMotes, ContinueLimits.DefaultTiles);
+                              ContinueLimits.DefaultMotes, ContinueLimits.DefaultTiles,
+                              ContinueLimits.DefaultTaps);
 
         /// <summary>A rule with the feature switched off, for a file that asks for that.</summary>
         public static readonly ContinueTable Off =
             new ContinueTable(false, ContinueLimits.DefaultGems, ContinueLimits.DefaultGemsStep,
                               ContinueLimits.DefaultTurns, ContinueLimits.DefaultInk,
-                              ContinueLimits.DefaultMotes, ContinueLimits.DefaultTiles);
+                              ContinueLimits.DefaultMotes, ContinueLimits.DefaultTiles,
+                              ContinueLimits.DefaultTaps);
 
         /// <summary>
         /// What the next continue costs, given how many this run has already had.
@@ -259,6 +266,7 @@ namespace GlimmerGrove.Progression
                 case ContinueUnit.Ink: return Ink;
                 case ContinueUnit.Motes: return Motes;
                 case ContinueUnit.Tiles: return Tiles;
+                case ContinueUnit.Taps: return Taps;
                 default: return Turns;
             }
         }
@@ -285,6 +293,7 @@ namespace GlimmerGrove.Progression
             int ink = dto.ink < 0 ? ContinueLimits.DefaultInk : dto.ink;
             int motes = dto.motes < 0 ? ContinueLimits.DefaultMotes : dto.motes;
             int tiles = dto.tiles < 0 ? ContinueLimits.DefaultTiles : dto.tiles;
+            int taps = dto.taps < 0 ? ContinueLimits.DefaultTaps : dto.taps;
 
             // Zero is refused rather than clamped, and it is the one refusal here worth
             // stating: a continue that costs nothing is not a cheap continue, it is a move
@@ -316,8 +325,9 @@ namespace GlimmerGrove.Progression
             ink = Bound(ink, "ink", ContinueLimits.DefaultInk, problems);
             motes = Bound(motes, "motes", ContinueLimits.DefaultMotes, problems);
             tiles = Bound(tiles, "tiles", ContinueLimits.DefaultTiles, problems);
+            taps = Bound(taps, "taps", ContinueLimits.DefaultTaps, problems);
 
-            return new ContinueTable(true, gems, step, turns, ink, motes, tiles);
+            return new ContinueTable(true, gems, step, turns, ink, motes, tiles, taps);
         }
 
         /// <summary>

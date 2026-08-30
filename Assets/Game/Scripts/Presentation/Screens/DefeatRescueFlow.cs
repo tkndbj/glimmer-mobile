@@ -18,7 +18,7 @@ namespace GlimmerGrove
     /// the near-miss line, the heart row, the rewarded-video offer and the way back to the map;
     /// a sixth responsibility with its own latch, its own subscription and its own purchase is
     /// how a class becomes the one nobody dares change. The test to apply is the one
-    /// <c>WeaveRun</c> was split against — <em>could this rule be proved without building the
+    /// <c>RippleRun</c> was split against — <em>could this rule be proved without building the
     /// other five</em> — and the answer here is now yes.
     /// </para>
     /// <para>

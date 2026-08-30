@@ -394,7 +394,9 @@ namespace GlimmerGrove
             // shortened or softened, so several inside a few seconds do not read as several
             // taps — they overlap into one continuous rumble. Payout.Land refused one for a
             // milder version of the same reason.
-            Audio.Sfx("chime2", .5f, 1.14f, .06f);
+            // No capstone. The token run is already an ascending phrase and it lands on its
+            // own highest note, so a chime on top of the last one was a second ending for a
+            // thing that had just ended.
             Finish(FinishBeat);
         }
 

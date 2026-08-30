@@ -462,7 +462,7 @@ namespace GlimmerGrove
                     xpChip = Payout.Chip("Xp", Panel, new Vector2(.5f, 1f), new Vector2(-spread, -payY),
                                          Art.Gem(128, Pal.Mint), Pal.Mint,
                                          n => Loc.Format("ui.win.xp", n), XpGained,
-                                         Art.Gem(64, Pal.Mint), Color.white, "tick");
+                                         Art.Gem(64, Pal.Mint), Color.white, sfx: "tick");
                 }
 
                 if (CreditsGained > 0)
@@ -476,7 +476,7 @@ namespace GlimmerGrove
                     coinChip = Payout.Chip("Coins", Panel, new Vector2(.5f, 1f), new Vector2(spread, -payY),
                                            null, Pal.Gold, n => Loc.Format("ui.win.coins", Compact.Number(n)), CreditsGained,
                                            minted ? frames[0] : Art.Disc(128),
-                                           minted ? Color.white : Pal.Gold, "pop");
+                                           minted ? Color.white : Pal.Gold, sfx: "coin");
                     RewardArt.Glyph(coinChip.Glyph, ChestDropKind.Credits, 14f);
                 }
 
@@ -515,7 +515,6 @@ namespace GlimmerGrove
             cue.Then(.20f, () =>
             {
                 if (banner) Tween.Pop(banner.transform, 0f, .5f);
-                Audio.Sfx("whoosh", .34f, 1.15f);
             });
 
             // Stars land one at a time, each a semitone above the last. The row schedules its
@@ -544,7 +543,6 @@ namespace GlimmerGrove
                 {
                     if (xpChip != null) Tween.Pop(xpChip.Root, .4f, .44f);
                     if (coinChip != null) Tween.Pop(coinChip.Root, .4f, .44f, .09f);
-                    Audio.Sfx("whoosh", .32f, 1.2f);
                 });
 
                 if (xpChip != null)
@@ -571,7 +569,6 @@ namespace GlimmerGrove
                         if (!goldenLine) return;
                         Tween.Pop(goldenLine.transform, 0f, .55f);
                         Tween.Breathe(goldenLine.transform, .035f, 1.8f);
-                        Audio.Sfx("chime2", .7f, 1.18f);
                         Burst.Sparks(goldenLine.transform, Vector2.zero, Pal.Gold, 18, 300f, 24f, .7f);
                         Flow.Flash(new Color(1f, .93f, .70f), .3f, .5f);
                     });
@@ -606,7 +603,6 @@ namespace GlimmerGrove
             {
                 if (!rank) return;
                 Tween.Pop(rank.transform, 0f, .6f);
-                Audio.Sfx("chime", .55f, 1f + .08f * stars);
             });
 
             if (seal)
@@ -623,7 +619,6 @@ namespace GlimmerGrove
                         Tween.Punch(seal.transform, .18f, .34f);
                         Burst.Sparks(seal.transform, Vector2.zero, Pal.Gold, 14, 220f, 20f, .55f);
                     });
-                    Audio.Sfx("pop2", .6f, .9f);
                 });
             }
 
@@ -641,12 +636,12 @@ namespace GlimmerGrove
             {
                 // The player's bar draws itself first and the grove's answers it, which is the
                 // order that makes the comparison a reveal rather than a chart.
-                cue.Then(.10f, () => Grow(_youFill, _youWidth, _youOver, _overWidth, "tick", 1f));
+                cue.Then(.10f, () => Grow(_youFill, _youWidth, _youOver, _overWidth, sfx: null, pitch: 1f));
                 cue.Then(.34f, () =>
                 {
                     Reveal(groveCap);
                     if (_infoDot) Tween.Pop(_infoDot.transform, 0f, .4f);
-                    Grow(_groveFill, _groveWidth, null, 0f, "tock", .9f);
+                    Grow(_groveFill, _groveWidth, null, 0f, sfx: null, pitch: .9f);
                 });
 
                 if (_mark != null)
@@ -655,7 +650,6 @@ namespace GlimmerGrove
                     {
                         if (_mark == null) return;
                         Tween.Pop(_mark, 0f, .42f);
-                        Audio.Sfx("pop", .38f, .95f);
                     });
                 }
 
@@ -665,7 +659,6 @@ namespace GlimmerGrove
                     {
                         if (!verdict) return;
                         Tween.Pop(verdict.transform, 0f, .5f);
-                        Audio.Sfx("chime2", .55f, Run.BeatRoute ? 1.3f : 1.1f);
                         if (Run.BeatRoute || Run.MatchedRoute)
                             Burst.Sparks(verdict.transform, Vector2.zero, VerdictInk(), 16, 280f, 22f, .7f);
                     });
@@ -678,7 +671,6 @@ namespace GlimmerGrove
                 {
                     if (stand == null) return;
                     Tween.Pop(stand, 0f, .46f);
-                    Audio.Sfx("bell", .45f, 1.1f);
                 });
             }
 
@@ -695,7 +687,6 @@ namespace GlimmerGrove
                 string opened = Loc.Format("ui.win.opened", Loc.Get(LevelDefinition.DefaultNameKey(next)));
                 cue.Then(.30f, () =>
                 {
-                    Audio.Sfx("unlock", .6f);
                     Scenery.Toast(Content, opened, Pal.Gold, 2.2f, new Vector2(.5f, 0f), 190f);
                 });
             }
@@ -1236,7 +1227,11 @@ namespace GlimmerGrove
 
             host.localScale = Vector3.zero;
             Tween.Scale(host, 1f, .28f, Ease.OutBack);
-            Audio.Sfx("pop", .42f, 1.3f);
+
+            // The same sound the lesson bubbles use: this is an info bubble raised by an "i",
+            // and two different noises for one idea is the thing a player has to learn twice.
+            Audio.Hush("click");
+            Audio.Sfx("tip", .5f);
 
             _bubble = host;
         }

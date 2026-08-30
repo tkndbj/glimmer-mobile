@@ -909,7 +909,11 @@ namespace GlimmerGrove
 
             Tween.KillChannel(rung.Root, "breathe");
             Tween.Punch(rung.Root, .24f, .40f);
-            Audio.Sfx("unlock", .82f, 1.02f);
+            // On the tap, not on the landing. The reward flies for the better part of a
+            // second before it arrives, so a sound on the arrival leaves the tap itself
+            // silent - and `Throw` returns early when a reward has no glyph to fly, so
+            // some collects made no sound at all. Feedback belongs on the action.
+            Audio.Sfx("collect", .6f);
 
             // The fan flares outward rather than fading, so the light looks like it went
             // into the flower rather than like it was switched off.
@@ -1061,7 +1065,7 @@ namespace GlimmerGrove
 
         void Land(Vector2 at, long paid)
         {
-            Audio.Sfx("chime", .85f, 1.06f);
+            // Silent: the tap already spoke. See the note where it does.
             Burst.Sparks(Content, at, Pal.Gold, 16, 260f, 26f, .55f);
 
             if (_purse) Tween.Punch(_purse, .16f, .30f);
@@ -1072,7 +1076,12 @@ namespace GlimmerGrove
             if (_purseNumber)
             {
                 Tween.Punch(_purseNumber.transform, .22f, .34f);
-                Roll.Number(_purseNumber, from, _gathered, .5f, Compact.Number, this);
+                // Money counting into the purse, so it makes money's sound - the same
+                // coin run at the same rising pitch that `RewardFlight` plays when an
+                // ad's coins land on the hub. It was the default `tick`, which is the
+                // dry counter used for bars and wheel pegs.
+                Roll.Number(_purseNumber, from, _gathered, .5f, Compact.Number, this,
+                            sfx: "coin", volume: .46f, pitchFrom: .92f, pitchTo: 1.88f);
             }
 
             var rise = UIKit.Shrinkable(

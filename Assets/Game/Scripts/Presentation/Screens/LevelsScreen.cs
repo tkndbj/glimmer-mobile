@@ -402,8 +402,10 @@ namespace GlimmerGrove
 
             node.localScale = Vector3.zero;
             Tween.Pop(node, 0f, .6f, .18f + delay).OnDone(() => { if (btn) btn.Rehome(); });
-            Tween.After(.2f + delay,
-                        () => Audio.Sfx("pop", .32f, 1f + indexInChapter * .09f), this);
+            // Silent. A node arriving is motion, not news - and a chapter is ten to twenty
+            // of them, so any sound here is a rising run played every single time the map
+            // opens, which is the screen a player passes through most. The nodes pop, the
+            // tap that opened the map spoke, and entering a glade has its own sound.
 
             if (unlocked && stars == 0)
             {
@@ -1093,7 +1095,10 @@ namespace GlimmerGrove
             if (!mode.IsValid || mode == Mode) return;
 
             ModeChoice.Write(mode);
-            Audio.Sfx("whoosh", .5f);
+
+            // Silent on purpose. The row that was tapped has already clicked, and the
+            // screen change is its own report - a swoop on top of it read as a noise
+            // nothing had asked for.
             Flow.Go<LevelsScreen>(v => v.Mode = mode);
         }
 
@@ -1257,7 +1262,7 @@ namespace GlimmerGrove
                 return;
             }
 
-            Audio.Sfx("unlock", .55f);
+            Audio.Sfx("enter", .55f);
 
             // Which screen a mode opens on lives in PlayRoute, because this is not the only
             // door into a run - the victory panel's "next glade" and its replay are two more,

@@ -6,7 +6,7 @@ namespace GlimmerGrove.Modes
     ///
     /// <para>
     /// <b>Whether two things on a screen overlap is arithmetic, so it lives here and gets a
-    /// test.</b> <c>ChapterMap</c> made that argument for map nodes, <c>WeaveBand</c> for the undo
+    /// test.</b> <c>ChapterMap</c> made that argument for map nodes, <c>RippleBand</c> for the undo
     /// key, <c>FallBand</c> for the blend legend and <c>PanelStack</c> for a modal's sections —
     /// and the reason it keeps being made is that every time it was a paragraph instead, the
     /// paragraph was wrong.
@@ -26,6 +26,27 @@ namespace GlimmerGrove.Modes
         /// and the grove cannot come to disagree about where the floor is.
         /// </summary>
         public const float BoardFloor = 236f;
+
+        /// <summary>
+        /// How far below the top of the board the refusal notice's centre sits.
+        ///
+        /// <para>
+        /// Measured from the board's own room rather than from the top of the screen, and that
+        /// is the whole of why it is one number instead of an overlap check. The board begins
+        /// exactly where the readout row stops (<c>ModeScreen.HostInset</c>), so a notice placed
+        /// inside it clears the numbers above it by construction — where a centre typed against
+        /// the safe area would be a second copy of where that row sits, free to stop agreeing
+        /// with it. <c>WheelPanel</c> is what one number meaning something different from its
+        /// neighbours costs.
+        /// </para>
+        /// <para>
+        /// It is deliberately not held clear of the grove: on a tall canvas the grove is
+        /// width-bound and there is room to spare above it, and on the shortest one there is
+        /// none to be had at any position. A sentence that stands for three seconds over the top
+        /// of a board is the right trade against one that cannot be read.
+        /// </para>
+        /// </summary>
+        public const float NoticeDrop = 86f;
 
         /// <summary>
         /// The band at the <em>bottom of the host</em> the basket takes, and the plate drawn

@@ -4,7 +4,7 @@ namespace GlimmerGrove.Modes
     /// How long every part of a Lightfall drop takes, in one place a test can hold to it.
     ///
     /// <para>
-    /// <b>Here rather than beside the paint, for <c>WeaveTempo</c>'s reason.</b> Motion is the
+    /// <b>Here rather than beside the paint, for <c>RippleTempo</c>'s reason.</b> Motion is the
     /// one subsystem in this game whose failures show up only in play — a cascade that outstays
     /// its welcome, a fall that reads as a lag, a chain whose length decides how long the player
     /// waits — so the arithmetic has to be reachable without an Editor. A <c>switch</c> on a

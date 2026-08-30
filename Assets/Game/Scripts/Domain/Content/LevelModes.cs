@@ -30,7 +30,7 @@ namespace GlimmerGrove.Content
             new GladeMode(),
             new FallMode(),
             new KeeperMode(),
-            new WeaveMode(),
+            new BudMode(),
         };
 
         public static IReadOnlyList<LevelMode> All => _all;

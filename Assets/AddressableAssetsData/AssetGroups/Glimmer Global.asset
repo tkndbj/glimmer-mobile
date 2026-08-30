@@ -373,11 +373,21 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 3534c7e6988b818b7906066461dbe947
+    m_Address: Audio/Sfx/collect
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 36753946afa207142828678c6d2e66d0
     m_Address: Art/Fx/Victory/f23
     m_ReadOnly: 0
     m_SerializedLabels:
     - Art/Fx/Victory
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 37351375d1a7eb9a308f23a4688ba7be
+    m_Address: Audio/Sfx/enter
+    m_ReadOnly: 0
+    m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 3c63daa158c23d2abde10b19973574a4
     m_Address: Art/Map/rock_plain
@@ -808,6 +818,11 @@ MonoBehaviour:
     m_SerializedLabels:
     - Art/Critters/c1
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 6facb7cb0d251cc013c078e98dfeb077
+    m_Address: Audio/Sfx/free
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 701055be278344725017dd3daeee9f85
     m_Address: Fonts/GameFont
     m_ReadOnly: 0
@@ -953,6 +968,11 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 83bad3167bbdcf2751d0f0339b04973e
+    m_Address: Audio/Sfx/reward
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 84aad4ec76cde4de95114a68d2201772
     m_Address: Art/Fx/Victory/f16
     m_ReadOnly: 0
@@ -1034,6 +1054,11 @@ MonoBehaviour:
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 8c87bbbdf97cb4f7f36bde33e2ad9a29
     m_Address: Art/Ui/ic_check
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 8f9e4956cfa75d941b96e0d814dfe72c
+    m_Address: Audio/Sfx/tip
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
@@ -1260,11 +1285,6 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels:
     - Art/Critters/c4
-    FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: ac6cf583e60e17df64139c5928b951ea
-    m_Address: Audio/Sfx/press
-    m_ReadOnly: 0
-    m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: ad2422ed1ca8cae099afca52ac49551a
     m_Address: Art/Critters/c5/f02
@@ -1555,6 +1575,11 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: d26f495e1f09ddc52f11379da09adba9
+    m_Address: Audio/Sfx/poke
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: d2a648721f9dca0488bd996d4c5f40b2
     m_Address: Art/Ui/Shop/gems_3
     m_ReadOnly: 0
@@ -1733,6 +1758,11 @@ MonoBehaviour:
     m_SerializedLabels:
     - Art/Critters/c5
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: ec3db5179bde0665c6f4d4bf150e65a3
+    m_Address: Audio/Sfx/burst
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: ec4e5aaa3fe9962b2337628723d7074c
     m_Address: Art/Ui/potion3
     m_ReadOnly: 0
@@ -1798,6 +1828,11 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels:
     - Art/Critters/c1
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: f58668de952c94542960da5f7fb27d77
+    m_Address: Audio/Sfx/menu
+    m_ReadOnly: 0
+    m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: f8153c5f4daaa55e0929b0aaae74d355
     m_Address: Art/Ui/btn_red
@@ -1867,6 +1902,11 @@ MonoBehaviour:
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: fec923710addfbc99d9a9f1ec7a4f6e9
     m_Address: Audio/Music/mus_play
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: ff62a1ed0f8871510282586bbf2e3081
+    m_Address: Audio/Sfx/wheel
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0

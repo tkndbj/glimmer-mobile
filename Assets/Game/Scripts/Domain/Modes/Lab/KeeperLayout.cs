@@ -13,7 +13,7 @@ namespace GlimmerGrove.Modes
     /// whose future is random, so it could author no goal, no budget and no star line, and two
     /// players on the same level were not playing the same board. It is <c>FallDeal</c>'s
     /// argument word for word, and deleting the generator deletes the same class of divergence
-    /// with it — a deal that differs between .NET, Mono and IL2CPP is <c>WeaveGenerator</c>'s
+    /// with it — a deal that differs between .NET, Mono and IL2CPP is Lightweave's generator's
     /// float bug wearing a different hat.
     /// </para>
     /// <para>

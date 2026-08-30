@@ -60,83 +60,51 @@ namespace GlimmerGrove.Progression
         // nothing about a board implies the player has opened the Grovement, and nothing about
         // a glade implies they have ever met a second mode.
 
-        /// <summary>
-        /// Lightweave's rule: join every pair, and never let two channels cross.
-        ///
-        /// <para>
-        /// A board very nearly shows this on its own — a refused drag says "not here" the first
-        /// time a finger tries to cut across somebody — but "nearly" is doing a lot of work in a
-        /// mode a player meets after four chapters of tapping tiles, where the very first thing
-        /// they must know is that this one is dragged rather than tapped. Two sentences before
-        /// the first grove costs a few seconds once in a lifetime.
-        /// </para>
-        /// <para>
-        /// <b>The retired id here is <c>weave_fill</c>, and it must never be reused.</b> It
-        /// taught the mode's old win condition: every critter awake <em>and</em> no bare ground
-        /// left anywhere. That rule is gone — it was invisible on the board, it made the sensible
-        /// route almost always wrong, and the state it produced (every critter awake, nothing
-        /// happening) was reported from play as a bug and was indistinguishable from one. What
-        /// replaced it is <see cref="WeaveBead"/>, which asks for the same thinking and can be
-        /// pointed at. A lesson id travels in the save file exactly like a level id, so the old
-        /// one stays spent for ever rather than being re-pointed at a rule it never described.
-        /// </para>
-        /// </summary>
-        public static readonly Mechanic WeaveJoin = new Mechanic("weave_join");
+        // ------------------------------------------------------------- Budburst
+        // Nine **retired lesson ids that must never be reused**: Lightweave's five (`weave_join`,
+        // `weave_bead`, `weave_ink`, `weave_hedge` and the `weave_fill` that was already spent
+        // before the mode was) and Ripplewake's five (`ripple_meet`, `ripple_satchel`,
+        // `ripple_reed`, `ripple_deep`, `ripple_lily`). A lesson id travels in the save
+        // (`tipsSeen`) exactly as a level id does, so re-pointing one at a rule it never
+        // described would tell a player they have already been shown something they never saw.
 
         /// <summary>
-        /// A bead: a cell one channel must be threaded through, and no other channel may enter.
+        /// Budburst's rule, and very nearly the only one it has: tapping a bud bursts it, and
+        /// everything beside it ripens.
         ///
         /// <para>
-        /// The half of it a board cannot show is which half it is being. A ring in a colour is
-        /// plainly <em>something</em>, and a player meeting one will read it either as a place to
-        /// go or as a thing to avoid — and both readings are correct, for different colours, at
-        /// the same time. That is not something to be discovered by losing a run to it.
+        /// <b>Two sentences, and the second one is the mode.</b> A board can show the first
+        /// perfectly well — tap once and watch — but a player who has just seen one bud go off
+        /// has no reason to expect that a bud pushed past full goes off <em>too</em>, which is
+        /// where every chain in the game comes from. It is also the one thing that makes a
+        /// careless tap different from a good one, so it is worth the two sentences before the
+        /// first thicket rather than after the fourth.
         /// </para>
         /// </summary>
-        public static readonly Mechanic WeaveBead = new Mechanic("weave_bead");
+        public static readonly Mechanic BudChain = new Mechanic("bud_chain");
 
         /// <summary>
-        /// A weave's ink: the light it is dealt, and that spending it is permanent.
+        /// A cocoon: cracked by a burst beside it, and the only thing on the board that has to be
+        /// dealt with.
         ///
         /// <para>
-        /// <b>Separate from <see cref="MoveBudget"/> on purpose, and the two must never be
-        /// merged.</b> They rhyme — both are a pot that empties and ends a run — and everything
-        /// a player has to be told is in the half that differs. A glade's budget counts
-        /// <em>committed</em> turns and hands one back for every undo, without limit, so
-        /// exploring a board costs nothing; a weave's ink is not given back when a channel is
-        /// taken up, and only two channels a grove may be undone. Somebody who learned the
-        /// glade's rule and was never taught this one would draw, look, redraw and lose, having
-        /// been told by four chapters of play that correcting yourself is free.
-        /// </para>
-        /// <para>
-        /// It is also the one lesson here about a number in the HUD rather than a thing on the
-        /// board, which is why the tip rings the readout — the same way the move budget's does,
-        /// one screen over.
+        /// The board says most of it — a critter is visibly shut in, and the counter says how
+        /// many are left — but not that a cocoon is opened by what happens <em>beside</em> it
+        /// rather than by being tapped. A player will tap one, and a tap that does nothing is the
+        /// shape this game refuses to let a rule be discovered by.
         /// </para>
         /// </summary>
-        public static readonly Mechanic WeaveInk = new Mechanic("weave_ink");
+        public static readonly Mechanic BudCocoon = new Mechanic("bud_cocoon");
 
         /// <summary>
-        /// A hedge: a barrier grown along the edge between two cells, which no channel may cross.
+        /// The satchel: a thicket is dealt so many taps and no more.
         ///
-        /// <para>
-        /// <b>Of the three rules this mode teaches, this is the one a board very nearly shows on
-        /// its own</b> — a finger pushed at a hedge simply stops, and the barrier flares in the
-        /// colour of the channel it refused. What it cannot show is the half a player has to know
-        /// <em>before</em> they draw: that it is a wall and not a bead. Every other thing drawn on
-        /// this ground is a place to go through, and a player who has just spent a chapter
-        /// learning that a ring means "come here" will read a bar the same way and route a channel
-        /// at it. One sentence is cheaper than one wasted drag, and on a mode where light is spent
-        /// permanently a wasted drag is a wasted run.
-        /// </para>
-        /// <para>
-        /// It is also the rule that changes what the <em>rest</em> of the board means. A grove
-        /// with a hedge in it has rooms and doorways, so "who yields" stops being a question about
-        /// open ground and becomes a question about which colour gets the gap. That is not
-        /// something to be discovered by losing.
-        /// </para>
+        /// <b>Separate from <see cref="MoveBudget"/>, and for the half that differs</b>: a glade
+        /// hands a turn back on every undo, so exploring is free. There is no undo here, and a
+        /// bud spent is gone from the board along with whatever its chain took — so the count on
+        /// screen is the only thing standing between a careless run and the end of it.
         /// </summary>
-        public static readonly Mechanic WeaveHedge = new Mechanic("weave_hedge");
+        public static readonly Mechanic BudSatchel = new Mechanic("bud_satchel");
 
         /// <summary>
         /// Lightfall's verb: a mote dropped onto another adds its colour rather than matching
@@ -166,7 +134,7 @@ namespace GlimmerGrove.Progression
         /// A well's supply: the motes it is dealt, and that spending one is permanent.
         ///
         /// <para>
-        /// <b>Separate from <see cref="MoveBudget"/> and from <see cref="WeaveInk"/>, for the
+        /// <b>Separate from <see cref="MoveBudget"/> and from <see cref="BudSatchel"/>, for the
         /// reason those two are separate from each other.</b> All three are a pot that empties
         /// and ends a run, and everything a player has to be told is in the half that differs. A
         /// glade's budget counts committed turns and hands one back for every undo, without
@@ -229,7 +197,7 @@ namespace GlimmerGrove.Progression
         /// and that a tile laid down stays there.
         ///
         /// <para>
-        /// <b>Separate from <see cref="MoveBudget"/>, <see cref="WeaveInk"/> and
+        /// <b>Separate from <see cref="MoveBudget"/>, <see cref="BudSatchel"/> and
         /// <see cref="FallSupply"/> for the reason those three are separate from each other.</b>
         /// All four are a pot that empties and ends a run, and everything a player has to be told
         /// is in the half that differs. A glade hands a turn back for every undo, without limit,
@@ -427,9 +395,10 @@ namespace GlimmerGrove.Progression
         public static readonly Mechanic[] All =
         {
             FragileConduit, MoveBudget, RootedTile, ColourMixing, Crossing, Briar,
-            BoundConduit, WeaveJoin, WeaveBead, WeaveInk, WeaveHedge, FallCook, FallSupply,
-            FallBrim, KeeperBloom, KeeperBasket, KeeperStone, KeeperCompost, KeeperHeartbed,
-            KeeperPrism, ModeSwitch, LuckySpin, Grove, GroveShop,
+            BoundConduit, BudChain, BudCocoon, BudSatchel,
+            FallCook, FallSupply, FallBrim, KeeperBloom, KeeperBasket, KeeperStone,
+            KeeperCompost, KeeperHeartbed, KeeperPrism, ModeSwitch, LuckySpin, Grove,
+            GroveShop,
         };
 
         public bool IsValid => !string.IsNullOrEmpty(Id);

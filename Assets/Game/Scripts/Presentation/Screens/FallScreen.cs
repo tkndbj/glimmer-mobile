@@ -424,7 +424,13 @@ namespace GlimmerGrove
                                      route: 0,
                                      lit: run.Started, wanted: run.Started);
 
-            Audio.Sfx("win", .9f);
+            // No fanfare here: the board already played one. `*View.Triumph` sounds `win`
+            // and then waits a beat before handing control back, so a copy at this point is
+            // the same clip twice a third of a second apart - which is a flam and 6 dB, not a
+            // bigger celebration. It is the fault `FallView.Overflow` names for the losing
+            // path ("a flood arrived as two crashes") on the winning one, and the house rule
+            // is to celebrate once: the glade has only ever sounded it from `BoardView`, and
+            // `WinOverlay` deliberately adds nothing.
             Flow.Flash(new Color(1f, .99f, .92f), .5f, .5f);
             Burst.Confetti(Content, 60);
 

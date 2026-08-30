@@ -263,7 +263,7 @@ namespace GlimmerGrove
             _chip = Payout.Chip("Prize", panel, new Vector2(.5f, 1f), new Vector2(0f, -y),
                                 null, RewardArt.Tint(Drop.Kind),
                                 n => "+" + Compact.Number(n), Drop.Amount,
-                                token, tokenTint, "coin", glyphSize: 0f);
+                                token, tokenTint, sfx: "coin", glyphSize: 0f);
         }
 
         // ------------------------------------------------------------- the beats
@@ -324,7 +324,10 @@ namespace GlimmerGrove
             Shockwave(.10f, 2.6f, .62f, .42f);
 
             Burst.Sparks(_coin, Vector2.zero, Tint, Loud ? 24 : 16, 400f, 30f, .74f);
-            Audio.Sfx("chest", .58f);
+
+            // Silent. The two shockwaves and the sparks are the arrival; a thump under them
+            // read as a spring, and this panel already speaks twice more before it is done -
+            // the payoff beat, and then a token per coin on the way to the purse.
         }
 
         /// <summary>
@@ -372,7 +375,7 @@ namespace GlimmerGrove
 
             if (Loud) Burst.Confetti(Content, Loudest ? 54 : 34);
 
-            Audio.Sfx("win", .55f);
+            Audio.Sfx("reward", .55f);
 
             if (_coin) { _coin.localScale = Vector3.one; Tween.Punch(_coin, .12f, .38f); }
         }

@@ -134,9 +134,18 @@ namespace GlimmerGrove
         {
             int ticked = 0;
 
+            // A null name is a bar that fills in silence, and it is a real case rather than
+            // a degenerate one: the victory panel draws two of these back to back, and
+            // eighteen ticks for two bars nobody is reading is most of what made that panel
+            // sound like a slot machine. Checked here rather than at the call site so a
+            // silent roll cannot become `Audio.Sfx(null)`, which resolves to the address
+            // "Audio/Sfx/" and throws.
+            bool speaks = !string.IsNullOrEmpty(sfx);
+
             return Tween.Run(duration, Ease.OutCubic, t =>
             {
                 apply?.Invoke(t);
+                if (!speaks) return;
 
                 // Driven off eased progress rather than a timer, so the ticks crowd
                 // together exactly where the number does and the ear hears the same
@@ -160,7 +169,9 @@ namespace GlimmerGrove
         /// short of what was actually banked.
         /// </summary>
         public static Tw Number(Text label, long from, long to, float duration,
-                                Func<long, string> format, UnityEngine.Object owner = null)
+                                Func<long, string> format, UnityEngine.Object owner = null,
+                                string sfx = "tick", float volume = .34f,
+                                float pitchFrom = .92f, float pitchTo = 1.62f)
         {
             if (label == null || format == null) return Tween.Run(.001f, Ease.Linear, null);
 
@@ -174,7 +185,7 @@ namespace GlimmerGrove
             {
                 if (!label) return;
                 label.text = format(from + (long)Mathf.Round(span * t));
-            }, host).OnDone(() =>
+            }, host, sfx, volume, pitchFrom, pitchTo).OnDone(() =>
             {
                 if (!label) return;
                 label.text = format(to);

@@ -211,7 +211,10 @@ namespace GlimmerGrove
                     _full[k].gameObject.SetActive(true);
                     _full[k].transform.localScale = Vector3.one * 2.4f;
                     Tween.Scale(_full[k].transform, 1f, .5f, Ease.OutBack);
-                    Audio.Sfx("star", .75f, 1f + k * .16f);
+                    // .55 rather than .75: with the victory panel's decorative sounds gone
+                    // this is the loudest thing on it after the board's own fanfare, and a
+                    // three-star reveal is three of them in a row.
+                    Audio.Sfx("star", .55f, 1f + k * .16f);
                     Burst.Sparks(_full[k].transform, Vector2.zero, Pal.Gold, 10, _size * 1.5f, _size * .28f, .6f);
                     Tween.Punch(transform, .07f, .3f);
                 }, this);

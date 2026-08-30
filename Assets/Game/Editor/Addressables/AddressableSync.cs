@@ -72,6 +72,20 @@ namespace GlimmerGrove.EditorTools
         /// Drops entries whose asset has gone, or which now live outside the managed
         /// folders. Without this an asset deleted while the package was uninstalled
         /// would leave an entry that resolves to nothing at runtime.
+        ///
+        /// <para>
+        /// <b>"The GUID maps to a managed path" is not the same as "the asset is there", and
+        /// the difference is a failed build.</b> This used to ask only the first question, and
+        /// <c>AssetDatabase.GUIDToAssetPath</c> keeps answering with the old path for a while
+        /// after a file has gone — so a folder of art deleted outside the Editor left every one
+        /// of its entries in place, each pointing at a path that looked perfectly managed. The
+        /// game did not care, because nothing requested them any more, and
+        /// <c>AddressableAudit</c> did not care, because it only proved that everything
+        /// <em>requested</em> resolves. The bundle builder cared: <c>BundleBuildContent</c>
+        /// throws <c>Asset '…' is not a valid Asset or Scene</c> and the Android build dies
+        /// before a single line of the player is written. Twenty-five dead frames of a deleted
+        /// flipbook cost exactly that.
+        /// </para>
         /// </summary>
         static void DropMissing(UnityEditor.AddressableAssets.Settings.AddressableAssetSettings settings,
                                 ref AddressableRegistry.Summary summary)
@@ -87,7 +101,9 @@ namespace GlimmerGrove.EditorTools
                     if (entry == null) continue;
 
                     string path = AssetDatabase.GUIDToAssetPath(entry.guid);
-                    if (!string.IsNullOrEmpty(path) && AddressableAddresses.IsManaged(path)) continue;
+                    if (!string.IsNullOrEmpty(path)
+                        && AddressableAddresses.IsManaged(path)
+                        && AddressableRegistry.StillThere(path)) continue;
 
                     doomed.Add(entry.guid);
                 }

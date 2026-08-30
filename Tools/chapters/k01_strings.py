@@ -40,6 +40,12 @@ STRINGS = {
     'mode.keeper.basket_free': 'free',
     'mode.keeper.compost': 'COMPOST',
 
+    # The one refusal the board cannot answer for itself. Stone is drawn as a rock, an occupied
+    # cell already holds a tile and a heartbed flares the colour it wants - but bare ground away
+    # from the groove looks exactly like bare ground beside it, so a tap there has to be answered
+    # in words. See KeeperBoard.Adrift.
+    'mode.keeper.adrift': 'Tiles go beside the groove - tap next to something already growing.',
+
     # The running count, one per flower as the cascade plays out, and the word it earns at the
     # end. A single bloom is not a flourish and says nothing at all - see KeeperFlourish.
     'mode.keeper.multiplier': 'x{0}',

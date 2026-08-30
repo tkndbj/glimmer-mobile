@@ -120,63 +120,14 @@
       ]
     },
     {
-      "id": "w01_lightweave",
-      "version": 2,
+      "id": "b01_thicket",
+      "version": 1,
       "order": 70,
       "disabled": false,
       "minAppVersion": 0,
-      "mode": "weave",
+      "mode": "bud",
       "levels": [
-        "w01_first_weave",
-        "w01_two_threads",
-        "w01_the_shuttle",
-        "w01_tight_warp",
-        "w01_five_lanterns",
-        "w01_the_long_skein",
-        "w01_close_quarters",
-        "w01_six_sleepers",
-        "w01_the_tangle",
-        "w01_the_weftwood_knot"
-      ]
-    },
-    {
-      "id": "w02_nightloom",
-      "version": 2,
-      "order": 80,
-      "disabled": false,
-      "minAppVersion": 0,
-      "mode": "weave",
-      "levels": [
-        "w02_dusk_threads",
-        "w02_the_narrow_loom",
-        "w02_the_pinch",
-        "w02_who_yields",
-        "w02_six_rings",
-        "w02_spindlewood",
-        "w02_the_long_way_round",
-        "w02_the_shuttered_loom",
-        "w02_thread_the_dark",
-        "w02_the_nightloom_knot"
-      ]
-    },
-    {
-      "id": "w03_wildhedge",
-      "version": 1,
-      "order": 90,
-      "disabled": false,
-      "minAppVersion": 0,
-      "mode": "weave",
-      "levels": [
-        "w03_the_first_hedge",
-        "w03_two_rooms",
-        "w03_the_green_gate",
-        "w03_hedgerows",
-        "w03_the_long_way_out",
-        "w03_thicket",
-        "w03_the_walled_garden",
-        "w03_narrow_ways",
-        "w03_the_maze_of_leaves",
-        "w03_the_wildhedge_knot"
+        "b01_firstburst"
       ]
     }
   ],
@@ -200,12 +151,30 @@
         "c01_grovekeepers_knot"
       ],
       "milestones": [
-        { "goal": 1, "credits": 60 },
-        { "goal": 2, "credits": 90 },
-        { "goal": 4, "credits": 250 },
-        { "goal": 6, "credits": 400 },
-        { "goal": 8, "credits": 600 },
-        { "goal": 10, "credits": 1000 }
+        {
+          "goal": 1,
+          "credits": 60
+        },
+        {
+          "goal": 2,
+          "credits": 90
+        },
+        {
+          "goal": 4,
+          "credits": 250
+        },
+        {
+          "goal": 6,
+          "credits": 400
+        },
+        {
+          "goal": 8,
+          "credits": 600
+        },
+        {
+          "goal": 10,
+          "credits": 1000
+        }
       ]
     }
   ],

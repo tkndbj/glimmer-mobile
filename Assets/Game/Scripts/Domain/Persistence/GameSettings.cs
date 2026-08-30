@@ -13,6 +13,28 @@ namespace GlimmerGrove.Persistence
     {
         public static bool MusicOn { get; private set; } = true;
         public static bool SfxOn { get; private set; } = true;
+
+        /// <summary>
+        /// <b>Retired in place.</b> The game no longer vibrates at all — <c>Haptic</c> is gone,
+        /// with it every call site, and with those the control that used to switch this — so
+        /// nothing reads this and nothing ever should again.
+        ///
+        /// <para>
+        /// It is kept for <c>SaveFileDto.bestMillis</c>'s reason and it is the same reason:
+        /// <c>settings</c> travels in the save file, <c>firestore.rules</c> gates that document
+        /// with a <c>hasOnly</c> allow-list, and a client that writes a key the rules do not
+        /// list loses <em>every</em> save write rather than that one key (invariant 12a). So the
+        /// field stays on the wire until a schema version in which no shipped client writes one,
+        /// and this property is what keeps writing it.
+        /// </para>
+        /// <para>
+        /// <b>Why the buzz went.</b> <c>Handheld.Vibrate</c> on Android is one fixed-length
+        /// heavy pulse with no way to make a second lighter than the first, so every use of it
+        /// here was the same blunt knock whatever it was answering — and on a mode that opens
+        /// four cocoons in one chain it fired four times inside a second, which is one rumble
+        /// rather than four taps.
+        /// </para>
+        /// </summary>
         public static bool HapticsOn { get; private set; } = true;
 
         /// <summary>Empty means follow the device language.</summary>
@@ -51,6 +73,7 @@ namespace GlimmerGrove.Persistence
             Commit();
         }
 
+        /// <summary>Retired with <see cref="HapticsOn"/>. Nothing calls this.</summary>
         public static void SetHaptics(bool on)
         {
             if (HapticsOn == on) return;

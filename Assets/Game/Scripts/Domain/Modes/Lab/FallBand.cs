@@ -6,7 +6,7 @@ namespace GlimmerGrove.Modes
     ///
     /// <para>
     /// <b>Whether two things on a screen overlap is arithmetic, so it lives here and gets a
-    /// test.</b> <c>ChapterMap</c> made that argument for map nodes, <c>WeaveBand</c> for the
+    /// test.</b> <c>ChapterMap</c> made that argument for map nodes, <c>RippleBand</c> for the
     /// undo key and the standing line, <c>ReadoutRow</c> for a row of numbers and
     /// <c>PanelStack</c> for a modal's sections — and the reason it keeps being made is that
     /// every time it was a paragraph instead, the paragraph was wrong. <c>PanelStack</c>'s was

@@ -54,9 +54,15 @@ namespace GlimmerGrove
         public Action Committed { get; set; }
 
         /// <summary>
+        /// A tap on ground the grove cannot reach yet — the one refusal this board cannot answer
+        /// for itself. See <see cref="Refuse"/>.
+        /// </summary>
+        public Action Unreachable { get; set; }
+
+        /// <summary>
         /// The closing cascade has begun, so nothing else may end this run.
         ///
-        /// <c>WeaveView.Finishing</c>'s rule and <c>FallView.Finishing</c>'s: the run is decided
+        /// <c>RippleView.Finishing</c>'s rule and <c>FallView.Finishing</c>'s: the run is decided
         /// when the last bed opens and the panel arrives a beat later while the flowers are still
         /// opening, so everything that could still end a run has to stop at the first of those two
         /// moments rather than the second.
@@ -102,6 +108,8 @@ namespace GlimmerGrove
         readonly List<int> _bloomed = new List<int>(KeeperFlourish.Most);
         Image[] _queue, _prisms;
         RectTransform[] _seats;
+
+        RectTransform _coach;
 
         float _cell, _size;
         Vector2 _origin;
@@ -156,6 +164,9 @@ namespace GlimmerGrove
 
             _spare.Clear();
             _seams.Clear();
+
+            // Its objects are children of the host, which the loop below is about to empty.
+            _coach = null;
 
             for (int i = host.childCount - 1; i >= 0; i--)
             {
@@ -433,6 +444,17 @@ namespace GlimmerGrove
             return _origin + new Vector2(x * _cell, -y * _cell);
         }
 
+        /// <summary>The first bed still waiting, or -1 when the grove has none left.</summary>
+        int FirstBed()
+        {
+            if (_cells == null || Run == null) return -1;
+
+            for (int i = 0; i < _cells.Length; i++)
+                if (_layout.IsBed(i) && !Run.Board.IsOpen(i)) return i;
+
+            return -1;
+        }
+
         /// <summary>Where a lesson about a bed should point. The first one still waiting.</summary>
         public RectTransform BedAnchor
         {
@@ -440,8 +462,8 @@ namespace GlimmerGrove
             {
                 if (_cells == null) return null;
 
-                for (int i = 0; i < _cells.Length; i++)
-                    if (_layout.IsBed(i) && Run != null && !Run.Board.IsOpen(i)) return _cells[i].Rt;
+                int at = FirstBed();
+                if (at >= 0) return _cells[at].Rt;
 
                 return _cells.Length > 0 ? _cells[0].Rt : null;
             }
@@ -497,6 +519,51 @@ namespace GlimmerGrove
 
                 return _seats.Length > 0 ? _seats[0] : null;
             }
+        }
+
+        // ------------------------------------------------------------------ the first tap
+        /// <summary>
+        /// Points a hand at the bed this grove wants opened, until the player taps anywhere.
+        ///
+        /// <para>
+        /// <b>Shown, not described</b>, and it is <c>CoachStroke</c>'s argument for a mode that
+        /// is tapped rather than dragged. The bloom lesson says what a bloom <em>is</em>; a
+        /// player meeting the mode for the first time still has to find the one cell where the
+        /// sentence is true, on a board of identical bare squares, with no undo and a counted
+        /// basket. Every other cell on the opening grove is a legal move that teaches nothing.
+        /// </para>
+        /// <para>
+        /// <b>It goes away on the first tap, whether or not that tap lands.</b> A pointer that
+        /// only cleared on a successful planting would stand over a board the player is already
+        /// working on the moment they tried something else, and a hand still asking for a cell
+        /// somebody has just declined reads as the game not noticing them.
+        /// </para>
+        /// <para>
+        /// Refused rather than pointed anywhere when the bed cannot actually take the tile in
+        /// hand: a demonstration of a move that would be turned down is worse than none, which
+        /// is the rule the coaching route is already held to. In practice that never fires —
+        /// <c>KeeperScreen</c> only asks on a board nobody has touched yet.
+        /// </para>
+        /// </summary>
+        public void CoachTap()
+        {
+            HideCoach();
+
+            if (Run == null || _fx == null || _cells == null) return;
+
+            int at = FirstBed();
+            if (at < 0 || !Run.CanPlant(at)) return;
+
+            // The cells and the effects layer are both stretched to the grove, so a cell's own
+            // position is already the point a fingertip has to press.
+            _coach = CoachHand.Tap(_fx, _cells[at].Rt.anchoredPosition, Pal.Gold, this);
+        }
+
+        /// <summary>Puts the pointer away. Safe to call when there is none.</summary>
+        public void HideCoach()
+        {
+            if (_coach) Destroy(_coach.gameObject);
+            _coach = null;
         }
 
         // ------------------------------------------------------------------ the pool
@@ -797,6 +864,9 @@ namespace GlimmerGrove
         // ------------------------------------------------------------------ playing
         void Plant(int index)
         {
+            // Whatever comes of it, the player has answered the hand. See CoachTap.
+            HideCoach();
+
             if (!Playable || !Run.CanPlant(index)) { Refuse(index); return; }
 
             int colour = Run.Next;
@@ -850,11 +920,22 @@ namespace GlimmerGrove
             }
 
             Audio.Sfx("rotate_b", .28f, .8f);
+
+            // The shake is the whole answer everywhere else: stone is drawn as a rock, an
+            // occupied cell already holds a tile, and a heartbed has just flared the colour it
+            // is holding out for. Bare ground away from the grove looks exactly like bare
+            // ground beside it, so there the shake is a control that did nothing — which is the
+            // state a rule the board cannot show always produces (invariant 20g).
+            if (Unreachable != null && Run != null && Run.Basket.Any
+                && Run.Board.Adrift(Run.Next, index))
+                Unreachable();
         }
 
         /// <summary>Spends a tile without planting it, and says so.</summary>
         public void Compost()
         {
+            HideCoach();
+
             if (!Playable || !Run.CanCompost) return;
 
             int colour = Run.Next;
@@ -1056,7 +1137,6 @@ namespace GlimmerGrove
             Tween.Punch(tile.Rt, bed ? .42f : .28f, KeeperTempo.Petal(of) * 1.1f);
 
             Audio.Sfx(bed ? "chime" : "lit", bed ? .62f : .42f, KeeperTempo.Pitch(nth));
-            if (bed) Haptic.Tap();
         }
 
         void Shockwave(Vector2 at, Color tint, float to, float seconds)
@@ -1135,7 +1215,6 @@ namespace GlimmerGrove
             {
                 Flow.Flash(Pal.A(Pal.Radiance, .34f), .28f, .38f);
                 Burst.Sparks(_fx, Vector2.zero, Pal.Gold, 18, 380f, 24f, .8f);
-                Haptic.Tap();
             }
 
             Audio.Sfx("win", .62f, 1f + KeeperFlourish.Tier(blooms) * .06f);

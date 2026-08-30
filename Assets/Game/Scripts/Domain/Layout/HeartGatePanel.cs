@@ -44,7 +44,7 @@ namespace GlimmerGrove.Layout
     ///
     /// <para>
     /// <b>Here rather than beside the panel, for <c>ChapterMap</c>'s reason</b> (invariant 8a),
-    /// which <c>ReadoutRow</c>, <c>WeaveBand</c>, <c>PanelStack</c> and <see cref="DefeatPanel"/>
+    /// which <c>ReadoutRow</c>, <c>RippleBand</c>, <c>PanelStack</c> and <see cref="DefeatPanel"/>
     /// have each earned: whether two things on a screen overlap is arithmetic, and arithmetic
     /// inside a <c>MonoBehaviour</c> is arithmetic nothing can check. This panel's height was
     /// two typed constants (900 and 780) with three button offsets written out under them, which

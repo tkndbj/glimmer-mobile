@@ -57,7 +57,7 @@ namespace GlimmerGrove.Layout
     ///
     /// <para>
     /// <b>Here rather than beside the panel, for <c>ChapterMap</c>'s reason</b> (invariant 8a),
-    /// which <c>ReadoutRow</c>, <c>WeaveBand</c> and <c>PanelStack</c> have already earned three
+    /// which <c>ReadoutRow</c>, <c>RippleBand</c> and <c>PanelStack</c> have already earned three
     /// times: whether two things on a screen overlap is arithmetic, and arithmetic inside a
     /// <c>MonoBehaviour</c> is arithmetic nothing can check. It became worth separating when the
     /// panel grew a third way out — hearts for gems — because that took the number of shapes it

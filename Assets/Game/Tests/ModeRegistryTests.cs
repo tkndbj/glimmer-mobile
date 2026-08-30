@@ -281,8 +281,27 @@ namespace GlimmerGrove.Tests
                     rows = new[] { "......", "..G...", ".R*B..", "......" },
                     tiles = "GRB",
                 };
-            else if (mode == GameMode.Weave)
-                dto.weave = new WeaveDto { width = 7, height = 9, pairs = 4 };
+            else if (mode == GameMode.Bud)
+                dto.bud = new BudDto
+                {
+                    // A grove authors its ground and what it deals, because par is searched from
+                    // the two. Small on purpose: this case is about the registry reading its own
+                    // block, not about a board being interesting.
+                    //
+                    // The basket used to be missing here and this fixture was the only thing in
+                    // the repository that noticed — the mode gained it after this sample was
+                    // written, exactly as the well one over did, and a mode that cannot read its
+                    // own level is a mode whose chapter would ship as a skipped one.
+                    // It also has to be *solvable*, which a grid and a basket alone are not:
+                    // this mode searches for par, so an unwinnable sample spends the whole node
+                    // budget proving nothing and then logs the refusal the build gate exists to
+                    // raise. One tap here — green into the red — makes three touching yellows,
+                    // which burst and crack the cocoon beside them. Par 1.
+                    width = 4,
+                    height = 4,
+                    rows = new[] { "....", ".RY.", ".Yo.", "...." },
+                    colours = "GRB",
+                };
             else
                 Assert.Fail($"ModeRegistryTests has no sample level for '{mode}'. A mode was "
                             + "registered without teaching these tests what one of its levels "

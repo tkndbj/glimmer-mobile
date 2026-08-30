@@ -8,7 +8,7 @@ Everything here used to live in `GlimmerGrove.Domain`, which ships. That was not
 it was the only place that satisfied both of the constraints these rules are under:
 
 - **`GlimmerGrove.Editor` can reach them.** The build gate (`ContentValidation`) and the
-  authoring tools (`ManifestSync`, `WeaveSurvey`) are the only callers.
+  authoring tools (`ManifestSync`, `ContentAuthoring`) are the only callers.
 - **`GlimmerGrove.Tests` can reach them.** A validator with no failing case is not a check,
   and the test assembly references `Domain` — it does *not* reference `Editor`.
 
@@ -30,18 +30,18 @@ than quietly dragging the folder back into the build.
 
 What deliberately does **not** belong here:
 
-- **`WeaveSolver`.** `WeaveGenerator` calls `AnyTautSolution` on the player's phone as its
-  acceptance bar (invariant 20f), and `Measure` is twenty-five lines of loop over the same
-  `Search` the bar needs. Splitting it would mean making a four-hundred-line search class
-  public across an assembly boundary to save the twenty-five. This is a trade, and it is the
-  only one left.
-- **`FallSolver`.** Same trade as `WeaveSolver` and a stronger version of it: a Lightfall
-  level is *graded* on what this returns. Par is the fewest drops that empty a well, both star
-  lines and the supply the run is dealt are multiples of it, and none of that may be authored
-  (a typed par drifts silently). So the player's device runs the search, once, the first time
-  anything asks — which is why `LevelTuning.Par` may be resolved lazily. The authoring-only
-  half is `Survey`, and it is a dozen lines over the same `Search` the phone needs.
-- **`ChapterMap`, `GroveFloor`, `WeaveLayout`** and the rest of the geometry. Screens read
+- **`FallSolver`, `KeeperSolver` and `BudSolver`.** A level of each of those modes is
+  *graded* on what they return: par is the fewest drops, tiles or taps that finish the board,
+  both star lines and the budget the run is dealt are derived from it, and none of that may be
+  authored (a typed par drifts silently). So the player's device runs the search, once, the
+  first time anything asks — which is why `LevelTuning.Par` may be resolved lazily. The
+  authoring-only half of each is `Survey`, a dozen lines over the same `Search` the phone needs,
+  and splitting that out would mean making a four-hundred-line search class public across an
+  assembly boundary to save the dozen. It is a trade, and it is the only one left.
+  <br>There used to be a fourth and it was the weaker case: Lightweave's solver ran on the phone
+  as its *generator's* acceptance bar rather than as a grading rule. That mode is retired, and so
+  is Ripplewake, which came and went between it and Budburst — see invariant 20j.
+- **`ChapterMap`, `GroveFloor`, `BudBand`** and the rest of the geometry. Screens read
   them. Only the *checks over* them are authoring.
 
 ## What is here
@@ -53,7 +53,6 @@ What deliberately does **not** belong here:
 | `ModeValidator` | How each mode is proved fit to ship, and the registry of them. |
 | `ChapterMapValidator` | Node collisions, backwards trails, the end-of-chapter marker's clearance. |
 | `ChapterModeValidator` | A chapter's declared mode against the mode its levels are (invariant 20h). |
-| `WeaveSeedSearch` | Which seed a Lightweave level should author, swept and measured. |
 
 ## A mode is declared three times
 

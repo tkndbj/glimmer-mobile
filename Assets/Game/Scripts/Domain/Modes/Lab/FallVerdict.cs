@@ -24,7 +24,7 @@ namespace GlimmerGrove.Modes
     /// <b>One predicate rather than three booleans in an <c>if</c> on a screen.</b> That is the
     /// shape this project keeps paying for: every one of those booleans is an edge where the
     /// run is decided and the screen has not caught up, and a condition spread across them
-    /// cannot be proved. <c>WeaveVerdict</c> is the same class for the same reason, and every
+    /// cannot be proved. <c>RippleVerdict</c> is the same class for the same reason, and every
     /// branch here is arithmetic over a board and two integers.
     /// </para>
     /// <para>

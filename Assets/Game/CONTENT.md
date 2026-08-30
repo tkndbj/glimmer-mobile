@@ -168,8 +168,8 @@ rejected, because where the game goes next must be readable from one file and
 changeable by pushing that one file.
 
 **`mode` is derived too, and that is invariant 20h.** It was the last field of an entry
-written by hand, and it is the one field whose absence nothing notices: a weave chapter
-missing `"mode": "weave"` is indexed as a glade chapter, and every level still parses,
+written by hand, and it is the one field whose absence nothing notices: a Budburst chapter
+missing `"mode": "bud"` is indexed as a glade chapter, and every level still parses,
 every board is still proved solvable, every string resolves and the build goes green —
 while the chapter is gated on a stranger's stars, filed under the wrong tab and routed to
 a screen that cannot play it. Sync now reads the mode off the body, `Validate Content`
@@ -644,123 +644,136 @@ goes as the column count to the power of par, so par 7 on a six-wide well is fou
 the same board: narrow the well or shorten the answer, and start it fuller rather than making it
 bigger.
 
-## Lightweave levels
+## Budburst levels
 
-`"mode": "weave"` on a manifest chapter entry says its levels are **groves**. A grove carries a
-`weave` block instead of a `rows` grid, and unlike a well there is almost nothing in it: the
-board is *generated* from the seed, so what a level authors is a shape and how much is grown on
-it.
+`"mode": "bud"` on a manifest chapter entry says its levels are **groves**. A grove carries a
+`bud` block instead of a `rows` grid, and the block is a grid, a basket and nothing else.
 
 ```json
 {
-  "id": "w03_the_first_hedge",
-  "mapX": 0.28,
-  "mapY": 0.06,
-  "weave": {
-    "width": 8,
-    "height": 10,
-    "pairs": 6,
-    "beads": 6,
-    "hedges": 1,
-    "seed": 12345
+  "id": "b01_firstburst",
+  "mapX": 0.3,
+  "mapY": 0.08,
+  "bud": {
+    "width": 7,
+    "height": 6,
+    "rows": [
+      "GYRYBBR",
+      "BRoBoYG",
+      "RBCRGRY",
+      "GRoYoGY",
+      "BBCRYRR",
+      ".GGRYG."
+    ],
+    "colours": "GBR"
   }
 }
 ```
 
-**The rule in one paragraph.** Drag a channel from each crystal to the critter that wants its
-colour. No two channels may share a cell, every **bead** must be threaded by the channel drawn in
-its own colour and by no other, and no channel may cross a **hedge**. Where a channel goes is
-otherwise entirely the player's business. You win when every critter is awake and every bead is
-threaded; you lose when the light left cannot cover the cheapest possible finish.
-
-**What each field does:**
-
-| field | means |
-|-------|-------|
-| `width` `height` | 4..9 by 4..12. Bigger is *not* harder: more room means less contention |
-| `pairs` | 2..6, one per colour the light makes. Six is the ceiling because white is what being awake looks like |
-| `beads` | at most one per pair. A cell one channel must be threaded through, and a wall to the other five |
-| `hedges` | at most `(width + height) / 6`, never more than three. A barrier along the edge *between* two cells |
-| `seed` | the whole difficulty of the level. Never leave it out — an unseeded grove deals whatever its id hashes to |
-
-**Nothing about difficulty is authored.** Par is the sum of the pairs' own shortest routes plus a
-cell of looking for each pair, bead and hedge, and the three lines a run is measured against fall
-out of par exactly as they do everywhere else — three stars at `par x 1.20`, two at `par x 1.40`,
-and the grove is dealt `par x 1.60` **cells of ink**. Growing a hedge therefore raises par, both
-star lines and the ink together, with no number to edit: a floor is measured over the ways that
-are actually *open* (`WeaveLayout.Span`), so a barrier's cost is priced in before anybody is
-graded against it. Getting that wrong is invariant 22's stranded band — a three-star line under
-the best possible play is a band nobody can land in.
-
-**A hedge is a run, not a cell.** It grows from one side of the grove inward, at least two cells
-long and never all the way across, so it always leaves a way past its tip. That is deliberate and
-it is what makes one do any work: on open ground there are a great many shortest routes between
-two cells, so a barrier dropped in the middle is walked round for nothing. A run anchored at a
-side shuts every route that crosses it, which turns a field into two rooms with a doorway between
-them — and a doorway is the sharpest form of the only question this mode asks, *who yields*,
-because it is a thing the player can see before committing to anything.
-
-The generator grows the hedges **before** it carves, so the arrangement it draws respects them
-and a hedged board is solvable by construction rather than by check. It refuses a fence that
-seals anything off, and it refuses one that changes no pair's shortest route — a barrier the
-player routes around without noticing is scenery (invariant 5d).
-
-### What makes a weave hard
-
-Two readings, and **size is not one of them** — a bigger grove with the same six pairs is a
-*roomier* grove, and roomier is easier.
-
-- **`toll`** — how far past straight lines the whole board has to be drawn: the detour the pairs
-  force on each other (`slack`) plus the detour the hedges force on the pairs (`bite`). Zero
-  slack means there is an arrangement in which every pair goes as directly as it possibly could,
-  all at once — six drags and a celebration, which is what the mode's first chapter measured
-  before there was anything here to measure it with. It is meant to **climb** down a chapter and
-  across the join into the next one.
-- **`ways`** — how many arrangements land within a couple of cells of the best one, which is how
-  much of what a tidy player tries will actually work. It is meant to **fall**.
-
-Both come from `WeaveSolver`, whose search is exponential in the worst case, so neither is a build
-gate — a gate that times out on a slow machine fails builds nobody can reproduce.
-`Glimmer Grove ▸ Content ▸ Survey Lightweave` reports them for the shipped groves and
-`WeaveLadderTests` pins what the survey chose, which is where a regression actually fails
-something.
-
-**Why `toll` and not `slack` alone.** Slack is measured against each pair's own floor, and a hedge
-*raises that floor* — it moves forced detour out of the number and into the thing the number is
-measured against. So an open grove forcing sixteen and a hedged grove forcing ten over floors
-already six cells longer are asking for the same amount of drawing, and comparing their slacks
-says the second one is easier. The sum is what stays comparable, and it is identical to slack on
-any grove with nothing grown on it — which is why the two chapters authored before hedges existed
-are unmoved.
-
-**Choosing a seed.** `python Tools/weave_seeds.py` runs the shipped `WeaveSeedSearch` rather than
-a copy of it:
+Ten characters, and they are the whole vocabulary:
 
 ```
-# what a shape can even produce, before picking a band
-python Tools/weave_seeds.py survey --size 8x10 --pairs 6 --beads 6 --hedges 2 --seeds 1..30000
-
-# every usable board a shape deals, cheapest first
-python Tools/weave_seeds.py pool   --size 8x10 --pairs 6 --beads 6 --hedges 2 --seeds 1..90000
-
-# the band a rung wants
-python Tools/weave_seeds.py sweep  --size 8x10 --pairs 6 --beads 6 --hedges 2 --toll 16 --ways 2..60
-
-# and always, before the numbers go into a test: both runtimes must agree
-python Tools/weave_seeds.py confirm --size 8x10 --pairs 6 --beads 6 --hedges 2 --seeds 17,204
+.              bare ground
+R G B          a flower in a pure colour
+Y M C          a flower in a blend - yellow (R+G), magenta (R+B), cyan (G+B)
+W              a flower holding every channel. It can never be mixed into again
+o              a cocoon with a critter in it - one crack opens it
+O              a cocoon that takes two
+#              old wood - no bunch and no wash crosses it, and nothing grows on it
 ```
 
-A sweep **refuses** rather than reports: a board it could not measure to the end, one short of the
-beads or hedges its rung asked for, or one whose hedges are scenery is not a board a ladder may
-use. High-toll boards are rare — expect to sweep tens of thousands of seeds per rung — which is
-why the pool mode exists and why the sweep runs across every core.
+`colours` is the **basket**: the colours dealt one per tap, repeating for ever. It is written in
+`R`, `G` and `B` only — **a blend is never dealt**, because a blend handed over is the one decision
+the mode has in it. Anything else is refused rather than ignored.
 
-**`python Tools/verify/weave.py` is the gate that matters most for this mode.** A grove is
-generated on a desktop at authoring time and again on the player's phone, so "the same seed deals
-the same board everywhere" is the property the whole mode rests on and nothing else checks it. It
-builds every shipped grove on .NET 8 *and* on Unity's own Mono and diffs the boards, the beads,
-the hedges and the difficulty. Nothing that decides a cell may be a `float` — see *Hard-won facts*
-for the 1.3 that dealt two different opening groves.
+The letters are the game's own — `Energy.Letter`, the same ones a glade's critters and conduits
+use — so the arithmetic an author reasons in is the arithmetic four chapters of glades already
+taught the player.
+
+**Every flower is drawn as the same four-petal shape whatever colour it is**, except `W`, which
+gets eight — because white is the only one whose difference is a *rule* (nothing can be mixed
+into it) rather than a colour. So an author composing a grove is composing in colour alone, and
+what reads as a bunch on paper reads as a bunch on the board. `BudFlower` is the single answer to
+that and the legend above the grove asks the same one, so a chip and a cell can never disagree.
+
+**A grove's celebration is content only in its words.** The four rungs a chain earns — GREAT,
+AMAZING, EPIC, LEGENDARY — are `mode.bud.chain_*` strings and nothing else: which rung a chain
+lands on is `BudChain.WordKey`, how loudly it is drawn is `BudChain.WordPointsFor`, and how long
+it all takes is `BudTempo`. If a chapter ever wants a different voice, translate the four
+strings; do not add a fifth rung without moving the ladder, because the rung index is what picks
+the colour and the size.
+
+**The colour legend above the grove is derived, so there is nothing to author.** `BudMixing`
+builds the three recipes from the same masks the board mixes with, and each is drawn on a card of
+its own so the row reads as three statements rather than as thirteen things in a box. It takes a
+strip off the top of the screen (`BudBand.BoardCeiling`), which is checked by `BudLegendTests`
+rather than argued about — do not add a fourth chip without re-running it.
+
+**There is no difficulty number here and there must never be one.** Par is the fewest taps that
+free every critter, found by search, and both star lines derive from it. Room above par is
+`spare`, counted in **taps**, and defaults to 5.
+
+### The rule, in three lines
+
+```
+tap a flower      the colour in hand is OR-ed into it. Red + green in hand = yellow.
+                  A tap that would change nothing is refused, not swallowed.
+three alike       any bunch of 3+ touching flowers of one colour bursts.
+a burst washes    its colour into every flower it touches - which makes more bunches,
+                  which makes more. A cocoon beside any of it takes one crack per wave.
+```
+
+### What makes a grove good
+
+Not hard — *good*. This mode is built against a feeling rather than a difficulty (invariant 20k),
+so two of the usual readings are read backwards:
+
+```
+ways      how many different plays of exactly par taps win.
+          WARNED BELOW 2 - one shortest play means the grove is a puzzle, which this
+          mode is deliberately not. Everywhere else in this game a high count is the warning.
+careless  what a player who always taps whatever sets off the biggest chain spends.
+          WARNED WHEN THEY CANNOT FINISH - this is the bar rather than a difficulty
+          reading. Everywhere else a careless player finishing is the complaint.
+nodes     what proving par costs, which the player's device pays once per level.
+          Warned above 20,000, refused above 60,000. Branching is the flower count, so the
+          cheap fix is a shorter answer - a cocoon nearer the fuse, never a bigger board.
+```
+
+**Author the layout, then sweep the basket.** That split is what makes this mode cheap to author:
+the layout decides what the grove *looks* like and the basket decides how it *plays*, and only the
+second is worth searching. Twenty-four baskets gave the shipped layout a par of 3; the one taken
+deals all three colours, so the rotation the player can see under the grove is visible on the very
+first board rather than being a rule they take on trust.
+
+**Blends are what make a chain possible, so a grove of pure colour is flat.** A red beside a green
+is one tap from being two yellows; two yellows and a red are one tap from a bunch. The shipped
+board runs about half blends, which is what gives it a thirteen-flower opening tap and still a par
+of 3.
+
+**A board must be authored settled.** Three alike already touching bursts in the first frame — the
+player is shown a chain they did not cause, and par is measured against a position they never met.
+Both gates refuse it and name the cell.
+
+**Where the cocoons go decides par far more than how many flowers there are.** A cocoon inside the
+fuse is freed by the big chain for nothing; one out at the edge needs a tap of its own. The shipped
+board has three of each, which is why its shortest answer is one huge tap and two small ones.
+
+**Every cocoon needs a flower beside it.** Nothing in a grove ever grows one back, so a cocoon
+walled in by bare ground and old wood can never be cracked — the build gate refuses that by reading
+the board rather than by searching it, because "nobody can finish this" tells an author nothing
+about what to move.
+
+**Watch the derived star lines on a short par, because no gate does.** `CheckStarBands` reads the
+*factors* rather than the thresholds, deliberately: at par 1 or 2 all three round onto the same
+number however they are set, and reporting that would be a complaint about board size. On this
+mode pars are that short, so it is worth reading the tool's own output — the shipped board was
+moved from par 2 to par 3 for exactly this reason, since `ceil(2 x 1.20)` and `ceil(2 x 1.40)` are
+both 3 and the two-star band was empty.
+
+**A white flower is a wall, not a flower.** It holds every channel, so nothing can be mixed into
+it — it will never burst and never join a bunch. One or two make a grove read richer; a grove of
+them is a board that can be neither won nor ended, and `BudBoard.AnyMove` is what notices.
 
 ## What makes a glade hard
 
@@ -1334,7 +1347,7 @@ Two numbers, and the difference between them is the feature:
 **`graceLevels` is where the gate does not apply.** The first three levels of the first
 chapter of *each mode* cost no heart at all — lose them, restart them or walk away from
 them as often as you like. It is per mode rather than once per account because a mode
-shipped a year from now is somebody's first board of that mode: Lightweave is dragged
+shipped a year from now is somebody's first board of that mode: Budburst is tapped
 rather than tapped and is lost on ink rather than turns, so a player meeting it is a
 beginner again in every sense that decides whether taking a heart off them is fair. The
 window is counted inside the first chapter and stops at that chapter's end, so the same
@@ -1800,6 +1813,92 @@ Three things about that script are worth knowing before changing the artwork:
 The subject in the foreground layer is fitted to 286 px of the 432 px canvas — just
 under the 72 dp every launcher mask keeps — so the crown and the plinth survive a
 circular mask.
+
+## Sound
+
+Twenty clips under `Assets/Game/Audio/Sfx/`, three music tracks beside them, and one
+player — `Audio` (Presentation). A sound is asked for by name: `Audio.Sfx("click")`,
+or `Audio.SfxVaried`, which is the same thing with a little random detune so a repeat
+never lands on exactly the same pitch twice.
+
+**The twenty names are a fixed vocabulary.** `AssetManifest.Sfxs` preloads exactly
+those names and nothing else, and `python Tools/verify/sfxnames.py` proves the three
+lists agree — what the code plays, what is on disk, and what is preloaded. Before that
+check existed a misspelled name was a runtime `InvalidKeyException` and a silence that
+shipped green (`Audio.Sfx("tap")` did, twice), and `press.wav` sat in the project for
+months played by nobody. Adding a twenty-first sound means adding it in three places:
+`Tools/sfx.tsv`, `AssetManifest.Sfxs`, and the call site.
+
+### The clips are cut by a tool, never edited by hand
+
+`python Tools/make_sfx.py` cuts all twenty out of the licensed source pack against
+`Tools/sfx.tsv` — one row per name, giving the source file, a transposition, a length
+cap, and a gain trim. `--check` proves the shipped wavs are what the table says, the
+same bargain `make_shop_art.py` strikes for the shop's money ladders.
+
+The reason to cut rather than copy is that four properties have to hold across the
+whole set, and not one of them is a property of any single file:
+
+- **One perceived loudness.** The volumes authored at the 115 call sites — `.28`,
+  `.34`, `.42`, `.5`, `.62`, `.9` — only mean something if the samples underneath them
+  are the same size to begin with. They were not: the previous set ranged over a
+  six-fold spread of RMS, so some of those numbers were compensating for the sample
+  rather than expressing a mix.
+- **A peak ceiling.** The game *pitches* these at playback — `lit` climbs to three
+  times its recorded rate — and pitching resamples, which overshoots a signal already
+  at full scale. A dB of headroom is what stops the happiest moment in the game being
+  the one that clips.
+- **Short where repeated.** `Audio.PlayOne` is a ten-voice round-robin that calls
+  `Stop()` on reuse, so the eleventh overlapping one-shot cuts the first off mid-tail.
+  `--report` prints, per clip, how many copies of itself it has to stand alongside at
+  its busiest moment; over ten is an error rather than a judgement call. The old `lit`
+  was 1.06 s against a ladder that fires twelve notes 70 ms apart — fifteen overlapping
+  copies, so it was cutting itself off every time anybody solved anything.
+- **Audible on a phone.** A phone speaker reproduces very little below about 500 Hz, so
+  a beautifully warm sample can simply be missing on the device most players use.
+  `--report` prints the spectral centroid for exactly this, and it is the reading that
+  rejected the first round of choices.
+
+### What the set is made of
+
+Three materials and one scale. **Wood** is the interface (`click`, `back`, `tick`,
+`tock`, `pop`, `pop2`, `blocked`, `shatter`), **stone** is movement (`rotate_a`,
+`rotate_b`, `whoosh`, `chest`), a **mallet** is the ladder (`lit`), and **bells** are
+reward (`chime`, `chime2`, `bell`, `coin`, `star`, `unlock`, `win`). Twelve source
+files carry the twenty slots, and the reuse is deliberate — a small palette is what
+makes a set sound like one place rather than twenty samples. Where a source is used
+twice the two sit an interval apart, so they read as two notes of one instrument:
+`tick` and `tock` are literally the same block of wood a fourth apart.
+
+Every transposition in the table is a **pentatonic** step. That matters more here than
+it would in most games because this one overlaps sound constantly — `lit` climbs twelve
+notes over two octaves on a single turn, `coin` runs dozens of tokens in two seconds,
+and three modes fire cascade voices on a rising ladder. A pentatonic set has no
+semitone in it, so no two of those can collide into a beat.
+
+### Judging it is a listening job, and there is a tool for that too
+
+`python Tools/make_sfx.py --contact sfx.html` writes a single self-contained page that
+*plays* the set. `--check` proves reproduction and says nothing about quality — the
+same gap `make_shop_art.py --contact` exists to close for pictures, except that a
+contact sheet for sound has to be pressed rather than looked at.
+
+Three controls per clip, and the last two are the ones that matter. **one** is the clip
+as it ships. **ladder** is the clip at the pitches the game really uses, which is the
+only way to hear whether `lit` reads as a phrase or as a sample being sped up. **run**
+is the clip at the rate the game really repeats it, which is how `coin` at nine a
+second is judged. Above them are four **scenes** — a turn, a solve, a payout, the wheel
+— assembled from the real delays, pitches and volumes. Every wrong choice this set has
+made was inaudible one clip at a time.
+
+### Import settings are written by a tool as well
+
+`python Tools/sfx_meta.py` writes one `AudioImporter` block for all twenty, preserving
+each file's GUID — Addressables keys on the GUID, so a regenerated `.meta` would
+silently unaddress every sound in the game. They are PCM, `DecompressOnLoad`, preloaded,
+and **`normalize: 0`**. That last one is the one to leave alone: Unity's importer
+peak-normalises when it downmixes, which would undo the loudness match and leave nothing
+at all to notice — the game would simply be mixed wrong.
 
 ## Strings
 

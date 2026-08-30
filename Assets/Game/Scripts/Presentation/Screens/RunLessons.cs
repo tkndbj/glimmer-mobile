@@ -66,7 +66,7 @@ namespace GlimmerGrove
     /// begin — and teaching is a third that is bigger than both put together: a queue, a chain,
     /// a modal, a latch, a toast and a header control. Folding it in made one type that had to
     /// be read whole before any part of it could be changed, which is the shape this project
-    /// keeps taking apart (<c>WeaveRun</c> into five, <c>ChestOverlay</c> into
+    /// keeps taking apart (<c>RippleRun</c> into four, <c>ChestOverlay</c> into
     /// <c>RewardFlight</c>). Split, "when may a run start" is thirty lines beside the stake and
     /// this is the rest.
     /// </para>

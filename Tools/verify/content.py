@@ -6,6 +6,7 @@ from collections import deque
 
 import fall                                  # Lightfall's rules, mirrored - see fall.py
 import keeper                                # Groovekeeper's rules, mirrored - see keeper.py
+import bud                                   # Budburst's rules, mirrored - see bud.py
 
 ROOT = os.path.join(os.path.dirname(os.path.abspath(__file__)),
                     "..", "..", "Assets", "StreamingAssets", "Content")
@@ -179,61 +180,150 @@ DEFAULT_BUDGET_FACTOR = 1.60
 GOLD_FACTOR, SILVER_FACTOR = 1.20, 1.40
 
 
-MODE_BLOCKS = ("fall", "keeper", "weave")
+MODE_BLOCKS = ("fall", "keeper", "bud")
 
 
-#: What a Lightweave grove may author, mirroring `WeaveMode.TryRead` and `WeaveGenerator`.
-#:
-#: A weave board is *generated*, so almost nothing about it can be proved without Unity -- but
-#: what is in the file can be, and every one of these is a refusal rather than a clamp on the
-#: other side. That matters more here than it looks: `TryRead` returning false does not deal a
-#: gentler board, it drops the level, so an out-of-range number is a chapter that quietly loses a
-#: rung. Catching it here says so on the machine that authored it instead of in an Editor log.
-WEAVE_SIZE = (4, 9, 4, 12)          # width low/high, height low/high
-WEAVE_PAIRS = (2, 6)                # one per colour the light makes; white is being awake
+#: Mirrors `BudValidator`. Lower than the other two because branching is the flower count.
+BUD_NODE_WARNING, BUD_NODE_CEILING = 20_000, 60_000
+
+#: Below this many shortest plays the grove is a puzzle, which this mode is deliberately not.
+BUD_TOO_FEW_WAYS = 2
 
 
-def most_hedges(width, height):
-    """`WeaveGenerator.MostHedges`: a sixth of the grove's span, never more than three."""
-    return min(3, (width + height) // 6)
+def check_bud(lid, chapter_id, level, block):
+    """Everything a Budburst grove has to prove, mirroring `BudValidator`.
 
+    Two of the checks are the house rules read backwards and that is deliberate: everywhere else
+    a board almost anything finishes is a warning (invariant 5d) and a careless player finishing
+    is one too. This mode's brief is a board almost anything finishes, so what is worth refusing
+    is a grove a careless player *cannot* finish.
+    """
+    empty = dict(id=lid, chapter=chapter_id, w=0, h=0, par=0, budget=0,
+                 gold=0, silver=0, lamps=0, sources=0, fragile=0, bound=0,
+                 crossings=0, briars=0, mode='bud',
+                 ways=0, greedy=-1, nodes=0, buds=0, cocoons=0, ready=0, deal='')
 
-def check_weave(lid, block):
-    """Everything about a grove that is in the file rather than in the seed."""
-    w = block.get('width', 7)
-    h = block.get('height', 9)
-    pairs = block.get('pairs', 4)
-    beads = block.get('beads', 0)
-    hedges = block.get('hedges', 0)
+    w, h = block.get('width') or 0, block.get('height') or 0
+    rows = block.get('rows') or []
+    deal = block.get('colours') or ''
 
-    lo_w, hi_w, lo_h, hi_h = WEAVE_SIZE
-    if not (lo_w <= w <= hi_w and lo_h <= h <= hi_h):
-        errors.append("%s: is a %dx%d grove; a weave is %d..%d by %d..%d"
-                      % (lid, w, h, lo_w, hi_w, lo_h, hi_h))
+    if not (bud.MIN_SIDE <= w <= bud.MAX_SIDE):
+        errors.append("%s: a grove is %d..%d wide; this one says %d"
+                      % (lid, bud.MIN_SIDE, bud.MAX_SIDE, w))
+        return empty
 
-    if not WEAVE_PAIRS[0] <= pairs <= WEAVE_PAIRS[1]:
-        errors.append("%s: asks for %d pairs; it is %d..%d, one per colour the grove has"
-                      % (lid, pairs, WEAVE_PAIRS[0], WEAVE_PAIRS[1]))
+    if not (bud.MIN_SIDE <= h <= bud.MAX_SIDE):
+        errors.append("%s: a grove is %d..%d tall; this one says %d"
+                      % (lid, bud.MIN_SIDE, bud.MAX_SIDE, h))
+        return empty
 
-    if beads > pairs:
-        errors.append("%s: asks for %d beads on %d pairs; it is at most one per channel - a "
-                      "channel with two is a tour to remember rather than a route to find"
-                      % (lid, beads, pairs))
+    try:
+        grove = bud.Grove(rows, deal)
+    except (ValueError, KeyError, IndexError) as bad:
+        errors.append("%s: %s" % (lid, bad))
+        return empty
 
-    if hedges > most_hedges(w, h):
-        errors.append("%s: asks for %d hedge(s) on a %dx%d grove; it is at most %d - every "
-                      "hedge takes a way out of the grove without taking any ground, and enough "
-                      "of them leave a corridor with no decisions left in it"
-                      % (lid, hedges, w, h, most_hedges(w, h)))
+    if grove.w != w or grove.h != h:
+        errors.append("%s: declares %dx%d and writes %dx%d" % (lid, w, h, grove.w, grove.h))
+        return empty
 
-    # Not an error, because a board with no seed is still solvable - it is simply a board of
-    # entirely unknown difficulty, which is exactly what `Survey Lightweave` and weave_seeds.py
-    # exist to stop shipping. `Tools/verify/weave.py` refuses one outright, because it cannot
-    # reproduce an id hash without the whole content layer.
-    if block.get('seed', 0) <= 0:
-        warnings.append("%s: authors no seed, so its board is whatever its id hashes to and its "
-                        "difficulty was never measured - pick one with Tools/weave_seeds.py"
-                        % lid)
+    start = bud.Board(grove)
+
+    if not start.shut:
+        errors.append("%s: nobody is shut in on this grove, so it is already finished" % lid)
+        return empty
+
+    if not start.flowers:
+        errors.append("%s: this grove has no flower on it, so there is nothing to tap" % lid)
+        return empty
+
+    # A grove holding a bunch of three before a tap is spent is a board that goes off on its own
+    # in the first frame - the player is shown a chain they did not cause, and par is measured
+    # against a position they never met. Mirrors `BudValidator.Settled`.
+    blobs = start.groups()
+    if blobs:
+        where = blobs[0][1][0]
+        errors.append("%s: this grove already holds a bunch of three alike at %d,%d, so it "
+                      "bursts before the player has touched it - author a settled board"
+                      % (lid, where % grove.w, where // grove.w))
+        return empty
+
+    # A cocoon with no flower beside it can never be cracked, because nothing here grows one
+    # back. The search catches it as "nobody can finish this", which is true and says nothing
+    # about what to move. Mirrors `BudValidator.Reachable`.
+    for i in range(grove.count):
+        if grove.ground[i] != "c":
+            continue
+        if any(grove.ground[n] == "f" for n in grove.beside(i)):
+            continue
+        errors.append("%s: the cocoon at %d,%d has no flower beside it, and nothing in a grove "
+                      "ever grows one - so no chain can ever crack it"
+                      % (lid, i % grove.w, i // grove.w))
+
+    par, ways, nodes, proved = bud.search(rows, deal)
+
+    if not proved:
+        errors.append("%s: this grove could not be proved inside %d positions (it looked at "
+                      "%d) or within %d taps - the player's device runs the same search to work "
+                      "out par" % (lid, bud.NODE_BUDGET, nodes, bud.MAX_TAPS))
+        return empty
+
+    if par < 1:
+        errors.append("%s: no order of taps frees every critter on this grove" % lid)
+        return empty
+
+    budget_h = factor_of(level, 'budgetFactor', bud.BUDGET_HUNDREDTHS)
+    gold_h = factor_of(level, 'goldFactor', bud.GOLD_HUNDREDTHS)
+    silver_h = factor_of(level, 'silverFactor', bud.SILVER_HUNDREDTHS)
+
+    spare = block.get('spare') or bud.DEFAULT_SPARE
+    budget = (par + spare) if budget_h > 0 else 0
+
+    if budget_h > 0 and budget_h != bud.BUDGET_HUNDREDTHS:
+        errors.append("%s: this grove authors budgetFactor %.2f, which does nothing - room "
+                      "above par is 'spare', counted in taps" % (lid, budget_h / 100.0))
+
+    gold, silver = bud.over(par, gold_h), bud.over(par, silver_h)
+
+    if gold_h >= silver_h:
+        errors.append("%s: goldFactor and silverFactor leave the two-star band empty" % lid)
+    elif budget and budget <= gold:
+        errors.append("%s: the satchel is at or under the three-star line, so every surviving "
+                      "run would be a three-star run" % lid)
+    elif budget and budget <= silver:
+        warnings.append("%s: the satchel is inside the two-star band, so one star can never be "
+                        "scored" % lid)
+
+    if nodes > BUD_NODE_CEILING:
+        errors.append("%s: proving this grove took %d positions, above the %d a level may "
+                      "cost - the player's device runs the same search when somebody opens it"
+                      % (lid, nodes, BUD_NODE_CEILING))
+    elif nodes > BUD_NODE_WARNING:
+        warnings.append("%s: proving this grove took %d positions against the %d a level is "
+                        "expected to cost (the refusal is at %d)"
+                        % (lid, nodes, BUD_NODE_WARNING, BUD_NODE_CEILING))
+
+    if ways < BUD_TOO_FEW_WAYS:
+        warnings.append("%s: there is only one play of %d taps that frees every critter here, "
+                        "so this grove is a puzzle rather than a place to make a mess"
+                        % (lid, par))
+
+    careless = bud.careless(rows, deal, budget or (par + bud.DEFAULT_SPARE))
+    if careless < 0:
+        warnings.append("%s: a player who always taps whatever sets off the biggest chain never "
+                        "finishes this grove, which is the bar this mode is held to" % lid)
+    elif budget and careless > budget:
+        warnings.append("%s: a careless player takes %d taps against a satchel of %d"
+                        % (lid, careless, budget))
+
+    return dict(id=lid, chapter=chapter_id, w=grove.w, h=grove.h, par=par,
+                budget=budget, gold=gold, silver=silver, lamps=0, sources=0, fragile=0,
+                bound=0, crossings=0, briars=0, mode='bud',
+                ways=ways, greedy=careless, nodes=nodes,
+                buds=start.flowers, cocoons=start.shut,
+                ready=len(set(grove.colour[i] for i in range(grove.count)
+                              if grove.ground[i] == "f")),
+                deal=deal)
 
 
 #: Where a well stops being cheap to prove, and where it stops being shippable. Mirrors
@@ -585,9 +675,9 @@ def check_level(level, chapter_id):
         if level.get('rows'):
             errors.append("%s: carries both a grid and a '%s' block" % (lid, claimed[0]))
 
-        # Lightfall and Groovekeeper are the two modes whose whole level is in the file, so they
-        # are the two this gate can prove without Unity. A weave is generated from a seed, so it
-        # is checked where it can be, which is the Editor.
+        # Every mode that ships now authors its whole level in the file, so every one of them is
+        # provable here rather than only in the Editor. That was not always true - a Lightweave
+        # board was generated from a seed, and the mode has been removed.
         if claimed[0] == 'fall':
             return check_fall(lid, chapter_id, level, block)
 
@@ -596,8 +686,11 @@ def check_level(level, chapter_id):
         if claimed[0] == 'keeper':
             return check_keeper(lid, chapter_id, level, block)
 
-        if claimed[0] == 'weave':
-            check_weave(lid, block)
+        # Budburst is the third, and for the same reason: everything about a grove is in the
+        # file, so the flowers, the basket and the search that turns the two into par can all be
+        # proved with no Unity anywhere.
+        if claimed[0] == 'bud':
+            return check_bud(lid, chapter_id, level, block)
 
         return dict(id=lid, chapter=chapter_id,
                     w=block.get('width', 0), h=block.get('height', 0), par=0, budget=0,
@@ -1764,6 +1857,7 @@ def daily_income(progression):
 BOARD_VECTORS = os.path.join(os.path.dirname(os.path.abspath(__file__)), "board-vectors.json")
 FALL_VECTORS = os.path.join(os.path.dirname(os.path.abspath(__file__)), "fall-vectors.json")
 KEEPER_VECTORS = os.path.join(os.path.dirname(os.path.abspath(__file__)), "keeper-vectors.json")
+BUD_VECTORS = os.path.join(os.path.dirname(os.path.abspath(__file__)), "bud-vectors.json")
 
 # The marker the four-armed-tile rule's warning carries, in all three copies of it.
 DECIDES_MARKER = "still finishes the glade"
@@ -1913,6 +2007,110 @@ def run_keeper_vectors():
 
     return (f"keeper vectors: {len(cases)} case(s), the offline rules agree"
             if not bad else f"keeper vectors: {len(bad)} disagreement(s)")
+
+
+def run_bud_vectors():
+    """Runs `bud-vectors.json` through this file's copy of Budburst's rules.
+
+    The chain rule exists twice - `BudBoard`/`BudSolver`, which is what ships, and `bud.py`,
+    which is what this gate and the chapter script run because they have no Unity anywhere.
+    Invariant 9a's answer for a board rule: the vector file is the contract, this proves the
+    Python side of it and `BudVectorTests` proves the C# side.
+
+    The cases are the places a loose transcription reads plausibly and answers differently - a
+    bunch of two going off, a burst forgetting to wash its colour outward, old wood carrying a
+    chain, a cocoon taking every crack of a wave at once, and a tap that mixes nothing being
+    allowed to spend a colour.
+
+    Every case with a par also carries the taps of one shortest play and what each one came to,
+    which is the half par alone cannot pin: two copies can agree exactly about how many taps a
+    grove costs and still disagree about how far the chain ran.
+    """
+    doc = json.load(open(BUD_VECTORS, encoding="utf-8"))
+    cases = doc.get("cases") or []
+    if not cases:
+        errors.append("bud-vectors.json has no cases")
+        return "bud vectors: none found"
+
+    bad = []
+    for case in cases:
+        name = case.get("name", "?")
+        try:
+            grove = bud.Grove(case["rows"], case["colours"])
+        except (ValueError, KeyError, IndexError) as why:
+            bad.append("%s: %s" % (name, why))
+            continue
+
+        start = bud.Board(grove)
+        par, ways, _, proved = bud.search(case["rows"], case["colours"])
+        best, _where = bud.biggest(case["rows"], case["colours"])
+
+        for label, got, want in (("proved", proved, case["proved"]),
+                                 ("par", par, case["par"]),
+                                 ("flowers", start.flowers, case["flowers"]),
+                                 ("cocoons", start.shut, case["cocoons"]),
+                                 ("bestBurst", best[0], case["bestBurst"]),
+                                 ("bestWaves", best[1], case["bestWaves"]),
+                                 ("bestFreed", best[2], case["bestFreed"])):
+            if got != want:
+                bad.append("%s: %s is %r, vectors say %r" % (name, label, got, want))
+
+        if case["par"] > 0:
+            if ways != case["ways"]:
+                bad.append("%s: ways is %r, vectors say %r" % (name, ways, case["ways"]))
+
+            careless = bud.careless(case["rows"], case["colours"],
+                                    case["par"] + bud.DEFAULT_SPARE)
+            if careless != case["careless"]:
+                bad.append("%s: careless is %r, vectors say %r"
+                           % (name, careless, case["careless"]))
+
+        board = bud.Board(grove)
+        for nth, beat in enumerate(case.get("beats") or []):
+            at = beat["tap"]
+            allowed = board.can_tap(at)
+
+            if allowed != beat["allowed"]:
+                bad.append("%s: tap %d allowed is %r, vectors say %r"
+                           % (name, nth + 1, allowed, beat["allowed"]))
+
+            b, w, f, c = board.tap(at) if allowed else (0, 0, 0, 0)
+
+            for label, got in (("burst", b), ("waves", w), ("freed", f), ("cracked", c),
+                               ("flowersLeft", board.flowers), ("shut", board.shut)):
+                if got != beat[label]:
+                    bad.append("%s: tap %d %s is %r, vectors say %r"
+                               % (name, nth + 1, label, got, beat[label]))
+
+
+    # A vector set that has quietly lost its teeth is worse than none: it passes, it is printed
+    # beside the word "ok", and nothing says the rule stopped being checked.
+    covers = dict(chain=False, unfinishable=False, nomove=False, tough=False, wood=False,
+                  refused=False)
+    for case in cases:
+        if case["bestWaves"] >= 3:
+            covers["chain"] = True
+        if case["par"] == 0:
+            covers["unfinishable"] = True
+        if case["proved"] and case["par"] == 0 and case["flowers"] > 0:
+            covers["nomove"] = True
+        if case["tough"] > 0:
+            covers["tough"] = True
+        if case["stones"] > 0:
+            covers["wood"] = True
+        if any(not beat["allowed"] for beat in (case.get("beats") or [])):
+            covers["refused"] = True
+
+    for what, held in covers.items():
+        if not held:
+            bad.append("no case covering '%s', so nothing here would notice that rule going away"
+                       % what)
+
+    for b in bad:
+        errors.append("bud vectors: " + b)
+
+    return (f"bud vectors: {len(cases)} case(s), the offline rules agree"
+            if not bad else f"bud vectors: {len(bad)} disagreement(s)")
 
 
 def run_board_vectors():
@@ -2131,17 +2329,30 @@ def main():
     if others:
         print()
         print("other modes:")
-        print(f"  {'level':<24}{'mode':<10}{'well':<8}{'motes':<7}{'head':<6}"
-              f"{'par':<5}{'3*':<5}{'2*':<5}{'supply':<8}{'ways':<6}{'greedy':<8}nodes")
+        print(f"  {'level':<24}{'mode':<9}{'board':<7}{'par':<5}{'3*':<5}{'2*':<5}"
+              f"{'budget':<8}{'ways':<6}{'greedy':<8}{'nodes':<8}what it holds")
+
         for c in others:
-            if c['mode'] != 'fall':
-                print(f"  {c['id']:<24} {c['mode']:<10} {c['w']}x{c['h']}")
-                continue
-            greedy = c['greedy'] if c['greedy'] >= 0 else '-'
-            print(f"  {c['id']:<24}{c['mode']:<10}{str(c['w']) + 'x' + str(c['h']):<8}"
-                  f"{c['fall_motes']:<7}{c['headroom']:<6}{c['par']:<5}{c['gold']:<5}"
-                  f"{c['silver']:<5}{c['budget'] or 'free':<8}{c['ways']:<6}{str(greedy):<8}"
-                  f"{c['nodes']}")
+            # Everything except the classic glade is proved here now, so every one of them has
+            # the same three readings to print - par against the ladder, `ways` for invariant 5d,
+            # and `nodes` for what the player's device pays. What differs is the last column,
+            # which is whatever that mode's board is made of.
+            greedy = c['greedy'] if c.get('greedy', -1) >= 0 else '-'
+
+            if c['mode'] == 'fall':
+                held = f"{c['fall_motes']} mote(s), {c['headroom']} headroom, deals {c['deal']}"
+            elif c['mode'] == 'keeper':
+                held = f"{c['beds']} bed(s), {c['hearts']} heartbed(s), deals {c['deal']}"
+            elif c['mode'] == 'bud':
+                held = (f"{c['buds']} flower(s) in {c['ready']} colour(s), "
+                        f"{c['cocoons']} critter(s) shut in, deals {c['deal']}")
+            else:
+                held = ""
+
+            print(f"  {c['id']:<24}{c['mode']:<9}{str(c['w']) + 'x' + str(c['h']):<7}"
+                  f"{c['par']:<5}{c['gold']:<5}{c['silver']:<5}"
+                  f"{str(c['budget'] or 'free'):<8}{c['ways']:<6}{str(greedy):<8}"
+                  f"{c['nodes']:<8}{held}")
 
     if grove:
         print(f"\ngrove: {grove['cols']}x{grove['rows']} floor, {grove['slots']} tile(s), "
@@ -2266,19 +2477,23 @@ def main():
         turns = carry.get("turns", 15)
         if turns < 0:
             turns = 15
-        ink = carry.get("ink", 20)
-        if ink < 0:
-            ink = 20
         motes = carry.get("motes", 6)
         if motes < 0:
             motes = 6
         tiles = carry.get("tiles", 6)
         if tiles < 0:
             tiles = 6
+        taps = carry.get("taps", 4)
+        if taps < 0:
+            taps = 4
 
+        # `ink` and `stones` are deliberately absent. They were Lightweave's and Ripplewake's
+        # units, both modes are gone, and the fields are kept in the DTO only so a published table
+        # still carrying the key does not read as malformed - printing one here would say a mode
+        # this build cannot play is still priced.
         print(f"continue: {gems} gem(s) for +{turns} turn(s) on a glade, "
-              f"+{ink} cell(s) of ink on a weave, +{motes} mote(s) on a well, "
-              f"+{tiles} tile(s) on a groove")
+              f"+{motes} mote(s) on a well, +{tiles} tile(s) on a groove, "
+              f"+{taps} tap(s) on a grove")
 
         # What the price means, said in the two units a player actually earns gems in.
         # A price nobody can reach is the failure mode this whole block is content for.
@@ -2368,6 +2583,7 @@ def main():
     print(run_board_vectors())
     print(run_fall_vectors())
     print(run_keeper_vectors())
+    print(run_bud_vectors())
 
     for w in warnings:
         print("WARN  " + w)

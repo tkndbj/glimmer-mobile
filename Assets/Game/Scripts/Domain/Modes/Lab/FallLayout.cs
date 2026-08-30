@@ -12,7 +12,7 @@ namespace GlimmerGrove.Modes
     /// board whose future is random, so a level could author no goal, no budget and no star
     /// line, and two players on the same glade were not playing the same glade. Deleting the
     /// generator also deletes a whole class of divergence — a deal that differs between .NET,
-    /// Mono and IL2CPP is <c>WeaveGenerator</c>'s float bug wearing a different hat, and this
+    /// Mono and IL2CPP is Lightweave's generator float bug wearing a different hat (see *Hard-won facts*), and this
     /// one would have been invisible because nothing was checking.
     /// </para>
     /// <para>

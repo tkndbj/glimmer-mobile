@@ -118,7 +118,7 @@ namespace GlimmerGrove
         /// <see cref="OnPresented"/> ran at a moment when <c>Play</c> may not have: the lesson
         /// toast could be thrown over a screen with no board on it, and anything an override
         /// wants to do with the board it just built would find nothing and quietly do nothing.
-        /// <c>WeaveScreen</c> raises the one lesson this game has that no board can demonstrate,
+        /// <c>RippleScreen</c> raises the one lesson this game has that no board can demonstrate,
         /// which is exactly the shape of thing that must not be skipped by a race.
         /// </para>
         /// <para>

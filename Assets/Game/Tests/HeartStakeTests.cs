@@ -111,12 +111,12 @@ namespace GlimmerGrove.Tests
             }, 1);
             builder.Add(new ManifestChapterDto
             {
-                id = "w01_weave", order = 30, version = 1, mode = "weave",
+                id = "b01_thicket", order = 30, version = 1, mode = "bud",
                 levels = new[] { "w1", "w2", "w3", "w4" },
             }, 1);
             builder.Add(new ManifestChapterDto
             {
-                id = "w02_loom", order = 40, version = 1, mode = "weave",
+                id = "b02_grove", order = 40, version = 1, mode = "bud",
                 levels = new[] { "w5", "w6" },
             }, 1);
             return builder.Build();
@@ -164,8 +164,8 @@ namespace GlimmerGrove.Tests
         [Test]
         public void EveryModeGetsItsOwnOpening()
         {
-            // Why the window is per mode rather than once per account. Lightweave is dragged
-            // rather than tapped and is lost on ink rather than turns, so somebody arriving at
+            // Why the window is per mode rather than once per account. Budburst is tapped
+            // rather than turned and is lost on a satchel rather than on turns, so somebody arriving at
             // it having finished four glade chapters is a beginner again in every sense that
             // decides whether a heart should be taken off them.
             Grace(3);
@@ -227,9 +227,9 @@ namespace GlimmerGrove.Tests
 
             Assert.AreEqual(3, HeartStake.FreeLevelsIn(index, ChapterId.Parse("c01_one")));
             Assert.AreEqual(0, HeartStake.FreeLevelsIn(index, ChapterId.Parse("c02_two")));
-            Assert.AreEqual(3, HeartStake.FreeLevelsIn(index, ChapterId.Parse("w01_weave")),
+            Assert.AreEqual(3, HeartStake.FreeLevelsIn(index, ChapterId.Parse("b01_thicket")),
                             "a mode's own first chapter, not the catalog's");
-            Assert.AreEqual(0, HeartStake.FreeLevelsIn(index, ChapterId.Parse("w02_loom")));
+            Assert.AreEqual(0, HeartStake.FreeLevelsIn(index, ChapterId.Parse("b02_grove")));
         }
 
         [Test]
@@ -241,12 +241,12 @@ namespace GlimmerGrove.Tests
             var index = Catalog();
 
             Assert.AreEqual(4, HeartStake.FreeLevelsIn(index, ChapterId.Parse("c01_one")));
-            Assert.AreEqual(4, HeartStake.FreeLevelsIn(index, ChapterId.Parse("w01_weave")),
+            Assert.AreEqual(4, HeartStake.FreeLevelsIn(index, ChapterId.Parse("b01_thicket")),
                             "exactly the whole of a four-level chapter");
 
             Grace(HeartLimits.MaxGraceLevels);
             Assert.AreEqual(5, HeartStake.FreeLevelsIn(index, ChapterId.Parse("c01_one")));
-            Assert.AreEqual(4, HeartStake.FreeLevelsIn(index, ChapterId.Parse("w01_weave")));
+            Assert.AreEqual(4, HeartStake.FreeLevelsIn(index, ChapterId.Parse("b01_thicket")));
         }
 
         [Test]

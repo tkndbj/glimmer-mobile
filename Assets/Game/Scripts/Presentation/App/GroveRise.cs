@@ -431,7 +431,6 @@ namespace GlimmerGrove
             if (_finished) return;
 
             Audio.Sfx("unlock", .7f);
-            Haptic.Tap();
 
             foreach (var edge in _edges)
             {
@@ -532,7 +531,6 @@ namespace GlimmerGrove
             if (_finished) return;
 
             Audio.Sfx("lit", .62f);
-            Haptic.Tap();
 
             float span = (_region.Cols + _region.Rows) * GroveFloor.TileWidth * .5f;
 

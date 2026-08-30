@@ -146,9 +146,9 @@ namespace GlimmerGrove.AssetPipeline
 
         static readonly string[] Sfxs =
         {
-            "click", "back", "coin", "rotate_a", "rotate_b", "blocked", "unlock", "shatter",
-            "pop", "pop2", "whoosh", "chest", "win", "star", "tick", "tock", "bell",
-            "lit", "chime", "chime2",
+            "click", "back", "menu", "tip", "enter", "poke", "wheel", "collect", "reward", "coin", "rotate_a", "rotate_b", "blocked",
+            "unlock", "shatter", "burst", "free", "pop", "pop2", "whoosh", "chest", "win", "star",
+            "tick", "tock", "bell", "lit", "chime", "chime2",
         };
 
         /// <summary>Everything the game needs before the menu appears.</summary>
@@ -160,6 +160,14 @@ namespace GlimmerGrove.AssetPipeline
                 list.Add(AssetRequest.SpriteSet($"{ArtRoot}Critters/c{i}"));
 
             list.Add(AssetRequest.SpriteSet($"{ArtRoot}Fx/Victory"));
+
+            // **Budburst asks for no explosion art at all, and that is the third answer to
+            // it.** Two cuts from a licensed VFX pack were shipped and thrown away — the first
+            // took the pack's shader utility maps by mistake, the second was a correct cut of a
+            // smoke plume and still read as dust on a puzzle grid. The whole set is generated
+            // now (`Art.Flash`, `Wave`, `Glint`, `Bolt`), so there is nothing here to preload,
+            // nothing to address, nothing in the bundle and no frame where an Image is a white
+            // rectangle because the art had not arrived. See the explosions block in `Art`.
             list.Add(AssetRequest.SpriteSet($"{UiRoot}Coin"));
 
             // The streak flame. Global rather than scoped for the reason the coin is: it is

@@ -352,7 +352,11 @@ namespace GlimmerGrove
             // seconds on an event a player meets several times a session — which is one rumble
             // rather than two taps. The victory panel's payout lost its buzz for the same
             // reason; the sound and the light are what mark the moment.
-            Audio.Sfx(slice.IsBonus ? "unlock" : "chime2", .62f, slice.IsBonus ? 1.05f : 1.15f);
+            // One sound for every landing rather than two bells chosen by tier. The
+            // pair before it were struck metal, which is what a wheel of fortune must
+            // not sound like; how good the slice was is carried by the confetti below
+            // and by the figure that follows, not by swapping the instrument.
+            Audio.Sfx("wheel", .62f);
 
             if (won != null) Burst.Sparks(won, Vector2.zero, tint, slice.IsBonus ? 26 : 14,
                                           460f, 30f, .85f);
@@ -360,6 +364,11 @@ namespace GlimmerGrove
             // The wash and the confetti are for a slice that is genuinely worth it. Spending
             // them on every spin spends them on most spins and marks out none — the same
             // argument that keeps the victory panel's flash for a full star row alone.
+            // Confetti on every landing, sized by what was won. Spending it only on the top
+            // slice marked one spin in eight and left the rest looking like a near miss -
+            // every slice on this wheel pays, so every landing is worth something. The
+            // hierarchy is kept by *how much* falls and by the flash, which is still the
+            // bonus tiers' alone.
             if (slice.Percent >= _wheel.TopPercent && slice.IsBonus)
             {
                 Flow.Flash(new Color(1f, .95f, .78f), .34f, .55f);
@@ -368,6 +377,11 @@ namespace GlimmerGrove
             else if (slice.IsBonus)
             {
                 Flow.Flash(Pal.A(tint, 1f), .16f, .40f);
+                Burst.Confetti(Content, 32);
+            }
+            else
+            {
+                Burst.Confetti(Content, 18);
             }
 
             var cue = new Cue(this);

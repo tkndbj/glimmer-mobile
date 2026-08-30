@@ -610,8 +610,7 @@ namespace GlimmerGrove
                 }
             }
 
-            Audio.Sfx("win", .6f);
-            Haptic.Tap();
+            Audio.Sfx("reward", .6f);
             Burst.Sparks(_card, Vector2.zero, RewardArt.Tint(drop.Kind), 20, 420f, 30f, .8f);
         }
 

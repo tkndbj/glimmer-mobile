@@ -65,6 +65,47 @@ namespace GlimmerGrove.Tests
                            "a grove grows outward from what is standing, it is not sprinkled");
         }
 
+        /// <summary>
+        /// The one refusal the board cannot draw, told apart from the three it can.
+        ///
+        /// <para>
+        /// <c>KeeperView</c> answers a refused tap with a shake, which is the whole answer on
+        /// stone, on an occupied cell and on a heartbed — each of those is drawn as what it is
+        /// and the heartbed flares the colour it wants. Bare ground away from the grove looks
+        /// exactly like bare ground beside it, so there the shake is a control that did nothing
+        /// and a sentence is raised instead. Reporting any of the other three as a reach would
+        /// tell a player to tap closer to the grove on a cell that is <em>already</em> beside it,
+        /// which is worse than saying nothing — so every one of them is a case here.
+        /// </para>
+        /// </summary>
+        [Test]
+        public void OnlyBareGroundOutOfTheGrovesReachIsReportedAsAReach()
+        {
+            var board = new KeeperBoard(Grove(new[]
+            {
+                "..#...",
+                "..R...",
+                "..g...",
+                "......",
+            }, "GB"));
+
+            Assert.IsTrue(board.Adrift(Energy.G, board.Index(5, 3)),
+                          "bare, plantable, and beside nothing at all");
+
+            Assert.IsFalse(board.Adrift(Energy.G, board.Index(2, 2)),
+                           "a heartbed's own colour beside the sprig is simply plantable");
+            Assert.IsFalse(board.Adrift(Energy.B, board.Index(2, 2)),
+                           "a heartbed refusing a colour is not a cell out of reach");
+            Assert.IsFalse(board.Adrift(Energy.G, board.Index(2, 0)), "stone");
+            Assert.IsFalse(board.Adrift(Energy.G, board.Index(2, 1)), "already occupied");
+
+            // The two are exclusive on every cell of every board, which is what makes one the
+            // remainder of the other rather than a second opinion about the same question.
+            for (int i = 0; i < board.Count; i++)
+                Assert.IsFalse(board.CanPlant(Energy.G, i) && board.Adrift(Energy.G, i),
+                               "cell " + i + " is both plantable and out of reach");
+        }
+
         [Test]
         public void StoneTakesNoTileAndPassesNoLight()
         {

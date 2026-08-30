@@ -462,7 +462,6 @@ namespace GlimmerGrove
 
                 Audio.Sfx("unlock", .8f);
                 Audio.Sfx("shatter", .32f, 1.25f);
-                Haptic.Tap();
 
                 Tween.Shake((RectTransform)Content, 26f, .42f);
 
@@ -519,7 +518,6 @@ namespace GlimmerGrove
                 {
                     Tween.Punch(_name.transform, .16f, .34f);
                     Audio.Sfx("pop2", .55f, .95f);
-                    Haptic.Tap();
                 });
             });
 

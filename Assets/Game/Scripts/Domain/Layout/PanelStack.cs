@@ -8,7 +8,7 @@ namespace GlimmerGrove.Layout
     ///
     /// <para>
     /// <b>Here rather than beside the panel, for <c>ChapterMap</c>'s reason</b> (invariant 8a),
-    /// which <c>ReadoutRow</c> and <c>WeaveBand</c> have already earned twice: whether two
+    /// which <c>ReadoutRow</c> and <c>RippleBand</c> have already earned twice: whether two
     /// things on a screen overlap is arithmetic, and arithmetic inside a <c>MonoBehaviour</c>
     /// is arithmetic nothing can check. It became worth separating the moment the section count
     /// stopped being fixed — a height that varies with content is a layout with cases in it,

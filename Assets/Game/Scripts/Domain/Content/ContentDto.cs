@@ -327,7 +327,7 @@ namespace GlimmerGrove.Content
         // field here plus a LevelMode subclass, and nothing else in the game changes.
         public FallDto fall;
         public KeeperDto keeper;
-        public WeaveDto weave;
+        public BudDto bud;
 
         public float mapX;
         public float mapY;
@@ -479,87 +479,55 @@ namespace GlimmerGrove.Content
         public bool IsAuthored => width > 0 || height > 0;
     }
 
-    /// <summary>Lightweave's grove and its crystal hearts.</summary>
+    /// <summary>
+    /// Budburst's grove: the flowers standing in it and the colours it is dealt.
+    ///
+    /// <para>
+    /// <b>No seed and no difficulty number.</b> Par is the fewest taps that free every critter,
+    /// found by search (<c>BudSolver</c>), and both star lines and the tap budget derive from it.
+    /// </para>
+    /// </summary>
     [Serializable]
-    public sealed class WeaveDto
+    public sealed class BudDto
     {
         public int width;
         public int height;
 
         /// <summary>
-        /// How many crystal-and-critter pairs to join. Where they stand is generated, not
-        /// authored: see <c>WeaveGenerator</c>, which carves the solution first so the board is
-        /// solvable by construction. Authoring endpoints by hand would mean authoring boards
-        /// that mostly cannot be finished.
+        /// The grove, one row per line and one letter per column: <c>R</c>/<c>G</c>/<c>B</c> a
+        /// flower of that pure colour, <c>Y</c>/<c>M</c>/<c>C</c>/<c>W</c> one already wearing a
+        /// blend, <c>o</c> a cocoon with a critter in it, <c>O</c> one that takes two cracks,
+        /// <c>#</c> old wood, which no burst crosses, and <c>.</c> bare ground.
+        ///
+        /// A grove must be authored <em>settled</em> — no bunch of three alike already touching —
+        /// or it would go off before anybody had touched it.
         /// </summary>
-        public int pairs;
-
-        public int seed;
+        public string[] rows;
 
         /// <summary>
-        /// How many beads to drop on the grove — cells a channel must be threaded through, drawn
-        /// in the colour of the channel that owes them.
+        /// The ordered basket, written in <c>R</c>, <c>G</c> and <c>B</c>. It repeats, so one lap
+        /// is enough.
         ///
-        /// <para>
-        /// Where they land is generated, like the endpoints and for the same reason: a bead is
-        /// only worth placing on a cell that lies off every shortest route between its pair's
-        /// ends, and which cells those are is a fact about a board nobody has seen yet. See
-        /// <c>WeaveGenerator.Thread</c>.
-        /// </para>
-        /// <para>
-        /// Absent means none, which is what the first rungs of a chapter want: the mode's own
-        /// rule — join every pair, cross nothing — is worth meeting on its own before anything is
-        /// added to it.
-        /// </para>
+        /// <b>Pure colour only.</b> Every blend on the board is one the player made by mixing,
+        /// which is what keeps the basket three symbols wide however rich the grove gets.
         /// </summary>
-        public int beads;
+        public string colours;
 
         /// <summary>
-        /// How many hedges to grow on the grove — barriers along the edge <em>between</em> two
-        /// cells that no channel may cross.
+        /// Wasted taps this grove forgives above par. Absent takes <c>BudRules.DefaultSpare</c>.
         ///
-        /// <para>
-        /// Where they stand is generated, like the endpoints and the beads and for the same
-        /// reason: a hedge is only worth growing where it shuts a way somebody actually wanted,
-        /// and which ways those are is a fact about a board nobody has seen yet. The generator
-        /// grows them <em>before</em> it carves, so the arrangement it draws respects them by
-        /// construction, and it refuses a board whose hedges change no pair's shortest route --
-        /// see <c>WeaveGenerator.Fence</c> and <c>WeaveLayout.HedgesBite</c>.
-        /// </para>
-        /// <para>
-        /// Absent means none, which is what every grove of the first two chapters authors. A
-        /// hedge takes no ground and costs no cell: it removes a <em>way</em>, so a grove grows
-        /// rooms and doorways rather than obstacles, and par rises with it on its own.
-        /// </para>
+        /// A count rather than a factor, for <see cref="KeeperDto.spare"/>'s reason: a wasted tap
+        /// costs about the same wherever it happens — one colour spent and whatever small chain it
+        /// set off — while a fraction of par gives a short grove almost no room at all.
         /// </summary>
-        public int hedges;
+        public int spare;
 
         /// <summary>
-        /// The fewest cells a bead may stand from either of its own pair's ends.
-        ///
-        /// <para>
-        /// <b>The bar that was missing, and the one the mode was reported on twice.</b> A bead
-        /// only ever had to lie off its pair's shortest corridor, and one step to the side of the
-        /// crystal does that — so on all ten groves of the first Wildhedge cut a bead stood a
-        /// single cell from its own crystal or critter, and threading it was something the hand
-        /// did on the way past. This is <c>WeaveGenerator.MinReach</c>'s rule about where
-        /// endpoints may stand, applied to where a bead may. A grove asking for one also has
-        /// every bead held to <c>WeaveGenerator.MinBeadDetour</c>, because standing far out and
-        /// costing nothing are not the same thing.
-        /// </para>
-        /// <para>
-        /// <b>Absent means the rule as it stood, and that is deliberate rather than lazy.</b> The
-        /// roller is consulted once per bead over the list of cells that qualify, so tightening
-        /// the bar by default would change which cell every bead lands on, which changes the
-        /// rolls, which re-deals every board in the mode — including twenty groves already
-        /// shipped, played and pinned. A level that wants the bar says so; the two chapters that
-        /// predate it are dealt from the sequence they were always dealt from, and
-        /// <c>WeaveLadderTests</c> proves it board for board.
-        /// </para>
+        /// Whether this block was authored. <b>Never test the block itself for null</b> —
+        /// JsonUtility instantiates a [Serializable] class field on every level in the game, so
+        /// absence has to be a value a real block cannot hold.
         /// </summary>
-        public int beadReach;
-
-        public bool IsAuthored => pairs > 0 || width > 0 || height > 0;
+        public bool IsAuthored => width > 0 || height > 0;
     }
 
     [Serializable]
@@ -1006,8 +974,16 @@ namespace GlimmerGrove.Content
         /// <summary>Turns a glade's continue hands over, above whatever it took to un-lose it.</summary>
         public int turns = -1;
 
-        /// <summary>Cells of light a weave's continue hands over, on the same terms.</summary>
+        /// <summary>
+        /// <b>Retired.</b> Cells of light a Lightweave continue handed over. The mode is gone;
+        /// the field stays because <c>progression.json</c> is content that ships on its own
+        /// cadence and a live document still carries this key — deleting it would make every
+        /// published table read as malformed for no gain. See <c>ContinueUnit.Ink</c>.
+        /// </summary>
         public int ink = -1;
+
+        /// <summary>Taps a thicket's continue hands over, on the same terms.</summary>
+        public int taps = -1;
 
         /// <summary>Motes a well's continue hands over, on the same terms.</summary>
         public int motes = -1;

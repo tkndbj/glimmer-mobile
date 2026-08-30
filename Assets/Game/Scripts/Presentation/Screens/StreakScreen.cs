@@ -704,7 +704,6 @@ namespace GlimmerGrove
 
             DailyStreak.Collect(tapped.Rung);
 
-            Haptic.Tap();
 
             var cue = new Cue(this);
             for (int i = 0; i < taking.Count; i++)
@@ -732,7 +731,11 @@ namespace GlimmerGrove
         {
             if (t == null || t.Root == null) return;
 
-            Audio.Sfx("unlock", .8f, 1f);
+            // On the tap, not on the landing. The reward flies for the better part of a
+            // second before it arrives, so a sound on the arrival leaves the tap itself
+            // silent - and `Throw` returns early when a reward has no glyph to fly, so
+            // some collects made no sound at all. Feedback belongs on the action.
+            Audio.Sfx("collect", .6f);
             Tween.KillChannel(t.Root, "breathe");
             Tween.Punch(t.Root, .22f, .38f);
 
@@ -816,7 +819,7 @@ namespace GlimmerGrove
         {
             if (Content == null) return;
 
-            Audio.Sfx("chime", .85f, 1.06f);
+            // Silent: the tap already spoke. See the note where it does.
             Burst.Sparks(Content, at, tint, 16, 260f, 26f, .55f);
 
             if (_countHost) Tween.Punch(_countHost, .12f, .34f);

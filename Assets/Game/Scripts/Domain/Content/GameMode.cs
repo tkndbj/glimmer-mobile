@@ -57,8 +57,17 @@ namespace GlimmerGrove.Content
         /// <summary>Tiles laid out so unlike edges bloom. See <c>KeeperBoard</c>.</summary>
         public static readonly GameMode Keeper = new GameMode("keeper");
 
-        /// <summary>Channels of light that blend where they share ground. See <c>WeaveBoard</c>.</summary>
-        public static readonly GameMode Weave = new GameMode("weave");
+        /// <summary>Buds that burst and ripen what is beside them. See <c>BudBoard</c>.</summary>
+        public static readonly GameMode Bud = new GameMode("bud");
+
+        // "weave" is a **retired mode id and must never be reused.** Lightweave shipped three
+        // chapters and was removed: dragging a channel from a crystal to its critter turned out
+        // to reject almost nothing (invariant 5d), and the two rules that did bite — the ring and
+        // the hedge — were bought by making the *route* longer rather than by making the decision
+        // harder. An id travels into the manifest, analytics and loc keys exactly as a level id
+        // does, so re-pointing it at a different way of playing would silently relabel three
+        // chapters' worth of history. A chapter file still naming it is simply skipped, which is
+        // the same forward-compatibility rule an unknown mode has always had.
 
         /// <summary>What a chapter with no <c>mode</c> field is played as.</summary>
         public static GameMode Default => Glade;

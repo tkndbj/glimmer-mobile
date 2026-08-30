@@ -58,7 +58,7 @@ namespace GlimmerGrove
             new GladeLook(),
             new FallLook(),
             new KeeperLook(),
-            new WeaveLook(),
+            new BudLook(),
         };
 
         public static IReadOnlyList<ModeLook> All => _all;
@@ -115,20 +115,18 @@ namespace GlimmerGrove
         public override Color Wash => new Color(.84f, 1f, .88f, 1f);
     }
 
-    sealed class WeaveLook : ModeLook
+    /// <summary>
+    /// Budburst. Gold, because the whole mode is light spreading — a chain is a wave of it
+    /// crossing the thicket, and the one colour on this board that is not a bud is the flash
+    /// where one goes off. The perch is a mossy stump, which is the map tile that reads as
+    /// undergrowth rather than as something standing in water or on a lawn.
+    /// </summary>
+    sealed class BudLook : ModeLook
     {
-        public override GameMode Mode => GameMode.Weave;
-        public override Type Screen => typeof(WeaveScreen);
-
-        /// <summary>
-        /// A lit face on dark earth — the mode's own subject standing under every glade. It is
-        /// also the furthest thing in the set from the glade island: the sand block it replaced
-        /// was the same rounded silhouette one tint away, which is no difference at all now that
-        /// the Nightloom draws Mill Vale's map.
-        /// </summary>
-        public override string Perch => "rock_lumen";
-
-        public override Color Accent => Pal.Aqua;
-        public override Color Wash => new Color(.80f, .98f, 1f, 1f);
+        public override GameMode Mode => GameMode.Bud;
+        public override Type Screen => typeof(BudScreen);
+        public override string Perch => "rock_chip";
+        public override Color Accent => Pal.Gold;
+        public override Color Wash => new Color(1f, .96f, .80f, 1f);
     }
 }

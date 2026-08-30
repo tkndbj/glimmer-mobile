@@ -1,0 +1,59 @@
+# The game's sound effects: one row per name the code plays.
+#
+# Regenerate with `python Tools/make_sfx.py`; prove the shipped wavs are what it
+# writes with `--check`; audition them with `--contact`. Read the head of
+# `make_sfx.py` before changing anything here.
+#
+# slot      the name `Audio.Sfx("...")` asks for. A fixed vocabulary - see below.
+# source    path inside the pack's WAV folder (see the audio-source-pack note).
+# semis     semitones to transpose. Resample-pitch, so it shifts speed too.
+# head      seconds to keep. Blank keeps the whole (trimmed) clip.
+# trim_db   gain trim on top of the loudness match, in dB. Blank is 0.
+# lowpass   Hz. Blank is none. Takes fizz off a sample that is otherwise right.
+# family    which material this belongs to, for the contact sheet's grouping.
+# note      why this source, in one line.
+#
+# The slots are a fixed vocabulary: `AssetManifest.Sfxs` preloads exactly these
+# names and `Tools/verify/sfxnames.py` proves the code asks for no other. Adding
+# one means adding it in all three places.
+#
+# Twelve source files carry twenty slots, and the reuse is the point: a small
+# palette of materials is what makes a set sound like one place rather than
+# twenty samples. Where a source is used twice the two are a interval apart, so
+# they read as two notes of one instrument - `tick` and `tock` are literally the
+# same block of wood a fourth apart, which is what a tick and a tock are.
+#
+# Every `semis` is a pentatonic step (0, 2, 3, 5, 7, 9, 12 and their negatives).
+# The game overlaps these constantly - `lit` climbs twelve notes on one turn -
+# and a pentatonic set has no semitone in it, so no two can collide into a beat.
+#
+#slot	source	semis	head	trim_db	lowpass	family	note
+click	POPS - BURSTS - (26)/POP Brust 01.wav	0	0.14		9000	wood	Every button in the game. Chosen by ear over the measurements, which is the owner's call to make.
+back	POPS - BURSTS - (26)/POP Brust 03.wav	-2	0.20		8000	wood	A tone below click, cut from the same wood, so a retreat reads as downward.
+menu	POPS - BURSTS - (26)/POP Brust 02.wav	0	0.20		9000	wood	Every panel opening - settings, pause, all twenty-five modals. The tap that opened it is hushed so this is the only sound.
+tip	POPS - BURSTS - (26)/POP Sucker 02.wav	0	0.18		10000	wood	Every tip box and info bubble. Brighter than the menu, because a bubble is smaller than a panel.
+enter	POPS - BURSTS - (26)/POP Brust 08.wav	0	0.18		8000	wood	Committing to a level from the map. Its own slot rather than `unlock`, which is what it used to borrow and which nine other things still use.
+poke	POPS - BURSTS - (26)/POP Brust 02.wav	0	0.16		9000	wood	Poking the critter on the home screen. Played with a wide random detune, which is what keeps a toy from getting old.
+wheel	SUCCESS - TUNES - CHEERS - (64)/SUCCESS TUNE Win Complete 01.wav	0	1.30		14000	tune	The bonus wheel landing. Low-passed at 14 kHz for the reason `win` is: 84% of the source sits above 8 kHz, which no handset reproduces.
+collect	SUCCESS - PICKUPS - (109)/SUCCESS PICKUP Collect Beep Short 14.wav	3	0.42		11000	bell	A reward landing on the counter: the streak's nights and First Bloom's vine.
+reward	SUCCESS - PICKUPS - (109)/SUCCESS PICKUP Retro Buildup 01.wav	0	1.10		7000	tune	Coming back from a watched ad. The one clip here chosen against its measurements - see the note in make_sfx.py.
+tick	BONGS - TIMERS - BELLS - (72)/BONG Clunk Hit Short 01.wav	0	0.10		9000	wood	The shortest and driest in the set, because it is the most repeated.
+tock	BONGS - TIMERS - BELLS - (72)/BONG Clunk Hit Short 02.wav	-5	0.16		7000	wood	tick's pair a fourth below, from a different block of the same wood.
+pop	BONGS - TIMERS - BELLS - (72)/BONG Clunk Hit Short 08.wav	2	0.16		9000	wood	Capped short: at nine a second, anything longer smears into a rattle.
+pop2	BONGS - TIMERS - BELLS - (72)/BONG Clunk Hit Short 02.wav	-2	0.16		7000	wood	Bright at source because the game plays it at .6 pitch, and .6 of a dull sound is nothing a phone can reproduce.
+blocked	POPS - BURSTS - (26)/POP Brust 17.wav	-2	0.50	-2	6000	wood	The gentlest refusal in the pack, and the one clip trimmed below the rest.
+free	POPS - BURSTS - (26)/POP Brust 02.wav	7	0.24		10000	wood	A critter getting out of its cocoon. The owner picked this source by ear. It is `menu`'s clip a fifth up, which is the reuse the head of this file describes: the same block of wood struck higher, so a cocoon opening is heard as a brighter relative of a panel opening rather than as a new instrument. The bell-and-chime pair that used to play here was removed for being the loudest thing in the game, four times a chain.
+burst	POPS - BURSTS - (26)/POP Brust 11.wav	0	0.16		11000	spark	A flower going off in Budburst. Its own slot rather than `pop`, which eight other things play: this one is struck thirteen times in a wave and pitched up through a chain, so it has to be the shortest and brightest thing in the set and nothing else should be tuned by it. Measured at 0.12s and a 4.7kHz centroid against `pop`'s 0.16s and 519Hz - the old sound was a wooden clunk, which is what a flower bursting into light is not.
+shatter	EXPLOSIONS - DESTRUCTION - (80)/DESTRUCTION Break Impact Wood 08.wav	0	0.70		7000	wood	Wood rather than glass. There is no glass in a grove.
+rotate_a	POPS - BURSTS - (26)/POP Brust 02.wav	0	0.16		9000	wood	Turning a conduit - the most-heard sound in the game. Chosen by ear over three earlier attempts; nothing in the 2-5 kHz band at all.
+rotate_b	POPS - BURSTS - (26)/POP Brust 02.wav	2	0.16		9000	wood	The other half of the turn coin-flip: the same bloop a tone up, so the two read as one action.
+whoosh	SWIPES - SLASHES - WHOOSHES - (58)/SWIPE Whoosh 04.wav	0	0.42		6000	stone	The same stone, longer and softer.
+chest	BONGS - TIMERS - BELLS - (72)/BONG Clunk Hit 05.wav	0	0.60		8000	stone	A mechanism rather than a chime, so the lid has weight.
+lit	SUCCESS - TUNES - CHEERS - (64)/SUCCESS TUNE Happy Sticks Short 01.wav	0	0.28		11000	mallet	A wooden mallet, so two octaves of transposition still sounds struck rather than sped up.
+chime	BONGS - TIMERS - BELLS - (72)/BONG Bell Timer Hit Short 13.wav	0	0.34		10000	bell	A soft bell with nothing in the fatiguing band.
+chime2	BONGS - TIMERS - BELLS - (72)/BONG Bell Timer Hit Short 09.wav	3	0.40		10000	bell	A minor third above chime, so the two read as question and answer.
+bell	BONGS - TIMERS - BELLS - (72)/BONG Bell Timer Hit Short 05.wav	0	0.40		11000	bell	The brightest of the three bells, because it is the one that means yes.
+coin	SUCCESS - PICKUPS - (109)/SUCCESS PICKUP Collect Beep Short 05.wav	2	0.15		11000	bell	The shortest bell here.
+star	SUCCESS - PICKUPS - (109)/SUCCESS PICKUP Collect Beep Short 11.wav	0	0.36		12000	bell	Allowed to glitter. It is the one that should.
+unlock	BONGS - TIMERS - BELLS - (72)/BONG Bell Timer Hit 03.wav	0	0.70		12000	bell	A short bell phrase rather than a single note.
+win	SUCCESS - TUNES - CHEERS - (64)/SUCCESS TUNE Win Complete 02.wav	0	1.60		14000	tune	Completing a level. Low-passed hard at 14 kHz: over half the source sits above 16 kHz, which no phone reproduces and the loudness match would otherwise spend its headroom on.

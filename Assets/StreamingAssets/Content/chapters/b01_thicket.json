@@ -1,0 +1,35 @@
+{
+  "schemaVersion": 2,
+  "id": "b01_thicket",
+  "accent": "#FFC24A",
+  "slate": "#241A0E",
+  "backdrop": "play_6",
+  "mapStrips": [
+    "strip0",
+    "strip1",
+    "strip2",
+    "strip3",
+    "strip4",
+    "strip5"
+  ],
+  "levels": [
+    {
+      "id": "b01_firstburst",
+      "mapX": 0.3,
+      "mapY": 0.08,
+      "bud": {
+        "width": 7,
+        "height": 6,
+        "rows": [
+          "GYRYBBR",
+          "BRoBoYG",
+          "RBCRGRY",
+          "GRoYoGY",
+          "BBCRYRR",
+          ".GGRYG."
+        ],
+        "colours": "GBR"
+      }
+    }
+  ]
+}

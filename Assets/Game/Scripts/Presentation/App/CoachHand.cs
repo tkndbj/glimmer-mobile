@@ -5,7 +5,8 @@ using UnityEngine.UI;
 namespace GlimmerGrove
 {
     /// <summary>
-    /// Draws a hand tracing a route, over and over, for as long as whatever built it is alive.
+    /// Draws a hand tracing a route — or tapping one spot — over and over, for as long as
+    /// whatever built it is alive.
     ///
     /// <para>
     /// The route is given in the host's own space — real points on the real board, worked out
@@ -19,6 +20,12 @@ namespace GlimmerGrove
     /// nothing scheduled to cancel, and killing the owner kills the demonstration wherever it
     /// had got to. A chain of <c>Tween.After</c> beats would have to be unwound correctly on
     /// every one of those exits, and this project has already recorded what that costs.
+    /// </para>
+    /// <para>
+    /// <b>Two gestures, one clock.</b> <see cref="Show"/> is the drag a woven channel is made
+    /// of and <see cref="Tap"/> is the press a groove is planted with; both read every frame out
+    /// of <see cref="CoachStroke"/>, so no demonstration in this game can come to run at a
+    /// different pace from another.
     /// </para>
     /// <para>
     /// The ink behind the fingertip is a row of dots rather than a drawn line, and that is
@@ -37,7 +44,7 @@ namespace GlimmerGrove
         const float Rise = 38f;
 
         /// <summary>
-        /// How thick the demonstrated line is, against <c>WeaveView.LiveThick</c>'s .24 of a
+        /// How thick the demonstrated line is, against a live channel's .24 of a
         /// cell. Deliberately the same weight as the line under a real finger — the ink here is
         /// pretending to be exactly that, so a different thickness would read as a different
         /// thing.
@@ -157,6 +164,72 @@ namespace GlimmerGrove
                     bool reached = beat.Trail > 1e-4f &&
                                    beat.Trail >= (i < from.Length ? from[i] : 1f) - 1e-4f;
                     joint[i].color = Pal.A(tint, reached ? .85f * beat.TrailAlpha : 0f);
+                }
+            }, owner, "coach").Loop(-1, false);
+
+            return root;
+        }
+
+        /// <summary>How wide the ripple under a tapping fingertip is drawn, against the hand.</summary>
+        const float TapRing = HandSize * .58f;
+
+        /// <summary>
+        /// Starts a hand tapping one spot, over and over, under <paramref name="parent"/>.
+        ///
+        /// <para>
+        /// The degenerate stroke, and it is <see cref="Show"/>'s argument for a mode that is
+        /// tapped rather than dragged: the only thing a first-timer has to know before anything
+        /// else is <em>where</em>, and a sentence pointing at a cell asks them to find the cell.
+        /// It leaves no ink at all — there is no route to remember, and the whole gesture is the
+        /// press.
+        /// </para>
+        /// <para>
+        /// The timing is <see cref="CoachStroke"/>'s, unchanged, at the shortest stroke it
+        /// allows: reach, press, hold, lift, rest. Sharing it rather than inventing a second
+        /// clock is what keeps one demonstration in this game from reading faster than another,
+        /// and it is arithmetic that is already walked frame by frame by a test.
+        /// </para>
+        /// </summary>
+        /// <param name="at">The point in the parent's local space the fingertip presses.</param>
+        /// <param name="tint">The colour of the ripple under the press.</param>
+        /// <param name="owner">Killed with this; the tween never outlives it.</param>
+        public static RectTransform Tap(RectTransform parent, Vector2 at, Color tint,
+                                        UnityEngine.Object owner)
+        {
+            if (parent == null) return null;
+
+            var root = UIKit.Node("Coach", parent);
+
+            var ring = UIKit.Img("Press", root, Art.Ring(96, 6f), Pal.A(tint, 0f),
+                                 Vector2.one * TapRing, new Vector2(.5f, .5f), at);
+
+            var hand = UIKit.Img("Hand", root, Art.Hand(160), Color.white,
+                                 Vector2.one * HandSize, new Vector2(.5f, .5f), at);
+            var hrt = hand.rectTransform;
+            hrt.pivot = Art.HandFingertip;
+            hrt.anchoredPosition = at;
+
+            float draw = CoachStroke.MinDraw;
+            float cycle = CoachStroke.Cycle(draw);
+
+            Tween.Run(cycle, Ease.Linear, t =>
+            {
+                if (!hand) return;
+
+                var beat = CoachStroke.At(t * cycle, draw);
+
+                hrt.anchoredPosition = at + new Vector2(0f, beat.Lift * Rise);
+                hrt.localScale = Vector3.one * (1f + beat.Lift * .10f - beat.Press * .09f);
+                hand.color = new Color(1f, 1f, 1f, beat.Alpha);
+
+                // The ripple is the press seen from the board's side, so it reads off Press
+                // alone: it is nothing while the hand is still coming down and gone the moment
+                // it lifts, which is what stops a ring standing on the cell between repeats
+                // looking like something the board is asking for.
+                if (ring)
+                {
+                    ring.rectTransform.localScale = Vector3.one * (.72f + beat.Press * .46f);
+                    ring.color = Pal.A(tint, beat.Press * .55f);
                 }
             }, owner, "coach").Loop(-1, false);
 

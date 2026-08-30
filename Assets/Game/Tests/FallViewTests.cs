@@ -30,7 +30,7 @@ namespace GlimmerGrove.Tests
     /// and a retry — and only two of them happened to unlatch: <c>RunScreen.RestartLevel</c> runs
     /// <c>Rewind(); Resume();</c> and the <c>Resume</c> is what cleared it, while
     /// <c>RetryAfterDefeat</c> is a mode's own override with no such pairing. A rule that holds
-    /// only when the caller remembers is a rule the fourth caller breaks. <c>WeaveView.Begin</c>
+    /// only when the caller remembers is a rule the fourth caller breaks. <c>RippleView.Begin</c>
     /// has had the line since it shipped; this is the copy that did not.
     /// </para>
     /// <para>

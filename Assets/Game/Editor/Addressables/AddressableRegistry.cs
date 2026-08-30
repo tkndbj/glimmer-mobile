@@ -104,6 +104,24 @@ namespace GlimmerGrove.EditorTools
         }
 
         /// <summary>Drops an entry for an asset that no longer exists.</summary>
+        /// <summary>
+        /// Whether a path is still a real asset, which is a different question from whether the
+        /// asset database will hand you that path.
+        ///
+        /// <para>
+        /// <c>AssetDatabase.GUIDToAssetPath</c> keeps answering with the old path for a while
+        /// after a file is deleted — especially when it went outside the Editor — so a path
+        /// coming back non-empty proves nothing. <c>GetMainAssetTypeAtPath</c> is null exactly
+        /// when the bundle builder would say <em>"is not a valid Asset or Scene"</em>, which is
+        /// the sentence that ends an Android build twenty minutes in, so it is the one this
+        /// asks. A folder answers <c>DefaultAsset</c> and is therefore still there, which is
+        /// what a sprite-set entry needs.
+        /// </para>
+        /// </summary>
+        public static bool StillThere(string assetPath)
+            => !string.IsNullOrEmpty(assetPath)
+               && AssetDatabase.GetMainAssetTypeAtPath(assetPath) != null;
+
         public static void Remove(AddressableAssetSettings settings, string guid, ref Summary summary)
         {
             if (settings == null || string.IsNullOrEmpty(guid)) return;

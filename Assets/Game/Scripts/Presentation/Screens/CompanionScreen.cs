@@ -395,7 +395,6 @@ namespace GlimmerGrove
             if (!Profile.TryWearAvatar(avatar.Id)) return;
 
             Audio.Sfx("chime2", .5f);
-            Haptic.Tap();
         }
 
         // --------------------------------------------------------------- chrome

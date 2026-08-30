@@ -12,7 +12,7 @@ namespace GlimmerGrove.Tests
     ///
     /// <para>
     /// <b>The case this suite exists for is
-    /// <see cref="ContinuingAWeaveHandsOverEnoughToActuallyCarryOn"/>.</b> A glade is lost when
+    /// <see cref="ContinuingAThicketHandsOverTheAuthoredTapsAndNothingElse"/>.</b> A glade is lost when
     /// its counter reaches the budget and any turn at all makes it playable again, so selling
     /// fifteen of them cannot go wrong. A weave is lost when the light left cannot cover the
     /// cheapest possible finish — which usually leaves cells in the pot that cannot be spent —
@@ -341,160 +341,126 @@ namespace GlimmerGrove.Tests
             Assert.AreEqual(int.MaxValue, board.MoveBudget, "still unbounded, not wrapped");
         }
 
-        // ================================================================ a weave's allowance
+        // ================================================================ a thicket's allowance
         [Test]
-        public void GrantingInkRaisesThePotAndNeverTheSpend()
+        public void GrantingTapsRaisesTheSatchelAndNeverTheSpend()
         {
-            var ink = new WeaveInk(10);
-            ink.Spend(8);
+            var satchel = new BudSatchel(10);
+            for (int i = 0; i < 8; i++) satchel.Take();
 
-            ink.Grant(20);
+            satchel.Grant(20);
 
-            Assert.AreEqual(30, ink.Budget);
-            Assert.AreEqual(22, ink.Left);
-            Assert.AreEqual(8, ink.Spent, "the grade is what was spent, and buying does not undo it");
+            Assert.AreEqual(30, satchel.Dealt);
+            Assert.AreEqual(22, satchel.Left);
+            Assert.AreEqual(8, satchel.Spent,
+                            "the grade is what was spent, and buying does not undo it");
         }
 
         [Test]
-        public void ARestartDealsThePotTheLevelAuthoredRatherThanTheOneThatWasToppedUp()
+        public void AnUnboundedSatchelRefusesAGrantRatherThanOverflowing()
         {
-            var ink = new WeaveInk(10);
-            ink.Spend(8);
-            ink.Grant(20);
+            var satchel = new BudSatchel(BudSatchel.Unlimited);
 
-            ink.Reset();
+            satchel.Grant(20);
 
-            Assert.AreEqual(10, ink.Budget);
-            Assert.AreEqual(0, ink.Spent);
+            Assert.IsFalse(satchel.Bounded,
+                           "a grant must never turn an unbounded thicket into a bounded one");
+            Assert.AreEqual(BudSatchel.Unlimited, satchel.Dealt);
         }
 
         [Test]
-        public void AnUnboundedPotRefusesAGrantRatherThanOverflowing()
-        {
-            var ink = new WeaveInk(WeaveInk.Unlimited);
-
-            ink.Grant(20);
-
-            Assert.IsFalse(ink.Bounded, "a grant must never turn an unbounded grove into a bounded one");
-            Assert.AreEqual(WeaveInk.Unlimited, ink.Budget);
-        }
-
-        [Test]
-        public void ATopUpCanNeverTurnAPotIntoAnUnboundedOne()
+        public void ATopUpCanNeverTurnASatchelIntoAnUnboundedOne()
         {
             // The fail state the whole mode rests on would retire itself silently.
-            var ink = new WeaveInk(WeaveInk.Unlimited - 4);
+            var satchel = new BudSatchel(BudSatchel.Unlimited - 4);
 
-            ink.Grant(1_000);
+            satchel.Grant(1_000);
 
-            Assert.IsTrue(ink.Bounded);
+            Assert.IsTrue(satchel.Bounded);
         }
 
         // ================================================================ the case this exists for
         /// <summary>
-        /// A grove that has run dry, bought a continue, and can genuinely carry on.
+        /// A thicket that has run out of taps, bought a continue, and can genuinely carry on.
         ///
         /// <para>
-        /// The board is <c>WeaveTests.AGroveRunsDryWhenAChannelSprawls</c>' exactly: a 3x3 with
-        /// two pairs down its outer columns, dealt seven cells against a floor of six. The
-        /// first channel wanders five cells over a route worth three, which leaves two cells
-        /// against a floor of three — light in the pot, and none of it spendable.
-        /// </para>
-        /// <para>
-        /// That is the whole point. Twenty cells would have been plenty here, but the number
-        /// that has to be right is not the allowance, it is that the shortfall is cleared
-        /// first: <see cref="WeaveVerdict.Deficit"/> reports one, the offer sells
-        /// <c>1 + authored</c>, and the grove comes back playable with the authored figure of
-        /// real room. Sell the authored figure alone on a grove whose shortfall is larger and
-        /// the run ends again in the same frame with the player's gems already gone.
+        /// A thicket is lost the tap its satchel empties, and one tap is a legal move again — so
+        /// the shortfall is nought and the offer is exactly what the table authored. That is the
+        /// claim worth pinning: a mode whose deficit was wrong would either sell nothing on a
+        /// board that needed a top-up or ask for one on a board that did not.
         /// </para>
         /// </summary>
         [Test]
-        public void ContinuingAWeaveHandsOverEnoughToActuallyCarryOn()
+        public void ContinuingAThicketHandsOverTheAuthoredTapsAndNothingElse()
         {
-            var grove = TwoPairsInAThreeByThree();
-            var run = new WeaveRun(grove, 7);
+            var run = new BudRun(TwoCritters(), 1);
 
-            Assert.IsTrue(run.Draw(0, new List<int> { 0, 1, 4, 7, 6 }));
+            // One tap into the corner, which frees nobody, and the satchel is empty.
+            run.Tap(Cell(0, 0), null);
 
             var lost = run.Verdict;
-            Assert.IsTrue(lost.IsLost, "the sprawl is what makes this the interesting board");
-            Assert.AreEqual(2, lost.Left, "there is light in the pot");
-            Assert.AreEqual(3, lost.Floor, "and it cannot cover the cheapest finish");
-            Assert.AreEqual(1, lost.Deficit, "so one cell is owed before a bought cell is usable");
+            Assert.AreEqual(BudEnding.Spent, lost.Ending);
+            Assert.AreEqual(0, lost.Deficit, "a tap is a legal move again the moment there is one");
 
-            Publish(new ContinueDto { gems = 20, ink = 20 });
+            Publish(new ContinueDto { gems = 20, taps = 4 });
 
-            var offer = RunContinue.Offer(ContinueUnit.Ink, lost.Deficit, taken: 0,
+            var offer = RunContinue.Offer(ContinueUnit.Taps, lost.Deficit, taken: 0,
                                           gemsHeld: 20, gemsForSale: false);
 
-            Assert.AreEqual(21, offer.Amount);
+            Assert.AreEqual(4, offer.Amount, "the authored figure, with nothing owed on top");
 
-            run.Ink.Grant(offer.Amount);
+            run.Grant(offer.Amount);
 
-            var after = run.Verdict;
-            Assert.IsTrue(after.IsPlaying, "a continue that does not continue is a charge");
-            Assert.AreEqual(20, after.Left - after.Need,
-                            "and what is left over the cheapest finish is exactly what was sold");
-
-            // Proved by playing it: the pair that was stranded can now actually be drawn.
-            Assert.IsTrue(run.Draw(1, new List<int> { 2, 5, 8 }));
-            Assert.IsTrue(run.Verdict.IsSolved);
-        }
-
-        /// <summary>
-        /// A grove is never lost on a reading that is merely pessimistic, so the deficit is
-        /// nought on a run that is still going. A caller never has to ask twice.
-        /// </summary>
-        [Test]
-        public void ARunStillGoingOwesNothing()
-        {
-            var run = new WeaveRun(TwoPairsInAThreeByThree(), 9);
-
-            Assert.IsTrue(run.Verdict.IsPlaying);
-            Assert.AreEqual(0, run.Verdict.Deficit);
+            Assert.AreEqual(BudEnding.Live, run.Verdict.Ending,
+                            "a continue that does not continue is a charge");
         }
 
         [Test]
-        public void AFinishedGroveOwesNothingEither()
+        public void AThicketStillGoingOwesNothing()
         {
-            var run = new WeaveRun(TwoPairsInAThreeByThree(), 9);
+            var run = new BudRun(TwoCritters(), 6);
 
-            Assert.IsTrue(run.Draw(0, new List<int> { 0, 3, 6 }));
-            Assert.IsTrue(run.Draw(1, new List<int> { 2, 5, 8 }));
-
-            Assert.IsTrue(run.Verdict.IsSolved);
+            Assert.AreEqual(BudEnding.Live, run.Verdict.Ending);
             Assert.AreEqual(0, run.Verdict.Deficit);
         }
 
         /// <summary>
-        /// An unbounded grove cannot be lost, so nothing there can be sold a continue — the
-        /// mirror of <see cref="AnUnbudgetedBoardRefusesAGrantRatherThanBankingIt"/>.
+        /// A grove with nothing left to tap is never sold anything, which is invariant 28f's
+        /// rule: the only thing that answer decides is whether it would be honest to take
+        /// somebody's gems. Nothing here ever grows a flower back, so no number of taps helps.
         /// </summary>
         [Test]
-        public void AnUnboundedGroveIsNeverOwedAnything()
+        public void AThicketWithNothingLeftToTapIsNeverSoldTaps()
         {
-            var run = new WeaveRun(TwoPairsInAThreeByThree());
+            var run = new BudRun(NothingLeftToTap(), 6);
 
-            Assert.IsFalse(run.Verdict.IsLost);
-            Assert.AreEqual(0, run.Verdict.Deficit);
+            Assert.AreEqual(BudEnding.Barren, run.Verdict.Ending);
+            Assert.AreEqual(RunContinueDeficit.None, run.Verdict.Deficit);
         }
 
-        /// <summary>
-        /// Two pairs down the outer columns of a 3x3. Each is three cells straight, so the
-        /// grove's floor is six and the middle column is the only room to go wrong in.
-        /// </summary>
-        static WeaveLayout TwoPairsInAThreeByThree()
+        // ------------------------------------------------------------------ the boards
+        const int ThicketWidth = 4;
+
+        static int Cell(int x, int y) => y * ThicketWidth + x;
+
+        /// <summary>A ripe corner and two cocoons the corner's chain cannot reach.</summary>
+        static BudLayout TwoCritters()
+            => Grove(new[] { "R...", "....", "..Ro", "...o" });
+
+        /// <summary>Nothing tappable at all: white takes no colour, so no tap changes anything.</summary>
+        static BudLayout NothingLeftToTap()
+            => Grove(new[] { "W...", "....", "...o", "...o" });
+
+        static BudLayout Grove(string[] rows)
         {
-            var pairs = new[]
-            {
-                new WeavePair(0, 6, WeaveGenerator.Palette[0]),
-                new WeavePair(2, 8, WeaveGenerator.Palette[1]),
-            };
+            int width = rows[0].Length;
 
-            var routes = new[] { new[] { 0, 3, 6 }, new[] { 2, 5, 8 } };
+            Assert.IsTrue(BudDeal.TryParse("G", out var deal, out string dealError), dealError);
+            Assert.IsTrue(BudLayout.TryReadRows(rows, width, rows.Length,
+                                                out var ground, out var value, out string error),
+                          error);
 
-            return new WeaveLayout(3, 3, pairs, routes, new WeaveBead[0]);
+            return new BudLayout(width, rows.Length, ground, value, deal);
         }
     }
 }

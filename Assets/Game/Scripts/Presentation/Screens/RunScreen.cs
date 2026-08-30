@@ -34,7 +34,7 @@ namespace GlimmerGrove
     /// sequence and the review key, <see cref="Continue"/> owns the offer to buy one more go.
     /// That split is deliberate rather than tidy: this class had grown five responsibilities,
     /// which is the point at which a base class becomes the type nobody dares change, and each
-    /// of the two that left was bigger than what remains. <c>WeaveRun</c> was taken apart into
+    /// of the two that left was bigger than what remains. <c>RippleRun</c> was split against
     /// five for the same reason and against the same test - could any one of these rules be
     /// proved without building the other four.
     /// </para>

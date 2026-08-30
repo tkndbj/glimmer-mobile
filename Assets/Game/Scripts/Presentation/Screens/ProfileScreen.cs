@@ -525,7 +525,6 @@ namespace GlimmerGrove
             if (!Profile.TryWearAvatar(avatar.Id)) return;
 
             Audio.Sfx("chime2", .5f);
-            Haptic.Tap();
             if (_portrait) Burst.Sparks(_portrait.transform, Vector2.zero, Pal.Gold, 12, 190f, 26f, .6f);
         }
 

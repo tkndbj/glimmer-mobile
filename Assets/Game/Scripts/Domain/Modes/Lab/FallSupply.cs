@@ -44,7 +44,7 @@ namespace GlimmerGrove.Modes
     /// before anything is committed — and only expensive to <em>make</em>.
     /// </para>
     /// <para>
-    /// Pure integers and no policy at all, for <c>WeaveInk</c>'s reason: where the budget comes
+    /// Pure integers and no policy at all, for <c>RippleSatchel</c>'s reason: where the budget comes
     /// from is <c>FallMode.Tune</c>'s business, when a run is lost is <see cref="FallVerdict"/>'s,
     /// and what the player sees is the screen's. This is only the arithmetic, so every rule over
     /// it is proved offline against plain numbers.

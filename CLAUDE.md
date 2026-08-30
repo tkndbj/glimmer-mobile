@@ -985,6 +985,10 @@ What that means in practice here:
     affordable — a walk whose ends came out close is **re-grown** rather than the whole attempt
     discarded, because rejecting the board raises the odds to the bar's chance *to the power of the
     pair count*, and measured that alone moved a reach of five from ordinary to one seed in five.
+    <br>**Lightweave is retired and this stays**, for the reason every retired thing
+    here stays: the rule is about how a mode is judged rather than about that mode, it
+    was learned by shipping the wrong answer twice, and the file that stops it being
+    learned a third time is this one. `weave` is a spent mode id.
 
 20g. **A mode may bring a rule no board can demonstrate, and the fix is to make the board
     demonstrate it.** Reported as "even though I wake up all the critters, the game doesn't end" —
@@ -1077,6 +1081,79 @@ What that means in practice here:
     refused (`WeaveLayout.HedgesBite`), by the generator, by the validator and by the suite: a
     barrier the player routes around without noticing is invariant 5d's decoration, and here it is
     one comparison of two integers.
+    <br>**Lightweave is retired and this stays**, for the reason every retired thing
+    here stays: the rule is about how a mode is judged rather than about that mode, it
+    was learned by shipping the wrong answer twice, and the file that stops it being
+    learned a third time is this one. `weave` is a spent mode id.
+
+20j. **Three modes were designed for this slot and two were thrown away, and what separates them
+   is not cleverness — it is whether a board can be read, and whether it can stall.** This is the
+   most expensive lesson in the file and it was paid for twice in one day, so it is written down
+   as three tests any new mode has to pass *before* a level is authored, let alone a chapter.
+   <br>**One: the answer has to be visible on the board, now.** *Ripplewake* was a mode of
+   expanding rings: drop a stone, its ring steps out a cell a beat, and where two rings arrive on
+   the same water at the same beat the sleeper under them wakes. Every number about it was good —
+   par searched cheaply, the ladder climbed, `ways` was low, a careless player finished the first
+   two rungs. It was played and the report was three words: *"I understood nothing."* The fault is
+   structural rather than presentational: the thing the player has to predict is a **coincidence
+   several beats in the future**, so the puzzle lives in their head instead of on the board.
+   Adding readouts for it was proposed and is the wrong fix — it patches the symptom. Every other
+   mode here is immediate and spatial (turn a conduit, drop a mote, lay a tile) and this one
+   deferred its answer by four beats and then asked to have been planned. **If a mode's payoff
+   arrives later than the input, it is a thinking puzzle, whatever the numbers say.**
+   <br>**Two: a finite board with no refill must not be able to freeze.** *Windfall* was the next
+   attempt and it never shipped a level: swipe a direction, everything slides, three alike
+   touching burst, and the wind keeps blowing so it cascades for free. One gesture moving the
+   whole board is the best spectacle-per-input there is. It **stalls**. A tilt barely changes
+   relative positions — after one compaction per axis the board is frozen, and the player flips
+   left-right for ever with nothing happening. Measured on the first hand-built board: stuck at
+   beat 3 of 12 with fifteen leaves and two critters left. 2048 survives this only by spawning a
+   random tile every move, and randomness is exactly what makes par unsearchable (invariant 26).
+   **Ask of any new mode: does every legal input strictly move something that only goes one
+   way?** Budburst's does — a tap *adds a channel* to a flower and channels never come off, so the
+   grove always moves toward white and toward a burst, and a wave always removes at least three
+   flowers while nothing is ever added. That single property gives it *cannot stall*, *always ends*
+   and *the search terminates* at once. Note the shape of it: the monotone quantity is not the
+   thing being counted (flowers) but the thing being *added* (channels), and a tap that would add
+   none is refused outright rather than swallowed — which is what makes "every allowed tap moves
+   the grove" true rather than nearly true.
+   <br>**Three: a cascade that spreads on its own is not a mechanic, it is a solvent.** An earlier
+   cut of Budburst's chain rule looked finished after an afternoon and every board measured par two
+   lower than it was designed for. A cell lending to its neighbours unconditionally walks outward
+   across open ground for ever: measured at **thirty cells in eleven waves from one tap**,
+   finishing a board built to take four. What settles it is a **threshold the spread has to clear
+   again** — the shipped rule washes a colour outward and nothing goes off unless *three alike*
+   end up touching, so a chain dies wherever the grove is not already nearly right, and the boards
+   that run are the ones somebody built to run. **A rule that makes boards more solvable is as
+   dangerous as one that makes them unsolvable, and only counting finds it**: every one of these
+   shipped a board that was solvable, correctly par'd, fully validated and wrong.
+   <br>`ripple` and `weave` are **spent mode ids** and must never be reused, along with the nine
+   retired lesson ids the two modes between them spent (`weave_join`, `weave_bead`, `weave_ink`,
+   `weave_hedge`, `weave_fill`, `ripple_meet`, `ripple_satchel`, `ripple_reed`, `ripple_deep`,
+   `ripple_lily`). An id travels into the manifest, analytics and the save file exactly as a level
+   id does.
+
+20k. **A mode may be built to be *easy*, and then two of this file's own rules invert.** Budburst
+   is the first mode here commissioned against a feeling rather than a difficulty: *chill,
+   hypnotic, one tap and something enormous happens* — the register Royal Match and Toy Blast play
+   in, where everybody finishes and the stars are where the skill lives. That is a legitimate
+   design decision, and honouring it means reading two gates backwards rather than quietly
+   ignoring them.
+   <br>**`ways` flips.** Invariant 5d warns above a threshold: a board almost anything finishes is
+   deciding nothing. Here the brief *is* a board almost anything finishes, so `BudValidator` warns
+   **below** two — one single shortest play means the grove has to be solved rather than played.
+   <br>**`greedy` flips, and becomes the bar rather than a reading.** Everywhere else a player who
+   never looks ahead finishing is a complaint. Here a grove a careless player *cannot* finish
+   inside its satchel is the thing that gets warned about, because it is asking for more than the
+   mode promises. The shipped board is the honest version of that: careless finishes in 4 against
+   a three-star line of 4, so a player who never plans still gets full marks — and it was chosen
+   over three shorter baskets whose careless play was *optimal*, because a greedy player playing
+   perfectly means the grove decided nothing at all, which is the one way a chill board can still
+   be a bad one.
+   <br>What does **not** flip is anything about money or grading: par is still searched, the star
+   lines are still the same 1.20/1.40 multiples every mode uses, room above par is still counted
+   in the unit the mode is graded in (invariant 26e), and the fail state is still real. An easy
+   mode is one whose *boards* are generous, never one whose arithmetic is.
 
 21. **A chapter is opened by stars, and only its first level asks.** Inside a chapter the chain
     is unchanged — clear the level before this one. At a **boundary** the chain gives way to
@@ -1234,6 +1311,9 @@ What that means in practice here:
     client writes one.
 
 22a. **A mode with no turns is graded on the count it does keep, never on how fast it was.**
+    <b>Lightweave is retired and this stays</b>, because the rule is what a mode does when it has
+    no move to count, and the next one to arrive without one will need it. The classes named below
+    are gone with the mode.
     Lightweave had no move budget and no move count — it reported a constant — so the clock
     decided every star, and removing it would have handed three stars to every clear. What
     replaced it was already there: `WeaveRun.Occupied`, the cells its channels took, against
@@ -1243,7 +1323,10 @@ What that means in practice here:
     and the published deciles had been fed `par` as the move count, which is a **constant**, so
     every player who ever finished a grove held an identical "best" and the population ranking
     for that mode meant nothing.
-22b. **A mode's fail state is a budget in the unit it is graded in — Lightweave's is ink.**
+22b. **A mode's fail state is a budget in the unit it is graded in — Lightweave's was ink,
+    Budburst's is taps.** <b>Retired in place</b>, and every mode since has struck the same
+    bargain in its own unit: a well in motes, a groove in tiles, a thicket in taps. The classes
+    named below belong to Lightweave and are gone with it; the rule is not.
     22a left a weave unable to be *lost* at all, only forfeited, and named the fix rather than
     making it. This is it: a grove is dealt `par × budgetFactor` **cells of light**
     (`WeaveInk`), a channel costs one per cell it covers, and the run ends when the grove
@@ -1399,8 +1482,8 @@ What that means in practice here:
     is — a player who loses their first three boards to a rule nobody has taught them yet is
     being charged for our teaching, before they have decided they like the game enough to wait
     eight hours. Per mode rather than once per account, because a mode shipping a year from now
-    is somebody's first board of that mode: Lightweave is dragged rather than tapped and is lost
-    on ink rather than turns, so a player arriving at it having finished four glade chapters is a
+    is somebody's first board of that mode: Budburst is tapped rather than turned and is lost
+    on a satchel rather than on turns, so a player arriving having finished four glade chapters is a
     beginner again in every sense that decides whether taking a heart off them is fair.
     <br>**The replay**: a glade this player has **already finished** costs nothing, for ever. The
     gate exists to pace somebody through content they have not seen, and a board they beat is not
@@ -1622,7 +1705,9 @@ What that means in practice here:
     *prove* a hard board, since a board with no par cannot be graded at all. Cost goes as the
     column count to the power of par, so par 7 on a six-wide well is four times par 6 on the
     same board: the cheap fixes are a narrower well or a shorter answer, never a bigger one.
-    <br>**Lightweave joined it later, and how it got there is the general lesson.** A weave's par
+    <br>**Lightweave joined it later, and how it got there is the general lesson — kept
+    although the mode is not, because it is the only recorded case of a mode's par becoming
+    expensive without its code changing.** A weave's par
     means *generating* the grove, and generating means carving until one passes the acceptance
     bar — so par is cheap exactly while good boards are common. When `w03_wildhedge` was re-dealt
     to make its hedges bite on more than one channel, the bar tightened from about 1.1% of seeds
@@ -1762,9 +1847,8 @@ none of the third. The membership test is mechanical: **a rule belongs there whe
 references it**, and `compile.py` proves it by building `domain` *without* `Authoring` on its
 reference list, so a Domain file that starts calling into it fails offline rather than quietly
 dragging the folder back into the build. `Assets/Game/Authoring/README.md` says what is
-deliberately *not* there and why — which is now one thing, `WeaveSolver`, because
-`WeaveGenerator` runs `AnyTautSolution` on the phone and `Measure` is a short loop over the
-same search.
+deliberately *not* there and why — which is now nothing at all: the one exception was
+Lightweave's solver, and the mode is retired.
 
 **A mode is declared three times, and the third one is what moved the validator.** `LevelMode`
 (Domain) says what a mode *is*; `ModeLook` (Presentation) says what it *looks like*, split off
@@ -1819,6 +1903,22 @@ scripts fail to compile. Do not guess — verify offline:
 - **Word list check:** `python Tools/make_name_blocklist.py --check` proves the checked-in list
   is what the tool would write, and refuses the four ways a blocklist goes quietly wrong. The
   filter itself is `npm --prefix firebase/functions test` (`names.mjs`, `reports.mjs`).
+- **Sound name check:** `python Tools/verify/sfxnames.py` proves the three lists agree — what
+  the code plays, what is on disk, and what `AssetManifest.Sfxs` preloads. This is the gap the
+  asset-names note describes, closed for audio: a misspelled sound name was a runtime
+  `InvalidKeyException` and a silence that shipped green (`Audio.Sfx("tap")` did, twice), and
+  `press.wav` sat unplayed for months. It reads **literals only**, and scans `Presentation`
+  alone — `Audio` lives there and Domain may never reference it, so a literal in Domain is
+  never a sound name. `Art.S`/`Art.Frames` still have no such gate.
+- **Sound check:** `python Tools/make_sfx.py --check` proves the twenty shipped clips are what
+  `Tools/sfx.tsv` cuts, and `--report` prints what each measures — including the one reading
+  no sound library can give you, which is how many copies of itself a clip has to stand
+  alongside at its busiest moment against `Audio.PlayOne`'s ten-voice pool. **`--check` proves
+  reproducibility and says nothing about whether it sounds any good**, which is
+  `make_shop_art.py`'s bargain in a second medium: `--contact <html>` writes a self-contained
+  page that *plays* the set — each clip alone, at the pitch ladders the game really uses, at
+  the rate it really repeats them, and in four scenes assembled from real play. Press that.
+  Every wrong choice this set has made was inaudible one clip at a time.
 - **Groovekeeper check:** rolled into `content.py`. A groove is the other non-glade mode whose
   whole level is in the file, so the offline gate proves it: every board searched for par, a
   sprig to grow from, a bed to open, a heartbed whose colour the basket actually deals, and the
@@ -1834,15 +1934,16 @@ scripts fail to compile. Do not guess — verify offline:
   `fall-vectors.json` is the contract between `Tools/verify/fall.py` and the shipping
   `FallBoard`/`FallSolver` — `content.py` runs it through the Python copy and `FallVectorTests`
   runs it through the C# one, so the burst-and-wash rule cannot drift quietly (invariant 9a).
-- **Weave determinism check:** `python Tools/verify/weave.py` builds every shipped Lightweave
-  grove on **both** the bundled .NET 8 and **Unity's own Mono** and diffs them. A weave board is
-  generated rather than authored, on a desktop at authoring time and again on the player's phone,
-  so "the same seed deals the same board everywhere" is the property the whole mode rests on and
-  the one nothing else checks. It compares boards, beads, hedges and difficulty rather than
-  checking any of them against a number, so there is no expected table to go stale. It also
-  refuses a grove whose hedges change no pair's shortest route, which is invariant 5d for the
-  mechanic that is hardest to see doing nothing. See *Hard-won facts* for the divergence that
-  made it.
+- **Budburst check:** rolled into `content.py`. A grove is the third non-glade mode whose
+  whole level is in the file, so the offline gate proves it: the board searched for par, the grove
+  shown to be **authored settled** (no bunch of three standing before a tap is spent), every cocoon
+  shown to have a flower beside it, the basket shown to deal pure colour only, the star bands
+  ordered, and the readings (`ways`, `careless`, `nodes`) printed beside par and the satchel.
+  `bud-vectors.json` is the contract between `Tools/verify/bud.py` and the shipping
+  `BudBoard`/`BudSolver` — `content.py` runs it through the Python copy and `BudVectorTests` runs
+  it through the C# one, so the mix-and-wash rule cannot drift quietly (invariant 9a). Every case carries a **play** as well as a par, which is
+  the half par alone cannot pin. Note that two of the readings are read **backwards** on this mode
+  — see invariant 20k.
 - **Name fold check:** `Tools/verify/names.py` runs `GroveNames` against the shared vectors
   **on Unity's own Mono** (`MonoBleedingEdge/bin/mono.exe`), not on the bundled .NET. That is
   the whole point of it: the first version ran on .NET 8, whose ICU agrees with Node about
@@ -1904,6 +2005,28 @@ Builds are gated: `ContentBuildGate` fails the build on any content error.
   `OnCollisionEnter`, `OnAnimatorIK`) are deliberately not on the list, because flagging
   those would make the check noise nobody reads. It lives in `compile.py` rather than in a
   seventh script for the reason the importer hook is not a menu item.
+- **A vector file that only the Editor can read is not a guard on the rule it pins.** Invariant
+  9a says a rule existing twice must be held to a shared file; what it does not say is that the
+  file has to be *readable where the code is edited*. Every `*VectorTests` here loads its JSON
+  through `JsonUtility`, which is a native call, so the offline runner reports the whole fixture
+  as "needs the Editor" and it is the one gate nobody runs on the way past. Budburst's wash rule
+  drifted from its mirror and **every offline gate stayed green**: the board parsed, the Python
+  copy proved par 3 in 7,903 positions, `content.py` printed `0 error(s), 0 warning(s)` — because
+  the mirror is a *different copy* and it happened to be the correct one. What noticed was
+  `ContentBuildGate` refusing to prove par at all, twenty minutes into an Android build, with the
+  C# search hitting all 120,000 positions on a board the mirror settles in 7,903. So a mode whose
+  rule exists twice needs at least one fixture that pins a **shipped board inline** —
+  `BudLadderTests`, `FallLadderTests`, `KeeperLadderTests` — because that runs offline and is
+  therefore the copy-versus-copy comparison that actually happens. The vector file stays; it is
+  broader and it is what the Editor run proves.
+  <br>Two smaller things the same bug taught. **A flood fill's `_seen` array means *visited*, not
+  *chosen*** — the guard read `!_seen[nb]`, meaning to skip a flower that is itself bursting, and
+  it also covered every flower already scanned as part of a group of one or two that was
+  *discarded*, so the wash stopped in one direction and not the other purely by index order. And
+  **par is a bad canary for a rule that got stricter**: a wash that stops early makes a board
+  harder, so par coming out one higher looks exactly like a level somebody authored. What cannot
+  look plausible is the best opening tap moving to a different cell and taking three fewer
+  flowers, which is why `BudLadderTests` pins that as well as par.
 - **A taproot whose members are four-armed conduits binds nothing, and only the Editor
   says so.** A four-armed tile wears all four arms at every angle, so `Puzzle.Alike` calls
   every rotation of it solved — which means `Board.root` hands it a start rotation of zero
@@ -1914,6 +2037,18 @@ Builds are gated: `ContentBuildGate` fails the build on any content error.
   orientation"), and it caught the first cut of `c01_bound_roots`. `c01_shallows.py`'s
   `taproot()` now asserts a period above one where the board is authored; the same trap is
   waiting for any chapter that hangs a fourth stub off a hub it meant to bind.
+- **A VFX pack's `Textures/` folder is two different things with one naming scheme, and
+  picking wrong is invisible everywhere.** Half of it is what a particle *draws* — a flash, a
+  flare, a lightning trail, a fire flipbook. The other half is what its shaders *sample* — noise
+  fields, gradient ramps, dissolve masks, colour LUTs. Both are white-on-black squares, the names
+  do not separate them, and a UI `Image` will happily draw either. Budburst's first cut took a
+  colour ramp for its flare, a bubble mask for its bolt and a streak-noise field for its
+  shockwave; every one of them imported, addressed, passed `AddressableAudit`, passed
+  `Validate Art` and drew on the board. There is no gate in this repository that can see it,
+  Before naming a texture after the effect you want, **render it** — the name is a label
+  somebody typed, and a contact sheet at the size the game draws it is the only thing that
+  answers. Budburst's set is generated now and cost nothing to keep, but the trap belongs to
+  every pack: see also the note below about a pack being the wrong shelf entirely.
 - **Unity only re-resolves packages and reimports on window focus.** If a change seems
   not to apply, the Editor probably has not been clicked.
 - **An Editor launched from the Hub gets a minimal `PATH`, and one failed post-processor
@@ -1940,10 +2075,13 @@ Builds are gated: `ContentBuildGate` fails the build on any content error.
   one-cell budget difference is not a rounding error there: the budget decides where the first
   walk stops, so every later walk starts from different ground and the whole grove is re-dealt.
   That is the one thing a generator whose output is proved at authoring time must never do. It was
-  found by `WeaveLadderTests` passing in the Editor and failing offline — the same shape as the
-  Mono/ICU divergence in invariant 19e, in arithmetic rather than Unicode, and invisible to every
-  check that runs on one runtime. The slack is now the exact fraction `13/10` in integer
-  arithmetic, and `Tools/verify/weave.py` diffs both runtimes so it cannot come back quietly.
+  found by that mode's ladder tests passing in the Editor and failing offline — the same shape as
+  the Mono/ICU divergence in invariant 19e, in arithmetic rather than Unicode, and invisible to
+  every check that runs on one runtime. **Lightweave is retired and the runtime diff went with it,
+  so what is left is the rule rather than the guard:** nothing that decides a *cell* may be a
+  float, anywhere, ever. Every mode shipping now authors its board in the file and searches it in
+  integers, which is why none of them needs a diff — and a mode that ever generates one again
+  needs the diff back before it ships a single board.
 - **Nor may a float decide a *threshold*, and that one shipped.** The same fault in the
   numbers a player is graded against, and worse in one way: `1.20f` is 1.20000004768…, so
   `Mathf.CeilToInt(45 * 1.20f)` is **55** where `par × 1.20` is exactly 54, and 61 against 60
@@ -2018,6 +2156,22 @@ Builds are gated: `ContentBuildGate` fails the build on any content error.
   be `.spriteatlasv2`, and `EditorSettings.spritePackerMode` must be `SpriteAtlasV2`
   (`Set Up Project` sets it, and it ships in `ProjectSettings/EditorSettings.asset` for
   `m_BuildAddressablesWithPlayerBuild`'s reason).
+- **Deleting art leaves its Addressables entry behind, and that fails the build rather than the
+  game.** `AssetDatabase.GUIDToAssetPath` keeps answering with the old path for a while after a
+  file has gone — especially when it went outside the Editor — so `AddressableSync`'s
+  `DropMissing` used to keep every entry of a deleted folder: the GUID mapped to a path, and the
+  path looked perfectly managed. Nothing at runtime cared, because nothing requested them any
+  more. `BundleBuildContent` cares: it throws `Asset '…' is not a valid Asset or Scene` while
+  `BuildPlayer` prepares, so the Android build dies before a line of the player is written and
+  the only clue is one file name buried in a stack trace of package internals. Deleting a
+  twenty-five-frame flipbook the game had stopped drawing cost exactly that.
+  <br>Two fixes, and the second is the one that matters. `DropMissing` now also asks
+  `AddressableRegistry.StillThere` — `AssetDatabase.GetMainAssetTypeAtPath(path) != null`, which
+  is null in precisely the case the bundle builder rejects. And `AddressableAudit` now **errors**
+  on any registered entry whose asset has gone, because every other gate here looks *outward*
+  from what the game requests — the compile, the tests, `Validate Content`, `Validate Art` and
+  the audit's own resolving-address pass were all green with twenty-five dead entries sitting in
+  the global group. This is the one question that has to be asked from the other end.
 - **The importer hook does not address art copied in while the Editor is closed or mid-reload**,
   which is every run of the art import tools. Unaddressed sprites load as nothing and cells
   draw blank. `Glimmer Grove ▸ Addressables ▸ Sync All Assets` is the repair; the build gate's
@@ -2057,11 +2211,12 @@ Builds are gated: `ContentBuildGate` fails the build on any content error.
 Everything here runs without Unity unless it says otherwise.
 
 - `Tools/verify/` — `compile.py`, `tests.py`, `content.py`, `loc.py`, `names.py`,
-  `difficulty.py`, `weave.py`, `fall.py`, `keeper.py`, and three shared contracts:
+  `difficulty.py`, `fall.py`, `keeper.py`, `bud.py`, and four shared contracts:
   `board-vectors.json` for the rule that exists in `LevelValidator`, `content.py` and `author.py`
   at once, `fall-vectors.json` for the burst-and-wash rule that exists in
   `FallBoard`/`FallSolver` and `fall.py`, and `keeper-vectors.json` for the bloom rule that
-  exists in `KeeperBoard`/`KeeperSolver` and `keeper.py`. See *Verifying*.
+  exists in `KeeperBoard`/`KeeperSolver` and `keeper.py`, and `bud-vectors.json` for the
+  mix-and-wash rule that exists in `BudBoard`/`BudSolver` and `bud.py`. See *Verifying*.
 - `Tools/chapters/k01_grovekeeper.py` — the Clearing's ten grooves, and `k01_strings.py` for
   the strings that belong to the mode rather than to a level. Both `--check` themselves against
   what is shipped. The boards were hand-drawn against a sweep (`ways`, `greedy` and the cost of
@@ -2077,15 +2232,13 @@ Everything here runs without Unity unless it says otherwise.
   than leaving four numbers that have to agree.
 - `Tools/hollow/` — the Hollow's rule mirror, board generator and `build_chapter.py`. The
   mirror is never authoritative; the shipping C# solver is what `Validate Content` runs.
-- `Tools/weave_seeds.py` — which seed a Lightweave level should author, swept offline and in
-  parallel. It compiles the **shipped** `WeaveSeedSearch` rather than mirroring it, so the bar a
-  rung is chosen against is the bar `Survey Lightweave` and `WeaveLadderTests` hold it to. `pool`
-  reports every usable board a shape deals, `sweep` filters to a band (on `--slack` or on
-  `--toll`, which is the reading that stays comparable once a chapter grows hedges), and `confirm`
-  re-measures a shortlist on **both** .NET 8 and Unity's Mono and refuses any that disagree — run
-  it on whatever a chapter ends up authoring before the numbers go into a test. High-toll boards
-  are rare: expect tens of thousands of seeds per rung, which is why the sweep runs across every
-  core.
+- `Tools/chapters/b01_thicket.py` — the Thicket's one board and basket, and the strings Budburst
+  needs. The layout is composed by hand and only the **basket** is swept, which is the cheap half
+  of the search and the half that decides how a board plays.
+  It `--check`s itself against what is shipped, and it is also what retired Ripplewake's strings.
+  The strings live in the chapter file rather than a `*_strings.py` only because there is one
+  level; the moment a second chapter exists they move out, because a mode's own strings outlive
+  any one chapter.
 - `Tools/render_wheel.py` — draws the bonus wheel exactly as `WheelFace` does, without Unity.
   `render_grove.py`'s argument for the one other object here whose quality is only visible as a
   picture: everything provable about the wheel is proved, and none of it can say whether the
@@ -2116,6 +2269,12 @@ Everything here runs without Unity unless it says otherwise.
 - `Tools/make_name_blocklist.py` — vendors LDNOOBW (27 languages, CC-BY-4.0); `--check` proves
   the checked-in list is what the tool would write and refuses the four ways a blocklist goes
   quietly wrong.
+- `Tools/make_sfx.py` + `sfx.tsv` + `sfx_dsp.py` — the game's twenty sound effects, cut from a
+  licensed pack. One row per name the code plays: source, transposition, length cap, gain trim.
+  `--check` gates reproduction, `--report` measures, `--contact` is how it is judged. The DSP is
+  split out so the cut can be proved without a 384 MB pack on disk. `Tools/sfx_meta.py` writes
+  the twenty `AudioImporter` blocks, preserving each GUID — Addressables keys on the GUID, so a
+  regenerated `.meta` silently unaddresses every sound in the game.
 - `firebase/seed/seed-config.mjs` — publishes `config/progression`, `config/products`,
   `config/grove`, `config/names` from the content files. `moderate-names.mjs` is the
   moderation desk (queue, show, hide, restore).
@@ -2150,9 +2309,9 @@ re-reading before changing something, it is in one of those two sections and not
 - **Boards** — public `groves/{uid}` cards, published rank distribution, unique keeper names
   with server-side filtering and reporting.
 - **Modes beyond the classic glade** — Lightfall (`f01_lightfall`), Groovekeeper
-  (`k01_grovekeeper`), the Hollow (`h01_emberfall`) and Lightweave (`w01_lightweave`,
-  `w02_nightloom`, `w03_wildhedge`).
-  See *Modes* below.
+  (`k01_grovekeeper`), the Hollow (`h01_emberfall`) and Budburst (`b01_thicket`).
+  See *Modes* below. Lightweave and Ripplewake are retired; `weave` and `ripple` are spent
+  mode ids.
 - **Privacy/ads plumbing** — Google UMP consent, ATT prompt, `app-ads.txt` (placeholders).
 - **Verifying** — `Tools/verify/` in the repo (see the *Verifying* section).
 
@@ -2167,9 +2326,7 @@ re-reading before changing something, it is in one of those two sections and not
 | `f01_lightfall` | fall | 10 | 2–6 drops | none, then default 1.60 (motes) | the cook, then the chain; motes 3 → 30, headroom 4 → 2, `ways` never above 8 |
 | `k01_grovekeeper` | keeper | 10 | 2–8 tiles | none, then par + 5 (tiles) | the inversion, then stone, the heartbed and the prism; beds 2 → 4, `ways` 2 → 2 with a 1 at the fifth |
 | `h01_emberfall` | hollow | 10 | 1–2 sparks | — | ladder is *how few openings win*: 7,8,6,4,2,3,4,1,4,1 |
-| `w01_lightweave` | weave | 10 | 19–64 | default 1.60 (ink) | pairs 3→6, beads 0→5; slack 2 → 8 and ways 230 → 2 |
-| `w02_nightloom` | weave | 10 | 63–74 | default 1.60 (ink) | six pairs throughout, beads 5→6; slack 8 → 16 and ways 305 → 7 |
-| `w03_wildhedge` | weave | 10 | 75–89 | default 1.60 (ink) | the hedge; six pairs and six rings throughout, hedges 1 → 3; toll 16 → 28 and ways 137 → 11 |
+| `b01_thicket` | bud | 1 | 3 taps | par + 5 (taps) | one board, to find out whether the verb lands; deals `GBR`, best opening tap is 3 waves / 13 flowers / 3 critters |
 
 **No level authors a difficulty number except the first glade in the game, and no chapter authors
 a clock** (invariant 22). Par is derived from the board; both star lines and the losing line are
@@ -2274,72 +2431,197 @@ are winning and running out, and unlimited undo is safe. Par is the fewest spark
 the board, found by search (`HollowSolver`), never authored. Boards are searched for, not
 typed — `Tools/hollow/`.
 
-**Lightweave** (`WeaveScreen`) — drag a channel from each crystal to its critter without
-crossing, thread every **bead** (a hexagonal ring on the ground that its own colour must pass
-through and no other colour may enter) and cross no **hedge** (a run of foliage grown along the
-edges *between* cells, which nothing may pass). Where a channel goes is otherwise entirely the
-player's business. Six colours (every mix except `Energy.All`, which is what a woken critter
-wears, so a seventh pair would sleep in the colour of being awake).
+**Budburst** (`BudScreen`) — a grove of **coloured flowers** with critters shut in **cocoons**,
+and a basket of pure colour dealt one per tap. Tap a flower and the colour in hand **mixes** into
+it — red with green in hand becomes yellow — and any bunch of **three or more touching flowers of
+one colour bursts**, washing its colour into every flower it touches. Which makes more bunches.
+Which makes more. A cocoon beside any burst takes a crack, and one out of cracks opens. Free every
+critter before the taps run out.
 
-It used to be won only by covering **every cell of the grove**, which was the whole difficulty and
-was also two faults at once: the sensible route was almost always wrong, and the state it produced
-— every critter awake, nothing happening — read as the game failing to notice a win. Both are
-invariant 20g, and both are gone. A bead asks for the same thinking and points at where.
+**The mix is the whole design decision, and it is why this mode is chill rather than clever.**
+Mixing only ever *adds* channels, so every tap drives the board toward white and toward a burst:
+the grove wants to go off, and the player is only choosing where. There is nothing to work
+backwards from, no state to hold in your head, and the answer to "what will this do" is on the
+board in front of you. It is also the arithmetic four chapters of glades already taught — red and
+green make yellow — reused as a verb rather than re-explained.
 
-Boards are *generated from a seed*, so determinism across runtimes is the property the mode rests
-on — `Tools/verify/weave.py` diffs .NET 8 against Unity's Mono: boards, beads and hedges alike.
-The hedges are grown **first** and the carve is threaded through what is left, so a hedged board
-is solvable by construction exactly as an open one is (invariant 20i).
+**The level is a grid and a basket, and no difficulty number.** Par is the fewest taps that free
+every critter, found by `BudSolver` and resolved lazily (invariant 26d), and both star lines and
+the tap budget derive from it. A blend is never dealt: the basket is pure `R`/`G`/`B` only,
+because a blend handed over is the one decision the mode has in it.
 
-**Three chapters.** The Weftwood teaches the mode: three channels growing to six, the first ring on
-its third grove, toll 2 → 8. The Nightloom asks. It opens on what the Weftwood closed on — all six
-colours, five rings, and eight cells of forced detour on its very first board — and climbs to
-sixteen, twice anything the Weftwood ever forced, with a sixth ring from its fifth grove on. The
-Wildhedge brings the **hedge** and is the first chapter of the mode to add a rule since the ring:
-one barrier on its opening two groves, two on its third and three from its fourth, six pairs and
-six rings throughout, and the rooms the hedges make are what the ladder climbs on. It opens at the
-toll the Nightloom closed on, which is the same join the Nightloom made with the Weftwood, and it
-is the first chapter of this mode to open at full strength *and* teach something.
-<br>**The ten groves shipping today have not been played, and the reason is worth keeping.** A
-first cut of the chapter was played through on device by the owner on 2026-08-28 and reported
-*too easy* — "as if the mechanics are not there" — which is invariant 5d arriving from the only
-instrument that can see it, since every board was solvable, every hedge bit and every number
-climbed. So all ten were re-dealt the same day against a tighter objective, and what the ladder's
-numbers still cannot answer on their own is what the first playthrough was for: whether a doorway
-reads as a decision or as a bottleneck, and whether the join with the Nightloom still lands now
-that a rule is being taught on the first board. Nothing about the second or third chapter is code
-beyond the mechanic itself: a JSON body, a manifest entry, strings and its own map art.
-<br>`WeaveLadderTests` holds *every* chapter to one set of rules rather than one copy per chapter,
-and `EveryChapterAsksMoreOfEveryGroveThanTheOneBeforeIt` is the cross-chapter claim — on **toll**,
-colours and size, which are the readings that mean the same thing in all three. It used to be on
-slack, and invariant 20i is why it could not stay there. **`ways` is deliberately not compared
-across chapters**: it counts arrangements within `WeaveSolver.Latitude` of the *best* one, and the
-best one moves with the toll, so a later chapter's opening count is taken in a band the earlier
-one's finale never reached. Asserting it fell across the join would be a rule about two different
-measurements, and the only way to satisfy it would be to author a gentler chapter.
+**The goal is the cocoons and not the flowers, and that choice is what makes it affordable.**
+"Clear every flower" was tried first: branching is the flower count, so a six-by-six cost
+ninety-five thousand positions and often could not be proved at all. The cocoons are a far smaller
+target reached by the same chains — measured on the same boards it is a few thousand positions —
+and it is also the more forgiving goal, which is the point of the mode.
 
-A grove is measured two ways and needs both (invariant 20f). **`toll`** is how far past straight
-lines the whole board has to be drawn: the detour the pairs force on each other (**`slack`**, the
-least total excess any arrangement has over every pair's own floor) plus the detour the hedges
-force on the pairs (**`bite`**). Zero slack means every pair can go as directly as it could, all at
-once, and the grove asks nothing. **`ways`** is how many arrangements land within a couple of cells
-of the best one — how much of what a tidy player tries will work. Toll is meant to climb down the
-chapter and ways to fall. Both come from `WeaveSolver`,
-which is an authoring instrument and deliberately **not** a build gate (the search is exponential in
-the worst case, so a gate would fail builds nobody can reproduce);
-`Glimmer Grove ▸ Content ▸ Survey Lightweave` reports them and its `SeedSearch` picks a level's seed
-against both. The cheap half — is there any arrangement in which everybody goes straight — is
-`WeaveSolver.AnyTautSolution`, the same search at an excess budget of zero, and it runs on the
-phone as the generator's acceptance bar. `WeaveGenerator.MinReach` is the separate rule about
-*placement*: no pair's ends may be close enough to join by a reflex.
+**A board must be authored settled** (`BudValidator.Settled`, and `content.py`): a grove already
+holding three alike touching bursts in the first frame, so the player is shown a chain they did
+not cause and par is measured against a position they never met.
 
-A weave record is the **cells of light its channels spent**, which is also what it is graded on
-and what it is lost on — see invariants 22a and 22b for why that replaced a clock, what it fixed
-about the published deciles, and why the mode needed a fail state at all. A grove is dealt
-`par × 1.60` cells of ink; spending is permanent, two landed channels a grove may be undone in
-full, and a tap on a channel does nothing. The win panel is deliberately **routeless**: a weave's
-carved solution is one arrangement out of many equally good ones, so a route bar would print the
-same verdict for everybody.
+Two fail states: the taps run out, or **no tap is legal any more**. Only the first may be sold a
+continue (invariant 23), because nothing in a grove ever grows a flower back. The second is
+subtler than it looks and cost a bug: white holds every channel, so a white flower can never be
+mixed into — a grove of nothing but white has flowers on it and no move in it, which is a board
+that can be neither won nor ended (invariant 20g). `BudBoard.AnyMove` asks the right question, over
+the *whole* basket rather than the colour in hand, and `AnyFlower` is what got it wrong.
+
+**The view exists to make the chain visible as it travels.** A bunch going off is not a flash and
+a jump to the end state — it winds up, bursts, and a beat later the flowers around it flare and
+visibly *turn* to the blend they have become. So a five-wave chain is five legible steps crossing
+the grove, the count climbs while it is still running, and the pitch and the shake climb with it.
+`BudBoard` reports every burst *and every wash* with the wave it belonged to, so the view is
+replaying facts rather than keeping a second copy of the rule (invariant 9a).
+
+**And "which wave was this" only ever comes from the pulses, never from the board.** `BudRun.Tap`
+settles the *entire* chain before a single frame is drawn, so `Run.Board` is the board as it will
+be at the *end*: it carries no time at all. A bolt of lightning used to be drawn between the
+bursting cell and each flower it washed, and it picked its source by asking the board which
+neighbour was `Bare` — which answers "empty once this is all over", so it fired from flowers that
+had not gone off yet and, worse, from cells that were bare ground in the authored layout and never
+held a flower. It was reported from play as *"random electric effects at positions unrelated to
+where the flowers are rotating"*, which is precisely what it was. The bolt is gone; what remains
+is anchored on the cell it belongs to, which is why nothing else in the file could have been wrong
+about a position.
+
+**The whole effect set is generated, and it took three attempts to get there.** `Art.Flash`,
+`Art.Wave`, `Art.Glint`, `Art.Bloom`, `Art.Leaf`, `Art.Rays`, `Art.Glow` and `Art.Crystal` — no
+addresses, no bundle, no preload, and every shape a coverage mask that takes the exact colour of
+the flower that went off. Two cuts from a licensed VFX pack were shipped and thrown away first: the
+first took the pack's *shader utility maps* by mistake (a colour ramp drawn as a flare, a bubble
+mask as a lightning bolt, a noise field as a shockwave — all of which loaded, addressed, audited
+and drew), and the second was a correct cut of a real fire flipbook that still came back from play
+as *"smoke/dust"*, because a plume authored for a rocket exhaust is a **volume** and a cell on a
+phone wants a **silhouette**. Both attempts are recorded in the explosions block of `Art`, and the
+general lesson is there: a pack built for world-space particles is the wrong shelf for a puzzle
+grid, however good the pack is.
+
+A freed critter is the real thing
+
+too — the same five flipbooks the glades and the roster use, so what pops out of a cocoon is
+somebody the player already knows.
+
+**A wave is a wind-up and a burst, and the wind-up is the half that was missing.** The first cut
+went straight from "nothing" to "gone", and it came back from play as *"it happens too fast"* —
+which was true, and was not the whole fault. There was no instant in which the player could see
+*which flowers had matched*, and that is the thing they had just done. So a bunch now **spins in
+place first**, accelerating, swelling and brightening for about a quarter of a second, and only
+then goes off. `BudTempo.Charge`/`Burn` split a wave between the two and both are proved to fit
+inside it. The player's own tap gets the same treatment — a full turn and the game's `enter`
+note, the one it already plays when somebody commits to a level from the map — because the tap
+had no moment of its own, so the one thing the player *did* was the one thing with no animation
+against it.
+
+**A burst is a silhouette event, never a volume one, and that is what the smoke taught.** A real
+fire flipbook was cut from the pack and drawn over every burst; it came back as *"when I burst
+buds a smoke/dust comes out — what is that?"*, which is an exactly correct reading of a plume
+authored for the scale of a rocket exhaust, shrunk onto a 170-point cell and drawn thirteen times
+in one wave. What replaced it is the flower **coming apart into its own petals** — six `Art.Leaf`
+shapes in its colour, thrown out and falling — under a hard white **flash**, inside a **ring**,
+with a **starburst of rays** for an edge and glints over the top. Every one of those is a shape
+with a clean line at cell size, and it is what this genre actually ships: Royal Match and Toy
+Blast burst in shards and light and have no smoke anywhere near the board.
+
+**A freed critter stays on the board, and that is the reward being visible.** It used to leap out
+of the shell and fade to nothing over the last third of its animation, so a grove where everybody
+had been freed was an empty field — the thing the player spent the level earning was the one thing
+not on screen at the end. It now jumps clear, settles back onto its own cell at `FreedScale`, and
+breathes there for the rest of the run. Two tweens rather than one, because a single eased curve
+across both halves reads as a float rather than as getting out: the leap is fast and overshoots,
+the settle is slower and lands.
+
+**Budburst's two sounds are its own slots, and both were picked by ear after the measurements had
+narrowed the field.** `burst` rather than `pop`, because `pop` is a wooden clunk eight other
+things are tuned around and this one is struck thirteen times in a wave and pitched up through a
+chain — it has to be the shortest, brightest thing in the set, and nothing else should move when
+it is retuned. `free` rather than the bell-and-chime pair that used to open a cocoon, which was
+the loudest thing in the game fired up to four times inside one chain over thirteen bursts already
+sounding; it is `menu`'s block of wood struck a fifth higher, which is the reuse `sfx.tsv`'s head
+describes — heard clearly over a burst and gone before the next.
+
+**Nothing is drawn between two cells, and the attempt to is worth knowing about.** A bolt of
+lightning ran from the bursting cell to each flower it washed, and it chose its source by asking
+`Run.Board` which neighbour was `Bare` — but the model settles the whole chain before a frame is
+drawn, so that question answers "empty at the *end*", and the bolts fired out of flowers that had
+not gone off yet and out of cells that were bare ground in the authored layout. Reported as
+*"random electric effects at positions unrelated to where the flowers are rotating"*. What says
+the same thing correctly is anchored on one cell: a small flare in the arriving colour, and the
+flower whitening for a frame before it settles. **A wave is dealt as a ripple**, a few tens of
+milliseconds between the flowers of one
+wave, bounded by `BudTempo` to a fraction of the beat so the wave still ends on time: the board's
+biggest tap is thirteen flowers, and drawn all in one frame that is one flat blink.
+
+**The word at the end is the score, said out loud, and it gets its own arrival.** GREAT, AMAZING,
+EPIC, LEGENDARY — a ladder every player can already order without being taught it, which the
+grove's own vocabulary (LOVELY / WILD / GLORIOUS / WILDFIRE) could not be, because nobody knows
+whether GLORIOUS beats WILD. It starts at **two** waves rather than three, so the loudest thing
+the mode says is not reserved for a chain most taps never reach. It has **its own label in the
+middle of the grove** rather than a caption swap on the running count at the top — the count is
+information arriving while somebody is trying to watch the board, and the word is the payoff, so
+it is allowed to cover flowers for a second and the count is not. It slams in from oversize past
+its resting size, in its rung's colour, out of a bloom, over a ring, with sparks, a screen flash
+and a punch on the whole grove; the top rung is the only thing in this mode that gets confetti.
+Every rung gets all of it, only louder — a ladder that withholds the celebration below its top
+rung teaches the player that most of what they do is not worth celebrating, which on a mode built
+to be generous (invariant 20k) is the wrong lesson twice over.
+
+**Every flower is the same four-petal shape, and white is the one exception.** It used to draw
+one petal per channel — three for a pure colour, five for a blend, eight for white — as a second
+reading for the roughly one man in twelve who cannot separate red from green. Reported from play
+as clutter, and correctly: thirty-six flowers in three different silhouettes scattered through
+each other is a *field of shapes*, and the thing the mode is actually about is the one thing that
+then stops standing out. One silhouette makes the grove one material and leaves colour as the only
+thing changing across it. **White keeps eight** because its difference is a rule rather than a
+colour — it holds every channel, so it can never be mixed into again — and it is the only flower
+that moves while nobody is tapping, so the two readings still agree on the one flower where it
+matters. `BudFlower` is the single answer, asked by the grove, the band and the legend alike.
+
+**The second reading moved to a legend above the grove, and that is `FallMixing`'s rule for the
+second mode.** *Recall is not difficulty*: "the colour in hand mixes into the flower you tap" is
+one sentence and the whole game, and a player mid-grove still has to remember that the pink ones
+came from red and blue. So the board answers it — three recipes drawn as flowers, permanently, at
+the top of the screen. `BudMixing` derives them from the same `|` on the same masks `BudBoard`
+mixes with, so there is no table to fall out of step with the rule; `BudBand` owns where every
+piece of one sits, because whether two things collide is arithmetic (invariant 8a) and it costs
+the grove a strip of the shortest screen this game is drawn on, which is checked rather than
+argued about. **Three recipes, not four**: a blend tapped with the colour it lacks makes white,
+and the board says that better than a fourth chip would.
+
+**And three cards, not one plate.** All nine flowers sat inside a single long box and it was
+reported as visually confusing — which is exactly right: nine coloured shapes and four operators
+inside one border are a row of thirteen things, and the eye has to find the groupings itself every
+time it looks. Giving each statement its own edge does that work in the layout, so the legend is
+*read* as three facts rather than parsed as one. The gap went up with it, because three cards
+eight units apart read as one card with seams in it, which is the worst of both.
+
+**One chapter, one level, on purpose.** `b01_thicket` ships a single board because the two modes
+before this one were built out to five and ten levels and then thrown away — what decides a mode
+is whether the verb lands, and no number answers that. Thirty-six flowers in five colours with
+four cocoons set into them: par 3, and the best opening tap runs **three waves, bursts thirteen of
+the thirty-six flowers and frees three of the four critters at once**. A player who just taps
+whatever looks biggest finishes in 4, which is still a three-star run, and that is the bar rather
+than a difficulty reading (invariant 20k).
+
+**Par 3 rather than par 2, and the reason generalises.** The layout's first basket gave par 2, and
+at par 2 both star lines round onto 3 — `ceil(2 × 1.20)` and `ceil(2 × 1.40)` are the same integer
+— so the two-star band is empty and a careless player drops straight to one star.
+`CheckStarBands` reads the *factors* rather than the thresholds and so says nothing about it,
+deliberately (it would be a complaint about board size). On a mode whose pars are this short, that
+is a check nobody has: **look at the derived lines, not the factors.**
+
+Boards are composed and searched, not generated — the layout is fixed by hand and only the
+*basket* is hunted, which is the cheap half of the search and the half that decides how a board
+plays. `Tools/chapters/b01_thicket.py` and `Tools/verify/bud.py`. `bud-vectors.json` is the
+contract between the two copies of the mix-and-wash rule, and every case carries a play as well as
+a par: two copies can agree exactly about how many taps a grove costs and still disagree about how
+far the chain ran. **`BudLadderTests` is the half of that guard which runs offline** — the vector
+fixture needs the Editor, so the rule drifted once and only the build gate noticed; see the
+hard-won fact about a vector file only the Editor can read.
+
+**Two retired modes sit behind this one** and both are worth knowing about before designing a
+third — see invariant 20j. Lightweave shipped three chapters and rejected almost nothing;
+Ripplewake shipped five levels and could not be read. `weave` and `ripple` are spent mode ids.
 
 Shared by every mode: `RunLedger` (record, chests, streak, reward, analytics — and it builds
 the `RunOutcome` *before* folding the record in, because half of what it describes stops being
@@ -2402,8 +2684,8 @@ Free play collects about **593 credits and 6 gems a day**; `Tools/verify/content
   bulk pack, which is a volume discount every honest tuning is dearer than. It buys a *fresh*
   attempt, graded like any other. Content (`hearts.rescueGems` / `hearts.rescueHearts`), and
   `"rescueHearts": 0` withdraws it.
-- **Continue** — **20 gems** for **+15 turns** on a glade, **+20 cells of ink** on a weave,
-  **+6 motes** on a well or **+6 tiles** on a groove,
+- **Continue** — **20 gems** for **+15 turns** on a glade, **+6 motes** on a well,
+  **+6 tiles** on a groove or **+4 taps** on a grove,
   flat and repeatable for as long as the player can pay (invariant 23). About three days of
   free gems, or a fifth of the entry rung. The grant is *on top of* whatever it took to un-lose
   the board, and a bought run can only ever score one star. Content (`continueRun`), and
@@ -2571,7 +2853,7 @@ and a screenshot of the source.
 - **A panel with several exits reports through none of them reliably.** Put the safe outcome
   on `OnDestroy` and make the exception the thing somebody declares — `AdOfferOverlay.Dismissed`,
   the pause menu's unlatch, `BoardView.Locked` as a property that raises `OnChanged`,
-  `WeaveView.Finishing`. Exactly one of `Rewarded`/`Dismissed` fires, so both must be handled.
+  `BudView.Finishing`. Exactly one of `Rewarded`/`Dismissed` fires, so both must be handled.
 - **What a way out of a run costs is `RunScreen`'s, never a mode's.** Commit, resolve, forfeit
   and the confirmation all live there, and `RestartLevel` is not overridable — a mode supplies
   `Rewind`, `RunOver`, `NoteAbandoned` and `StakeLevel` and never gets at the price. It was each
@@ -2665,8 +2947,7 @@ and a screenshot of the source.
   that already existed. Two rules keep it repeatable rather than tiring: **a way out arrives with
   the tokens, not after them** (the button pops in when the payout starts, and tapping it early is
   safe because the flight's snapshot was taken at build time), and **everything loud happens once,
-  on the last landing** — one haptic, because `Handheld.Vibrate` is a single fixed-length pulse and
-  several inside a second are one rumble rather than several taps.
+  on the last landing** — one sound and one flourish, for the reason the buzz was removed below.
 - **Repaint from an event, never from a callback on the panel that changed something.**
   `CompanionLedger.Changed`, `CloudSaveService.IdentityChanged`, `GameSettings.Changed`.
 - **`UIKit.Box` pivots centre.** Anchoring a child to an edge puts half of it outside, and
@@ -2694,7 +2975,7 @@ and a screenshot of the source.
   camera cutout is a worse picture than the cutout. iOS reports its inset a frame or two after
   a cold start, so the node re-fits itself rather than reading the value once in `Build`.
 - **Timing rules live in Domain and are tested** — `Cue`, `TweenCycle`, `GroveGrowth`,
-  `GroveUnveil`, `WeaveTempo`, `CoachStroke`. Every sequence is bounded and **the rate gives
+  `GroveUnveil`, `BudTempo`, `CoachStroke`. Every sequence is bounded and **the rate gives
   way**, so a bigger board is never a longer wait. Motion is the one subsystem whose failures
   show up only in play, which is why the arithmetic has to be reachable without an Editor.
 - **A lesson is declared as a fact about the board, never as a fact about the player.** A mode
@@ -2709,44 +2990,34 @@ and a screenshot of the source.
   and there is no second copy of the rule about when a run is allowed to run. `Teachable` is the
   mode's own "is the board taking input" predicate, and it is what stops a review latching a
   board that a cascade or a closing sequence still owns.
-- **A lesson about a gesture is shown, not described.** A `TipOverlay` with a ring and two
-  sentences is the right shape for a *rule*; Lightweave's two lessons are a **verb** — this
-  mode is dragged, and a channel goes *through* a ring rather than stopping at it — and a
-  sentence describing a movement has to be turned back into the movement by whoever reads it.
-  So `Trace` lights the route on the real board and `CoachHand` walks a hand along it, the
-  sentence is cut to the half words are good at, and `Target` still rings only the thing being
-  named. Two rules the demonstration keeps: it never traces the carved solution (`StrokeThrough`
-  picks by geometry, because a demonstration is not where the answer is handed over), and its
-  ink is **dots**, since a solid line is what a finished channel looks like and a hand must not
-  leave one the player has not drawn. `Art.Hand` is generated for invariant 7b's reason and is
-  **tilted on purpose** — an upright finger over a closed fist is a gesture that must never
-  reach a teaching panel in any market.
-- **A demonstration must show a move the player could actually make, and the shortest one that
-  still shows it.** The Lightweave coaching hand got this wrong twice in one day. It was handed
-  two points, the crystal and the critter, which interpolates *diagonally* — an input the mode
-  does not have, shown while teaching what the input is. Traced along the generator's carved walk
-  instead it became legal and unreadable, because that walk exists to fill the grove, so a
-  fingertip zig-zagged through twenty cells and taught that the mode is fiddly. It is now an
-  elbow (`WeaveLayout.CoachRoute`), refused if it would cross another pair's endpoint — an
-  *illegal* demonstration reads as permission, where an impossible one only reads as decoration.
-  The ink is the same `Link`/`Knuckle` pair a real channel is drawn from, because a dotted trail
-  is a path marker — the thing a map draws — and the lesson is that the player draws.
-  <br>**And the fallback under it was the carved walk, which is the one route a demonstration may
-  never be.** An elbow is refused by a hedge outright (bending it round a barrier would be the
-  illegal move above), so a grove where no pair has a clean one fell straight through to the
-  generator's solution — wandering, which is what the elbow replaced, *and* the answer, handed
-  over. Nothing could reach that state while every shipped grove was open ground, and
-  `w03_the_wildhedge_knot` reached it the moment three hedges were grown on it: four corners,
-  on a chapter finale, found only because `TheDemonstratedRouteStepsTheWayAFingerCan` happened to
-  bound the turns. `WeaveLayout.Detour` is what runs instead — fewest corners first, then fewest
-  cells, over (cell, heading) because the cheapest way *to* a cell depends on which way the hand
-  was already going. It is exact, so it can only ever return the elbow on open ground, and its
-  two corners on that finale are the floor rather than a concession. The test bound is therefore
-  one corner where there are no hedges and two where there are: a hedged grove earns the step
-  round a barrier, and a third corner means re-seed the grove rather than widen the rule.
+- **A lesson about a gesture is shown, not described, and a demonstration must show a move the
+  player could actually make.** A `TipOverlay` with a ring and two sentences is the right shape
+  for a *rule*; a **verb** is not that shape, because a sentence describing a movement has to be
+  turned back into the movement by whoever reads it. So `Lesson.Trace` lights a route on the real
+  board and `CoachHand` walks a hand along it, `CoachStroke` times it, and `Target` still rings only
+  the thing being named. Three rules the machinery keeps, each learned by getting it wrong: the
+  demonstrated route must be one the mode's own input could produce (a straight interpolation
+  between two cells is a diagonal drag on a mode that has no diagonal, shown while teaching what
+  the input is); it must never be the board's own answer, because a demonstration is not where the
+  solution is handed over; and `Art.Hand` is generated for invariant 7b's reason and is **tilted on
+  purpose** — an upright finger over a closed fist is a gesture that must never reach a teaching
+  panel in any market.
+  <br>Lightweave is what all of that was built for and Lightweave is retired. It survives because
+  Groovekeeper already uses the tap half (`CoachHand.Tap`), and because the next mode with a verb
+  rather than a rule will need the rest of it — Budburst does not, because its verb is one tap and
+  everything it has to teach is what happens *after* the tap, which the board shows better than a
+  hand could.
 - **Celebrate once.** The board already flashes, sounds and (for a glade) throws confetti when
-  it solves; the win panel adds no fanfare, no confetti and no haptic. `Handheld.Vibrate` is
-  one fixed-length buzz on Android, so a second one cannot be made lighter than the first.
+  it solves; the win panel adds no fanfare and no confetti.
+- **The game does not vibrate at all, and `Haptic` is deleted.** It was twenty call sites and a
+  settings toggle, and every one of them was the *same* knock whatever it was answering:
+  `Handheld.Vibrate` on Android is a single fixed-length heavy pulse with no way to make a second
+  lighter than the first, so a mode that opens four cocoons in one chain fired four times inside a
+  second and produced one rumble. What it cost in feedback it took back twice over in noise. The
+  `haptics` field stays in the settings DTO and `GameSettings.HapticsOn` stays with it, retired in
+  place for `bestMillis`' reason — `settings` travels in the save and `firestore.rules` gates that
+  document with a `hasOnly` allow-list, so a key dropped before every shipped client has stopped
+  writing it loses *every* save write (invariant 12a).
 - **Depth is applied to a whole visible window in one pass.** `SetSiblingIndex` *inserts*, so
   assigning depth per tile as tiles are realised leaves a field that looks sorted and is not.
 - **An arrangement of identical things is arithmetic too, and the tell is an even count.**
@@ -2760,7 +3031,7 @@ and a screenshot of the source.
   hands back a *slot* alongside its draw order, since a caller filling a bundle's gems is choosing
   by position and the draw order is back to front.
 - **Whether two things on a screen overlap is arithmetic, so it goes in Domain and gets a test.**
-  `ChapterMap` did it for map nodes (invariant 8a); `WeaveBand` does it for the undo key and the
+  `ChapterMap` did it for map nodes (invariant 8a); `BudBand` does it for the readouts under a
   standing line under a grove, and `ReadoutRow` for a row of one, two or three numbers. The rule
   earned its third instance the honest way: the band was three constants with a paragraph
   explaining why they cleared each other, and the paragraph was wrong, because `UIKit.Box`

@@ -614,6 +614,127 @@ namespace GlimmerGrove
             });
         }
 
+        // ------------------------------------------------------------------ explosions
+        //
+        // **Budburst's whole effect set, generated.** It was cut from a licensed VFX pack
+        // twice and thrown away twice — the first cut took the pack's shader utility maps by
+        // mistake (a colour ramp drawn as a flare, a noise field as a shockwave), and the
+        // second, correct cut still put a smoke plume onto a puzzle grid. What both attempts
+        // really proved is that a pack authored for world-space particles is the wrong shelf:
+        // its shapes are volumes meant to be seen large, and a cell on a phone wants
+        // silhouettes seen small.
+        //
+        // Generated art answers that and four other things this project keeps asking for
+        // (invariant 7b): no address to register, no group to belong to, no bundle to grow, no
+        // frame where an Image is a white rectangle because the art had not arrived — and, the
+        // one that matters most here, every shape is a coverage mask, so it takes the exact
+        // colour of the flower that went off rather than a tint over somebody else's paint.
+
+        /// <summary>
+        /// A starburst: a hot core with sharp spikes off it.
+        ///
+        /// <para>
+        /// The instant of a burst. <paramref name="points"/> spikes on a radius that swings
+        /// between a stub and the full circle, so the silhouette has straight edges in it —
+        /// which is the whole reason it is here rather than a <see cref="Glow"/>. A burst built
+        /// only from round soft shapes reads as a puff; it needs one thing with a corner on it
+        /// to read as a bang.
+        /// </para>
+        /// <para>
+        /// The core is added to the spikes rather than maxed against them, so the middle blows
+        /// out to solid white while the arms stay thin. An even fill draws a rounded blob,
+        /// which at cell size is the one silhouette this must not have.
+        /// </para>
+        /// </summary>
+        public static Sprite Flash(int size = 256, int points = 12)
+        {
+            int n = Mathf.Clamp(points, 4, 24);
+            float h = size * .5f;
+
+            return Make($"flash{size}_{n}", size, size, (x, y) =>
+            {
+                float dx = (x - h) / h, dy = (y - h) / h;
+                float d = Mathf.Sqrt(dx * dx + dy * dy);
+                if (d >= 1f) return 0f;
+
+                // half-angle, so n spikes rather than 2n - Bloom's trick
+                float lobe = Mathf.Abs(Mathf.Cos(Mathf.Atan2(dy, dx) * n * .5f));
+
+                // **Sharp, and that exponent is the whole shape.** At 2.6 the lobes come out
+                // fat and the thing reads as a twelve-petal flower — on a board made of
+                // flowers, the one silhouette it must not have. Past about 4 they are needles
+                // with a hot middle, which is what a bang looks like.
+                float rad = Mathf.Lerp(.19f, .99f, Mathf.Pow(lobe, 4.4f));
+
+                float spike = Cover((d - rad) * h);
+                float core = Mathf.Pow(Mathf.Clamp01(1f - d / .34f), 1.7f);
+                return Mathf.Clamp01(spike + core);
+            });
+        }
+
+        /// <summary>
+        /// The front of a shockwave: a crisp ring with its wake fading inward.
+        ///
+        /// <para>
+        /// Not <see cref="Ring"/>, which is even on both sides and is what a cocoon's cracks
+        /// wear. A wave has a direction — it is going outward — and the only way a still shape
+        /// can say so is to be hard on its leading edge and soft behind it. Tween its
+        /// <c>sizeDelta</c> rather than its scale and the front keeps the same width however
+        /// wide the ring gets, which is what a wave leaving actually looks like; scaling it
+        /// thickens the line as it grows and reads as a bubble inflating.
+        /// </para>
+        /// </summary>
+        public static Sprite Wave(int size = 256, float thickness = 9f)
+        {
+            float t = Mathf.Max(2f, thickness);
+            float h = size * .5f;
+            float r = h - t - 2f;
+
+            return Make($"wave{size}_{t:0.0}", size, size, (x, y) =>
+            {
+                float dx = x - h, dy = y - h;
+                float d = Mathf.Sqrt(dx * dx + dy * dy) - r;
+
+                float front = Cover(Mathf.Abs(d) - t * .5f);
+                float wake = d < 0f
+                    ? Mathf.Pow(Mathf.Clamp01(1f + d / (t * 4.5f)), 2.2f) * .38f
+                    : 0f;
+
+                return Mathf.Clamp01(Mathf.Max(front, wake));
+            });
+        }
+
+        /// <summary>
+        /// A four-pointed twinkle: a bright dot with needle rays off it.
+        ///
+        /// <para>
+        /// <see cref="Spark"/> is an astroid — a fat four-pointed star, and the right shape for
+        /// a spray of debris, which is what <c>Burst.Sparks</c> makes it. This is the other
+        /// thing: a point of light with rays so thin they read as a lens catching it. The two
+        /// are used within a few pixels of each other after every burst, so they had to be
+        /// told apart at a glance rather than by size.
+        /// </para>
+        /// </summary>
+        public static Sprite Glint(int size = 96, int points = 4)
+        {
+            int n = Mathf.Clamp(points, 3, 8);
+            float h = size * .5f;
+
+            return Make($"glint{size}_{n}", size, size, (x, y) =>
+            {
+                float dx = (x - h) / h, dy = (y - h) / h;
+                float d = Mathf.Sqrt(dx * dx + dy * dy);
+                if (d >= 1f) return 0f;
+
+                float lobe = Mathf.Abs(Mathf.Cos(Mathf.Atan2(dy, dx) * n * .5f));
+
+                // A very high power is what makes a ray a needle rather than a wedge.
+                float ray = Mathf.Pow(lobe, 30f) * Mathf.Pow(1f - d, .7f);
+                float core = Mathf.Pow(Mathf.Clamp01(1f - d / .18f), 2.2f);
+                return Mathf.Clamp01(ray + core);
+            });
+        }
+
         /// <summary>
         /// Fan of light rays from a hollow centre, for the thing behind a prize.
         ///
@@ -753,6 +874,11 @@ namespace GlimmerGrove
                 float half = .883f * Mathf.Pow(w, .5f) * Mathf.Pow(1f - w, 1f);
 
                 float body = Cover((Mathf.Abs(u - .5f) - half * .62f) * size);
+
+                // A vein of nought means no vein. It used to leave a half-covered hairline
+                // down the middle, because Cover(0) is .5 — invisible on an event page's
+                // grown leaf and a dark slot down the centre of a petal thrown by a burst.
+                if (v <= 0f) return body;
 
                 float rib = Cover((Mathf.Abs(u - .5f) - v * .5f) * size) *
                             Cover((Mathf.Abs(w - .5f) - .46f) * size);
