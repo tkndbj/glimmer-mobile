@@ -103,7 +103,7 @@
     },
     {
       "key": "level.c01_three_springs.tagline",
-      "text": "Gold, teal, and a red spring of its own"
+      "text": "Orange, green, and a red spring of its own"
     },
     {
       "key": "level.c01_twin_streams.name",
@@ -247,7 +247,7 @@
     },
     {
       "key": "level.c03_the_verdigris.tagline",
-      "text": "Teal, between the blue comb and the green one"
+      "text": "Green, between the blue comb and the yellow one"
     },
     {
       "key": "level.c03_three_springs.name",
@@ -367,7 +367,7 @@
     },
     {
       "key": "level.f01_two_lights.tagline",
-      "text": "Blue is the one thing yellow lacks."
+      "text": "Blue is the one thing orange lacks."
     },
     {
       "key": "level.f01_the_kindling.name",
@@ -2198,8 +2198,8 @@
       "text": "tap to collect"
     },
     {
-      "key": "ui.howto.blossom",
-      "text": "blossom"
+      "key": "ui.howto.purple",
+      "text": "purple"
     },
     {
       "key": "ui.howto.blue",
@@ -3855,7 +3855,7 @@
     },
     {
       "key": "ui.tip.bud_chain.body",
-      "text": "The colour in your hand MIXES into whatever flower you tap - red with green in hand turns yellow.\n\nGet three of one colour touching and they burst, splashing that colour into every flower around them. Which makes more threes. Which makes more."
+      "text": "The colour in your hand MIXES into whatever flower you tap - red with yellow in hand turns orange.\n\nGet three of one colour touching and they burst, splashing that colour into every flower around them. Which makes more threes. Which makes more."
     },
     {
       "key": "ui.tip.bud_cocoon.title",
@@ -3903,7 +3903,7 @@
     },
     {
       "key": "ui.tip.fall_cook.body",
-      "text": "A mote adds its colour to the one it lands on. Red on green makes yellow.\n\nA mote holding all three bursts, and washes that colour into everything beside it."
+      "text": "A mote adds its colour to the one it lands on. Red on yellow makes orange.\n\nA mote holding all three bursts, and washes that colour into everything beside it."
     },
     {
       "key": "ui.tip.fall_supply.title",
@@ -3955,7 +3955,7 @@
     },
     {
       "key": "ui.tip.mixing.body",
-      "text": "This critter dreams of a colour no single heart carries. Join two hearts into one network and their light blends — red and green make gold."
+      "text": "This critter dreams of a colour no single heart carries. Join two hearts into one network and their light blends — red and yellow make orange."
     },
     {
       "key": "ui.tip.mixing.title",

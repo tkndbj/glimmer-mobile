@@ -386,7 +386,13 @@ namespace GlimmerGrove
         }
 
         /// <summary>The three channels, in the order <see cref="PrismRing"/> walks them.</summary>
-        static readonly Color[] Arcs = { Pal.Ember, Pal.Verdant, Pal.Azure };
+        // Read out of the energy table rather than named, so the ring stays the three
+        // channels whatever those channels are painted. Naming them is what made this a
+        // second copy of the colour language when the wheel moved from light to paint.
+        static readonly Color[] Arcs =
+        {
+            Pal.EnergyColour(Energy.R), Pal.EnergyColour(Energy.G), Pal.EnergyColour(Energy.B)
+        };
 
         /// <summary>Soft radial falloff. Higher power = tighter core.</summary>
         public static Sprite Glow(int size = 128, float power = 2.2f)

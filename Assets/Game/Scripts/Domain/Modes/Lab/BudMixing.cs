@@ -28,8 +28,8 @@ namespace GlimmerGrove.Modes
     /// <para>
     /// <b><c>FallMixing</c>'s argument, and it is the same argument.</b> "The colour in hand is
     /// added to the flower you tap" is one sentence and the whole mode — and a player still has
-    /// to remember, mid-tap, that the pink one came from red and blue and that tapping it with
-    /// green ends it. That is not difficulty, it is recall, and recall is the thing a board
+    /// to remember, mid-tap, that the purple one came from red and blue and that tapping it with
+    /// yellow ends it. That is not difficulty, it is recall, and recall is the thing a board
     /// should answer for the player rather than test them on. So the grove draws a legend above
     /// it, and this is what the legend draws.
     /// </para>
@@ -37,7 +37,7 @@ namespace GlimmerGrove.Modes
     /// <b>Derived, never typed.</b> Every pair of distinct pure channels is a recipe and what it
     /// makes is the two of them together — the same <c>|</c> on the same masks that
     /// <c>BudBoard.Mix</c> runs — so there is no table here that could come to disagree with the
-    /// rule it describes. A hand-written "red and blue make pink" is a second answer waiting to
+    /// rule it describes. A hand-written "red and blue make purple" is a second answer waiting to
     /// be wrong, and this mode has four colours' worth of them.
     /// </para>
     /// <para>
@@ -55,8 +55,8 @@ namespace GlimmerGrove.Modes
         static readonly BudRecipe[] _all = Build();
 
         /// <summary>
-        /// The three recipes, in the order a legend reads them: red and green, red and blue,
-        /// green and blue.
+        /// The three recipes, in the order a legend reads them: red and yellow, red and blue,
+        /// yellow and blue.
         /// </summary>
         public static IReadOnlyList<BudRecipe> Recipes => _all;
 

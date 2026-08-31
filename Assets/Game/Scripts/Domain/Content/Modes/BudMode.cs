@@ -6,7 +6,7 @@ namespace GlimmerGrove.Content
     /// <summary>
     /// <b>Budburst.</b> A grove of coloured flowers with critters shut in cocoons, and a basket
     /// of pure colour dealt one per tap. Tap a flower and the colour in hand <em>mixes</em> into
-    /// it — red with green in hand becomes yellow — and any bunch of three or more touching
+    /// it — red with yellow in hand becomes orange — and any bunch of three or more touching
     /// flowers of one colour bursts, washing its colour into everything it touches, which makes
     /// more bunches. That is the chain, and a cocoon beside any of it cracks open.
     ///

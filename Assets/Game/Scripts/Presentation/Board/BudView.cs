@@ -762,8 +762,8 @@ namespace GlimmerGrove
         /// What a tap would come to, shown on the grove before anything is spent.
         ///
         /// <b>Two things, and the first is the one that teaches the mode.</b> The flower under the
-        /// thumb is drawn in the colour it <em>would become</em>, so "red plus green in hand makes
-        /// yellow" is a thing the player watches happen rather than a rule they are told. Then
+        /// thumb is drawn in the colour it <em>would become</em>, so "red plus yellow in hand makes
+        /// orange" is a thing the player watches happen rather than a rule they are told. Then
         /// every cell the chain would take is lit, so a big one can be seen coming — which is the
         /// whole pleasure of choosing — without the board saying which tap is best.
         /// </summary>
@@ -2597,8 +2597,8 @@ namespace GlimmerGrove
         /// The small flash where colour lands on a flower.
         ///
         /// Drawn in the colour that arrived rather than in white, which is the whole point of
-        /// it: a white flash over a flower that then turns yellow makes the player work out
-        /// afterwards what happened, where a yellow one says it as it happens. Smaller than a
+        /// it: a white flash over a flower that then turns orange makes the player work out
+        /// afterwards what happened, where an orange one says it as it happens. Smaller than a
         /// burst's flash and gone faster, because this flower did not go off — something
         /// reached it.
         /// </summary>

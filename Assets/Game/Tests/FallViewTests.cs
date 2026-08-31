@@ -59,6 +59,23 @@ namespace GlimmerGrove.Tests
             return new FallLayout(4, rows.Length, fill, deal);
         }
 
+        /// <summary>Lantern Row, which is the board the leak was reported on: two panes.</summary>
+        static FallLayout Lanterns()
+        {
+            Assert.IsTrue(FallDeal.TryParse("GBR", out var deal, out string dealError), dealError);
+
+            var rows = new[]
+            {
+                ".......", ".......", ".......", "M.....Y",
+                "M.....Y", "Mb...yM", "MY...MM", "YYYYMMM"
+            };
+
+            Assert.IsTrue(FallLayout.TryReadRows(rows, 7, rows.Length, out var fill,
+                                                 out string fillError), fillError);
+
+            return new FallLayout(7, rows.Length, fill, deal);
+        }
+
         /// <summary>
         /// A host with a real rect, because <c>Begin</c> sizes the well from it — a board built
         /// against a zero rect is a board of nothing and would prove nothing here.
@@ -197,6 +214,148 @@ namespace GlimmerGrove.Tests
                             "a recycled widget was dragged off the cell it was just placed in by " +
                             "a slide belonging to the run before it — which is a lens that " +
                             "refuses to fall, on a board the model settled perfectly");
+        }
+
+        /// <summary>
+        /// <b>Every widget drawn on the board is one the view still owns.</b> The census the leak
+        /// was found by, and the one thing that could have caught it: the model was right, par was
+        /// right, every validator and the whole suite were green, and the only wrong thing was a
+        /// picture nobody was counting.
+        ///
+        /// <para>
+        /// A drop taken in by glass is absorbed — the stack does not grow — so the falling widget
+        /// must be handed back and the lens's own widget left standing. <c>FallView.Drop</c> asked
+        /// <c>Enriches</c>, which is false for glass, so it took the "came to rest on top" branch
+        /// instead: the falling mote was written into the view's index over the lens, and the
+        /// lens's widget fell out of it. Nothing owned it after that, so nothing repainted it,
+        /// nothing moved it when the column collapsed, and nothing ever took it off the board.
+        /// Reported from play as a pane hanging in the air showing the charge it held before the
+        /// drop.
+        /// </para>
+        /// <para>
+        /// Driven through the real <c>PlayDrop</c> rather than by inspection, because the claim is
+        /// about what is on the screen. Edit mode runs no coroutines, so the body is stepped by
+        /// hand — a wait is satisfied at once and a nested coroutine is pumped, which is what
+        /// Unity does with a longer clock.
+        /// </para>
+        /// </summary>
+        [Test]
+        public void EveryWidgetOnTheBoardIsOneTheViewStillOwns()
+        {
+            LogAssert.ignoreFailingMessages = true;
+
+            var host = Host();
+            var view = host.gameObject.AddComponent<FallView>();
+            view.Begin(host, Lanterns(), 8);
+
+            Census(view, "the board as it opens");
+
+            // The exact sequence it was reported on: green onto the left pane, then blue onto the
+            // right one — which fires, strikes the left pane, and takes the whole board with it.
+            int lens = view.Run.Board.Index(1, 5);
+            object before = WidgetAt(view, lens);
+            Assert.IsNotNull(before, "the left pane should be drawn before anybody touches it");
+
+            PumpDrop(view, 1);
+            Census(view, "after a drop the left pane took in");
+
+            // **The identity is the half a head-count cannot see.** A drop glass takes in is
+            // absorbed, so the pane keeps its own widget and the falling mote is handed back.
+            // Routed down the "came to rest on top" branch instead, the falling mote is written
+            // into the index over the pane — which draws the cell as a plain green mote until the
+            // next repaint, plays the note for a mote that only stacked, and (before the branch
+            // learned to reclaim) left the pane's own widget on the board for ever.
+            Assert.AreSame(before, WidgetAt(view, lens),
+                           "the pane's own widget was replaced by the mote that was dropped on " +
+                           "it, so the cell is no longer being drawn by the thing that is in it");
+
+            PumpDrop(view, 5);
+            Census(view, "after the shot that empties the well");
+
+            Assert.AreEqual(0, view.Run.Board.Lenses,
+                            "both panes fired, so neither is still standing in the model");
+
+            Assert.IsNull(WidgetAt(view, lens),
+                          "and a pane that fired empties fully: nothing of it is left on the board");
+        }
+
+        /// <summary>Whatever widget the view currently has drawing one cell, or null.</summary>
+        static object WidgetAt(FallView view, int cell)
+        {
+            var flags = System.Reflection.BindingFlags.Instance
+                      | System.Reflection.BindingFlags.NonPublic;
+
+            var at = (System.Array)typeof(FallView).GetField("_at", flags).GetValue(view);
+            return at.GetValue(cell);
+        }
+
+        /// <summary>
+        /// What the view is drawing, what it still owns, and what the model says are all one
+        /// number. Anything else is a widget on a board that nothing can move or remove.
+        /// </summary>
+        static void Census(FallView view, string when)
+        {
+            var flags = System.Reflection.BindingFlags.Instance
+                      | System.Reflection.BindingFlags.NonPublic;
+
+            var well = (RectTransform)typeof(FallView).GetField("_well", flags).GetValue(view);
+            var at = (System.Array)typeof(FallView).GetField("_at", flags).GetValue(view);
+
+            int owned = 0;
+            foreach (var widget in at) if (widget != null) owned++;
+
+            int drawn = 0;
+            foreach (Transform child in well) if (child.gameObject.activeSelf) drawn++;
+
+            Assert.AreEqual(owned, drawn,
+                            when + ": " + drawn + " widget(s) are drawn on the board and the view " +
+                            "owns " + owned + ". The difference is orphaned — still on screen, in " +
+                            "nobody's index, so it will never repaint, never fall and never leave");
+
+            Assert.AreEqual(view.Run.Board.Motes, owned,
+                            when + ": the view owns " + owned + " widget(s) against " +
+                            view.Run.Board.Motes + " occupied cell(s) in the model");
+        }
+
+        /// <summary>
+        /// One drop, played through the real coroutine. Edit mode runs none, so it is stepped by
+        /// hand: a wait is satisfied at once (<c>WaitForSecondsRealtime</c> is itself an
+        /// <c>IEnumerator</c>, so it has to be told apart from a nested coroutine or the pump
+        /// spins on it for ever), and the tweens are then run out.
+        /// </summary>
+        static void PumpDrop(FallView view, int column)
+        {
+            var flags = System.Reflection.BindingFlags.Instance
+                      | System.Reflection.BindingFlags.NonPublic;
+
+            int colour = view.Run.Next;
+            int row = view.Run.Board.Landing(colour, column);
+            bool taken = view.Run.Board.Takes(colour, column);
+
+            var result = view.Run.Drop(column);
+            Assert.IsNotNull(result, "the drop was refused");
+
+            var body = (System.Collections.IEnumerator)typeof(FallView)
+                .GetMethod("PlayDrop", flags)
+                .Invoke(view, new object[] { column, row, colour, taken, result });
+
+            var stack = new System.Collections.Generic.Stack<System.Collections.IEnumerator>();
+            stack.Push(body);
+
+            for (int step = 0; stack.Count > 0; step++)
+            {
+                Assert.Less(step, 20000, "the drop never finished");
+
+                var top = stack.Peek();
+                if (!top.MoveNext()) { stack.Pop(); continue; }
+
+                object now = top.Current;
+                if (now is YieldInstruction || now is CustomYieldInstruction) continue;
+
+                if (now is System.Collections.IEnumerator nested) stack.Push(nested);
+            }
+
+            for (int frame = 0; frame < 200; frame++) Tween.Inst.Tick(.05f, .05f);
         }
     }
 }

@@ -1302,6 +1302,29 @@ What that means in practice here:
     to the same answer — the ten boards were re-picked against a tight `ways` rather than the
     rule being backed out. **Before shipping a resource that only one destructible thing can
     produce, ask what happens to the player who destroys them all first.**
+    <br>**The valve cost the view a widget on every drop, and the cause is a predicate that
+    answers half a question being used as the whole one.** "Does the thing on top take this drop"
+    has two answers — a mote is *enriched*, a lens is *charged* — and `Enriches` is
+    `IsMote(...) && ...`, so it answers **false** for every charging drop. That is correct for
+    what it asks and was catastrophic where `FallView.Drop` used it to decide whether the falling
+    widget is handed back or left standing in the cell: every drop glass took in was drawn as one
+    that had come to rest on top, so the falling mote was written into `_at` over the lens and the
+    lens's own widget fell out of the index — still on screen, owned by nothing, so it never
+    repainted, never fell when the column collapsed and never left. Reported from play as a pane
+    hanging in the air over an emptied column, still showing the charge it held *before* the drop,
+    on the one board where two lenses make it obvious (`f02_lantern_row`). Measured on the real
+    view: **10 widgets drawn against 8 the view owned and 8 the model held.**
+    <br>Three things about it are the general lesson. **The model was never wrong** — the same two
+    scenarios settle identically, wave for wave, with no lens left standing in either — so a
+    player reporting "these two do different things" was reporting two drawings of one rule.
+    **Nothing here could see it**: the board settles, par is right, the validators and the whole
+    suite are green, and the only wrong thing is a picture nobody was counting. And the fix is not
+    the widened condition but `FallBoard.Takes`, which is the clause `Landing` already turns on,
+    said out loud — because a question with two answers asked as two predicates is a question some
+    caller will ask half of. `FallViewTests.EveryWidgetOnTheBoardIsOneTheViewStillOwns` is the
+    census that catches it, and it asserts **identity** as well as the head-count: a drop the glass
+    took in must leave the pane's *own* widget standing, which is what tells "absorbed" from
+    "landed on top" once the branch has learned to reclaim what it displaces.
     <br>**`aim` is the metric, and it replaced one that was quietly wrong.** The question worth
     asking is how many of a lens's shots land on anything: glass pointing at nothing has taken
     three drops of charging and bought nothing, which is invariant 5d in the place nobody would
@@ -1891,7 +1914,7 @@ What that means in practice here:
     destruction and a spread: **a white mote bursts alone and washes the colour that finished it
     into the motes beside it**, so any of them thereby completed bursts in turn. That is what
     makes one drop worth more than one mote, and it decides what the mode *is*: dropping blue
-    clears the yellows, leaves the reds and greens it passes one step better, and reaches a mote
+    clears the oranges, leaves the reds and yellows it passes one step better, and reaches a mote
     buried at the bottom of a column that no drop could ever land on. Before changing it, note
     the ordering the whole thing rests on — a wave decides what bursts and what it washes from
     the positions the bursting motes are standing in, **before** anything is removed and
@@ -2759,6 +2782,28 @@ reason.
 
 ### The board's vocabulary
 
+**The wheel is paint, not light, and that is a look rather than a rule.** `Energy` still mixes by
+`|` over three bits — the boards, the letters in every chapter file, the searches, par and the
+vectors are all untouched — and `Pal.EnergyColour` is the one place that says what each of the
+seven masks is *painted*. It used to be additive: red, green and blue blending to yellow, magenta
+and cyan, which is exactly right for light and is the one colour arithmetic nobody outside a
+graphics pipeline has been taught. It was reported from play as confusion rather than as a bug, a
+player mixing red and blue expecting purple, because what everybody has actually handled is paint.
+So the middle channel is drawn **yellow** and the blends fall out of the wheel a five-year-old
+knows: red+yellow **orange**, red+blue **purple**, yellow+blue **green**. All three still meet at
+`Radiance`, which paint does not do, because white here is not a colour — it is the *finished*
+state, and a muddy brown would be arithmetically honest and say the opposite of what the state
+means. What made it a one-file change is that every mode asks `EnergyColour` and both teaching
+legends (`FallMixing`, `BudMixing`) derive their chips from the same masks, so the board, the tray,
+the legend and the tips all moved together. Two consequences worth knowing. The authored letters
+**`Y`, `M` and `C` still name the masks** and are not renamed — they are in every shipped chapter
+and three offline mirrors, and the look is `Pal`'s job. And the warm three are now genuine
+neighbours on the wheel where red, green and blue were not, so they are separated by **value** as
+well as hue (Poppy deep, Marigold mid, Pollen bright); the old palette was also the friendlier one
+for red-green colour blindness, and nothing on a glade tells two channels apart except tint, so
+that is the price of the change and it is worth measuring if it is ever reported.
+
+
 One verb — turn a conduit, light a critter — with modifiers, and no second solver:
 
 - `~` **brittle stone** — survives a fixed number of turns. Belongs on a tile the player
@@ -2985,7 +3030,7 @@ typed — `Tools/hollow/`.
 
 **Budburst** (`BudScreen`) — a grove of **coloured flowers** with critters shut in **cocoons**,
 and a basket of pure colour dealt one per tap. Tap a flower and the colour in hand **mixes** into
-it — red with green in hand becomes yellow — and any bunch of **three or more touching flowers of
+it — red with yellow in hand becomes orange — and any bunch of **three or more touching flowers of
 one colour bursts**, washing its colour into every flower it touches. Which makes more bunches.
 Which makes more. A cocoon beside any burst takes a crack, and one out of cracks opens. Free every
 critter before the taps run out.

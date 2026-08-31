@@ -10,7 +10,7 @@ namespace GlimmerGrove.Modes
     /// <para>
     /// <b>One verb with two branches, and the branch is what makes it a game.</b> A mote dropped
     /// onto a stack either <em>enriches</em> the top of it or <em>heightens</em> it. Red onto
-    /// green makes yellow and the stack does not grow. Red onto yellow adds nothing — yellow
+    /// yellow makes orange and the stack does not grow. Red onto orange adds nothing — orange
     /// already holds red — so the mote sits on top and the well is one row nearer its brim.
     /// Every drop therefore costs one of a finite supply and, if it was the wrong one, a row of
     /// headroom as well: one mistake, two meters, and both of them visible.
@@ -350,6 +350,41 @@ namespace GlimmerGrove.Modes
 
             int cell = _cells[Index(x, top)];
             return FallCell.IsLens(cell) && (cell | colour) != cell;
+        }
+
+        /// <summary>
+        /// Whether whatever is on top of this column <em>takes</em> the drop, rather than the
+        /// drop coming to rest above it and the stack growing a row.
+        ///
+        /// <para>
+        /// <b>One question with two answers, and it exists because asking the two answers
+        /// separately is how a caller comes to ask only one of them.</b> A mote lacking the
+        /// colour is enriched and a lens lacking it is charged; in both cases the drop is
+        /// absorbed and the well does not get any taller. <see cref="Enriches"/> is
+        /// <c>IsMote(...) &amp;&amp; ...</c>, so it answers <b>false</b> for every charging drop —
+        /// which is correct for the question it asks and catastrophic as a stand-in for this one.
+        /// <c>FallView</c> used it to decide whether the falling widget should be handed back or
+        /// left standing in the cell, so every drop taken in by glass was drawn as one that had
+        /// come to rest on top: the falling mote took the lens's place in the view's own index
+        /// and the lens's widget was dropped out of it, still on screen, tracked by nothing.
+        /// It then never repainted, never fell and never left — a pane hanging in the air over a
+        /// column that had since emptied, showing the charge it held before the drop. Reported
+        /// from play in exactly those words.
+        /// </para>
+        /// <para>
+        /// It is the same clause <see cref="Landing"/> already turns on, said out loud, which is
+        /// what makes it impossible for the two to disagree.
+        /// </para>
+        /// </summary>
+        public bool Takes(int colour, int x)
+        {
+            if (x < 0 || x >= Width || colour == Energy.None) return false;
+
+            int top = TopOf(x);
+            if (top < 0) return false;
+
+            int cell = _cells[Index(x, top)];
+            return (cell | colour) != cell;
         }
 
         /// <summary>

@@ -687,7 +687,13 @@ namespace GlimmerGrove
 
             int colour = Run.Next;
             int row = Run.Board.Landing(colour, column);
-            bool enriches = Run.Board.Enriches(colour, column);
+
+            // Whatever is on top takes the drop when it lacks the colour - a mote is enriched
+            // and a lens is charged - and either way the stack does not grow, so the falling
+            // widget is handed back and the thing already standing there changes. One question
+            // with one answer: `FallBoard.Takes` says why that is not `Enriches` and what asking
+            // `Enriches` instead cost.
+            bool taken = Run.Board.Takes(colour, column);
 
             var result = Run.Drop(column);
             if (result == null) return;
@@ -708,10 +714,10 @@ namespace GlimmerGrove
             PaintHalos();
             Changed?.Invoke();
 
-            StartCoroutine(PlayDrop(column, row, colour, enriches, result));
+            StartCoroutine(PlayDrop(column, row, colour, taken, result));
         }
 
-        IEnumerator PlayDrop(int column, int row, int colour, bool enriches, FallResolution result)
+        IEnumerator PlayDrop(int column, int row, int colour, bool taken, FallResolution result)
         {
             int index = Run.Board.Index(column, row);
 
@@ -747,32 +753,59 @@ namespace GlimmerGrove
             if (!this) yield break;
 
             // ---- the landing
-            if (enriches)
+            if (taken)
             {
-                // The mote it landed on takes the light: the falling widget is handed back and
-                // the one already standing there changes colour, which is what actually happened.
+                // Whatever it landed on takes the light: the falling widget is handed back and
+                // the thing already standing there changes, which is what actually happened. The
+                // hand-back is the half that matters — a widget nothing hands back is a widget
+                // nothing owns, and `_at` is the only thing that can ever move it again.
                 Give(falling);
 
                 var host = _at[index];
                 if (host != null)
                 {
                     _shown[index] |= colour;
-                    Paint(host, _shown[index], Run.Next, index);
-                    Tween.Punch(host.Rt, .38f, FallTempo.Enrich);
-                    Ripple(to, Pal.EnergyColour(_shown[index]), _size * 2.1f, .42f);
+
+                    // Glass is drawn by the one drawing of "a lens took a channel" rather than a
+                    // second copy of it here (invariant 9a, at the smallest scale it appears at).
+                    // It is also the only correct one: a lens two channels short *trembles*, on a
+                    // looping tween that writes `localScale`, so a punch beside it would be two
+                    // tweens on one value — `ChargeGlass` kills the tremble before it punches,
+                    // pops every pip the arrival lit, and climbs the note one-of-three,
+                    // two-of-three, which is what the player is actually being told.
+                    if (FallCell.IsLens(_shown[index]))
+                    {
+                        ChargeGlass(host, to, _shown[index], colour, index, FallTempo.Enrich);
+                    }
+                    else
+                    {
+                        Paint(host, _shown[index], Run.Next, index);
+                        Tween.Punch(host.Rt, .38f, FallTempo.Enrich);
+                        Ripple(to, Pal.EnergyColour(_shown[index]), _size * 2.1f, .42f);
+
+                        // A bloop, never a bell. This is the commonest good thing that happens in
+                        // the mode — every other drop enriches — and `chime` put a metal dong
+                        // under it, which is the one material a well of light is not made of.
+                        // `free` is `menu`'s block of wood struck a fifth up, and it is the
+                        // *upper* note of a pair: the mote that only stacked (below) plays the
+                        // same block at the bottom of that fifth, so the two outcomes are two
+                        // notes of one instrument rather than two instruments. Glass has its own
+                        // note and `ChargeGlass` plays it, so it is not doubled here.
+                        Audio.Sfx("free", .46f);
+                    }
                 }
 
-                // A bloop, never a bell. This is the commonest good thing that happens in the
-                // mode — every other drop enriches — and `chime` put a metal dong under it,
-                // which is the one material a well of light is not made of. `free` is `menu`'s
-                // block of wood struck a fifth up, and it is the *upper* note of a pair: the
-                // mote that only stacked (below) plays the same block at the bottom of that
-                // fifth, so the two outcomes are two notes of one instrument rather than two
-                // instruments. Groovekeeper's beds made the same swap for the same reason.
-                Audio.Sfx("free", .46f);
             }
             else
             {
+                // It came to rest above the stack, so this cell was bare a moment ago and the
+                // falling widget is what stands in it now. Anything already here would be a
+                // widget the view had lost track of - it cannot happen, because `Takes` is the
+                // exact complement of this branch and `Sync` re-reads the board after every drop
+                // - and handing it back costs nothing where leaking it is invisible for the rest
+                // of the run.
+                if (_at[index] != null) Give(_at[index]);
+
                 _at[index] = falling;
                 _shown[index] = colour;
                 falling.Rt.anchoredPosition = to;

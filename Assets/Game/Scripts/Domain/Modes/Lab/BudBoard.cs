@@ -180,7 +180,7 @@ namespace GlimmerGrove.Modes
     ///
     /// <para>
     /// <b>One tap is a mix, and the mix is what starts everything.</b> The colour in hand is added
-    /// to the flower you tap — red with green in hand becomes yellow — and then the grove settles:
+    /// to the flower you tap — red with yellow in hand becomes orange — and then the grove settles:
     /// any bunch of three or more touching flowers of one colour <b>bursts</b>, and a burst
     /// <b>washes its colour into every flower touching it</b>. Those flowers change, which can
     /// make new bunches, which burst and wash further. That is the chain, and it is the whole

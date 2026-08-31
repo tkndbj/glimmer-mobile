@@ -28,7 +28,7 @@ namespace GlimmerGrove.Modes
     /// </para>
     /// <para>
     /// <b>A blend is refused and a prism is not, and the difference is who made it.</b> Dealing
-    /// yellow would hand over a seam already made, and the whole mode is that a blend is
+    /// a blend would hand over a seam already made, and the whole mode is that a blend is
     /// something the player <em>arranges</em> by putting unlike beside unlike. A prism carries
     /// all three at once, which is not a step of that work done for free — it is a different
     /// thing entirely, and one worth being rare (see <c>Mechanic.KeeperPrism</c>).

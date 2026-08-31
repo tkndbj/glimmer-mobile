@@ -361,6 +361,53 @@ namespace GlimmerGrove.Tests
         /// it would on a mote that already holds the colour. Without this clause a lens would be
         /// a bottomless sink and a column topped by one could never be built on.
         /// </summary>
+        /// <summary>
+        /// <b>"Does the thing on top take this drop" is one question, and it has to be asked as
+        /// one.</b> A mote lacking the colour is enriched and a lens lacking it is charged; both
+        /// are absorbed and neither makes the well taller. <c>Enriches</c> answers only the first
+        /// half — it is <c>IsMote(...) &amp;&amp; ...</c> — which is right for what it asks and
+        /// was wrong everywhere it stood in for the whole question.
+        ///
+        /// <para>
+        /// What that cost: <c>FallView</c> used <c>Enriches</c> to decide whether the falling
+        /// widget was handed back or left standing in the cell, so every drop taken in by glass
+        /// was drawn as one that had come to rest on top. The falling mote took the lens's place
+        /// in the view's index and the lens's own widget fell out of it — still on screen, owned
+        /// by nothing, so it never repainted, never fell and never left. Reported from play as a
+        /// pane hanging in the air over an emptied column, showing the charge it held before the
+        /// drop.
+        /// </para>
+        /// </summary>
+        [Test]
+        public void WhateverIsOnTopTakesTheDropWhetherItIsAMoteOrALens()
+        {
+            var board = Board("......",
+                              "......",
+                              "......",
+                              "......",
+                              "......",
+                              "MyM...");
+
+            Assert.IsTrue(board.Takes(Energy.B, 1), "the two-thirds lens lacks blue, so it takes it");
+            Assert.IsFalse(board.Enriches(Energy.B, 1), "which Enriches cannot say, and must not");
+            Assert.IsTrue(board.Charges(Energy.B, 1), "because the lens is charged rather than enriched");
+
+            Assert.IsTrue(board.Takes(Energy.G, 0), "the magenta mote lacks green, so it takes it");
+            Assert.IsTrue(board.Enriches(Energy.G, 0));
+
+            Assert.IsFalse(board.Takes(Energy.B, 0),
+                           "magenta already holds blue, so that drop comes to rest above it and " +
+                           "the well grows a row — which is the one case the falling mote stays");
+
+            Assert.IsFalse(board.Takes(Energy.R, 1),
+                           "and the lens already holds red, so that drop stacks above it too — " +
+                           "glass is a wall to a colour it holds exactly as a mote is");
+
+            Assert.AreEqual(board.TopOf(1), board.Landing(Energy.B, 1),
+                            "Takes is the exact clause Landing turns on, which is what makes it " +
+                            "impossible for the two to disagree");
+        }
+
         [Test]
         public void GlassThatAlreadyHoldsAColourLetsTheDropStackAboveIt()
         {

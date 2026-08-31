@@ -29,7 +29,7 @@ namespace GlimmerGrove.Modes
     /// <para>
     /// <b>It exists because the rule is easy to state and hard to hold.</b> "A mote adds its
     /// colour rather than matching it" is one sentence, and a player still has to remember, mid
-    /// drop, that yellow is the one that wants blue. That is not difficulty — it is recall, and
+    /// drop, that orange is the one that wants blue. That is not difficulty — it is recall, and
     /// recall is the thing a board should be answering for the player rather than testing them
     /// on. So the well draws a legend under its tray, and this is what it draws.
     /// </para>
@@ -37,7 +37,7 @@ namespace GlimmerGrove.Modes
     /// <b>Derived, never typed.</b> Every pair of distinct pure channels is a recipe, its blend
     /// is the two of them together and its finisher is whatever is left — so there is no table
     /// here that could come to disagree with <c>FallBoard</c>'s actual rule, which is the same
-    /// <c>|</c> on the same masks. A hand-written "yellow needs blue" is a second answer waiting
+    /// <c>|</c> on the same masks. A hand-written "orange needs blue" is a second answer waiting
     /// to be wrong.
     /// </para>
     /// </summary>

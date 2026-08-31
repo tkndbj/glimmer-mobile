@@ -29,7 +29,17 @@ namespace GlimmerGrove
 
         /// <summary>
         /// Reads an authored colour letter. Y, M and C are the two-channel mixes and
-        /// W is all three, matching how the light actually blends on the board.
+        /// W is all three.
+        ///
+        /// <para>
+        /// <b>A letter names a mask, never the paint the mask is drawn in.</b> They were minted
+        /// when the board mixed like light and they still read as yellow, magenta and cyan —
+        /// which is no longer what a player sees, because <c>Pal</c> now paints the wheel the way
+        /// paint behaves (R|G is orange, R|B purple, G|B green). The letters stay exactly as they
+        /// are: they are in every shipped chapter file and in three offline mirrors, so renaming
+        /// them would be a content migration bought for nothing — the look is <c>Pal</c>'s and
+        /// this is the rule.
+        /// </para>
         /// </summary>
         public static bool TryParse(char c, out int mask)
         {

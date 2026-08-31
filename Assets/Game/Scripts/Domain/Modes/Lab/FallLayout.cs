@@ -26,7 +26,7 @@ namespace GlimmerGrove.Modes
     /// finished however many drops were bought.
     /// </para>
     /// <para>
-    /// <b>Pure colours only.</b> Dealing yellow would hand over a step of the cooking for free,
+    /// <b>Pure colours only.</b> Dealing a blend would hand over a step of the cooking for free,
     /// and the whole mode is that a blend has to be <em>made</em>. It is also what keeps the
     /// rule sayable in one line.
     /// </para>

@@ -200,6 +200,22 @@ class Well(object):
         cell = self.cells[top * self.w + x]
         return is_lens(cell) and (cell | colour) != cell
 
+    def takes(self, colour, x):
+        """Whether whatever is on top takes this drop, rather than the stack growing a row.
+
+        One question with two answers - a mote lacking the colour is enriched, a lens lacking it
+        is charged - and it exists because asking the two separately is how a caller comes to ask
+        only one of them. `enriches` is false for every charging drop, which is right for the
+        question it asks and was catastrophic where it stood in for this one: the view used it to
+        decide whether the falling widget was handed back, so a drop taken in by glass left the
+        lens's own widget drawn on a board that no longer tracked it.
+        """
+        top = self.top_of(x)
+        if top < 0:
+            return False
+        cell = self.cells[top * self.w + x]
+        return (cell | colour) != cell
+
     def bursts(self, colour, x):
         top = self.top_of(x)
         if top < 0:

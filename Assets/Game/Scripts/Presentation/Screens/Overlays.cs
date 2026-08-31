@@ -892,13 +892,13 @@ namespace GlimmerGrove
             }
 
             var mix = UIKit.Box("Mix", Panel, new Vector2(700f, 150f), new Vector2(.5f, 1f), new Vector2(0f, -930f));
-            Swatch(mix, Pal.Ember, -230f, "ui.howto.red");
+            Swatch(mix, Pal.EnergyColour(Energy.R), -230f, "ui.howto.red");
             UIKit.Titled("plus", mix, "+", 46, new Color(.4f, .3f, .22f), TextAnchor.MiddleCenter,
                          new Vector2(60f, 60f), new Vector2(.5f, .5f), new Vector2(-140f, 14f), 0f, 0f);
-            Swatch(mix, Pal.Azure, -50f, "ui.howto.blue");
+            Swatch(mix, Pal.EnergyColour(Energy.B), -50f, "ui.howto.blue");
             UIKit.Titled("eq", mix, "=", 46, new Color(.4f, .3f, .22f), TextAnchor.MiddleCenter,
                          new Vector2(60f, 60f), new Vector2(.5f, .5f), new Vector2(45f, 14f), 0f, 0f);
-            Swatch(mix, Pal.Bloom, 150f, "ui.howto.blossom");
+            Swatch(mix, Pal.EnergyColour(Energy.R | Energy.B), 150f, "ui.howto.purple");
 
             UIKit.TextButton("Ok", Panel, "btn_green", Loc.Get("ui.common.got_it"), 48, new Vector2(520f, 132f),
                              new Vector2(.5f, 0f), new Vector2(0f, 86f), () => Close());

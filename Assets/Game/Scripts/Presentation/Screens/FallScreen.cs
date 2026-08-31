@@ -150,7 +150,7 @@ namespace GlimmerGrove
         /// <para>
         /// <b>Recall is not difficulty.</b> "A mote adds its colour rather than matching it" is
         /// one sentence and the whole mode, but a player still has to remember mid-drop that
-        /// yellow is the one waiting for blue — and being asked to hold three pairs in your head
+        /// orange is the one waiting for blue — and being asked to hold three pairs in your head
         /// is not a puzzle, it is a tax on the puzzle. It was reported exactly that way: "I
         /// always forget which colour blends with which". So the board answers it, always, and
         /// what is left to think about is *where*.

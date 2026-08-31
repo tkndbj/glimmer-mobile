@@ -63,8 +63,8 @@ namespace GlimmerGrove
 
         /// <summary>
         /// What a flower's colour looks like. <c>Pal.EnergyColour</c> is the game's own answer
-        /// and is used everywhere else light is mixed, so a yellow here is the same yellow a
-        /// glade's red-and-green critter wears — which is the point: the arithmetic a player
+        /// and is used everywhere else colour is mixed, so an orange here is the same orange a
+        /// glade's red-and-yellow critter wears — which is the point: the arithmetic a player
         /// already knows from four chapters of glades is the arithmetic this mode runs on.
         /// </summary>
         public static Color Tint(int mask) => Pal.EnergyColour(mask);

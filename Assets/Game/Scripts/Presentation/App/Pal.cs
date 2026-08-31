@@ -24,14 +24,63 @@ namespace GlimmerGrove
         }
 
         // -- energy ------------------------------------------------------------
-        public static readonly Color Ember = Hex("#FF6B57");   // R
-        public static readonly Color Verdant = Hex("#54E48C");   // G
+
+        /// <summary>
+        /// The three channels and their blends, painted the way a player expects paint to
+        /// behave rather than the way light does.
+        ///
+        /// <para>
+        /// <b>This is a look, not a rule.</b> <see cref="Energy"/> still mixes by <c>|</c> over
+        /// three bits and nothing about the boards, the search, par or the vectors moved — the
+        /// only thing that changed is which actual colour each of the seven masks is drawn in.
+        /// That separation is why it could change at all: every mode asks
+        /// <see cref="EnergyColour"/>, and the two legends that teach the arithmetic
+        /// (<c>FallMixing</c>, <c>BudMixing</c>) derive their chips from the same masks, so the
+        /// board, the tray, the legend and the tips all moved together with no table anywhere
+        /// to fall out of step.
+        /// </para>
+        /// <para>
+        /// <b>Why it moved.</b> The channels were additive — red, green and blue, blending to
+        /// yellow, magenta and cyan — which is exactly correct for light and is the one thing
+        /// nobody outside a graphics pipeline has ever been taught. Reported from play as
+        /// confusion rather than as a bug: a player mixing red and blue expects purple, because
+        /// what they have handled all their lives is paint. So the middle channel is drawn as
+        /// <see cref="Pollen"/> and the blends fall out of the primary-school wheel that needs
+        /// no teaching at all — red+yellow is orange, red+blue is purple, yellow+blue is green.
+        /// </para>
+        /// <para>
+        /// <b>The warm three are separated by value as well as by hue</b>, because red, orange
+        /// and yellow are genuine neighbours on that wheel where red, green and blue were not.
+        /// Poppy is deep, Marigold mid and Pollen bright, so the ladder survives a small disc,
+        /// a dim backdrop and a player who reads it out of the corner of an eye.
+        /// </para>
+        /// <para>
+        /// All three still meet at <see cref="Radiance"/>, which paint does not do. That is
+        /// deliberate: white is not a colour on these boards, it is the <em>finished</em> state
+        /// — a mote about to burst, a bloomed tile, a flower nothing can add to — and it has to
+        /// read as completion in every mode. A muddy brown would be arithmetically honest and
+        /// would say the opposite of what the state means.
+        /// </para>
+        /// </summary>
+        public static readonly Color Poppy = Hex("#F2404F");   // R
+        public static readonly Color Pollen = Hex("#FFDD57");   // G
         public static readonly Color Azure = Hex("#4FC1FF");   // B
-        public static readonly Color Sun = Hex("#FFC93C");   // R|G
-        public static readonly Color Bloom = Hex("#FF74D4");   // R|B
-        public static readonly Color Aqua = Hex("#3BE9D8");   // G|B
+        public static readonly Color Marigold = Hex("#FF8A1F");   // R|G
+        public static readonly Color Foxglove = Hex("#B478FF");   // R|B
+        public static readonly Color Verdant = Hex("#54E48C");   // G|B
         public static readonly Color Radiance = Hex("#FFF4CE");   // R|G|B
         public static readonly Color Dormant = Hex("#3A5064");   // unpowered conduit
+
+        // -- chrome that used to be energy -------------------------------------
+        // Ember, Sun, Bloom and Aqua were the old R, R|G, R|B and G|B. They are kept at their
+        // own values and are no longer channel colours: every one of them is drawn somewhere
+        // that says nothing about light - the brim line, a rarity ladder, a mode accent, the
+        // bonus wheel, a shop ribbon - and repointing those at the paint wheel would have been
+        // a retune of half the interface hidden inside a change to the board.
+        public static readonly Color Ember = Hex("#FF6B57");
+        public static readonly Color Sun = Hex("#FFC93C");
+        public static readonly Color Bloom = Hex("#FF74D4");
+        public static readonly Color Aqua = Hex("#3BE9D8");
 
         // -- chrome ------------------------------------------------------------
         public static readonly Color Ink = Hex("#20303F");
@@ -135,16 +184,16 @@ namespace GlimmerGrove
 
         static readonly Color[] Table =
         {
-            Dormant,                       // 0
-            Ember, Verdant, Sun,           // R, G, R|G
-            Azure, Bloom, Aqua, Radiance   // B, R|B, G|B, R|G|B
+            Dormant,                            // 0
+            Poppy, Pollen, Marigold,            // R, G, R|G
+            Azure, Foxglove, Verdant, Radiance  // B, R|B, G|B, R|G|B
         };
 
         public static Color EnergyColour(int mask) => Table[mask & 7];
 
         static readonly string[] Names =
         {
-            "Dormant", "Ember", "Verdant", "Sunfire", "Azure", "Blossom", "Tidal", "Radiance"
+            "Dormant", "Poppy", "Pollen", "Marigold", "Azure", "Foxglove", "Verdant", "Radiance"
         };
 
         public static string EnergyLabel(int mask) => Names[mask & 7];

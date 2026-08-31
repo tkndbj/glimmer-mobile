@@ -7,8 +7,8 @@ namespace GlimmerGrove.Modes
     /// The ordered basket of colours a grove is dealt, one per tap.
     ///
     /// <para>
-    /// <b>Pure colour only, and that is the whole trick.</b> A grove is dealt red, green and
-    /// blue; every blend on the board — yellow, magenta, cyan, white — is one the *player* made
+    /// <b>Pure colour only, and that is the whole trick.</b> A grove is dealt the three pure
+    /// channels; every blend on the board — orange, purple, green, white — is one the *player* made
     /// by mixing. So the basket stays three symbols wide however rich the board gets, and the
     /// colour a flower ends up is always something somebody chose.
     /// </para>
