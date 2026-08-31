@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
@@ -486,6 +486,12 @@ namespace GlimmerGrove
         /// a breathe in order to punch the same control are why: they used to punch whatever
         /// scale the breath happened to be holding at that instant.
         /// </summary>
+        /// <summary>
+        /// How long a breath takes to come up to its full size, so nothing ever begins one by
+        /// jumping.
+        /// </summary>
+        const float Ramp = .50f;
+
         public static Tw Breathe(Transform tr, float amplitude = .04f, float period = 2.2f, float phase = 0f)
         {
             if (tr == null) return Run(0.001f, Ease.Linear, null);
@@ -497,8 +503,21 @@ namespace GlimmerGrove
             return Run(3600f, Ease.Linear, _ =>
             {
                 if (!tr) return;
-                float w = (Time.unscaledTime - t0) / period * Mathf.PI * 2f + phase;
-                tr.localScale = home * (1f + Mathf.Sin(w) * amplitude);
+
+                float on = Time.unscaledTime - t0;
+
+                // **It fades in rather than starting mid-breath, and that is what a phase costs
+                // if you do not.** A phase exists to stop a row of things breathing in lockstep,
+                // and `sin(phase)` is not zero — so every caller passing one used to snap its
+                // target to a different size on the frame the breath began. One control doing
+                // that is a twitch nobody sees; a *board* doing it is thirty flowers each
+                // jumping to a size of their own in one frame, which is what "the background
+                // resets suddenly" was. Smoothstepped, so the fade has no corner at either end.
+                float k = on < Ramp ? on / Ramp : 1f;
+                k = k * k * (3f - 2f * k);
+
+                float w = on / period * Mathf.PI * 2f + phase;
+                tr.localScale = home * (1f + Mathf.Sin(w) * amplitude * k);
             }, tr, "breathe").OnAbandon(() => { if (tr) tr.localScale = home; });
         }
     }

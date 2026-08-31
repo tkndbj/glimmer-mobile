@@ -113,16 +113,15 @@ namespace GlimmerGrove.Tests
             Assert.LessOrEqual(BudTempo.Cascade(BudChain.Most), 8.5f,
                                $"the deepest chain the ladder distinguishes runs for " +
                                $"{BudTempo.Cascade(BudChain.Most):0.00}s");
-            // Everything the player waits through, not only the part named "cascade": the
-            // chain, the beat the grove is given to land in, and the word over the top of it.
-            float whole = BudTempo.Cascade(BudChain.Most)
-                        + BudTempo.Landing(BudChain.Most)
-                        + BudTempo.Fanfare;
+            // Everything the player waits through. The word is no longer *added* to the chain —
+            // it rides the last wave's answer, so the two overlap by design (see `BudStage`, and
+            // `BudStageTests.TheWordArrivesOnTheClimaxRatherThanAfterIt`). The bound has to be
+            // stated over the whole thing anyway: an overlap is the reason it is affordable, not
+            // a reason to stop counting it.
+            float whole = BudTempo.Cascade(BudChain.Most) + BudTempo.Fanfare;
 
             Assert.LessOrEqual(whole, 11f,
-                               $"the deepest chain, its landing and the word come to {whole:0.00}s");
-            Assert.Greater(BudTempo.Landing(BudChain.Most), 0f,
-                           "the word arrives while the grove is still in the air");
+                               $"the deepest chain and the word come to {whole:0.00}s");
         }
 
         // ------------------------------------------------------------------ inside one wave
@@ -561,238 +560,78 @@ namespace GlimmerGrove.Tests
 
         // ------------------------------------------------------------------ the grove falling
         /// <summary>
-        /// <b>Every piece is standing still again before the wave that threw it ends.</b>
+        /// <b>One gravity, and nothing may bend it.</b>
         ///
         /// <para>
-        /// The stagger used to be added to a duration that was already the wave's whole
-        /// allowance, so a piece late in the ripple was still travelling a third of a wave after
-        /// the wave was over — and the next wave's bursts then killed it where it stood, because
-        /// everything that touches a flower kills the tween that was moving it. That is what
-        /// left flowers hanging between two squares for the rest of the run. The drawing is
-        /// fixed where it belongs (one transform per cell, and a fall that declares where an
-        /// interrupted one lands), and this holds the arithmetic that made it likely.
+        /// This is <see cref="BudStage"/>'s rule 2 held at the arithmetic that implements it: a
+        /// fall's length is its distance at <see cref="BudTempo.Pace"/> and depends on nothing
+        /// else — not on how long the wave is, not on how many other pieces are coming down, not
+        /// on which wave of the chain it is.
+        /// </para>
+        /// <para>
+        /// <b>What it replaced is the fault the mode was reported for.</b> The old rule fitted a
+        /// fall into whatever was left of a per-wave budget, so the moment a wave ran short the
+        /// tall drops were the ones made to hurry — and inside one wave a six-row drop fell half
+        /// again faster than the one-row drop beside it. That is not a pacing preference: a
+        /// board whose pieces fall at three speeds at once does not read as a board falling, and
+        /// it was reported as the flowers <em>"skipping frames"</em>, which at better than a
+        /// third of a cell a frame is exactly what they were doing.
         /// </para>
         /// </summary>
         [Test]
-        public void EveryPieceIsBackOnTheGroundBeforeTheWaveThatDroppedItEnds()
+        public void EveryPieceFallsAtTheModesOwnPaceWhateverElseIsHappening()
         {
-            for (int waves = 1; waves <= BudChain.Most; waves++)
+            for (int rows = 1; rows <= 12; rows++)
             {
-                float burn = BudTempo.Burn(BudTempo.Wave(waves));
-                float over = BudTempo.Rain(burn);
+                float fall = BudTempo.Falling(rows);
 
-                float hold = BudTempo.Settle(burn);
-
-                for (int nth = 0; nth < 24; nth++)
-                for (int rows = 1; rows <= 12; rows++)
-                {
-                    BudTempo.Rainfall(nth, rows, over, hold, out float wait, out float fall);
-
-                    Assert.GreaterOrEqual(fall, 0f);
-                    Assert.GreaterOrEqual(wait, 0f);
-
-                    // The window is the hold *and* the fall's allowance, because a tall drop
-                    // spends the hold travelling rather than waiting it out. What may not move
-                    // is the sum: that is what `Rain` promises the next wave.
-                    Assert.LessOrEqual(wait + fall, hold + over + .0001f,
-                                       $"a {waves}-wave chain drops a piece {rows} rows down " +
-                                       $"as the {nth}th of its ripple, and it is still moving " +
-                                       $"{wait + fall - hold - over:0.000}s after the fall is over");
-                }
+                Assert.Greater(fall, 0f, $"a {rows}-row drop takes no time at all");
+                Assert.AreEqual(BudTempo.Pace, rows * BudTempo.Curve / fall, .0001f,
+                                $"a {rows}-row drop is not falling at the mode's own pace");
             }
         }
 
         /// <summary>
-        /// <b>And the whole grove is on the ground before the wave that dropped it ends.</b>
-        ///
-        /// <para>
-        /// This is the promise <c>BudTempo.Rain</c>'s own remarks make and nothing checked it —
-        /// which mattered, because <c>Rain</c> was written as a fraction of the burn <em>with a
-        /// floor under it</em>, and a floor on a fraction of something can exceed the thing it
-        /// is a fraction of. At the shortest beats the floor won: the grove was still falling
-        /// when the next wave charged, so two gestures were on the same transforms, which is
-        /// the fault this mode's view has paid for twice and the one that left flowers hanging
-        /// between two squares for the rest of a run.
-        /// </para>
-        /// <para>
-        /// The check above is one step downstream of this — it holds the <em>ripple</em> inside
-        /// the allowance, and this holds the allowance inside the wave. Both are needed and
-        /// neither implies the other.
-        /// </para>
+        /// And a taller fall takes longer, in proportion, which is the whole of what makes a
+        /// board feel heavy: a flower dropping five rows and one dropping a single row in the
+        /// same time reads as teleporting.
         /// </summary>
         [Test]
-        public void TheGroveIsBackOnTheGroundBeforeItsOwnWaveEnds()
+        public void AndATallerFallTakesLongerInProportion()
         {
-            for (int waves = 1; waves <= 40; waves++)
+            for (int rows = 2; rows <= 12; rows++)
             {
-                float burn = BudTempo.Burn(BudTempo.Wave(waves));
+                Assert.Greater(BudTempo.Falling(rows), BudTempo.Falling(rows - 1),
+                               $"a {rows}-row drop does not take longer than a {rows - 1}-row one");
 
-                float hold = BudTempo.Settle(burn);
-
-                Assert.LessOrEqual(hold + BudTempo.Rain(burn), burn + .0001f,
-                                   $"a {waves}-wave chain burns for {burn:0.000}s and spends " +
-                                   $"{hold:0.000}s holding plus {BudTempo.Rain(burn):0.000}s " +
-                                   "falling");
-                Assert.Greater(BudTempo.Rain(burn), 0f,
-                               $"a {waves}-wave chain gives the grove no time to fall at all");
-                Assert.Greater(hold, 0f,
-                               $"a {waves}-wave chain drops the grove into its own bursts in " +
-                               "the frame they go off");
+                Assert.AreEqual(rows, BudTempo.Falling(rows) / BudTempo.Falling(1), .0001f,
+                                $"a {rows}-row drop is not {rows} times a one-row drop");
             }
         }
 
         /// <summary>
-        /// <b>And the same drop takes the same time wherever it sits in the ripple.</b>
+        /// <b>And no piece ever moves far enough between two frames to tear.</b>
         ///
-        /// <para>
-        /// The wait used to be taken out of the allowance and whatever was left became the fall,
-        /// so one piece falling four rows took up to <em>45% less time</em> than another falling
-        /// four rows in the same wave — for no reason except which column it was in. A board
-        /// whose pieces fall at several speeds at once does not read as a board falling; it was
-        /// reported as the fall being sudden and stuttery, and at the far end of the ripple a
-        /// five-row drop really was covering about a third of a cell per frame.
-        /// </para>
-        /// <para>
-        /// How long a thing takes to fall is a fact about how far it is falling and nothing
-        /// else. The ripple is what gives way now, which is why this can be asserted as exact
-        /// equality rather than as a tolerance.
-        /// </para>
-        /// </summary>
-        [Test]
-        public void ADropOfTheSameHeightTakesTheSameTimeWhereverItIsInTheRipple()
-        {
-            for (int waves = 1; waves <= BudChain.Most; waves++)
-            {
-                float over = BudTempo.Rain(BudTempo.Burn(BudTempo.Wave(waves)));
-
-                float hold = BudTempo.Settle(BudTempo.Burn(BudTempo.Wave(waves)));
-
-                for (int rows = 1; rows <= 12; rows++)
-                {
-                    BudTempo.Rainfall(0, rows, over, hold, out _, out float first);
-
-                    for (int nth = 1; nth < 24; nth++)
-                    {
-                        BudTempo.Rainfall(nth, rows, over, hold, out _, out float fall);
-                        Assert.AreEqual(first, fall, .0001f,
-                                        $"a {rows}-row drop takes {fall:0.000}s as the {nth}th " +
-                                        $"of its wave and {first:0.000}s as the first");
-                    }
-                }
-            }
-        }
-
-        /// <summary>
-        /// And a taller fall still takes longer, which is the whole of what makes a board feel
-        /// heavy — bounding the ripple must not flatten that into one speed.
-        /// </summary>
-        [Test]
-        public void AndATallerFallStillTakesLonger()
-        {
-            float burn = BudTempo.Burn(BudTempo.Wave(3));
-            float over = BudTempo.Rain(burn), hold = BudTempo.Settle(burn);
-
-            for (int nth = 0; nth < 12; nth++)
-            {
-                float last = -1f;
-
-                for (int rows = 1; rows <= 6; rows++)
-                {
-                    BudTempo.Rainfall(nth, rows, over, hold, out _, out float fall);
-                    Assert.GreaterOrEqual(fall, last, "a taller fall is quicker than a short one");
-                    last = fall;
-                }
-            }
-        }
-
-        /// <summary>
-        /// <b>And no piece ever moves fast enough to tear, which is the check the old shape of
-        /// this arithmetic could not have carried.</b>
-        ///
-        /// <para>
-        /// A fall used to be a <em>share of the wave</em> - .42 of it for one row plus .15 a row
-        /// after - and that saturates: past about four rows every drop took the whole allowance,
-        /// so a six-row drop and a four-row drop landed together and the six-row one was half
-        /// again faster. The board therefore fell at three speeds inside one wave and the
-        /// <em>tallest</em> drop, which is the one everybody is watching, was the fastest of
-        /// them. Reported as the flowers falling <em>"too suddenly, not smooth, like they skip
-        /// frames"</em>, and measured that is exactly what it was: better than a third of a cell
-        /// in a frame, on a picture .72 of a cell wide.
-        /// </para>
-        /// <para>
-        /// There was no way to say any of that about the old arithmetic, because a share of a
-        /// beat carries no speed in it. A duration derived from <see cref="BudTempo.Pace"/> does,
-        /// and this is the line under it. It is checked at the <em>peak</em> rather than the
-        /// mean, which is what <see cref="BudTempo.Curve"/> is for - the exponent of the fall's
-        /// curve is exactly the ratio of its fastest instant to its average, so the two constants
-        /// are one statement and the view draws with the same one.
-        /// </para>
-        /// <para>
-        /// The bound is in cells a second because a cell is the only length this mode has that is
-        /// the same on every phone. Eighteen is <em>three tenths</em> of a cell in a frame at
-        /// 60fps, and it is deliberately slacker than <c>Pace</c>: a drop taller than the wave
-        /// has room for is still made to hurry, and this says how much hurrying is allowed before
-        /// the wave itself has to grow.
-        /// </para>
-        /// <para>
-        /// <b>And there are two bounds because there is one case the design cannot honour and
-        /// should say so out loud.</b> A chain has to end, so <see cref="BudTempo.Ceiling"/>
-        /// divides across it and the ninth wave of the deepest chain the mode can produce runs
-        /// at .89s — where a drop of a <em>whole seven-high column</em> cannot be given the room
-        /// it wants by any arrangement of the beat. Every chain the shipped chapter reaches is
-        /// held to the tight bound; the ninth wave is held to a looser one, so the day something
-        /// makes it worse the test still says so rather than having been written around it.
-        /// Note what makes that acceptable rather than a hole: a column empties completely only
-        /// on a wave that burst all seven of its flowers, which the eighth wave of a cascade has
-        /// nothing left to do with.
-        /// </para>
+        /// The eye reads a moving picture as continuous while it overlaps itself frame to frame,
+        /// so what has to be bounded is how far a flower travels in a sixtieth of a second — at
+        /// its <em>fastest</em> instant, which is where the tearing is and which is
+        /// <see cref="BudTempo.Curve"/> times its mean. In cells rather than pixels because a
+        /// cell is the one length this mode has that is the same on every phone.
         /// </summary>
         [Test]
         public void NoPieceEverFallsFastEnoughToTear()
         {
-            const float Tearing = 18f, AtTheVeryDeepest = 21f;
-            const int Deepest = 8;
+            const float Frame = 1f / 60f;
+            const float Most = .25f;            // a quarter of a cell between two frames
 
-            for (int waves = 1; waves <= BudChain.Most; waves++)
+            for (int rows = 1; rows <= 12; rows++)
             {
-                float burn = BudTempo.Burn(BudTempo.Wave(waves));
-                float over = BudTempo.Rain(burn), hold = BudTempo.Settle(burn);
-                float bar = waves <= Deepest ? Tearing : AtTheVeryDeepest;
+                float fall = BudTempo.Falling(rows);
+                float peak = rows / fall * BudTempo.Curve;
 
-                // Seven is the tallest column the shipped chapter has, so it is the tallest
-                // drop a grove can produce.
-                for (int rows = 1; rows <= 7; rows++)
-                {
-                    BudTempo.Rainfall(0, rows, over, hold, out _, out float fall);
-
-                    Assert.Greater(fall, 0f, $"a {rows}-row drop is given no time at all");
-
-                    float peak = rows * BudTempo.Curve / fall;
-                    Assert.LessOrEqual(peak, bar,
-                                       $"a {waves}-wave chain drops a piece {rows} rows at " +
-                                       $"{peak:0.0} cells a second - {peak / 60f:0.00} of a cell " +
-                                       "in a frame");
-                }
-            }
-        }
-
-        /// <summary>
-        /// <b>And every piece of one wave falls at the same speed, which is what a board falling
-        /// looks like and what a board rearranging itself does not.</b> The saturation above is
-        /// the only thing allowed to break it, so this is asserted over the drops a wave has
-        /// room for rather than over all of them.
-        /// </summary>
-        [Test]
-        public void EveryPieceOfAWaveFallsAtTheSameSpeedUntilTheWaveRunsOut()
-        {
-            float burn = BudTempo.Burn(BudTempo.Wave(1));
-            float over = BudTempo.Rain(burn), hold = BudTempo.Settle(burn);
-
-            for (int rows = 1; rows <= 5; rows++)
-            {
-                BudTempo.Rainfall(0, rows, over, hold, out _, out float fall);
-                Assert.AreEqual(BudTempo.Pace, rows * BudTempo.Curve / fall, .01f,
-                                $"a {rows}-row drop is not falling at the mode's own pace");
+                Assert.LessOrEqual(peak * Frame, Most + .0001f,
+                                   $"a {rows}-row drop covers {peak * Frame:0.000} of a cell in a "
+                                   + "frame, which is a picture jumping rather than falling");
             }
         }
 

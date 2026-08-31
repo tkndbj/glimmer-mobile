@@ -495,26 +495,6 @@
         }
 
         /// <summary>
-        /// How long the grove is given to land after the last wave, before anything else is
-        /// allowed to happen to it.
-        ///
-        /// <para>
-        /// <b>The beat before a celebration is part of the celebration.</b> The word used to
-        /// slam in while the last flowers were still in the air and the whole board was
-        /// repainted underneath it in the same frame — reported as the board resetting
-        /// suddenly. This is the hold and the fall of the wave that has just ended, which is
-        /// exactly how long the grove needs, so it is derived rather than chosen: a shorter
-        /// board settles sooner and a deeper chain is not made to wait for a grove that has
-        /// already stopped moving.
-        /// </para>
-        /// </summary>
-        public static float Landing(int waves)
-        {
-            float burn = Burn(Wave(waves));
-            return Settle(burn) + Rain(burn);
-        }
-
-        /// <summary>
         /// The word at the end, which is the one beat outside the cascade's ceiling.
         ///
         /// It is the longest single hold in the mode on purpose. Everything before it is the
@@ -568,59 +548,6 @@
 
         // ------------------------------------------------------------------ the grove falling
         /// <summary>
-        /// How long a wave's fall is given, inside the beat that threw it.
-        ///
-        /// The grove has to be back on the ground before the next wave charges, or two waves are
-        /// moving the same flowers at once — the bug this mode has paid for twice.
-        /// </summary>
-        /// <remarks>
-        /// <b>A share of the burn and nothing else, which is a correctness change as much as a
-        /// pacing one.</b> It used to carry a floor of .12s, and a floor on a fraction of
-        /// something can exceed the thing it is a fraction of: at the shortest beats the floor
-        /// won, the grove was still falling when the next wave charged, and two gestures were
-        /// on one transform — which is the exact fault this mode has paid for twice.
-        /// <c>TheGroveIsBackOnTheGroundBeforeItsOwnWaveEnds</c> is the line under it now, and it
-        /// could not have been written while the floor was there.
-        /// </remarks>
-        public static float Rain(float burn)
-        {
-            if (burn < 0f) burn = 0f;
-
-            float over = (burn - Settle(burn)) * .92f;
-            return over > .64f ? .64f : over;
-        }
-
-        /// <summary>
-        /// How long a wave's bursts are left standing on their own before the grove comes down
-        /// on top of them.
-        ///
-        /// <para>
-        /// <b>The beat that made a cascade read as one thing collapsing rather than as two
-        /// things happening at once.</b> The fall used to be dealt in the same frame as the
-        /// bursts it was falling into, so the flower above a burst started moving while the
-        /// burst was still opening — and the player, who is watching the thing they caused,
-        /// had it covered by the consequence of it before they had seen it. A tenth of a second
-        /// of nothing is enough: the bunch goes, it is alone for an instant, and <em>then</em>
-        /// the grove drops.
-        /// </para>
-        /// <para>
-        /// It is taken out of the fall's own allowance rather than added beside it, which is
-        /// <see cref="Rainfall"/>'s lesson in the one place that had not learned it: a hold
-        /// added to a duration that was already the whole of the wave is a grove still falling
-        /// when the next wave charges, which is two gestures on one transform and the fault this
-        /// mode's view has paid for twice. <c>TheGroveIsBackOnTheGroundBeforeItsOwnWaveEnds</c>
-        /// holds the pair together.
-        /// </para>
-        /// </summary>
-        public static float Settle(float burn)
-        {
-            if (burn < 0f) burn = 0f;
-
-            float hold = burn * .30f;
-            return hold > .30f ? .30f : hold;
-        }
-
-        /// <summary>
         /// The fastest a piece may ever travel, in cells a second.
         ///
         /// <para>
@@ -658,7 +585,7 @@
         ///
         /// <para>
         /// <b>It is also exactly the ratio of a fall's fastest instant to its average</b>, which
-        /// is why it lives beside <see cref="Pace"/> and why <see cref="FallOver"/> can be one
+        /// is why it lives beside <see cref="Pace"/> and why <see cref="Falling"/> can be one
         /// line. A curve <c>t^c</c> covering a distance <c>d</c> in a time <c>f</c> has speed
         /// <c>c·d·t^(c-1)/f</c>, so its last instant is <c>c</c> times its mean.
         /// </para>
@@ -673,106 +600,112 @@
         public const float Curve = 1.40f;
 
         /// <summary>
-        /// And how long one piece takes, given how many rows it has to travel.
+        /// How long one piece takes to come down, given how many rows it has to travel.
         ///
-        /// <b>Taller falls take longer, which is the whole of what makes a board feel heavy.</b>
-        /// A flower dropping five rows and one dropping a single row in the same time reads as
-        /// teleporting, and it is the commonest reason a falling board looks cheap. It is the
-        /// distance at a fixed speed, so every piece of every wave falls at the same rate and
-        /// only the tallest drops — past about five rows, where the wave itself runs out — are
-        /// made to hurry.
+        /// <para>
+        /// <b>Its distance at one fixed speed, and nothing may clamp it.</b> That is rule 2 of
+        /// <see cref="BudStage"/> and it is the whole of what makes a board feel heavy: a flower
+        /// dropping five rows and one dropping a single row in the same time reads as teleporting,
+        /// and it is the commonest reason a falling board looks cheap.
+        /// </para>
+        /// <para>
+        /// <b>The clamp this replaced is the fault, not a detail of it.</b> A fall used to be
+        /// fitted into a per-wave budget — the distance at this pace <em>or</em> whatever was
+        /// left, whichever was smaller — so the moment a wave ran short the tall drops were the
+        /// ones made to hurry, and inside one wave a six-row drop fell half again faster than the
+        /// one-row drop beside it. Measured on the shipped finale that came to better than a
+        /// third of a cell in a frame, which for a shape .72 of a cell wide is a picture jumping
+        /// half its own width between one frame and the next: reported as the flowers falling
+        /// <em>"too suddenly, not smooth, like they skip frames"</em>, which is exactly what it
+        /// was. A budget that cannot be met is met by lengthening the <em>wave</em>, and the
+        /// ceiling over the whole chain is met by squeezing the slack — never by moving a piece
+        /// faster than the eye.
+        /// </para>
         /// </summary>
-        public static float FallOver(float over, float rows)
+        public static float Falling(float rows)
         {
-            if (over < 0f) over = 0f;
             if (rows < 1f) rows = 1f;
 
-            float want = rows * Curve / Pace;
-            return want > over ? over : want;
+            return rows * Curve / Pace;
         }
 
-        /// <summary>Where one piece falls inside the wave's own ripple, so a column is not a wall.</summary>
-        public static float RainAt(int nth, float over)
-        {
-            if (nth <= 0) return 0f;
+        // ------------------------------------------------------------------ the score
+        /// <summary>
+        /// How long a bunch gathers before the first of it goes off.
+        ///
+        /// A constant rather than a share of the wave, which is the change <see cref="BudStage"/>
+        /// made possible: a wave is now as long as what happens in it, so the wind-up no longer
+        /// has to be squeezed to make room for the fall. It is slack, so a chain that has to meet
+        /// <see cref="Ceiling"/> takes it out of here before it takes it out of anything moving.
+        /// </summary>
+        public const float Wind = .30f;
 
-            // Eight rather than six, because the widest shipped grove is eight columns and a
-            // wrap shorter than the board deals two columns at once for no reason the player
-            // can see. The share is bigger for the same reason the burst ripple's is: a grove
-            // that comes down in one sheet is one event, and a grove that comes down column by
-            // column is a grove.
-            float step = over * .075f;
-            float delay = (nth % 8) * step;
-            return delay > over * .45f ? over * .45f : delay;
-        }
+        /// <summary>Between two flowers of one wave going off, at most.</summary>
+        public const float BurstStep = .055f;
 
         /// <summary>
-        /// The whole of one piece's fall: when it starts, and how long it then takes.
+        /// And the most the whole ripple may take, however many are in the wave.
         ///
-        /// <para>
-        /// <b>The two halves have to be bounded together, and they were not.</b>
-        /// <see cref="Rain"/> promises the grove is back on the ground before the next wave
-        /// charges, and <see cref="FallOver"/> keeps a fall inside that allowance — but the
-        /// ripple's delay was <em>added</em> to the result, so a piece late in the ripple
-        /// finished a third of a wave past the bound the comment claimed. That is two waves
-        /// moving the same flowers at once, which is the fault this mode has paid for twice.
-        /// A piece falls in what is left of the wave after its own wait, so a late one falls
-        /// faster rather than later, and the sum is the wave's allowance whatever the ripple
-        /// does.
-        /// </para>
+        /// The step shortens until the set fits rather than the tail being clipped, so a wave of
+        /// three is three clear beats and a wave of thirteen is one long ripple — and neither is
+        /// a clump, which is what the ripple exists to prevent.
         /// </summary>
-        /// <remarks>
-        /// <b>The fall is chosen first and the ripple gives way, and it used to be the other way
-        /// round.</b> A piece's wait was taken out of the allowance and whatever was left became
-        /// its fall — so the same drop, over the same distance, took up to <em>45% less time</em>
-        /// depending only on which column it happened to be in. That is a board whose pieces fall
-        /// at several different speeds inside one wave, and it was reported as the fall being
-        /// sudden and stuttery: at the far end of the ripple a five-row drop was covering a third
-        /// of a cell per frame. How long a thing takes to fall is a fact about how far it is
-        /// falling and nothing else, so <see cref="FallOver"/> is asked first and the ripple is
-        /// trimmed to fit in what is left. A tall drop therefore rides at the front of the wave
-        /// with no wait at all, which is right — it has the furthest to come.
-        /// </remarks>
-        /// <param name="hold">
-        /// <see cref="Settle"/>: the beat a wave's bursts are left alone before the grove comes
-        /// down on them. It is handed in rather than added by the caller because a tall drop
-        /// <em>spends</em> it travelling, which is the other half of what made the fall skip.
+        public const float BurstBody = .34f;
+
+        /// <summary>After the burst that sent it, colour lands on the flower beside it.</summary>
+        public const float WashLag = .085f;
+
+        /// <summary>And after the burst that hit it, a cocoon answers.</summary>
+        public const float CrackLag = .10f;
+
+        /// <summary>
+        /// The least there may ever be between two critters getting out.
         ///
-        /// <para>
-        /// The hold is there so the player sees what they caused before the consequence covers
-        /// it — which is a fact about the flower landing <em>on the burst</em>, one row up.
-        /// A flower five rows above has not reached anything yet at the moment the hold ends, so
-        /// making it wait buys nothing and costs it a third of the time it has to come down in:
-        /// with the hold spent waiting, the deepest drops were the ones with the least room, and
-        /// they are the ones that need the most. So a piece sets off the sooner the further it
-        /// has to come, and the whole window — wait plus fall — is <c>hold + over</c> for every
-        /// piece however tall its drop, which is what keeps <see cref="Rain"/>'s promise that the
-        /// grove is on the ground before the next wave charges.
-        /// </para>
-        /// </param>
-        /// <param name="wait">The whole of it: the hold this piece owes plus its place in the ripple.</param>
-        public static void Rainfall(int nth, float rows, float over, float hold,
-                                    out float wait, out float fall)
-        {
-            if (hold < 0f) hold = 0f;
-            if (rows < 1f) rows = 1f;
+        /// <b>A floor rather than a share, because what has to be true is about a person.</b>
+        /// Each of these carries a sound, a halo, a shockwave and a creature, and the chapter's
+        /// finale frees ten on one wave. Whether the player sees each of them is not a fact about
+        /// how long the wave happens to be.
+        /// </summary>
+        public const float GreetLag = .26f;
 
-            // Nought for a piece landing next to the burst, all of it by four rows up, so the
-            // trade is spent smoothly rather than at a threshold nobody could name.
-            float lift = (rows - 1f) / 3f;
-            if (lift > 1f) lift = 1f;
+        /// <summary>
+        /// Between a flower going off and the grove coming down into the hole.
+        ///
+        /// The player watches what they did, and <em>then</em> watches what was above it come
+        /// down — which is the beat that makes a cascade read as one thing collapsing rather than
+        /// as two unrelated events.
+        /// </summary>
+        public const float Hold = .11f;
 
-            float budget = over + hold * lift;
-            fall = FallOver(budget, rows);
+        /// <summary>
+        /// Between one piece of a column leaving and the piece above it following.
+        ///
+        /// It is what makes a column read as collapsing rather than sliding as a block, and it is
+        /// a correctness rule as much as a look: two pieces of one column moving together overlap.
+        /// </summary>
+        public const float RowLag = .050f;
 
-            float room = budget - fall;
-            if (room < 0f) room = 0f;
+        /// <summary>A breath between one wave finishing and the next gathering.</summary>
+        public const float WaveGap = .06f;
 
-            float ripple = RainAt(nth, budget);
-            if (ripple > room) ripple = room;
+        /// <summary>
+        /// Where in a wave's ripple the grove answers it — the jolt, the ring, the shake, the flash.
+        ///
+        /// <b>On the body of the wave rather than on its first frame.</b> These used to fire the
+        /// instant the wave's first flower went off, so on a thirteen-flower wave the screen had
+        /// already answered before most of the wave existed.
+        /// </summary>
+        public const float AnswerAt = .45f;
 
-            wait = hold * (1f - lift) + ripple;
-        }
+        /// <summary>
+        /// The most a chain's slack may be squeezed to meet <see cref="Ceiling"/>.
+        ///
+        /// Below this the pauses stop being pauses, and a chain that still does not fit is
+        /// allowed to run long instead — which is the right way to be wrong, because the
+        /// alternative is moving the pieces faster than the eye.
+        /// </summary>
+        public const float SlackFloor = .55f;
+
 
         // ------------------------------------------------------- what would pop, breathing
         /// <summary>

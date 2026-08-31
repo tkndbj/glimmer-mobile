@@ -41,7 +41,7 @@ namespace GlimmerGrove.Tests
     public sealed class BudLadderTests
     {
         /// <summary>One authored rung: its board, its basket, and what that grove measured.</summary>
-        sealed class Rung
+        internal sealed class Rung
         {
             public readonly string Id, Colours, Regrow;
             public readonly string[] Rows;
@@ -101,7 +101,7 @@ namespace GlimmerGrove.Tests
         /// The Thicket. One grove, because what decides a mode is whether the verb lands and no
         /// number answers that (invariant 20j).
         /// </summary>
-        static readonly Rung[] Ladder =
+        internal static readonly Rung[] Ladder =
         {
             new Rung("b01_firstburst", "RGB", "RGBYMCW",
                      par: 3, ways: 80, careless: 3, nodes: 1989,

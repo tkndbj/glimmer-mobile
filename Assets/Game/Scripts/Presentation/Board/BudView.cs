@@ -1005,248 +1005,250 @@ namespace GlimmerGrove
         }
 
         /// <summary>
-        /// The chain, wave by wave: every bud in the wave bursts, throws pollen at the cells
-        /// beside it, and the pollen lands a moment later on the buds that swell.
+        /// Plays one chain: reads the score <see cref="BudStage"/> wrote and draws it.
         ///
-        /// The whole sequence is bounded by <c>BudTempo</c>, which is what stops a nine-wave chain
-        /// taking nine times as long as a one-wave one — and floored by it, because a chain the eye
-        /// cannot follow pays out nothing.
+        /// <para>
+        /// <b>This used to be the scheduler as well as the player, and that was the fault behind
+        /// every complaint the mode's animation got.</b> It walked the waves, and per wave fired
+        /// several dozen independent tweens each of which worked its own delay out of its own
+        /// share of a per-wave beat. Nothing was comparable to anything: the bursts rippled over
+        /// a fraction of the burn, the falls split a separate budget between a hold and a drop,
+        /// and the grove's answer fired at the start of the burn regardless. So two things that
+        /// were <em>causally</em> related were timed by arithmetic that had never met, and on
+        /// seven of the ten shipped groves a flower slid into a hole before the burst that made
+        /// the hole had been drawn.
+        /// </para>
+        /// <para>
+        /// <b>Now there is one clock and one list.</b> Every cue carries an absolute time from
+        /// the tap; this walks them in order and waits out the difference between where the cue
+        /// is and where the clock is. Three things follow that no amount of care with the old
+        /// shape could have bought. Ordering is a property of the score rather than of this
+        /// method, so it is provable offline — see <c>BudStageTests</c>. Cues that share an
+        /// instant are drawn in one frame rather than a frame apart, so a wave of thirteen is one
+        /// gesture. And the timing cannot <em>drift</em>: a hitched frame is caught up against
+        /// <c>t0</c> instead of pushing everything after it further out, which is what a chain of
+        /// two hundred consecutive <c>WaitForSeconds</c> calls does.
+        /// </para>
+        /// <para>
+        /// The one number still worked out here is <paramref name="beat"/>, and it is deliberately
+        /// no longer a schedule: it is the nominal length of a wave, which several effects use to
+        /// size <em>themselves</em> — how long petals live, how long a shockwave takes. Those are
+        /// amplitudes, not order.
+        /// </para>
         /// </summary>
         IEnumerator PlayChain(BudChainResult chain, BudPulse[] pulses, BudWash[] washes,
                               BudDrop[] drops)
         {
+            var score = BudStage.Of(chain.Waves, pulses, washes, drops, _layout.Width);
+
+            // Nominal, and used only to size effects that have to outlive the cue that threw
+            // them. Nothing below reads it to decide *when* anything happens.
             float beat = BudTempo.Wave(Mathf.Max(1, chain.Waves));
-            int shown = 0;
 
-            float charge = BudTempo.Charge(beat);
-            float burn = BudTempo.Burn(beat);
+            // What each wave is, read once: where the middle of it was and what colour its
+            // biggest bunch wore. Everything drawn over the top of a wave is anchored on these
+            // rather than on the board, which by now holds the position the whole chain ends in
+            // and carries no time at all.
+            int waves = Mathf.Max(1, chain.Waves);
+            var heart = new Vector2[waves];
+            var tint = new Color[waves];
 
-            for (int wave = 0; wave < chain.Waves; wave++)
+            for (int wave = 0; wave < waves; wave++)
             {
-                // What this wave is, read once: how many went off, where the middle of it was,
-                // and what colour the biggest bunch in it wore. Everything drawn over the top of
-                // the wave is anchored on these rather than on the board, which by now holds the
-                // position the whole chain ends in and carries no time at all.
-                int inWave = 0, fattest = 0, waveColour = Energy.None;
-                var heart = Vector2.zero;
+                int inWave = 0, fattest = 0, colour = Energy.None;
+                var middle = Vector2.zero;
 
                 for (int i = 0; i < pulses.Length; i++)
                 {
                     if (pulses[i].Wave != wave || pulses[i].Kind != BudPulseKind.Burst) continue;
 
                     inWave++;
-                    heart += Where(pulses[i].Cell);
+                    middle += Where(pulses[i].Cell);
 
                     if (pulses[i].Bunch <= fattest) continue;
                     fattest = pulses[i].Bunch;
-                    waveColour = pulses[i].Colour;
+                    colour = pulses[i].Colour;
                 }
 
-                if (inWave > 0) heart /= inWave;
-                var waveTint = waveColour == Energy.None ? Pal.Gold : Petal(waveColour);
-
-                // ---------------------------------------------------------- the charge
-                // **Every wave winds up before it goes off, and this is the beat the mode was
-                // missing.** The bunch that matched spins in place, brightening, for a fraction
-                // of a second — so there is a moment where the player can see *which flowers*
-                // did it, before they stop existing. Without it a wave went straight from
-                // "nothing" to "gone", which is why a perfectly good three-wave cascade read as
-                // a flicker rather than as something they had caused.
-                // Ascending, before this wave's flowers are lifted over their neighbours, so
-                // that only the bunch currently winding up is ever out of order.
-                RestoreDepth();
-
-                for (int i = 0; i < pulses.Length; i++)
-                {
-                    if (pulses[i].Wave != wave || pulses[i].Kind != BudPulseKind.Burst)
-                        continue;
-                    Wind(pulses[i].Cell, pulses[i].Colour, charge, i, wave + 1);
-                }
-
-                // And the bunch is *wired together* while it winds up, which is the half the
-                // charge could not say on its own. Three flowers spinning in three places on a
-                // grid of fifty is three things happening; a line of light between them is one
-                // thing about to happen, and it is the reading the player needs before they stop
-                // existing.
-                Wires(pulses, wave, waveTint, charge);
-
-                if (inWave > 0)
-                {
-                    // Rising, so the wind-up is heard as well as seen and a deep chain climbs.
-                    Audio.Sfx("whoosh", .30f, BudTempo.Pitch(wave + 1) * 1.1f);
-                }
-
-                yield return new WaitForSecondsRealtime(charge);
-                if (!this) yield break;
-
-                // ---------------------------------------------------------- and the burst
-                // **The wave is dealt as a ripple.** The model says these all went off at once
-                // and drawing it that way is what made the board's biggest tap — thirteen
-                // flowers — read as one flat flicker. A few tens of milliseconds apart is
-                // enough to count them, and `BudTempo` bounds the whole ripple to a fraction
-                // of the beat so the wave still ends when it said it would.
-                // **Each kind of thing is rippled across its own count, and that is a
-                // correctness fix as much as a pacing one.** All four used to be dealt against
-                // `inWave` — the number of *bursts* — so a wave washing twenty flowers ran its
-                // index past the end of a ripple built for thirteen, and a wave freeing four
-                // critters fired all four in the same frame because `Free` was never given a
-                // delay at all. On the chapter's finale, whose opening tap frees ten at once,
-                // that is the single loudest moment in the mode played as one chord.
-                //
-                // Counted first, because how far apart to deal them depends on how many there
-                // are: `BudTempo.StaggerAt` shortens the step until the whole set fits its
-                // allowance, so a wave of three is three clear beats and a wave of thirteen is
-                // one long ripple, and neither is a clump.
-                int cracks = 0, frees = 0, sends = 0;
-                for (int i = 0; i < pulses.Length; i++)
-                {
-                    if (pulses[i].Wave != wave) continue;
-                    if (pulses[i].Kind == BudPulseKind.Crack) cracks++;
-                    else if (pulses[i].Kind == BudPulseKind.Freed) frees++;
-                }
-                for (int i = 0; i < washes.Length; i++) if (washes[i].Wave == wave) sends++;
-
-                int nth = 0, crack = 0, freed = 0;
-                for (int i = 0; i < pulses.Length; i++)
-                {
-                    if (pulses[i].Wave != wave) continue;
-
-                    if (pulses[i].Kind == BudPulseKind.Freed)
-                    {
-                        // **A critter getting out is the thing the level is for, so two of them
-                        // may never happen at once.** This is the one ripple where the delay is
-                        // doing more than pacing: each of these carries a sound, a halo, a
-                        // shockwave and a creature, and four on one frame is four of everything
-                        // over the top of each other with no one of them legible.
-                        Free(pulses[i].Cell, burn,
-                             BudTempo.StaggerAt(freed++, frees, burn, BudTempo.GreetSpread));
-                        continue;
-                    }
-
-                    if (pulses[i].Kind == BudPulseKind.Crack)
-                    {
-                        // Held back behind the bunch that did it, exactly as a wash is: a shell
-                        // that splinters before the flower beside it has gone off reads as the
-                        // cocoon having done it to itself.
-                        Crack(pulses[i].Cell, burn, BudTempo.StaggerAt(crack++, cracks, burn));
-                        continue;
-                    }
-
-                    Split(pulses[i].Cell, wave, pulses[i].Colour, pulses[i].Bunch, beat,
-                          BudTempo.StaggerAt(nth, inWave, burn));
-                    nth++;
-                }
-
-                // Colour lands on the flowers around the bunch a beat after it goes off, held
-                // back by a ripple of its own, so a flower never turns before the bunch that
-                // turned it has burst.
-                int sent = 0;
-                for (int i = 0; i < washes.Length; i++)
-                {
-                    if (washes[i].Wave != wave) continue;
-                    Land(washes[i], beat, BudTempo.StaggerAt(sent++, sends, burn));
-                }
-
-                if (inWave > 0)
-                {
-                    shown = wave + 1;
-                    if (BudChain.Counts(shown)) ShowChain(shown, chain.Waves);
-
-                    // **The escalation, and it is in kinds of thing rather than in amounts.**
-                    // Every wave switches a new one on and keeps the ones before it, so a
-                    // five-wave chain is six different events arriving one after another rather
-                    // than the same event five times a little louder — which is what the first
-                    // version of this was, and it was reported as no change at all.
-                    var layers = BudSpectacle.Of(shown);
-
-                    Jolt(heart, layers.Ripple, burn, pulses, wave);
-                    if (layers.Sweep) Sweep(heart, waveTint, burn);
-                    if (layers.Fireworks) Fireworks(heart, waveTint, layers.Rockets, burn);
-                    if (layers.Rays) Backlight(waveTint, burn);
-                    if (layers.Confetti) Burst.Confetti(_fx, 18 + shown * 6);
-
-                    float shake = BudTempo.Shake(shown);
-                    if (shake > 0f && _grid) Tween.Shake(_grid, shake, burn * .9f);
-
-                    // And the screen answers, harder every wave — in the wave's *own colour*
-                    // from the second on, so what takes the screen says which colour is running
-                    // rather than merely that something did.
-                    float bloom = BudTempo.Bloom(shown);
-                    if (bloom > 0f) Flow.Flash(Pal.A(new Color(1f, .96f, .84f), bloom),
-                                               burn * .30f, burn * .70f);
-
-                    if (layers.Tint > 0f)
-                        Flow.Flash(Pal.A(waveTint, layers.Tint), burn * .22f, burn * .80f);
-
-                    // The whole thicket heaves, harder every wave — the chain's escalation said
-                    // at grove scale. It replaces a punch on the plate of between 1.2% and 3.6%,
-                    // which is below the size at which a scale change on a whole screen is
-                    // noticed: a player watching thirteen flowers go off has no attention spare
-                    // for a 2% nudge behind them. On `_grid` rather than `_plate` so the flowers
-                    // move with the ground they stand on — a plate that swells behind a static
-                    // grid is a border thickening, not a board reacting.
-                    //
-                    // Safe beside the shake above: that borrows the position, this the scale.
-                    if (_grid) Tween.Punch(_grid, BudTempo.Heave(shown), burn * .85f);
-                }
-
-                // **And the grove falls into the holes it just made.** Held back behind the
-                // bursts of its own wave, so the player watches the flowers go and *then* watches
-                // what was above them come down — which is the beat that makes a cascade read as
-                // one thing collapsing rather than as two unrelated events.
-                Rain(drops, wave, burn);
-
-                PaintBand();
-                Changed?.Invoke();
-
-                yield return new WaitForSecondsRealtime(burn);
-                if (!this) yield break;
+                if (inWave > 0) middle /= inWave;
+                heart[wave] = middle;
+                tint[wave] = colour == Energy.None ? Pal.Gold : Petal(colour);
             }
 
-            // What grew back arrives on the wave after the last one, which is where the model
-            // put it: growing happens once, after the chain has stopped (see BudBoard.Grow).
-            Rain(drops, chain.Waves, burn);
+            // How long a wind-up's *shape* is given, read off the score rather than off
+            // `BudTempo.Wind` — the two differ whenever a chain had to be squeezed to meet the
+            // ceiling, and a shape normalised over the unsqueezed length would never reach its
+            // full swell before the flower went off. The first flower of a wave bursts the
+            // instant the wind ends, so its cue carries exactly that length.
+            float windShape = BudTempo.Wind;
 
-            // **And the grove is allowed to land before anything else happens to it.** The word
-            // used to slam in while the last flowers were still in the air and every cell was
-            // repainted underneath it in the same frame, which is the "the board resets so
-            // suddenly" this was reported as. It is the glade's hush (`GladeFanfare`) arrived at
-            // from the other end: the beat before a celebration is part of the celebration.
-            yield return new WaitForSecondsRealtime(BudTempo.Landing(chain.Waves));
-            if (!this) yield break;
+            float t0 = Time.unscaledTime;
+            var cues = score.Cues;
 
-            // The last wave lifted its own bunch and there is no wave after it to tidy up, so
-            // the settled board would keep that stacking for the rest of the run.
+            for (int i = 0; i < cues.Length; i++)
+            {
+                var cue = cues[i];
+
+                // Measured against the tap rather than against the cue before it, so nothing
+                // accumulates. A cue whose moment has already passed — because the frame before
+                // it was long, or because several cues share an instant — is drawn at once.
+                float wait = cue.At - (Time.unscaledTime - t0);
+                if (wait > 0f) yield return new WaitForSecondsRealtime(wait);
+                if (!this) yield break;
+
+                switch (cue.Kind)
+                {
+                    case BudCueKind.Wind:
+                        // Ascending, before this wave's flowers are lifted over their neighbours,
+                        // so only the bunch currently winding up is ever out of order.
+                        if (cue.Nth == 0)
+                        {
+                            windShape = cue.Over;
+
+                            RestoreDepth();
+
+                            // The light strung between a bunch lasts until the first of it goes
+                            // off, which is what the wind-up's own length means.
+                            Wires(pulses, cue.Wave, tint[cue.Wave], windShape);
+
+                            // Rising, so the wind-up is heard as well as seen and a deep chain
+                            // climbs.
+                            Audio.Sfx("whoosh", .30f, BudTempo.Pitch(cue.Wave + 1) * 1.1f);
+                        }
+
+                        Wind(cue.Cell, cue.Colour, cue.Over, windShape, cue.Nth, cue.Wave + 1);
+                        break;
+
+                    case BudCueKind.Burst:
+                        Split(cue.Cell, cue.Wave, cue.Colour, cue.Bunch, beat);
+                        break;
+
+                    case BudCueKind.Wash:
+                        Land(cue.Cell, cue.Colour, beat);
+                        break;
+
+                    case BudCueKind.Crack:
+                        Crack(cue.Cell, beat);
+                        break;
+
+                    case BudCueKind.Free:
+                        Free(cue.Cell, beat);
+                        break;
+
+                    case BudCueKind.Fall:
+                        Fall(cue);
+                        break;
+
+                    case BudCueKind.Answer:
+                        Answer(cue.Wave, chain.Waves, heart[cue.Wave], tint[cue.Wave], beat, pulses);
+                        break;
+
+                    case BudCueKind.Tidy:
+                        Tidy();
+                        break;
+
+                    case BudCueKind.Word:
+                        // Started rather than awaited: the score has more to say underneath it —
+                        // the last collapse landing, the grove growing back, the board being put
+                        // in step — and every one of those is the celebration having something to
+                        // celebrate over.
+                        StartCoroutine(Fanfare(chain.Waves, BudChain.WordKey(chain.Waves)));
+                        break;
+
+                    case BudCueKind.Done:
+                        HideChain();
+                        _busy = false;
+                        Settle();
+                        TellHint();
+                        break;
+                }
+            }
+        }
+
+        /// <summary>
+        /// The grove's own answer to one wave: what it does as a whole rather than cell by cell.
+        ///
+        /// <para>
+        /// <b>The escalation, and it is in kinds of thing rather than in amounts.</b> Every wave
+        /// switches a new one on and keeps the ones before it, so a five-wave chain is six
+        /// different events arriving one after another rather than the same event five times a
+        /// little louder — which is what the first version of this was, and it was reported as no
+        /// change at all.
+        /// </para>
+        /// <para>
+        /// <b>It lands on the body of the wave, not on its first frame</b>
+        /// (<see cref="BudTempo.AnswerAt"/>). It used to fire the instant the wave's first flower
+        /// went off, so on a thirteen-flower wave the screen had already answered before most of
+        /// the wave existed.
+        /// </para>
+        /// </summary>
+        void Answer(int wave, int waves, Vector2 heart, Color waveTint, float beat,
+                    BudPulse[] pulses)
+        {
+            int shown = wave + 1;
+            float burn = BudTempo.Burn(beat);
+
+            if (BudChain.Counts(shown)) ShowChain(shown, waves);
+
+            var layers = BudSpectacle.Of(shown);
+
+            Jolt(heart, layers.Ripple, burn, pulses, wave);
+            if (layers.Sweep) Sweep(heart, waveTint, burn);
+            if (layers.Fireworks) Fireworks(heart, waveTint, layers.Rockets, burn);
+            if (layers.Rays) Backlight(waveTint, burn);
+            if (layers.Confetti) Burst.Confetti(_fx, 18 + shown * 6);
+
+            float shake = BudTempo.Shake(shown);
+            if (shake > 0f && _grid) Tween.Shake(_grid, shake, burn * .9f);
+
+            // And the screen answers, harder every wave — in the wave's *own colour* from the
+            // second on, so what floods the screen says which colour is running rather than
+            // merely that something did.
+            float bloom = BudTempo.Bloom(shown);
+            if (bloom > 0f)
+                Flow.Flash(Pal.A(new Color(1f, .96f, .84f), bloom), burn * .30f, burn * .70f);
+
+            if (layers.Tint > 0f)
+                Flow.Flash(Pal.A(waveTint, layers.Tint), burn * .22f, burn * .80f);
+
+            // The whole thicket heaves, harder every wave — the chain's escalation said at grove
+            // scale. On `_grid` rather than `_plate` so the flowers move with the ground they
+            // stand on: a plate that swells behind a static grid is a border thickening, not a
+            // board reacting. Safe beside the shake above, which borrows the position where this
+            // borrows the scale.
+            if (_grid) Tween.Punch(_grid, BudTempo.Heave(shown), burn * .85f);
+
+            PaintBand();
+            Changed?.Invoke();
+        }
+
+        /// <summary>
+        /// The board put back in step with the model, once, when nothing is moving any more.
+        ///
+        /// <para>
+        /// <b>Not animated, and that word is doing the work.</b> <c>PaintCell(i, true)</c> skips
+        /// its own "nothing changed" guard, so this loop used to kill every tween on every flower
+        /// and snap every scale back to one — most of which were already correct. Every white
+        /// flower's breath and every "this one pops" hint died at once and <see cref="PaintPops"/>
+        /// restarted them from nothing, which is a whole board flinching at the moment it should
+        /// be settling.
+        /// </para>
+        /// <para>
+        /// <b>And it is scheduled rather than tacked on to the end of the chain.</b> It is a
+        /// board-<em>wide</em> event, so it waits until the score says the last piece has landed
+        /// — which is usually underneath the word rather than before it.
+        /// </para>
+        /// </summary>
+        void Tidy()
+        {
+            // The last wave lifted its own bunch and there is no wave after it to tidy up, so the
+            // settled board would keep that stacking for the rest of the run.
             RestoreDepth();
 
-            // **Not animated, and that word is doing the work.** `PaintCell(i, true)` skips its
-            // own "nothing changed" guard, so this loop used to kill every tween on every flower
-            // and snap every scale back to one — thirty-six cells, in a frame, most of which
-            // were already correct. Every white flower's breath and every "this one pops" hint
-            // died at once and `PaintPops` restarted them from nothing, which is a whole board
-            // flinching at the moment it should be settling. Asked without `animate`, a cell
-            // whose colour has not moved is left exactly as it is.
             for (int i = 0; i < _cells.Length; i++) PaintCell(i, false);
             PaintBand();
             PaintPops();
             Changed?.Invoke();
-
-            string word = BudChain.WordKey(chain.Waves);
-            if (word != null)
-            {
-                yield return Fanfare(chain.Waves, word);
-                if (!this) yield break;
-            }
-            else if (BudChain.Counts(chain.Waves))
-            {
-                yield return new WaitForSecondsRealtime(BudTempo.CountPop(chain.Waves) * 2f);
-                if (!this) yield break;
-                HideChain();
-            }
-
-            _busy = false;
-            Settle();
-            TellHint();
         }
 
         // ------------------------------------------------------ what a wave draws over the top
@@ -1727,129 +1729,40 @@ namespace GlimmerGrove
 
         // ------------------------------------------------------------------ the grove falling
         /// <summary>
-        /// Everything that moved on this wave, sliding down into the holes under it.
+        /// One piece coming down, exactly where and for exactly as long as the score says.
         ///
         /// <para>
-        /// <b>The cells never move; what is drawn in them does.</b> A cell is a fixed square of
-        /// the grid with a flower or a cocoon standing in it, so a fall is not a cell changing
-        /// position — it is the <em>picture</em> being handed from one cell to the next, and then
-        /// the receiving cell animating its own <see cref="Cell.Piece"/> in from where it came.
-        /// That is what keeps the ground, the hit target and the <c>Btn</c> exactly where the
-        /// layout put them, which is the one thing a falling board must not lose.
+        /// <b>Everything that used to be decided here has moved</b> — when it may start, how far
+        /// it has to come and therefore how long it takes are <see cref="BudStage"/>'s, because
+        /// each of those is a fact about the piece <em>relative to the rest of the wave</em> and
+        /// this method can only ever see one piece. That is not a tidy-up: the three faults it
+        /// removes are the ones this mode was reported for. A fall used to begin at a fixed
+        /// offset into the wave's burn regardless of when the burst below it had been drawn (so
+        /// pieces slid into holes that did not exist yet); it used to be clamped into a leftover
+        /// budget (so, within one wave, a tall drop fell half again faster than a short one); and
+        /// a column's pieces were dealt in whatever order the model happened to emit them.
         /// </para>
         /// <para>
-        /// <b>A column falls as a column, and the further it falls the longer it takes</b> — a
-        /// flower that drops five rows and one that drops one row cannot take the same time
-        /// without the tall one reading as teleporting, and two pieces of one column that start
-        /// at different moments read as a shower rather than as a board collapsing. So the
-        /// ripple is over <em>columns</em> and never over the order the model happened to list
-        /// the drops in, which is what it used to be.
-        /// </para>
-        /// <para>
-        /// <b>And what grew travels the height of its own hole.</b> Every new flower in a column
-        /// enters from over the top of the grove, stacked in the order it will land, so a column
-        /// that lost three moves three squares' worth of new flowers down by three squares —
-        /// which is one distance for the whole column rather than one per row. The old
-        /// arithmetic negated the grove's own origin, so on a seven-high board the top row's new
-        /// flower rose <em>up</em> into place from three squares below and only the bottom rows
-        /// fell at all.
+        /// <b>And the distance comes off the cue rather than off the board.</b> A grown flower
+        /// travels the depth of its own column's hole and a fallen one travels the rows between
+        /// its two cells — one rule, worked out once, where it can be tested. Deriving it here as
+        /// well would be a second copy of the number that decides the duration, and the two only
+        /// have to disagree by a cell for that piece to fall at a different speed from the one
+        /// beside it.
         /// </para>
         /// </summary>
-        void Rain(BudDrop[] drops, int wave, float burn)
+        void Fall(BudCue cue)
         {
-            if (drops == null || _cells == null) return;
+            if (_cells == null || cue.Cell < 0 || cue.Cell >= _cells.Length) return;
 
-            float over = BudTempo.Rain(burn);
-
-            // **The bursts are left alone for a beat first.** The grove used to start falling
-            // in the frame its own wave went off, so the flower above a burst was already
-            // moving while the burst was still opening — the player's own doing, covered by the
-            // consequence of it before they had seen it. `BudTempo.Settle` takes this out of the
-            // fall's allowance rather than adding it beside one, so the grove is still back on
-            // the ground before the next wave charges.
-            float hold = BudTempo.Settle(burn);
-
-            // How many are coming down, counted before any of them is dealt, because which of
-            // them are struck depends on how many there are — see `BudChorus`.
-            int falling = 0;
-            for (int i = 0; i < drops.Length; i++)
-                if (drops[i].Wave == wave && drops[i].Cell >= 0 && drops[i].Cell < _cells.Length)
-                    falling++;
-
-            int nth = 0;
-
-            for (int i = 0; i < drops.Length; i++)
-            {
-                var drop = drops[i];
-                if (drop.Wave != wave) continue;
-                if (drop.Cell < 0 || drop.Cell >= _cells.Length) continue;
-
-                int column = drop.Cell % _layout.Width;
-
-                // Where it is coming from: the cell above it, or from over the top of the grove
-                // for a flower that has just grown, which travels as far as its column is deep.
-                float above = drop.Grew
-                    ? Grown(drops, wave, column) * _cell
-                    : Where(drop.From).y - Where(drop.Cell).y;
-
-                Land(drop, above, over, column, hold, nth, falling);
-                nth++;
-            }
-        }
-
-        /// <summary>
-        /// How many flowers grew into one column on this wave, which is how far every one of
-        /// them falls.
-        ///
-        /// <para>
-        /// A hole is always at the top of its column — the grove falls first and grows into what
-        /// is left — so the new flowers of one column enter as a block from above the grove and
-        /// come down together. Each therefore travels the same distance: the height of the hole
-        /// the column lost, whatever row inside it any one of them ends up on.
-        /// </para>
-        /// </summary>
-        int Grown(BudDrop[] drops, int wave, int column)
-        {
-            int count = 0;
-
-            for (int i = 0; i < drops.Length; i++)
-                if (drops[i].Wave == wave && drops[i].Grew
-                    && drops[i].Cell >= 0 && drops[i].Cell % _layout.Width == column) count++;
-
-            return count < 1 ? 1 : count;
-        }
-
-        /// <summary>
-        /// One thing arriving in a cell, dropped in from <paramref name="above"/>.
-        ///
-        /// <para>
-        /// <b>The offset is taken the instant the picture is handed over, not when the tween
-        /// starts.</b> <see cref="PaintCell"/> draws what has landed straight away, so a piece
-        /// left sitting at its destination for the length of its stagger and only then lifted to
-        /// where it fell from is a flower that appears, jumps back up and falls again.
-        /// </para>
-        /// <para>
-        /// <b>And an interrupted fall lands rather than being abandoned.</b> A fall arrives at a
-        /// resting state it knows absolutely — the cell it belongs to — so it is
-        /// <see cref="Tw.OnAbandon"/>'s second kind: it declares where a superseded one goes and
-        /// <c>KillChannel</c> puts it there. Without that, a wave dropping twice into one cell
-        /// left the first fall wherever the second caught it.
-        /// </para>
-        /// </summary>
-        void Land(BudDrop drop, float above, float over, int column,
-                  float hold = 0f, int nth = 0, int of = 1)
-        {
-            var cell = _cells[drop.Cell];
+            var cell = _cells[cue.Cell];
             if (cell?.Rt == null || cell.Piece == null) return;
 
-            PaintCell(drop.Cell, true);
+            PaintCell(cue.Cell, true);
 
             var piece = cell.Piece;
-
-            // Bounded *with* its stagger rather than beside it — see `BudTempo.Rainfall`, which
-            // is where that arithmetic lives so it can be proved without an Editor.
-            float rows = Mathf.Abs(above) / Mathf.Max(1f, _cell);
-            BudTempo.Rainfall(column, rows, over, hold, out float wait, out float fall);
+            float above = cue.Rows * _cell;
+            float over = cue.Over;
 
             Action rest = () =>
             {
@@ -1858,41 +1771,30 @@ namespace GlimmerGrove
                 piece.localScale = Vector3.one;
             };
 
-            // **A fall accelerates, and this is the curve the mode was most obviously wrong
-            // about.** It was `OutQuad` - a piece that leaves fast and *decelerates* into the
-            // ground, which is the one shape a falling thing cannot have. Nothing here is
-            // pushed; it is dropped, so it gathers speed all the way down and stops dead. Read
-            // beside the landing squash below, that swap alone is most of what separates a
-            // board with weight from a board whose contents slide about.
-            //
-            // How far it has to travel decides how hard it lands and how much it stretches on
-            // the way, so a flower falling the height of the grove arrives like one and a
-            // flower nudged down a single row does not.
-            float lean = Mathf.Min(.26f, rows * .060f);
+            // How far it has to travel decides how hard it lands and how much it stretches on the
+            // way, so a flower falling the height of the grove arrives like one and a flower
+            // nudged down a single row does not.
+            float lean = Mathf.Min(.26f, cue.Rows * .060f);
 
-            // **The landing of the *previous* fall into this cell is ended first, and that is
-            // not tidying.** A squash outlives the wave that threw it by design — it is the
-            // ground pushing back, so it settles after the piece has stopped — and this fall
-            // writes the same `localScale` from a different channel. Two tweens on one value is
-            // a bug however different their channels are, and this pair genuinely overlaps: a
-            // cell that receives a fall, bursts on the next wave and receives another is an
-            // ordinary thing for a cascade to do. Killing it hands the resting scale back
-            // before the stretch below borrows it.
+            // **The landing of the *previous* fall into this cell is ended first, and that is not
+            // tidying.** A squash outlives the wave that threw it by design — it is the ground
+            // pushing back, so it settles after the piece has stopped — and this fall writes the
+            // same `localScale` from a different channel. Two tweens on one value is a bug however
+            // different their channels are, and this pair genuinely overlaps: a cell that receives
+            // a fall, bursts on the next wave and receives another is an ordinary thing for a
+            // cascade to do.
             Tween.KillChannel(piece, SquashChannel);
 
-            // **Gentler than gravity, and the shape is `BudTempo.Curve` rather than a number
-            // typed here.** `InQuad` is what a falling thing really does and it peaks at twice
-            // its own average speed, so the last frames of a tall drop cover a third of a cell
-            // each and the eye reads it as skipping rather than as falling. What replaces it is
-            // not merely a smaller exponent: the exponent *is* the ratio of a fall's fastest
-            // instant to its mean, so it is the other half of the arithmetic that decides how
-            // long the fall gets (`BudTempo.Pace`), and the two have to be the same number in
-            // both places or the bound is a bound on nothing. Hence the constant is Domain's and
-            // the test that measures the peak reads the same one this line draws with.
+            // **A fall accelerates**, which is the one shape a falling thing must have: nothing
+            // here is pushed, it is dropped, so it gathers speed all the way down and stops dead.
+            // The exponent is `BudTempo.Curve` rather than a number typed here because it *is*
+            // the ratio of a fall's fastest instant to its mean — so it is the other half of the
+            // arithmetic that decided how long the fall got, and the two have to be the same
+            // number in both places or the bound on tearing is a bound on nothing.
             //
-            // Shaped here with `Ease.Linear` rather than added to `Ease`, because it exists for
-            // this one gesture and naming it in the shared set would invite it into others.
-            Tween.Run(fall, Ease.Linear, t =>
+            // Shaped with `Ease.Linear` rather than added to `Ease`, because it exists for this
+            // one gesture and naming it in the shared set would invite it into others.
+            Tween.Run(over, Ease.Linear, t =>
             {
                 if (!piece) return;
 
@@ -1900,33 +1802,32 @@ namespace GlimmerGrove
                 piece.anchoredPosition = new Vector2(0f, Mathf.LerpUnclamped(above, 0f, drop));
 
                 // Drawn out along the way it is travelling, and most drawn out where it is
-                // fastest. It is a small number on purpose - enough that the eye reads speed,
-                // never enough to be caught looking at.
+                // fastest. A small number on purpose — enough that the eye reads speed, never
+                // enough to be caught looking at.
                 float pull = lean * drop;
                 piece.localScale = new Vector3(1f - pull * .45f, 1f + pull, 1f);
-            }, piece, FallChannel).Delay(wait).OnAbandon(rest).OnDone(() =>
+            }, piece, FallChannel).OnAbandon(rest).OnDone(() =>
             {
                 if (!piece) return;
                 piece.anchoredPosition = Vector2.zero;
 
-                // And the landing, which is the beat the old punch was standing in for. A
-                // wobble says "something touched this"; a squash and a spring say "this had
-                // weight and the ground stopped it".
+                // And the landing, which is the beat a punch used to stand in for. A wobble says
+                // "something touched this"; a squash and a spring say "this had weight and the
+                // ground stopped it".
                 Squash(piece, lean, over);
 
-                // **And it is heard.** A board that falls in silence is a board that is being
-                // rearranged rather than one where things are dropping onto other things, and
-                // this is the cheapest half of making a fall feel like one. Which pieces are
-                // struck and at what note is `BudChorus`, in Domain, because "voice five of the
-                // twenty and space them evenly" is a rule that is wrong for a year without
-                // anybody being able to say why the board sounds thin.
-                if (BudChorus.Voiced(nth, of))
-                    Audio.Sfx("pop", .22f, BudChorus.Pitch(nth, of), .03f);
+                // **And it is heard.** A board that falls in silence is being rearranged rather
+                // than dropping things onto other things. Which pieces are struck and at what
+                // note is `BudChorus`, in Domain, because "voice five of the twenty and space
+                // them evenly" is a rule that is wrong for a year without anybody being able to
+                // say why the board sounds thin.
+                if (BudChorus.Voiced(cue.Nth, cue.Of))
+                    Audio.Sfx("pop", .22f, BudChorus.Pitch(cue.Nth, cue.Of), .03f);
             });
 
-            // **After the tween is registered, not before.** Registering supersedes whatever
-            // fall was still running on this cell, and a superseded fall *lands* — so lifting
-            // the piece first would be undone by the very kill that makes this one safe.
+            // **After the tween is registered, not before.** Registering supersedes whatever fall
+            // was still running on this cell, and a superseded fall *lands* — so lifting the
+            // piece first would be undone by the very kill that makes this one safe.
             piece.anchoredPosition = new Vector2(0f, above);
             piece.localScale = Vector3.one;
         }
@@ -2111,7 +2012,7 @@ namespace GlimmerGrove
         /// tweens at once.
         /// </para>
         /// </summary>
-        void Wind(int index, int colour, float charge, int seed, int wave)
+        void Wind(int index, int colour, float over, float shape, int seed, int wave)
         {
             if (_cells == null || index < 0 || index >= _cells.Length) return;
 
@@ -2140,19 +2041,31 @@ namespace GlimmerGrove
             // survivable while the swell was .34; it is not at .82.
             Tween.KillChannel(rt, "punch");
 
-            Tween.Run(charge, Ease.Linear, t =>
+            // **The shape is read against the wave's own wind-up rather than against this
+            // flower's, and that is what keeps a bunch one thing.** The score lets a flower gather
+            // right up to the moment it goes off, so a flower late in a wave's ripple winds for
+            // longer than one early in it — normalised over its own length, the two would crouch
+            // and swell at visibly different rates and the bunch would come apart into a queue.
+            // Anchored to the one `shape` the whole wave shares, every flower of a bunch moves
+            // identically and the ones going off later simply *hold* at their peak for longer,
+            // which is the curve's own doctrine (`BudTempo.Peak`) finally getting what it wanted.
+            if (shape < .0001f) shape = .0001f;
+
+            Tween.Run(over, Ease.Linear, t =>
             {
                 if (!rt) return;
 
-                // t squared, so it starts almost still and is whipping round by the end.
-                rt.localRotation = Quaternion.Euler(0, 0, lean * spin * t * t);
-                rt.localScale = Vector3.one * BudTempo.WindScale(t, wave);
+                float u = Mathf.Min(1f, t * over / shape);
+
+                // u squared, so it starts almost still and is whipping round by the end.
+                rt.localRotation = Quaternion.Euler(0, 0, lean * spin * u * u);
+                rt.localScale = Vector3.one * BudTempo.WindScale(u, wave);
 
                 // Held back to two thirds of the way to white until the flower has stopped
                 // growing, then pushed the rest of the way. The charge exists to show *which*
                 // flowers matched, so it may not go white while that is still being said — and
                 // the hold at the end is somewhere safe to spend the rest. See BudTempo.WindWhite.
-                if (bud) bud.color = Color.Lerp(tint, Color.white, BudTempo.WindWhite(t));
+                if (bud) bud.color = Color.Lerp(tint, Color.white, BudTempo.WindWhite(u));
             }, rt, SpinChannel).OnAbandon(() =>
             {
                 if (!rt) return;
@@ -2212,16 +2125,8 @@ namespace GlimmerGrove
         /// spark emitter and a method here would shadow it inside this class.
         /// </para>
         /// </summary>
-        void Split(int index, int wave, int colour, int bunch, float beat, float delay)
+        void Split(int index, int wave, int colour, int bunch, float beat)
         {
-            if (delay > 0f)
-            {
-                Tween.After(delay,
-                            () => { if (this) Split(index, wave, colour, bunch, beat, 0f); },
-                            this);
-                return;
-            }
-
             var where = Where(index);
             var cell = _cells[index];
             var tint = Petal(colour);
@@ -2359,14 +2264,8 @@ namespace GlimmerGrove
         /// without reading anything.
         /// </para>
         /// </summary>
-        void Crack(int index, float beat, float delay)
+        void Crack(int index, float beat)
         {
-            if (delay > 0f)
-            {
-                Tween.After(delay, () => { if (this) Crack(index, beat, 0f); }, this);
-                return;
-            }
-
             if (_cells == null || index < 0 || index >= _cells.Length) return;
 
             var cell = _cells[index];
@@ -2568,27 +2467,22 @@ namespace GlimmerGrove
         /// what it has become.
         /// </para>
         /// </summary>
-        void Land(BudWash wash, float beat, float delay)
+        void Land(int index, int to, float beat)
         {
-            if (delay > 0f)
-            {
-                Tween.After(delay, () => { if (this) Land(wash, beat, 0f); }, this);
-                return;
-            }
+            if (_cells == null || index < 0 || index >= _cells.Length) return;
 
-            var cell = _cells[wash.Cell];
-            var tint = Petal(wash.To);
+            var cell = _cells[index];
+            if (cell == null) return;
 
-            float strike = BudTempo.Strike(beat);
+            var tint = Petal(to);
 
-            // Held back by a beat of its own so the colour arrives *after* the bunch that sent
-            // it has gone off rather than in the same frame.
-            Tween.After(strike, () =>
-            {
-                if (!this) return;
-                Flare(Where(wash.Cell), tint, BudTempo.Linger(beat));
-                Turn(wash.Cell, cell, tint, strike);
-            }, this);
+            // **Drawn where it is asked for and not a beat later**, because the beat is already
+            // spent: the score puts a wash `BudTempo.WashLag` after the burst that sent it (and
+            // after *that* burst rather than after the wave's first, which is the whole reason
+            // the stage exists). This used to hold itself back by a `Tween.After` as well, which
+            // was the same lag charged twice.
+            Flare(Where(index), tint, BudTempo.Linger(beat));
+            Turn(index, cell, tint, BudTempo.Strike(beat));
         }
 
         /// <summary>
@@ -2691,14 +2585,8 @@ namespace GlimmerGrove
         /// the same colour, in pieces.
         /// </para>
         /// </summary>
-        void Free(int index, float beat, float delay = 0f)
+        void Free(int index, float beat)
         {
-            if (delay > 0f)
-            {
-                Tween.After(delay, () => { if (this) Free(index, beat, 0f); }, this);
-                return;
-            }
-
             var where = Where(index);
             var cell = _cells[index];
 
@@ -2964,7 +2852,13 @@ namespace GlimmerGrove
         /// </summary>
         IEnumerator Fanfare(int waves, string wordKey)
         {
-            if (_chain == null) yield break;
+            // Guarded on what it actually draws with. It used to guard on `_chain`, the running
+            // count — which was only ever *incidentally* true, because the count is raised by the
+            // wave before. Now that the word rides the last wave's answer the two land in the
+            // same frame, so that guard would have made the biggest thing this mode says depend
+            // on the order two constants happen to be written in (`BudChain.CountFrom` and
+            // `NameFrom`, which are both 2 and need not be).
+            if (_fx == null || wordKey == null) yield break;
 
             int rung = BudChain.Rung(waves);
             if (rung < 0) rung = 0;

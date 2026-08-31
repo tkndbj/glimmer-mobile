@@ -3056,6 +3056,76 @@ was about whether a gesture could be *seen*; the second was about whether a wave
 **one flower at a time**, which needs room inside the burn for the ripple, the hold and the fall
 all three. At a .55s burn there was none.
 
+**A chain is a score, and until it was one every complaint about this mode's animation was the
+same fault seen from a different angle.** Reported as three things — *random flowers on random
+spots move, as if they slide in*; *the flowers don't fall properly, they fall too suddenly or
+skip frames*; *the "Epic/Legendary" text turns up when the animations are over and the board
+resets*. They are one bug. `PlayChain` was the scheduler as well as the player: it walked the
+waves, and per wave fired several dozen independent tweens each of which worked its own delay out
+of its own share of a per-wave beat. Nothing was comparable to anything — the bursts rippled over
+a fraction of the burn, the falls split a separate budget between a hold and a drop, the grove's
+answer fired at the start of the burn regardless — so two events that were *causally* related
+were timed by arithmetic that had never met, and came out in the wrong order routinely rather
+than occasionally.
+<br>**It is countable, which is the part that matters.** Replaying the ten shipped groves' best
+opening taps through the mirror and scoring them against the shipped schedule: **seven of the ten
+dropped a flower into a hole before the burst that made the hole had been drawn**, up to six
+times in one tap on the finale. Worse, the *tallest* drops got the shortest wait — `lift` spent a
+piece's hold in proportion to how far it had to come — so the most conspicuous movement on the
+board was the one most decoupled from its cause. That is exactly "flowers sliding in at random
+spots with nothing to have caused them", and no amount of care with the old shape could have
+found it, because nothing anywhere held the two numbers that had to be compared.
+<br>`BudStage` writes the whole chain out first — every cue at an absolute time from the tap —
+and `PlayChain` walks that list against **one clock**, waiting out the difference between where
+the cue is and where the clock is. Four rules hold over the score and each is an inequality over
+`BudCue.At`, so each is a test rather than a paragraph (`BudStageTests`, and every one of them
+was watched failing against the old rule before it was kept).
+<br>— **Nothing is drawn before its cause.** A piece may not begin to fall until every burst it
+falls *into or past* has gone off — the cells between where it stood and where it comes to rest
+are precisely the ones that emptied, so that is the exact causal set rather than a proxy for one.
+A wash waits on the burst that sent it, a cocoon on the burst that hit it.
+<br>— **One gravity.** A fall's length is its distance at `BudTempo.Pace` and nothing may clamp
+it. The old rule fitted a fall into whatever was left of the wave, so when a wave ran short the
+tall drops were the ones made to hurry: inside *one wave* a six-row drop fell half again faster
+than the one-row drop beside it, at better than a third of a cell a frame. A board that falls at
+three speeds at once does not read as a board falling, and "skips frames" is the correct reading
+of a picture .72 of a cell wide moving half its own width between two frames.
+<br>— **A column collapses from the bottom.** The lowest piece leaves first and the one above
+follows. A correctness rule as much as a look: two pieces of one column moving at once are two
+pictures passing through each other.
+<br>— **The ceiling is met by squeezing the slack, never the falls.** "The rate gives way" is
+this mode's own doctrine and the old code honoured it in the one place it must not, which is the
+individual piece. Dead air compresses (`BudTempo.SlackFloor`, found by bisection because a wave
+ends when the last of several things ends, so the length is a maximum over sums and has no closed
+form); gravity does not. Measured on the shipped ten, **only the finale needs a squeeze at all**
+— nine of them fit the 8.00s ceiling untouched and most run *shorter* than they did, so the
+schedule that was wrong was not buying anything with it.
+<br>**And the word rides the climax rather than following it.** It was raised after the last
+collapse had landed *and* after the whole board had been repainted — so the biggest thing this
+mode says arrived into dead air over a board that had visibly just reset, which is precisely how
+it was reported. It is scheduled on the last wave's `Answer`, the loudest instant in the chain,
+and the final collapse, the regrowth and the tidy-up all play underneath it: on the finale it
+lands at 6.26s of an 8.00s chain instead of after it. The repaint is a cue of its own for the
+same reason — it is a board-*wide* event, so it waits until the score says the last piece has
+landed rather than being tacked onto the end of the loop.
+<br>Two smaller things fall out of the same idea. The grove's answer to a wave — the jolt, the
+ring, the fireworks, the shake, the flash — now lands on the **body** of the ripple
+(`BudTempo.AnswerAt`) rather than on its first frame, so on a thirteen-flower wave the screen no
+longer answers before most of the wave exists. And a flower's wind-up runs right up to the moment
+it goes off rather than for a fixed beat with the remainder spent standing still — with the
+*shape* still read against the shared `BudTempo.Wind`, so a bunch moves as one and the flowers
+going off later simply hold at their peak for longer, which is what `Peak` always wanted.
+
+**A breath fades in, and a phase is what makes that necessary.** `Tween.Breathe`'s `phase`
+exists to stop a row of things breathing in lockstep, and `sin(phase)` is not zero — so every
+caller passing one snapped its target to a different size on the frame the breath began. One
+control doing that is a twitch nobody sees. A *board* doing it is thirty flowers each jumping to
+a size of their own in one frame, which is what `PaintPops` did at the exact moment a chain
+settled, and it is the other half of "the background resets suddenly". The amplitude is
+smoothstepped in over `Ramp`; it costs nothing and it fixes every caller at once — the grove's
+poppable flowers, Groovekeeper's halos, and the glade's crystals, which were seeded with a *fully
+random* phase.
+
 **A wave is dealt one thing at a time, and the ripple that does it was clumping.** `StaggerAt` was
 `min(nth x step, most)` — so on a wave of thirteen the first four were dealt apart and the
 remaining **nine landed on the cap, in the same frame**. The bigger the wave, the more of it went
