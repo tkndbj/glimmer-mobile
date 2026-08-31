@@ -146,6 +146,28 @@ namespace GlimmerGrove.Modes
         /// </summary>
         bool[] _going;
 
+        /// <summary>
+        /// Scratch for one <em>beam</em>: which mirrors this shot has already turned on.
+        ///
+        /// <para>
+        /// <b>Per beam rather than per wave, and that is what keeps a wave free of reading
+        /// order.</b> Every beam that reaches a mirror turns on it, however many beams that is —
+        /// so which lens was scanned first cannot change what any of them did, which is the
+        /// property <see cref="Resolve"/> is arranged around. Spending the mirror for the wave on
+        /// the first beam to reach it would make the second beam's behaviour depend on the order
+        /// the lenses happened to be read in.
+        /// </para>
+        /// <para>
+        /// Stamped with a walk number rather than cleared, so starting a beam costs nothing. The
+        /// state it guards against is a shot circling four mirrors for ever; it needs a rectangle
+        /// of them to reach at all, and no shipped board has one — it is a proof of termination
+        /// rather than a rule anybody meets. Not forked and not settled with the cells, because
+        /// no beam outlives the walk that started it.
+        /// </para>
+        /// </summary>
+        int[] _bounce;
+        int _walk;
+
         public FallBoard(FallLayout layout)
         {
             Width = layout.Width;
@@ -302,10 +324,10 @@ namespace GlimmerGrove.Modes
             if (top >= 0)
             {
                 // Whatever is on top takes the drop if it lacks the colour: a mote is enriched,
-                // a lens is charged. Neither raises the stack, and the one line covers both
-                // because `|=` means the same thing to either.
-                int cell = _cells[Index(x, top)];
-                if ((cell | colour) != cell) return top;
+                // a lens is charged, and a mirror takes nothing whatever. One predicate rather
+                // than the clause spelt out, because the clause is right for two of the three
+                // kinds and silently wrong for the third (`FallCell.Takes`).
+                if (FallCell.Takes(_cells[Index(x, top)], colour)) return top;
             }
 
             return FirstFree(x);                             // sits on top instead
@@ -383,8 +405,7 @@ namespace GlimmerGrove.Modes
             int top = TopOf(x);
             if (top < 0) return false;
 
-            int cell = _cells[Index(x, top)];
-            return (cell | colour) != cell;
+            return FallCell.Takes(_cells[Index(x, top)], colour);
         }
 
         /// <summary>

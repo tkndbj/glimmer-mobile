@@ -27,6 +27,24 @@ namespace GlimmerGrove.Modes
     /// thing up and then it goes off — which is why glass needed no new rule taught, only a new
     /// consequence.
     /// </para>
+    /// <para>
+    /// <b>A mirror is the third kind, and it is the first cell here that is <em>none</em> of
+    /// that.</b> It holds no light, wants nothing, takes nothing and can never be cooked; what
+    /// it does is turn a beam ninety degrees and carry on. So it is a second bit above the
+    /// channels rather than a value among them, for exactly the reason the lens is: a sentinel
+    /// inside the mask would collide with a colour, and a parallel array would be a third thing
+    /// <c>Fork</c>, <c>Settle</c> and <c>Signature</c> had to keep in step across hundreds of
+    /// thousands of forked boards.
+    /// </para>
+    /// <para>
+    /// <b>Two predicates had to be narrowed for it and both were silent failures.</b>
+    /// <see cref="IsMote"/> was "occupied and not glass", which reads a mirror as a mote that
+    /// wants all three — so a wash would have poured colour into it and a drop would have been
+    /// absorbed by it, both of them changing a cell whose whole point is that nothing changes
+    /// it. That is the same fault the lens laid on <c>Wanted</c> and <c>Enriches</c>, one
+    /// mechanic later, which is why <see cref="Takes"/> now exists here rather than being spelt
+    /// out at each of the three call sites that ask it.
+    /// </para>
     /// </summary>
     public static class FallCell
     {
@@ -55,16 +73,60 @@ namespace GlimmerGrove.Modes
         /// <summary>Empty glass, as authored.</summary>
         public const char LensLetter = 'O';
 
+        /// <summary>
+        /// A mirror: the bit above <see cref="Lens"/>, so it is occupied, is not light, and is
+        /// not glass.
+        ///
+        /// <para>
+        /// It carries no channels at all — <see cref="Held"/> is nought for one and always will
+        /// be — so it can never equal <see cref="Energy.All"/> or <see cref="Full"/> and the two
+        /// "has this reached white" tests in <c>FallBoard.Resolve</c> are correct for it with no
+        /// clause of their own. A mirror never goes off; it is spent by turning somebody else's
+        /// light.
+        /// </para>
+        /// </summary>
+        public const int Mirror = 16;
+
+        /// <summary>
+        /// Which way a mirror leans: set for <c>/</c>, clear for <c>\</c>.
+        ///
+        /// A bit rather than two unrelated values so that <see cref="IsMirror"/> is one mask
+        /// test, and above the channels so that <see cref="Held"/> keeps answering nought.
+        /// </summary>
+        public const int Tilt = 32;
+
+        /// <summary>A mirror leaning <c>/</c>: light arriving from the left leaves upward.</summary>
+        public const int Fore = Mirror | Tilt;
+
+        /// <summary>A mirror leaning <c>\</c>: light arriving from the left leaves downward.</summary>
+        public const int Back = Mirror;
+
+        /// <summary>The two letters a mirror is authored with, and they are the two it draws as.</summary>
+        public const char ForeLetter = '/', BackLetter = '\\';
+
         /// <summary>Whether anything at all stands here.</summary>
         public static bool Occupied(int cell) => cell != Empty;
 
         /// <summary>Whether this is glass.</summary>
         public static bool IsLens(int cell) => (cell & Lens) != 0;
 
-        /// <summary>Whether this is a mote of light — the only kind that can be enriched or burst.</summary>
-        public static bool IsMote(int cell) => cell != Empty && (cell & Lens) == 0;
+        /// <summary>Whether this is a mirror — the one thing here that light passes through.</summary>
+        public static bool IsMirror(int cell) => (cell & Mirror) != 0;
 
-        /// <summary>The channels standing here, whether they are a mote's or a lens's charge.</summary>
+        /// <summary>
+        /// Whether this is a mote of light — the only kind that can be enriched or burst.
+        ///
+        /// <b>Both other kinds are excluded and the second one had to be added.</b> This read
+        /// "occupied and not glass", which answers <c>true</c> for a mirror — so a mirror would
+        /// have been washed by a burst beside it and would have taken a drop that landed on it,
+        /// on the one cell in this well that nothing is allowed to change.
+        /// </summary>
+        public static bool IsMote(int cell) => cell != Empty && (cell & (Lens | Mirror)) == 0;
+
+        /// <summary>
+        /// The channels standing here, whether they are a mote's or a lens's charge. Nought for
+        /// a mirror, which holds none and never will — its bits are above the mask.
+        /// </summary>
         public static int Held(int cell) => cell & Energy.All;
 
         /// <summary>The channels a lens is holding. Nought for a mote and for bare ground.</summary>
@@ -77,7 +139,56 @@ namespace GlimmerGrove.Modes
         /// because it is the same question.
         /// </summary>
         public static int Wants(int cell)
-            => cell == Empty ? Energy.None : Energy.All & ~(cell & Energy.All);
+            => cell == Empty || IsMirror(cell)
+             ? Energy.None
+             : Energy.All & ~(cell & Energy.All);
+
+        /// <summary>
+        /// Whether this cell would <em>take</em> a drop of this colour rather than let it come
+        /// to rest above and the stack grow a row.
+        ///
+        /// <para>
+        /// <b>The one question three callers ask, said once here rather than three times
+        /// there.</b> <c>FallBoard.Landing</c>, <c>FallBoard.Takes</c> and the view's ghost all
+        /// need it, and the version spelt out at each of them — <c>(cell | colour) != cell</c> —
+        /// is right for a mote, right for a lens and <em>wrong for a mirror</em>, which holds no
+        /// channels and so appears to lack every one of them. A drop would have been swallowed
+        /// by the glass wedge and turned it into something no rule here has a name for.
+        /// </para>
+        /// <para>
+        /// The lens paid for this lesson already: <c>Enriches</c> is <c>IsMote(...) &amp;&amp;
+        /// ...</c>, so it answers false for a charging drop, and standing in for this question
+        /// it left a pane hanging in the air over an emptied column. A question with three
+        /// answers asked as three predicates is one some caller will ask a third of.
+        /// </para>
+        /// </summary>
+        public static bool Takes(int cell, int colour)
+            => cell != Empty && !IsMirror(cell) && (cell | colour) != cell;
+
+        /// <summary>
+        /// Turns a beam on this mirror: the way in, and the way out.
+        ///
+        /// <para>
+        /// <b>It lives here because it exists three times.</b> <c>FallBoard.Shoot</c> is what
+        /// ships, <c>FallSolver.Blast</c> reads where a lens is pointing for an author, and
+        /// <c>Tools/verify/fall.py</c> mirrors both offline — and the two in this assembly must
+        /// not be two transcriptions of one diagram (invariant 9a). The Python copy is pinned to
+        /// this one by <c>fall-vectors.json</c>.
+        /// </para>
+        /// <para>
+        /// Cell space counts rows <em>downward</em>, which is the whole of what makes this easy
+        /// to get backwards. A <c>/</c> leans from the low left to the high right, so light
+        /// travelling right (<c>+1,0</c>) leaves upward (<c>0,-1</c>): that is <c>(-dy,-dx)</c>.
+        /// A <c>\</c> leans the other way and is <c>(dy,dx)</c>. Both are their own inverse, so
+        /// a beam retracing its path leaves the way it came — which is the only reason the guard
+        /// against a beam chasing its own tail is a guard rather than a mechanic.
+        /// </para>
+        /// </summary>
+        public static void Turn(int cell, int dx, int dy, out int ndx, out int ndy)
+        {
+            if ((cell & Tilt) != 0) { ndx = -dy; ndy = -dx; }     // '/'
+            else                    { ndx = dy;  ndy = dx;  }     // ''
+        }
 
         /// <summary>
         /// The letter this cell is authored with. Light is upper case and glass is lower, so a
@@ -86,6 +197,7 @@ namespace GlimmerGrove.Modes
         public static char Letter(int cell)
         {
             if (cell == Empty) return '.';
+            if (IsMirror(cell)) return (cell & Tilt) != 0 ? ForeLetter : BackLetter;
             if (!IsLens(cell)) return Energy.Letter(cell);
 
             int charge = cell & Energy.All;
@@ -112,6 +224,8 @@ namespace GlimmerGrove.Modes
         {
             if (c == '.' || c == '-') { cell = Empty; return true; }
             if (c == LensLetter) { cell = Lens; return true; }
+            if (c == ForeLetter) { cell = Fore; return true; }
+            if (c == BackLetter) { cell = Back; return true; }
 
             bool glass = c >= 'a' && c <= 'z';
             char letter = glass ? char.ToUpperInvariant(c) : c;
@@ -139,13 +253,20 @@ namespace GlimmerGrove.Modes
     /// never held anything: the model has to say what happened, or the view will invent it.
     /// </para>
     /// <para>
-    /// <b>There are always four of them per firing lens, one per direction.</b> That is the
-    /// payoff for charging it, and it is what makes the shot worth stopping the board for.
+    /// <b>Two per lens charged the ordinary way and four per lens another lens struck</b>, plus
+    /// one more segment for every mirror any of them turns on. That is the payoff for charging
+    /// it, and it is what makes the shot worth stopping the board for.
     /// </para>
     /// </summary>
     public readonly struct FallBeam
     {
-        /// <summary>The cell the light leaves: the lens that fired.</summary>
+        /// <summary>
+        /// The cell the light leaves: the lens that fired, or the mirror that turned it.
+        ///
+        /// <b>A bend is two segments rather than a bent one</b>, which is what lets a view that
+        /// knows how to draw a straight shot draw a ricochet with no new machinery — and is why
+        /// <see cref="Leg"/> exists to say which is which.
+        /// </summary>
         public readonly int From;
 
         /// <summary>Which way it goes. One of the four; never diagonal, never zero.</summary>
@@ -167,16 +288,48 @@ namespace GlimmerGrove.Modes
         /// </summary>
         public readonly int Hit;
 
-        public FallBeam(int from, int dx, int dy, int steps, int hit)
+        /// <summary>
+        /// How many mirrors this light had already turned on before this segment began. Nought
+        /// for the shot leaving the lens.
+        ///
+        /// <para>
+        /// The view spends it as a delay, so a bend is watched as light arriving at the mirror
+        /// and then leaving it rather than as two beams drawn at once — which is the whole of
+        /// what makes a ricochet read as one travelling thing.
+        /// </para>
+        /// </summary>
+        public readonly int Leg;
+
+        /// <summary>
+        /// Whether <see cref="Hit"/> is a mirror this shot turned on rather than something it
+        /// spent itself against.
+        ///
+        /// <para>
+        /// <b>Both are a hit and only one is an arrival</b>, which the view cannot work out for
+        /// itself: it draws a shockwave where light lands, and a shockwave on a mirror would say
+        /// the shot stopped there. Asking the live board instead would be asking a board that
+        /// has already settled — the fault this whole step structure exists to make
+        /// unrepresentable.
+        /// </para>
+        /// </summary>
+        public readonly bool Turned;
+
+        public FallBeam(int from, int dx, int dy, int steps, int hit,
+                        int leg = 0, bool turned = false)
         {
             From = from;
             Dx = dx;
             Dy = dy;
             Steps = steps;
             Hit = hit;
+            Leg = leg;
+            Turned = turned;
         }
 
-        /// <summary>Whether it landed on something rather than leaving the well.</summary>
+        /// <summary>Whether it reached something rather than leaving the well.</summary>
         public bool Landed => Hit >= 0;
+
+        /// <summary>Whether it spent itself on what it reached, which a turn does not.</summary>
+        public bool Absorbed => Hit >= 0 && !Turned;
     }
 }
