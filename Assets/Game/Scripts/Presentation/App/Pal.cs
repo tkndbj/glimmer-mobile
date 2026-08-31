@@ -112,6 +112,27 @@ namespace GlimmerGrove
         /// </summary>
         public static readonly Color Thorn = Hex("#8A7060");
 
+        /// <summary>
+        /// A lens in a well: the third colour on the board that deliberately says nothing about
+        /// light, and <see cref="Rope"/>'s argument for the third time.
+        ///
+        /// <para>
+        /// Glass holds no channels, so it may not wear one. That is the easy half. The hard half
+        /// is that it may not wear <see cref="Radiance"/> either, which is the obvious choice for
+        /// something clear: Radiance <em>is</em> a mote — it is what a mote holding all three
+        /// looks like for the instant before it bursts — and a lens tinted with it would read as
+        /// a mote permanently about to go off, on the one object whose whole point is that it
+        /// never does.
+        /// </para>
+        /// <para>
+        /// So it is a cool near-white, off the energy wheel in the one direction nothing else on
+        /// this board uses: Radiance is warm and every channel colour is saturated, so pale and
+        /// cold cannot be read as a dim anything. The silhouette carries the rest — glass is
+        /// drawn as a rim and a four-point glint where a mote is a filled disc.
+        /// </para>
+        /// </summary>
+        public static readonly Color Glass = Hex("#DCEBF5");
+
         static readonly Color[] Table =
         {
             Dormant,                       // 0

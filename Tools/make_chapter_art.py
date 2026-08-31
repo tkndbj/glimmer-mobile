@@ -84,7 +84,15 @@ def rows():
             # *some* map source in order to exist is a row that quietly overwrites theirs the
             # first time somebody runs it without `--only backdrops`.
             map_src = None if parts[1].strip() == "-" else parts[1]
-            out[parts[0]] = (map_src, [q for q in parts[2].split(",") if q], grade)
+
+            # And the same `-` on the backdrops, for the same reason read the other way round.
+            # A chapter that *borrows* a backdrop — every non-glade chapter does, from the nine
+            # c01_shallows cuts — has a row that must not name a source for it: the tool writes
+            # `play_8.png` graded to whichever chapter it was run for, so a row naming any
+            # source at all would silently re-cut a picture four other chapters draw. It was
+            # exactly the trap the map column already documents, waiting on the other column.
+            bg_srcs = [] if parts[2].strip() == "-" else [q for q in parts[2].split(",") if q]
+            out[parts[0]] = (map_src, bg_srcs, grade)
     return out
 
 
@@ -512,7 +520,10 @@ def main():
              level.get("slate") or fallback_slate)
 
     strip_count = 0 if map_src is None else len(chapter.get("mapStrips") or [])
-    print(f"{args.chapter}: {strip_count} strip(s), {len(wanted)} backdrop(s)")
+    bg_count = 0 if not bg_srcs else len(wanted)
+    print(f"{args.chapter}: {strip_count} strip(s), {bg_count} backdrop(s)"
+          + ("" if bg_srcs else f" (it borrows {chapter.get('backdrop')}, which is not this "
+                                "row's to cut)"))
 
     if not args.dry_run:
         os.makedirs(map_art, exist_ok=True)
@@ -528,7 +539,8 @@ def main():
         if not args.dry_run:
             image.save(out)
 
-    for i, (name, accent, slate) in enumerate([] if args.only == "maps" else wanted):
+    for i, (name, accent, slate) in enumerate(
+            [] if args.only == "maps" or not bg_srcs else wanted):
         source = bg_srcs[i % len(bg_srcs)]
         # Windows are spread across each source rather than taken in a row, so two
         # paintings do not hand out two near-identical crops to adjacent glades.

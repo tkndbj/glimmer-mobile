@@ -1255,7 +1255,11 @@ namespace GlimmerGrove
             // just met the mode — and every glade this player has already finished, which is
             // the door standing open on the whole of what somebody has beaten while their
             // hearts fill. See HeartStake.
-            if (!Profile.CanPlay && !HeartStake.IsFree(_index, id))
+            //
+            // Asked through PlayRoute rather than assembled here, because this is not the only
+            // door and the three others were opening charged runs on an empty bar. What stays
+            // here is what only the map can do about it: shake the node that was refused.
+            if (!PlayRoute.CanOpen(id))
             {
                 if (_nodes.TryGetValue(id, out var barred)) Tween.Shake(barred, 10f, .35f);
                 Flow.Modal<OutOfHeartsOverlay>();

@@ -18,7 +18,9 @@
       "greedy": 1,
       "proved": true,
       "headroom": 4,
-      "standing": 5
+      "standing": 5,
+      "lenses": 0,
+      "charged": 0
     },
     {
       "name": "a wall of the wrong colour",
@@ -37,7 +39,9 @@
       "greedy": 3,
       "proved": true,
       "headroom": 4,
-      "standing": 5
+      "standing": 5,
+      "lenses": 0,
+      "charged": 0
     },
     {
       "name": "two blobs the wash cannot cross between",
@@ -56,7 +60,9 @@
       "greedy": 2,
       "proved": true,
       "headroom": 4,
-      "standing": 2
+      "standing": 2,
+      "lenses": 0,
+      "charged": 0
     },
     {
       "name": "a burst under a stack",
@@ -75,7 +81,9 @@
       "greedy": 2,
       "proved": true,
       "headroom": 1,
-      "standing": 5
+      "standing": 5,
+      "lenses": 0,
+      "charged": 0
     },
     {
       "name": "a pure mote finished by two bursts",
@@ -94,7 +102,9 @@
       "greedy": 2,
       "proved": true,
       "headroom": 3,
-      "standing": 7
+      "standing": 7,
+      "lenses": 0,
+      "charged": 0
     },
     {
       "name": "nothing on this board wants what the well deals",
@@ -113,7 +123,9 @@
       "greedy": -1,
       "proved": true,
       "headroom": 4,
-      "standing": 2
+      "standing": 2,
+      "lenses": 0,
+      "charged": 0
     },
     {
       "name": "a column with no room and a procession that opens badly",
@@ -132,7 +144,9 @@
       "greedy": 3,
       "proved": true,
       "headroom": 0,
-      "standing": 5
+      "standing": 5,
+      "lenses": 0,
+      "charged": 0
     },
     {
       "name": "a well that has to be emptied from the top down",
@@ -151,7 +165,9 @@
       "greedy": 2,
       "proved": true,
       "headroom": 2,
-      "standing": 9
+      "standing": 9,
+      "lenses": 0,
+      "charged": 0
     },
     {
       "name": "a shipped shape",
@@ -171,7 +187,156 @@
       "greedy": 6,
       "proved": true,
       "headroom": 3,
-      "standing": 13
+      "standing": 13,
+      "lenses": 0,
+      "charged": 0
+    },
+    {
+      "name": "one drop fills glass by one channel, however many bursts it sets off",
+      "why": "every wave of a drop carries that drop's colour, so a lens gains one channel per drop and no more - which is the whole of what makes a shot cost three drops and the chapter harder than its first cut",
+      "rows": [
+        "......",
+        "......",
+        "......",
+        "......",
+        "......",
+        "YYOYY."
+      ],
+      "motes": "BRG",
+      "par": 4,
+      "ways": 6,
+      "greedy": -1,
+      "proved": true,
+      "headroom": 4,
+      "standing": 5,
+      "lenses": 1,
+      "charged": 0
+    },
+    {
+      "name": "glass filled the ordinary way fires sideways",
+      "why": "a well has gravity, so a lens rests on something: down is the thing holding it up and up is the sky. The cyan directly over the glass is untouched by the shot and has to be cooked afterwards, where the magenta two cells across is taken by it",
+      "rows": [
+        "......",
+        "......",
+        "......",
+        "......",
+        ".C....",
+        "YyM..M"
+      ],
+      "motes": "BRG",
+      "par": 3,
+      "ways": 1,
+      "greedy": 3,
+      "proved": true,
+      "headroom": 3,
+      "standing": 5,
+      "lenses": 1,
+      "charged": 1
+    },
+    {
+      "name": "a beam is white, so it pops whatever it lands on",
+      "why": "glass holds all three by the time it goes off, so what it throws is all three. The magenta across the gap already holds the blue that was dropped - a wash would have been absorbed by it and a beam completes it - which is the whole of what separates a shot from a wash, and what three drops of charging buy",
+      "rows": [
+        "......",
+        "......",
+        "......",
+        "......",
+        "......",
+        "Yy..M."
+      ],
+      "motes": "BRG",
+      "par": 1,
+      "ways": 2,
+      "greedy": 1,
+      "proved": true,
+      "headroom": 4,
+      "standing": 3,
+      "lenses": 1,
+      "charged": 1
+    },
+    {
+      "name": "a lens struck by another lens fires every way",
+      "why": "one drop takes the whole board: the burst fills the two-thirds pane, that fires sideways into the empty pane, and the empty pane was *struck* rather than filled, so it fires up and down as well and reaches the mote standing over it. That is the chain the chapter is built on, and it is the reason a lens knows how it was lit",
+      "rows": [
+        "......",
+        "......",
+        "......",
+        "......",
+        "..Y...",
+        "YyOC.."
+      ],
+      "motes": "BRG",
+      "par": 1,
+      "ways": 2,
+      "greedy": 1,
+      "proved": true,
+      "headroom": 3,
+      "standing": 5,
+      "lenses": 2,
+      "charged": 1
+    },
+    {
+      "name": "a drop is taken in by glass rather than stacking on it",
+      "why": "the valve that stops a well ever becoming unwinnable - a player who cleared every mote before feeding the lens was stranded, so a drop now feeds it at one channel a drop, while a burst beside it stays free",
+      "rows": [
+        "......",
+        "......",
+        "......",
+        "......",
+        "...Y..",
+        "YyY.YY"
+      ],
+      "motes": "BRG",
+      "par": 1,
+      "ways": 4,
+      "greedy": 1,
+      "proved": true,
+      "headroom": 3,
+      "standing": 6,
+      "lenses": 1,
+      "charged": 1
+    },
+    {
+      "name": "empty glass costs three drops where two-thirds glass costs one",
+      "why": "the chapter's difficulty dial: measured, an empty lens leaves 7 boards in 90 solvable where two-thirds-full glass leaves 50",
+      "rows": [
+        "......",
+        "......",
+        "......",
+        "......",
+        "..Y...",
+        "YOYC.Y"
+      ],
+      "motes": "BRGRGB",
+      "par": 4,
+      "ways": 1,
+      "greedy": -1,
+      "proved": true,
+      "headroom": 3,
+      "standing": 6,
+      "lenses": 1,
+      "charged": 0
+    },
+    {
+      "name": "glass falls into a gap like anything else",
+      "why": "a lens is a mote for gravity, the mote count, the brim and the fingerprint - it differs only in being charged rather than washed",
+      "rows": [
+        "......",
+        "......",
+        "......",
+        "..O...",
+        "..C...",
+        ".YY..Y"
+      ],
+      "motes": "BRG",
+      "par": 6,
+      "ways": 2,
+      "greedy": -1,
+      "proved": true,
+      "headroom": 2,
+      "standing": 5,
+      "lenses": 1,
+      "charged": 0
     }
   ]
 }

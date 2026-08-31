@@ -301,6 +301,29 @@ namespace GlimmerGrove
 
         // ------------------------------------------------------------ the ways out
         /// <summary>
+        /// Whether the restart key would actually do anything: the heart gate, asked of this
+        /// screen's own level and the live wallet.
+        ///
+        /// <para>
+        /// <b>Split out from <see cref="RestartLevel"/> so that the decision can be proved
+        /// without a screen.</b> The telling needs a canvas — a sound and a line over the board
+        /// — and the answer needs a price, a commitment and a wallet, which is the half worth
+        /// pinning. It is also the half a mode's chrome could paint a key from, if a dead key
+        /// ever turns out to read better than a key that says why.
+        /// </para>
+        /// <para>
+        /// Note which three it reads. <see cref="Price"/> rather than the level, so a glade
+        /// cleared mid-screen is free to restart the moment it is beaten (that latch is one-way
+        /// on purpose); <see cref="Committed"/>, so a board nobody has touched is priced like an
+        /// entry rather than like two; and the wallet <em>now</em>, never a count snapshotted
+        /// when the screen was built — a heart can land from the clock, a chest, a streak night
+        /// or a watched video while somebody is sitting on a board.
+        /// </para>
+        /// </summary>
+        protected internal bool MayRestart
+            => HeartStake.CanRestart(Price, Wallet.Hearts.Count, Committed);
+
+        /// <summary>
         /// Put the level back as it started, at the price of the run in progress.
         ///
         /// <para>
@@ -312,8 +335,75 @@ namespace GlimmerGrove
         /// </para>
         /// </summary>
         public void RestartLevel()
-            => ConfirmForfeit(ForfeitOverlay.Kind.Restart, "restart",
-                              () => { Rewind(); Resume(); });
+        {
+            // The gate, and it has to be here rather than only at the map. A restart abandons
+            // one run and begins another, so it is two answers with a charge between them, and
+            // only the first was ever asked. The consequence was not a rounding error: at nought
+            // hearts the abandonment silently takes nothing — Wallet.TrySpendHeart reports
+            // "already out" rather than refusing — so the board came back, free, as often as
+            // anybody cared to tap. The one rule in this game that can stop somebody playing was
+            // walked straight past by the key in the header.
+            //
+            // Refused before ConfirmForfeit rather than inside it, which covers the branch a
+            // check further in would miss: a run that is already over short-circuits every
+            // question that method asks. It also means nobody is ever asked to confirm a heart
+            // and then told no.
+            //
+            // Note it is not a stricter rule than the map's, it is the same one: leaving to the
+            // glades and walking back in spends the same heart and is refused at the same point.
+            // See HeartStake.CanRestart.
+            if (!MayRestart) { OfferHearts(); return; }
+
+            ConfirmForfeit(ForfeitOverlay.Kind.Restart, "restart",
+                           () => { Rewind(); Resume(); });
+        }
+
+        /// <summary>
+        /// Brings the ways back to playing to the player, over the board.
+        ///
+        /// <para>
+        /// <b>A panel of ours rather than <c>OutOfHeartsOverlay</c>, and that is not a stylistic
+        /// choice.</b> That panel navigates to the shop, and it self-closes the moment
+        /// <c>Profile.CanPlay</c> reads true — both of which are correct where it is raised
+        /// today, because nothing is standing behind it there. Here a committed run is. Leaving
+        /// this screen through <c>Flow.Go</c> abandons that run <em>without resolving it</em>, so
+        /// the marker <c>RunGuard</c> wrote stays on disk and charges a heart at the next launch
+        /// for a run nobody finished; and the refusal a player most often meets is the one where
+        /// they hold a heart and would have nothing left for the fresh board, which is a state
+        /// that panel closes itself on while the restart is still refused. Invariant 23's rule —
+        /// bring the shelf to them, never navigate out from under a run.
+        /// </para>
+        /// <para>
+        /// <b>The board is latched behind it, exactly as it is behind the forfeit
+        /// confirmation.</b> A refusal is that question answered no without having been asked,
+        /// so it holds the board the same way — and <see cref="RestartGateOverlay"/> hands it
+        /// back from its own <c>OnDestroy</c>, which is <c>PauseOverlay</c>'s rule: a panel with
+        /// several exits reports through none of them reliably, so the safe outcome has to be
+        /// the default and the hand-off has to be the thing somebody declares.
+        /// </para>
+        /// <para>
+        /// The count is handed over rather than read there, because it is what the panel prices
+        /// its rescue against and what decides which of the two refusals it is explaining. Both
+        /// are facts about this moment, and a wallet that moves while the panel is up must not
+        /// silently rewrite the sentence somebody is reading.
+        /// </para>
+        /// </summary>
+        void OfferHearts()
+        {
+            // No refusal noise in front of it, deliberately. The map's refused node does not
+            // make one either, and a buzz ahead of a panel whose whole job is to offer a way
+            // forward reads as a scolding — the defeat panel's tone rule, which is that a gate
+            // that has just stopped somebody playing has nothing to gain by also telling them
+            // off. The key's own click and the panel arriving are the answer.
+            Latch(true);
+
+            Flow.Modal<RestartGateOverlay>(v =>
+            {
+                v.Screen = this;
+                v.Level = StakeLevel;
+                v.HeartsHeld = Wallet.Hearts.Count;
+            });
+        }
 
         /// <summary>Leaving without solving is a data point, not just a navigation.</summary>
         public virtual void LeaveToMap()

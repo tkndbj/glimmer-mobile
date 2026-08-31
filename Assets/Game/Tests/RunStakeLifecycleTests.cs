@@ -77,6 +77,11 @@ namespace GlimmerGrove.Tests
             public bool Priced => Staked;
             public HeartPrice Cost => Price;
             public bool Begun => Committed;
+
+            // RunScreen.MayRestart needs no exposer: it is `protected internal`, and
+            // Presentation's InternalsVisibleTo makes the internal half reachable from here.
+            // Declaring one would hide the base's member rather than forward to it.
+
             public void Begin() => Commit();
             public void End() => Resolve();
 
@@ -111,11 +116,21 @@ namespace GlimmerGrove.Tests
 
             RunGuard.Resolve();
             RunGuard.NoteReported();
+
+            // The restart's gate reads the live wallet, so these cases drive it — and a wallet
+            // is process-wide. Taken and handed back rather than assumed, exactly as the table
+            // and the save above are: the offline runner promises no order.
+            _heartsBefore = Wallet.Hearts.Count;
         }
+
+        int _heartsBefore;
 
         [TearDown]
         public void Restore()
         {
+            Wallet.TrySpendHeart(Wallet.Hearts.Count);
+            if (_heartsBefore > 0) Wallet.GrantHearts(_heartsBefore);
+
             for (int i = 0; i < _probes.Count; i++)
                 if (_probes[i] != null) UnityEngine.Object.DestroyImmediate(_probes[i].gameObject);
             _probes.Clear();
@@ -333,5 +348,114 @@ namespace GlimmerGrove.Tests
             Assert.IsTrue(probe.Left, "and the player still goes where they asked to go");
             Assert.IsFalse(probe.Begun, "a forfeited run is resolved whatever it cost");
         }
+
+        // ------------------------------------------------------ the restart, and its gate
+        //
+        // Reported from play as the plainest possible sentence: a level could be restarted for
+        // ever with no hearts left. It is the whole heart gate walked past by one key, and the
+        // mechanism is worth stating because nothing in the code looked wrong. A restart is
+        // priced as an abandonment (RunScreen.RestartLevel), the abandonment charges through
+        // Wallet.TrySpendHeart — and at nought hearts that reports "already out" rather than
+        // refusing. So every restart after the first was free, and the run it dealt was never
+        // paid for at all.
+        //
+        // Driven at the screen rather than only at HeartStake, because the three inputs are the
+        // screen's: the latched price, whether the run has been committed, and the live wallet.
+
+        /// <summary>
+        /// Puts the wallet at exactly this many hearts, whatever it held before — spent down to
+        /// nothing and granted back up, which is <c>RunGuardTests</c>' idiom next door and is
+        /// the only pair of doors the wallet offers. There is deliberately no setter on a heart
+        /// count, for the reason there is none on a balance.
+        /// </summary>
+        static void Holding(int hearts)
+        {
+            Wallet.TrySpendHeart(Wallet.Hearts.Count);
+            if (hearts > 0) Wallet.GrantHearts(hearts);
+
+            Assume.That(Wallet.Hearts.Count, Is.EqualTo(hearts), "the fixture could not set the wallet");
+        }
+
+        [Test]
+        public void ACommittedGladeCannotBeRestartedWithNoHeartsLeft()
+        {
+            // The bug exactly: the board is under way, it is charged for, and there is nothing
+            // to take. Every restart from here used to deal a fresh run for nothing.
+            Holding(0);
+
+            var probe = On(Paid);
+            probe.Begin();
+
+            Assert.IsTrue(probe.Priced, "the fixture wants a charged glade");
+            Assert.IsFalse(probe.MayRestart);
+        }
+
+        [Test]
+        public void OneHeartPaysForTheRunBeingLeftAndNotForTheOneThatFollows()
+        {
+            // The step that produced the empty bar in the first place. A player with one heart
+            // restarts, the forfeit takes it, and the fresh board is dealt to somebody who can
+            // no longer afford to lose it — which is precisely what the map refuses at its door.
+            Holding(1);
+
+            var probe = On(Paid);
+            probe.Begin();
+
+            Assert.IsFalse(probe.MayRestart, "one heart is an abandonment, not an abandonment and an entry");
+
+            Holding(2);
+            Assert.IsTrue(probe.MayRestart, "two is the honest floor");
+        }
+
+        [Test]
+        public void ABoardNobodyHasTouchedIsRestartedForWhatItCostToWalkIn()
+        {
+            // Uncommitted, so nothing is owed on the way out: the tap puts back a run that never
+            // began. Refusing here would shut out a player who had just legitimately walked
+            // through the door with their last heart, over a board they had not played.
+            Holding(1);
+
+            var probe = On(Paid);
+
+            Assert.IsFalse(probe.Begun);
+            Assert.IsTrue(probe.MayRestart);
+        }
+
+        [Test]
+        public void AFreeRunIsAlwaysRestartableHoweverEmptyTheBarIs()
+        {
+            // Both clauses. A run that costs nothing to lose cannot coherently be refused for
+            // lack of something to lose — which is the same sentence the map's door is built on.
+            Holding(0);
+            Finished(Beaten);
+
+            var opening = On(Free);
+            var replay = On(Beaten);
+            opening.Begin();
+            replay.Begin();
+
+            Assert.AreEqual(HeartPrice.Opening, opening.Cost);
+            Assert.AreEqual(HeartPrice.Replay, replay.Cost);
+            Assert.IsTrue(opening.MayRestart, "a mode's opening glade");
+            Assert.IsTrue(replay.MayRestart, "a glade this player has beaten");
+        }
+
+        [Test]
+        public void ClearingAGladeMidScreenMakesItRestartableOnAnEmptyBar()
+        {
+            // The one-way latch on Price, seen from the restart. A player who beats a board on
+            // their last heart may go straight round again: the glade is a replay now, and a
+            // replay pays nothing on any exit, so there is nothing for the gate to refuse.
+            Holding(0);
+
+            var probe = On(Paid);
+            probe.Begin();
+            Assert.IsFalse(probe.MayRestart, "before the clear");
+
+            Finished(Paid);
+
+            Assert.IsTrue(probe.MayRestart, "after it");
+        }
+
     }
 }

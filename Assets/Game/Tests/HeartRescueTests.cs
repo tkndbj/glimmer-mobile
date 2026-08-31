@@ -299,7 +299,7 @@ namespace GlimmerGrove.Tests
             int before = Hearts;
 
             var offer = HeartRescue.Offer(Shipped(), before, Gems, gemsForSale: true);
-            Assert.IsTrue(HeartRescue.TryBuy(offer, Glade));
+            Assert.IsTrue(HeartRescue.TryBuy(offer, Glade, HeartRescueWhere.Defeat));
 
             Assert.AreEqual(100L - HeartLimits.DefaultRescueGems, Gems);
             Assert.AreEqual(before + HeartLimits.DefaultRescueHearts, Hearts);
@@ -332,7 +332,7 @@ namespace GlimmerGrove.Tests
             Assert.IsTrue(PlayerProgression.TrySpend(Currency.Gems, Gems, "test:drain"));
             Assert.AreEqual(0L, Gems);
 
-            Assert.IsFalse(HeartRescue.TryBuy(offer, Glade), "an unaffordable debit is refused");
+            Assert.IsFalse(HeartRescue.TryBuy(offer, Glade, HeartRescueWhere.Defeat), "an unaffordable debit is refused");
             Assert.AreEqual(0L, Gems, "a refused purchase must not go further into debt");
             Assert.AreEqual(before, Hearts, "a refused purchase must not grant hearts");
             Assert.AreEqual(1, Spends().Count, "only the drain, never the rescue");
@@ -348,7 +348,7 @@ namespace GlimmerGrove.Tests
             Hold(100L);
             int before = Hearts;
 
-            Assert.IsFalse(HeartRescue.TryBuy(HeartRescueOffer.None, Glade));
+            Assert.IsFalse(HeartRescue.TryBuy(HeartRescueOffer.None, Glade, HeartRescueWhere.Defeat));
             Assert.AreEqual(100L, Gems);
             Assert.AreEqual(before, Hearts);
             CollectionAssert.IsEmpty(Spends());
@@ -362,7 +362,7 @@ namespace GlimmerGrove.Tests
         /// rescue is a spend rather than an award (invariant 10a draws that line): a player who
         /// loses twice genuinely buys twice, and an id derived from the level would make the
         /// second purchase collapse into the first and hand over free hearts. What stops a
-        /// double <em>tap</em> becoming two purchases is the latch in <c>DefeatRescueFlow</c>
+        /// double <em>tap</em> becoming two purchases is the latch in <c>HeartRescueFlow</c>
         /// and the panel closing behind it — a UI concern, deliberately not this one.
         /// </para>
         /// </summary>
@@ -372,8 +372,8 @@ namespace GlimmerGrove.Tests
             Hold(100L);
 
             var offer = HeartRescue.Offer(Shipped(), Hearts, Gems, gemsForSale: true);
-            Assert.IsTrue(HeartRescue.TryBuy(offer, Glade));
-            Assert.IsTrue(HeartRescue.TryBuy(offer, Glade));
+            Assert.IsTrue(HeartRescue.TryBuy(offer, Glade, HeartRescueWhere.Defeat));
+            Assert.IsTrue(HeartRescue.TryBuy(offer, Glade, HeartRescueWhere.Defeat));
 
             var spends = Spends();
             Assert.AreEqual(2, spends.Count);
@@ -388,7 +388,7 @@ namespace GlimmerGrove.Tests
             Hold(100L);
 
             var offer = HeartRescue.Offer(Shipped(), Hearts, Gems, gemsForSale: true);
-            Assert.IsTrue(HeartRescue.TryBuy(offer, Glade));
+            Assert.IsTrue(HeartRescue.TryBuy(offer, Glade, HeartRescueWhere.Defeat));
 
             StringAssert.StartsWith(HeartRescue.SpendReason, Spends()[0].reason);
             StringAssert.Contains(Glade.Value, Spends()[0].reason);
@@ -489,5 +489,63 @@ namespace GlimmerGrove.Tests
 
             public void Delete() => _file = null;
         }
+
+        // ============================================ the second panel it is offered on
+        //
+        // A refused restart raises the same offer over a board that is still standing
+        // (RestartGateOverlay). The price, the amount and the debit are identical there — the
+        // panel is what differs, and HeartRescueWhere is the only thing that knows. What is
+        // worth pinning is the pair of heart counts that panel is reached at, because the
+        // ceiling clause below is written for a bar the defeat emptied and this one is not
+        // always empty.
+
+        [Test]
+        public void TheOfferStandsAtBothHeartCountsARefusedRestartProduces()
+        {
+            var table = Shipped();
+
+            // Nought is the empty bar. One is the count that produces the other refusal — a
+            // charged restart pays for the run being left and then needs a heart for the one
+            // that follows, so a player holding exactly one is stopped with a heart in hand.
+            // The offer has to exist for both or the panel is a countdown and a way out.
+            Assert.IsTrue(HeartRescue.Offer(table, 0, 10_000L, true).Exists, "an empty bar");
+            Assert.IsTrue(HeartRescue.Offer(table, 1, 10_000L, true).Exists, "one heart in hand");
+        }
+
+        [Test]
+        public void TheTwoPanelsSellExactlyTheSameThing()
+        {
+            // The price is not a function of where it was met, and that is deliberate: the two
+            // are reachable on one screen a minute apart, and a player quoted one price and then
+            // another reads the pair as haggling (invariant 23a). HeartRescueWhere labels the
+            // event and never reaches Offer, which is what makes this true by construction — the
+            // case is here so that giving it a price would fail rather than merely read oddly.
+            var table = Shipped();
+
+            var defeat = HeartRescue.Offer(table, 0, 10_000L, true);
+            var restart = HeartRescue.Offer(table, 0, 10_000L, true);
+
+            Assert.AreEqual(defeat.Gems, restart.Gems);
+            Assert.AreEqual(defeat.Hearts, restart.Hearts);
+            Assert.AreEqual(defeat.Choice, restart.Choice);
+        }
+
+        [Test]
+        public void ARescueTakenOverARunIsTheSameDebitAsOneTakenOnADefeat()
+        {
+            // Same ledger, same reason string, same grant — only the funnel label differs. A
+            // second call site for a proven path is the whole claim this feature rests on: no
+            // schema version, no merge rule, no server work.
+            Hold(100L);
+            int hearts = Hearts;
+
+            var offer = HeartRescue.Offer(Shipped(), hearts, Gems, gemsForSale: true);
+            Assert.IsTrue(HeartRescue.TryBuy(offer, Glade, HeartRescueWhere.Restart));
+
+            Assert.AreEqual(100L - HeartLimits.DefaultRescueGems, Gems);
+            Assert.AreEqual(hearts + HeartLimits.DefaultRescueHearts, Hearts);
+            Assert.AreEqual(1, Spends().Count, "one purchase is one debit, wherever it was made");
+        }
+
     }
 }

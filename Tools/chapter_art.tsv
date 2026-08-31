@@ -14,7 +14,8 @@
 #   chapter    the chapter id, matching Content/chapters/<id>.json
 #   map        one tall image, sliced bottom-upward into `mapStrips`, or `-` when this
 #              chapter's strips are not cut by this tool
-#   backdrops  comma-separated sources for the board backdrops; windows are taken
+#   backdrops  comma-separated sources for the board backdrops, or `-` when this chapter's
+#              backdrop is not this row's to cut. Windows are taken
 #              across them in turn, so two wide images comfortably feed ten glades.
 #              A source may be a `+`-joined **stack** of layer files, composited bottom
 #              upward — which is what a layered pack is for. Three of these were overlay
@@ -46,4 +47,19 @@ c04_nightbriar	craftpix-net-998887-top-down-dark-level-map-asset-pack/Png/Level 
 # h01_emberfall is not in the manifest; nothing in this repository could have caught it,
 # which is why a source is looked at before it is named.
 h01_emberfall	craftpix-135791-level-map-2d-game-backgrounds/_PNG/02/map02_preview-01.png	craftpix-net-858776-level-game-assets/PNG/Backgrounds/Layer2.png	0.62
+# f02_glasswater is the first non-glade chapter to get a map of its own, and it needed one:
+# it drew `strip0..5` — c01_shallows' hand-made set — so Lightfall's two chapters were the same
+# painting, which is what the glade chapters never do.
+#
+# There are four tall map paintings in these packs and all four were already cut, so this is the
+# case the fourth column exists for: the source is c03_amberwood's, the output files and
+# addresses are f02's own, and `night` at 0.60 pulls it to Glasswater's cold slate so the two
+# chapters read as two places rather than one picture twice. The alternatives were looked at and
+# rejected — the island map is the one f01 already draws, the dark map is a Halloween scene
+# (pumpkins and a gravestone), and the top-down map crops to 59% of its width at six strips.
+#
+# The backdrop is `-`. Every non-glade chapter borrows one of c01_shallows' nine (f01 draws
+# play_2, k01 play_4, b01 play_6, f02 play_8), and a row naming a source for one would re-cut a
+# picture four chapters share, graded to whichever chapter the tool was last run for.
+f02_glasswater	craftpix-net-144512-vector-top-down-level-map-asset-pack/Png/Level map.png	-	0.60
 x02_lab	craftpix-net-966735-island-map-for-game-level-interface-vector-pack/Png/Level-map.png	craftpix-net-858776-level-game-assets/PNG/Backgrounds/3.png	0.55

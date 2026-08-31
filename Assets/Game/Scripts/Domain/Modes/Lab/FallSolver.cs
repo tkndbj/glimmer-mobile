@@ -35,24 +35,57 @@ namespace GlimmerGrove.Modes
         /// </summary>
         public readonly int Greedy;
 
+        /// <summary>
+        /// How many of a lens's two sideways shots land on something, at its best on this board.
+        ///
+        /// <para>
+        /// <b>Invariant 5d's instrument for the lens, and it needs one for the same reason
+        /// <see cref="Ways"/> does.</b> Glass whose every beam leaves the well the moment it sets
+        /// off has been charged over three drops to do nothing at all. That board validates, the
+        /// glass fills, it fires, and it would play exactly the same with the lens taken out of it.
+        /// </para>
+        /// <para>
+        /// <b>Out of two rather than out of four, because a lens filled the ordinary way fires
+        /// sideways.</b> Counting the vertical pair flattered every board in the chapter: a well
+        /// has gravity, so a lens rests on something and its downward beam always lands, on the
+        /// cell it is standing on, having crossed nothing. That is a shot scoring a mark for
+        /// travelling one cell into the thing already holding it up. All four are counted only
+        /// for a lens another lens strikes, and where a lens has fallen to by then is not a
+        /// position any cheap check can enumerate.
+        /// </para>
+        /// <para>
+        /// Geometry of the authored position rather than a proof, and it warns rather than
+        /// refuses: a well collapses under a chain, so a lens fires from wherever it has fallen
+        /// to, which is not a position any cheap check can enumerate. Nought on a board with no
+        /// glass on it, which is every board of the first chapter.
+        /// </para>
+        /// </summary>
+        public readonly int Aim;
+
+        /// <summary>The longest single shot, in cells, that lands. See <see cref="Aim"/>.</summary>
+        public readonly int Reach;
+
         /// <summary>Positions the search had to look at. Watched against <see cref="FallSolver.NodeBudget"/>.</summary>
         public readonly int Nodes;
 
         /// <summary>Whether the search finished rather than running out of budget.</summary>
         public readonly bool Proved;
 
-        public FallSurvey(int par, int ways, int greedy, int nodes, bool proved)
+        public FallSurvey(int par, int ways, int greedy, int aim, int reach, int nodes,
+                          bool proved)
         {
             Par = par;
             Ways = ways;
             Greedy = greedy;
+            Aim = aim;
+            Reach = reach;
             Nodes = nodes;
             Proved = proved;
         }
 
         public bool IsSolvable => Par > 0;
 
-        public static readonly FallSurvey Unproved = new FallSurvey(-1, 0, -1, 0, false);
+        public static readonly FallSurvey Unproved = new FallSurvey(-1, 0, -1, 0, 0, 0, false);
     }
 
     /// <summary>
@@ -127,7 +160,10 @@ namespace GlimmerGrove.Modes
         public static FallSurvey Survey(FallLayout layout)
         {
             var found = Search(layout, true);
-            return new FallSurvey(found.Par, found.Ways, Greedy(layout), found.Nodes, found.Proved);
+            Blast(layout, out int aim, out int reach);
+
+            return new FallSurvey(found.Par, found.Ways, Greedy(layout), aim, reach,
+                                  found.Nodes, found.Proved);
         }
 
         readonly struct Found
@@ -246,6 +282,67 @@ namespace GlimmerGrove.Modes
             // matters to whoever has to fix it, and only one of the two is a bug in the search.
             return new Found(-1, 0, nodes, false);
         }
+
+        /// <summary>
+        /// What the glass on this board is pointing at, as geometry rather than as play: the
+        /// best lens's landing count out of two, and the longest single shot that lands.
+        ///
+        /// <para>
+        /// Read off the authored position with every lens treated as though it were full, which
+        /// is the only cheap way to ask the question at all — actually filling one takes three
+        /// drops of three colours, so no single trial drop can ever set one off and the old
+        /// reading (drop everything once, watch the beams) would have answered nought on every
+        /// board in the chapter.
+        /// </para>
+        /// <para>
+        /// <b>A beam that lands on nothing does not count, and leaving it in makes the number
+        /// mean nothing.</b> A lens with open sky above it throws one straight out of the well
+        /// every time, as far as the ceiling, which measured as reach would score full marks for
+        /// light that got nowhere. That was written the wrong way round first and every fill of
+        /// a whole shape scored six.
+        /// </para>
+        /// </summary>
+        static void Blast(FallLayout layout, out int aim, out int reach)
+        {
+            aim = 0;
+            reach = 0;
+
+            for (int at = 0; at < layout.Count; at++)
+            {
+                if (!FallCell.IsLens(layout.At(at))) continue;
+
+                int lands = 0;
+
+                for (int n = 0; n < Across.Length; n++)
+                {
+                    int x = at % layout.Width, y = at / layout.Width;
+                    int travelled = 0;
+
+                    while (true)
+                    {
+                        x += Across[n].dx;
+                        y += Across[n].dy;
+                        travelled++;
+
+                        if (x < 0 || y < 0 || x >= layout.Width || y >= layout.Height) break;
+                        if (layout.At(y * layout.Width + x) == FallCell.Empty) continue;
+
+                        lands++;
+                        if (travelled > reach) reach = travelled;
+                        break;
+                    }
+                }
+
+                if (lands > aim) aim = lands;
+            }
+        }
+
+        /// <summary>
+        /// The two ways a lens fires unaided. See <see cref="FallSurvey.Aim"/> for why the
+        /// vertical pair is not counted: on a board with gravity, down is the thing the lens is
+        /// standing on and up is the sky.
+        /// </summary>
+        static readonly (int dx, int dy)[] Across = { (1, 0), (-1, 0) };
 
         /// <summary>
         /// How a player who never looks ahead would get on: take the drop that bursts the most

@@ -184,18 +184,21 @@ namespace GlimmerGrove.Analytics
         /// funnels that share this panel — somebody holding the gems is one tap from playing,
         /// somebody who is not has a shop to visit first and a much longer way to fall out.
         /// </summary>
-        public static void TrackHeartRescueOffered(LevelId level, HeartRescueOffer offer)
-            => TrackHeartRescue(HeartRescueOffered, level, offer);
+        public static void TrackHeartRescueOffered(LevelId level, HeartRescueOffer offer,
+                                                   HeartRescueWhere where)
+            => TrackHeartRescue(HeartRescueOffered, level, offer, where);
 
         /// <summary>
         /// The gems were taken and the hearts granted. Emitted after the debit lands, never
         /// before, so this count and the ledger cannot disagree.
         /// </summary>
-        public static void TrackHeartRescueBought(LevelId level, HeartRescueOffer offer)
-            => TrackHeartRescue(HeartRescueBought, level, offer);
+        public static void TrackHeartRescueBought(LevelId level, HeartRescueOffer offer,
+                                                  HeartRescueWhere where)
+            => TrackHeartRescue(HeartRescueBought, level, offer, where);
 
         /// <summary>One shape for both halves, so the funnel stays joinable on every field.</summary>
-        static void TrackHeartRescue(string name, LevelId level, HeartRescueOffer offer)
+        static void TrackHeartRescue(string name, LevelId level, HeartRescueOffer offer,
+                                     HeartRescueWhere where)
         {
             if (!level.IsValid) return;
 
@@ -204,6 +207,7 @@ namespace GlimmerGrove.Analytics
                 "chapter_id", GameContent.ChapterOf(level).Value,
                 "gems", offer.Gems,
                 "hearts", offer.Hearts,
+                "where", where == HeartRescueWhere.Restart ? "restart" : "defeat",
                 "choice", offer.Choice == GemChoice.Spend ? "spend" : "buy_gems");
         }
 

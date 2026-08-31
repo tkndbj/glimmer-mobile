@@ -128,5 +128,75 @@ namespace GlimmerGrove.Tests
 
             Assert.IsFalse(view.Playable, "which is the half TakingInput deliberately excludes");
         }
+
+        /// <summary>
+        /// <b>A widget handed back to the pool carries no live tween, on either of the objects a
+        /// tween here can be filed under.</b> Reported from play as a lens that sometimes refused
+        /// to fall.
+        ///
+        /// <para>
+        /// A <c>Tween</c> is filed under the <c>UnityEngine.Object</c> its caller named, so
+        /// <c>KillAll(mote.Body)</c> says nothing at all about a tween owned by <c>mote.Rt</c> —
+        /// they are two different objects and neither call reaches the other. The pool called the
+        /// first; the collapse (<c>Slide</c>) uses the second, because a slide moves the
+        /// transform. So a mote or a lens recycled while its slide was still running went into
+        /// the pool with a live tween writing its position, came back out as the next falling
+        /// drop or as a cell <c>Sync</c> had just placed, and was dragged to wherever the old
+        /// cell had been.
+        /// </para>
+        /// <para>
+        /// It is easy to hit rather than a corner: a slide is dealt a stagger by column, so it
+        /// finishes up to a third of a beat after the wave that threw it, and the next wave is
+        /// already bursting by then. Nothing else here could have caught it — the model settles
+        /// correctly (fuzzed at thirty thousand drops across the shipped chapter with no floating
+        /// cell), every gate is green, and only the drawing is wrong.
+        /// </para>
+        /// <para>
+        /// Driven behaviourally rather than by asking the tween system what it holds: the claim
+        /// is that a recycled widget is not <em>moved</em>, and the honest way to say that is to
+        /// put it somewhere and let time pass. Reflection reaches the pool because it is private
+        /// on purpose — this is a fact about the pool rather than about its interface.
+        /// </para>
+        /// </summary>
+        [Test]
+        public void AWidgetHandedBackToThePoolCarriesNoLiveTween()
+        {
+            LogAssert.ignoreFailingMessages = true;
+
+            var host = Host();
+            var view = host.gameObject.AddComponent<FallView>();
+            view.Begin(host, Layout(), 8);
+
+            var flags = System.Reflection.BindingFlags.Instance
+                      | System.Reflection.BindingFlags.NonPublic;
+
+            var widgets = (System.Array)typeof(FallView).GetField("_at", flags).GetValue(view);
+
+            object widget = null;
+            foreach (var candidate in widgets) if (candidate != null) { widget = candidate; break; }
+            Assert.IsNotNull(widget, "the well should have drawn something to recycle");
+
+            var kind = widget.GetType();
+            var rt = (RectTransform)kind.GetField("Rt").GetValue(widget);
+            var body = (UnityEngine.UI.Image)kind.GetField("Body").GetValue(widget);
+
+            // Exactly what a wave leaves behind: the collapse on the transform, and a tint on the
+            // image. Only the second was ever being killed.
+            Tween.Move(rt, new Vector2(999f, 999f), 4f);
+            Tween.Tint(body, Color.red, 4f);
+
+            typeof(FallView).GetMethod("Give", flags).Invoke(view, new[] { widget });
+
+            // Where the pool's next caller would put it.
+            var placed = new Vector2(12f, 34f);
+            rt.anchoredPosition = placed;
+
+            Tween.Inst.Tick(1f, 1f);
+
+            Assert.AreEqual(placed, rt.anchoredPosition,
+                            "a recycled widget was dragged off the cell it was just placed in by " +
+                            "a slide belonging to the run before it — which is a lens that " +
+                            "refuses to fall, on a board the model settled perfectly");
+        }
     }
 }

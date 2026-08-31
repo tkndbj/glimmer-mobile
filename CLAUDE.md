@@ -1226,6 +1226,118 @@ What that means in practice here:
     nothing, mints nothing and is stored nowhere, so it stays a pure function of the star ledger.
 
 
+26f. **"It is too easy" and "the animation is weak" were one complaint, and the fix was one
+    change.** Lightfall's second chapter brings the **lens**: a bead of glass that holds no light
+    of its own, that nothing can be dropped into, and that instead *fills up* — one channel at a
+    time, from any light that reaches it — until it holds all three and **fires**, each beam
+    crossing bare ground until the first cell in its line takes it.
+    <br>**It shipped relaying instead, and both halves of what came back were the same fault.**
+    The first cut let any burst beside a lens set it off, once, in the direction the light
+    happened to arrive from. It was reported as *"it made the game much easier"* and *"the
+    animation is too weak, you didn't even put in any effort"* — and those are not two notes. A
+    relay that costs nothing happens on most drops that touch glass, so it hands the player reach
+    for free (the boards get easier) **and** it happens far too often to be worth stopping the
+    board for (the moment cannot be made big). **A payoff handed out for free cannot be a payoff.**
+    Before animating anything, ask how often it fires: if the answer is "most turns", no amount of
+    effort spent on the effect will fix it, and the thing to change is the price.
+    <br>**The price is what a drop can carry, and it is arithmetic rather than a dial.** Every
+    wave of one drop washes that drop's colour, so a lens gains **at most one channel per drop**
+    however long the chain beside it runs. Filling an empty one therefore takes three separate
+    drops of three separate colours, each engineered to burst next to it — a plan built across a
+    run rather than a freebie. `FallGlassTests.OneDropCanOnlyEverAddOneChannelToGlass` is the
+    guard, and it is the single most load-bearing case in this mode.
+    <br>**How full the glass starts is the whole of the chapter's ramp, and it was measured
+    before it was chosen.** Over ninety generated boards on one shape: two-thirds-full glass
+    (`y`/`m`/`c`) leaves **50** solvable, one-third (`r`/`g`/`b`) **38**, and empty (`O`) **7**.
+    So the early boards hand most of the charge over and ask for one well-aimed burst, and the
+    late ones ask for all three. That is the only dial the chapter needed — mote count, headroom
+    and lens count all follow it rather than leading. Light is authored in upper case and glass in
+    lower, so a board says at a glance what is made of what.
+    <br>**A lens fires white, and it is the one thing here allowed past the threshold rather
+    than through it.** Glass holds all three channels by the time it goes off, so what it throws
+    is all three — which means every mote a beam lands on is completed and **pops**, whatever
+    colour it was. Nothing else in this mode can do that: a burst washes one colour and only sets
+    off what was exactly that channel short, and a mote already holding it is a wall to a *wash*
+    exactly as it always was. The beam's absorbing wall is gone, deliberately, and what replaces
+    it as the bound is the **price**: a lens gains at most one channel per drop, so a shot is
+    three drops of three colours already paid for, and it still only reaches the *first* thing in
+    each line. **A mechanic may buy reach or it may buy threshold, and only one of those is safe
+    to give a cascade** — reach without a bound anywhere is invariant 20j's solvent, and the bound
+    moved from the consequence to the cost rather than being dropped.
+    <br>**And how far round it fires says where its own light came from, which is the chain.** A
+    lens charged the ordinary way — bursts beside it, a drop taken in — fires **sideways**. A lens
+    **struck by another lens's shot** fires along all four axes, up and down together, because it
+    was struck rather than filled. So one well-aimed shot down a row of glass opens every pane in
+    it and each of those then opens its own column, and the only thing in the mode that reaches
+    *upward* is a lens that another lens lit. `FallBoard._struck` is the flag, and it is not
+    scratch: a lens a beam lands on is filled in one wave and fires in the next, and the well
+    settles in between, so it is carried by `Settle` alongside the cell it belongs to and cleared
+    when that cell leaves. At rest it is always false, which is why the search never observes one
+    — and it is copied by `Fork` anyway, because a fork that drops state the rule reads is the
+    kind of divergence nothing can see.
+    <br>**A wave stopped carrying one colour, and that is what the white beam actually cost.** A
+    burst washes the drop's colour and a lens throws all three, so one cell can be reached by both
+    in the same wave and must take both — `FallBoard._gain` is a mask accumulated with `|=` rather
+    than a bool latched by whichever arrived first, because a wave read in an order is the one
+    thing this method is arranged to avoid. `FallStep.WashedWith` / `ChargedWith` carry the same
+    figures to the view, for the same reason everything else there does: painted as the drop's
+    colour, a mote about to pop would be drawn as one that had merely improved.
+    <br>**A mechanic whose only fuel is destructible must have a second way to feed it, or the
+    obvious line of play is a trap.** Glass was charged only by light from a burst, and light only
+    ever comes from a mote — so a player who did the natural thing and cleared the motes first had
+    destroyed the one thing that could ever fill the lens, and was left tapping at a board that
+    could not be finished and would not end. Reported as *"I have destroyed all the motes, only
+    this prism ball left, but I cannot finish the level"*, and measured afterwards at **three
+    drops away on the fifth board and five on the sixth** — not a corner case, the obvious line.
+    That is invariant 20g's state reached by arithmetic: indistinguishable from a bug, and the
+    worst kind because the player caused it by playing well.
+    <br>**The fix is a valve, and what makes it a valve rather than a shortcut is the
+    arithmetic.** A drop that lands on glass is now taken *in* by it, one channel a drop. Feeding
+    a lens with a burst stays free — the burst was clearing a blob anyway — so the search still
+    prefers it and **par was unmoved on eight of the ten shipped boards**; what the drop buys is
+    that being wrong can always be paid for, out of the same five drops of slack every well is
+    dealt. The two readings that had to move with it: `FallVerdict` no longer refuses a continue
+    on a well down to its last lens (it is now one drop from a win, which is when the offer is
+    most obviously worth taking), and `ways` inflates, because direct feeding is a second route
+    to the same answer — the ten boards were re-picked against a tight `ways` rather than the
+    rule being backed out. **Before shipping a resource that only one destructible thing can
+    produce, ask what happens to the player who destroys them all first.**
+    <br>**`aim` is the metric, and it replaced one that was quietly wrong.** The question worth
+    asking is how many of a lens's shots land on anything: glass pointing at nothing has taken
+    three drops of charging and bought nothing, which is invariant 5d in the place nobody would
+    look. It is geometry of the authored position rather
+    than a proof — a well collapses under a chain, so a lens fires from wherever it has fallen to
+    — so it warns and never refuses. What needs no check at all is reachability: **a lens can only
+    leave the well by firing**, so any board the search proves emptiable is a board where every
+    lens on it was filled and fired. The reading it replaced counted a beam's *distance* and
+    scored full marks for one that flew out of the open sky above the stack and hit nothing;
+    written that way, every fill of a whole shape scored six.
+    <br>**The board has gravity, and that is why sideways is not a reduction of four.** A lens
+    rests on something, so its downward beam would travel exactly one cell — into the thing
+    holding it up — and its upward one would fly into the air above the stack and leave. Only
+    across is there anything to cross, which is why `aim` is counted **out of two** and why every
+    lens in the chapter stands on the floor looking along a valley in the terrain.
+    <br>**Two shipped boards had been drawn against the old rule and both leaned on the downward
+    shot, and only counting found it.** `f02_low_tide` and `f02_the_crossing` each stood their
+    pane on a mote, so the beam that had been doing the work crossed one cell into the thing
+    holding the glass up. The search answered par 3 and par 4 while that beam existed and **par 6
+    with 55 and 52 winning lines** once it did not — a board that still validates, still ships,
+    still has its glass filled and fired, and has stopped deciding anything. Both stand their
+    glass on the floor now, and every other board of the ten was unmoved in shape. The general
+    form is the one this file keeps arriving at: **a rule change that makes a board easier is as
+    invisible as one that makes it harder, and `ways` is what says so.**
+    <br>**A cell that is occupied without being made of the board's substance needs a vocabulary,
+    because the reverse reading is silent.** `FallCell` is it: a lens is a bit *above* the three
+    channels and carries its charge in the three below, so everything asking "is anything here" —
+    gravity, the mote count, the brim, the fingerprint — is correct with no change at all, and
+    everything asking about light has to say which kind it means. Two bugs came from the other
+    direction and neither would have thrown: `Wanted` read a lens as a mote wanting all three, and
+    `Enriches` read it as a mote every colour would improve, which would have let a drop fill one
+    directly and handed three drops of planning over for one tap. The one shape it opens up is a
+    well holding cells that can never be completed — glass with no mote left to cook — and
+    `FallVerdict` answers **no continue** for it, because selling motes into a run that is already
+    finished is invariant 23's one forbidden charge.
+
 27. **Deleting an account removes data first and the account itself last, and that ordering
     is the only thing making it safe to retry.** Both stores require an app that supports account
     creation to offer deletion *inside* the app — Apple's 5.1.1(v) does not accept a web page —
@@ -1586,6 +1698,110 @@ What that means in practice here:
     empty wallet as a free run and it offers one to somebody who cannot. A free run also replaces the heart row
     with the reason, because five empty hearts under a run that spent none of them is a picture
     of a charge that did not happen, sitting directly above a working retry button.
+
+24a. **A run is charged when it ends and gated when it begins, so every door has to ask — and
+    only one of five was asking.** Reported from play in one sentence: *a level can be restarted
+    for ever with no hearts left.* It is the whole heart gate walked past by the key in the header,
+    and nothing in this repository could see it, because every individual rule was right. The heart
+    is taken on the way *out* of a run (a loss, a forfeit, a marker a crash left behind), the gate
+    is asked on the way *in*, and the invariant joining those two moments — **a run may only begin
+    if the player could pay for it if it went wrong** — existed as a line inside `LevelsScreen`'s
+    node tap and nowhere else.
+    <br>The map is not the only door. The victory panel's **next**, an event's two ways in and the
+    restart key are four more, and all four opened a charged run on an empty bar. The restart was
+    the unbounded one, and the mechanism is worth stating because it is the shape of every bug this
+    file records: `RestartLevel` prices a restart as an abandonment, deliberately (a restart that
+    was free would be the fastest way to walk out of a losing board and to bank three chests), and
+    an abandonment charges through `Wallet.TrySpendHeart` — **which at nought hearts reports
+    "already out" rather than refusing**. That is correct there and it is what makes it silent
+    here: the caller was written to treat the answer as news rather than as permission. So the
+    first restart at one heart took it, and every restart after that dealt a fresh, unpaid run for
+    ever.
+    <br>**The fix is a predicate every door asks, not a check added to the door that was
+    reported.** `HeartStake.CanBegin` is the gate; `PlayRoute` is the funnel the four *navigating*
+    doors already walked through, so asking it there gated three of them with no call-site change
+    at all. That is the same argument that put the routing there — a rule asked once is the only
+    kind that cannot be forgotten by the next door somebody adds. `LevelsScreen` keeps only what
+    it alone can do about a refusal, which is shaking the node.
+    <br>**A restart is two answers with a charge between them**, and `HeartStake.CanRestart` is
+    that: pay for the run being left, then ask `CanBegin` of what remains. So a charged glade needs
+    **two** hearts to restart and one to enter, and that is not a stricter rule than the map's — it
+    is arithmetically the same rule, because leaving to the glades and walking straight back in
+    spends exactly the same heart and is refused at exactly the same point. Uncommitted is priced
+    like an entry rather than like two, or a player who had just legitimately walked through the
+    door with their last heart would be refused a board they had not touched.
+    <br>**A run already under way is refused with a line over the board, never with
+    `OutOfHeartsOverlay`.** That panel navigates to the shop and self-closes the moment
+    `Profile.CanPlay` reads true, both of which are right where it is raised today because nothing
+    is standing behind it. Leaving a run through `Flow.Go` abandons it *without resolving it*, so
+    `RunGuard`'s marker survives and charges a heart at the next launch for a run nobody finished —
+    invariant 23's rule ("short of gems must never navigate") reached from the heart side. The
+    refusal also has to call `Resume`: the pause menu's restart declares a **hand-off**, which is
+    what stops its `OnDestroy` unlatching the board, so a refusal that took nothing would close
+    the menu onto a board that never thaws.
+    <br>Two smaller things the audit turned up. The defeat panel's retry read `HeartsLeft`, a
+    **snapshot** taken when the run was lost, so a rebuild after a rescue or a watched video
+    recomputed the button from a stale nought; it asks `CanBegin` of the live wallet now, which
+    is the same predicate rather than a fourth spelling of it. And the victory panel asks
+    **before** it closes, so a refusal leaves its replay and its map key under the player's thumb
+    rather than stranding them on a solved board under a modal.
+    <br>Nothing about any of it reaches the save file, the wire or the server: no schema version,
+    no merge rule, no server work. A heart is simply not spent, which is invariant 14's shape and
+    what keeps the whole window retunable from a config push.
+
+24b. **A refusal over a live run brings the shelf to the player; only a refusal with nothing
+    behind it may navigate.** Invariant 23's rule ("short of gems must never navigate") reached
+    from the heart side, and it is what decides which panel a refusal gets. `OutOfHeartsOverlay`
+    is right on a refused map node, an event tile and the victory panel's next, and it is right
+    *because* nothing is standing behind it: it goes to the shop, and it closes itself the moment
+    `Profile.CanPlay` reads true. Both are wrong over a board. Leaving a run through `Flow.Go`
+    abandons it **without resolving it**, so `RunGuard`'s marker survives on disk and charges a
+    heart at the next launch for a run nobody finished — and the commonest refusal here is a
+    player holding *one* heart, which is a state that panel would close itself on while the
+    restart was still refused.
+    <br>So `RestartGateOverlay` stands over the run: the free way (`HeartVideoFlow`), the paid
+    way (`HeartRescueFlow`, whose gem shelf is **stacked** rather than navigated to), a countdown,
+    and KEEP PLAYING under both — because there is a board behind this one and carrying on with it
+    is a real answer. It cost no new mechanism: both flows were already collaborators taking a
+    panel and two callbacks, which is what being lifted out of the defeat panel was *for*, and the
+    column is `HeartGatePanel` widened by one bool. **`DefeatRescueFlow` was renamed
+    `HeartRescueFlow` in the same pass** — a class named after one of its two callers is how the
+    next reader concludes the other is doing something different.
+    <br>**Onward is `RunScreen.RestartLevel` again, never `Rewind`, and that is the clause with
+    teeth.** Hearts arriving do not imply the gate has lifted: a rescue of one heart to a player
+    holding none leaves a charged restart still refused, so calling the mode's rewind directly
+    would be invariant 24a's bug reintroduced by its own fix. Re-entering the door re-asks the
+    gate, and when it passes the player gets the ordinary forfeit confirmation — abandoning a
+    committed run is one of the three confirmations in this game, and skipping it because money
+    changed hands would make a paid restart *less* guarded than a free one.
+    <br>**Three smaller things, each of which would have shipped as a bug.** The panel hands the
+    board back from its own `OnDestroy` unless it declares a hand-off, which is `PauseOverlay`'s
+    rule and is load-bearing in both directions here: the pause menu's restart already declares
+    one, so a refusal that took nothing would close the menu onto a board that never thaws. The
+    clock's auto-proceed is gated on `Flow.IsTopModal`, because the hearts land the instant a
+    video finishes — seconds before the celebration over the panel has been collected — so
+    without it the panel would close out from under `PrizeOverlay` and raise a forfeit
+    confirmation behind somebody's confetti. And `HeartRescueWhere` splits the analytics, because
+    the same offer now fires from two panels a player reaches in opposite frames of mind — a
+    defeat has already happened and the board is gone; a refused restart is a board still standing
+    that they were about to throw away — and a take-up rate averaged over both answers no question
+    anybody would ask. It labels the *event* and never reaches `HeartRescue.Offer`: a per-panel
+    price would be the haggling invariant 23a refuses.
+    <br>Like 24a, none of it reaches the save file, the wire or the server. The gems leave through
+    `PlayerProgression.TrySpend` and the hearts arrive through `Wallet.GrantHearts` — a second
+    call site for two proven paths, so **no schema version, no merge rule and no server work.**
+    <br>**`RestartGateTests` builds the real panel, and writing it found two faults that no
+    amount of reading would have.** The first is a trap for any Editor fixture touching a panel:
+    **edit mode dispatches no `MonoBehaviour` messages**, so `DestroyImmediate` alone tears an
+    object down without `OnDestroy` ever running — which produces *passing* tests, because the
+    case asserting the board was **not** handed back is satisfied by the method never being
+    called. It passed that way until the opposite case failed and said so. The fixture sends the
+    message and then destroys, in that order, because that is what the engine does. The second is
+    that `Build` calls `Paint`, so a **rebuild** is a second route into the auto-proceed — granting
+    hearts fires `PlayerProgression.Changed`, the rescue redraws, and the gate is noticed as
+    lifted with no frame involved. A test that granted before stacking anything therefore proved
+    nothing about being covered. Each of the three guards was then mutated in turn and watched
+    failing on its own case.
 
 25. **A variable reward the client shows must be one the server can recompute, and the bonus
     wheel is the third thing built that way.** The victory panel's video offer used to pay a flat
@@ -1983,9 +2199,16 @@ scripts fail to compile. Do not guess — verify offline:
   level is in the file, so the offline gate proves it: every board searched for par, the brim
   row empty, nothing floating, the procession carrying all three channels, and the four
   difficulty readings (`motes`, `headroom`, `ways`, `greedy`) printed beside par and the supply.
+  From the second chapter on it also prints `lenses` and `reach` — how far the light actually
+  travels through glass on the opening position, which is invariant 5d's instrument for the lens
+  and warns rather than refuses.
   `fall-vectors.json` is the contract between `Tools/verify/fall.py` and the shipping
   `FallBoard`/`FallSolver` — `content.py` runs it through the Python copy and `FallVectorTests`
   runs it through the C# one, so the burst-and-wash rule cannot drift quietly (invariant 9a).
+  **`FallGlassTests` is the half of that guard which runs offline**: the vector fixture needs the
+  Editor (`JsonUtility` is a native call), so it is the one gate nobody runs on the way past —
+  Budburst's wash rule drifted from its mirror with every offline gate green. The lens's shapes
+  are therefore pinned inline there as well.
 - **Budburst check:** rolled into `content.py`. A grove is the third non-glade mode whose
   whole level is in the file, so the offline gate proves it: the board searched for par, the grove
   shown to be **authored settled** (no bunch of three standing before a tap is spent), every cocoon
@@ -2288,10 +2511,17 @@ Everything here runs without Unity unless it says otherwise.
   what is shipped. The boards were hand-drawn against a sweep (`ways`, `greedy` and the cost of
   proving them), because the shape of a groove is what teaches and a random one teaches nothing.
 - `Tools/chapters/f01_lightfall.py` — the Deep Well's ten wells, and `f01_strings.py` for the
-  strings that belong to the mode rather than to a level. Both `--check` themselves against
+  strings that belong to the mode rather than to a level — the lens's lesson among them, because
+  a mode's vocabulary outlives any one chapter. Both `--check` themselves against
   what is shipped. The boards were *searched for* rather than typed, because a random fill is
   almost never solvable — every pure mote needs two more channels and the stragglers pile up
   faster than any chain clears them.
+- `Tools/chapters/f02_glasswater.py` — Glasswater's ten, the chapter that brings the lens. Only
+  the **fill** is swept and the *shape* is drawn by hand, because where the terrain dips and where
+  the glass stands in it is what teaches. The sweep splits the cells into connected blobs, each
+  filled with the one blend missing the same channel so that a drop takes a whole blob, with pure
+  motes on the seams that need two — the Deep Well's own construction, with the light allowed to
+  travel.
 - `Tools/chapters/*.py` — one module per glade chapter; regenerates the shipped JSON and
   `--check`s itself against it. `author.py` is the shared board DSL (`cross`, `root`, `briar`,
   `path`), and it derives a taproot's start rotations from the taps the root should cost rather
@@ -2322,9 +2552,21 @@ Everything here runs without Unity unless it says otherwise.
   **Two ramps, and they are not interchangeable.** `night` is what a *map* is graded with,
   because a map is the thing being looked at; `daylight` is what a *board backdrop* is graded
   with, because a board is drawn over it. `--only maps|backdrops` is what keeps a re-grade of
-  one from silently re-cutting the other, and `-` in the map column says a chapter's strips are
-  not this tool's to cut at all — four chapters share one hand-made set, and a row obliged to
-  name *some* map source would overwrite it the first time anybody ran without the flag.
+  one from silently re-cutting the other, and `-` says a column is not this row's to cut at all.
+  **Both columns take it, and the second one had to be added the day a non-glade chapter first
+  wanted a map of its own.** Four chapters share one hand-made strip set, so a row obliged to
+  name *some* map source would overwrite it the first time anybody ran without the flag; and
+  every non-glade chapter *borrows* one of c01_shallows' nine backdrops (f01 draws `play_2`,
+  k01 `play_4`, b01 `play_6`, f02 `play_8`), so a row obliged to name *some* backdrop source
+  would re-cut a picture four chapters draw, graded to whichever chapter the tool was last run
+  for. The same trap, waiting on the other column.
+  <br>**There are four tall map paintings in these packs and all four are cut**, so a fifth
+  chapter wanting a map of its own shares a source and is told apart by the fourth column:
+  `f02_glasswater` draws `c03_amberwood`'s painting at `night` 0.60, which pulls it to
+  Glasswater's cold slate. Its files and addresses are its own, so its art still lands in its own
+  chapter bundle (invariant 7a). Look at a candidate before naming it — the island map is the one
+  `f01_lightfall` already draws, the dark map is a Halloween scene, and the top-down map crops to
+  59% of its width at six strips.
 - `Tools/make_shop_art.py` — the shop's two money ladders, six painted pictures each, cut out
   of two licensed sheets. The background is keyed by **chroma rather than brightness**: both
   sheets put a soft coloured halo behind every object, and the halo overlaps the objects in
@@ -2381,8 +2623,13 @@ re-reading before changing something, it is in one of those two sections and not
   bought by the copy, residents projected from the companion roster, derived grove worth.
 - **Boards** — public `groves/{uid}` cards, published rank distribution, unique keeper names
   with server-side filtering and reporting.
-- **Modes beyond the classic glade** — Lightfall (`f01_lightfall`), Groovekeeper
-  (`k01_grovekeeper`), the Hollow (`h01_emberfall`) and Budburst (`b01_thicket`).
+- **Modes beyond the classic glade** — Lightfall (`f01_lightfall`, `f02_glasswater`),
+  Groovekeeper (`k01_grovekeeper`), the Hollow (`h01_emberfall`) and Budburst (`b01_thicket`).
+  Lightfall is the first of them to reach a second chapter, and what that cost is the shape to
+  copy: one new object (the lens), one lesson id, one `Pal` colour, four fields on `FallStep`
+  — and **no save schema version, no merge rule, no `progression.json` retune and no server
+  work**, because a Glasswater level is an ordinary level with its own permanent id
+  (invariant 20a).
   See *Modes* below. Lightweave and Ripplewake are retired; `weave` and `ripple` are spent
   mode ids.
 - **Privacy/ads plumbing** — Google UMP consent, ATT prompt, `app-ads.txt` (placeholders).
@@ -2396,7 +2643,8 @@ re-reading before changing something, it is in one of those two sections and not
 | `c02_millvale` | glade | 10 | 41–63 | default 1.60 | the crossing |
 | `c03_amberwood` | glade | 10 | 44–70 | default 1.60 | colour as the subject; no new rule |
 | `c04_nightbriar` | glade | 10 | 44–69 | default 1.60 | the briar |
-| `f01_lightfall` | fall | 10 | 2–6 drops | none, then default 1.60 (motes) | the cook, then the chain; motes 3 → 30, headroom 4 → 2, `ways` never above 8 |
+| `f01_lightfall` | fall | 10 | 2–6 drops | none, then par + 5 (motes) | the cook, then the chain; motes 3 → 30, headroom 4 → 2, `ways` never above 8 |
+| `f02_glasswater` | fall | 10 | 3–6 drops | par + 5 (motes) | the lens, charged and fired; motes 5 → 33, glass 1 → 3 panes, channels it asks for 1 → 6, every lens aiming at 2 of 2, greedy beaten on eight of ten |
 | `k01_grovekeeper` | keeper | 10 | 2–8 tiles | none, then par + 5 (tiles) | the inversion, then stone, the heartbed and the prism; beds 2 → 4, `ways` 2 → 2 with a 1 at the fifth |
 | `h01_emberfall` | hollow | 10 | 1–2 sparks | — | ladder is *how few openings win*: 7,8,6,4,2,3,4,1,4,1 |
 | `b01_thicket` | bud | 10 | 3 taps | par + 5 (taps) | every grove *living* (invariant 20l); 5x5 → 8x7, flowers 22 → 49, critters 3 → 12, opening tap 3 waves → 8 |
@@ -2428,7 +2676,7 @@ reward.
 Chapter art is generated: `Tools/chapters/*.py` regenerate the shipped JSON and self-check
 against it; `Tools/make_chapter_art.py` reads names and colours out of the chapter's own JSON
 and **scales a source to whole strips** rather than stretching to them, which is what decides
-a chapter's strip count (Shallows 6, Mill Vale 4, Amberwood 5, Nightbriar 6).
+a chapter's strip count (Shallows 6, Mill Vale 4, Amberwood 5, Nightbriar 6, Glasswater 6).
 
 **A board backdrop is graded in daylight, and the board is what makes that safe.** Every one of
 the forty-one shipped backdrops used to arrive at a mean luminance between 28 and 105 out of
@@ -2595,12 +2843,52 @@ motes beside it — so any of them thereby completed bursts in turn, and one wel
 through a whole connected blob. It reaches a mote buried at the bottom of a column that no drop
 could ever land on, which is what makes a full well solvable at all.
 
+**The second chapter brings the lens, and it is the one thing in a well not made of light.**
+Glass holds no channels of its own, nothing can be dropped into it and nothing cooks it — a mote
+landing on a column topped by one simply sits on it. What it does is *fill up*, exactly as a mote
+does: light that reaches it, from a burst beside it or from another lens's beam, is taken in one
+channel at a time, and when it holds all three it **fires**, each beam crossing bare ground until
+the first cell in its line takes it.
+
+**What it throws is white, and that is the one thing here that pops a mote of any colour.** Glass
+holds all three channels by the time it goes off, so every mote a beam lands on is completed and
+bursts on the next wave, whatever it was. A *wash* still has its absorbing wall — a mote that
+already holds the drop's colour takes nothing from it, which is what keeps colour a decision — and
+a shot is what buys past it. It is bought dearly: three drops of three colours, and a beam still
+only reaches the first thing in each line.
+
+**And how far round it fires says where its own light came from.** A lens charged the ordinary way
+fires **sideways**: a well has gravity, so a lens rests on something and its downward beam would
+cross one cell into the thing holding it up while its upward one flies into the air above the
+stack. A lens **struck by another lens's shot** fires along all four axes, up and down together —
+which is the chain the second chapter is built on, and the only thing in the mode that reaches
+upward.
+
+**A shot costs three drops, and that is arithmetic rather than a dial.** Every wave of one drop
+carries that drop's colour, so a lens gains at most one channel per drop however long the chain
+beside it runs — filling an empty one takes three separate drops of three separate colours, each
+engineered to burst next to it. The chapter ramps on nothing but **how full each lens starts**:
+authored `O` empty, or `r`/`g`/`b`/`y`/`m`/`c` already that full, light in upper case and glass in
+lower. It relayed on first touch once, which was free, and the two things reported about it — too
+easy, and an effect with no effort in it — were one fault (invariant 26f).
+
+**The shot is drawn as it happened, and that is the model's doing rather than the view's.** A drop
+settles its whole cascade before a frame exists, so `FallStep` carries what burst, what glass was
+*charged*, what *fired*, and every beam it threw — the charging half especially, because two
+thirds of what the player does is filling a lens and without it those two drops would land on the
+board as nothing. `FallTempo.ShotBeat` gives a wave with glass in it a beat of its own and
+`ShotCeiling` bounds what a whole cascade may spend on them, so four lenses going off do not take
+four times as long. That is a bound rather than a preference, because the board is latched while a
+wave plays — and it is the one beat in this mode allowed outside `Ceiling`, because it is the only
+moment here worth stopping for.
+
 Two fail states, both visible: the supply runs out, or a mote comes to rest above the **brim**
 (row nought, drawn with a hard line under it). Only the first may be sold a continue — see
-invariant 26b. Par is the fewest drops that empty a well without ever breaching the brim, found
+invariant 26b, and note the one shape glass adds: a well holding nothing that can burst is over
+whatever the tray says, and is never sold one either. Par is the fewest drops that empty a well without ever breaching the brim, found
 by search (`FallSolver`) and resolved lazily, so a level authors a board and a procession and no
 difficulty number at all. Boards are searched for, not typed — `Tools/chapters/f01_lightfall.py`
-and `Tools/verify/fall.py`.
+`Tools/chapters/f02_glasswater.py` and `Tools/verify/fall.py`.
 
 **Groovekeeper** (`KeeperScreen`) — a groove of bare ground, a handful of **sprigs** already
 standing on it, and an ordered basket of coloured tiles. A tile is laid on bare ground beside
@@ -3684,12 +3972,24 @@ a failure that arrives in the first minute after a deploy.
    reconciled against AdMob instances in item 4.
 10. **Give `bestMillis` its removal.** See invariant 22 — drop it from `FirestoreSaveMapper`
     and `firestore.rules` in a later schema version, once no shipped client writes one.
-11. **Measure the heart rescue with the continue.** `heart_rescue_offered` /
+11. **Measure the restart gate.** Two stars of this are unmeasured. The **floor** — a charged
+    restart needs two hearts, one for the run being left and one for the one that follows
+    (invariant 24a) — is arithmetically the same rule as leaving to the map and walking back in,
+    but it is still a rule players will meet often and nothing counts how often. And the **offer**
+    raised when it refuses (invariant 24b) shares `heart_rescue_offered` / `heart_rescue_bought`
+    with the defeat panel, told apart by `where`: read the two funnels **separately**, because a
+    defeat has already happened and the board is gone, while a refused restart is a board still
+    standing that the player was about to throw away. What they decide together is whether 20 gems
+    is one price or two, and whether the two-heart floor is right. There is deliberately **no**
+    event for the refusal itself yet; if the funnel turns out to need a denominator, that is the
+    one to add. Content, so a retune costs a re-seed and no store review.
+
+12. **Measure the heart rescue with the continue.** `heart_rescue_offered` /
     `heart_rescue_bought` is the second funnel on the same screen and it answers a different
     question — the continue's ratio is taken against a lost run, this one against an empty
     heart bar — so read them apart. What they decide together is whether 20 gems is one price
     or two. Content, so a retune costs a re-seed and no store review.
-12. **Measure the bonus wheel, and read it against the cap.** The ladder averages 218.75% and
+13. **Measure the bonus wheel, and read it against the cap.** The ladder averages 218.75% and
     the cap moved from twelve to six to pay for it, which holds the *day* roughly where it was
     and more than doubles what one video is worth. Both halves were reasoned about rather than
     played against. `rewarded_ad_completed` on `win_bonus` is the funnel; what it decides is
@@ -3700,7 +4000,7 @@ a failure that arrives in the first minute after a deploy.
     two synthetic callbacks on one account drew slices 2 and 7 and were granted 300 and 1,000,
     the index advanced once per paid view, and a retried callback paid nothing and did not turn
     the wheel again.
-13. **Measure the Budburst ramp.** Its ten groves are all par 3 and dealt eight taps each, so
+14. **Measure the Budburst ramp.** Its ten groves are all par 3 and dealt eight taps each, so
     the whole ramp is how many are shut in (4 → 8). That has not been played against, and the mode
     is the one commissioned against a *feeling* rather than a difficulty (invariant 20k) — so the
     reading that matters is not the clear rate (it should be ~100%) but the **three-star rate**,
@@ -3709,7 +4009,7 @@ a failure that arrives in the first minute after a deploy.
     `greedy`, old wood), so if the chapter turns out to be flat the fix is **more to free**, not
     less to spend. `spare` is authored per level if it is ever needed, so a retune is a content
     drop and no store review.
-14. **Measure the continue.** 20 gems for +15 turns was reasoned about, never played against
+15. **Measure the continue.** 20 gems for +15 turns was reasoned about, never played against
     (invariant 23), and it is the second number after the move budget most likely to be wrong:
     too dear and a defeat is a dead end, too cheap and the fail state stops meaning anything.
     `continue_offered` / `continue_bought` are the funnel; the ratio and the distribution of
@@ -3809,6 +4109,21 @@ and a screenshot of the source.
   where an interrupted one lands rather than being left mid-air; and the offset is taken **after**
   the tween is registered, because registering supersedes the fall already running there and a
   superseded fall lands, which would undo a lift taken first.
+- **And the third form of it: a widget returned to a pool must be given back with every tween it
+  owns killed, on every object it owns.** A `Tween` is filed under the `UnityEngine.Object` its
+  caller named, so `KillAll(mote.Body)` says nothing at all about a tween owned by `mote.Rt` —
+  they are two different objects and neither call reaches the other. Lightfall's pool called the
+  first and the collapse (`FallView.Slide`) uses the second, because a slide moves the transform.
+  So a mote or a lens recycled while its slide was still running went into the pool with a live
+  tween writing its position, came back out as the next falling drop or as a cell `Sync` had just
+  placed, and was dragged to wherever the *old* cell had been — reported from play as a lens that
+  sometimes refused to fall. It is easy to hit rather than a corner: a slide is dealt a stagger by
+  column, so it finishes up to a third of a beat after the wave that threw it, and the next wave
+  is already bursting by then. Nothing in this repository could have caught it — the model settles
+  correctly (fuzzed at thirty thousand drops across the shipped chapter with no floating cell),
+  every gate is green, and only the drawing is wrong. **Before pooling a widget, list the objects
+  a tween here can be filed under and kill them all**; a pool that returns a live tween is a bug
+  that reappears on a different widget every time.
 - **A stagger and a duration are one bound, not two.** `BudTempo.Rain` promises the grove is back
   on the ground before the next wave charges and `FallOver` kept a fall inside that allowance —
   but the ripple's delay was *added* to the result, so a piece late in the ripple was still

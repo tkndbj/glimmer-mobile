@@ -13,7 +13,16 @@ namespace GlimmerGrove
     /// price, the debit, and keeping the panel honest while a balance moves underneath it.
     ///
     /// <para>
-    /// <b>It is a collaborator rather than more of <c>DefeatOverlay</c>, for
+    /// <b>It is named for the offer and not for a panel, because it now has two.</b> It was
+    /// <c>DefeatRescueFlow</c> while the defeat screen was the only place a player could be out
+    /// of hearts with something at stake; <see cref="RestartGateOverlay"/> is the second, and a
+    /// class called after one of its two callers is how the next reader concludes the other one
+    /// is doing something different. Nothing about the offer moved with the name: one price, one
+    /// amount, one debit, and <see cref="HeartRescueWhere"/> to keep the two funnels apart in
+    /// the analytics rather than in the rule.
+    /// </para>
+    /// <para>
+    /// <b>It is a collaborator rather than more of the panel that draws it, for
     /// <see cref="RunContinueFlow"/>'s reason.</b> That panel already carried the reason copy,
     /// the near-miss line, the heart row, the rewarded-video offer and the way back to the map;
     /// a sixth responsibility with its own latch, its own subscription and its own purchase is
@@ -40,11 +49,14 @@ namespace GlimmerGrove
     /// lifetime check — the same bargain <see cref="RunContinueFlow"/> makes with its screen.
     /// </para>
     /// </summary>
-    public sealed class DefeatRescueFlow
+    public sealed class HeartRescueFlow
     {
         readonly ModalView _panel;
         readonly LevelId _level;
         readonly int _heartsLeft;
+
+        /// <summary>Which panel this is standing on. Labels the analytics and nothing else.</summary>
+        readonly HeartRescueWhere _where;
 
         /// <summary>Redraws the panel around a changed offer. <c>ModalView.Rebuild</c>.</summary>
         readonly Action _redraw;
@@ -75,14 +87,20 @@ namespace GlimmerGrove
         /// is the rule that keeps a defeat from being an advertisement. Answered by the panel
         /// because a free opening can be retried whatever the wallet says.
         /// </param>
+        /// <param name="where">
+        /// Which panel is drawing this. It labels the two events and reaches nothing else — a
+        /// per-panel price would be the haggling invariant 23a refuses, and the two are met a
+        /// minute apart on the same screen.
+        /// </param>
         /// <param name="redraw">Redraws the panel. Called only when the offer's state changes.</param>
-        /// <param name="backToTheBoard">Closes the panel and starts a fresh attempt.</param>
-        public DefeatRescueFlow(ModalView panel, LevelId level, int heartsLeft, bool canRetry,
-                                Action redraw, Action backToTheBoard)
+        /// <param name="backToTheBoard">Closes the panel and puts the player back in play.</param>
+        public HeartRescueFlow(ModalView panel, LevelId level, int heartsLeft, bool canRetry,
+                               HeartRescueWhere where, Action redraw, Action backToTheBoard)
         {
             _panel = panel;
             _level = level;
             _heartsLeft = heartsLeft;
+            _where = where;
             _redraw = redraw;
             _backToTheBoard = backToTheBoard;
 
@@ -96,7 +114,7 @@ namespace GlimmerGrove
             // ever decide to do nothing is a handler somebody will later make do something.
             PlayerProgression.Changed += OnBalanceChanged;
 
-            LevelAnalytics.TrackHeartRescueOffered(_level, _offer);
+            LevelAnalytics.TrackHeartRescueOffered(_level, _offer, _where);
         }
 
         /// <summary>What is being sold, or <c>None</c>. The panel sizes itself against this.</summary>
@@ -177,7 +195,7 @@ namespace GlimmerGrove
             if (_buying || !_panel) return;
             _buying = true;
 
-            if (!HeartRescue.TryBuy(_offer, _level))
+            if (!HeartRescue.TryBuy(_offer, _level, _where))
             {
                 _buying = false;
 

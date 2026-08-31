@@ -682,6 +682,11 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 60e3ecbc56f10fc4bac8bd882641110a
+    m_Address: Art/Bg/play_8
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 60efd5fccd825341df749401fcb861db
     m_Address: Art/Fx/Victory/f09
     m_ReadOnly: 0

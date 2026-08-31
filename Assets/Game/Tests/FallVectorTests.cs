@@ -65,6 +65,26 @@ namespace GlimmerGrove.Tests
 
             public int headroom;
             public int standing;
+
+            /// <summary>
+            /// Glass standing in it, which is nought on every case written before the lens
+            /// existed.
+            ///
+            /// Checked rather than merely recorded, because a lens is counted by
+            /// <c>FallLayout.Motes</c> like anything else — so a copy that read glass as bare
+            /// ground would agree about <c>standing</c> on a board with none and disagree
+            /// silently on every board with one.
+            /// </summary>
+            public int lenses;
+
+            /// <summary>
+            /// How many of those lenses are authored part full.
+            ///
+            /// The chapter's difficulty dial, so it is pinned rather than left to the boards:
+            /// a copy that read a charged lens as an empty one would still parse, still search,
+            /// and would quietly cost every early board three drops instead of one.
+            /// </summary>
+            public int charged;
         }
 
         static string VectorPath =>
@@ -114,6 +134,14 @@ namespace GlimmerGrove.Tests
                 Assert.AreEqual(test.greedy, survey.Greedy, why + " (greedy)");
                 Assert.AreEqual(test.headroom, layout.Headroom, why + " (headroom)");
                 Assert.AreEqual(test.standing, layout.Motes, why + " (motes standing)");
+                Assert.AreEqual(test.lenses, layout.Lenses, why + " (lenses standing)");
+
+                int charged = 0;
+                for (int i = 0; i < layout.Count; i++)
+                    if (FallCell.IsLens(layout.At(i)) &&
+                        FallCell.Charge(layout.At(i)) != Energy.None) charged++;
+
+                Assert.AreEqual(test.charged, charged, why + " (glass authored part full)");
 
                 // Ways is only meaningful where there is an answer to count routes to.
                 if (test.par > 0) Assert.AreEqual(test.ways, survey.Ways, why + " (ways)");
@@ -131,6 +159,7 @@ namespace GlimmerGrove.Tests
             var file = Load();
 
             bool chain = false, wall = false, unsolvable = false, brim = false;
+            bool glass = false, partFull = false, empty = false;
 
             foreach (var test in file.cases)
             {
@@ -141,6 +170,18 @@ namespace GlimmerGrove.Tests
                 if (survey.Par > 0 && survey.Ways == 1) wall = true;
                 if (survey.Proved && survey.Par < 0) unsolvable = true;
                 if (layout.Headroom == 0) brim = true;
+
+                if (layout.Lenses > 0) glass = true;
+
+                int charged = 0;
+                for (int i = 0; i < layout.Count; i++)
+                    if (FallCell.IsLens(layout.At(i)) &&
+                        FallCell.Charge(layout.At(i)) != Energy.None) charged++;
+
+                // Glass that starts part full is the chapter's difficulty dial, and glass that
+                // starts empty is what the dial is measured against.
+                if (charged > 0) partFull = true;
+                if (layout.Lenses > charged) empty = true;
             }
 
             Assert.IsTrue(chain, "no case where one drop clears four or more motes, so nothing " +
@@ -151,6 +192,15 @@ namespace GlimmerGrove.Tests
                                       "notice a search that reported every board as timed out");
             Assert.IsTrue(brim, "no case standing at the brim, so nothing here would notice the " +
                                 "flood clause going away");
+
+            Assert.IsTrue(glass, "no case with a lens in it, so nothing here would notice the " +
+                                 "whole mechanic going away — which would read as a chapter of " +
+                                 "boards that simply got harder");
+            Assert.IsTrue(partFull, "no case with glass authored part full, so nothing here " +
+                                    "would notice the charge being ignored at parse — which is " +
+                                    "the dial the whole chapter's difficulty ramps on");
+            Assert.IsTrue(empty, "no case with an empty lens, so nothing here would notice a " +
+                                 "board that hands one a channel it was never given");
         }
     }
 }

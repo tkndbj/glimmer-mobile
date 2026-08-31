@@ -2,7 +2,7 @@
 
 The chapter's own names and taglines live in `f01_lightfall.py` with the boards they describe;
 this holds the strings that belong to the *mode* rather than to a level — its readouts, its two
-defeats, its three lessons — because those outlive any one chapter and would otherwise be
+defeats, its four lessons — because those outlive any one chapter and would otherwise be
 rewritten every time a chapter script ran.
 
     python Tools/chapters/f01_strings.py --check
@@ -60,7 +60,7 @@ STRINGS = {
     'ui.defeat.motes_reason': 'Nothing left to drop, and the well is not empty. Spend each '
                               'mote where it finishes something.',
 
-    # ---------------------------------------------------------------- the three lessons
+    # ---------------------------------------------------------------- the four lessons
     'ui.tip.fall_cook.title': 'COOK, DO NOT MATCH',
     'ui.tip.fall_cook.body': 'A mote adds its colour to the one it lands on. Red on green '
                              'makes yellow.\n\nA mote holding all three bursts, and washes '
@@ -69,6 +69,16 @@ STRINGS = {
     'ui.tip.fall_supply.title': 'THE LIGHT IS COUNTED',
     'ui.tip.fall_supply.body': 'This well is dealt so many motes and no more.\n\nThere is no '
                                'undo here. Watch the ring under your thumb before you let go.',
+
+    # The fourth arrived with the second chapter. It lives here rather than in that chapter's
+    # own script for the reason all of these do: a mode's vocabulary outlives any one chapter,
+    # and a lesson id travels in the save file exactly as a level id does.
+    'ui.tip.fall_lens.title': 'FILL THE GLASS',
+    'ui.tip.fall_lens.body': 'A lens fills one colour at a time - free from any burst beside '
+                             'it, or a drop at a time by hand.\n\nFill all three and it '
+                             'fires white to left and right, popping whatever each beam '
+                             'lands on.\n\nLight one lens with another and it fires '
+                             'every way - up and down as well.',
 
     'ui.tip.fall_brim.title': 'MIND THE BRIM',
     'ui.tip.fall_brim.body': 'A mote that comes to rest above the line ends the run.\n\nA '

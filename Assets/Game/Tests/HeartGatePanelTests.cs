@@ -18,23 +18,29 @@ namespace GlimmerGrove.Tests
     public sealed class HeartGatePanelTests
     {
         /// <summary>
-        /// Nothing overlaps, in either shape the panel can take.
+        /// Nothing overlaps, in any of the four shapes the panel can take.
         ///
         /// Structurally guaranteed by a cursor — but that is a claim about the implementation,
         /// and this is the property. A row placed by an absolute offset would compile and fail
         /// here.
+        ///
+        /// Four rather than two since a second panel started drawing this column: the restart
+        /// gate over a run has no shop to send anybody to, so its paid row is a rescue that can
+        /// genuinely not exist. Both conditional rows are now walked together, which is the
+        /// combination neither caller draws on its own and therefore the one nobody would see.
         /// </summary>
         [Test]
-        public void NeitherShapeLetsTwoRowsTouch()
+        public void NoShapeLetsTwoRowsTouch()
         {
             foreach (bool watching in new[] { false, true })
+            foreach (bool buying in new[] { false, true })
             {
-                var stack = HeartGatePanel.Of(watching);
+                var stack = HeartGatePanel.Of(watching, buying);
                 float last = HeartGatePanel.StackTop;
-                string what = watching ? "with a video" : "with no video";
+                string what = $"video={watching}, paid={buying}";
 
                 last = Follows(stack.HasWatch, stack.Watch, HeartGatePanel.ActionHeight, last, what);
-                last = Follows(true, stack.Shop, HeartGatePanel.ActionHeight, last, what);
+                last = Follows(stack.HasPaid, stack.Paid, HeartGatePanel.ActionHeight, last, what);
                 last = Follows(true, stack.Ok, HeartGatePanel.OkHeight, last, what);
 
                 Assert.GreaterOrEqual(stack.Height, last,
@@ -54,20 +60,40 @@ namespace GlimmerGrove.Tests
         }
 
         /// <summary>
-        /// The shop is offered whether or not there is a video, and the video is not.
+        /// Each row is drawn when it is asked for and not otherwise, and the two are
+        /// independent.
         ///
-        /// Not a layout fact. Hearts sell for gems, which need no store connection and may
-        /// already be in hand, so the shop is the way out that always works — where an ad
-        /// button drawn against an empty inventory is a control that cannot.
+        /// The independence is the part worth asserting. Both callers happen to pass the video
+        /// flag from the same reading, so a column that quietly tied the paid row to it would
+        /// look correct on the out-of-hearts panel — which always wants both — and would silently
+        /// drop the rescue on the restart gate whenever no video had loaded.
         /// </summary>
         [Test]
-        public void TheShopIsAlwaysOfferedAndTheVideoIsNot()
+        public void EachRowIsDrawnExactlyWhenItIsAskedFor()
         {
-            Assert.IsFalse(HeartGatePanel.Of(watching: false).HasWatch);
-            Assert.IsTrue(HeartGatePanel.Of(watching: true).HasWatch);
+            Assert.IsFalse(HeartGatePanel.Of(watching: false, buying: true).HasWatch);
+            Assert.IsTrue(HeartGatePanel.Of(watching: true, buying: false).HasWatch);
 
-            Assert.Greater(HeartGatePanel.Of(watching: false).Shop, 0f);
-            Assert.Greater(HeartGatePanel.Of(watching: true).Shop, 0f);
+            Assert.IsFalse(HeartGatePanel.Of(watching: true, buying: false).HasPaid);
+            Assert.IsTrue(HeartGatePanel.Of(watching: false, buying: true).HasPaid);
+        }
+
+        /// <summary>
+        /// A row that is not drawn gives its room back rather than leaving a hole.
+        ///
+        /// What a cursor buys over four typed offsets, and the reason the shortest shape is
+        /// worth having at all: the restart gate with no video and no affordable rescue is a
+        /// title, a sentence, a clock and one way out, and reserving two buttons of air under it
+        /// would read as a panel that failed to finish drawing.
+        /// </summary>
+        [Test]
+        public void AnUndrawnRowCostsThePanelNoHeight()
+        {
+            float full = HeartGatePanel.Of(watching: true, buying: true).Height;
+            float bare = HeartGatePanel.Of(watching: false, buying: false).Height;
+
+            Assert.AreEqual(2f * (HeartGatePanel.ActionHeight + HeartGatePanel.Gap), full - bare,
+                            "two undrawn rows should give back exactly their own room");
         }
 
         /// <summary>
@@ -79,12 +105,12 @@ namespace GlimmerGrove.Tests
         /// store reviewer is right to object to.
         /// </summary>
         [Test]
-        public void TheVideoIsAboveTheShopAndTheWayOutIsUnderBoth()
+        public void TheVideoIsAboveThePaidWayAndTheWayOutIsUnderBoth()
         {
-            var stack = HeartGatePanel.Of(watching: true);
+            var stack = HeartGatePanel.Of(watching: true, buying: true);
 
-            Assert.Less(stack.Watch, stack.Shop);
-            Assert.Less(stack.Shop, stack.Ok);
+            Assert.Less(stack.Watch, stack.Paid);
+            Assert.Less(stack.Paid, stack.Ok);
         }
 
         /// <summary>

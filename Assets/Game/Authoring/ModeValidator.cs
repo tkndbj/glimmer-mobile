@@ -194,6 +194,17 @@ namespace GlimmerGrove.Content
                     "one. A deal has to carry all three channels"));
             }
 
+            // Glass is only ever removed by light reaching it, and light only ever comes from a
+            // burst — so a well made of nothing but lenses can never lose one and can never be
+            // emptied. The search below proves it unwinnable, but only after spending the whole
+            // node budget failing to, and it says so in words about a search rather than in
+            // words about the board.
+            if (layout.Lenses > 0 && layout.Lenses == layout.Motes)
+                issues.Add(new LevelIssue(LevelIssueSeverity.Error,
+                    $"every one of this well's {layout.Lenses} cells is glass, and glass is only " +
+                    "ever filled by light that has already travelled. With no mote to cook there " +
+                    "can never be a burst, so nothing here can ever be charged or got rid of"));
+
             // Room above par is `spare`, in drops, so a budgetFactor on a well is a number
             // that does nothing. Refused rather than ignored, for ChapterDto.order's reason —
             // and refused rather than honoured, because two ways to say one thing is how they
@@ -263,6 +274,31 @@ namespace GlimmerGrove.Content
                     $"against a supply of {level.Tuning.MoveBudget}, so it can be cleared by " +
                     "always taking the biggest burst going — fine early in a chapter, and worth " +
                     "knowing later in one"));
+
+            // Invariant 5d, counted, for the one object in this mode that is not made of light.
+            // A lens costs three drops of three colours to fill, and then fires sideways in
+            // white. Glass whose both shots leave the well the moment it sets off has taken the
+            // whole of that plan and bought nothing with it, and a chapter authored that way is
+            // a chapter of ordinary wells with beads in them.
+            //
+            // Counted out of two rather than out of four, because a lens filled the ordinary way
+            // fires sideways: a well has gravity, so a lens rests on something and its downward
+            // beam always lands, on the cell holding it up, having crossed nothing. All four are
+            // only fired by a lens another lens strikes, and where a lens has fallen to by then
+            // is not a position any cheap check can enumerate.
+            //
+            // Geometry of the authored position rather than a proof — a well collapses under a
+            // chain, so a lens fires from wherever it has fallen to — so it is said out loud
+            // rather than refused. Note what needs no check at all: a lens can only leave the
+            // well by firing, so a board the search proves emptiable is a board where every lens
+            // on it is filled and fired. Glass cannot go uncharged and ship.
+            if (layout.Lenses > 0 && survey.Aim < 1)
+                issues.Add(new LevelIssue(LevelIssueSeverity.Warning,
+                    $"this well stands {layout.Lenses} lens(es) and not one of them is pointing " +
+                    "sideways at anything: both shots would leave the well the moment it set " +
+                    "off, so three drops of charging would buy nothing and the board would play " +
+                    "the same without the glass. Stand a lens on the floor with its light across " +
+                    "a gap, or looking into a blob the wash cannot reach"));
 
             // Zero headroom means the tallest column is one careless drop from the brim before
             // the player has touched anything. Legitimate as a finale and alarming anywhere

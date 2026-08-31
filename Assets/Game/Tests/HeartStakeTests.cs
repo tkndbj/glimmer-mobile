@@ -369,6 +369,121 @@ namespace GlimmerGrove.Tests
             Assert.AreEqual(0, HeartStake.FreeLevelsIn(index, ChapterId.Parse("c02_two")));
         }
 
+        // ------------------------------------------------------ the gate on the way in
+        //
+        // A heart is charged when a run ends badly and the gate is asked when a run begins, and
+        // the rule joining those two moments is that a run may only start if the player could
+        // pay for it if it went wrong. It was written into the map's node tap and nowhere else,
+        // so the victory panel's "next", an event's tile and — worst — the restart key all
+        // opened charged runs on an empty bar. The restart was unbounded, because at nought
+        // hearts the abandonment it pays for takes nothing at all: Wallet.TrySpendHeart reports
+        // "already out" rather than refusing, so the board came back free, for ever.
+        //
+        // Everything below runs over plain integers, deliberately: what the gate is about is
+        // arithmetic, and a rule that can stop somebody playing should be provable without a
+        // wallet, a save or an Editor.
+
+        [Test]
+        public void AChargedRunNeedsAHeartAndAFreeOneNeverDoes()
+        {
+            Assert.IsFalse(HeartStake.CanBegin(HeartPrice.Charged, 0));
+            Assert.IsTrue(HeartStake.CanBegin(HeartPrice.Charged, 1));
+
+            // Both free clauses, on an empty bar. A run that costs nothing to lose cannot
+            // coherently be refused for lack of something to lose — and the replay clause is
+            // what keeps the whole of what somebody has beaten open while their hearts fill.
+            Assert.IsTrue(HeartStake.CanBegin(HeartPrice.Opening, 0));
+            Assert.IsTrue(HeartStake.CanBegin(HeartPrice.Replay, 0));
+        }
+
+        [Test]
+        public void TheGateIsAHeartInHandRatherThanThePublishedDefeatCost()
+        {
+            // hearts > 0, exactly as Hearts.CanPlay and Wallet.TrySpendHeart both read it. A
+            // published cost above one is a decision about how much a defeat takes, not about
+            // who is allowed to sit down — reading it as an entry requirement would lock a
+            // player out of the game holding a heart.
+            Assert.Greater(HeartLimits.MaxDefeatCost, 1, "the cost is retunable, so this matters");
+            Assert.IsTrue(HeartStake.CanBegin(HeartPrice.Charged, 1));
+        }
+
+        [Test]
+        public void RestartingAChargedRunPaysForTheOneBeingLeftBeforeTheGateIsAsked()
+        {
+            // The bug this exists to refuse, in one line: one heart is enough to abandon a run
+            // and nowhere near enough to begin another, and the old code did both anyway —
+            // charging the heart, dropping the player to nought, and dealing a fresh board that
+            // was never paid for. Two is the honest floor, and it is not a stricter rule than
+            // the map's: leaving to the glades and walking back in spends the same heart and is
+            // refused at exactly the same point.
+            Assert.IsFalse(HeartStake.CanRestart(HeartPrice.Charged, 1, owed: true));
+            Assert.IsTrue(HeartStake.CanRestart(HeartPrice.Charged, 2, owed: true));
+        }
+
+        [Test]
+        public void RestartingOnAnEmptyBarIsRefusedHoweverOftenItIsAsked()
+        {
+            // The unbounded case as reported: at nought hearts the forfeit silently takes
+            // nothing, so every previous restart succeeded and the gate had ceased to exist.
+            for (int i = 0; i < 5; i++)
+                Assert.IsFalse(HeartStake.CanRestart(HeartPrice.Charged, 0, owed: true),
+                               "a restart cannot become free by being asked again");
+        }
+
+        [Test]
+        public void ARestartBeforeTheRunIsCommittedIsPricedLikeAnEntryAndNotLikeTwo()
+        {
+            // Nothing has been charged yet, so there is nothing to pay for on the way out: a
+            // player putting back a board they have not touched is asking the same question the
+            // door already answered. Demanding two here would refuse the commonest harmless tap
+            // in the game to somebody who had just legitimately walked through the door with
+            // their last heart.
+            Assert.IsTrue(HeartStake.CanRestart(HeartPrice.Charged, 1, owed: false));
+            Assert.IsFalse(HeartStake.CanRestart(HeartPrice.Charged, 0, owed: false));
+        }
+
+        [Test]
+        public void AFreeRunIsRestartedForNothingWhateverTheBarSays()
+        {
+            // Both clauses, committed and not. A mode's opening glades are where the one player
+            // this gate would shut out is the one still working out what the verb is, and a
+            // replay is a board they have already beaten — neither takes a heart on any exit,
+            // so neither has anything for the gate to refuse.
+            foreach (var price in new[] { HeartPrice.Opening, HeartPrice.Replay })
+                foreach (bool owed in new[] { true, false })
+                    Assert.IsTrue(HeartStake.CanRestart(price, 0, owed),
+                                  price + " restart was refused on an empty bar");
+        }
+
+        [Test]
+        public void ARestartIsTheSameAnswerAsLeavingAndWalkingBackIn()
+        {
+            // The property the rule is really about, over the whole range rather than at the
+            // one boundary: a restart may go ahead exactly when the round trip through the map
+            // would have been let through. Anything else and the header key is either a
+            // loophole or a punishment.
+            var index = Catalog();
+            var glade = LevelId.Parse("g4");
+            Grace(3);
+
+            // Both clauses driven rather than assumed: outside the window, and finished
+            // nothing. The [SetUp] above already says so, and saying it here as well is what
+            // lets this run under a bare reflection runner that does not honour one.
+            Finished();
+
+            Assert.AreEqual(HeartPrice.Charged, HeartStake.PriceOf(index, glade),
+                            "the fixture wants a charged glade");
+
+            for (int hearts = 0; hearts <= 4; hearts++)
+            {
+                int afterLeaving = hearts - HeartRules.DefeatCost;
+
+                Assert.AreEqual(HeartStake.CanBegin(index, glade, afterLeaving),
+                                HeartStake.CanRestart(HeartPrice.Charged, hearts, owed: true),
+                                "restart and the round trip disagreed at " + hearts + " hearts");
+            }
+        }
+
         [Test]
         public void TheFreeOnesAreThePrefixOfTheChapterRatherThanAnyThreeOfIt()
         {

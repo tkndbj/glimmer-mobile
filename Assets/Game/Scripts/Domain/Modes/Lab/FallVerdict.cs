@@ -138,6 +138,13 @@ namespace GlimmerGrove.Modes
         {
             if (deal == null || deal.Count == 0) return RunContinueDeficit.None;
 
+            // There used to be a clause here refusing a continue on a well with no mote left to
+            // cook — glass with nothing to light it, which was then genuinely unfinishable. It
+            // is gone because the board changed underneath it: a drop now feeds glass it lands
+            // on, so a lone lens is one drop from firing and more motes are exactly what such a
+            // run needs. Left in, it would refuse the offer on the one board where it is most
+            // obviously worth taking. See `FallBoard.Charges`.
+
             int wanted = board.Wanted;
             if (wanted == Energy.None) return floor;
 

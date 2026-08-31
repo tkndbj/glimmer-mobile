@@ -21,8 +21,50 @@ bursts share a neighbour or a column collapses under one.
 R, G, B = 1, 2, 4
 ALL = R | G | B
 
-LETTERS = {'R': R, 'G': G, 'B': B, 'Y': R | G, 'M': R | B, 'C': G | B, 'W': ALL}
+#: A lens: one bit above the three channels, so it is occupied and is not light. Mirrors
+#: `FallCell.Lens`. It can never equal ALL, which is what makes "a cell that reached white
+#: bursts" correct for glass with no clause of its own.
+LENS = 8
+
+#: A lens holding all three, which is the state that fires. Never authored - `w` is refused at
+#: parse exactly as `W` is for a mote, because a board that goes off before anybody has touched it
+#: is a board whose author meant something else.
+FULL = LENS | ALL
+
+#: Glass is written in lower case and light in upper: `O` is empty glass and `r`, `g`, `b`, `y`,
+#: `m`, `c` are glass already holding that much. A pre-charged lens is the chapter's gentleness
+#: dial - an early board asks for one well-aimed burst where a late one asks for all three.
+LETTERS = {'R': R, 'G': G, 'B': B, 'Y': R | G, 'M': R | B, 'C': G | B, 'W': ALL,
+           'O': LENS, 'r': LENS | R, 'g': LENS | G, 'b': LENS | B,
+           'y': LENS | R | G, 'm': LENS | R | B, 'c': LENS | G | B, 'w': FULL}
 LETTER_OF = {v: k for k, v in LETTERS.items()}
+
+
+def is_lens(cell):
+    return bool(cell & LENS)
+
+
+def is_mote(cell):
+    """A cell made of light: the only kind that can be enriched, burst, or want a channel."""
+    return cell != 0 and not (cell & LENS)
+
+
+def charge(cell):
+    """The channels a lens is holding. Nought for a mote and for bare ground."""
+    return (cell & ALL) if is_lens(cell) else 0
+
+
+def wants(cell):
+    """The channels this cell still lacks before it goes off. Nought for bare ground.
+
+    Both kinds want something now. A mote wants what it needs to reach white and burst; a lens
+    wants what it needs to reach white and *fire*. That is the same sentence twice, which is the
+    whole reason the rule needed nothing new taught: light fills a thing up and then it goes off.
+    """
+    if not cell:
+        return 0
+    return ALL & ~(cell & ALL)
+
 
 BRIM = 0
 
@@ -34,6 +76,12 @@ MAX_DROPS = 28
 MOST_WAYS = 100_000
 
 NEIGHBOURS = ((0, -1), (1, 0), (0, 1), (-1, 0))
+
+#: The two ways a lens fires when it was filled rather than struck. Not a reduction of four: a
+#: well has gravity, so a lens rests on something - its downward beam travels one cell into what
+#: is holding it up and its upward one flies into the air above the stack. Only across is there
+#: anything to cross. A lens another lens's beam strikes fires along all four.
+SIDEWAYS = ((1, 0), (-1, 0))
 
 
 def parse_rows(rows, width=None, height=None):
@@ -57,6 +105,9 @@ def parse_rows(rows, width=None, height=None):
             mask = LETTERS[c]
             if mask == ALL:
                 raise ValueError('row %d column %d is already white' % (y, x))
+            if mask == FULL:
+                raise ValueError('row %d column %d is glass already full, so it would fire '
+                                 'before the player had touched it' % (y, x))
             cells.append(mask)
 
     if width is not None and w != width:
@@ -76,7 +127,8 @@ def parse_deal(motes):
             raise ValueError("'%s' at %d is not a colour" % (c, i))
         mask = LETTERS[c]
         if mask not in (R, G, B):
-            raise ValueError("'%s' at %d is a blend; a well deals pure light only" % (c, i))
+            what = 'a lens' if is_lens(mask) else 'a blend'
+            raise ValueError("'%s' at %d is %s; a well deals pure light only" % (c, i, what))
         out.append(mask)
     if not out:
         raise ValueError('a deal of nothing deals nothing')
@@ -95,15 +147,20 @@ def written(cells, width):
 class Well(object):
     """One well being played on. Mirrors `FallBoard`."""
 
-    __slots__ = ('w', 'h', 'cells', 'flooded')
+    __slots__ = ('w', 'h', 'cells', 'flooded', 'struck')
 
-    def __init__(self, cells, width, height, flooded=False):
+    def __init__(self, cells, width, height, flooded=False, struck=None):
         self.w, self.h = width, height
         self.cells = list(cells)
         self.flooded = flooded
+        #: Which lenses were struck by another lens's beam, and so fire along all four axes
+        #: rather than sideways. It outlives the wave that sets it - a lens a beam lands on is
+        #: filled in one wave and fires in the next, and the well settles in between - so it is
+        #: carried by `_settle` and cleared when the glass leaves. Empty at rest.
+        self.struck = set(struck) if struck else set()
 
     def fork(self):
-        return Well(self.cells, self.w, self.h, self.flooded)
+        return Well(self.cells, self.w, self.h, self.flooded, self.struck)
 
     # ---------------------------------------------------------------- reading
     def top_of(self, x):
@@ -121,8 +178,10 @@ class Well(object):
     def landing(self, colour, x):
         top = self.top_of(x)
         if top >= 0:
-            mote = self.cells[top * self.w + x]
-            if (mote | colour) != mote:
+            cell = self.cells[top * self.w + x]
+            # A drop is taken by whatever is on top if it lacks the colour - a mote is enriched,
+            # a lens is charged. Neither raises the stack.
+            if (cell | colour) != cell:
                 return top
         return self.first_free(x)
 
@@ -131,13 +190,22 @@ class Well(object):
         if top < 0:
             return False
         mote = self.cells[top * self.w + x]
-        return (mote | colour) != mote
+        return is_mote(mote) and (mote | colour) != mote
+
+    def charges(self, colour, x):
+        """Whether a drop here would be taken in by glass rather than by a mote."""
+        top = self.top_of(x)
+        if top < 0:
+            return False
+        cell = self.cells[top * self.w + x]
+        return is_lens(cell) and (cell | colour) != cell
 
     def bursts(self, colour, x):
         top = self.top_of(x)
         if top < 0:
             return False
-        return (self.cells[top * self.w + x] | colour) == ALL
+        mote = self.cells[top * self.w + x]
+        return is_mote(mote) and (mote | colour) == ALL
 
     @property
     def motes(self):
@@ -160,9 +228,22 @@ class Well(object):
     def wanted(self):
         mask = 0
         for c in self.cells:
-            if c:
-                mask |= ALL & ~c
+            mask |= wants(c)
         return mask
+
+    @property
+    def lenses(self):
+        return sum(1 for c in self.cells if is_lens(c))
+
+    @property
+    def glass(self):
+        """The lenses and how full each is, for a report that has to say how much is asked."""
+        return [charge(c) for c in self.cells if is_lens(c)]
+
+    @property
+    def cookable(self):
+        """Whether anything here could ever burst. Glass cannot - see `FallBoard.Cookable`."""
+        return any(is_mote(c) for c in self.cells)
 
     def can_drop(self, colour, x):
         return (not self.flooded and not self.is_empty
@@ -185,17 +266,56 @@ class Well(object):
         return dict(column=x, row=at, colour=colour, enriched=enriched, steps=steps)
 
     def _resolve(self, wash, record):
+        """Mirrors `FallBoard.Resolve`, wave for wave - including the glass.
+
+        A wave takes everything that has reached white: motes, which **burst** and wash the four
+        cells they touch with the drop's colour, and lenses, which **fire** beams along the axes.
+
+        Two things about a shot and both are the mechanic. Its light is **white** - glass holds
+        all three by the time it goes off - so every mote a beam lands on is completed and pops,
+        whatever colour it was. And how far round it fires says where its own light came from: a
+        lens charged the ordinary way fires **sideways**, which on a board with gravity is the
+        only pair worth anything, and a lens **struck by another lens's beam** fires along all
+        four axes. What keeps that from being a solvent is the price - a lens gains at most one
+        channel per drop, so a shot costs three drops of three colours.
+
+        The gains are accumulated per cell rather than latched, because a wave no longer carries
+        one colour: a cell reached by a burst and by a beam takes both, and `|=` is what keeps
+        the answer free of any reading order.
+        """
         steps = []
         wave = 0
 
         while True:
             burst = [i for i, c in enumerate(self.cells) if c == ALL]
-            if not burst:
+            fired = [i for i, c in enumerate(self.cells) if c == FULL]
+            if not burst and not fired:
                 break
 
-            bursting = set(burst)
-            washed = []
-            seen = set()
+            # Everything leaving this wave. Read once, before anything is applied, so nothing
+            # here depends on which cell was scanned first.
+            going = set(burst) | set(fired)
+
+            washed, charged, beams = [], [], []
+            gain = {}
+
+            def reached(ni, light):
+                """One cell the light got to. Charges glass, washes a mote, or does neither."""
+                if ni in going:
+                    return                      # gone by the time it arrives
+                cell = self.cells[ni]
+                if not cell:
+                    return
+                taken = light & ~cell
+                if not taken:
+                    return                      # holds it already: takes nothing
+                first = ni not in gain
+                gain[ni] = gain.get(ni, 0) | taken
+                if not first:
+                    return                      # already on a list
+                (charged if is_lens(cell) else washed).append(ni)
+
+            # ---- what each burst touches, in the drop's own colour
             for at in burst:
                 x, y = at % self.w, at // self.w
                 for dx, dy in NEIGHBOURS:
@@ -203,24 +323,57 @@ class Well(object):
                     if not (0 <= nx < self.w and 0 <= ny < self.h):
                         continue
                     ni = ny * self.w + nx
-                    if ni in bursting or ni in seen:
-                        continue
-                    mote = self.cells[ni]
-                    if not mote or (mote | wash) == mote:
-                        continue
-                    seen.add(ni)
-                    washed.append(ni)
+                    if self.cells[ni]:
+                        reached(ni, wash)
+
+            # ---- and the beams out of every lens that filled up, in white
+            for at in fired:
+                x, y = at % self.w, at // self.w
+                for dx, dy in (NEIGHBOURS if at in self.struck else SIDEWAYS):
+                    cx, cy, travelled = x, y, 0
+                    while True:
+                        cx += dx
+                        cy += dy
+                        travelled += 1
+
+                        if not (0 <= cx < self.w and 0 <= cy < self.h):
+                            beams.append((at, dx, dy, travelled, -1))
+                            break
+
+                        ni = cy * self.w + cx
+                        cell = self.cells[ni]
+
+                        if not cell:
+                            continue            # what a lens exists to cross
+                        if ni in going:
+                            continue            # going off this wave; gone when the light lands
+
+                        beams.append((at, dx, dy, travelled, ni))
+                        if is_lens(cell):
+                            self.struck.add(ni)
+                        reached(ni, ALL)
+                        break
 
             for at in burst:
                 self.cells[at] = 0
+            for at in fired:
+                self.cells[at] = 0
+                self.struck.discard(at)
+
+            washed_with = [gain[at] for at in washed]
+            charged_with = [gain[at] for at in charged]
             for at in washed:
-                self.cells[at] |= wash
+                self.cells[at] |= gain[at]
+            for at in charged:
+                self.cells[at] |= gain[at]
 
             moved = self._settle()
             wave += 1
 
             if record:
-                steps.append(dict(burst=burst, washed=washed, wave=wave, moved=moved))
+                steps.append(dict(burst=burst, fired=fired, washed=washed, charged=charged,
+                                  washed_with=washed_with, charged_with=charged_with,
+                                  beams=beams, wave=wave, moved=moved))
             else:
                 steps.append(None)
 
@@ -238,6 +391,13 @@ class Well(object):
                     to = write * self.w + x
                     self.cells[to] = self.cells[at]
                     self.cells[at] = 0
+                    # The struck flag travels with the glass it belongs to: a lens filled by a
+                    # beam fires on the next wave and the well settles in between, so a flag left
+                    # behind would arm whatever fell into that cell and disarm the lens that
+                    # earned it.
+                    if at in self.struck:
+                        self.struck.discard(at)
+                        self.struck.add(to)
                     moved.append((at, to))
                 write -= 1
         return moved
@@ -341,7 +501,10 @@ def greedy(cells, width, height, deal):
             if result is None or trial.flooded:
                 continue
 
-            burst = sum(len(step['burst']) for step in result['steps'])
+            # Glass counts, exactly as `FallResolution.Burst` counts it: both are cells the
+            # well had to be rid of, and a greedy player ranking them differently from the
+            # shipped solver is a mirror that measures a different board.
+            burst = sum(len(step['burst']) + len(step['fired']) for step in result['steps'])
             enriches = board.enriches(colour, x)
             better = burst > best_burst or (burst == best_burst and enriches and not best_enriches)
             if not better:
@@ -355,6 +518,50 @@ def greedy(cells, width, height, deal):
     return MAX_DROPS if board.is_empty else -1
 
 
+def blast(cells, width, height):
+    """What the glass on this board is pointing at, as geometry rather than as play.
+
+    For every lens, the two sideways directions it would fire in if it were full, counted as the
+    ones that land on something. A lens whose beams both leave the well the moment they set off
+    is invariant 5d's decoration: it validates, it is charged, it fires, and the board would play
+    the same without it.
+
+    Out of two rather than out of four, because a lens filled the ordinary way fires sideways.
+    Counting the vertical pair flattered every board in the chapter: a well has gravity, so a
+    lens rests on something and its downward beam always lands, on the cell holding it up, having
+    crossed nothing.
+
+    Returns (most, longest): the best lens's landing count out of two, and the longest single
+    beam in cells that lands. A reading of the authored position rather than a proof - the well
+    collapses under a chain and a lens fires from wherever it has fallen to - so it warns and
+    never refuses.
+    """
+    most, longest = 0, 0
+
+    for at, cell in enumerate(cells):
+        if not is_lens(cell):
+            continue
+
+        lands = 0
+        for dx, dy in SIDEWAYS:
+            x, y = at % width, at // width
+            travelled = 0
+            while True:
+                x += dx
+                y += dy
+                travelled += 1
+                if not (0 <= x < width and 0 <= y < height):
+                    break
+                if not cells[y * width + x]:
+                    continue
+                lands += 1
+                longest = max(longest, travelled)
+                break
+        most = max(most, lands)
+
+    return most, longest
+
+
 def survey(rows, motes, width=None, height=None):
     """Everything an author needs to judge a well by, from the two things they wrote."""
     cells, w, h = parse_rows(rows, width, height)
@@ -366,8 +573,9 @@ def survey(rows, motes, width=None, height=None):
     return dict(width=w, height=h, cells=cells, deal=deal,
                 par=par, ways=ways, nodes=nodes, proved=proved,
                 greedy=greedy(cells, w, h, deal),
+                aim=blast(cells, w, h)[0], reach=blast(cells, w, h)[1],
                 motes=well.motes, headroom=well.headroom,
-                wanted=well.wanted,
+                lenses=well.lenses, glass=well.glass, wanted=well.wanted,
                 channels=_channels(deal))
 
 

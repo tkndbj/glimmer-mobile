@@ -520,7 +520,7 @@ namespace GlimmerGrove
 
         // ------------------------------------------------------------------ the lessons
         /// <summary>
-        /// The three things a well brings that a player arriving from four chapters of tapping
+        /// The four things a well brings that a player arriving from four chapters of tapping
         /// tiles cannot be expected to work out, declared as facts about <em>this</em> board.
         ///
         /// <para>
@@ -549,6 +549,14 @@ namespace GlimmerGrove
             // The verb first. A player who has met neither this nor the meter has to know what
             // a drop does before a number counting them down can mean anything.
             into.Add(Lesson.At(Mechanic.FallCook, _view.RipeAnchor));
+
+            // Then the one thing on the board that is not a mote. Conditional on the board
+            // actually standing one, which every well of the first chapter does not — and a
+            // lesson spent over a board with no glass on it is one that can never be spent
+            // again. Second rather than last because it is about what is *there*, where the two
+            // below are about meters and fail lines.
+            if (run.Board.Lenses > 0)
+                into.Add(Lesson.At(Mechanic.FallLens, _view.LensAnchor));
 
             if (run.Supply.Bounded)
                 into.Add(Lesson.At(Mechanic.FallSupply, ReadoutAt(SupplyReadout)));

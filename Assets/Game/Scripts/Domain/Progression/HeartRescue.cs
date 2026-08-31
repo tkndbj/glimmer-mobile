@@ -53,6 +53,33 @@ namespace GlimmerGrove.Progression
     }
 
     /// <summary>
+    /// Which panel an offer was made on.
+    ///
+    /// <para>
+    /// <b>The one field that keeps two funnels apart</b>, and it exists for the reason
+    /// <c>choice</c> beside it does: the same offer is now drawn in two places that a player
+    /// arrives at in opposite frames of mind, and a take-up rate averaged over both answers no
+    /// question anybody would ask. A defeat has already happened and the board is gone; a
+    /// refused restart is a board still standing that the player was about to throw away. If
+    /// those two convert at the same rate that is a finding, and it is one nothing could report
+    /// while both wrote the same row.
+    /// </para>
+    /// <para>
+    /// It labels an <em>event</em> and never reaches the price: <see cref="HeartRescue.Offer"/>
+    /// takes no such parameter, so the two panels cannot come to sell different things. A
+    /// per-panel price would be the haggling invariant 23a refuses.
+    /// </para>
+    /// </summary>
+    public enum HeartRescueWhere
+    {
+        /// <summary>The defeat panel, after a run was lost and there was nothing left to spend.</summary>
+        Defeat,
+
+        /// <summary>The restart gate, over a board the player is still standing on.</summary>
+        Restart,
+    }
+
+    /// <summary>
     /// Whether a player who has just run out of hearts can buy their way back to the board,
     /// at what price, and the debit that does it.
     ///
@@ -191,8 +218,13 @@ namespace GlimmerGrove.Progression
         /// Returns false without charging anything when it cannot be met, so a caller has
         /// exactly one thing to test before letting somebody back onto the board.
         /// </para>
+        /// <para>
+        /// <paramref name="where"/> reaches the event and nothing else. It has to be passed
+        /// rather than inferred: the debit, the grant and the sync are identical on both panels,
+        /// and the only thing that differs is which funnel the row belongs to.
+        /// </para>
         /// </summary>
-        public static bool TryBuy(HeartRescueOffer offer, LevelId level)
+        public static bool TryBuy(HeartRescueOffer offer, LevelId level, HeartRescueWhere where)
         {
             if (!offer.Exists) return false;
 
@@ -202,7 +234,7 @@ namespace GlimmerGrove.Progression
 
             Wallet.GrantHearts(offer.Hearts);
 
-            LevelAnalytics.TrackHeartRescueBought(level, offer);
+            LevelAnalytics.TrackHeartRescueBought(level, offer, where);
 
             // The debit is owed to the server. Requesting rather than syncing outright is the
             // debounce doing its job, exactly as a gem-priced good does it.

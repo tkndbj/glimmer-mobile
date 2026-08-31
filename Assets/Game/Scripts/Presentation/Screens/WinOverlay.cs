@@ -1440,35 +1440,49 @@ namespace GlimmerGrove
             bool offerAccount = FinishedAChapter(index)
                                 && AccountPrompts.ShouldOffer(AccountPromptTrigger.Chapter);
 
+            // The tap, written out rather than nested three lambdas deep: it now asks a
+            // question before it agrees to get out of the way.
+            void OnNext()
+            {
+                // The heart gate, asked while this panel is still standing. PlayRoute would
+                // refuse the run either way, but refusing it after the victory panel has closed
+                // leaves the player on a solved board with a modal over it and nothing behind —
+                // where staying up keeps their replay and their map key one tap away. Only
+                // "next" needs it: "glades" navigates, and a replay of the glade they have just
+                // cleared is free for ever (HeartStake's replay clause).
+                if (!last && !PlayRoute.CanOpen(nextId))
+                {
+                    Flow.Modal<OutOfHeartsOverlay>();
+                    return;
+                }
+
+                Close(() =>
+                {
+                    // What the tap meant, whether or not the nudge borrows it first. Handed to
+                    // the panel rather than dropped: a nudge that eats a Next is a button that
+                    // did nothing, which is how a player learns to distrust the button rather
+                    // than the panel.
+                    void Onward()
+                    {
+                        if (last) Flow.Go<LevelsScreen>();
+                        else PlayRoute.Open(nextId);
+                    }
+
+                    // Asked again rather than trusting the flag measured when the row was laid
+                    // out: a sync can link this device while the panel is up, and Offer is the
+                    // only thing that spends the budget, so the two can never disagree.
+                    if (offerAccount
+                        && AccountPrompts.Offer(AccountPromptTrigger.Chapter, Onward))
+                        return;
+
+                    Onward();
+                });
+            }
+
             var nextButton = UIKit.TextButton("Next", Panel, "btn_green",
                                               Loc.Get(last ? "ui.win.glades" : "ui.win.next"), 50,
                                               new Vector2(520f, 152f), new Vector2(.5f, 0f),
-                                              new Vector2(0f, ButtonY),
-                                              () => Close(() =>
-                                              {
-                                                  // What the tap meant, whether or not the nudge
-                                                  // borrows it first. Handed to the panel rather
-                                                  // than dropped: a nudge that eats a Next is a
-                                                  // button that did nothing, which is how a
-                                                  // player learns to distrust the button rather
-                                                  // than the panel.
-                                                  void Onward()
-                                                  {
-                                                      if (last) Flow.Go<LevelsScreen>();
-                                                      else PlayRoute.Open(nextId);
-                                                  }
-
-                                                  // Asked again rather than trusting the flag
-                                                  // measured when the row was laid out: a sync
-                                                  // can link this device while the panel is up,
-                                                  // and Offer is the only thing that spends the
-                                                  // budget, so the two can never disagree.
-                                                  if (offerAccount
-                                                      && AccountPrompts.Offer(AccountPromptTrigger.Chapter, Onward))
-                                                      return;
-
-                                                  Onward();
-                                              }));
+                                              new Vector2(0f, ButtonY), OnNext);
             UIKit.Halo(nextButton.transform, Pal.Mint, 620f, .28f);
 
             var replayId = Run.Level;

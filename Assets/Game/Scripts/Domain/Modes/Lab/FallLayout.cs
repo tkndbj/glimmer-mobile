@@ -202,6 +202,24 @@ namespace GlimmerGrove.Modes
         }
 
         /// <summary>
+        /// Lenses standing in it, which is the second chapter's dial and is nought on all of the
+        /// first chapter's wells.
+        ///
+        /// Counted separately from <see cref="Motes"/> rather than instead of it: glass occupies
+        /// a cell, falls, blocks a column and has to be got rid of like anything else, so it is
+        /// a mote for every purpose except being made of light.
+        /// </summary>
+        public int Lenses
+        {
+            get
+            {
+                int n = 0;
+                for (int i = 0; i < _fill.Length; i++) if (FallCell.IsLens(_fill[i])) n++;
+                return n;
+            }
+        }
+
+        /// <summary>
         /// Careless drops the tallest column can still take before the well floods.
         ///
         /// <para>
@@ -240,18 +258,15 @@ namespace GlimmerGrove.Modes
             get
             {
                 int mask = Energy.None;
-                for (int i = 0; i < _fill.Length; i++)
-                {
-                    int mote = _fill[i];
-                    if (mote != Energy.None) mask |= Energy.All & ~mote;
-                }
+                for (int i = 0; i < _fill.Length; i++) mask |= FallCell.Wants(_fill[i]);
                 return mask;
             }
         }
 
         /// <summary>
         /// Reads an authored fill: one row per line, one letter per column, a full stop for
-        /// empty ground. Spaces are ignored, so a row may be written spaced out for reading.
+        /// empty ground and <c>O</c> for a lens. Spaces are ignored, so a row may be written
+        /// spaced out for reading.
         /// </summary>
         public static bool TryReadRows(string[] rows, int width, int height,
                                        out int[] fill, out string error)
@@ -290,29 +305,38 @@ namespace GlimmerGrove.Modes
                         return false;
                     }
 
-                    if (c == '.' || c == '-')
-                    {
-                        cells[y * width + x] = Energy.None;
-                    }
-                    else if (Energy.TryParse(c, out int mask) && mask != Energy.None)
+                    if (FallCell.TryParse(c, out int cell))
                     {
                         // White is refused rather than burst at setup: a board that detonates
                         // before anybody has touched it is a board whose author meant something
                         // else, and reading it as an opening cascade would hide the mistake
                         // behind a very pretty animation.
-                        if (mask == Energy.All)
+                        if (cell == Energy.All)
                         {
                             error = "row " + y + " column " + x + " is already white, so the " +
                                     "well would burst before the player had touched it";
                             return false;
                         }
 
-                        cells[y * width + x] = mask;
+                        // The same refusal for glass, and for the same reason: a lens holding all
+                        // three fires the moment the board is read, so a board authored with one
+                        // goes off before anybody has touched it. `w` is refused exactly as `W`
+                        // is - the charge is authorable up to two of three and no further.
+                        if (cell == FallCell.Full)
+                        {
+                            error = "row " + y + " column " + x + " is glass already full, so it " +
+                                    "would fire before the player had touched it";
+                            return false;
+                        }
+
+                        cells[y * width + x] = cell;
                     }
                     else
                     {
                         error = "'" + c + "' at row " + y + " column " + x + " is not a mote; " +
-                                "a well is written in R, G, B, Y, M, C and '.'";
+                                "a well is written in R, G, B, Y, M and C for light, " +
+                                "the same letters in lower case for glass already that full, " +
+                                FallCell.LensLetter + " for empty glass, and '.' for bare ground";
                         return false;
                     }
 

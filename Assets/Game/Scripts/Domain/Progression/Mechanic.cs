@@ -178,6 +178,32 @@ namespace GlimmerGrove.Progression
         public static readonly Mechanic FallBrim = new Mechanic("fall_brim");
 
         /// <summary>
+        /// The lens: a bead of glass that fills with light and then fires.
+        ///
+        /// <para>
+        /// <b>The board shows the filling and cannot show the rule behind it.</b> Three pips on
+        /// the glass say what it holds and what it still wants, and the shot itself is the
+        /// loudest thing in the mode — so once a player has seen one go off they understand it
+        /// completely. What no board can say is the part that has to be known <em>before</em>
+        /// the first one: that a lens takes light from a burst beside it rather than from a
+        /// drop. Every other cell here is filled by dropping on it, so the natural thing to do
+        /// with a half-charged lens is to drop the colour it wants straight onto it, and that
+        /// costs a mote, costs a row of headroom, and does nothing at all.
+        /// </para>
+        /// <para>
+        /// So it is two sentences and a ring, and only what the board genuinely cannot say: that
+        /// glass is charged by light that has already travelled, and that a full one fires along
+        /// every axis. How far a shot gets, what stops it, and which colour is still missing the
+        /// board shows perfectly well.
+        /// </para>
+        /// <para>
+        /// Only on a well that stands one. The Deep Well's ten do not, and a lesson shown over a
+        /// board with no glass on it is one that can never be shown again.
+        /// </para>
+        /// </summary>
+        public static readonly Mechanic FallLens = new Mechanic("fall_lens");
+
+        /// <summary>
         /// Groovekeeper's verb, and the inversion at the heart of it: a tile is laid beside the
         /// grove, and a tile whose own colour and its neighbours' between them carry all three
         /// bursts into bloom.
@@ -404,7 +430,7 @@ namespace GlimmerGrove.Progression
         {
             FragileConduit, MoveBudget, RootedTile, ColourMixing, Crossing, Briar,
             BoundConduit, BudChain, BudCocoon, BudSatchel,
-            FallCook, FallSupply, FallBrim, KeeperBloom, KeeperBasket, KeeperStone,
+            FallCook, FallSupply, FallBrim, FallLens, KeeperBloom, KeeperBasket, KeeperStone,
             KeeperCompost, KeeperHeartbed, KeeperPrism, ModeSwitch, LuckySpin, Grove,
             GroveShop,
         };

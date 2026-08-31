@@ -290,7 +290,7 @@ namespace GlimmerGrove
         ///
         /// <para>
         /// A collaborator rather than more of this panel, which had already reached five
-        /// responsibilities — <see cref="DefeatRescueFlow"/> says why, and <c>RunContinueFlow</c>
+        /// responsibilities — <see cref="HeartRescueFlow"/> says why, and <c>RunContinueFlow</c>
         /// is the precedent. What is left here is what only a panel can answer: whether there is
         /// still a heart to spend, where the button goes, and what "back onto the board" means.
         /// </para>
@@ -300,7 +300,7 @@ namespace GlimmerGrove
         /// rather than per <em>paint</em> has to outlive <c>Build</c>.
         /// </para>
         /// </summary>
-        DefeatRescueFlow _rescue;
+        HeartRescueFlow _rescue;
 
         /// <summary>
         /// Keeps the offer button's countdown live while the panel is open.
@@ -365,7 +365,15 @@ namespace GlimmerGrove
         {
             // A free opening can always be tried again, whatever the wallet says. That is the
             // whole point of it, and it is why this is not simply a heart count.
-            bool canRetry = WasFree || HeartsLeft > 0;
+            //
+            // The one predicate every door into a run asks (HeartStake.CanBegin), rather than a
+            // fourth spelling of it — this panel is one of five, and the reason the others were
+            // gathered onto it is that three of them had quietly stopped asking at all. Read
+            // live rather than off HeartsLeft, which is the snapshot the defeat left behind: a
+            // rebuild after a rescue or a watched video recomputes this, and a stale nought
+            // would draw a panel with no way back onto a board the player had just paid to
+            // return to.
+            bool canRetry = HeartStake.CanBegin(Price, Profile.Hearts);
 
             // Neither offer belongs on the branch that has a retry button. A player who can
             // still play does not need to be sold a way to play, and putting either there
@@ -378,8 +386,8 @@ namespace GlimmerGrove
 
             // Once per defeat, never per paint: it decides the offer, counts the impression and
             // subscribes to the balance, none of which a redraw may do again.
-            _rescue ??= new DefeatRescueFlow(this, Run.Level, HeartsLeft, canRetry,
-                                             Rebuild, BackToTheBoard);
+            _rescue ??= new HeartRescueFlow(this, Run.Level, HeartsLeft, canRetry,
+                                            HeartRescueWhere.Defeat, Rebuild, BackToTheBoard);
 
             // Derived rather than typed, so the five shapes this panel can take cannot come to
             // disagree with the buttons drawn into them. See DefeatPanel — the two constants
@@ -689,7 +697,7 @@ namespace GlimmerGrove
             // Derived rather than typed, so the panel cannot come to disagree with the buttons
             // drawn into it. See HeartGatePanel — the two constants this replaced were 900 and
             // 780, written when there were two ways out rather than three.
-            var stack = HeartGatePanel.Of(_offering);
+            var stack = HeartGatePanel.Of(_offering, buying: true);
 
             MakePanel(new Vector2(HeartGatePanel.Width, stack.Height), Loc.Get("ui.hearts.empty"));
 
@@ -730,7 +738,7 @@ namespace GlimmerGrove
             // rather than a corner of it.
             var shop = UIKit.TextButton("Shop", Panel, "btn_violet", Loc.Get("ui.hearts.to_shop"), 44,
                                         new Vector2(560f, HeartGatePanel.ActionHeight),
-                                        new Vector2(.5f, 1f), new Vector2(0f, -stack.Shop),
+                                        new Vector2(.5f, 1f), new Vector2(0f, -stack.Paid),
                                         () => Close(() => Flow.Go<ShopScreen>()), "ic_gem");
             UIKit.OneLine(shop, 24);
 

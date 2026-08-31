@@ -22,6 +22,10 @@
       "text": "The Deep Well"
     },
     {
+      "key": "chapter.f02_glasswater.name",
+      "text": "Glasswater"
+    },
+    {
       "key": "chapter.k01_grovekeeper.name",
       "text": "The Clearing"
     },
@@ -428,6 +432,86 @@
     {
       "key": "level.f01_last_ember.tagline",
       "text": "Count what is still to come."
+    },
+    {
+      "key": "level.f02_the_glass.name",
+      "text": "The Glass"
+    },
+    {
+      "key": "level.f02_the_glass.tagline",
+      "text": "Fill it, and it fires."
+    },
+    {
+      "key": "level.f02_the_glasswater.name",
+      "text": "Glasswater"
+    },
+    {
+      "key": "level.f02_the_glasswater.tagline",
+      "text": "Every mote, and every pane."
+    },
+    {
+      "key": "level.f02_the_crossing.name",
+      "text": "The Crossing"
+    },
+    {
+      "key": "level.f02_the_crossing.tagline",
+      "text": "Three colours, three drops, one shot."
+    },
+    {
+      "key": "level.f02_two_panes.name",
+      "text": "Two Panes"
+    },
+    {
+      "key": "level.f02_two_panes.tagline",
+      "text": "One lens can fill another."
+    },
+    {
+      "key": "level.f02_lantern_row.name",
+      "text": "Lantern Row"
+    },
+    {
+      "key": "level.f02_lantern_row.tagline",
+      "text": "A burst feeds it free. A drop costs you."
+    },
+    {
+      "key": "level.f02_low_tide.name",
+      "text": "Low Tide"
+    },
+    {
+      "key": "level.f02_low_tide.tagline",
+      "text": "Aim it while the valley is open."
+    },
+    {
+      "key": "level.f02_stillwater.name",
+      "text": "Stillwater"
+    },
+    {
+      "key": "level.f02_stillwater.tagline",
+      "text": "A colour it already holds is a wall."
+    },
+    {
+      "key": "level.f02_slack_water.name",
+      "text": "Slack Water"
+    },
+    {
+      "key": "level.f02_slack_water.tagline",
+      "text": "One pane starts empty. Plan for it."
+    },
+    {
+      "key": "level.f02_far_shore.name",
+      "text": "Far Shore"
+    },
+    {
+      "key": "level.f02_far_shore.tagline",
+      "text": "Where no wash could ever reach."
+    },
+    {
+      "key": "level.f02_underglass.name",
+      "text": "Underglass"
+    },
+    {
+      "key": "level.f02_underglass.tagline",
+      "text": "The line at the top has not moved."
     },
     {
       "key": "level.k01_first_grove.name",
@@ -1542,6 +1626,10 @@
       "text": "THE WELL BRIMMED OVER"
     },
     {
+      "key": "ui.defeat.flood_reason",
+      "text": "A mote came to rest above the line. A colour a stack already holds has nowhere to go but upward."
+    },
+    {
       "key": "ui.defeat.get_gems",
       "text": "Get gems"
     },
@@ -1552,6 +1640,10 @@
     {
       "key": "ui.defeat.motes_title",
       "text": "THE LIGHT RAN OUT"
+    },
+    {
+      "key": "ui.defeat.motes_reason",
+      "text": "Nothing left to drop, and the well is not empty. Spend each mote where it finishes something."
     },
     {
       "key": "ui.defeat.near_one",
@@ -1990,6 +2082,10 @@
       "text": "Your hearts are full."
     },
     {
+      "key": "ui.hearts.keep_playing",
+      "text": "KEEP PLAYING"
+    },
+    {
       "key": "ui.hearts.next",
       "text": "Next heart in {0}"
     },
@@ -2000,6 +2096,18 @@
     {
       "key": "ui.hearts.regen_fast",
       "text": "Fast hearts: one every {0} hours, for {1} more."
+    },
+    {
+      "key": "ui.hearts.restart_last",
+      "text": "Starting over spends the heart for this run, and you would have none left for the new one."
+    },
+    {
+      "key": "ui.hearts.restart_none",
+      "text": "Starting over spends a heart, and you have none left."
+    },
+    {
+      "key": "ui.hearts.restart_title",
+      "text": "Start over?"
     },
     {
       "key": "ui.hearts.stack",
@@ -3812,6 +3920,14 @@
     {
       "key": "ui.tip.fall_brim.body",
       "text": "A mote that comes to rest above the line ends the run.\n\nA colour the top of a stack already holds is what raises it - the ring turns red when it would."
+    },
+    {
+      "key": "ui.tip.fall_lens.title",
+      "text": "FILL THE GLASS"
+    },
+    {
+      "key": "ui.tip.fall_lens.body",
+      "text": "A lens fills one colour at a time - free from any burst beside it, or a drop at a time by hand.\n\nFill all three and it fires white to left and right, popping whatever each beam lands on.\n\nLight one lens with another and it fires every way - up and down as well."
     },
     {
       "key": "ui.tip.grove.body",

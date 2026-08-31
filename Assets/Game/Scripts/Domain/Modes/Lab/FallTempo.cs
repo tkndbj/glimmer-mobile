@@ -94,6 +94,50 @@ namespace GlimmerGrove.Modes
         public static float Burst(int waves) => Wave(waves) * BurstShare;
         public static float Settle(int waves) => Wave(waves) * SettleShare;
 
+        // ------------------------------------------------------------------ the shot
+        /// <summary>
+        /// The beat a wave is given when glass fires in it, and the most a whole cascade may
+        /// spend on shots however many go off.
+        ///
+        /// <para>
+        /// <b>The one thing in this mode allowed outside <see cref="Ceiling"/>, and it earns
+        /// it.</b> The cascade cap exists because the board is latched while a chain plays and a
+        /// player waiting to act is being made to wait. A shot is the opposite: it costs three
+        /// drops of deliberate charging to set up, it is the loudest thing the mode does, and it
+        /// is the only moment here worth stopping for. It is still bounded, and
+        /// <see cref="ShotCeiling"/> is the whole of what a cascade may spend on them — a well
+        /// where four lenses go off does not take four times as long, it takes the same beat
+        /// shared four ways, exactly as the waves themselves do.
+        /// </para>
+        /// </summary>
+        public const float ShotBeat = .62f, ShotCeiling = 1.24f;
+
+        /// <summary>
+        /// How a shot is split between gathering and throwing.
+        ///
+        /// They sum to one, so a shot finishes exactly as its own beat does. The gather is the
+        /// smaller half deliberately: an impact needs a wind-up, not a wait.
+        /// </summary>
+        public const float GatherShare = .34f, ThrowShare = .66f;
+
+        /// <summary>How long each of a cascade's firing waves gets.</summary>
+        public static float Shot(int firingWaves)
+        {
+            if (firingWaves <= 0) return 0f;
+
+            float all = firingWaves * ShotBeat;
+            if (all > ShotCeiling) all = ShotCeiling;
+
+            return all / firingWaves;
+        }
+
+        /// <summary>The glass drawing in and the well dimming, before anything is thrown.</summary>
+        public static float Gather(int firingWaves) => Shot(firingWaves) * GatherShare;
+
+        /// <summary>The beams crossing the well: two from a lens that filled, four from one
+        /// another lens struck.</summary>
+        public static float Throw(int firingWaves) => Shot(firingWaves) * ThrowShare;
+
         // ------------------------------------------------------------------ the count
         /// <summary>
         /// How briskly the running chain count pops in. Always quick, and never longer than the

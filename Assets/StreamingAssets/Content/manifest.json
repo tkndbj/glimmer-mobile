@@ -138,6 +138,26 @@
         "b01_everbloom",
         "b01_thicketheart"
       ]
+    },
+    {
+      "id": "f02_glasswater",
+      "version": 3,
+      "order": 80,
+      "disabled": false,
+      "minAppVersion": 0,
+      "mode": "fall",
+      "levels": [
+        "f02_the_glass",
+        "f02_stillwater",
+        "f02_low_tide",
+        "f02_the_crossing",
+        "f02_two_panes",
+        "f02_far_shore",
+        "f02_lantern_row",
+        "f02_slack_water",
+        "f02_underglass",
+        "f02_the_glasswater"
+      ]
     }
   ],
   "events": [

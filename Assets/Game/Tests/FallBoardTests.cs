@@ -50,8 +50,10 @@ namespace GlimmerGrove.Tests
                 var row = new char[board.Width];
                 for (int x = 0; x < board.Width; x++)
                 {
-                    int mote = board.At(x, y);
-                    row[x] = mote == Energy.None ? '.' : Energy.Letter(mote);
+                    // Through FallCell rather than Energy: a lens is not a colour, and
+                    // Energy.Letter answers 'A' for one, which reads as a cell holding nothing
+                    // in particular rather than as the one cell in the well that is glass.
+                    row[x] = FallCell.Letter(board.At(x, y));
                 }
                 rows[y] = new string(row);
             }

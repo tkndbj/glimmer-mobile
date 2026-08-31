@@ -349,7 +349,8 @@ def check_fall(lid, chapter_id, level, block):
     empty = dict(id=lid, chapter=chapter_id, w=0, h=0, par=0, budget=0,
                  gold=0, silver=0, lamps=0, sources=0, fragile=0, bound=0,
                  crossings=0, briars=0, mode='fall',
-                 ways=0, greedy=-1, nodes=0, fall_motes=0, headroom=0, deal='')
+                 ways=0, greedy=-1, nodes=0, fall_motes=0, headroom=0, deal='',
+                 lenses=0, reach=0, aim=0, charged=0)
 
     w, h = block.get('width', 0), block.get('height', 0)
     if not (4 <= w <= 8):
@@ -413,6 +414,14 @@ def check_fall(lid, chapter_id, level, block):
         errors.append("%s: this procession never deals %s, so a mote that ends up wanting it "
                       "could never be finished - and a drop onto bare ground makes one. A deal "
                       "has to carry all three channels" % (lid, fall.LETTER_OF[absent]))
+
+    # Glass is only ever cleared by a burst beside it, so a well of nothing but lenses can
+    # never lose one. The search proves it unwinnable but only after spending the whole budget,
+    # and in words about a search rather than about the board.
+    if well.lenses and well.lenses == well.motes:
+        errors.append("%s: every one of this well's %d cells is glass, and glass is only ever "
+                      "cleared by a burst beside it - with no mote to cook there can never be a "
+                      "burst" % (lid, well.lenses))
 
     par, ways, nodes, proved = fall.search(cells, ww, hh, deal)
 
@@ -482,11 +491,23 @@ def check_fall(lid, chapter_id, level, block):
         warnings.append("%s: the fill reaches the row below the brim, so the very first "
                         "careless drop on the tallest column ends the run" % lid)
 
+    # Invariant 5d for the lens. Glass exists to make light travel; glass whose every beam lands
+    # on the cell next door has done the neighbour wash's job with an extra object on the board.
+    # A reading of the opening position rather than a proof, so it is said rather than refused.
+    aim, reach = fall.blast(cells, ww, hh)
+    if well.lenses and aim < 1:
+        warnings.append("%s: this well stands %d lens(es) and not one of them is pointing "
+                        "sideways at anything - both shots would leave the well the moment it "
+                        "set off, so three drops of charging would buy nothing and the board "
+                        "would play the same without the glass" % (lid, well.lenses))
+
     return dict(id=lid, chapter=chapter_id, w=ww, h=hh, par=par, budget=budget,
                 gold=gold, silver=silver, lamps=0, sources=0, fragile=0, bound=0,
                 crossings=0, briars=0, mode='fall',
                 ways=ways, greedy=greedy, nodes=nodes,
-                fall_motes=well.motes, headroom=well.headroom, deal=block.get('motes'))
+                fall_motes=well.motes, headroom=well.headroom, deal=block.get('motes'),
+                lenses=well.lenses, reach=reach, aim=aim,
+                charged=sum(1 for g in well.glass if g))
 
 
 #: Mirrors `KeeperValidator`. Lower than Lightfall's pair because a position here costs more to
@@ -1901,7 +1922,9 @@ def run_fall_vectors():
                                  ("par", par, case["par"]),
                                  ("greedy", fall.greedy(cells, w, h, deal), case["greedy"]),
                                  ("headroom", well.headroom, case["headroom"]),
-                                 ("standing", well.motes, case["standing"])):
+                                 ("standing", well.motes, case["standing"]),
+                                 ("lenses", well.lenses, case["lenses"]),
+                                 ("charged", sum(1 for g in well.glass if g), case["charged"])):
             if got != want:
                 bad.append("%s: %s is %r, vectors say %r" % (name, label, got, want))
 
@@ -1910,7 +1933,8 @@ def run_fall_vectors():
 
     # A vector set that has quietly lost its teeth is worse than none: it passes, it is printed
     # beside the word "ok", and nothing says the rule stopped being checked.
-    covers = dict(chain=False, only_one=False, unsolvable=False, brim=False)
+    covers = dict(chain=False, only_one=False, unsolvable=False, brim=False,
+                  glass=False, glass_charged=False, glass_empty=False)
     for case in cases:
         if case["par"] == 1 and case["standing"] >= 4:
             covers["chain"] = True
@@ -1920,6 +1944,15 @@ def run_fall_vectors():
             covers["unsolvable"] = True
         if case["headroom"] == 0:
             covers["brim"] = True
+        if case["lenses"] > 0:
+            covers["glass"] = True
+        # Glass that starts part full is the chapter's difficulty dial, and glass that starts
+        # empty is what the dial is measured against. Losing either would leave the set unable
+        # to notice the charge going away entirely.
+        if case["charged"] > 0:
+            covers["glass_charged"] = True
+        if case["lenses"] > case["charged"]:
+            covers["glass_empty"] = True
 
     for what, held in covers.items():
         if not held:
@@ -2348,7 +2381,12 @@ def main():
             greedy = c['greedy'] if c.get('greedy', -1) >= 0 else '-'
 
             if c['mode'] == 'fall':
-                held = f"{c['fall_motes']} mote(s), {c['headroom']} headroom, deals {c['deal']}"
+                # Out of two: a lens filled the ordinary way fires sideways, and only a lens
+                # another lens strikes fires all four (see `fall.blast`).
+                glass = (f", {c['lenses']} lens(es) ({c['charged']} part-charged) aiming at "
+                         f"{c['aim']} of 2, reaching {c['reach']}") if c.get('lenses') else ""
+                held = (f"{c['fall_motes']} mote(s), {c['headroom']} headroom{glass}, "
+                        f"deals {c['deal']}")
             elif c['mode'] == 'keeper':
                 held = f"{c['beds']} bed(s), {c['hearts']} heartbed(s), deals {c['deal']}"
             elif c['mode'] == 'bud':

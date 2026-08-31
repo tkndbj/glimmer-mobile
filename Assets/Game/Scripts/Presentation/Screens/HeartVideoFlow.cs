@@ -11,7 +11,7 @@ namespace GlimmerGrove
     ///
     /// <para>
     /// <b>A collaborator rather than more of the panel that draws it</b>, for
-    /// <see cref="DefeatRescueFlow"/>'s reason and directly beside it — that one sells hearts
+    /// <see cref="HeartRescueFlow"/>'s reason and directly beside it — that one sells hearts
     /// for gems, this one sells them for thirty seconds, and a defeat panel that owned both
     /// would be back to the six responsibilities the rescue was lifted out of. The split is the
     /// same: this owns what is being offered and what happens when it pays, and the panel owns

@@ -125,6 +125,70 @@ namespace GlimmerGrove.Progression
             => PriceOf(index, level) != HeartPrice.Charged;
 
         /// <summary>
+        /// Whether a run priced like this may <em>begin</em> at all, with this many hearts in
+        /// hand.
+        ///
+        /// <para>
+        /// <b>The gate, and the reason it has to exist as a predicate rather than as a line in
+        /// one screen.</b> A heart is charged when a run ends badly, and the gate is asked when
+        /// a run begins — two different moments, joined by one rule: a run may only start if the
+        /// player could pay for it if it went wrong. That rule was written into the map's node
+        /// tap and nowhere else, and the map is not the only door. The victory panel's
+        /// <b>next</b>, an event's tile and the restart key are three more, and all three opened
+        /// a charged run on an empty bar. The restart was the expensive one, because at nought
+        /// hearts the charge for the run it abandons silently takes nothing
+        /// (<c>Wallet.TrySpendHeart</c> reports "already out" rather than refusing) — so the
+        /// board came back, free, for ever. The one thing in this game that can stop somebody
+        /// playing could be walked straight past by tapping restart.
+        /// </para>
+        /// <para>
+        /// <c>hearts &gt; 0</c> rather than <c>hearts &gt;= DefeatCost</c>, deliberately: that
+        /// is exactly <c>Hearts.CanPlay</c>, which is what the door has always asked and what
+        /// <c>Wallet.TrySpendHeart</c> itself tests before spending. A published cost above one
+        /// is a decision about how much a defeat takes, not about who is allowed to sit down,
+        /// and reading it as an entry requirement here would quietly lock a player out of the
+        /// game with a heart in hand.
+        /// </para>
+        /// </summary>
+        public static bool CanBegin(HeartPrice price, int hearts)
+            => price != HeartPrice.Charged || hearts > 0;
+
+        /// <summary>The same question of a level, for the doors that hold one rather than a price.</summary>
+        public static bool CanBegin(CatalogIndex index, LevelId level, int hearts)
+            => CanBegin(PriceOf(index, level), hearts);
+
+        /// <summary>
+        /// Whether a run may be <em>restarted</em> — which is <see cref="CanBegin"/> asked after
+        /// the run being walked away from has been paid for.
+        ///
+        /// <para>
+        /// <b>A restart abandons one run and begins another</b>, and this project prices it that
+        /// way on purpose (<c>RunScreen.RestartLevel</c>). So it is two answers with a charge
+        /// between them, and asking only the first is what let a player with one heart restart
+        /// into a board they could not afford — the abandonment took their last heart and the
+        /// fresh run was never paid for at all. Refusing there is not a stricter rule than the
+        /// map's, it is the <em>same</em> rule: leaving to the map and walking back in costs
+        /// exactly the same heart and is refused at exactly the same point.
+        /// </para>
+        /// <para>
+        /// <paramref name="owed"/> is whether the outgoing run has been committed. An
+        /// uncommitted one is charged nothing — a player who taps restart before touching the
+        /// board is putting back a run that never began — so the question collapses to
+        /// <see cref="CanBegin"/>, which their entry through the door has already answered.
+        /// </para>
+        /// <para>
+        /// The subtraction uses <c>HeartRules.DefeatCost</c> because that is what the
+        /// abandonment really spends (<c>RunScreen.Forfeit</c> calls the same table through
+        /// <c>Wallet.TrySpendHeart</c>), and it may go negative without harm: nothing below one
+        /// is allowed to begin a charged run anyway.
+        /// </para>
+        /// </summary>
+        public static bool CanRestart(HeartPrice price, int hearts, bool owed)
+            => CanBegin(price, owed && price == HeartPrice.Charged
+                                   ? hearts - HeartRules.DefeatCost
+                                   : hearts);
+
+        /// <summary>
         /// Whether this glade is one of its mode's free openings — the first clause alone, with
         /// no reference to anything the player has done.
         /// </summary>

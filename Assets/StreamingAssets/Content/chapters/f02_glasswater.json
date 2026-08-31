@@ -1,0 +1,212 @@
+{
+  "schemaVersion": 2,
+  "id": "f02_glasswater",
+  "accent": "#7FD8F0",
+  "slate": "#111E2A",
+  "backdrop": "play_8",
+  "mapStrips": [
+    "f02_strip0",
+    "f02_strip1",
+    "f02_strip2",
+    "f02_strip3",
+    "f02_strip4",
+    "f02_strip5"
+  ],
+  "levels": [
+    {
+      "id": "f02_the_glass",
+      "mapX": 0.3,
+      "mapY": 0.055,
+      "fall": {
+        "width": 5,
+        "height": 6,
+        "rows": [
+          ".....",
+          ".....",
+          ".....",
+          ".....",
+          "M...Y",
+          "My..Y"
+        ],
+        "motes": "RGB"
+      }
+    },
+    {
+      "id": "f02_stillwater",
+      "mapX": 0.72,
+      "mapY": 0.14,
+      "fall": {
+        "width": 6,
+        "height": 6,
+        "rows": [
+          "......",
+          "......",
+          "......",
+          "C.....",
+          "C....M",
+          "Cm...M"
+        ],
+        "motes": "BRG"
+      }
+    },
+    {
+      "id": "f02_low_tide",
+      "mapX": 0.26,
+      "mapY": 0.225,
+      "fall": {
+        "width": 5,
+        "height": 7,
+        "rows": [
+          ".....",
+          ".....",
+          ".....",
+          "Y....",
+          "Y...C",
+          "Y...C",
+          "Yc..C"
+        ],
+        "motes": "GBR"
+      }
+    },
+    {
+      "id": "f02_the_crossing",
+      "mapX": 0.7,
+      "mapY": 0.31,
+      "fall": {
+        "width": 6,
+        "height": 7,
+        "rows": [
+          "......",
+          "......",
+          "......",
+          "Y....C",
+          "Y....C",
+          "Y....C",
+          "Mg..CC"
+        ],
+        "motes": "RGB"
+      }
+    },
+    {
+      "id": "f02_two_panes",
+      "mapX": 0.28,
+      "mapY": 0.395,
+      "fall": {
+        "width": 6,
+        "height": 7,
+        "rows": [
+          "......",
+          "......",
+          "......",
+          "......",
+          "Y....C",
+          "Ry..gC",
+          "MYY.CC"
+        ],
+        "motes": "BGR"
+      }
+    },
+    {
+      "id": "f02_far_shore",
+      "mapX": 0.74,
+      "mapY": 0.48,
+      "fall": {
+        "width": 7,
+        "height": 8,
+        "rows": [
+          ".......",
+          ".......",
+          ".......",
+          "Y......",
+          "Y.....C",
+          "Yg....C",
+          "BM...CC",
+          "MMM.CCC"
+        ],
+        "motes": "BRG"
+      }
+    },
+    {
+      "id": "f02_lantern_row",
+      "mapX": 0.3,
+      "mapY": 0.56,
+      "fall": {
+        "width": 7,
+        "height": 8,
+        "rows": [
+          ".......",
+          ".......",
+          ".......",
+          "M.....Y",
+          "M.....Y",
+          "Mb...yM",
+          "MY...MM",
+          "YYYYMMM"
+        ],
+        "motes": "GBR"
+      }
+    },
+    {
+      "id": "f02_slack_water",
+      "mapX": 0.68,
+      "mapY": 0.645,
+      "fall": {
+        "width": 6,
+        "height": 9,
+        "rows": [
+          "......",
+          "......",
+          "......",
+          "C....M",
+          "CO..gM",
+          "CC..MM",
+          "YCM.MM",
+          "YYMYRM",
+          "YMMGYY"
+        ],
+        "motes": "GRB"
+      }
+    },
+    {
+      "id": "f02_underglass",
+      "mapX": 0.26,
+      "mapY": 0.73,
+      "fall": {
+        "width": 6,
+        "height": 8,
+        "rows": [
+          "......",
+          "......",
+          "CR..CC",
+          "GYg.CC",
+          "CYYYGC",
+          "CCYYYR",
+          "CCRYBM",
+          "CCBMMM"
+        ],
+        "motes": "GRB"
+      }
+    },
+    {
+      "id": "f02_the_glasswater",
+      "mapX": 0.72,
+      "mapY": 0.815,
+      "fall": {
+        "width": 6,
+        "height": 9,
+        "rows": [
+          "......",
+          "......",
+          "......",
+          "CO..yM",
+          "CCg.MM",
+          "CYYYMM",
+          "CYRYYM",
+          "CMMMGG",
+          "BRMCCC"
+        ],
+        "motes": "RBG"
+      }
+    }
+  ]
+}

@@ -115,10 +115,29 @@ namespace GlimmerGrove
         bool _busy, _over, _committed;
         int _hovered = -1, _ghostKey = int.MinValue;
 
-        /// <summary>One mote on screen: the body, the sheen over it and the halo round it.</summary>
+        /// <summary>
+        /// One cell's widget: the body, the sheen over it, the halo round it, and — when the cell
+        /// is glass rather than light — the four-point glint inside it.
+        ///
+        /// <para>
+        /// One pooled widget for both rather than two pools, because a lens is a mote in every
+        /// way that matters to this file: it stands in a cell, it falls when the well collapses,
+        /// it is drawn, and it is given back when it goes. What differs is the sprite, the tint
+        /// and one extra child, and <see cref="Paint"/> switches between them — so gravity, the
+        /// pool and the collapse have no idea the distinction exists.
+        /// </para>
+        /// </summary>
         sealed class MoteView
         {
-            public Image Body, Sheen, Halo;
+            public Image Body, Sheen, Halo, Facet;
+
+            /// <summary>
+            /// The three channel pips a lens wears, or null on a widget that has never drawn
+            /// glass. Built on first use rather than with the widget, because most cells in most
+            /// wells are motes and three objects each would be three hundred nobody looks at.
+            /// </summary>
+            public Image[] Pips;
+
             public RectTransform Rt;
         }
 
@@ -364,7 +383,15 @@ namespace GlimmerGrove
             sheen.raycastTarget = false;
             sheen.transform.SetAsFirstSibling();
 
-            return new MoteView { Body = body, Halo = halo, Sheen = sheen, Rt = (RectTransform)body.transform };
+            // Off until a lens needs it. Built here rather than on demand so a well that turns
+            // out to hold glass does not allocate in the middle of the cascade it holds it for.
+            var facet = UIKit.Img("Facet", body.transform, Art.Glint(96, 4), new Color(1, 1, 1, 0f),
+                                  Vector2.one * _size * 1.02f, new Vector2(.5f, .5f), Vector2.zero);
+            facet.raycastTarget = false;
+            facet.gameObject.SetActive(false);
+
+            return new MoteView { Body = body, Halo = halo, Sheen = sheen, Facet = facet,
+                                  Rt = (RectTransform)body.transform };
         }
 
         /// <summary>
@@ -380,9 +407,40 @@ namespace GlimmerGrove
             if (mote == null) return;
 
             Tween.KillAll(mote.Body);
+
+            // **And everything the transform owns, which is where the gravity bug lived.**
+            // `Slide` puts the collapse on `mote.Rt` (channel "move"), because that is what it
+            // moves; every other gesture here is owned by `mote.Body`. So a widget recycled while
+            // its slide was still running went into the pool with a live tween writing its
+            // position, came back out as the next falling drop or as a cell `Sync` had just
+            // placed, and was dragged to wherever the *old* cell had been - a mote that visibly
+            // refused to fall, or fell to the wrong square, on a board the model had settled
+            // perfectly. It is easy to hit: a slide is dealt a stagger by column, so it finishes
+            // up to a third of a beat after the wave that threw it, and the next wave is already
+            // bursting by then.
+            Tween.KillAll(mote.Rt);
+
+            // Put back as a mote, whatever it was drawing. The falling widget in PlayDrop takes
+            // one straight out of the pool and sets its colour without going through Paint, so a
+            // recycled lens that kept its rim would fall as a hollow ring of the wrong colour.
+            if (mote.Facet)
+            {
+                Tween.KillAll(mote.Facet);
+                mote.Facet.gameObject.SetActive(false);
+                mote.Facet.transform.localRotation = Quaternion.identity;
+                mote.Facet.color = new Color(1, 1, 1, 0f);
+            }
+
+            if (mote.Pips != null)
+                for (int i = 0; i < mote.Pips.Length; i++)
+                    if (mote.Pips[i]) mote.Pips[i].color = new Color(1, 1, 1, 0f);
+
             mote.Rt.gameObject.SetActive(false);
             mote.Rt.localScale = Vector3.one;
+            mote.Rt.localRotation = Quaternion.identity;
+            mote.Body.sprite = Art.Disc(96);
             mote.Body.color = Color.white;
+            mote.Sheen.color = new Color(1, 1, 1, .18f);
             _spare.Push(mote);
         }
 
@@ -412,7 +470,7 @@ namespace GlimmerGrove
                 if (_at[i] == null) _at[i] = Take();
 
                 _at[i].Rt.anchoredPosition = Where(i);
-                Paint(_at[i], colour, Run.Next);
+                Paint(_at[i], colour, Run.Next, i);
             }
 
             PaintBrim();
@@ -436,14 +494,30 @@ namespace GlimmerGrove
         /// could start here; how far the chain then runs is the thinking, and is never shown.
         /// </para>
         /// </summary>
-        static void Paint(MoteView mote, int colour, int next)
+        void Paint(MoteView mote, int cell, int next, int index)
         {
-            mote.Body.color = Pal.EnergyColour(colour);
+            if (FallCell.IsLens(cell)) { PaintGlass(mote, cell, index); return; }
+
+            if (mote.Facet && mote.Facet.gameObject.activeSelf)
+            {
+                Tween.KillAll(mote.Facet);
+                mote.Facet.gameObject.SetActive(false);
+            }
+
+            if (mote.Pips != null)
+                for (int i = 0; i < mote.Pips.Length; i++)
+                    if (mote.Pips[i]) mote.Pips[i].color = new Color(1, 1, 1, 0f);
+
+            Tween.KillChannel(mote.Rt, "tremble");
+
+            mote.Body.sprite = Art.Disc(96);
+            mote.Body.color = Pal.EnergyColour(cell);
+            mote.Sheen.color = new Color(1, 1, 1, .18f);
 
             // A mote the next drop would finish, and only that. Buried ones are ringed too:
             // no drop can land on them, but a chain can reach them, and that is worth seeing.
-            bool ripe = next != Energy.None && colour != Energy.All &&
-                        (colour | next) == Energy.All;
+            bool ripe = next != Energy.None && cell != Energy.All &&
+                        (cell | next) == Energy.All;
 
             mote.Halo.color = ripe ? Pal.A(Pal.EnergyColour(next), .60f) : new Color(1, 1, 1, 0f);
             mote.Halo.gameObject.SetActive(ripe);
@@ -462,7 +536,7 @@ namespace GlimmerGrove
 
             int next = Run.Next;
             for (int i = 0; i < _at.Length; i++)
-                if (_at[i] != null) Paint(_at[i], _shown[i], next);
+                if (_at[i] != null) Paint(_at[i], _shown[i], next, i);
         }
 
         /// <summary>
@@ -556,16 +630,20 @@ namespace GlimmerGrove
             ((RectTransform)_ghostRing.transform).anchoredPosition = at;
 
             bool enriches = Run.Board.Enriches(colour, column);
+            bool charges = Run.Board.Charges(colour, column);
             bool bursts = Run.Board.Bursts(colour, column);
             bool brim = Run.Board.AtBrim(colour, column);
 
-            // Three readings, one glance. Red is the only one that is a warning rather than a
-            // description, so it wins over the other two: a drop that comes to rest on the brim
-            // is very probably the end of the run, and it is the one thing the player must not
-            // do by accident.
-            var ring = brim ? Pal.Rose : enriches ? Pal.Cream : Pal.Amber;
+            // Four readings, one glance. Red is the only one that is a warning rather than a
+            // description, so it wins over the rest: a drop that comes to rest on the brim is
+            // very probably the end of the run, and it is the one thing the player must not do
+            // by accident. Glass is next, because "this fills the lens" is the one outcome a
+            // player has no other way to predict — it is why they can never be stranded, and a
+            // valve nobody can see is a valve nobody uses.
+            var ring = brim ? Pal.Rose : charges ? Pal.Glass : enriches ? Pal.Cream : Pal.Amber;
 
-            _ghost.color = Pal.A(bursts ? Pal.Radiance : tint, bursts ? .55f : enriches ? .34f : .44f);
+            _ghost.color = Pal.A(bursts ? Pal.Radiance : charges ? Pal.Glass : tint,
+                                 bursts ? .55f : charges ? .5f : enriches ? .34f : .44f);
             _ghostRing.color = Pal.A(ring, .9f);
 
             for (int x = 0; x < _stripGlow.Length; x++)
@@ -679,7 +757,7 @@ namespace GlimmerGrove
                 if (host != null)
                 {
                     _shown[index] |= colour;
-                    Paint(host, _shown[index], Run.Next);
+                    Paint(host, _shown[index], Run.Next, index);
                     Tween.Punch(host.Rt, .38f, FallTempo.Enrich);
                     Ripple(to, Pal.EnergyColour(_shown[index]), _size * 2.1f, .42f);
                 }
@@ -698,7 +776,7 @@ namespace GlimmerGrove
                 _at[index] = falling;
                 _shown[index] = colour;
                 falling.Rt.anchoredPosition = to;
-                Paint(falling, colour, Run.Next);
+                Paint(falling, colour, Run.Next, index);
 
                 // A squash, not a punch: this one landed on something rather than lighting it.
                 var landed = falling.Rt;
@@ -757,6 +835,16 @@ namespace GlimmerGrove
             float burst = FallTempo.Burst(waves);
             float settle = FallTempo.Settle(waves);
 
+            // A wave with glass going off in it is given a beat of its own, and the whole cascade
+            // is bounded in how much of that it may spend (FallTempo.ShotCeiling). Counted up
+            // front so four lenses across four waves share one allowance rather than each taking
+            // the full one.
+            int firing = 0;
+            for (int w = 0; w < waves; w++) if (result.Steps[w].Fired.Count > 0) firing++;
+
+            float gather = FallTempo.Gather(firing);
+            float throwing = FallTempo.Throw(firing);
+
             for (int w = 0; w < waves; w++)
             {
                 var step = result.Steps[w];
@@ -800,6 +888,34 @@ namespace GlimmerGrove
                     }, mote.Body).OnDone(() => Give(going));
                 }
 
+                // ---- glass taking a channel. Two thirds of what the player is doing lives
+                //      here: a lens is three drops apart from going off, so the two drops that
+                //      pay for it have to land on the board as something. Dealt a little apart
+                //      so two lenses charging in one wave read as two events.
+                for (int i = 0; i < step.Charged.Count; i++)
+                {
+                    int at = step.Charged[i];
+                    var glass = _at[at];
+                    if (glass == null) continue;
+
+                    // What this lens was actually handed, which is no longer the wave's colour:
+                    // a burst beside it gives the drop's, and another lens's beam gives white and
+                    // fills it in one step. Drawing both as the drop's colour would say a lens is
+                    // a channel nearer when it is in fact about to go off.
+                    int took = step.ChargeGain(i, result.Colour);
+                    _shown[at] |= took;
+
+                    var target = glass;
+                    int now = _shown[at];
+                    int cell = at;
+
+                    Tween.After(burst * .3f + i * burst * .14f, () =>
+                    {
+                        if (target.Body == null) return;
+                        ChargeGlass(target, Where(cell), now, took, cell, burst);
+                    }, glass.Body);
+                }
+
                 // Each washed mote is reached by a streak from whichever burst was nearest, so
                 // the rule is drawn rather than described: this colour came from that burst.
                 for (int i = 0; i < step.Washed.Count; i++)
@@ -808,18 +924,37 @@ namespace GlimmerGrove
                     var mote = _at[at];
                     if (mote == null) continue;
 
-                    Streak(Nearest(step.Burst, at), at, Pal.EnergyColour(result.Colour), burst);
+                    // A cell a beam delivered to has already been shown where its light came
+                    // from, at rather more length than a streak would — and the shot is a whole
+                    // beat later than the burst, so its colour must not land early. Everything
+                    // else keeps the ordinary wash's own beat. That is "nothing is drawn before
+                    // its cause" for this mode.
+                    bool byBeam = Beamed(step.Beams, at);
+                    float arrives = byBeam ? burst + gather + throwing * .4f : burst * .45f;
+
+                    // What this mote was actually handed. A burst washes the drop's one colour; a
+                    // beam hands over white, so the mote is completed and pops on the next wave.
+                    // Painted as the drop's colour instead, a mote about to go off would be drawn
+                    // as one that had merely improved, which is the most misleading thing this
+                    // board could say.
+                    int took = step.WashGain(i, result.Colour);
+
+                    // The streak is for the ordinary wash alone: it says "this colour came from
+                    // that burst", which a beam says for itself at four times the length.
+                    if (!byBeam && step.Burst.Count > 0)
+                        Streak(Nearest(step.Burst, at), at, Pal.EnergyColour(took), burst);
 
                     int was = _shown[at];
-                    _shown[at] = was | result.Colour;
+                    _shown[at] = was | took;
 
                     var target = mote;
                     int now = _shown[at];
                     int coming = Run.Next;
-                    Tween.After(burst * .45f, () =>
+                    int cell = at;
+                    Tween.After(arrives, () =>
                     {
                         if (target.Body == null) return;
-                        Paint(target, now, coming);
+                        Paint(target, now, coming, cell);
                         Tween.Punch(target.Rt, .30f, burst);
                     }, mote.Body);
                 }
@@ -831,6 +966,38 @@ namespace GlimmerGrove
 
                 yield return new WaitForSecondsRealtime(burst);
                 if (!this) yield break;
+
+                // ---- the shot. Its own beat between the burst and the collapse, because it is
+                //      the one thing in this mode worth stopping the board for and because the
+                //      well must not fall through the light while it is still crossing.
+                if (step.Fired.Count > 0)
+                {
+                    for (int i = 0; i < step.Fired.Count; i++)
+                    {
+                        int at = step.Fired[i];
+                        var glass = _at[at];
+                        _at[at] = null;
+                        _shown[at] = Energy.None;
+
+                        FireGlass(glass, Where(at), gather, throwing);
+                    }
+
+                    // Every beam of every lens that fired this wave, thrown once the gather is
+                    // done. Staggered by a frame or two apiece so the pair or the four leaving one
+                    // lens read as a star opening rather than as one cross drawn at once.
+                    //
+                    // **Drawn white, because it is white.** A lens holds all three channels by the
+                    // time it goes off, so what it throws is all three and whatever it lands on is
+                    // completed rather than improved. Painting the shot in the drop's colour was
+                    // right while a beam carried one channel and is now a lie about the one thing
+                    // that separates a shot from a wash.
+                    for (int i = 0; i < step.Beams.Count; i++)
+                        Ray(step.Beams[i], Pal.Radiance, throwing,
+                            gather + i * throwing * .05f);
+
+                    yield return new WaitForSecondsRealtime(gather + throwing);
+                    if (!this) yield break;
+                }
 
                 // ---- the collapse
                 Slide(step.Moved, settle);
@@ -998,6 +1165,13 @@ namespace GlimmerGrove
             }
         }
 
+        /// <summary>Whether any beam of this wave delivered its light to this cell.</summary>
+        static bool Beamed(IReadOnlyList<FallBeam> beams, int cell)
+        {
+            for (int i = 0; i < beams.Count; i++) if (beams[i].Hit == cell) return true;
+            return false;
+        }
+
         /// <summary>The cell of the burst nearest a washed mote, for the streak to come from.</summary>
         int Nearest(IReadOnlyList<int> burst, int at)
         {
@@ -1122,6 +1296,512 @@ namespace GlimmerGrove
                 rt.anchoredPosition = Vector2.Lerp(a, b, t);
                 img.color = Pal.A(colour, .9f * (1f - t * t));
             }, img).OnDone(() => { if (img) Destroy(img.gameObject); });
+        }
+
+        // ------------------------------------------------------------------ the glass
+        /// <summary>
+        /// A lens: a rim, a four-point glint, and three pips saying how full it is.
+        ///
+        /// <para>
+        /// <b>The silhouette carries the fact that it is not a mote, and the pips carry the
+        /// puzzle.</b> Every other cell here is a bright saturated circle, so glass is hollow and
+        /// pale and cold (<c>Pal.Glass</c>) and wears the one mark on this board that points four
+        /// ways — which is the shape of what it does when it goes off. What the rim alone cannot
+        /// say is <em>which colour it is still waiting for</em>, and that is the whole of the
+        /// decision: three pips in R, G and B, lit for what it holds and dark for what it wants.
+        /// A player reads "needs blue" off the board at a glance, exactly as the halo on a mote
+        /// says "this drop would finish me".
+        /// </para>
+        /// <para>
+        /// <b>And a lens one channel short trembles.</b> That is not decoration: charging is
+        /// three drops apart and the payoff is the biggest thing in the mode, so the board owes
+        /// the player a beat of "the next one does it". Nothing else in this well moves while
+        /// nobody is touching it.
+        /// </para>
+        /// </summary>
+        void PaintGlass(MoteView glass, int cell, int index)
+        {
+            int charge = FallCell.Charge(cell);
+            int wants = FallCell.Wants(cell);
+            bool nearly = charge != Energy.None && CountChannels(charge) == 2;
+
+            glass.Body.sprite = Art.Ring(128, nearly ? 11f : 9f);
+            glass.Body.color = charge == Energy.None
+                             ? Pal.A(Pal.Glass, .92f)
+                             : Pal.A(Color.Lerp(Pal.Glass, Pal.EnergyColour(charge), .72f), .96f);
+
+            glass.Sheen.color = charge == Energy.None
+                              ? Pal.A(Pal.Glass, .12f)
+                              : Pal.A(Pal.EnergyColour(charge), .20f);
+
+            // Never ripe. A halo says "the next drop finishes this", and no drop ever finishes a
+            // lens — only light that has already travelled does.
+            glass.Halo.gameObject.SetActive(false);
+            glass.Halo.color = new Color(1, 1, 1, 0f);
+
+            PaintPips(glass, charge);
+
+            if (!glass.Facet) return;
+
+            if (!glass.Facet.gameObject.activeSelf)
+            {
+                glass.Facet.gameObject.SetActive(true);
+
+                // Phased off the cell index rather than rolled: a random phase differs between a
+                // board being built and the same board restarted, and two runs of one well that
+                // shimmer differently is a difference nobody can name and everybody notices.
+                var facet = glass.Facet;
+                var frt = (RectTransform)facet.transform;
+                float phase = (index * .37f) % 1f;
+
+                Tween.Run(GlintTurn, Ease.Linear, t =>
+                {
+                    if (!facet) return;
+
+                    float a = (t + phase) % 1f;
+                    frt.localRotation = Quaternion.Euler(0f, 0f, a * 90f);
+                    facet.color = Pal.A(Pal.Glass, .48f + Mathf.Abs(Mathf.Sin(a * Mathf.PI)) * .38f);
+                }, facet, "glint").Loop(-1);
+            }
+
+            Tween.KillChannel(glass.Rt, "tremble");
+            if (!nearly) { glass.Rt.localScale = Vector3.one; return; }
+
+            // One channel short. It is about to be the loudest thing on the board and it says so.
+            var body = glass.Body;
+            var rt = glass.Rt;
+
+            Tween.Run(TrembleTurn, Ease.InOutSine, t =>
+            {
+                if (!body) return;
+
+                float swell = Mathf.Sin(t * Mathf.PI * 2f);
+                rt.localScale = Vector3.one * (1f + swell * .07f);
+                body.color = Pal.A(Color.Lerp(Pal.Glass, Pal.EnergyColour(FallCell.Charge(cell)), .72f),
+                                   .82f + Mathf.Abs(swell) * .18f);
+            }, glass.Rt, "tremble").Loop(-1)
+              .OnAbandon(() => { if (rt) rt.localScale = Vector3.one; });
+        }
+
+        /// <summary>How long a lens takes to turn a quarter, which is one period of a four-point glint.</summary>
+        const float GlintTurn = 3.4f;
+
+        /// <summary>How long one breath of a lens that is one channel short takes.</summary>
+        const float TrembleTurn = .78f;
+
+        static int CountChannels(int mask)
+        {
+            int n = 0;
+            if ((mask & Energy.R) != 0) n++;
+            if ((mask & Energy.G) != 0) n++;
+            if ((mask & Energy.B) != 0) n++;
+            return n;
+        }
+
+        /// <summary>
+        /// The three pips: lit for a channel the glass holds, dark for one it still wants.
+        ///
+        /// Built once and rebound, for <c>GridView</c>'s reason — a well is up to a hundred cells
+        /// and a cascade recharges several of them, so three objects per lens that are recoloured
+        /// beats three destroyed and remade in the middle of the one animation this chapter is
+        /// for.
+        /// </summary>
+        void PaintPips(MoteView glass, int charge)
+        {
+            if (glass.Pips == null)
+            {
+                glass.Pips = new Image[3];
+                for (int i = 0; i < 3; i++)
+                {
+                    // A triangle inside the rim, which reads as a gauge without needing a track
+                    // drawn round it: three of anything is counted at a glance.
+                    float angle = (90f + i * 120f) * Mathf.Deg2Rad;
+                    var at = new Vector2(Mathf.Cos(angle), Mathf.Sin(angle)) * _size * .22f;
+
+                    glass.Pips[i] = UIKit.Img("Pip" + i, glass.Body.transform, Art.Disc(64),
+                                              new Color(1, 1, 1, 0f), Vector2.one * _size * .17f,
+                                              new Vector2(.5f, .5f), at);
+                    glass.Pips[i].raycastTarget = false;
+                }
+            }
+
+            int[] channels = { Energy.R, Energy.G, Energy.B };
+            for (int i = 0; i < 3; i++)
+            {
+                if (!glass.Pips[i]) continue;
+
+                bool held = (charge & channels[i]) != 0;
+                glass.Pips[i].color = held ? Pal.A(Pal.EnergyColour(channels[i]), 1f)
+                                           : Pal.A(Pal.Glass, .18f);
+                glass.Pips[i].transform.localScale = Vector3.one * (held ? 1f : .72f);
+            }
+        }
+
+        /// <summary>
+        /// A lens taking light: it arrives, the pips it lit spring in, the glass rings.
+        ///
+        /// <para>
+        /// <b>This is two thirds of what the player actually does, and it used to be drawn as
+        /// nothing.</b> Filling a lens is three drops apart; if only the shot were animated, the
+        /// two drops that paid for it would land on the board as silence. So a charge is a small
+        /// version of the big moment — a ring closing inward, the pip springing in, the rim
+        /// taking the colour — and the note climbs, so the player hears one-of-three and
+        /// two-of-three without counting.
+        /// </para>
+        /// <para>
+        /// <b><paramref name="taken"/> is a mask rather than a channel, and on one arrival it is
+        /// all three.</b> A burst beside the glass hands over the drop's one colour; another
+        /// lens's beam hands over white and fills it outright. So every pip in the mask is popped
+        /// rather than one worked out from a channel — the version that did the latter answered
+        /// "blue" for white, lit one pip of three and pitched the note as though a lens two drops
+        /// away had just gone off.
+        /// </para>
+        /// </summary>
+        void ChargeGlass(MoteView glass, Vector2 where, int cell, int taken, int index, float run)
+        {
+            if (glass == null) return;
+
+            int charge = FallCell.Charge(cell);
+            int filled = CountChannels(charge);
+
+            // A ring closing onto the glass rather than a streak into it. Where the light came
+            // from is already drawn — by the burst beside it, or by the beam that carried it —
+            // and a second line saying the same thing is the clutter Budburst's bolt was.
+            Circle(where, Pal.EnergyColour(taken), _size * 2.3f, run * 1.1f);
+
+            PaintGlass(glass, cell, index);
+
+            // Every pip that just lit springs in. Named on its own channel so a second charge in
+            // the same cascade supersedes cleanly rather than compounding.
+            if (glass.Pips != null)
+            {
+                int[] channels = { Energy.R, Energy.G, Energy.B };
+                for (int i = 0; i < 3; i++)
+                {
+                    if ((taken & channels[i]) == 0 || !glass.Pips[i]) continue;
+                    Tween.Pop(glass.Pips[i].transform, .1f, run * 1.2f);
+                }
+            }
+
+            Tween.KillChannel(glass.Rt, "tremble");
+            Tween.Punch(glass.Rt, .30f, run);
+
+            Burst.Sparks(_fx, where, Pal.EnergyColour(taken), 5, 120f, 9f, run * 1.6f);
+
+            // One of three, two of three — and the top of the run when a beam filled it outright,
+            // which is the loudest a charge is allowed to be before the shot itself.
+            Audio.Sfx("lit", .42f, .92f + filled * .16f);
+        }
+
+        /// <summary>
+        /// <b>The shot.</b> A lens that has taken all three fires along every axis at once, and
+        /// this is the one moment in Lightfall the board is allowed to stop for.
+        ///
+        /// <para>
+        /// <b>Four gestures, not eight.</b> Budburst's burst was rebuilt from petals, rays,
+        /// embers, a backlight and a prism ring, and came back as "a meshed up random animation"
+        /// — the lesson being that a premium moment is a few things done properly, all of them
+        /// round and soft-edged, rather than a pile of kinds. So: it <b>gathers</b> (the glass
+        /// draws in and goes white while the well dims and a ring closes onto it), it
+        /// <b>strikes</b> (a white core, a flash, a shake), it <b>throws</b> (its beams, drawn
+        /// by <see cref="Ray"/>), and it <b>comes apart</b> (a shockwave and prismatic shards).
+        /// </para>
+        /// <para>
+        /// <b>The dim is what makes it read as an event rather than a bigger burst.</b> Nothing
+        /// else in this mode darkens the well, so the first frame of a gather is already unlike
+        /// every other frame the player has seen — which is worth more than any amount added on
+        /// top of the explosion itself.
+        /// </para>
+        /// </summary>
+        void FireGlass(MoteView glass, Vector2 where, float gather, float run)
+        {
+            // The whole shot, not half of it: the beams set off after the gather and run for
+            // the rest of the beat, so a dim that lifted at the midpoint would brighten the well
+            // underneath light that was still crossing it.
+            Dim(gather + run);
+
+            var closing = Circle(where, Pal.Radiance, _size * 4.2f, gather);
+            if (closing) closing.transform.SetAsLastSibling();
+
+            Audio.Sfx("whoosh", .5f, 1.35f);
+
+            if (glass != null)
+            {
+                var rt = glass.Rt;
+                var body = glass.Body;
+
+                Tween.KillChannel(glass.Rt, "tremble");
+                if (glass.Facet) Tween.KillAll(glass.Facet);
+
+                // Drawn in rather than swelling: a thing that gathers is about to do something,
+                // where a thing that grows is only getting bigger. The white arrives with it.
+                Tween.Run(gather, Ease.InQuad, t =>
+                {
+                    if (!body) return;
+
+                    rt.localScale = Vector3.one * Mathf.Lerp(1f, .46f, t);
+                    body.color = Color.Lerp(body.color, Pal.A(Pal.Radiance, 1f), t);
+
+                    if (glass.Pips == null) return;
+                    for (int i = 0; i < glass.Pips.Length; i++)
+                        if (glass.Pips[i]) glass.Pips[i].color = Pal.A(Pal.Radiance, 1f - t);
+                }, glass.Body);
+            }
+
+            var going = glass;
+            Tween.After(gather, () =>
+            {
+                // ---- the strike
+                Flash(where, run);
+                ShakeBoard(22f);
+                Flow.Flash(Pal.A(Pal.Radiance, .30f), .10f, .28f);
+                Audio.Sfx("burst", .85f, .78f);
+                Audio.Sfx("chime2", .5f, 1.55f);
+
+                Shockwave(where, Pal.Radiance, _size * 7.5f, run * 2.2f);
+                Shards(where, run);
+
+                if (going == null) return;
+
+                var rt = going.Rt;
+                var body = going.Body;
+
+                Tween.Run(run * .55f, Ease.OutQuad, t =>
+                {
+                    if (!body) return;
+                    rt.localScale = Vector3.one * Mathf.Lerp(.46f, 2.1f, t);
+                    body.color = Pal.A(Pal.Radiance, 1f - t);
+                }, going.Body).OnDone(() => Give(going));
+            }, this);
+        }
+
+        /// <summary>
+        /// The well darkening for the length of a shot, so the light in it is the only thing on
+        /// screen. Drawn over the board and under the effects, and it is the whole reason a shot
+        /// reads as a different kind of event.
+        /// </summary>
+        void Dim(float seconds)
+        {
+            if (_fx == null) return;
+
+            var shade = UIKit.Img("Shade", _fx, Art.Pixel, new Color(0f, 0f, 0f, 0f),
+                                  new Vector2(_layout.Width * _cell + 64f,
+                                              _layout.Height * _cell + 64f),
+                                  new Vector2(.5f, .5f), Vector2.zero);
+            shade.raycastTarget = false;
+            shade.transform.SetAsFirstSibling();
+
+            Tween.Run(seconds, Ease.OutQuad, t =>
+            {
+                if (!shade) return;
+                // Up quickly, held, and away — the hold is what the beams are drawn against.
+                float a = t < .22f ? t / .22f : t > .74f ? (1f - t) / .26f : 1f;
+                shade.color = new Color(0f, 0f, 0f, a * .46f);
+            }, shade).OnDone(() => { if (shade) Destroy(shade.gameObject); });
+        }
+
+        /// <summary>A hot round core over a wide soft bloom, which is the two-layer light every
+        /// game of this shape draws. Round on purpose: a spiky star reads as lighting equipment
+        /// rather than as light, which is the fault Budburst shipped and took back.</summary>
+        void Flash(Vector2 at, float seconds)
+        {
+            var bloom = UIKit.Img("Bloom", _fx, Art.Glow(256, 1.6f), Pal.A(Pal.Radiance, .0f),
+                                  Vector2.one * _size * 6.5f, new Vector2(.5f, .5f), at);
+            bloom.raycastTarget = false;
+
+            var core = UIKit.Img("Core", _fx, Art.Glow(128, 3.4f), Pal.A(Color.white, .0f),
+                                 Vector2.one * _size * 2.4f, new Vector2(.5f, .5f), at);
+            core.raycastTarget = false;
+
+            Tween.Run(seconds * 1.5f, Ease.OutQuad, t =>
+            {
+                if (!core) return;
+
+                float up = t < .12f ? t / .12f : 1f - (t - .12f) / .88f;
+                core.color = Pal.A(Color.white, up);
+                core.transform.localScale = Vector3.one * Mathf.Lerp(.4f, 1.5f, t);
+
+                if (!bloom) return;
+                bloom.color = Pal.A(Pal.Radiance, up * .72f);
+                bloom.transform.localScale = Vector3.one * Mathf.Lerp(.3f, 1.25f, t);
+            }, core).OnDone(() =>
+            {
+                if (core) Destroy(core.gameObject);
+                if (bloom) Destroy(bloom.gameObject);
+            });
+        }
+
+        /// <summary>
+        /// What is left of the glass: shards thrown outward, each in one of the three channels.
+        ///
+        /// Prismatic rather than white, because that is the one thing a lens is: the light it was
+        /// holding comes apart into the colours it was made of, which nothing else on this board
+        /// does.
+        /// </summary>
+        void Shards(Vector2 at, float seconds)
+        {
+            int[] channels = { Energy.R, Energy.G, Energy.B };
+
+            for (int i = 0; i < 9; i++)
+            {
+                var tint = Color.Lerp(Pal.EnergyColour(channels[i % 3]), Pal.Glass, .35f);
+
+                var shard = UIKit.Img("Shard", _fx, Art.SoftCapsule(20, 72), Pal.A(tint, .95f),
+                                      new Vector2(_size * .12f, _size * .34f),
+                                      new Vector2(.5f, .5f), at);
+                shard.raycastTarget = false;
+
+                // Spread evenly rather than rolled, for the phase rule: a restart of one well must
+                // not throw its glass differently from the first run of it.
+                float angle = i * (360f / 9f) + 18f;
+                var dir = new Vector2(Mathf.Cos(angle * Mathf.Deg2Rad), Mathf.Sin(angle * Mathf.Deg2Rad));
+                float reach = _cell * (1.5f + (i % 3) * .45f);
+
+                var rt = (RectTransform)shard.transform;
+                rt.localRotation = Quaternion.Euler(0f, 0f, -angle);
+
+                Tween.Run(seconds * 1.9f, Ease.OutQuint, t =>
+                {
+                    if (!shard) return;
+                    rt.anchoredPosition = at + dir * reach * t;
+                    rt.localScale = new Vector3(1f - t * .5f, 1f + t * .35f, 1f);
+                    shard.color = Pal.A(tint, .95f * (1f - t) * (1f - t));
+                }, shard).OnDone(() => { if (shard) Destroy(shard.gameObject); });
+            }
+        }
+
+        /// <summary>
+        /// One of a shot's beams: a white core inside a coloured glow, with a red and a blue
+        /// fringe either side of it.
+        ///
+        /// <para>
+        /// <b>The fringe is the one idea here that is about a lens rather than about an
+        /// explosion.</b> Light through glass comes apart, so the beam is drawn as three strands
+        /// that do not quite agree — red one side, blue the other, white down the middle. It
+        /// costs two extra capsules and it is the difference between "a bright line" and "light
+        /// being refracted", which is the whole of what the object is.
+        /// </para>
+        /// <para>
+        /// <b>It grows from its source rather than appearing whole.</b> The pivot is moved to the
+        /// base of the capsule so length is the only thing animated — growing a centre-pivoted
+        /// bar would have it reaching backwards out of the lens at the same rate it reaches
+        /// forwards. And a beam that reached nothing is drawn exactly as far as it went, one cell
+        /// outside the wall: three drops of charge spent on nothing is a decision that went
+        /// wrong, and the player is entitled to watch it happen.
+        /// </para>
+        /// </summary>
+        void Ray(FallBeam beam, Color colour, float run, float delay)
+        {
+            if (_fx == null) return;
+
+            // Cell space counts rows downward and the canvas counts them up, so the step is
+            // negated in y. Getting this wrong draws every vertical shot upside down.
+            var step = new Vector2(beam.Dx * _cell, -beam.Dy * _cell);
+            var from = Where(beam.From);
+            var to = from + step * beam.Steps;
+
+            float length = step.magnitude * beam.Steps;
+            float angle = Mathf.Atan2(step.y, step.x) * Mathf.Rad2Deg - 90f;
+            float width = _size * .26f;
+
+            // The fringes *diverge*. They leave the glass together and fan apart by a couple
+            // of degrees as they go, so the further the shot travels the wider the split — which
+            // is what light through a prism actually does, and is the difference between a beam
+            // with coloured edges and a beam that is visibly being refracted. Two degrees is
+            // enough to read across five cells and small enough that a one-cell shot still looks
+            // like one beam.
+            var glow = Lance("Beam", Art.SoftCapsule(44, 128), Pal.A(colour, .5f),
+                             width * 3.1f, from, angle);
+            var red = Lance("Fringe", Art.SoftCapsule(20, 128), Pal.A(Pal.Ember, .55f),
+                            width * .8f, from, angle - Split);
+            var blue = Lance("Fringe", Art.SoftCapsule(20, 128), Pal.A(Pal.Azure, .55f),
+                             width * .8f, from, angle + Split);
+            var core = Lance("Core", Art.SoftCapsule(24, 128), Pal.A(Color.white, .0f),
+                             width, from, angle);
+
+            var gr = (RectTransform)glow.transform;
+            var rr = (RectTransform)red.transform;
+            var br = (RectTransform)blue.transform;
+            var cr = (RectTransform)core.transform;
+
+            Tween.Run(run, Ease.Linear, t =>
+            {
+                if (!core) return;
+
+                // Out to full length over the first stretch, then held while it fades: a beam
+                // still growing as it faded would never be seen at its own length.
+                float reach = length * Ease.OutQuint(Mathf.Clamp01(t / .34f));
+                float fade = (1f - t) * (1f - t);
+
+                cr.sizeDelta = new Vector2(width, reach);
+                core.color = Pal.A(Color.white, fade);
+
+                if (gr) { gr.sizeDelta = new Vector2(width * 3.1f, reach); glow.color = Pal.A(colour, .5f * (1f - t)); }
+                if (rr) { rr.sizeDelta = new Vector2(width * .8f, reach); red.color = Pal.A(Pal.Ember, .5f * fade); }
+                if (br) { br.sizeDelta = new Vector2(width * .8f, reach); blue.color = Pal.A(Pal.Azure, .5f * fade); }
+            }, core).Delay(delay).OnDone(() =>
+            {
+                if (core) Destroy(core.gameObject);
+                if (glow) Destroy(glow.gameObject);
+                if (red) Destroy(red.gameObject);
+                if (blue) Destroy(blue.gameObject);
+            });
+
+            // The arrival, and only where there was one. A ring thrown at the wall would say
+            // something landed there.
+            if (beam.Landed)
+                Tween.After(delay + run * .34f,
+                            () => Shockwave(to, colour, _size * 2.4f, run * 1.4f), this);
+        }
+
+        /// <summary>
+        /// How far the two fringes fan away from the beam they left with, in degrees.
+        ///
+        /// The whole of what makes a shot read as glass rather than as a bright line. Kept small
+        /// on purpose: at two degrees a shot across five cells splits by about a fifth of a cell,
+        /// which is legible, and a one-cell shot still reads as a single beam.
+        /// </summary>
+        const float Split = 2.2f;
+
+        /// <summary>A capsule pivoted at its base and turned along the way it travels.</summary>
+        Image Lance(string name, Sprite sprite, Color colour, float width, Vector2 at, float angle)
+        {
+            var img = UIKit.Img(name, _fx, sprite, colour, new Vector2(width, 0f),
+                                new Vector2(.5f, .5f), at);
+            img.raycastTarget = false;
+
+            var rt = (RectTransform)img.transform;
+
+            // UIKit.Box always pivots at centre, so this is set after the fact — and the position
+            // after that, because moving the pivot moves the rect under it.
+            rt.pivot = new Vector2(.5f, 0f);
+            rt.anchoredPosition = at;
+            rt.localRotation = Quaternion.Euler(0f, 0f, angle);
+
+            return img;
+        }
+
+        /// <summary>
+        /// A ring closing <em>inward</em> onto a cell, which is this game's idiom for "this one".
+        ///
+        /// Every other ring in Lightfall expands, and an expanding ring says <em>something went
+        /// off here</em>. Closing says <em>watch this</em>, which is what both a charge and the
+        /// gather before a shot need and what neither could say with a shockwave.
+        /// </summary>
+        Image Circle(Vector2 at, Color colour, float size, float seconds)
+        {
+            var img = UIKit.Img("Closing", _fx, Art.Ring(128, 7f), Pal.A(colour, 0f),
+                                Vector2.one * size, new Vector2(.5f, .5f), at);
+            img.raycastTarget = false;
+
+            Tween.Run(seconds, Ease.OutQuad, t =>
+            {
+                if (!img) return;
+                img.transform.localScale = Vector3.one * Mathf.Lerp(1.6f, .28f, t);
+                img.color = Pal.A(colour, Mathf.Sin(t * Mathf.PI) * .9f);
+            }, img).OnDone(() => { if (img) Destroy(img.gameObject); });
+
+            return img;
         }
 
         void ShakeBoard(float amount)
@@ -1266,6 +1946,36 @@ namespace GlimmerGrove
                     if (_at[i] != null) return _at[i].Rt;
 
                 return null;
+            }
+        }
+
+        /// <summary>
+        /// A lens to point a lesson at, or null on a well that stands none — which is every well
+        /// of the first chapter, and is exactly why the lesson is conditional on this.
+        /// </summary>
+        public RectTransform LensAnchor
+        {
+            get
+            {
+                if (_at == null) return null;
+
+                // The fullest one, because a lesson about glass wants to point at the piece
+                // that is closest to showing the player what it is for.
+                RectTransform best = null;
+                int most = -1;
+
+                for (int i = 0; i < _at.Length; i++)
+                {
+                    if (_at[i] == null || !FallCell.IsLens(_shown[i])) continue;
+
+                    int held = CountChannels(FallCell.Charge(_shown[i]));
+                    if (held <= most) continue;
+
+                    most = held;
+                    best = _at[i].Rt;
+                }
+
+                return best;
             }
         }
 
