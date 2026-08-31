@@ -96,16 +96,17 @@ namespace GlimmerGrove
 
         // ------------------------------------------------------------------ the furniture
         KeeperLayout _layout;
-        RectTransform _host, _grid, _field, _seamNode, _fx, _tray, _plate;
+        RectTransform _host, _grid, _field, _seamNode, _flora, _fx, _air, _tray, _plate;
         Image _ghost, _ghostRing, _compostKey;
         Text _ghostCount, _count, _flourish;
         Btn _compost;
 
         Cell[] _cells;
         Tile[] _at;
+        Seam[] _seamAt;
         readonly Stack<Tile> _spare = new Stack<Tile>();
-        readonly List<Image> _seams = new List<Image>();
         readonly List<int> _bloomed = new List<int>(KeeperFlourish.Most);
+        readonly List<KeeperHop> _hops = new List<KeeperHop>(32);
         Image[] _queue, _prisms;
         RectTransform[] _seats;
 
@@ -116,17 +117,56 @@ namespace GlimmerGrove
         bool _busy, _over, _committed;
         int _hovered = -1, _ghostKey = int.MinValue;
 
-        /// <summary>One cell of the ground: the plate under it, and what a bed draws on top.</summary>
+        /// <summary>One cell of the ground: the soil under it, and what a bed draws on top.</summary>
         sealed class Cell
         {
             public RectTransform Rt;
             public Image Plate, Bud, Halo, Glow;
+
+            /// <summary>The soil's own colour, so a planting can darken it and a rebuild put it back.</summary>
+            public Color Bare;
+
+            /// <summary>The flower this cell grew, kept standing for the rest of the run.</summary>
+            public RectTransform Bloom;
         }
 
-        /// <summary>One tile on screen: the body, the sheen over it and the flower it may grow.</summary>
+        /// <summary>
+        /// One tile on screen.
+        ///
+        /// <para>
+        /// <b>Two transforms rather than one, and that is load-bearing.</b> A tile is punched
+        /// when it is planted, again when it blooms and again when the grove ripples, and it
+        /// breathes for the whole of the rest of the run — and a punch and a breath both write
+        /// <c>localScale</c>, which is a bug however different their channels are. So the holder
+        /// carries everything transient and the body carries the idle, and neither can ever read
+        /// the other mid-flight.
+        /// </para>
+        /// </summary>
         sealed class Tile
         {
-            public Image Body, Sheen, Prism;
+            public Image Body, Sheen, Prism, Shadow;
+
+            /// <summary>The holder: position, and everything that punches or springs.</summary>
+            public RectTransform Rt;
+
+            /// <summary>The body's own transform: the breath, and nothing else.</summary>
+            public RectTransform Skin;
+        }
+
+        /// <summary>
+        /// One seam: the light standing in the gap between two unlike tiles.
+        ///
+        /// <para>
+        /// Kept per edge rather than repainted as a list, because a seam is now a thing that
+        /// <em>happens</em> — it draws itself on when it is made and flares when light crosses
+        /// it — and an index that moved between repaints would flare whichever seam happened to
+        /// inherit the slot. Nothing is ever taken off this board, so a seam once made is
+        /// permanent and the array only ever fills.
+        /// </para>
+        /// </summary>
+        sealed class Seam
+        {
+            public Image Bar, Glow;
             public RectTransform Rt;
         }
 
@@ -163,7 +203,7 @@ namespace GlimmerGrove
             _ghostKey = int.MinValue;
 
             _spare.Clear();
-            _seams.Clear();
+            _hops.Clear();
 
             // Its objects are children of the host, which the loop below is about to empty.
             _coach = null;
@@ -221,11 +261,33 @@ namespace GlimmerGrove
             _field = UIKit.Node("Tiles", _grid);
             UIKit.StretchTo(_field, 0f, 0f, 0f, 0f);
 
+            // The flowers a bloom leaves standing. Above the tiles, because a flower grows out
+            // of one; below the effects, because a burst has to cover it rather than the other
+            // way round.
+            _flora = UIKit.Node("Flora", _grid);
+            UIKit.StretchTo(_flora, 0f, 0f, 0f, 0f);
+
             _fx = UIKit.Node("Fx", _grid);
             UIKit.StretchTo(_fx, 0f, 0f, 0f, 0f);
 
+            // Drifting light, and the fireworks a big flourish sends up. Above everything, and
+            // the one layer allowed to leave the grove.
+            _air = UIKit.Node("Air", _grid);
+            UIKit.StretchTo(_air, 0f, 0f, 0f, 0f);
+
+            // A rebuild boundary each, so a screenful of sparks and a drifting mote do not
+            // re-batch the board underneath them sixty times a second. Safe here
+            // and nowhere else on this screen: every cell's tap target lives under Ground, and
+            // a nested Canvas is a raycast boundary as well as a rebuild one — nesting the
+            // ground would take every tap on this board with it.
+            Nest(_flora);
+            Nest(_fx);
+            Nest(_air);
+
             _cells = new Cell[_layout.Count];
             for (int i = 0; i < _cells.Length; i++) _cells[i] = BuildCell(ground, i);
+
+            _seamAt = new Seam[_layout.Count * 2];
 
             _ghost = UIKit.Img("Ghost", _fx, Art.Round(18), new Color(1, 1, 1, 0f),
                                Vector2.one * _size, new Vector2(.5f, .5f), Vector2.zero);
@@ -237,6 +299,61 @@ namespace GlimmerGrove
                                        new Vector2(_cell, _cell * .6f), new Vector2(.5f, .5f),
                                        Vector2.zero, 4f, 3f);
             _ghostCount.gameObject.SetActive(false);
+
+            Drift();
+        }
+
+        /// <summary>
+        /// Gives a layer its own rebuild boundary. See the call site for why only three of them
+        /// get one.
+        /// </summary>
+        static void Nest(RectTransform node)
+        {
+            if (node == null || node.GetComponent<Canvas>() != null) return;
+
+            node.gameObject.AddComponent<Canvas>();
+        }
+
+        /// <summary>
+        /// Motes of light drifting over the grove, for ever.
+        ///
+        /// <para>
+        /// <b>A board that is completely still between taps is a board waiting to be told what to
+        /// do.</b> This mode is played slowly — the whole point of it is a player deciding rather
+        /// than reacting — so the seconds where nothing is happening are most of it, and they are
+        /// exactly the seconds nothing was drawing. Eight motes, well under the size at which
+        /// anything competes with a decision, and they are the only thing on this screen that
+        /// moves while the player is thinking.
+        /// </para>
+        /// </summary>
+        void Drift()
+        {
+            float w = _layout.Width * _cell, h = _layout.Height * _cell;
+
+            for (int i = 0; i < 8; i++)
+            {
+                float size = _cell * UnityEngine.Random.Range(.05f, .11f);
+                var mote = UIKit.Img("Mote", _air, Art.Glow(64, 2.4f), Pal.A(Pal.Cream, .16f),
+                                     Vector2.one * size, new Vector2(.5f, .5f), Vector2.zero);
+
+                var rt = (RectTransform)mote.transform;
+                float x = UnityEngine.Random.Range(-w * .48f, w * .48f);
+                float from = UnityEngine.Random.Range(-h * .55f, h * .1f);
+                float rise = h * UnityEngine.Random.Range(.5f, .95f);
+                float sway = _cell * UnityEngine.Random.Range(.2f, .5f);
+                float period = UnityEngine.Random.Range(7f, 12f);
+                float phase = UnityEngine.Random.value;
+
+                Tween.Run(period, Ease.Linear, t =>
+                {
+                    if (!rt) return;
+
+                    float k = (t + phase) % 1f;
+                    rt.anchoredPosition = new Vector2(x + Mathf.Sin(k * 6.2831853f) * sway,
+                                                      from + rise * k);
+                    mote.color = Pal.A(Pal.Cream, .16f * Mathf.Sin(k * Mathf.PI));
+                }, mote).Loop(-1, false);
+            }
         }
 
         /// <summary>
@@ -279,7 +396,8 @@ namespace GlimmerGrove
             }
             else
             {
-                cell.Plate = UIKit.Img("Soil", root, Art.Round(16), new Color(1, 1, 1, .045f),
+                cell.Bare = new Color(1, 1, 1, .045f);
+                cell.Plate = UIKit.Img("Soil", root, Art.Round(16), cell.Bare,
                                        Vector2.one * _size * .86f, new Vector2(.5f, .5f),
                                        Vector2.zero);
             }
@@ -575,10 +693,22 @@ namespace GlimmerGrove
                 reused.Rt.gameObject.SetActive(true);
                 reused.Rt.localScale = Vector3.one;
                 reused.Rt.localRotation = Quaternion.identity;
+                reused.Skin.localScale = Vector3.one;
+                reused.Skin.localRotation = Quaternion.identity;
+                if (reused.Shadow) reused.Shadow.color = new Color(0f, 0f, 0f, .30f);
                 return reused;
             }
 
-            var body = UIKit.Img("Tile", _field, Art.Round(18), Color.white,
+            var holder = UIKit.Box("Tile", _field, Vector2.one * _size, new Vector2(.5f, .5f),
+                                   Vector2.zero);
+
+            // Cast on the soil rather than painted into the tile, so a tile that springs, sways
+            // or is thrown about keeps something under it that says it is standing on something.
+            var shadow = UIKit.Img("Shadow", holder, Art.Round(18), new Color(0f, 0f, 0f, .30f),
+                                   Vector2.one * _size * .96f, new Vector2(.5f, .5f),
+                                   new Vector2(0f, -_size * .07f));
+
+            var body = UIKit.Img("Body", holder, Art.Round(18), Color.white,
                                  Vector2.one * _size, new Vector2(.5f, .5f), Vector2.zero);
 
             var sheen = UIKit.Img("Sheen", body.transform, Art.Glow(128, 2.4f),
@@ -598,7 +728,9 @@ namespace GlimmerGrove
                 Body = body,
                 Sheen = sheen,
                 Prism = prism,
-                Rt = (RectTransform)body.transform,
+                Shadow = shadow,
+                Rt = holder,
+                Skin = (RectTransform)body.transform,
             };
         }
 
@@ -606,11 +738,33 @@ namespace GlimmerGrove
         {
             if (tile == null) return;
 
+            // Three owners, because the two transforms and the graphic each hold tweens of their
+            // own — a breath belongs to a Transform and a tint to an Image, and killing one has
+            // never stopped the other.
             Tween.KillAll(tile.Body);
+            Tween.KillAll(tile.Rt);
+            Tween.KillAll(tile.Skin);
+
             tile.Rt.gameObject.SetActive(false);
             tile.Rt.localScale = Vector3.one;
+            tile.Rt.localRotation = Quaternion.identity;
+            tile.Skin.localScale = Vector3.one;
+            tile.Skin.localRotation = Quaternion.identity;
             tile.Body.color = Color.white;
             _spare.Push(tile);
+        }
+
+        /// <summary>
+        /// The idle every planted tile keeps for the rest of the run.
+        ///
+        /// On the body rather than the holder, so nothing that punches the tile can ever read a
+        /// mid-breath size as the one to spring back to. See <see cref="Tile"/>.
+        /// </summary>
+        void Idle(Tile tile, int index)
+        {
+            if (tile == null) return;
+
+            Tween.Breathe(tile.Skin, .022f, KeeperTempo.Sway, KeeperTempo.Phase(index));
         }
 
         // ------------------------------------------------------------------ painting
@@ -639,10 +793,34 @@ namespace GlimmerGrove
 
                 _at[i].Rt.anchoredPosition = Where(i);
                 Paint(_at[i], colour);
+                Idle(_at[i], i);
+                Soil(i);
             }
 
-            PaintSeams();
+            PaintSeams(false);
             PaintBeds();
+
+            // A sprig can be standing bloomed before anybody has touched the grove, and a flower
+            // that only ever grew from a planting would leave that cell the one bloom on the
+            // board with nothing on it.
+            for (int i = 0; i < _at.Length; i++)
+                if (_at[i] != null && Run.Board.Bloomed(i)) GrowFlower(i, true);
+        }
+
+        /// <summary>
+        /// Darkens the ground a tile is standing on, so a grove reads as something growing out
+        /// of soil rather than as stickers on a grid.
+        ///
+        /// Nothing else says a cell is taken: the tile covers most of it, and the sliver of
+        /// lighter ground showing round the edge used to read as a gap.
+        /// </summary>
+        void Soil(int index)
+        {
+            var cell = _cells[index];
+            if (cell?.Plate == null || _layout.GroundAt(index) == KeeperGround.Stone) return;
+
+            bool taken = Run.Board.Standing(index);
+            cell.Plate.color = taken ? new Color(.06f, .10f, .07f, .55f) : cell.Bare;
         }
 
         static void Paint(Tile tile, int colour)
@@ -665,57 +843,116 @@ namespace GlimmerGrove
         /// answer for the drawing and the board to disagree about.
         /// </para>
         /// </summary>
-        void PaintSeams()
+        void PaintSeams(bool animate)
         {
-            int used = 0;
             var board = Run.Board;
 
             for (int y = 0; y < _layout.Height; y++)
                 for (int x = 0; x < _layout.Width; x++)
                 {
                     int at = _layout.Index(x, y);
-                    int here = board.At(at);
-                    if (here == Energy.None) continue;
+                    if (board.At(at) == Energy.None) continue;
 
-                    if (x + 1 < _layout.Width) used = Seam(at, at + 1, true, used);
-                    if (y + 1 < _layout.Height) used = Seam(at, at + _layout.Width, false, used);
+                    if (x + 1 < _layout.Width) MakeSeam(at, at + 1, true, animate);
+                    if (y + 1 < _layout.Height) MakeSeam(at, at + _layout.Width, false, animate);
                 }
-
-            for (int i = used; i < _seams.Count; i++)
-                if (_seams[i]) _seams[i].gameObject.SetActive(false);
         }
 
-        int Seam(int a, int b, bool across, int used)
+        /// <summary>Which slot an edge owns: the cell it leaves, and which way it goes.</summary>
+        int SeamKey(int at, bool across) => at * 2 + (across ? 0 : 1);
+
+        /// <summary>
+        /// Lights a seam that has just been made, once and for good.
+        ///
+        /// <para>
+        /// Made rather than repainted, because a seam is permanent: the board never loses a tile
+        /// and a tile never changes colour, so an edge that is a seam now is one for the rest of
+        /// the run. That is what lets it be a <em>thing</em> — drawn on when it is made, flared
+        /// when light crosses it — instead of a bar redrawn from scratch every planting.
+        /// </para>
+        /// </summary>
+        void MakeSeam(int a, int b, bool across, bool animate)
         {
             int one = Run.Board.At(a), two = Run.Board.At(b);
-            if (one == Energy.None || two == Energy.None || one == two) return used;
+            if (one == Energy.None || two == Energy.None || one == two) return;
 
-            var image = SeamAt(used);
-            var rt = (RectTransform)image.transform;
+            int key = SeamKey(a, across);
+            if (_seamAt[key] != null) return;
 
+            var tint = Pal.EnergyColour(one | two);
             var mid = (Where(a) + Where(b)) * .5f;
+
             float length = _cell - _size + 16f;
+            float across_ = _size * .58f;
+            var size = across ? new Vector2(length, across_) : new Vector2(across_, length);
 
-            rt.anchoredPosition = mid;
-            rt.sizeDelta = across ? new Vector2(length, _size * .62f)
-                                  : new Vector2(_size * .62f, length);
+            var glow = UIKit.Img("SeamGlow", _seamNode, Art.Glow(64, 1.7f), Pal.A(tint, .30f),
+                                 size * 2.6f, new Vector2(.5f, .5f), mid);
 
-            image.color = Pal.A(Pal.EnergyColour(one | two), .92f);
-            image.gameObject.SetActive(true);
+            var bar = UIKit.Img("Seam", _seamNode, Art.Round(10), Pal.A(tint, .92f), size,
+                                new Vector2(.5f, .5f), mid);
 
-            return used + 1;
+            var seam = new Seam { Bar = bar, Glow = glow, Rt = (RectTransform)bar.transform };
+            _seamAt[key] = seam;
+
+            // The light in the gap is never quite still, which is most of what separates "a rule
+            // the board is drawing" from "a bar somebody painted between two squares".
+            Tween.Breathe(glow.transform, .09f, KeeperTempo.Sway * .8f, KeeperTempo.Phase(key));
+
+            if (!animate) return;
+
+            // It draws itself on along its own axis rather than fading up, so the eye reads it as
+            // light running into the gap the tile has just made.
+            var rt = seam.Rt;
+            var grt = (RectTransform)glow.transform;
+            var from = across ? new Vector3(.02f, 1f, 1f) : new Vector3(1f, .02f, 1f);
+
+            rt.localScale = from;
+            grt.localScale = from;
+
+            Tween.Run(KeeperTempo.SeamDraw, Ease.OutBack, t =>
+            {
+                if (!rt) return;
+                rt.localScale = Vector3.LerpUnclamped(from, Vector3.one, t);
+            }, bar).OnAbandon(() => { if (rt) rt.localScale = Vector3.one; });
+
+            Tween.Run(KeeperTempo.SeamDraw, Ease.OutQuad, t =>
+            {
+                if (!grt) return;
+                grt.localScale = Vector3.LerpUnclamped(from, Vector3.one, t);
+            }, glow.gameObject).OnAbandon(() => { if (grt) grt.localScale = Vector3.one; });
+
+            Flash(bar, tint, .34f);
         }
 
-        Image SeamAt(int index)
+        /// <summary>The seam between two cells, or null where the two are not joined by one.</summary>
+        Seam SeamBetween(int a, int b)
         {
-            while (_seams.Count <= index)
-            {
-                var made = UIKit.Img("Seam", _seamNode, Art.Round(10), Color.white,
-                                     Vector2.one * 8f, new Vector2(.5f, .5f), Vector2.zero);
-                _seams.Add(made);
-            }
+            if (_seamAt == null) return null;
 
-            return _seams[index];
+            int width = _layout.Width;
+
+            if (b == a + 1) return _seamAt[SeamKey(a, true)];
+            if (b == a - 1) return _seamAt[SeamKey(b, true)];
+            if (b == a + width) return _seamAt[SeamKey(a, false)];
+            if (b == a - width) return _seamAt[SeamKey(b, false)];
+
+            return null;
+        }
+
+        /// <summary>A bar going white and settling back to the colour it was.</summary>
+        static void Flash(Image image, Color settled, float seconds)
+        {
+            if (image == null) return;
+
+            var hot = Pal.A(Pal.Radiance, 1f);
+            var rest = Pal.A(settled, .92f);
+
+            Tween.Run(seconds, Ease.OutQuint, t =>
+            {
+                if (!image) return;
+                image.color = Color.LerpUnclamped(hot, rest, t);
+            }, image).OnAbandon(() => { if (image) image.color = rest; });
         }
 
         /// <summary>
@@ -995,18 +1232,18 @@ namespace GlimmerGrove
             tile.Rt.anchoredPosition = Where(index);
             Paint(tile, colour);
 
-            tile.Rt.localScale = Vector3.one * 1.45f;
-            Tween.Scale(tile.Rt, 1f, KeeperTempo.Land, Ease.OutBack);
-            Tween.Fade(tile.Body, 1f, KeeperTempo.Land * .6f);
+            Sprout(tile, index, colour);
 
             Audio.SfxVaried("pop", .42f);
 
             yield return new WaitForSecondsRealtime(KeeperTempo.Land);
             if (!this) yield break;
 
+            Idle(tile, index);
+
             // The seams first, and separately: a planting that makes only seams is still a move
             // worth watching, and on a board where most of them are, this is the feedback.
-            PaintSeams();
+            PaintSeams(true);
             PaintBeds();
             PaintBasket();
             Changed?.Invoke();
@@ -1027,6 +1264,11 @@ namespace GlimmerGrove
             yield return new WaitForSecondsRealtime(KeeperTempo.Seam * .5f);
             if (!this) yield break;
 
+            // The light leaves before the flowers do, so the surge plays *under* the cascade
+            // rather than after it. It costs the latch nothing, and it is what makes a bloom read
+            // as something that happened to the grove rather than to one cell.
+            Surge(bloomed);
+
             yield return Cascade(bloomed);
             if (!this) yield break;
 
@@ -1035,25 +1277,185 @@ namespace GlimmerGrove
         }
 
         /// <summary>
+        /// A tile coming up out of the ground rather than dropping onto it.
+        ///
+        /// <para>
+        /// <b>The same information, a different verb.</b> A tile that appears at 1.45 and springs
+        /// to 1.0 is a sticker being placed; one that pushes up out of the soil, wide and flat
+        /// first, is a thing being <em>planted</em> — which is what this mode is about and what
+        /// its one action had never once looked like. The ground darkens under it in the same
+        /// beat and the soil puffs, so the cell is visibly given over rather than covered up.
+        /// </para>
+        /// </summary>
+        void Sprout(Tile tile, int index, int colour)
+        {
+            var at = Where(index);
+            var tint = colour == Energy.All ? Pal.Radiance : Pal.EnergyColour(colour);
+
+            Soil(index);
+
+            var cell = _cells[index];
+            if (cell != null && cell.Plate) Tween.Punch(cell.Plate.transform, .18f, KeeperTempo.Land);
+
+            // The soil giving way. Drawn in the ground's own dark rather than in light, so it
+            // reads as earth instead of as one more thing made of glow.
+            var puff = UIKit.Img("Puff", _fx, Art.Ring(96, 10f), new Color(.10f, .16f, .12f, .75f),
+                                 Vector2.one * _size * .5f, new Vector2(.5f, .5f), at);
+            var prt = (RectTransform)puff.transform;
+
+            Tween.Run(KeeperTempo.Land * 1.6f, Ease.OutQuint, t =>
+            {
+                if (!puff) return;
+                prt.sizeDelta = Vector2.one * Mathf.Lerp(_size * .5f, _size * 1.5f, t);
+                puff.color = new Color(.10f, .16f, .12f, .75f * (1f - t));
+            }, puff).OnDone(() => { if (puff) Destroy(puff.gameObject); });
+
+            // Wide and flat, then up. Non-uniform on purpose: a uniform pop is a thing arriving,
+            // and this is a thing growing.
+            tile.Rt.localScale = new Vector3(1.34f, .06f, 1f);
+            Tween.Scale(tile.Rt, Vector3.one, KeeperTempo.Land, Ease.OutBack);
+
+            if (tile.Shadow)
+            {
+                tile.Shadow.color = new Color(0f, 0f, 0f, 0f);
+                Tween.Fade(tile.Shadow, .30f, KeeperTempo.Land);
+            }
+
+            Tween.Fade(tile.Body, 1f, KeeperTempo.Land * .6f);
+
+            // A halo of the tile's own colour, so the eye is told where the move landed before it
+            // is told what the move did.
+            Shockwave(at, tint, _size * 1.9f, KeeperTempo.Land * 2.2f);
+        }
+
+        /// <summary>
+        /// The light leaving a bloom along the seams the player made.
+        ///
+        /// <para>
+        /// <b>This is the mode's one flourish that no other mode could have.</b> The walk is
+        /// <see cref="KeeperSurge"/>'s — outward through seams, and never between two tiles of
+        /// one colour — so the shape the light takes is the shape of the grove that was built,
+        /// and two people who finish the same board differently see visibly different light.
+        /// </para>
+        /// <para>
+        /// Fired rather than awaited: the board is latched for the cascade and the surge plays
+        /// underneath it. Bounded all the same (<c>KeeperTempo.SurgeCeiling</c>) — a tail still
+        /// travelling as the next tile lands reads as the board answering the wrong move.
+        /// </para>
+        /// </summary>
+        void Surge(int[] bloomed)
+        {
+            KeeperSurge.Walk(Run.Board, bloomed, _hops);
+            if (_hops.Count == 0) return;
+
+            int rings = KeeperSurge.Rings(_hops);
+            float hop = KeeperTempo.HopAt(rings);
+
+            for (int i = 0; i < _hops.Count; i++)
+            {
+                var step = _hops[i];
+                float delay = (step.Ring - 1) * hop;
+
+                LightSeam(step.From, step.To, delay);
+                Touch(step.To, delay + hop * .55f, step.Ring);
+            }
+        }
+
+        /// <summary>One seam taking the light and handing it on.</summary>
+        void LightSeam(int from, int to, float delay)
+        {
+            var seam = SeamBetween(from, to);
+            if (seam == null) return;
+
+            var bar = seam.Bar;
+            var glow = seam.Glow;
+            var settled = bar.color;
+            var glowRest = glow ? glow.color : default(Color);
+
+            Tween.After(delay, () =>
+            {
+                if (!bar) return;
+
+                Flash(bar, settled, KeeperTempo.SeamFlare);
+
+                if (glow)
+                    Tween.Run(KeeperTempo.SeamFlare, Ease.OutQuint, t =>
+                    {
+                        if (!glow) return;
+                        glow.color = Color.LerpUnclamped(Pal.A(Pal.Radiance, .55f), glowRest, t);
+                    }, glow).OnAbandon(() => { if (glow) glow.color = glowRest; });
+            }, bar);
+        }
+
+        /// <summary>One tile taking the light: a knock and a glint, and nothing that lasts.</summary>
+        void Touch(int at, float delay, int ring)
+        {
+            var tile = _at[at];
+            if (tile == null) return;
+
+            float strength = .20f / ring;
+            var holder = tile.Rt;
+            var where = Where(at);
+
+            Tween.After(delay, () =>
+            {
+                if (!holder) return;
+
+                Tween.Punch(holder, strength, KeeperTempo.SeamFlare * .8f);
+
+                var glint = UIKit.Img("Glint", _fx, Art.Glint(96, 4), Pal.A(Pal.Radiance, .8f),
+                                      Vector2.one * _size * .8f, new Vector2(.5f, .5f), where);
+                var grt = (RectTransform)glint.transform;
+
+                Tween.Run(KeeperTempo.SeamFlare, Ease.OutQuad, t =>
+                {
+                    if (!glint) return;
+                    grt.localScale = Vector3.one * Mathf.Lerp(.3f, 1.25f, t);
+                    grt.localRotation = Quaternion.Euler(0, 0, 60f * t);
+                    glint.color = Pal.A(Pal.Radiance, .8f * (1f - t));
+                }, glint).OnDone(() => { if (glint) Destroy(glint.gameObject); });
+            }, holder);
+        }
+
+        /// <summary>
         /// The flowers opening, one after another, inside one bounded cascade.
         ///
+        /// <para>
         /// The order is the order <c>KeeperBoard.Plant</c> reported them in — the planted cell
         /// first, then the neighbours it finished — so the eye is led outward from the tile the
         /// player just laid rather than arriving everywhere at once.
+        /// </para>
+        /// <para>
+        /// <b>What is drawn over the flowers escalates in kinds rather than in amounts</b>
+        /// (<see cref="KeeperSpectacle"/>), and it escalates <em>while the cascade is running</em>
+        /// rather than being decided at the end: the second flower throws a ring across the
+        /// grove, the third lights a star behind it, the fourth sends fireworks up out of it.
+        /// Nobody watching the third flower open knows yet whether there is a fourth, which is
+        /// the whole tension of a big flourish and is lost entirely if the answer arrives once it
+        /// is over.
+        /// </para>
         /// </summary>
         IEnumerator Cascade(int[] bloomed)
         {
             int count = bloomed.Length;
             float petal = KeeperTempo.Petal(count);
 
+            bool anyBed = false;
+            var had = KeeperSpectacle.For(0, false);
+
             for (int i = 0; i < count; i++)
             {
                 int at = bloomed[i];
+                bool bed = _layout.IsBed(at) && Run.Board.IsOpen(at);
+                anyBed |= bed;
+
                 OpenFlower(at, i + 1, count);
 
                 if (KeeperFlourish.Counts(i + 1)) ShowFlourish(i + 1, count);
 
-                if (KeeperTempo.Shake(i + 1) > 0f) ShakeBoard(KeeperTempo.Shake(i + 1));
+                var now = KeeperSpectacle.For(i + 1, anyBed);
+                Layers(had, now, at, i + 1, anyBed);
+                had = now;
 
                 yield return new WaitForSecondsRealtime(petal);
                 if (!this) yield break;
@@ -1082,11 +1484,118 @@ namespace GlimmerGrove
         }
 
         /// <summary>
-        /// One tile bursting into bloom: the flower, the rays behind it and the ring going out.
+        /// Everything above the flower itself, switched on a kind at a time.
         ///
-        /// A bed gets the same flower one size larger and its halo thrown outward, because a bed
-        /// opening is the only thing on this board that is progress — every other bloom is
-        /// beautiful and optional, and the two must not read the same.
+        /// <para>
+        /// Only what is <em>new</em> is fired, and nothing is ever taken away again — a layer
+        /// switching off would read as the flourish running out of steam exactly as it runs
+        /// hardest. The knock is the one exception and is re-struck on every flower, because its
+        /// whole job is to answer <em>this</em> flower.
+        /// </para>
+        /// </summary>
+        void Layers(KeeperLayers had, KeeperLayers now, int at, int nth, bool bed)
+        {
+            float knock = KeeperTempo.Shake(nth, bed);
+            if (knock > 0f) ShakeBoard(knock);
+
+            int colour = Run.Board.At(at);
+            var tint = colour == Energy.None || colour == Energy.All
+                     ? Pal.Radiance : Pal.EnergyColour(colour);
+
+            if (now.Sweep && !had.Sweep) SweepGrove(Where(at), tint);
+            if (now.Rays && !had.Rays) StarBehind();
+            if (now.Fireworks && !had.Fireworks) Fireworks(now.Rockets);
+            if (now.Confetti && !had.Confetti) Burst.Confetti(_air, 46);
+        }
+
+        /// <summary>A ring of the completed colour thrown right across the grove.</summary>
+        void SweepGrove(Vector2 from, Color tint)
+        {
+            float far = Mathf.Max(_layout.Width, _layout.Height) * _cell * 1.5f;
+            Shockwave(from, tint, far, .58f);
+        }
+
+        /// <summary>
+        /// A slow star lit behind the whole board — the one layer drawn <em>under</em> the grove
+        /// rather than over it, which is what makes it read as a new kind of thing rather than as
+        /// more of the last one.
+        /// </summary>
+        void StarBehind()
+        {
+            if (_grid == null) return;
+
+            float far = Mathf.Max(_layout.Width, _layout.Height) * _cell * 2.6f;
+
+            var star = UIKit.Img("Star", _grid, Art.Rays(256, 16), Pal.A(Pal.Gold, 0f),
+                                 Vector2.one * far, new Vector2(.5f, .5f), Vector2.zero);
+            star.transform.SetAsFirstSibling();
+
+            var rt = (RectTransform)star.transform;
+
+            Tween.Run(1.1f, Ease.OutQuad, t =>
+            {
+                if (!star) return;
+                rt.localRotation = Quaternion.Euler(0, 0, 26f * t);
+                rt.localScale = Vector3.one * Mathf.Lerp(.6f, 1.08f, t);
+                star.color = Pal.A(Pal.Gold, .30f * Mathf.Sin(t * Mathf.PI));
+            }, star).OnDone(() => { if (star) Destroy(star.gameObject); });
+        }
+
+        /// <summary>
+        /// Sparks arcing up out of the grove and going off above it. The first thing in this mode
+        /// that leaves the board, so it is unmistakable without being compared to anything.
+        /// </summary>
+        void Fireworks(int rockets)
+        {
+            if (rockets <= 0 || _air == null) return;
+
+            float w = _layout.Width * _cell;
+            float top = _origin.y + _cell * 1.4f;
+
+            for (int i = 0; i < rockets; i++)
+            {
+                float x = Mathf.Lerp(-w * .42f, w * .42f, (i + .5f) / rockets)
+                        + UnityEngine.Random.Range(-_cell * .3f, _cell * .3f);
+
+                var from = new Vector2(x, _origin.y - (_layout.Height - .5f) * _cell);
+                var to = new Vector2(x + UnityEngine.Random.Range(-_cell * .6f, _cell * .6f),
+                                     top + UnityEngine.Random.Range(0f, _cell * 1.4f));
+
+                var tint = i % 2 == 0 ? Pal.Gold : Pal.Bloom;
+
+                var spark = UIKit.Img("Rocket", _air, Art.Spark(64), Pal.A(tint, .95f),
+                                      Vector2.one * _size * .3f, new Vector2(.5f, .5f), from);
+                var rt = (RectTransform)spark.transform;
+
+                Tween.Run(UnityEngine.Random.Range(.42f, .60f), Ease.OutQuad, t =>
+                {
+                    if (!rt) return;
+                    rt.anchoredPosition = Vector2.LerpUnclamped(from, to, t);
+                    rt.localScale = Vector3.one * (1f - t * .4f);
+                }, spark).Delay(i * .07f)
+                         .OnDone(() =>
+                         {
+                             if (spark) Destroy(spark.gameObject);
+                             if (_air) Burst.Sparks(_air, to, tint, 12, 160f, 14f, .6f);
+                         });
+            }
+        }
+
+        /// <summary>
+        /// One tile bursting into bloom: the flower it throws, and the flower it <em>leaves</em>.
+        ///
+        /// <para>
+        /// <b>The second one is the change.</b> A bloom used to be a burst that faded to nothing
+        /// over a white square, so a grove near the end of a run was a grid of blank tiles and
+        /// the thing the player had spent the level building was the one thing not on the screen.
+        /// Every bloom now grows a flower that stays, in the tile's own colour, swaying for the
+        /// rest of the run — so the board fills up with a garden and <em>is</em> the score.
+        /// </para>
+        /// <para>
+        /// A bed gets the same flower larger, with a visitor coming to it, because a bed opening
+        /// is the only thing on this board that is progress — every other bloom is beautiful and
+        /// optional, and the two must not read the same.
+        /// </para>
         /// </summary>
         void OpenFlower(int at, int nth, int of)
         {
@@ -1136,7 +1645,73 @@ namespace GlimmerGrove
             Tween.Tint(tile.Body, Pal.Radiance, KeeperTempo.Petal(of) * .7f);
             Tween.Punch(tile.Rt, bed ? .42f : .28f, KeeperTempo.Petal(of) * 1.1f);
 
-            Audio.Sfx(bed ? "chime" : "lit", bed ? .62f : .42f, KeeperTempo.Pitch(nth));
+            GrowFlower(at, false);
+
+            // Wood rather than a bell, and the difference is the whole of what a player hears
+            // when a bed opens. `chime` is the pack's soft bell and it came back from play as a
+            // dong — which is exactly right, because a bell is the one thing a grove is not made
+            // of. `free` is `menu`'s block of wood struck a fifth up, so a bed opening is heard
+            // as a brighter relative of everything else on this board rather than as a second
+            // instrument arriving. Budburst's cocoons made the same swap for the same reason.
+            Audio.Sfx(bed ? "free" : "lit", bed ? .58f : .42f, KeeperTempo.Pitch(nth));
+        }
+
+        /// <summary>
+        /// The flower a bloom leaves standing for the rest of the run. See
+        /// <see cref="OpenFlower"/>.
+        ///
+        /// <para>
+        /// Coloured by the tile under it rather than by the light that opened it, which is what
+        /// makes a finished grove a spread of the colours the player chose instead of a field of
+        /// identical white. Nothing about it is stored — a cell either has one or it has not, and
+        /// the board is what decides.
+        /// </para>
+        /// </summary>
+        void GrowFlower(int at, bool instant)
+        {
+            if (_cells == null || at < 0 || at >= _cells.Length || _flora == null) return;
+
+            var cell = _cells[at];
+            if (cell == null || cell.Bloom != null) return;
+
+            bool bed = _layout.IsBed(at);
+            int colour = Run.Board.At(at);
+            var petal = colour == Energy.None || colour == Energy.All
+                      ? Pal.Radiance : Pal.EnergyColour(colour);
+
+            float size = _size * (bed ? .84f : .58f);
+
+            var holder = UIKit.Box("Bloom" + at, _flora, Vector2.one * _size,
+                                   new Vector2(.5f, .5f), Where(at));
+
+            UIKit.Img("Shine", holder, Art.Glow(128, 2f), Pal.A(petal, .26f),
+                      Vector2.one * size * 1.9f, new Vector2(.5f, .5f), Vector2.zero);
+
+            var petals = UIKit.Img("Petals", holder, Art.Bloom(128, bed ? 8 : 6, 1f),
+                                   Pal.A(petal, .95f), Vector2.one * size,
+                                   new Vector2(.5f, .5f), Vector2.zero);
+
+            UIKit.Img("Heart", petals.transform, Art.Disc(64), Pal.A(Pal.Radiance, .95f),
+                      Vector2.one * size * .34f, new Vector2(.5f, .5f), Vector2.zero);
+
+            cell.Bloom = holder;
+
+            var prt = (RectTransform)petals.transform;
+            float phase = KeeperTempo.Phase(at);
+
+            // Two idles on two properties of one transform, which is allowed where two on one
+            // property is not: the breath owns the scale and the sway owns the rotation, so
+            // neither can ever read what the other is holding.
+            Tween.Breathe(prt, .05f, KeeperTempo.FlowerSway, phase);
+            Tween.Run(KeeperTempo.FlowerSway, Ease.Linear, t =>
+            {
+                if (!prt) return;
+                prt.localRotation = Quaternion.Euler(0, 0, Mathf.Sin((t + phase) * 6.2831853f) * 7f);
+            }, petals).Loop(-1, false);
+
+            if (instant) return;
+
+            Tween.Pop(holder, 0f, KeeperTempo.PetalFull * 1.4f);
         }
 
         void Shockwave(Vector2 at, Color tint, float to, float seconds)
@@ -1277,8 +1852,6 @@ namespace GlimmerGrove
         {
             Audio.Sfx("win", .9f);
 
-            float far = Mathf.Max(_layout.Width, _layout.Height);
-
             for (int i = 0; i < _at.Length; i++)
             {
                 if (_at[i] == null) continue;
@@ -1296,6 +1869,10 @@ namespace GlimmerGrove
                     if (!sheen) return;
                     sheen.color = new Color(1, 1, 1, .16f + .5f * Mathf.Sin(t * Mathf.PI));
                 }, sheen).Delay(delay);
+
+                // The flowers the run grew answer with the tiles they grew out of.
+                var bloom = _cells[i] != null ? _cells[i].Bloom : null;
+                if (bloom) Tween.Punch(bloom, .34f, .42f).Delay(delay + .04f);
             }
 
             if (_plate) Tween.Punch(_plate, .06f, .5f);

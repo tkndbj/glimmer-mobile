@@ -684,7 +684,14 @@ namespace GlimmerGrove
                     Ripple(to, Pal.EnergyColour(_shown[index]), _size * 2.1f, .42f);
                 }
 
-                Audio.Sfx("chime", .58f, 1.22f);
+                // A bloop, never a bell. This is the commonest good thing that happens in the
+                // mode — every other drop enriches — and `chime` put a metal dong under it,
+                // which is the one material a well of light is not made of. `free` is `menu`'s
+                // block of wood struck a fifth up, and it is the *upper* note of a pair: the
+                // mote that only stacked (below) plays the same block at the bottom of that
+                // fifth, so the two outcomes are two notes of one instrument rather than two
+                // instruments. Groovekeeper's beds made the same swap for the same reason.
+                Audio.Sfx("free", .46f);
             }
             else
             {
@@ -702,7 +709,11 @@ namespace GlimmerGrove
                     landed.localScale = new Vector3(1f + squash, 1f - squash, 1f);
                 }, falling.Body).OnAbandon(() => { if (landed) landed.localScale = Vector3.one; });
 
-                Audio.Sfx("pop", .5f, .82f);
+                // The lower note of that pair, and quieter: a mote that only stacked has done
+                // nothing worth announcing, and it is what the well is full of. `pop` at .82 is
+                // a wooden clunk, which reads as something heavy hitting a floor rather than as
+                // light coming to rest.
+                Audio.Sfx("rotate_a", .34f, .94f);
             }
 
             PaintBrim();

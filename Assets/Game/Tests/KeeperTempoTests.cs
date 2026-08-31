@@ -81,6 +81,50 @@ namespace GlimmerGrove.Tests
         }
 
         [Test]
+        public void TheSurgeIsBoundedAndTravelsFasterTheFurtherItReaches()
+        {
+            // It plays under the flowers rather than after them, so it adds nothing to what the
+            // board is latched for — but a tail still travelling as the next tile lands reads as
+            // the board answering the wrong move.
+            for (int rings = 1; rings <= KeeperSurge.MaxRings + 4; rings++)
+            {
+                Assert.LessOrEqual(KeeperTempo.Surge(rings), KeeperTempo.SurgeCeiling + 1e-4f);
+                Assert.Greater(KeeperTempo.HopAt(rings), 0f);
+            }
+
+            Assert.AreEqual(0f, KeeperTempo.Surge(0));
+            Assert.AreEqual(0f, KeeperTempo.HopAt(0));
+
+            Assert.LessOrEqual(KeeperTempo.HopAt(KeeperSurge.MaxRings + 4),
+                               KeeperTempo.HopAt(1) + 1e-4f);
+        }
+
+        [Test]
+        public void TheSurgeIsOverBeforeTheFlowersAre()
+        {
+            // The two run together, so a surge outlasting the cascade it belongs to would still
+            // be crossing the grove while the player is choosing their next cell.
+            Assert.LessOrEqual(KeeperTempo.Surge(KeeperSurge.MaxRings),
+                               KeeperTempo.Cascade(1) + KeeperTempo.SeamFlare);
+        }
+
+        [Test]
+        public void EveryCellBreathesOnItsOwnBeat()
+        {
+            // Derived rather than rolled: a random phase differs between a board being rebuilt
+            // and the same board restarted, and two runs of one grove that shimmer differently
+            // is a difference nobody can name and everybody notices.
+            Assert.AreEqual(KeeperTempo.Phase(17), KeeperTempo.Phase(17));
+
+            for (int i = 0; i < 81; i++)
+            {
+                Assert.GreaterOrEqual(KeeperTempo.Phase(i), 0f);
+                Assert.Less(KeeperTempo.Phase(i), 6.2832f);
+                if (i > 0) Assert.AreNotEqual(KeeperTempo.Phase(i), KeeperTempo.Phase(i - 1));
+            }
+        }
+
+        [Test]
         public void AFlourishIsCountedFromTwoAndNamedFromThree()
         {
             // Most plantings that do anything open exactly one tile, so a count starting at one

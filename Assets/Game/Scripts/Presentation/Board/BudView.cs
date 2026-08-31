@@ -1113,10 +1113,6 @@ namespace GlimmerGrove
                             // The light strung between a bunch lasts until the first of it goes
                             // off, which is what the wind-up's own length means.
                             Wires(pulses, cue.Wave, tint[cue.Wave], windShape);
-
-                            // Rising, so the wind-up is heard as well as seen and a deep chain
-                            // climbs.
-                            Audio.Sfx("whoosh", .30f, BudTempo.Pitch(cue.Wave + 1) * 1.1f);
                         }
 
                         Wind(cue.Cell, cue.Colour, cue.Over, windShape, cue.Nth, cue.Wave + 1);
@@ -1159,7 +1155,7 @@ namespace GlimmerGrove
                         // the last collapse landing, the grove growing back, the board being put
                         // in step — and every one of those is the celebration having something to
                         // celebrate over.
-                        StartCoroutine(Fanfare(chain.Waves, BudChain.WordKey(chain.Waves)));
+                        StartCoroutine(Fanfare(chain.Waves, BudChain.WordKey(chain.Waves), pulses));
                         break;
 
                     case BudCueKind.Done:
@@ -2944,25 +2940,31 @@ namespace GlimmerGrove
         }
 
         /// <summary>
-        /// The word at the end, which is the loudest thing this mode says.
+        /// The word at the end of a chain: GREAT, AMAZING, EPIC, LEGENDARY.
         ///
         /// <para>
-        /// <b>It is the score, said out loud, and it is built to be believed.</b> It used to be
-        /// a caption swap on the running count — same size, same place, same colour — so the
-        /// biggest moment in the mode arrived as the smallest change on the screen, which is
-        /// exactly the fault <c>WheelPrizeOverlay</c> was built to fix one feature over. It now
-        /// gets its own arrival: a ring thrown out behind it, the word slamming in from
-        /// oversize, a rung colour, a shockwave, sparks, and a flash whose brightness is the
-        /// rung's.
+        /// <b>Three beats, and it used to be one.</b> It <em>gathers</em> — motes converge on the
+        /// middle of the grove under a ring closing inward, which is the beat that makes what
+        /// follows an impact rather than an arrival. Then it <em>lands</em>, all at once, with
+        /// everything its rung is allowed. Then it <em>stands</em>, alive, and leaves.
         /// </para>
         /// <para>
-        /// <b>Every rung gets all of it, only louder.</b> A ladder that withholds the
-        /// celebration below its top rung teaches the player that most of what they do is not
-        /// worth celebrating — which on a mode built to be generous (invariant 20k) is the
-        /// wrong lesson twice over.
+        /// <b>What it draws is <see cref="BudAcclaim"/>'s and escalates in kinds of thing</b>, for
+        /// the reason <see cref="BudSpectacle"/> exists: the four rungs used to draw one picture
+        /// at four sizes — <c>16 + rung * 8</c> sparks, <c>.16 + rung * .07</c> of a flash — so
+        /// the biggest thing this mode can say arrived as the smallest possible change. Reported
+        /// as the word feeling <em>dull</em>, which is exactly what a number going up looks like.
+        /// </para>
+        /// <para>
+        /// <b>And it no longer plays <c>win</c>.</b> That is the level's own note and the victory
+        /// panel plays it a beat later — the same cue twice, which is the "celebrate once" rule
+        /// <see cref="Triumph"/> already records having broken once. What it plays instead is a
+        /// <em>run</em>: <c>lit</c> climbing a pentatonic scale, as many steps as the rung is
+        /// worth. That is the one escalation that cannot be heard as the same thing louder, and
+        /// the sound set was cut for it.
         /// </para>
         /// </summary>
-        IEnumerator Fanfare(int waves, string wordKey)
+        IEnumerator Fanfare(int waves, string wordKey, BudPulse[] pulses)
         {
             // Guarded on what it actually draws with. It used to guard on `_chain`, the running
             // count — which was only ever *incidentally* true, because the count is raised by the
@@ -2976,8 +2978,15 @@ namespace GlimmerGrove
             if (rung < 0) rung = 0;
 
             var tint = RungColour(rung);
-            float weight = .55f + rung * .15f;
+            var pomp = BudAcclaim.Of(rung);
 
+            // ---------------------------------------------------------------- it gathers
+            Gather(pomp, tint);
+
+            yield return new WaitForSecondsRealtime(pomp.Gather);
+            if (!this) yield break;
+
+            // ---------------------------------------------------------------- and it lands
             // The running count goes; the word takes the middle of the grove.
             HideChain();
 
@@ -2991,9 +3000,9 @@ namespace GlimmerGrove
             rt.localScale = Vector3.one;
             rt.SetAsLastSibling();
 
-            // A bloom laid under it first, so the word arrives out of light rather than simply
-            // appearing over the board. It is what lets a word be drawn across a grid of small
-            // bright shapes and still be the brightest thing on the screen.
+            // Light laid under it first, so the word arrives out of something rather than simply
+            // appearing over the board. It is what lets a word drawn across a grid of small
+            // bright shapes still be the brightest thing on the screen.
             var halo = UIKit.Img("WordGlow", _fx, Art.Glow(256, 1.7f), Pal.A(tint, 0f),
                                  new Vector2(_size * 9f, _size * 3.4f), new Vector2(.5f, .5f),
                                  Vector2.zero);
@@ -3008,9 +3017,9 @@ namespace GlimmerGrove
                 halo.color = Pal.A(tint, a * (.30f + rung * .06f));
             }, halo).OnDone(() => { if (halo) Destroy(halo.gameObject); });
 
-            // A ring thrown out from behind the word, so it arrives *out of* something - and
-            // a second one chasing it a beat later, which is `Split`'s trick at grove scale:
-            // one ring is an arrival and two is an arrival that had somewhere to go.
+            // A ring thrown out from behind the word, and a second chasing it a beat later —
+            // `Split`'s trick at grove scale: one ring is an arrival and two is an arrival that
+            // had somewhere to go.
             Shockwave(Vector2.zero, tint, _size * (4.5f + rung * 1.6f), .55f, _fx);
             Tween.After(.14f, () =>
             {
@@ -3033,40 +3042,206 @@ namespace GlimmerGrove
                 rt.localScale = Vector3.one;
                 rt.localRotation = Quaternion.identity;
 
-                // **It holds for well over a second, so it may not hold still.** The slam is
-                // over in a third of a second and everything else on screen is settling; a word
-                // frozen at rest for the remaining beat stops being the loudest thing on the
-                // board and starts being a caption. One slow breath keeps it alive without
-                // competing with the grove underneath, and it is the only motion left running
-                // by then, so nothing is borrowing the scale it borrows.
+                // **It holds for well over a second, so it may not hold still.** The slam is over
+                // in a third of a second and everything else on screen is settling; a word frozen
+                // at rest for the remaining beat stops being the loudest thing on the board and
+                // starts being a caption.
                 Tween.Punch(rt, .10f, .40f);
                 Tween.After(.44f, () =>
                 {
                     if (this && rt) Tween.Breathe(rt, .035f, .95f);
                 }, this);
+
+                // And the light travels across the letters once they have stopped moving, which
+                // is the only moment there is room for it to be read as a shine rather than as
+                // one more thing flying about.
+                if (pomp.Shine) Shine(rt, tint);
             });
 
             Flow.Flash(Pal.A(new Color(1f, .96f, .82f), .16f + rung * .07f), .16f, .44f);
+            if (pomp.Tint > 0f) Flow.Flash(Pal.A(tint, pomp.Tint), .20f, .62f);
+
             Burst.Sparks(_fx, Vector2.zero, tint, 16 + rung * 8, 320f + rung * 120f,
                          22f + rung * 5f, .85f);
+
             if (_grid)
             {
-                Tween.Shake(_grid, 8f + rung * 6f, .34f);
-                Tween.Punch(_grid, .035f + rung * .015f, .46f);
+                Tween.Shake(_grid, 8f + pomp.Shove * 22f, .34f);
+                Tween.Punch(_grid, .035f + pomp.Shove * .05f, .46f);
             }
 
-            Audio.Sfx("win", weight, 1f + rung * .07f);
-            Audio.Sfx("star", .40f + rung * .08f, 1f + rung * .05f, .10f);
+            if (pomp.Bloom) WordBloom(tint);
+            if (pomp.Confetti) Burst.Confetti(_fx, 26 + rung * 14);
+            if (pomp.Grove) GroveCheers(pulses, waves - 1);
 
-            // The top two rungs get the thing nothing else in this mode gets, and how much of
-            // it is the rung. It used to be the top rung alone, which on a chapter whose groves
-            // mostly run two and three waves meant almost nobody ever saw any.
-            if (rung >= 2) Burst.Confetti(_fx, 26 + rung * 14);
+            // The run. `lit` is the one clip in the set cut to be climbed, so the rung is heard
+            // as a longer climb rather than as a louder anything.
+            for (int n = 0; n < pomp.Notes; n++)
+                Audio.Sfx("lit", .40f, BudAcclaim.NoteAt(n),
+                          BudAcclaim.NoteLead + n * BudAcclaim.NoteGap);
 
-            yield return new WaitForSecondsRealtime(BudTempo.Fanfare);
+            // Under it, the impact: the mode's own burst note struck low and doubled, which is
+            // how this grove already says "bigger" without reaching for a different material.
+            Audio.Sfx("burst", .70f, .62f);
+            Audio.Sfx("pop2", .38f, .52f, .05f);
+
+            // And the top rung alone gets a bell over the top of the run, because it is the one
+            // thing in this mode that never rings otherwise.
+            if (pomp.Grove)
+                Audio.Sfx("bell", .46f, 1.18f,
+                          BudAcclaim.NoteLead + pomp.Notes * BudAcclaim.NoteGap);
+
+            yield return new WaitForSecondsRealtime(BudAcclaim.Held(rung));
             if (!this) yield break;
 
             HideWord();
+        }
+
+        // ------------------------------------------------------------------ the three beats
+        /// <summary>
+        /// The word drawing breath: motes converging on the middle under a ring closing inward.
+        ///
+        /// <para>
+        /// <b>Closing rather than expanding, which is this mode's own vocabulary.</b> Every other
+        /// ring here expands and means <em>something went off there</em>; a ring that closes means
+        /// <em>this</em>, and it is what a freed critter already gets. At screen scale it reads as
+        /// the grove gathering itself, which is exactly the sentence the beat is for.
+        /// </para>
+        /// <para>
+        /// Round soft shapes only, deliberately. A converging <em>streak</em> is the obvious
+        /// drawing and it is the one this board may not have: anything with a straight edge in it
+        /// reads as lighting equipment rather than as light, which is why the burst lost its rays.
+        /// </para>
+        /// </summary>
+        void Gather(BudHonours pomp, Color tint)
+        {
+            if (_fx == null) return;
+
+            float reach = Mathf.Max(_layout.Width, _layout.Height) * _cell * 1.15f;
+
+            for (int i = 0; i < pomp.Motes; i++)
+            {
+                float turn = (i / (float)pomp.Motes) * Mathf.PI * 2f
+                           + UnityEngine.Random.Range(-.22f, .22f);
+                float far = reach * UnityEngine.Random.Range(.72f, 1.15f);
+                var from = new Vector2(Mathf.Cos(turn) * far, Mathf.Sin(turn) * far);
+
+                float size = _size * UnityEngine.Random.Range(.16f, .30f);
+
+                var mote = UIKit.Img("Gather", _fx, Art.Glow(64, 2.4f), Pal.A(tint, 0f),
+                                     Vector2.one * size, new Vector2(.5f, .5f), from);
+                mote.raycastTarget = false;
+
+                var mrt = (RectTransform)mote.transform;
+                float over = pomp.Gather * UnityEngine.Random.Range(.80f, 1f);
+
+                // In-quad, so it arrives fast: a mote that decelerates into the middle is
+                // drifting, and drifting is the opposite of what this beat says.
+                Tween.Run(over, Ease.InQuad, t =>
+                {
+                    if (!mote) return;
+                    mrt.anchoredPosition = Vector2.LerpUnclamped(from, Vector2.zero, t);
+                    mote.color = Pal.A(Color.Lerp(tint, Color.white, t), Mathf.Min(1f, t * 2.2f));
+                }, mote).OnDone(() => { if (mote) Destroy(mote.gameObject); });
+            }
+
+            var sprite = Art.Ring(256, 8f);
+            if (sprite != null)
+            {
+                var ring = UIKit.Img("GatherRing", _fx, sprite, Pal.A(tint, 0f),
+                                     Vector2.one * reach * 2f, new Vector2(.5f, .5f),
+                                     Vector2.zero);
+                ring.raycastTarget = false;
+
+                var rrt = (RectTransform)ring.transform;
+
+                Tween.Run(pomp.Gather, Ease.InQuad, t =>
+                {
+                    if (!ring) return;
+                    rrt.localScale = Vector3.one * Mathf.Lerp(1f, .18f, t);
+                    ring.color = Pal.A(tint, Mathf.Sin(Mathf.Clamp01(t) * Mathf.PI) * .70f);
+                }, ring).OnDone(() => { if (ring) Destroy(ring.gameObject); });
+            }
+        }
+
+        /// <summary>
+        /// A highlight travelling across the letters, once they have stopped moving. Rung one up.
+        /// </summary>
+        void Shine(RectTransform word, Color tint)
+        {
+            if (_fx == null || word == null) return;
+
+            float wide = word.rect.width;
+            float tall = word.rect.height;
+
+            var bar = UIKit.Img("WordShine", _fx, Art.Glow(64, 1.5f), new Color(1, 1, 1, 0f),
+                                new Vector2(tall * .55f, tall * 1.15f), new Vector2(.5f, .5f),
+                                new Vector2(-wide * .58f, 0f));
+            bar.raycastTarget = false;
+            bar.transform.SetAsLastSibling();
+
+            var brt = (RectTransform)bar.transform;
+
+            Tween.Run(.46f, Ease.InOutQuad, t =>
+            {
+                if (!bar) return;
+                brt.anchoredPosition = new Vector2(Mathf.Lerp(-wide * .58f, wide * .58f, t), 0f);
+                bar.color = Pal.A(Color.Lerp(Color.white, Pal.Lift(tint, .7f), .35f),
+                                  Mathf.Sin(Mathf.Clamp01(t) * Mathf.PI) * .70f);
+            }, bar).OnDone(() => { if (bar) Destroy(bar.gameObject); });
+        }
+
+        /// <summary>Light thrown out from behind the word as it lands. Rung two up.</summary>
+        void WordBloom(Color tint)
+        {
+            if (_fx == null) return;
+
+            var bloom = UIKit.Img("WordBloom", _fx, Art.Glow(256, 1.15f), Pal.A(tint, 0f),
+                                  Vector2.one * _size * 5f, new Vector2(.5f, .5f), Vector2.zero);
+            bloom.raycastTarget = false;
+            bloom.transform.SetAsFirstSibling();
+
+            var brt = (RectTransform)bloom.transform;
+
+            Tween.Run(.72f, Ease.OutQuint, t =>
+            {
+                if (!bloom) return;
+                brt.localScale = Vector3.one * Mathf.Lerp(.30f, 2.4f, t);
+                bloom.color = Pal.A(Pal.Lift(tint, .35f), (1f - t) * (1f - t) * .55f);
+            }, bloom).OnDone(() => { if (bloom) Destroy(bloom.gameObject); });
+        }
+
+        /// <summary>
+        /// The whole grove answering under the word, out from the middle. The top rung alone.
+        ///
+        /// It is the board itself joining in rather than one more thing drawn over the top of it,
+        /// which is what makes the last rung different in kind rather than merely louder — and it
+        /// costs nothing new, because a ripple out from the centre is what a wave's own answer
+        /// already does (<see cref="Jolt"/>).
+        /// </summary>
+        void GroveCheers(BudPulse[] pulses, int wave)
+        {
+            if (_cells == null || _layout == null) return;
+
+            float far = Mathf.Max(_layout.Width, _layout.Height) * _cell;
+            if (far <= 0f) return;
+
+            for (int i = 0; i < _cells.Length; i++)
+            {
+                var cell = _cells[i];
+                if (cell?.Rt == null) continue;
+
+                // **The cells of the wave that is still going off are left alone**, which is
+                // `Jolt`'s rule and is a correctness one rather than a taste. The word rides the
+                // last wave's answer, so that wave is *mid-ripple* when this runs: a flower that
+                // has not burst yet is still winding up, and `Tween.Punch` borrows the scale it
+                // finds and hands it back as rest — so punching one would leave it permanently
+                // oversized, which is the fault this mode was reported for one bug ago.
+                if (InWave(pulses, wave, i)) continue;
+
+                float away = Vector2.Distance(Where(i), Vector2.zero);
+                Tween.Punch(cell.Rt, .24f, .40f).Delay(away / far * .34f);
+            }
         }
 
         /// <summary>The most the word ever slams in at, when the word is short enough for it.</summary>

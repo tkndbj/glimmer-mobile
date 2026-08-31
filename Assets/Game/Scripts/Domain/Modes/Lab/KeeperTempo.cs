@@ -89,14 +89,20 @@ namespace GlimmerGrove.Modes
         /// <summary>A flourish worth the screen flashing and confetti for.</summary>
         public const int BigFrom = 4;
 
-        /// <summary>How much the grove is shaken by a flourish this big, in canvas units.</summary>
-        public static float Shake(int blooms)
-        {
-            if (blooms < KeeperFlourish.CountFrom) return 0f;
+        /// <summary>
+        /// How much the grove is knocked by a flourish this big, in canvas units.
+        ///
+        /// <para>
+        /// Derived from <see cref="KeeperSpectacle"/> rather than being a second ladder beside
+        /// it. There is exactly one statement of how loud a flourish is, and everything that
+        /// says it — the knock, the ring, the star, the fireworks — reads that one.
+        /// </para>
+        /// </summary>
+        public static float Shake(int blooms, bool openedABed)
+            => KeeperSpectacle.For(blooms, openedABed).Jolt * MostShake;
 
-            float amount = 4f + (blooms - KeeperFlourish.CountFrom) * 4.5f;
-            return amount > 20f ? 20f : amount;
-        }
+        /// <summary>The hardest the grove is ever knocked, at the top of the ladder.</summary>
+        public const float MostShake = 20f;
 
         /// <summary>
         /// How far up the scale a flower sounds, as a pitch multiplier.
@@ -149,5 +155,64 @@ namespace GlimmerGrove.Modes
         /// to be sat through is one they learn to tap past.
         /// </summary>
         public const float Ripple = .70f;
+
+        // ------------------------------------------------------------------ the surge
+        /// <summary>
+        /// How long light takes to cross one seam.
+        ///
+        /// Quick enough that a four-ring walk is over before the flowers are, and slow enough
+        /// that the eye can follow which way it went — which is the whole reason the surge
+        /// exists (see <see cref="KeeperSurge"/>).
+        /// </summary>
+        public const float Hop = .085f;
+
+        /// <summary>
+        /// The most a whole surge may take, however far it reaches.
+        ///
+        /// It plays under the flowers rather than after them, so it is not added to what the
+        /// board is latched for — but a tail still running while the player lays the next tile
+        /// reads as the board answering the wrong move, so it is bounded like everything else
+        /// here.
+        /// </summary>
+        public const float SurgeCeiling = .46f;
+
+        /// <summary>How long a surge of <paramref name="rings"/> rings takes. Never above the ceiling.</summary>
+        public static float Surge(int rings)
+        {
+            if (rings <= 0) return 0f;
+
+            float full = rings * Hop;
+            return full < SurgeCeiling ? full : SurgeCeiling;
+        }
+
+        /// <summary>
+        /// How long one ring of a <paramref name="rings"/>-ring surge takes.
+        ///
+        /// The rate giving way again: a surge that reaches further travels faster rather than
+        /// lasting longer, which is also what light spreading through something looks like.
+        /// </summary>
+        public static float HopAt(int rings) => rings <= 0 ? 0f : Surge(rings) / rings;
+
+        /// <summary>How long a seam holds its flare once the light has crossed it.</summary>
+        public const float SeamFlare = .34f;
+
+        /// <summary>How long a seam takes to draw itself on when it is first made.</summary>
+        public const float SeamDraw = .26f;
+
+        // ------------------------------------------------------------------ standing still
+        /// <summary>How long one breath of a planted tile takes.</summary>
+        public const float Sway = 3.4f;
+
+        /// <summary>How long one sway of an opened flower takes. Slower than the tile under it.</summary>
+        public const float FlowerSway = 4.2f;
+
+        /// <summary>
+        /// A per-cell phase, so a grove of forty tiles does not breathe in lockstep.
+        ///
+        /// Derived from the index rather than rolled, because a random one differs between a
+        /// board being rebuilt and the same board restarted, and two runs of one grove that
+        /// shimmer differently is a difference nobody can name and everybody notices.
+        /// </summary>
+        public static float Phase(int index) => index * .7361f % 6.2831853f;
     }
 }

@@ -2584,6 +2584,12 @@ unreachable — a solved glade with no stars, no credits and no panel.
 **Lightfall** (`FallScreen`) — a well of coloured motes that has to be emptied, and an ordered
 procession to empty it with. Tap a column: the mote either **enriches** the top of that column
 (a colour it lacks, and the stack does not grow) or **heightens** it (a colour it already holds).
+The two outcomes are **two notes of one instrument** — `free` and `rotate_a`, the same block of
+wood a fifth apart, the upper note for the good outcome. They were `chime` and `pop`: a bell and a
+wooden clunk, so the commonest good thing in the mode had a metal dong under it and the commonest
+neutral one sounded like something heavy hitting a floor. Same swap, same reason and same week as
+Groovekeeper's beds — **before giving a mode's moment a sound, check it is the same material as
+the rest of the set**, and where two outcomes are a pair, make them a pair.
 A mote holding all three channels **bursts**, and washes the colour that finished it into the
 motes beside it — so any of them thereby completed bursts in turn, and one well-chosen drop runs
 through a whole connected blob. It reaches a mote buried at the bottom of a column that no drop
@@ -2621,6 +2627,67 @@ may be sold a continue (invariant 28c). There is no undo — the procession is v
 under a thumb says what a cell would open before it is committed, so a wrong tile is a
 misjudgement rather than a surprise. Boards are authored and searched, not generated —
 `Tools/chapters/k01_grovekeeper.py` and `Tools/verify/keeper.py`.
+
+**The mode had no propagating event, and that was the whole of what was wrong with its look.**
+Every other mode here has something that *travels* — a glade's light walks the network, a well's
+burst washes into the motes beside it, a grove's chain crosses the board wave by wave — and this
+one laid a tile, opened a flower and stopped. There was nothing on the board for a celebration to
+be *about*, so every attempt at one came out as more decoration around a single cell. `KeeperSurge`
+is the answer and it changes no rule: after a planting has settled, the light walks outward from
+every bloom through the **seams** and never between two tiles of one colour, so the shape the
+celebration takes is the shape the player arranged — two people who finish the same groove
+differently see visibly different light. It is bounded in rings (four) rather than by the groove,
+for `KeeperTempo.Ceiling`'s reason, and it plays *under* the cascade rather than after it, so it
+costs the latch nothing.
+<br>Four things follow it and each is about the board rather than about one cell. A tile
+**sprouts** — wide and flat, then up, with the soil darkening under it and puffing — because a
+tile that appears at 1.45 and springs to 1.0 is a sticker being placed and this mode is about
+planting. A seam is **made once and kept**, drawn on along its own axis and flared when light
+crosses it, rather than a bar repainted from a list every planting. Every bloom **leaves a
+flower**, in the tile's own colour, swaying for the rest of the run: a bloom used to fade to
+nothing over a white square, so a groove near the end of a run was a grid of blanks and the thing
+the player spent the level building was the one thing not on screen.
+<br>**The flourish ladder escalates in kinds rather than in amounts** (`KeeperSpectacle`), which
+is `BudSpectacle`'s lesson applied to the mode that needed it most: it was one picture at five
+sizes — the same flower, ring and sparks with a bigger swell and a louder knock — and *a number
+going up is not something anybody sees*. A second bloom throws a ring across the groove, a third
+lights a star behind it, a fourth sends fireworks up out of it, a fifth brings confetti, and it
+escalates **while the cascade is running** rather than being decided at the end. Two rungs of that
+are unlike Budburst's. **Five is the ceiling and it is a fact about the board**, so unlike a chain
+there is nowhere for a ladder to hide — every rung has to land inside ordinary play. And **a bed
+lifts the floor to the sweep rung**: one tile, one bed, par advanced is the commonest thing a
+player does on purpose here, and a ladder whose first rung is bare teaches them that most of what
+they do does not count. `KeeperTempo.Shake` is *derived* from that ladder rather than being a
+second one beside it.
+<br>**Two things were built here, played, and taken back out, and both failed the same way.** A
+**butterfly** flew in from off the board and settled on every opened bed, and a **meadow** turned
+every unplanted square to grass and flowers when the last bed opened. Neither is a reading of
+anything on the board: a visitor says nothing about which tile was laid or what it completed, and
+a meadow drawn on the cells the player *never used* is at its biggest exactly where they did least
+— so both are scenery arriving on top of a decision rather than a picture of one, and both were
+reported as unnecessary inside a minute of play. **A board's celebration has to be made of the
+board.** The surge, the seams and the kept flowers survived the same session, and what separates
+them from these two is not effort or size: every one of them is a reading of what the player just
+did. `KeeperTempo.Meadow` and `MeadowDelay` went with them, and the finale is the ripple through
+the tiles that were actually laid, with the flowers they grew answering under it.
+<br>**A bed opening plays wood, never a bell.** `chime` is the pack's soft bell and it came back
+from play as a metallic dong — correctly, because a bell is the one thing a grove is not made of.
+It is `free` now, which is `menu`'s block of wood struck a fifth up, so a bed opening is heard as a
+brighter relative of everything else on this board rather than as a second instrument arriving.
+Budburst's cocoons made exactly this swap for exactly this reason and the lesson did not travel:
+**before giving a mode's biggest moment a sound of its own, check it is the same material as the
+rest of the set.**
+<br>**And the board is never completely still.** This mode is played slowly — the whole point of
+it is a player deciding rather than reacting — so the seconds where nothing is happening are most
+of it, and they were exactly the seconds nothing was drawing. Motes drift over the groove, tiles
+and seams breathe and flowers sway, all off `KeeperTempo.Phase`, which
+is derived from the cell index rather than rolled: a random phase differs between a board being
+rebuilt and the same board restarted, and two runs of one groove that shimmer differently is a
+difference nobody can name and everybody notices. A tile is **two transforms** for the house
+rule's reason — the holder carries everything that punches and the body carries the breath, and a
+punch and a breath both write `localScale`. `_flora`, `_fx` and `_air` each get a nested `Canvas`,
+and the ground deliberately does not: a nested canvas is a raycast boundary as well as a rebuild
+one, and nesting the ground would take every tap on the board with it.
 
 **Hollow** (`HollowScreen`) — a field of sleeping critters and a short *ordered* queue of
 sparks. Light accumulates and never decays, so a player can never be stuck, the only endings
@@ -3115,6 +3182,45 @@ longer answers before most of the wave exists. And a flower's wind-up runs right
 it goes off rather than for a fixed beat with the remainder spent standing still — with the
 *shape* still read against the shared `BudTempo.Wind`, so a bunch moves as one and the flowers
 going off later simply hold at their peak for longer, which is what `Peak` always wanted.
+
+**The word at the end escalated in amounts, which is the fault `BudSpectacle` exists to fix —
+in the one place nobody applied it.** Reported as GREAT/AMAZING/EPIC/LEGENDARY feeling *dull*. The
+four rungs were each individually plausible — `16 + rung x 8` sparks, `.16 + rung x .07` of a
+flash, `8 + rung x 6` of a shake, confetti above rung two — and between them they drew **one
+picture at four sizes**. That is precisely the mistake the wave ladder made and took a rewrite to
+correct ("*a number going up is not something anybody sees; a thing that was not there before
+is*"), and it sat unnoticed on the biggest thing this mode can say because every individual number
+looked reasonable.
+<br>`BudAcclaim` is the ladder as **kinds of thing**, switching a new one on at each rung and
+keeping the ones before: the word landing (always), a **shine** travelling across the letters at
+AMAZING, a **bloom** thrown out from behind it and **confetti** at EPIC, and at LEGENDARY the
+**whole grove** answering under it, cell by cell, out from the middle. One to five kinds rather
+than one at four volumes, and `BudAcclaimTests` holds it — each rung draws something the one below
+did not, nothing is ever taken away, and the *commonest* word is already worth watching, because a
+ladder whose first rung is bare teaches the player that most of what they do does not count
+(invariant 20k, on the mode built to be generous).
+<br>**And the word gathers before it lands**, which is the beat it never had. Motes converge on the
+middle under a ring closing **inward** — the mode's own "this one" idiom at screen scale — and it
+comes *out of* `BudTempo.Fanfare` rather than beside it, so the word costs the chain exactly what
+it always did. That is `BudTempo.Charge` to a wave, one level up: an impact needs a wind-up or it
+is only an arrival.
+<br>**The sound was the other half and it was borrowed.** It played `win` — the *level's* own note,
+which the victory panel plays a beat later — which is the same cue twice and the exact "celebrate
+once" break `Triumph` already records having made ("*Not `win`. The panel plays that a beat
+later*"); the fanfare never got the memo. What it plays now is a **run**: `lit` climbing a
+pentatonic scale, three notes at GREAT and six at LEGENDARY, over the mode's own burst note struck
+low and doubled, with a bell over the top of the last rung alone. A longer climb is the one
+escalation that cannot be heard as the same thing louder — and `lit` is the clip the set was cut to
+be climbed with, every transposition in `sfx.tsv` being a pentatonic step precisely so overlapping
+notes cannot collide into a beat. The run is led in by `NoteLead` so the impact lands alone: `lit`
+is .28s, so a run 85ms apart already stands three deep, and starting it on the same frame as the
+two impact notes puts six voices on one instant of a ten-voice pool the board is still using.
+<br>One trap worth keeping, because it is this file's own lesson caught in freshly written code:
+the grove's answer at the top rung punches every cell, and the word rides the **last wave's**
+answer — so that wave is mid-ripple and its flowers are still winding up. `Tween.Punch` borrows the
+scale it finds and hands it back as rest, so punching one would have left it permanently oversized:
+the fault reported one bug earlier, reintroduced by the fix for it. `GroveCheers` skips the wave's
+own cells, which is `Jolt`'s rule and is a correctness rule rather than a tidy one.
 
 **A thing that is leaving and a thing that is arriving may not share a transform, and the second
 report of these animations was that rule broken.** Reported as *"some of the falling flowers get
