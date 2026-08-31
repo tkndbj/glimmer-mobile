@@ -87,7 +87,7 @@ namespace GlimmerGrove
 
         // ------------------------------------------------------------------ the furniture
         BudLayout _layout;
-        RectTransform _host, _grid, _field, _residents, _fx, _tray, _plate;
+        RectTransform _host, _grid, _field, _near, _residents, _fx, _tray, _plate;
         Text _count, _left, _chain;
 
         Cell[] _cells;
@@ -259,6 +259,11 @@ namespace GlimmerGrove
         /// what it costs is about a tenth off the top of a top-row flower at the deepest
         /// wind-up — a moment, on one row, against something that was happening on every fall.
         /// </para>
+        /// <para>
+        /// <b>And it is now all four sides rather than only the top.</b> The other three carried
+        /// a cell of slack apiece on the reasoning that there is nothing to hide at the sides or
+        /// below — true of a flower arriving, false of one going off. See <c>BuildGround</c>.
+        /// </para>
         /// </summary>
         const float PlateLip = 13f;
 
@@ -281,28 +286,39 @@ namespace GlimmerGrove
             // nothing under it. `_grid` is the whole screen below the band, so masking that
             // clips nothing; the mask has to be a node the size of the board.
             //
-            // **It is deliberately not the same rect as the board**, and the margins are not
-            // symmetric because what they are for is not. Above, it stops a little over a
-            // quarter of a cell past the top row, which is the least that lets a top-row flower
-            // reach its full wind-up (a flower is drawn at .78 of `_size` and swells to 2.20, so
-            // it overhangs its own cell by .29 of one) and the most that still hides an entry.
-            // At the sides and below there is nothing to hide, so they are generous and no
-            // gesture is ever cut there at all.
-            //
-            // Only the *field* is masked. `_fx` and `_residents` are siblings of it, so a
-            // burst's petals, its rings, the fireworks and a freed critter all still cross the
-            // edge of the board — which they must, since leaving the board is the whole of what
-            // makes the fireworks read as fireworks.
-            float skirt = _cell * 1.5f;
-            float lift = (skirt - PlateLip) * .5f;
-
+            // **The clip is the plate, exactly, and the asymmetric version of it is what put
+            // flowers outside the grove.** It used to keep 1.2 cells of room at each side and
+            // 1.5 below on the reasoning that there is nothing to *hide* there — which is true
+            // of a flower arriving and false of one going off. A burst hands the wind-up's size
+            // on to `ThrowFlower` and grows it further, so an edge flower reached most of two
+            // cells across and the margin drew all of it: reported from play as *"random flowers
+            // outside of the grid"*, and it was the board's own flowers, cut off in mid-air
+            // beside it. There is no margin that is generous for an entrance and tight for a
+            // burst, so the clip is the one line the player already reads as the edge of the
+            // grove — the plate's own lip, on all four sides. What it costs is the last sliver
+            // of an edge burst, which is a fading flower trimmed at a border it is plainly
+            // inside; what it buys is that nothing on this board is ever drawn off it.
             var clip = UIKit.Box("Field", _grid,
-                                 new Vector2(w + _cell * 2.4f, h + PlateLip + skirt),
-                                 new Vector2(.5f, .5f), new Vector2(0f, -lift));
+                                 new Vector2(w + PlateLip * 2f, h + PlateLip * 2f),
+                                 new Vector2(.5f, .5f), Vector2.zero);
             clip.gameObject.AddComponent<RectMask2D>();
 
             _field = UIKit.Box("Buds", clip, new Vector2(w, h), new Vector2(.5f, .5f),
-                               new Vector2(0f, lift));
+                               Vector2.zero);
+
+            // **Everything a burst throws is clipped with the flowers, because a pop happens on
+            // the spot.** The rings, the core, the sparks and the shell's chips are all anchored
+            // on the cell they belong to, so they belong inside the grove with it — and they are
+            // the half of "outside the grid" a tighter field mask alone would not have fixed,
+            // since they were drawn on `_fx`, which is the whole screen. It shares `clip` rather
+            // than carrying a mask of its own so there is one boundary rather than two that can
+            // come to disagree.
+            //
+            // What stays on `_fx` is what is *about the grove* rather than about a cell: the
+            // sweep, the fireworks, the star behind the board, the confetti and the word. Those
+            // must cross the edge — a firework that cannot leave the board is not a firework.
+            _near = UIKit.Box("Near", clip, new Vector2(w, h), new Vector2(.5f, .5f),
+                              Vector2.zero);
 
             // **Freed critters stand above the grove rather than in it.** See `Free`: a critter
             // the player has let out is not a tenant of a cell any more, so it is drawn on its
@@ -314,9 +330,61 @@ namespace GlimmerGrove
             _fx = UIKit.Node("Fx", _grid);
             UIKit.StretchTo(_fx, 0f, 0f, 0f, 0f);
 
+            // **Three canvases, and it is the fall that pays for them.** Measured on the shipped
+            // finale's best tap, one wave puts up to *296* transient graphics on the screen -
+            // every burst is a core, a bloom, one or two rings and a dozen sparks, and every one
+            // of those animates its colour, which dirties its vertices every frame. Unity
+            // rebuilds and re-batches a canvas *whole*: one dirty spark costs a rebuild of every
+            // graphic sharing its canvas, so the grove's own three hundred were being rebuilt
+            // sixty times a second for the length of a cascade, on top of the effects' three
+            // hundred.
+            //
+            // That is the other half of what was reported as the flowers falling in steps rather
+            // than smoothly, and it is the half no timing change could have fixed: the fall's
+            // arithmetic was asking for a position sixty times a second and the frame was not
+            // arriving. A nested `Canvas` is a rebuild boundary - the effects churn inside their
+            // own and the board rebuilds only when the board moves - so the work is split three
+            // ways instead of multiplied.
+            //
+            // **`overrideSorting` is deliberately left off.** Turning it on is the usual next
+            // step and it would silently unclip `_near`: `MaskUtilities` walks up looking for a
+            // `RectMask2D` and *stops* at the first canvas that overrides sorting, so the burst
+            // effects would leave the grove again with nothing to say why. Without it a nested
+            // canvas keeps its place in the hierarchy's draw order, which is all this needs.
+            //
+            // **And `_field` is NOT nested, which is the whole of what this costs.** A nested
+            // canvas is a rebuild boundary *and* a raycast boundary: `Graphic.canvas` resolves to
+            // the nearest enabled `Canvas` above it, `GraphicRegistry` files the graphic under
+            // that one, and a `GraphicRaycaster` only ever looks up the canvas it is sitting on.
+            // So the instant `_field` had a canvas of its own, every cell's hit target vanished
+            // from the root raycaster's list and the grove stopped answering taps at all -
+            // shipped exactly like that, and it is invisible in a compile, a validator and a
+            // screenshot alike, because the board still draws perfectly. Nesting it would need a
+            // `GraphicRaycaster` of its own, and it buys nothing: what was thrashing the canvas
+            // was the *effects*, and they are the two layers that are nested. The board rebuilds
+            // when the board moves, which it has to anyway.
+            //
+            // The rule to keep, because it is one line and it is not obvious: **a layer may be
+            // nested only if nothing under it is ever tapped.** `_near` and `_fx` qualify by
+            // construction - `UIKit.Img` sets `raycastTarget = false` and every effect here comes
+            // from it - and `_field` never will, because the tap target is the whole mode.
+            Nest(_near);
+            Nest(_fx);
+
             _cells = new Cell[_layout.Count];
             _freed = new Image[_layout.Count];
             for (int i = 0; i < _cells.Length; i++) _cells[i] = BuildCell(_field, i);
+        }
+
+        /// <summary>
+        /// Give a layer a rebuild boundary of its own. See <see cref="BuildGround"/> for why —
+        /// and for why only a layer with nothing tappable under it may be given one.
+        /// </summary>
+        static void Nest(RectTransform node)
+        {
+            if (node == null || node.GetComponent<Canvas>() != null) return;
+
+            node.gameObject.AddComponent<Canvas>();
         }
 
         Cell BuildCell(RectTransform field, int index)
@@ -826,7 +894,7 @@ namespace GlimmerGrove
             var paint = Petal(made);
             Shockwave(Where(index), paint, _size * 1.9f,
                       BudTempo.Strike(BudTempo.WaveFull) * 2.2f);
-            Burst.Sparks(_fx, Where(index), paint, 8, 170f, 13f, .45f);
+            Burst.Sparks(_near, Where(index), paint, 8, 170f, 13f, .45f);
 
             var rt = cell.Rt;
             var bud = cell.Bud;
@@ -901,9 +969,9 @@ namespace GlimmerGrove
             Audio.Sfx("burst", .42f, .84f, .07f);
 
             Flow.Flash(Pal.A(Color.white, .22f), .10f, .40f);
-            Shockwave(where, Color.white, _size * 4.6f, .40f);
-            Shockwave(where, Pal.Gold, _size * 3.2f, .30f);
-            Burst.Sparks(_fx, where, Color.white, 18, 340f, 18f, .7f);
+            Shockwave(where, Color.white, _size * 3.0f, .40f);
+            Shockwave(where, Pal.Gold, _size * 2.2f, .30f);
+            Burst.Sparks(_near, where, Color.white, 18, 210f, 18f, .7f);
 
             if (_grid) { Tween.Shake(_grid, 16f, .34f); Tween.Punch(_grid, .06f, .40f); }
         }
@@ -1239,7 +1307,7 @@ namespace GlimmerGrove
             bool across = Mathf.Abs(a.x - b.x) > Mathf.Abs(a.y - b.y);
             float span = _cell;
 
-            var bar = UIKit.Img("Wire", _fx, Art.Round(8), Pal.A(tint, 0f),
+            var bar = UIKit.Img("Wire", _near, Art.Round(8), Pal.A(tint, 0f),
                                 across ? new Vector2(span, _size * .10f)
                                        : new Vector2(_size * .10f, span),
                                 new Vector2(.5f, .5f), mid);
@@ -1381,8 +1449,8 @@ namespace GlimmerGrove
                     // **A firework is a round pop of light.** It used to go off as a starburst
                     // of straight rays, which is a spotlight rather than a firework and read as
                     // exactly that against a board of soft round shapes.
-                    Flare(to, paint, climb * .8f);
-                    Shockwave(to, paint, _size * 2.2f, climb * 1.1f);
+                    Flare(to, paint, climb * .8f, _fx);
+                    Shockwave(to, paint, _size * 2.2f, climb * 1.1f, _fx);
                     Burst.Sparks(_fx, to, paint, 12, 300f, 16f, climb * 1.4f);
                     Audio.Sfx("star", .26f, 1.25f + i * .06f);
                 });
@@ -1781,7 +1849,7 @@ namespace GlimmerGrove
             // Bounded *with* its stagger rather than beside it — see `BudTempo.Rainfall`, which
             // is where that arithmetic lives so it can be proved without an Editor.
             float rows = Mathf.Abs(above) / Mathf.Max(1f, _cell);
-            BudTempo.Rainfall(column, rows, over, out float delay, out float fall);
+            BudTempo.Rainfall(column, rows, over, hold, out float wait, out float fall);
 
             Action rest = () =>
             {
@@ -1812,18 +1880,23 @@ namespace GlimmerGrove
             // before the stretch below borrows it.
             Tween.KillChannel(piece, SquashChannel);
 
-            // **Gentler than gravity, and that is a drawing decision rather than a physical
-            // one.** `InQuad` is what a falling thing really does and it peaks at twice its own
-            // average speed, so the last frames of a five-row drop cover a third of a cell each
-            // and the eye reads it as skipping rather than as falling. `t^1.5` peaks at one and
-            // a half times instead: still unmistakably accelerating, never fast enough to tear.
+            // **Gentler than gravity, and the shape is `BudTempo.Curve` rather than a number
+            // typed here.** `InQuad` is what a falling thing really does and it peaks at twice
+            // its own average speed, so the last frames of a tall drop cover a third of a cell
+            // each and the eye reads it as skipping rather than as falling. What replaces it is
+            // not merely a smaller exponent: the exponent *is* the ratio of a fall's fastest
+            // instant to its mean, so it is the other half of the arithmetic that decides how
+            // long the fall gets (`BudTempo.Pace`), and the two have to be the same number in
+            // both places or the bound is a bound on nothing. Hence the constant is Domain's and
+            // the test that measures the peak reads the same one this line draws with.
+            //
             // Shaped here with `Ease.Linear` rather than added to `Ease`, because it exists for
             // this one gesture and naming it in the shared set would invite it into others.
             Tween.Run(fall, Ease.Linear, t =>
             {
                 if (!piece) return;
 
-                float drop = t * Mathf.Sqrt(t);
+                float drop = Mathf.Pow(t, BudTempo.Curve);
                 piece.anchoredPosition = new Vector2(0f, Mathf.LerpUnclamped(above, 0f, drop));
 
                 // Drawn out along the way it is travelling, and most drawn out where it is
@@ -1831,7 +1904,7 @@ namespace GlimmerGrove
                 // never enough to be caught looking at.
                 float pull = lean * drop;
                 piece.localScale = new Vector3(1f - pull * .45f, 1f + pull, 1f);
-            }, piece, FallChannel).Delay(hold + delay).OnAbandon(rest).OnDone(() =>
+            }, piece, FallChannel).Delay(wait).OnAbandon(rest).OnDone(() =>
             {
                 if (!piece) return;
                 piece.anchoredPosition = Vector2.zero;
@@ -2172,9 +2245,10 @@ namespace GlimmerGrove
             //
             // What it is read *for*: the ground goes back to square, and the flower carries its
             // size on into the burst. Discarding it made the flower visibly collapse on the
-            // frame it went off — invisible while the wind-up only reached 1.34, and the exact
-            // opposite of the gesture once it reaches 1.82. A thing that shrinks before it
-            // explodes is not building, it is deflating.
+            // frame it went off — a thing that shrinks before it explodes is not building, it
+            // is deflating. It matters less now the wind-up is trimmed back to 1.30–1.52 and it
+            // is still worth the two lines: continuity through the frame a gesture changes into
+            // another one is the cheapest thing there is to get right.
             float swollen = cell.Rt ? cell.Rt.localScale.x : 1f;
             float turned = cell.Rt ? cell.Rt.localEulerAngles.z : 0f;
 
@@ -2201,7 +2275,7 @@ namespace GlimmerGrove
             // White rather than tinted for the first instant, because a burst is brighter than
             // any colour on this board and reading it as light rather than as paint is what
             // makes it feel like something went off.
-            var core = UIKit.Img("Flash", _fx, Art.Glow(256, 3.4f), Color.white,
+            var core = UIKit.Img("Flash", _near, Art.Glow(256, 3.4f), Color.white,
                                  Vector2.one * _size * 1.55f * force, new Vector2(.5f, .5f),
                                  where);
             var crt = (RectTransform)core.transform;
@@ -2220,8 +2294,8 @@ namespace GlimmerGrove
 
             // The bloom under everything, which is what stops a dark blend's burst reading as a
             // hole punched in the board.
-            var flare = UIKit.Img("Bloom", _fx, Art.Glow(256, 1.8f), Pal.A(tint, .78f),
-                                  Vector2.one * _size * 2.3f * force, new Vector2(.5f, .5f),
+            var flare = UIKit.Img("Bloom", _near, Art.Glow(256, 1.8f), Pal.A(tint, .78f),
+                                  Vector2.one * _size * 1.9f * force, new Vector2(.5f, .5f),
                                   where);
             flare.transform.SetAsFirstSibling();
 
@@ -2233,7 +2307,7 @@ namespace GlimmerGrove
                 flare.color = Pal.A(tint, .78f * (1f - t) * (1f - t));
             }, flare).OnDone(() => { if (flare) Destroy(flare.gameObject); });
 
-            Shockwave(where, tint, _size * 3.1f * force, life * .85f);
+            Shockwave(where, tint, _size * 2.4f * force, life * .85f);
 
             // A second ring chasing the first, from five alike upward. It is the cheapest thing
             // here that reads as *more* rather than as *bigger*: one ring is a burst, and two is
@@ -2241,11 +2315,11 @@ namespace GlimmerGrove
             if (blast != BudBlast.Small)
                 Tween.After(life * .16f, () =>
                 {
-                    if (this) Shockwave(where, Pal.Lift(tint, .5f), _size * 4.4f * force,
+                    if (this) Shockwave(where, Pal.Lift(tint, .5f), _size * 3.3f * force,
                                         life * .95f);
                 }, this);
 
-            Burst.Sparks(_fx, where, tint, Mathf.RoundToInt(8f * force), 210f * force, 14f,
+            Burst.Sparks(_near, where, tint, Mathf.RoundToInt(8f * force), 135f * force, 14f,
                          life * .8f);
 
             // Budburst's own slot, and it had to be: this is struck thirteen times in a wave
@@ -2346,7 +2420,7 @@ namespace GlimmerGrove
 
             Splinters(where, life);
             Shockwave(where, Pal.Rope, _size * 1.9f, life * .7f);
-            Burst.Sparks(_fx, where, Pal.Rope, 7, 150f, 14f, life * .8f);
+            Burst.Sparks(_near, where, Pal.Rope, 7, 150f, 14f, life * .8f);
 
             // A shell taking a crack, and it is not the shell breaking — that is `Free`. The
             // wood-break sample that used to play here went with the white flower's, for the
@@ -2372,7 +2446,7 @@ namespace GlimmerGrove
                 float reach = _size * (.5f + i * .12f);
                 float spin = (i % 2 == 0 ? 1f : -1f) * (240f + i * 60f);
 
-                var chip = UIKit.Img("Splinter", _fx, sprite, new Color(.94f, .90f, .74f, 1f),
+                var chip = UIKit.Img("Splinter", _near, sprite, new Color(.94f, .90f, .74f, 1f),
                                      Vector2.one * _size * .18f, new Vector2(.5f, .5f), at);
                 var rt = (RectTransform)chip.transform;
 
@@ -2426,18 +2500,26 @@ namespace GlimmerGrove
             // .11s and a uniform grow this was a flower blinking off: the wind-up spent a third
             // of a second building to it and then nothing came of it. Now it is thrown - pulled
             // long as it leaves, released past its own size on an out-back so the shape
-            // overshoots the way a thing under pressure does, whipped round harder than the
+            // overshoots the way a thing under pressure does, turned a little harder than the
             // wind-up left it, and gone. The alpha is held back deliberately: it stays fully
             // lit until the shape has finished moving, so the last thing the eye keeps is the
             // flower at its largest rather than a ghost of it.
+            //
+            // **The growth is .45 and it was 1.05, which is what made a burst leave its own
+            // square.** It multiplies the wind-up rather than replacing it, so at the old swell
+            // a flower went off at better than four times its drawn size - most of two cells
+            // across, which is a burst happening *over the grove* rather than on the tile that
+            // caused it, and on an edge column it was the thing the player was seeing outside
+            // the board. Trimmed here as well as in the wind-up because the two multiply:
+            // cutting one alone still leaves the other doing most of it.
             Tween.Run(BudTempo.Burst, Ease.OutBack, t =>
             {
                 if (!bud) return;
 
-                float grow = from * (1f + t * 1.05f);
+                float grow = from * (1f + t * .45f);
                 float draw = .22f * Mathf.Sin(Mathf.Clamp01(t) * Mathf.PI);
                 brt.localScale = new Vector3(grow * (1f + draw), grow * (1f - draw * .7f), 1f);
-                brt.localRotation = Quaternion.Euler(0, 0, turned + t * 130f);
+                brt.localRotation = Quaternion.Euler(0, 0, turned + t * 55f);
                 // Clamped because `OutBack` overshoots past one on purpose, and an alpha is
                 // the one thing here that must not follow it out.
                 float u = Mathf.Clamp01(t);
@@ -2518,7 +2600,8 @@ namespace GlimmerGrove
         /// burst's flash and gone faster, because this flower did not go off — something
         /// reached it.
         /// </summary>
-        void Flare(Vector2 at, Color tint, float life)
+        /// <param name="on">Which layer, for <see cref="Shockwave"/>'s reason.</param>
+        void Flare(Vector2 at, Color tint, float life, RectTransform on = null)
         {
             // Round, for the core's reason: this was a ten-pointed star flipped and rotated by
             // index, so a wave washing twenty flowers drew twenty little searchlights at
@@ -2527,7 +2610,7 @@ namespace GlimmerGrove
             var sprite = Art.Glow(128, 2.6f);
             if (sprite == null) return;
 
-            var fork = UIKit.Img("Flare", _fx, sprite, Pal.A(Pal.Lift(tint, .45f), .95f),
+            var fork = UIKit.Img("Flare", on ? on : _near, sprite, Pal.A(Pal.Lift(tint, .45f), .95f),
                                  Vector2.one * _size * 1.05f, new Vector2(.5f, .5f), at);
             var rt = (RectTransform)fork.transform;
 
@@ -2727,10 +2810,10 @@ namespace GlimmerGrove
                 });
             }
 
-            Shockwave(where, Pal.Gold, _size * 3.4f, life * .7f);
-            Burst.Sparks(_fx, where, Pal.Gold, 12, 230f, 18f, life * .8f);
+            Shockwave(where, Pal.Gold, _size * 2.6f, life * .7f);
+            Burst.Sparks(_near, where, Pal.Gold, 12, 170f, 18f, life * .8f);
 
-            var halo = UIKit.Img("Freed", _fx, Art.Glow(256, 1.8f), Pal.A(Pal.Gold, .85f),
+            var halo = UIKit.Img("Freed", _near, Art.Glow(256, 1.8f), Pal.A(Pal.Gold, .85f),
                                  Vector2.one * _size * 2.4f, new Vector2(.5f, .5f), where);
             var hrt = (RectTransform)halo.transform;
 
@@ -2770,7 +2853,7 @@ namespace GlimmerGrove
                 float spin = (i % 2 == 0 ? 1f : -1f) * (200f + i * 40f);
                 float size = _size * (.30f - (i % 3) * .05f);
 
-                var chip = UIKit.Img("Chip", _fx, sprite, new Color(.94f, .90f, .74f, 1f),
+                var chip = UIKit.Img("Chip", _near, sprite, new Color(.94f, .90f, .74f, 1f),
                                      Vector2.one * size, new Vector2(.5f, .5f), at);
                 var rt = (RectTransform)chip.transform;
 
@@ -2796,9 +2879,16 @@ namespace GlimmerGrove
         /// same thickness however wide it gets — a scaled ring thickens as it grows, which reads
         /// as a bubble inflating rather than as a wave leaving.
         /// </summary>
-        void Shockwave(Vector2 at, Color tint, float to, float seconds)
+        /// <param name="on">
+        /// Which layer to draw on, and it defaults to the clipped one. A ring belongs to the
+        /// cell that threw it, so it is cut at the edge of the grove with everything else a
+        /// burst does; the three that are about the <em>grove</em> rather than about a cell —
+        /// a firework going off over the board, the ring behind the word, the one the grove
+        /// opens with — say so by asking for <c>_fx</c>.
+        /// </param>
+        void Shockwave(Vector2 at, Color tint, float to, float seconds, RectTransform on = null)
         {
-            var ring = UIKit.Img("Wave", _fx, Art.Wave(256, 9f), Pal.A(tint, .85f),
+            var ring = UIKit.Img("Wave", on ? on : _near, Art.Wave(256, 9f), Pal.A(tint, .85f),
                                  Vector2.one * (_size * .4f), new Vector2(.5f, .5f), at);
             var rt = (RectTransform)ring.transform;
 
@@ -2915,11 +3005,11 @@ namespace GlimmerGrove
             // A ring thrown out from behind the word, so it arrives *out of* something - and
             // a second one chasing it a beat later, which is `Split`'s trick at grove scale:
             // one ring is an arrival and two is an arrival that had somewhere to go.
-            Shockwave(Vector2.zero, tint, _size * (4.5f + rung * 1.6f), .55f);
+            Shockwave(Vector2.zero, tint, _size * (4.5f + rung * 1.6f), .55f, _fx);
             Tween.After(.14f, () =>
             {
                 if (this) Shockwave(Vector2.zero, Pal.Lift(tint, .45f),
-                                    _size * (6.5f + rung * 2.2f), .78f);
+                                    _size * (6.5f + rung * 2.2f), .78f, _fx);
             }, this);
 
             // The slam. In from oversize and past its resting size, which is the one motion that
@@ -3385,7 +3475,7 @@ namespace GlimmerGrove
 
                 Tween.After(at, () =>
                 {
-                    if (this) Shockwave(Vector2.zero, tint, reach, BudTempo.Sweep);
+                    if (this) Shockwave(Vector2.zero, tint, reach, BudTempo.Sweep, _fx);
                 }, this);
             }
 

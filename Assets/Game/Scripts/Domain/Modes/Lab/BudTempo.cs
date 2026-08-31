@@ -59,8 +59,18 @@
         /// wave went off together, which is the flat flicker the stagger exists to prevent. At
         /// .70s the thirteen are genuinely sequential and the grove still lands on time.
         /// </para>
+        /// <para>
+        /// <b>And a third time, for the grove coming down.</b> A fall's length is now its
+        /// distance at a fixed speed (<see cref="Pace"/>) rather than a share of the beat, which
+        /// is what stopped the tall drops tearing — but a speed and a fixed allowance cannot both
+        /// be honoured, so past about five rows the allowance still wins and the drop still
+        /// hurries. At a .70s burn that bit at four rows on a seven-high grove, which is most of
+        /// the deep drops the finale produces. .85s moves it to six and costs the chain nothing
+        /// at all past seven waves, where <see cref="Ceiling"/> is what binds and this is not
+        /// reached.
+        /// </para>
         /// </summary>
-        public const float WaveFull = 1.10f;
+        public const float WaveFull = 1.25f;
 
         /// <summary>And the floor under it, however far the chain runs.</summary>
         public const float MinWave = .46f;
@@ -126,23 +136,39 @@
         /// almost all of it on waves nobody reaches. The first version did exactly that and the
         /// escalation was invisible in play.
         /// </remarks>
-        public const float SwellFrom = .62f;
+        /// <remarks>
+        /// <b>And then it was cut to a third, which is the same number corrected twice in
+        /// opposite directions — the part worth keeping.</b> It went from a flat .34 to
+        /// .62–1.20 because the wind-up was reported as invisible, and the raise is not what
+        /// fixed that: <see cref="Peak"/> was. A flower reaching its full size on the last frame
+        /// is a flash whatever size it reaches, and one that arrives early and <em>holds</em> is
+        /// legible at any size at all. With the dwell in place the size was free to come back
+        /// down, and it had to: reported from play as <em>"when a chain reaction happens, it is
+        /// too much"</em>, which is precisely what thirteen flowers each swelling to half again
+        /// wider than their own cell look like when they do it together. The ladder still
+        /// climbs and it climbs a third as far — what says "this is a deeper wave" is the
+        /// crouch, the hold and <see cref="Heave"/> at grove scale, and the swell is now the
+        /// smallest of the four rather than the loudest.
+        /// </remarks>
+        public const float SwellFrom = .30f;
 
         /// <summary>How much more each wave of a chain swells than the one before it.</summary>
-        public const float SwellStep = .22f;
+        public const float SwellStep = .10f;
 
         /// <summary>
         /// And the ceiling on it.
         ///
         /// <para>
-        /// A flower is drawn at about .72 of its cell, so a scale of 2.20 makes it a half again
-        /// wider than the cell it stands in. That overlap is wanted — a bunch is three or more
-        /// flowers <em>touching</em>, so they swell into each other and the bunch reads as one
-        /// thing under pressure rather than three things growing — but past this it stops being
-        /// a bunch crowding and starts being a grid that has lost its shape.
+        /// A flower is drawn at about .72 of its cell, so a scale of 1.52 leaves it a little
+        /// wider than the cell it stands in. That overlap is wanted and is all of it that is —
+        /// a bunch is three or more flowers <em>touching</em>, so they crowd into each other and
+        /// read as one thing under pressure rather than three things growing. Past about this
+        /// the grove stops being a grid: at 2.20 a flower was half again wider than its square,
+        /// which is a board losing its shape every time a wave lands on it, and it is also what
+        /// pushed an edge flower far enough past the board to be seen outside it.
         /// </para>
         /// </summary>
-        public const float SwellMost = 1.20f;
+        public const float SwellMost = .52f;
 
         /// <summary>How much bigger a flower gets at the top of its wind-up, on this wave.</summary>
         public static float Swell(int wave)
@@ -290,17 +316,29 @@
             return spin > SpinMost ? SpinMost : spin;
         }
 
-        /// <summary>A little over one turn, which is what reads as a wind-up rather than a twitch.</summary>
-        public const float SpinFrom = 420f;
+        /// <summary>
+        /// A third of a turn: a flower <em>leaning</em> into what it is about to do.
+        ///
+        /// <para>
+        /// <b>It was 420° — a full turn and a sixth — and that was the loudest half of the
+        /// complaint <see cref="SwellFrom"/> answers.</b> Past about a half turn a wind-up stops
+        /// being a lean and becomes a spin, and a spin is the one gesture in this mode that says
+        /// nothing about <em>which</em> flowers matched: it is the same whirl whatever colour is
+        /// underneath it, so thirteen of them at once is thirteen things moving and nothing
+        /// being said. A lean keeps the flower's face pointed at the player, which is where the
+        /// colour is.
+        /// </para>
+        /// </summary>
+        public const float SpinFrom = 120f;
 
         /// <summary>Faster every wave, for <see cref="SwellFrom"/>'s reason — amplitude, not time.</summary>
-        public const float SpinStep = 80f;
+        public const float SpinStep = 26f;
 
         /// <summary>
-        /// And the ceiling. Past about two turns inside a tenth of a second a spin stops being a
-        /// direction and becomes a flicker, which says nothing at all.
+        /// And the ceiling, which is now a little over a half turn. Past that a wind-up this
+        /// short is a flicker, and a flicker says nothing at all.
         /// </summary>
-        public const float SpinMost = 760f;
+        public const float SpinMost = 190f;
 
         // ------------------------------------------------------------------ inside one wave
         /// <summary>
@@ -549,7 +587,7 @@
             if (burn < 0f) burn = 0f;
 
             float over = (burn - Settle(burn)) * .92f;
-            return over > .48f ? .48f : over;
+            return over > .64f ? .64f : over;
         }
 
         /// <summary>
@@ -579,24 +617,78 @@
             if (burn < 0f) burn = 0f;
 
             float hold = burn * .30f;
-            return hold > .26f ? .26f : hold;
+            return hold > .30f ? .30f : hold;
         }
+
+        /// <summary>
+        /// The fastest a piece may ever travel, in cells a second.
+        ///
+        /// <para>
+        /// <b>This is the number the fall is built out of, and expressing it any other way is
+        /// what made the grove skip.</b> A duration was a <em>share of the wave</em> — a fall of
+        /// one row took .42 of the allowance and each further row added .15 — which saturates:
+        /// past about four rows every drop took the whole allowance, so a six-row drop and a
+        /// four-row drop finished together and the six-row one was half again faster. Inside one
+        /// wave a board therefore fell at three different speeds at once, the tallest drop was
+        /// the fastest, and the tallest drop is the one everybody is looking at. Reported as the
+        /// flowers falling <em>"too suddenly, not smooth, like they skip frames"</em>, and
+        /// measured it really was: the deepest drop on the shipped finale covered better than a
+        /// third of a cell in a frame, which for a shape .72 of a cell wide is a picture jumping
+        /// half its own width between one frame and the next.
+        /// </para>
+        /// <para>
+        /// A speed is the right shape because it is the thing that has to be bounded: the eye
+        /// reads a moving picture as continuous while it overlaps itself frame to frame, so what
+        /// matters is how far a flower goes in a sixtieth of a second and not what fraction of a
+        /// beat it took. In cells rather than in pixels because a cell is the one length this
+        /// mode has that is the same on every phone — <c>BudView</c> sizes everything off it, so
+        /// a bound in cells is a bound in <em>flower widths</em> at any resolution, which is what
+        /// the eye is actually measuring against.
+        /// </para>
+        /// <para>
+        /// Ten cells a second is a sixth of a cell a frame at 60fps, so a flower always overlaps
+        /// itself by better than three quarters. It is a <em>peak</em> rather than an average —
+        /// see <see cref="Curve"/> — and it is the peak because that is where the tearing is.
+        /// </para>
+        /// </summary>
+        public const float Pace = 10f;
+
+        /// <summary>
+        /// The shape of a fall: distance covered is <c>t</c> to this power.
+        ///
+        /// <para>
+        /// <b>It is also exactly the ratio of a fall's fastest instant to its average</b>, which
+        /// is why it lives beside <see cref="Pace"/> and why <see cref="FallOver"/> can be one
+        /// line. A curve <c>t^c</c> covering a distance <c>d</c> in a time <c>f</c> has speed
+        /// <c>c·d·t^(c-1)/f</c>, so its last instant is <c>c</c> times its mean.
+        /// </para>
+        /// <para>
+        /// <b>Gentler than gravity, and that is a drawing decision rather than a physical one.</b>
+        /// Real gravity is <c>t²</c> and peaks at twice its average, which spends the whole
+        /// budget on the last few frames — the ones already closest to tearing. 1.40 still
+        /// accelerates the whole way down, which is what says a thing was dropped rather than
+        /// slid, and it costs a fifth off the peak.
+        /// </para>
+        /// </summary>
+        public const float Curve = 1.40f;
 
         /// <summary>
         /// And how long one piece takes, given how many rows it has to travel.
         ///
         /// <b>Taller falls take longer, which is the whole of what makes a board feel heavy.</b>
         /// A flower dropping five rows and one dropping a single row in the same time reads as
-        /// teleporting, and it is the commonest reason a falling board looks cheap. Bounded by
-        /// the wave either way.
+        /// teleporting, and it is the commonest reason a falling board looks cheap. It is the
+        /// distance at a fixed speed, so every piece of every wave falls at the same rate and
+        /// only the tallest drops — past about five rows, where the wave itself runs out — are
+        /// made to hurry.
         /// </summary>
         public static float FallOver(float over, float rows)
         {
             if (over < 0f) over = 0f;
             if (rows < 1f) rows = 1f;
 
-            float share = over * (.42f + .15f * rows);
-            return share > over ? over : share;
+            float want = rows * Curve / Pace;
+            return want > over ? over : want;
         }
 
         /// <summary>Where one piece falls inside the wave's own ripple, so a column is not a wall.</summary>
@@ -641,16 +733,45 @@
         /// trimmed to fit in what is left. A tall drop therefore rides at the front of the wave
         /// with no wait at all, which is right — it has the furthest to come.
         /// </remarks>
-        public static void Rainfall(int nth, float rows, float over,
-                                    out float delay, out float fall)
+        /// <param name="hold">
+        /// <see cref="Settle"/>: the beat a wave's bursts are left alone before the grove comes
+        /// down on them. It is handed in rather than added by the caller because a tall drop
+        /// <em>spends</em> it travelling, which is the other half of what made the fall skip.
+        ///
+        /// <para>
+        /// The hold is there so the player sees what they caused before the consequence covers
+        /// it — which is a fact about the flower landing <em>on the burst</em>, one row up.
+        /// A flower five rows above has not reached anything yet at the moment the hold ends, so
+        /// making it wait buys nothing and costs it a third of the time it has to come down in:
+        /// with the hold spent waiting, the deepest drops were the ones with the least room, and
+        /// they are the ones that need the most. So a piece sets off the sooner the further it
+        /// has to come, and the whole window — wait plus fall — is <c>hold + over</c> for every
+        /// piece however tall its drop, which is what keeps <see cref="Rain"/>'s promise that the
+        /// grove is on the ground before the next wave charges.
+        /// </para>
+        /// </param>
+        /// <param name="wait">The whole of it: the hold this piece owes plus its place in the ripple.</param>
+        public static void Rainfall(int nth, float rows, float over, float hold,
+                                    out float wait, out float fall)
         {
-            fall = FallOver(over, rows);
+            if (hold < 0f) hold = 0f;
+            if (rows < 1f) rows = 1f;
 
-            float room = over - fall;
+            // Nought for a piece landing next to the burst, all of it by four rows up, so the
+            // trade is spent smoothly rather than at a threshold nobody could name.
+            float lift = (rows - 1f) / 3f;
+            if (lift > 1f) lift = 1f;
+
+            float budget = over + hold * lift;
+            fall = FallOver(budget, rows);
+
+            float room = budget - fall;
             if (room < 0f) room = 0f;
 
-            delay = RainAt(nth, over);
-            if (delay > room) delay = room;
+            float ripple = RainAt(nth, budget);
+            if (ripple > room) ripple = room;
+
+            wait = hold * (1f - lift) + ripple;
         }
 
         // ------------------------------------------------------- what would pop, breathing

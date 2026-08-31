@@ -2732,8 +2732,8 @@ available: `BudTempo.Wave` divides `Ceiling` across the whole chain, so every wa
 cascade is *shorter* than the single wave of an ordinary tap. Lengthening the late ones either
 breaks the ceiling — the nine-second freeze it exists to prevent — or steals from the early ones,
 which is a chain that starts blurred and ends legible, exactly backwards. So what grows is how far
-a flower **travels**: `BudTempo.Swell` takes each wave's wind-up from 1.62 to a capped 2.20, and
-`WindSpin` from 420° to 760°, in the same time or less. That reads as accelerating rather than as
+a flower **travels**: `BudTempo.Swell` takes each wave's wind-up from 1.30 to a capped 1.52, and
+`WindSpin` from 120° to 190°, in the same time or less. That reads as accelerating rather than as
 dragging, and it is the only axis the ceiling leaves open.
 
 **A peak reached on the last frame is a flash, not a size — and that is why the first cut of this
@@ -2758,12 +2758,21 @@ follows the same phases, holding the flower at `Matched` (.62 toward white) whil
 growing — the charge's job is to say *which* flowers matched, and a bunch that goes white has
 stopped saying it — and spending the rest to `Critical` during the hold, where it is free to.
 
-**A ladder has to be spent on the waves the mode actually reaches.** `b01_thicket` is one board
-whose best opening tap runs three waves and most taps run one or two, so the first ladder — nine
-waves from 1.46 to 1.82 — put almost all of its range past anything a player sees, and moved wave
-one by 9%. It is front-loaded now: +0.22 a wave, so waves one to three span 1.62 → 2.06.
-`TheLadderIsSpentOnTheWavesTheShippedBoardReaches` is the guard, and it is worth keeping when the
-mode grows past one chapter.
+**A ladder has to be spent on the waves the mode actually reaches, and it has to stop somewhere
+— this one number was corrected in both directions, which is the part worth keeping.**
+`b01_thicket` is one board whose best opening tap runs three waves and most taps run one or two, so
+the first ladder — nine waves from 1.46 to 1.82 — put almost all of its range past anything a
+player sees, and moved wave one by 9%. It was front-loaded to fix that (+0.22 a wave, waves one to
+three spanning 1.62 → 2.06) **and the raise was never what made the wind-up visible**: the dwell
+above was. So what shipped was a legible gesture *and* a flower swelling to half again wider than
+its own square, thirteen at a time — reported from play as *"when a chain reaction happens, it's
+too much"*, along with the spin, which at 420° is a whirl rather than a lean and is the one gesture
+in the mode that says nothing about *which* flowers matched. It is 1.30 → 1.52 now, +0.10 a wave,
+with the spin at 120° → 190°: the same shape of ladder, a third of the amplitude, and the crouch,
+the hold and `Heave` still doing the escalating.
+`TheLadderIsSpentOnTheWavesTheShippedBoardReachesAndStopsShortOfTooMuch` is the guard and it now
+holds a **ceiling** as well as a floor, because a ladder with only a floor can be corrected in one
+direction and this one had to go the other way.
 
 **The chain is also said at grove scale, because a 2% nudge is not.** A wave's answer from the
 board was a shake plus a punch on the plate of 1.2%–3.6%, which is under the size at which a scale
@@ -3072,15 +3081,29 @@ hide, so they are generous and no gesture is ever cut there, and above the clip 
 `BudView.PlateLip` — the 13 units the board's own plate stands out past the grid, which is what
 the player reads as the edge of the grove.
 <br>**That top margin was first set to the wind-up's overhang and that is the wrong trade.** A
-flower swells to 2.20 and so reaches about .29 of a cell past its own square, and leaving room for
-it meant leaving room for a falling flower too — which came back as *"I still see them coming out
-of the grid slightly"*. A quarter of a cell is invisible when a flower is swelling in it and
-perfectly visible when a flower is falling through it. The clip is tight now and what it costs is
-about a tenth off the top of a top-row flower at the deepest wind-up: a moment, on one row,
-against something that was happening on every fall.
-<br>**Only the field is masked**: `_fx` and `_residents` are siblings of it, so rings, sparkles,
-fireworks and freed critters all still cross the edge of the board, which they must, since leaving
-the board is the whole of what makes the fireworks read as fireworks.
+flower swells and so reaches past its own square, and leaving room for it meant leaving room for a
+falling flower too — which came back as *"I still see them coming out of the grid slightly"*. A
+quarter of a cell is invisible when a flower is swelling in it and perfectly visible when a flower
+is falling through it. The clip is tight now and what it costs is about a tenth off the top of a
+top-row flower at the deepest wind-up: a moment, on one row, against something that was happening
+on every fall.
+<br>**And then the other three sides went the same way, from the other end.** They kept 1.2 cells
+at each side and 1.5 below on the reasoning that there is nothing to *hide* there — true of a
+flower arriving, false of one going off. A burst hands the wind-up's size to `ThrowFlower` and
+grows it further, so an edge flower reached most of two cells across and the margin drew every bit
+of it: reported as *"random flowers outside of the grid"*, and they were this board's own flowers,
+cut off in mid-air beside it. There is no margin that is generous for an entrance and tight for a
+burst, so the clip is the plate's own lip on all four sides — the line the player already reads as
+the edge of the grove. `ThrowFlower`'s growth came down with it (1.05 → .45), because the two
+multiply and trimming one alone leaves the other doing most of it.
+<br>**And everything a burst throws is clipped with the flowers, because a pop happens on the
+spot.** `_near` is a second layer inside the same mask: the core, the bloom, the rings, the sparks
+and the shell's chips are all anchored on the cell they belong to, and they were drawn on `_fx`,
+which is the whole screen — so a tighter field mask alone would have fixed only half of it. One
+mask rather than two, or the two boundaries come to disagree. What stays on `_fx` is what is about
+the *grove* rather than about a cell: the sweep, the fireworks, the star behind the board, the
+confetti, a freed critter and the word. Those must cross the edge — a firework that cannot leave
+the board is not a firework.
 
 **Nothing in this grove is made of anything that shatters.** The white flower's detonation played
 `shatter` — *DESTRUCTION Break Impact Wood*, the one genuinely destructive sample in the pack —
@@ -3102,11 +3125,70 @@ a cell. `FallOver` is asked first now and the ripple is trimmed into what is lef
 rides at the front of the wave with no wait at all — which is right, it has the furthest to come —
 and `ADropOfTheSameHeightTakesTheSameTimeWhereverItIsInTheRipple` asserts it as exact equality
 rather than as a tolerance.
-<br>**And the curve is gentler than gravity, which is a drawing decision rather than a physical
-one.** `InQuad` is what a falling thing really does and it peaks at twice its own average speed;
-`t^1.5` peaks at one and a half times. Together with the fix above that takes the worst drop on
-the shipped boards from 81 pixels a frame to **33**, still unmistakably accelerating and never
-fast enough to tear.
+
+**And it was still a fact about its column, because a share of a beat has no speed in it.** The
+fix above equalised two drops of the *same* height and left the real fault standing: a duration
+that is a *share of the wave* — .42 of it for one row plus .15 a row after — **saturates**. Past
+about four rows every drop took the whole allowance, so a six-row drop and a four-row drop landed
+together and the six-row one was half again faster; inside one wave the board fell at speeds from
+13 to **52 pixels a frame**, and the fastest of them was the tallest drop, which is the one
+everybody is watching. Reported the second time as the flowers falling *"too suddenly, not smooth,
+like they skip frames"*, which is precisely a picture .72 of a cell wide moving half its own width
+between two frames.
+<br>**A fall's length is now its distance at a fixed speed** — `BudTempo.Pace`, ten cells a second
+at its fastest instant — and the wave gives way instead. In *cells* rather than pixels because a
+cell is the one length this mode has that is the same on every phone, so the bound is really in
+flower-widths, which is what the eye measures against. `BudTempo.Curve` (1.40) is the other half of
+one statement rather than a second opinion: the exponent of the fall's curve *is* the ratio of its
+fastest instant to its mean, so it decides both the shape the view draws and the duration the
+arithmetic hands out, and `NoPieceEverFallsFastEnoughToTear` reads the same constant the drawing
+does. Measured on the shipped finale afterwards: a flat **22.5 pixels a frame at every depth**.
+<br>Two consequences, and both were forced rather than chosen. **The hold is spent by short drops
+and borrowed by tall ones.** `Settle` exists so the player sees a burst before the grove covers it
+— which is a fact about the flower landing *on* the burst, one row up. A flower five rows above has
+reached nothing at the moment the hold ends, so making it wait bought nothing and left the deepest
+drops with the least room; a piece now sets off the sooner the further it has to come, and the
+window — wait plus fall — is `hold + over` for every piece whatever its height, which is what keeps
+`Rain`'s promise to the next wave intact. And **`WaveFull` went to 1.25s**, which is where the
+allowance stops binding until six rows; it costs a chain of seven waves or more nothing at all,
+because past there `Ceiling` is what binds and 1.25 is never reached.
+<br>The one case the design cannot honour is the ninth wave of the deepest possible chain dropping
+a whole seven-high column, and the test says so out loud with a second, looser bar rather than
+being written around it. Measured on the shipped chapter, the tallest fall any wave of the finale's
+best tap produces is **three rows**.
+
+**And half of "it skips frames" was the frames genuinely not arriving.** Measured on the finale's
+best tap, one wave puts up to **296 transient graphics** on the screen — every burst is a core, a
+bloom, one or two rings and a dozen sparks, and every one of them animates its *colour*, which
+dirties its vertices every frame. Unity rebuilds and re-batches a canvas **whole**, so one dirty
+spark cost a rebuild of all ~450 of the grove's own graphics as well, sixty times a second, for the
+length of a cascade. No timing change could have fixed that: the fall was asking for a position
+sixty times a second and the frame was not coming. `BudView.Nest` gives `_near` and `_fx` a
+`Canvas` each, so the effects churn inside their own rebuild boundary and the board rebuilds only
+when the board moves.
+<br>**A nested `Canvas` is a raycast boundary as well as a rebuild boundary, and the field got one
+and shipped a grove nobody could tap.** `Graphic.canvas` resolves to the *nearest enabled* canvas
+above it, `GraphicRegistry` files the graphic under that one, and a `GraphicRaycaster` only ever
+looks up the canvas it is sitting on — so the instant `_field` had a canvas of its own, all
+fifty-six of the grove's hit targets left the root raycaster's list at once. Measured both ways
+afterwards: **56 tap targets and 0 reachable with it, 56 and 56 without.** Nothing here could see
+it — the board draws perfectly, so a compile, a validator and a screenshot are all green, and the
+mode simply stops answering. The rule it reduces to is one line: **a layer may be nested only if
+nothing under it is ever tapped**, which `_near` and `_fx` satisfy by construction because
+`UIKit.Img` sets `raycastTarget = false` and every effect comes from it. Nesting `_field` would
+need a `GraphicRaycaster` beside the canvas and buys nothing anyway: what was thrashing the canvas
+was the effects, and the board has to rebuild when the board moves.
+<br>**`overrideSorting` is deliberately off, and that is the same trap from the other side.**
+Turning it on is the usual next step after nesting and it would silently unclip `_near`:
+`MaskUtilities.GetRectMaskForClippable` walks up looking for a `RectMask2D` and **stops at the
+first canvas that overrides sorting**, so every burst effect would leave the grove again with
+nothing anywhere to say why.
+<br>`BudCanvasTests` is the guard for both — it builds the real finale grove and asks whether every
+tap target answers a raycaster and whether an effect placed on `_near` would still be clipped. It
+was watched failing against the exact bug before it was kept (*"56 of 56 tap targets answer no
+raycaster — Cell0 under 'Buds'"*), because a check with no failing case is not a check. It needs
+the Editor, which is honest: the fact being proved is a fact about `GraphicRegistry`, and there is
+no arithmetic here to lift into Domain.
 
 **The grove is allowed to land before the word arrives** (`BudTempo.Landing`). The celebration used
 to begin while the last flowers were still in the air *and* every cell was repainted underneath it
