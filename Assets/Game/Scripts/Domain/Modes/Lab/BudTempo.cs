@@ -689,6 +689,18 @@
         public const float WaveGap = .06f;
 
         /// <summary>
+        /// How long the grove takes to say it has ripened one for the player.
+        ///
+        /// Slower than anything a bunch does, and the ring closes <b>inward</b> — which is why it
+        /// needs a size to close from as well as one to close to. Everything else in this mode
+        /// expands, so a contraction is unmistakable without being loud.
+        /// </summary>
+        public const float Ripen = .62f;
+
+        /// <summary>Where the ripen's ring starts, in cells, and where it closes to.</summary>
+        public const float RipenFrom = 2.30f, RipenTo = .80f;
+
+        /// <summary>
         /// Where in a wave's ripple the grove answers it — the jolt, the ring, the shake, the flash.
         ///
         /// <b>On the body of the wave rather than on its first frame.</b> These used to fire the

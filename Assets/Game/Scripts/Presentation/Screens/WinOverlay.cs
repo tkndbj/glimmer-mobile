@@ -1446,16 +1446,28 @@ namespace GlimmerGrove
                                               new Vector2(0f, ButtonY),
                                               () => Close(() =>
                                               {
+                                                  // What the tap meant, whether or not the nudge
+                                                  // borrows it first. Handed to the panel rather
+                                                  // than dropped: a nudge that eats a Next is a
+                                                  // button that did nothing, which is how a
+                                                  // player learns to distrust the button rather
+                                                  // than the panel.
+                                                  void Onward()
+                                                  {
+                                                      if (last) Flow.Go<LevelsScreen>();
+                                                      else PlayRoute.Open(nextId);
+                                                  }
+
                                                   // Asked again rather than trusting the flag
                                                   // measured when the row was laid out: a sync
                                                   // can link this device while the panel is up,
                                                   // and Offer is the only thing that spends the
                                                   // budget, so the two can never disagree.
                                                   if (offerAccount
-                                                      && AccountPrompts.Offer(AccountPromptTrigger.Chapter))
+                                                      && AccountPrompts.Offer(AccountPromptTrigger.Chapter, Onward))
                                                       return;
-                                                  if (last) Flow.Go<LevelsScreen>();
-                                                  else PlayRoute.Open(nextId);
+
+                                                  Onward();
                                               }));
             UIKit.Halo(nextButton.transform, Pal.Mint, 620f, .28f);
 

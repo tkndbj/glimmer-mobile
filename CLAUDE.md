@@ -3116,6 +3116,45 @@ it goes off rather than for a fixed beat with the remainder spent standing still
 *shape* still read against the shared `BudTempo.Wind`, so a bunch moves as one and the flowers
 going off later simply hold at their peak for longer, which is what `Peak` always wanted.
 
+**A thing that is leaving and a thing that is arriving may not share a transform, and the second
+report of these animations was that rule broken.** Reported as *"some of the falling flowers get
+huge"*. `ThrowFlower` animated the cell's **own** flower on its way out — growing it to as much as
+2.7x and putting it back only in `OnDone` — so the departing flower and the *arriving* one were one
+picture, and anything that repainted that cell in between killed the throw where it stood. It had
+always been possible and the score made it certain: a fall into a hole is dealt `BudTempo.Hold`
+(.11s) after the burst that made it, where a throw runs `BudTempo.Burst` (.22s), so `Fall`'s
+`PaintCell` cut **every** throw off at exactly half its life and left the bud at **2.27 wide and 28
+degrees round**. Most colours were then set back to one; a **white** one got `Tween.Breathe`, which
+captures whatever scale it finds as the size to breathe *around* — so that flower stayed huge for
+the rest of the run. The departing flower is a copy on `_near` now, so two pictures cannot interrupt
+each other and the throw always finishes.
+<br>Two smaller things it uncovered, both general. **A repaint that assigns a scale and says nothing
+about a rotation is half a repaint** — a flower interrupted mid-throw stayed *leaning* for the rest
+of the run, and that half survived every version of the scale fix. And **`Tween.KillAll(cell.Bud)`
+cannot stop a breathe**: a breathe is owned by the `Transform` and that call names the `Image`, which
+are two different `UnityEngine.Object`s — so a white flower washed to another colour went on
+breathing under a repaint that kept setting its scale back. `RestFlower` is the one answer to "put
+this flower back", and `BudRestTests` drives both, in the Editor, because the whole subject is which
+object owns which tween and what a killed one leaves behind.
+
+**The grove ripening a flower for the player is a mechanic, and drawn as a wash it reads as a bug.**
+Reported as *"I tap on a flower, but another far flower's colour changes — I'm not sure if this is a
+bug or a feature"*. It is a feature: `BudBoard.Creep` moves one flower beside a still-shut cocoon a
+step on after every tap, which is invariant 20l's "one flower ripens between taps, so the grove leans
+toward the player". What was wrong is that it was reported to the view as an ordinary `BudWash` and
+therefore drawn as one — and a wash has its cause on screen a tenth of a second earlier, where a
+ripen has none anywhere near it and can land right across the board from the tap. Invariant 20g in
+the one place nobody had looked: a mechanic the board cannot show is one the player is always being
+surprised by.
+<br>`BudWash.Ripened` says which it is, `BudCueKind.Ripen` is its own cue, and the score **holds it
+back to the end of the chain** — dealt with its wave it is one flower changing colour among twenty in
+a collapsing grove, and it needs a still board. It arrives as a ring closing **inward** onto the
+flower, which is the reading a freed critter already gets and works for the same reason: every other
+ring in this mode expands, which says *something went off here*, and closing says *this one*. It is
+scheduled **before** the tidy-up rather than after, because the repaint applies every colour the
+model holds — announced afterwards it would be announcing a change the board had already made
+silently.
+
 **A breath fades in, and a phase is what makes that necessary.** `Tween.Breathe`'s `phase`
 exists to stop a row of things breathing in lockstep, and `sin(phase)` is not zero — so every
 caller passing one snapped its target to a different size on the frame the breath began. One

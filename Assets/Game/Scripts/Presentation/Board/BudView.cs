@@ -678,7 +678,7 @@ namespace GlimmerGrove
                 if (cell.Glow)
                     cell.Glow.color = shut ? Pal.A(Pal.Rope, .18f) : new Color(1, 1, 1, 0f);
 
-                Tween.KillAll(cell.Bud);
+                RestFlower(cell.Bud);
                 cell.Pops = false;
                 return;
             }
@@ -694,13 +694,16 @@ namespace GlimmerGrove
             // on the board and the only one that moves while nobody is tapping.
             // KillAll takes the "this one pops" breath with it, so the flag has to come off too
             // or PaintPops will think it is still running and never restart it.
-            Tween.KillAll(cell.Bud);
+            // **Put back to rest before anything is started on it, and that is load-bearing
+            // rather than tidy.** `Tween.Breathe` captures whatever scale it finds as the size to
+            // breathe *around*, for ever — so a flower repainted while something else was still
+            // growing it kept that size for the rest of the run. See `RestFlower`, and
+            // `ThrowFlower` for the growth that used to be there to find.
+            RestFlower(cell.Bud);
             cell.Pops = false;
 
             if (colour == Energy.All)
                 Tween.Breathe(cell.Bud.transform, .11f, 1.35f, index * .13f);
-            else
-                cell.Bud.transform.localScale = Vector3.one;
         }
 
         void PaintBand()
@@ -1127,6 +1130,10 @@ namespace GlimmerGrove
                         Land(cue.Cell, cue.Colour, beat);
                         break;
 
+                    case BudCueKind.Ripen:
+                        Ripen(cue.Cell, cue.Colour);
+                        break;
+
                     case BudCueKind.Crack:
                         Crack(cue.Cell, beat);
                         break;
@@ -1163,6 +1170,77 @@ namespace GlimmerGrove
                         break;
                 }
             }
+        }
+
+        /// <summary>
+        /// The grove ripening one flower for the player, between taps.
+        ///
+        /// <para>
+        /// <b>Its own gesture, because it is the one thing that happens on this board with no
+        /// cause anywhere near it.</b> <c>BudBoard.Creep</c> leans the grove toward the player
+        /// after every tap by moving one flower beside a still-shut cocoon a step on — deliberate,
+        /// generous, and invisible: it was drawn exactly like a wash, which is a flower turning
+        /// because the bunch <em>beside it</em> just went off. Somewhere across the board a flower
+        /// changed colour with nothing to explain it, and it was reported the way an unexplained
+        /// change always is — <em>"I tap on a flower, but another far flower's colour changes...
+        /// I'm not sure if this is a bug"</em>. Invariant 20g, in the one place nobody had looked.
+        /// </para>
+        /// <para>
+        /// So it waits for a still board (the score holds it back to the end of the chain) and
+        /// arrives as a ring closing <b>inward</b> onto the flower. Every other ring in this mode
+        /// expands, which says <em>something went off here</em>; closing says <em>this one</em> —
+        /// which is the reading a freed critter already gets, and the same reason it works.
+        /// </para>
+        /// </summary>
+        void Ripen(int index, int colour)
+        {
+            if (_cells == null || index < 0 || index >= _cells.Length) return;
+
+            var cell = _cells[index];
+            if (cell == null) return;
+
+            var tint = Petal(colour);
+            var where = Where(index);
+
+            // The colour itself lands through the ordinary path, so there is one answer to what
+            // a flower turning looks like; everything below is what says who did it.
+            Land(index, colour, BudTempo.WaveFull);
+
+            if (_near == null) return;
+
+            var sprite = Art.Ring(128, 7f);
+            if (sprite != null)
+            {
+                var ring = UIKit.Img("Ripen", _near, sprite, Pal.A(tint, 0f),
+                                     Vector2.one * _size * BudTempo.RipenFrom,
+                                     new Vector2(.5f, .5f), where);
+                ring.raycastTarget = false;
+
+                var rrt = (RectTransform)ring.transform;
+
+                Tween.Run(BudTempo.Ripen, Ease.OutCubic, t =>
+                {
+                    if (!ring) return;
+
+                    rrt.localScale = Vector3.one
+                                   * Mathf.Lerp(1f, BudTempo.RipenTo / BudTempo.RipenFrom, t);
+                    ring.color = Pal.A(tint, Mathf.Sin(Mathf.Clamp01(t) * Mathf.PI) * .80f);
+                }, ring).OnDone(() => { if (ring) Destroy(ring.gameObject); });
+            }
+
+            var glow = UIKit.Img("Ripenlight", _near, Art.Glow(128, 1.9f), Pal.A(tint, 0f),
+                                 Vector2.one * _size * 1.5f, new Vector2(.5f, .5f), where);
+            glow.raycastTarget = false;
+
+            Tween.Run(BudTempo.Ripen * 1.15f, Ease.OutQuad, t =>
+            {
+                if (!glow) return;
+                glow.color = Pal.A(tint, Mathf.Sin(Mathf.Clamp01(t) * Mathf.PI) * .55f);
+            }, glow).OnDone(() => { if (glow) Destroy(glow.gameObject); });
+
+            // Quieter than anything a bunch does, and a fifth above the wash's own tick, so it
+            // reads as the grove offering something rather than as something going off.
+            Audio.Sfx("tick", .20f, 1.42f, .06f);
         }
 
         /// <summary>
@@ -2160,7 +2238,7 @@ namespace GlimmerGrove
             Tween.KillChannel(cell.Rt, SpinChannel);
             if (cell.Rt) { cell.Rt.localRotation = Quaternion.identity; cell.Rt.localScale = Vector3.one; }
 
-            ThrowFlower(cell, tint, swollen, turned);
+            ThrowFlower(index, cell, tint, swollen, turned);
 
             float life = BudTempo.Shrapnel(beat);
             // The cap was .18s, which was the whole of what a burst's core was ever allowed
@@ -2362,24 +2440,37 @@ namespace GlimmerGrove
         }
 
         /// <summary>
-        /// The flower coming apart, which is the tenth of a second the burst used to skip.
+        /// The flower leaving a cell that has just gone off.
         ///
-        /// It is drawn on the flower's own <c>Image</c> rather than on a copy, so there is
-        /// nothing to tidy up and nothing that can be left behind if the run ends mid-chain:
-        /// <see cref="PaintCell"/> puts it back wherever the board says it should be.
+        /// <para>
+        /// <b>It is a copy, thrown on the effects layer, and the cell's own flower is put away at
+        /// once.</b> That is a correctness change rather than a tidy-up, and the fault it removes
+        /// is one this mode was reported for. It used to animate <see cref="Cell.Bud"/> itself —
+        /// growing it to as much as 2.7 times its size on the way out and putting it back only in
+        /// <c>OnDone</c> — so the departing flower and the <em>arriving</em> one were one picture.
+        /// Anything that repainted that cell in between killed the throw where it stood and left
+        /// the flower at whatever size and angle it had reached.
+        /// </para>
+        /// <para>
+        /// <b>And it went from unlikely to certain when the score arrived.</b> A fall into a hole
+        /// is dealt <see cref="BudTempo.Hold"/> (.11s) after the burst that made it, where a throw
+        /// runs for <see cref="BudTempo.Burst"/> (.22s) — so <see cref="Fall"/>'s
+        /// <see cref="PaintCell"/> cut every throw off at exactly half its life, leaving the bud
+        /// <b>2.27 wide and 28° round</b>. For most colours the repaint then set the scale back;
+        /// for a <b>white</b> one it called <c>Tween.Breathe</c>, which captures whatever scale it
+        /// finds as the size to breathe around — so that flower stayed huge for the rest of the
+        /// run. Reported as <em>"some of the falling flowers get huge"</em>, and that is exactly
+        /// what it was.
+        /// </para>
+        /// <para>
+        /// Two pictures cannot interrupt each other, so the throw always finishes and the arriving
+        /// flower is never drawn at a size somebody else chose. The general form is worth keeping:
+        /// <b>a thing that is leaving and a thing that is arriving may not share a transform</b>,
+        /// however briefly they overlap — which is <see cref="Cell.Piece"/>'s own lesson one level
+        /// down.
+        /// </para>
         /// </summary>
-        /// <param name="from">
-        /// How swollen the wind-up left it, handed over so the growth is continuous through the
-        /// frame it bursts on. The cell's own square goes back to normal; only the flower keeps
-        /// the size, which is what makes it read as the flower tearing free of its ground rather
-        /// than as the whole tile inflating.
-        /// </param>
-        /// <param name="turned">
-        /// And how far round it had spun, for the same reason. A flower whipping through two
-        /// turns that snaps upright to burst has stopped dead first, which is a beat of stillness
-        /// in the one place the sequence cannot afford one.
-        /// </param>
-        void ThrowFlower(Cell cell, Color tint, float from = 1f, float turned = 0f)
+        void ThrowFlower(int index, Cell cell, Color tint, float from = 1f, float turned = 0f)
         {
             if (cell.Bud == null)
             {
@@ -2387,50 +2478,71 @@ namespace GlimmerGrove
                 return;
             }
 
-            var bud = cell.Bud;
-            var brt = (RectTransform)bud.transform;
+            var sprite = cell.Bud.sprite;
+            var size = ((RectTransform)cell.Bud.transform).sizeDelta;
 
-            Tween.KillAll(bud);
+            // The cell is emptied first, so nothing below can be undone by a repaint arriving a
+            // frame later.
+            RestFlower(cell.Bud);
+            cell.Bud.color = new Color(1, 1, 1, 0f);
             if (cell.Halo) cell.Halo.color = new Color(1, 1, 1, 0f);
             if (cell.Glow) cell.Glow.color = new Color(1, 1, 1, 0f);
             cell.Drawn = Energy.None;
 
-            // **It tears free rather than fading out, and it takes long enough to see.** At
-            // .11s and a uniform grow this was a flower blinking off: the wind-up spent a third
-            // of a second building to it and then nothing came of it. Now it is thrown - pulled
-            // long as it leaves, released past its own size on an out-back so the shape
-            // overshoots the way a thing under pressure does, turned a little harder than the
-            // wind-up left it, and gone. The alpha is held back deliberately: it stays fully
-            // lit until the shape has finished moving, so the last thing the eye keeps is the
-            // flower at its largest rather than a ghost of it.
-            //
-            // **The growth is .45 and it was 1.05, which is what made a burst leave its own
-            // square.** It multiplies the wind-up rather than replacing it, so at the old swell
-            // a flower went off at better than four times its drawn size - most of two cells
-            // across, which is a burst happening *over the grove* rather than on the tile that
-            // caused it, and on an edge column it was the thing the player was seeing outside
-            // the board. Trimmed here as well as in the wind-up because the two multiply:
-            // cutting one alone still leaves the other doing most of it.
+            if (_near == null || sprite == null) return;
+
+            var thrown = UIKit.Img("Thrown", _near, sprite, tint, size,
+                                   new Vector2(.5f, .5f), Where(index));
+            thrown.raycastTarget = false;
+
+            var trt = (RectTransform)thrown.transform;
+            trt.localScale = Vector3.one * from;
+            trt.localRotation = Quaternion.Euler(0, 0, turned);
+
             Tween.Run(BudTempo.Burst, Ease.OutBack, t =>
             {
-                if (!bud) return;
+                if (!thrown) return;
 
                 float grow = from * (1f + t * .45f);
                 float draw = .22f * Mathf.Sin(Mathf.Clamp01(t) * Mathf.PI);
-                brt.localScale = new Vector3(grow * (1f + draw), grow * (1f - draw * .7f), 1f);
-                brt.localRotation = Quaternion.Euler(0, 0, turned + t * 55f);
-                // Clamped because `OutBack` overshoots past one on purpose, and an alpha is
-                // the one thing here that must not follow it out.
+
+                trt.localScale = new Vector3(grow * (1f + draw), grow * (1f - draw * .7f), 1f);
+                trt.localRotation = Quaternion.Euler(0, 0, turned + t * 55f);
+
+                // Clamped because `OutBack` overshoots past one on purpose, and an alpha is the
+                // one thing here that must not follow it out.
                 float u = Mathf.Clamp01(t);
-                bud.color = Pal.A(Color.Lerp(tint, Color.white, Mathf.Min(1f, t * 2.2f)),
-                                  1f - u * u * u);
-            }, bud).OnDone(() =>
-            {
-                if (!bud) return;
-                brt.localScale = Vector3.one;
-                brt.localRotation = Quaternion.identity;
-                bud.color = new Color(1, 1, 1, 0f);
-            });
+                thrown.color = Pal.A(Color.Lerp(tint, Color.white, Mathf.Min(1f, t * 2.2f)),
+                                     1f - u * u * u);
+            }, thrown).OnDone(() => { if (thrown) Destroy(thrown.gameObject); });
+        }
+
+        /// <summary>
+        /// Puts a cell's flower back to rest and stops everything that was moving it.
+        ///
+        /// <para>
+        /// <b>Two owners, and that is the whole reason this is a method.</b> A tween that moves
+        /// the flower is owned by the <c>Image</c>; <c>Tween.Breathe</c> is owned by its
+        /// <c>Transform</c>, which is a different <c>UnityEngine.Object</c> — so
+        /// <c>Tween.KillAll(cell.Bud)</c> never touched a breathe, and a white flower washed to
+        /// another colour went on breathing for the rest of the run underneath a repaint that
+        /// kept setting its scale back to one.
+        /// </para>
+        /// <para>
+        /// The rotation matters as much as the scale and was the half nothing put back: a repaint
+        /// assigned <c>localScale</c> and said nothing about <c>localRotation</c>, so a flower
+        /// interrupted mid-throw stayed leaning for the rest of the run.
+        /// </para>
+        /// </summary>
+        static void RestFlower(Image bud)
+        {
+            if (bud == null) return;
+
+            Tween.KillAll(bud);
+            Tween.KillAll(bud.transform);
+
+            bud.transform.localScale = Vector3.one;
+            bud.transform.localRotation = Quaternion.identity;
         }
 
         /// <summary>

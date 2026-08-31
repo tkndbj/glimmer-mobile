@@ -85,6 +85,17 @@ namespace GlimmerGrove
         LinkCredential _contested;
         bool _armed;
 
+        /// <summary>
+        /// True once this panel has sent the player somewhere itself, which is
+        /// <see cref="Leave"/> and nothing else. It is the exception <see cref="Then"/> must
+        /// not fire behind — a grove that now belongs to a different account is not one the
+        /// interrupted tap was about.
+        /// </summary>
+        bool _moved;
+
+        /// <summary>Latch, so the continuation runs exactly once however the panel ended.</summary>
+        bool _continued;
+
         // Laid out by stacking downward from the top edge. Everything here is anchored
         // to the panel top and positioned by its own centre — UIKit.Box pivots every box
         // centrally whatever its anchor — so a row's position is computed rather than
@@ -514,7 +525,13 @@ namespace GlimmerGrove
         /// screen underneath is still describing the truth.
         /// </summary>
         void Leave()
-            => Tween.After(1.8f, () => { if (this != null) Close(() => Flow.Go<HomeScreen>()); }, this);
+        {
+            // Set here rather than in the callback: from this instant the panel owns where the
+            // player goes next, and the tap that raised it (if there was one) is about a grove
+            // this device is no longer holding.
+            _moved = true;
+            Tween.After(1.8f, () => { if (this != null) Close(() => Flow.Go<HomeScreen>()); }, this);
+        }
 
         // ------------------------------------------------------- the one hard prompt
         /// <summary>
@@ -637,5 +654,49 @@ namespace GlimmerGrove
         /// </para>
         /// </summary>
         public AccountPromptTrigger? Reason { get; set; }
+
+        /// <summary>
+        /// What the player was doing when this panel interrupted them, to be resumed once it
+        /// is gone.
+        ///
+        /// <para>
+        /// Null when they opened the panel themselves — then there is nothing to resume, and
+        /// closing it is the whole of what they asked for. It is set only by
+        /// <c>AccountPrompts.Offer</c>, on behalf of a tap that meant something else: the
+        /// victory panel's Next, which raises this instead of moving on and would otherwise
+        /// drop the navigation the player actually asked for. A nudge that eats a tap is
+        /// indistinguishable from a broken button, and it is worse than the nudge is worth.
+        /// </para>
+        /// <para>
+        /// It runs on <b>every</b> ending except one — the close, the corner cross, the scrim,
+        /// the back key, a sign-in that succeeded, and this panel being torn down with the
+        /// screen underneath it. The exception is <see cref="Leave"/>, which has already sent
+        /// the player somewhere of its own and is the one case where the interrupted tap has
+        /// stopped meaning anything.
+        /// </para>
+        /// </summary>
+        public Action Then { get; set; }
+
+        /// <summary>
+        /// Resumes whatever was interrupted, exactly once, however this panel ended.
+        ///
+        /// <para>
+        /// Here rather than on the close for the reason <c>AdOfferOverlay</c> and
+        /// <c>ContinueOverlay</c> both report from here: this panel has several exits and one
+        /// of them is no exit at all — the screen underneath being replaced with this still up
+        /// — so a continuation hung off any single button is one a player can lose by using a
+        /// different one. The latch is the other half: a caller that hears twice is as broken
+        /// as one that never hears, and this one navigates.
+        /// </para>
+        /// </summary>
+        void OnDestroy()
+        {
+            if (_moved || _continued) return;
+
+            _continued = true;
+            var then = Then;
+            Then = null;
+            then?.Invoke();
+        }
     }
 }

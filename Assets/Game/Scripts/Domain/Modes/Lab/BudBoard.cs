@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 
 namespace GlimmerGrove.Modes
@@ -81,11 +81,31 @@ namespace GlimmerGrove.Modes
         /// <summary>What it turned into. -1 for the wave means the player's own tap.</summary>
         public readonly int To;
 
-        public BudWash(int cell, int wave, int to)
+        /// <summary>
+        /// Whether this is the grove ripening one between taps rather than a bunch washing its
+        /// colour into a neighbour.
+        ///
+        /// <para>
+        /// <b>Reported because the two are the same event to the model and nothing like the same
+        /// event to the player.</b> A wash happens beside a bunch that has just gone off, so its
+        /// cause is on screen a tenth of a second earlier. A ripen has no cause anywhere near it
+        /// — it is <see cref="BudBoard.Creep"/> leaning the grove toward the player, and it can
+        /// land right across the board from the tap. Drawn identically, which is how it shipped,
+        /// it reads as a flower changing colour for no reason: reported as
+        /// <em>"I tap on a flower, but another far flower's colour changes"</em>, with the
+        /// player unsure whether it was a bug. It is not, and invariant 20g is the rule it was
+        /// breaking — a mechanic the board cannot show is one the player is always being
+        /// surprised by.
+        /// </para>
+        /// </summary>
+        public readonly bool Ripened;
+
+        public BudWash(int cell, int wave, int to, bool ripened = false)
         {
             Cell = cell;
             Wave = wave;
             To = to;
+            Ripened = ripened;
         }
     }
 
@@ -754,7 +774,7 @@ namespace GlimmerGrove.Modes
 
             if (JoinsABunch(best)) { _value[best] = was; return; }
 
-            washes?.Add(new BudWash(best, wave, _value[best]));
+            washes?.Add(new BudWash(best, wave, _value[best], ripened: true));
         }
 
         /// <summary>How many of the three channels a colour holds. One is pure, three is white.</summary>

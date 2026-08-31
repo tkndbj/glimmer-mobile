@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 
 
@@ -16,26 +16,35 @@ namespace GlimmerGrove.Modes
         /// <summary>Colour landing on a flower beside a bunch.</summary>
         Wash = 2,
 
+        /// <summary>
+        /// The grove ripening one flower between taps — <c>BudBoard.Creep</c>.
+        ///
+        /// <b>Its own kind rather than a wash, because it is its own event to the player.</b> A
+        /// wash has its cause on screen a tenth of a second earlier; a ripen has none anywhere
+        /// near it and can land right across the board from the tap. See <c>BudWash.Ripened</c>.
+        /// </summary>
+        Ripen = 3,
+
         /// <summary>A cocoon taking a crack and holding.</summary>
-        Crack = 3,
+        Crack = 4,
 
         /// <summary>A cocoon opening and a critter getting out.</summary>
-        Free = 4,
+        Free = 5,
 
         /// <summary>The grove's own answer to a wave: the jolt, the ring, the shake, the flash.</summary>
-        Answer = 5,
+        Answer = 6,
 
         /// <summary>A piece coming down. <c>From</c> is where it fell from, -1 if it grew.</summary>
-        Fall = 6,
+        Fall = 7,
 
         /// <summary>The board put back in step with the model, once, when nothing is moving.</summary>
-        Tidy = 7,
+        Tidy = 8,
 
         /// <summary>The word.</summary>
-        Word = 8,
+        Word = 9,
 
         /// <summary>The run may carry on.</summary>
-        Done = 9,
+        Done = 10,
     }
 
     /// <summary>
@@ -254,6 +263,10 @@ namespace GlimmerGrove.Modes
 
             float t = 0f, body = 0f, wordAt = -1f;
 
+            // The one flower the grove ripens for the player, kept back until it can be seen.
+            var ripen = default(BudWash);
+            bool ripened = false;
+
             for (int wave = 0; wave <= waves; wave++)
             {
                 burstAt.Clear();
@@ -304,6 +317,13 @@ namespace GlimmerGrove.Modes
                 for (int i = 0; i < washes.Length; i++)
                 {
                     if (washes[i].Wave != wave) continue;
+
+                    // **Held back to the end rather than dealt with its wave.** The grove
+                    // ripening one for the player is not a consequence of any bunch, so there is
+                    // nothing here for it to follow — and dealt in among a collapsing grove it is
+                    // one more flower changing colour among twenty, which is precisely how it
+                    // came to read as a glitch. It waits for a still board.
+                    if (washes[i].Ripened) { ripen = washes[i]; ripened = true; continue; }
 
                     float at = Beside(burstAt, washes[i].Cell, width, from) + washLag;
                     cues.Add(new BudCue(BudCueKind.Wash, at, 0f, wave, washes[i].Cell,
@@ -376,6 +396,20 @@ namespace GlimmerGrove.Modes
             // Nothing is put back in step until nothing is moving. The repaint is cheap and
             // mostly a no-op, but it is a board-*wide* event, and a board-wide event laid over a
             // board still settling is the "it all resets at once" this was reported as.
+            // **And never in the same breath as the tap itself.** On a tap that sets nothing off
+            // the chain has no length at all, so the ripen would land in the frame the player's
+            // finger came down — which reads as part of their own tap rather than as the grove
+            // answering it. One beat is enough to make it a reply.
+            if (ripened && body < BudTempo.Wind) body = BudTempo.Wind;
+
+            // **Before the tidy-up, and that ordering is what lets it be drawn at all.** The
+            // repaint applies every colour the model holds; a ripen announced after it would be
+            // announcing a change the board had already made silently. Drawn first, it sets the
+            // colour itself and `PaintCell`'s own "nothing changed" guard then leaves it alone.
+            if (ripened)
+                cues.Add(new BudCue(BudCueKind.Ripen, body, 0f, waves, ripen.Cell,
+                                    colour: ripen.To));
+
             cues.Add(new BudCue(BudCueKind.Tidy, body, 0f, waves, -1));
 
             float length = body;
@@ -526,7 +560,8 @@ namespace GlimmerGrove.Modes
         static int Count(BudWash[] washes, int wave)
         {
             int n = 0;
-            for (int i = 0; i < washes.Length; i++) if (washes[i].Wave == wave) n++;
+            for (int i = 0; i < washes.Length; i++)
+                if (washes[i].Wave == wave && !washes[i].Ripened) n++;
 
             return n;
         }

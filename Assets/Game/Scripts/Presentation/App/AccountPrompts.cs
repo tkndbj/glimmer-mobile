@@ -1,3 +1,4 @@
+using System;
 using GlimmerGrove.Analytics;
 using GlimmerGrove.Cloud;
 using GlimmerGrove.Progression;
@@ -85,6 +86,14 @@ namespace GlimmerGrove
         /// Raises the panel if this trigger may, and reports whether it did.
         ///
         /// <para>
+        /// <paramref name="then"/> is what the player was doing when the panel took their tap
+        /// — the victory panel's Next is the one caller that has one — and it is handed to the
+        /// panel rather than run here, because "the ask is over" is several frames and several
+        /// endings away. A caller that raised a nudge and navigated anyway would put a board
+        /// behind a modal; one that navigated only on the close would drop the player's tap on
+        /// every other ending. See <see cref="AccountOverlay.Then"/>.
+        /// </para>
+        /// <para>
         /// The state is written through immediately rather than at the next save. This is one
         /// of the two records in the game whose loss is invisible — nothing shows a player how
         /// many times they have been nudged — so the only way it can be wrong is by being asked
@@ -92,8 +101,15 @@ namespace GlimmerGrove
         /// the one that has just been backgrounded by an OAuth consent screen.
         /// </para>
         /// </summary>
-        public static bool Offer(AccountPromptTrigger trigger)
+        public static bool Offer(AccountPromptTrigger trigger, Action then = null)
         {
+            // A panel already up was configured by whoever raised it: Flow.Modal hands it back
+            // untouched on purpose, so this ask cannot reach it and must not claim to have been
+            // made. Reporting false is what keeps the caller's own continuation with the
+            // caller — the alternative loses the tap silently, which is the bug this
+            // continuation exists to fix, arriving by a different door.
+            if (Flow.LiveModal<AccountOverlay>() != null) return false;
+
             if (!ShouldOffer(trigger)) return false;
 
             Policy.NoteOffered(trigger, GameClock.NowUnix());
@@ -110,7 +126,11 @@ namespace GlimmerGrove
             // the whole reason the pacing is content is so that answer can be acted on.
             Telemetry.Track("account_prompt_shown", "trigger", trigger.ToString());
 
-            Flow.Modal<AccountOverlay>(v => v.Reason = trigger);
+            Flow.Modal<AccountOverlay>(v =>
+            {
+                v.Reason = trigger;
+                v.Then = then;
+            });
             return true;
         }
     }

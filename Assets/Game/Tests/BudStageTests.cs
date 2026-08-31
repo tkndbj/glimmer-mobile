@@ -66,6 +66,7 @@ namespace GlimmerGrove.Tests
 
                 BudChainResult best = default;
                 BudPulse[] pulses = null;
+                BudWash[] washes = null;
                 BudDrop[] drops = null;
 
                 // The first colour the basket deals, which is what an opening tap is made with.
@@ -85,13 +86,13 @@ namespace GlimmerGrove.Tests
 
                     best = chain;
                     pulses = p.ToArray();
+                    washes = w.ToArray();
                     drops = d.ToArray();
                 }
 
                 Assert.IsNotNull(pulses, rung.Id + ": no legal opening tap");
 
-                var score = BudStage.Of(best.Waves, pulses, System.Array.Empty<BudWash>(),
-                                        drops, layout.Width);
+                var score = BudStage.Of(best.Waves, pulses, washes, drops, layout.Width);
 
                 yield return new Tap(rung.Id, score, pulses, drops, best.Waves, layout.Width);
             }
@@ -427,6 +428,70 @@ namespace GlimmerGrove.Tests
             }
 
             Assert.Greater(greeted, 0, "no shipped grove frees anybody on its best tap");
+        }
+
+        // ------------------------------------------------------------------ the ripen
+        /// <summary>
+        /// <b>The grove ripening one for the player waits for a still board, and is never dealt
+        /// as an ordinary wash.</b>
+        ///
+        /// <para>
+        /// <c>BudBoard.Creep</c> moves one flower beside a still-shut cocoon a step on after every
+        /// tap. It is the one event on this board with no cause anywhere near it, and it shipped
+        /// drawn exactly like a wash — a flower turning because the bunch beside it went off. So a
+        /// flower changed colour across the board with nothing to explain it, and it was reported
+        /// as a suspected bug. It is held to the end of the chain, where it is the only thing
+        /// moving, and it arrives before the tidy-up that would otherwise apply its colour
+        /// silently.
+        /// </para>
+        /// </summary>
+        [Test]
+        public void TheGroveRipensOneForThePlayerOnceTheBoardHasStopped()
+        {
+            int seen = 0;
+
+            foreach (var tap in Taps())
+            {
+                float ripen = -1f, tidy = -1f, moving = 0f;
+                int count = 0;
+
+                foreach (var cue in tap.Score.Cues)
+                {
+                    if (cue.Kind == BudCueKind.Ripen) { ripen = cue.At; count++; }
+                    else if (cue.Kind == BudCueKind.Tidy) tidy = cue.At;
+                    else if (cue.Kind != BudCueKind.Word && cue.Kind != BudCueKind.Done
+                             && cue.Until > moving) moving = cue.Until;
+                }
+
+                Assert.LessOrEqual(count, 1, tap.Id + ": the grove ripened more than one flower");
+                if (count == 0) continue;
+
+                seen++;
+
+                Assert.GreaterOrEqual(ripen, moving - .0001f,
+                    $"{tap.Id}: the grove ripens a flower at {ripen:0.00}s with the board still "
+                    + $"moving until {moving:0.00}s, so it is one change among twenty");
+
+                Assert.LessOrEqual(ripen, tidy + .0001f,
+                    $"{tap.Id}: the ripen lands at {ripen:0.00}s and the repaint at {tidy:0.00}s, "
+                    + "so the colour is applied before anything says who did it");
+            }
+
+            Assert.Greater(seen, 0, "no shipped grove ripens anything on its best tap");
+        }
+
+        /// <summary>
+        /// And a ripen is never counted among its wave's washes, or the ripple that spaces them
+        /// is built for one more than there are.
+        /// </summary>
+        [Test]
+        public void ARipenIsNotOneOfTheWashes()
+        {
+            foreach (var tap in Taps())
+                foreach (var cue in tap.Score.Cues)
+                    if (cue.Kind == BudCueKind.Wash)
+                        Assert.Less(cue.Nth, cue.Of,
+                                    tap.Id + ": a wash is dealt past the end of its own ripple");
         }
 
         /// <summary>An empty tap is a score with nothing in it but a full stop.</summary>
