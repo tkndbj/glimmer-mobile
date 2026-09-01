@@ -61,39 +61,46 @@ namespace GlimmerGrove.Dev
         /// </summary>
         const float FieldOfView = 50f;
 
-        /// <summary>How much room one effect is given across the line, in world units.</summary>
-        const float Cell = 2.4f;
+        /// <summary>
+        /// How much lane a shot gets beyond the length of its own trail: room for the head in
+        /// front and for the tail to thin out behind.
+        /// </summary>
+        const float LaneMargin = 1.7f;
+
+        /// <summary>The shortest lane worth flying, for an effect that trails almost nothing.</summary>
+        const float MinLane = 9f;
+
+        /// <summary>How much room one effect is given across the line, as a fraction of the lane.</summary>
+        const float CellFraction = .13f;
 
         /// <summary>
-        /// The closest the camera is ever allowed.
-        ///
-        /// It sets how big a single projectile is drawn, and it is the number that decides whether
-        /// this screen is worth opening: too far and the answer to "is this effect any good" is a
-        /// speck. Measured rather than guessed — at 7.5 with a 50 degree field a fireball stands
-        /// about half the height of a portrait phone, which is where its shape reads and its glow
-        /// still has somewhere to spill. 4.6 was the first try and is too close: the effect
-        /// overflows the frame and the halo has no room, so it reads as a flat wall of colour.
+        /// How much of the flight the camera takes in: the whole lane, or a closer look at the
+        /// head as it passes.
         /// </summary>
-        const float MinDistance = 7.5f;
+        static readonly float[] Views = { 1f, .45f, .2f };
+        static readonly string[] ViewNames = { "WHOLE FLIGHT", "CLOSER", "HEAD" };
 
         /// <summary>Where the stage sits. Far from the origin so it can never share a frame with anything else.</summary>
         static readonly Vector3 StageOrigin = new Vector3(0f, -4000f, 0f);
 
-        /// <summary>How long a shot takes to cross, slow to quick.</summary>
-        static readonly float[] Flights = { 2.2f, 1.4f, 0.85f };
-        static readonly string[] SpeedNames = { "SLOW", "NORMAL", "FAST" };
+        /// <summary>
+        /// What the authored speed is multiplied by. <b>One is the default and the honest
+        /// answer</b> — every other setting is for inspecting, because speed is not a display
+        /// preference here: the trail systems are world-space and emit per <em>second</em>, so
+        /// halving the speed halves the length the trail is smeared over and the comet collapses
+        /// back onto the head. That is exactly the bug this control exists to let you see.
+        /// </summary>
+        static readonly float[] Rates = { 1f, .5f, 2f };
+        static readonly string[] RateNames = { "AUTHORED", "HALF SPEED", "DOUBLE" };
 
-        /// <summary>How close the camera stands, as a multiple of the fitted distance.</summary>
-        static readonly float[] Sizes = { .72f, 1f, 1.5f };
-        static readonly string[] SizeNames = { "BIG", "FIT", "SMALL" };
 
         // ------------------------------------------------------------------ state
         readonly List<GameObject> _prefabs = new List<GameObject>();
 
         int _pick;
         int _count = 1;        // how many fly the line at once
-        int _speed = 1;
-        int _size = 1;
+        int _rate;
+        int _view;
         bool _column = true;   // portrait has height to spare and no width, so upward by default
         bool _loop = true;
 
@@ -102,13 +109,12 @@ namespace GlimmerGrove.Dev
         RenderTexture _rt;
         RawImage _screen;
         Text _name, _counter;
-        Btn _countBtn, _axisBtn, _speedBtn, _sizeBtn, _loopBtn;
+        Btn _countBtn, _axisBtn, _rateBtn, _viewBtn, _loopBtn;
 
         Coroutine _play;
         int _rtW, _rtH;
         string _loaded;
 
-        float Flight => Flights[_speed];
 
         // ------------------------------------------------------------------ build
         protected override void Build()
@@ -166,13 +172,13 @@ namespace GlimmerGrove.Dev
                                         new Vector2(.5f, 0f), new Vector2(166f, 214f),
                                         () => { _column = !_column; Repaint(); });
 
-            _speedBtn = UIKit.TextButton("Speed", Safe, "btn_blue", "", 28, size,
-                                         new Vector2(.5f, 0f), new Vector2(-166f, 116f),
-                                         () => { _speed = (_speed + 1) % Flights.Length; Repaint(); });
+            _rateBtn = UIKit.TextButton("Rate", Safe, "btn_blue", "", 28, size,
+                                        new Vector2(.5f, 0f), new Vector2(-166f, 116f),
+                                        () => { _rate = (_rate + 1) % Rates.Length; Repaint(); });
 
-            _sizeBtn = UIKit.TextButton("Size", Safe, "btn_violet", "", 28, size,
+            _viewBtn = UIKit.TextButton("View", Safe, "btn_violet", "", 28, size,
                                         new Vector2(.5f, 0f), new Vector2(166f, 116f),
-                                        () => { _size = (_size + 1) % Sizes.Length; Repaint(); });
+                                        () => { _view = (_view + 1) % Views.Length; Repaint(); });
 
             _loopBtn = UIKit.TextButton("Loop", Safe, "btn_green", "", 28, size,
                                         new Vector2(.5f, 0f), new Vector2(0f, 18f),
@@ -244,31 +250,120 @@ namespace GlimmerGrove.Dev
         static float HalfAngle => Mathf.Tan(FieldOfView * .5f * Mathf.Deg2Rad);
 
         /// <summary>
-        /// How far back the camera stands: as close as the line will allow, never closer than
-        /// <see cref="MinDistance"/>.
+        /// How fast the shot currently in view flies, in world units a second.
         ///
-        /// The camera is fitted to the line rather than the line to the camera, so asking for a
-        /// second and a third pulls back instead of running them off the edge — and asking for one
-        /// comes all the way in, which is the setting this screen is really for.
+        /// <para>
+        /// <b>Read off the prefab, and that is the whole of what was wrong before.</b> The bench
+        /// used to invent a speed that made a projectile fit a small lane — about 5.7 units a
+        /// second against the 30 to 45 these are authored at. Every trail here is a world-space
+        /// system emitting per <em>second</em>, so the length a trail smears over is speed times
+        /// its particles' lifetime: fly one at a fifth of its speed and the flames and sparks
+        /// that should stream out behind it pile up on the head instead. The effect stops being a
+        /// comet and becomes an oval with debris round it, which is exactly how it was reported.
+        /// </para>
+        /// </summary>
+        float Speed()
+        {
+            if (_prefabs.Count == 0) return 30f;
+            return Mathf.Max(1f, SpeedOf(_prefabs[_pick])) * Rates[_rate];
+        }
+
+        /// <summary>
+        /// The prefab's authored speed, found by reflection.
+        ///
+        /// The pack's <c>ProjectileMoveScript</c> compiles into <c>Assembly-CSharp</c>, which an
+        /// asmdef assembly may never reference — so the field is read by name. Narrow and honest:
+        /// one public float, with a sane fallback if a future pack names it something else.
+        /// </summary>
+        static float SpeedOf(GameObject prefab)
+        {
+            var behaviours = prefab.GetComponentsInChildren<MonoBehaviour>(true);
+            for (int i = 0; i < behaviours.Length; i++)
+            {
+                if (behaviours[i] == null) continue;
+
+                var field = behaviours[i].GetType().GetField("speed");
+                if (field != null && field.FieldType == typeof(float))
+                    return (float)field.GetValue(behaviours[i]);
+            }
+            return 30f;
+        }
+
+        /// <summary>One of the prefab's own companion effects — its muzzle flash or its hit.</summary>
+        static GameObject Companion(GameObject prefab, string field)
+        {
+            var behaviours = prefab.GetComponentsInChildren<MonoBehaviour>(true);
+            for (int i = 0; i < behaviours.Length; i++)
+            {
+                if (behaviours[i] == null) continue;
+
+                var f = behaviours[i].GetType().GetField(field);
+                if (f != null && f.FieldType == typeof(GameObject))
+                    return (GameObject)f.GetValue(behaviours[i]);
+            }
+            return null;
+        }
+
+        /// <summary>
+        /// How long the lane is: the length of this effect's own trail, plus room.
+        ///
+        /// <para>
+        /// <b>Derived from the art, not from a flight time somebody liked.</b> A trail is a
+        /// world-space system emitting per second, so the distance it smears over is the speed
+        /// times how long its particles live — 30 units a second for half a second is fifteen
+        /// units of flame, and no more however far the thing flies. Sizing the lane off a flat
+        /// 1.25 second flight made it 38 units instead, which is correct and useless: the camera
+        /// goes back far enough to hold two thirds of empty black, and the head everybody wants
+        /// to look at ends up a twelfth of the screen.
+        /// </para>
+        /// </summary>
+        float Span()
+        {
+            if (_prefabs.Count == 0) return MinLane;
+            return Mathf.Max(MinLane, TrailOf(_prefabs[_pick]) * Speed() * LaneMargin);
+        }
+
+        /// <summary>
+        /// How long, in seconds, this effect's trail lingers: the longest-lived of the systems
+        /// that are simulated in <em>world</em> space, because those are the ones left behind.
+        /// A system in local space rides along with the head and trails nothing.
+        /// </summary>
+        static float TrailOf(GameObject prefab)
+        {
+            float longest = 0f;
+            var systems = prefab.GetComponentsInChildren<ParticleSystem>(true);
+
+            for (int i = 0; i < systems.Length; i++)
+            {
+                var main = systems[i].main;
+                if (main.simulationSpace != ParticleSystemSimulationSpace.World) continue;
+                longest = Mathf.Max(longest, main.startLifetime.constantMax);
+            }
+            return longest;
+        }
+
+        /// <summary>How long the shot is in the air, which now falls out of the lane and the speed.</summary>
+        float FlightTime => Span() / Speed();
+
+        /// <summary>
+        /// How far back the camera stands: far enough to hold the part of the lane
+        /// <see cref="Views"/> asks for, and never so close that a line of shots overlaps.
         /// </summary>
         float Distance()
         {
-            // Across the line is the screen's width in a column and its height in a row, which is
-            // the whole reason a column is the default: a portrait phone has height to spend on
-            // travel and almost no width.
-            float across = _count * Cell;
-            float needed = _column
-                ? across / (2f * HalfAngle * Mathf.Max(.2f, Aspect()))
-                : across / (2f * HalfAngle);
+            float along = Span() * Views[_view];
+            float across = _count * Span() * CellFraction;
 
-            return Mathf.Max(MinDistance, needed) * Sizes[_size];
-        }
+            // Along the lane is the screen's height in a column and its width in a row.
+            float forAlong = _column
+                ? along * .5f / HalfAngle
+                : along * .5f / (HalfAngle * Mathf.Max(.2f, Aspect()));
 
-        /// <summary>How far a shot crosses: everything the camera sees along the line, and a margin.</summary>
-        float Span()
-        {
-            float halfHeight = Distance() * HalfAngle;
-            return (_column ? halfHeight : halfHeight * Aspect()) * 2f * 1.15f;
+            float forAcross = _column
+                ? across * .5f / (HalfAngle * Mathf.Max(.2f, Aspect()))
+                : across * .5f / HalfAngle;
+
+            return Mathf.Max(forAlong, forAcross);
         }
 
         // ------------------------------------------------------------------ the pack
@@ -333,8 +428,8 @@ namespace GlimmerGrove.Dev
         {
             _countBtn.SetCaption(_count == 1 ? "ONE" : "LINE  " + _count);
             _axisBtn.SetCaption(_column ? "UPWARD" : "ACROSS");
-            _speedBtn.SetCaption(SpeedNames[_speed]);
-            _sizeBtn.SetCaption(SizeNames[_size]);
+            _rateBtn.SetCaption(RateNames[_rate]);
+            _viewBtn.SetCaption(ViewNames[_view]);
             _loopBtn.SetCaption(_loop ? "LOOP ON" : "LOOP OFF");
 
             _name.text = _prefabs.Count == 0 ? "NOTHING FOUND" : _prefabs[_pick].name;
@@ -388,34 +483,74 @@ namespace GlimmerGrove.Dev
 
                 if (!_loop) { _play = null; yield break; }
 
-                yield return new WaitForSeconds(Flight + .35f);
+                // Long enough for the shot to land and its hit to read before the lane clears.
+                yield return new WaitForSeconds(FlightTime + 1.1f);
                 Clear();
                 yield return new WaitForSeconds(.12f);
             }
         }
 
         /// <summary>
-        /// Sends one copy down the line from slot <paramref name="slot"/>.
+        /// Sends one shot down the lane from slot <paramref name="slot"/>: its muzzle where it
+        /// starts, the projectile at its authored speed, its hit where it lands.
         ///
-        /// Its matching hit is deliberately not played behind it: this bench reports what a prefab
-        /// does, and pairing it with a guess about which hit belongs to it is how a pack gets
-        /// judged on something it was never asked to do.
+        /// <para>
+        /// <b>All three, because that is what the pack is.</b> Every projectile prefab names a
+        /// <c>muzzlePrefab</c> and a <c>hitPrefab</c>, and the vendor's own demo fires the set as
+        /// one event — a flash, a comet, an impact. Showing the middle one alone was judging a
+        /// sentence by its verb.
+        /// </para>
+        /// <para>
+        /// Driven here rather than by the pack's <c>ProjectileMoveScript</c>, which is still
+        /// switched off, and for a sharper reason than before: 45 of these 60 carry a
+        /// <c>buildUpTime</c>, and the script implements it by deactivating the GameObject and
+        /// calling <c>Invoke</c> to switch it back on — but Unity does not run an <c>Invoke</c>
+        /// queued on a behaviour that has been disabled, and deactivating the object disables it.
+        /// Three quarters of the pack would simply never appear. What the script is read for is
+        /// its <em>numbers</em>.
+        /// </para>
         /// </summary>
         void Launch(GameObject prefab, int slot)
         {
             Vector3 axis = _column ? Vector3.up : Vector3.right;
             Vector3 across = _column ? Vector3.right : Vector3.up;
 
+            float span = Span();
             float from = -(_count - 1) * .5f;
-            Vector3 at = StageOrigin - axis * (Span() * .5f) + across * ((from + slot) * Cell);
+            Vector3 offset = across * ((from + slot) * span * CellFraction);
 
-            // Rolled to face the camera as well as pointed along travel: several of these meshes
-            // are flat on one axis, and one edge-on to the viewer is a line.
-            var go = Instantiate(prefab, at, Quaternion.LookRotation(axis, Vector3.back), _stage);
+            Vector3 start = StageOrigin - axis * (span * .5f) + offset;
+            Vector3 land  = StageOrigin + axis * (span * .5f) + offset;
+
+            // Pointed along travel and rolled to face the camera: several of these meshes are
+            // flat on one axis, and one edge-on to the viewer is a line.
+            var facing = Quaternion.LookRotation(axis, Vector3.back);
+
+            Fire(Companion(prefab, "muzzlePrefab"), start, facing);
+
+            var go = Instantiate(prefab, start, facing, _stage);
             Strip(go);
+            go.AddComponent<Drift>().Velocity = axis * Speed();
+            Destroy(go, FlightTime);
 
-            go.AddComponent<Drift>().Velocity = axis * (Span() / Flight);
-            Destroy(go, Flight + .3f);
+            StartCoroutine(Land(prefab, land, facing));
+        }
+
+        /// <summary>The hit, when the shot gets there.</summary>
+        IEnumerator Land(GameObject prefab, Vector3 where, Quaternion facing)
+        {
+            yield return new WaitForSeconds(FlightTime);
+            Fire(Companion(prefab, "hitPrefab"), where, facing);
+        }
+
+        /// <summary>Plays one of the pack's one-shot effects and forgets about it.</summary>
+        void Fire(GameObject prefab, Vector3 at, Quaternion facing)
+        {
+            if (prefab == null || _stage == null) return;
+
+            var go = Instantiate(prefab, at, facing, _stage);
+            Strip(go);
+            Destroy(go, 3f);
         }
 
         /// <summary>

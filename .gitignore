@@ -71,8 +71,10 @@ crashlytics-build.properties
 # permanently, for a developer bench no player build contains. It is also licensed third-party
 # art, which is the same reason GooglePackages is ignored below.
 #
-# Restore with: import UniqueProjectilesVol5_6_BIRP_v1.0.unitypackage (the Unity 6 BUILT-IN
-# variant - URP and HDRP import pink here), then Glimmer Grove > Addressables > Sync VFX Bench.
+# Restore with: import UniqueProjectilesVol5_6_BIRP_v1.0.unitypackage from
+#   C:\Users\Digikey\Downloads\UniqueProjectilesVol5_v1.0\
+# - the Unity 6 BUILT-IN variant. The URP and HDRP ones import pink here, because this
+# project has no SRP. Then run Glimmer Grove > Addressables > Sync VFX Bench.
 # The .unitypackage carries the .meta files, so GUIDs survive and the committed group's entries
 # resolve again on import.
 /[Aa]ssets/GabrielAguiarProductions/
