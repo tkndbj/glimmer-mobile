@@ -1074,5 +1074,5 @@ MonoBehaviour:
     m_SchemaDisplayOrder:
     - Glimmer VFX Bench_BundledAssetGroupSchema
     - Glimmer VFX Bench_ContentUpdateGroupSchema
-  m_IncludeInBuild: 1
+  m_IncludeInBuild: 0
   m_IncludeInBuildMigrated: 1

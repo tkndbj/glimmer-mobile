@@ -829,7 +829,7 @@ PlayerSettings:
   webWasm2023: 1
   webEnableSubmoduleStrippingCompatibility: 0
   scriptingDefineSymbols:
-    Android: LEVELPLAY_DEPENDENCIES_INSTALLED;GLIMMER_BENCH
+    Android: LEVELPLAY_DEPENDENCIES_INSTALLED
     EmbeddedLinux: 
     GameCoreScarlett: 
     GameCoreXboxOne: 
@@ -840,11 +840,11 @@ PlayerSettings:
     PS4: 
     PS5: 
     QNX: 
-    Standalone: LEVELPLAY_DEPENDENCIES_INSTALLED;GLIMMER_BENCH
+    Standalone: LEVELPLAY_DEPENDENCIES_INSTALLED
     VisionOS: 
     WebGL: 
     XboxOne: 
-    iPhone: LEVELPLAY_DEPENDENCIES_INSTALLED;GLIMMER_BENCH
+    iPhone: LEVELPLAY_DEPENDENCIES_INSTALLED
     tvOS: 
   additionalCompilerArguments: {}
   platformArchitecture: {}
