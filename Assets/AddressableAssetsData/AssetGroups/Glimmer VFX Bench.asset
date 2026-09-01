@@ -1,0 +1,1078 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: bbb281ee3bf0b054c82ac2347e9e782c, type: 3}
+  m_Name: Glimmer VFX Bench
+  m_EditorClassIdentifier: Unity.Addressables.Editor::UnityEditor.AddressableAssets.Settings.AddressableAssetGroup
+  m_GroupName: Glimmer VFX Bench
+  m_GUID: 26a8ff3c857337049949b7f5af4a73e0
+  m_SerializeEntries:
+  - m_GUID: 0078e192e44f7b149ac4d885a602555c
+    m_Address: Fx/Bench/Muzzles/vfx_Muzzle_Spiral02
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - Fx/Bench/Muzzles
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 00e3576bcd19db54b87862512149e8ae
+    m_Address: Fx/Bench/Hits/vfx_Hit_MagicArrow_03
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - Fx/Bench/Hits
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 00f7770bdb0c6c44dadf97f8d5aaac46
+    m_Address: Fx/Bench/Hits/vfx_Hit_Sun01
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - Fx/Bench/Hits
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 039dabb2826d07549bbd37768d836989
+    m_Address: Fx/Bench/Hits/vfx_Hit_ShootingStar01
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - Fx/Bench/Hits
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 03e04c4fcb11232468e0724702e0788c
+    m_Address: Fx/Bench/Hits/vfx_Hit_Cube03
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - Fx/Bench/Hits
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 05235e7c88a2b154dae06a6f5559c0a2
+    m_Address: Fx/Bench/Projectiles/vfx_Projectile_Music03
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - Fx/Bench/Projectiles
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 0ae120516b45a9c4aafcf4a9eddc93ff
+    m_Address: Fx/Bench/Projectiles/vfx_Projectile_Rocket03
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - Fx/Bench/Projectiles
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 0cee1a5806265cc488983479eedbf80f
+    m_Address: Fx/Bench/Projectiles/vfx_Projectile_Icicle01
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - Fx/Bench/Projectiles
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 0d21d318ad608aa4da7c59dd5339a3da
+    m_Address: Fx/Bench/Projectiles/vfx_Projectile_PoisonDart02
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - Fx/Bench/Projectiles
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 0d501fdb2dea9c642972b4b27e13f284
+    m_Address: Fx/Bench/Muzzles/vfx_Muzzle_Cube01
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - Fx/Bench/Muzzles
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 0fad376f228bd2e408c50769717cb4dc
+    m_Address: Fx/Bench/Hits/vfx_Hit_Orb18_red
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - Fx/Bench/Hits
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 0fae1a3e911ce424f9320f2337534802
+    m_Address: Fx/Bench/Projectiles/vfx_Projectile_YinYang03
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - Fx/Bench/Projectiles
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 11f6b27c03e2d794295953699aa5c5fb
+    m_Address: Fx/Bench/Muzzles/vfx_Muzzle_Slash03
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - Fx/Bench/Muzzles
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 1409a671e938e384c9943aef8433e305
+    m_Address: Fx/Bench/Hits/vfx_Hit_Spiral02
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - Fx/Bench/Hits
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 14cd1b5a1b9c54b41a993bfb5c56f5ad
+    m_Address: Fx/Bench/Muzzles/vfx_Muzzle_Orb17_yellow
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - Fx/Bench/Muzzles
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 14ed1dfc77f5fe942b5bd127dd17732d
+    m_Address: Fx/Bench/Projectiles/vfx_Projectile_Orb17_orange
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - Fx/Bench/Projectiles
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 160ac1978abfc134d8088a60f9a104eb
+    m_Address: Fx/Bench/Hits/vfx_Hit_Cube02
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - Fx/Bench/Hits
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 16bb91ba8b97ad14aab21b6bce162b4c
+    m_Address: Fx/Bench/Projectiles/vfx_Projectile_Bullet03
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - Fx/Bench/Projectiles
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 1af8d6c77b8f56d46b8dfd6b1b44ba5a
+    m_Address: Fx/Bench/Projectiles/vfx_Projectile_Fireball03
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - Fx/Bench/Projectiles
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 21514a1483cb65c49a03485ea441b141
+    m_Address: Fx/Bench/Projectiles/vfx_Projectile_YinYang01
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - Fx/Bench/Projectiles
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 22ca012b795730b4389f4c72cc06902f
+    m_Address: Fx/Bench/Hits/vfx_Hit_Bullet01
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - Fx/Bench/Hits
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 23917341e0032f149aef99329d7dd315
+    m_Address: Fx/Bench/Projectiles/vfx_Projectile_Orb17_yellow
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - Fx/Bench/Projectiles
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 2679f8ca4ae06c544b45730bc8269d38
+    m_Address: Fx/Bench/Projectiles/vfx_Projectile_Wind03
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - Fx/Bench/Projectiles
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 269967bab957b4e4a9a020a680ad6091
+    m_Address: Fx/Bench/Hits/vfx_Hit_Fireball03
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - Fx/Bench/Hits
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 274fdb3b8b3fb4643875da9d7bb1e702
+    m_Address: Fx/Bench/Projectiles/vfx_Projectile_Orb18_red
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - Fx/Bench/Projectiles
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 2a667cf7183c2224fbfbfb0936084215
+    m_Address: Fx/Bench/Hits/vfx_Hit_Wind01
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - Fx/Bench/Hits
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 2dd04b49d4a90a8459c1ef9347789612
+    m_Address: Fx/Bench/Hits/vfx_Hit_Icicle02
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - Fx/Bench/Hits
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 2f406ab9c0aede2458efb8817e77c0fe
+    m_Address: Fx/Bench/Hits/vfx_Hit_Lightning01
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - Fx/Bench/Hits
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 3028ffaa8c33af047a513e600c3480a6
+    m_Address: Fx/Bench/Projectiles/vfx_Projectile_Fireworks03
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - Fx/Bench/Projectiles
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 335723549070e2b4eaf2cab7a6ae7513
+    m_Address: Fx/Bench/Muzzles/vfx_Muzzle_Wind01
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - Fx/Bench/Muzzles
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 346528f766610a44b897890f61bad5de
+    m_Address: Fx/Bench/Muzzles/vfx_Muzzle_Orb18_blue
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - Fx/Bench/Muzzles
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 34867bf7145a6fa49a2014e9316a6aea
+    m_Address: Fx/Bench/Projectiles/vfx_Projectile_Lightning03
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - Fx/Bench/Projectiles
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 378c04a82f697a049b8cbd238081e038
+    m_Address: Fx/Bench/Projectiles/vfx_Projectile_MagicArrow03
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - Fx/Bench/Projectiles
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 39e8f2904977d9e46ab6802f26e8bf75
+    m_Address: Fx/Bench/Projectiles/vfx_Projectile_ShootingStar03
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - Fx/Bench/Projectiles
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 3bec71cb8778e884d80dd61fc7b8d538
+    m_Address: Fx/Bench/Muzzles/vfx_Muzzle_Capsule02
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - Fx/Bench/Muzzles
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 3bf2ba58ba8122c47ac82114c897c632
+    m_Address: Fx/Bench/Hits/vfx_Hit_Music02
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - Fx/Bench/Hits
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 3cb73259e9ad2b9499bb499e4e8efae7
+    m_Address: Fx/Bench/Hits/vfx_Hit_Wind03
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - Fx/Bench/Hits
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 3e478f5eb4824034396f546897920ded
+    m_Address: Fx/Bench/Hits/vfx_Hit_Sun02
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - Fx/Bench/Hits
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 3f3825f6a2fd1124081511dde82e44e4
+    m_Address: Fx/Bench/Projectiles/vfx_Projectile_Slash03
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - Fx/Bench/Projectiles
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 3fb656875e62851448dc1f77c44d253d
+    m_Address: Fx/Bench/Hits/vfx_Hit_PoisonDart01
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - Fx/Bench/Hits
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 435d862ac89a4b2478afa68fbde9486a
+    m_Address: Fx/Bench/Hits/vfx_Hit_Orb17_yellow
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - Fx/Bench/Hits
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 48a7e60b5c0e1c647a33115855bc3ada
+    m_Address: Fx/Bench/Muzzles/vfx_Muzzle_Orb18_purple
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - Fx/Bench/Muzzles
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 48e87d5a2cb160c40b18fc1664bc58e4
+    m_Address: Fx/Bench/Muzzles/vfx_Muzzle_ShootingStar01
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - Fx/Bench/Muzzles
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 497e136537e83b94e8b5f8460fff9134
+    m_Address: Fx/Bench/Muzzles/vfx_Muzzle_YinYang02
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - Fx/Bench/Muzzles
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 4a67941147f026d4b8ef666910655b3b
+    m_Address: Fx/Bench/Muzzles/vfx_Muzzle_YinYang01
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - Fx/Bench/Muzzles
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 4eeb05aa87a9d244c8db0d88ce1684de
+    m_Address: Fx/Bench/Projectiles/vfx_Projectile_Slash02
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - Fx/Bench/Projectiles
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 4f89da6602b8b10489157f6476633934
+    m_Address: Fx/Bench/Hits/vfx_Hit_Wind02
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - Fx/Bench/Hits
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 509dbf0cb9dd1794890ee786bb675481
+    m_Address: Fx/Bench/Projectiles/vfx_Projectile_Icicle03
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - Fx/Bench/Projectiles
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 530d72b75e9d0964896ff53b73735012
+    m_Address: Fx/Bench/Muzzles/vfx_Muzzle_Icicle02
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - Fx/Bench/Muzzles
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 53910c448ddcfce49b3ea032d7900bd2
+    m_Address: Fx/Bench/Projectiles/vfx_Projectile_PoisonDart03
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - Fx/Bench/Projectiles
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 56076751c3b82094dad47a6cba13d1a8
+    m_Address: Fx/Bench/Hits/vfx_Hit_Sun03
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - Fx/Bench/Hits
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 5882bc634b59d2349b8ba30ce0fb4f52
+    m_Address: Fx/Bench/Muzzles/vfx_Muzzle_Rocket02
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - Fx/Bench/Muzzles
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 58d46e138e1020043befc54d96aace06
+    m_Address: Fx/Bench/Hits/vfx_Hit_PoisonDart03
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - Fx/Bench/Hits
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 5989e508747f3b241b33b09192b00361
+    m_Address: Fx/Bench/Hits/vfx_Hit_Music03
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - Fx/Bench/Hits
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 59bbf78bc62354e44b0f0363f5808627
+    m_Address: Fx/Bench/Hits/vfx_Hit_Spiral01
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - Fx/Bench/Hits
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 5a1bedca190e0894899375494da61f77
+    m_Address: Fx/Bench/Muzzles/vfx_Muzzle_Fireworks03
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - Fx/Bench/Muzzles
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 5cbc01cc370d3194489216675dbeb7bd
+    m_Address: Fx/Bench/Muzzles/vfx_Muzzle_Cube03
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - Fx/Bench/Muzzles
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 5d837996082b6b34899841caef64a67c
+    m_Address: Fx/Bench/Hits/vfx_Hit_YinYang01
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - Fx/Bench/Hits
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 5f41eafc109173e4992316a32207fe23
+    m_Address: Fx/Bench/Projectiles/vfx_Projectile_Fireworks01
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - Fx/Bench/Projectiles
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 5f65f4092f25c3a46b6d508923579863
+    m_Address: Fx/Bench/Muzzles/vfx_Muzzle_Rocket03
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - Fx/Bench/Muzzles
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 620e7349ebf84a64ea443a1a86b8279e
+    m_Address: Fx/Bench/Hits/vfx_Hit_Rocket02
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - Fx/Bench/Hits
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 628c4a7b11fde964baec699178c76189
+    m_Address: Fx/Bench/Hits/vfx_Hit_Orb18_purple
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - Fx/Bench/Hits
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 63ad4d2f74e0e4449b4f7954c8f8c2c9
+    m_Address: Fx/Bench/Muzzles/vfx_Muzzle_Sun03
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - Fx/Bench/Muzzles
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 640ceeca5aed7f045bf7e7e26d0ed2e3
+    m_Address: Fx/Bench/Muzzles/vfx_Muzzle_Wind02
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - Fx/Bench/Muzzles
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 65d0f29c53a1ba14a81f87c18c6a0be8
+    m_Address: Fx/Bench/Muzzles/vfx_Muzzle_Lightning03
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - Fx/Bench/Muzzles
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 678b211dce5d12d41a393f346272d47e
+    m_Address: Fx/Bench/Muzzles/vfx_Muzzle_Slash02
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - Fx/Bench/Muzzles
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 6818176f5eddf3f438c7fc23ff592524
+    m_Address: Fx/Bench/Projectiles/vfx_Projectile_Cube02
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - Fx/Bench/Projectiles
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 68bf9a326d265124f92f0b6fdefc666e
+    m_Address: Fx/Bench/Hits/vfx_Hit_Lightning02
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - Fx/Bench/Hits
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 69f87133341b1664fa98985d00f9f4ee
+    m_Address: Fx/Bench/Projectiles/vfx_Projectile_Spiral01
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - Fx/Bench/Projectiles
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 6cbd4b25a9606c447a7817ac889daa99
+    m_Address: Fx/Bench/Muzzles/vfx_Muzzle_ShootingStar02
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - Fx/Bench/Muzzles
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 6cd7dada28d169542a86ccd4a669c8c9
+    m_Address: Fx/Bench/Projectiles/vfx_Projectile_Fireworks02
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - Fx/Bench/Projectiles
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 6e8380dd208d76f42b33de8d4ef11523
+    m_Address: Fx/Bench/Muzzles/vfx_Muzzle_PoisonDart03
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - Fx/Bench/Muzzles
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 6fdeae02a0bef8347bd87a8b3c0f0ac4
+    m_Address: Fx/Bench/Projectiles/vfx_Projectile_ShootingStar02
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - Fx/Bench/Projectiles
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 6fe563c11112b3748b5caafbde9d95b4
+    m_Address: Fx/Bench/Projectiles/vfx_Projectile_Sun03
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - Fx/Bench/Projectiles
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 729758749605142409e678c0d5b384a1
+    m_Address: Fx/Bench/Muzzles/vfx_Muzzle_PoisonDart01
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - Fx/Bench/Muzzles
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 75956b93b6f750c40a3b97c1cc1a629b
+    m_Address: Fx/Bench/Hits/vfx_Hit_PoisonDart02
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - Fx/Bench/Hits
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 764c1c59424f8f040b165ff7c374e16f
+    m_Address: Fx/Bench/Hits/vfx_Hit_Fireworks03
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - Fx/Bench/Hits
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 78612c6b035c6f44897bcfd6b0f0e77b
+    m_Address: Fx/Bench/Projectiles/vfx_Projectile_Orb18_purple
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - Fx/Bench/Projectiles
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 789c76a54f6d20c41aeef29ac5a59dd4
+    m_Address: Fx/Bench/Hits/vfx_Hit_Fireball02
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - Fx/Bench/Hits
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 79ad5c53650464a438e4adaf8c93882e
+    m_Address: Fx/Bench/Projectiles/vfx_Projectile_Cube01
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - Fx/Bench/Projectiles
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 7c990d38587467f408783f6394d62b05
+    m_Address: Fx/Bench/Muzzles/vfx_Muzzle_Ghostly03
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - Fx/Bench/Muzzles
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 7dab4dbc838259d4faf1acc88563b07c
+    m_Address: Fx/Bench/Hits/vfx_Hit_ShootingStar02
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - Fx/Bench/Hits
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 7e8ff6608e2af1d4c962625946ea7d11
+    m_Address: Fx/Bench/Hits/vfx_Hit_Orb17_blue
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - Fx/Bench/Hits
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 808c26be43d1fb04aa429c6f05be10f1
+    m_Address: Fx/Bench/Projectiles/vfx_Projectile_Ghostly01
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - Fx/Bench/Projectiles
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 81bb33510d4b9b8498aaee2982ad6183
+    m_Address: Fx/Bench/Projectiles/vfx_Projectile_Cube03
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - Fx/Bench/Projectiles
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 82617d4b5f424c14fbfa52cc48c9129d
+    m_Address: Fx/Bench/Hits/vfx_Hit_Capsule01
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - Fx/Bench/Hits
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 84d0e2e89524b174497cfe9449cfe93a
+    m_Address: Fx/Bench/Muzzles/vfx_Muzzle_Orb17_orange
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - Fx/Bench/Muzzles
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 84e6f912edcc56149ac10ad610adf394
+    m_Address: Fx/Bench/Projectiles/vfx_Projectile_Wind02
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - Fx/Bench/Projectiles
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 84ed838dfb8c67947bfebfe0fdff697d
+    m_Address: Fx/Bench/Hits/vfx_Hit_Icicle03
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - Fx/Bench/Hits
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 85edd29154847a249a04ad0b3de34b3d
+    m_Address: Fx/Bench/Projectiles/vfx_Projectile_Orb17_blue
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - Fx/Bench/Projectiles
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 87e1cd1e11a995c4d97b24804cbe03a5
+    m_Address: Fx/Bench/Hits/vfx_Hit_MagicArrow_01
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - Fx/Bench/Hits
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 887673bc1429f974c8af0acb01cad01e
+    m_Address: Fx/Bench/Muzzles/vfx_Muzzle_Music03
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - Fx/Bench/Muzzles
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 89d320cf981b14d409e861124fd3630a
+    m_Address: Fx/Bench/Hits/vfx_Hit_Orb18_blue
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - Fx/Bench/Hits
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 8a1676ee7b5f45e44a0dfcda188d7f2d
+    m_Address: Fx/Bench/Muzzles/vfx_Muzzle_Lightning02
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - Fx/Bench/Muzzles
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 8abbb475102c8694a8d4fd450275d3b2
+    m_Address: Fx/Bench/Muzzles/vfx_Muzzle_Fireball03
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - Fx/Bench/Muzzles
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 8c3ab2c73e443a84b9e1a8f1eb858923
+    m_Address: Fx/Bench/Muzzles/vfx_Muzzle_Capsule01
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - Fx/Bench/Muzzles
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 8cc79dc562e10d040ae7964187c418d3
+    m_Address: Fx/Bench/Projectiles/vfx_Projectile_Sun02
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - Fx/Bench/Projectiles
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 8f7e89f93d24cb64ab4c9182b4b6a87d
+    m_Address: Fx/Bench/Muzzles/vfx_Muzzle_Spiral01
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - Fx/Bench/Muzzles
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 9192d773f9fea3546b0af2509269578f
+    m_Address: Fx/Bench/Hits/vfx_Hit_ShootingStar03
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - Fx/Bench/Hits
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 920561e9a6c02be4f8028c77ed280d4d
+    m_Address: Fx/Bench/Muzzles/vfx_Muzzle_Music02
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - Fx/Bench/Muzzles
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 92394081379a4494e8b7f7d4d80134b9
+    m_Address: Fx/Bench/Hits/vfx_Hit_Ghostly03
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - Fx/Bench/Hits
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 9416caa7ec1f33d4db80998353d68aa6
+    m_Address: Fx/Bench/Muzzles/vfx_Muzzle_PoisonDart02
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - Fx/Bench/Muzzles
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 9808d91e7e54e2b4bbbcebef7b15436d
+    m_Address: Fx/Bench/Projectiles/vfx_Projectile_Orb18_blue
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - Fx/Bench/Projectiles
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 9dafc41a58b5c484cb737edcc7233ae2
+    m_Address: Fx/Bench/Hits/vfx_Hit_Rocket03
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - Fx/Bench/Hits
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 9dba506507663034c89c9493ae963d55
+    m_Address: Fx/Bench/Muzzles/vfx_Muzzle_MagicArrow03
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - Fx/Bench/Muzzles
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 9ff119fc8b769f94aa6322003f5e6879
+    m_Address: Fx/Bench/Projectiles/vfx_Projectile_Fireball02
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - Fx/Bench/Projectiles
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: a1874819b3ce213469e4ada0f9e4da80
+    m_Address: Fx/Bench/Hits/vfx_Hit_Lightning03
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - Fx/Bench/Hits
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: a27d57914395ab645b35aa5db31d403d
+    m_Address: Fx/Bench/Muzzles/vfx_Muzzle_Wind03
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - Fx/Bench/Muzzles
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: a27f9632a1158db4784eb6cb93312c60
+    m_Address: Fx/Bench/Hits/vfx_Hit_Fireworks02
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - Fx/Bench/Hits
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: a427771355de5cf4ca95cf881fd871f9
+    m_Address: Fx/Bench/Hits/vfx_Hit_Fireball01
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - Fx/Bench/Hits
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: a57efe1767a272246bfd50482a1d9699
+    m_Address: Fx/Bench/Hits/vfx_Hit_Slash03
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - Fx/Bench/Hits
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: a5982a84484207d44b24790b11aaebf7
+    m_Address: Fx/Bench/Hits/vfx_Hit_Rocket01
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - Fx/Bench/Hits
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: a72eccff5c419b74e85d054a93b6fe21
+    m_Address: Fx/Bench/Hits/vfx_Hit_Ghostly01
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - Fx/Bench/Hits
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: aa1012570a90b87438c5b9e23f5b4de3
+    m_Address: Fx/Bench/Projectiles/vfx_Projectile_YinYang02
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - Fx/Bench/Projectiles
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: aa41ceabae442e64b95efb70f59ff4c5
+    m_Address: Fx/Bench/Projectiles/vfx_Projectile_Lightning02
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - Fx/Bench/Projectiles
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: aa7a99e8a89bba94aa0d5ed22568ab64
+    m_Address: Fx/Bench/Projectiles/vfx_Projectile_Sun01
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - Fx/Bench/Projectiles
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: aacedb9906555974faf75a248fb72426
+    m_Address: Fx/Bench/Muzzles/vfx_Muzzle_Slash01
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - Fx/Bench/Muzzles
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: ab03e1ea0b32c7d4ea4f511c738fd548
+    m_Address: Fx/Bench/Hits/vfx_Hit_Ghostly02
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - Fx/Bench/Hits
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: ac28f01d75125e240a38d464419c2833
+    m_Address: Fx/Bench/Projectiles/vfx_Projectile_Spiral02
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - Fx/Bench/Projectiles
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: b1a400fcc032b544f90e39155b3344d7
+    m_Address: Fx/Bench/Projectiles/vfx_Projectile_Slash01
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - Fx/Bench/Projectiles
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: b22b69954001e8744aca69ba32078637
+    m_Address: Fx/Bench/Muzzles/vfx_Muzzle_Bullet01
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - Fx/Bench/Muzzles
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: b28a7e116d1702249818c86125b04f8e
+    m_Address: Fx/Bench/Projectiles/vfx_Projectile_Music02
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - Fx/Bench/Projectiles
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: b3344435a17ca0240930e62ed6519c96
+    m_Address: Fx/Bench/Projectiles/vfx_Projectile_Rocket01
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - Fx/Bench/Projectiles
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: b58481a2de43c5c4db059429f98c8064
+    m_Address: Fx/Bench/Projectiles/vfx_Projectile_Bullet02
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - Fx/Bench/Projectiles
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: b640d7588d8f0634aa8cdc2963ffe25a
+    m_Address: Fx/Bench/Projectiles/vfx_Projectile_Rocket02
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - Fx/Bench/Projectiles
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: b74d4d0f95d4ebf47a23b85980d3119f
+    m_Address: Fx/Bench/Muzzles/vfx_Muzzle_Sun02
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - Fx/Bench/Muzzles
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: ba1518112f9f83240ac13fb38d118721
+    m_Address: Fx/Bench/Hits/vfx_Hit_Capsule02
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - Fx/Bench/Hits
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: bd8904af5c913ae408d7b43bb899625b
+    m_Address: Fx/Bench/Muzzles/vfx_Muzzle_Rocket01
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - Fx/Bench/Muzzles
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: be3c224c314868c4ca06bc99459de3e3
+    m_Address: Fx/Bench/Muzzles/vfx_Muzzle_MagicArrow02
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - Fx/Bench/Muzzles
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: bee7add829345944f880b2b66b24db3a
+    m_Address: Fx/Bench/Hits/vfx_Hit_Spiral03
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - Fx/Bench/Hits
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: c2f64011975ca0e4e91f8487b1ad4d37
+    m_Address: Fx/Bench/Hits/vfx_Hit_Cube01
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - Fx/Bench/Hits
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: c3210a76170022542bcb480a4674387e
+    m_Address: Fx/Bench/Muzzles/vfx_Muzzle_MagicArrow01
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - Fx/Bench/Muzzles
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: c41e02ff2a04c2844beaab6d44576a99
+    m_Address: Fx/Bench/Projectiles/vfx_Projectile_Spiral03
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - Fx/Bench/Projectiles
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: c4ff2e3b52f705b48886e31cd63bf851
+    m_Address: Fx/Bench/Projectiles/vfx_Projectile_Wind01
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - Fx/Bench/Projectiles
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: c5c607639983b8b47aedf9facf74f6ba
+    m_Address: Fx/Bench/Muzzles/vfx_Muzzle_Fireball01
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - Fx/Bench/Muzzles
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: cba253cdb9f395541b71706c83ccaca6
+    m_Address: Fx/Bench/Muzzles/vfx_Muzzle_Cube02
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - Fx/Bench/Muzzles
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: cf79ebfcc16eca14dad94c1f086d0b49
+    m_Address: Fx/Bench/Hits/vfx_Hit_MagicArrow_02
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - Fx/Bench/Hits
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: d36b831d690a3814f99d8ffda84bbb39
+    m_Address: Fx/Bench/Muzzles/vfx_Muzzle_Fireball02
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - Fx/Bench/Muzzles
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: d580ed1b1b80a62458cc13be9bb06c0e
+    m_Address: Fx/Bench/Hits/vfx_Hit_Icicle01
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - Fx/Bench/Hits
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: d6bd941464c3eb24788223e41889750a
+    m_Address: Fx/Bench/Muzzles/vfx_Muzzle_Sun01
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - Fx/Bench/Muzzles
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: d6cc710801f95ea4bb26f6e44152bb7f
+    m_Address: Fx/Bench/Hits/vfx_Hit_Orb17_orange
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - Fx/Bench/Hits
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: d758be07ea3786a4eae38e2a507b77da
+    m_Address: Fx/Bench/Muzzles/vfx_Muzzle_ShootingStar03
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - Fx/Bench/Muzzles
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: d760ced6a6edc7347bbe31b1b775f4e6
+    m_Address: Fx/Bench/Muzzles/vfx_Muzzle_Ghostly02
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - Fx/Bench/Muzzles
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: d836c6baaf6d6e046abd541f1b4975a1
+    m_Address: Fx/Bench/Muzzles/vfx_Muzzle_Spiral03
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - Fx/Bench/Muzzles
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: d9a05c87248ae4b4bb280b2fdf34a90f
+    m_Address: Fx/Bench/Projectiles/vfx_Projectile_Icicle02
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - Fx/Bench/Projectiles
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: d9ee8a2e90e1e4c48b625497c0dd4868
+    m_Address: Fx/Bench/Projectiles/vfx_Projectile_Music01
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - Fx/Bench/Projectiles
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: de24c2a0808d24443b0ce4115209dfca
+    m_Address: Fx/Bench/Muzzles/vfx_Muzzle_Ghostly01
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - Fx/Bench/Muzzles
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: de4566b8267fb3d47b531ae565cc6f4c
+    m_Address: Fx/Bench/Hits/vfx_Hit_YinYang02
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - Fx/Bench/Hits
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: e02bedaa11088e34d978b2f403634f35
+    m_Address: Fx/Bench/Hits/vfx_Hit_Capsule03
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - Fx/Bench/Hits
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: e11c9f7407b311046822ee397f63b2b6
+    m_Address: Fx/Bench/Hits/vfx_Hit_Fireworks01
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - Fx/Bench/Hits
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: e13a50c44d70ea848a1ae45e9cb0db25
+    m_Address: Fx/Bench/Projectiles/vfx_Projectile_Lightning01
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - Fx/Bench/Projectiles
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: e4d512657a939d2499d459b72ed4357d
+    m_Address: Fx/Bench/Projectiles/vfx_Projectile_Bullet01
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - Fx/Bench/Projectiles
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: e6dd55251f893294c9a27e9e669cd3a4
+    m_Address: Fx/Bench/Muzzles/vfx_Muzzle_Icicle01
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - Fx/Bench/Muzzles
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: e7f89470d877ebd4186d7bbace2d6c0b
+    m_Address: Fx/Bench/Projectiles/vfx_Projectile_Capsule02
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - Fx/Bench/Projectiles
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: e82821dd2d7d8f54b9898fac386d0d5b
+    m_Address: Fx/Bench/Muzzles/vfx_Muzzle_Orb18_red
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - Fx/Bench/Muzzles
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: e8569bcc0a88d79429881957c82525f6
+    m_Address: Fx/Bench/Muzzles/vfx_Muzzle_Music01
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - Fx/Bench/Muzzles
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: ec8a19605534bea4c8ca50894af88fed
+    m_Address: Fx/Bench/Projectiles/vfx_Projectile_MagicArrow02
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - Fx/Bench/Projectiles
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: ee21a55def7a588449f1b13d4836da80
+    m_Address: Fx/Bench/Projectiles/vfx_Projectile_Fireball01
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - Fx/Bench/Projectiles
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: f2537d32178e1834ea9005672e2806b2
+    m_Address: Fx/Bench/Projectiles/vfx_Projectile_Ghostly03
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - Fx/Bench/Projectiles
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: f376287c7c740b943b7e25304271992c
+    m_Address: Fx/Bench/Projectiles/vfx_Projectile_PoisonDart01
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - Fx/Bench/Projectiles
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: f46b349941a6b7540af5766e21391799
+    m_Address: Fx/Bench/Projectiles/vfx_Projectile_MagicArrow01
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - Fx/Bench/Projectiles
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: f46f78b583725e346a459e86c16eb0ed
+    m_Address: Fx/Bench/Muzzles/vfx_Muzzle_Capsule03
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - Fx/Bench/Muzzles
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: f4932193e77d6bb499913a44f4f5f38b
+    m_Address: Fx/Bench/Hits/vfx_Hit_Music01
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - Fx/Bench/Hits
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: f7c6b31a11297c14399715b53f81f8b6
+    m_Address: Fx/Bench/Muzzles/vfx_Muzzle_Fireworks01
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - Fx/Bench/Muzzles
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: f8eda480be840d140b189df0316db600
+    m_Address: Fx/Bench/Projectiles/vfx_Projectile_Capsule01
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - Fx/Bench/Projectiles
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: f998dc4d8fc60f242b4634c73ffc9390
+    m_Address: Fx/Bench/Muzzles/vfx_Muzzle_Orb17_blue
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - Fx/Bench/Muzzles
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: f9bc7078464aa714e8a68722e5299e6b
+    m_Address: Fx/Bench/Projectiles/vfx_Projectile_ShootingStar01
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - Fx/Bench/Projectiles
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: f9c5f1dcdc8e38e4ea8741886cdc44b9
+    m_Address: Fx/Bench/Hits/vfx_Hit_Slash01
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - Fx/Bench/Hits
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: f9ce42d33db250941b86036cd84f51e0
+    m_Address: Fx/Bench/Muzzles/vfx_Muzzle_Lightning01
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - Fx/Bench/Muzzles
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: fc705df192550d746814c2eaeb459253
+    m_Address: Fx/Bench/Projectiles/vfx_Projectile_Ghostly02
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - Fx/Bench/Projectiles
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: fc7cdddc4055ffa45ab1faca5d16d0fc
+    m_Address: Fx/Bench/Muzzles/vfx_Muzzle_Icicle03
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - Fx/Bench/Muzzles
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: fd857cb9362427d44a54b8cf042f3d38
+    m_Address: Fx/Bench/Muzzles/vfx_Muzzle_YinYang03
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - Fx/Bench/Muzzles
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: feb7237ddd0ad9e4182e83ba37c7e347
+    m_Address: Fx/Bench/Projectiles/vfx_Projectile_Capsule03
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - Fx/Bench/Projectiles
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: ffc23d1b6cf540349b1269238352af90
+    m_Address: Fx/Bench/Hits/vfx_Hit_Slash02
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - Fx/Bench/Hits
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: ffe656fdf4f8ed14084f2d446ef403a9
+    m_Address: Fx/Bench/Muzzles/vfx_Muzzle_Fireworks02
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - Fx/Bench/Muzzles
+    FlaggedDuringContentUpdateRestriction: 0
+  m_ReadOnly: 0
+  m_Settings: {fileID: 11400000, guid: 6c4c5f6eb57af6542b195d29840b42f2, type: 2}
+  m_SchemaSet:
+    m_Schemas:
+    - {fileID: 11400000, guid: 72d85daaf68edc64ab70e0dfeb32ab7e, type: 2}
+    - {fileID: 11400000, guid: 8c995d060a609c543b7819d678d55695, type: 2}
+    m_SchemaDisplayOrder:
+    - Glimmer VFX Bench_BundledAssetGroupSchema
+    - Glimmer VFX Bench_ContentUpdateGroupSchema
+  m_IncludeInBuild: 1
+  m_IncludeInBuildMigrated: 1

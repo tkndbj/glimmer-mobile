@@ -73,11 +73,19 @@ namespace GlimmerGrove.EditorTools
             {
                 if (group == null) continue;
 
+                // The VFX bench is asked for by a developer tool rather than by AssetManifest,
+                // so every one of its entries would be counted "never requested by the game" —
+                // 175 of them, drowning the one real one that warning exists to surface. Skipped
+                // whole rather than filtered later, because it is not the game's art in any
+                // sense: its own root, its own bundle, and switched off for every build that
+                // has not asked for it (VfxBenchGroup).
+                bool bench = group.Name == Dev.VfxBench.GroupName;
+
                 foreach (var entry in group.entries)
                 {
                     if (entry == null || string.IsNullOrEmpty(entry.address)) continue;
 
-                    addresses.Add(entry.address);
+                    if (!bench) addresses.Add(entry.address);
                     groupOf[entry.address] = group.Name;
 
                     foreach (var label in entry.labels) labels.Add(label);
@@ -165,6 +173,14 @@ namespace GlimmerGrove.EditorTools
             {
                 if (group == null) continue;
 
+                // The VFX bench's pack is gitignored - 199MB of licensed particle art that no
+                // player build contains - so a fresh clone has the group and not the assets. That
+                // is not a fault while the bundle is switched off: nothing builds it, so nothing
+                // can throw "is not a valid Asset or Scene". With the bundle switched *on* it is
+                // the same fault as any other and is reported the same way, which is what tells
+                // somebody who set GLIMMER_BENCH that they still have to import the pack.
+                if (group.Name == Dev.VfxBench.GroupName && !BenchIsBuilt(group)) continue;
+
                 foreach (var entry in group.entries)
                 {
                     if (entry == null) continue;
@@ -190,6 +206,13 @@ namespace GlimmerGrove.EditorTools
                 $"{gone.Count} addressed asset(s) no longer exist and will fail the bundle " +
                 $"build with \"is not a valid Asset or Scene\": {names}{more}. " +
                 "Run Addressables ▸ Sync All Assets");
+        }
+
+        /// <summary>Whether a group's bundle is actually included in this build.</summary>
+        static bool BenchIsBuilt(AddressableAssetGroup group)
+        {
+            var schema = group.GetSchema<UnityEditor.AddressableAssets.Settings.GroupSchemas.BundledAssetGroupSchema>();
+            return schema != null && schema.IncludeInBuild;
         }
 
         /// <summary>

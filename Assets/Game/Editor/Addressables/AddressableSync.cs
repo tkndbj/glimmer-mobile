@@ -58,6 +58,12 @@ namespace GlimmerGrove.EditorTools
 
                 DropMissing(settings, ref summary);
                 AddressableRegistry.PruneEmptyChapterGroups(settings, ref summary);
+
+                // The bench's pack is outside the managed folders on purpose, so the loop above
+                // cannot see it and the importer hook never will either. It is swept here rather
+                // than left to its own menu item for this file's own reason: a repair somebody
+                // has to remember is a repair that does not happen.
+                VfxBenchGroup.Sync(settings, ref summary);
             }
             finally
             {

@@ -65,6 +65,19 @@ crashlytics-build.properties
 /[Aa]ssets/[Aa]ddressable[Aa]ssets[Dd]ata/link.xml
 /[Aa]ssets/[Aa]ddressable[Aa]ssets[Dd]ata/link.xml.meta
 
+# The VFX bench's projectile pack (UniqueProjectilesVol5, Gabriel Aguiar): 199 MB, and 175
+# particle prefabs that serialise to 5.6 MILLION lines of YAML, because Unity writes every
+# module's curve keyframes out longhand. Committing it would more than double a 164 MB repo,
+# permanently, for a developer bench no player build contains. It is also licensed third-party
+# art, which is the same reason GooglePackages is ignored below.
+#
+# Restore with: import UniqueProjectilesVol5_6_BIRP_v1.0.unitypackage (the Unity 6 BUILT-IN
+# variant - URP and HDRP import pink here), then Glimmer Grove > Addressables > Sync VFX Bench.
+# The .unitypackage carries the .meta files, so GUIDs survive and the committed group's entries
+# resolve again on import.
+/[Aa]ssets/GabrielAguiarProductions/
+/[Aa]ssets/GabrielAguiarProductions.meta
+
 # Firebase Unity SDK packages: build inputs with a canonical download URL, ~75 MB.
 # Committing them would add that to the history on every version bump.
 # Restore with: pwsh GooglePackages/fetch.ps1

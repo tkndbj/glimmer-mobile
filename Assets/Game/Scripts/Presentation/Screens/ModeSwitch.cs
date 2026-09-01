@@ -113,6 +113,28 @@ namespace GlimmerGrove
         const float ExitRise = 26f, ExitSquash = .86f;
 
         /// <summary>
+        /// Whether the list carries a row that is not a mode at all: the VFX bench
+        /// (<c>Dev.VfxDemoScreen</c>), under <c>GLIMMER_BENCH</c> and nowhere else.
+        ///
+        /// <para>
+        /// It hangs off this one constant so a build without that define is the file it was
+        /// before — the guard below, the row count, the list height and the row itself all fold
+        /// away together, and no shipped build can draw a control that navigates to a screen it
+        /// does not contain.
+        /// </para>
+        /// <para>
+        /// A define rather than <c>UNITY_EDITOR</c>, because the whole point of the bench is to
+        /// judge an effect at the size, brightness and frame rate of a real phone. The same
+        /// define decides whether the pack's bundle is packed at all — see <c>VfxBenchGroup</c>.
+        /// </para>
+        /// </summary>
+#if GLIMMER_BENCH
+        const bool Bench = true;
+#else
+        const bool Bench = false;
+#endif
+
+        /// <summary>
         /// Puts the switcher in <paramref name="host"/>, centred on <paramref name="y"/> measured
         /// down from the host's top edge, and hands back the pill it drew — or <c>null</c> when
         /// it drew nothing.
@@ -132,7 +154,7 @@ namespace GlimmerGrove
         public static RectTransform Build(RectTransform host, CatalogIndex index, GameMode current,
                                           Action<GameMode> choose, float y)
         {
-            if (index == null || !index.HasSeveralModes) return null;
+            if (index == null || (!index.HasSeveralModes && !Bench)) return null;
 
             var pill = UIKit.Button("ModeSwitch", host, Art.S("Ui/" + PillSkin),
                                     new Vector2(PillW, PillH), new Vector2(.5f, 1f),
@@ -206,7 +228,8 @@ namespace GlimmerGrove
             catcher.raycastTarget = true;
 
             var modes = index.Modes;
-            float height = modes.Count * RowH + (modes.Count - 1) * RowGap;
+            int rows = modes.Count + (Bench ? 1 : 0);
+            float height = rows * RowH + (rows - 1) * RowGap;
 
             // Hung from the same top edge the pill is, so the two cannot drift: the plaque, the
             // pill and the list are one stack measured downwards from the header.
@@ -257,8 +280,23 @@ namespace GlimmerGrove
                 // Top-down, so the entry nearest the pill is the first one in the list and the
                 // order reads the way the list opens.
                 float rowY = height * .5f - RowH * .5f - i * (RowH + RowGap);
-                Row(list, mode, mode == current, rowY, () => { Close(); choose?.Invoke(mode); });
+                Row(list, "Mode_" + mode.Value, Loc.Get(mode.NameKey), Loc.Get(mode.TaglineKey),
+                    ModeLooks.Of(mode).Accent, mode == current, rowY,
+                    () => { Close(); choose?.Invoke(mode); });
             }
+
+#if GLIMMER_BENCH
+            // Last, always, and never selected: it is a workbench rather than a way of playing,
+            // so putting it under the real modes is what keeps the list still reading as the
+            // list of games. Its words are literals rather than loc keys deliberately — nothing
+            // here is ever seen by a player, and a key would be a string the translators are
+            // asked to carry for ever.
+            {
+                float rowY = height * .5f - RowH * .5f - modes.Count * (RowH + RowGap);
+                Row(list, "Mode_demo", "DEMO", "vfx bench", Pal.Bloom, false, rowY,
+                    () => { Close(); Flow.Go<Dev.VfxDemoScreen>(); });
+            }
+#endif
 
             if (chevron) Tween.Rotate(chevron, 180f, EntryTime, Ease.OutBack);
 
@@ -274,12 +312,21 @@ namespace GlimmerGrove
             // down, and a second click as the list unrolls is one tap making two noises.
         }
 
-        static void Row(RectTransform parent, GameMode mode, bool selected, float y, Action tap)
+        /// <summary>
+        /// One row of the list.
+        /// </summary>
+        /// <remarks>
+        /// Handed a name, a tagline and a colour rather than a <c>GameMode</c>, because the list
+        /// carries one row that is not a mode (see <see cref="Bench"/>) and the alternative is a
+        /// second copy of the seat, the rim and the two lines that could drift from this one.
+        /// The caller resolves its own text, which is what keeps <c>Loc</c> out of a row that
+        /// does not have a key.
+        /// </remarks>
+        static void Row(RectTransform parent, string id, string title, string tagline,
+                        Color accent, bool selected, float y, Action tap)
         {
-            var row = UIKit.Box("Mode_" + mode.Value, parent, new Vector2(RowInner, RowH),
+            var row = UIKit.Box(id, parent, new Vector2(RowInner, RowH),
                                 new Vector2(.5f, .5f), new Vector2(0f, y));
-
-            var accent = ModeLooks.Of(mode).Accent;
 
             // The row's own hit area. UIKit.Img leaves raycastTarget off on everything it
             // builds, so a row made only of pictures is a row no tap ever reaches — invisible
@@ -300,7 +347,7 @@ namespace GlimmerGrove
                 UIKit.StretchTo((RectTransform)rim.transform, 0, 0, 0, 0);
             }
 
-            var name = UIKit.Titled("Name", row, Loc.Get(mode.NameKey), 36,
+            var name = UIKit.Titled("Name", row, title, 36,
                                     selected ? Pal.Cream : Pal.A(Pal.Cream, .82f),
                                     TextAnchor.MiddleCenter, new Vector2(TextW, 42f),
                                     new Vector2(.5f, .5f), new Vector2(0f, 20f), 0f, 2f);
@@ -308,7 +355,7 @@ namespace GlimmerGrove
 
             // The tagline is the only place the game ever says what a mode *is*, and it is here
             // rather than on a first-run panel because this is where somebody is deciding.
-            var tag = UIKit.Label("Tag", row, Loc.Get(mode.TaglineKey), 24,
+            var tag = UIKit.Label("Tag", row, tagline, 24,
                                   Pal.A(Pal.Cream, .60f), TextAnchor.MiddleCenter,
                                   new Vector2(TextW, 40f), new Vector2(.5f, .5f),
                                   new Vector2(0f, -22f));

@@ -2481,6 +2481,12 @@ namespace GlimmerGrove.EditorTools
             var warnings = new List<string>(result.Warnings);
 
 #if GLIMMER_HAS_ADDRESSABLES
+            // Before the audit, because it changes what is in the build. The VFX bench is a
+            // developer tool sitting on two hundred megabytes of licensed particle art, and this
+            // is the one line standing between that and a store build: the bundle is packed only
+            // when this target's defines ask for it.
+            VfxBenchGroup.Gate(BuildPipeline.GetBuildTargetGroup(report.summary.platform));
+
             var audit = AddressableAudit.Run();
             errors.AddRange(audit.Errors);
             warnings.AddRange(audit.Warnings);
