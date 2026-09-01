@@ -43,8 +43,10 @@ import sys
 HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.dirname(os.path.dirname(HERE))
 sys.path.insert(0, os.path.join(ROOT, "Tools", "verify"))
+sys.path.insert(0, HERE)
 
 from author import Board, fit                                    # noqa: E402
+import mapart                                                    # noqa: E402
 
 CHAPTER = "c02_millvale"
 BODY = os.path.join(ROOT, "Assets", "StreamingAssets", "Content", "chapters", CHAPTER + ".json")
@@ -521,6 +523,12 @@ PALETTE = {
     "c02_the_millers_knot": ("#E86A5A", "#3A1A18"),
 }
 
+#: Which chapter of its own mode this is. It buys the map and the ten skies - see
+#: `mapart`, which owns that arithmetic for every chapter of every mode.
+ORDINAL = 2
+STRIPS = mapart.strips(ORDINAL)
+SKIES = mapart.skies(ORDINAL)
+
 MAPX = [0.30, 0.70, 0.26, 0.72, 0.26, 0.68, 0.28, 0.72, 0.23, 0.71]
 MAPY = [0.065, 0.145, 0.220, 0.300, 0.390, 0.485, 0.560, 0.650, 0.752, 0.830]
 
@@ -588,8 +596,8 @@ def chapter_json(built):
     doc["id"] = CHAPTER
     doc["accent"] = "#9BD84A"
     doc["slate"] = "#17301E"
-    doc["backdrop"] = "c02_play_0"
-    doc["mapStrips"] = [f"c02_strip{i}" for i in range(4)]
+    doc["backdrop"] = SKIES[0]
+    doc["mapStrips"] = list(STRIPS)
     doc["teaserX"] = 0.3
 
     levels = []
@@ -605,7 +613,7 @@ def chapter_json(built):
         level["accent"] = accent
         level["slate"] = slate
         if i > 0:                       # the first glade inherits the chapter's backdrop
-            level["backdrop"] = f"c02_play_{i}"
+            level["backdrop"] = SKIES[i]
         level["rows"] = board.rows()
         levels.append(level)
     doc["levels"] = levels

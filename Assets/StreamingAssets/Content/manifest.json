@@ -158,6 +158,46 @@
         "f02_underglass",
         "f02_the_glasswater"
       ]
+    },
+    {
+      "id": "f03_whorlwater",
+      "version": 3,
+      "order": 90,
+      "disabled": false,
+      "minAppVersion": 0,
+      "mode": "fall",
+      "levels": [
+        "f03_first_whorl",
+        "f03_make_the_pair",
+        "f03_the_span",
+        "f03_buried",
+        "f03_two_shores",
+        "f03_twin_mouths",
+        "f03_through_the_glass",
+        "f03_the_deep_draw",
+        "f03_every_light",
+        "f03_whorlwater"
+      ]
+    },
+    {
+      "id": "b02_tanglewood",
+      "version": 1,
+      "order": 100,
+      "disabled": false,
+      "minAppVersion": 0,
+      "mode": "bud",
+      "levels": [
+        "b02_firstvine",
+        "b02_longreach",
+        "b02_deepthicket",
+        "b02_windingway",
+        "b02_twovines",
+        "b02_thewilds",
+        "b02_crossvine",
+        "b02_thornedvine",
+        "b02_thetangle",
+        "b02_tangleheart"
+      ]
     }
   ],
   "events": [

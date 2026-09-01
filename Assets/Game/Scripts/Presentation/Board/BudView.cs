@@ -88,6 +88,56 @@ namespace GlimmerGrove
         // ------------------------------------------------------------------ the furniture
         BudLayout _layout;
         RectTransform _host, _grid, _field, _near, _residents, _fx, _tray, _plate;
+
+        /// <summary>
+        /// The vines, painted on the grove floor <em>under</em> everything standing on it.
+        ///
+        /// <para>
+        /// <b>Its own layer because a runner belongs to the ground</b> (<c>BudLayout.FarEnd</c>).
+        /// Every flower on this board falls; a vine drawn as a child of a cell would go down
+        /// with it and the two ends of one runner would drift apart on the first chain, which is
+        /// the "wall sliding down the board" that kept old wood out of this mode. Drawn once
+        /// when the grove is built, and never moved again.
+        /// </para>
+        /// <para>
+        /// It shares the field's clip so a vine cannot be drawn outside the grove, and it is
+        /// deliberately <em>not</em> a nested canvas: it is repainted only when a runner fires,
+        /// which is a handful of times a chain.
+        /// </para>
+        /// </summary>
+        RectTransform _vines;
+
+        /// <summary>The bar and the two collars of each runner, by its lower end.</summary>
+        readonly Dictionary<int, Vine> _vine = new Dictionary<int, Vine>(4);
+
+        /// <summary>One runner as it is drawn: the stem between its ends and the cuff on each.</summary>
+        sealed class Vine
+        {
+            public RectTransform Stem;
+            public Image Bar, Glow;
+
+            /// <summary>The two cells it joins, and the cuff drawn on each.</summary>
+            public int LowEnd, HighEnd;
+
+            public Image Low, High;
+
+            /// <summary>The cuff at one end of this vine, by the cell it is rooted on.</summary>
+            public Image CuffAt(int cell) => cell == LowEnd ? Low : High;
+        }
+
+        /// <summary>
+        /// What a vine looks like when nothing is running down it: leaf green, well under the
+        /// flowers, with the cuffs a little brighter because they are the half that has to
+        /// survive a grove of thirty flowers drawn on top of it.
+        ///
+        /// Named once rather than written out at each of the three places that need it — the
+        /// build, the firing and the cuff's own swell all have to agree about what "back to
+        /// normal" is, and an <c>OnAbandon</c> that restores the wrong green is a vine that
+        /// stays lit for the rest of the run.
+        /// </summary>
+        static readonly Color VineStem = new Color(.45f, .78f, .40f, .34f);
+        static readonly Color VineBed = new Color(.45f, .78f, .40f, .28f);
+        static readonly Color VineCuff = new Color(.62f, .92f, .52f, .58f);
         Text _count, _left, _chain;
 
         Cell[] _cells;
@@ -213,6 +263,7 @@ namespace GlimmerGrove
             _mark = null;
             _hintAt = -1;
             _hintToken++;
+            _vine.Clear();
 
             // A restart is not a hint being taken, so the caller is never told. What it *is* is
             // the mark's cell ceasing to exist, so the pending callback is dropped rather than
@@ -303,6 +354,12 @@ namespace GlimmerGrove
                                  new Vector2(.5f, .5f), Vector2.zero);
             clip.gameObject.AddComponent<RectMask2D>();
 
+            // **Under the flowers and inside the same clip.** A vine is painted on the grove
+            // floor rather than on anything standing in it, so it goes down before the cells and
+            // is never touched again — see `_vines`.
+            _vines = UIKit.Box("Runners", clip, new Vector2(w, h), new Vector2(.5f, .5f),
+                               Vector2.zero);
+
             _field = UIKit.Box("Buds", clip, new Vector2(w, h), new Vector2(.5f, .5f),
                                Vector2.zero);
 
@@ -374,6 +431,93 @@ namespace GlimmerGrove
             _cells = new Cell[_layout.Count];
             _freed = new Image[_layout.Count];
             for (int i = 0; i < _cells.Length; i++) _cells[i] = BuildCell(_field, i);
+
+            BuildRunners();
+        }
+
+        /// <summary>How wide a resting vine is drawn, as a fraction of a flower.</summary>
+        const float VineWidth = .13f;
+
+        /// <summary>
+        /// How wide a runner's cuff is drawn, as a fraction of a cell.
+        ///
+        /// <b>Wider than the flower standing on it, which is the whole reason it is a number and
+        /// not a guess.</b> The vines live on their own layer <em>under</em> the field, so a cuff
+        /// drawn at the flower's own size is a ring the flower covers completely — which is
+        /// exactly what shipped in the first cut and was invisible in every check: the board
+        /// validated, the vines drew, and the two ends of each one had nothing marking them.
+        /// A ring outside the petals sits on the bare soil of the cell and cannot be hidden.
+        /// </summary>
+        const float VineCuffSize = 1.00f;
+
+        /// <summary>
+        /// The vines, once, for the life of the board.
+        ///
+        /// <para>
+        /// <b>A runner has to be legible before it has ever fired</b>, and that is what most of
+        /// this is for. The last time this mode moved colour somewhere with no cause beside it,
+        /// the change was drawn exactly like an ordinary wash and came back from play as
+        /// <em>"another far flower's colour changes... I'm not sure if this is a bug"</em>
+        /// (see <c>BudBoard.Creep</c>). A runner does the same thing on purpose and far harder,
+        /// so the answer cannot be a better animation on the day — the vine is on the board from
+        /// the first frame, joining two squares the player can see, and when it fires the light
+        /// visibly travels along the line they have been looking at all along.
+        /// </para>
+        /// <para>
+        /// Dim, green and under everything, because it is scenery until it is not: a vine drawn
+        /// as brightly as a flower would compete with the thing the player is actually choosing
+        /// between. The two <em>cuffs</em> are what carry the reading — a ring around each end
+        /// square, which is the one part that has to survive a grove of thirty flowers on top of
+        /// it.
+        /// </para>
+        /// </summary>
+        void BuildRunners()
+        {
+            if (_vines == null || _layout == null || !_layout.HasRunners) return;
+
+            for (int i = 0; i < _layout.Count; i++)
+            {
+                int far = _layout.FarEnd(i);
+                if (far < i) continue;                  // once per runner, at its lower end
+
+                Vector2 a = Where(i), b = Where(far);
+                var mid = (a + b) * .5f;
+
+                float span = Vector2.Distance(a, b);
+                float angle = Mathf.Atan2(b.y - a.y, b.x - a.x) * Mathf.Rad2Deg;
+
+                // A zero-sized box at the middle of the vine, turned to lie along it. Its two
+                // children carry their own size, so the whole runner is one transform to place
+                // and one angle to think about — and nothing here ever moves again.
+                var node = UIKit.Box("Runner" + i, _vines, Vector2.zero,
+                                     new Vector2(.5f, .5f), mid);
+                node.localRotation = Quaternion.Euler(0f, 0f, angle);
+
+                // The soft body of it, under the line itself, so a vine reads as growing out of
+                // the ground rather than as a wire laid on top of it.
+                var glow = UIKit.Img("Bed", node, Art.Round(12), VineBed,
+                                     new Vector2(span, _size * VineWidth * 2.6f),
+                                     new Vector2(.5f, .5f), Vector2.zero);
+
+                var bar = UIKit.Img("Stem", node, Art.Round(8), VineStem,
+                                    new Vector2(span, _size * VineWidth),
+                                    new Vector2(.5f, .5f), Vector2.zero);
+
+                // The cuffs are children of the layer rather than of the rotated stem, so they
+                // stay round however the vine leans.
+                var low = UIKit.Img("Cuff", _vines, Art.Ring(96, 6f), VineCuff,
+                                    Vector2.one * _size * VineCuffSize,
+                                    new Vector2(.5f, .5f), a);
+                var high = UIKit.Img("Cuff", _vines, Art.Ring(96, 6f), VineCuff,
+                                     Vector2.one * _size * VineCuffSize,
+                                     new Vector2(.5f, .5f), b);
+
+                _vine[i] = new Vine
+                {
+                    Stem = node, Bar = bar, Glow = glow,
+                    LowEnd = i, HighEnd = far, Low = low, High = high,
+                };
+            }
         }
 
         /// <summary>
@@ -600,6 +744,50 @@ namespace GlimmerGrove
             }
         }
 
+        /// <summary>
+        /// Where a lesson about a runner should point: the end whose flower is nearest to being
+        /// part of a bunch, so the tip rings a vine the player could actually fire.
+        ///
+        /// <b>The end rather than the middle of the vine</b>, because what has to be learned is
+        /// about the <em>square</em> — the flower standing there has to be one of the three, and
+        /// a ring drawn across the empty middle of the board would teach that a runner is a line
+        /// rather than a pair of places.
+        /// </summary>
+        public RectTransform RunnerAnchor
+        {
+            get
+            {
+                if (_cells == null || Run == null || _layout == null) return null;
+
+                int best = -1, most = -1;
+
+                for (int i = 0; i < _cells.Length; i++)
+                {
+                    if (!_layout.IsRunner(i) || !Run.Board.IsFlower(i)) continue;
+
+                    // How many flowers of its own colour touch it. Two is one wash from a bunch,
+                    // which is the state this lesson is trying to point at.
+                    _layout.Beside(i, _beside);
+                    int alike = 0;
+
+                    for (int j = 0; j < _beside.Count; j++)
+                        if (Run.Board.IsFlower(_beside[j])
+                            && Run.Board.ValueAt(_beside[j]) == Run.Board.ValueAt(i)) alike++;
+
+                    if (alike <= most) continue;
+                    most = alike;
+                    best = i;
+                }
+
+                if (best >= 0) return _cells[best].Rt;
+
+                for (int i = 0; i < _cells.Length; i++)
+                    if (_layout.IsRunner(i)) return _cells[i].Rt;
+
+                return null;
+            }
+        }
+
         /// <summary>Where a lesson about a cocoon should point: the first one still shut.</summary>
         public RectTransform CocoonAnchor
         {
@@ -704,6 +892,86 @@ namespace GlimmerGrove
 
             if (colour == Energy.All)
                 Tween.Breathe(cell.Bud.transform, .11f, 1.35f, index * .13f);
+        }
+
+        /// <summary>
+        /// Everything standing in a cell put away at once, because it has <em>left</em> the cell.
+        ///
+        /// <para>
+        /// <b>The half of painting that was missing, and its absence is the fault this mode was
+        /// reported for.</b> <see cref="PaintCell"/> asks the board what stands here — and the
+        /// board is the position the whole chain <em>ends</em> in, so it can never answer "the
+        /// flower that used to be here has gone down a row and nothing has arrived yet". That
+        /// state is real, it lasts for the length of a fall, and nothing could draw it: a piece
+        /// coming down is painted into the cell it is falling <em>into</em> and offset upward to
+        /// where it came from, so the cell it came from went on drawing the flower that had
+        /// left. Reported exactly as it looks — <em>"the flowers at top stay still, and new
+        /// flowers fall through them"</em> — and the flower falling through was that same
+        /// flower, drawn a second time by the cell it was on its way to.
+        /// </para>
+        /// <para>
+        /// <b>It is a fact about the piece, never about the board</b>, which is why it takes an
+        /// index and asks nothing. Everything else in this file that empties a cell is answering
+        /// the model (<see cref="PaintCell"/>) or an event (<see cref="ThrowFlower"/>, which is a
+        /// flower going off); this one is answering a cue, and the cue is the only thing that
+        /// knows a piece has moved — <c>BudDrop.From</c> is the fact, carried from the model and
+        /// through the score, and until now the view read it only to work out how far the piece
+        /// had come.
+        /// </para>
+        /// <para>
+        /// <see cref="Cell.Drawn"/> is put back to a value no real state can hold — a flower is
+        /// its colour (0–7) and a cocoon is <c>-2 - cracks</c> (−3 and down) — so the next paint
+        /// of this cell always runs, whatever lands in it and however it is asked for. That is
+        /// the backstop rather than the mechanism: every vacated cell is filled again by a fall
+        /// or by the regrowth, both of which paint it, and <see cref="Tidy"/> would catch one
+        /// that somehow was not.
+        /// </para>
+        /// </summary>
+        void EmptyCell(int index)
+        {
+            if (_cells == null || index < 0 || index >= _cells.Length) return;
+
+            var cell = _cells[index];
+            if (cell == null) return;
+
+            // Put back to rest before it is hidden, for `RestFlower`'s reason: a breathe captures
+            // whatever scale it finds as the size to breathe around, so a picture left mid-swell
+            // is a picture the *next* thing painted here inherits. Hiding alone would leave that
+            // waiting to be found.
+            if (cell.Bud)
+            {
+                RestFlower(cell.Bud);
+                cell.Bud.color = new Color(1, 1, 1, 0f);
+            }
+
+            if (cell.Halo) cell.Halo.color = new Color(1, 1, 1, 0f);
+            if (cell.Glow) cell.Glow.color = new Color(1, 1, 1, 0f);
+            if (cell.Ring) cell.Ring.color = new Color(1, 1, 1, 0f);
+
+            // The cocoon and the creature asleep in it travel together and are put away together.
+            // Both carry tweens of their own — the shell's own swell, and the sleeper's breath,
+            // which is owned by the `Transform` and so is never touched by a `KillAll` naming the
+            // `Image` (see `RestFlower`).
+            Rest(cell.Pod);
+            Rest(cell.Critter);
+
+            cell.Pops = false;
+            cell.Drawn = -1;
+        }
+
+        /// <summary>
+        /// One picture in a cell stopped and hidden, whichever object its tween was filed under.
+        /// </summary>
+        static void Rest(Image image)
+        {
+            if (image == null) return;
+
+            Tween.KillAll(image);
+            Tween.KillAll(image.transform);
+
+            image.transform.localScale = Vector3.one;
+            image.transform.localRotation = Quaternion.identity;
+            image.color = new Color(1, 1, 1, 0f);
         }
 
         void PaintBand()
@@ -1120,6 +1388,10 @@ namespace GlimmerGrove
 
                     case BudCueKind.Burst:
                         Split(cue.Cell, cue.Wave, cue.Colour, cue.Bunch, beat);
+                        break;
+
+                    case BudCueKind.Run:
+                        Runner(cue.From, cue.Cell, cue.Colour, cue.Over);
                         break;
 
                     case BudCueKind.Wash:
@@ -1828,6 +2100,23 @@ namespace GlimmerGrove
         void Fall(BudCue cue)
         {
             if (_cells == null || cue.Cell < 0 || cue.Cell >= _cells.Length) return;
+
+            // **The cell it came from is emptied on the same frame it leaves, and that is what
+            // makes this one piece moving rather than two pictures of it.** A fall is drawn by
+            // painting the arriving piece into the cell it is falling *into* and offsetting it up
+            // to where it stood — so without this line the cell it stood in goes on drawing it,
+            // and the board shows a flower sitting perfectly still while a copy of itself falls
+            // down through it. That is the fault reported from play, and it is a fact only the
+            // cue knows: `Run.Board` is the position the whole chain ends in and has no opinion
+            // about a piece being in mid-air.
+            //
+            // **Before the destination is painted, and the ordering is a rule rather than a
+            // preference.** Within a column a cell can be both — the piece above it falls into
+            // the hole it leaves — and `BudStage.Rain` deals a column deepest-destination first,
+            // so the cue that empties a cell is always handed over before the cue that fills it.
+            // `BudStageTests.ACellIsEmptiedBeforeAnythingIsPaintedIntoIt` is what holds that,
+            // because the two live in different files and only one of them can say so.
+            EmptyCell(cue.From);
 
             var cell = _cells[cue.Cell];
             if (cell?.Rt == null || cell.Piece == null) return;
@@ -2575,6 +2864,129 @@ namespace GlimmerGrove
         /// what it has become.
         /// </para>
         /// </summary>
+        /// <summary>
+        /// A runner firing: the colour of a bunch running the length of a vine to whatever is
+        /// standing at the other end.
+        ///
+        /// <para>
+        /// <b>Three things at once, and each is answering a different question the player has.</b>
+        /// The <em>stem lights up</em> in the colour being carried, which says <em>what</em>;
+        /// a <em>head travels</em> down it from the end that went off, which says <em>which
+        /// way</em>; and the <em>far cuff swells</em> as the head lands, which says <em>where to
+        /// look now</em> — a beat before <see cref="Land"/> turns the flower there. It is the
+        /// same three-part reading a burst gets (flash, body, reach), spent on the one event in
+        /// this mode that happens somewhere the player is not already watching.
+        /// </para>
+        /// <para>
+        /// <b>It is drawn even when the far end does not change</b>, which is deliberate and is
+        /// the whole reason <c>BudBoard</c> reports a runner's wash unconditionally. Sending a
+        /// colour the far end already wears is the one mistake a runner can punish, and a
+        /// mistake the player cannot see is one nobody learns from (invariant 20g). What they
+        /// watch is the light arrive and the flower shrug.
+        /// </para>
+        /// <para>
+        /// A fixed beat rather than a speed — see <c>BudTempo.RunLag</c>, which is the one place
+        /// in this file that deliberately does not obey the one-gravity rule.
+        /// </para>
+        /// </summary>
+        void Runner(int from, int to, int colour, float over)
+        {
+            if (_layout == null || from < 0 || to < 0) return;
+
+            var vine = _vine.TryGetValue(from < to ? from : to, out var found) ? found : null;
+            if (vine == null) return;
+
+            var tint = Petal(colour);
+            float life = Mathf.Max(over, .08f);
+
+            Vector2 a = Where(from), b = Where(to);
+
+            // The stem itself, taken over for as long as the light is on it. Killed on its own
+            // channel rather than by a new tween on the image, so two runners firing on the same
+            // vine in one chain supersede rather than fight — the same rule every gesture in
+            // this file lives by.
+            var bar = vine.Bar;
+            var glow = vine.Glow;
+
+            if (bar)
+            {
+                Tween.Run(life * 2.2f, Ease.OutQuad, t =>
+                {
+                    if (!bar) return;
+                    bar.color = Color.Lerp(Pal.A(Pal.Lift(tint, .55f), .95f), VineStem, t);
+                }, bar, "run").OnAbandon(() => { if (bar) bar.color = VineStem; });
+            }
+
+            if (glow)
+            {
+                Tween.Run(life * 2.4f, Ease.OutQuad, t =>
+                {
+                    if (!glow) return;
+                    glow.color = Color.Lerp(Pal.A(tint, .58f), VineBed, t);
+                }, glow, "run").OnAbandon(() => { if (glow) glow.color = VineBed; });
+            }
+
+            // The head. On `_near` with the bursts rather than on the vine layer, because it is
+            // a thing happening rather than a thing that is there — and `_near` is nested, so a
+            // travelling glow does not dirty the board's own canvas every frame.
+            if (_near != null)
+            {
+                var spark = Art.Glow(128, 2.4f);
+                if (spark != null)
+                {
+                    var head = UIKit.Img("Sap", _near, spark, Pal.A(Pal.Lift(tint, .70f), .95f),
+                                         Vector2.one * _size * .92f, new Vector2(.5f, .5f), a);
+                    var rt = (RectTransform)head.transform;
+
+                    Tween.Run(life, Ease.InOutQuad, t =>
+                    {
+                        if (!head) return;
+                        rt.anchoredPosition = Vector2.Lerp(a, b, t);
+
+                        // Fattest in the middle of the run, so it reads as something passing
+                        // rather than as a dot sliding.
+                        float swell = 1f + .45f * Mathf.Sin(Mathf.Clamp01(t) * Mathf.PI);
+                        rt.localScale = Vector3.one * swell;
+                    }, head).OnDone(() => { if (head) Destroy(head.gameObject); });
+                }
+            }
+
+            // **Which cuff is which is read off the firing, not off the vine.** A runner
+            // carries in whichever direction the bunch went off, so the end that leaves and the
+            // end that answers swap over between one chain and the next — and a departure drawn
+            // on the wrong end is the mechanic pointing backwards.
+            Pulse(vine.CuffAt(from), tint, life, .0f);
+            Pulse(vine.CuffAt(to), tint, life * 1.3f, life);
+
+            // Leaving and arriving, because both ends are worth a note when the two are a board
+            // apart. The arrival is pitched above the departure so the pair reads as one gesture
+            // travelling rather than as two unrelated clicks.
+            Audio.Sfx("whoosh", .30f, 1.15f + Bright(tint) * .30f);
+            Audio.Sfx("lit", .32f, 1.30f + Bright(tint) * .28f, life);
+        }
+
+        /// <summary>One cuff answering: a swell of the colour that passed through it.</summary>
+        void Pulse(Image cuff, Color tint, float over, float after)
+        {
+            if (!cuff) return;
+
+            var rt = (RectTransform)cuff.transform;
+            float big = _size * VineCuffSize;
+
+            Tween.Run(Mathf.Max(over, .10f), Ease.OutCubic, t =>
+            {
+                if (!cuff) return;
+                cuff.color = Color.Lerp(Pal.A(Pal.Lift(tint, .80f), 1f), VineCuff, t);
+                rt.sizeDelta = Vector2.one * Mathf.Lerp(big * 1.55f, big, t);
+            }, cuff, "cuff").Delay(after)
+             .OnAbandon(() =>
+             {
+                 if (!cuff) return;
+                 cuff.color = VineCuff;
+                 rt.sizeDelta = Vector2.one * big;
+             });
+        }
+
         void Land(int index, int to, float beat)
         {
             if (_cells == null || index < 0 || index >= _cells.Length) return;
@@ -2700,6 +3112,15 @@ namespace GlimmerGrove
 
             if (cell.Ring) cell.Ring.color = new Color(1, 1, 1, 0f);
             if (cell.Glow) cell.Glow.color = new Color(1, 1, 1, 0f);
+
+            // **And the sleeper is put away, because it is standing right there.** The cell draws
+            // its own dim critter inside the pod, and nothing here used to take it down — so a
+            // dormant silhouette sat on the square while the shell came apart over it and the
+            // creature the level was for arrived beside it. It was cleared only by whatever
+            // landed in the square next, which on a cell at the top of its column is the
+            // regrowth, at the very end of the chain. The pod is not touched: it has a gesture of
+            // its own below, which is the shell breaking.
+            Rest(cell.Critter);
 
             float life = Mathf.Max(beat * 2.4f, .55f);
 

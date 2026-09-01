@@ -100,13 +100,39 @@ namespace GlimmerGrove.Modes
         /// </summary>
         public readonly bool Ripened;
 
-        public BudWash(int cell, int wave, int to, bool ripened = false)
+        /// <summary>
+        /// The cell this colour ran from down a runner, or -1 where it simply came from next
+        /// door.
+        ///
+        /// <para>
+        /// <b>Carried because the view cannot work it out and must not guess.</b> A runner joins
+        /// two squares that are nowhere near each other, so a flower turning at one end has its
+        /// cause right across the board — which is precisely the shape that was reported as a
+        /// bug the last time this mode did it silently (see <see cref="Ripened"/>). The view
+        /// draws the light travelling down the vine, and it can only do that if it is told which
+        /// vine.
+        /// </para>
+        /// <para>
+        /// <b>A runner's wash is reported even when it changes nothing</b>, which is the one
+        /// place this type breaks its own rule that a wash is a flower <em>changing</em>. It has
+        /// to be: sending a colour the far end already wears is the mistake a runner is made of,
+        /// and a mistake nobody sees is a mistake nobody learns from (invariant 20g). The player
+        /// watches the light arrive and fizzle.
+        /// </para>
+        /// </summary>
+        public readonly int From;
+
+        public BudWash(int cell, int wave, int to, bool ripened = false, int from = -1)
         {
             Cell = cell;
             Wave = wave;
             To = to;
             Ripened = ripened;
+            From = from;
         }
+
+        /// <summary>Whether this colour arrived down a runner rather than from next door.</summary>
+        public bool Ran => From >= 0;
     }
 
     /// <summary>
@@ -199,6 +225,14 @@ namespace GlimmerGrove.Modes
     /// asked the player to predict four beats ahead, and the other froze into a position where no
     /// input changed anything.
     /// </para>
+    /// <para>
+    /// <b>A runner is the one thing here that takes the adjacency out.</b> Two squares of the
+    /// grove are joined by a vine, and a flower standing on one of them that goes off <em>as part
+    /// of a bunch</em> sends its colour to whatever is standing on the other — the same wash, the
+    /// same <c>|</c>, across the board. It adds no operator and no second kind of light, and it
+    /// leaves every proof above untouched, because it can only ever put channels onto a flower
+    /// that is already there. See <see cref="BudLayout.FarEnd"/>.
+    /// </para>
     /// </summary>
     public sealed class BudBoard
     {
@@ -212,6 +246,18 @@ namespace GlimmerGrove.Modes
         readonly List<int> _cracked = new List<int>(8);
         readonly List<int> _washed = new List<int>(32);
         readonly int[] _wash;
+
+        /// <summary>
+        /// For each cell washed this wave, which runner end sent the colour — or -1 where it came
+        /// from next door.
+        ///
+        /// <b>Beside <see cref="_wash"/> rather than folded into it</b>, because the two answer
+        /// different questions: <c>_wash</c> is what arrives, accumulated with <c>|=</c> from
+        /// however many bunches reach the cell, and this is <em>who</em> reached it from a
+        /// distance. Only the second is something the view could never work out for itself.
+        /// </summary>
+        readonly int[] _ran;
+
         readonly bool[] _seen;
         readonly List<int> _beside = new List<int>(4);
 
@@ -230,6 +276,7 @@ namespace GlimmerGrove.Modes
             _ground = layout.Standing();
             _value = layout.Values();
             _wash = new int[layout.Count];
+            _ran = new int[layout.Count];
             _seen = new bool[layout.Count];
         }
 
@@ -243,6 +290,7 @@ namespace GlimmerGrove.Modes
             Array.Copy(other._value, _value, _value.Length);
 
             _wash = new int[_ground.Length];
+            _ran = new int[_ground.Length];
             _seen = new bool[_ground.Length];
             Grown = other.Grown;
         }
@@ -415,6 +463,13 @@ namespace GlimmerGrove.Modes
         /// It is reported as wave nought with a bunch of nine, so the view draws it as the
         /// biggest kind of burst there is without being told about it separately.
         /// </para>
+        /// <para>
+        /// <b>And it sends nothing down a runner</b>, for the same reason it washes nothing next
+        /// door: a runner carries a <em>bunch's colour</em>, and a bomb has no colour to carry —
+        /// it clears a block. One clause, and it stays one clause. What a bomb standing on a
+        /// runner end does is take that end off the board for a moment, which the grove then
+        /// fills in the ordinary way.
+        /// </para>
         /// </summary>
         BudChainResult Bomb(int cell, List<BudPulse> pulses, List<BudWash> washes,
                             List<BudDrop> drops)
@@ -481,6 +536,7 @@ namespace GlimmerGrove.Modes
             while (waves - from < BudLayout.MostWaves)
             {
                 Array.Clear(_wash, 0, _wash.Length);
+                for (int i = 0; i < _ran.Length; i++) _ran[i] = -1;
                 _cracked.Clear();
                 _washed.Clear();
                 _queue.Clear();
@@ -529,6 +585,30 @@ namespace GlimmerGrove.Modes
                                 _wash[nb] |= colour;
                             }
                         }
+
+                        // **And down the runner, which is the whole of the second chapter.** A
+                        // flower standing on one end of a runner sends its colour to whatever is
+                        // standing on the other, however far across the grove that is — the same
+                        // wash, over the same operator, with the adjacency taken out of it.
+                        //
+                        // **The threshold is that the end has to be *in* the bunch**, not merely
+                        // beside one. That is what stops it being a solvent (invariant 20j): a
+                        // spread that fires on anything happening nearby walks outward for ever
+                        // and makes every board more solvable, where a spread that has to be
+                        // *built into* is a thing the player arranges. It is also the whole
+                        // decision — which three to make, and in which colour, given what is
+                        // standing at the far end.
+                        //
+                        // Read here, with the adjacency wash, before anything is taken away, so
+                        // the wave still has no reading order: two runners whose ends burst
+                        // together each deliver into `_wash` and neither can see the other.
+                        int far = Layout.FarEnd(_bunch[k]);
+                        if (far >= 0 && _ground[far] == BudGround.Flower)
+                        {
+                            if (_wash[far] == Energy.None) _washed.Add(far);
+                            _wash[far] |= colour;
+                            _ran[far] = _bunch[k];
+                        }
                     }
 
                     for (int k = 0; k < _bunch.Count; k++) _queue.Add(_bunch[k]);
@@ -558,7 +638,15 @@ namespace GlimmerGrove.Modes
                     int was = _value[at];
                     _value[at] |= _wash[at];
 
-                    if (_value[at] != was) washes?.Add(new BudWash(at, waves, _value[at]));
+                    // A runner's delivery is reported whether or not it changed anything, and
+                    // an ordinary wash only when it did. See <see cref="BudWash.From"/>: the
+                    // travel is the event, and a runner that arrives carrying a colour the far
+                    // end already wears is the one mistake this mechanic can punish — so it is
+                    // the one the player has to be able to watch happen.
+                    if (_ran[at] >= 0)
+                        washes?.Add(new BudWash(at, waves, _value[at], from: _ran[at]));
+                    else if (_value[at] != was)
+                        washes?.Add(new BudWash(at, waves, _value[at]));
                 }
 
                 // **And then the grove falls, and grows.** Everything above a hole slides down

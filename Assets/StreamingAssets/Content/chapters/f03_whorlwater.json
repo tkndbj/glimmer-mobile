@@ -1,0 +1,217 @@
+{
+  "schemaVersion": 2,
+  "id": "f03_whorlwater",
+  "accent": "#FF9A5C",
+  "slate": "#1A1220",
+  "backdrop": "sky_20",
+  "mapStrips": [
+    "map3_strip0",
+    "map3_strip1",
+    "map3_strip2",
+    "map3_strip3",
+    "map3_strip4"
+  ],
+  "teaserX": 0.3,
+  "levels": [
+    {
+      "id": "f03_first_whorl",
+      "mapX": 0.3,
+      "mapY": 0.055,
+      "fall": {
+        "width": 5,
+        "height": 6,
+        "rows": [
+          ".....",
+          ".....",
+          ".....",
+          ".....",
+          ".....",
+          "CY@C."
+        ],
+        "motes": "RGB"
+      }
+    },
+    {
+      "id": "f03_make_the_pair",
+      "mapX": 0.72,
+      "mapY": 0.14,
+      "backdrop": "sky_21",
+      "fall": {
+        "width": 6,
+        "height": 6,
+        "rows": [
+          "......",
+          "......",
+          "......",
+          "......",
+          ".CC...",
+          ".CM@B."
+        ],
+        "motes": "RGBB"
+      }
+    },
+    {
+      "id": "f03_the_span",
+      "mapX": 0.26,
+      "mapY": 0.225,
+      "backdrop": "sky_22",
+      "fall": {
+        "width": 6,
+        "height": 6,
+        "rows": [
+          "......",
+          "......",
+          "......",
+          ".Y...C",
+          ".Y...C",
+          ".YY@YC"
+        ],
+        "motes": "GBR"
+      }
+    },
+    {
+      "id": "f03_buried",
+      "mapX": 0.7,
+      "mapY": 0.31,
+      "backdrop": "sky_23",
+      "fall": {
+        "width": 6,
+        "height": 7,
+        "rows": [
+          "......",
+          "......",
+          "......",
+          "...Y..",
+          ".M.Y..",
+          ".MMM..",
+          ".MM@M."
+        ],
+        "motes": "BRGB"
+      }
+    },
+    {
+      "id": "f03_two_shores",
+      "mapX": 0.28,
+      "mapY": 0.395,
+      "backdrop": "sky_24",
+      "fall": {
+        "width": 7,
+        "height": 7,
+        "rows": [
+          ".......",
+          ".......",
+          ".......",
+          ".......",
+          "YYY..YY",
+          "YYY.MMM",
+          "YYY.G@B"
+        ],
+        "motes": "GBR"
+      }
+    },
+    {
+      "id": "f03_twin_mouths",
+      "mapX": 0.74,
+      "mapY": 0.48,
+      "backdrop": "sky_25",
+      "fall": {
+        "width": 7,
+        "height": 7,
+        "rows": [
+          ".......",
+          ".......",
+          ".......",
+          ".......",
+          "CCC.YYY",
+          "CCC.YYY",
+          "C@R.R@G"
+        ],
+        "motes": "GBR"
+      }
+    },
+    {
+      "id": "f03_through_the_glass",
+      "mapX": 0.3,
+      "mapY": 0.56,
+      "backdrop": "sky_26",
+      "fall": {
+        "width": 7,
+        "height": 8,
+        "rows": [
+          ".......",
+          ".......",
+          ".......",
+          ".......",
+          "YYY..YY",
+          "YYY.YYY",
+          "YYY.YYY",
+          "YOY.Y@C"
+        ],
+        "motes": "BRGB"
+      }
+    },
+    {
+      "id": "f03_the_deep_draw",
+      "mapX": 0.68,
+      "mapY": 0.645,
+      "backdrop": "sky_27",
+      "fall": {
+        "width": 7,
+        "height": 8,
+        "rows": [
+          ".......",
+          ".......",
+          ".......",
+          "MMM....",
+          "MMM..C.",
+          "MMM.CCC",
+          "MMM.CCC",
+          "C@C.CCC"
+        ],
+        "motes": "GBBR"
+      }
+    },
+    {
+      "id": "f03_every_light",
+      "mapX": 0.26,
+      "mapY": 0.73,
+      "backdrop": "sky_28",
+      "fall": {
+        "width": 7,
+        "height": 8,
+        "rows": [
+          ".......",
+          ".......",
+          ".......",
+          ".......",
+          "MMM.YYY",
+          "MMM.YYY",
+          "MMM.OMM",
+          "M@B.G@M"
+        ],
+        "motes": "GBBR"
+      }
+    },
+    {
+      "id": "f03_whorlwater",
+      "mapX": 0.72,
+      "mapY": 0.815,
+      "backdrop": "sky_29",
+      "fall": {
+        "width": 7,
+        "height": 8,
+        "rows": [
+          ".......",
+          ".......",
+          ".......",
+          ".Y...Y.",
+          "MMM.MMM",
+          "MMM.MMM",
+          "MMM.YYY",
+          "C@Y.G@Y"
+        ],
+        "motes": "BRGG"
+      }
+    }
+  ]
+}

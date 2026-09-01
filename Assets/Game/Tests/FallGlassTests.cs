@@ -571,6 +571,39 @@ namespace GlimmerGrove.Tests
             Assert.AreEqual(0f, FallTempo.Shot(0), "and a cascade with no glass in it spends none");
         }
 
+        /// <summary>
+        /// A whorl's pull gets its own beat and is bounded over the cascade, and it is
+        /// deliberately shorter than a shot.
+        ///
+        /// <para>
+        /// <b>That difference is the two mechanics' economics said in time.</b> A lens fires once
+        /// or twice a run and costs three drops of three colours, so it is worth stopping the
+        /// board for; a merge is what the player spent the last several drops *arranging*, and
+        /// two motes have to be seen leaving the cells they were standing in. So it is longer
+        /// than a burst and shorter than a shot, and it is bounded over the cascade: four whorls
+        /// turning in one chain must not freeze the board for four times as long.
+        /// </para>
+        /// </summary>
+        [Test]
+        public void AWhorlsPullIsBoundedAndIsShorterThanAShot()
+        {
+            Assert.AreEqual(0f, FallTempo.Draw(0),
+                            "a cascade with no whorl in it spends none of this");
+
+            for (int waves = 1; waves <= 12; waves++)
+            {
+                float each = FallTempo.Draw(waves);
+                float all = each * waves;
+
+                Assert.LessOrEqual(all, FallTempo.DrawCeiling + 1e-4f,
+                    $"{waves} turning wave(s) spend {all:0.###}s against a ceiling of " +
+                    $"{FallTempo.DrawCeiling:0.###}s");
+
+                Assert.Less(each, FallTempo.Shot(waves) + 1e-4f,
+                    "a pull that took as long as a shot would make a chain of merges a wait");
+            }
+        }
+
         [Test]
         public void OneShotIsWorthStoppingTheBoardForAndABurstIsNot()
         {

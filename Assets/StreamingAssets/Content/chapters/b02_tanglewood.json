@@ -1,0 +1,293 @@
+{
+  "schemaVersion": 2,
+  "id": "b02_tanglewood",
+  "accent": "#C8E24A",
+  "slate": "#1B2A12",
+  "backdrop": "sky_10",
+  "mapStrips": [
+    "map2_strip0",
+    "map2_strip1",
+    "map2_strip2",
+    "map2_strip3"
+  ],
+  "teaserX": 0.3,
+  "levels": [
+    {
+      "id": "b02_firstvine",
+      "mapX": 0.3,
+      "mapY": 0.065,
+      "bud": {
+        "width": 7,
+        "height": 6,
+        "rows": [
+          "MoMMCGG",
+          "RRYRGoB",
+          "CYGRGBo",
+          "CGoGYBM",
+          "GRRBRYG",
+          "MoCMCoB"
+        ],
+        "runners": [
+          ".......",
+          ".a.....",
+          ".......",
+          ".......",
+          "....a..",
+          "......."
+        ],
+        "colours": "GBR",
+        "regrow": "RGBYMCW"
+      }
+    },
+    {
+      "id": "b02_longreach",
+      "mapX": 0.7,
+      "mapY": 0.145,
+      "backdrop": "sky_11",
+      "bud": {
+        "width": 7,
+        "height": 6,
+        "rows": [
+          "YoGCoMG",
+          "GRYGBBG",
+          "oYMRCoR",
+          "CCoCYMR",
+          "BGGMoYM",
+          "BoRRYRM"
+        ],
+        "runners": [
+          ".......",
+          ".a.....",
+          ".......",
+          ".......",
+          ".......",
+          ".....a."
+        ],
+        "colours": "GBR",
+        "regrow": "RGBYMCW"
+      }
+    },
+    {
+      "id": "b02_deepthicket",
+      "mapX": 0.26,
+      "mapY": 0.22,
+      "backdrop": "sky_12",
+      "bud": {
+        "width": 7,
+        "height": 7,
+        "rows": [
+          "YoRYYoG",
+          "GBBOMYB",
+          "YRRCGMB",
+          "CoCMGoC",
+          "MBGGYBB",
+          "MGoCoMC",
+          "GRRCYMC"
+        ],
+        "colours": "BGR",
+        "regrow": "RGBYMC"
+      }
+    },
+    {
+      "id": "b02_windingway",
+      "mapX": 0.72,
+      "mapY": 0.3,
+      "backdrop": "sky_13",
+      "bud": {
+        "width": 7,
+        "height": 7,
+        "rows": [
+          "MoRRGoY",
+          "GMBMGBG",
+          "oRMCBoY",
+          "CRBOBRC",
+          "CoYRMCo",
+          "GRBMRGB",
+          "GYYoBBR"
+        ],
+        "runners": [
+          ".......",
+          "..a....",
+          ".......",
+          ".......",
+          ".......",
+          "....a..",
+          "......."
+        ],
+        "colours": "RGB",
+        "regrow": "RGBYMC"
+      }
+    },
+    {
+      "id": "b02_twovines",
+      "mapX": 0.26,
+      "mapY": 0.39,
+      "backdrop": "sky_14",
+      "bud": {
+        "width": 8,
+        "height": 7,
+        "rows": [
+          "RoRBBGoC",
+          "GGCCYRCM",
+          "RCYoBGoM",
+          "RBMMORRC",
+          "YoGGoBCM",
+          "RYMBGCBM",
+          "BBoBGoCC"
+        ],
+        "runners": [
+          ".......a",
+          ".b......",
+          "........",
+          "........",
+          "........",
+          "......b.",
+          "a......."
+        ],
+        "colours": "BRG",
+        "regrow": "RGBYMC"
+      }
+    },
+    {
+      "id": "b02_thewilds",
+      "mapX": 0.68,
+      "mapY": 0.485,
+      "backdrop": "sky_15",
+      "bud": {
+        "width": 8,
+        "height": 7,
+        "rows": [
+          "MoGGCOBB",
+          "MRYCYYGG",
+          "CoRYoGBo",
+          "CRCYCBYM",
+          "YOBBoCRR",
+          "MGRGYBCC",
+          "RRoGBoGY"
+        ],
+        "colours": "BRG",
+        "regrow": "RGBYM"
+      }
+    },
+    {
+      "id": "b02_crossvine",
+      "mapX": 0.28,
+      "mapY": 0.56,
+      "backdrop": "sky_16",
+      "bud": {
+        "width": 8,
+        "height": 7,
+        "rows": [
+          "MoYCMOMM",
+          "RGGYYGGB",
+          "oCYMoRBo",
+          "CGYMGGoG",
+          "MOMoBYRG",
+          "YRRBYRMY",
+          "BBoCGGoR"
+        ],
+        "runners": [
+          ".......a",
+          "..b.....",
+          "........",
+          "........",
+          "........",
+          ".....b..",
+          "a......."
+        ],
+        "colours": "RGB",
+        "regrow": "RGBYMC"
+      }
+    },
+    {
+      "id": "b02_thornedvine",
+      "mapX": 0.72,
+      "mapY": 0.65,
+      "backdrop": "sky_17",
+      "bud": {
+        "width": 8,
+        "height": 7,
+        "rows": [
+          "YoRMOBBo",
+          "MRMYRRCC",
+          "YMRoMBoR",
+          "oGRYMBCG",
+          "YOGGoCMR",
+          "YMYYMMBB",
+          "MYoGGoMY"
+        ],
+        "runners": [
+          "........",
+          ".a......",
+          ".......b",
+          "........",
+          "b.......",
+          "......a.",
+          "........"
+        ],
+        "colours": "BRG",
+        "regrow": "RGBYM"
+      }
+    },
+    {
+      "id": "b02_thetangle",
+      "mapX": 0.23,
+      "mapY": 0.752,
+      "backdrop": "sky_18",
+      "bud": {
+        "width": 8,
+        "height": 7,
+        "rows": [
+          "GoBCORRo",
+          "RBCBCGGR",
+          "RCYoMMoY",
+          "oBYBYYRo",
+          "BOCYoGCC",
+          "BMCBMCGB",
+          "GoYRoCoB"
+        ],
+        "runners": [
+          "......a.",
+          ".b......",
+          "c.......",
+          "........",
+          ".......c",
+          "......b.",
+          "a......."
+        ],
+        "colours": "GBR",
+        "regrow": "RGBYM"
+      }
+    },
+    {
+      "id": "b02_tangleheart",
+      "mapX": 0.71,
+      "mapY": 0.83,
+      "backdrop": "sky_19",
+      "bud": {
+        "width": 8,
+        "height": 7,
+        "rows": [
+          "GoGoOBBo",
+          "BBMYRYCG",
+          "RMRoCCoR",
+          "oBBCMMCo",
+          "YOCBoBMR",
+          "BRRBGMBR",
+          "CoYoOGoC"
+        ],
+        "runners": [
+          "......a.",
+          ".b......",
+          "c.......",
+          "........",
+          ".......c",
+          "......b.",
+          "a......."
+        ],
+        "colours": "RBG",
+        "regrow": "RYGMBC"
+      }
+    }
+  ]
+}

@@ -1,42 +1,45 @@
 # -*- coding: utf-8 -*-
-"""Cuts a chapter's map strips and board backdrops from source art, driven by chapter_art.tsv.
+"""Cuts a chapter's map strips from source art, driven by chapter_art.tsv.
 
     python Tools/make_chapter_art.py c02_millvale --source "C:/path/to/_extracted"
 
-Two outputs, both named by the chapter file rather than by this script:
+Writes `Assets/Game/Art/Map/<strip>.png` — one 1080x1200 slice per name in the chapter's
+`mapStrips`, cut **bottom-upward** out of one tall image, because strip 0 is the foot of the
+map and the trail is walked upward from there.
 
-  * `Assets/Game/Art/Map/<strip>.png` — one 1080x1200 slice per name in `mapStrips`,
-    cut **bottom-upward** out of one tall image, because strip 0 is the foot of the
-    map and the trail is walked upward from there.
-  * `Assets/Game/Art/Bg/<backdrop>.png` — one 720x1280 board backdrop per distinct
-    backdrop the chapter or any of its levels names.
+**Board backdrops are no longer cut here.** They were, per chapter, from that chapter's own
+pack and graded to each level's own accent — which is how the game came to hold forty-one
+backdrops out of six paintings, and how a Lightfall chapter came to draw *one* picture for
+all ten of its wells. They are now one shared family of skies with a tool of its own
+(`Tools/make_sky_art.py`) and a rule instead of a decision (`Tools/chapters/mapart.py`). The
+grading craft still lives here — `vivid`, `opened`, `backdrop` — and `make_sky_art` imports
+it, because it took four attempts to get right and a second copy is a second thing to get
+wrong.
+
+**A map is shared too, and only one chapter's row cuts it.** Every mode's first chapter draws
+`map1`, every mode's second draws `map2`; the row that names a source is the row of the
+chapter that owns that ordinal's cut (c01 is hand-made, so `map1` is `-`), and every other
+chapter says `-`. Sharing is what puts the strips in the **global** Addressables group rather
+than in one chapter's bundle — `AddressableAddresses.ChapterOwnership` files an address wanted
+by two chapters as belonging to nobody, which is exactly right for a painting five chapters
+draw.
 
 Three decisions worth not re-litigating.
 
-**The names come from the content and the palette comes from the content.** This
-script is told which pack to cut from and nothing else: the strip names, the
-backdrop names and the accent/slate each backdrop is graded to are all read out of
-`chapters/<id>.json`. So retuning a glade's colour regrades its backdrop with no
-second place to remember, and a chapter that adds an eleventh glade gets an
-eleventh backdrop by being authored, not by anybody editing a list here. It is the
-same rule `AssetManifest.ChapterAssets` follows on the other side of the pipeline —
-art is derived from the catalog, never hand-listed.
+**The names come from the content.** This script is told which pack to cut from and nothing
+else: the strip names are read out of `chapters/<id>.json`, which reads them from `mapart`. It
+is the same rule `AssetManifest.ChapterAssets` follows on the other side of the pipeline — art
+is derived from the catalog, never hand-listed.
 
-**A backdrop keeps its own colours and is turned to the level's accent.** It used to
-be reduced to luminance and mapped back through a slate-to-accent ramp, which is a
-duotone: every pixel of every backdrop held one hue, and since most authored accents
-here are gold, most boards in the game were a painting behind an amber gel. `vivid`
-rotates the picture's dominant hue onto the accent and moves every other hue in it by
-the same amount, so a chapter's ten glades still read as ten places — the thing the
-duotone was for — while the painting keeps having more than one colour in it. It is
-then lifted to `BG_TARGET_LUMA`, which is what makes "cheerful" a number rather than
-an adjective.
+**The map is scaled to whole strips, never stretched to them.** The source is resized on its
+own aspect until its height is exactly `strips x 1200`, and the surplus width is trimmed from
+the centre. Stretching would be the easy fix and it shows: every tree on the map would be the
+wrong shape by the same few per cent, which reads as cheapness without ever reading as an
+error. It is also why `mapart.STRIPS` is a fact about each painting rather than a preference.
 
-**The map is scaled to whole strips, never stretched to them.** The source is
-resized on its own aspect until its height is exactly `strips x 1200`, and the
-surplus width is trimmed from the centre. Stretching would be the easy fix and it
-shows: every tree on the map would be the wrong shape by the same few per cent,
-which reads as cheapness without ever reading as an error.
+**A map keeps its own colours.** The fourth column's `night` grade exists and is used by
+nothing today: it was how two chapters sharing one painting were told apart, and chapters at
+one ordinal are now meant to be the same place. Grading one would put that back.
 """
 import argparse, colorsys, io, json, math, os, sys
 
@@ -72,27 +75,19 @@ def rows():
             line = line.strip()
             if not line or line.startswith("#"):
                 continue
-            parts = line.split("\t")
-            if len(parts) not in (3, 4):
-                sys.exit(f"chapter_art.tsv line {n}: expected 3 or 4 tab-separated columns, "
+            parts = line.split("	")
+            if len(parts) not in (2, 3):
+                sys.exit(f"chapter_art.tsv line {n}: expected 2 or 3 tab-separated columns, "
                          f"got {len(parts)}")
-            # The fourth column is optional and defaults to 0, so every row written before map
+            # The third column is optional and defaults to 0, so every row written before map
             # grading existed keeps producing exactly the map it produced.
-            grade = float(parts[3]) if len(parts) == 4 and parts[3].strip() else 0.0
+            grade = float(parts[2]) if len(parts) == 3 and parts[2].strip() else 0.0
             # A lone `-` in the map column says this chapter's strips are not cut by this
-            # tool. Four chapters share one hand-made strip set, and a row that had to name
-            # *some* map source in order to exist is a row that quietly overwrites theirs the
-            # first time somebody runs it without `--only backdrops`.
+            # tool. Most rows say it: an ordinal's map is cut once and drawn by every mode's
+            # chapter at that ordinal, and a row obliged to name *some* source is a row that
+            # quietly overwrites theirs the first time somebody runs it.
             map_src = None if parts[1].strip() == "-" else parts[1]
-
-            # And the same `-` on the backdrops, for the same reason read the other way round.
-            # A chapter that *borrows* a backdrop — every non-glade chapter does, from the nine
-            # c01_shallows cuts — has a row that must not name a source for it: the tool writes
-            # `play_8.png` graded to whichever chapter it was run for, so a row naming any
-            # source at all would silently re-cut a picture four other chapters draw. It was
-            # exactly the trap the map column already documents, waiting on the other column.
-            bg_srcs = [] if parts[2].strip() == "-" else [q for q in parts[2].split(",") if q]
-            out[parts[0]] = (map_src, bg_srcs, grade)
+            out[parts[0]] = (map_src, grade)
     return out
 
 
@@ -479,78 +474,41 @@ def main():
     ap.add_argument("chapter")
     ap.add_argument("--source", required=True, help="folder the art packs were extracted into")
     ap.add_argument("--dry-run", action="store_true")
-    ap.add_argument("--only", choices=("maps", "backdrops"),
-                    help="write just one half. A re-grade of the board backdrops must not "
-                         "silently re-cut the maps, which are a separate decision and are "
-                         "graded with a separate ramp.")
     ap.add_argument("--out", help="write somewhere other than the project, for judging a "
                                   "grade before it lands.")
     args = ap.parse_args()
 
     map_art = os.path.join(args.out, "Map") if args.out else MAP_ART
-    bg_art = os.path.join(args.out, "Bg") if args.out else BG_ART
 
     table = rows()
     if args.chapter not in table:
         sys.exit(f"no row for '{args.chapter}' in Tools/chapter_art.tsv")
-    map_src, bg_srcs, map_grade = table[args.chapter]
+    map_src, map_grade = table[args.chapter]
 
     path = os.path.join(CHAPTERS, args.chapter + ".json")
     if not os.path.exists(path):
         sys.exit(f"no chapter body at {path}")
     chapter = json.load(io.open(path, encoding="utf-8"))
 
-    fallback_accent = chapter.get("accent") or "#FFC93C"
-    fallback_slate = chapter.get("slate") or "#123640"
+    names = chapter.get("mapStrips") or []
 
-    # Every backdrop this chapter draws, in the order the player meets them, with the
-    # palette it is graded to. The chapter's own backdrop is first because a level
-    # that overrides nothing inherits it.
-    wanted, seen = [], set()
+    if map_src is None:
+        print(f"{args.chapter}: draws {names[0].rsplit('_', 1)[0] if names else '?'}, which is "
+              "not this row's to cut")
+        return
 
-    def want(name, accent, slate):
-        if name and name not in seen:
-            seen.add(name)
-            wanted.append((name, accent, slate))
-
-    want(chapter.get("backdrop"), fallback_accent, fallback_slate)
-    for level in chapter.get("levels", []):
-        want(level.get("backdrop") or chapter.get("backdrop"),
-             level.get("accent") or fallback_accent,
-             level.get("slate") or fallback_slate)
-
-    strip_count = 0 if map_src is None else len(chapter.get("mapStrips") or [])
-    bg_count = 0 if not bg_srcs else len(wanted)
-    print(f"{args.chapter}: {strip_count} strip(s), {bg_count} backdrop(s)"
-          + ("" if bg_srcs else f" (it borrows {chapter.get('backdrop')}, which is not this "
-                                "row's to cut)"))
+    print(f"{args.chapter}: {len(names)} strip(s)")
 
     if not args.dry_run:
         os.makedirs(map_art, exist_ok=True)
-        os.makedirs(bg_art, exist_ok=True)
 
-    for name, image in ([] if args.only == "backdrops" or map_src is None else strips(args.source, map_src,
-                              chapter.get("mapStrips") or [],
-                              hexcolour(fallback_slate, "#123640"),
-                              hexcolour(fallback_accent, "#FFC93C"),
-                              map_grade)):
-        out = os.path.join(map_art, name + ".png")
+    for name, image in strips(args.source, map_src, names,
+                              hexcolour(chapter.get("slate"), "#123640"),
+                              hexcolour(chapter.get("accent"), "#FFC93C"),
+                              map_grade):
         print(f"  map  {name:<16} {image.size[0]}x{image.size[1]}")
         if not args.dry_run:
-            image.save(out)
-
-    for i, (name, accent, slate) in enumerate(
-            [] if args.only == "maps" or not bg_srcs else wanted):
-        source = bg_srcs[i % len(bg_srcs)]
-        # Windows are spread across each source rather than taken in a row, so two
-        # paintings do not hand out two near-identical crops to adjacent glades.
-        per = max(1, (len(wanted) + len(bg_srcs) - 1) // len(bg_srcs))
-        window = (i // len(bg_srcs)) / float(max(1, per - 1)) if per > 1 else .5
-        image = backdrop(args.source, source, window, hexcolour(slate, fallback_slate),
-                         hexcolour(accent, fallback_accent))
-        print(f"  bg   {name:<16} {accent} on {slate}")
-        if not args.dry_run:
-            image.save(os.path.join(bg_art, name + ".png"))
+            image.save(os.path.join(map_art, name + ".png"))
 
     print("\nNext: Glimmer Grove > Addressables > Sync All Assets, then > Validate Art.")
     print("The importer hook only addresses art that arrives while the Editor is running.")

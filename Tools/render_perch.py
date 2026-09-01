@@ -150,7 +150,7 @@ def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("rocks", nargs="*", help="source PNGs; default is every shipped perch")
     ap.add_argument("--mode", default="weave", choices=sorted(WASHES))
-    ap.add_argument("--strip", default="c02_strip1")
+    ap.add_argument("--strip", default="map2_strip1")
     ap.add_argument("--out", default="out/perches")
     args = ap.parse_args()
 

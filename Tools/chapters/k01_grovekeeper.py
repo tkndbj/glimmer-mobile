@@ -54,16 +54,22 @@ import sys
 HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.dirname(os.path.dirname(HERE))
 sys.path.insert(0, os.path.join(ROOT, "Tools", "verify"))
+sys.path.insert(0, HERE)
 
 import keeper                                                    # noqa: E402
+import mapart                                                    # noqa: E402
 
 CHAPTER = "k01_grovekeeper"
 BODY = os.path.join(ROOT, "Assets", "StreamingAssets", "Content", "chapters", CHAPTER + ".json")
 LOC = os.path.join(ROOT, "Assets", "StreamingAssets", "Content", "loc", "en.json")
 
 ACCENT, SLATE = "#7BD86A", "#14241A"
-BACKDROP = "play_4"
-STRIPS = ["strip0", "strip1", "strip2", "strip3", "strip4", "strip5"]
+
+#: Which chapter of its own mode this is. It buys the map and the ten skies - see
+#: `mapart`, which owns that arithmetic for every chapter of every mode.
+ORDINAL = 1
+STRIPS = mapart.strips(ORDINAL)
+SKIES = mapart.skies(ORDINAL)
 
 #: Left and right down the map, the spacing the other ten-node chapters already use - proved
 #: against `ChapterMapValidator` rather than guessed at.
@@ -218,6 +224,8 @@ def level_json(groove, at):
              "rows": groove.rows, "tiles": groove.tiles}
 
     out = {"id": groove.id, "mapX": x, "mapY": y}
+    if at:                              # level one takes the chapter's own
+        out["backdrop"] = SKIES[at]
     if groove.budget:
         out["budgetFactor"] = groove.budget
     out["keeper"] = block
@@ -230,7 +238,7 @@ def chapter_json():
         "id": CHAPTER,
         "accent": ACCENT,
         "slate": SLATE,
-        "backdrop": BACKDROP,
+        "backdrop": SKIES[0],
         "mapStrips": list(STRIPS),
         "levels": [level_json(g, i) for i, g in enumerate(BOARDS)],
     }

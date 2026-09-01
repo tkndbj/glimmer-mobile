@@ -29,12 +29,17 @@ namespace GlimmerGrove.Content
 
         /// <summary>
         /// Used only to keep a chapter renderable when its body forgot to name a
-        /// backdrop. It is reported as a problem rather than applied silently: a
-        /// chapter inheriting art from a constant is how one chapter's backdrop ends
-        /// up owned by another chapter's asset bundle. Validation fails the build on
-        /// it, so this fallback can only ever be seen by a partial download.
+        /// backdrop. It is reported as a problem rather than applied silently, because a
+        /// chapter drawing art it did not ask for is a chapter nobody chose the look of.
+        /// Validation fails the build on it, so this fallback can only ever be seen by a
+        /// partial download.
+        ///
+        /// The first of the shared skies (see <c>Tools/chapters/mapart.py</c>), which every
+        /// chapter of every mode now draws from - so unlike the per-chapter backdrop this
+        /// used to name, it belongs to no chapter's bundle and cannot drag one chapter's art
+        /// into another's download.
         /// </summary>
-        const string LastResortBackdrop = "play_0";
+        const string LastResortBackdrop = "sky_00";
 
         public static bool TryReadChapter(string json, ICollection<string> problems, out ChapterBody body)
         {

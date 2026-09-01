@@ -189,6 +189,9 @@ BUD_NODE_WARNING, BUD_NODE_CEILING = 20_000, 60_000
 #: Below this many shortest plays the grove is a puzzle, which this mode is deliberately not.
 BUD_TOO_FEW_WAYS = 2
 
+#: Mirrors `BudLayout.MaxRunners`. A readability bound rather than a cost one.
+BUD_MAX_RUNNERS = 6
+
 
 def check_bud(lid, chapter_id, level, block):
     """Everything a Budburst grove has to prove, mirroring `BudValidator`.
@@ -201,11 +204,13 @@ def check_bud(lid, chapter_id, level, block):
     empty = dict(id=lid, chapter=chapter_id, w=0, h=0, par=0, budget=0,
                  gold=0, silver=0, lamps=0, sources=0, fragile=0, bound=0,
                  crossings=0, briars=0, mode='bud',
-                 ways=0, greedy=-1, nodes=0, buds=0, cocoons=0, ready=0, deal='')
+                 ways=0, greedy=-1, nodes=0, buds=0, cocoons=0, ready=0, deal='',
+                 runners=0, ran=0, changed=0, caught=0, taps=0)
 
     w, h = block.get('width') or 0, block.get('height') or 0
     rows = block.get('rows') or []
     deal = block.get('colours') or ''
+    vines = block.get('runners') or None
 
     if not (bud.MIN_SIDE <= w <= bud.MAX_SIDE):
         errors.append("%s: a grove is %d..%d wide; this one says %d"
@@ -220,7 +225,7 @@ def check_bud(lid, chapter_id, level, block):
         return empty
 
     try:
-        grove = bud.Grove(rows, deal, regrow)
+        grove = bud.Grove(rows, deal, regrow, vines)
     except (ValueError, KeyError, IndexError) as bad:
         errors.append("%s: %s" % (lid, bad))
         return empty
@@ -262,7 +267,44 @@ def check_bud(lid, chapter_id, level, block):
                       "ever grows one - so no chain can ever crack it"
                       % (lid, i % grove.w, i // grove.w))
 
-    par, ways, nodes, proved = bud.search(rows, deal, regrow)
+    # Everything about a runner that can be read off the picture. Mirrors `BudValidator.Strung`
+    # - a vine between two squares that already touch delivers a colour the wave was delivering
+    # anyway, which is invariant 5d in its purest form and the one case provable by looking.
+    if grove.runners > BUD_MAX_RUNNERS:
+        errors.append("%s: this grove is strung with %d runners, above the %d a grove may carry"
+                      % (lid, grove.runners, BUD_MAX_RUNNERS))
+
+    for i in range(grove.count):
+        far = grove.runner[i]
+        if far < i:
+            continue
+
+        ax, ay = i % grove.w, i // grove.w
+        bx, by = far % grove.w, far // grove.w
+        span = abs(ax - bx) + abs(ay - by)
+
+        if span <= 1:
+            errors.append("%s: the runner between %d,%d and %d,%d joins two squares that already "
+                          "touch, so it can never deliver anything the wave was not delivering "
+                          "anyway" % (lid, ax, ay, bx, by))
+        elif span < 3:
+            warnings.append("%s: the runner between %d,%d and %d,%d spans %d squares, about as "
+                            "far as one wave reaches on its own"
+                            % (lid, ax, ay, bx, by, span))
+
+        for end in (i, far):
+            ex, ey = end % grove.w, end // grove.w
+            if grove.ground[end] == "f":
+                continue
+            if grove.ground[end] == "c":
+                warnings.append("%s: the runner end at %d,%d is authored under a cocoon, so that "
+                                "half of it is inert until the grove falls something else onto it"
+                                % (lid, ex, ey))
+                continue
+            errors.append("%s: the runner end at %d,%d stands on nothing a bunch could ever "
+                          "include" % (lid, ex, ey))
+
+    par, ways, nodes, proved = bud.search(rows, deal, regrow, vines)
 
     if not proved:
         errors.append("%s: this grove could not be proved inside %d positions (it looked at "
@@ -310,7 +352,19 @@ def check_bud(lid, chapter_id, level, block):
                         "so this grove is a puzzle rather than a place to make a mess"
                         % (lid, par))
 
-    careless = bud.careless(rows, deal, budget or (par + bud.DEFAULT_SPARE), regrow)
+    # What the vines are worth on the board as dealt - invariant 26g's own test rather than a
+    # difficulty reading. Mirrors `BudValidator.Carrying`, and a warning for its reason: a grove
+    # may carry a vine that does nothing on the opening board and everything two taps in.
+    ran, changed, caught, legal = 0, 0, 0, 0
+    if grove.runners:
+        _best, _where, ran = bud.biggest(rows, deal, regrow, vines)
+        changed, caught, legal = bud.vines(rows, deal, regrow, vines)
+        if changed == 0:
+            warnings.append("%s: not one of this grove's %d opening taps plays out differently "
+                            "with every vine cut, so the runners are scenery on the board as "
+                            "dealt" % (lid, legal))
+
+    careless = bud.careless(rows, deal, budget or (par + bud.DEFAULT_SPARE), regrow, vines)
     if careless < 0:
         warnings.append("%s: a player who always taps whatever sets off the biggest chain never "
                         "finishes this grove, which is the bar this mode is held to" % lid)
@@ -325,7 +379,8 @@ def check_bud(lid, chapter_id, level, block):
                 buds=start.flowers, cocoons=start.shut,
                 ready=len(set(grove.colour[i] for i in range(grove.count)
                               if grove.ground[i] == "f")),
-                deal=deal, grow=regrow or '')
+                deal=deal, grow=regrow or '',
+                runners=grove.runners, ran=ran, changed=changed, caught=caught, taps=legal)
 
 
 #: Where a well stops being cheap to prove, and where it stops being shippable. Mirrors
@@ -350,7 +405,7 @@ def check_fall(lid, chapter_id, level, block):
                  gold=0, silver=0, lamps=0, sources=0, fragile=0, bound=0,
                  crossings=0, briars=0, mode='fall',
                  ways=0, greedy=-1, nodes=0, fall_motes=0, headroom=0, deal='',
-                 lenses=0, reach=0, aim=0, charged=0)
+                 lenses=0, whorls=0, fused=0, kindled=0, reach=0, aim=0, charged=0)
 
     w, h = block.get('width', 0), block.get('height', 0)
     if not (4 <= w <= 8):
@@ -418,7 +473,7 @@ def check_fall(lid, chapter_id, level, block):
     # Glass is only ever cleared by a burst beside it, so a well of nothing but lenses can
     # never lose one. The search proves it unwinnable but only after spending the whole budget,
     # and in words about a search rather than about the board.
-    if well.lenses and well.lenses == well.motes:
+    if well.lenses and well.lenses + well.whorls == well.motes:
         errors.append("%s: every one of this well's %d cells is glass, and glass is only ever "
                       "cleared by a burst beside it - with no mote to cook there can never be a "
                       "burst" % (lid, well.lenses))
@@ -501,12 +556,39 @@ def check_fall(lid, chapter_id, level, block):
                         "set off, so three drops of charging would buy nothing and the board "
                         "would play the same without the glass" % (lid, well.lenses))
 
+    # Invariant 5d for the whorl, and the strict reading of it. A whorl that never draws in a
+    # *pair* has moved one mote sideways; a pair whose union never reaches white has tidied the
+    # board without deciding anything. Measured over every shortest solution rather than the
+    # first one the search happens to reach, or an author would be tuning against a coin toss.
+    #
+    # Said rather than refused, for `aim`'s reason: the well collapses under every chain, so a
+    # whorl merges from wherever it has fallen to, and the first board of a chapter may carry one
+    # as scenery while the verb is being taught.
+    fused, kindled = fall.best_merges(cells, ww, hh, deal, par)
+
+    if well.whorls and not kindled:
+        warnings.append("%s: this well stands %d whorl(s) and no shortest solution ever merges a "
+                        "pair that reaches white, so the arrangement is not deciding anything - "
+                        "the board would play the same with the whorls taken out of it"
+                        % (lid, well.whorls))
+
+    # And the exact half of it, which the lens has no equivalent of: gravity never moves a whorl
+    # sideways, so a whorl authored against a wall has one side for its whole life and can never
+    # merge a pair whatever the well collapses into.
+    walled = sum(1 for at, cell in enumerate(cells)
+                 if fall.is_whorl(cell) and at % ww in (0, ww - 1))
+    if walled:
+        warnings.append("%s: %d of this well's %d whorl(s) stand against a wall, and gravity "
+                        "never moves a whorl sideways - so those can only ever draw in one mote "
+                        "and can never merge a pair" % (lid, walled, well.whorls))
+
     return dict(id=lid, chapter=chapter_id, w=ww, h=hh, par=par, budget=budget,
                 gold=gold, silver=silver, lamps=0, sources=0, fragile=0, bound=0,
                 crossings=0, briars=0, mode='fall',
                 ways=ways, greedy=greedy, nodes=nodes,
                 fall_motes=well.motes, headroom=well.headroom, deal=block.get('motes'),
-                lenses=well.lenses, reach=reach, aim=aim,
+                lenses=well.lenses, whorls=well.whorls, reach=reach, aim=aim,
+                fused=fused, kindled=kindled,
                 charged=sum(1 for g in well.glass if g))
 
 
@@ -1092,12 +1174,15 @@ def check_level(level, chapter_id):
 MAP_WIDTH, STRIP_HEIGHT = 1080.0, 1200.0
 NODE_DIAMETER, NODE_CLEARANCE = 196.0, 24.0
 MIN_SEPARATION = NODE_DIAMETER + NODE_CLEARANCE
-TEASER_GAP, TEASER_HEADROOM, TEASER_X = 0.22, 500.0, 0.66
+# TEASER_HEADROOM mirrors ChapterMap.TeaserHeadroom, which was raised from 500 to 700 when
+# the mode switcher arrived under the banner - this copy was left behind, so the offline
+# check was the looser of the two and could pass a marker the Editor would flag.
+TEASER_GAP, TEASER_HEADROOM, TEASER_X = 0.22, 700.0, 0.66
 
 
 def check_chapter_map(chapter, cid, ordered):
     """Placement checks that need the whole chapter: ChapterMapValidator.cs."""
-    strips = len(chapter.get("mapStrips") or ["strip0"])
+    strips = len(chapter.get("mapStrips") or ["map1_strip0"])
     height = max(STRIP_HEIGHT, strips * STRIP_HEIGHT)
 
     def place(level):
@@ -1924,6 +2009,7 @@ def run_fall_vectors():
                                  ("headroom", well.headroom, case["headroom"]),
                                  ("standing", well.motes, case["standing"]),
                                  ("lenses", well.lenses, case["lenses"]),
+                                 ("whorls", well.whorls, case["whorls"]),
                                  ("charged", sum(1 for g in well.glass if g), case["charged"])):
             if got != want:
                 bad.append("%s: %s is %r, vectors say %r" % (name, label, got, want))
@@ -1934,7 +2020,9 @@ def run_fall_vectors():
     # A vector set that has quietly lost its teeth is worse than none: it passes, it is printed
     # beside the word "ok", and nothing says the rule stopped being checked.
     covers = dict(chain=False, only_one=False, unsolvable=False, brim=False,
-                  glass=False, glass_charged=False, glass_empty=False)
+                  glass=False, glass_charged=False, glass_empty=False,
+                  whorl=False, whorl_kindles=False, whorl_pair=False, whorl_closes=False,
+                  whorl_contested=False)
     for case in cases:
         if case["par"] == 1 and case["standing"] >= 4:
             covers["chain"] = True
@@ -1953,6 +2041,22 @@ def run_fall_vectors():
             covers["glass_charged"] = True
         if case["lenses"] > case["charged"]:
             covers["glass_empty"] = True
+
+        # The whorl is the third chapter's whole subject, and each of these is a separate rule
+        # that would otherwise go away in silence: that a whorl merges at all, that a merge can
+        # reach white, that two on one board are two separate events, that one with nothing
+        # beside it closes rather than waiting, and that a mote two whorls both reach is let go
+        # by both - which is the clause that keeps the wave free of a reading order.
+        if case["whorls"] > 0:
+            covers["whorl"] = True
+        if case.get("kindles"):
+            covers["whorl_kindles"] = True
+        if case["whorls"] > 1:
+            covers["whorl_pair"] = True
+        if case.get("closes"):
+            covers["whorl_closes"] = True
+        if case.get("contested"):
+            covers["whorl_contested"] = True
 
     for what, held in covers.items():
         if not held:
@@ -2062,6 +2166,11 @@ def run_bud_vectors():
     ripens between taps - and one without is *still*, which is how this mode shipped. The still
     cases go on pinning the base rule in isolation from everything built on top of it.
 
+    The runner cases are the same bargain one layer up: a vine carries a bursting flower's colour
+    across the board, and what has to be pinned is *when it does not* - a bunch that only touches
+    an end rather than including it, an end whose flower is not in the bunch, and a bomb, which
+    has no colour to send.
+
     Every case with a par also carries the taps of one shortest play and what each one came to,
     which is the half par alone cannot pin: two copies can agree exactly about how many taps a
     grove costs and still disagree about how far the chain ran.
@@ -2075,16 +2184,18 @@ def run_bud_vectors():
     bad = []
     for case in cases:
         name = case.get("name", "?")
+        vines = case.get("runners") or None
+
         try:
-            grove = bud.Grove(case["rows"], case["colours"], case.get("regrow") or None)
+            grove = bud.Grove(case["rows"], case["colours"], case.get("regrow") or None, vines)
         except (ValueError, KeyError, IndexError) as why:
             bad.append("%s: %s" % (name, why))
             continue
 
         strip = case.get("regrow") or None
         start = bud.Board(grove)
-        par, ways, _, proved = bud.search(case["rows"], case["colours"], strip)
-        best, _where = bud.biggest(case["rows"], case["colours"], strip)
+        par, ways, _, proved = bud.search(case["rows"], case["colours"], strip, vines)
+        best, _where, ran = bud.biggest(case["rows"], case["colours"], strip, vines)
 
         for label, got, want in (("proved", proved, case["proved"]),
                                  ("par", par, case["par"]),
@@ -2092,7 +2203,9 @@ def run_bud_vectors():
                                  ("cocoons", start.shut, case["cocoons"]),
                                  ("bestBurst", best[0], case["bestBurst"]),
                                  ("bestWaves", best[1], case["bestWaves"]),
-                                 ("bestFreed", best[2], case["bestFreed"])):
+                                 ("bestFreed", best[2], case["bestFreed"]),
+                                 ("runners", grove.runners, case.get("runnerCount", 0)),
+                                 ("ran", ran, case.get("ran", 0))):
             if got != want:
                 bad.append("%s: %s is %r, vectors say %r" % (name, label, got, want))
 
@@ -2101,7 +2214,7 @@ def run_bud_vectors():
                 bad.append("%s: ways is %r, vectors say %r" % (name, ways, case["ways"]))
 
             careless = bud.careless(case["rows"], case["colours"],
-                                    case["par"] + bud.DEFAULT_SPARE, strip)
+                                    case["par"] + bud.DEFAULT_SPARE, strip, vines)
             if careless != case["careless"]:
                 bad.append("%s: careless is %r, vectors say %r"
                            % (name, careless, case["careless"]))
@@ -2127,8 +2240,12 @@ def run_bud_vectors():
     # A vector set that has quietly lost its teeth is worse than none: it passes, it is printed
     # beside the word "ok", and nothing says the rule stopped being checked.
     covers = dict(chain=False, unfinishable=False, nomove=False, tough=False, wood=False,
-                  refused=False)
+                  refused=False, runner=False, runner_idle=False)
     for case in cases:
+        if case.get("runnerCount"):
+            covers["runner"] = True
+            if not case.get("ran"):
+                covers["runner_idle"] = True
         if case["bestWaves"] >= 3:
             covers["chain"] = True
         if case["par"] == 0:
@@ -2385,13 +2502,31 @@ def main():
                 # another lens strikes fires all four (see `fall.blast`).
                 glass = (f", {c['lenses']} lens(es) ({c['charged']} part-charged) aiming at "
                          f"{c['aim']} of 2, reaching {c['reach']}") if c.get('lenses') else ""
-                held = (f"{c['fall_motes']} mote(s), {c['headroom']} headroom{glass}, "
+
+                # Whorls named separately, because they are paid for in the other currency:
+                # a pane costs three drops of three colours in any order at all, and a whorl
+                # costs one arrangement - two particular motes standing in two particular cells.
+                # `kindled` is what says the arrangement was worth making.
+                whorls = (f", {c['whorls']} whorl(s) ({c['kindled']} merge(s) reaching "
+                          f"white)") if c.get('whorls') else ""
+
+                held = (f"{c['fall_motes']} mote(s), {c['headroom']} headroom{glass}{whorls}, "
                         f"deals {c['deal']}")
             elif c['mode'] == 'keeper':
                 held = f"{c['beds']} bed(s), {c['hearts']} heartbed(s), deals {c['deal']}"
             elif c['mode'] == 'bud':
+                # Runners named separately, with the readings that say whether they are doing
+                # anything. `changed` is invariant 26g's test - opening taps that play out
+                # differently with every vine cut, so 0 condemns the board - and `caught` is the
+                # one an author holds out for: taps that burst MORE because a vine carried, which
+                # is the arrangement the player is making. `ran` says the best tap fires one,
+                # which is what makes the mechanic something anybody watches.
+                vines = (f", {c['runners']} runner(s) (best tap fires {c['ran']}; of "
+                         f"{c['taps']} opening taps {c['changed']} play differently and "
+                         f"{c['caught']} burst more)") if c.get('runners') else ""
+
                 held = (f"{c['buds']} flower(s) in {c['ready']} colour(s), "
-                        f"{c['cocoons']} critter(s) shut in, deals {c['deal']}")
+                        f"{c['cocoons']} critter(s) shut in{vines}, deals {c['deal']}")
             else:
                 held = ""
 

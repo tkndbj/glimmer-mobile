@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections;
 using System.Collections.Generic;
 using GlimmerGrove.AssetPipeline;
@@ -453,18 +453,26 @@ namespace GlimmerGrove
             // 1080-wide phone, where the wrong answer and the right one happen to coincide,
             // which is exactly why it survives a desk full of checks.
             //
-            // There is nothing to measure. The scaler is width-matched at `Boot.RefWidth`
-            // (`Boot.BuildCanvas`), so the canvas is *always* that wide and its height is the
-            // display's aspect times that width — a pure function of `Screen`, correct in the
-            // first frame and in every frame after it. The same division converts the safe
-            // area, which `SafeArea` would otherwise divide by a scale factor that has not been
-            // set yet. The app is portrait-locked (`defaultScreenOrientation: 0`), so this
-            // answer does not change during a launch, and the picture is placed once.
+            // There is nothing to measure. The scaler is width-matched (`Boot.BuildCanvas`), so
+            // the canvas is *always* `Boot.CanvasWidth` across and its height is the display's
+            // aspect times that width — a pure function of `Screen`, correct in the first frame
+            // and in every frame after it. The same division converts the safe area, which
+            // `SafeArea` would otherwise divide by a scale factor that has not been set yet. The
+            // app is portrait-locked (`defaultScreenOrientation: 0`), so this answer does not
+            // change during a launch, and the picture is placed once.
+            //
+            // `Boot.CanvasWidth` rather than `Boot.RefWidth`, and the two part on a tablet: the
+            // canvas is widened on anything squarer than a phone (`Layout.CanvasFit`), so the
+            // design width and the drawn width are no longer the same number. Reading the design
+            // one here would lay the key art out for a 1080-wide canvas and then draw it on a
+            // 1620-wide one — the launch arriving stretched and settling, which is the exact
+            // failure the paragraph above exists to prevent, moved onto a different device.
             // ------------------------------------------------------------------------------
             if (Screen.width <= 0 || Screen.height <= 0) return;
 
-            float units = Boot.RefWidth / (float)Screen.width;
-            float w = Boot.RefWidth, h = Screen.height * units;
+            float canvasW = Boot.CanvasWidth;
+            float units = canvasW / Screen.width;
+            float w = canvasW, h = Screen.height * units;
             float inset = Mathf.Max(0f, Screen.safeArea.yMin) * units;
 
             if (Mathf.Approximately(w, _fitW) && Mathf.Approximately(h, _fitH)

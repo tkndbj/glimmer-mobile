@@ -505,6 +505,136 @@
           "shut": 0
         }
       ]
+    },
+    {
+      "name": "a runner carries a bunch's colour right across the grove",
+      "why": "the vine is what the second chapter is built on: a flower standing on one end of a runner that goes off as part of a bunch sends its colour to whatever is standing on the other, however far away that is. Here the only chain that reaches the cocoon is the one the vine delivers - cut it and the tap is three flowers and one wave",
+      "rows": [
+        "YYRB..",
+        "R.....",
+        "...o..",
+        "..YYRB"
+      ],
+      "colours": "G",
+      "runners": [
+        "a.....",
+        "......",
+        "......",
+        "....a."
+      ],
+      "par": 1,
+      "ways": 3,
+      "nodes": 6,
+      "proved": true,
+      "careless": 1,
+      "flowers": 9,
+      "cocoons": 1,
+      "tough": 0,
+      "stones": 0,
+      "runnerCount": 1,
+      "ran": 1,
+      "bestBurst": 6,
+      "bestWaves": 2,
+      "bestFreed": 1,
+      "beats": [
+        {
+          "tap": 6,
+          "allowed": true,
+          "burst": 6,
+          "waves": 2,
+          "freed": 1,
+          "cracked": 0,
+          "flowersLeft": 3,
+          "shut": 0
+        }
+      ]
+    },
+    {
+      "name": "a bunch that only touches a runner end fires nothing",
+      "why": "the threshold is that the end has to be IN the bunch, not merely beside one. A spread that fires on anything happening nearby walks outward for ever and makes every board more solvable, which is invariant 20j's solvent - and it is the half of this rule that no board would ever look wrong for losing",
+      "rows": [
+        "YYB..o",
+        "R.....",
+        "......",
+        "....GG"
+      ],
+      "colours": "G",
+      "runners": [
+        "..a...",
+        "......",
+        "......",
+        ".....a"
+      ],
+      "par": 0,
+      "ways": 0,
+      "nodes": 31,
+      "proved": false,
+      "careless": -1,
+      "flowers": 6,
+      "cocoons": 1,
+      "tough": 0,
+      "stones": 0,
+      "runnerCount": 1,
+      "ran": 0,
+      "bestBurst": 3,
+      "bestWaves": 1,
+      "bestFreed": 0,
+      "beats": [
+        {
+          "tap": 6,
+          "allowed": true,
+          "burst": 3,
+          "waves": 1,
+          "freed": 0,
+          "cracked": 0,
+          "flowersLeft": 3,
+          "shut": 1
+        }
+      ]
+    },
+    {
+      "name": "a bomb sends nothing down a runner",
+      "why": "a runner carries a BUNCH's colour, and a bomb has no colour to carry - it clears a block. One clause, and it stays one clause: widened to 'anything that goes off', a white flower standing on an end would deliver Energy.None and the far end would flash for nothing",
+      "rows": [
+        "WRGBR",
+        "GBRGB",
+        "RGBRG",
+        "BRGBo"
+      ],
+      "colours": "R",
+      "regrow": "RGBYMC",
+      "runners": [
+        "a....",
+        ".....",
+        ".....",
+        "...a."
+      ],
+      "par": 4,
+      "ways": 1,
+      "nodes": 3532,
+      "proved": true,
+      "careless": 8,
+      "flowers": 19,
+      "cocoons": 1,
+      "tough": 0,
+      "stones": 0,
+      "runnerCount": 1,
+      "ran": 0,
+      "bestBurst": 4,
+      "bestWaves": 1,
+      "bestFreed": 0,
+      "beats": [
+        {
+          "tap": 0,
+          "allowed": true,
+          "burst": 4,
+          "waves": 1,
+          "freed": 0,
+          "cracked": 0,
+          "flowersLeft": 19,
+          "shut": 1
+        }
+      ]
     }
   ]
 }

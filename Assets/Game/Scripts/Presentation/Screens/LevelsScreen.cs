@@ -1,4 +1,4 @@
-using System.Collections;
+﻿using System.Collections;
 using System.Collections.Generic;
 using GlimmerGrove.AssetPipeline;
 using GlimmerGrove.Content;
@@ -18,8 +18,8 @@ namespace GlimmerGrove
     /// the catalog, so the map costs the same at chapter fifty as at chapter one —
     /// no virtualisation, no pooling, no cleverness required. Arrows either side of
     /// the name plaque step between chapters — forward even into a locked one, which
-    /// is how the ladder stays visible — and the screen opens on wherever the player
-    /// is up to.
+    /// is how the ladder stays visible — and the screen opens on the chapter of
+    /// this mode the player was last looking at, falling back to wherever they are up to.
     /// </summary>
     public sealed class LevelsScreen : View
     {
@@ -56,6 +56,21 @@ namespace GlimmerGrove
         ChapterBody _body;
 
         MapLayout _layout;
+
+        /// <summary>
+        /// How much larger than <see cref="ChapterMap.Width"/> the map is actually drawn.
+        /// One on every phone; see where it is set, in <c>BuildScroller</c>.
+        /// </summary>
+        float _mapScale = 1f;
+
+        /// <summary>
+        /// The map's height as drawn, which is what the scroller measures against.
+        ///
+        /// <see cref="MapLayout.TotalHeight"/> is the height it was <em>authored</em> at, and
+        /// scrolling to a fraction of the wrong one puts every glade off by however much the
+        /// two differ.
+        /// </summary>
+        float MapHeight => _layout != null ? _layout.TotalHeight * _mapScale : 0f;
 
         /// <summary>
         /// The mode pill under the header, or null when the catalog holds one mode and
@@ -125,9 +140,24 @@ namespace GlimmerGrove
             // looking at. ModeChoice.Read also refuses a mode this catalog has no chapters for,
             // which is what stops a rolled-back client or an undownloaded drop opening the map
             // onto nothing at all.
-            _entry = ChapterId.IsValid
-                ? _index.FindChapter(ChapterId)
-                : LevelUnlock.CurrentChapter(_index, Mode.IsPlayable ? Mode : ModeChoice.Read(_index));
+            if (ChapterId.IsValid)
+            {
+                _entry = _index.FindChapter(ChapterId);
+            }
+            else
+            {
+                var mode = Mode.IsPlayable ? Mode : ModeChoice.Read(_index);
+
+                // The chapter the player was last looking at in this mode, and only then
+                // wherever they are up to in it. Every way back to the map except the chapter
+                // arrows arrives with no chapter named - the back key, a forfeit, the victory
+                // panel, the home screen - so on an account that has unlocked everything, "up
+                // to" is the newest chapter and replaying an early one meant arrowing back to
+                // it after every level. ChapterChoice.Read answers null the moment the
+                // remembered chapter is not a chapter of this mode in this catalog, which is
+                // what keeps a rollback or an undownloaded drop from opening onto nothing.
+                _entry = ChapterChoice.Read(_index, mode) ?? LevelUnlock.CurrentChapter(_index, mode);
+            }
 
             if (_entry != null) Mode = _entry.Mode;
             else if (!Mode.IsPlayable) Mode = ModeChoice.Read(_index);
@@ -135,6 +165,7 @@ namespace GlimmerGrove
             // Remembered on arrival rather than on the tap, so the map a player is returned to
             // after a run is the one they left - the tap is only one of the ways to get here.
             ModeChoice.Write(Mode);
+            ChapterChoice.Write(_entry);
 
             // The header is index knowledge - chapter name, total stars - so it draws
             // immediately and never waits on a file.
@@ -254,11 +285,30 @@ namespace GlimmerGrove
             catcher.raycastTarget = true;
             _viewport.gameObject.AddComponent<RectMask2D>();
 
+            // How much larger than its authored width the map is being drawn.
+            //
+            // A chapter's map is a *painting* — a column of strips a fixed number of units
+            // across, with every glade, trail and prop placed as a fraction of it — and until
+            // there was a tablet the canvas was that width exactly, so the question never came
+            // up. It does now: `Layout.CanvasFit` widens the canvas on anything squarer than a
+            // phone, and a strip drawn at its authored 1080 in a 1620-unit canvas is a painting
+            // with 270 units of nothing down each side and glades that no longer stand on it.
+            // Stretching the strips instead is worse — that is the same painting 50% wider than
+            // it was drawn.
+            //
+            // So the whole map is scaled uniformly to the width it is given, which costs
+            // nothing anywhere else: every position on it is already a fraction. Exactly 1 on
+            // every phone, so this is a no-op on everything that ships today. The glade discs
+            // are deliberately *not* scaled with it — they are controls rather than scenery, and
+            // a control that stays the size it was on a canvas that grew is a control that has
+            // got smaller, which is the whole point of the widening.
+            _mapScale = Mathf.Max(1f, Boot.CanvasWidth / ChapterMap.Width);
+
             _map = UIKit.Node("Map", _viewport);
             _map.anchorMin = new Vector2(0f, 1f);
             _map.anchorMax = new Vector2(1f, 1f);
             _map.pivot = new Vector2(.5f, 1f);
-            _map.sizeDelta = new Vector2(0f, _layout.TotalHeight);
+            _map.sizeDelta = new Vector2(0f, MapHeight);
             _map.anchoredPosition = Vector2.zero;
 
             _scroll = _viewport.gameObject.AddComponent<ScrollRect>();
@@ -281,8 +331,10 @@ namespace GlimmerGrove
                 if (sprite == null) continue;
 
                 var img = UIKit.Img("Strip" + i, _map, sprite, Color.white,
-                                    new Vector2(ChapterMap.Width, ChapterMap.StripHeight), new Vector2(.5f, 0f),
-                                    new Vector2(0f, _layout.StripBottom(i) + ChapterMap.StripHeight * .5f));
+                                    new Vector2(ChapterMap.Width, ChapterMap.StripHeight) * _mapScale,
+                                    new Vector2(.5f, 0f),
+                                    new Vector2(0f, (_layout.StripBottom(i) + ChapterMap.StripHeight * .5f)
+                                                    * _mapScale));
                 img.type = Image.Type.Simple;
             }
 
@@ -319,9 +371,11 @@ namespace GlimmerGrove
                 var s = Art.S("Map/" + art);
                 if (s == null) continue;
                 var img = UIKit.Img("Prop_" + art, _map, s, new Color(1f, 1f, 1f, .95f),
-                                    Vector2.one * size, new Vector2(x, y), Vector2.zero);
+                                    Vector2.one * size * _mapScale, new Vector2(x, y), Vector2.zero);
                 img.preserveAspect = true;
-                if (bob > 0f) Tween.Bob((RectTransform)img.transform, bob, Random.Range(2.6f, 4.2f), Random.value * 6f);
+                if (bob > 0f)
+                    Tween.Bob((RectTransform)img.transform, bob * _mapScale,
+                              Random.Range(2.6f, 4.2f), Random.value * 6f);
             }
         }
 
@@ -350,7 +404,8 @@ namespace GlimmerGrove
 
                 var trail = _map.gameObject.AddComponent<Trail>();
                 trail.Setup(_map, from, to, 13,
-                            live ? ModeLooks.Of(Mode).Accent : new Color(1f, .99f, .92f, .8f), live);
+                            live ? ModeLooks.Of(Mode).Accent : new Color(1f, .99f, .92f, .8f), live,
+                            _mapScale);
             }
         }
 
@@ -1082,7 +1137,8 @@ namespace GlimmerGrove
         }
 
         /// <summary>
-        /// Opens another mode's map at wherever the player is up to in it.
+        /// Opens another mode's map where that mode was left: the chapter last looked at in
+        /// it, or wherever the player is up to when there is none.
         ///
         /// A fresh screen rather than a repaint: the map is a chapter's body, its art scope and
         /// a scroll position, and rebuilding those in place is the same work as arriving plus
@@ -1221,9 +1277,9 @@ namespace GlimmerGrove
         float NormalisedFor(float fraction)
         {
             float v = _viewport.rect.height;
-            float range = _layout.TotalHeight - v;
+            float range = MapHeight - v;
             if (range <= 1f) return 0f;
-            return Mathf.Clamp01((fraction * _layout.TotalHeight - v * .5f) / range);
+            return Mathf.Clamp01((fraction * MapHeight - v * .5f) / range);
         }
 
         void Open(LevelId id, bool unlocked)
@@ -1285,7 +1341,15 @@ namespace GlimmerGrove
         Image[] _dots;
         bool _live;
 
-        public void Setup(RectTransform area, Vector2 fracA, Vector2 fracB, int count, Color colour, bool live)
+        /// <summary>
+        /// <paramref name="scale"/> is the map's own, and the dots take it because a trail is
+        /// part of the painting rather than a control on top of it: the ends it joins are
+        /// fractions, so on a map drawn half again as large the gaps between the dots grow and
+        /// the dots would not — a dotted path becoming a sparser one for no reason a player
+        /// could name. One on every phone.
+        /// </summary>
+        public void Setup(RectTransform area, Vector2 fracA, Vector2 fracB, int count, Color colour,
+                          bool live, float scale = 1f)
         {
             _area = area; _a = fracA; _b = fracB; _live = live;
             _dots = new Image[count];
@@ -1293,7 +1357,7 @@ namespace GlimmerGrove
             for (int i = 0; i < count; i++)
             {
                 float k = (i + 1f) / (count + 1f);
-                float size = Mathf.Lerp(22f, 34f, Mathf.Sin(k * Mathf.PI));
+                float size = Mathf.Lerp(22f, 34f, Mathf.Sin(k * Mathf.PI)) * scale;
                 _dots[i] = UIKit.Img("d" + i, host, Art.Disc(64), colour,
                                      Vector2.one * size, new Vector2(.5f, .5f), Vector2.zero);
             }

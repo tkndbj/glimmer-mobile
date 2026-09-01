@@ -76,6 +76,25 @@ namespace GlimmerGrove.Tests
             return new FallLayout(7, rows.Length, fill, deal);
         }
 
+
+        /// <summary>
+        /// The chapter-three shape: a whorl with a yellow on one side and a cyan on the other,
+        /// which is the pair whose union is white. One drop opens it, and on the next wave it
+        /// draws both in and leaves a white where it stood — so this board exercises the one
+        /// event in the mode that moves two widgets to a cell neither of them was in.
+        /// </summary>
+        static FallLayout Whorled()
+        {
+            Assert.IsTrue(FallDeal.TryParse("BRG", out var deal, out string dealError), dealError);
+
+            var rows = new[] { "......", "......", "......", "......", "......", ".Y@CG." };
+
+            Assert.IsTrue(FallLayout.TryReadRows(rows, 6, rows.Length, out var fill,
+                                                 out string fillError), fillError);
+
+            return new FallLayout(6, rows.Length, fill, deal);
+        }
+
         /// <summary>
         /// A host with a real rect, because <c>Begin</c> sizes the well from it — a board built
         /// against a zero rect is a board of nothing and would prove nothing here.
@@ -277,6 +296,55 @@ namespace GlimmerGrove.Tests
 
             Assert.IsNull(WidgetAt(view, lens),
                           "and a pane that fired empties fully: nothing of it is left on the board");
+        }
+
+
+        /// <summary>
+        /// <b>The same census over a whorl, which leaves the board by a different route from
+        /// everything else.</b> A mote and a pane are handed back by the wave that removed them;
+        /// a whorl opens on one wave and, on the next, takes <em>two other cells</em> with it and
+        /// hands its own widget on to the mote they became. That is three more places a widget
+        /// can be dropped out of the index and left standing — the exact failure the lens shipped
+        /// with, on the one structure in this mode with more of them than glass had.
+        /// </summary>
+        [Test]
+        public void AWhorlThatTurnsTakesItsPairOffTheBoardWithIt()
+        {
+            LogAssert.ignoreFailingMessages = true;
+
+            var host = Host();
+            var view = host.gameObject.AddComponent<FallView>();
+            view.Begin(host, Whorled(), 9);
+
+            Census(view, "the board as it opens");
+
+            int whorl = view.Run.Board.Index(2, 5);
+            int left = view.Run.Board.Index(1, 5);
+            int right = view.Run.Board.Index(3, 5);
+
+            Assert.IsNotNull(WidgetAt(view, whorl), "the whorl should be drawn from the start");
+            Assert.AreEqual(1, view.Run.Board.Whorls, "and standing in the model");
+
+            // Blue straight onto the whorl: it opens, and on the next wave it draws the yellow
+            // and the cyan together into a white that bursts where it stands.
+            PumpDrop(view, 2);
+
+            Census(view, "after the whorl turned");
+
+            Assert.AreEqual(0, view.Run.Board.Whorls,
+                            "the whorl turned, so it is spent and gone from the model");
+
+            // **The half that only a census can catch.** A merge is the one event here that moves
+            // two widgets to a cell neither of them was in, so it is the one place a widget can
+            // be left drawing a cell the board has emptied - still on screen, owned by nothing,
+            // never repainted and never falling. That is the fault a pane hanging over an emptied
+            // column was reported as one mechanic earlier.
+            Assert.IsNull(WidgetAt(view, whorl),
+                          "and nothing of it is left on the board");
+            Assert.IsNull(WidgetAt(view, left),
+                          "nor of the mote it drew in from the left");
+            Assert.IsNull(WidgetAt(view, right),
+                          "nor of the one on its right");
         }
 
         /// <summary>Whatever widget the view currently has drawing one cell, or null.</summary>

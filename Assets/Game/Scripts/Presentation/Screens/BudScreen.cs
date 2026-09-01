@@ -648,6 +648,25 @@ namespace GlimmerGrove
             var cocoon = _view.CocoonAnchor;
             if (cocoon != null) into.Add(Lesson.At(Mechanic.BudCocoon, cocoon));
 
+            // Then the one thing on this board that is not a flower or a cocoon. Conditional on
+            // the grove actually being strung with one, which the whole first chapter is not —
+            // and a lesson spent over a board with no vine on it is one that can never be spent
+            // again (`FallScreen`'s rule for the lens, for the same reason).
+            //
+            // Before the satchel, because it is about what is *there*: the meter below is a fail
+            // line, and a player who has not worked out what a vine does cannot be helped by
+            // knowing how many taps they have left.
+            // Through a local rather than off the run: `compile.py` refuses a file that reads
+            // `.Layout.` without anywhere admitting a level's board can be absent, which is a
+            // fact about `LevelDefinition` rather than about a grove — and the check is coarse on
+            // purpose, so this costs one line. `BudLadderTests` does the same.
+            var grove = run.Layout;
+
+            if (grove.HasRunners)
+            {
+                var runner = _view.RunnerAnchor;
+                if (runner != null) into.Add(Lesson.At(Mechanic.BudRunner, runner));
+            }
 
             if (run.Satchel.Bounded)
                 into.Add(Lesson.At(Mechanic.BudSatchel, ReadoutAt(TapsReadout)));

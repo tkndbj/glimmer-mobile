@@ -1,4 +1,4 @@
-using UnityEngine;
+﻿using UnityEngine;
 
 namespace GlimmerGrove
 {
@@ -8,7 +8,8 @@ namespace GlimmerGrove
     ///
     /// <para>
     /// <b>The canvas is not the screen, and that is the whole of it.</b> Everything here is
-    /// laid out against a canvas width-matched at 1080 (see <c>Boot.BuildCanvas</c>), while
+    /// laid out against a width-matched canvas (see <c>Boot.BuildCanvas</c>: 1080 units across
+    /// on a phone, wider on a display <c>Layout.CanvasFit</c> has widened it for), while
     /// <see cref="Screen.safeArea"/> is reported in device pixels — 141 of them across the
     /// top of an iPhone 13 Pro Max. Dividing by the canvas's own scale factor is what turns
     /// one into the other, and it is the step a hand-tuned margin skips: a constant chosen to

@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""Proves every sound the code asks for exists, and every sound that exists is asked for.
+"""Proves every sound and music track the code asks for exists, and the reverse.
 
     python Tools/verify/sfxnames.py
 
@@ -34,6 +34,19 @@ a field like `ClickSfx`, a default like `string sfx = "tick"`, or a named argume
 `sfx: "coin"`. A name computed at runtime is invisible to this and always will be; the
 answer is not to compute one.
 
+**Music tracks are checked the same way and for the same reason.** A screen names its
+bed by overriding `View.Track`, that name goes through Addressables, and a wrong one
+throws `InvalidKeyException` on the frame the screen opens and then plays nothing. Not
+hypothetical either: `ShopScreen` shipped `"hub"`, which was not a clip, on the one
+screen in the game that takes money. Three of the four checks above apply unchanged, and
+the preload one deliberately does not - music is *not* in `AssetManifest.GlobalAssets`,
+because a track is two to five megabytes and is fetched when the screen that wants it
+opens, which is what the crossfade is there to cover.
+
+A `Track` must be a literal or `null`, and a declaration in any other shape is an error
+rather than something skipped - the same rule invariant 6 imposes on loc keys. A name
+this cannot read is a name nothing checks, which is the state this file exists to end.
+
 This does **not** cover `Art.S`/`Art.Frames` sprite names, which have the same gap and
 the same fix. See the asset-names-have-no-build-gate note.
 """
@@ -54,6 +67,7 @@ SCRIPTS = REPO / "Assets" / "Game" / "Scripts"
 # frozen by invariant 2 and could not have been changed to appease it.
 PLAYED_IN = SCRIPTS / "Presentation"
 SFX_DIR = REPO / "Assets" / "Game" / "Audio" / "Sfx"
+MUSIC_DIR = REPO / "Assets" / "Game" / "Audio" / "Music"
 MANIFEST = SCRIPTS / "Domain" / "AssetPipeline" / "AssetManifest.cs"
 
 SINKS = ("Audio.Sfx", "Audio.SfxVaried")
@@ -64,6 +78,13 @@ SINKS = ("Audio.Sfx", "Audio.SfxVaried")
 NAMED = re.compile(r'\b\w*[Ss]fx\s*[:=]\s*"([^"]*)"')
 
 STRING = re.compile(r'"((?:[^"\\]|\\.)*)"')
+
+
+# A screen's music bed: `public override string Track => "mus_menu";`. DECLARED finds
+# every declaration whatever shape it is in and TRACK reads the ones this understands,
+# so a shape it cannot read is reported rather than silently contributing nothing.
+DECLARED = re.compile(r"\b(?:override|virtual)\s+string\s+Track\b")
+TRACK = re.compile(r'\b(?:override|virtual)\s+string\s+Track\s*=>\s*(?:"([^"]*)"|null)\s*;')
 
 
 def strip_comments_and_verbatim(text):
@@ -164,8 +185,8 @@ def asked_for():
     return found
 
 
-def addressed():
-    """{address: guid} for every Audio/Sfx entry in the global Addressables group.
+def addressed(prefix):
+    """{address: guid} for every entry under `prefix` in the global Addressables group.
 
     Checked here because `AddressableAudit` only runs in the Editor, and a clip that is
     on disk, preloaded and played but *not addressed* fails at the first `AssetLibrary`
@@ -178,15 +199,58 @@ def addressed():
         return None
     text = group.read_text(encoding="utf-8", errors="replace")
     return {a: g for g, a in re.findall(
-        r"- m_GUID: ([0-9a-f]{32})\n\s+m_Address: (Audio/Sfx/\S+)", text)}
+        r"- m_GUID: ([0-9a-f]{32})\n\s+m_Address: (" + re.escape(prefix) + r"\S+)", text)}
 
 
-def guid_of(slot):
-    meta = SFX_DIR / f"{slot}.wav.meta"
+def guid_of(path):
+    meta = path.with_name(path.name + ".meta")
     if not meta.exists():
         return None
     m = re.search(r"guid: ([0-9a-f]{32})", meta.read_text(encoding="utf-8", errors="replace"))
     return m.group(1) if m else None
+
+
+def check_addressing(on_disk, folder, suffix, prefix, errors, warnings):
+    """Every file has a meta, is addressed at its own path, and nothing is addressed twice.
+
+    Checked here because `AddressableAudit` only runs in the Editor, and an asset that is
+    on disk and asked for but *not* addressed fails at the first `AssetLibrary` call
+    rather than at build time. It is also the half that goes wrong when somebody adds a
+    file with the Editor closed - the importer hook cannot fire, so the entry is simply
+    never written (see the unity-editor-gotchas note).
+    """
+    entries = addressed(prefix)
+    if entries is None:
+        warnings.append("no Glimmer Global.asset - skipped the Addressables cross-check")
+        return
+    for name in sorted(on_disk):
+        guid, addr = guid_of(folder / (name + suffix)), prefix + name
+        if guid is None:
+            errors.append(f"{name}{suffix} has no .meta, so nothing can address it")
+        elif addr not in entries:
+            errors.append(f"{name}{suffix} is not addressed at {addr} - it will throw at the "
+                          f"first play. Open the Editor, or add the entry by hand.")
+        elif entries[addr] != guid:
+            errors.append(f"{addr} is addressed to {entries[addr]} but {name}{suffix}.meta "
+                          f"says {guid} - the entry points at a different asset")
+    for addr in sorted(entries):
+        if addr[len(prefix):] not in on_disk:
+            errors.append(f"{addr} is addressed but has no file - a dangling entry")
+
+
+def tracks():
+    """Every music track a screen names, as {name: [where]}. `None` keys an unreadable one."""
+    found = {}
+    for path in sorted(PLAYED_IN.rglob("*.cs")):
+        text = strip_comments_and_verbatim(path.read_text(encoding="utf-8", errors="replace"))
+        rel = path.relative_to(REPO).as_posix()
+        for m in DECLARED.finditer(text):
+            read = TRACK.match(text, m.start())
+            if read is None:
+                found.setdefault(None, []).append(rel)
+            elif read.group(1) is not None:
+                found.setdefault(read.group(1), []).append(rel)
+    return found
 
 
 def manifest_names():
@@ -204,6 +268,8 @@ def main():
     on_disk = {p.stem for p in SFX_DIR.glob("*.wav")}
     played = asked_for()
     preloaded = manifest_names()
+    beds = {p.stem for p in MUSIC_DIR.glob("*.mp3")}
+    named = tracks()
 
     errors, warnings = [], []
 
@@ -232,30 +298,33 @@ def main():
             warnings.append(f"{name}.wav is never played - dead weight in the preload, "
                             f"or a caller was lost")
 
-    entries = addressed()
-    if entries is None:
-        warnings.append("no Glimmer Global.asset - skipped the Addressables cross-check")
-    else:
-        for name in sorted(on_disk):
-            guid, addr = guid_of(name), f"Audio/Sfx/{name}"
-            if guid is None:
-                errors.append(f"{name}.wav has no .meta - run python Tools/sfx_meta.py")
-            elif addr not in entries:
-                errors.append(f"{name}.wav is not addressed at {addr} - it will throw at the "
-                              f"first play. Open the Editor, or add the entry by hand.")
-            elif entries[addr] != guid:
-                errors.append(f"{addr} is addressed to {entries[addr]} but {name}.wav.meta "
-                              f"says {guid} - the entry points at a different asset")
-        for addr in sorted(entries):
-            if addr.rsplit("/", 1)[-1] not in on_disk:
-                errors.append(f"{addr} is addressed but has no wav - a dangling entry")
+    check_addressing(on_disk, SFX_DIR, ".wav", "Audio/Sfx/", errors, warnings)
+
+    # -------------------------------------------------------------------- music
+    for where in sorted(set(named.pop(None, []))):
+        errors.append(f"{where} declares a Track this cannot read - a music track must be "
+                      f"a string literal or null, or nothing checks the name")
+
+    for name, wheres in sorted(named.items()):
+        if name not in beds:
+            errors.append(f"nothing plays: Track => \"{name}\" has no "
+                          f"Assets/Game/Audio/Music/{name}.mp3\n"
+                          + "".join(f"      {w}\n" for w in sorted(set(wheres))).rstrip())
+
+    for name in sorted(beds):
+        if name not in named:
+            warnings.append(f"{name}.mp3 is named by no screen - megabytes of bundle nothing "
+                            f"can reach, or a screen that lost its Track")
+
+    check_addressing(beds, MUSIC_DIR, ".mp3", "Audio/Music/", errors, warnings)
 
     for w in warnings:
         print(f"  warning: {w}")
     for e in errors:
         print(f"  error: {e}")
 
-    print(f"\n{len(on_disk)} clips, {len(played)} names played, {len(preloaded)} preloaded"
+    print(f"\n{len(on_disk)} clips, {len(played)} names played, {len(preloaded)} preloaded;"
+          f" {len(beds)} tracks, {len(named)} named"
           f" - {len(errors)} error(s), {len(warnings)} warning(s)")
     return 1 if errors else 0
 

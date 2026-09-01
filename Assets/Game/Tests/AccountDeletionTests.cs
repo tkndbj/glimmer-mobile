@@ -380,16 +380,20 @@ namespace GlimmerGrove.Tests
             var syncing = CloudSaveService.SyncAsync();
             var deleting = CloudSaveService.DeleteAccountAsync();
 
-            // Long enough for the latch's poll to have come round several times.
-            for (int i = 0; i < 30; i++) yield return null;
+            // Long enough for the latch's poll to have come round several times — and measured
+            // on the *clock* rather than in frames. The latch polls every 50ms of wall time
+            // (CloudSaveService.PollMs), so a frame count only stands in for that at a frame
+            // rate nobody promises: under -batchmode -nographics frames are unthrottled and six
+            // hundred of them can pass inside a single poll, which is what had this fixture
+            // failing on a warm machine and passing on a cold one.
+            yield return Settling(.3f, () => false);
 
             Assert.IsFalse(deleting.IsCompleted, "the deletion ran while a sync held the latch");
             Assert.AreEqual(0, _backend.Deletes, "the deletion raced a live sync");
 
             _backend.ReleasePulls();
 
-            for (int i = 0; i < 600 && !(syncing.IsCompleted && deleting.IsCompleted); i++)
-                yield return null;
+            yield return Settling(10f, () => syncing.IsCompleted && deleting.IsCompleted);
 
             Assert.IsTrue(syncing.IsCompleted, "the sync never finished");
             Assert.IsTrue(deleting.IsCompleted, "the deletion never finished");
@@ -398,6 +402,27 @@ namespace GlimmerGrove.Tests
         }
 
         // ================================================================== the scaffolding
+        /// <summary>
+        /// Pumps frames until <paramref name="done"/> is true or <paramref name="seconds"/> of
+        /// real time have passed, whichever comes first.
+        ///
+        /// <para>
+        /// Frames rather than a sleep, because the continuations being waited on are posted back
+        /// to Unity's synchronisation context and only a pumping main thread ever runs them — and
+        /// real seconds rather than a frame count, because the thing being waited <em>for</em> is
+        /// a wall-clock timer. Mixing the two units is the fault this replaced: the budget
+        /// silently shrinks to nothing on a runner that draws no frames, and the failure it
+        /// produces names the code under test rather than the harness.
+        /// </para>
+        /// </summary>
+        static IEnumerator Settling(float seconds, System.Func<bool> done)
+        {
+            float until = UnityEngine.Time.realtimeSinceStartup + seconds;
+
+            while (UnityEngine.Time.realtimeSinceStartup < until && !done())
+                yield return null;
+        }
+
         void SignedInAs(string userId, string glade = "c01_first_light")
         {
             _backend.Session = userId;

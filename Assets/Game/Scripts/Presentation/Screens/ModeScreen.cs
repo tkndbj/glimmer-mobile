@@ -30,7 +30,40 @@ namespace GlimmerGrove
     {
         public LevelId LevelId { protected get; set; }
 
-        public override string Track => "mus_play";
+        /// <summary>
+        /// The bed every board in the game plays, glades included — see
+        /// <c>PlayScreen.Track</c>, which names the same string rather than sharing a
+        /// constant with this one, for <see cref="Track"/>'s own reason below.
+        ///
+        /// <para>
+        /// <b>Cut to the map's loudness, not the old level track's.</b> Measured, the three
+        /// tracks that shipped before it were not a family: <c>mus_menu</c> is -17.9 LUFS and
+        /// <c>mus_map</c> -17.2, while the retired <c>mus_play</c> was -11.9 — six decibels
+        /// hotter than everything a player heard on the way to it, so every entry into a
+        /// level stepped up in volume. This one is cut to -17.5, which is between the two
+        /// screens a board is entered from, so the crossfade off the map is a change of tune
+        /// rather than a change of level. <c>Audio.Music</c>'s .42 is what holds it under the
+        /// board's own noise; the file is what holds it level with the rest of the game.
+        /// </para>
+        /// <para>
+        /// <b>Both level screens naming one string is what makes the transition silent.</b>
+        /// <c>Audio.SwapTrack</c> is a no-op on the track already playing, so leaving a mode
+        /// for a glade does not restart the music or crossfade it into itself — it simply
+        /// keeps playing. That is a property of the two names being equal, so it is worth
+        /// knowing before either is changed on its own.
+        /// </para>
+        /// <para>
+        /// <b>A literal, and it may never become a shared constant.</b> A track name resolves
+        /// through Addressables and nothing in the Editor catches a wrong one — see the note
+        /// over <c>ShopScreen.Track</c>, which is that bug having already shipped once. What
+        /// catches it is <c>Tools/verify/sfxnames.py</c>, which reads <b>literals</b>, exactly
+        /// as invariant 6 makes loc keys literals and for the same reason: a name assembled
+        /// from anything is a name no gate can check, and the gate reports one it cannot read
+        /// as an error rather than skipping it. Two screens spelling one string out is the
+        /// same bargain the eleven screens naming <c>mus_menu</c> already make.
+        /// </para>
+        /// </summary>
+        public override string Track => "mus_mode";
 
         protected LevelDefinition Level { get; private set; }
         protected ChapterDefinition Chapter { get; private set; }

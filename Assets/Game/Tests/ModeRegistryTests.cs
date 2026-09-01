@@ -152,7 +152,7 @@ namespace GlimmerGrove.Tests
                 var level = new LevelDefinition(LevelId.Parse("t_level"),
                                                 ChapterId.Parse("t_chapter"), rules,
                                                 mode.Tune(dto, rules),
-                                                new LevelPresentation(default, null, null, "play_0"));
+                                                new LevelPresentation(default, null, null, "sky_00"));
 
                 Assert.AreEqual(mode.Mode, level.Mode);
                 Assert.AreEqual(mode.Mode == GameMode.Glade, level.HasBoard,

@@ -26,12 +26,20 @@
       "text": "Glasswater"
     },
     {
+      "key": "chapter.f03_whorlwater.name",
+      "text": "Whorlwater"
+    },
+    {
       "key": "chapter.k01_grovekeeper.name",
       "text": "The Clearing"
     },
     {
       "key": "chapter.b01_thicket.name",
       "text": "The Thicket"
+    },
+    {
+      "key": "chapter.b02_tanglewood.name",
+      "text": "The Tanglewood"
     },
     {
       "key": "level.c01_bound_roots.name",
@@ -514,6 +522,86 @@
       "text": "The line at the top has not moved."
     },
     {
+      "key": "level.f03_first_whorl.name",
+      "text": "First Whorl"
+    },
+    {
+      "key": "level.f03_first_whorl.tagline",
+      "text": "It takes whatever stands either side of it."
+    },
+    {
+      "key": "level.f03_the_span.name",
+      "text": "The Span"
+    },
+    {
+      "key": "level.f03_the_span.tagline",
+      "text": "A wash stops at the gap. This does not."
+    },
+    {
+      "key": "level.f03_the_deep_draw.name",
+      "text": "The Deep Draw"
+    },
+    {
+      "key": "level.f03_the_deep_draw.tagline",
+      "text": "Little room, and a long way down."
+    },
+    {
+      "key": "level.f03_through_the_glass.name",
+      "text": "Through the Glass"
+    },
+    {
+      "key": "level.f03_through_the_glass.tagline",
+      "text": "A beam is the third way in."
+    },
+    {
+      "key": "level.f03_two_shores.name",
+      "text": "Two Shores"
+    },
+    {
+      "key": "level.f03_two_shores.tagline",
+      "text": "Nothing crosses but what you arrange."
+    },
+    {
+      "key": "level.f03_twin_mouths.name",
+      "text": "Twin Mouths"
+    },
+    {
+      "key": "level.f03_twin_mouths.tagline",
+      "text": "Two of them, and one deal to feed both."
+    },
+    {
+      "key": "level.f03_whorlwater.name",
+      "text": "Whorlwater"
+    },
+    {
+      "key": "level.f03_whorlwater.tagline",
+      "text": "Two mouths, and everything you have learnt."
+    },
+    {
+      "key": "level.f03_make_the_pair.name",
+      "text": "Make the Pair"
+    },
+    {
+      "key": "level.f03_make_the_pair.tagline",
+      "text": "Cook one side before you open it."
+    },
+    {
+      "key": "level.f03_buried.name",
+      "text": "Buried"
+    },
+    {
+      "key": "level.f03_buried.tagline",
+      "text": "Some of them you have to reach."
+    },
+    {
+      "key": "level.f03_every_light.name",
+      "text": "Every Light"
+    },
+    {
+      "key": "level.f03_every_light.tagline",
+      "text": "Glass, mouths, and one procession."
+    },
+    {
       "key": "level.k01_first_grove.name",
       "text": "First Clearing"
     },
@@ -672,6 +760,86 @@
     {
       "key": "level.b01_dewfall.tagline",
       "text": "Six shut in, and the grove is willing."
+    },
+    {
+      "key": "level.b02_firstvine.name",
+      "text": "First Vine"
+    },
+    {
+      "key": "level.b02_firstvine.tagline",
+      "text": "It goes off here. It answers over there."
+    },
+    {
+      "key": "level.b02_longreach.name",
+      "text": "Long Reach"
+    },
+    {
+      "key": "level.b02_longreach.tagline",
+      "text": "The vine crosses what a chain never could."
+    },
+    {
+      "key": "level.b02_deepthicket.name",
+      "text": "Deep Thicket"
+    },
+    {
+      "key": "level.b02_deepthicket.tagline",
+      "text": "No vines here. Just a great deal of grove."
+    },
+    {
+      "key": "level.b02_windingway.name",
+      "text": "The Winding Way"
+    },
+    {
+      "key": "level.b02_windingway.tagline",
+      "text": "Feed the end, not the flower beside it."
+    },
+    {
+      "key": "level.b02_twovines.name",
+      "text": "Two Vines"
+    },
+    {
+      "key": "level.b02_twovines.tagline",
+      "text": "One is taught. The other you will find."
+    },
+    {
+      "key": "level.b02_thewilds.name",
+      "text": "The Wilds"
+    },
+    {
+      "key": "level.b02_thewilds.tagline",
+      "text": "Ten shut in and nothing to help you."
+    },
+    {
+      "key": "level.b02_thetangle.name",
+      "text": "The Tangle"
+    },
+    {
+      "key": "level.b02_thetangle.tagline",
+      "text": "Three vines. Every one of them is a decision."
+    },
+    {
+      "key": "level.b02_thornedvine.name",
+      "text": "Thorn and Vine"
+    },
+    {
+      "key": "level.b02_thornedvine.tagline",
+      "text": "Two rings, two vines, and one basket."
+    },
+    {
+      "key": "level.b02_tangleheart.name",
+      "text": "The Tanglewood's Heart"
+    },
+    {
+      "key": "level.b02_tangleheart.tagline",
+      "text": "Everything this grove can do, at once."
+    },
+    {
+      "key": "level.b02_crossvine.name",
+      "text": "Crossed Runners"
+    },
+    {
+      "key": "level.b02_crossvine.tagline",
+      "text": "What one vine starts, the other carries on."
     },
     {
       "key": "mode.cap.best",
@@ -3834,6 +4002,14 @@
       "text": "Your time keeps counting — stars still go by the clock."
     },
     {
+      "key": "ui.tip.anylight.body",
+      "text": "This critter is not fussy. Its ring shows every colour at once because it is not asking for one - the first light of any colour to reach it will wake it, and the ring takes on whatever arrives."
+    },
+    {
+      "key": "ui.tip.anylight.title",
+      "text": "ANY LIGHT WILL DO"
+    },
+    {
       "key": "ui.tip.bound.body",
       "text": "These conduits grow from one root, marked with the same pips. Turning either one turns them all, however far apart they sit."
     },
@@ -3855,7 +4031,7 @@
     },
     {
       "key": "ui.tip.bud_chain.body",
-      "text": "The colour in your hand MIXES into whatever flower you tap - red with yellow in hand turns orange.\n\nGet three of one colour touching and they burst, splashing that colour into every flower around them. Which makes more threes. Which makes more."
+      "text": "The colour in your hand MIXES into whatever flower you tap - red with green in hand turns yellow.\n\nGet three of one colour touching and they burst, splashing that colour into every flower around them. Which makes more threes. Which makes more."
     },
     {
       "key": "ui.tip.bud_cocoon.title",
@@ -3872,6 +4048,14 @@
     {
       "key": "ui.tip.bud_satchel.body",
       "text": "This grove is dealt so many taps and no more.\n\nThere is no undo, and nothing grows back - so the fewer taps you free everyone in, the more stars you keep."
+    },
+    {
+      "key": "ui.tip.bud_runner.title",
+      "text": "MIND THE VINE"
+    },
+    {
+      "key": "ui.tip.bud_runner.body",
+      "text": "A runner joins two squares of the grove, however far apart they are.\n\nWhen a bursting bunch takes in one end, its colour runs down the vine to whatever is standing on the other. Going off next to an end is not enough - the flower on it has to be one of the three."
     },
     {
       "key": "ui.tip.crossing.body",
@@ -3928,6 +4112,14 @@
     {
       "key": "ui.tip.fall_lens.body",
       "text": "A lens fills one colour at a time - free from any burst beside it, or a drop at a time by hand.\n\nFill all three and it fires white to left and right, popping whatever each beam lands on.\n\nLight one lens with another and it fires every way - up and down as well."
+    },
+    {
+      "key": "ui.tip.fall_whorl.title",
+      "text": "OPEN THE WHORL"
+    },
+    {
+      "key": "ui.tip.fall_whorl.body",
+      "text": "A whorl holds no light. Any light opens it - a burst beside it, a beam, or a drop straight onto it.\n\nOn the next wave it draws in whatever stands to its left and its right and mixes them into one.\n\nTwo motes a drop apiece from white are none at all. Arrange the pair, then open it."
     },
     {
       "key": "ui.tip.grove.body",

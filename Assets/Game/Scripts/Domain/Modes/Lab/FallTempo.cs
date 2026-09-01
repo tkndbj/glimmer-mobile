@@ -138,6 +138,48 @@ namespace GlimmerGrove.Modes
         /// another lens struck.</summary>
         public static float Throw(int firingWaves) => Shot(firingWaves) * ThrowShare;
 
+        /// <summary>
+        /// How much of a throw a beam spends growing to its full length, after which it is held
+        /// while it fades.
+        ///
+        /// Said once here because two things read it — the view draws the beam to this fraction,
+        /// and it throws the shockwave at the far end on the same beat. A second copy is a second
+        /// thing that can drift into landing the arrival before the light gets there.
+        /// </summary>
+        public const float ReachShare = .34f;
+
+        // ------------------------------------------------------------------ the whorl
+        /// <summary>
+        /// What a wave with a whorl turning in it spends on the pull, and the ceiling over a
+        /// whole cascade of them.
+        ///
+        /// <para>
+        /// <b>Longer than a burst and shorter than a shot, which is the mechanic's economics
+        /// said in time.</b> A shot is three drops of charge going off and happens once or twice
+        /// a run, so it is worth stopping the board for outright. A merge is the thing the player
+        /// spent the last several drops <em>arranging</em>, and it has to be legible — two motes
+        /// have to be seen leaving the cells they were standing in — so it cannot be given a
+        /// burst's beat. But there may be several in one chain, so it cannot be given a shot's
+        /// either.
+        /// </para>
+        /// <para>
+        /// Bounded over the cascade rather than per whorl for <see cref="ShotCeiling"/>'s reason:
+        /// four whorls turning in one chain must not freeze the board for four times as long.
+        /// </para>
+        /// </summary>
+        public const float DrawBeat = .38f, DrawCeiling = 1.14f;
+
+        /// <summary>How long each wave with a whorl in it may spend on its pull.</summary>
+        public static float Draw(int turningWaves)
+        {
+            if (turningWaves <= 0) return 0f;
+
+            float all = turningWaves * DrawBeat;
+            if (all > DrawCeiling) all = DrawCeiling;
+
+            return all / turningWaves;
+        }
+
         // ------------------------------------------------------------------ the count
         /// <summary>
         /// How briskly the running chain count pops in. Always quick, and never longer than the

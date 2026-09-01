@@ -3,14 +3,14 @@
   "id": "c01_shallows",
   "accent": "#FFC93C",
   "slate": "#123640",
-  "backdrop": "play_0",
+  "backdrop": "sky_00",
   "mapStrips": [
-    "strip0",
-    "strip1",
-    "strip2",
-    "strip3",
-    "strip4",
-    "strip5"
+    "map1_strip0",
+    "map1_strip1",
+    "map1_strip2",
+    "map1_strip3",
+    "map1_strip4",
+    "map1_strip5"
   ],
   "levels": [
     {
@@ -35,7 +35,7 @@
       "mapY": 0.14,
       "accent": "#4FC1FF",
       "slate": "#0F2A4A",
-      "backdrop": "play_1",
+      "backdrop": "sky_01",
       "rows": [
         "*ES#R/3 -ESW/0 -EW/1 -ESW/0 @W#R/3",
         "-NS/1 @N#R/3 . @N#R/2 .",
@@ -52,7 +52,7 @@
       "mapY": 0.23,
       "accent": "#FF74D4",
       "slate": "#241540",
-      "backdrop": "play_2",
+      "backdrop": "sky_02",
       "rows": [
         "*S#R/3 @S#Y/2 . @S#Y/3 *S#G/3 .",
         "-NES/1 -NSW/2 . -NES/0 -NEW/2 @W#Y/0",
@@ -69,7 +69,7 @@
       "mapY": 0.32,
       "accent": "#7ED957",
       "slate": "#1B2E1A",
-      "backdrop": "play_2",
+      "backdrop": "sky_03",
       "rows": [
         "*ES#R/3 -EW/1 -ESW/3~2 -EW/0 -ESW/3 -SW/2",
         "-NS/0 . @N#R/0 . @N#R/1 -NS/1",
@@ -87,7 +87,7 @@
       "mapY": 0.41,
       "accent": "#8B93FF",
       "slate": "#1B2140",
-      "backdrop": "play_3",
+      "backdrop": "sky_04",
       "rows": [
         "*ES#R/2 @W#R/0 . @S#R/2 . .",
         "-NES/1 -ESW/3&A -EW/0 -NSW/2 . .",
@@ -105,7 +105,7 @@
       "mapY": 0.5,
       "accent": "#63C7C0",
       "slate": "#12242B",
-      "backdrop": "play_4",
+      "backdrop": "sky_05",
       "rows": [
         "*ES#R/3 -EW/0 -ESW/1 -EW/1 -ESW/3 -EW/0 -SW/3",
         "-NS/1 . @N#R/3 . @N#R/2 . -NS/1",
@@ -123,7 +123,7 @@
       "mapY": 0.59,
       "accent": "#FFC93C",
       "slate": "#3A2A12",
-      "backdrop": "play_5",
+      "backdrop": "sky_06",
       "rows": [
         "*ES#R/1 -SW/1 . @S#R/2 . . .",
         "@N#R/1 -NES/3&A -EW/1 -NEW/3 -EW/1 -ESW/3&A @W#R/1",
@@ -141,7 +141,7 @@
       "mapY": 0.68,
       "accent": "#4FD18B",
       "slate": "#122318",
-      "backdrop": "play_6",
+      "backdrop": "sky_07",
       "rows": [
         "*ES#R/2 -EW/1 -SW/2 . . . .",
         "-NS/1 . @N#R/3 @S#G/3 . @S#B/1 @S#B/2",
@@ -160,7 +160,7 @@
       "mapY": 0.77,
       "accent": "#FF8FB1",
       "slate": "#33172A",
-      "backdrop": "play_7",
+      "backdrop": "sky_08",
       "rows": [
         "*E#R/3 -ESW/2 @W#Y/1 . @S#Y/3 . .",
         "*E#G/1 -NESW/0 -ESW/0 -EW/0 -NEW/0 @W#Y/0 .",
@@ -179,7 +179,7 @@
       "mapY": 0.86,
       "accent": "#9C8CFF",
       "slate": "#171436",
-      "backdrop": "play_8",
+      "backdrop": "sky_09",
       "rows": [
         "*ES#R/1 -ESW/2 *W#G/3 @S#B/3 . . .",
         "-NS/1 -NES/3&A @W#Y/1 *N#B/1 . . .",

@@ -1,4 +1,4 @@
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using GlimmerGrove.Modes;
 using NUnit.Framework;
 
@@ -37,15 +37,17 @@ namespace GlimmerGrove.Tests
             public readonly BudScore Score;
             public readonly BudPulse[] Pulses;
             public readonly BudDrop[] Drops;
+            public readonly BudLayout Grove;
             public readonly int Waves, Width;
 
             public Tap(string id, BudScore score, BudPulse[] pulses, BudDrop[] drops,
-                       int waves, int width)
+                       BudLayout grove, int waves, int width)
             {
                 Id = id;
                 Score = score;
                 Pulses = pulses;
                 Drops = drops;
+                Grove = grove;
                 Waves = waves;
                 Width = width;
             }
@@ -55,12 +57,17 @@ namespace GlimmerGrove.Tests
         /// Every shipped grove, tapped where it goes off hardest.
         ///
         /// The deepest opening tap rather than an arbitrary one, because that is the board this
-        /// mode is judged on: the finale's runs eight waves, bursts twenty-seven flowers and
-        /// frees ten critters, and it is where every ordering fault is worst.
+        /// mode is judged on: the Thicket's finale runs eight waves, bursts twenty-seven flowers
+        /// and frees ten critters, and it is where every ordering fault is worst.
+        ///
+        /// **Both chapters**, because the Tanglewood puts a cue kind on the timeline that the
+        /// Thicket never emits — a runner's colour leaving one end and landing on the other — and
+        /// every rule this fixture proves is about the order things happen in.
         /// </summary>
         static IEnumerable<Tap> Taps()
         {
-            foreach (var rung in BudLadderTests.Ladder)
+            foreach (var chapter in BudLadderTests.Chapters)
+            foreach (var rung in chapter.Rungs)
             {
                 var layout = rung.Layout();
 
@@ -94,7 +101,8 @@ namespace GlimmerGrove.Tests
 
                 var score = BudStage.Of(best.Waves, pulses, washes, drops, layout.Width);
 
-                yield return new Tap(rung.Id, score, pulses, drops, best.Waves, layout.Width);
+                yield return new Tap(rung.Id, score, pulses, drops, layout, best.Waves,
+                                     layout.Width);
             }
         }
 
@@ -122,9 +130,13 @@ namespace GlimmerGrove.Tests
         {
             foreach (var tap in Taps())
             {
+                // Every hole, which is a flower going off *or* a cocoon opening. Only the
+                // bursts were read here for as long as this rule existed, and the mode shipped
+                // dealing a flower into a cocoon's square 45ms before its shell broke.
                 var burst = new Dictionary<int, float>();
                 foreach (var cue in tap.Score.Cues)
-                    if (cue.Kind == BudCueKind.Burst) burst[Key(cue.Wave, cue.Cell)] = cue.At;
+                    if (cue.Kind == BudCueKind.Burst || cue.Kind == BudCueKind.Free)
+                        burst[Key(cue.Wave, cue.Cell)] = cue.At;
 
                 foreach (var cue in tap.Score.Cues)
                 {
@@ -141,7 +153,7 @@ namespace GlimmerGrove.Tests
 
                         Assert.GreaterOrEqual(cue.At, at - .0001f,
                             $"{tap.Id}: a piece lands in cell {cue.Cell} starting at {cue.At:0.000}s, "
-                            + $"but the flower at {cell} it falls past does not go off until "
+                            + $"but the square at {cell} it falls past is not emptied until "
                             + $"{at:0.000}s — it is sliding into a hole nobody has made");
                     }
                 }
@@ -245,6 +257,81 @@ namespace GlimmerGrove.Tests
 
                     seen[key] = new KeyValuePair<int, float>(row, cue.At);
                 }
+            }
+        }
+
+        /// <summary>
+        /// <b>A cell is emptied before anything is painted into it, so no square on the board
+        /// ever draws two pieces at once.</b>
+        ///
+        /// <para>
+        /// This is the Domain half of the fault reported as <em>"the flowers at top stay still,
+        /// and new flowers fall through them"</em>. A fall is drawn by painting the arriving
+        /// piece into the cell it is falling <em>into</em> and offsetting it up to where it came
+        /// from — so the cell it came from has to stop drawing it in the same breath
+        /// (<c>BudView.EmptyCell</c>), or the board shows the flower standing still and a copy of
+        /// itself coming down through it.
+        /// </para>
+        /// <para>
+        /// <b>What lives here is the ordering that makes that safe.</b> Within a column a cell is
+        /// routinely both — the piece above it falls into the hole it leaves — so emptying it and
+        /// filling it are two cues about one square, and only <see cref="BudStage"/> decides
+        /// which is handed over first. It comes out right because <c>Rain</c> deals a column
+        /// deepest-destination first, which is rule 3 read for a second reason: reverse that and
+        /// a piece is painted into a square something is still standing in, and the fix in the
+        /// view would then blank a flower that had legitimately just arrived.
+        /// </para>
+        /// <para>
+        /// So it walks the score exactly as the view does, keeping one bit per cell, and holds
+        /// two things over the whole chapter: nothing is ever painted into an occupied square,
+        /// and nothing ever leaves an empty one.
+        /// </para>
+        /// </summary>
+        [Test]
+        public void ACellIsEmptiedBeforeAnythingIsPaintedIntoIt()
+        {
+            foreach (var tap in Taps())
+            {
+                var drawn = new bool[tap.Grove.Count];
+                for (int i = 0; i < drawn.Length; i++)
+                    drawn[i] = tap.Grove.IsFlower(i) || tap.Grove.IsCocoon(i);
+
+                foreach (var cue in tap.Score.Cues)
+                {
+                    switch (cue.Kind)
+                    {
+                        // A flower going off and a cocoon opening both leave bare ground.
+                        case BudCueKind.Burst:
+                        case BudCueKind.Free:
+                            drawn[cue.Cell] = false;
+                            break;
+
+                        case BudCueKind.Fall:
+                            if (cue.From >= 0)
+                            {
+                                Assert.IsTrue(drawn[cue.From],
+                                    $"{tap.Id}: a piece leaves cell {cue.From} at {cue.At:0.000}s, "
+                                    + "which nothing was standing in");
+
+                                drawn[cue.From] = false;
+                            }
+
+                            Assert.IsFalse(drawn[cue.Cell],
+                                $"{tap.Id}: a piece is painted into cell {cue.Cell} at "
+                                + $"{cue.At:0.000}s while something is still drawn there — one "
+                                + "square would draw two pieces, and emptying it afterwards would "
+                                + "take down the one that had just arrived");
+
+                            drawn[cue.Cell] = true;
+                            break;
+                    }
+                }
+
+                // And the grove the chain ends on is the grove the model holds, square for square.
+                for (int i = 0; i < drawn.Length; i++)
+                    Assert.IsTrue(drawn[i] || tap.Grove.IsStone(i),
+                        $"{tap.Id}: cell {i} is left empty by the end of the chain, so the grove "
+                        + "finishes with a hole in it that the regrowth never filled");
             }
         }
 
@@ -492,6 +579,77 @@ namespace GlimmerGrove.Tests
                     if (cue.Kind == BudCueKind.Wash)
                         Assert.Less(cue.Nth, cue.Of,
                                     tap.Id + ": a wash is dealt past the end of its own ripple");
+        }
+
+        /// <summary>
+        /// A runner's colour leaves the end that went off and lands at the other one a fixed
+        /// beat later, and the burst that sent it comes first.
+        ///
+        /// <para>
+        /// <b>Three things, and the first is that it happens at all.</b> Nothing else in this
+        /// fixture would notice a <c>Run</c> cue disappearing from the timeline: the chain would
+        /// still be correct, the grove would still end where the model says, and the only symptom
+        /// would be a colour arriving across the board with no light having travelled to it —
+        /// which is precisely the complaint <c>Creep</c> earned and the whole reason the vine is
+        /// drawn (invariant 20m).
+        /// </para>
+        /// <para>
+        /// The fixed beat is the one place this mode deliberately breaks its own one-gravity
+        /// rule. A falling flower must move at <c>BudTempo.Pace</c> or a six-row drop outruns the
+        /// one-row drop beside it; a runner is not a thing moving but a message arriving, and the
+        /// player is watching <em>both ends at once</em> — so a long vine and a short one take
+        /// exactly as long. See <c>BudTempo.RunLag</c>.
+        /// </para>
+        /// </summary>
+        [Test]
+        public void ARunnersColourLeavesOneEndAndLandsAtTheOtherAFixedBeatLater()
+        {
+            int runs = 0;
+
+            foreach (var tap in Taps())
+            {
+                foreach (var cue in tap.Score.Cues)
+                {
+                    if (cue.Kind != BudCueKind.Run) continue;
+
+                    runs++;
+
+                    Assert.GreaterOrEqual(cue.From, 0,
+                                          tap.Id + ": a runner cue with no end to have come from");
+                    Assert.AreNotEqual(cue.From, cue.Cell,
+                                       tap.Id + ": a runner that carried to itself");
+
+                    // The burst that sent it.
+                    float sent = float.NaN;
+                    foreach (var other in tap.Score.Cues)
+                        if (other.Kind == BudCueKind.Burst && other.Wave == cue.Wave
+                            && other.Cell == cue.From) sent = other.At;
+
+                    Assert.IsFalse(float.IsNaN(sent),
+                                   tap.Id + ": a runner fired from a cell that never burst");
+                    Assert.AreEqual(sent, cue.At, .0005f,
+                                    tap.Id + ": the light leaves the vine before the flower on " +
+                                    "it goes off");
+
+                    // And the colour it carries lands exactly when the travel ends.
+                    float landed = float.NaN;
+                    foreach (var other in tap.Score.Cues)
+                        if (other.Kind == BudCueKind.Wash && other.Wave == cue.Wave
+                            && other.Cell == cue.Cell && other.From == cue.From)
+                            landed = other.At;
+
+                    Assert.IsFalse(float.IsNaN(landed),
+                                   tap.Id + ": light ran down a vine and nothing arrived");
+                    Assert.AreEqual(cue.At + cue.Over, landed, .0005f,
+                                    tap.Id + ": the colour lands somewhere other than the end of " +
+                                    "its own travel");
+                }
+            }
+
+            Assert.Greater(runs, 0,
+                           "no grove in either shipped chapter fires a vine on its best opening " +
+                           "tap, so nothing here would notice the runner's own cue leaving the " +
+                           "timeline — see invariant 20m");
         }
 
         /// <summary>An empty tap is a score with nothing in it but a full stop.</summary>

@@ -77,6 +77,24 @@ namespace GlimmerGrove.Tests
             /// </summary>
             public int lenses;
 
+            /// <summary>Whorls standing in the well, the third chapter's whole subject.</summary>
+            public int whorls;
+
+            /// <summary>
+            /// Whether this case's whorls ever merge a pair that reaches white.
+            ///
+            /// Carried by the file rather than derived here, because deriving it would need the
+            /// search's winning line — and a coverage flag the fixture works out for itself is
+            /// one the fixture can quietly stop working out.
+            /// </summary>
+            public bool kindles;
+
+            /// <summary>Whether a whorl in this case turns with nothing beside it and closes.</summary>
+            public bool closes;
+
+            /// <summary>Whether a mote in this case is reached by two turning whorls at once.</summary>
+            public bool contested;
+
             /// <summary>
             /// How many of those lenses are authored part full.
             ///
@@ -135,6 +153,7 @@ namespace GlimmerGrove.Tests
                 Assert.AreEqual(test.headroom, layout.Headroom, why + " (headroom)");
                 Assert.AreEqual(test.standing, layout.Motes, why + " (motes standing)");
                 Assert.AreEqual(test.lenses, layout.Lenses, why + " (lenses standing)");
+                Assert.AreEqual(test.whorls, layout.Whorls, why + " (whorls standing)");
 
                 int charged = 0;
                 for (int i = 0; i < layout.Count; i++)
@@ -160,6 +179,8 @@ namespace GlimmerGrove.Tests
 
             bool chain = false, wall = false, unsolvable = false, brim = false;
             bool glass = false, partFull = false, empty = false;
+            bool whorl = false, kindles = false, whorlPair = false;
+            bool closes = false, contested = false;
 
             foreach (var test in file.cases)
             {
@@ -182,6 +203,17 @@ namespace GlimmerGrove.Tests
                 // starts empty is what the dial is measured against.
                 if (charged > 0) partFull = true;
                 if (layout.Lenses > charged) empty = true;
+
+                // The whorl is the third chapter's whole subject, and each of these is a
+                // separate rule that would otherwise go away in silence: that a whorl merges at
+                // all, that a merge can reach white, that two on one board are two separate
+                // events, that one with nothing beside it closes rather than waiting, and that a
+                // mote two whorls both reach is let go by both.
+                if (layout.Whorls > 0) whorl = true;
+                if (layout.Whorls > 1) whorlPair = true;
+                if (test.kindles) kindles = true;
+                if (test.closes) closes = true;
+                if (test.contested) contested = true;
             }
 
             Assert.IsTrue(chain, "no case where one drop clears four or more motes, so nothing " +
@@ -201,6 +233,21 @@ namespace GlimmerGrove.Tests
                                     "the dial the whole chapter's difficulty ramps on");
             Assert.IsTrue(empty, "no case with an empty lens, so nothing here would notice a " +
                                  "board that hands one a channel it was never given");
+
+            Assert.IsTrue(whorl, "no case with a whorl in it, so nothing here would notice " +
+                                 "the whole mechanic going away");
+            Assert.IsTrue(kindles, "no case where a merge reaches white, so nothing here would " +
+                                   "notice a whorl that had stopped mixing what it drew in — " +
+                                   "which is the entire mechanic");
+            Assert.IsTrue(whorlPair, "no case with two whorls, so nothing here would notice a " +
+                                     "board where only one could ever turn");
+            Assert.IsTrue(closes, "no case where a whorl turns with nothing beside it, so " +
+                                  "nothing here would notice one that waited instead — which is " +
+                                  "a whorl that can never be got rid of, on a well that can then " +
+                                  "never be emptied");
+            Assert.IsTrue(contested, "no case where two whorls reach the same mote, so nothing " +
+                                     "here would notice the clause that keeps the wave free of a " +
+                                     "reading order");
         }
     }
 }

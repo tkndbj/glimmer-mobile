@@ -744,17 +744,23 @@ namespace GlimmerGrove
                 }
             });
 
+            // The lesson, on the heels of the beat that asks for the eye rather than a second
+            // after it. It used to sit last of everything, a full second past the punch, and
+            // that second was spent on a player already reading a button nobody had explained
+            // — the shine says *look here* and the tip says *here is what it is*, so anything
+            // between the two is a gap in one sentence. Only where there is something to point
+            // at: once in a player's life, and a tip shown over a button that is not on screen
+            // is one that can never be shown again — see Mechanic.LuckySpin.
+            if (_bonus) cue.Then(.14f, TeachTheWheel);
+
             // The breath waits for the punch to land, and that is not pacing — the two write the
             // same local scale on different channels, so started together the punch borrows a
             // mid-breath size as its resting value and hands back something the breath then
             // walks away from. The house rule about a tween that reads its own target's value,
-            // met by not overlapping two of them.
-            if (_bonus) cue.Then(.46f, () => { if (_bonus) Tween.Breathe(_bonus.transform, .034f, 1.7f); });
-
-            // The lesson, last of everything and only where there is something to point at.
-            // Once in a player's life, and a tip shown over a button that is not on screen is
-            // one that can never be shown again — see Mechanic.LuckySpin.
-            if (_bonus) cue.Then(.55f, TeachTheWheel);
+            // met by not overlapping two of them. Still .46 after the punch: the lesson was
+            // placed *inside* that gap rather than before it, so the beat this depends on has
+            // not moved.
+            if (_bonus) cue.Then(.32f, () => { if (_bonus) Tween.Breathe(_bonus.transform, .034f, 1.7f); });
         }
 
         /// <summary>

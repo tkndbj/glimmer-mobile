@@ -1,4 +1,4 @@
-using GlimmerGrove.Ads;
+﻿using GlimmerGrove.Ads;
 using GlimmerGrove.Analytics;
 using GlimmerGrove.AssetPipeline;
 using GlimmerGrove.Cloud;
@@ -26,6 +26,45 @@ namespace GlimmerGrove
         public const int RefWidth = (int)ChapterMap.Width;
 
         public const int RefHeight = 1920;
+
+        /// <summary>
+        /// The canvas's width in its own reference units on the display this build is running
+        /// on: <see cref="RefWidth"/> on every phone, and wider on anything squarer.
+        ///
+        /// <para>
+        /// <see cref="RefWidth"/> is the width the game is <em>designed</em> at and is a
+        /// compile-time contract shared with the map validator; this is the width it is
+        /// <em>drawn</em> at, and on a tablet the two differ. Anything converting between
+        /// device pixels and canvas units, or assuming it knows how much canvas there is
+        /// across, wants this one — see <see cref="Layout.CanvasFit"/> for why they part.
+        /// </para>
+        /// <para>
+        /// A pure function of <see cref="UnityEngine.Screen"/>, deliberately, so it is correct
+        /// in the frame the canvas is created in. <c>CanvasScaler</c> does not apply until
+        /// <c>Canvas.willRenderCanvases</c>, which runs after every <c>Update</c> in the frame,
+        /// so a caller that measured a rect instead would be a frame behind — which is the trap
+        /// <c>SplashScreen.Fit</c> exists to document.
+        /// </para>
+        /// </summary>
+        public static float CanvasWidth => Layout.CanvasFit.WidthFor(UnityEngine.Screen.width, UnityEngine.Screen.height);
+
+        /// <summary>The canvas's height in reference units, by the same reckoning.</summary>
+        public static float CanvasHeight => Layout.CanvasFit.HeightFor(UnityEngine.Screen.width, UnityEngine.Screen.height);
+
+        /// <summary>
+        /// Whether this display is squarer than a phone — a tablet, a foldable, a window in
+        /// split view — and so one the canvas has been widened for.
+        ///
+        /// <para>
+        /// Very little should ask. The widening is what makes a tablet need no second layout,
+        /// and a screen reaching for this is a screen about to grow a case. The one caller today
+        /// is Lightfall, whose well is the only board in the game bound by <em>height</em>: a
+        /// short display leaves it a sixth of the room a phone does, so its band and its tray
+        /// give some back. See <c>FallBand</c>.
+        /// </para>
+        /// </summary>
+        public static bool ShortCanvas
+            => Layout.CanvasFit.IsShort(UnityEngine.Screen.width, UnityEngine.Screen.height);
 
         static bool _started;
 
@@ -221,6 +260,15 @@ namespace GlimmerGrove
             scaler.screenMatchMode = CanvasScaler.ScreenMatchMode.MatchWidthOrHeight;
             scaler.matchWidthOrHeight = 0f;      // portrait: width is the constant
             scaler.referencePixelsPerUnit = 100f;
+
+            // ...and *which* width is the constant is a fact about the display, not a fact
+            // about the game. See Layout.CanvasFit: a phone gets RefWidth, and anything
+            // squarer than a phone gets a wider canvas so that the vertical stack every
+            // screen here is made of has the room it was laid out against. The fitter is
+            // what keeps that answer current — a tablet in split view is resized while the
+            // app is running, and `Expand` would have covered that for free where a typed
+            // reference width does not. SafeAreaFitter is the same bargain one layer down.
+            go.AddComponent<CanvasFitter>().Bind(scaler);
 
             return canvas;
         }

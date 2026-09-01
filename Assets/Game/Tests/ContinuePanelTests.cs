@@ -39,10 +39,32 @@ namespace GlimmerGrove.Tests
                                "half the panel, and passes layouts whose word is off the top of " +
                                "a tablet");
 
-            Assert.Greater(ContinuePanel.Tallest + ContinuePanel.BannerOverhang,
-                           PanelStack.TightestCanvas * .5f,
-                           "if this ever stops being true the check has gone slack and would " +
-                           "pass anything");
+            // The two readings differ by half the clear air under the panel, and stating it as
+            // an equality is what keeps this case honest whatever either number becomes. It
+            // used to be stated as "the loose reading would have passed this very panel", which
+            // was true by 10 units and is not any more — and what moved is not the panel. It is
+            // the canvas: `CanvasFit` widened the shortest display this game is drawn on from a
+            // 4:3 tablet's 1440 to 1890, so every modal in the game gained 450 units of budget
+            // it does not spend.
+            float strict = PanelStack.TightestCanvas * .5f - needed;
+            float loose = PanelStack.TightestCanvas
+                        - (ContinuePanel.Tallest + ContinuePanel.BannerOverhang);
+
+            Assert.Less(strict, loose,
+                        "the halved reading has to be the tighter of the two, or it is not the " +
+                        "check — it would be the mistake it replaced wearing the same name");
+
+            Assert.AreEqual((PanelStack.TightestCanvas - ContinuePanel.Tallest) * .5f,
+                            loose - strict, .001f,
+                            "and it is tighter by exactly the air under a centred panel, which " +
+                            "is the space the loose reading spends on a banner entirely above it");
+
+            // Still a ceiling rather than a formality: the panel has real room now, but not
+            // enough to grow by its own height twice over. If that stops being true the budget
+            // has moved again and this case wants looking at rather than raising.
+            Assert.Less(strict * 2f, ContinuePanel.Tallest * 2f,
+                        "the panel could more than treble and still pass, so this check has " +
+                        "gone slack");
         }
 
         /// <summary>

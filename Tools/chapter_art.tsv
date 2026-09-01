@@ -1,65 +1,53 @@
-# A chapter's art, and where it came from.
+# A chapter's map, and where it came from.
 #
 # One row per chapter. `make_chapter_art.py` reads the chapter's own JSON for the
-# names — its `mapStrips`, its backdrop and every backdrop a level overrides — and
-# for the palette each backdrop is graded to. This file only says which source
-# images those names are cut from, because that is the one thing the content
-# cannot state: a chapter names art, it does not name the pack it was cut from.
+# names — its `mapStrips` — because that is the one thing this file cannot state: a
+# chapter names art, it does not name the pack it was cut from.
 #
-# Re-running is safe and is the point. A retune of a level's `accent`/`slate`
-# regrades its backdrop with no second place to edit, which is why the palette
-# lives in the chapter file and not here.
+# **A map is shared, and only one row cuts it.** Every mode's first chapter draws
+# `map1`, every mode's second draws `map2` (`Tools/chapters/mapart.py` owns that
+# rule), so a painting is cut once and drawn by every chapter at that ordinal — and
+# the mode is told apart by its **perch**, the floating tile a node stands on, which
+# is the rule `ModeLook.Perch` already stated and is now true of the art as well.
+# The row that names a source is the one that owns the cut; every other row says `-`.
+# Sharing is also what puts the strips in the **global** Addressables group instead of
+# one chapter's bundle: `AddressableAddresses.ChapterOwnership` files an address two
+# chapters want as belonging to nobody, which is right for a painting five draw.
+#
+# **Board backdrops are not cut here any more.** They used to be, per chapter, graded
+# to each level's own accent — which is how the game came to hold forty-one backdrops
+# out of six paintings while a whole Lightfall chapter drew one picture for ten wells.
+# They are now one family of forty skies, all the same cloud painting at forty colours,
+# with a tool of their own: `Tools/make_sky_art.py`. A level names one by arithmetic
+# rather than by choice, so a chapter published next year needs no backdrop art at all.
+#
+# Re-running is safe and is the point.
 #
 # columns
-#   chapter    the chapter id, matching Content/chapters/<id>.json
-#   map        one tall image, sliced bottom-upward into `mapStrips`, or `-` when this
-#              chapter's strips are not cut by this tool
-#   backdrops  comma-separated sources for the board backdrops, or `-` when this chapter's
-#              backdrop is not this row's to cut. Windows are taken
-#              across them in turn, so two wide images comfortably feed ten glades.
-#              A source may be a `+`-joined **stack** of layer files, composited bottom
-#              upward — which is what a layered pack is for. Three of these were overlay
-#              layers named on their own (71% and 75% transparent) and were being
-#              flattened onto undefined paper; `opened` now refuses a stack whose bottom
-#              layer is not opaque, because that failure is invisible in every other gate.
+#   chapter  the chapter id, matching Content/chapters/<id>.json
+#   map      one tall image, sliced bottom-upward into `mapStrips`, or `-` when this
+#            chapter draws a map some other row cut
+#   grade    optional `night` strength, 0 to 1. Blank leaves the painting alone, which
+#            is what every row does now: it existed to tell two chapters sharing one
+#            source apart, and chapters at one ordinal are meant to be the same place.
 #
 # Sources are outside the repo (they are licensed packs, not project files). Pass
 # the folder they were extracted into with --source; paths below are relative to it.
 #
-# chapter	map	backdrops
+# chapter	map
 #
-# c01_shallows, and the three chapters that borrow its backdrops (f01_lightfall draws
-# play_2, k01_grovekeeper play_4, b01_thicket play_6), had no row here at all — so nine
-# of the game's forty-one board backdrops were the one part of the art pipeline nothing
-# could re-cut. Those four share a hand-made strip set, hence the `-`.
-# Two cloud layers rather than two paintings: the Shallows is the first chapter anybody
-# meets and its nine backdrops sit behind five different boards (f01, k01 and b01 all
-# borrow one), so what they owe is a friendly sky and no scene of their own to argue
-# with. The layer art also carries none of the dummy lettering the preview sheets in
-# these packs do.
-c01_shallows	-	craftpix-135791-level-map-2d-game-backgrounds/_PNG/01/layers/l1-sky.png,craftpix-135791-level-map-2d-game-backgrounds/_PNG/02/layers/l1-sky.png
-c02_millvale	craftpix-net-567563-the-top-down-level-map-asset-pack/Png/LevelSelect.png	craftpix-net-720546-forest-platformer-level-assets/PNG/Background01.png
-c03_amberwood	craftpix-net-144512-vector-top-down-level-map-asset-pack/Png/Level map.png	craftpix-891911-jungle-platformer-2d-game-tileset/PNG/Background/Cartoon Jungle Game Tileset_Background - Layer 00.png,craftpix-891911-jungle-platformer-2d-game-tileset/PNG/Background/Cartoon Jungle Game Tileset_Background - Layer 00.png+craftpix-891911-jungle-platformer-2d-game-tileset/PNG/Background/Cartoon Jungle Game Tileset_Background - Layer 01.png
-c04_nightbriar	craftpix-net-998887-top-down-dark-level-map-asset-pack/Png/Level map.png	craftpix-net-556084-dungeon-cartoon-2d-platformer-tileset/PNG/Background/Background_01.png,craftpix-net-556084-dungeon-cartoon-2d-platformer-tileset/PNG/Background/Background_01.png+craftpix-net-556084-dungeon-cartoon-2d-platformer-tileset/PNG/Background/Background_02.png
-# `Backgrounds/1.png` is the pack's placeholder sheet — two blocks of dummy lettering on
-# a flat panel — and it was what the Hollow's only backdrop was cut from: blurred and
-# graded, the words survived as two legible smudges. It reached no player only because
-# h01_emberfall is not in the manifest; nothing in this repository could have caught it,
-# which is why a source is looked at before it is named.
-h01_emberfall	craftpix-135791-level-map-2d-game-backgrounds/_PNG/02/map02_preview-01.png	craftpix-net-858776-level-game-assets/PNG/Backgrounds/Layer2.png	0.62
-# f02_glasswater is the first non-glade chapter to get a map of its own, and it needed one:
-# it drew `strip0..5` — c01_shallows' hand-made set — so Lightfall's two chapters were the same
-# painting, which is what the glade chapters never do.
-#
-# There are four tall map paintings in these packs and all four were already cut, so this is the
-# case the fourth column exists for: the source is c03_amberwood's, the output files and
-# addresses are f02's own, and `night` at 0.60 pulls it to Glasswater's cold slate so the two
-# chapters read as two places rather than one picture twice. The alternatives were looked at and
-# rejected — the island map is the one f01 already draws, the dark map is a Halloween scene
-# (pumpkins and a gravestone), and the top-down map crops to 59% of its width at six strips.
-#
-# The backdrop is `-`. Every non-glade chapter borrows one of c01_shallows' nine (f01 draws
-# play_2, k01 play_4, b01 play_6, f02 play_8), and a row naming a source for one would re-cut a
-# picture four chapters share, graded to whichever chapter the tool was last run for.
-f02_glasswater	craftpix-net-144512-vector-top-down-level-map-asset-pack/Png/Level map.png	-	0.60
-x02_lab	craftpix-net-966735-island-map-for-game-level-interface-vector-pack/Png/Level-map.png	craftpix-net-858776-level-game-assets/PNG/Backgrounds/3.png	0.55
+# map1 — the island map, hand-made before this tool existed and the one map here it does
+# not cut. Drawn by the first chapter of all four modes.
+c01_shallows	-
+# map2 — four strips, because at six this painting is 1.5x zoomed and the mill house comes
+# out sliced in half. Drawn by c02_millvale and f02_glasswater.
+c02_millvale	craftpix-net-567563-the-top-down-level-map-asset-pack/Png/LevelSelect.png
+# map3 — five strips. Drawn by c03_amberwood and f03_whorlwater.
+c03_amberwood	craftpix-net-144512-vector-top-down-level-map-asset-pack/Png/Level map.png
+# map4 — six strips. Drawn by c04_nightbriar, and by whatever fourth chapter comes next.
+c04_nightbriar	craftpix-net-998887-top-down-dark-level-map-asset-pack/Png/Level map.png
+f01_lightfall	-
+f02_glasswater	-
+f03_whorlwater	-
+k01_grovekeeper	-
+b01_thicket	-

@@ -70,7 +70,17 @@ namespace GlimmerGrove.Content
                 return false;
             }
 
-            var layout = new BudLayout(width, height, ground, value, deal, regrow);
+            // Read even when absent, because "no runners" is an answer this has to give: a
+            // `[Serializable]` array field is null on a level that never mentioned one and empty
+            // on one that wrote `[]`, and both mean the same thing to a grove.
+            if (!BudLayout.TryReadRunners(grove.runners, width, height,
+                                          out var runners, out string runnerError))
+            {
+                problems.Add($"{id}: {runnerError}");
+                return false;
+            }
+
+            var layout = new BudLayout(width, height, ground, value, deal, regrow, runners);
 
             // Two refusals rather than one, because they read as completely different mistakes to
             // whoever wrote the file — and the search would report both as "this cannot be

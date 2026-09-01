@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections;
 using System.Collections.Generic;
 using GlimmerGrove.Localization;
@@ -65,6 +65,19 @@ namespace GlimmerGrove
         /// </summary>
         public Action Finishing { get; set; }
 
+        /// <summary>
+        /// The band this well is drawn in — how much of the host the tray takes, and how large
+        /// it is drawn.
+        ///
+        /// <para>
+        /// Handed over by <c>FallScreen</c> rather than read here, so the tray this reserves and
+        /// the floor the screen left under the host are the same answer rather than two readings
+        /// of one fact. Defaults to the phone's band, which is what every fixture that builds a
+        /// view without a screen gets and is exactly what shipped.
+        /// </para>
+        /// </summary>
+        public FallBand.Band Band { get; set; } = FallBand.Of(false);
+
         /// <summary>Input off. Set by every panel that goes over this board.</summary>
         public bool Locked { get; set; }
 
@@ -129,7 +142,7 @@ namespace GlimmerGrove
         /// </summary>
         sealed class MoteView
         {
-            public Image Body, Sheen, Halo, Facet;
+            public Image Body, Sheen, Halo, Facet, Swirl, Arms;
 
             /// <summary>
             /// The three channel pips a lens wears, or null on a widget that has never drawn
@@ -194,7 +207,14 @@ namespace GlimmerGrove
 
             // Measured rather than assumed: a fixed cell size is a well that overflows on
             // somebody's phone, and this mode has both a tray and a brim band to find room for.
-            _trayHeight = 196f;
+            //
+            // The tray's own height comes from `FallBand` rather than being written here,
+            // because it is one of the three numbers a well's cell is a function of and the
+            // other two already live there. It is 196 on every phone. On a display squarer than
+            // a phone it is smaller, for the reason that file gives: this is the one board in
+            // the game bound by `usableH` rather than by width, so the tray is charged directly
+            // to the cell.
+            _trayHeight = Band.TrayHeight;
             float usableH = rect.height - _trayHeight;
             _cell = Mathf.Min(rect.width / layout.Width, usableH / layout.Height);
             _size = _cell * .86f;
@@ -309,6 +329,12 @@ namespace GlimmerGrove
 
             var plate = UIKit.Img("Plate", _tray, Art.Round(28), new Color(.045f, .065f, .125f, .78f),
                                   new Vector2(560f, 132f), new Vector2(.5f, .5f), Vector2.zero);
+
+            // Scaled rather than re-laid-out on a shorter tray, which is the legend's bargain
+            // one band down: everything below sits at a fixed offset on this plate — the queue
+            // at -196 and -78, the count at +150 — so a second set of coordinates would be a
+            // second layout to keep in step. Exactly 1 on every phone.
+            plate.transform.localScale = Vector3.one * Band.TrayScale;
             UIKit.Img("Edge", plate.transform, Art.RoundOutline(28, 3f), new Color(1, 1, 1, .12f),
                       new Vector2(560f, 132f), new Vector2(.5f, .5f), Vector2.zero);
 
@@ -390,7 +416,32 @@ namespace GlimmerGrove
             facet.raycastTarget = false;
             facet.gameObject.SetActive(false);
 
+            // The whorl's two pieces, off until a well turns out to stand one. Built here
+            // rather than on demand for the facet's reason — a board that holds a whorl should
+            // not be allocating objects in the middle of the cascade it holds it for.
+            //
+            // Their own children rather than the body itself: the body's transform *is* the
+            // widget's transform, so a swirl that turns would take the halo, the pips, every
+            // punch and the whole falling widget round with it.
+            var swirl = UIKit.Img("Swirl", body.transform, Art.Whorl(96),
+                                  new Color(1, 1, 1, 0f), Vector2.one * _size * .92f,
+                                  new Vector2(.5f, .5f), Vector2.zero);
+            swirl.raycastTarget = false;
+            swirl.gameObject.SetActive(false);
+
+            // And the arms, which are the *rule* drawn on the board: a whorl takes the cells to
+            // its left and its right and nothing else, and no amount of spiral says so. A
+            // sibling of the swirl rather than a child of it, because the swirl turns and these
+            // must not — an arrow that spins is pointing nowhere.
+            var arms = UIKit.Img("Arms", body.transform, Art.Inward(96),
+                                 new Color(1, 1, 1, 0f), Vector2.one * _size * 1.34f,
+                                 new Vector2(.5f, .5f), Vector2.zero);
+            arms.raycastTarget = false;
+            arms.gameObject.SetActive(false);
+            arms.transform.SetAsFirstSibling();
+
             return new MoteView { Body = body, Halo = halo, Sheen = sheen, Facet = facet,
+                                  Swirl = swirl, Arms = arms,
                                   Rt = (RectTransform)body.transform };
         }
 
@@ -434,6 +485,25 @@ namespace GlimmerGrove
             if (mote.Pips != null)
                 for (int i = 0; i < mote.Pips.Length; i++)
                     if (mote.Pips[i]) mote.Pips[i].color = new Color(1, 1, 1, 0f);
+
+            // And the whorl's pieces, for the same reason: a recycled whorl that kept them
+            // would fall as a mote with a spinning spiral on top of it.
+            if (mote.Swirl)
+            {
+                Tween.KillAll(mote.Swirl);
+                mote.Swirl.gameObject.SetActive(false);
+                mote.Swirl.transform.localScale = Vector3.one;
+                mote.Swirl.transform.localRotation = Quaternion.identity;
+                mote.Swirl.color = new Color(1, 1, 1, 0f);
+            }
+
+            if (mote.Arms)
+            {
+                Tween.KillAll(mote.Arms);
+                mote.Arms.gameObject.SetActive(false);
+                mote.Arms.transform.localScale = Vector3.one;
+                mote.Arms.color = new Color(1, 1, 1, 0f);
+            }
 
             mote.Rt.gameObject.SetActive(false);
             mote.Rt.localScale = Vector3.one;
@@ -497,6 +567,20 @@ namespace GlimmerGrove
         void Paint(MoteView mote, int cell, int next, int index)
         {
             if (FallCell.IsLens(cell)) { PaintGlass(mote, cell, index); return; }
+            if (FallCell.IsWhorl(cell)) { PaintWhorl(mote, cell, index); return; }
+
+            if (mote.Swirl && mote.Swirl.gameObject.activeSelf)
+            {
+                Tween.KillAll(mote.Swirl);
+                mote.Swirl.gameObject.SetActive(false);
+                mote.Swirl.transform.localRotation = Quaternion.identity;
+            }
+
+            if (mote.Arms && mote.Arms.gameObject.activeSelf)
+            {
+                Tween.KillAll(mote.Arms);
+                mote.Arms.gameObject.SetActive(false);
+            }
 
             if (mote.Facet && mote.Facet.gameObject.activeSelf)
             {
@@ -875,6 +959,15 @@ namespace GlimmerGrove
             int firing = 0;
             for (int w = 0; w < waves; w++) if (result.Steps[w].Fired.Count > 0) firing++;
 
+            // The same bargain for the whorls, and bounded over the cascade rather than per
+            // whorl: four turning in one chain must not freeze the board for four times as long.
+            // Longer than a burst and shorter than a shot - two motes have to be seen leaving the
+            // cells they were standing in, and there may be several merges in one chain.
+            int turning = 0;
+            for (int w = 0; w < waves; w++) if (result.Steps[w].Fuses.Count > 0) turning++;
+
+            float draw = FallTempo.Draw(turning);
+
             float gather = FallTempo.Gather(firing);
             float throwing = FallTempo.Throw(firing);
 
@@ -992,6 +1085,31 @@ namespace GlimmerGrove
                     }, mote.Body);
                 }
 
+                // ---- and every whorl the light opened this wave. It turns on the *next* one,
+                //      so this is the only frame in which a player can see which pair is about to
+                //      be taken - the wind-up a lens gets for exactly the same reason, and
+                //      without which the merge arrives out of nowhere.
+                for (int i = 0; i < step.Caught.Count; i++)
+                {
+                    int at = step.Caught[i];
+                    var whorl = _at[at];
+                    if (whorl == null) continue;
+
+                    _shown[at] |= FallCell.Lit;
+
+                    int now = _shown[at];
+                    int cell = at;
+                    var target = whorl;
+
+                    Tween.After(burst * .35f + i * burst * .12f, () =>
+                    {
+                        if (target.Body == null) return;
+
+                        Paint(target, now, Run != null ? Run.Next : Energy.None, cell);
+                        CatchWhorl(target, Where(cell), 0f, burst);
+                    }, whorl.Body);
+                }
+
                 // The count climbs as the chain runs, one number per wave, so the player
                 // watches it grow rather than being told afterwards how big it was. A single
                 // burst is not a chain and says nothing at all — see FallChain.
@@ -1000,11 +1118,34 @@ namespace GlimmerGrove
                 yield return new WaitForSecondsRealtime(burst);
                 if (!this) yield break;
 
+                // ---- and the turn: every whorl that opened last wave draws its pair in now.
+                //      Its own beat rather than none, because two motes *moving* is the one thing
+                //      in this mode that cannot be read off a flash - and shorter than a shot,
+                //      because several may turn in one chain.
+                //
+                //      Everything the step names is a position on the board *before* the wave was
+                //      applied, which is what makes this drawable at all: the settled board has
+                //      bare ground where the pair stood, and bare ground is also what a cell the
+                //      author left empty looks like.
+                if (step.Fuses.Count > 0)
+                {
+                    // Dealt a little apart so two whorls turning in one wave read as two events,
+                    // and only a little: the pull itself is .62 of the beat, so a stagger any
+                    // wider would have the last merge landing after the collapse it belongs to
+                    // had already started.
+                    for (int i = 0; i < step.Fuses.Count; i++)
+                        TurnWhorl(step.Fuses[i], i * draw * .08f, draw);
+
+                    yield return new WaitForSecondsRealtime(draw);
+                    if (!this) yield break;
+                }
+
                 // ---- the shot. Its own beat between the burst and the collapse, because it is
                 //      the one thing in this mode worth stopping the board for and because the
                 //      well must not fall through the light while it is still crossing.
                 if (step.Fired.Count > 0)
                 {
+
                     for (int i = 0; i < step.Fired.Count; i++)
                     {
                         int at = step.Fired[i];
@@ -1354,6 +1495,19 @@ namespace GlimmerGrove
         /// </summary>
         void PaintGlass(MoteView glass, int cell, int index)
         {
+            if (glass.Swirl && glass.Swirl.gameObject.activeSelf)
+            {
+                Tween.KillAll(glass.Swirl);
+                glass.Swirl.gameObject.SetActive(false);
+                glass.Swirl.transform.localRotation = Quaternion.identity;
+            }
+
+            if (glass.Arms && glass.Arms.gameObject.activeSelf)
+            {
+                Tween.KillAll(glass.Arms);
+                glass.Arms.gameObject.SetActive(false);
+            }
+
             int charge = FallCell.Charge(cell);
             int wants = FallCell.Wants(cell);
             bool nearly = charge != Energy.None && CountChannels(charge) == 2;
@@ -1415,6 +1569,107 @@ namespace GlimmerGrove
             }, glass.Rt, "tremble").Loop(-1)
               .OnAbandon(() => { if (rt) rt.localScale = Vector3.one; });
         }
+
+        /// <summary>
+        /// A whorl: a dark mouth with a spiral turning in it, and two chevrons saying which way
+        /// it reaches.
+        ///
+        /// <para>
+        /// <b>A fourth silhouette, and it had to be one.</b> A mote is a filled disc and a lens
+        /// is a rim with a glint inside it, so a whorl drawn as either would read as a dim one of
+        /// those. It carries no colour at all — it holds no channels, and painting it in one
+        /// would promise cooking that can never happen — so what tells it apart is <em>shape</em>
+        /// and <em>motion</em>: it is the only thing on a settled board that turns.
+        /// </para>
+        /// <para>
+        /// <b>The arms are the rule, drawn.</b> A whorl takes the cells to its left and its right
+        /// and nothing else, and there is no way at all to read that off a spiral — invariant
+        /// 20g's complaint, and the cheapest possible answer to it. They point inward because it
+        /// pulls; the lens is the thing here that throws.
+        /// </para>
+        /// <para>
+        /// <b>Open is a different picture, not a brighter one.</b> A whorl that has taken light
+        /// turns on the very next wave, so the one frame between those two is the only warning
+        /// the player gets that the pair they arranged is about to be spent — it stops drifting,
+        /// snaps wide and holds, and the arms brighten to say which two cells are going.
+        /// </para>
+        /// </summary>
+        void PaintWhorl(MoteView whorl, int cell, int index)
+        {
+            if (whorl.Facet && whorl.Facet.gameObject.activeSelf)
+            {
+                Tween.KillAll(whorl.Facet);
+                whorl.Facet.gameObject.SetActive(false);
+            }
+
+            if (whorl.Pips != null)
+                for (int i = 0; i < whorl.Pips.Length; i++)
+                    if (whorl.Pips[i]) whorl.Pips[i].color = new Color(1, 1, 1, 0f);
+
+            Tween.KillChannel(whorl.Rt, "tremble");
+            whorl.Rt.localScale = Vector3.one;
+
+            bool open = FallCell.IsLit(cell);
+
+            // Slate rather than a channel, because a whorl holds none and never will. It is the
+            // one cell on this board that is a *place* rather than a quantity of light.
+            var tint = open ? Pal.Radiance : Pal.Glass;
+
+            whorl.Body.sprite = Art.Ring(128, 9f);
+            whorl.Body.color = Pal.A(tint, open ? .96f : .74f);
+            whorl.Sheen.color = Pal.A(tint, open ? .30f : .10f);
+
+            // Never ripe: no drop and no wash ever *finishes* a whorl — they open it, which is a
+            // different thing, and a halo here would say the next drop completes it.
+            whorl.Halo.gameObject.SetActive(false);
+            whorl.Halo.color = new Color(1, 1, 1, 0f);
+
+            if (whorl.Arms)
+            {
+                whorl.Arms.gameObject.SetActive(true);
+                whorl.Arms.color = Pal.A(tint, open ? .92f : .46f);
+                whorl.Arms.transform.localScale = Vector3.one;
+            }
+
+            if (!whorl.Swirl) return;
+
+            whorl.Swirl.gameObject.SetActive(true);
+            whorl.Swirl.color = Pal.A(open ? Color.white : tint, open ? 1f : .80f);
+
+            Tween.KillChannel(whorl.Swirl, "whorl");
+
+            var swirl = whorl.Swirl;
+            var srt = (RectTransform)swirl.transform;
+
+            if (open)
+            {
+                // Armed. It turns on the next wave, so it stops drifting and stands wide open —
+                // the one still, bright thing on a board that is otherwise all motion.
+                srt.localScale = Vector3.one * 1.18f;
+                return;
+            }
+
+            // Phased off the cell index rather than rolled — for the lens glint's reason: a
+            // random phase differs between a board being built and the same board restarted, and
+            // two runs of one well that turn differently is a difference nobody can name and
+            // everybody notices.
+            float phase = (index * .29f) % 1f;
+
+            Tween.Run(WhorlTurn, Ease.Linear, t =>
+            {
+                if (!swirl) return;
+
+                float a = (t + phase) % 1f;
+                srt.localRotation = Quaternion.Euler(0f, 0f, -a * 360f);
+                srt.localScale = Vector3.one * (1f + Mathf.Sin(a * Mathf.PI * 2f) * .05f);
+            }, swirl, "whorl").Loop(-1)
+              .OnAbandon(() => { if (srt) srt.localRotation = Quaternion.identity; });
+        }
+
+        /// <summary>How long an unlit whorl takes to turn once. Slow: it is waiting, not working.</summary>
+        const float WhorlTurn = 4.6f;
+
+
 
         /// <summary>How long a lens takes to turn a quarter, which is one period of a four-point glint.</summary>
         const float GlintTurn = 3.4f;
@@ -1763,7 +2018,9 @@ namespace GlimmerGrove
 
                 // Out to full length over the first stretch, then held while it fades: a beam
                 // still growing as it faded would never be seen at its own length.
-                float reach = length * Ease.OutQuint(Mathf.Clamp01(t / .34f));
+                // Read from `FallTempo` rather than typed here, so the beat the beam reaches
+                // its far end and the beat the shockwave is thrown there cannot drift apart.
+                float reach = length * Ease.OutQuint(Mathf.Clamp01(t / FallTempo.ReachShare));
                 float fade = (1f - t) * (1f - t);
 
                 cr.sizeDelta = new Vector2(width, reach);
@@ -1783,7 +2040,7 @@ namespace GlimmerGrove
             // The arrival, and only where there was one. A ring thrown at the wall would say
             // something landed there.
             if (beam.Landed)
-                Tween.After(delay + run * .34f,
+                Tween.After(delay + run * FallTempo.ReachShare,
                             () => Shockwave(to, colour, _size * 2.4f, run * 1.4f), this);
         }
 
@@ -1795,6 +2052,185 @@ namespace GlimmerGrove
         /// which is legible, and a one-cell shot still reads as a single beam.
         /// </summary>
         const float Split = 2.2f;
+
+        /// <summary>
+        /// A whorl opening: it stops turning, flares, and its arms reach out to the two cells it
+        /// is about to take.
+        ///
+        /// <para>
+        /// <b>The wind-up, and the mechanic is unreadable without it.</b> A whorl turns on the
+        /// wave <em>after</em> the one that opened it, so this is the only instant in which the
+        /// player can see which pair is going — and the pair is the whole of what they spent the
+        /// last several drops arranging. It is deliberately small: the payoff is the merge.
+        /// </para>
+        /// </summary>
+        void CatchWhorl(MoteView whorl, Vector2 where, float delay, float run)
+        {
+            if (whorl == null) return;
+
+            Tween.After(delay, () =>
+            {
+                if (whorl.Body == null) return;
+
+                Circle(where, Pal.Radiance, _size * 2.1f, run * 1.1f);
+                Burst.Sparks(_fx, where, Pal.Radiance, 6, 120f, 12f, run * 1.3f);
+
+                if (whorl.Arms) Tween.Punch(whorl.Arms.transform, .30f, run * 1.2f);
+
+                Audio.Sfx("tick", .42f, 1.55f);
+            }, whorl.Body);
+        }
+
+        /// <summary>
+        /// A whorl turning: the motes either side of it slide in, fuse into one, and the whorl is
+        /// gone.
+        ///
+        /// <para>
+        /// <b>The motes are drawn <em>travelling</em>, and that is the whole of it.</b> Every
+        /// other event in this mode happens where it stands — a burst goes off in its own cell, a
+        /// wash changes a neighbour in place, a beam crosses ground nothing is standing on. This
+        /// one <em>moves two things</em>, so it is the one animation here that has to be a
+        /// journey; drawn as a flash and a repaint it would be indistinguishable from two motes
+        /// bursting and a third appearing, which is a rule this board does not have.
+        /// </para>
+        /// <para>
+        /// <b>What comes back is the whorl's own widget, repainted.</b> Not a new one: the merged
+        /// mote stands exactly where the whorl stood, so reusing it is what makes the board's
+        /// index right with no second bookkeeping path — and it costs the pool nothing in the
+        /// middle of a cascade.
+        /// </para>
+        /// <para>
+        /// The cells are handed over <em>now</em> and only the pictures are delayed, which is the
+        /// same bargain the burst above strikes. A wave that left <c>_at</c> stale for the length
+        /// of its own animation would have the next wave painting cells that had already moved.
+        /// </para>
+        /// </summary>
+        void TurnWhorl(FallFuse fuse, float delay, float run)
+        {
+            var whorl = _at[fuse.At];
+            var where = Where(fuse.At);
+
+            // The pair, taken out of the index at once and slid in over the beat.
+            Pull(fuse.Left, where, delay, run);
+            Pull(fuse.Right, where, delay, run);
+
+            bool merged = fuse.Into != Energy.None;
+
+            _at[fuse.At] = merged ? whorl : null;
+            _shown[fuse.At] = merged ? fuse.Into : Energy.None;
+
+            if (whorl == null) return;
+
+            int at = fuse.At;
+            int into = fuse.Into;
+            var going = whorl;
+
+            Tween.After(delay, () =>
+            {
+                if (going.Body == null) return;
+
+                if (going.Swirl)
+                {
+                    Tween.KillChannel(going.Swirl, "whorl");
+
+                    // It spins up as it swallows: the one gesture that says the thing is doing
+                    // work rather than merely disappearing.
+                    var srt = (RectTransform)going.Swirl.transform;
+                    Tween.Run(run * .62f, Ease.InQuad, t =>
+                    {
+                        if (!going.Swirl) return;
+                        srt.localRotation = Quaternion.Euler(0f, 0f, -t * 540f);
+                        srt.localScale = Vector3.one * Mathf.Lerp(1.18f, .34f, t);
+                        going.Swirl.color = Pal.A(Color.white, 1f - t * .55f);
+                    }, going.Swirl, "whorl");
+                }
+
+                if (going.Arms)
+                {
+                    var arms = going.Arms;
+                    Tween.Run(run * .58f, Ease.InQuad, t =>
+                    {
+                        if (!arms) return;
+                        arms.transform.localScale = Vector3.one * Mathf.Lerp(1f, .55f, t);
+                        arms.color = Pal.A(Pal.Radiance, .92f * (1f - t));
+                    }, arms);
+                }
+
+                Audio.Sfx("whoosh", .46f, 1.22f);
+            }, whorl.Body);
+
+            // And the arrival, on the beat the pair lands.
+            Tween.After(delay + run * .62f, () =>
+            {
+                if (going.Body == null) return;
+
+                if (merged)
+                {
+                    var tint = Pal.EnergyColour(into);
+
+                    Paint(going, into, Run != null ? Run.Next : Energy.None, at);
+                    Shockwave(where, tint, _size * 2.8f, run * 1.4f);
+                    Burst.Sparks(_fx, where, tint, 9, 150f, 14f, run * 1.6f);
+                    Tween.Punch(going.Rt, .42f, run * .7f);
+
+                    // Higher for a merge that reached white, because that is the thing the player
+                    // arranged and the board is about to answer it with a burst.
+                    Audio.Sfx("chime", .58f, into == Energy.All ? 1.42f : 1.06f);
+                    return;
+                }
+
+                // Nothing beside it: it closes. Quietly, because a whorl spent on an empty pair
+                // is the player finding out they were too early, and a fanfare over that would be
+                // the board congratulating them for it.
+                Ripple(where, Pal.Glass, _size * 1.8f, run * .9f);
+
+                Tween.Run(run * .5f, Ease.OutQuad, t =>
+                {
+                    if (going.Body == null) return;
+                    going.Rt.localScale = Vector3.one * (1f - t * .5f);
+                    var c = going.Body.color; c.a = 1f - t; going.Body.color = c;
+                    if (going.Swirl) going.Swirl.color = Pal.A(Color.white, (1f - t) * .5f);
+                    if (going.Arms) going.Arms.color = Pal.A(Pal.Glass, (1f - t) * .4f);
+                }, going.Body).OnDone(() => Give(going));
+            }, whorl.Body);
+        }
+
+        /// <summary>
+        /// One mote sliding into a whorl and gone.
+        ///
+        /// It leaves the index at once and travels afterwards, which is <c>Slide</c>'s bargain
+        /// with the collapse: a widget is what is currently drawing a cell rather than something
+        /// the cell owns, so it can outlive the cell it came from by exactly one animation.
+        /// </summary>
+        void Pull(int from, Vector2 to, float delay, float run)
+        {
+            if (from < 0) return;
+
+            var mote = _at[from];
+            _at[from] = null;
+            _shown[from] = Energy.None;
+
+            if (mote == null) return;
+
+            var start = Where(from);
+            var rt = mote.Rt;
+            var going = mote;
+
+            Tween.After(delay, () =>
+            {
+                if (going.Body == null) return;
+
+                Tween.Run(run * .62f, Ease.InQuad, t =>
+                {
+                    if (!rt || going.Body == null) return;
+
+                    rt.anchoredPosition = Vector2.Lerp(start, to, t);
+                    rt.localScale = Vector3.one * Mathf.Lerp(1f, .42f, t);
+
+                    var c = going.Body.color; c.a = 1f - t * .35f; going.Body.color = c;
+                }, going.Body).OnDone(() => Give(going));
+            }, going.Body);
+        }
 
         /// <summary>A capsule pivoted at its base and turned along the way it travels.</summary>
         Image Lance(string name, Sprite sprite, Color colour, float width, Vector2 at, float angle)
@@ -2005,6 +2441,40 @@ namespace GlimmerGrove
                     if (held <= most) continue;
 
                     most = held;
+                    best = _at[i].Rt;
+                }
+
+                return best;
+            }
+        }
+
+        /// <summary>
+        /// A whorl to point a lesson at, or null on a well that stands none — which is every
+        /// well of the first two chapters.
+        ///
+        /// <para>
+        /// The <em>lowest</em> one, where the lens anchor takes the fullest. A lesson about glass
+        /// wants the pane nearest to showing what it is for; a lesson about a whorl wants the one
+        /// the player will meet first, and on a board with gravity that is the one furthest down.
+        /// </para>
+        /// </summary>
+        public RectTransform WhorlAnchor
+        {
+            get
+            {
+                if (_at == null) return null;
+
+                RectTransform best = null;
+                int lowest = -1;
+
+                for (int i = 0; i < _at.Length; i++)
+                {
+                    if (_at[i] == null || !FallCell.IsWhorl(_shown[i])) continue;
+
+                    int row = i / _layout.Width;
+                    if (row <= lowest) continue;
+
+                    lowest = row;
                     best = _at[i].Rt;
                 }
 

@@ -34,9 +34,23 @@ FULL = LENS | ALL
 #: Glass is written in lower case and light in upper: `O` is empty glass and `r`, `g`, `b`, `y`,
 #: `m`, `c` are glass already holding that much. A pre-charged lens is the chapter's gentleness
 #: dial - an early board asks for one well-aimed burst where a late one asks for all three.
+#: A whorl: the bit above the lens, holding no channels at all. Mirrors `FallCell.Whorl`. Any
+#: light opens one; on the next wave it draws the motes standing either side of it together and
+#: mixes them into one. It is the only place in this mode where two *motes* are combined - every
+#: other rule here adds a *colour* to a cell - and the only thing that moves a mote sideways.
+WHORL = 16
+
+#: A whorl that has caught the light and turns on the next wave. Never authored.
+LIT = 32
+
 LETTERS = {'R': R, 'G': G, 'B': B, 'Y': R | G, 'M': R | B, 'C': G | B, 'W': ALL,
            'O': LENS, 'r': LENS | R, 'g': LENS | G, 'b': LENS | B,
-           'y': LENS | R | G, 'm': LENS | R | B, 'c': LENS | G | B, 'w': FULL}
+           'y': LENS | R | G, 'm': LENS | R | B, 'c': LENS | G | B, 'w': FULL,
+           '@': WHORL}
+
+#: The three digits a wick was authored with. Retired, and refused by name rather than read as
+#: anything - a chapter file carrying one is content written for a build that no longer exists.
+RETIRED_WICK = '123'
 LETTER_OF = {v: k for k, v in LETTERS.items()}
 
 
@@ -44,9 +58,44 @@ def is_lens(cell):
     return bool(cell & LENS)
 
 
+def is_whorl(cell):
+    """A whorl - a mouth that any light opens and that draws the pair beside it together."""
+    return bool(cell & WHORL)
+
+
+def is_lit(cell):
+    """A whorl that has caught the light and turns on the next wave."""
+    return bool(cell & LIT)
+
+
 def is_mote(cell):
-    """A cell made of light: the only kind that can be enriched, burst, or want a channel."""
-    return cell != 0 and not (cell & LENS)
+    """A cell made of light: the only kind that can be enriched, burst, drawn in, or want.
+
+    **Both other kinds are excluded and the second one had to be added.** This read "occupied and
+    not glass", which answers true for a whorl - so a wash beside one would have poured colour
+    into a cell that holds none, a drop landing on one would have been swallowed by it, and a
+    whorl would have drawn in another whorl.
+    """
+    return cell != 0 and not (cell & (LENS | WHORL))
+
+
+def takes(cell, colour):
+    """Whether this cell takes a drop of this colour rather than letting the stack grow a row.
+
+    One predicate for the three kinds, because the clause spelt out - ``(cell | colour) != cell``
+    - is right for a mote, right for a lens and wrong for a whorl, which holds no channels at all
+    and whose answer does not depend on the colour.
+
+    **A drop opens an unlit whorl, whatever colour it is**, and that is what stops a well ever
+    becoming unwinnable: a whorl is otherwise only reached by a chain, and a player who cleared
+    every mote around one first would be stranded. That is the state the lens shipped with and
+    had to have a valve added for; here it is the rule from the start.
+    """
+    if not cell:
+        return False
+    if is_whorl(cell):
+        return not is_lit(cell)
+    return (cell | colour) != cell
 
 
 def charge(cell):
@@ -61,7 +110,7 @@ def wants(cell):
     wants what it needs to reach white and *fire*. That is the same sentence twice, which is the
     whole reason the rule needed nothing new taught: light fills a thing up and then it goes off.
     """
-    if not cell:
+    if not cell or is_whorl(cell):
         return 0
     return ALL & ~(cell & ALL)
 
@@ -135,19 +184,29 @@ def parse_deal(motes):
     return out
 
 
+def letter(cell):
+    """The letter this cell is authored with. Mirrors `FallCell.Letter`.
+
+    An *open* whorl writes as an ordinary one: the flag is state rather than content, so a board
+    caught mid-cascade still round-trips to the board somebody authored.
+    """
+    if not cell:
+        return '.'
+    if is_whorl(cell):
+        return '@'
+    return LETTER_OF[cell]
+
+
 def written(cells, width):
     """The rows again, for a round trip."""
-    out = []
-    for y in range(len(cells) // width):
-        out.append(''.join(LETTER_OF[cells[y * width + x]] if cells[y * width + x] else '.'
-                           for x in range(width)))
-    return out
+    return [''.join(letter(cells[y * width + x]) for x in range(width))
+            for y in range(len(cells) // width)]
 
 
 class Well(object):
     """One well being played on. Mirrors `FallBoard`."""
 
-    __slots__ = ('w', 'h', 'cells', 'flooded', 'struck')
+    __slots__ = ('w', 'h', 'cells', 'flooded', 'struck', 'fused', 'kindled')
 
     def __init__(self, cells, width, height, flooded=False, struck=None):
         self.w, self.h = width, height
@@ -159,8 +218,18 @@ class Well(object):
         #: carried by `_settle` and cleared when the glass leaves. Empty at rest.
         self.struck = set(struck) if struck else set()
 
+        #: How many whorls have drawn in *two* motes, and how many of those merges reached
+        #: white. Authoring readings rather than rules - see `_draw`. `kindled` is the strict
+        #: one: two yellows drawn together make a tidier board, and a yellow and a blue make a
+        #: burst the player arranged and could not have bought with any single drop.
+        self.fused = 0
+        self.kindled = 0
+
     def fork(self):
-        return Well(self.cells, self.w, self.h, self.flooded, self.struck)
+        fork = Well(self.cells, self.w, self.h, self.flooded, self.struck)
+        fork.fused = self.fused
+        fork.kindled = self.kindled
+        return fork
 
     # ---------------------------------------------------------------- reading
     def top_of(self, x):
@@ -177,12 +246,11 @@ class Well(object):
 
     def landing(self, colour, x):
         top = self.top_of(x)
-        if top >= 0:
-            cell = self.cells[top * self.w + x]
-            # A drop is taken by whatever is on top if it lacks the colour - a mote is enriched,
-            # a lens is charged. Neither raises the stack.
-            if (cell | colour) != cell:
-                return top
+        # A drop is taken by whatever is on top if it lacks the colour - a mote is enriched, a
+        # lens is charged, and a whorl is opened whatever the colour. None of the three raises
+        # the stack; the third always does.
+        if top >= 0 and takes(self.cells[top * self.w + x], colour):
+            return top
         return self.first_free(x)
 
     def enriches(self, colour, x):
@@ -203,18 +271,18 @@ class Well(object):
     def takes(self, colour, x):
         """Whether whatever is on top takes this drop, rather than the stack growing a row.
 
-        One question with two answers - a mote lacking the colour is enriched, a lens lacking it
-        is charged - and it exists because asking the two separately is how a caller comes to ask
-        only one of them. `enriches` is false for every charging drop, which is right for the
-        question it asks and was catastrophic where it stood in for this one: the view used it to
-        decide whether the falling widget was handed back, so a drop taken in by glass left the
-        lens's own widget drawn on a board that no longer tracked it.
+        One question with three answers - a mote lacking the colour is enriched, a lens lacking
+        it is charged, a whorl is opened whatever the colour - and it exists because asking them
+        separately is how a caller comes to ask only one of them. `enriches` is false for every
+        charging drop, which is right for the question it asks and was catastrophic where it
+        stood in for this one: the view used it to decide whether the falling widget was handed
+        back, so a drop taken in by glass left the lens's own widget drawn on a board that no
+        longer tracked it.
         """
         top = self.top_of(x)
         if top < 0:
             return False
-        cell = self.cells[top * self.w + x]
-        return (cell | colour) != cell
+        return takes(self.cells[top * self.w + x], colour)
 
     def bursts(self, colour, x):
         top = self.top_of(x)
@@ -252,6 +320,10 @@ class Well(object):
         return sum(1 for c in self.cells if is_lens(c))
 
     @property
+    def whorls(self):
+        return sum(1 for c in self.cells if is_whorl(c))
+
+    @property
     def glass(self):
         """The lenses and how full each is, for a report that has to say how much is asked."""
         return [charge(c) for c in self.cells if is_lens(c)]
@@ -274,7 +346,14 @@ class Well(object):
         at = self.landing(colour, x)
         index = at * self.w + x
         enriched = self.cells[index] != 0
-        self.cells[index] |= colour
+
+        # A whorl is *opened* by a drop rather than filled by it. It holds no channels at all
+        # - `|=` here would quietly make a coloured whorl, which is a cell no rule in this file
+        # has a name for and which the letters cannot even write down.
+        if is_whorl(self.cells[index]):
+            self.cells[index] |= LIT
+        else:
+            self.cells[index] |= colour
 
         steps = self._resolve(colour, record)
         self.flooded = any(self.cells[BRIM * self.w + x] for x in range(self.w))
@@ -305,14 +384,22 @@ class Well(object):
         while True:
             burst = [i for i, c in enumerate(self.cells) if c == ALL]
             fired = [i for i, c in enumerate(self.cells) if c == FULL]
-            if not burst and not fired:
+            turning = [i for i, c in enumerate(self.cells) if is_lit(c)]
+            if not burst and not fired and not turning:
                 break
 
             # Everything leaving this wave. Read once, before anything is applied, so nothing
             # here depends on which cell was scanned first.
-            going = set(burst) | set(fired)
+            going = set(burst) | set(fired) | set(turning)
 
-            washed, charged, beams = [], [], []
+            # And what each turning whorl draws in, settled *before* any light is handed out.
+            # Both orderings matter. It is decided before the washes because a mote in motion has
+            # to be invisible to them - it is not where the wave thinks it is by the time the wave
+            # lands, so it takes nothing and stops no beam - and it is read off the board as it
+            # stands, so a mote that is bursting this wave is never also drawn in.
+            fuses = self._draw(turning, going)
+
+            washed, charged, caught, beams = [], [], [], []
             gain = {}
 
             def reached(ni, light):
@@ -322,9 +409,21 @@ class Well(object):
                 cell = self.cells[ni]
                 if not cell:
                     return
+                if is_whorl(cell):
+                    # A whorl takes no channels - it holds none and never will. What light does
+                    # to one is *open* it, and only once: a second arrival in the same wave finds
+                    # it already open, which keeps the wave free of any reading order. It turns
+                    # on the wave after this one, which is the wind-up the player needs in order
+                    # to see which two motes are about to be taken.
+                    if is_lit(cell):
+                        return
+                    self.cells[ni] = cell | LIT
+                    caught.append(ni)
+                    return
                 taken = light & ~cell
                 if not taken:
                     return                      # holds it already: takes nothing
+
                 first = ni not in gain
                 gain[ni] = gain.get(ni, 0) | taken
                 if not first:
@@ -376,6 +475,24 @@ class Well(object):
                 self.cells[at] = 0
                 self.struck.discard(at)
 
+            # A whorl turns: what it drew in leaves the cells it stood in, and comes back as one
+            # mote in the whorl's own. A whorl that drew in nothing closes and leaves bare ground,
+            # which is what keeps it removable - and therefore what keeps a well holding nothing
+            # but whorls winnable. Two motes in and one out, which is also why the loop still
+            # terminates: no wave can leave the well as full as it found it.
+            for fuse in fuses:
+                for side in (fuse['left'], fuse['right']):
+                    if side >= 0:
+                        self.cells[side] = 0
+
+                self.cells[fuse['at']] = fuse['into']
+                self.struck.discard(fuse['at'])
+
+                if fuse['left'] >= 0 and fuse['right'] >= 0:
+                    self.fused += 1
+                    if fuse['into'] == ALL:
+                        self.kindled += 1
+
             washed_with = [gain[at] for at in washed]
             charged_with = [gain[at] for at in charged]
             for at in washed:
@@ -387,13 +504,71 @@ class Well(object):
             wave += 1
 
             if record:
-                steps.append(dict(burst=burst, fired=fired, washed=washed, charged=charged,
+                steps.append(dict(burst=burst, fired=fired, fuses=fuses,
+                                  caught=caught,
+                                  washed=washed, charged=charged,
                                   washed_with=washed_with, charged_with=charged_with,
                                   beams=beams, wave=wave, moved=moved))
             else:
                 steps.append(None)
 
         return steps
+
+    def _draw(self, turning, going):
+        """What every whorl turning this wave draws in, and what the pair becomes.
+
+        **Two passes, and the split is the whole of what makes the result order-free.** Every
+        claim is read off the board as it stands; only when all of them have been taken are the
+        drawn motes marked as in motion. Marked as they were claimed, a mote with a turning whorl
+        on each side would go to whichever of the two this loop reached first, which is a reading
+        order in the one method the whole class is arranged to keep free of one. Marked
+        afterwards, both whorls see it, both are refused it, and it stays where it is.
+        """
+        fuses = []
+
+        for at in turning:
+            left = self._claim(at, -1, going)
+            right = self._claim(at, +1, going)
+
+            into = 0
+            if left >= 0:
+                into |= self.cells[left]
+            if right >= 0:
+                into |= self.cells[right]
+
+            fuses.append(dict(at=at, left=left, right=right, into=into))
+
+        for fuse in fuses:
+            for side in (fuse['left'], fuse['right']):
+                if side >= 0:
+                    going.add(side)
+
+        return fuses
+
+    def _claim(self, whorl, dx, going):
+        """The mote one step `dx` of a turning whorl, if it may be drawn in, or -1.
+
+        Three refusals, and each is a rule rather than a guard. A cell already leaving this wave
+        is not drawn in - the light got to it first. Anything that is not a mote is not drawn in:
+        **a whorl draws light and nothing else**, so glass stays where it stands and two whorls
+        never eat each other. And a mote with a turning whorl on *each* side is let go by both,
+        which is the only symmetric answer available.
+        """
+        mx = whorl % self.w + dx
+        if not (0 <= mx < self.w):
+            return -1
+
+        at = whorl + dx
+        if at in going or not is_mote(self.cells[at]):
+            return -1
+
+        bx = mx + dx
+        if 0 <= bx < self.w:
+            beyond = at + dx
+            if is_whorl(self.cells[beyond]) and is_lit(self.cells[beyond]):
+                return -1
+
+        return at
 
     def _settle(self):
         moved = []
@@ -517,10 +692,18 @@ def greedy(cells, width, height, deal):
             if result is None or trial.flooded:
                 continue
 
-            # Glass counts, exactly as `FallResolution.Burst` counts it: both are cells the
-            # well had to be rid of, and a greedy player ranking them differently from the
-            # shipped solver is a mirror that measures a different board.
-            burst = sum(len(step['burst']) + len(step['fired']) for step in result['steps'])
+            # Everything the drop was rid of, exactly as `FallResolution.Burst` counts it: a
+            # greedy player ranking them differently from the shipped solver is a mirror that
+            # measures a different board. A merge counts as the *one* cell it really frees -
+            # two motes go in and one comes out - so a whorl that fuses a pair is worth two and
+            # one that closes on nothing is worth one.
+            burst = 0
+            for step in result['steps']:
+                burst += len(step['burst']) + len(step['fired'])
+                for fuse in step['fuses']:
+                    burst += (1 if fuse['left'] >= 0 else 0) \
+                           + (1 if fuse['right'] >= 0 else 0) \
+                           + (0 if fuse['into'] else 1)
             enriches = board.enriches(colour, x)
             better = burst > best_burst or (burst == best_burst and enriches and not best_enriches)
             if not better:
@@ -578,6 +761,84 @@ def blast(cells, width, height):
     return most, longest
 
 
+def merges(cells, width, height, deal, par):
+    """What the whorls actually did along a shortest solution, and the line it took.
+
+    **This is the measurement two withdrawn mechanics never had, and it is why they shipped.**
+    Every other reading here - solvable, par, ways, greedy, aim - is passed just as happily by an
+    object that decorates the board as by one that decides it. This asks the only question that
+    separates them: did the thing actually *do* something a player could not have had without it.
+
+    Returns (fused, kindled, line). `fused` counts whorls that drew in two motes; `kindled` counts
+    those whose union reached white, which is the strict reading and the one a board is authored
+    against. Two yellows drawn together make a yellow, which is a tidier board and nothing else; a
+    yellow and a blue make a burst the player arranged and could not have bought with any single
+    drop. Nought kindled on a board carrying whorls is the answer that condemns it.
+    """
+    if par < 1:
+        return 0, 0, []
+
+    frontier = [(Well(cells, width, height), [])]
+    for depth in range(par):
+        colour = deal[depth % len(deal)]
+        nxt = []
+        for board, path in frontier:
+            for x in range(width):
+                if not board.can_drop(colour, x):
+                    continue
+                child = board.fork()
+                child.drop(colour, x)
+                if child.flooded:
+                    continue
+                if child.is_empty:
+                    return child.fused, child.kindled, path + [(colour, x)]
+                nxt.append((child, path + [(colour, x)]))
+        frontier = nxt
+        if not frontier:
+            break
+
+    return 0, 0, []
+
+
+def best_merges(cells, width, height, deal, par):
+    """The same, over *every* shortest solution, taking the most a par line ever makes of them.
+
+    `merges` reports the first winning line the search happens to reach, which is an arbitrary one
+    among however many `ways` counts - so a board whose whorls are load-bearing can report nought
+    simply because one particular ordering did without them. The reading that judges a board has
+    to be what its *best* shortest play does, or an author is tuning against a coin toss.
+
+    Bounded by the same par depth, so it costs what one extra breadth-first sweep costs.
+    """
+    if par < 1:
+        return 0, 0
+
+    frontier = [Well(cells, width, height)]
+    best = (0, 0)
+
+    for depth in range(par):
+        colour = deal[depth % len(deal)]
+        nxt = []
+        for board in frontier:
+            for x in range(width):
+                if not board.can_drop(colour, x):
+                    continue
+                child = board.fork()
+                child.drop(colour, x)
+                if child.flooded:
+                    continue
+                if child.is_empty:
+                    if (child.kindled, child.fused) > (best[1], best[0]):
+                        best = (child.fused, child.kindled)
+                    continue
+                nxt.append(child)
+        frontier = nxt
+        if not frontier:
+            break
+
+    return best
+
+
 def survey(rows, motes, width=None, height=None):
     """Everything an author needs to judge a well by, from the two things they wrote."""
     cells, w, h = parse_rows(rows, width, height)
@@ -591,7 +852,10 @@ def survey(rows, motes, width=None, height=None):
                 greedy=greedy(cells, w, h, deal),
                 aim=blast(cells, w, h)[0], reach=blast(cells, w, h)[1],
                 motes=well.motes, headroom=well.headroom,
-                lenses=well.lenses, glass=well.glass, wanted=well.wanted,
+                lenses=well.lenses, glass=well.glass, whorls=well.whorls,
+                fused=best_merges(cells, w, h, deal, par)[0],
+                kindled=best_merges(cells, w, h, deal, par)[1],
+                wanted=well.wanted,
                 channels=_channels(deal))
 
 

@@ -53,6 +53,15 @@ What deliberately does **not** belong here:
 | `ModeValidator` | How each mode is proved fit to ship, and the registry of them. |
 | `ChapterMapValidator` | Node collisions, backwards trails, the end-of-chapter marker's clearance. |
 | `ChapterModeValidator` | A chapter's declared mode against the mode its levels are (invariant 20h). |
+| `BudRunnerReading` | What the vines on a Budburst grove are worth, measured by cutting them (invariant 20m). |
+
+`BudRunnerReading` is a type of its own rather than a private method because it is asked
+**twice** — `ModeValidator` asks it to decide whether a grove may ship, and `BudLadderTests`
+asks it of every grove that already has, pinning the answer against `Tools/verify/bud.py`. A
+second copy of the arithmetic would be a second thing to keep in step with the mirror, and that
+is not hypothetical: the two *did* disagree by one on `b02_crossvine`, because the fixture
+compared a chain's four numbers where the mirror compared the whole grove — and a vine that
+moves a colour without setting anything off changes the second and not the first.
 
 ## A mode is declared three times
 

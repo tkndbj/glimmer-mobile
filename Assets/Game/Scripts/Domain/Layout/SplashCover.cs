@@ -1,4 +1,4 @@
-namespace GlimmerGrove.Layout
+﻿namespace GlimmerGrove.Layout
 {
     /// <summary>Where the launch screen's picture and its loading bar sit, in canvas units.</summary>
     public readonly struct SplashPlan
@@ -69,9 +69,10 @@ namespace GlimmerGrove.Layout
     /// </para>
     /// <para>
     /// <b>The picture is cover-fit and bottom-aligned, and both halves are load-bearing.</b>
-    /// The canvas is width-matched at 1080 (see <c>Boot.BuildCanvas</c>), so its height is
-    /// whatever the device's aspect makes it — 1440 on a 4:3 tablet, 2400 on a 20:9 phone —
-    /// and a single portrait picture cannot be all of those shapes. Cover-fitting keeps it
+    /// The canvas is width-matched (see <c>Boot.BuildCanvas</c>), so its height is whatever
+    /// the device's aspect makes it — 2400 on a 20:9 phone, and 2160 on anything squarer than
+    /// a phone, which <see cref="CanvasFit"/> widens the canvas for instead — and a single
+    /// portrait picture cannot be all of those shapes. Cover-fitting keeps it
     /// full-bleed, which is the house rule (letterboxing a painting to dodge a camera is a
     /// worse picture than the camera). Bottom-aligning decides <em>which</em> edge pays for
     /// that: the crop comes off the top, which is sky, because everything the screen is for —
@@ -178,7 +179,11 @@ namespace GlimmerGrove.Layout
         /// <summary>
         /// Where everything goes on a canvas this size.
         /// </summary>
-        /// <param name="canvasW">Canvas width in reference units — 1080, always (width-matched).</param>
+        /// <param name="canvasW">
+        /// Canvas width in reference units: 1080 on a phone, and wider on a display
+        /// <see cref="CanvasFit"/> has widened the canvas for. Everything below is a function of
+        /// it rather than of the constant, which is why a tablet needed no change here.
+        /// </param>
         /// <param name="canvasH">Canvas height in reference units, which varies with the device.</param>
         /// <param name="safeBottom">
         /// The bottom inset the system has taken, in canvas units — a home indicator, a gesture

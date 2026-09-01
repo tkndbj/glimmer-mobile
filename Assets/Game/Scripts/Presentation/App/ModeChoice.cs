@@ -1,4 +1,5 @@
 using GlimmerGrove.Content;
+using GlimmerGrove.Persistence;
 using UnityEngine;
 
 namespace GlimmerGrove
@@ -37,12 +38,16 @@ namespace GlimmerGrove
             return GameMode.Default;
         }
 
+        /// <summary>
+        /// Remembers a mode. Written on the map's <em>arrival</em> rather than on the tap, so
+        /// it is set far more often than it changes — hence <see cref="DevicePrefs.WriteString"/>,
+        /// which does nothing at all when it already says this.
+        /// </summary>
         public static void Write(GameMode mode)
         {
             if (!mode.IsValid) return;
 
-            PlayerPrefs.SetString(Key, mode.Value);
-            PlayerPrefs.Save();
+            DevicePrefs.WriteString(Key, mode.Value);
         }
     }
 }

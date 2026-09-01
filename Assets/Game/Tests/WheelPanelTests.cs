@@ -77,6 +77,14 @@ namespace GlimmerGrove.Tests
         /// <summary>
         /// There is room to grow the wheel, and how much is worth knowing rather than
         /// rediscovering: the diameter is the number everybody wants to raise.
+        ///
+        /// <para>
+        /// The figure was 800 and is now 1250, and nothing about the wheel moved. The ceiling
+        /// did: <c>PanelStack.TightestCanvas</c> is the shortest canvas this game is drawn on,
+        /// and <c>CanvasFit</c> widened that from a 4:3 tablet's 1440 to 1890, so every modal in
+        /// the game gained 450 units of budget. The wheel is deliberately not spending any of
+        /// it — a modal that fills the screen was the complaint the widening answered.
+        /// </para>
         /// </summary>
         [Test]
         public void ThereIsHeadroomAndItIsWorthAtLeastAModestWheel()
@@ -84,9 +92,9 @@ namespace GlimmerGrove.Tests
             float spare = PanelStack.TallestPanel - WheelPanel.Tallest;
 
             Assert.Greater(spare, 0f);
-            Assert.Less(WheelPanel.WheelSize + spare, 800f,
-                        "if the wheel could grow past 800 units the budget has moved and this " +
-                        "test is no longer telling anybody anything");
+            Assert.Less(WheelPanel.WheelSize + spare, 1250f,
+                        "if the wheel could grow past this the budget has moved and this test " +
+                        "is no longer telling anybody anything");
         }
 
         /// <summary>The rows sit inside the panel's own width, with the frame showing round them.</summary>

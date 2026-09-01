@@ -1,4 +1,4 @@
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using GlimmerGrove.Content;
 using GlimmerGrove.Daily;
 using GlimmerGrove.Events;
@@ -1254,10 +1254,16 @@ namespace GlimmerGrove
             var host = UIKit.Node("Petals", parent);
             host.SetAsFirstSibling();
 
+            // The canvas rather than the design width, and the same for the fall below: on a
+            // tablet the two are different numbers (`Layout.CanvasFit`), and petals scattered
+            // across 1080 units of a 1620-unit canvas would fall down a column through the
+            // middle of the screen with clear air either side of it.
+            float across = Boot.CanvasWidth, down = Boot.CanvasHeight;
+
             for (int i = 0; i < count; i++)
             {
                 float size = Random.Range(16f, 34f);
-                float x = Random.Range(-.55f, .55f) * Boot.RefWidth;
+                float x = Random.Range(-.55f, .55f) * across;
                 float fall = Random.Range(11f, 20f);
                 float drift = Random.Range(40f, 130f) * (Random.value < .5f ? -1f : 1f);
                 float spin = Random.Range(-70f, 70f);
@@ -1273,7 +1279,7 @@ namespace GlimmerGrove
                     if (!rt) return;
                     float t = Mathf.Repeat(k + phase, 1f);
                     rt.anchoredPosition = new Vector2(x + drift * Mathf.Sin(t * 5.2f + phase * 6f),
-                                                      120f - t * (Boot.RefHeight + 260f));
+                                                      120f - t * (down + 260f));
                     rt.localRotation = Quaternion.Euler(0f, 0f, spin * t * 6f);
                 }, petal).Loop(-1, false);
             }

@@ -182,10 +182,24 @@ namespace GlimmerGrove.Modes
         /// <summary>The most cracks a cocoon may take before the critter is out.</summary>
         public const int ToughestCocoon = 2;
 
+        /// <summary>
+        /// How many runners one grove may be strung with.
+        ///
+        /// <b>A readability bound rather than a cost one.</b> A runner is the one thing here that
+        /// moves colour somewhere the player is not looking, so a grove laced with them stops
+        /// being a board somebody can read at a glance and becomes a wiring diagram — which is
+        /// the failure invariant 20l is about, arriving from the other direction. The search does
+        /// not care.
+        /// </summary>
+        public const int MaxRunners = 6;
+
         public readonly int Width, Height;
 
         readonly BudGround[] _ground;
         readonly int[] _value;      // a colour mask on a flower, cracks on a cocoon, 0 otherwise
+
+        /// <summary>The other end of the runner rooted at each cell, or -1 where none is.</summary>
+        readonly int[] _runner;
 
         public readonly BudDeal Deal;
 
@@ -203,7 +217,7 @@ namespace GlimmerGrove.Modes
         public bool Grows => Regrow != null;
 
         public BudLayout(int width, int height, BudGround[] ground, int[] value, BudDeal deal,
-                         BudDeal regrow = null)
+                         BudDeal regrow = null, int[] runner = null)
         {
             if (width < MinWidth || width > MaxWidth)
                 throw new ArgumentOutOfRangeException(nameof(width));
@@ -221,6 +235,10 @@ namespace GlimmerGrove.Modes
 
             if (ground != null) Array.Copy(ground, _ground, Math.Min(ground.Length, n));
             if (value != null) Array.Copy(value, _value, Math.Min(value.Length, n));
+
+            _runner = new int[n];
+            for (int i = 0; i < n; i++) _runner[i] = -1;
+            if (runner != null) Array.Copy(runner, _runner, Math.Min(runner.Length, n));
         }
 
         public int Count => _ground.Length;
@@ -243,6 +261,37 @@ namespace GlimmerGrove.Modes
             for (int i = 0; i < _ground.Length; i++) if (_ground[i] == kind) n++;
             return n;
         }
+
+        /// <summary>
+        /// The far end of the runner rooted at this cell, or -1 where nothing is.
+        ///
+        /// <para>
+        /// <b>A runner belongs to the ground, never to what is standing on it</b>, and that is
+        /// the whole of why it survives a living grove. Everything here falls: a flower that
+        /// carried its own vine would drag it down the board, and old wood was refused from this
+        /// mode for exactly that reason turned round (a barrier sliding down a grove is a wall
+        /// that fell over). Two squares of the grove are joined once and for ever, and whatever
+        /// is standing on them at the moment a bunch goes off is what the runner carries
+        /// between.
+        /// </para>
+        /// </summary>
+        public int FarEnd(int cell)
+            => cell >= 0 && cell < _runner.Length ? _runner[cell] : -1;
+
+        public bool IsRunner(int cell) => FarEnd(cell) >= 0;
+
+        /// <summary>How many runners are strung across this grove. A runner has two ends.</summary>
+        public int Runners
+        {
+            get
+            {
+                int ends = 0;
+                for (int i = 0; i < _runner.Length; i++) if (_runner[i] >= 0) ends++;
+                return ends / 2;
+            }
+        }
+
+        public bool HasRunners => Runners > 0;
 
         /// <summary>Cocoons that take more than one crack.</summary>
         public int ToughCocoons
@@ -293,6 +342,18 @@ namespace GlimmerGrove.Modes
             if (y < Height - 1) into.Add(index + Width);
             if (x > 0) into.Add(index - 1);
         }
+
+        /// <summary>
+        /// The same grove with every vine cut. What the runners are measured against.
+        ///
+        /// <b>Invariant 26g's own test, said in code</b>: replace the new object with the nearest
+        /// existing one and see whether anything changes. The nearest existing thing to a runner
+        /// is no runner, and the difference that can be measured is par — so a grove whose par is
+        /// the same with the vines cut is a grove whose vines decided nothing, which is exactly
+        /// the state that shipped a mirror and a wick before this mode ever met one.
+        /// </summary>
+        public BudLayout WithoutRunners()
+            => new BudLayout(Width, Height, _ground, _value, Deal, Regrow);
 
         public BudGround[] Standing()
         {
@@ -385,6 +446,150 @@ namespace GlimmerGrove.Modes
             ground = cells;
             value = values;
             return true;
+        }
+
+        /// <summary>
+        /// Reads the second grid a grove may author: which squares are joined by a runner.
+        ///
+        /// <para>
+        /// A letter marks an end and the same letter marks its partner; <c>.</c>, <c>-</c> and a
+        /// space mark ordinary ground. A tag has to be written exactly twice, because a runner
+        /// has two ends and nothing here would know what a third one meant.
+        /// </para>
+        /// <para>
+        /// <b>A grid of its own rather than a list of coordinates</b>, for the reason
+        /// <see cref="TryReadRows"/> is one: an author reads a grove by looking at it, and a
+        /// runner is a fact about <em>where</em>. Written as a list, a vine's two ends are four
+        /// numbers nobody can picture; written as a layer, it is a shape lying over the board it
+        /// belongs to, and a wrong one is visible in the file that caused it.
+        /// </para>
+        /// </summary>
+        public static bool TryReadRunners(string[] rows, int width, int height,
+                                          out int[] runner, out string error)
+        {
+            runner = null;
+            error = null;
+
+            var ends = new int[width * height];
+            for (int i = 0; i < ends.Length; i++) ends[i] = -1;
+
+            if (rows == null || rows.Length == 0) { runner = ends; return true; }
+
+            if (rows.Length != height)
+            {
+                error = "the runners are drawn over the grove, so they are " + height +
+                        " rows; this one writes " + rows.Length;
+                return false;
+            }
+
+            // Where each tag was first seen, so the second sighting can be joined to it.
+            var seen = new Dictionary<char, int>(4);
+
+            for (int y = 0; y < height; y++)
+            {
+                string row = rows[y] ?? string.Empty;
+                int x = 0;
+
+                for (int i = 0; i < row.Length; i++)
+                {
+                    char c = row[i];
+                    if (c == '\t') continue;
+
+                    if (x >= width)
+                    {
+                        error = "runner row " + y + " is wider than the " + width +
+                                " columns this grove declares";
+                        return false;
+                    }
+
+                    int at = y * width + x;
+                    x++;
+
+                    if (c == '.' || c == '-' || c == ' ') continue;
+
+                    if (c < 'a' || c > 'z')
+                    {
+                        error = "'" + c + "' at runner row " + y + " column " + (x - 1) +
+                                " is not a runner; a runner is written as one lower-case letter " +
+                                "on each of its two ends, with '.' everywhere else";
+                        return false;
+                    }
+
+                    if (!seen.TryGetValue(c, out int first))
+                    {
+                        seen[c] = at;
+                        continue;
+                    }
+
+                    if (ends[first] >= 0)
+                    {
+                        error = "runner '" + c + "' is written three or more times. A runner has " +
+                                "two ends; use another letter for another runner";
+                        return false;
+                    }
+
+                    ends[first] = at;
+                    ends[at] = first;
+                }
+
+                if (x != width)
+                {
+                    error = "runner row " + y + " names " + x + " cells, expected " + width;
+                    return false;
+                }
+            }
+
+            foreach (var pair in seen)
+            {
+                if (ends[pair.Value] >= 0) continue;
+
+                error = "runner '" + pair.Key + "' is written once. A runner joins two squares, " +
+                        "so its letter goes on both of them";
+                return false;
+            }
+
+            runner = ends;
+            return true;
+        }
+
+        /// <summary>
+        /// The runners written back out, or null on a grove strung with none.
+        ///
+        /// Tagged in reading order — the first runner met is <c>a</c> — so the answer is a pure
+        /// function of the grove rather than of whichever letters somebody happened to pick,
+        /// which is what makes a round-trip proof a proof.
+        /// </summary>
+        public string[] WrittenRunners()
+        {
+            if (!HasRunners) return null;
+
+            var rows = new string[Height];
+            var line = new char[Width];
+            char tag = 'a';
+
+            var named = new Dictionary<int, char>(MaxRunners * 2);
+
+            for (int i = 0; i < _runner.Length; i++)
+            {
+                if (_runner[i] < 0 || named.ContainsKey(i)) continue;
+
+                named[i] = tag;
+                named[_runner[i]] = tag;
+                tag++;
+            }
+
+            for (int y = 0; y < Height; y++)
+            {
+                for (int x = 0; x < Width; x++)
+                {
+                    int at = Index(x, y);
+                    line[x] = named.TryGetValue(at, out char c) ? c : '.';
+                }
+
+                rows[y] = new string(line);
+            }
+
+            return rows;
         }
 
         /// <summary>The grove written back out, which is what a round-trip proof compares.</summary>

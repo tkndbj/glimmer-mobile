@@ -13,8 +13,19 @@ namespace GlimmerGrove.Modes
         /// <summary>A flower going off.</summary>
         Burst = 1,
 
-        /// <summary>Colour landing on a flower beside a bunch.</summary>
-        Wash = 2,
+        /// <summary>
+        /// Colour running the length of a runner, from the end that went off to the far one.
+        ///
+        /// <b>Its own kind, sorted between the burst that sends it and the wash that lands, so
+        /// the score itself says which order the three happen in.</b> The alternative was a wash
+        /// carrying a flag and the view working out for itself when to draw the travel, which is
+        /// the shape this whole class exists to remove: a cue is a moment, and a runner has two
+        /// of them.
+        /// </summary>
+        Run = 2,
+
+        /// <summary>Colour landing on a flower beside a bunch, or at the end of a runner.</summary>
+        Wash = 3,
 
         /// <summary>
         /// The grove ripening one flower between taps — <c>BudBoard.Creep</c>.
@@ -23,28 +34,28 @@ namespace GlimmerGrove.Modes
         /// wash has its cause on screen a tenth of a second earlier; a ripen has none anywhere
         /// near it and can land right across the board from the tap. See <c>BudWash.Ripened</c>.
         /// </summary>
-        Ripen = 3,
+        Ripen = 4,
 
         /// <summary>A cocoon taking a crack and holding.</summary>
-        Crack = 4,
+        Crack = 5,
 
         /// <summary>A cocoon opening and a critter getting out.</summary>
-        Free = 5,
+        Free = 6,
 
         /// <summary>The grove's own answer to a wave: the jolt, the ring, the shake, the flash.</summary>
-        Answer = 6,
+        Answer = 7,
 
         /// <summary>A piece coming down. <c>From</c> is where it fell from, -1 if it grew.</summary>
-        Fall = 7,
+        Fall = 8,
 
         /// <summary>The board put back in step with the model, once, when nothing is moving.</summary>
-        Tidy = 8,
+        Tidy = 9,
 
         /// <summary>The word.</summary>
-        Word = 9,
+        Word = 10,
 
         /// <summary>The run may carry on.</summary>
-        Done = 10,
+        Done = 11,
     }
 
     /// <summary>
@@ -74,7 +85,10 @@ namespace GlimmerGrove.Modes
         /// <summary>The cell it happens to, or -1 for a cue about the whole grove.</summary>
         public readonly int Cell;
 
-        /// <summary>A fall's origin: the cell it came from, or -1 for one that grew.</summary>
+        /// <summary>
+        /// Where this came from: a fall's origin cell (-1 for one that grew), or the runner end
+        /// that sent a colour. -1 on everything else.
+        /// </summary>
         public readonly int From;
 
         /// <summary>A burst's colour, a wash's arriving colour. <c>Energy.None</c> otherwise.</summary>
@@ -252,6 +266,7 @@ namespace GlimmerGrove.Modes
             float rowLag = BudTempo.RowLag * slack;
             float gap = BudTempo.WaveGap * slack;
             float washLag = BudTempo.WashLag * slack;
+            float runLag = BudTempo.RunLag * slack;
             float crackLag = BudTempo.CrackLag * slack;
 
             var cues = new List<BudCue>(pulses.Length * 2 + washes.Length + drops.Length + 8);
@@ -260,6 +275,15 @@ namespace GlimmerGrove.Modes
             // read by everything that has to come after one — the washes, the cocoons and, above
             // all, the rain.
             var burstAt = new Dictionary<int, float>(64);
+
+            // **And when each *hole* of it is made, which is not the same set.** A burst leaves
+            // bare ground and so does a cocoon opening, and the rain has to wait on either — a
+            // flower dealt into a cocoon's square before the shell has broken is a piece falling
+            // through something that is still standing there. `burstAt` cannot simply be widened
+            // to carry both: it is also what a wash, a crack and a critter getting out are timed
+            // against, and a cocoon opening beside another cocoon is not a reason for the second
+            // to wait on the first.
+            var holeAt = new Dictionary<int, float>(64);
 
             float t = 0f, body = 0f, wordAt = -1f;
 
@@ -270,6 +294,7 @@ namespace GlimmerGrove.Modes
             for (int wave = 0; wave <= waves; wave++)
             {
                 burstAt.Clear();
+                holeAt.Clear();
 
                 // ------------------------------------------------------ the bunch winds up
                 int inWave = Count(pulses, wave, BudPulseKind.Burst);
@@ -290,6 +315,7 @@ namespace GlimmerGrove.Modes
 
                     float at = from + nth * step;
                     burstAt[pulses[i].Cell] = at;
+                    holeAt[pulses[i].Cell] = at;
                     if (at > last) last = at;
 
                     // **Its wind-up runs right up to the moment it goes off, rather than for a
@@ -325,8 +351,31 @@ namespace GlimmerGrove.Modes
                     // came to read as a glitch. It waits for a still board.
                     if (washes[i].Ripened) { ripen = washes[i]; ripened = true; continue; }
 
-                    float at = Beside(burstAt, washes[i].Cell, width, from) + washLag;
+                    // **A runner's colour is timed off the end that sent it, not off a
+                    // neighbour**, because there is no burst next door to wait for — `Beside`
+                    // would fall back to the head of the wave and the light would leave before
+                    // the flower it left did. The travel and the landing are laid out together
+                    // here so the two can never come to disagree about when either happened.
+                    float at;
+
+                    if (washes[i].Ran)
+                    {
+                        float sentAt = burstAt.TryGetValue(washes[i].From, out float went)
+                                     ? went : from;
+
+                        cues.Add(new BudCue(BudCueKind.Run, sentAt, runLag, wave,
+                                            washes[i].Cell, from: washes[i].From,
+                                            colour: washes[i].To, nth: sent, of: sends));
+
+                        at = sentAt + runLag;
+                    }
+                    else
+                    {
+                        at = Beside(burstAt, washes[i].Cell, width, from) + washLag;
+                    }
+
                     cues.Add(new BudCue(BudCueKind.Wash, at, 0f, wave, washes[i].Cell,
+                                        from: washes[i].Ran ? washes[i].From : -1,
                                         colour: washes[i].To, nth: sent++, of: sends));
                     if (at > last) last = at;
                 }
@@ -361,6 +410,7 @@ namespace GlimmerGrove.Modes
                     if (greet < lastGreet + BudTempo.GreetLag)
                         greet = lastGreet + BudTempo.GreetLag;
                     lastGreet = greet;
+                    holeAt[pulses[i].Cell] = greet;
 
                     cues.Add(new BudCue(BudCueKind.Free, greet, 0f, wave, pulses[i].Cell,
                                         nth: freed++, of: frees));
@@ -385,7 +435,7 @@ namespace GlimmerGrove.Modes
                 }
 
                 // ------------------------------------------------------ and the grove falls
-                float ended = Rain(cues, drops, wave, width, burstAt, from, hold, rowLag);
+                float ended = Rain(cues, drops, wave, width, holeAt, from, hold, rowLag);
                 if (ended > last) last = ended;
 
                 if (last > body) body = last;
@@ -448,7 +498,7 @@ namespace GlimmerGrove.Modes
         /// </para>
         /// </summary>
         static float Rain(List<BudCue> cues, BudDrop[] drops, int wave, int width,
-                          Dictionary<int, float> burstAt, float from, float hold, float rowLag)
+                          Dictionary<int, float> holeAt, float from, float hold, float rowLag)
         {
             int falling = 0;
             for (int i = 0; i < drops.Length; i++) if (drops[i].Wave == wave) falling++;
@@ -484,12 +534,19 @@ namespace GlimmerGrove.Modes
                 int to = drop.Cell / width;
                 int came = drop.Grew ? -1 : drop.From / width;
 
-                // **Every burst this piece falls into or past**, which is the exact causal set:
+                // **Every hole this piece falls into or past**, which is the exact causal set:
                 // the cells between where it stood and where it comes to rest are precisely the
                 // ones that emptied. A flower that grew enters from over the top of the grove, so
                 // everything in its column at or above its destination is on its way down.
+                //
+                // **A hole is a burst *or* a cocoon opening**, and reading only the bursts is a
+                // fault this shipped with: a cocoon is cracked by what goes off *beside* it, so
+                // its square empties on a beat of its own — later than the burst that did it, and
+                // later still when two critters are held apart so each is seen. Measured on
+                // `b01_firstburst`, a flower was dealt into a cocoon's square 45ms before the
+                // shell it was standing in broke.
                 float cause = from;
-                foreach (var pair in burstAt)
+                foreach (var pair in holeAt)
                 {
                     if (pair.Key % width != at) continue;
 

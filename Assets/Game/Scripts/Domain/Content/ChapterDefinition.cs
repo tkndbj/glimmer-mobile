@@ -55,7 +55,7 @@ namespace GlimmerGrove.Content
             Accent = accent;
             Slate = slate;
             Backdrop = backdrop;
-            MapStrips = mapStrips != null && mapStrips.Length > 0 ? mapStrips : new[] { "strip0" };
+            MapStrips = mapStrips != null && mapStrips.Length > 0 ? mapStrips : new[] { "map1_strip0" };
             TeaserX = ChapterMap.TeaserAcross(teaserX);
         }
 

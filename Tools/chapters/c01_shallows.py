@@ -55,8 +55,10 @@ import sys
 HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.dirname(os.path.dirname(HERE))
 sys.path.insert(0, os.path.join(ROOT, "Tools", "verify"))
+sys.path.insert(0, HERE)
 
 from author import Board, fit                                    # noqa: E402
+import mapart                                                    # noqa: E402
 
 CHAPTER = "c01_shallows"
 BODY = os.path.join(ROOT, "Assets", "StreamingAssets", "Content", "chapters", CHAPTER + ".json")
@@ -505,10 +507,14 @@ def g10(seed, bias):
 
 
 # ---------------------------------------------------------------- the chapter
-# Palette, art, map positions and the strip count are unchanged from the chapter that
-# shipped: the boards were rebuilt, not the shallows. Nothing here needs art regenerating,
-# because `make_chapter_art.py` grades a backdrop from a level's own accent and slate and
-# neither moved.
+# Palette and map positions are unchanged from the chapter that shipped: the boards were
+# rebuilt, not the shallows. The art is no longer this file's decision at all - the map and
+# the ten skies come from `mapart` and the ordinal below, which is what makes the first
+# chapter of every mode the same place.
+#
+# The palette is still authored and still matters: `accent` and `slate` are the board's own
+# light and its plate, which is where a glade's identity belongs. They no longer reach the
+# backdrop.
 PALETTE = {
     "c01_first_light": (None, None),          # the opener wears the chapter's own colours
     "c01_twin_streams": ("#4FC1FF", "#0F2A4A"),
@@ -522,10 +528,11 @@ PALETTE = {
     "c01_grovekeepers_knot": ("#9C8CFF", "#171436"),
 }
 
-# The backdrop each glade overrides the chapter's with. Glade one inherits, and glades
-# three and four have always shared `play_2` - held exactly as shipped so no art moves.
-BACKDROP = [None, "play_1", "play_2", "play_2", "play_3",
-            "play_4", "play_5", "play_6", "play_7", "play_8"]
+#: Which chapter of its own mode this is. It buys the map and the ten skies - see
+#: `mapart`, which owns that arithmetic for every chapter of every mode.
+ORDINAL = 1
+STRIPS = mapart.strips(ORDINAL)
+SKIES = mapart.skies(ORDINAL)
 
 MAPX = [0.32, 0.68, 0.30, 0.70, 0.33, 0.67, 0.31, 0.69, 0.34, 0.66]
 MAPY = [0.05, 0.14, 0.23, 0.32, 0.41, 0.50, 0.59, 0.68, 0.77, 0.86]
@@ -625,8 +632,8 @@ def chapter_json(built):
     doc["id"] = CHAPTER
     doc["accent"] = "#FFC93C"
     doc["slate"] = "#123640"
-    doc["backdrop"] = "play_0"
-    doc["mapStrips"] = [f"strip{i}" for i in range(6)]
+    doc["backdrop"] = SKIES[0]
+    doc["mapStrips"] = list(STRIPS)
 
     levels = []
     for i, (lid, make, target) in enumerate(BOARDS):
@@ -643,8 +650,8 @@ def chapter_json(built):
         if accent:
             level["accent"] = accent
             level["slate"] = slate
-        if BACKDROP[i]:
-            level["backdrop"] = BACKDROP[i]
+        if i > 0:                       # the first glade inherits the chapter's backdrop
+            level["backdrop"] = SKIES[i]
         level["rows"] = board.rows()
         levels.append(level)
     doc["levels"] = levels

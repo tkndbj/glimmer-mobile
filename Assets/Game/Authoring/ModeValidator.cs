@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using GlimmerGrove.Modes;
 
@@ -195,15 +196,22 @@ namespace GlimmerGrove.Content
             }
 
             // Glass is only ever removed by light reaching it, and light only ever comes from a
-            // burst — so a well made of nothing but lenses can never lose one and can never be
-            // emptied. The search below proves it unwinnable, but only after spending the whole
-            // node budget failing to, and it says so in words about a search rather than in
-            // words about the board.
-            if (layout.Lenses > 0 && layout.Lenses == layout.Motes)
+            // burst — so a well with no mote in it can never charge a lens and can never lose
+            // one. The search below proves it unwinnable, but only after spending the whole node
+            // budget failing to, and it says so in words about a search rather than in words
+            // about the board.
+            //
+            // A whorl counts on the wrong side of this rather than being left out of it, and the
+            // reason is worth stating: a whorl is always *removable* — a drop opens one and one
+            // with nothing beside it closes — but it emits no light whatever. It gives back the
+            // motes it drew in, so a well holding only glass and whorls has nothing to draw and
+            // nothing to cook, and the glass in it is there for ever.
+            if (layout.Lenses > 0 && layout.Lenses + layout.Whorls == layout.Motes)
                 issues.Add(new LevelIssue(LevelIssueSeverity.Error,
-                    $"every one of this well's {layout.Lenses} cells is glass, and glass is only " +
-                    "ever filled by light that has already travelled. With no mote to cook there " +
-                    "can never be a burst, so nothing here can ever be charged or got rid of"));
+                    $"every one of this well's {layout.Motes} cells is glass or a whorl, and " +
+                    "glass is only ever filled by light that has already travelled. With no mote " +
+                    "to cook there can never be a burst, so nothing here can ever be charged or " +
+                    "got rid of"));
 
             // Room above par is `spare`, in drops, so a budgetFactor on a well is a number
             // that does nothing. Refused rather than ignored, for ChapterDto.order's reason —
@@ -299,6 +307,36 @@ namespace GlimmerGrove.Content
                     "off, so three drops of charging would buy nothing and the board would play " +
                     "the same without the glass. Stand a lens on the floor with its light across " +
                     "a gap, or looking into a blob the wash cannot reach"));
+
+            // Invariant 5d, counted, for the object the third chapter is built on — and unlike
+            // the lens's `aim` this one is exact rather than geometry, because **gravity never
+            // moves a whorl sideways**. A whorl draws in the cells to its left and its right, so
+            // the two columns it can ever draw from are the two it is authored between, whatever
+            // the well collapses into. One standing against a wall therefore has one side for
+            // its whole life and can never merge a pair: it can shift a single mote one column
+            // in and then close, which is a hole the player had to poke rather than a decision
+            // they made.
+            //
+            // A warning rather than a refusal, because moving one mote inward is a real if small
+            // effect and the first board of a chapter may legitimately carry one as scenery. The
+            // reading that actually condemns a board is `kindled` — how often a merge reached
+            // white along a shortest solution — and that needs the search's winning line, which
+            // is what `Tools/verify/fall.py` and the ladder fixtures report.
+            int walled = 0;
+            for (int at = 0; at < layout.Count; at++)
+            {
+                if (!FallCell.IsWhorl(layout.At(at))) continue;
+
+                int x = at % layout.Width;
+                if (x == 0 || x == layout.Width - 1) walled++;
+            }
+
+            if (walled > 0)
+                issues.Add(new LevelIssue(LevelIssueSeverity.Warning,
+                    $"{walled} of this well's {layout.Whorls} whorl(s) stand against a wall, and " +
+                    "gravity never moves a whorl sideways — so those can only ever draw in one " +
+                    "mote and can never merge a pair, which is the whole of what a whorl is for. " +
+                    "Stand them at least one column in"));
 
             // Zero headroom means the tallest column is one careless drop from the brim before
             // the player has touched anything. Legitimate as a finale and alarming anywhere
@@ -508,11 +546,12 @@ namespace GlimmerGrove.Content
                     "does nothing: room above par is 'spare', counted in taps. Use 'spare', or a " +
                     "negative budgetFactor if it is meant to be unlosable"));
 
-            // Two things are checkable by *looking*, and both would otherwise come back from the
-            // search as "nobody can finish this" — which is true and tells the author nothing
+            // Three things are checkable by *looking*, and each would otherwise come back from
+            // the search as "nobody can finish this" — which is true and tells the author nothing
             // about what to move.
             Reachable(layout, issues);
             Settled(layout, issues);
+            Strung(layout, issues);
 
             // **Old wood is retired from this mode.** The parser still understands `#` — the
             // character is shared vocabulary with Groovekeeper and a second rule about it would
@@ -593,6 +632,10 @@ namespace GlimmerGrove.Content
             // And the bar this mode actually has. A player who never looks past this tap is the
             // player this mode is for, and a grove they cannot finish inside the satchel is
             // asking for more than the mode promises.
+            // And whether the vines are worth anything, which is the one reading this mode's
+            // second chapter added. See `Carrying` — invariant 26g's test, not a difficulty.
+            Carrying(layout, issues);
+
             int careless = BudSolver.Careless(layout, level.Tuning.MoveBudget);
 
             if (careless < 0)
@@ -634,6 +677,124 @@ namespace GlimmerGrove.Content
                     "grows one — so no bunch can ever crack it and that critter can never be " +
                     "freed"));
             }
+        }
+
+        /// <summary>
+        /// Everything about a runner that can be read off the picture rather than searched for.
+        ///
+        /// <para>
+        /// <b>The one that is an error is adjacency</b>, and it is an error rather than a taste:
+        /// a burst already washes its colour into every flower touching it, so a runner joining
+        /// two squares that touch delivers a colour the wave was delivering anyway. It is the
+        /// purest form of the fault this project keeps paying for — an object that rejects no
+        /// arrangement (invariant 5d) — and unlike the readings below it can be proved by
+        /// looking at two numbers.
+        /// </para>
+        /// </summary>
+        static void Strung(BudLayout layout, List<LevelIssue> issues)
+        {
+            if (!layout.HasRunners) return;
+
+            if (layout.Runners > BudLayout.MaxRunners)
+                issues.Add(new LevelIssue(LevelIssueSeverity.Error,
+                    $"this grove is strung with {layout.Runners} runners, above the " +
+                    $"{BudLayout.MaxRunners} a grove may carry. A runner moves colour somewhere " +
+                    "the player is not looking, so a board laced with them is a wiring diagram " +
+                    "rather than somewhere to make a mess"));
+
+            for (int i = 0; i < layout.Count; i++)
+            {
+                int far = layout.FarEnd(i);
+                if (far < i) continue;                  // once per runner, at its lower end
+
+                int ax = i % layout.Width, ay = i / layout.Width;
+                int bx = far % layout.Width, by = far / layout.Width;
+                int span = Math.Abs(ax - bx) + Math.Abs(ay - by);
+
+                if (span <= 1)
+                {
+                    issues.Add(new LevelIssue(LevelIssueSeverity.Error,
+                        $"the runner between {ax},{ay} and {bx},{by} joins two squares that " +
+                        "already touch, and a burst washes its colour into everything touching " +
+                        "it — so this vine can never deliver anything the wave was not " +
+                        "delivering anyway"));
+                }
+                else if (span < 3)
+                {
+                    issues.Add(new LevelIssue(LevelIssueSeverity.Warning,
+                        $"the runner between {ax},{ay} and {bx},{by} spans {span} squares, which " +
+                        "is about as far as one wave of an ordinary chain reaches on its own. A " +
+                        "runner is worth authoring for the distance it covers"));
+                }
+
+                End(layout, i, issues);
+                End(layout, far, issues);
+            }
+        }
+
+        /// <summary>What one end of a runner is standing on, which decides whether it can work.</summary>
+        static void End(BudLayout layout, int end, List<LevelIssue> issues)
+        {
+            if (layout.IsFlower(end)) return;
+
+            int x = end % layout.Width, y = end / layout.Width;
+
+            if (layout.IsCocoon(end))
+            {
+                issues.Add(new LevelIssue(LevelIssueSeverity.Warning,
+                    $"the runner end at {x},{y} is authored under a cocoon, so that half of it " +
+                    "is inert until the grove falls something else onto it. Legal — and a vine " +
+                    "nobody can use on the opening board is a vine nobody will notice is there"));
+                return;
+            }
+
+            issues.Add(new LevelIssue(LevelIssueSeverity.Error,
+                $"the runner end at {x},{y} stands on nothing a bunch could ever include. A " +
+                "runner carries a bursting flower’s colour, so both its ends belong on the " +
+                "grove itself"));
+        }
+
+        /// <summary>
+        /// Whether the vines decide anything, measured by cutting them.
+        ///
+        /// <para>
+        /// <b>This is invariant 26g’s test rather than a difficulty reading</b>, and the two
+        /// mechanics that were withdrawn from Lightfall are why it exists at all: a mirror and a
+        /// wick both passed every check in this repository while changing nothing about any board
+        /// they stood on, and the comparison that would have caught either is one line —
+        /// <em>replace the new object with the nearest existing one and see whether anything
+        /// changes</em>. Here the nearest existing thing is no runner, and what is compared is
+        /// every opening tap the grove has, played out both ways.
+        /// </para>
+        /// <para>
+        /// <b>Not par, which is the reading this started as and which cannot work in this
+        /// mode.</b> A grove is dealt far more taps than its answer needs and its chains reach
+        /// most of the board, so par sits on a floor set by how many critters are shut in and
+        /// how far apart they are — measured across a few thousand swept boards, cutting every
+        /// vine moved par on <em>none</em> of them, on groves where the vine plainly decided how
+        /// the grove played. A metric that answers "nothing" for every input is not a strict
+        /// gate, it is a broken one, and shipping it would have meant every level of the chapter
+        /// carrying a warning nobody could act on.
+        /// </para>
+        /// <para>
+        /// A warning rather than a refusal, for <c>CheckDecidableTiles</c>’ reason: a grove
+        /// may carry a vine that does nothing on the board <em>as dealt</em> and everything two
+        /// taps in, once the grove has fallen through it.
+        /// </para>
+        /// </summary>
+        static void Carrying(BudLayout layout, List<LevelIssue> issues)
+        {
+            if (!layout.HasRunners) return;
+
+            var reading = BudRunnerReading.Of(layout);
+            if (reading.Changed > 0) return;
+
+            issues.Add(new LevelIssue(LevelIssueSeverity.Warning,
+                $"not one of this grove's {reading.Taps} opening taps plays out differently with " +
+                "every vine cut, so the runners are scenery on the board as dealt. That is the " +
+                "state a mirror and a wick both shipped in and were withdrawn for — move an end " +
+                "where a bunch can take it in, or put two alike beside the far one so the colour " +
+                "that arrives completes something"));
         }
 
         /// <summary>

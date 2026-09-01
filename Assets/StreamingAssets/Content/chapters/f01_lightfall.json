@@ -3,14 +3,14 @@
   "id": "f01_lightfall",
   "accent": "#FF6B57",
   "slate": "#241414",
-  "backdrop": "play_2",
+  "backdrop": "sky_00",
   "mapStrips": [
-    "strip0",
-    "strip1",
-    "strip2",
-    "strip3",
-    "strip4",
-    "strip5"
+    "map1_strip0",
+    "map1_strip1",
+    "map1_strip2",
+    "map1_strip3",
+    "map1_strip4",
+    "map1_strip5"
   ],
   "levels": [
     {
@@ -36,6 +36,7 @@
       "id": "f01_two_lights",
       "mapX": 0.72,
       "mapY": 0.14,
+      "backdrop": "sky_01",
       "fall": {
         "width": 4,
         "height": 6,
@@ -54,6 +55,7 @@
       "id": "f01_the_kindling",
       "mapX": 0.26,
       "mapY": 0.225,
+      "backdrop": "sky_02",
       "fall": {
         "width": 5,
         "height": 7,
@@ -73,6 +75,7 @@
       "id": "f01_narrow_water",
       "mapX": 0.7,
       "mapY": 0.31,
+      "backdrop": "sky_03",
       "fall": {
         "width": 5,
         "height": 8,
@@ -93,6 +96,7 @@
       "id": "f01_the_stack",
       "mapX": 0.28,
       "mapY": 0.395,
+      "backdrop": "sky_04",
       "fall": {
         "width": 5,
         "height": 7,
@@ -112,6 +116,7 @@
       "id": "f01_deep_cistern",
       "mapX": 0.74,
       "mapY": 0.48,
+      "backdrop": "sky_05",
       "fall": {
         "width": 6,
         "height": 8,
@@ -132,6 +137,7 @@
       "id": "f01_brimming",
       "mapX": 0.3,
       "mapY": 0.56,
+      "backdrop": "sky_06",
       "fall": {
         "width": 6,
         "height": 8,
@@ -152,6 +158,7 @@
       "id": "f01_the_undertow",
       "mapX": 0.68,
       "mapY": 0.645,
+      "backdrop": "sky_07",
       "fall": {
         "width": 6,
         "height": 9,
@@ -173,6 +180,7 @@
       "id": "f01_last_ember",
       "mapX": 0.26,
       "mapY": 0.73,
+      "backdrop": "sky_08",
       "fall": {
         "width": 6,
         "height": 9,
@@ -194,6 +202,7 @@
       "id": "f01_the_deep_well",
       "mapX": 0.72,
       "mapY": 0.815,
+      "backdrop": "sky_09",
       "fall": {
         "width": 6,
         "height": 9,

@@ -55,6 +55,20 @@ namespace GlimmerGrove.Tests
             /// </summary>
             public string regrow;
 
+            /// <summary>
+            /// The runners, as a second grid over the first. Absent on a grove strung with none.
+            ///
+            /// See <c>BudLayout.TryReadRunners</c>: one lower-case letter on each of a runner's
+            /// two ends, <c>.</c> everywhere else.
+            /// </summary>
+            public string[] runners;
+
+            /// <summary>How many runners the grid above is expected to describe.</summary>
+            public int runnerCount;
+
+            /// <summary>How many vines the best opening tap fires.</summary>
+            public int ran;
+
             public int par;
             public int ways;
             public int nodes;
@@ -127,7 +141,39 @@ namespace GlimmerGrove.Tests
                                                 out var ground, out var value, out string error),
                           test.name + ": " + error);
 
-            return new BudLayout(width, test.rows.Length, ground, value, deal, strip);
+            Assert.IsTrue(BudLayout.TryReadRunners(test.runners, width, test.rows.Length,
+                                                   out var runners, out string runnerError),
+                          test.name + ": " + runnerError);
+
+            return new BudLayout(width, test.rows.Length, ground, value, deal, strip, runners);
+        }
+
+        /// <summary>
+        /// How many vines the best opening tap fires. Mirrors <c>bud.biggest</c>'s third answer,
+        /// and it is counted off the washes rather than off the board — a runner that delivers a
+        /// colour the far end already wears changes nothing, and it still fired.
+        /// </summary>
+        static int Ran(BudLayout layout)
+        {
+            var board = new BudBoard(layout);
+            var washes = new List<BudWash>(64);
+            var best = BudChainResult.Nothing;
+            int colour = layout.Deal.At(0), ran = 0;
+
+            for (int i = 0; i < layout.Count; i++)
+            {
+                if (!board.CanTap(i, colour)) continue;
+
+                var chain = board.Preview(i, colour, null, washes);
+                if (chain.Waves < best.Waves
+                    || (chain.Waves == best.Waves && chain.Burst <= best.Burst)) continue;
+
+                best = chain;
+                ran = 0;
+                foreach (var wash in washes) if (wash.Ran) ran++;
+            }
+
+            return ran;
         }
 
         /// <summary>
@@ -177,6 +223,9 @@ namespace GlimmerGrove.Tests
                 Assert.AreEqual(test.bestWaves, best.Waves, why + " (bestWaves)");
                 Assert.AreEqual(test.bestBurst, best.Burst, why + " (bestBurst)");
                 Assert.AreEqual(test.bestFreed, best.Freed, why + " (bestFreed)");
+
+                Assert.AreEqual(test.runnerCount, layout.Runners, why + " (runners)");
+                Assert.AreEqual(test.ran, Ran(layout), why + " (ran)");
 
                 if (test.par > 0)
                 {
@@ -253,6 +302,7 @@ namespace GlimmerGrove.Tests
 
             bool chain = false, unfinishable = false, nomove = false;
             bool tough = false, wood = false, refused = false;
+            bool runner = false, idle = false;
 
             foreach (var test in file.cases)
             {
@@ -264,6 +314,12 @@ namespace GlimmerGrove.Tests
                 if (survey.Proved && survey.Par == 0 && layout.Flowers > 0) nomove = true;
                 if (layout.ToughCocoons > 0) tough = true;
                 if (layout.Stones > 0) wood = true;
+
+                if (layout.Runners > 0)
+                {
+                    runner = true;
+                    if (test.ran == 0) idle = true;
+                }
 
                 if (test.beats != null)
                     foreach (var beat in test.beats)
@@ -285,6 +341,12 @@ namespace GlimmerGrove.Tests
                                 "bunch or a wash starting to cross it");
             Assert.IsTrue(refused, "no case where a tap is refused, so nothing here would notice " +
                                    "a colour being spent on a flower it cannot change");
+            Assert.IsTrue(runner, "no case with a runner on it, so nothing here would notice a " +
+                                  "vine stopping carrying colour across the grove");
+            Assert.IsTrue(idle, "no case with a runner that does NOT fire, so nothing here would " +
+                                "notice the threshold going away — a vine that fires on a bunch " +
+                                "merely touching an end is invariant 20j's solvent, and no board " +
+                                "would ever look wrong for it");
         }
     }
 }

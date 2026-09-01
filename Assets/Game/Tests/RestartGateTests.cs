@@ -1,11 +1,13 @@
 using System;
 using System.Collections.Generic;
 using System.Reflection;
+using System.Text.RegularExpressions;
 using GlimmerGrove.Content;
 using GlimmerGrove.Persistence;
 using GlimmerGrove.Progression;
 using NUnit.Framework;
 using UnityEngine;
+using UnityEngine.TestTools;
 using UnityEngine.UI;
 
 namespace GlimmerGrove.Tests
@@ -401,6 +403,15 @@ namespace GlimmerGrove.Tests
 
             Tick(panel);
             Assert.IsFalse(panel.IsLeaving, "and again on its next frame while still covered");
+
+            // Flow.Dismiss ends a panel the way the game does, with Object.Destroy — which is
+            // correct in a build and *refused* in edit mode, where it logs an error and does
+            // nothing. Hence the DestroyImmediate underneath it, which is what actually removes
+            // the object here. The expectation is what stops NUnit failing the case on that
+            // error log: the complaint is a fact about the runner, not about the panel, and
+            // teaching Flow to branch on Application.isPlaying would be shipping code bent
+            // around a test.
+            LogAssert.Expect(LogType.Error, new Regex("Destroy may not be called from edit mode"));
 
             Flow.Dismiss(over);
             UnityEngine.Object.DestroyImmediate(over.gameObject);

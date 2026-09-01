@@ -28,6 +28,14 @@ bomb rather than a dead cell: tapping it clears the three-by-three around it. An
 the grove always leans a little further toward going off, and always beside somebody who needs
 freeing. Every one of them is a pure function of the position and the tap, so par is still
 searchable and two players on the same grove still meet the same board.
+
+**And a fifth arrived with the second chapter: the RUNNER.** Two squares of the grove are joined
+by a vine, drawn as a second grid over the first. A flower standing on one end that goes off *as
+part of a bunch* sends its colour to whatever is standing on the other, however far away that is -
+the same wash, the same `|`, with the adjacency taken out. The threshold is that the end has to be
+*in* the bunch rather than merely beside one, which is what stops a spread that fires on anything
+nearby walking outward for ever (invariant 20j). It belongs to the ground and not to the flower,
+so a living grove can fall through it without dragging it down the board.
 """
 import sys
 from collections import deque
@@ -49,7 +57,7 @@ def channels(mask):
 
 
 class Grove(object):
-    def __init__(self, rows, deal, regrow=None):
+    def __init__(self, rows, deal, regrow=None, runners=None):
         rows = list(rows)
         self.h = len(rows); self.w = len(rows[0])
         self.ground = []
@@ -75,6 +83,42 @@ class Grove(object):
         # with, and a strip is scenery. See `BudDeal.TryParse`'s `pure` argument.
         self.regrow = [MASK[c] for c in regrow] if regrow else None
 
+        # The runners, as a partner index per cell. Mirrors `BudLayout.TryReadRunners`: one
+        # lower-case letter on each of a runner's two ends, '.' everywhere else, and a tag
+        # written anything but exactly twice is refused.
+        self.runner = [-1] * self.count
+        if runners:
+            rows2 = list(runners)
+            if len(rows2) != self.h:
+                raise ValueError("the runners are drawn over the grove, so they are %d rows; "
+                                 "this one writes %d" % (self.h, len(rows2)))
+            seen = {}
+            for y, row in enumerate(rows2):
+                if len(row) != self.w:
+                    raise ValueError("runner row %d names %d cells, expected %d"
+                                     % (y, len(row), self.w))
+                for x, c in enumerate(row):
+                    if c in (".", "-", " "):
+                        continue
+                    if not ("a" <= c <= "z"):
+                        raise ValueError("'%s' at runner row %d column %d is not a runner"
+                                         % (c, y, x))
+                    at = y * self.w + x
+                    if c not in seen:
+                        seen[c] = at
+                        continue
+                    if self.runner[seen[c]] >= 0:
+                        raise ValueError("runner '%s' is written three or more times" % c)
+                    self.runner[seen[c]] = at
+                    self.runner[at] = seen[c]
+            for c, at in seen.items():
+                if self.runner[at] < 0:
+                    raise ValueError("runner '%s' is written once; a runner joins two squares" % c)
+
+    @property
+    def runners(self):
+        return sum(1 for r in self.runner if r >= 0) // 2
+
     def beside(self, i):
         x, y = i % self.w, i // self.w
         out = []
@@ -92,15 +136,20 @@ class Grove(object):
 
 
 class Board(object):
-    def __init__(self, g, ground=None, colour=None, spent=0, grown=0):
+    def __init__(self, g, ground=None, colour=None, spent=0, grown=0, ran=0):
         self.g = g
         self.ground = list(ground if ground is not None else g.ground)
         self.colour = list(colour if colour is not None else g.colour)
         self.spent = spent
         self.grown = grown
 
+        #: How many times a vine has carried a colour on this board. Not part of the position -
+        #: `key` deliberately leaves it out, or two identical groves would look different to the
+        #: solver because of something that changed nothing about either of them.
+        self.ran = ran
+
     def copy(self):
-        return Board(self.g, self.ground, self.colour, self.spent, self.grown)
+        return Board(self.g, self.ground, self.colour, self.spent, self.grown, self.ran)
 
     def key(self):
         # Where the strip is up to is part of the position: two groves that look the same but
@@ -293,6 +342,10 @@ class Board(object):
     def settle(self, spent):
         burst = waves = freed = cracked = 0
 
+        # How many times a vine carried a colour this chain. Counted rather than derived, for
+        # `BudWash.From`'s reason - it is what says whether the runners were doing anything.
+        ran = 0
+
         # Mirrors `BudLayout.MostWaves`. Once a grove regrows, a chain is no longer bounded by
         # the board it started on - a repeating strip can resonate with the grove for ever.
         while waves < MOST_WAVES:
@@ -311,6 +364,14 @@ class Board(object):
                             wash.append((n, col))
                         elif self.ground[n] == "f":
                             wash.append((n, col))
+
+                    # And down the runner. Read here with the adjacency wash, before anything is
+                    # taken away, so the wave still has no reading order. Mirrors `BudBoard`.
+                    far = self.g.runner[a]
+                    if far >= 0 and self.ground[far] == "f":
+                        wash.append((far, col))
+                        ran += 1
+
                 for a in blob:
                     self.ground[a] = EMPTY; self.colour[a] = 0
                     burst += 1
@@ -331,6 +392,7 @@ class Board(object):
 
         self.grow()
         self.creep(spent)
+        self.ran += ran
         return (burst, waves, freed, cracked)
 
     def draw(self):
@@ -363,8 +425,8 @@ def over(par, hundredths):
     return (par * hundredths + 99) // 100
 
 
-def search(rows, deal, regrow=None):
-    g = Grove(rows, deal, regrow)
+def search(rows, deal, regrow=None, runners=None):
+    g = Grove(rows, deal, regrow, runners)
     start = Board(g)
     if start.done:
         return (0, 0, 0, True)
@@ -402,8 +464,8 @@ def search(rows, deal, regrow=None):
     return (0, 0, st["n"], False)
 
 
-def careless(rows, deal, budget, regrow=None):
-    g = Grove(rows, deal, regrow); b = Board(g)
+def careless(rows, deal, budget, regrow=None, runners=None):
+    g = Grove(rows, deal, regrow, runners); b = Board(g)
     for spent in range(budget):
         if b.done: return spent
         best, gain = None, None
@@ -417,25 +479,69 @@ def careless(rows, deal, budget, regrow=None):
     return budget if b.done else -1
 
 
-def biggest(rows, deal, regrow=None):
-    g = Grove(rows, deal, regrow); b = Board(g); best = (0, 0, 0, 0); where = None
+def biggest(rows, deal, regrow=None, runners=None):
+    """The best opening tap, and what it came to. `ran` is how many vines it fired."""
+    g = Grove(rows, deal, regrow, runners); b = Board(g)
+    best, where, ran = (0, 0, 0, 0), None, 0
     for i in range(g.count):
         if not b.can_tap(i): continue
         p = b.copy(); s = p.tap(i)
-        if (s[1], s[0]) > (best[1], best[0]): best, where = s, i
-    return best, where
+        if (s[1], s[0]) > (best[1], best[0]): best, where, ran = s, i, p.ran
+    return best, where, ran
 
 
-def survey(rows, deal, regrow=None):
-    g = Grove(rows, deal, regrow)
-    par, ways, nodes, proved = search(rows, deal, regrow)
-    best, where = biggest(rows, deal, regrow)
+def vines(rows, deal, regrow=None, runners=None):
+    """(changed, caught, legal) - what the vines are worth on the board as dealt.
+
+    Mirrors `BudValidator.Carrying` and the reading beside it. `changed` counts opening taps
+    that play out differently with every vine cut, which is invariant 26g's test: a mechanic that
+    changes no board is decoration, and a mirror and a wick both shipped in exactly that state.
+    `caught` is the number an author holds out for - a tap that bursts MORE because a vine
+    carried, which is the arrangement the player is making.
+
+    **Not par**, which is what this started as. A grove is dealt far more taps than its answer
+    needs, so par sits on a floor set by how many critters are shut in and how far apart they
+    are; cutting every vine moved par on none of a few thousand swept boards. A metric that
+    answers "nothing" for every input is a broken gate, not a strict one.
+    """
+    if not runners:
+        return (0, 0, 0)
+
+    g = Grove(rows, deal, regrow, runners)
+    cut = Grove(rows, deal, regrow, None)
+    a, b = Board(g), Board(cut)
+
+    changed = caught = legal = 0
+    for i in range(g.count):
+        if not a.can_tap(i):
+            continue
+        legal += 1
+        p, q = a.copy(), b.copy()
+        pr, qr = p.tap(i), q.tap(i)
+        if pr != qr or p.ground != q.ground or p.colour != q.colour:
+            changed += 1
+        if pr[0] > qr[0]:
+            caught += 1
+
+    return (changed, caught, legal)
+
+
+def survey(rows, deal, regrow=None, runners=None):
+    g = Grove(rows, deal, regrow, runners)
+    par, ways, nodes, proved = search(rows, deal, regrow, runners)
+    best, where, ran = biggest(rows, deal, regrow, runners)
+
+    changed, caught, legal = vines(rows, deal, regrow, runners)
+
     return dict(w=g.w, h=g.h, flowers=Board(g).flowers, cocoons=Board(g).shut,
                 par=par, ways=ways, nodes=nodes, proved=proved,
-                careless=careless(rows, deal, par + 5, regrow) if proved and par else -1,
-                bestBurst=best[0], bestWaves=best[1], bestFreed=best[2], bestAt=where)
+                careless=careless(rows, deal, par + 5, regrow, runners) if proved and par else -1,
+                bestBurst=best[0], bestWaves=best[1], bestFreed=best[2], bestAt=where,
+                runners=g.runners, ran=ran,
+                changed=changed, caught=caught, taps=legal)
 
 
 if __name__ == "__main__":
     sys.setrecursionlimit(10000)
-    print(survey(sys.argv[1].split(","), sys.argv[2]))
+    runners = sys.argv[3].split(",") if len(sys.argv) > 3 else None
+    print(survey(sys.argv[1].split(","), sys.argv[2], None, runners))

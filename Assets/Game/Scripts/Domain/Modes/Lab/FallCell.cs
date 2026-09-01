@@ -1,7 +1,7 @@
 namespace GlimmerGrove.Modes
 {
     /// <summary>
-    /// What may stand in a cell of a well: light, glass, or nothing.
+    /// What may stand in a cell of a well: light, glass, a whorl, or nothing.
     ///
     /// <para>
     /// <b>A well's cell was an <see cref="Energy"/> mask and nothing else, and the lens is the
@@ -24,26 +24,19 @@ namespace GlimmerGrove.Modes
     /// <b><see cref="Wants"/> is the one thing both kinds answer the same way, and that is the
     /// mechanic.</b> A mote wants what it needs to reach white and <em>burst</em>; a lens wants
     /// what it needs to reach white and <em>fire</em>. One sentence covers both — light fills a
-    /// thing up and then it goes off — which is why glass needed no new rule taught, only a new
-    /// consequence.
+    /// thing up and then it goes off — which is why the lens needed no new rule taught, only a
+    /// new consequence.
     /// </para>
     /// <para>
-    /// <b>A mirror is the third kind, and it is the first cell here that is <em>none</em> of
-    /// that.</b> It holds no light, wants nothing, takes nothing and can never be cooked; what
-    /// it does is turn a beam ninety degrees and carry on. So it is a second bit above the
-    /// channels rather than a value among them, for exactly the reason the lens is: a sentinel
-    /// inside the mask would collide with a colour, and a parallel array would be a third thing
-    /// <c>Fork</c>, <c>Settle</c> and <c>Signature</c> had to keep in step across hundreds of
-    /// thousands of forked boards.
-    /// </para>
-    /// <para>
-    /// <b>Two predicates had to be narrowed for it and both were silent failures.</b>
-    /// <see cref="IsMote"/> was "occupied and not glass", which reads a mirror as a mote that
-    /// wants all three — so a wash would have poured colour into it and a drop would have been
-    /// absorbed by it, both of them changing a cell whose whole point is that nothing changes
-    /// it. That is the same fault the lens laid on <c>Wanted</c> and <c>Enriches</c>, one
-    /// mechanic later, which is why <see cref="Takes"/> now exists here rather than being spelt
-    /// out at each of the three call sites that ask it.
+    /// <b>A whorl is the third kind, and it is the one this mode had to be argued into.</b> The
+    /// third chapter shipped a <em>mirror</em> first and a <em>wick</em> second, and both were
+    /// played and both came back as the same complaint: they were the lens again. A mirror only
+    /// ever bent somebody else's beam, so on a board with no glass it did nothing at all. A wick
+    /// held one authored colour and washed it into the four cells beside it when any light
+    /// touched it — which is a <em>burst</em> with the colour changed, on an object with no
+    /// decision in it: its colour was fixed by the author, its trigger was free, and the player
+    /// never chose anything about it at all. See <see cref="Whorl"/> for what replaced them, and
+    /// why it is a different kind of object rather than a stronger one.
     /// </para>
     /// </summary>
     public static class FallCell
@@ -74,35 +67,79 @@ namespace GlimmerGrove.Modes
         public const char LensLetter = 'O';
 
         /// <summary>
-        /// A mirror: the bit above <see cref="Lens"/>, so it is occupied, is not light, and is
-        /// not glass.
+        /// A whorl: a mouth in the well that, when light reaches it, draws the motes standing
+        /// either side of it together and <b>mixes them into one</b>.
         ///
         /// <para>
-        /// It carries no channels at all — <see cref="Held"/> is nought for one and always will
-        /// be — so it can never equal <see cref="Energy.All"/> or <see cref="Full"/> and the two
-        /// "has this reached white" tests in <c>FallBoard.Resolve</c> are correct for it with no
-        /// clause of their own. A mirror never goes off; it is spent by turning somebody else's
-        /// light.
+        /// <b>It is the mode's own arithmetic applied to a pair of operands it never had.</b>
+        /// Everything in Lightfall is <c>|</c> — a drop adds one channel to a mote, a wash adds
+        /// one channel to a neighbour, a beam adds all three. In every one of those the second
+        /// operand is a <em>colour</em>. A whorl is the only place two <em>motes</em> are ever
+        /// combined, so a cyan and a red that would each have needed a drop of their own become
+        /// one white on the spot. Nothing has to be taught for it: a player who has cooked a
+        /// single mote already knows what yellow and blue make.
+        /// </para>
+        /// <para>
+        /// <b>It pulls sideways, and that is a rule about gravity rather than a choice.</b> The
+        /// well falls; the one direction nothing here ever travels in is across. A lens fires
+        /// sideways for exactly this reason — up is the open air and down is the thing holding it
+        /// up — and a whorl is that same observation turned into a verb. It is the only object in
+        /// this mode that <em>moves</em> a mote, which is what makes it unmistakable on the
+        /// board: two lights slide together and fuse.
+        /// </para>
+        /// <para>
+        /// <b>What makes it hard is the pair, not the trigger.</b> Any light opens a whorl — a
+        /// burst beside it, a beam, or a drop straight onto it — for the reason the wick was
+        /// given that rule and the lens had one added after a player was stranded (invariant
+        /// 26f): an object only a chain can reach is an object that can strand a well. The price
+        /// is paid somewhere else entirely. What a whorl gives back is decided by <em>what is
+        /// standing either side of it at the instant it turns</em>, and the well collapses under
+        /// every chain — so the player is engineering two particular motes into two particular
+        /// cells and then choosing the moment. A lens asks for three drops of three colours in
+        /// any order at all; a whorl asks for one arrangement, which is a harder and a far more
+        /// interesting thing to ask for.
+        /// </para>
+        /// <para>
+        /// <b>It draws light and nothing else.</b> Glass beside a whorl stays where it is, and so
+        /// does another whorl: pulling glass in would mean deciding what a lens and a mote mix
+        /// into, and two whorls tugging at each other is a rule nobody can read off a board. A
+        /// whorl that turns with nothing beside it simply closes and is gone, which is what keeps
+        /// it removable and the well winnable.
+        /// </para>
+        /// <para>
+        /// It holds no channels of its own — bits nought to two are always clear on one — so
+        /// <see cref="Wants"/> is nought for it and it can never be enriched, charged or burst.
         /// </para>
         /// </summary>
-        public const int Mirror = 16;
+        public const int Whorl = 16;
 
         /// <summary>
-        /// Which way a mirror leans: set for <c>/</c>, clear for <c>\</c>.
+        /// A whorl that has caught the light and turns on the next wave.
         ///
-        /// A bit rather than two unrelated values so that <see cref="IsMirror"/> is one mask
-        /// test, and above the channels so that <see cref="Held"/> keeps answering nought.
+        /// <para>
+        /// A bit on the cell rather than a parallel array, so <c>Fork</c>, <c>Settle</c> and
+        /// <c>Signature</c> carry it for nothing — which is the whole reason the lens's own
+        /// "struck" flag was the awkward part of that mechanic. It is never authored: a board
+        /// that begins turning is a board that rearranges itself before anybody has touched it.
+        /// </para>
         /// </summary>
-        public const int Tilt = 32;
+        public const int Lit = 32;
 
-        /// <summary>A mirror leaning <c>/</c>: light arriving from the left leaves upward.</summary>
-        public const int Fore = Mirror | Tilt;
+        /// <summary>
+        /// A whorl, as authored. A spiral rather than a letter, because the one thing in this
+        /// well that is not a colour must not look like one.
+        /// </summary>
+        public const char WhorlLetter = '@';
 
-        /// <summary>A mirror leaning <c>\</c>: light arriving from the left leaves downward.</summary>
-        public const int Back = Mirror;
-
-        /// <summary>The two letters a mirror is authored with, and they are the two it draws as.</summary>
-        public const char ForeLetter = '/', BackLetter = '\\';
+        /// <summary>
+        /// The three digits a wick was authored with. <b>Retired, and refused by name.</b>
+        ///
+        /// A chapter file carrying one is content written for a build that no longer exists, and
+        /// reading it as anything at all would put a cell on the board no rule here knows what to
+        /// do with. Invariant 5f's rule for the duskcap, applied to the mechanic that this one
+        /// replaced.
+        /// </summary>
+        public const string RetiredWickLetters = "123";
 
         /// <summary>Whether anything at all stands here.</summary>
         public static bool Occupied(int cell) => cell != Empty;
@@ -110,36 +147,32 @@ namespace GlimmerGrove.Modes
         /// <summary>Whether this is glass.</summary>
         public static bool IsLens(int cell) => (cell & Lens) != 0;
 
-        /// <summary>Whether this is a mirror — the one thing here that light passes through.</summary>
-        public static bool IsMirror(int cell) => (cell & Mirror) != 0;
+        /// <summary>Whether this is a whorl.</summary>
+        public static bool IsWhorl(int cell) => (cell & Whorl) != 0;
+
+        /// <summary>Whether this whorl has caught the light and turns on the next wave.</summary>
+        public static bool IsLit(int cell) => (cell & Lit) != 0;
 
         /// <summary>
-        /// Whether this is a mote of light — the only kind that can be enriched or burst.
+        /// Whether this is a mote of light — the only kind that can be enriched, burst, or drawn
+        /// into a whorl.
         ///
-        /// <b>Both other kinds are excluded and the second one had to be added.</b> This read
-        /// "occupied and not glass", which answers <c>true</c> for a mirror — so a mirror would
-        /// have been washed by a burst beside it and would have taken a drop that landed on it,
-        /// on the one cell in this well that nothing is allowed to change.
+        /// <b>Both other kinds are excluded, and each had to be added when it arrived.</b> Read
+        /// as "occupied and not glass" this answers <c>true</c> for a whorl, which would let a
+        /// wash pour colour into a cell that holds none, let a drop be swallowed by one, and let
+        /// a whorl draw in another whorl.
         /// </summary>
-        public static bool IsMote(int cell) => cell != Empty && (cell & (Lens | Mirror)) == 0;
-
-        /// <summary>
-        /// The channels standing here, whether they are a mote's or a lens's charge. Nought for
-        /// a mirror, which holds none and never will — its bits are above the mask.
-        /// </summary>
-        public static int Held(int cell) => cell & Energy.All;
+        public static bool IsMote(int cell) => cell != Empty && (cell & (Lens | Whorl)) == 0;
 
         /// <summary>The channels a lens is holding. Nought for a mote and for bare ground.</summary>
         public static int Charge(int cell) => IsLens(cell) ? cell & Energy.All : Energy.None;
 
         /// <summary>
-        /// The channels this cell still lacks before it goes off. Nought for bare ground.
-        ///
-        /// See the remarks on the class: this is deliberately the same question for both kinds,
-        /// because it is the same question.
+        /// The channels this cell still lacks before it goes off. Nought for bare ground and for
+        /// a whorl, which never fills up — it opens, which is a different thing entirely.
         /// </summary>
         public static int Wants(int cell)
-            => cell == Empty || IsMirror(cell)
+            => cell == Empty || IsWhorl(cell)
              ? Energy.None
              : Energy.All & ~(cell & Energy.All);
 
@@ -151,53 +184,37 @@ namespace GlimmerGrove.Modes
         /// <b>The one question three callers ask, said once here rather than three times
         /// there.</b> <c>FallBoard.Landing</c>, <c>FallBoard.Takes</c> and the view's ghost all
         /// need it, and the version spelt out at each of them — <c>(cell | colour) != cell</c> —
-        /// is right for a mote, right for a lens and <em>wrong for a mirror</em>, which holds no
-        /// channels and so appears to lack every one of them. A drop would have been swallowed
-        /// by the glass wedge and turned it into something no rule here has a name for.
+        /// is right for a mote, right for a lens and wrong for a whorl, which holds no channels
+        /// at all and whose answer does not depend on the colour.
         /// </para>
         /// <para>
-        /// The lens paid for this lesson already: <c>Enriches</c> is <c>IsMote(...) &amp;&amp;
-        /// ...</c>, so it answers false for a charging drop, and standing in for this question
-        /// it left a pane hanging in the air over an emptied column. A question with three
-        /// answers asked as three predicates is one some caller will ask a third of.
+        /// <b>A drop opens an unlit whorl, whatever colour it is</b>, and that is a rule rather
+        /// than a convenience: it is what stops a well ever becoming unwinnable. A whorl is only
+        /// otherwise reached by a chain, and a player who cleared every mote around one would be
+        /// left tapping at a board that could not be finished — which is exactly the state the
+        /// lens shipped with and had to have a valve added for (invariant 26f). Here the valve is
+        /// the rule from the start.
         /// </para>
         /// </summary>
         public static bool Takes(int cell, int colour)
-            => cell != Empty && !IsMirror(cell) && (cell | colour) != cell;
-
-        /// <summary>
-        /// Turns a beam on this mirror: the way in, and the way out.
-        ///
-        /// <para>
-        /// <b>It lives here because it exists three times.</b> <c>FallBoard.Shoot</c> is what
-        /// ships, <c>FallSolver.Blast</c> reads where a lens is pointing for an author, and
-        /// <c>Tools/verify/fall.py</c> mirrors both offline — and the two in this assembly must
-        /// not be two transcriptions of one diagram (invariant 9a). The Python copy is pinned to
-        /// this one by <c>fall-vectors.json</c>.
-        /// </para>
-        /// <para>
-        /// Cell space counts rows <em>downward</em>, which is the whole of what makes this easy
-        /// to get backwards. A <c>/</c> leans from the low left to the high right, so light
-        /// travelling right (<c>+1,0</c>) leaves upward (<c>0,-1</c>): that is <c>(-dy,-dx)</c>.
-        /// A <c>\</c> leans the other way and is <c>(dy,dx)</c>. Both are their own inverse, so
-        /// a beam retracing its path leaves the way it came — which is the only reason the guard
-        /// against a beam chasing its own tail is a guard rather than a mechanic.
-        /// </para>
-        /// </summary>
-        public static void Turn(int cell, int dx, int dy, out int ndx, out int ndy)
         {
-            if ((cell & Tilt) != 0) { ndx = -dy; ndy = -dx; }     // '/'
-            else                    { ndx = dy;  ndy = dx;  }     // ''
+            if (cell == Empty) return false;
+            if (IsWhorl(cell)) return !IsLit(cell);
+
+            return (cell | colour) != cell;
         }
 
         /// <summary>
-        /// The letter this cell is authored with. Light is upper case and glass is lower, so a
-        /// board reads at a glance as what is made of what.
+        /// The letter this cell is authored with. Light is upper case, glass is lower, and a
+        /// whorl is a spiral — so a board says at a glance what is made of what.
+        ///
+        /// A whorl that has caught writes as an ordinary one: <see cref="Lit"/> is state rather
+        /// than content, and it cannot be authored.
         /// </summary>
         public static char Letter(int cell)
         {
             if (cell == Empty) return '.';
-            if (IsMirror(cell)) return (cell & Tilt) != 0 ? ForeLetter : BackLetter;
+            if (IsWhorl(cell)) return WhorlLetter;
             if (!IsLens(cell)) return Energy.Letter(cell);
 
             int charge = cell & Energy.All;
@@ -208,24 +225,25 @@ namespace GlimmerGrove.Modes
 
         /// <summary>
         /// Reads an authored cell letter: everything <see cref="Energy"/> understands in upper
-        /// case, the same set in lower case for glass already holding that much, and the two
-        /// ways of writing bare ground.
+        /// case, the same set in lower case for glass already holding that much, the two ways of
+        /// writing bare ground, and <see cref="WhorlLetter"/> for a whorl.
         ///
         /// <para>
-        /// <b>Pre-charged glass is the chapter's difficulty dial, which is why it is authorable
-        /// at all.</b> A drop's whole chain carries that drop's colour, so an empty lens needs
-        /// three separate drops of three separate colours each engineered to burst beside it —
+        /// <b>Pre-charged glass is a chapter's difficulty dial, which is why it is authorable at
+        /// all.</b> A drop's whole chain carries that drop's colour, so an empty lens needs three
+        /// separate drops of three separate colours each engineered to burst beside it —
         /// measured, that leaves 7 boards in 90 solvable where two-thirds-full glass leaves 50.
-        /// The charge is therefore how much a board asks, and it ramps across a chapter the way
-        /// mote count and headroom do.
+        /// </para>
+        /// <para>
+        /// A whorl has no such dial and authors no state at all: what it gives back is decided by
+        /// what the player has arranged beside it, which is the whole of the mechanic.
         /// </para>
         /// </summary>
         public static bool TryParse(char c, out int cell)
         {
             if (c == '.' || c == '-') { cell = Empty; return true; }
             if (c == LensLetter) { cell = Lens; return true; }
-            if (c == ForeLetter) { cell = Fore; return true; }
-            if (c == BackLetter) { cell = Back; return true; }
+            if (c == WhorlLetter) { cell = Whorl; return true; }
 
             bool glass = c >= 'a' && c <= 'z';
             char letter = glass ? char.ToUpperInvariant(c) : c;
@@ -253,20 +271,13 @@ namespace GlimmerGrove.Modes
     /// never held anything: the model has to say what happened, or the view will invent it.
     /// </para>
     /// <para>
-    /// <b>Two per lens charged the ordinary way and four per lens another lens struck</b>, plus
-    /// one more segment for every mirror any of them turns on. That is the payoff for charging
-    /// it, and it is what makes the shot worth stopping the board for.
+    /// Two per lens charged the ordinary way and four per lens another lens struck. That is the
+    /// payoff for charging it, and it is what makes the shot worth stopping the board for.
     /// </para>
     /// </summary>
     public readonly struct FallBeam
     {
-        /// <summary>
-        /// The cell the light leaves: the lens that fired, or the mirror that turned it.
-        ///
-        /// <b>A bend is two segments rather than a bent one</b>, which is what lets a view that
-        /// knows how to draw a straight shot draw a ricochet with no new machinery — and is why
-        /// <see cref="Leg"/> exists to say which is which.
-        /// </summary>
+        /// <summary>The cell the light leaves: the lens that fired.</summary>
         public readonly int From;
 
         /// <summary>Which way it goes. One of the four; never diagonal, never zero.</summary>
@@ -288,48 +299,67 @@ namespace GlimmerGrove.Modes
         /// </summary>
         public readonly int Hit;
 
-        /// <summary>
-        /// How many mirrors this light had already turned on before this segment began. Nought
-        /// for the shot leaving the lens.
-        ///
-        /// <para>
-        /// The view spends it as a delay, so a bend is watched as light arriving at the mirror
-        /// and then leaving it rather than as two beams drawn at once — which is the whole of
-        /// what makes a ricochet read as one travelling thing.
-        /// </para>
-        /// </summary>
-        public readonly int Leg;
-
-        /// <summary>
-        /// Whether <see cref="Hit"/> is a mirror this shot turned on rather than something it
-        /// spent itself against.
-        ///
-        /// <para>
-        /// <b>Both are a hit and only one is an arrival</b>, which the view cannot work out for
-        /// itself: it draws a shockwave where light lands, and a shockwave on a mirror would say
-        /// the shot stopped there. Asking the live board instead would be asking a board that
-        /// has already settled — the fault this whole step structure exists to make
-        /// unrepresentable.
-        /// </para>
-        /// </summary>
-        public readonly bool Turned;
-
-        public FallBeam(int from, int dx, int dy, int steps, int hit,
-                        int leg = 0, bool turned = false)
+        public FallBeam(int from, int dx, int dy, int steps, int hit)
         {
             From = from;
             Dx = dx;
             Dy = dy;
             Steps = steps;
             Hit = hit;
-            Leg = leg;
-            Turned = turned;
         }
 
-        /// <summary>Whether it reached something rather than leaving the well.</summary>
+        /// <summary>Whether it landed on something rather than leaving the well.</summary>
         public bool Landed => Hit >= 0;
+    }
 
-        /// <summary>Whether it spent itself on what it reached, which a turn does not.</summary>
-        public bool Absorbed => Hit >= 0 && !Turned;
+    /// <summary>
+    /// One whorl turning: the motes it drew in, and the mote they became.
+    ///
+    /// <para>
+    /// <b>It exists for <see cref="FallBeam"/>'s reason.</b> The model settles the whole cascade
+    /// before a frame is drawn, so the board a screen can read holds the position the chain
+    /// <em>ends</em> in — and a merge is two motes that were somewhere else a moment ago. Asked
+    /// of the settled board, "which motes did this whorl take" has no answer at all: their cells
+    /// are bare, and bare is also what a cell the author left empty looks like.
+    /// </para>
+    /// <para>
+    /// <see cref="Into"/> is carried rather than derived from the two sources, because a view
+    /// that OR-ed them itself would be a second copy of the one rule this object exists to
+    /// perform (invariant 9a, at the smallest scale it appears at).
+    /// </para>
+    /// </summary>
+    public readonly struct FallFuse
+    {
+        /// <summary>The whorl's own cell, where the merged mote comes to rest.</summary>
+        public readonly int At;
+
+        /// <summary>The cell to its left that was drawn in, or -1.</summary>
+        public readonly int Left;
+
+        /// <summary>The cell to its right that was drawn in, or -1.</summary>
+        public readonly int Right;
+
+        /// <summary>
+        /// The mote the whorl leaves behind: the union of what it drew in. Nought when it drew in
+        /// nothing at all, which is a whorl closing rather than a whorl merging.
+        /// </summary>
+        public readonly int Into;
+
+        public FallFuse(int at, int left, int right, int into)
+        {
+            At = at;
+            Left = left;
+            Right = right;
+            Into = into;
+        }
+
+        /// <summary>How many motes it drew in: nought, one, or two.</summary>
+        public int Drawn => (Left >= 0 ? 1 : 0) + (Right >= 0 ? 1 : 0);
+
+        /// <summary>
+        /// Whether the merge itself completed a mote, which is the whole payoff and the one
+        /// reading a board is authored against. See <c>FallBoard.Kindled</c>.
+        /// </summary>
+        public bool Kindled => Into == Energy.All;
     }
 }

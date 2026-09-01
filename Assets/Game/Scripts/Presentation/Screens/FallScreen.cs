@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using GlimmerGrove.Analytics;
 using GlimmerGrove.Content;
@@ -48,12 +48,36 @@ namespace GlimmerGrove
         FallRules Rules => Level != null ? Level.RulesAs<FallRules>() : null;
 
         /// <summary>
+        /// The band under this well, on the display it is being drawn on.
+        ///
+        /// <para>
+        /// A property rather than a field latched at build time, so the floor, the legend and
+        /// the view's tray cannot be taken from two different answers — which is a real hazard
+        /// rather than a tidy one, since the answer moves: a tablet in split view is resized
+        /// while the app is running, and the three are read in three different frames. It is two
+        /// pure functions of <c>Screen</c>, so asking again costs nothing.
+        /// </para>
+        /// </summary>
+        FallBand.Band Band => FallBand.Of(Boot.ShortCanvas);
+
+        /// <summary>
         /// The board's floor, read from <c>FallBand</c> rather than repeated here, so the legend
         /// below it and the well above it cannot come to disagree about where the floor is —
         /// which is exactly how a carefully measured band ends up under a tray.
+        ///
+        /// <para>
+        /// The floor is the one inset that differs by display, and only here. A well is the one
+        /// board in the game whose grid is bound by <em>height</em> — 4x6 to 6x10, so
+        /// <c>min(width / columns, usable / rows)</c> always takes the second term — which means
+        /// every unit of furniture under it comes straight off the cell, and on a 4:3 display it
+        /// took the cell down to 62 against a phone's 151. See <c>FallBand</c>. The top stays
+        /// 350 on every display because what it clears is the readout row, which
+        /// <c>ModeScreen</c> draws at the same place for every mode: a shorter one here would be
+        /// this screen alone deciding where a shared control sits.
+        /// </para>
         /// </summary>
         protected override Vector4 HostInset
-            => new Vector4(24f, FallBand.BoardFloor, 24f, 350f);
+            => new Vector4(24f, Band.BoardFloor, 24f, 350f);
 
         /// <summary>
         /// The top-right key pauses rather than restarting, which is Lightweave's rule for
@@ -100,6 +124,10 @@ namespace GlimmerGrove
 
             _finished = false;
             _closing = false;
+
+            // Handed the band rather than reading one of its own, so the tray it reserves and
+            // the floor `HostInset` left under it are the same answer.
+            _view.Band = Band;
 
             _view.Begin(Host, rules.Layout, Budget);
 
@@ -170,10 +198,19 @@ namespace GlimmerGrove
         /// </summary>
         void BuildLegend()
         {
+            var shape = Band;
+
             var band = UIKit.Box("Blends", Safe,
                                  new Vector2(FallBand.LegendWidth, FallBand.LegendHeight),
-                                 new Vector2(.5f, 0f), new Vector2(0f, FallBand.LegendCentre));
+                                 new Vector2(.5f, 0f), new Vector2(0f, shape.LegendCentre));
             band.anchorMin = band.anchorMax = new Vector2(.5f, 0f);
+
+            // Scaled rather than re-laid-out on a short display. Everything on this plate sits
+            // at a fixed offset from its centre — three recipes at ±114, with dots, glyphs and a
+            // spark inside each — so a second set of coordinates would be a second layout to
+            // keep in step, and the box keeps its own rect while the drawing shrinks around the
+            // centre `FallBand` placed. Exactly 1 on every phone. See `FallBand.Of`.
+            band.localScale = Vector3.one * shape.LegendScale;
 
             var plate = UIKit.Img("Plate", band, Art.Round(24),
                                   new Color(.045f, .065f, .125f, .58f));
@@ -520,7 +557,7 @@ namespace GlimmerGrove
 
         // ------------------------------------------------------------------ the lessons
         /// <summary>
-        /// The four things a well brings that a player arriving from four chapters of tapping
+        /// The five things a well brings that a player arriving from four chapters of tapping
         /// tiles cannot be expected to work out, declared as facts about <em>this</em> board.
         ///
         /// <para>
@@ -557,6 +594,14 @@ namespace GlimmerGrove
             // below are about meters and fail lines.
             if (run.Board.Lenses > 0)
                 into.Add(Lesson.At(Mechanic.FallLens, _view.LensAnchor));
+
+            // Then the whorl, which is a fact about *position* rather than about glass — so
+            // unlike the two mechanics it replaced it needs no lens on the board to mean
+            // anything, and it is taught wherever one stands. Conditional on the board standing
+            // one for the lens's reason: two of this mode's three chapters do not, and a lesson
+            // spent over a board with no whorl on it is one that can never be spent again.
+            if (run.Board.Whorls > 0)
+                into.Add(Lesson.At(Mechanic.FallWhorl, _view.WhorlAnchor));
 
             if (run.Supply.Bounded)
                 into.Add(Lesson.At(Mechanic.FallSupply, ReadoutAt(SupplyReadout)));

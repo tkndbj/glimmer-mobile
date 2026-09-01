@@ -101,8 +101,8 @@ $@"{{
 
   ""accent"": ""#FFC93C"",
   ""slate"": ""#123640"",
-  ""backdrop"": ""play_0"",
-  ""mapStrips"": [""strip0"", ""strip1"", ""strip2""],
+  ""backdrop"": ""sky_00"",
+  ""mapStrips"": [""map1_strip0"", ""map1_strip1"", ""map1_strip2"", ""map1_strip3"", ""map1_strip4"", ""map1_strip5""],
 
   ""levels"": [
     {{

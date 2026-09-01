@@ -394,6 +394,112 @@ namespace GlimmerGrove
             Pal.EnergyColour(Energy.R), Pal.EnergyColour(Energy.G), Pal.EnergyColour(Energy.B)
         };
 
+        /// <summary>
+        /// A two-armed spiral: the silhouette a Lightfall whorl wears.
+        ///
+        /// <para>
+        /// <b>A fourth silhouette, and it had to be one.</b> A mote is a filled disc, a lens is a
+        /// rim with a four-point glint in it, and a critter is a circle — so a whorl drawn as any
+        /// of those would read as a dim one of them, on the one screen where reading the board at
+        /// a glance is the entire game. A spiral is the shape everybody already reads as
+        /// <em>things go in here</em>, and it is legible at a cell's width on a phone, which a
+        /// dashed ring or a double ring is not.
+        /// </para>
+        /// <para>
+        /// Generated rather than addressed, for <see cref="IsoTile"/>'s reason with the same
+        /// force: a whorl is what the third chapter is built on, and an <c>Image</c> whose sprite
+        /// has not arrived is a white rectangle sitting in the middle of the board (invariant
+        /// 7b).
+        /// </para>
+        /// <para>
+        /// The arms taper outward and the hub is solid, so it holds together when it is spun —
+        /// which is what the view does with it, and the reason the arm count is two rather than
+        /// three: two arms turning read as a rotation, and three read as a flicker.
+        /// </para>
+        /// <para>
+        /// <b>The three numbers were chosen by looking at it</b>
+        /// (<c>scratchpad/render_whorl.py</c>, which draws this arithmetic without Unity — see
+        /// <c>Tools/render_wheel.py</c> for the same bargain). Nothing provable about a generated
+        /// sprite can say whether it reads as a mouth: at <c>turns</c> .58 the two arms met after
+        /// most of a turn and closed the shape into a plain ring, which is a silhouette this mode
+        /// already uses for glass.
+        /// </para>
+        /// </summary>
+        public static Sprite Whorl(int size = 96, float thickness = 14f, float turns = .38f)
+        {
+            float h = size * .5f;
+            float r0 = h - 1f;
+
+            return Make($"whorl{size}_{thickness}_{turns}", size, size, (x, y) =>
+            {
+                float dx = x - h, dy = y - h;
+                float rad = Mathf.Sqrt(dx * dx + dy * dy);
+                float dn = rad / r0;
+                if (dn > 1f) return 0f;
+
+                // The hub, solid, so the arms have something to come out of.
+                const float Hub = .20f;
+                if (dn <= Hub) return Cover((rad - Hub * r0) - thickness * .5f);
+
+                // Unwind the angle by how far out the pixel is: a constant here is a straight
+                // spoke, and the coefficient is how tightly the arm curls.
+                float ang = Mathf.Atan2(dy, dx);
+                float phase = ang - dn * turns * Mathf.PI * 2f;
+
+                const float Slot = Mathf.PI;                    // two arms, half a turn apart
+                float off = Mathf.Repeat(phase, Slot);
+                float w = Mathf.Min(off, Slot - off) * Mathf.Max(rad, 2f);
+
+                // Thinner towards the tip, so the arms read as trailing off rather than as
+                // being cut by the rim.
+                float taper = Mathf.Lerp(1f, .62f, dn);
+                float a = Cover(w - thickness * .5f * taper);
+
+                // And faded at the very edge for the same reason.
+                return a * (1f - Mathf.SmoothStep(.84f, 1f, dn));
+            });
+        }
+
+        /// <summary>
+        /// Two chevrons pointing inward along the horizontal, one from each side.
+        ///
+        /// <para>
+        /// <b>It is the rule drawn on the board rather than said in a panel.</b> A whorl draws in
+        /// the cells to its <em>left and right</em> and nothing else, and there is no way to
+        /// infer that from a spiral — invariant 20g's complaint exactly, and the cheapest
+        /// possible answer to it. Inward rather than outward: the whorl pulls, and an arrow
+        /// pointing out would say it throws, which is what the lens does.
+        /// </para>
+        /// </summary>
+        public static Sprite Inward(int size = 96, float thickness = 8f)
+        {
+            float h = size * .5f;
+
+            return Make($"inward{size}_{thickness}", size, size, (x, y) =>
+            {
+                float dx = x - h, dy = y - h;
+
+                // Mirrored, so one arithmetic draws both: everything is measured from the
+                // right-hand chevron and the left one is its reflection.
+                float ax = Mathf.Abs(dx);
+
+                // A chevron is two arms meeting at a point. Reflecting in y as well leaves one
+                // arm running from the tip up and out at forty-five degrees, which is the line
+                // |ay| = (ax - tip) for ax between the tip and the base.
+                float ay = Mathf.Abs(dy);
+                float tip = h * .30f, baseAt = h * .88f;
+
+                if (ax < tip - thickness || ax > baseAt + thickness) return 0f;
+
+                float d = Mathf.Abs(ay - (ax - tip)) * .7071f;   // distance to a 45 degree line
+                float a = Cover(d - thickness * .5f);
+
+                // Trimmed to the span of the arm, so it is a chevron rather than an endless X.
+                a *= 1f - Mathf.SmoothStep(baseAt - thickness, baseAt + thickness * .5f, ax);
+                return a * Mathf.SmoothStep(tip - thickness, tip, ax + thickness * .5f);
+            });
+        }
+
         /// <summary>Soft radial falloff. Higher power = tighter core.</summary>
         public static Sprite Glow(int size = 128, float power = 2.2f)
         {

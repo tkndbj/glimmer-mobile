@@ -3,12 +3,12 @@
   "id": "c02_millvale",
   "accent": "#9BD84A",
   "slate": "#17301E",
-  "backdrop": "c02_play_0",
+  "backdrop": "sky_10",
   "mapStrips": [
-    "c02_strip0",
-    "c02_strip1",
-    "c02_strip2",
-    "c02_strip3"
+    "map2_strip0",
+    "map2_strip1",
+    "map2_strip2",
+    "map2_strip3"
   ],
   "teaserX": 0.3,
   "levels": [
@@ -37,7 +37,7 @@
       "mapY": 0.145,
       "accent": "#4FC1FF",
       "slate": "#0E2A3A",
-      "backdrop": "c02_play_1",
+      "backdrop": "sky_11",
       "rows": [
         "*E#R/2 -ESW/0 -EW/1 -EW/0 -ESW/3 -SW/3",
         "-ES/1 =NE+SW/1 -ESW/0 -SW/2 @N#R/3 -NS/1",
@@ -56,7 +56,7 @@
       "mapY": 0.22,
       "accent": "#A98BFF",
       "slate": "#1E1A38",
-      "backdrop": "c02_play_2",
+      "backdrop": "sky_12",
       "rows": [
         "-ES/2 -SW/0 @E#R/2 -SW/1 -ES/2 @W#R/3 @S#A/3",
         "@N#A/1 *NES#R/0 -ESW/0 -NEW/3 -NEW/2 -ESW/0 -NW/0",
@@ -74,7 +74,7 @@
       "mapY": 0.3,
       "accent": "#FFB347",
       "slate": "#33220F",
-      "backdrop": "c02_play_3",
+      "backdrop": "sky_13",
       "rows": [
         "-ES/2 -SW/0 @E#R/3 -ESW/2 @W#R/3 -ES/3 @W#A/3",
         "@N#R/1 *NE#R/1 -ESW/0 -NEW/2 -ESW/3 -NEW/1 @W#R/0",
@@ -92,7 +92,7 @@
       "mapY": 0.39,
       "accent": "#63C7C0",
       "slate": "#10262B",
-      "backdrop": "c02_play_4",
+      "backdrop": "sky_14",
       "rows": [
         "-ES/2 -SW/0 @E#R/2 -ESW/1 @W#R/2 -ES/3 -SW/3",
         "@N#A/1 *NE#R/0 -ESW/0 -NEW/3 -ESW/2 -NSW/0 @N#A/0",
@@ -111,7 +111,7 @@
       "mapY": 0.485,
       "accent": "#FF74D4",
       "slate": "#2B1436",
-      "backdrop": "c02_play_5",
+      "backdrop": "sky_15",
       "rows": [
         "*ES#R/3 -ESW/2 -SW/1 @S#M/3 -ES/3 -ESW/2 *SW#B/3",
         "-NS/1 -NS/0 @N#R/0 -NS/0 -NS/0 @N#B/0 -NS/1",
@@ -130,7 +130,7 @@
       "mapY": 0.56,
       "accent": "#8FD694",
       "slate": "#14251A",
-      "backdrop": "c02_play_6",
+      "backdrop": "sky_16",
       "rows": [
         "-ES/3 -SW/0 @E#R/3 -ESW/1 @W#R/0 -ES/1 -SW/3",
         "@N#A/3 *NES#R/2 -ESW/0 -NEW/0 -ESW/2 -NSW/1 @N#A/3",
@@ -149,7 +149,7 @@
       "mapY": 0.65,
       "accent": "#D8CBA6",
       "slate": "#2A2A24",
-      "backdrop": "c02_play_7",
+      "backdrop": "sky_17",
       "rows": [
         "*ES#R/1 -ESW/3 -ESW/2 -ESW/3 -ESW/3 -ESW/0 -SW/3",
         "@N#R/2 -NS/0 @N#R/3 -NS/1 @N#A/3 -NS/1 @N#R/2",
@@ -168,7 +168,7 @@
       "mapY": 0.752,
       "accent": "#FFD75E",
       "slate": "#332812",
-      "backdrop": "c02_play_8",
+      "backdrop": "sky_18",
       "rows": [
         "*ES#R/2 -ESW/0 -SW/3 -ES/2 -ESW/3 -ESW/3 -ESW/3 -SW/0",
         "-NS/1 @N#Y/1 -NS/0 -NS/0 @N#Y/3 @N#A/1 @N#Y/0 @N#A/1",
@@ -187,7 +187,7 @@
       "mapY": 0.83,
       "accent": "#E86A5A",
       "slate": "#3A1A18",
-      "backdrop": "c02_play_9",
+      "backdrop": "sky_19",
       "rows": [
         "*E#R/2 -ESW/1 -EW/1 -EW/1 -ESW/0 -ESW/1 -ESW/3 -W/2",
         "-ES/0 =NE+SW/1&A -EW/0 -SW/3 @N#R/2 @N#A/1 @N#A/3 *S#R/2",

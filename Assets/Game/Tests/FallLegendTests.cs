@@ -50,14 +50,73 @@ namespace GlimmerGrove.Tests
 
         // ------------------------------------------------------------------ where it sits
         [Test]
-        public void TheLegendSitsInsideTheBandBelowTheBoard()
+        public void TheLegendSitsInsideTheBandBelowTheBoardOnEveryShapeOfDisplay()
         {
-            Assert.Less(FallBand.LegendTop, FallBand.BoardFloor,
-                        "the legend runs up into the well's own floor, so it would be drawn " +
-                        "under the tray");
+            // Both shapes, not the one that shipped. The short band is the whole reason this
+            // file has a second case at all: it moves the legend, its size and the floor above
+            // it together, and the failure it can produce — a legend drawn under the tray — is
+            // one nothing else here could see.
+            foreach (bool shortCanvas in new[] { false, true })
+            {
+                var band = FallBand.Of(shortCanvas);
+                string where = shortCanvas ? "on a short display" : "on a phone";
 
-            Assert.Greater(FallBand.LegendBottom, FallBand.BottomClearance,
-                           "and down into the home indicator");
+                Assert.Less(band.LegendTop, band.BoardFloor,
+                            "the legend runs up into the well's own floor " + where + ", so it " +
+                            "would be drawn under the tray");
+
+                Assert.Greater(band.LegendBottom, FallBand.BottomClearance,
+                               "and down into the home indicator " + where);
+            }
+        }
+
+        /// <summary>
+        /// The shipped band, stated as itself. A short display is allowed to differ; a phone is
+        /// not, and this is the case that says so — the tablet change was made under exactly
+        /// that promise.
+        /// </summary>
+        [Test]
+        public void APhoneGetsTheBandThatShipped()
+        {
+            var band = FallBand.Of(false);
+
+            Assert.AreEqual(1f, band.LegendScale, .0001f);
+            Assert.AreEqual(1f, band.TrayScale, .0001f);
+            Assert.AreEqual(FallBand.LegendCentre, band.LegendCentre, .0001f);
+            Assert.AreEqual(FallBand.BoardFloor, band.BoardFloor, .0001f);
+            Assert.AreEqual(FallBand.TrayHeight, band.TrayHeight, .0001f);
+        }
+
+        /// <summary>
+        /// What the short band is <em>for</em>: a 6x10 well is bound by height, so the furniture
+        /// under it is charged straight to the cell. The numbers below are the shape reported
+        /// from an iPad — 350 of header, the band, the tray, and 24 of home indicator — and what
+        /// is asserted is that the change is worth making and does not go so far that a legend
+        /// or a tray stops being legible.
+        /// </summary>
+        [Test]
+        public void AShortDisplayGivesAHeightBoundWellItsRoomBack()
+        {
+            var phone = FallBand.Of(false);
+            var squat = FallBand.Of(true);
+
+            Assert.Less(squat.BoardFloor, phone.BoardFloor, "the floor has to come down");
+            Assert.Less(squat.TrayHeight, phone.TrayHeight, "and the tray with it");
+
+            float given = (phone.BoardFloor - squat.BoardFloor)
+                        + (phone.TrayHeight - squat.TrayHeight);
+
+            Assert.Greater(given, 150f,
+                           "a band that gives back less than this is not worth a second shape: "
+                           + "the well it is for loses a cell for every ten units of it");
+
+            // Nothing is scaled away to the point of being unreadable. A short display is a
+            // physically large one, so what looks small as a fraction of the screen is still
+            // larger in the hand than the phone it was tuned on — but only within reason.
+            Assert.GreaterOrEqual(squat.LegendScale, .6f);
+            Assert.GreaterOrEqual(squat.TrayScale, .6f);
+            Assert.LessOrEqual(squat.LegendScale, 1f);
+            Assert.LessOrEqual(squat.TrayScale, 1f);
         }
 
         [Test]
@@ -65,9 +124,11 @@ namespace GlimmerGrove.Tests
         {
             float usable = FallBand.Canvas - FallBand.SideInset * 2f;
 
-            Assert.LessOrEqual(FallBand.LegendWidth, usable,
-                               "the outer recipes run off a portrait 4:3 screen, which is the " +
-                               "shape nobody happens to have open");
+            foreach (bool shortCanvas in new[] { false, true })
+                Assert.LessOrEqual(FallBand.Of(shortCanvas).LegendWidth, usable,
+                                   "the outer recipes run off the narrowest canvas this game " +
+                                   "is drawn on, which is a phone's — a widened one is never " +
+                                   "narrower, so this is the case that binds");
         }
 
         [Test]

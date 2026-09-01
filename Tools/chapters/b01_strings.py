@@ -65,7 +65,7 @@ STRINGS = {
     "ui.continue.taps_title": "Out of taps",
     "ui.continue.taps_unit": "more taps",
 
-    # The three lessons. `bud_wood` was a fourth for one drop and is retired - a
+    # The four lessons. `bud_wood` was another for one drop and is retired - a
     # barrier can only ever make a chain shorter, which is the opposite of what this
     # mode is for.
     "ui.tip.bud_chain.title": "MIX, THEN THREE",
@@ -78,6 +78,17 @@ STRINGS = {
     "ui.tip.bud_cocoon.body": "A critter is shut in until a burst goes off right beside it.\n\n"
                               "You cannot tap a cocoon open - you have to set something off next "
                               "to it. The ones drawn with a second ring take two.",
+
+    # The fourth, and the only one a chapter rather than the mode brings. Two sentences and the
+    # second one is the whole of it: the vine and the travelling light say what a runner does,
+    # and no board anywhere can say what it takes to *fire* one. A player who has not been told
+    # the threshold reads a vine that stayed dark as a bug rather than as a near miss.
+    "ui.tip.bud_runner.title": "MIND THE VINE",
+    "ui.tip.bud_runner.body": "A runner joins two squares of the grove, however far apart they "
+                              "are.\n\nWhen a bursting bunch takes in one end, its colour runs "
+                              "down the vine to whatever is standing on the other. Going off "
+                              "next to an end is not enough - the flower on it has to be one of "
+                              "the three.",
 
     "ui.tip.bud_satchel.title": "COUNT YOUR TAPS",
     "ui.tip.bud_satchel.body": "This grove is dealt so many taps and no more.\n\nThere is no "

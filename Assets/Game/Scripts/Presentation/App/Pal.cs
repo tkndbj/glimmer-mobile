@@ -181,7 +181,6 @@ namespace GlimmerGrove
         /// </para>
         /// </summary>
         public static readonly Color Glass = Hex("#DCEBF5");
-
         static readonly Color[] Table =
         {
             Dormant,                            // 0

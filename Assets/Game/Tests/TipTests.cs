@@ -245,6 +245,61 @@ namespace GlimmerGrove.Tests
                     Assert.IsFalse(s.HasCell, "the budget lives in the HUD, not in a cell");
         }
 
+        // ---------------------------------------------------- a critter that is not fussy
+
+        /// <summary>
+        /// The lesson is a contrast, so it needs both kinds standing on one board: the
+        /// unfussy critter it rings, and a fussy one for "any" to be the absence of.
+        /// </summary>
+        [Test]
+        public void AnUnfussyCritterBesideAFussyOneIsPointedAt()
+        {
+            var board = Board(4, 1, new[] { "@E#A/0 *EW#R/0 -EW/0 @W#R/0" }, NoBudget);
+            var found = MechanicScan.InBoard(board);
+
+            Assert.IsTrue(Contains(found, Mechanic.AnyLight));
+            Assert.AreEqual(0, Sighting(found, Mechanic.AnyLight).CellIndex,
+                            "the tip should ring the critter that is not asking for a colour");
+        }
+
+        /// <summary>
+        /// The opening glade is every critter unfussy and no colour rule anywhere on it, so
+        /// there is nothing for "any light" to be the absence of. Taught there, a once-in-a-
+        /// lifetime lesson could never be shown on the first board that mixes the two.
+        /// </summary>
+        [Test]
+        public void ABoardOfNothingButUnfussyCrittersTeachesNothingAboutColour()
+        {
+            var board = Board(3, 1, new[] { "@E#A/0 *EW#R/0 @W#A/0" }, NoBudget);
+
+            Assert.IsFalse(Contains(MechanicScan.InBoard(board), Mechanic.AnyLight));
+        }
+
+        /// <summary>And nor does a board where every critter is asking for something.</summary>
+        [Test]
+        public void ABoardOfNothingButFussyCrittersDoesNotClaimTheLesson()
+        {
+            var board = Board(3, 1, new[] { "@E#R/0 *EW#R/0 @W#R/0" }, NoBudget);
+
+            Assert.IsFalse(Contains(MechanicScan.InBoard(board), Mechanic.AnyLight));
+        }
+
+        /// <summary>
+        /// A critter wanting a blend is a fussy critter, so it is the other half of the
+        /// contrast — a board mixing the two teaches both, in that order.
+        /// </summary>
+        [Test]
+        public void ABlendedCritterIsWhatAnUnfussyOneIsContrastedWith()
+        {
+            var board = Board(4, 1, new[] { "@E#A/0 *EW#R/0 @EW#M/0 *W#B/0" }, NoBudget);
+
+            var queue = MechanicScan.Unseen(board, _ => false);
+
+            Assert.AreEqual(2, queue.Count);
+            Assert.IsTrue(queue[0].Mechanic.Equals(Mechanic.AnyLight), queue[0].Mechanic.ToString());
+            Assert.IsTrue(queue[1].Mechanic.Equals(Mechanic.ColourMixing), queue[1].Mechanic.ToString());
+        }
+
         // ------------------------------------------------- what a board teaches at all
 
         /// <summary>
@@ -325,7 +380,8 @@ namespace GlimmerGrove.Tests
             // Everything MechanicScan can report belongs here; the crossing was added to
             // the scan a chapter after this list was written and went unlisted for it.
             var board = new[] { Mechanic.FragileConduit, Mechanic.MoveBudget,
-                                Mechanic.RootedTile, Mechanic.ColourMixing,
+                                Mechanic.RootedTile, Mechanic.AnyLight,
+                                Mechanic.ColourMixing,
                                 Mechanic.Crossing, Mechanic.Briar,
                                 Mechanic.BoundConduit };
 

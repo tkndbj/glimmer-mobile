@@ -3,14 +3,14 @@
   "id": "c04_nightbriar",
   "accent": "#F2B45C",
   "slate": "#1B1426",
-  "backdrop": "c04_play_0",
+  "backdrop": "sky_30",
   "mapStrips": [
-    "c04_strip0",
-    "c04_strip1",
-    "c04_strip2",
-    "c04_strip3",
-    "c04_strip4",
-    "c04_strip5"
+    "map4_strip0",
+    "map4_strip1",
+    "map4_strip2",
+    "map4_strip3",
+    "map4_strip4",
+    "map4_strip5"
   ],
   "teaserX": 0.28,
   "levels": [
@@ -37,7 +37,7 @@
       "mapY": 0.14,
       "accent": "#C77BFF",
       "slate": "#1A1030",
-      "backdrop": "c04_play_1",
+      "backdrop": "sky_31",
       "rows": [
         "@S#R/3 -ES/1 @W#R/1 -ES/3 @W#R/2 @S#R/0",
         "-NES/0 -NEW/3 *ESW#R/2 -NEW/1 -ESW/0 -NSW/1",
@@ -56,7 +56,7 @@
       "mapY": 0.225,
       "accent": "#5FD1B0",
       "slate": "#0F2027",
-      "backdrop": "c04_play_2",
+      "backdrop": "sky_32",
       "rows": [
         "-ES/1 @W#A/3 *E#G/2 @ESW#G/3 @SW#G/3 @E#A/0 -SW/3",
         "-NES/2 -SW/0 -ES/3 %EW+NS/1 %EW+NS/1 -ESW/1 -NSW/2",
@@ -74,7 +74,7 @@
       "mapY": 0.31,
       "accent": "#FF8C6B",
       "slate": "#2A1420",
-      "backdrop": "c04_play_3",
+      "backdrop": "sky_33",
       "rows": [
         "@ES#G/2 @W#G/2 @E#G/1 -ESW/3 @W#G/2 @E#G/3 @SW#G/3",
         "-NES/1 -EW/1 -ESW/1 *NESW#G/0 -ESW/2 -EW/1 -NSW/0",
@@ -93,7 +93,7 @@
       "mapY": 0.395,
       "accent": "#9BB6FF",
       "slate": "#141A2E",
-      "backdrop": "c04_play_4",
+      "backdrop": "sky_34",
       "rows": [
         "-ES/2 @W#R/0 -ES/3 @W#R/2 @S#R/3 @E#R/3 -SW/3",
         "-NE/1 *EW#R/1 -NESW/0 -ESW/2 -NEW/3 -EW/1 -NW/0",
@@ -112,7 +112,7 @@
       "mapY": 0.48,
       "accent": "#A8D94A",
       "slate": "#1A2413",
-      "backdrop": "c04_play_5",
+      "backdrop": "sky_35",
       "rows": [
         "@S#A/2 *E#G/0 @SW#G/2 @E#A/1 -SW/2 @E#A/3 -SW/3",
         "-NES/1 -ESW/0 %EW+NS/1&A -ESW/3 -NESW/0 -ESW/0 -NSW/0",
@@ -131,7 +131,7 @@
       "mapY": 0.56,
       "accent": "#FF6FA8",
       "slate": "#2A1226",
-      "backdrop": "c04_play_6",
+      "backdrop": "sky_36",
       "rows": [
         "@E#R/1 -SW/3 @S#R/2 @S#B/3 @S#G/3 -ES/0 @W#G/3",
         "-ES/2 *NESW#R/0 -NEW/3 %NS+EW/0 -NEW/3 *NESW#G/0 -SW/2",
@@ -150,7 +150,7 @@
       "mapY": 0.645,
       "accent": "#6E8BFF",
       "slate": "#101830",
-      "backdrop": "c04_play_7",
+      "backdrop": "sky_37",
       "rows": [
         "-ES/2 -EW/1 @W#A/3 @E#A/3 -EW/0 -SW/1 -ES/3 -SW/2",
         "-NES/0 -ESW/2 -ESW/0 *ESW#R/3 -ESW/2 @NEW#A/1 -NSW/3 -NS/0",
@@ -169,7 +169,7 @@
       "mapY": 0.73,
       "accent": "#FFD36B",
       "slate": "#241B12",
-      "backdrop": "c04_play_8",
+      "backdrop": "sky_38",
       "rows": [
         "-ES/2 -ESW/2 -EW/0 @W#Y/1 -ES/2 @W#Y/3 @S#Y/3",
         "-NS/1 -NES/0 -ESW/0 -ESW/3 -NEW/2 -ESW/0 -NSW/3",
@@ -188,7 +188,7 @@
       "mapY": 0.815,
       "accent": "#D96BFF",
       "slate": "#20122E",
-      "backdrop": "c04_play_9",
+      "backdrop": "sky_39",
       "rows": [
         "@S#Y/0 -ES/1 @SW#Y/2 @E#Y/2 -SW/3 @ES#Y/3 -SW/1 @S#Y/3",
         "-NES/2 *NEW#R/0 %EW+NS/1&A -ESW/1 -NEW/2 %EW+NS/1&A *NEW#G/1 -NSW/3",

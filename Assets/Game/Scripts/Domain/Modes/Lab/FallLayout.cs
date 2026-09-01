@@ -220,6 +220,28 @@ namespace GlimmerGrove.Modes
         }
 
         /// <summary>
+        /// Whorls standing in the well, for the readout and for an author's sweep.
+        ///
+        /// <para>
+        /// Counted apart from the lenses, because the two are paid for in different currencies. A
+        /// lens costs three drops of three colours in any order at all and then throws white
+        /// across the board; a whorl costs one touch of any light and gives back exactly what the
+        /// player arranged either side of it. The lens is bought with <em>drops</em> and the
+        /// whorl with <em>position</em>, which is why a board can stand both and ask two
+        /// different things.
+        /// </para>
+        /// </summary>
+        public int Whorls
+        {
+            get
+            {
+                int n = 0;
+                for (int i = 0; i < _fill.Length; i++) if (FallCell.IsWhorl(_fill[i])) n++;
+                return n;
+            }
+        }
+
+        /// <summary>
         /// Careless drops the tallest column can still take before the well floods.
         ///
         /// <para>
@@ -331,12 +353,27 @@ namespace GlimmerGrove.Modes
 
                         cells[y * width + x] = cell;
                     }
+                    else if (FallCell.RetiredWickLetters.IndexOf(c) >= 0)
+                    {
+                        // Refused by name rather than read as anything, for the reason the
+                        // duskcap's token is (invariant 5f): a chapter file carrying one is
+                        // content written for a build that no longer exists, and reading it as a
+                        // mote would put a cell on the board no rule here knows what to do with.
+                        error = "'" + c + "' at row " + y + " column " + x + " is a wick, and " +
+                                "the wick was withdrawn — it was the lens again with the colour " +
+                                "changed, and nothing about it was the player's decision. What " +
+                                "stands in that slot now is '" + FallCell.WhorlLetter + "', a " +
+                                "whorl, which draws the motes either side of it together and " +
+                                "mixes them into one";
+                        return false;
+                    }
                     else
                     {
                         error = "'" + c + "' at row " + y + " column " + x + " is not a mote; " +
                                 "a well is written in R, G, B, Y, M and C for light, " +
                                 "the same letters in lower case for glass already that full, " +
-                                FallCell.LensLetter + " for empty glass, and '.' for bare ground";
+                                FallCell.LensLetter + " for empty glass, " +
+                                FallCell.WhorlLetter + " for a whorl, and '.' for bare ground";
                         return false;
                     }
 

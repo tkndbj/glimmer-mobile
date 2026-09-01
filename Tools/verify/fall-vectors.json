@@ -20,7 +20,8 @@
       "headroom": 4,
       "standing": 5,
       "lenses": 0,
-      "charged": 0
+      "charged": 0,
+      "whorls": 0
     },
     {
       "name": "a wall of the wrong colour",
@@ -41,7 +42,8 @@
       "headroom": 4,
       "standing": 5,
       "lenses": 0,
-      "charged": 0
+      "charged": 0,
+      "whorls": 0
     },
     {
       "name": "two blobs the wash cannot cross between",
@@ -62,7 +64,8 @@
       "headroom": 4,
       "standing": 2,
       "lenses": 0,
-      "charged": 0
+      "charged": 0,
+      "whorls": 0
     },
     {
       "name": "a burst under a stack",
@@ -83,7 +86,8 @@
       "headroom": 1,
       "standing": 5,
       "lenses": 0,
-      "charged": 0
+      "charged": 0,
+      "whorls": 0
     },
     {
       "name": "a pure mote finished by two bursts",
@@ -104,7 +108,8 @@
       "headroom": 3,
       "standing": 7,
       "lenses": 0,
-      "charged": 0
+      "charged": 0,
+      "whorls": 0
     },
     {
       "name": "nothing on this board wants what the well deals",
@@ -125,7 +130,8 @@
       "headroom": 4,
       "standing": 2,
       "lenses": 0,
-      "charged": 0
+      "charged": 0,
+      "whorls": 0
     },
     {
       "name": "a column with no room and a procession that opens badly",
@@ -146,7 +152,8 @@
       "headroom": 0,
       "standing": 5,
       "lenses": 0,
-      "charged": 0
+      "charged": 0,
+      "whorls": 0
     },
     {
       "name": "a well that has to be emptied from the top down",
@@ -167,7 +174,8 @@
       "headroom": 2,
       "standing": 9,
       "lenses": 0,
-      "charged": 0
+      "charged": 0,
+      "whorls": 0
     },
     {
       "name": "a shipped shape",
@@ -189,7 +197,8 @@
       "headroom": 3,
       "standing": 13,
       "lenses": 0,
-      "charged": 0
+      "charged": 0,
+      "whorls": 0
     },
     {
       "name": "one drop fills glass by one channel, however many bursts it sets off",
@@ -210,7 +219,8 @@
       "headroom": 4,
       "standing": 5,
       "lenses": 1,
-      "charged": 0
+      "charged": 0,
+      "whorls": 0
     },
     {
       "name": "glass filled the ordinary way fires sideways",
@@ -231,7 +241,8 @@
       "headroom": 3,
       "standing": 5,
       "lenses": 1,
-      "charged": 1
+      "charged": 1,
+      "whorls": 0
     },
     {
       "name": "a beam is white, so it pops whatever it lands on",
@@ -252,7 +263,8 @@
       "headroom": 4,
       "standing": 3,
       "lenses": 1,
-      "charged": 1
+      "charged": 1,
+      "whorls": 0
     },
     {
       "name": "a lens struck by another lens fires every way",
@@ -273,7 +285,8 @@
       "headroom": 3,
       "standing": 5,
       "lenses": 2,
-      "charged": 1
+      "charged": 1,
+      "whorls": 0
     },
     {
       "name": "a drop is taken in by glass rather than stacking on it",
@@ -294,7 +307,8 @@
       "headroom": 3,
       "standing": 6,
       "lenses": 1,
-      "charged": 1
+      "charged": 1,
+      "whorls": 0
     },
     {
       "name": "empty glass costs three drops where two-thirds glass costs one",
@@ -315,7 +329,8 @@
       "headroom": 3,
       "standing": 6,
       "lenses": 1,
-      "charged": 0
+      "charged": 0,
+      "whorls": 0
     },
     {
       "name": "glass falls into a gap like anything else",
@@ -336,7 +351,145 @@
       "headroom": 2,
       "standing": 5,
       "lenses": 1,
-      "charged": 0
+      "charged": 0,
+      "whorls": 0
+    },
+    {
+      "name": "a whorl mixes the two motes beside it",
+      "why": "every other rule in this mode adds a *colour* to a cell - a drop adds one, a wash adds one, a beam adds three. This is the only place two *motes* are ever combined, so a yellow and a blue that were each a drop away from white are none",
+      "rows": [
+        "......",
+        "......",
+        "......",
+        "......",
+        "......",
+        "Y@B..."
+      ],
+      "motes": "RGB",
+      "par": 1,
+      "ways": 1,
+      "greedy": 1,
+      "proved": true,
+      "headroom": 4,
+      "standing": 3,
+      "lenses": 0,
+      "charged": 0,
+      "whorls": 1,
+      "kindles": true
+    },
+    {
+      "name": "a merge that does not reach white is still a merge",
+      "why": "two motes of the same colour draw together into one of that colour, which tidies the board and decides nothing - the distinction `fused` and `kindled` exist to keep apart, and the reason a board is authored against the second",
+      "rows": [
+        "......",
+        "......",
+        "......",
+        "......",
+        "......",
+        "Y@YC.."
+      ],
+      "motes": "BRG",
+      "par": 5,
+      "ways": 24,
+      "greedy": 5,
+      "proved": true,
+      "headroom": 4,
+      "standing": 4,
+      "lenses": 0,
+      "charged": 0,
+      "whorls": 1
+    },
+    {
+      "name": "a whorl draws light and nothing else",
+      "why": "glass beside a whorl stays where it stands: pulling it in would mean deciding what a lens and a mote mix into, and two whorls tugging at each other is a rule nobody can read off a board",
+      "rows": [
+        "......",
+        "......",
+        "......",
+        "......",
+        "......",
+        "c@Y..."
+      ],
+      "motes": "RGB",
+      "par": 4,
+      "ways": 18,
+      "greedy": 4,
+      "proved": true,
+      "headroom": 4,
+      "standing": 3,
+      "lenses": 1,
+      "charged": 1,
+      "whorls": 1
+    },
+    {
+      "name": "a whorl with nothing beside it closes and is gone",
+      "why": "the valve, and the reason a well full of whorls is still winnable: a whorl that waited for a pair could never be got rid of, which is exactly the state the lens shipped with",
+      "rows": [
+        "......",
+        "......",
+        "......",
+        "......",
+        "......",
+        "..@.YC"
+      ],
+      "motes": "BRG",
+      "par": 3,
+      "ways": 1,
+      "greedy": 3,
+      "proved": true,
+      "headroom": 4,
+      "standing": 3,
+      "lenses": 0,
+      "charged": 0,
+      "whorls": 1,
+      "closes": true
+    },
+    {
+      "name": "a mote two whorls both reach is let go by both",
+      "why": "the only symmetric answer available: giving it to one of them would be a reading order, in the one method this rule is arranged to keep free of one. Both whorls find that side empty and close",
+      "rows": [
+        "......",
+        "......",
+        "......",
+        "......",
+        "CCC...",
+        "@Y@..."
+      ],
+      "motes": "RGB",
+      "par": 4,
+      "ways": 5,
+      "greedy": -1,
+      "proved": true,
+      "headroom": 3,
+      "standing": 6,
+      "lenses": 0,
+      "charged": 0,
+      "whorls": 2,
+      "closes": true,
+      "contested": true
+    },
+    {
+      "name": "a drop opens a whorl, whatever colour it is",
+      "why": "the same valve from the other side: a whorl is otherwise only reached by a chain, so without this a player who cleared every mote around one would be stranded on a board that could not be finished and would not end",
+      "rows": [
+        "......",
+        "......",
+        "......",
+        "......",
+        "......",
+        "@CC..."
+      ],
+      "motes": "GBR",
+      "par": 3,
+      "ways": 7,
+      "greedy": -1,
+      "proved": true,
+      "headroom": 4,
+      "standing": 3,
+      "lenses": 0,
+      "charged": 0,
+      "whorls": 1,
+      "closes": true
     }
   ]
 }

@@ -84,6 +84,24 @@ namespace GlimmerGrove.Modes
     /// column.
     /// </para>
     /// <para>
+    /// <b>A whorl is the third chapter's answer to the one thing a lens cannot do, which is
+    /// <em>move</em> anything.</b> Every rule above adds a channel to a cell: a drop adds one, a
+    /// wash adds one, a beam adds three. A whorl is the only place two <em>motes</em> are ever
+    /// put together — light reaches it, and on the next wave it draws in whatever is standing
+    /// either side of it and leaves one mote holding both. A cyan and a red that would each have
+    /// wanted a drop of their own become a white on the spot.
+    /// </para>
+    /// <para>
+    /// <b>It is the third mechanic tried in that slot and the first that is not the lens
+    /// again.</b> A <em>mirror</em> only bent somebody else's beam, so on a board with no glass it
+    /// did nothing; a <em>wick</em> washed one authored colour into its four neighbours when any
+    /// light touched it, which is this class's own burst with the colour changed and with no
+    /// decision anywhere in it. What a whorl gives back is decided entirely by what the player
+    /// arranged beside it, and the well collapses under every chain — so the mechanic is a
+    /// question about <em>position</em>, which is the one axis a mode with one verb and one input
+    /// had never been asked about. See <see cref="FallCell.Whorl"/>.
+    /// </para>
+    /// <para>
     /// <b>No Unity types and no randomness.</b> The whole thing is provable offline, which
     /// matters because a falling-piece game is wrong in ways a screenshot cannot show — a
     /// gravity pass that settles in the wrong order, a wash applied after the fall rather than
@@ -146,28 +164,6 @@ namespace GlimmerGrove.Modes
         /// </summary>
         bool[] _going;
 
-        /// <summary>
-        /// Scratch for one <em>beam</em>: which mirrors this shot has already turned on.
-        ///
-        /// <para>
-        /// <b>Per beam rather than per wave, and that is what keeps a wave free of reading
-        /// order.</b> Every beam that reaches a mirror turns on it, however many beams that is —
-        /// so which lens was scanned first cannot change what any of them did, which is the
-        /// property <see cref="Resolve"/> is arranged around. Spending the mirror for the wave on
-        /// the first beam to reach it would make the second beam's behaviour depend on the order
-        /// the lenses happened to be read in.
-        /// </para>
-        /// <para>
-        /// Stamped with a walk number rather than cleared, so starting a beam costs nothing. The
-        /// state it guards against is a shot circling four mirrors for ever; it needs a rectangle
-        /// of them to reach at all, and no shipped board has one — it is a proof of termination
-        /// rather than a rule anybody meets. Not forked and not settled with the cells, because
-        /// no beam outlives the walk that started it.
-        /// </para>
-        /// </summary>
-        int[] _bounce;
-        int _walk;
-
         public FallBoard(FallLayout layout)
         {
             Width = layout.Width;
@@ -184,6 +180,8 @@ namespace GlimmerGrove.Modes
             System.Array.Copy(other._cells, _cells, _cells.Length);
             _motes = other._motes;
             Flooded = other.Flooded;
+            Fused = other.Fused;
+            Kindled = other.Kindled;
 
             if (other._struck != null)
             {
@@ -208,6 +206,36 @@ namespace GlimmerGrove.Modes
 
         /// <summary>Motes still standing. The goal is nought of them.</summary>
         public int Motes => _motes;
+
+        /// <summary>
+        /// How many whorls have drawn in <em>two</em> motes on this board, over its whole life.
+        ///
+        /// <para>
+        /// <b>An authoring reading rather than a rule</b> — nothing about play consults it, and
+        /// it is deliberately cumulative rather than per drop so a fixture can play a whole
+        /// solution and ask one question at the end. It exists because every *other* reading this
+        /// mode takes — solvable, par, ways, greedy, aim — is passed just as happily by an object
+        /// that decorates the board as by one that decides it, which is how the mirror this
+        /// mechanic replaced got as far as being played (invariant 26g). A whorl that only ever
+        /// turns with one mote beside it has moved a mote sideways; a whorl that turns with none
+        /// is a hole the player had to poke.
+        /// </para>
+        /// </summary>
+        public int Fused { get; private set; }
+
+        /// <summary>
+        /// How many of those merges reached white, so the merge itself completed a mote.
+        ///
+        /// <para>
+        /// <b>The reading a board is authored against, and the strict one.</b> Two yellows drawn
+        /// together make a yellow, which is a tidier board and nothing else; a yellow and a blue
+        /// make white, which is a burst the player <em>arranged</em> and could not have bought
+        /// with any single drop. Nought here on a board carrying whorls is the same complaint
+        /// invariant 5d makes about a mechanic that rejects no arrangement, counted where it
+        /// happens rather than argued about afterwards.
+        /// </para>
+        /// </summary>
+        public int Kindled { get; private set; }
 
         /// <summary>The well is empty and the run is won.</summary>
         public bool IsEmpty => _motes == 0;
@@ -289,6 +317,27 @@ namespace GlimmerGrove.Modes
             }
         }
 
+        /// <summary>
+        /// Whorls still standing, open or not.
+        ///
+        /// <para>
+        /// It needs no clause anywhere that a lens needs, and that is the point of the mechanic:
+        /// a drop opens a whorl, and a whorl with nothing beside it closes rather than waiting —
+        /// so one can always be got rid of and a well holding nothing but whorls is still
+        /// winnable. The lens shipped without that property and had to have a valve added when a
+        /// player reported being stranded (invariant 26f).
+        /// </para>
+        /// </summary>
+        public int Whorls
+        {
+            get
+            {
+                int n = 0;
+                for (int i = 0; i < _cells.Length; i++) if (FallCell.IsWhorl(_cells[i])) n++;
+                return n;
+            }
+        }
+
         // ------------------------------------------------------------------ reading a column
         /// <summary>The row of the highest mote in a column, or -1 for an empty column.</summary>
         public int TopOf(int x)
@@ -324,9 +373,9 @@ namespace GlimmerGrove.Modes
             if (top >= 0)
             {
                 // Whatever is on top takes the drop if it lacks the colour: a mote is enriched,
-                // a lens is charged, and a mirror takes nothing whatever. One predicate rather
-                // than the clause spelt out, because the clause is right for two of the three
-                // kinds and silently wrong for the third (`FallCell.Takes`).
+                // a lens is charged, and a whorl is opened whatever the colour is. One predicate
+                // rather than the clause spelt out, because the clause is right for two of the
+                // three kinds and silently wrong for the third (`FallCell.Takes`).
                 if (FallCell.Takes(_cells[Index(x, top)], colour)) return top;
             }
 
@@ -460,7 +509,12 @@ namespace GlimmerGrove.Modes
             bool enriched = _cells[index] != Energy.None;
 
             if (!enriched) _motes++;
-            _cells[index] |= colour;
+
+            // A whorl is *opened* by a drop rather than filled by it. It holds no channels at
+            // all — `|=` here would quietly make a coloured whorl, which is a cell no rule in
+            // this file has a name for and which the letters cannot even write down.
+            if (FallCell.IsWhorl(_cells[index])) _cells[index] |= FallCell.Lit;
+            else _cells[index] |= colour;
 
             Resolve(colour, steps, out int waves, out int burst);
 
@@ -497,12 +551,13 @@ namespace GlimmerGrove.Modes
 
             while (true)
             {
-                // ---- what has reached white, decided over the whole board before anything moves.
-                //      Two kinds, one condition: a mote at Energy.All bursts, and glass at
-                //      FallCell.Full fires. That is the same sentence twice on purpose — light
-                //      fills a thing up and then it goes off — which is why the lens needed no
-                //      new rule taught, only a new consequence.
-                List<int> burst = null, fired = null;
+                // ---- what is leaving this wave, decided over the whole board before anything
+                //      moves. Three kinds and two sentences: a mote at Energy.All bursts and
+                //      glass at FallCell.Full fires — which is one sentence twice on purpose,
+                //      light fills a thing up and then it goes off — and a whorl the light
+                //      reached last wave *turns*, which is what light does to the one cell here
+                //      that never fills up at all.
+                List<int> burst = null, fired = null, turning = null;
 
                 for (int i = 0; i < _cells.Length; i++)
                 {
@@ -516,9 +571,18 @@ namespace GlimmerGrove.Modes
                         if (fired == null) fired = new List<int>();
                         fired.Add(i);
                     }
+                    else if (FallCell.IsLit(_cells[i]))
+                    {
+                        // A whorl the light opened last wave. It is read here with the whites for
+                        // the same reason they are read together at all: everything that happens
+                        // this wave is decided before any of it is applied, so no part of a wave
+                        // can depend on the order the board was scanned in.
+                        if (turning == null) turning = new List<int>();
+                        turning.Add(i);
+                    }
                 }
 
-                if (burst == null && fired == null) break;
+                if (burst == null && fired == null && turning == null) break;
 
                 if (_gain == null) _gain = new int[_cells.Length];
                 else for (int i = 0; i < _gain.Length; i++) _gain[i] = Energy.None;
@@ -532,8 +596,25 @@ namespace GlimmerGrove.Modes
                     for (int b = 0; b < burst.Count; b++) _going[burst[b]] = true;
                 if (fired != null)
                     for (int f = 0; f < fired.Count; f++) _going[fired[f]] = true;
+                if (turning != null)
+                    for (int t = 0; t < turning.Count; t++) _going[turning[t]] = true;
 
-                List<int> washed = null, charged = null;
+                // ---- and what each turning whorl draws in, settled *before* any light is
+                //      handed out. Both orderings matter and neither is obvious.
+                //
+                //      It is decided before the washes because a mote in motion has to be
+                //      invisible to them: it is not where the wave thinks it is by the time the
+                //      wave lands, so it takes nothing and it stops no beam. `Draw` marks it in
+                //      `_going`, which is the same word this wave already uses for a cell that
+                //      will not be there when the light arrives.
+                //
+                //      And it is decided from the board as it stands rather than as it will be,
+                //      so a mote that is bursting this wave is never also drawn in. The whorl
+                //      simply finds that side empty, which is the honest reading: the light got
+                //      there first.
+                List<FallFuse> fuses = turning == null ? null : Draw(turning);
+
+                List<int> washed = null, charged = null, caught = null;
                 List<FallBeam> beams = null;
 
                 // ---- what each burst touches: the four cells beside it, and nothing further.
@@ -554,7 +635,7 @@ namespace GlimmerGrove.Modes
                             int ni = Index(nx, ny);
                             if (_cells[ni] == FallCell.Empty) continue;
 
-                            Reached(ni, wash, ref washed, ref charged);
+                            Reached(ni, wash, ref washed, ref charged, ref caught);
                         }
                     }
 
@@ -581,7 +662,7 @@ namespace GlimmerGrove.Modes
 
                         for (int n = 0; n < ways.Length; n++)
                             Shoot(at, ways[n].dx, ways[n].dy,
-                                  ref washed, ref charged, ref beams);
+                                  ref washed, ref charged, ref caught, ref beams);
                     }
 
                 // ---- apply, in the one order that has no reading order in it
@@ -604,7 +685,53 @@ namespace GlimmerGrove.Modes
                         _motes--;
                     }
 
-                burstCount += (burst == null ? 0 : burst.Count) + (fired == null ? 0 : fired.Count);
+                // A whorl turns: what it drew in leaves the cells it stood in, and comes back as
+                // one mote in the whorl's own. A whorl that drew in nothing closes and leaves
+                // bare ground, which is what keeps it removable — and therefore what keeps a
+                // well holding nothing but whorls winnable, and a continue on one honest.
+                //
+                // **Two motes in, one out, and that is why the loop still terminates.** Every
+                // wave of this method must destroy at least one cell or the cascade could run
+                // for ever: a burst takes its mote, a lens takes its glass, and a whorl takes
+                // itself when it closes and takes one of a pair when it merges. There is no
+                // arrangement in which a wave leaves the well as full as it found it.
+                int cleared = 0;
+
+                if (fuses != null)
+                    for (int f = 0; f < fuses.Count; f++)
+                    {
+                        var fuse = fuses[f];
+
+                        if (fuse.Left >= 0) { _cells[fuse.Left] = FallCell.Empty; _motes--; cleared++; }
+                        if (fuse.Right >= 0) { _cells[fuse.Right] = FallCell.Empty; _motes--; cleared++; }
+
+                        if (fuse.Into == Energy.None)
+                        {
+                            _cells[fuse.At] = FallCell.Empty;
+                            _motes--;
+                            cleared++;
+                        }
+                        else
+                        {
+                            // The cell stays occupied — the whorl has gone and the mote it made
+                            // is standing in its place — so it is not one the drop was rid of.
+                            _cells[fuse.At] = fuse.Into;
+                        }
+
+                        // Defensive, and cheap: a whorl is never glass, so this flag is never
+                        // set on one. It is cleared for the reason `Settle` clears it — a flag
+                        // left behind at an index would arm whatever comes to rest there.
+                        if (_struck != null) _struck[fuse.At] = false;
+
+                        if (fuse.Drawn == 2)
+                        {
+                            Fused++;
+                            if (fuse.Kindled) Kindled++;
+                        }
+                    }
+
+                burstCount += (burst == null ? 0 : burst.Count) + (fired == null ? 0 : fired.Count)
+                            + cleared;
 
                 // Each cell takes what it was actually handed rather than one colour for the
                 // whole wave: a burst washes the drop's, a beam hands over white, and a cell
@@ -638,6 +765,8 @@ namespace GlimmerGrove.Modes
 
                 steps?.Add(new FallStep((IReadOnlyList<int>)burst ?? Empty,
                                         (IReadOnlyList<int>)fired ?? Empty,
+                                        (IReadOnlyList<FallFuse>)fuses ?? NoFuses,
+                                        (IReadOnlyList<int>)caught ?? Empty,
                                         (IReadOnlyList<int>)washed ?? Empty,
                                         (IReadOnlyList<int>)charged ?? Empty,
                                         (IReadOnlyList<int>)washedWith ?? Empty,
@@ -647,6 +776,80 @@ namespace GlimmerGrove.Modes
             }
 
             waves = wave;
+        }
+
+        /// <summary>
+        /// What every whorl turning this wave draws in, and what the pair becomes.
+        ///
+        /// <para>
+        /// <b>Two passes, and the split is the whole of what makes the result order-free.</b>
+        /// Every claim is read off the board as it stands; only when all of them have been taken
+        /// are the drawn motes marked as in motion. Marked as they were claimed, a mote with a
+        /// turning whorl on each side would go to whichever of the two this loop reached first,
+        /// which is a reading order in the one method the whole class is arranged to keep free of
+        /// one. Marked afterwards, both whorls see it, both are refused it, and it stays where it
+        /// is — see <see cref="Claim"/>.
+        /// </para>
+        /// </summary>
+        List<FallFuse> Draw(List<int> turning)
+        {
+            var fuses = new List<FallFuse>(turning.Count);
+
+            for (int t = 0; t < turning.Count; t++)
+            {
+                int at = turning[t];
+
+                int left = Claim(at, -1);
+                int right = Claim(at, +1);
+
+                int into = Energy.None;
+                if (left >= 0) into |= _cells[left];
+                if (right >= 0) into |= _cells[right];
+
+                fuses.Add(new FallFuse(at, left, right, into));
+            }
+
+            for (int f = 0; f < fuses.Count; f++)
+            {
+                var fuse = fuses[f];
+                if (fuse.Left >= 0) _going[fuse.Left] = true;
+                if (fuse.Right >= 0) _going[fuse.Right] = true;
+            }
+
+            return fuses;
+        }
+
+        /// <summary>
+        /// The mote one step <paramref name="dir"/> of a turning whorl, if it may be drawn in,
+        /// or -1.
+        ///
+        /// <para>
+        /// Three refusals, and each is a rule rather than a guard. A cell already leaving this
+        /// wave is not drawn in — the light got to it first, which is the honest reading and the
+        /// one that keeps a mote from both bursting and being taken. Anything that is not a mote
+        /// is not drawn in: <b>a whorl draws light and nothing else</b>, so glass stays where it
+        /// stands and two whorls never eat each other. And a mote with a turning whorl on
+        /// <em>each</em> side is let go by both, which is the only symmetric answer available —
+        /// giving it to one of them would be a reading order.
+        /// </para>
+        /// </summary>
+        int Claim(int whorl, int dir)
+        {
+            int mx = whorl % Width + dir;
+            if (mx < 0 || mx >= Width) return -1;
+
+            int at = whorl + dir;
+            if (_going[at]) return -1;
+            if (!FallCell.IsMote(_cells[at])) return -1;
+
+            int bx = mx + dir;
+            if (bx >= 0 && bx < Width)
+            {
+                int beyond = at + dir;
+                if (FallCell.IsWhorl(_cells[beyond]) && FallCell.IsLit(_cells[beyond])) return -1;
+            }
+
+            return at;
         }
 
         /// <summary>
@@ -667,12 +870,29 @@ namespace GlimmerGrove.Modes
         /// of cells rather than of arrivals.
         /// </para>
         /// </summary>
-        void Reached(int ni, int light, ref List<int> washed, ref List<int> charged)
+        void Reached(int ni, int light, ref List<int> washed, ref List<int> charged,
+                     ref List<int> caught)
         {
             if (_going[ni]) return;                                // gone by the time it arrives
 
             int cell = _cells[ni];
             if (cell == FallCell.Empty) return;
+
+            // A whorl takes no channels — it holds none and never will. What light does to one
+            // is *open* it, and only once: a second arrival in the same wave finds it already
+            // open and is not a second event, which is what keeps the wave free of any reading
+            // order. It turns on the wave after this one, which is the wind-up the player needs
+            // in order to see which two motes are about to be taken.
+            if (FallCell.IsWhorl(cell))
+            {
+                if (FallCell.IsLit(cell)) return;
+
+                _cells[ni] = cell | FallCell.Lit;
+
+                if (caught == null) caught = new List<int>();
+                caught.Add(ni);
+                return;
+            }
 
             int gain = light & ~cell;
             if (gain == Energy.None) return;                       // holds it already: takes nothing
@@ -729,9 +949,18 @@ namespace GlimmerGrove.Modes
         /// they are taken before anything settles. A lens shielded by its own cause would be a
         /// rule with nothing on the board to show it.
         /// </para>
+        /// <para>
+        /// <b>A whorl is the third thing it can meet, and it stops the beam like anything
+        /// else.</b> What is different is what happens to the whorl: any light at all opens one,
+        /// so a shot is one of the three ways a whorl is set turning — the other two being a
+        /// burst beside it and a drop straight onto it. A beam is the only one of the three that
+        /// can open a whorl the player cannot otherwise reach, which is what makes glass and
+        /// whorls one game on a board rather than two sharing it.
+        /// </para>
         /// </summary>
         void Shoot(int from, int dx, int dy,
-                   ref List<int> washed, ref List<int> charged, ref List<FallBeam> beams)
+                   ref List<int> washed, ref List<int> charged, ref List<int> caught,
+                   ref List<FallBeam> beams)
         {
             int x = from % Width, y = from / Width;
             int steps = 0;
@@ -767,7 +996,7 @@ namespace GlimmerGrove.Modes
                     _struck[ni] = true;
                 }
 
-                Reached(ni, Energy.All, ref washed, ref charged);
+                Reached(ni, Energy.All, ref washed, ref charged, ref caught);
                 return;
             }
         }
@@ -779,6 +1008,8 @@ namespace GlimmerGrove.Modes
         }
 
         static readonly FallBeam[] NoBeams = new FallBeam[0];
+
+        static readonly FallFuse[] NoFuses = new FallFuse[0];
 
         static readonly int[] Empty = new int[0];
 
@@ -908,9 +1139,14 @@ namespace GlimmerGrove.Modes
         public readonly int Waves;
 
         /// <summary>
-        /// Cells this drop destroyed, over every wave - motes that burst and glass that fired
-        /// alike, because both are things the well had to be rid of. Counted for
-        /// <see cref="Waves"/>' reason.
+        /// Cells this drop was rid of, over every wave — motes that burst, glass that fired, and
+        /// whatever a whorl took with it, because all of them are things the well had to lose.
+        /// Counted for <see cref="Waves"/>' reason.
+        ///
+        /// A merge counts as the <em>one</em> cell it really frees: two motes go in and one comes
+        /// out, so a whorl that fuses a pair is worth two and one that closes on nothing is worth
+        /// one. <c>Greedy</c> ranks on this, and a careless player credited for three would take
+        /// every whorl going whatever it gave back.
         /// </summary>
         public readonly int Burst;
 
@@ -967,6 +1203,37 @@ namespace GlimmerGrove.Modes
         public readonly IReadOnlyList<int> Fired;
 
         /// <summary>
+        /// Whorls that turned this wave: where each stood, what it drew in, and what the pair
+        /// became.
+        ///
+        /// <para>
+        /// Its own list rather than more of <see cref="Burst"/> for <see cref="Fired"/>'s reason:
+        /// three things left the well and they are three different events to watch. A mote
+        /// bursting is light being spent, a lens firing is three drops of charge going off at
+        /// once, and a whorl turning is two motes <em>moving</em> — the only motion in this mode
+        /// that is not the stack falling. Drawn the same way, the one thing the chapter is about
+        /// would be invisible in the middle of it.
+        /// </para>
+        /// <para>
+        /// It carries the cells the pair came from rather than only the cell it went to, because
+        /// the settled board cannot say: their cells are bare afterwards, and bare is also what
+        /// a cell the author left empty looks like. See <see cref="FallFuse"/>.
+        /// </para>
+        /// </summary>
+        public readonly IReadOnlyList<FallFuse> Fuses;
+
+        /// <summary>
+        /// Whorls the light <em>opened</em> this wave, which turn on the next one.
+        ///
+        /// <b>The half a view would otherwise have no way to show.</b> A whorl opens on one beat
+        /// and turns on the following one, exactly as a lens fills on one and fires on the next —
+        /// so without this the merge would have no wind-up, and the player would never get the
+        /// instant in which they can see <em>which two motes are about to be taken</em>, which is
+        /// the whole of what they arranged.
+        /// </summary>
+        public readonly IReadOnlyList<int> Caught;
+
+        /// <summary>
         /// Lenses that took a channel this wave without filling up.
         ///
         /// <b>The half a view would otherwise have no way to show.</b> Charging is most of what
@@ -1010,12 +1277,15 @@ namespace GlimmerGrove.Modes
         public readonly IReadOnlyList<FallMove> Moved;
 
         public FallStep(IReadOnlyList<int> burst, IReadOnlyList<int> fired,
+                        IReadOnlyList<FallFuse> fuses, IReadOnlyList<int> caught,
                         IReadOnlyList<int> washed, IReadOnlyList<int> charged,
                         IReadOnlyList<int> washedWith, IReadOnlyList<int> chargedWith,
                         IReadOnlyList<FallBeam> beams, int wave, IReadOnlyList<FallMove> moved)
         {
             Burst = burst;
             Fired = fired;
+            Fuses = fuses;
+            Caught = caught;
             Washed = washed;
             Charged = charged;
             WashedWith = washedWith;

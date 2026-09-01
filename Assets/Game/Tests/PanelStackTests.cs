@@ -111,8 +111,9 @@ namespace GlimmerGrove.Tests
         {
             Assert.LessOrEqual(PanelStack.TextLeft + PanelStack.TextWidth,
                                PanelStack.Width - PanelStack.HostInset);
-            Assert.LessOrEqual(PanelStack.Width, PanelStack.TightestCanvas / PanelStack.TightestAspect,
-                               "and the panel inside the reference width");
+            Assert.LessOrEqual(PanelStack.Width, CanvasFit.PhoneWidth,
+                               "and the panel inside the narrowest canvas, which is a phone's — "
+                               + "a tablet's is wider, never narrower");
         }
 
         [Test]

@@ -123,24 +123,24 @@ Two consequences worth holding on to:
    authored by hand unbuildable, and the point of these files is that a chapter can be
    *retuned* rather than that it must have been generated.
    **Leave `par` out** — it is derived from the
-   board, so an omitted par can never be wrong while a typed one can. **Do set
-   `backdrop`**: a chapter that does not name its own art inherits another
-   chapter's, which puts it in another chapter's asset bundle.
+   board, so an omitted par can never be wrong while a typed one can. **Do not choose a
+   `backdrop` or a `mapStrips`**: both are arithmetic now, from the chapter's ordinal
+   inside its own mode — `Tools/chapters/mapart.py` hands back the map and the ten skies,
+   and the generator writes them into the JSON. See *A chapter's art is a rule* below.
 3. Place the glades with `mapX`/`mapY`, fractions of *this chapter's* map. Walk
    them upward — each above the one before — and keep them apart; validation
    measures the gap in canvas units against the chapter's strip count and warns
    about collisions, backwards trails and anything crowding the end-of-chapter
    marker. More levels means more `mapStrips`, not tighter packing — which in
-   practice means **the strip art decides how long a chapter is**. The Shallows
-   runs to ten glades because its source image held six 1200px slices; the Mill Vale
-   runs to ten over four, and the Amberwood to ten over five, because their sources are
-   shorter and `make_chapter_art.py` scales to whole strips rather than stretching to
-   them. Pick the strip count that leaves the scaled source *wider* than 1080 — the tool
-   then trims the surplus from the centre, which is invisible, where a count that leaves
-   it narrower forces the width up to 1080 and stretches the map sideways, which is not.
-   The Amberwood's source is 892x4745, so five strips scale it to 1128 wide and four
-   would have stretched it by a fifth. Work that out before
-   authoring boards, not after. The end-of-chapter marker caps the trail and places
+   practice means **the map decides how long a chapter is**, and the map is the one at
+   this chapter's ordinal: six strips at ordinal 1 and 4, four at ordinal 2, five at
+   ordinal 3 (`mapart.STRIPS`). Those counts are facts about the four paintings rather
+   than preferences — `make_chapter_art.py` scales a source to *whole* strips, so a count
+   that leaves the scaled source narrower than 1080 stretches the map sideways, and the
+   Amberwood's 892x4745 source is 1128 wide at five strips and would have stretched by a
+   fifth at four. **A chapter at a new ordinal is the only thing that needs a map cut**,
+   and it needs its count worked out before boards are authored, not after, because every
+   distance on a map is measured against it. The end-of-chapter marker caps the trail and places
    itself: how far *up* it floats is derived, but which side it sits on is
    `teaserX` — a fraction across the map, 0.66 if omitted, which is above a chapter
    whose last glade is on the right. A chapter ending on the right side wants a left
@@ -152,11 +152,12 @@ Two consequences worth holding on to:
 5. `Glimmer Grove ▸ Content ▸ Sync Manifest` — adopts the new chapter into
    `manifest.json`, picks an `order`, fills in its level list and derives its `mode`
    from the levels it holds. Run it after *every* content edit.
-6. Cut the art (`make_chapter_art.py`, below), then `Glimmer Grove ▸ Addressables ▸
-   Sync All Assets` — **after** step 5 and never before it. A chapter's art is filed into
-   that chapter's bundle only once the manifest lists the chapter; sync earlier and it is
-   filed as global art, which resolves, validates and audits perfectly while being loaded at
-   launch and never released. See *Addressing* below.
+6. `Glimmer Grove ▸ Addressables ▸ Sync All Assets`. **There is no art to cut**, unless
+   the chapter is the first at a new ordinal — the map and the ten skies already exist and
+   are shared, which is the whole point of *A chapter's art is a rule* below. Sync **after**
+   step 5 and never before it: which bundle a piece of art belongs in is derived from which
+   chapter claims it, and a chapter claims nothing until the manifest lists it. See
+   *Addressing* below.
 7. `Glimmer Grove ▸ Validate Content`. It must report zero errors — builds refuse
    to run otherwise.
 
@@ -207,27 +208,48 @@ Everything still resolves, `Validate Art` is green and the audit passes, because
 addressed and present; it is simply in the wrong bundle. Re-running the sync after the manifest
 sync moves it, and there is no other symptom to notice.
 
-### Cutting a chapter's art
+### A chapter's art is a rule, not a decision
 
-`python Tools/make_chapter_art.py <chapter_id> --source <pack folder>` writes both
-halves of a chapter's art: the map strips named in `mapStrips`, sliced **bottom
-upward** out of one tall image, and one graded 720×1280 backdrop for the chapter and
-every backdrop a level overrides.
+Two tools and one table:
 
-`Tools/chapter_art.tsv` is one row per chapter and says only which source images to
-cut from — the names and the palette are read out of the chapter's own JSON. So
-retuning a glade's `accent`/`slate` regrades its backdrop with nothing else to edit,
-and an eleventh glade gets an eleventh backdrop by being authored. It is
-`AssetManifest.ChapterAssets`' rule from the other end of the pipeline: art is
-derived from the catalog, never hand-listed.
+```
+Tools/chapters/mapart.py     which map a chapter draws, and which sky each level does
+Tools/make_chapter_art.py    cuts one ordinal's map strips        (chapter_art.tsv)
+Tools/make_sky_art.py        cuts the forty shared skies
+```
 
-Two things it will not do. It **scales the map to whole strips and never stretches
-it**, trimming the surplus width from the centre — a 3% vertical stretch makes every
-tree on the map the wrong shape, which reads as cheapness rather than as an error.
-And it **grades a backdrop rather than merely darkening it**: the source is reduced
-to luminance, softened and mapped onto a three-stop ramp built from the level's own
-slate and accent, which is what lets ten glades share two source paintings without
-looking like ten crops of two paintings.
+**The map belongs to the ordinal, not to the chapter.** Every mode's first chapter draws
+`map1`, every mode's second draws `map2`, and so on; a mode is told apart on the map by its
+**perch** — the floating tile a node stands on, `ModeLook.Perch` — and by nothing else. That
+was already the rule for the perch and is now true of the painting too, which is what stopped
+Lightfall's three chapters being three unrelated places from the glade chapters' four others.
+Sharing is also what puts a painting in the **global** group by itself, because
+`AddressableAddresses.ChapterOwnership` files an address two chapters want as belonging to
+nobody.
+
+**The backdrop belongs to the level's place in its chapter.** Forty skies, `sky_00`..`sky_39`,
+ten per ordinal — the same soft cloud painting at forty different colours, dealt round the
+wheel with a stride so two levels in a row are never close in hue. Level *i* of a chapter at
+ordinal *k* draws `mapart.sky(k, i)`, which is what a generator writes into the JSON.
+
+What that buys is the reason to keep it: **a chapter published next year needs no art at all.**
+It names an ordinal and gets a map and ten skies — nothing to cut, no row to add, no name to
+invent, and no way for two chapters of two modes to disagree about what the second chapter of
+the game looks like. It replaced forty-one backdrops cut from six different paintings, of which
+a whole Lightfall chapter's ten levels shared *one*.
+
+`python Tools/make_chapter_art.py <chapter_id> --source <pack folder>` cuts the map strips
+named in that chapter's `mapStrips`, sliced **bottom upward** out of one tall image.
+`Tools/chapter_art.tsv` is one row per chapter and says only which source to cut from — and
+almost every row says `-`, because an ordinal's map is cut once, by whichever chapter owns it.
+It **scales the map to whole strips and never stretches it**, trimming the surplus width from
+the centre: a 3% vertical stretch makes every tree on the map the wrong shape, which reads as
+cheapness rather than as an error.
+
+`python Tools/make_sky_art.py --source <pack folder>` cuts all forty skies, and `--check`
+proves the shipped ones are what it would cut. The grade is `make_chapter_art.vivid`, imported
+rather than copied — it took four attempts to get right (see `CRAFT.md`), and a second copy
+would be a second thing to get wrong.
 
 ## Token grammar
 
@@ -581,6 +603,63 @@ two ways: the supply runs out, or a mote comes to rest above the **brim**, which
 | `R` `G` `B` | a mote of one channel: two more to go |
 | `Y` `M` `C` | a mote of two channels — *ripe*, and one drop from bursting |
 | `W` | refused: a well that bursts before anybody touches it is a board its author did not mean |
+| `O` | an empty **lens** — glass, which fills with light and then fires |
+| `r` `g` `b` `y` `m` `c` | a lens already holding that much. Light is upper case and glass is lower |
+| `w` | refused, for `W`'s reason: a lens holding all three fires the moment the board is read |
+| `@` | a **whorl** — a mouth that draws the motes either side of it together and mixes them |
+| `1` `2` `3` | refused: these were a **wick**, and the wick was withdrawn (invariant 26h) |
+
+**The lens** (Glasswater, `f02`) is the one thing in a well that is not made of light. Nothing
+cooks it by landing on it; what it does is *fill up*, one channel at a time, from any burst
+beside it, from another lens's beam, or from a drop taken straight in — and when it holds all
+three it **fires white**, each beam crossing bare ground until the first cell in its line takes
+it. A beam is white, so whatever it lands on is *completed* and pops whatever colour it was.
+
+Every wave of one drop carries that drop's colour, so **a lens gains at most one channel per
+drop**: filling an empty one costs three separate drops of three separate colours, each
+engineered to burst beside it. How full each pane starts is therefore a chapter's whole
+difficulty ramp — measured, two-thirds-full glass leaves 50 boards in 90 solvable where empty
+glass leaves 7. A lens charged the ordinary way fires **sideways**; one *struck by another
+lens's shot* fires along all four axes, which is the chain a chapter of glass is built on.
+
+**The whorl** (Whorlwater, `f03`) holds no light at all. **Anything** opens it — a burst beside
+it, a lens beam, or a drop straight onto it — and on the *next* wave it draws in whatever is
+standing to its **left and its right**, leaves one mote holding both, and is gone.
+
+That is the mode's own arithmetic on a pair of operands it never had. Every other rule here adds
+a *colour* to a cell: a drop adds one channel, a wash adds one, a beam adds all three. A whorl is
+the only place two **motes** are combined — so a cyan and a red that were each a drop away from
+white are none. Nothing has to be taught for it: a player who has cooked one mote already knows
+what yellow and blue make.
+
+**It pulls sideways, and that is a fact about gravity rather than a choice.** The well falls, so
+across is the one direction nothing here ever travels in — the same observation that makes a lens
+fire sideways. It is the only object in this mode that *moves* a mote.
+
+**The trigger is free and the pair is what costs.** What a whorl gives back is decided entirely by
+what stands either side of it **at the instant it turns**, and the well collapses under every
+chain — so authoring one means arranging two particular motes into two particular cells, and
+opening it early spends it on a pair that was not ready. A lens asks for three drops of three
+colours in any order at all; a whorl asks for one arrangement.
+
+Three rules it is held to, and each is checkable:
+
+- **A whorl draws light and nothing else.** Glass beside one stays where it stands, and so does
+  another whorl.
+- **One with nothing beside it closes and is gone**, which is what keeps a well of them winnable
+  and a continue on one honest.
+- **Never against a wall.** Gravity only moves a whorl *down*, so the two columns it can ever draw
+  from are the two it is authored between — one in column nought or the last column has one side
+  for its whole life and can never merge a pair. `ContentValidation` warns about it.
+
+**Its two predecessors are worth knowing about before adding a fourth object.** The third chapter
+shipped a *mirror* that turned a lens's beam ninety degrees, and then a *wick* that washed one
+authored colour into the four cells beside it. Both were reported inside a session and withdrawn:
+the mirror had no event of its own, and the wick had one and no **decision** in it — its colour
+was the author's, its trigger was free, and its effect was identical on every board it stood on.
+A lens delivers all three channels at range, so anything that also delivers light is competing on
+degree and will lose. See invariants 26g and 26h for the test to apply instead: *what can it do
+that a lens cannot*, and *what does the player decide about it*.
 
 `motes` is the procession, in the order it is dealt, written in `R`, `G` and `B` only — dealing a
 blend would hand the player a step of the cooking for free. **It repeats**, so it never needs to
@@ -601,7 +680,12 @@ Two rules the validator holds a well to that are easy to get wrong by hand:
 
 - **The brim row must be empty**, or the level begins in its own fail state.
 - **Nothing may float.** The well settles the instant anything bursts, so a mote with nothing
-  under it is a mote drawn in one place and met in another.
+  under it is a mote drawn in one place and met in another. Glass and whorls fall too.
+- **A whorl needs nothing.** A drop opens one and one with nothing beside it closes, so whorls are
+  always removable and a well of them is always winnable — which is why there is no rule here
+  about them, and why `FallVerdict` needs no clause either. That is deliberate: the lens shipped
+  without the equivalent property and had to have a valve added after a player reported being
+  stranded.
 
 `budgetFactor: -1` turns the supply off entirely, and exactly one level in the game uses it: the
 first well, for the reason the first glade cannot be lost either. It is also what keeps the
@@ -625,6 +709,10 @@ is a shorter number than a small one that has to be picked apart. The dials are:
 - **`greedy`** — whether a player who never looks ahead, always taking the biggest burst going,
   clears the well inside its supply. On a chapter's opening wells they should; that is what
   teaching the verb looks like. By the middle they should not.
+- **`aim`** — how many of a lens's two sideways shots land on anything.
+  Glass pointing at nothing has taken three drops of charging and bought nothing. It is geometry
+  of the authored position rather than a proof — the well collapses under a chain, so a lens
+  fires from wherever it has fallen to — so it warns and never refuses.
 
 `Validate Content` and `Tools/verify/content.py` both print all four beside par, the two star
 lines, the supply and the number of positions the proof cost.
@@ -682,6 +770,14 @@ O              a cocoon that takes two
 #              old wood - no bunch and no wash crosses it, and nothing grows on it
 ```
 
+**A grove with a `regrow` strip is a *living* one** and behaves differently enough to be worth
+saying once: what bursts leaves a hole, everything above slides down into it, new flowers arrive
+along the top from that strip, a white flower is a **bomb** rather than a wall, and one flower
+ripens on its own between taps. A living grove is therefore authored as a **full rectangle** —
+bare ground and old wood are both refused on one, because the first chain fills every hole and
+they never come back. Everything shipped is living; a grove without a strip is the shape this
+mode shipped with and still parses.
+
 `colours` is the **basket**: the colours dealt one per tap, repeating for ever. It is written in
 `R`, `G` and `B` only — **a blend is never dealt**, because a blend handed over is the one decision
 the mode has in it. Anything else is refused rather than ignored.
@@ -713,14 +809,93 @@ rather than argued about — do not add a fourth chip without re-running it.
 free every critter, found by search, and both star lines derive from it. Room above par is
 `spare`, counted in **taps**, and defaults to 5.
 
+### Runners — the second chapter's one new thing
+
+A grove may author a **second grid** of the same size, `runners`, which strings vines across it:
+
+```json
+"bud": {
+  "width": 7,
+  "height": 6,
+  "rows":    ["?o?????", "..."],
+  "runners": [".......",
+              ".a.....",
+              ".......",
+              ".......",
+              "....a..",
+              "......."],
+  "colours": "GRB",
+  "regrow":  "RGBYMC"
+}
+```
+
+One lower-case letter on each of a runner's **two** ends and `.` everywhere else. A letter
+written once, or three times, is refused — a runner has two ends and nothing knows what a third
+would mean. Different letters are different runners; `a` is not special, and the letters are
+re-derived on a round trip, so which one you pick changes nothing.
+
+```
+a bunch that TAKES IN a runner end sends that bunch's colour to whatever is
+standing on the other end, however far across the grove that is.
+```
+
+Four things about it are worth having in front of you before authoring one.
+
+**The end has to be *in* the bunch, not beside it.** A wave going off next door to a vine does
+nothing at all. That threshold is the whole mechanic: a spread that fires on anything happening
+nearby walks outward for ever and makes every board more solvable (invariant 20j), where one that
+has to be *built into* is a thing the player arranges. It is also the only mistake a runner can
+punish, which is why a vine that fires and delivers a colour the far end already wears is drawn
+in full and lands on nothing — the player has to be able to watch that happen.
+
+**A vine belongs to the ground, never to the flower.** Everything on a living grove falls, so the
+two squares are joined for the life of the level and whatever is standing on them at the moment a
+bunch goes off is what the runner carries between. An end authored under a cocoon is legal and
+warned about: that half of the vine is inert until the grove falls something else onto it.
+
+**A bomb sends nothing.** A runner carries a *bunch's colour*, and a white flower going off has no
+colour to carry — it clears a block. One clause, and it stays one clause.
+
+**Author the far end's neighbourhood, or the vine is scenery.** This is the part a sweep will not
+find for you. The motif the Tanglewood teaches with is four cells:
+
+```
+near end  R with a Y beside it        tap it with G in hand -> R|G is Y -> three Y burst,
+far  end  R with a Y beside it        and the Y that runs down the vine does it again
+```
+
+Two readings say whether it worked, and both are printed by `content.py` and
+`Glimmer Grove > Validate Content`:
+
+```
+changed   opening taps that play out differently with every vine cut.
+          WARNED AT 0 - the runners are scenery on the board as dealt. This is
+          invariant 26g's test: replace the new object with the nearest existing one
+          and see whether anything changes.
+caught    opening taps that burst MORE because a vine carried. The number to author
+          against - it is the arrangement the player is making, rather than merely
+          the vine existing. Not gated, because a chapter's first grove may
+          legitimately teach with one that only changes the grove.
+ran       how many vines the *best* opening tap fires, which is what decides whether
+          anybody will ever watch one.
+```
+
+Two structural refusals, both provable by looking rather than by searching: a vine joining two
+squares that already **touch** (a burst washes there anyway, so it can never deliver anything the
+wave was not delivering), and an end standing on **bare ground or old wood** (nothing a bunch
+could ever take in). A vine spanning fewer than three squares is warned about — that is about as
+far as one wave reaches on its own. At most `BudLayout.MaxRunners` (6) to a grove, which is a
+readability bound rather than a cost one.
+
 ### The rule, in three lines
 
 ```
 tap a flower      the colour in hand is OR-ed into it. Red + green in hand = yellow.
                   A tap that would change nothing is refused, not swallowed.
 three alike       any bunch of 3+ touching flowers of one colour bursts.
-a burst washes    its colour into every flower it touches - which makes more bunches,
-                  which makes more. A cocoon beside any of it takes one crack per wave.
+a burst washes    its colour into every flower it touches - and down any vine whose end
+                  it took in - which makes more bunches, which makes more. A cocoon
+                  beside any of it takes one crack per wave.
 ```
 
 ### What makes a grove good
@@ -738,7 +913,24 @@ careless  what a player who always taps whatever sets off the biggest chain spen
 nodes     what proving par costs, which the player's device pays once per level.
           Warned above 20,000, refused above 60,000. Branching is the flower count, so the
           cheap fix is a shorter answer - a cocoon nearer the fuse, never a bigger board.
+changed   on a grove with vines: opening taps that play differently with every vine cut.
+          WARNED AT 0. See *Runners* above.
 ```
+
+**Par is 3 on every grove this mode has shipped, and that is arithmetic rather than a
+preference.** Cost goes as the flower count to the power of par, and the player's own device runs
+this search when it opens the level (invariant 26d), so a par of 4 on a grove big enough to
+cascade is refused outright by the node ceiling — and one small enough to prove comes back at
+twenty flowers with a *one-wave* best tap, which is this mode with the mode taken out of it. So a
+chapter's ramp is spent on what does not multiply the search: **how many are shut in**, how much
+grove there is, how many cocoons take two cracks, how many vines are strung across it, and
+whether a careless run still scores three stars.
+
+**`Tools/chapters/budforge.py` is the sweeper**, and both shipped chapters were found with it:
+draw the skeleton — where the cocoons sit, how big the grove is, where the vines run and the four
+cells of the teaching motif — and it searches the *fill* against `Tools/verify/bud.py`, the same
+mirror the build gate runs. Its header carries the three facts that decide how a sweep has to be
+run, each of which cost a day to find.
 
 **Author the layout, then sweep the basket.** That split is what makes this mode cheap to author:
 the layout decides what the grove *looks* like and the basket decides how it *plays*, and only the
@@ -856,16 +1048,17 @@ Only one tip is shown per glade, most dangerous first.
 ## Inheritance
 
 A level inherits `accent`, `slate` and `backdrop` from its chapter unless it sets
-its own. Prefer inheriting: twenty levels sharing one backdrop is the difference
-between a 60 MB game and a 2 GB one. `mapX`/`mapY` are fractions of the
-*chapter's* band of the map, not of the whole map, so chapters stay independent.
+its own. `accent` and `slate` are the board's own light and its plate, which is where
+a glade's identity belongs. `backdrop` is no longer a choice: every level but the
+first writes the sky its ordinal and position give it, and the first inherits the
+chapter's, which is that same sky. `mapX`/`mapY` are fractions of the *chapter's*
+band of the map, not of the whole map, so chapters stay independent.
 
-A *chapter* inherits nothing. It must name its own `backdrop`, and validation
-fails if it does not. Two chapters silently defaulting to the same backdrop is
-how one chapter's art ends up owned by another chapter's bundle — harmless while
-everything is local, a whole extra download once chapters are delivered remotely.
-Art that genuinely is shared by several chapters goes in the global group, which
-the Addressables tooling works out for itself.
+A *chapter* inherits nothing. It must name its own `backdrop`, and validation fails
+if it does not — the check is unchanged even though what it names is now derived,
+because a chapter drawing art it never asked for is a chapter nobody decided the look
+of. What it names is shared, and shared art goes in the global group, which the
+Addressables tooling works out for itself.
 
 ## Companions
 
@@ -1695,7 +1888,10 @@ Assets have one of two lifetimes:
 
 - **Global** — buttons, icons, critters, the font. Loaded once on the splash, kept.
 - **Chapter** — a chapter's backdrop and map strips, plus any backdrop one of its
-  levels overrides. Loaded on entering the chapter, **released on leaving it**.
+  levels overrides. Loaded on entering the chapter, **released on leaving it**. All of
+  it is *shared* now — the ordinal's map, the ten skies — so it lives in the global
+  bundle and is still claimed and released by the chapter scope. A bundle is where a
+  file is downloaded from; a scope is what is decoded and resident.
 
 The chapter set is *derived from the catalog*, never hand-listed. The old build
 hardcoded `play_0, play_1, play_2` inside the splash screen, so every content drop

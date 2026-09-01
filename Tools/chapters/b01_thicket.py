@@ -27,12 +27,24 @@ refused. Swept for anyway, a par-4 grove comes back at twenty flowers with a **o
 tap: solvable, correctly par'd, validated, and with the mode taken out of it. So par stays where
 the cascades are, exactly as `CONTENT.md` says a glade's does - *par is length, not difficulty*.
 
-**The ramp is one dial: how many are shut in.** Four, four, five, five, six, six, seven, eight,
-eight, eight - and with it how much grove there is (36 flowers to 50) and how many cocoons take
-two cracks rather than one. Every grove is dealt `par + 5`, which is eight taps for a three-tap
-answer, and it stays eight on the tenth: freeing eight critters with the same allowance is more
-to do than freeing four **without ever being tighter**, which is the only kind of harder this
-mode is allowed to get (invariant 20k).
+**The ramp is one dial: how many are shut in.** Three, four, four, six, six, six, seven, eight,
+nine, twelve - and with it how much grove there is (22 flowers to 49) and how many cocoons take
+two cracks rather than one. From the fourth rung on, every grove is dealt `par + 5`, which is
+eight taps for a three-tap answer, and it stays eight on the tenth: freeing twelve critters with
+the same allowance is more to do than freeing six **without ever being tighter**, which is the
+only kind of harder this mode is allowed to get (invariant 20k).
+
+**The first three rungs are where a player is working out what the verb is, and none of them is
+allowed to punish that.** Invariant 24 already refuses to charge a heart for the first three
+levels of a mode's first chapter; the fail *line* is the same rule one step in, and this mode
+was the only one shipping without it - Lightfall's first well and Groovekeeper's first groove are
+both authored `budgetFactor: -1`, and Budburst's first grove was not. So **rungs one and two
+cannot be lost at all**, and rung three - the first grove in the game with a fail line on it, and
+the one where `bud_satchel` is therefore first taught - is dealt the most generous satchel in the
+chapter at `par + 8`. Nothing about the *boards* got easier for it, because they could not: at
+this size a grove whose chain runs three waves is a grove one tap frees everybody on, so par
+collapses to one and the whole ladder goes with it. What got easier is the only thing that could,
+which is what a mistake costs.
 
 **Three other dials were tried and thrown away.** `spare` came down from five to three across the
 chapter; `greedy` - whether a thoughtless run still scored three stars - was true early and false
@@ -44,9 +56,9 @@ spent lesson id. Four level ids went with them and must never be reused: `b01_ol
 `b01_twinhollows`, `b01_bramblebright` and `b01_hollowbanks`.
 
 **What every grove has to do**, and what the sweep held out for: a *best play* that runs six waves
-or more, and an opening tap that is itself a chain. The chapter's loudest is `b01_widewild`, whose
-best opening tap runs **nine waves, bursts twenty-nine of fifty flowers and frees five critters at
-once**; the finale's runs seven and frees five, and `b01_wildwaking`'s frees **six**. A grove whose
+or more, and an opening tap that is itself a chain. The finale's best opening tap runs **eight
+waves, bursts twenty-seven of forty-four flowers and frees ten critters at once**, and
+`b01_everbloom`'s frees seven. A grove whose
 best play is three separate one-wave taps passes every other check in this repository with the
 mode taken out of it, which is why this one is held to it (`BudLadderTests`).
 
@@ -67,13 +79,18 @@ sys.path.insert(0, HERE)
 
 import bud                                                       # noqa: E402
 import b01_strings                                               # noqa: E402
+import mapart                                                    # noqa: E402
 
 CHAPTER = "b01_thicket"
 BODY = os.path.join(ROOT, "Assets", "StreamingAssets", "Content", "chapters", CHAPTER + ".json")
 
 ACCENT, SLATE = "#FFC24A", "#241A0E"
-BACKDROP = "play_6"
-STRIPS = ["strip0", "strip1", "strip2", "strip3", "strip4", "strip5"]
+
+#: Which chapter of its own mode this is. It buys the map and the ten skies - see
+#: `mapart`, which owns that arithmetic for every chapter of every mode.
+ORDINAL = 1
+STRIPS = mapart.strips(ORDINAL)
+SKIES = mapart.skies(ORDINAL)
 
 #: Left and right down the map, the spacing the other six-strip chapters use - proved against
 #: `ChapterMapValidator` for ten nodes rather than guessed at.
@@ -84,7 +101,8 @@ WHERE = [(0.30, 0.055), (0.72, 0.140), (0.26, 0.225), (0.70, 0.310), (0.28, 0.39
 class Grove(object):
     """One authored level: a permanent id, a name, a line, a board and a basket."""
 
-    def __init__(self, lid, name, tagline, rows, colours, regrow=None, spare=0):
+    def __init__(self, lid, name, tagline, rows, colours, regrow=None, spare=0,
+                 losable=True):
         self.id = lid
         self.name = name
         self.tagline = tagline
@@ -93,9 +111,12 @@ class Grove(object):
         self.regrow = regrow
         self.spare = spare
 
+        #: Whether this grove has a fail line at all. The first two do not - see the header.
+        self.losable = losable
+
     @property
     def satchel(self):
-        return self.par + (self.spare or bud.DEFAULT_SPARE)
+        return self.par + (self.spare or bud.DEFAULT_SPARE) if self.losable else 0
 
     def survey(self):
         if not hasattr(self, "_survey"):
@@ -118,18 +139,28 @@ class Grove(object):
         if self.spare:
             block["spare"] = self.spare
 
-        return {
+        out = {
             "id": self.id,
             "mapX": WHERE[at][0],
             "mapY": WHERE[at][1],
-            "bud": block,
         }
+        if at:                          # grove one takes the chapter's own
+            out["backdrop"] = SKIES[at]
+
+        # A negative factor turns the fail line off entirely, which no amount of `spare` can
+        # express - see `LevelTuning`. It is written on the level rather than in the block
+        # because that is where every tuning factor in this game lives.
+        if not self.losable:
+            out["budgetFactor"] = -1.0
+
+        out["bud"] = block
+        return out
 
 
 GROVES = []
 
-#: 1. the verb, on the smallest grove in the game. par 3, satchel 8, three stars at 4, ways 80, greedy 3;
-#: the best opening tap runs 3 wave(s), bursts 10 and frees 2.
+#: 1. the verb, on the smallest grove in the game, and it cannot be lost. par 3, satchel free,
+#: three stars at 4, ways 80, greedy 3; the best opening tap runs 3 wave(s), bursts 10 and frees 2.
 GROVES.append(Grove(
     "b01_firstburst", "First Burst",
     "Tap a flower. Watch it run.",
@@ -139,10 +170,10 @@ GROVES.append(Grove(
         "BRRGG",
         "RBBoB",
         "RMoRB",
-    ], "RGB", "RGBYMCW"))
+    ], "RGB", "RGBYMCW", losable=False))
 
-#: 2. a little more grove, one more shut in. par 3, satchel 8, three stars at 4, ways 54, greedy 3;
-#: the best opening tap runs 4 wave(s), bursts 13 and frees 2.
+#: 2. a little more grove, one more shut in, and still no way to lose. par 3, satchel free,
+#: three stars at 4, ways 54, greedy 3; the best opening tap runs 4 wave(s), bursts 13 and frees 2.
 GROVES.append(Grove(
     "b01_catchalight", "Catch Alight",
     "One tap, and it keeps going.",
@@ -153,21 +184,22 @@ GROVES.append(Grove(
         "RRBBYY",
         "BoGGoG",
         "GGRYBB",
-    ], "RBG", "RGBYM"))
+    ], "RBG", "RGBYM", losable=False))
 
-#: 3. the tough cocoon. par 3, satchel 8, three stars at 4, ways 87, greedy 3;
-#: the best opening tap runs 5 wave(s), bursts 16 and frees 4.
+#: 3. the tough cocoon, and the first grove in the game with a fail line on it - so it is dealt
+#: the most generous satchel in the chapter. par 3, satchel 11, three stars at 4, ways 113,
+#: greedy 3; the best opening tap runs 5 wave(s), bursts 16 and frees 3.
 GROVES.append(Grove(
     "b01_twiceknocked", "Twice Knocked",
     "A second ring takes a second burst.",
     [
-        "RGGYBB",
-        "RoRRoR",
-        "GYBYYB",
-        "RYORBG",
-        "BBRGBY",
-        "YoYRoY",
-    ], "RBG", "RGBYMCW"))
+        "CMMGGM",
+        "GoRRoB",
+        "GRGGYB",
+        "RGYOYM",
+        "MoMBGG",
+        "MGYBCR",
+    ], "BGR", "RYGMBC", spare=8))
 
 #: 4. six shut in, and the most forgiving board in the chapter. par 3, satchel 8, three stars at 4, ways 129, greedy 3;
 #: the best opening tap runs 4 wave(s), bursts 20 and frees 5.
@@ -279,7 +311,7 @@ def chapter_json():
         "id": CHAPTER,
         "accent": ACCENT,
         "slate": SLATE,
-        "backdrop": BACKDROP,
+        "backdrop": SKIES[0],
         "mapStrips": list(STRIPS),
         "levels": [g.json(i) for i, g in enumerate(GROVES)],
     }
@@ -294,9 +326,9 @@ def report():
         gold = bud.over(s["par"], 120)
         greedy = s["careless"]
 
-        print("%-20s %dx%-3d %-4d %-4d %-4d %-4d %-4d %-5d %-6s  %dw/%df/%dc  (%d nodes)"
-              % (g.id, s["w"], s["h"], s["flowers"], s["cocoons"], s["par"], g.satchel,
-                 gold, s["ways"], greedy if greedy >= 0 else "-",
+        print("%-20s %dx%-3d %-4d %-4d %-4d %-4s %-4d %-5d %-6s  %dw/%df/%dc  (%d nodes)"
+              % (g.id, s["w"], s["h"], s["flowers"], s["cocoons"], s["par"],
+                 g.satchel or "free", gold, s["ways"], greedy if greedy >= 0 else "-",
                  s["bestWaves"], s["bestBurst"], s["bestFreed"], s["nodes"]))
 
 

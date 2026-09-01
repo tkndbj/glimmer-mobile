@@ -145,6 +145,11 @@ namespace GlimmerGrove.Modes
             // run needs. Left in, it would refuse the offer on the one board where it is most
             // obviously worth taking. See `FallBoard.Charges`.
 
+            // There is deliberately no clause here for a whorl either. A drop opens one whatever
+            // colour it is, and one with nothing beside it closes rather than waiting - so a
+            // whorl can always be got rid of and more motes really can finish a well full of
+            // them, which is the property the lens had to have a valve added to acquire and the
+            // reason this mechanic was built with it from the start.
             int wanted = board.Wanted;
             if (wanted == Energy.None) return floor;
 

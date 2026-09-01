@@ -114,6 +114,14 @@ namespace GlimmerGrove
 
             Policy.NoteOffered(trigger, GameClock.NowUnix());
 
+            // Three keys behind one flush, and deliberately *not* routed through
+            // `DevicePrefs`. That class exists for a preference written on a screen's arrival,
+            // which is written far more often than it changes; this is the opposite on both
+            // counts — `NoteOffered` has just moved a count and stamped the clock, so every
+            // value here has genuinely changed, and writing them one at a time through a
+            // per-key flush would turn a single serialisation of the store into three. The
+            // rule DevicePrefs owns is "do not flush what has not changed", not "never call
+            // PlayerPrefs", and this already batches correctly.
             PlayerPrefs.SetInt(ChapterKey, Policy.ChapterOffers);
             PlayerPrefs.SetInt(PurchaseKey, Policy.PurchaseOffers);
             PlayerPrefs.SetString(LastOfferedKey, Policy.LastOfferedUnix.ToString());

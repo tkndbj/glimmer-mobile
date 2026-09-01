@@ -48,16 +48,22 @@ import sys
 HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.dirname(os.path.dirname(HERE))
 sys.path.insert(0, os.path.join(ROOT, "Tools", "verify"))
+sys.path.insert(0, HERE)
 
 import fall                                                      # noqa: E402
+import mapart                                                    # noqa: E402
 
 CHAPTER = "f01_lightfall"
 BODY = os.path.join(ROOT, "Assets", "StreamingAssets", "Content", "chapters", CHAPTER + ".json")
 LOC = os.path.join(ROOT, "Assets", "StreamingAssets", "Content", "loc", "en.json")
 
 ACCENT, SLATE = "#FF6B57", "#241414"
-BACKDROP = "play_2"
-STRIPS = ["strip0", "strip1", "strip2", "strip3", "strip4", "strip5"]
+
+#: Which chapter of its own mode this is. It buys the map and the ten skies - see
+#: `mapart`, which owns that arithmetic for every chapter of every mode.
+ORDINAL = 1
+STRIPS = mapart.strips(ORDINAL)
+SKIES = mapart.skies(ORDINAL)
 
 #: Left and right down the map, the spacing Lightweave's six strips already use - proved
 #: against `ChapterMapValidator` for ten nodes rather than guessed at.
@@ -223,6 +229,8 @@ def level_json(well, at):
              "rows": well.rows, "motes": well.motes}
 
     out = {"id": well.id, "mapX": x, "mapY": y}
+    if at:                                  # level one inherits the chapter's
+        out["backdrop"] = SKIES[at]
     if well.budget:
         out["budgetFactor"] = well.budget
     out["fall"] = block
@@ -235,7 +243,7 @@ def chapter_json():
         "id": CHAPTER,
         "accent": ACCENT,
         "slate": SLATE,
-        "backdrop": BACKDROP,
+        "backdrop": SKIES[0],
         "mapStrips": list(STRIPS),
         "levels": [level_json(w, i) for i, w in enumerate(BOARDS)],
     }

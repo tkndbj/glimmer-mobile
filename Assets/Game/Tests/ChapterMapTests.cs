@@ -27,7 +27,7 @@ namespace GlimmerGrove.Tests
             for (int i = 0; i < strips; i++) mapStrips[i] = "strip" + i;
 
             return new ChapterDefinition(ChapterId.Parse("t_chapter"), null,
-                                         Color.white, Color.black, "play_0", mapStrips, teaserX);
+                                         Color.white, Color.black, "sky_00", mapStrips, teaserX);
         }
 
         static LevelDefinition Level(string id, float x, float y)

@@ -20,6 +20,11 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 01d5884ebe4c29945ab61f446e7b2c99
+    m_Address: Art/Map/map2_strip1
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 01d6b8223560d1d55e40382c0296b2ba
     m_Address: Art/Ui/frame_cream
     m_ReadOnly: 0
@@ -37,8 +42,23 @@ MonoBehaviour:
     m_SerializedLabels:
     - Art/Critters/c3
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 064269e485cd04f48b4cbb17d85dce89
+    m_Address: Art/Bg/sky_16
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 06cd4bd4c585974f5ae0e1d6b4dfa406
     m_Address: Art/Ui/banner
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 077b8c39461fafc4db1a170c74899ae2
+    m_Address: Art/Map/map3_strip4
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 083fa1cc627f01041823cba4dcdaa8a1
+    m_Address: Art/Bg/sky_10
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
@@ -77,8 +97,8 @@ MonoBehaviour:
     m_SerializedLabels:
     - Art/Critters/c5
     FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: 0dac8cf6e677f054b834f6cd0d265665
-    m_Address: Art/Bg/play_6
+  - m_GUID: 0da53ad91c20f854f8dc8712bb21d285
+    m_Address: Art/Bg/sky_08
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
@@ -106,12 +126,17 @@ MonoBehaviour:
     - Art/Critters/c5
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 0f62723584f54f8011a04dde90efc13b
-    m_Address: Art/Map/strip0
+    m_Address: Art/Map/map1_strip0
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 0f82defa974edd8d1adbe74bbcd268bb
     m_Address: Art/Ui/panel_soft
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 10ba9f8dc7d040c45bed3518436156b7
+    m_Address: Art/Map/map2_strip0
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
@@ -146,6 +171,11 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 157cfe63cf8228b409c332c4182187c5
+    m_Address: Art/Map/map3_strip1
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 1624ddd44d8912bdffd97be23041908c
     m_Address: Art/Fx/Victory/f19
     m_ReadOnly: 0
@@ -158,7 +188,7 @@ MonoBehaviour:
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 1a158e089440f7146b1a8f742abf4b84
-    m_Address: Art/Map/strip4
+    m_Address: Art/Map/map1_strip4
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
@@ -261,6 +291,11 @@ MonoBehaviour:
     m_SerializedLabels:
     - Art/Fx/Victory
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 25b72ff3716b44369b90104151108192
+    m_Address: Audio/Music/mus_mode
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 25fce7c7ccbe9716d8f7d2d3dc48ca8e
     m_Address: Art/Critters/c1/f02
     m_ReadOnly: 0
@@ -320,6 +355,11 @@ MonoBehaviour:
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 2e3bbb3380b20c0a2f3693808db4e662
     m_Address: Audio/Sfx/shatter
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 2eed109265b95814993a95ef0b009801
+    m_Address: Art/Bg/sky_27
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
@@ -445,6 +485,16 @@ MonoBehaviour:
     m_SerializedLabels:
     - Art/Critters/c3
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 43ac942b167656949a8fa857bdc76556
+    m_Address: Art/Map/map3_strip0
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 46b60bab93703284f8c8d82cd7a3cdff
+    m_Address: Art/Bg/sky_29
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 46d776254deb3c692d15a9b4cae2f250
     m_Address: Art/Critters/c3/f18
     m_ReadOnly: 0
@@ -466,6 +516,11 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels:
     - Art/Critters/c2
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 47efd1c6246899d4795d57bc21113148
+    m_Address: Art/Map/map2_strip3
+    m_ReadOnly: 0
+    m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 48c7d373ca15b5440a4f54adb4707fcb
     m_Address: Art/Ui/Shop/coins_5
@@ -523,6 +578,16 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 4f3a010c5ec5b3146a98dc0fd1f6a486
+    m_Address: Art/Map/map3_strip2
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 4fc77a1110a81264d818e0720ce9f74e
+    m_Address: Art/Bg/sky_18
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 5105e35b4b33241b94367a139fd2ee9c
     m_Address: Art/Map/rock_wide
     m_ReadOnly: 0
@@ -535,7 +600,7 @@ MonoBehaviour:
     - Art/Critters/c4
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 519453f73f0d6cd4aa843d5c2edcad6d
-    m_Address: Art/Map/strip5
+    m_Address: Art/Map/map1_strip5
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
@@ -566,6 +631,11 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels:
     - Art/Critters/c2
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 549d359015a2acd4291a9efa43c67661
+    m_Address: Art/Bg/sky_23
+    m_ReadOnly: 0
+    m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 54f5214740aeebcc1ea857d30b486103
     m_Address: Art/Critters/c3/f04
@@ -612,6 +682,16 @@ MonoBehaviour:
     m_SerializedLabels:
     - Art/Critters/c2
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 588913881143705448c398193080fd9c
+    m_Address: Art/Map/map3_strip3
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 58a1c0af46d84dc46963e2863cdfb491
+    m_Address: Art/Bg/sky_24
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 595438cbfb5b5a77e1df6d91fc374874
     m_Address: Art/Critters/c1/f16
     m_ReadOnly: 0
@@ -632,6 +712,11 @@ MonoBehaviour:
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 5a67c39961e28f0489e3c2f0840ad75d
     m_Address: Art/Map/rock_lumen
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 5b14366c00b79f446a13ab3800cccd49
+    m_Address: Art/Bg/sky_14
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
@@ -679,11 +764,6 @@ MonoBehaviour:
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 6067986a9fd040c7a8d83460e5e04ba4
     m_Address: Art/Ui/ic_play
-    m_ReadOnly: 0
-    m_SerializedLabels: []
-    FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: 60e3ecbc56f10fc4bac8bd882641110a
-    m_Address: Art/Bg/play_8
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
@@ -740,6 +820,11 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 67a3c70d2bf465a47a342aa56e5c3b23
+    m_Address: Art/Bg/sky_02
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 6965cb96735e4c8a32645948999911b2
     m_Address: Art/Fx/Victory/f01
     m_ReadOnly: 0
@@ -763,8 +848,18 @@ MonoBehaviour:
     m_SerializedLabels:
     - Art/Critters/c5
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 6ad96eb25890c2c479fb24ad69a94448
+    m_Address: Art/Bg/sky_06
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 6b427d048487aef4b9243ab0838381d0
+    m_Address: Art/Bg/sky_04
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 6bd1e279517059ffd82412677d275239
-    m_Address: Art/Map/strip2
+    m_Address: Art/Map/map1_strip2
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
@@ -947,11 +1042,6 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: 7fc5189e2f69cd54093ad02d00014469
-    m_Address: Art/Bg/play_4
-    m_ReadOnly: 0
-    m_SerializedLabels: []
-    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 7fe444a1a73540089440085908aee536
     m_Address: Art/Ui/ic_pencil
     m_ReadOnly: 0
@@ -963,8 +1053,23 @@ MonoBehaviour:
     m_SerializedLabels:
     - Art/Critters/c2
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 80f95f04c18b90b4e89c9bff27d3a7b0
+    m_Address: Art/Bg/sky_28
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 8196a7d6acf84ac44b9a86084309c52a
+    m_Address: Art/Bg/sky_07
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 81adaf14a351c444b9330af561064921
     m_Address: Art/Ui/Shop
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 82e79bd41a402aa4283795d4fa5714b5
+    m_Address: Art/Bg/sky_00
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
@@ -975,6 +1080,11 @@ MonoBehaviour:
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 83bad3167bbdcf2751d0f0339b04973e
     m_Address: Audio/Sfx/reward
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 842881d3c866b134dbdcf5520364c986
+    m_Address: Art/Bg/sky_09
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
@@ -1022,6 +1132,11 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 8950fb90c64bd9b4b85ef73897f68a31
+    m_Address: Art/Bg/sky_20
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 8970768b5c20181142171194083ca3a5
     m_Address: Art/Fx/Victory/f15
     m_ReadOnly: 0
@@ -1059,6 +1174,11 @@ MonoBehaviour:
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 8c87bbbdf97cb4f7f36bde33e2ad9a29
     m_Address: Art/Ui/ic_check
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 8d61b7c8debb83a44be2a2c55776148b
+    m_Address: Art/Bg/sky_25
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
@@ -1132,6 +1252,11 @@ MonoBehaviour:
     m_SerializedLabels:
     - Art/Ui/Flame
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 973713d6ce4f66c41bb82888b41c8445
+    m_Address: Art/Bg/sky_05
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 9813f1f482030a6e56b34641364a3e0d
     m_Address: Art/Ui/wood_panel
     m_ReadOnly: 0
@@ -1139,6 +1264,11 @@ MonoBehaviour:
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 98145c48822c8c9d21fbb3de38b3f9e2
     m_Address: Art/Ui/ic_stars
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 986bf3a80cd490c47a033261689124fc
+    m_Address: Art/Bg/sky_12
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
@@ -1245,6 +1375,11 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: a4fd1a367c4e19845a7cd56e1f7214ef
+    m_Address: Art/Bg/sky_03
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: a579dba84d4551531f0c1d5422d69243
     m_Address: Art/Critters/c2/f01
     m_ReadOnly: 0
@@ -1276,6 +1411,11 @@ MonoBehaviour:
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: a9974a9a44af065df48cbd05e1c91d5c
     m_Address: Art/Ui/badge_star
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: abedbef94208dde4ebf50d256033cf47
+    m_Address: Art/Bg/sky_21
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
@@ -1314,6 +1454,11 @@ MonoBehaviour:
     m_SerializedLabels:
     - Art/Critters/c5
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: aee2c3ebec19cdb419633b306386739d
+    m_Address: Art/Bg/sky_19
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: afdbd3feb2892c5e9001a3916fb4eb06
     m_Address: Art/Fx/Victory/f04
     m_ReadOnly: 0
@@ -1343,6 +1488,11 @@ MonoBehaviour:
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: b1fe8fb449778158cfbaa02704c3dedd
     m_Address: Art/Ui/sq_green
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: b4434ee8345c0fa4697085ad4acf2596
+    m_Address: Art/Bg/sky_15
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
@@ -1379,8 +1529,18 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: b8b85eeb4ee704b478e4fc8b7f691097
+    m_Address: Art/Bg/sky_22
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: b8c5aa732272018ab3cbf40133268885
     m_Address: Art/Ui/ribbon_green
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: b8c6bb81a9dfbc64eb7f24ee25f7dacd
+    m_Address: Art/Bg/sky_01
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
@@ -1485,7 +1645,7 @@ MonoBehaviour:
     - Art/Critters/c1
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: c55d3f8c3c5f84c458c6fc4f600155d0
-    m_Address: Art/Map/strip3
+    m_Address: Art/Map/map1_strip3
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
@@ -1537,11 +1697,6 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: ccc83be2dd2e6ddb7413c4643a6bd083
-    m_Address: Art/Bg/play_2
-    m_ReadOnly: 0
-    m_SerializedLabels: []
-    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: cefef8313167a8d917c00faf18727d92
     m_Address: Art/Fx/Victory/f26
     m_ReadOnly: 0
@@ -1555,6 +1710,11 @@ MonoBehaviour:
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: cffd24d7fbfcaf5db535fcd5132de8a4
     m_Address: Audio/Sfx/pop
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: d0670ee4a7fd31245bd63695f0815c4e
+    m_Address: Art/Bg/sky_11
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
@@ -1629,6 +1789,11 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: d85dfbac7b4ebdc43870a4163873ebef
+    m_Address: Art/Bg/sky_26
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: d867d37a4952121f5a22fd58e8005afe
     m_Address: Art/Map/node_s3
     m_ReadOnly: 0
@@ -1666,7 +1831,7 @@ MonoBehaviour:
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: dfbf61084bad150138874059e8c6a223
-    m_Address: Art/Map/strip1
+    m_Address: Art/Map/map1_strip1
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
@@ -1793,11 +1958,21 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: eefd9664b12cf294682f2fb61350aa9f
+    m_Address: Art/Map/map2_strip2
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: ef4e4674f646c79127dd0ae79af69f64
     m_Address: Art/Critters/c5/f09
     m_ReadOnly: 0
     m_SerializedLabels:
     - Art/Critters/c5
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: f1063a9f4ee200b4d86c5489d7f72199
+    m_Address: Art/Bg/sky_17
+    m_ReadOnly: 0
+    m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: f212424285e8d8a1e04f51fb15162419
     m_Address: Audio/Sfx/chime
@@ -1905,8 +2080,8 @@ MonoBehaviour:
     m_SerializedLabels:
     - Art/Critters/c4
     FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: fec923710addfbc99d9a9f1ec7a4f6e9
-    m_Address: Audio/Music/mus_play
+  - m_GUID: fed48a3aa10327b4b97441d363665a94
+    m_Address: Art/Bg/sky_13
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0

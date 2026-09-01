@@ -27,6 +27,30 @@ namespace GlimmerGrove.Progression
         public static readonly Mechanic MoveBudget = new Mechanic("moves");
         public static readonly Mechanic RootedTile = new Mechanic("rooted");
 
+        /// <summary>
+        /// A critter that asks for no colour at all, and wakes to whatever light arrives.
+        ///
+        /// <para>
+        /// <b>It is taught because the ring is read as a demand.</b> Every other sleeping
+        /// critter wears the colour it is waiting for, so a player learns within a glade or
+        /// two that the ring on a critter is an instruction — and an unfussy one wears all
+        /// three channels at once (<c>Art.PrismRing</c>), which under that reading says
+        /// <em>bring me white</em>. That is the opposite of what it means, and it is the
+        /// crossing's fault rather than the taproot's: the player does not fail to learn a
+        /// rule, they conclude a wrong one and route light they never needed to.
+        /// </para>
+        /// <para>
+        /// <b>Only where the board can show it.</b> The lesson is a contrast — this one asks
+        /// for nothing, those ones ask for something — so it is reported only on a board that
+        /// also holds a fussy critter. A glade where every critter is unfussy has no colour
+        /// rule on it yet, so there is nothing for "any" to be the absence of, and a lesson is
+        /// shown once in a player's life: spent on the opening glade, where all three critters
+        /// take any light and no critter has ever asked for a colour, it could never be shown
+        /// on the first board that actually mixes the two.
+        /// </para>
+        /// </summary>
+        public static readonly Mechanic AnyLight = new Mechanic("anylight");
+
         /// <summary>Two heart colours, and a critter that wants them blended.</summary>
         public static readonly Mechanic ColourMixing = new Mechanic("mixing");
 
@@ -105,6 +129,24 @@ namespace GlimmerGrove.Progression
         /// screen is the only thing standing between a careless run and the end of it.
         /// </summary>
         public static readonly Mechanic BudSatchel = new Mechanic("bud_satchel");
+
+        /// <summary>
+        /// The runner: two squares of the grove joined by a vine, and a bunch that <em>includes</em>
+        /// one end sends its colour to the other.
+        ///
+        /// <para>
+        /// <b>The board shows almost all of it, and the half it cannot show is the half that
+        /// costs.</b> The vine is painted between its two ends and the light visibly runs down
+        /// it, so a player who fires one once knows what happened — which is exactly the
+        /// standard invariant 20g holds a mechanic to, and it is why this one is worth
+        /// shipping where a wick and a mirror were not. What no board can say is the
+        /// <em>threshold</em>: a bunch going off next door to an end does nothing at all, and
+        /// the flower standing on the end has to be one of the three. That is the whole
+        /// decision, and a player who has not been told it reads a vine that stayed dark as a
+        /// bug rather than as a near miss.
+        /// </para>
+        /// </summary>
+        public static readonly Mechanic BudRunner = new Mechanic("bud_runner");
 
         // **`bud_wood` is a retired lesson id and must never be reused.** Old wood was
         // authored across most of the Thicket for one drop and taken out again, because a
@@ -202,6 +244,51 @@ namespace GlimmerGrove.Progression
         /// </para>
         /// </summary>
         public static readonly Mechanic FallLens = new Mechanic("fall_lens");
+
+        /// <summary>
+        /// The whorl: a mouth in the well that draws the motes either side of it together and
+        /// mixes them into one.
+        ///
+        /// <para>
+        /// <b>The board shows what it does and cannot show what it is for.</b> Watch one turn and
+        /// the mechanism is obvious — two lights slide in and one comes out. What no board can
+        /// state is the reason a player should care, and it is the one fact that makes the
+        /// mechanic worth having: <em>every other rule in this mode adds a colour to a mote</em>,
+        /// so a cyan and a red are two separate drops away from bursting. Put them either side of
+        /// a whorl and they are none.
+        /// </para>
+        /// <para>
+        /// The second sentence is the one that costs a run if it is left to be discovered:
+        /// <b>anything</b> opens a whorl — a burst beside it, a lens beam, or a drop straight
+        /// onto it — and what it gives back is whatever is standing beside it <em>at that
+        /// moment</em>. A player who reads it as glass will try to charge it and waste drops; a
+        /// player who does not know it fires on any touch will lose the pair they spent four
+        /// drops arranging to a chain that reached it early.
+        /// </para>
+        /// <para>
+        /// <b>It replaced two mechanics that had to be withdrawn, and that is why this one is
+        /// shaped the way it is.</b> The mirror turned a lens's beam ninety degrees, so it had no
+        /// event of its own and did nothing at all on a board with no glass. The wick washed one
+        /// authored colour into its four neighbours, which is a burst with the colour changed —
+        /// its colour was the author's, its trigger was free, and there was no point at which the
+        /// player decided anything. Both were reported as the lens again, correctly. A whorl is
+        /// bought with <em>position</em> rather than with drops, which is the one currency this
+        /// mode had never charged in.
+        /// </para>
+        /// <para>
+        /// Only on a well that stands one. Two of Lightfall's three chapters do not, and a lesson
+        /// shown over a board with no whorl on it is one that can never be shown again.
+        /// </para>
+        /// </summary>
+        public static readonly Mechanic FallWhorl = new Mechanic("fall_whorl");
+
+        /// <summary>
+        /// <b>Retired, and the id must never be reused.</b> <c>fall_wick</c> named the mechanic
+        /// the whorl replaced. A lesson id travels in <c>tipsSeen</c> exactly as a level id
+        /// travels in the ledger, so re-pointing one at a rule it never described would tell a
+        /// player they have already been shown something they never saw.
+        /// </summary>
+        public const string RetiredWick = "fall_wick";
 
         /// <summary>
         /// Groovekeeper's verb, and the inversion at the heart of it: a tile is laid beside the
@@ -409,7 +496,7 @@ namespace GlimmerGrove.Progression
         /// </remarks>
         public static readonly Mechanic[] TeachingOrder =
         {
-            FragileConduit, MoveBudget, RootedTile, ColourMixing, Crossing, Briar,
+            FragileConduit, MoveBudget, RootedTile, AnyLight, ColourMixing, Crossing, Briar,
             BoundConduit,
         };
 
@@ -428,9 +515,10 @@ namespace GlimmerGrove.Progression
         /// </summary>
         public static readonly Mechanic[] All =
         {
-            FragileConduit, MoveBudget, RootedTile, ColourMixing, Crossing, Briar,
-            BoundConduit, BudChain, BudCocoon, BudSatchel,
-            FallCook, FallSupply, FallBrim, FallLens, KeeperBloom, KeeperBasket, KeeperStone,
+            FragileConduit, MoveBudget, RootedTile, AnyLight, ColourMixing, Crossing, Briar,
+            BoundConduit, BudChain, BudCocoon, BudSatchel, BudRunner,
+            FallCook, FallSupply, FallBrim, FallLens, FallWhorl,
+            KeeperBloom, KeeperBasket, KeeperStone,
             KeeperCompost, KeeperHeartbed, KeeperPrism, ModeSwitch, LuckySpin, Grove,
             GroveShop,
         };
@@ -503,6 +591,11 @@ namespace GlimmerGrove.Progression
             int fragile = -1, rooted = -1, blended = -1, bound = -1, crossing = -1;
             int briar = -1;
 
+            // The unfussy critter to ring, and whether anything on this board is fussy —
+            // without which there is no contrast to teach. See Mechanic.AnyLight.
+            int unfussy = -1;
+            bool fussy = false;
+
             for (int i = 0; i < board.C.Length; i++)
             {
                 var cell = board.C[i];
@@ -522,6 +615,12 @@ namespace GlimmerGrove.Progression
                 // may just as well mean "keep these apart".
                 if (cell.kind == Kind.Lamp && cell.colour != 0 &&
                     (cell.colour & (cell.colour - 1)) != 0 && blended < 0) blended = i;
+
+                if (cell.kind == Kind.Lamp)
+                {
+                    if (cell.colour == Energy.Any) { if (unfussy < 0) unfussy = i; }
+                    else fussy = true;
+                }
             }
 
             if (fragile >= 0) found.Add(new MechanicSighting(Mechanic.FragileConduit, fragile));
@@ -530,6 +629,13 @@ namespace GlimmerGrove.Progression
             if (board.HasBudget) found.Add(new MechanicSighting(Mechanic.MoveBudget, -1));
 
             if (rooted >= 0) found.Add(new MechanicSighting(Mechanic.RootedTile, rooted));
+
+            // Both halves, always: a board of nothing but unfussy critters is the board the
+            // player starts on, and "this one is not fussy" says nothing where none of them
+            // is. The ring goes round the unfussy critter alone rather than round one of each
+            // — unlike blending, whose answer is two hearts elsewhere on the board, the whole
+            // of this rule is drawn on the tile being pointed at.
+            if (unfussy >= 0 && fussy) found.Add(new MechanicSighting(Mechanic.AnyLight, unfussy));
             if (blended >= 0)
                 found.Add(new MechanicSighting(Mechanic.ColourMixing, blended, HeartsBehind(board, blended)));
             if (crossing >= 0) found.Add(new MechanicSighting(Mechanic.Crossing, crossing));

@@ -17,6 +17,25 @@ namespace GlimmerGrove
         bool _onA = true;
         string _currentTrack;
 
+        /// <summary>
+        /// How loud the live deck is meant to be.
+        ///
+        /// <para>
+        /// Remembered rather than written out at each of the three places that restore a
+        /// volume, because those three have to agree and nothing would say so if they
+        /// stopped: <see cref="Music"/> takes a level per call, and both
+        /// <see cref="ApplyMusicSetting"/> and <see cref="Duck"/> put the music *back*
+        /// afterwards. Spelt as a constant in each, a track faded in at anything but the
+        /// default would be silently promoted to the default by the next settings toggle or
+        /// fanfare — a track getting louder on its own, which is the one failure a music bed
+        /// must not have.
+        /// </para>
+        /// </summary>
+        float _level = DefaultLevel;
+
+        /// <summary>What a track plays at unless a caller says otherwise.</summary>
+        public const float DefaultLevel = .42f;
+
         public static void Boot(Transform parent)
         {
             if (I != null) return;
@@ -139,7 +158,7 @@ namespace GlimmerGrove
 
         // -------------------------------------------------------------- music
         /// <summary>Crossfade to a track. Passing the current track is a no-op.</summary>
-        public static void Music(string name, float fade = .9f, float volume = .42f)
+        public static void Music(string name, float fade = .9f, float volume = DefaultLevel)
         {
             if (I == null) return;
             I.SwapTrack(name, fade, volume);
@@ -148,14 +167,22 @@ namespace GlimmerGrove
         void SwapTrack(string name, float fade, float volume)
         {
             if (_currentTrack == name) return;
+
+            // Resolved before anything is written down, and that ordering is the whole of
+            // this guard. The track name used to be recorded and the decks swapped *first*,
+            // so a clip that did not resolve left the player in a state nothing recovers
+            // from: the live deck is the empty one, the outgoing track keeps playing at the
+            // volume it had, and every later ApplyMusicSetting and Duck writes to the deck
+            // with no clip in it — so turning the music off in settings leaves it playing.
+            var clip = Clip(AssetManifest.Music(name));
+            if (clip == null) return;
+
             _currentTrack = name;
+            _level = volume;
 
             var from = _onA ? _deckA : _deckB;
             var to = _onA ? _deckB : _deckA;
             _onA = !_onA;
-
-            var clip = Clip(AssetManifest.Music(name));
-            if (clip == null) return;
 
             to.clip = clip;
             to.volume = 0f;
@@ -178,7 +205,8 @@ namespace GlimmerGrove
             if (GameSettings.MusicOn)
             {
                 if (live.clip != null && !live.isPlaying) live.Play();
-                Tween.Run(.4f, Ease.OutQuad, t => { if (live) live.volume = .42f * t; }, I, "music");
+                float back = I._level;
+                Tween.Run(.4f, Ease.OutQuad, t => { if (live) live.volume = back * t; }, I, "music");
             }
             else
             {
@@ -193,7 +221,7 @@ namespace GlimmerGrove
         {
             if (I == null || !GameSettings.MusicOn) return;
             var live = I._onA ? I._deckA : I._deckB;
-            float full = .42f;
+            float full = I._level;
             Tween.Run(.18f, Ease.OutQuad, t => { if (live) live.volume = Mathf.Lerp(full, full * amount, t); }, I, "duck")
                  .OnDone(() => Tween.Run(.9f, Ease.InOutSine,
                      t => { if (live) live.volume = Mathf.Lerp(full * amount, full, t); }, I, "duck").Delay(hold));

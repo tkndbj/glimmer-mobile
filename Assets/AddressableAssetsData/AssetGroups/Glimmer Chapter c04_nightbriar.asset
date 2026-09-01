@@ -15,83 +15,83 @@ MonoBehaviour:
   m_GroupName: Glimmer Chapter c04_nightbriar
   m_GUID: 93858074d7759f64faecf44edc437922
   m_SerializeEntries:
-  - m_GUID: 07b8c6ec55c7a4b4c984c9b0630c68e3
-    m_Address: Art/Bg/c04_play_8
+  - m_GUID: 14bf33b0a3adfdf499e33c3fa8f4f2e8
+    m_Address: Art/Bg/sky_32
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: 2e253766ec93b3e42bbb9780a13a0c82
-    m_Address: Art/Bg/c04_play_1
+  - m_GUID: 327864e03838b6643acb5aa28de844e9
+    m_Address: Art/Bg/sky_30
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: 52d7f36f359b0324183845a689627cf9
-    m_Address: Art/Bg/c04_play_2
+  - m_GUID: 342446f69d709c5448ce2e1dc55d0ed5
+    m_Address: Art/Bg/sky_37
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: 698e728a0d1b8264bb8efbfbe3d36af4
-    m_Address: Art/Bg/c04_play_4
+  - m_GUID: 5691197f7547cd547b43db0693b1857d
+    m_Address: Art/Bg/sky_31
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 56d09bb4eec6d5c4483acf12eb39df2c
+    m_Address: Art/Bg/sky_38
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 63240a889836eef4ca5cd8ae38fff92c
+    m_Address: Art/Bg/sky_36
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 6a3471122e574c748a4dec281a08cac0
-    m_Address: Art/Map/c04_strip5
+    m_Address: Art/Map/map4_strip5
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 7367ba1b32f3b40418606d314ca5c63f
-    m_Address: Art/Map/c04_strip0
+    m_Address: Art/Map/map4_strip0
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: 8facd8863fe0f2f4f9a6b8ac54586ee2
-    m_Address: Art/Bg/c04_play_5
+  - m_GUID: 834f1260e71bbcd4ea03fdf3b65a127f
+    m_Address: Art/Bg/sky_39
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: a16cde9ce16a14f4ba182ab91eb77b38
-    m_Address: Art/Bg/c04_play_7
+  - m_GUID: 9244a001c80e35749a5146536a989500
+    m_Address: Art/Bg/sky_34
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: ac4b3c51a24f2eb47934962a73ae567d
-    m_Address: Art/Bg/c04_play_9
-    m_ReadOnly: 0
-    m_SerializedLabels: []
-    FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: d09d7b1f0683cb944b6f544ea26a58c8
-    m_Address: Art/Bg/c04_play_0
-    m_ReadOnly: 0
-    m_SerializedLabels: []
-    FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: d1e9c65942382c94fbb9a3a59eea90a5
-    m_Address: Art/Bg/c04_play_6
+  - m_GUID: b075912d04465f6439b3123d89f9722e
+    m_Address: Art/Bg/sky_33
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: e1f31f9927690924dba1f71ea2f38c9a
-    m_Address: Art/Map/c04_strip3
+    m_Address: Art/Map/map4_strip3
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: eeb44b6a925ab1b4fb69ce3df68aa163
-    m_Address: Art/Map/c04_strip1
+    m_Address: Art/Map/map4_strip1
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: f3313ed178325a84ba6f792aacb4e9f8
-    m_Address: Art/Map/c04_strip2
+    m_Address: Art/Map/map4_strip2
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: f505b40e38725624786eada3ff564e61
-    m_Address: Art/Bg/c04_play_3
+  - m_GUID: fbbade98458269f4b8b1b5c12724796d
+    m_Address: Art/Bg/sky_35
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: fefcc113530d9f84291e94746acbc284
-    m_Address: Art/Map/c04_strip4
+    m_Address: Art/Map/map4_strip4
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0

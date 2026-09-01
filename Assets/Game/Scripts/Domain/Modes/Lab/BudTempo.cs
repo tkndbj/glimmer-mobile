@@ -655,6 +655,28 @@
         /// <summary>After the burst that sent it, colour lands on the flower beside it.</summary>
         public const float WashLag = .085f;
 
+        /// <summary>
+        /// How long colour takes to run the length of a runner, whatever that length is.
+        ///
+        /// <para>
+        /// <b>A fixed beat rather than a speed, which is the opposite of the rule gravity gets</b>
+        /// — and the two are different for a reason worth writing down. A falling flower is
+        /// <em>this board's own physics</em>, so it must move at one pace or a six-row drop
+        /// visibly outruns the one-row drop beside it. A runner is not a thing moving; it is a
+        /// message arriving, and the player is watching <em>both ends at once</em>. Timed by
+        /// distance, a long runner would take most of a second while the wave that sent it had
+        /// already finished, and a short one would land before the eye left the burst.
+        /// </para>
+        /// <para>
+        /// Long enough to be seen leaving and arriving (about three frames of travel either side
+        /// of the middle at sixty), short enough that the far end still belongs to the wave that
+        /// sent it — which is what makes a runner read as part of the chain rather than as an
+        /// afterthought. It is squeezed with the rest of the slack when a chain has to meet
+        /// <see cref="Ceiling"/>.
+        /// </para>
+        /// </summary>
+        public const float RunLag = .155f;
+
         /// <summary>And after the burst that hit it, a cocoon answers.</summary>
         public const float CrackLag = .10f;
 

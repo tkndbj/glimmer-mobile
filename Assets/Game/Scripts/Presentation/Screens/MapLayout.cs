@@ -26,7 +26,7 @@ namespace GlimmerGrove
         public float TotalHeight { get; private set; } = ChapterMap.StripHeight;
 
         /// <summary>Strip sprite keys, bottom to top.</summary>
-        public IReadOnlyList<string> Strips { get; private set; } = new[] { "strip0" };
+        public IReadOnlyList<string> Strips { get; private set; } = new[] { "map1_strip0" };
 
         /// <summary>Where the end-of-chapter marker sits, as fractions of this map.</summary>
         public Vector2 TeaserPosition { get; private set; } = new Vector2(0.66f, 0.845f);

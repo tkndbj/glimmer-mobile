@@ -3,15 +3,14 @@
   "id": "f02_glasswater",
   "accent": "#7FD8F0",
   "slate": "#111E2A",
-  "backdrop": "play_8",
+  "backdrop": "sky_10",
   "mapStrips": [
-    "f02_strip0",
-    "f02_strip1",
-    "f02_strip2",
-    "f02_strip3",
-    "f02_strip4",
-    "f02_strip5"
+    "map2_strip0",
+    "map2_strip1",
+    "map2_strip2",
+    "map2_strip3"
   ],
+  "teaserX": 0.3,
   "levels": [
     {
       "id": "f02_the_glass",
@@ -35,6 +34,7 @@
       "id": "f02_stillwater",
       "mapX": 0.72,
       "mapY": 0.14,
+      "backdrop": "sky_11",
       "fall": {
         "width": 6,
         "height": 6,
@@ -53,6 +53,7 @@
       "id": "f02_low_tide",
       "mapX": 0.26,
       "mapY": 0.225,
+      "backdrop": "sky_12",
       "fall": {
         "width": 5,
         "height": 7,
@@ -72,6 +73,7 @@
       "id": "f02_the_crossing",
       "mapX": 0.7,
       "mapY": 0.31,
+      "backdrop": "sky_13",
       "fall": {
         "width": 6,
         "height": 7,
@@ -91,6 +93,7 @@
       "id": "f02_two_panes",
       "mapX": 0.28,
       "mapY": 0.395,
+      "backdrop": "sky_14",
       "fall": {
         "width": 6,
         "height": 7,
@@ -110,6 +113,7 @@
       "id": "f02_far_shore",
       "mapX": 0.74,
       "mapY": 0.48,
+      "backdrop": "sky_15",
       "fall": {
         "width": 7,
         "height": 8,
@@ -130,6 +134,7 @@
       "id": "f02_lantern_row",
       "mapX": 0.3,
       "mapY": 0.56,
+      "backdrop": "sky_16",
       "fall": {
         "width": 7,
         "height": 8,
@@ -150,6 +155,7 @@
       "id": "f02_slack_water",
       "mapX": 0.68,
       "mapY": 0.645,
+      "backdrop": "sky_17",
       "fall": {
         "width": 6,
         "height": 9,
@@ -171,6 +177,7 @@
       "id": "f02_underglass",
       "mapX": 0.26,
       "mapY": 0.73,
+      "backdrop": "sky_18",
       "fall": {
         "width": 6,
         "height": 8,
@@ -191,6 +198,7 @@
       "id": "f02_the_glasswater",
       "mapX": 0.72,
       "mapY": 0.815,
+      "backdrop": "sky_19",
       "fall": {
         "width": 6,
         "height": 9,

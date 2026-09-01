@@ -35,8 +35,10 @@ import sys
 HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.dirname(os.path.dirname(HERE))
 sys.path.insert(0, os.path.join(ROOT, "Tools", "verify"))
+sys.path.insert(0, HERE)
 
 from author import Board, fit                                    # noqa: E402
+import mapart                                                    # noqa: E402
 
 CHAPTER = "c03_amberwood"
 BODY = os.path.join(ROOT, "Assets", "StreamingAssets", "Content", "chapters", CHAPTER + ".json")
@@ -527,6 +529,12 @@ PALETTE = {
 
 # Walked up the map, alternating sides. Five strips is 6000 canvas units tall, so the
 # nearest pair is about 700 apart against a 220-unit floor.
+#: Which chapter of its own mode this is. It buys the map and the ten skies - see
+#: `mapart`, which owns that arithmetic for every chapter of every mode.
+ORDINAL = 3
+STRIPS = mapart.strips(ORDINAL)
+SKIES = mapart.skies(ORDINAL)
+
 MAPX = [0.28, 0.72, 0.26, 0.70, 0.30, 0.74, 0.28, 0.70, 0.24, 0.72]
 MAPY = [0.060, 0.145, 0.225, 0.305, 0.390, 0.475, 0.555, 0.640, 0.725, 0.815]
 
@@ -596,8 +604,8 @@ def chapter_json(built):
     doc["id"] = CHAPTER
     doc["accent"] = accent
     doc["slate"] = slate
-    doc["backdrop"] = "c03_play_0"
-    doc["mapStrips"] = [f"c03_strip{i}" for i in range(5)]
+    doc["backdrop"] = SKIES[0]
+    doc["mapStrips"] = list(STRIPS)
     doc["teaserX"] = 0.3
 
     levels = []
@@ -613,7 +621,7 @@ def chapter_json(built):
             a, s = PALETTE[lid]
             level["accent"] = a
             level["slate"] = s
-            level["backdrop"] = f"c03_play_{i}"
+            level["backdrop"] = SKIES[i]
         level["rows"] = board.rows()
         levels.append(level)
     doc["levels"] = levels

@@ -167,12 +167,20 @@ namespace GlimmerGrove.Social
             _policy.Adopt(UnityEngine.PlayerPrefs.GetString(PublishedKey + uid, string.Empty));
         }
 
+        /// <summary>
+        /// Written through <see cref="DevicePrefs"/> rather than staged, because this note is
+        /// taken at the one moment it can be lost: immediately after a network round trip, on
+        /// an app that has been in the background long enough to do one. Left to Unity's own
+        /// <c>OnApplicationQuit</c> it would survive a clean quit and almost nothing else, and
+        /// a lost note is a card republished on the next launch — harmless, server-side, and
+        /// paid for by every device it happens to.
+        /// </summary>
         static void Note(string fingerprint)
         {
             string uid = CloudState.UserId;
             if (string.IsNullOrEmpty(uid)) return;
 
-            UnityEngine.PlayerPrefs.SetString(PublishedKey + uid, fingerprint ?? string.Empty);
+            DevicePrefs.WriteString(PublishedKey + uid, fingerprint ?? string.Empty);
         }
 
         /// <summary>

@@ -24,7 +24,12 @@ namespace GlimmerGrove
         /// </summary>
         LevelId IPlaysLevel.LevelId { set => LevelId = value; }
 
-        public override string Track => "mus_play";
+        /// <summary>
+        /// The same bed the other four modes play. Spelt out rather than shared with
+        /// <c>ModeScreen.Track</c>, which is where the reasoning lives — a track name has to
+        /// be a literal or nothing can check it.
+        /// </summary>
+        public override string Track => "mus_mode";
 
         BoardView _board;
         RectTransform _boardHost;

@@ -337,11 +337,6 @@ namespace GlimmerGrove.Modes
             }
         }
 
-        /// <summary>
-        /// The two ways a lens fires unaided. See <see cref="FallSurvey.Aim"/> for why the
-        /// vertical pair is not counted: on a board with gravity, down is the thing the lens is
-        /// standing on and up is the sky.
-        /// </summary>
         static readonly (int dx, int dy)[] Across = { (1, 0), (-1, 0) };
 
         /// <summary>

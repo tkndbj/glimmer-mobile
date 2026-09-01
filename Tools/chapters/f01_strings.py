@@ -2,7 +2,7 @@
 
 The chapter's own names and taglines live in `f01_lightfall.py` with the boards they describe;
 this holds the strings that belong to the *mode* rather than to a level — its readouts, its two
-defeats, its four lessons — because those outlive any one chapter and would otherwise be
+defeats, its five lessons — because those outlive any one chapter and would otherwise be
 rewritten every time a chapter script ran.
 
     python Tools/chapters/f01_strings.py --check
@@ -60,10 +60,10 @@ STRINGS = {
     'ui.defeat.motes_reason': 'Nothing left to drop, and the well is not empty. Spend each '
                               'mote where it finishes something.',
 
-    # ---------------------------------------------------------------- the four lessons
+    # ---------------------------------------------------------------- the five lessons
     'ui.tip.fall_cook.title': 'COOK, DO NOT MATCH',
-    'ui.tip.fall_cook.body': 'A mote adds its colour to the one it lands on. Red on green '
-                             'makes yellow.\n\nA mote holding all three bursts, and washes '
+    'ui.tip.fall_cook.body': 'A mote adds its colour to the one it lands on. Red on yellow '
+                             'makes orange.\n\nA mote holding all three bursts, and washes '
                              'that colour into everything beside it.',
 
     'ui.tip.fall_supply.title': 'THE LIGHT IS COUNTED',
@@ -80,6 +80,23 @@ STRINGS = {
                              'lands on.\n\nLight one lens with another and it fires '
                              'every way - up and down as well.',
 
+    # The fifth arrived with the third chapter, and lives here for the same reason the fourth
+    # does: a mode's vocabulary outlives any one chapter, and a lesson id travels in the save
+    # file exactly as a level id does.
+    #
+    # Three sentences, and the *order* is the lesson. What it does first, because that is what
+    # the board cannot say on its own; that any light sets it off, because a player who does not
+    # know that will lose the pair they spent four drops arranging to a chain that reached it
+    # early; and what it is worth, which is the one thing no board can ever state - every other
+    # rule in this mode adds a colour to a mote, so a cyan and a red are two drops apart, and
+    # beside a whorl they are none.
+    'ui.tip.fall_whorl.title': 'OPEN THE WHORL',
+    'ui.tip.fall_whorl.body': 'A whorl holds no light. Any light opens it - a burst beside it, '
+                              'a beam, or a drop straight onto it.' + '\n' + '\n' + 'On the next '
+                              'wave it draws in whatever stands to its left and its right and '
+                              'mixes them into one.' + '\n' + '\n' + 'Two motes a drop apiece '
+                              'from white are none at all. Arrange the pair, then open it.',
+
     'ui.tip.fall_brim.title': 'MIND THE BRIM',
     'ui.tip.fall_brim.body': 'A mote that comes to rest above the line ends the run.\n\nA '
                              'colour the top of a stack already holds is what raises it - the '
@@ -92,7 +109,40 @@ STRINGS = {
 #: `mode.fall.chain` is retired with the banner it belonged to - one line printed after the
 #: cascade, which said the same thing for a two-chain and a six. What replaced it is a count that
 #: climbs while the chain runs and a word at the end (`FallChain`).
-RETIRED = ('mode.fall.over', 'mode.fall.chain')
+#:
+#: `ui.tip.fall_mirror.*` is the third chapter's *first* mechanic, withdrawn before it shipped.
+#: A mirror turned a lens's beam ninety degrees, which meant it had no event of its own: on a
+#: board with no glass it did nothing, and on a board with glass it was a narrower spelling of
+#: what a struck lens already does in four directions. It was reported as useless inside one
+#: session of play, correctly.
+#:
+#: `ui.tip.fall_wick.*` is its *second*, withdrawn after one session for the same fault seen a
+#: step further in. A wick held one authored channel and washed it into the four cells beside it
+#: when any light touched it - which is this mode's own burst with the colour swapped, on an
+#: object with no decision anywhere in it: its colour was the author's, its trigger was free, and
+#: its effect was identical on every board it ever stood on. It was reported as **boring**, which
+#: is the more useful verdict of the two. See invariant 26h.
+#:
+#: **`fall_mirror` and `fall_wick` are spent lesson ids and must never be reused** - a lesson id
+#: travels in `tipsSeen` exactly as a level id does, so re-pointing one at a rule it never
+#: described would tell a player they have already been shown something they never saw. The same
+#: goes for the ten level names and the chapter name the wick's chapter carried: `f03_wickwater`
+#: and its levels were never committed, let alone released, so they were re-authored honestly
+#: rather than kept, and their strings go with them.
+RETIRED = ('mode.fall.over', 'mode.fall.chain',
+           'ui.tip.fall_mirror.title', 'ui.tip.fall_mirror.body',
+           'ui.tip.fall_wick.title', 'ui.tip.fall_wick.body',
+           'chapter.f03_wickwater.name',
+           'level.f03_first_wick.name', 'level.f03_first_wick.tagline',
+           'level.f03_the_wall.name', 'level.f03_the_wall.tagline',
+           'level.f03_touchpaper.name', 'level.f03_touchpaper.tagline',
+           'level.f03_lanternlight.name', 'level.f03_lanternlight.tagline',
+           'level.f03_up_the_column.name', 'level.f03_up_the_column.tagline',
+           'level.f03_the_fuse.name', 'level.f03_the_fuse.tagline',
+           'level.f03_slow_burn.name', 'level.f03_slow_burn.tagline',
+           'level.f03_deep_wick.name', 'level.f03_deep_wick.tagline',
+           'level.f03_wildfire.name', 'level.f03_wildfire.tagline',
+           'level.f03_wickwater.name', 'level.f03_wickwater.tagline')
 
 
 def load():

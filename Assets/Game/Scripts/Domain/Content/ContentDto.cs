@@ -377,12 +377,25 @@ namespace GlimmerGrove.Content
         public int height;
 
         /// <summary>
-        /// What is standing in the well, top row first — one letter per column in R, G, B, Y, M
-        /// and C, with '.' for empty ground. Spaces are ignored, so a row may be spaced out for
-        /// reading.
+        /// What is standing in the well, top row first — one letter per column, with '.' for
+        /// empty ground. Spaces are ignored, so a row may be spaced out for reading.
         ///
+        /// <para>
+        /// Light is upper case (R, G, B, Y, M, C) and glass is lower, so a board says at a glance
+        /// what is made of what: <c>O</c> is an empty lens and <c>r</c>, <c>g</c>, <c>b</c>,
+        /// <c>y</c>, <c>m</c>, <c>c</c> are a lens already holding that much. How full each pane
+        /// starts is the second chapter's whole difficulty ramp.
+        /// </para>
+        /// <para>
+        /// The two slashes are a <b>mirror</b>, leaning the way it turns light. It is the one
+        /// cell here light passes through rather than stopping at, it takes no drop and no wash,
+        /// and it shatters the first time it turns a shot — so a mirror nothing is ever aimed at
+        /// makes a level unwinnable rather than merely dull.
+        /// </para>
+        /// <para>
         /// Row nought is the brim and must be empty: a mote that comes to rest there floods the
         /// well and ends the run, so a level that begins in that state begins lost.
+        /// </para>
         /// </summary>
         public string[] rows;
 
@@ -532,6 +545,24 @@ namespace GlimmerGrove.Content
         /// </para>
         /// </summary>
         public string regrow;
+
+        /// <summary>
+        /// The runners, drawn as a second grid over the first: one lower-case letter on each of a
+        /// runner's two ends, <c>.</c> everywhere else. Absent on a grove strung with none.
+        ///
+        /// <para>
+        /// A flower standing on one end that goes off <em>as part of a bunch</em> sends its
+        /// colour to whatever is standing on the other, wherever that is. It is the one thing in
+        /// this mode that moves colour without adjacency, and the second chapter is built on it.
+        /// </para>
+        /// <para>
+        /// <b>A runner belongs to the ground, not to the flower.</b> Everything on a living grove
+        /// falls, so a vine carried by a flower would slide down the board with it; these two
+        /// squares are joined for the life of the level and whatever lands on them is what the
+        /// runner carries between. See <c>BudLayout.FarEnd</c>.
+        /// </para>
+        /// </summary>
+        public string[] runners;
 
         /// <summary>
         /// Wasted taps this grove forgives above par. Absent takes <c>BudRules.DefaultSpare</c>.

@@ -130,25 +130,21 @@ namespace GlimmerGrove.Layout
         public const float TitleOverhang = 87f;
 
         /// <summary>
-        /// The squarest screen this game is drawn on: a 4:3 tablet held in portrait.
-        ///
-        /// Phones are taller and every one of them gives a panel more room, so the tablet is
-        /// the only aspect worth measuring against.
-        /// </summary>
-        public const float TightestAspect = 4f / 3f;
-
-        /// <summary>
         /// The shortest canvas this game is ever drawn on, in the same reference units.
         ///
         /// <para>
-        /// Derived rather than typed. The canvas scaler matches on <em>width</em> (portrait:
-        /// width is the constant, <c>Boot.RefWidth</c>), so the reference height a device offers
-        /// is that width times its aspect — about 2400 on a tall phone and 1440 on a 4:3 tablet.
-        /// Writing 1440 here would silently stop being true the day the reference width moved,
-        /// and a stale ceiling in a fit check is worse than no fit check.
+        /// Derived rather than typed, and it has already earned that once. It used to be a 4:3
+        /// tablet's <c>1080 x 4/3</c> = 1440, on the reasoning that the scaler matches on
+        /// <em>width</em> so the height a device offers is that width times its aspect, and a
+        /// tablet is the squarest thing there is. Both halves were true and the answer stopped
+        /// being: <see cref="CanvasFit"/> now widens the canvas on anything squarer than a
+        /// phone, so <b>no display produces 1440 any more</b> and the tightest is a phone at
+        /// <see cref="CanvasFit.PhoneFloor"/>. Left as a literal it would have gone on refusing
+        /// panels against a shape nothing is drawn on, which is a stale ceiling in a fit check
+        /// — worse than no fit check, because it reads as having been measured.
         /// </para>
         /// </summary>
-        public const float TightestCanvas = ChapterMap.Width * TightestAspect;
+        public const float TightestCanvas = CanvasFit.ShortestCanvas;
 
         /// <summary>
         /// The tallest a panel may be, title and all.

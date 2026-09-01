@@ -75,8 +75,10 @@ import sys
 HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.dirname(os.path.dirname(HERE))
 sys.path.insert(0, os.path.join(ROOT, "Tools", "verify"))
+sys.path.insert(0, HERE)
 
 import fall                                                      # noqa: E402
+import mapart                                                    # noqa: E402
 
 CHAPTER = "f02_glasswater"
 BODY = os.path.join(ROOT, "Assets", "StreamingAssets", "Content", "chapters", CHAPTER + ".json")
@@ -85,21 +87,19 @@ LOC = os.path.join(ROOT, "Assets", "StreamingAssets", "Content", "loc", "en.json
 #: Cold and pale against the Deep Well's ember, because this is the chapter made of glass.
 ACCENT, SLATE = "#7FD8F0", "#111E2A"
 
-#: The one backdrop of c01_shallows' nine that no chapter had claimed. Borrowed rather than
-#: cut, which is what every non-glade chapter does - f01 draws play_2, k01 play_4, b01 play_6 -
-#: so this costs no art and no addressable. `chapter_art.tsv` says `-` for it, because a row
-#: naming a source would re-cut a picture four chapters share.
-BACKDROP = "play_8"
+#: Which chapter of its own mode this is. It buys the map and the ten skies - see
+#: `mapart`, which owns that arithmetic for every chapter of every mode.
+ORDINAL = 2
+STRIPS = mapart.strips(ORDINAL)
+SKIES = mapart.skies(ORDINAL)
 
-#: **Its own map, which is the one thing it must not borrow.** It drew c01_shallows' hand-made
-#: `strip0..5` at first, so Lightfall's two chapters were the same painting - which is exactly
-#: what the glade chapters never do, and it was reported that way. Six strips rather than four or
-#: five because the node positions below are f01's, and `make_chapter_art.py` scales a source to
-#: whole strips: a different count is a different map height, and every distance on the map is
-#: measured in canvas units (`ChapterMapValidator`).
-STRIPS = ["f02_strip0", "f02_strip1", "f02_strip2", "f02_strip3", "f02_strip4", "f02_strip5"]
+#: The Deep Well's own spacing, proved against `ChapterMapValidator` for ten nodes - at
+#: **four** strips, which is what the second chapter of every mode is cut into. A shorter map
+#: is a shorter drop between two nodes, so the end-of-chapter marker had to move off the last
+#: glade's side; `TEASER` is the whole of that.
+TEASER = 0.30
 
-#: The Deep Well's own spacing, proved against `ChapterMapValidator` for ten nodes.
+#:
 WHERE = [(0.30, 0.055), (0.72, 0.140), (0.26, 0.225), (0.70, 0.310), (0.28, 0.395),
          (0.74, 0.480), (0.30, 0.560), (0.68, 0.645), (0.26, 0.730), (0.72, 0.815)]
 
@@ -232,6 +232,8 @@ def level_json(well, at):
              "rows": well.rows, "motes": well.motes}
 
     out = {"id": well.id, "mapX": x, "mapY": y}
+    if at:                              # level one takes the chapter's own
+        out["backdrop"] = SKIES[at]
     if well.budget:
         out["budgetFactor"] = well.budget
     out["fall"] = block
@@ -244,8 +246,9 @@ def chapter_json():
         "id": CHAPTER,
         "accent": ACCENT,
         "slate": SLATE,
-        "backdrop": BACKDROP,
+        "backdrop": SKIES[0],
         "mapStrips": list(STRIPS),
+        "teaserX": TEASER,
         "levels": [level_json(w, i) for i, w in enumerate(BOARDS)],
     }
 
