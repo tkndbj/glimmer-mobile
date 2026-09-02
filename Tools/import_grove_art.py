@@ -27,6 +27,9 @@ made once somewhere:
 """
 import argparse, io, json, collections, os, shutil, struct, sys
 
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+import grove_art_facts as facts  # noqa: E402
+
 HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.dirname(HERE)
 TSV = os.path.join(HERE, "grove_art.tsv")
@@ -123,6 +126,7 @@ def main():
 
     mine = {r["id"] for r in wanted}
     kept = [p for p in catalog["pieces"] if p.get("id") not in mine]
+    before = {p.get("id"): p for p in catalog["pieces"]}
 
     dropped = [p["id"] for p in catalog["pieces"]
                if p.get("id") not in mine and p.get("slot") and p.get("_imported")]
@@ -147,9 +151,21 @@ def main():
         if r["bundle"] > 1:
             row["bundle"] = r["bundle"]
 
+        # A footprint is a judgement about the picture that lives in the catalog rather than
+        # in this file, so a re-import keeps whatever was decided for the id before.
+        prior = before.get(r["id"]) or {}
+        if prior.get("cols") or prior.get("rows"):
+            row["cols"] = prior.get("cols") or 1
+            row["rows"] = prior.get("rows") or 1
+
         row["scale"] = r["scale"]
         row["lift"] = r["lift"]
         row["_imported"] = True
+
+        # What the picture is — its size and where the paint lands — read off the file just
+        # copied, so the catalog can never describe art it does not ship. See grove_art_facts.
+        if not args.dry_run:
+            facts.apply(row, *facts.piece_art(row))
         fresh.append(row)
 
     # The home ladder, then decor by kind and price — the order the shop draws them in,

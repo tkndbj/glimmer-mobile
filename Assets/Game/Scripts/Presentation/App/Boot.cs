@@ -122,18 +122,18 @@ namespace GlimmerGrove
             CloudSaveService.UseBackend(new FirebaseCloudSaveBackend());
 #endif
 
-            // A name or a companion the player picked is worth a sync of its own rather
-            // than waiting for the app to be backgrounded — which is the least reliable
-            // moment there is to start a network call, since the process is being frozen
-            // as it goes out. Hung on the event rather than called from the rename panel
-            // so a second way to change either cannot forget it; the request is debounced
-            // and retried, so this is cheap however often it fires. See SyncScheduler.
-            Wallet.ProfileChanged += CloudSaveService.RequestSync;
+            // A name, a companion, a purchase or a piece put down is worth a sync of its own
+            // rather than waiting for the app to be backgrounded — which is the least reliable
+            // moment there is to start a network call, since the process is being frozen as
+            // it goes out. Hung on the events rather than called from the panels so a second
+            // way to do any of them cannot forget it; the request is debounced and retried, so
+            // this is cheap however often it fires. The list lives in SyncTriggers.
+            SyncTriggers.Attach();
 
-            // The public boards listen to the three grove ledgers and the profile, so that a
-            // purchase or a rearrangement reaches the leaderboard without any screen having to
-            // remember to say so. Wired once, here, for the reason above — and it is a no-op in
-            // a build with no backend, because everything behind it checks IsAvailable.
+            // The public boards rebuild this account's card after a sync has put the grove on
+            // the server — never before, because the server builds the card from the pushed
+            // save. Wired once, here, for the reason above; a no-op in a build with no
+            // backend, because everything behind it checks IsAvailable.
             Social.GroveBoard.Attach();
 
             // Rewarded ads, chosen the same way and inert by the same default. Two gates,

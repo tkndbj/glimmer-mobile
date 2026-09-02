@@ -15,7 +15,7 @@
   "levels": [
     {
       "id": "b01_firstburst",
-      "mapX": 0.3,
+      "mapX": 0.7,
       "mapY": 0.055,
       "budgetFactor": -1.0,
       "bud": {
@@ -34,7 +34,7 @@
     },
     {
       "id": "b01_catchalight",
-      "mapX": 0.72,
+      "mapX": 0.28,
       "mapY": 0.14,
       "backdrop": "sky_01",
       "budgetFactor": -1.0,
@@ -55,7 +55,7 @@
     },
     {
       "id": "b01_twiceknocked",
-      "mapX": 0.26,
+      "mapX": 0.74,
       "mapY": 0.225,
       "backdrop": "sky_02",
       "bud": {
@@ -76,7 +76,7 @@
     },
     {
       "id": "b01_sunspill",
-      "mapX": 0.7,
+      "mapX": 0.3,
       "mapY": 0.31,
       "backdrop": "sky_03",
       "bud": {
@@ -96,7 +96,7 @@
     },
     {
       "id": "b01_dewfall",
-      "mapX": 0.28,
+      "mapX": 0.72,
       "mapY": 0.395,
       "backdrop": "sky_04",
       "bud": {
@@ -116,7 +116,7 @@
     },
     {
       "id": "b01_widewild",
-      "mapX": 0.74,
+      "mapX": 0.26,
       "mapY": 0.48,
       "backdrop": "sky_05",
       "bud": {
@@ -137,7 +137,7 @@
     },
     {
       "id": "b01_honeylight",
-      "mapX": 0.3,
+      "mapX": 0.7,
       "mapY": 0.56,
       "backdrop": "sky_06",
       "bud": {
@@ -158,7 +158,7 @@
     },
     {
       "id": "b01_wildwaking",
-      "mapX": 0.68,
+      "mapX": 0.32,
       "mapY": 0.645,
       "backdrop": "sky_07",
       "bud": {
@@ -179,7 +179,7 @@
     },
     {
       "id": "b01_everbloom",
-      "mapX": 0.26,
+      "mapX": 0.74,
       "mapY": 0.73,
       "backdrop": "sky_08",
       "bud": {
@@ -200,7 +200,7 @@
     },
     {
       "id": "b01_thicketheart",
-      "mapX": 0.72,
+      "mapX": 0.28,
       "mapY": 0.815,
       "backdrop": "sky_09",
       "bud": {

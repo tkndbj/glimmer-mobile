@@ -34,6 +34,22 @@ namespace GlimmerGrove.Cloud
         public static event Action Synced;
 
         /// <summary>
+        /// Raised by a sync that has left the server holding the save it carries — and by
+        /// nothing else.
+        ///
+        /// <para>
+        /// <see cref="Synced"/> is the broad "the account or the save moved" signal, and it is
+        /// also raised by a switch, a link, a purchase and a deletion, none of which pushed
+        /// anything. Anything the server derives from the pushed document — the public card,
+        /// the name reservation — must hang on this one, because asking after
+        /// <see cref="Synced"/> was how the card came to be built from last session's save
+        /// for the life of the account. The receipt says which save, and which revision the
+        /// server will report having read; see <see cref="SyncReceipt"/>.
+        /// </para>
+        /// </summary>
+        public static event Action<SyncReceipt> Settled;
+
+        /// <summary>
         /// Raised when <em>which</em> account this device is, or <em>how</em> it is signed in,
         /// has changed — a silent anonymous sign-in, a provider linked, an account switched, a
         /// mismatch opening or closing.
@@ -226,6 +242,22 @@ namespace GlimmerGrove.Cloud
         /// </para>
         /// </summary>
         public static void RequestSync() => _schedule.Request();
+
+        /// <summary>
+        /// Whether a sync has been asked for and not yet run. For tests and diagnostics: the
+        /// one observable that lets <see cref="SyncTriggers"/> be proved without a backend.
+        /// </summary>
+        public static bool IsSyncPending => _schedule.HasWork;
+
+        /// <summary>
+        /// Drops a pending request without running it. The scheduler is process-wide, so a
+        /// test that raised one would otherwise leave it pending for every test after it.
+        /// </summary>
+        internal static void ForgetSyncRequestForTests()
+        {
+            _schedule.Started();
+            _schedule.Succeeded();
+        }
 
         /// <summary>
         /// Drives the scheduler. Called every frame by <c>Boot.Pump</c>, which is also
@@ -633,6 +665,11 @@ namespace GlimmerGrove.Cloud
                 CloudState.MarkSynced(SaveSchema.NowUnix());
                 SaveService.Flush();
                 Raise(Synced);
+
+                // The document is the remote one, so its revision is the remote's — the join
+                // above gave `merged` one higher, and a publish proved against that would be
+                // refused by a server that has done nothing wrong.
+                Raise(Settled, new SyncReceipt(merged, remote?.cloud?.revision ?? 0L, pushed: false));
                 return CloudResult.Success;
             }
 
@@ -645,6 +682,7 @@ namespace GlimmerGrove.Cloud
             SaveService.Flush();
 
             Raise(Synced);
+            Raise(Settled, new SyncReceipt(merged, merged.cloud?.revision ?? 0L, pushed: true));
             return CloudResult.Success;
         }
 
@@ -1255,6 +1293,12 @@ namespace GlimmerGrove.Cloud
         static void Raise(Action handler)
         {
             try { handler?.Invoke(); }
+            catch (Exception e) { Debug.LogException(e); }
+        }
+
+        static void Raise<T>(Action<T> handler, T argument)
+        {
+            try { handler?.Invoke(argument); }
             catch (Exception e) { Debug.LogException(e); }
         }
     }

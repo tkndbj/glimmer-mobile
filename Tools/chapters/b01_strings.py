@@ -79,16 +79,25 @@ STRINGS = {
                               "You cannot tap a cocoon open - you have to set something off next "
                               "to it. The ones drawn with a second ring take two.",
 
-    # The fourth, and the only one a chapter rather than the mode brings. Two sentences and the
-    # second one is the whole of it: the vine and the travelling light say what a runner does,
-    # and no board anywhere can say what it takes to *fire* one. A player who has not been told
-    # the threshold reads a vine that stayed dark as a bug rather than as a near miss.
-    "ui.tip.bud_runner.title": "MIND THE VINE",
-    "ui.tip.bud_runner.body": "A runner joins two squares of the grove, however far apart they "
-                              "are.\n\nWhen a bursting bunch takes in one end, its colour runs "
-                              "down the vine to whatever is standing on the other. Going off "
-                              "next to an end is not enough - the flower on it has to be one of "
-                              "the three.",
+    # The three the second chapter brings. Each says the half no board can show: that a graft
+    # has to make a bunch, that FIVE is what forges a bolt, and that a special in a fired
+    # special's reach fires too. `bud_runner`, `bud_gust`, `bud_firefly`, `bud_puff` and
+    # `bud_hive` are retired - see RETIRED.
+    "ui.tip.bud_graft.title": "DRAG TO TRADE",
+    "ui.tip.bud_graft.body": "Drag a flower onto its neighbour and the two trade places - if "
+                             "that makes three of a colour touching.\n\nA trade that makes "
+                             "nothing snaps back and costs nothing. One that works costs a tap, "
+                             "and you keep the colour in your hand.",
+
+    "ui.tip.bud_bolt.title": "MAKE FIVE",
+    "ui.tip.bud_bolt.body": "Five of a colour touching leave a BOLT behind, right where you "
+                            "tapped.\n\nTap the bolt and lightning clears its whole row and "
+                            "column - critters and all.",
+
+    "ui.tip.bud_sun.title": "MAKE EIGHT",
+    "ui.tip.bud_sun.body": "Eight of a colour touching leave a SUN. Tap it and everything "
+                           "within two squares goes up at once.\n\nA bolt or a sun caught in "
+                           "another one's blast fires too. Chain them.",
 
     "ui.tip.bud_satchel.title": "COUNT YOUR TAPS",
     "ui.tip.bud_satchel.body": "This grove is dealt so many taps and no more.\n\nThere is no "
@@ -99,6 +108,34 @@ STRINGS = {
 #: Ripplewake's, which never shipped, and Lightweave's, which did. Both modes are gone.
 #: Plus Budburst's own first chain ladder, replaced rather than re-pointed - see BudChain.
 RETIRED = (
+    # The runner - a vine joining two squares of the grove - was the Tanglewood's first
+    # object and was withdrawn after one session of play: it fired by itself, drew nothing of
+    # its own and crossed the board with a line. Its lesson id and the ten level ids of the
+    # chapter it shipped in are retired with it and must never be reused.
+    "ui.tip.bud_runner.title", "ui.tip.bud_runner.body",
+    # The four that replaced the runner for one build, played on a device and withdrawn -
+    # every one paid out as the same chain. Their lesson ids and the five level ids they
+    # stood on are spent.
+    "ui.tip.bud_gust.title", "ui.tip.bud_gust.body",
+    "ui.tip.bud_firefly.title", "ui.tip.bud_firefly.body",
+    "ui.tip.bud_puff.title", "ui.tip.bud_puff.body",
+    "ui.tip.bud_hive.title", "ui.tip.bud_hive.body",
+    "level.b02_windrow.name", "level.b02_windrow.tagline",
+    "level.b02_lanternfly.name", "level.b02_lanternfly.tagline",
+    "level.b02_graftwood.name", "level.b02_graftwood.tagline",
+    "level.b02_puffhollow.name", "level.b02_puffhollow.tagline",
+    "level.b02_hivehill.name", "level.b02_hivehill.tagline",
+    "level.b02_firstvine.name", "level.b02_firstvine.tagline",
+    "level.b02_longreach.name", "level.b02_longreach.tagline",
+    "level.b02_deepthicket.name", "level.b02_deepthicket.tagline",
+    "level.b02_windingway.name", "level.b02_windingway.tagline",
+    "level.b02_twovines.name", "level.b02_twovines.tagline",
+    "level.b02_thewilds.name", "level.b02_thewilds.tagline",
+    "level.b02_crossvine.name", "level.b02_crossvine.tagline",
+    "level.b02_thornedvine.name", "level.b02_thornedvine.tagline",
+    "level.b02_thetangle.name", "level.b02_thetangle.tagline",
+    "level.b02_tangleheart.name", "level.b02_tangleheart.tagline",
+
     # Old wood, authored across most of the Thicket for one drop and taken out again. The
     # lesson id `bud_wood` is retired with it and must never be reused, and so are the four
     # level ids that were named after it.

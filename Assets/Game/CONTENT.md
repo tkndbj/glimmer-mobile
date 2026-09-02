@@ -127,11 +127,19 @@ Two consequences worth holding on to:
    `backdrop` or a `mapStrips`**: both are arithmetic now, from the chapter's ordinal
    inside its own mode — `Tools/chapters/mapart.py` hands back the map and the ten skies,
    and the generator writes them into the JSON. See *A chapter's art is a rule* below.
-3. Place the glades with `mapX`/`mapY`, fractions of *this chapter's* map. Walk
+3. Place the glades with `mapX`/`mapY`, fractions of *this chapter's* map — and for a
+   ten-level chapter, **do not choose them**: `mapart.places(ordinal)` is one layout for
+   every chapter of every mode, odd glades on the right, even on the left, the tenth on the
+   left under a marker on the right. Seven generators once carried their own copy of that
+   table and drifted, and every mode's first chapter ended on the *right*, straight under
+   the marker, whose name plate then sat on the tenth glade's standing mark. Walk
    them upward — each above the one before — and keep them apart; validation
    measures the gap in canvas units against the chapter's strip count and warns
-   about collisions, backwards trails and anything crowding the end-of-chapter
-   marker. More levels means more `mapStrips`, not tighter packing — which in
+   about collisions, backwards trails, anything crowding the end-of-chapter
+   marker, and any perch — a glade's or the marker's — standing on the record-and-rank
+   mark a cleared glade draws above its disc (`ChapterMap.Overshadows`: the mark reaches
+   302 units up, a plate hangs 227 down, so a node straight above another needs 529 units
+   of drop where the discs alone need 220). More levels means more `mapStrips`, not tighter packing — which in
    practice means **the map decides how long a chapter is**, and the map is the one at
    this chapter's ordinal: six strips at ordinal 1 and 4, four at ordinal 2, five at
    ordinal 3 (`mapart.STRIPS`). Those counts are facts about the four paintings rather
@@ -142,10 +150,10 @@ Two consequences worth holding on to:
    and it needs its count worked out before boards are authored, not after, because every
    distance on a map is measured against it. The end-of-chapter marker caps the trail and places
    itself: how far *up* it floats is derived, but which side it sits on is
-   `teaserX` — a fraction across the map, 0.66 if omitted, which is above a chapter
-   whose last glade is on the right. A chapter ending on the right side wants a left
-   `teaserX` and the other way round, or the trail's last step is a redundant
-   vertical one. The Mill Vale ends at 0.71 and sets 0.3.
+   `teaserX` — a fraction across the map, 0.66 if omitted, which is the right-hand side.
+   No shipped chapter sets it: every one ends on the left, so the default is already the
+   other side from the last glade. A chapter that does end on the right must set a left
+   `teaserX`, or the marker stands on that glade's standing mark and the validator says so.
 4. Add `chapter.<id>.name` and, per level, `level.<id>.name` / `.tagline` to
    `loc/en.json`. Missing keys fail validation, which names each one. There is no
    third per-level string — see the derived-strings note above.
@@ -809,83 +817,70 @@ rather than argued about — do not add a fourth chip without re-running it.
 free every critter, found by search, and both star lines derive from it. Room above par is
 `spare`, counted in **taps**, and defaults to 5.
 
-### Runners — the second chapter's one new thing
+### The second chapter: specials, and the graft
 
-A grove may author a **second grid** of the same size, `runners`, which strings vines across it:
+The Tanglewood is ten groves and the genre's own loop laid over Budburst: **a big bunch leaves a special
+behind, the player chooses when to fire it, and firing it is a board-scale event that sets off
+every special in its reach.** Two objects and one gesture, gated on two fields:
 
 ```json
 "bud": {
-  "width": 7,
-  "height": 6,
-  "rows":    ["?o?????", "..."],
-  "runners": [".......",
-              ".a.....",
-              ".......",
-              ".......",
-              "....a..",
-              "......."],
-  "colours": "GRB",
-  "regrow":  "RGBYMC"
+  "rows":     ["...", "..."],
+  "grafts":   true,              drag two neighbours to trade places
+  "forges":   true,              five alike leave a bolt, eight a sun
+  "specials": ["...|...", ...],  optional: specials dealt already forged, | bolt, * sun
+  "colours":  "GRB",
+  "regrow":   "RGBYMC"
 }
 ```
 
-One lower-case letter on each of a runner's **two** ends and `.` everywhere else. A letter
-written once, or three times, is refused — a runner has two ends and nothing knows what a third
-would mean. Different letters are different runners; `a` is not special, and the letters are
-re-derived on a round trip, so which one you pick changes nothing.
+**The bolt and the sun** (`forges`). A bunch of **five** or more leaves a **bolt** on the cell
+the player tapped (or the flower they dragged; once the chain has moved on, the bunch's lowest
+cell); a bunch of **eight** forges a **sun**. A special is a flower wearing the bunch's colour,
+standing on the board, turning so it is never still. It **fires** when tapped (whatever colour is
+in hand), when a bunch takes it in, or when another special's reach hits it: a bolt clears its
+whole row and column, a sun the five-by-five around it. What a special clears it does **not**
+wash — a bolt that washed the neighbours of a whole row would set off most of the board, which is
+invariant 20j's solvent — but it cracks every cocoon it hits and every cocoon beside what it
+cleared, which is what it was fired for. A bomb (white) fires a special in its square. **Gated**,
+because the first chapter was authored and pinned without it: bunches of five happen on the
+Thicket, and a Thicket that forged would be a different chapter. A grove dealing a special
+(`specials`) forges whatever `forges` says; at most `BudValidator.MaxDealtSpecials` (2), because a
+special is something the player makes and a grove deals one only to teach what firing it does.
+
+**Earned, never placed, is what makes it a payoff.** The runner, and the windmill, the firefly,
+the puffball and the hive that replaced it, were all put on the board by an author — so the
+player found them, and every one paid out as the same chain. Play reported all five as *flowers
+popping, nothing different*. A special exists because of something the player just did and is
+worth exactly what they choose to do with it next.
+
+**The graft** (`grafts`). Drag a flower onto its neighbour and the two trade places, **if that
+makes a bunch**; otherwise it snaps back and costs nothing. One that works costs a tap and keeps
+the colour in hand. A graft bursts by construction and so collapses par: a grafting grove wants
+**many shut in, spread to every edge, several tough** — the shipped groves carry twelve to
+fourteen — or par is two on every fill.
+
+Two readings say whether the chapter's idea is on a grove, both printed by `content.py` and
+`Glimmer Grove > Validate Content` and both **warned at 0**:
 
 ```
-a bunch that TAKES IN a runner end sends that bunch's colour to whatever is
-standing on the other end, however far across the grove that is.
+forgeable   opening moves that forge a special. 0 means the player cannot make one on the
+            board as dealt - author a four the hand's colour completes.
+fired       of the shortest plays, how many fire a special (Whorlwater's `kindled`, measured
+            over every shortest solution rather than the first). 0 means the specials are
+            never the best thing to do - put the cocoons where a line or a square reaches them.
+forged      of the shortest plays, how many forge one. Printed, not gated.
 ```
 
-Four things about it are worth having in front of you before authoring one.
+**Two counters, and the difference is the graft.** `Spent` is taps out of the satchel, which
+every move costs; `Dealt` is colours off the basket, which only a flower tap costs (a special or
+a bomb counts as a tap). **Par counts moves of every kind.** Move order is part of the contract
+with the Python mirror: taps by cell, then grafts by cell, rightward before downward
+(`BudRun.Moves`, `bud.Board.moves`); ties in the careless player's ranking and the best-opening
+reading go to the earlier move.
 
-**The end has to be *in* the bunch, not beside it.** A wave going off next door to a vine does
-nothing at all. That threshold is the whole mechanic: a spread that fires on anything happening
-nearby walks outward for ever and makes every board more solvable (invariant 20j), where one that
-has to be *built into* is a thing the player arranges. It is also the only mistake a runner can
-punish, which is why a vine that fires and delivers a colour the far end already wears is drawn
-in full and lands on nothing — the player has to be able to watch that happen.
-
-**A vine belongs to the ground, never to the flower.** Everything on a living grove falls, so the
-two squares are joined for the life of the level and whatever is standing on them at the moment a
-bunch goes off is what the runner carries between. An end authored under a cocoon is legal and
-warned about: that half of the vine is inert until the grove falls something else onto it.
-
-**A bomb sends nothing.** A runner carries a *bunch's colour*, and a white flower going off has no
-colour to carry — it clears a block. One clause, and it stays one clause.
-
-**Author the far end's neighbourhood, or the vine is scenery.** This is the part a sweep will not
-find for you. The motif the Tanglewood teaches with is four cells:
-
-```
-near end  R with a Y beside it        tap it with G in hand -> R|G is Y -> three Y burst,
-far  end  R with a Y beside it        and the Y that runs down the vine does it again
-```
-
-Two readings say whether it worked, and both are printed by `content.py` and
-`Glimmer Grove > Validate Content`:
-
-```
-changed   opening taps that play out differently with every vine cut.
-          WARNED AT 0 - the runners are scenery on the board as dealt. This is
-          invariant 26g's test: replace the new object with the nearest existing one
-          and see whether anything changes.
-caught    opening taps that burst MORE because a vine carried. The number to author
-          against - it is the arrangement the player is making, rather than merely
-          the vine existing. Not gated, because a chapter's first grove may
-          legitimately teach with one that only changes the grove.
-ran       how many vines the *best* opening tap fires, which is what decides whether
-          anybody will ever watch one.
-```
-
-Two structural refusals, both provable by looking rather than by searching: a vine joining two
-squares that already **touch** (a burst washes there anyway, so it can never deliver anything the
-wave was not delivering), and an end standing on **bare ground or old wood** (nothing a bunch
-could ever take in). A vine spanning fewer than three squares is warned about — that is about as
-far as one wave reaches on its own. At most `BudLayout.MaxRunners` (6) to a grove, which is a
-readability bound rather than a cost one.
+**Retired and refused by name**: `runners`, `winds` and `firefly` on a level, and the lesson ids
+`bud_runner`, `bud_gust`, `bud_firefly`, `bud_puff`, `bud_hive`.
 
 ### The rule, in three lines
 
@@ -893,9 +888,9 @@ readability bound rather than a cost one.
 tap a flower      the colour in hand is OR-ed into it. Red + green in hand = yellow.
                   A tap that would change nothing is refused, not swallowed.
 three alike       any bunch of 3+ touching flowers of one colour bursts.
-a burst washes    its colour into every flower it touches - and down any vine whose end
-                  it took in - which makes more bunches, which makes more. A cocoon
-                  beside any of it takes one crack per wave.
+a burst washes    its colour into every flower it touches, which makes more bunches, which
+                  makes more. A cocoon beside any of it takes one crack per wave. On a grove
+                  that forges, five alike leave a bolt and eight a sun.
 ```
 
 ### What makes a grove good
@@ -913,8 +908,8 @@ careless  what a player who always taps whatever sets off the biggest chain spen
 nodes     what proving par costs, which the player's device pays once per level.
           Warned above 20,000, refused above 60,000. Branching is the flower count, so the
           cheap fix is a shorter answer - a cocoon nearer the fuse, never a bigger board.
-changed   on a grove with vines: opening taps that play differently with every vine cut.
-          WARNED AT 0. See *Runners* above.
+forgeable, fired
+          on a grove that forges, WARNED AT 0. See *The second chapter*.
 ```
 
 **Par is 3 on every grove this mode has shipped, and that is arithmetic rather than a
@@ -923,13 +918,13 @@ this search when it opens the level (invariant 26d), so a par of 4 on a grove bi
 cascade is refused outright by the node ceiling — and one small enough to prove comes back at
 twenty flowers with a *one-wave* best tap, which is this mode with the mode taken out of it. So a
 chapter's ramp is spent on what does not multiply the search: **how many are shut in**, how much
-grove there is, how many cocoons take two cracks, how many vines are strung across it, and
-whether a careless run still scores three stars.
+grove there is, how many cocoons take two cracks, and whether a careless run still scores
+three stars. A grafting grove needs a dozen shut in to hold par 3 at all.
 
 **`Tools/chapters/budforge.py` is the sweeper**, and both shipped chapters were found with it:
-draw the skeleton — where the cocoons sit, how big the grove is, where the vines run and the four
-cells of the teaching motif — and it searches the *fill* against `Tools/verify/bud.py`, the same
-mirror the build gate runs. Its header carries the three facts that decide how a sweep has to be
+draw the skeleton — where the cocoons sit, how big the grove is, which specials are dealt — and
+it searches the *fill* against `Tools/verify/bud.py`, the same mirror the build gate runs,
+holding out (`want`) for `forgeable` and `fired`. Its header carries the three facts that decide how a sweep has to be
 run, each of which cost a day to find.
 
 **Author the layout, then sweep the basket.** That split is what makes this mode cheap to author:
@@ -1155,7 +1150,8 @@ bought. It lives in its own file because it is a **body**, not index knowledge:
     "rows": 14,
     "tileArt": "",
     "hallTile": "t_006_006",
-    "starterTile": "t_007_006",
+    "hallCols": 2, "hallRows": 2,
+    "starterTile": "t_008_006",
     "regions": [
       { "id": "hearthstead", "col": 4, "row": 4, "cols": 6, "rows": 6, "cost": 0 },
       { "id": "east_meadow", "col": 10, "row": 4, "cols": 4, "rows": 6, "cost": 2500 }
@@ -1168,7 +1164,17 @@ bought. It lives in its own file because it is a **body**, not index knowledge:
       "kind": "decor",
       "cost": 340,
       "bundle": 10,
-      "scale": 1.0, "lift": 0.45
+      "scale": 1.0, "lift": 0.45,
+      "w": 120, "h": 82,
+      "hit": "0000000000000000000000000000000001800380..."
+    },
+    {
+      "id": "well",
+      "art": "Homestead/well",
+      "kind": "decor", "slot": "structure",
+      "cols": 2, "rows": 2,
+      "scale": 0.9, "lift": 0.45,
+      "w": 399, "h": 306, "hit": "..."
     }
   ]
 }
@@ -1274,6 +1280,34 @@ A piece with no requirement and no price is a **starter** — free from the firs
 least one must exist, or a new player opens the picker onto an empty list, and the build
 gate refuses that.
 
+### Footprints, and what the picture is
+
+`cols` and `rows` are the tiles a piece **occupies** — its footprint, facing the way it was
+drawn; absent means one tile. It is a judgement about the picture rather than a reading of its
+rectangle: an oak is wider than a cottage and stands on one tile, because a tree's footprint is
+its trunk and a house's is its walls. Nine pieces ship larger than a tile — the five homes,
+`well`, `cave`, `wreck`, `brambles`, `path_snake`, `path_bend`, the two long bridges at 2×2 and
+`bridge_ramp` at 1×2 — and a mirrored piece swaps its columns for its rows, because screen x is
+`(col − row)`. The save stores the **anchor** (the back corner) and nothing else; the tiles a
+piece covers are derived at read time through the catalog (`GroveOccupancy`), so retuning a
+footprint moves what it occupies and never what is stored. Sides are 1..4. Every dwelling must
+author the floor's `hallCols`×`hallRows`, because the hall's ground is fixed for the life of the
+grove (invariant 16i).
+
+`w`, `h` and `hit` are **generated, never typed**: `python Tools/grove_art_facts.py` reads every
+piece's PNG and writes its pixel size and a mask of where the paint is — one cell every sixteen
+art pixels, `ceil(w/16)` by `ceil(h/16)` cells, row-major from the top as hexadecimal, so the
+mask's length follows from the size and a mask of any other length is refused. The size is what
+the layout draws from — so a tile laid out before its art arrives is exactly the size it will be
+— and the mask is what a tap tests, so the grass beside a trunk can be touched; the touch's
+tolerance is a distance on the floor, not a count of cells. `import_grove_art.py` writes them on
+every import. **Residents carry the same facts on their companion entry in `manifest.json`**
+(`groveW`, `groveH`, `groveHit`, over the critter frames when the companion has them and the
+portrait otherwise), written by the same tool and carried through `Sync Manifest`.
+`grove_art_facts.py --check`, `Tools/verify/content.py` and `Validate Content` all refuse a piece
+or a companion whose facts differ from its file, because a number describing a picture is only
+true until the picture is re-cut.
+
 ### Authoring the floor
 
 `cols` and `rows` are the size of the field in tiles; everything else about its geometry is
@@ -1293,11 +1327,12 @@ It may also be left empty, which is a choice rather than an omission — the flo
 `Art.IsoTile`, a generated diamond, which is how the feature works before the ground has been cut
 and why the Grovement is never a screenful of white rectangles (invariant 7b).
 
-`hallTile` and `starterTile` are tile ids. The hall is the one square nothing can be placed on,
-because it is *drawn* from the best home the player owns rather than put down by hand. The starter
-tile shows whichever companion nothing gates until the player moves them — **shown, never
-stored**, because writing that placement at first launch is exactly the stored default invariant
-11c forbids.
+`hallTile` and `starterTile` are tile ids. The hall is the `hallCols`×`hallRows` footprint from
+`hallTile` (its back corner) that nothing can be placed on, because it is *drawn* from the best
+home the player owns rather than put down by hand; it must stand entirely on starter land, and
+the starter tile must not be under it. The starter tile shows whichever companion nothing gates
+until the player moves them — **shown, never stored**, because writing that placement at first
+launch is exactly the stored default invariant 11c forbids.
 
 A **region** is a rectangle of the floor sold as a unit: `col`/`row` is its top-left tile,
 `cols`/`rows` its size, and `cost` the credits that buy it. `cost: 0` means open from the first

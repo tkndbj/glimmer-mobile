@@ -41,6 +41,32 @@ namespace GlimmerGrove.Content
         /// <summary>Centres closer together than this overlap on screen.</summary>
         public const float MinimumNodeSeparation = NodeDiameter + NodeClearance;
 
+        /// <summary>
+        /// What rides above a glade: the standing mark — record and rank — that
+        /// <c>LevelsScreen.RankMark</c> hangs over a cleared node. A rectangle centred on the
+        /// node, <see cref="CrownHalfWidth"/> either side of it and reaching from
+        /// <see cref="CrownBottom"/> to <see cref="CrownTop"/> above its centre.
+        ///
+        /// <para>
+        /// Named here because the disc was the only footprint the clearance check knew, and
+        /// the disc is not what collides. <see cref="MinimumNodeSeparation"/> guarantees 220
+        /// units; the mark reaches 302 above a node and the end-of-chapter marker hangs a name
+        /// plate 227 below its own centre — so the Shallows shipped its marker 308 units
+        /// directly above its tenth glade, every gate green, with the plate sitting on the
+        /// player's standing on the one glade in the chapter that earns a look.
+        /// <c>ChapterMapTests</c> holds these numbers to what the screen draws. The glow behind
+        /// a top-tier mark is deliberately not counted: it is light, not a thing.
+        /// </para>
+        /// </summary>
+        public const float CrownHalfWidth = 204f, CrownBottom = 106f, CrownTop = 302f;
+
+        /// <summary>
+        /// A perch's own body — rock, disc and the name plate under it — as the rectangle
+        /// another node's crown must stay out of: <see cref="BodyHalfWidth"/> either side,
+        /// <see cref="BodyBelow"/> under the centre and <see cref="BodyAbove"/> over it.
+        /// </summary>
+        public const float BodyHalfWidth = 180f, BodyBelow = 227f, BodyAbove = 100f;
+
         /// <summary>How far above the highest glade the end-of-chapter marker floats.</summary>
         public const float TeaserGap = 0.22f;
 
@@ -98,7 +124,9 @@ namespace GlimmerGrove.Content
 
         /// <summary>
         /// Where the end-of-chapter marker sits across the map when a chapter does not say.
-        /// The Shallows ends on the right, so this is above its last glade.
+        /// Every chapter's last glade stands on the left (<c>Tools/chapters/mapart.py</c>), so
+        /// this is the other side of the map from it — a marker above the last glade sits its
+        /// plate on that glade's standing mark, which is what <see cref="Overshadows"/> refuses.
         /// </summary>
         public const float TeaserX = 0.66f;
 
@@ -154,6 +182,23 @@ namespace GlimmerGrove.Content
             float dx = (a.x - b.x) * Width;
             float dy = (a.y - b.y) * Height(stripCount);
             return Mathf.Sqrt(dx * dx + dy * dy);
+        }
+
+        /// <summary>
+        /// Whether the perch standing at <paramref name="body"/> covers any of the standing
+        /// mark above the glade at <paramref name="crown"/>. Both are authored fractions and
+        /// the answer is in canvas units, which is why the strip count is needed — see
+        /// <see cref="Separation"/>. A rectangle test rather than a distance, because the
+        /// mark is four times wider than it is tall and a radius that cleared its corners
+        /// would refuse every alternating layout that ships.
+        /// </summary>
+        public static bool Overshadows(Vector2 body, Vector2 crown, int stripCount)
+        {
+            float dx = Mathf.Abs(body.x - crown.x) * Width;
+            if (dx >= BodyHalfWidth + CrownHalfWidth) return false;
+
+            float dy = (body.y - crown.y) * Height(stripCount);
+            return dy - BodyBelow < CrownTop && dy + BodyAbove > CrownBottom;
         }
     }
 }

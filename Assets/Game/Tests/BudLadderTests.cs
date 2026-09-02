@@ -50,29 +50,31 @@ namespace GlimmerGrove.Tests
             public readonly int BestAt, BestBurst, BestWaves, BestFreed;
 
             // **Set through an object initialiser rather than the constructor**, because they
-            // are the half a Thicket rung does not have: nine of the ten groves below carry no
-            // vine and two of them cannot be lost, and threading six more positional arguments
-            // through every one of those would make the boards — the thing anybody reads this
-            // file for — impossible to see.
+            // are the half a Thicket rung does not have: none of its ten groves stands an
+            // object, and threading eight more positional arguments through every one of those
+            // would make the boards — the thing anybody reads this file for — impossible to see.
 
-            /// <summary>The vine grid, or null on a grove strung with none.</summary>
-            public string[] Runners;
+            /// <summary>Whether grafting is on, and whether a big bunch forges a special.</summary>
+            public bool Grafts, Forges;
 
-            /// <summary>How many vines this grove carries.</summary>
-            public int Vines;
+            /// <summary>Specials dealt already forged, as a second grid, or null.</summary>
+            public string[] Specials;
+
+            /// <summary>How many specials stand on the grove as dealt.</summary>
+            public int Dealt;
 
             /// <summary>
-            /// Opening taps that play out differently with every vine cut, and how many of those
-            /// burst <em>more</em> because a vine carried.
-            ///
-            /// <b><see cref="Changed"/> is the gate and <see cref="Caught"/> is the goal.</b>
-            /// Nought changed means the runners are scenery on the board as dealt, which is
-            /// invariant 26g's test and the state a mirror and a wick both shipped in.
+            /// What the specials are worth — <c>BudObjectReading</c>, pinned: opening moves that
+            /// forge one, and shortest plays that forge one and fire one. Nought fired on a
+            /// grove that forges is the state five withdrawn mechanics shipped in.
             /// </summary>
-            public int Changed, Caught;
+            public int Forgeable, Forged, Fired;
 
-            /// <summary>How many vines the best opening tap fires.</summary>
-            public int Ran;
+            /// <summary>What kind of move the best opening is: tap or graft.</summary>
+            public string BestKind = "tap";
+
+            /// <summary>The second cell of a best opening that is a graft. -1 otherwise.</summary>
+            public int BestOther = -1;
 
             /// <summary>
             /// Whether this grove has a fail line at all. The Thicket's first two do not —
@@ -110,31 +112,41 @@ namespace GlimmerGrove.Tests
             /// <summary>What a careless run is measured against, budget or no budget.</summary>
             public int Room => Par + Spare;
 
-            public BudLayout Layout()
-            {
-                Assert.IsTrue(BudDeal.TryParse(Colours, out var deal, out string dealError),
-                              Id + ": " + dealError);
+            public BudLayout Layout() => Grove(Rows, Colours, Regrow, Grafts, Forges, Specials, Id);
+        }
 
-                // A strip may deal blends where a basket may not: a basket is what the player
-                // decides with, and a strip is scenery. See BudDeal.TryParse's `pure` argument.
-                BudDeal strip = null;
-                if (!string.IsNullOrEmpty(Regrow))
-                    Assert.IsTrue(BudDeal.TryParse(Regrow, out strip, out string growError,
-                                                   pure: false),
-                                  Id + ": " + growError);
+        /// <summary>
+        /// A grove from the letters an author writes, exactly as <c>BudMode.TryRead</c> builds
+        /// one. Shared with <see cref="BudVectorTests"/> and <see cref="BudStageTests"/>, so
+        /// there is one answer to how a test turns rows into a board.
+        /// </summary>
+        internal static BudLayout Grove(string[] rows, string colours, string regrow = null,
+                                        bool grafts = false, bool forges = false,
+                                        string[] specials = null, string id = "grove")
+        {
+            Assert.IsTrue(BudDeal.TryParse(colours, out var deal, out string dealError),
+                          id + ": " + dealError);
 
-                int width = Rows[0].Length;
-                Assert.IsTrue(BudLayout.TryReadRows(Rows, width, Rows.Length,
-                                                    out var ground, out var value,
-                                                    out string error),
-                              Id + ": " + error);
+            // A strip may deal blends where a basket may not: a basket is what the player
+            // decides with, and a strip is scenery. See BudDeal.TryParse's `pure` argument.
+            BudDeal strip = null;
+            if (!string.IsNullOrEmpty(regrow))
+                Assert.IsTrue(BudDeal.TryParse(regrow, out strip, out string growError,
+                                               pure: false),
+                              id + ": " + growError);
 
-                Assert.IsTrue(BudLayout.TryReadRunners(Runners, width, Rows.Length,
-                                                       out var runners, out string vineError),
-                              Id + ": " + vineError);
+            int width = rows[0].Replace(" ", "").Length;
+            Assert.IsTrue(BudLayout.TryReadRows(rows, width, rows.Length,
+                                                out var ground, out var value,
+                                                out string error),
+                          id + ": " + error);
 
-                return new BudLayout(width, Rows.Length, ground, value, deal, strip, runners);
-            }
+            Assert.IsTrue(BudLayout.TryReadSpecials(specials, width, rows.Length, ground,
+                                                    out var special, out string specialError),
+                          id + ": " + specialError);
+
+            return new BudLayout(width, rows.Length, ground, value, deal, strip, grafts, special,
+                                 forges);
         }
 
         /// <summary>
@@ -271,253 +283,209 @@ namespace GlimmerGrove.Tests
         };
 
         /// <summary>
-        /// The Tanglewood. What is new here is the <b>runner</b> — a vine joining two squares of
-        /// the grove, and a bunch that <em>takes in</em> one end sends its colour to whatever is
-        /// standing on the other (invariant 20m).
+        /// The Tanglewood: five groves that graft and forge. A bunch of five leaves a bolt where
+        /// the player tapped and a bunch of eight a sun; a special fires when tapped, when a
+        /// bunch takes it in, or when another special's reach hits it (invariant 20m).
         ///
         /// <para>
-        /// <b>Three of the ten carry no vine at all</b>, deliberately: a chapter of nothing but
-        /// its own new object is a chapter with one board in it. What ramps is the same dial the
-        /// Thicket's was — how many are shut in, six to fourteen — plus how many vines are
-        /// strung across the grove.
-        /// </para>
-        /// <para>
-        /// Every one of the seven that carries a vine is pinned with what the vines are
-        /// <em>worth</em>: <c>Changed</c>, <c>Caught</c> and <c>Ran</c>. That is the guard this
-        /// mode did not have when Lightfall shipped a mirror and then a wick — both passed every
-        /// other check in this repository while changing nothing about any board they stood on.
+        /// Every rung is pinned with what its specials are <em>worth</em>: <c>Forgeable</c>,
+        /// <c>Forged</c> and <c>Fired</c>. That is the guard this mode did not have when it
+        /// shipped a runner, and then a windmill, a firefly, a puffball and a hive — all of
+        /// which passed every other check in this repository while paying out as the same
+        /// chain on every board they stood on.
         /// </para>
         /// </summary>
         internal static readonly Rung[] Tangle =
         {
-            new Rung("b02_firstvine", "GBR", "RGBYMCW",
-                     par: 3, ways: 49, careless: 3, nodes: 7277,
+            new Rung("b02_firstbolt", "GRB", "RGBYMC",
+                     par: 3, ways: 230, careless: 3, nodes: 17427,
                      spare: 5,
-                     flowers: 36, cocoons: 6,
-                     bestAt: 8, bestBurst: 6, bestWaves: 2, bestFreed: 2,
-                     "MoMMCGG",
-                     "RRYRGoB",
-                     "CYGRGBo",
-                     "CGoGYBM",
-                     "GRRBRYG",
-                     "MoCMCoB")
+                     flowers: 41, cocoons: 15,
+                     bestAt: 38, bestBurst: 15, bestWaves: 2, bestFreed: 5,
+                     "oOGRMCOo",
+                     "GYYMGBCC",
+                     "oMBOBYYo",
+                     "RMGCRCRR",
+                     "oYRBGCBo",
+                     "GYOGYORM",
+                     "oORCCGOo")
             {
-                Vines = 1, Changed = 2, Caught = 2, Ran = 1,
-                Runners = new[]
+                Grafts = true, Forges = true, Dealt = 1,
+                Specials = new[]
                 {
-                    ".......",
-                    ".a.....",
-                    ".......",
-                    ".......",
-                    "....a..",
-                    "......."
+                    "........",
+                    "........",
+                    "........",
+                    "......|.",
+                    "........",
+                    "........",
+                    "........",
                 },
+                Forgeable = 0, Forged = 230, Fired = 230,
+                BestKind = "tap", BestOther = -1,
             },
-
-            new Rung("b02_longreach", "GBR", "RGBYMCW",
-                     par: 3, ways: 43, careless: 3, nodes: 6322,
+            new Rung("b02_makefive", "GRB", "RGBYMC",
+                     par: 3, ways: 240, careless: 4, nodes: 12237,
                      spare: 5,
-                     flowers: 35, cocoons: 7,
-                     bestAt: 8, bestBurst: 9, bestWaves: 3, bestFreed: 4,
-                     "YoGCoMG",
-                     "GRYGBBG",
-                     "oYMRCoR",
-                     "CCoCYMR",
-                     "BGGMoYM",
-                     "BoRRYRM")
+                     flowers: 41, cocoons: 15,
+                     bestAt: 30, bestBurst: 30, bestWaves: 5, bestFreed: 9,
+                     "oOCCYCOo",
+                     "RMYRBGRB",
+                     "oBMOCYCo",
+                     "YRCRMYGY",
+                     "oMYRMCBo",
+                     "CYOYCOBR",
+                     "oOMBYCOo")
             {
-                Vines = 1, Changed = 2, Caught = 2, Ran = 1,
-                Runners = new[]
-                {
-                    ".......",
-                    ".a.....",
-                    ".......",
-                    ".......",
-                    ".......",
-                    ".....a."
-                },
+                Grafts = true, Forges = true, Dealt = 0,
+                Forgeable = 1, Forged = 240, Fired = 240,
+                BestKind = "graft", BestOther = 31,
             },
-
-            new Rung("b02_deepthicket", "BGR", "RGBYMC",
-                     par: 3, ways: 89, careless: 3, nodes: 9398,
+            new Rung("b02_sunspark", "GBR", "RGBYMCW",
+                     par: 3, ways: 540, careless: 3, nodes: 17748,
                      spare: 5,
-                     flowers: 42, cocoons: 7,
-                     bestAt: 31, bestBurst: 30, bestWaves: 7, bestFreed: 5,
-                     "YoRYYoG",
-                     "GBBOMYB",
-                     "YRRCGMB",
-                     "CoCMGoC",
-                     "MBGGYBB",
-                     "MGoCoMC",
-                     "GRRCYMC"),
-
-            new Rung("b02_windingway", "RGB", "RGBYMC",
-                     par: 3, ways: 59, careless: 3, nodes: 11399,
-                     spare: 5,
-                     flowers: 41, cocoons: 8,
-                     bestAt: 9, bestBurst: 27, bestWaves: 6, bestFreed: 6,
-                     "MoRRGoY",
-                     "GMBMGBG",
-                     "oRMCBoY",
-                     "CRBOBRC",
-                     "CoYRMCo",
-                     "GRBMRGB",
-                     "GYYoBBR")
+                     flowers: 41, cocoons: 15,
+                     bestAt: 36, bestBurst: 22, bestWaves: 3, bestFreed: 4,
+                     "oOCGBMOo",
+                     "CGRRYYRY",
+                     "oGBOCBRo",
+                     "MBMRYMBM",
+                     "oCYCRYCo",
+                     "GCOYMOYG",
+                     "oOMGRBOo")
             {
-                Vines = 1, Changed = 1, Caught = 1, Ran = 1,
-                Runners = new[]
+                Grafts = true, Forges = true, Dealt = 1,
+                Specials = new[]
                 {
-                    ".......",
-                    "..a....",
-                    ".......",
-                    ".......",
-                    ".......",
-                    "....a..",
-                    "......."
+                    "........",
+                    ".*......",
+                    "........",
+                    "........",
+                    "........",
+                    "........",
+                    "........",
                 },
+                Forgeable = 1, Forged = 540, Fired = 540,
+                BestKind = "tap", BestOther = -1,
             },
-
-            new Rung("b02_twovines", "BRG", "RGBYMC",
-                     par: 3, ways: 68, careless: 3, nodes: 15166,
+            new Rung("b02_crossfire", "GBR", "RYGMBC",
+                     par: 3, ways: 399, careless: 3, nodes: 19318,
                      spare: 5,
-                     flowers: 47, cocoons: 9,
-                     bestAt: 9, bestBurst: 12, bestWaves: 3, bestFreed: 4,
-                     "RoRBBGoC",
-                     "GGCCYRCM",
-                     "RCYoBGoM",
-                     "RBMMORRC",
-                     "YoGGoBCM",
-                     "RYMBGCBM",
-                     "BBoBGoCC")
+                     flowers: 41, cocoons: 15,
+                     bestAt: 4, bestBurst: 20, bestWaves: 4, bestFreed: 6,
+                     "oOGGYGOo",
+                     "CBYRCCGY",
+                     "oRMOYYMo",
+                     "MGMBGGMG",
+                     "oGBYMCRo",
+                     "BBOYMORB",
+                     "oOGCGGOo")
             {
-                Vines = 2, Changed = 1, Caught = 1, Ran = 1,
-                Runners = new[]
-                {
-                    ".......a",
-                    ".b......",
-                    "........",
-                    "........",
-                    "........",
-                    "......b.",
-                    "a......."
-                },
+                Grafts = true, Forges = true, Dealt = 0,
+                Forgeable = 1, Forged = 399, Fired = 399,
+                BestKind = "graft", BestOther = 12,
             },
-
-            new Rung("b02_thewilds", "BRG", "RGBYM",
-                     par: 3, ways: 85, careless: 4, nodes: 16321,
+            new Rung("b02_stormheart", "GRB", "RGBYMCW",
+                     par: 3, ways: 400, careless: 3, nodes: 16718,
                      spare: 5,
-                     flowers: 47, cocoons: 9,
-                     bestAt: 54, bestBurst: 36, bestWaves: 7, bestFreed: 6,
-                     "MoGGCOBB",
-                     "MRYCYYGG",
-                     "CoRYoGBo",
-                     "CRCYCBYM",
-                     "YOBBoCRR",
-                     "MGRGYBCC",
-                     "RRoGBoGY"),
-
-            new Rung("b02_crossvine", "RGB", "RGBYMC",
-                     par: 3, ways: 101, careless: 3, nodes: 14018,
-                     spare: 5,
-                     flowers: 46, cocoons: 10,
-                     bestAt: 13, bestBurst: 24, bestWaves: 5, bestFreed: 6,
-                     "MoYCMOMM",
-                     "RGGYYGGB",
-                     "oCYMoRBo",
-                     "CGYMGGoG",
-                     "MOMoBYRG",
-                     "YRRBYRMY",
-                     "BBoCGGoR")
+                     flowers: 41, cocoons: 15,
+                     bestAt: 27, bestBurst: 27, bestWaves: 5, bestFreed: 9,
+                     "oOGMCCOo",
+                     "BCBMGYCM",
+                     "oRGOBMGo",
+                     "MRCMBRCY",
+                     "oGBYMRYo",
+                     "GBOGMORY",
+                     "oOYRRGOo")
             {
-                Vines = 2, Changed = 3, Caught = 2, Ran = 1,
-                Runners = new[]
-                {
-                    ".......a",
-                    "..b.....",
-                    "........",
-                    "........",
-                    "........",
-                    ".....b..",
-                    "a......."
-                },
+                Grafts = true, Forges = true, Dealt = 0,
+                Forgeable = 2, Forged = 400, Fired = 400,
+                BestKind = "graft", BestOther = 28,
             },
-
-            new Rung("b02_thornedvine", "BRG", "RGBYM",
-                     par: 3, ways: 204, careless: 3, nodes: 10932,
-                     spare: 5,
-                     flowers: 46, cocoons: 10,
-                     bestAt: 2, bestBurst: 37, bestWaves: 8, bestFreed: 7,
-                     "YoRMOBBo",
-                     "MRMYRRCC",
-                     "YMRoMBoR",
-                     "oGRYMBCG",
-                     "YOGGoCMR",
-                     "YMYYMMBB",
-                     "MYoGGoMY")
+            new Rung("b02_sixfold", "BGR", "RGBYMCW",
+                     par: 3, ways: 474, careless: 3, nodes: 14855,
+                     spare: 4,
+                     flowers: 40, cocoons: 16,
+                     bestAt: 22, bestBurst: 25, bestWaves: 4, bestFreed: 10,
+                     "oOBCMMOo",
+                     "GRYBRCRB",
+                     "oGMOBCGo",
+                     "GBCCMMCR",
+                     "oMBOGYYo",
+                     "BROGBOGM",
+                     "oOGYYROo")
             {
-                Vines = 2, Changed = 2, Caught = 2, Ran = 1,
-                Runners = new[]
-                {
-                    "........",
-                    ".a......",
-                    ".......b",
-                    "........",
-                    "b.......",
-                    "......a.",
-                    "........"
-                },
+                Grafts = true, Forges = true, Dealt = 0,
+                Forgeable = 2, Forged = 474, Fired = 474,
+                BestKind = "tap", BestOther = -1,
             },
-
-            new Rung("b02_thetangle", "GBR", "RGBYM",
-                     par: 3, ways: 126, careless: 3, nodes: 12510,
-                     spare: 5,
-                     flowers: 44, cocoons: 12,
-                     bestAt: 47, bestBurst: 35, bestWaves: 7, bestFreed: 10,
-                     "GoBCORRo",
-                     "RBCBCGGR",
-                     "RCYoMMoY",
-                     "oBYBYYRo",
-                     "BOCYoGCC",
-                     "BMCBMCGB",
-                     "GoYRoCoB")
+            new Rung("b02_thundering", "RBG", "RGBYMC",
+                     par: 3, ways: 231, careless: 3, nodes: 17433,
+                     spare: 4,
+                     flowers: 40, cocoons: 16,
+                     bestAt: 36, bestBurst: 23, bestWaves: 6, bestFreed: 7,
+                     "oOGBYYOo",
+                     "BYRORMGB",
+                     "OGYMYBGO",
+                     "CCRGCBCC",
+                     "OGGOGGMO",
+                     "MMOCYOBB",
+                     "oOMCYMOo")
             {
-                Vines = 3, Changed = 3, Caught = 3, Ran = 2,
-                Runners = new[]
-                {
-                    "......a.",
-                    ".b......",
-                    "c.......",
-                    "........",
-                    ".......c",
-                    "......b.",
-                    "a......."
-                },
+                Grafts = true, Forges = true, Dealt = 0,
+                Forgeable = 1, Forged = 231, Fired = 231,
+                BestKind = "tap", BestOther = -1,
             },
-
-            new Rung("b02_tangleheart", "RBG", "RYGMBC",
-                     par: 3, ways: 54, careless: 3, nodes: 11067,
-                     spare: 5,
-                     flowers: 42, cocoons: 14,
-                     bestAt: 37, bestBurst: 30, bestWaves: 7, bestFreed: 11,
-                     "GoGoOBBo",
-                     "BBMYRYCG",
-                     "RMRoCCoR",
-                     "oBBCMMCo",
-                     "YOCBoBMR",
-                     "BRRBGMBR",
-                     "CoYoOGoC")
+            new Rung("b02_sunwell", "RGB", "RGBYMC",
+                     par: 3, ways: 105, careless: 3, nodes: 19951,
+                     spare: 4,
+                     flowers: 40, cocoons: 16,
+                     bestAt: 22, bestBurst: 7, bestWaves: 2, bestFreed: 3,
+                     "OOGBYBOO",
+                     "BGYYGCMB",
+                     "oGCOMGBo",
+                     "RBBCOMRG",
+                     "oMGRCBBo",
+                     "MROMCOMM",
+                     "OOYBBMOO")
             {
-                Vines = 3, Changed = 3, Caught = 3, Ran = 1,
-                Runners = new[]
-                {
-                    "......a.",
-                    ".b......",
-                    "c.......",
-                    "........",
-                    ".......c",
-                    "......b.",
-                    "a......."
-                },
+                Grafts = true, Forges = true, Dealt = 0,
+                Forgeable = 1, Forged = 105, Fired = 105,
+                BestKind = "graft", BestOther = 30,
+            },
+            new Rung("b02_wildstorm", "RBG", "RYGMBC",
+                     par: 3, ways: 313, careless: 3, nodes: 18526,
+                     spare: 3,
+                     flowers: 40, cocoons: 16,
+                     bestAt: 29, bestBurst: 19, bestWaves: 4, bestFreed: 2,
+                     "oOCBGGOo",
+                     "BBROBRYB",
+                     "OYGRYRYO",
+                     "RRGBYGMB",
+                     "OYYOBGRO",
+                     "CCORROMR",
+                     "oOCYGBOo")
+            {
+                Grafts = true, Forges = true, Dealt = 0,
+                Forgeable = 3, Forged = 313, Fired = 313,
+                BestKind = "tap", BestOther = -1,
+            },
+            new Rung("b02_stormcrown", "RBG", "RGBYM",
+                     par: 3, ways: 136, careless: 3, nodes: 18998,
+                     spare: 3,
+                     flowers: 40, cocoons: 16,
+                     bestAt: 24, bestBurst: 21, bestWaves: 4, bestFreed: 8,
+                     "OORBRBOO",
+                     "CCBMYGCY",
+                     "oGYOCMMo",
+                     "BMGGORGY",
+                     "oMCRRBGo",
+                     "YBOMCOYM",
+                     "OOYRRYOO")
+            {
+                Grafts = true, Forges = true, Dealt = 0,
+                Forgeable = 1, Forged = 136, Fired = 136,
+                BestKind = "tap", BestOther = -1,
             },
         };
 
@@ -569,7 +537,7 @@ namespace GlimmerGrove.Tests
                 Assert.AreEqual(rung.Careless, BudSolver.Careless(layout, rung.Room),
                                 rung.Id + " (careless)");
 
-                Assert.AreEqual(rung.Vines, layout.Runners, rung.Id + " (runners)");
+                Assert.AreEqual(rung.Dealt, layout.Specials, rung.Id + " (specials dealt)");
 
                 // The node cost is pinned rather than merely bounded, because it is the reading
                 // that moved when the rule drifted — par came out unprovable, and the number that
@@ -585,31 +553,17 @@ namespace GlimmerGrove.Tests
         /// plausible is the best tap moving to a different cell and taking three fewer flowers.
         /// </summary>
         [Test]
-        public void TheBestOpeningTapOfEveryGroveIsStillTheOneItWasAuthoredAround()
+        public void TheBestOpeningMoveOfEveryGroveIsStillTheOneItWasAuthoredAround()
         {
             foreach (var rung in Every)
             {
                 var layout = rung.Layout();
-                var board = new BudBoard(layout);
-                int colour = layout.Deal.At(0);
+                var move = BudSolver.Opening(layout, out var best);
 
-                int at = -1;
-                var best = BudChainResult.Nothing;
-
-                for (int i = 0; i < layout.Count; i++)
-                {
-                    if (!board.CanTap(i, colour)) continue;
-
-                    var chain = board.Preview(i, colour);
-                    if (chain.Waves > best.Waves
-                        || (chain.Waves == best.Waves && chain.Burst > best.Burst))
-                    {
-                        at = i;
-                        best = chain;
-                    }
-                }
-
-                Assert.AreEqual(rung.BestAt, at, rung.Id + " (which cell)");
+                Assert.AreEqual(rung.BestKind, move.Kind.ToString().ToLowerInvariant(),
+                                rung.Id + " (which kind of move)");
+                Assert.AreEqual(rung.BestAt, move.Cell, rung.Id + " (which cell)");
+                Assert.AreEqual(rung.BestOther, move.Other, rung.Id + " (which other cell)");
                 Assert.AreEqual(rung.BestBurst, best.Burst, rung.Id + " (flowers burst)");
                 Assert.AreEqual(rung.BestWaves, best.Waves, rung.Id + " (waves)");
                 Assert.AreEqual(rung.BestFreed, best.Freed, rung.Id + " (critters freed)");
@@ -670,56 +624,90 @@ namespace GlimmerGrove.Tests
         }
 
         /// <summary>
-        /// Every vine on every shipped grove is worth something, and the reading is the one
-        /// invariant 26g prescribes: cut them and see whether anything changes.
+        /// The specials on every shipped Tanglewood grove decide something, and the reading is
+        /// the one invariant 26g prescribes.
         ///
         /// <para>
-        /// <b>This is the guard the mode did not have when a mirror and a wick shipped.</b> Both
-        /// passed every check in this repository — solvable, correctly par'd, tight <c>ways</c>,
-        /// every gate green — while changing nothing about any board they stood on, because a
-        /// decoration passes all of those. What catches it is one comparison, and it has to run
-        /// over the boards that actually ship rather than over a fixture's own invention.
+        /// <b>This is the guard the mode did not have when five mechanics shipped and were
+        /// withdrawn.</b> Each passed every check in this repository — solvable, correctly
+        /// par'd, tight <c>ways</c>, every gate green — while paying out as the same chain on
+        /// every board it stood on. What catches it is two numbers: whether the board as dealt
+        /// lets the player forge a special, and whether any shortest play fires one.
         /// </para>
         /// <para>
-        /// <c>Changed</c> is the gate and <c>Caught</c> is the goal: a tap that bursts
-        /// <em>more</em> because a vine carried is the arrangement the player is making, where a
-        /// tap that merely leaves a different grove behind is the vine existing.
+        /// Through <c>BudObjectReading</c> rather than worked out here, so this fixture and
+        /// <c>BudValidator</c> cannot come to disagree about what "worth something" means — and
+        /// so what is pinned below is the <em>shipping</em> answer against the Python mirror's,
+        /// which is the comparison invariant 9a is about.
         /// </para>
         /// </summary>
         [Test]
-        public void EveryVineOnEveryShippedGroveIsWorthSomething()
+        public void EverySpecialOnEveryShippedGroveDecidesSomething()
         {
             foreach (var rung in Every)
             {
                 var layout = rung.Layout();
-                if (rung.Vines == 0)
+                var survey = BudSolver.Survey(layout);
+                var reading = BudObjectReading.Of(layout, survey);
+
+                Assert.AreEqual(rung.Forgeable, reading.Forgeable, rung.Id + " (opening moves that forge)");
+                Assert.AreEqual(rung.Forged, reading.Forged, rung.Id + " (plays that forge)");
+                Assert.AreEqual(rung.Fired, reading.Fired, rung.Id + " (plays that fire)");
+
+                if (!layout.Forges)
                 {
-                    Assert.AreEqual(0, layout.Runners, rung.Id + " carries a vine it does not own");
+                    Assert.AreEqual(0, reading.Forged, rung.Id + " forges a special it does not allow");
                     continue;
                 }
 
-                // Through `BudRunnerReading` rather than worked out here, so this fixture and
-                // `BudValidator` cannot come to disagree about what "worth something" means —
-                // and so what is pinned below is the *shipping* answer against the Python
-                // mirror's, which is the comparison invariant 9a is about. Writing it out a
-                // second time here is exactly how the two came to differ by one on
-                // `b02_crossvine`: this copy compared the chain's four numbers and the mirror
-                // compared the grove, and a vine that moves a colour without setting anything
-                // off changes the second and not the first.
-                var reading = BudRunnerReading.Of(layout);
-
-                Assert.AreEqual(rung.Changed, reading.Changed,
-                                rung.Id + " (opening taps the vines change)");
-                Assert.AreEqual(rung.Caught, reading.Caught,
-                                rung.Id + " (opening taps the vines catch)");
-                Assert.AreEqual(rung.Ran, reading.Ran,
-                                rung.Id + " (vines the best opening tap fires)");
-
-                Assert.Greater(reading.Changed, 0,
-                               rung.Id + ": not one opening tap on this grove plays out " +
-                               "differently with every vine cut, so its runners are scenery — " +
-                               "which is exactly the state a mirror and a wick both shipped in");
+                Assert.Greater(reading.Fired, 0, rung.Id + ": no shortest play fires a special, " +
+                                                 "so on this grove they are decoration");
             }
+        }
+
+        /// <summary>
+        /// The Tanglewood's satchel only ever tightens, and never below three above par.
+        ///
+        /// <para>
+        /// <b>The chapter's challenge is the satchel, and it is the one dial that can strand a
+        /// star band.</b> Par is 3 on every rung, so the two-star line is 5 and a satchel of 5
+        /// would make one star unscorable (invariant 22); <c>par + 3</c> is the least a rung may
+        /// be dealt, and it is what the last two are dealt. A rung dealt more room than the one
+        /// before it is a ramp running backwards.
+        /// </para>
+        /// </summary>
+        [Test]
+        public void TheTanglewoodsSatchelTightensAndNeverStrandsABand()
+        {
+            int spare = int.MaxValue;
+            foreach (var rung in Tangle)
+            {
+                Assert.LessOrEqual(rung.Spare, spare,
+                                   rung.Id + " is dealt more room than the rung before it");
+                // The two-star line, in the integer arithmetic LevelTuning uses (1.40 in hundredths).
+                int silver = (rung.Par * 140 + 99) / 100;
+                Assert.Greater(rung.Par + rung.Spare, silver,
+                               rung.Id + ": its satchel sits on or under the two-star line");
+                spare = rung.Spare;
+            }
+        }
+
+        /// <summary>
+        /// Every Tanglewood grove grafts and forges, and every Thicket grove does neither.
+        /// </summary>
+        [Test]
+        public void TheTanglewoodForgesAndTheThicketDoesNot()
+        {
+            foreach (var rung in Tangle)
+            {
+                var layout = rung.Layout();
+                Assert.IsTrue(layout.Grafts, rung.Id + " does not graft");
+                Assert.IsTrue(layout.Forges, rung.Id + " does not forge");
+            }
+
+            foreach (var rung in Thicket)
+                Assert.IsFalse(rung.Layout().HasObjects, rung.Id + " has something the Thicket " +
+                                                          "never had");
         }
 
         /// <summary>
@@ -744,8 +732,11 @@ namespace GlimmerGrove.Tests
         [Test]
         public void TheChapterAsksForMoreAsItGoes()
         {
+            // The Thicket alone: the Tanglewood's five all carry fifteen shut in, and what ramps
+            // there is what is dealt — a bolt on rung one, a sun on rung three, nothing after.
             foreach (var chapter in Chapters)
             {
+                if (chapter.Rungs != Thicket) continue;
                 var rungs = chapter.Rungs;
                 int shut = 0;
 
@@ -781,17 +772,8 @@ namespace GlimmerGrove.Tests
             foreach (var rung in Every)
             {
                 var layout = rung.Layout();
-                var board = new BudBoard(layout);
-                int colour = layout.Deal.At(0);
-                int best = 0;
-
-                for (int i = 0; i < layout.Count; i++)
-                {
-                    if (!board.CanTap(i, colour)) continue;
-
-                    var chain = board.Preview(i, colour);
-                    if (chain.Waves > best) best = chain.Waves;
-                }
+                BudSolver.Opening(layout, out var opening);
+                int best = opening.Waves;
 
                 Assert.GreaterOrEqual(best, 2,
                                       rung.Id + ": the best opening tap on this grove runs " +
@@ -855,8 +837,10 @@ namespace GlimmerGrove.Tests
                 var shipped = rules.Layout;
 
                 CollectionAssert.AreEqual(rung.Rows, shipped.Written(), rung.Id + " (board)");
-                CollectionAssert.AreEqual(rung.Runners, shipped.WrittenRunners(),
-                                          rung.Id + " (vines)");
+                CollectionAssert.AreEqual(rung.Specials, shipped.WrittenSpecials(),
+                                          rung.Id + " (specials dealt)");
+                Assert.AreEqual(rung.Grafts, shipped.Grafts, rung.Id + " (grafts)");
+                Assert.AreEqual(rung.Forges, shipped.Forges, rung.Id + " (forges)");
                 Assert.AreEqual(rung.Colours, shipped.Deal.Written(), rung.Id + " (basket)");
                 Assert.AreEqual(rung.Regrow,
                                 shipped.Regrow == null ? "" : shipped.Regrow.Written(),

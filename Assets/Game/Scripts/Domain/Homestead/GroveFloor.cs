@@ -39,17 +39,41 @@ namespace GlimmerGrove.Homestead
         public readonly int Cols, Rows;
 
         /// <summary>
-        /// Credits that buy this region. <b>Zero means it is open from the first launch</b> —
-        /// the ground a new grove starts on.
+        /// Credits that buy this region, or zero when it is not sold for credits — either free
+        /// from the first launch, or priced in <see cref="Gems"/>.
         ///
         /// Zero rather than a separate flag for <c>HomesteadPiece.Cost</c>'s reason:
         /// <c>JsonUtility</c> writes a zero into every field an older file never had, so
-        /// "absent" and "free" have to be the same fact or a catalog written before this
-        /// existed would give away the whole floor.
+        /// "absent" and "not for credits" have to be the same fact or a catalog written before
+        /// this existed would give away the whole floor.
         /// </summary>
         public readonly int Cost;
 
-        public GroveRegion(string id, int col, int row, int cols, int rows, int cost)
+        /// <summary>
+        /// Gems that buy this region instead, or zero. Exactly one of the two prices is set —
+        /// <c>ContentValidation</c> refuses a region carrying both.
+        ///
+        /// <para>
+        /// <b>Nothing here converts one into the other, and that is deliberate.</b> The one
+        /// place a credit figure is read off a region is the grove's worth (invariant 16g), and
+        /// gem-priced land is worth nothing there — see <c>GroveRegionDto.gems</c> for why the
+        /// leaderboard cannot price a gem. Every sum on both sides already asks for
+        /// <see cref="Cost"/> above zero, so it falls out rather than needing a clause.
+        /// </para>
+        /// </summary>
+        public readonly int Gems;
+
+        /// <summary>
+        /// This region's rung on the ladder, counting from 1, or zero on starter land.
+        ///
+        /// Authored rather than derived from price, because the floor is sold in two currencies
+        /// and because a retune must never reorder a ladder a player is part-way up. See
+        /// <c>GroveRegionDto.order</c>.
+        /// </summary>
+        public readonly int Order;
+
+        public GroveRegion(string id, int col, int row, int cols, int rows,
+                           int cost, int gems = 0, int order = 0)
         {
             Id = id;
             Col = Math.Max(0, col);
@@ -57,12 +81,42 @@ namespace GlimmerGrove.Homestead
             Cols = Math.Max(0, cols);
             Rows = Math.Max(0, rows);
             Cost = Math.Max(0, cost);
+            Gems = Math.Max(0, gems);
+            Order = Math.Max(0, order);
         }
 
         public bool IsValid => !string.IsNullOrEmpty(Id) && Cols > 0 && Rows > 0;
 
-        /// <summary>True for land nothing gates — what a new player builds on.</summary>
-        public bool IsStarter => Cost <= 0;
+        /// <summary>
+        /// True for land nothing gates — what a new player builds on.
+        ///
+        /// <b>Both prices, not just credits.</b> This used to read <c>Cost &lt;= 0</c>, which was
+        /// the whole rule while credits were the only currency and becomes "every gem-priced
+        /// region is free" the moment they are not. It gates the ladder, the shop shelf, the
+        /// hall's ground and what is written into the save, so the narrow reading would have
+        /// handed over half the floor at launch.
+        /// </summary>
+        public bool IsStarter => Cost <= 0 && Gems <= 0;
+
+        /// <summary>Whether this stretch is sold for gems rather than credits.</summary>
+        public bool IsGemPriced => Gems > 0;
+
+        /// <summary>
+        /// Which wallet buys this region. Meaningless on starter land.
+        ///
+        /// Named for the question rather than for the type, because a property called
+        /// <c>Currency</c> would shadow <see cref="GlimmerGrove.Persistence.Currency"/> inside
+        /// this class and every use of the constants would have to be qualified to compile.
+        /// </summary>
+        public string PaidIn
+            => IsGemPriced ? Persistence.Currency.Gems : Persistence.Currency.Credits;
+
+        /// <summary>
+        /// What it costs, in whichever currency it is sold in. A caller drawing a price needs
+        /// this and <see cref="Currency"/> together and must never pick one field by hand —
+        /// reading <see cref="Cost"/> alone on a gem region prints a free stretch of land.
+        /// </summary>
+        public int Price => IsGemPriced ? Gems : Cost;
 
         public int TileCount => Cols * Rows;
 
@@ -141,14 +195,39 @@ namespace GlimmerGrove.Homestead
         /// </summary>
         public readonly string StarterTile;
 
+        /// <summary>
+        /// The tiles the hall covers, anchored at <see cref="HallTile"/>.
+        ///
+        /// <para>
+        /// A fact about the <em>floor</em> rather than about whichever dwelling stands there,
+        /// deliberately: the home ladder is bought rung by rung, and if a manor covered more
+        /// ground than the cabin, buying one would evict whatever the player had planted beside
+        /// their door. So every dwelling authors the same footprint, <c>ContentValidation</c>
+        /// refuses one that does not, and the tiles a home takes are fixed for the life of the
+        /// grove.
+        /// </para>
+        /// </summary>
+        public readonly GroveFootprint HallFootprint;
+
+        readonly int _hallCol, _hallRow;
+        readonly bool _hasHall;
+
         public GroveFloor(int cols, int rows, string tileArt, string hallTile, string starterTile,
                           IReadOnlyList<GroveRegion> regions)
+            : this(cols, rows, tileArt, hallTile, starterTile, regions, GroveFootprint.Single)
+        {
+        }
+
+        public GroveFloor(int cols, int rows, string tileArt, string hallTile, string starterTile,
+                          IReadOnlyList<GroveRegion> regions, GroveFootprint hallFootprint)
         {
             Cols = Math.Max(0, cols);
             Rows = Math.Max(0, rows);
             TileArt = tileArt ?? string.Empty;
             HallTile = hallTile ?? string.Empty;
             StarterTile = starterTile ?? string.Empty;
+            HallFootprint = hallFootprint.Cols < 1 ? GroveFootprint.Single : hallFootprint;
+            _hasHall = TryParse(HallTile, out _hallCol, out _hallRow);
 
             if (regions == null || regions.Count == 0)
             {
@@ -209,10 +288,26 @@ namespace GlimmerGrove.Homestead
         public bool Contains(string tileId)
             => TryParse(tileId, out int col, out int row) && Contains(col, row);
 
-        /// <summary>True for the one tile the hall stands on. Nothing else may go there.</summary>
+        /// <summary>
+        /// True for any tile the hall covers. Nothing else may go there.
+        ///
+        /// Asked of the footprint rather than of the one anchor tile, because the hall is two
+        /// tiles wide and a fence planted under its eaves was the first thing every tester did.
+        /// </summary>
         public bool IsHall(string tileId)
-            => !string.IsNullOrEmpty(HallTile)
-            && string.Equals(tileId, HallTile, StringComparison.Ordinal);
+            => TryParse(tileId, out int col, out int row) && IsHall(col, row);
+
+        public bool IsHall(int col, int row)
+            => _hasHall && HallFootprint.Holds(_hallCol, _hallRow, col, row);
+
+        /// <summary>True for the hall's anchor tile itself — the one its dwelling is drawn from.</summary>
+        public bool IsHallAnchor(int col, int row) => _hasHall && col == _hallCol && row == _hallRow;
+
+        /// <summary>The hall as a stand, for an occupancy index. Invalid when the floor has no hall.</summary>
+        public GroveStand HallStand(string dwellingId)
+            => _hasHall && !string.IsNullOrEmpty(dwellingId)
+                ? new GroveStand(_hallCol, _hallRow, dwellingId, false, HallFootprint, true)
+                : default;
 
         /// <summary>
         /// The piece the starter tile shows while nothing has been placed on it.
@@ -240,9 +335,20 @@ namespace GlimmerGrove.Homestead
         /// be placed on, and therefore the one that must not count towards how full it is.
         /// </summary>
         public bool HallIsIn(GroveRegion region)
-            => region != null && region.IsValid
-            && TryParse(HallTile, out int col, out int row)
-            && region.Holds(col, row);
+            => HallTilesIn(region) > 0;
+
+        /// <summary>How many of a region's tiles the hall covers — the ones that can never be filled.</summary>
+        public int HallTilesIn(GroveRegion region)
+        {
+            if (region == null || !region.IsValid || !_hasHall) return 0;
+
+            int count = 0;
+            for (int c = 0; c < HallFootprint.Cols; c++)
+                for (int r = 0; r < HallFootprint.Rows; r++)
+                    if (region.Holds(_hallCol + c, _hallRow + r)) count++;
+
+            return count;
+        }
 
         /// <summary>The region a tile belongs to, or null for ground nobody sells.</summary>
         public GroveRegion RegionOf(int col, int row)

@@ -11,12 +11,11 @@
     "map3_strip3",
     "map3_strip4"
   ],
-  "teaserX": 0.3,
   "levels": [
     {
       "id": "f03_first_whorl",
-      "mapX": 0.3,
-      "mapY": 0.055,
+      "mapX": 0.7,
+      "mapY": 0.06,
       "fall": {
         "width": 5,
         "height": 6,
@@ -33,8 +32,8 @@
     },
     {
       "id": "f03_make_the_pair",
-      "mapX": 0.72,
-      "mapY": 0.14,
+      "mapX": 0.28,
+      "mapY": 0.145,
       "backdrop": "sky_21",
       "fall": {
         "width": 6,
@@ -52,7 +51,7 @@
     },
     {
       "id": "f03_the_span",
-      "mapX": 0.26,
+      "mapX": 0.74,
       "mapY": 0.225,
       "backdrop": "sky_22",
       "fall": {
@@ -71,8 +70,8 @@
     },
     {
       "id": "f03_buried",
-      "mapX": 0.7,
-      "mapY": 0.31,
+      "mapX": 0.3,
+      "mapY": 0.305,
       "backdrop": "sky_23",
       "fall": {
         "width": 6,
@@ -91,8 +90,8 @@
     },
     {
       "id": "f03_two_shores",
-      "mapX": 0.28,
-      "mapY": 0.395,
+      "mapX": 0.72,
+      "mapY": 0.39,
       "backdrop": "sky_24",
       "fall": {
         "width": 7,
@@ -111,8 +110,8 @@
     },
     {
       "id": "f03_twin_mouths",
-      "mapX": 0.74,
-      "mapY": 0.48,
+      "mapX": 0.26,
+      "mapY": 0.475,
       "backdrop": "sky_25",
       "fall": {
         "width": 7,
@@ -131,8 +130,8 @@
     },
     {
       "id": "f03_through_the_glass",
-      "mapX": 0.3,
-      "mapY": 0.56,
+      "mapX": 0.7,
+      "mapY": 0.555,
       "backdrop": "sky_26",
       "fall": {
         "width": 7,
@@ -152,8 +151,8 @@
     },
     {
       "id": "f03_the_deep_draw",
-      "mapX": 0.68,
-      "mapY": 0.645,
+      "mapX": 0.32,
+      "mapY": 0.64,
       "backdrop": "sky_27",
       "fall": {
         "width": 7,
@@ -173,8 +172,8 @@
     },
     {
       "id": "f03_every_light",
-      "mapX": 0.26,
-      "mapY": 0.73,
+      "mapX": 0.74,
+      "mapY": 0.725,
       "backdrop": "sky_28",
       "fall": {
         "width": 7,
@@ -194,7 +193,7 @@
     },
     {
       "id": "f03_whorlwater",
-      "mapX": 0.72,
+      "mapX": 0.28,
       "mapY": 0.815,
       "backdrop": "sky_29",
       "fall": {

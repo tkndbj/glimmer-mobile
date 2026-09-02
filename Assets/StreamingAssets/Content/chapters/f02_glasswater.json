@@ -10,12 +10,11 @@
     "map2_strip2",
     "map2_strip3"
   ],
-  "teaserX": 0.3,
   "levels": [
     {
       "id": "f02_the_glass",
-      "mapX": 0.3,
-      "mapY": 0.055,
+      "mapX": 0.7,
+      "mapY": 0.065,
       "fall": {
         "width": 5,
         "height": 6,
@@ -32,8 +31,8 @@
     },
     {
       "id": "f02_stillwater",
-      "mapX": 0.72,
-      "mapY": 0.14,
+      "mapX": 0.28,
+      "mapY": 0.145,
       "backdrop": "sky_11",
       "fall": {
         "width": 6,
@@ -51,8 +50,8 @@
     },
     {
       "id": "f02_low_tide",
-      "mapX": 0.26,
-      "mapY": 0.225,
+      "mapX": 0.74,
+      "mapY": 0.22,
       "backdrop": "sky_12",
       "fall": {
         "width": 5,
@@ -71,8 +70,8 @@
     },
     {
       "id": "f02_the_crossing",
-      "mapX": 0.7,
-      "mapY": 0.31,
+      "mapX": 0.3,
+      "mapY": 0.3,
       "backdrop": "sky_13",
       "fall": {
         "width": 6,
@@ -91,8 +90,8 @@
     },
     {
       "id": "f02_two_panes",
-      "mapX": 0.28,
-      "mapY": 0.395,
+      "mapX": 0.72,
+      "mapY": 0.39,
       "backdrop": "sky_14",
       "fall": {
         "width": 6,
@@ -111,8 +110,8 @@
     },
     {
       "id": "f02_far_shore",
-      "mapX": 0.74,
-      "mapY": 0.48,
+      "mapX": 0.26,
+      "mapY": 0.485,
       "backdrop": "sky_15",
       "fall": {
         "width": 7,
@@ -132,7 +131,7 @@
     },
     {
       "id": "f02_lantern_row",
-      "mapX": 0.3,
+      "mapX": 0.7,
       "mapY": 0.56,
       "backdrop": "sky_16",
       "fall": {
@@ -153,8 +152,8 @@
     },
     {
       "id": "f02_slack_water",
-      "mapX": 0.68,
-      "mapY": 0.645,
+      "mapX": 0.32,
+      "mapY": 0.65,
       "backdrop": "sky_17",
       "fall": {
         "width": 6,
@@ -175,7 +174,7 @@
     },
     {
       "id": "f02_underglass",
-      "mapX": 0.26,
+      "mapX": 0.74,
       "mapY": 0.73,
       "backdrop": "sky_18",
       "fall": {
@@ -196,8 +195,8 @@
     },
     {
       "id": "f02_the_glasswater",
-      "mapX": 0.72,
-      "mapY": 0.815,
+      "mapX": 0.28,
+      "mapY": 0.83,
       "backdrop": "sky_19",
       "fall": {
         "width": 6,

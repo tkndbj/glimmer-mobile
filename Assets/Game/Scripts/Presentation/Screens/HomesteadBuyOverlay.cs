@@ -55,6 +55,33 @@ namespace GlimmerGrove
         const float PanelW = 820f;
 
         /// <summary>
+        /// Body copy on this panel, and it is a dark ink rather than the cream the rest of
+        /// the game writes in.
+        ///
+        /// <para>
+        /// <c>panel_main</c> is a light parchment, so a cream label on it is a pale thing on a
+        /// pale ground held apart only by <c>Titled</c>'s outline — which at 26 point is a
+        /// dark rim thicker than the strokes it surrounds, and reads as a smudge rather than
+        /// as a sentence. Every other panel on this skin already writes in ink with no outline
+        /// at all (<c>CompanionUnlockOverlay</c>, <c>AccountOverlay</c>); this one did not, and
+        /// it was reported as exactly that.
+        /// </para>
+        /// <para>
+        /// The accents are darkened for the same reason. <c>Pal.Mint</c> and <c>Pal.Sun</c> are
+        /// chosen to sit on the board's near-black plate; on parchment they are two shades of
+        /// nothing. <b>A palette colour is a colour against a named ground</b> — carrying one
+        /// onto a different ground is a decision, not a default.
+        /// </para>
+        /// </summary>
+        static readonly Color Ink = new Color(.36f, .25f, .18f);
+        static readonly Color Deep = new Color(.30f, .20f, .13f);
+        // 4.7:1 on the parchment, measured. The obvious .62/.34/.08 reads warmer and
+        // lands at 4.17, which clears the bar for a heading and misses it for the
+        // 29pt line this actually is.
+        static readonly Color Short = new Color(.58f, .31f, .06f);
+        static readonly Color Held = new Color(.18f, .42f, .21f);
+
+        /// <summary>
         /// The panel is measured rather than fixed, because the stepper is a row that only
         /// half the catalog has. A constant tall enough for both would leave a hole under
         /// every resident and every home rung — <c>WinOverlay</c>'s lesson, in miniature.
@@ -110,17 +137,17 @@ namespace GlimmerGrove
             // copy, because the answer differs across the catalog and a sentence that is true
             // of a fence and false of a friend is how a player stops believing the panel.
             _note = UIKit.Shrinkable(
-                UIKit.Titled("Note", Panel, NoteText(), 26,
-                             new Color(1f, .96f, .88f, .70f), TextAnchor.MiddleCenter,
+                UIKit.Titled("Note", Panel, NoteText(), 27, Ink, TextAnchor.MiddleCenter,
                              new Vector2(640f, 76f), new Vector2(.5f, .5f),
-                             new Vector2(0f, -142f + Lift), 3f, 0f), 18);
+                             new Vector2(0f, -142f + Lift), outline: 0f, shadow: 0f, wrap: true), 19);
 
             if (Stocked) BuildStepper();
 
             _status = UIKit.Shrinkable(
-                UIKit.Titled("Status", Panel, string.Empty, 30, Pal.Cream, TextAnchor.MiddleCenter,
-                             new Vector2(660f, 44f), new Vector2(.5f, .5f),
-                             new Vector2(0f, Stocked ? StatusY : -228f), 3f, 3f), 20);
+                UIKit.Titled("Status", Panel, string.Empty, 29, Ink, TextAnchor.MiddleCenter,
+                             new Vector2(660f, 52f), new Vector2(.5f, .5f),
+                             new Vector2(0f, Stocked ? StatusY : -228f),
+                             outline: 0f, shadow: 0f, wrap: true), 20);
 
             BuildAction();
 
@@ -169,14 +196,16 @@ namespace GlimmerGrove
             _less = Step("Less", "−", new Vector2(-214f, Y), -1);
             _more = Step("More", "+", new Vector2(214f, Y), +1);
 
-            _count = UIKit.Titled("Count", Panel, string.Empty, 52, Pal.Cream,
+            _count = UIKit.Titled("Count", Panel, string.Empty, 52, Deep,
                                   TextAnchor.MiddleCenter, new Vector2(300f, 62f),
-                                  new Vector2(.5f, .5f), new Vector2(0f, Y + 20f), 3f, 3f);
+                                  new Vector2(.5f, .5f), new Vector2(0f, Y + 20f),
+                                  outline: 0f, shadow: 2f);
 
             _copies = UIKit.Shrinkable(
-                UIKit.Titled("Copies", Panel, string.Empty, 26, Pal.A(Pal.Mint, .95f),
+                UIKit.Titled("Copies", Panel, string.Empty, 26, Held,
                              TextAnchor.MiddleCenter, new Vector2(360f, 40f),
-                             new Vector2(.5f, .5f), new Vector2(0f, Y - 34f), 3f, 2f), 18);
+                             new Vector2(.5f, .5f), new Vector2(0f, Y - 34f),
+                             outline: 0f, shadow: 0f), 18);
 
         }
 
@@ -232,8 +261,11 @@ namespace GlimmerGrove
             }
             else
             {
+                // The coin goes after the figure, because it is the unit on the number and
+                // not a label on the verb — "BUY FOR 4,500 ⬤" rather than "⬤ BUY FOR 4,500".
+                // See Btn.IconTrails.
                 _action = UIKit.TextButton("Buy", Panel, "btn_green", BuyLabel(offer), 40,
-                                           size, anchor, at, OnBuy);
+                                           size, anchor, at, OnBuy, Art.CoinFace(), iconTrails: true);
                 _action.Interactable = offer.CanBuy;
             }
 
@@ -340,7 +372,7 @@ namespace GlimmerGrove
             {
                 case HomesteadPurchaseState.TooExpensive:
                     _status.text = Loc.Format("ui.companion.short", Compact.Number(offer.Shortfall), Compact.Number(offer.Balance));
-                    _status.color = Pal.A(Pal.Sun, .95f);
+                    _status.color = Short;
                     break;
 
                 case HomesteadPurchaseState.AlreadyHeld:
@@ -348,12 +380,12 @@ namespace GlimmerGrove
                     // piece is never done being sold — the two readings are one enum member and
                     // only the piece can tell them apart.
                     _status.text = Stocked ? Loc.Get("ui.grove.stock_full") : Loc.Get("ui.grove.yours");
-                    _status.color = Pal.A(Pal.Mint, .95f);
+                    _status.color = Held;
                     break;
 
                 default:
                     _status.text = Stocked ? StockLine() : Loc.Format("ui.companion.balance", Compact.Number(offer.Balance));
-                    _status.color = new Color(1f, .96f, .88f, .78f);
+                    _status.color = Ink;
                     break;
             }
         }

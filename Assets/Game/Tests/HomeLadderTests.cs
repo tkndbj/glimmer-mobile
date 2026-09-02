@@ -193,21 +193,21 @@ namespace GlimmerGrove.Tests
         {
             // Four tiles and one of them is the hall. Counting it would make a region that can
             // never read as finished, because nothing is ever placed there.
-            var floor = Field();
-            var region = floor.Region("home");
+            var grove = Ladder();
+            var region = grove.Floor.Region("home");
 
-            Assert.AreEqual(0f, HomesteadLayout.FillOf(floor, region));
+            Assert.AreEqual(0f, HomesteadLayout.FillOf(grove, region));
 
             HomesteadLayout.Place(GroveFloor.TileId(1, 0), "daisies");
             HomesteadLayout.Place(GroveFloor.TileId(0, 1), "fence_low");
 
-            Assert.AreEqual(2f / 3f, HomesteadLayout.FillOf(floor, region), .001f,
+            Assert.AreEqual(2f / 3f, HomesteadLayout.FillOf(grove, region), .001f,
                             "three placeable tiles, not four");
 
             HomesteadLayout.Place(GroveFloor.TileId(1, 1), "pebble");
 
-            Assert.AreEqual(1f, HomesteadLayout.FillOf(floor, region), .001f);
-            Assert.AreEqual(TendedStage.Bloomed, GroveTending.Of(floor, region));
+            Assert.AreEqual(1f, HomesteadLayout.FillOf(grove, region), .001f);
+            Assert.AreEqual(TendedStage.Bloomed, GroveTending.Of(grove, region));
         }
 
         [Test]
@@ -218,9 +218,10 @@ namespace GlimmerGrove.Tests
             // finished state for free.
             var floor = new GroveFloor(1, 1, string.Empty, GroveFloor.TileId(0, 0), string.Empty,
                                        new[] { new GroveRegion("perch", 0, 0, 1, 1, 0) });
+            var grove = new HomesteadCatalog(floor, new[] { Home("cottage", 1, 0) });
 
-            Assert.AreEqual(0f, HomesteadLayout.FillOf(floor, floor.Region("perch")));
-            Assert.AreEqual(TendedStage.Bare, GroveTending.Of(floor, floor.Region("perch")));
+            Assert.AreEqual(0f, HomesteadLayout.FillOf(grove, floor.Region("perch")));
+            Assert.AreEqual(TendedStage.Bare, GroveTending.Of(grove, floor.Region("perch")));
         }
     }
 }

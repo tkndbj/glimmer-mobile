@@ -35,7 +35,7 @@ if (!existsSync(compiled)) {
 const {
   groveWorth, keeperLevel, leagueOf, starsFor,
   sanitiseName, isNameAllowed, publicName, boardName, fallbackName,
-  summarise, deciles, optedIn,
+  summarise, deciles, optedIn, saveRevision,
 } = await import(pathToFileURL(compiled).href);
 
 const namesModule = join(REPO, "firebase", "functions", "lib", "names.js");
@@ -394,4 +394,18 @@ function writable(value) {
 }
 
 console.log(`\n${pass} passed, ${fail} failed`);
+// ------------------------------------------------------------------ the revision
+//
+// What `publishGrove` reports beside the card, so the client can prove the card was built
+// from the save it pushed. The client reads a *missing* field as "cannot be checked" and a
+// nought as a real answer, so the shape of the bad cases matters as much as the good one.
+equal("a save's revision is reported as written", saveRevision({ cloud: { revision: 41 } }), 41);
+equal("a revision written as a string is read", saveRevision({ cloud: { revision: "17" } }), 17);
+equal("a fractional revision is floored", saveRevision({ cloud: { revision: 17.9 } }), 17);
+equal("a save with no cloud block reports nought", saveRevision({}), 0);
+equal("a cloud block with no revision reports nought", saveRevision({ cloud: {} }), 0);
+equal("a negative revision reports nought", saveRevision({ cloud: { revision: -3 } }), 0);
+equal("an unreadable revision reports nought", saveRevision({ cloud: { revision: "later" } }), 0);
+equal("a cloud block that is not an object reports nought", saveRevision({ cloud: 7 }), 0);
+
 process.exit(fail === 0 ? 0 : 1);

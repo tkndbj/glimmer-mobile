@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using GlimmerGrove.Content;
 using GlimmerGrove.Modes;
 using NUnit.Framework;
 using UnityEngine;
@@ -21,9 +22,11 @@ namespace GlimmerGrove.Tests
     /// </para>
     /// <para>
     /// <b>Every case carries a play as well as a par, and the play is the half that matters
-    /// most.</b> Two copies can agree exactly about how many taps a grove costs and still
+    /// most.</b> Two copies can agree exactly about how many moves a grove costs and still
     /// disagree about the chain — how far it ran, how many flowers it washed on the way, whether
-    /// a cocoon took one crack or four. Par would never say so; a tap-for-tap replay does.
+    /// a cocoon took one crack or four. Par would never say so; a move-for-move replay does. And
+    /// a play here may be a gust, a graft or a firefly tap as well as a tap, because the second
+    /// chapter's moves are exactly the ones the two copies are likeliest to disagree about.
     /// </para>
     /// </summary>
     public sealed class BudVectorTests
@@ -55,19 +58,12 @@ namespace GlimmerGrove.Tests
             /// </summary>
             public string regrow;
 
-            /// <summary>
-            /// The runners, as a second grid over the first. Absent on a grove strung with none.
-            ///
-            /// See <c>BudLayout.TryReadRunners</c>: one lower-case letter on each of a runner's
-            /// two ends, <c>.</c> everywhere else.
-            /// </summary>
-            public string[] runners;
+            /// <summary>Whether grafting is on, and whether a big bunch forges a special.</summary>
+            public bool grafts;
+            public bool forges;
 
-            /// <summary>How many runners the grid above is expected to describe.</summary>
-            public int runnerCount;
-
-            /// <summary>How many vines the best opening tap fires.</summary>
-            public int ran;
+            /// <summary>Specials dealt already forged, as a second grid. Absent on most cases.</summary>
+            public string[] specials;
 
             public int par;
             public int ways;
@@ -80,29 +76,50 @@ namespace GlimmerGrove.Tests
             public int tough;
             public int stones;
 
-            /// <summary>The best chain available on the opening board.</summary>
+            /// <summary>How many specials the grid above deals. Named for the field it counts.</summary>
+            public int specialsDealt;
+
+            /// <summary>The best chain available on the opening board, over every move.</summary>
             public int bestWaves;
             public int bestBurst;
             public int bestFreed;
 
+            /// <summary>What the specials are worth. See <c>BudObjectReading</c>.</summary>
+            public int forgeable;
+            public int forged;
+            public int fired;
+
             public VectorBeat[] beats;
-
-
         }
 
         [Serializable]
         public sealed class VectorBeat
         {
+            /// <summary>tap or graft.</summary>
+            public string kind;
+
+            /// <summary>The cell for a tap, the first cell for a graft.</summary>
             public int tap;
+
+            /// <summary>The second cell of a graft. -1 otherwise.</summary>
+            public int other;
+
             public bool allowed;
 
             public int burst;
             public int waves;
             public int freed;
             public int cracked;
+            public int forged;
+            public int fired;
 
             public int flowersLeft;
             public int shut;
+
+            /// <summary>Specials standing afterwards, and how many of each kind.</summary>
+            public int specialsLeft;
+            public int bolt;
+            public int sun;
         }
 
         static string VectorPath =>
@@ -123,82 +140,11 @@ namespace GlimmerGrove.Tests
         }
 
         static BudLayout Layout(VectorCase test)
-        {
-            int width = test.rows[0].Replace(" ", "").Length;
+            => BudLadderTests.Grove(test.rows, test.colours, test.regrow, test.grafts, test.forges,
+                                    test.specials != null && test.specials.Length > 0 ? test.specials : null);
 
-            Assert.IsTrue(BudDeal.TryParse(test.colours, out var deal, out string dealError),
-                          test.name + ": " + dealError);
-
-            // A strip may deal blends where a basket may not: a basket is what the player
-            // decides with, and a strip is scenery. See BudDeal.TryParse's `pure` argument.
-            BudDeal strip = null;
-            if (!string.IsNullOrEmpty(test.regrow))
-                Assert.IsTrue(BudDeal.TryParse(test.regrow, out strip, out string growError,
-                                               pure: false),
-                              test.name + ": " + growError);
-
-            Assert.IsTrue(BudLayout.TryReadRows(test.rows, width, test.rows.Length,
-                                                out var ground, out var value, out string error),
-                          test.name + ": " + error);
-
-            Assert.IsTrue(BudLayout.TryReadRunners(test.runners, width, test.rows.Length,
-                                                   out var runners, out string runnerError),
-                          test.name + ": " + runnerError);
-
-            return new BudLayout(width, test.rows.Length, ground, value, deal, strip, runners);
-        }
-
-        /// <summary>
-        /// How many vines the best opening tap fires. Mirrors <c>bud.biggest</c>'s third answer,
-        /// and it is counted off the washes rather than off the board — a runner that delivers a
-        /// colour the far end already wears changes nothing, and it still fired.
-        /// </summary>
-        static int Ran(BudLayout layout)
-        {
-            var board = new BudBoard(layout);
-            var washes = new List<BudWash>(64);
-            var best = BudChainResult.Nothing;
-            int colour = layout.Deal.At(0), ran = 0;
-
-            for (int i = 0; i < layout.Count; i++)
-            {
-                if (!board.CanTap(i, colour)) continue;
-
-                var chain = board.Preview(i, colour, null, washes);
-                if (chain.Waves < best.Waves
-                    || (chain.Waves == best.Waves && chain.Burst <= best.Burst)) continue;
-
-                best = chain;
-                ran = 0;
-                foreach (var wash in washes) if (wash.Ran) ran++;
-            }
-
-            return ran;
-        }
-
-        /// <summary>
-        /// The best chain the opening board has in it, with the first colour in hand. Mirrors
-        /// <c>bud.biggest</c>, which walks the same cells in the same order — and the order is
-        /// part of the contract, because two taps can tie.
-        /// </summary>
-        static BudChainResult Biggest(BudLayout layout)
-        {
-            var board = new BudBoard(layout);
-            var best = BudChainResult.Nothing;
-            int colour = layout.Deal.At(0);
-
-            for (int i = 0; i < layout.Count; i++)
-            {
-                if (!board.CanTap(i, colour)) continue;
-
-                var chain = board.Preview(i, colour);
-                if (chain.Waves > best.Waves
-                    || (chain.Waves == best.Waves && chain.Burst > best.Burst))
-                    best = chain;
-            }
-
-            return best;
-        }
+        static BudMove Move(VectorBeat beat)
+            => beat.kind == "graft" ? BudMove.Graft(beat.tap, beat.other) : BudMove.Tap(beat.tap);
 
         [Test]
         public void TheShippingRuleAgreesWithEveryVector()
@@ -209,7 +155,8 @@ namespace GlimmerGrove.Tests
             {
                 var layout = Layout(test);
                 var survey = BudSolver.Survey(layout);
-                var best = Biggest(layout);
+                BudSolver.Opening(layout, out var best);
+                var reading = BudObjectReading.Of(layout, survey);
 
                 string why = test.name + " — " + test.why;
 
@@ -219,27 +166,37 @@ namespace GlimmerGrove.Tests
                 Assert.AreEqual(test.cocoons, layout.Cocoons, why + " (cocoons)");
                 Assert.AreEqual(test.tough, layout.ToughCocoons, why + " (tough)");
                 Assert.AreEqual(test.stones, layout.Stones, why + " (stones)");
+                Assert.AreEqual(test.specialsDealt, layout.Specials, why + " (specials dealt)");
 
                 Assert.AreEqual(test.bestWaves, best.Waves, why + " (bestWaves)");
                 Assert.AreEqual(test.bestBurst, best.Burst, why + " (bestBurst)");
                 Assert.AreEqual(test.bestFreed, best.Freed, why + " (bestFreed)");
 
-                Assert.AreEqual(test.runnerCount, layout.Runners, why + " (runners)");
-                Assert.AreEqual(test.ran, Ran(layout), why + " (ran)");
+                Assert.AreEqual(test.forgeable, reading.Forgeable, why + " (forgeable)");
 
                 if (test.par > 0)
                 {
                     Assert.AreEqual(test.ways, survey.Ways, why + " (ways)");
+                    Assert.AreEqual(test.forged, survey.Forged, why + " (forged)");
+                    Assert.AreEqual(test.fired, survey.Fired, why + " (fired)");
 
-                    int budget = test.par + Content.BudRules.DefaultSpare;
+                    int budget = test.par + BudRules.DefaultSpare;
                     Assert.AreEqual(test.careless, BudSolver.Careless(layout, budget),
                                     why + " (careless)");
                 }
             }
         }
 
+        /// <summary>
+        /// Whether a move is legal on a bare board, which is what the mirror asks: the run's
+        /// own refusals (an empty satchel, a finished grove) are not part of the rule.
+        /// </summary>
+        static bool Legal(BudBoard board, BudMove move, int hand)
+            => move.Kind == BudMoveKind.Graft ? board.CanGraft(move.Cell, move.Other)
+                                              : board.CanTap(move.Cell, hand);
+
         [Test]
-        public void EveryRecordedPlayRunsTapForTapTheWayTheVectorsSayItDoes()
+        public void EveryRecordedPlayRunsMoveForMoveTheWayTheVectorsSayItDoes()
         {
             var file = Load();
             var pulses = new List<BudPulse>(64);
@@ -251,42 +208,63 @@ namespace GlimmerGrove.Tests
 
                 var layout = Layout(test);
                 var board = new BudBoard(layout);
-                int spent = 0;
+                int dealt = 0;
 
                 for (int nth = 0; nth < test.beats.Length; nth++)
                 {
                     var beat = test.beats[nth];
-                    string why = $"{test.name} — tap {nth + 1}";
+                    var move = Move(beat);
+                    int hand = layout.Deal.At(dealt);
+                    string why = $"{test.name} — move {nth + 1} ({move})";
 
-                    int colour = layout.Deal.At(spent);
-                    bool allowed = board.CanTap(beat.tap, colour);
+                    bool allowed = Legal(board, move, hand);
                     Assert.AreEqual(beat.allowed, allowed, why + " (allowed)");
 
-                    var chain = allowed ? board.Tap(beat.tap, colour, pulses, washes)
-                                        : BudChainResult.Nothing;
-                    if (!allowed) { pulses.Clear(); washes.Clear(); }
-                    if (allowed) spent++;
+                    var chain = BudChainResult.Nothing;
+                    pulses.Clear();
+                    washes.Clear();
+                    if (allowed) dealt += BudRun.Apply(board, move, hand, pulses, out chain, washes);
 
                     Assert.AreEqual(beat.burst, chain.Burst, why + " (burst)");
                     Assert.AreEqual(beat.waves, chain.Waves, why + " (waves)");
                     Assert.AreEqual(beat.freed, chain.Freed, why + " (freed)");
                     Assert.AreEqual(beat.cracked, chain.Cracked, why + " (cracked)");
+                    Assert.AreEqual(beat.forged, chain.Forged, why + " (forged)");
+                    Assert.AreEqual(beat.fired, chain.Fired, why + " (fired)");
                     Assert.AreEqual(beat.flowersLeft, board.Flowers, why + " (flowersLeft)");
                     Assert.AreEqual(beat.shut, board.Shut, why + " (shut)");
+                    Assert.AreEqual(beat.specialsLeft, board.Specials, why + " (specialsLeft)");
+
+                    int bolts = 0, suns = 0;
+                    for (int i = 0; i < board.Count; i++)
+                    {
+                        if (!board.IsFlower(i)) continue;
+                        if (board.SpecialAt(i) == BudSpecial.Bolt) bolts++;
+                        if (board.SpecialAt(i) == BudSpecial.Sun) suns++;
+                    }
+                    Assert.AreEqual(beat.bolt, bolts, why + " (bolts standing)");
+                    Assert.AreEqual(beat.sun, suns, why + " (suns standing)");
 
                     // The pulses are what the view animates, so a chain that reported thirteen
                     // bursts and handed back four would draw less than a third of what happened.
-                    int bursts = 0, frees = 0, cracks = 0;
+                    int bursts = 0, frees = 0, cracks = 0, forges = 0, fires = 0;
                     foreach (var pulse in pulses)
                     {
-                        if (pulse.Kind == BudPulseKind.Freed) frees++;
-                        else if (pulse.Kind == BudPulseKind.Crack) cracks++;
-                        else bursts++;
+                        switch (pulse.Kind)
+                        {
+                            case BudPulseKind.Freed: frees++; break;
+                            case BudPulseKind.Crack: cracks++; break;
+                            case BudPulseKind.Forged: forges++; break;
+                            case BudPulseKind.Fired: fires++; break;
+                            case BudPulseKind.Burst: bursts++; break;
+                        }
                     }
 
                     Assert.AreEqual(chain.Burst, bursts, why + " (pulses burst)");
                     Assert.AreEqual(chain.Freed, frees, why + " (pulses freed)");
                     Assert.AreEqual(chain.Cracked, cracks, why + " (pulses cracked)");
+                    Assert.AreEqual(chain.Forged, forges, why + " (pulses forged)");
+                    Assert.AreEqual(chain.Fired, fires, why + " (pulses fired)");
                 }
             }
         }
@@ -302,7 +280,8 @@ namespace GlimmerGrove.Tests
 
             bool chain = false, unfinishable = false, nomove = false;
             bool tough = false, wood = false, refused = false;
-            bool runner = false, idle = false;
+            bool bolt = false, sun = false, fired = false, chained = false;
+            bool graft = false, snapped = false;
 
             foreach (var test in file.cases)
             {
@@ -315,15 +294,18 @@ namespace GlimmerGrove.Tests
                 if (layout.ToughCocoons > 0) tough = true;
                 if (layout.Stones > 0) wood = true;
 
-                if (layout.Runners > 0)
-                {
-                    runner = true;
-                    if (test.ran == 0) idle = true;
-                }
+                if (test.beats == null) continue;
 
-                if (test.beats != null)
-                    foreach (var beat in test.beats)
-                        if (!beat.allowed) refused = true;
+                foreach (var beat in test.beats)
+                {
+                    if (!beat.allowed) refused = true;
+                    if (beat.kind == "graft" && beat.allowed) graft = true;
+                    if (beat.kind == "graft" && !beat.allowed) snapped = true;
+                    if (beat.forged > 0 && beat.bolt > 0) bolt = true;
+                    if (beat.forged > 0 && beat.sun > 0) sun = true;
+                    if (beat.fired == 1) fired = true;
+                    if (beat.fired >= 2) chained = true;
+                }
             }
 
             Assert.IsTrue(chain, "no case whose chain runs past two waves, so nothing here would " +
@@ -339,14 +321,20 @@ namespace GlimmerGrove.Tests
                                  "one taking every crack of a wave at once");
             Assert.IsTrue(wood, "no case with old wood on it, so nothing here would notice a " +
                                 "bunch or a wash starting to cross it");
-            Assert.IsTrue(refused, "no case where a tap is refused, so nothing here would notice " +
+            Assert.IsTrue(refused, "no case where a move is refused, so nothing here would notice " +
                                    "a colour being spent on a flower it cannot change");
-            Assert.IsTrue(runner, "no case with a runner on it, so nothing here would notice a " +
-                                  "vine stopping carrying colour across the grove");
-            Assert.IsTrue(idle, "no case with a runner that does NOT fire, so nothing here would " +
-                                "notice the threshold going away — a vine that fires on a bunch " +
-                                "merely touching an end is invariant 20j's solvent, and no board " +
-                                "would ever look wrong for it");
+            Assert.IsTrue(bolt, "no case where a bunch of five leaves a bolt standing, so nothing " +
+                                "here would notice the forge threshold moving");
+            Assert.IsTrue(sun, "no case where a bunch of eight leaves a sun standing, so nothing " +
+                               "here would notice a sun being forged at five");
+            Assert.IsTrue(fired, "no case where exactly one special fires, so nothing here would " +
+                                 "notice a bolt clearing the wrong line");
+            Assert.IsTrue(chained, "no case where one special fires another, so nothing here " +
+                                   "would notice the chain going away — which is the chapter");
+            Assert.IsTrue(graft && snapped, "no case with a graft that works and one that snaps " +
+                                            "back, so nothing here would notice the bunch " +
+                                            "threshold going away — a graft that makes nothing " +
+                                            "is a free colour skip");
         }
     }
 }

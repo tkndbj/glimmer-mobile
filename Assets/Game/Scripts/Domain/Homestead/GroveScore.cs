@@ -239,6 +239,12 @@ namespace GlimmerGrove.Homestead
                 }
             }
 
+            // Cost, so the two kinds of region that are worth nothing here drop out without a
+            // clause. Starter land is free and is never written down (invariant 16e); gem-priced
+            // land has no credit price at all, and the score is the *credits'* worth of what is
+            // held (16g) against a server ceiling denominated in credits (19a) — so a gem cannot
+            // be priced into it in either direction. See GroveRegionDto.gems.
+            //
             // Starter land is free and is never written down (invariant 16e), so it adds
             // nothing here without needing to be excluded — its cost is zero.
             foreach (var region in catalog.Floor.Regions)

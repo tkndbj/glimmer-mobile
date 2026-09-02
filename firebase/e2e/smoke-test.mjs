@@ -618,6 +618,13 @@ check(forgedGrove.ok, "a client may write its own grove sets", String(forgedGrov
 const published = await call("publishGrove", {});
 check(published.status === 200, "publishGrove accepts an honest call", String(published.status));
 
+// The proof the client holds the reply to: which save the card was built from. This save
+// was written with revision 1 above, so anything less says the server read a document that
+// is not the one this client pushed — the exact failure the field exists to expose.
+check(Number(published.body?.result?.revision) >= 1,
+      "publishGrove reports the save revision it built the card from",
+      JSON.stringify(published.body?.result?.revision));
+
 const card = await (await fetch(`${FS}/groves/${uid}`, { headers: bearer })).json();
 const cardScore = Number(card?.fields?.score?.integerValue ?? -1);
 

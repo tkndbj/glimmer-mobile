@@ -245,13 +245,56 @@ namespace GlimmerGrove.Homestead
         /// </summary>
         public readonly float Lift;
 
+        /// <summary>
+        /// The tiles this piece stands on, as authored — facing the way it was drawn. See
+        /// <see cref="GroveFootprint"/> for what a mirrored one covers.
+        ///
+        /// <para>
+        /// Content, per piece, because it is a judgement about the picture rather than about
+        /// the size of its rectangle: an oak is wider than a cottage and stands on one tile,
+        /// because a tree's footprint is its trunk and a house's is its walls. Absent means one
+        /// tile, which is what every piece was before this existed and what a catalog written
+        /// before it still means.
+        /// </para>
+        /// </summary>
+        public readonly GroveFootprint Footprint;
+
+        /// <summary>
+        /// The art's size in its own pixels, as authored — <b>so the layout never depends on
+        /// whether the sprite has arrived.</b>
+        ///
+        /// <para>
+        /// A piece used to be measured off its loaded sprite and fell back to a square while
+        /// the art was in flight. A tile bound in that window and not re-bound after the art
+        /// landed drew the real picture inside the fallback box, which is a lantern a third of
+        /// its size — the "objects appear much smaller when working rapidly" report, and the
+        /// class of bug this field removes: the box is exact before, during and after the load.
+        /// Zero means unknown, and the sprite is measured as before.
+        /// </para>
+        /// <para>
+        /// Written by <c>Tools/grove_art_facts.py</c> from the PNG and checked against it by
+        /// the same tool and by <c>ContentValidation</c>, because a number describing a picture
+        /// is only true until the picture is re-cut (<c>GroveFloor.TileFaceRatio</c>).
+        /// </para>
+        /// </summary>
+        public readonly int ArtWidth, ArtHeight;
+
+        /// <summary>Where the picture is inside its rectangle. See <see cref="GroveHitMask"/>.</summary>
+        public readonly GroveHitMask Hit;
+
         public HomesteadPiece(string id, string art, bool animated, HomesteadPieceKind kind,
                               int cost, LevelId requiresLevel, ChapterId requiresChapter,
                               float scale, float lift,
                               HomesteadSlotKind slot = HomesteadSlotKind.Ground, int tier = 0,
-                              int requiresKeeperLevel = 0, int bundle = 1)
+                              int requiresKeeperLevel = 0, int bundle = 1,
+                              GroveFootprint footprint = default, int artWidth = 0, int artHeight = 0,
+                              GroveHitMask hit = default)
         {
             Bundle = bundle < 1 ? 1 : bundle;
+            Footprint = footprint.Cols < 1 ? GroveFootprint.Single : footprint;
+            ArtWidth = artWidth < 0 ? 0 : artWidth;
+            ArtHeight = artHeight < 0 ? 0 : artHeight;
+            Hit = hit;
             Id = id;
             Art = string.IsNullOrEmpty(art) ? id : art;
             Animated = animated;
@@ -267,6 +310,9 @@ namespace GlimmerGrove.Homestead
         }
 
         public bool IsValid => !string.IsNullOrEmpty(Id);
+
+        /// <summary>True when the art's size is authored, so a layout can be exact before it loads.</summary>
+        public bool HasArtSize => ArtWidth > 0 && ArtHeight > 0;
 
         public bool IsResident => Kind == HomesteadPieceKind.Resident;
 

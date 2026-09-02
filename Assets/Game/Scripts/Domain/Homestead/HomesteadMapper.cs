@@ -194,14 +194,44 @@ namespace GlimmerGrove.Homestead
             string hall = CheckTile(dto.hallTile, cols, rows, "hallTile", problems);
             string starter = CheckTile(dto.starterTile, cols, rows, "starterTile", problems);
 
-            if (!string.IsNullOrEmpty(hall) && string.Equals(hall, starter, StringComparison.Ordinal))
+            var hallFootprint = ReadFootprint(dto.hallCols, dto.hallRows, "the grove's hall", problems);
+
+            var floor = new GroveFloor(cols, rows, tileArt, hall, starter, regions, hallFootprint);
+
+            if (!string.IsNullOrEmpty(hall) && floor.IsHall(starter))
             {
-                problems.Add("the grove's hall and its starter companion are on the same tile; " +
+                problems.Add("the grove's starter companion stands on a tile the hall covers; " +
                              "the companion is dropped");
-                starter = string.Empty;
+                floor = new GroveFloor(cols, rows, tileArt, hall, string.Empty, regions, hallFootprint);
             }
 
-            return new GroveFloor(cols, rows, tileArt, hall, starter, regions);
+            if (!string.IsNullOrEmpty(hall)
+                && GroveFloor.TryParse(hall, out int hallCol, out int hallRow)
+                && (hallCol + hallFootprint.Cols > cols || hallRow + hallFootprint.Rows > rows))
+                problems.Add($"the grove's hall at {hall} is {hallFootprint} and runs off a " +
+                             $"{cols}x{rows} field");
+
+            return floor;
+        }
+
+        /// <summary>
+        /// A footprint from its two authored sides. Zero or absent is one; anything past
+        /// <see cref="GroveFootprint.MaxSide"/> is clamped and reported, because a piece that
+        /// covered a whole region would be a content mistake that reads as a full grove.
+        /// </summary>
+        static GroveFootprint ReadFootprint(int cols, int rows, string owner, ICollection<string> problems)
+        {
+            if (cols < 0 || rows < 0)
+            {
+                problems.Add($"{owner} has a negative footprint ({cols}x{rows}); read as one tile");
+                return GroveFootprint.Single;
+            }
+
+            if (cols > GroveFootprint.MaxSide || rows > GroveFootprint.MaxSide)
+                problems.Add($"{owner} has a footprint of {cols}x{rows}, above the " +
+                             $"{GroveFootprint.MaxSide} a side may be; it is clamped");
+
+            return new GroveFootprint(cols == 0 ? 1 : cols, rows == 0 ? 1 : rows);
         }
 
         /// <summary>
@@ -273,7 +303,39 @@ namespace GlimmerGrove.Homestead
                 cost = 0;
             }
 
-            region = new GroveRegion(dto.id, dto.col, dto.row, dto.cols, dto.rows, cost);
+            int gems = dto.gems;
+            if (gems < 0)
+            {
+                problems.Add($"grove region '{dto.id}' has a negative gem price ({gems}); " +
+                             "treated as free");
+                gems = 0;
+            }
+
+            // Two prices is a content mistake with no safe reading — a stretch of ground that
+            // costs both is one the shop cannot draw a button for, and picking either silently
+            // would charge a player a price nobody authored. The credit price is the one
+            // dropped because it is the one every other reader already skips at zero: the
+            // grove's worth, the seeder's table and the server's clamp all ask for a cost above
+            // nought, so the salvaged region behaves exactly like the gem-priced land it was
+            // presumably meant to be. ContentValidation errors on it either way; this is what
+            // keeps a live client running if one ever reaches it through a remote push.
+            if (cost > 0 && gems > 0)
+            {
+                problems.Add($"grove region '{dto.id}' is priced in both credits ({cost}) and " +
+                             $"gems ({gems}); the credit price is ignored");
+                cost = 0;
+            }
+
+            int order = dto.order;
+            if (order < 0)
+            {
+                problems.Add($"grove region '{dto.id}' has a negative ladder rung ({order}); " +
+                             "treated as unplaced");
+                order = 0;
+            }
+
+            region = new GroveRegion(dto.id, dto.col, dto.row, dto.cols, dto.rows,
+                                     cost, gems, order);
             return true;
         }
 
@@ -372,9 +434,22 @@ namespace GlimmerGrove.Homestead
                 bundle = 1;
             }
 
+            var footprint = ReadFootprint(dto.cols, dto.rows, $"grove piece '{dto.id}'", problems);
+
+            int w = dto.w, h = dto.h;
+            if (w < 0 || h < 0 || (w > 0) != (h > 0))
+            {
+                problems.Add($"grove piece '{dto.id}' has art size {w}x{h}, which is not a size; " +
+                             "the sprite is measured instead");
+                w = h = 0;
+            }
+
+            var hit = ReadHitMask(dto.hit, w, h, $"grove piece '{dto.id}'", problems);
+
             piece = new HomesteadPiece(dto.id, art, dto.animated, kind, cost,
                                        requiresLevel, requiresChapter, dto.scale, dto.lift,
-                                       ReadSlotKind(dto.slot, dto.id, problems), tier, bundle: bundle);
+                                       ReadSlotKind(dto.slot, dto.id, problems), tier, bundle: bundle,
+                                       footprint: footprint, artWidth: w, artHeight: h, hit: hit);
             return true;
         }
 
@@ -387,6 +462,35 @@ namespace GlimmerGrove.Homestead
         /// player arranged, and ground is the safe half — it is the kind that accepts the
         /// ordinary catalog.
         /// </summary>
+        /// <summary>
+        /// A hit mask beside the art size it was generated for.
+        ///
+        /// <para>
+        /// A mask that cannot be read is dropped rather than refused with its piece: it
+        /// sharpens a tap and nothing more, so a corrupt one costs the box the piece had before
+        /// masks existed. Reported, because a generated field that fails to parse means the
+        /// generator and this reader have drifted — and a mask with no size beside it is one
+        /// the generator did not write, since the grid is the size's.
+        /// </para>
+        /// </summary>
+        public static GroveHitMask ReadHitMask(string hex, int width, int height, string owner,
+                                               ICollection<string> problems)
+        {
+            if (string.IsNullOrEmpty(hex)) return GroveHitMask.None;
+
+            if (width <= 0 || height <= 0)
+            {
+                problems.Add($"{owner} has a hit mask but no art size to read it against; it is ignored");
+                return GroveHitMask.None;
+            }
+
+            if (GroveHitMask.TryParse(hex, width, height, out var mask)) return mask;
+
+            problems.Add($"{owner} has a hit mask that is not the {GroveHitMask.HexLengthFor(width, height)} " +
+                         $"hexadecimal characters a {width}x{height} picture implies; it is ignored");
+            return GroveHitMask.None;
+        }
+
         static HomesteadSlotKind ReadSlotKind(string name, string owner, ICollection<string> problems)
         {
             if (string.IsNullOrEmpty(name)) return HomesteadSlotKind.Ground;

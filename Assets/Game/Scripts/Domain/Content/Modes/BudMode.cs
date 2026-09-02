@@ -70,17 +70,29 @@ namespace GlimmerGrove.Content
                 return false;
             }
 
-            // Read even when absent, because "no runners" is an answer this has to give: a
-            // `[Serializable]` array field is null on a level that never mentioned one and empty
-            // on one that wrote `[]`, and both mean the same thing to a grove.
-            if (!BudLayout.TryReadRunners(grove.runners, width, height,
-                                          out var runners, out string runnerError))
+            // **A retired field is refused by name, never ignored** — the duskcap's rule (5f).
+            // JsonUtility would drop it silently and the author would believe a vine that no
+            // build can draw. A `[Serializable]` array is null on a level that never mentioned
+            // one and empty on one that wrote `[]`; only the first is honest absence.
+            if ((grove.runners != null && grove.runners.Length > 0)
+                || !string.IsNullOrEmpty(grove.winds) || !string.IsNullOrEmpty(grove.firefly))
             {
-                problems.Add($"{id}: {runnerError}");
+                problems.Add($"{id}: this grove authors 'runners', 'winds' or 'firefly', all of " +
+                             "which are retired — the vine, the windmill and the firefly were " +
+                             "withdrawn from Budburst. A grove may allow grafts ('grafts') and " +
+                             "deal specials ('specials') instead");
                 return false;
             }
 
-            var layout = new BudLayout(width, height, ground, value, deal, regrow, runners);
+            if (!BudLayout.TryReadSpecials(grove.specials, width, height, ground,
+                                           out var special, out string specialError))
+            {
+                problems.Add($"{id}: {specialError}");
+                return false;
+            }
+
+            var layout = new BudLayout(width, height, ground, value, deal, regrow, grove.grafts,
+                                       special, grove.forges);
 
             // Two refusals rather than one, because they read as completely different mistakes to
             // whoever wrote the file — and the search would report both as "this cannot be

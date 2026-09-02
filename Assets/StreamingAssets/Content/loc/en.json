@@ -762,84 +762,84 @@
       "text": "Six shut in, and the grove is willing."
     },
     {
-      "key": "level.b02_firstvine.name",
-      "text": "First Vine"
+      "key": "level.b02_firstbolt.name",
+      "text": "First Bolt"
     },
     {
-      "key": "level.b02_firstvine.tagline",
-      "text": "It goes off here. It answers over there."
+      "key": "level.b02_firstbolt.tagline",
+      "text": "Tap the bolt. Watch the row go."
     },
     {
-      "key": "level.b02_longreach.name",
-      "text": "Long Reach"
+      "key": "level.b02_makefive.name",
+      "text": "Make Five"
     },
     {
-      "key": "level.b02_longreach.tagline",
-      "text": "The vine crosses what a chain never could."
+      "key": "level.b02_makefive.tagline",
+      "text": "Five of a colour leave one behind, right where you tapped."
     },
     {
-      "key": "level.b02_deepthicket.name",
-      "text": "Deep Thicket"
+      "key": "level.b02_sunspark.name",
+      "text": "Sunspark"
     },
     {
-      "key": "level.b02_deepthicket.tagline",
-      "text": "No vines here. Just a great deal of grove."
+      "key": "level.b02_sunspark.tagline",
+      "text": "Eight make a sun. A sun takes everything near it."
     },
     {
-      "key": "level.b02_windingway.name",
-      "text": "The Winding Way"
+      "key": "level.b02_sunwell.name",
+      "text": "Sunwell"
     },
     {
-      "key": "level.b02_windingway.tagline",
-      "text": "Feed the end, not the flower beside it."
+      "key": "level.b02_sunwell.tagline",
+      "text": "Eight in a bunch is a sun. Find the eight."
     },
     {
-      "key": "level.b02_twovines.name",
-      "text": "Two Vines"
+      "key": "level.b02_stormheart.name",
+      "text": "The Storm's Heart"
     },
     {
-      "key": "level.b02_twovines.tagline",
-      "text": "One is taught. The other you will find."
+      "key": "level.b02_stormheart.tagline",
+      "text": "Fifteen shut in. Make the storm."
     },
     {
-      "key": "level.b02_thewilds.name",
-      "text": "The Wilds"
+      "key": "level.b02_stormcrown.name",
+      "text": "The Storm's Crown"
     },
     {
-      "key": "level.b02_thewilds.tagline",
-      "text": "Ten shut in and nothing to help you."
+      "key": "level.b02_stormcrown.tagline",
+      "text": "Everything this wood can do, in six taps."
     },
     {
-      "key": "level.b02_thetangle.name",
-      "text": "The Tangle"
+      "key": "level.b02_sixfold.name",
+      "text": "Sixfold"
     },
     {
-      "key": "level.b02_thetangle.tagline",
-      "text": "Three vines. Every one of them is a decision."
+      "key": "level.b02_sixfold.tagline",
+      "text": "Six take two hits. Two bolts crossed take them all."
     },
     {
-      "key": "level.b02_thornedvine.name",
-      "text": "Thorn and Vine"
+      "key": "level.b02_crossfire.name",
+      "text": "Crossfire"
     },
     {
-      "key": "level.b02_thornedvine.tagline",
-      "text": "Two rings, two vines, and one basket."
+      "key": "level.b02_crossfire.tagline",
+      "text": "A bolt in a sun's blast fires too. Line them up."
     },
     {
-      "key": "level.b02_tangleheart.name",
-      "text": "The Tanglewood's Heart"
+      "key": "level.b02_thundering.name",
+      "text": "Thundering"
     },
     {
-      "key": "level.b02_tangleheart.tagline",
-      "text": "Everything this grove can do, at once."
+      "key": "level.b02_thundering.tagline",
+      "text": "Trade for the five. Fire it where the tough ones stand."
     },
     {
-      "key": "level.b02_crossvine.name",
-      "text": "Crossed Runners"
+      "key": "level.b02_wildstorm.name",
+      "text": "Wildstorm"
     },
     {
-      "key": "level.b02_crossvine.tagline",
-      "text": "What one vine starts, the other carries on."
+      "key": "level.b02_wildstorm.tagline",
+      "text": "Six taps. Every one of them has to count."
     },
     {
       "key": "mode.cap.best",
@@ -2138,6 +2138,10 @@
       "text": "Hold MOVE and drag it to another tile."
     },
     {
+      "key": "ui.grove.no_room",
+      "text": "There's no room for that here."
+    },
+    {
       "key": "ui.grove.needs_chapter",
       "text": "Finish {0}"
     },
@@ -2168,6 +2172,10 @@
     {
       "key": "ui.grove.price",
       "text": "{0} coins"
+    },
+    {
+      "key": "ui.grove.price_gems",
+      "text": "{0} gems"
     },
     {
       "key": "ui.grove.score",
@@ -2418,12 +2426,20 @@
       "text": "Dusk Field"
     },
     {
+      "key": "ui.land.earlier_first",
+      "text": "{0} comes first"
+    },
+    {
       "key": "ui.land.east_meadow",
       "text": "East Meadow"
     },
     {
       "key": "ui.land.far_terrace",
       "text": "Far Terrace"
+    },
+    {
+      "key": "ui.land.get_gems",
+      "text": "GET GEMS"
     },
     {
       "key": "ui.land.hearthstead",
@@ -2436,6 +2452,10 @@
     {
       "key": "ui.land.note",
       "text": "Yours for good — room for anything you like."
+    },
+    {
+      "key": "ui.land.open_next",
+      "text": "OPEN {0}"
     },
     {
       "key": "ui.land.owned",
@@ -3754,10 +3774,6 @@
       "text": "Gems"
     },
     {
-      "key": "ui.shop.granted_note",
-      "text": "Added to your groove. Enjoy!"
-    },
-    {
       "key": "ui.shop.guest_notice",
       "text": "Not signed in. Anything you buy stays on this phone only."
     },
@@ -4003,23 +4019,23 @@
     },
     {
       "key": "ui.tip.anylight.body",
-      "text": "This critter is not fussy. Its ring shows every colour at once because it is not asking for one - the first light of any colour to reach it will wake it, and the ring takes on whatever arrives."
+      "text": "This critter is not fussy. Any colour of light wakes it up."
     },
     {
       "key": "ui.tip.anylight.title",
-      "text": "ANY LIGHT WILL DO"
+      "text": "ANY COLOUR"
     },
     {
       "key": "ui.tip.bound.body",
-      "text": "These conduits grow from one root, marked with the same pips. Turning either one turns them all, however far apart they sit."
+      "text": "These tiles share the same marks. Turn one and they all turn together."
     },
     {
       "key": "ui.tip.bound.title",
-      "text": "SHARED ROOT"
+      "text": "LINKED TILES"
     },
     {
       "key": "ui.tip.briar.body",
-      "text": "Thorns have grown across two of this tile's four ways. Light passes along the other two, and turning the tile swings the thorns round onto them - so a bramble never opens a way without shutting one."
+      "text": "Thorns block two of the four ways. Light only goes through the open ways.\n\nTurn the tile to move the thorns."
     },
     {
       "key": "ui.tip.briar.title",
@@ -4031,7 +4047,7 @@
     },
     {
       "key": "ui.tip.bud_chain.body",
-      "text": "The colour in your hand MIXES into whatever flower you tap - red with green in hand turns yellow.\n\nGet three of one colour touching and they burst, splashing that colour into every flower around them. Which makes more threes. Which makes more."
+      "text": "This is the colour in your hand. Tap a flower to mix it in.\n\nGet three of one colour touching and they burst!"
     },
     {
       "key": "ui.tip.bud_cocoon.title",
@@ -4039,7 +4055,7 @@
     },
     {
       "key": "ui.tip.bud_cocoon.body",
-      "text": "A critter is shut in until a burst goes off right beside it.\n\nYou cannot tap a cocoon open - you have to set something off next to it. The ones drawn with a second ring take two."
+      "text": "A critter is stuck in here. Burst flowers right next to it to let it out.\n\nTwo rings means it needs two bursts."
     },
     {
       "key": "ui.tip.bud_satchel.title",
@@ -4047,19 +4063,35 @@
     },
     {
       "key": "ui.tip.bud_satchel.body",
-      "text": "This grove is dealt so many taps and no more.\n\nThere is no undo, and nothing grows back - so the fewer taps you free everyone in, the more stars you keep."
+      "text": "You only get this many taps. There is no undo.\n\nFree everyone in fewer taps to earn more stars."
     },
     {
-      "key": "ui.tip.bud_runner.title",
-      "text": "MIND THE VINE"
+      "key": "ui.tip.bud_sun.title",
+      "text": "MAKE EIGHT"
     },
     {
-      "key": "ui.tip.bud_runner.body",
-      "text": "A runner joins two squares of the grove, however far apart they are.\n\nWhen a bursting bunch takes in one end, its colour runs down the vine to whatever is standing on the other. Going off next to an end is not enough - the flower on it has to be one of the three."
+      "key": "ui.tip.bud_sun.body",
+      "text": "Eight of one colour together make a SUN.\n\nTap it and everything around it bursts. A bolt or sun caught in a blast goes off too!"
+    },
+    {
+      "key": "ui.tip.bud_graft.title",
+      "text": "DRAG TO TRADE"
+    },
+    {
+      "key": "ui.tip.bud_graft.body",
+      "text": "Drag a flower onto the one next to it and they swap.\n\nIt only works if it makes three of one colour. A swap costs one tap."
+    },
+    {
+      "key": "ui.tip.bud_bolt.title",
+      "text": "MAKE FIVE"
+    },
+    {
+      "key": "ui.tip.bud_bolt.body",
+      "text": "Five of one colour together make a BOLT.\n\nTap it and it clears the whole row and column!"
     },
     {
       "key": "ui.tip.crossing.body",
-      "text": "Two flows pass through this tile and never meet. It wears no hub, and that is how you tell it from a junction: follow each strand with your eye, because light that enters by one arm can only leave by the arm that shares its strand."
+      "text": "Two paths cross here and never touch. Light stays on its own path."
     },
     {
       "key": "ui.tip.crossing.title",
@@ -4075,35 +4107,35 @@
     },
     {
       "key": "ui.tip.fragile.body",
-      "text": "This one crumbles after a few turns — the number shows how many are left. Undoing does not mend it."
+      "text": "This tile breaks after a few turns. The number shows how many are left.\n\nUndo does not fix it."
     },
     {
       "key": "ui.tip.fragile.title",
-      "text": "BRITTLE CONDUIT"
+      "text": "BRITTLE TILE"
     },
     {
       "key": "ui.tip.fall_cook.title",
-      "text": "COOK, DO NOT MATCH"
+      "text": "MIX, DO NOT MATCH"
     },
     {
       "key": "ui.tip.fall_cook.body",
-      "text": "A mote adds its colour to the one it lands on. Red on yellow makes orange.\n\nA mote holding all three bursts, and washes that colour into everything beside it."
+      "text": "Drop a colour onto a mote to mix them. Red on yellow makes orange.\n\nA mote with all three colours bursts and shares its colour with its neighbours."
     },
     {
       "key": "ui.tip.fall_supply.title",
-      "text": "THE LIGHT IS COUNTED"
+      "text": "COUNT YOUR MOTES"
     },
     {
       "key": "ui.tip.fall_supply.body",
-      "text": "This well is dealt so many motes and no more.\n\nThere is no undo here. Watch the ring under your thumb before you let go."
+      "text": "You only get this many motes. There is no undo.\n\nLook at the ring under your finger before you let go."
     },
     {
       "key": "ui.tip.fall_brim.title",
-      "text": "MIND THE BRIM"
+      "text": "MIND THE LINE"
     },
     {
       "key": "ui.tip.fall_brim.body",
-      "text": "A mote that comes to rest above the line ends the run.\n\nA colour the top of a stack already holds is what raises it - the ring turns red when it would."
+      "text": "A mote that stops above the line ends the run.\n\nThe ring turns red when a drop would go too high."
     },
     {
       "key": "ui.tip.fall_lens.title",
@@ -4111,7 +4143,7 @@
     },
     {
       "key": "ui.tip.fall_lens.body",
-      "text": "A lens fills one colour at a time - free from any burst beside it, or a drop at a time by hand.\n\nFill all three and it fires white to left and right, popping whatever each beam lands on.\n\nLight one lens with another and it fires every way - up and down as well."
+      "text": "The glass fills with colour from bursts next to it, or from a mote dropped on it.\n\nFill all three colours and it shoots light left and right. Hit it with another lens and it shoots every way!"
     },
     {
       "key": "ui.tip.fall_whorl.title",
@@ -4119,7 +4151,7 @@
     },
     {
       "key": "ui.tip.fall_whorl.body",
-      "text": "A whorl holds no light. Any light opens it - a burst beside it, a beam, or a drop straight onto it.\n\nOn the next wave it draws in whatever stands to its left and its right and mixes them into one.\n\nTwo motes a drop apiece from white are none at all. Arrange the pair, then open it."
+      "text": "Any light opens the whorl. It then pulls in the two motes beside it and mixes them into one.\n\nPut the right pair beside it first, then open it."
     },
     {
       "key": "ui.tip.grove.body",
@@ -4147,15 +4179,15 @@
     },
     {
       "key": "ui.tip.mixing.body",
-      "text": "This critter dreams of a colour no single heart carries. Join two hearts into one network and their light blends — red and yellow make orange."
+      "text": "This critter wants a mixed colour. Join two hearts and their light mixes.\n\nRed and yellow make orange."
     },
     {
       "key": "ui.tip.mixing.title",
-      "text": "BLENDED LIGHT"
+      "text": "MIX COLOURS"
     },
     {
       "key": "ui.tip.mode_switch.body",
-      "text": "There is more than one way to play. Tap here to swap between them — each has its own map and its own levels, and every one is open to you from the very first day."
+      "text": "There is more than one way to play. Tap here to swap between them. Each has its own map and its own levels, and every one is open to you from the very first day."
     },
     {
       "key": "ui.tip.mode_switch.title",
@@ -4163,7 +4195,7 @@
     },
     {
       "key": "ui.tip.moves.body",
-      "text": "This is how many turns you have left. Run out with the glade still dark and it costs a heart."
+      "text": "This is how many turns you have left. Run out and you lose a heart."
     },
     {
       "key": "ui.tip.moves.title",
@@ -4171,7 +4203,7 @@
     },
     {
       "key": "ui.tip.rooted.body",
-      "text": "A rooted tile cannot be turned. Treat it as a fixed part of the path and route the rest of the groove around it."
+      "text": "This tile cannot turn. Build the path around it."
     },
     {
       "key": "ui.tip.rooted.title",
@@ -4179,51 +4211,51 @@
     },
     {
       "key": "ui.tip.keeper_bloom.title",
-      "text": "UNLIKE, NOT ALIKE"
+      "text": "DIFFERENT, NOT SAME"
     },
     {
       "key": "ui.tip.keeper_bloom.body",
-      "text": "A tile goes beside the groove, never on its own.\n\nOne that gathers all three colours - counting its neighbours - bursts into bloom. Two of a colour together are worth nothing."
+      "text": "Plant a tile next to the garden. It blooms when it and its neighbours have all three colours.\n\nTwo of the same colour do not help."
     },
     {
       "key": "ui.tip.keeper_basket.title",
-      "text": "THE BASKET IS COUNTED"
+      "text": "COUNT YOUR TILES"
     },
     {
       "key": "ui.tip.keeper_basket.body",
-      "text": "This groove is dealt so many tiles and no more, in the order the basket shows.\n\nThere is no undo here. The ring under your thumb says what a tile would open before you let go."
+      "text": "You only get this many tiles, in this order. There is no undo.\n\nThe ring under your finger shows what a tile would open."
     },
     {
       "key": "ui.tip.keeper_stone.title",
-      "text": "STONE GROWS NOTHING"
+      "text": "STONE"
     },
     {
       "key": "ui.tip.keeper_stone.body",
-      "text": "Nothing may be planted on stone, and no light passes through it.\n\nA bed beside one has fewer neighbours to gather from, so what it is missing has to come from a shorter list of cells."
+      "text": "Nothing grows on stone, and no light passes through it.\n\nA bed next to stone has fewer neighbours to help it bloom."
     },
     {
       "key": "ui.tip.keeper_compost.title",
-      "text": "COMPOST WHAT YOU CANNOT USE"
+      "text": "COMPOST"
     },
     {
       "key": "ui.tip.keeper_compost.body",
-      "text": "The key beside the basket spends the tile in your hand without planting it, and brings the next one round.\n\nIt costs a tile like any other. Sometimes that is the cheapest move there is."
+      "text": "Tap this key to throw away the tile in your hand and get the next one.\n\nIt costs one tile."
     },
     {
       "key": "ui.tip.keeper_heartbed.title",
-      "text": "A HEARTBED WANTS ITS OWN"
+      "text": "HEARTBED"
     },
     {
       "key": "ui.tip.keeper_heartbed.body",
-      "text": "A bed drawn in a colour takes that colour and no other. Anything else is refused outright, so nothing can be spoiled by a stray tap.\n\nCount forward through the basket, and compost what is in the way."
+      "text": "A bed with a colour takes only that colour. Other tiles are refused, so nothing gets spoiled.\n\nLook ahead in the basket, and compost what is in the way."
     },
     {
       "key": "ui.tip.keeper_prism.title",
-      "text": "ONE PRISM, ONE CHANCE"
+      "text": "THE PRISM"
     },
     {
       "key": "ui.tip.keeper_prism.body",
-      "text": "A prism carries all three colours at once. It blooms wherever it lands and opens any bed, heartbed included.\n\nThere is only one. Spend it where two ordinary tiles could not."
+      "text": "The prism has all three colours. It blooms wherever you plant it and opens any bed.\n\nYou only get one. Use it well."
     },
     {
       "key": "ui.title.elder",

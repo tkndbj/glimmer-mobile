@@ -2,12 +2,12 @@ using System.Collections.Generic;
 
 namespace GlimmerGrove.Modes
 {
-    /// <summary>What a search of a grove came to. Par, and the two readings an author needs.</summary>
+    /// <summary>What a search of a grove came to. Par, and the readings an author needs.</summary>
     public readonly struct BudSurvey
     {
         public readonly bool Proved;
 
-        /// <summary>The fewest taps that free every critter. 0 when nothing does.</summary>
+        /// <summary>The fewest moves that free every critter. 0 when nothing does.</summary>
         public readonly int Par;
 
         /// <summary>
@@ -24,19 +24,32 @@ namespace GlimmerGrove.Modes
         /// <summary>How many positions it cost. What the player's device will pay (invariant 26d).</summary>
         public readonly int Nodes;
 
-        public BudSurvey(bool proved, int par, int ways, int nodes)
+        /// <summary>
+        /// Of the shortest plays, how many forged a special, and how many fired one.
+        ///
+        /// <b>Whorlwater's <c>kindled</c>, for the special.</b> Measured over every shortest
+        /// solution rather than the first one the search reaches, because <c>Ways</c> is rarely
+        /// one and an author tuning against the first line is tuning against a coin toss. A
+        /// grove where no shortest play fires a special is a grove the specials are decoration
+        /// on.
+        /// </summary>
+        public readonly int Forged, Fired;
+
+        public BudSurvey(bool proved, int par, int ways, int nodes, int forged = 0, int fired = 0)
         {
             Proved = proved;
             Par = par;
             Ways = ways;
             Nodes = nodes;
+            Forged = forged;
+            Fired = fired;
         }
 
         public bool IsSolvable => Proved && Par > 0;
     }
 
     /// <summary>
-    /// The fewest taps that free every critter, found by search.
+    /// The fewest moves that free every critter, found by search.
     ///
     /// <para>
     /// <b>The goal is the cocoons and not the buds, and that choice is what makes this
@@ -47,15 +60,17 @@ namespace GlimmerGrove.Modes
     /// which is the point of the mode.
     /// </para>
     /// <para>
-    /// Cost still goes as the flower count to the power of par, so the cheap fix for an expensive
-    /// grove is a shorter answer — a cocoon moved nearer the powder, never a bigger board.
+    /// Cost still goes as the move count to the power of par, so the cheap fix for an expensive
+    /// grove is a shorter answer — a cocoon moved nearer the powder, never a bigger board. A
+    /// graft adds every productive pair to the branching, which is why the second chapter stays
+    /// at par 3 with everything else.
     /// </para>
     /// </summary>
     public static class BudSolver
     {
         public const int NodeBudget = 120_000;
 
-        /// <summary>No shipped grove may need more taps than this to finish.</summary>
+        /// <summary>No shipped grove may need more moves than this to finish.</summary>
         public const int MaxTaps = 8;
 
         /// <summary>Counting shortest plays stops here; past it the reading says the same thing.</summary>
@@ -70,8 +85,8 @@ namespace GlimmerGrove.Modes
         }
 
         /// <summary>
-        /// How a player who never looks past this tap gets on: always the one that frees the most,
-        /// then runs the furthest.
+        /// How a player who never looks past this move gets on: always the one that frees the
+        /// most, then runs the furthest.
         ///
         /// <b>Read the opposite way round here too.</b> On every other mode a careless player
         /// finishing is a warning that the board decides nothing. On this one it is the bar: the
@@ -84,31 +99,64 @@ namespace GlimmerGrove.Modes
 
             var run = new BudRun(layout, budget);
             int ceiling = budget > 0 && budget < MaxTaps * 4 ? budget : MaxTaps * 4;
+            var moves = new List<BudMove>(64);
 
             for (int tap = 0; tap < ceiling; tap++)
             {
                 if (run.Board.IsFinished) return run.Spent;
                 if (!run.Satchel.Any) return -1;
 
-                int best = -1;
+                BudRun.Moves(run.Board, run.Next, moves);
+
+                var best = BudMove.None;
                 var bestChain = BudChainResult.Nothing;
 
-                for (int i = 0; i < layout.Count; i++)
+                for (int i = 0; i < moves.Count; i++)
                 {
-                    if (!run.CanTap(i)) continue;
+                    var chain = run.Preview(moves[i]);
+                    if (best.Any && !Better(chain, bestChain)) continue;
 
-                    var chain = run.Preview(i);
-                    if (best >= 0 && !Better(chain, bestChain)) continue;
-
-                    best = i;
+                    best = moves[i];
                     bestChain = chain;
                 }
 
-                if (best < 0) return -1;
-                run.Tap(best, null);
+                if (!best.Any) return -1;
+                run.Play(best, null);
             }
 
             return run.Board.IsFinished ? run.Spent : -1;
+        }
+
+        /// <summary>
+        /// The best opening move the dealt grove has in it, by chain length and then by size —
+        /// the reading every fixture pins a board's opening on. The move order is
+        /// <see cref="BudRun.Moves"/>' and the tie goes to the earlier move, which is part of the
+        /// contract with the Python mirror.
+        /// </summary>
+        public static BudMove Opening(BudLayout layout, out BudChainResult best)
+        {
+            best = BudChainResult.Nothing;
+            var chosen = BudMove.None;
+            if (layout == null) return chosen;
+
+            var board = new BudBoard(layout);
+            var moves = new List<BudMove>(64);
+            BudRun.Moves(board, layout.Deal.At(0), moves);
+
+            for (int i = 0; i < moves.Count; i++)
+            {
+                var probe = new BudBoard(board);
+                BudRun.Apply(probe, moves[i], layout.Deal.At(0), null, out var chain);
+
+                if (chain.Waves > best.Waves
+                    || (chain.Waves == best.Waves && chain.Burst > best.Burst))
+                {
+                    best = chain;
+                    chosen = moves[i];
+                }
+            }
+
+            return chosen;
         }
 
         static bool Better(BudChainResult a, BudChainResult b)
@@ -126,12 +174,14 @@ namespace GlimmerGrove.Modes
 
             readonly BudGround[][] _groundAt;
             readonly int[][] _valueAt;
-            readonly int[] _grownAt;
+            readonly BudSpecial[][] _specialAt;
+            readonly int[] _packedAt;
+            readonly List<BudMove>[] _movesAt;
 
             readonly HashSet<string> _seen = new HashSet<string>();
             readonly char[] _key;
 
-            int _nodes, _limit, _ways;
+            int _nodes, _limit, _ways, _forged, _fired;
             bool _budgetSpent;
 
             public Search(BudLayout layout)
@@ -142,15 +192,19 @@ namespace GlimmerGrove.Modes
                 int depth = MaxTaps + 2;
                 _groundAt = new BudGround[depth][];
                 _valueAt = new int[depth][];
+                _specialAt = new BudSpecial[depth][];
+                _movesAt = new List<BudMove>[depth];
 
                 for (int i = 0; i < depth; i++)
                 {
                     _groundAt[i] = new BudGround[layout.Count];
                     _valueAt[i] = new int[layout.Count];
+                    _specialAt[i] = new BudSpecial[layout.Count];
+                    _movesAt[i] = new List<BudMove>(64);
                 }
 
-                _grownAt = new int[depth];
-                _key = new char[layout.Count + 4];
+                _packedAt = new int[depth];
+                _key = new char[layout.Count + 6];
             }
 
             public BudSurvey Run()
@@ -167,26 +221,33 @@ namespace GlimmerGrove.Modes
                 {
                     _limit = limit;
                     _ways = 0;
+                    _forged = 0;
+                    _fired = 0;
                     _seen.Clear();
 
-                    Walk(0);
+                    Walk(0, 0);
 
                     if (_budgetSpent) return new BudSurvey(false, 0, 0, _nodes);
-                    if (_ways > 0) return new BudSurvey(true, limit, _ways, _nodes);
+                    if (_ways > 0) return new BudSurvey(true, limit, _ways, _nodes, _forged, _fired);
                 }
 
                 return new BudSurvey(false, 0, 0, _nodes);
             }
 
-            void Walk(int spent)
+            void Walk(int spent, int dealt)
             {
                 if (_budgetSpent) return;
                 if (++_nodes > NodeBudget) { _budgetSpent = true; return; }
-                if (!Fresh(spent)) return;
+                if (!Fresh(spent, dealt)) return;
 
                 if (_board.IsFinished)
                 {
-                    if (spent == _limit && _ways < MaxWays) _ways++;
+                    if (spent == _limit && _ways < MaxWays)
+                    {
+                        _ways++;
+                        if (_board.Forged > 0) _forged++;
+                        if (_board.Fired > 0) _fired++;
+                    }
                     return;
                 }
 
@@ -195,30 +256,31 @@ namespace GlimmerGrove.Modes
                 // Every remaining cocoon needs at least one burst beside it, and one tap's chain
                 // can reach several — so the only floor that is always true is "at least one more
                 // tap", which is what the loop above already charges.
-                _board.Save(_groundAt[spent], _valueAt[spent], out _grownAt[spent]);
+                _board.Save(_groundAt[spent], _valueAt[spent], _specialAt[spent], out _packedAt[spent]);
 
-                int colour = _layout.Deal.At(spent);
+                int hand = _layout.Deal.At(dealt);
+                var moves = _movesAt[spent];
+                BudRun.Moves(_board, hand, moves);
 
-                for (int i = 0; i < _layout.Count; i++)
+                for (int i = 0; i < moves.Count; i++)
                 {
-                    if (!_board.CanTap(i, colour)) continue;
-
-                    _board.Tap(i, colour, null);
-                    Walk(spent + 1);
-                    _board.Restore(_groundAt[spent], _valueAt[spent], _grownAt[spent]);
+                    int took = BudRun.Apply(_board, moves[i], hand, null, out _);
+                    Walk(spent + 1, dealt + took);
+                    _board.Restore(_groundAt[spent], _valueAt[spent], _specialAt[spent], _packedAt[spent]);
 
                     if (_budgetSpent) return;
                 }
             }
 
-            bool Fresh(int spent)
+            bool Fresh(int spent, int dealt)
             {
                 _board.KeyInto(_key, out int length);
 
-                // The colour in hand is part of the position: the same grove with red up next is
-                // a different problem from the same grove with blue up next.
+                // The colour in hand is part of the position, and so is where the basket is up
+                // to: the same grove with red up next is a different problem from the same grove
+                // with blue up next, and "RGRB" with red in hand is two different futures.
                 _key[length] = (char)('0' + spent);
-                _key[length + 1] = Energy.Letter(_layout.Deal.At(spent));
+                _key[length + 1] = (char)('a' + dealt % _layout.Deal.Count);
 
                 return _seen.Add(new string(_key, 0, length + 2));
             }

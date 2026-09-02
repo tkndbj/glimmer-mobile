@@ -41,8 +41,10 @@ namespace GlimmerGrove
 
         BudRules Rules => Level != null ? Level.RulesAs<BudRules>() : null;
 
+        // Twelve at the sides rather than the twenty-four every other mode keeps: an 8-wide grove
+        // is width-bound, so every point of inset is a point off every flower.
         protected override Vector4 HostInset
-            => new Vector4(24f, BudBand.BoardFloor, 24f, BudBand.BoardCeiling);
+            => new Vector4(12f, BudBand.BoardFloor, 12f, BudBand.BoardCeiling);
 
         protected override HeaderKey RightKey => new HeaderKey("ic_pause", Pause);
 
@@ -79,6 +81,16 @@ namespace GlimmerGrove
             _view.Lost = Concede;
             _view.Committed = Commit;
             _view.Finishing = () => { _closing = true; Teaching.Refresh(); };
+
+            // A special the player just made is the moment its lesson is about (20m): the tip
+            // goes up over the bolt standing where five burst, not at the opening over a board
+            // where nothing has happened. RunLessons refuses it once seen, so this may fire on
+            // every forge for the life of the run.
+            _view.Forged = kind =>
+            {
+                if (kind == BudSpecial.Bolt) Teaching.Teach(Mechanic.BudBolt);
+                else if (kind == BudSpecial.Sun) Teaching.Teach(Mechanic.BudSun);
+            };
 
             _finished = false;
             _closing = false;
@@ -643,29 +655,47 @@ namespace GlimmerGrove
 
             var run = _view.Run;
 
-            into.Add(Lesson.At(Mechanic.BudChain, _view.ChainAnchor));
+            // The colour in hand is ringed beside the flower, because the sentence is about
+            // both and a first-timer has not yet been told which thing on screen "your hand"
+            // is. Alongside rather than Trace: nothing moves between them.
+            var hand = _view.HandAnchor;
+            into.Add(Lesson.At(Mechanic.BudChain, _view.ChainAnchor,
+                               hand ? new[] { hand } : null));
 
             var cocoon = _view.CocoonAnchor;
             if (cocoon != null) into.Add(Lesson.At(Mechanic.BudCocoon, cocoon));
 
-            // Then the one thing on this board that is not a flower or a cocoon. Conditional on
-            // the grove actually being strung with one, which the whole first chapter is not —
-            // and a lesson spent over a board with no vine on it is one that can never be spent
-            // again (`FallScreen`'s rule for the lens, for the same reason).
+            // Then whichever of the second chapter's objects this grove stands. Conditional on
+            // the object actually being there, which the whole first chapter is not — a lesson
+            // spent over a board with nothing to point at is one that can never be spent again
+            // (`FallScreen`'s rule for the lens, for the same reason).
             //
-            // Before the satchel, because it is about what is *there*: the meter below is a fail
-            // line, and a player who has not worked out what a vine does cannot be helped by
-            // knowing how many taps they have left.
+            // Before the satchel, because they are about what is *there*: the meter below is a
+            // fail line, and a player who has not worked out what a windmill does cannot be
+            // helped by knowing how many taps they have left.
             // Through a local rather than off the run: `compile.py` refuses a file that reads
             // `.Layout.` without anywhere admitting a level's board can be absent, which is a
             // fact about `LevelDefinition` rather than about a grove — and the check is coarse on
             // purpose, so this costs one line. `BudLadderTests` does the same.
             var grove = run.Layout;
 
-            if (grove.HasRunners)
+            // A graft is a drag, so it is shown as one: both flowers of a pair the board would
+            // accept are ringed, and a coaching hand walks from the one to drag onto the other.
+            // Only over a pair that works — a demonstration of a refused move is worse than none.
+            if (grove.Grafts && _view.GraftPair(out var from, out var onto))
+                into.Add(Lesson.Along(Mechanic.BudGraft, from, new[] { onto }, new[] { from, onto }));
+
+            // The specials are taught when the player first *makes* one (20m: the event is the
+            // reward), raised from the view's Forged event through RunLessons.Teach — so they
+            // are listed here as deferred, which keeps them out of the opening and in the review
+            // key, and gives the raise something to point at: the special standing where five
+            // or eight just burst, or the ripest flower if it has already been fired.
+            if (grove.Forges)
             {
-                var runner = _view.RunnerAnchor;
-                if (runner != null) into.Add(Lesson.At(Mechanic.BudRunner, runner));
+                into.Add(Lesson.Later(Mechanic.BudBolt,
+                                      _view.SpecialAnchor(BudSpecial.Bolt) ?? _view.ChainAnchor));
+                into.Add(Lesson.Later(Mechanic.BudSun,
+                                      _view.SpecialAnchor(BudSpecial.Sun) ?? _view.ChainAnchor));
             }
 
             if (run.Satchel.Bounded)

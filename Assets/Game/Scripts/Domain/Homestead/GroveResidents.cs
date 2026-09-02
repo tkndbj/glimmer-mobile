@@ -130,10 +130,19 @@ namespace GlimmerGrove.Homestead
                 ? CritterFolder + companion.Animated
                 : PortraitFolder + companion.Portrait;
 
+            // The manifest's facts about the art the grove draws, read as a piece's are. A mask
+            // that does not parse is dropped silently here rather than reported: the manifest
+            // is validated where it is read, and a resident's tap falls back to its box.
+            GroveHitMask hit = GroveHitMask.None;
+            if (!string.IsNullOrEmpty(companion.GroveHit))
+                GroveHitMask.TryParse(companion.GroveHit, companion.GroveArtWidth, companion.GroveArtHeight, out hit);
+
             return new HomesteadPiece(PieceId(companion.Id), art, animated, HomesteadPieceKind.Resident,
                                       companion.UnlockCost, LevelId.None, ChapterId.None,
                                       Scale, Lift, HomesteadSlotKind.Ground, 0,
-                                      companion.UnlockLevel);
+                                      companion.UnlockLevel,
+                                      artWidth: companion.GroveArtWidth, artHeight: companion.GroveArtHeight,
+                                      hit: hit);
         }
 
         /// <summary>The whole roster, as pieces. Invalid entries are dropped, never projected.</summary>

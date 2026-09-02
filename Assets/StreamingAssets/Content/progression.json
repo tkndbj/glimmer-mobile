@@ -213,7 +213,7 @@
       {
         "id": "coin_bonus",
         "kind": "credits",
-        "amount": 1000,
+        "amount": 300,
         "dailyCap": 12
       },
       {

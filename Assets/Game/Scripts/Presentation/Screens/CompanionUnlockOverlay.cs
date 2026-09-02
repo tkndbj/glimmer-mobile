@@ -218,7 +218,7 @@ namespace GlimmerGrove
             // player is watching it; a caption that has to be understood at a glance cannot.
             if (offer.Cost > 0)
             {
-                var coin = CoinFace();
+                var coin = Art.CoinFace();
                 Fact(top, i++, coin, ChestDropKind.None,
                      coin == null ? RewardArt.Tint(ChestDropKind.Credits) : Color.white,
                      Loc.Format("ui.companion.by_coins", Compact.Number(offer.Cost)));
@@ -229,20 +229,6 @@ namespace GlimmerGrove
             if (offer.State == CompanionPurchaseState.TooExpensive)
                 Fact(top, i, Art.S("Ui/ic_play"), ChestDropKind.None, Pal.Cream,
                      Loc.Get("ui.companion.earn_more"));
-        }
-
-        /// <summary>
-        /// The coin's face-on frame, or null when the roster's art has not arrived.
-        ///
-        /// Frame zero of the flipbook rather than a sprite of its own, so the price line and the
-        /// spinning coin everywhere else are visibly the same coin — and so this needs no new
-        /// asset. Null rather than a guess when the frames are missing, which the caller
-        /// renders as the tinted disc <c>RewardArt</c> falls back to.
-        /// </summary>
-        static Sprite CoinFace()
-        {
-            var frames = Art.Frames("Ui/Coin");
-            return frames != null && frames.Length > 0 ? frames[0] : null;
         }
 
         void Fact(float top, int index, Sprite sprite, ChestDropKind kind, Color tint, string line)
@@ -296,12 +282,12 @@ namespace GlimmerGrove
             switch (offer.State)
             {
                 case CompanionPurchaseState.Ready:
-                    // No glyph. Credits have no static icon in this UI — only the coin
-                    // flipbook, which a pill button builds from a sprite name it cannot be
-                    // given — and the caption already names the price.
+                    // The coin goes after the figure, because it is the unit on the number
+                    // rather than a label on the verb — see Btn.IconTrails. It is the still
+                    // face rather than the spin, for Art.CoinFace's reason.
                     _buy = UIKit.TextButton("Buy", Panel, "btn_green",
                                             Loc.Format("ui.companion.unlock_for", Compact.Number(offer.Cost)), 44,
-                                            size, anchor, at, OnBuy);
+                                            size, anchor, at, OnBuy, Art.CoinFace(), iconTrails: true);
                     break;
 
                 case CompanionPurchaseState.TooExpensive:

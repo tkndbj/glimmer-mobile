@@ -112,8 +112,18 @@ namespace GlimmerGrove
         /// glade number, the onward chevron and the sealed teaser's question mark — cannot
         /// drift apart the way three hand-tuned offsets did.
         /// </summary>
-        const float NodeSize = 196f;
+        public const float NodeSize = 196f;
         const float NodeFaceY = NodeSize * UIKit.NodeFaceLift;
+
+        /// <summary>
+        /// A perch's rock and the name plate under it, and where each hangs from the node's
+        /// centre. Public because <see cref="ChapterMap"/> carries the same shape as the
+        /// footprint another glade's standing mark has to clear (<c>BodyHalfWidth</c>,
+        /// <c>BodyBelow</c>, <c>BodyAbove</c>), and Domain cannot read these — so
+        /// <c>ChapterMapTests</c> reads both and holds them to each other.
+        /// </summary>
+        public const float PerchWidth = 360f, PerchRockHeight = 290f, PerchRockY = -50f;
+        public const float PlateWidth = 340f, PlateHeight = 62f, PlateY = -196f;
 
         /// <summary>
         /// Seconds between one glade popping in and the next, and the longest the whole
@@ -449,7 +459,7 @@ namespace GlimmerGrove
                              new Vector2(0f, NodeFaceY), 0f, 2f);
 
             Plate(node, unlocked ? Loc.Get(level.NameKey) : Loc.Get("ui.levels.locked"),
-                  unlocked ? Pal.Cream : new Color(1f, 1f, 1f, .62f), -196f);
+                  unlocked ? Pal.Cream : new Color(1f, 1f, 1f, .62f), PlateY);
 
             float delay = PopDelay(indexInChapter, _layout.Levels.Count);
 
@@ -499,7 +509,7 @@ namespace GlimmerGrove
                 UIKit.Titled("Arrow", btn.transform, "»", 64, new Color(.30f, .21f, .13f),
                              TextAnchor.MiddleCenter, new Vector2(190f, 110f), new Vector2(.5f, .5f),
                              new Vector2(0f, NodeFaceY), 0f, 2f);
-                Plate(node, Loc.Get(next.NameKey), Pal.Cream, -196f);
+                Plate(node, Loc.Get(next.NameKey), Pal.Cream, PlateY);
             }
             else
             {
@@ -516,7 +526,7 @@ namespace GlimmerGrove
                 // earlier glade is visibly the thing to do.
                 Plate(node, onward ? GateLine(LevelUnlock.GateFor(_index, next.Id))
                                    : Loc.Get("ui.levels.more_soon"),
-                      new Color(1f, 1f, 1f, .62f), -196f);
+                      new Color(1f, 1f, 1f, .62f), PlateY);
             }
 
             int count = _layout.Levels.Count;
@@ -559,7 +569,8 @@ namespace GlimmerGrove
             // chapter together. The rock *set* differs too, so the two maps are still told apart
             // by somebody who cannot see the colour.
             var img = UIKit.Img("Rock", node, Art.S("Map/" + rock), ModeLooks.Of(Mode).Wash,
-                                new Vector2(360f, 290f), new Vector2(.5f, .5f), new Vector2(0f, -50f));
+                                new Vector2(PerchWidth, PerchRockHeight), new Vector2(.5f, .5f),
+                                new Vector2(0f, PerchRockY));
             img.preserveAspect = true;
 
             // contact shadow, so the glade disc looks planted rather than floating
@@ -596,13 +607,13 @@ namespace GlimmerGrove
         /// </para>
         /// </summary>
         /// <remarks>
-        /// The sizes are safe against the shipped maps, where consecutive glades sit 756px
-        /// apart vertically and ~370px across — but note that
-        /// <see cref="ChapterMap.MinimumNodeSeparation"/> only <em>guarantees</em> 220px,
-        /// because it is derived from the 196px disc and knows nothing about what rides above
-        /// it. A future chapter authored near that floor would overlap these. Raising the
-        /// guarantee is a content-authoring decision rather than a layout one, so it is not
-        /// made here.
+        /// This pill is the <em>crown</em> <see cref="ChapterMap"/> carries
+        /// (<c>CrownHalfWidth</c>, <c>CrownBottom</c>, <c>CrownTop</c>), and
+        /// <c>ChapterMapValidator</c> refuses any perch — a glade's or the end-of-chapter
+        /// marker's — whose body would stand on it. It used to guarantee only the disc's 220px,
+        /// which is how the marker came to sit on the tenth glade's standing in every mode's
+        /// first chapter. Resize the pill here and <c>ChapterMapTests</c> says which of the
+        /// Domain numbers no longer covers it.
         /// </remarks>
         /// <remarks>
         /// The two-line width is measured, not chosen. "You are in the top 25%" generates
@@ -613,12 +624,12 @@ namespace GlimmerGrove
         /// widest record line with room to spare — that used to be "108 turns · 12:04" at
         /// 245px, and a record has carried no time since invariant 22.
         /// </remarks>
-        const float RankMarkBottom = 106f;
-        static readonly Vector2 RankMarkTwoLine = new Vector2(408f, 196f);
+        public const float RankMarkBottom = 106f;
+        public static readonly Vector2 RankMarkTwoLine = new Vector2(408f, 196f);
         static readonly Vector2 RankMarkOneLine = new Vector2(344f, 74f);
 
         /// <summary>Medal disc size, and how far above the pill centre it sits.</summary>
-        const float MedalSize = 78f, MedalY = 54f;
+        public const float MedalSize = 78f, MedalY = 54f;
 
         /// <summary>
         /// Inset from the pill's edge to a line's own box, and how far each line sits from the
@@ -827,7 +838,7 @@ namespace GlimmerGrove
         static void Plate(Transform parent, string text, Color colour, float y)
         {
             var bg = UIKit.Img("Plate", parent, Art.Round(20), new Color(.04f, .09f, .13f, .74f),
-                               new Vector2(340f, 62f), new Vector2(.5f, .5f), new Vector2(0f, y));
+                               new Vector2(PlateWidth, PlateHeight), new Vector2(.5f, .5f), new Vector2(0f, y));
             var edge = UIKit.Img("Edge", bg.transform, Art.RoundOutline(20, 3f), new Color(1, 1, 1, .16f));
             UIKit.StretchTo((RectTransform)edge.transform, 0, 0, 0, 0);
             var t = UIKit.Titled("T", bg.transform, text, 32, colour, TextAnchor.MiddleCenter,

@@ -47,6 +47,20 @@ namespace GlimmerGrove
         /// <summary>How far a demonstration reaches in board cells, which decides its pace.</summary>
         public int Cells;
 
+        /// <summary>
+        /// Taught when its moment comes rather than at the opening, and still shown again by
+        /// the review key.
+        ///
+        /// <para>
+        /// A lesson about an <em>event</em> — a bolt forged, a sun forged — is told best over
+        /// the thing the player just made (invariant 20m: the event is the reward), and told
+        /// at the opening it is a rule about nothing, pointing at the ripest flower on a board
+        /// where nothing has happened yet. <see cref="RunLessons.Open"/> skips these;
+        /// <see cref="RunLessons.Teach"/> raises one when the mode says the moment has come.
+        /// </para>
+        /// </summary>
+        public bool Deferred;
+
         /// <summary>A lesson that rings what it is about and says a sentence about it.</summary>
         public static Lesson At(Mechanic mechanic, RectTransform target, RectTransform[] alongside = null)
             => new Lesson
@@ -54,6 +68,27 @@ namespace GlimmerGrove
                 Mechanic = mechanic, Target = target, Alongside = alongside,
                 Tint = Pal.Cream, Cells = 1
             };
+
+        /// <summary>
+        /// A lesson that walks a coaching hand along <paramref name="trace"/> as well, from the
+        /// first step to the last — a drag, shown rather than described.
+        /// </summary>
+        public static Lesson Along(Mechanic mechanic, RectTransform target, RectTransform[] alongside,
+                                   RectTransform[] trace, int cells = 1)
+        {
+            var lesson = At(mechanic, target, alongside);
+            lesson.Trace = trace;
+            lesson.Cells = cells;
+            return lesson;
+        }
+
+        /// <summary>A lesson kept for the moment its subject first exists. See <see cref="Deferred"/>.</summary>
+        public static Lesson Later(Mechanic mechanic, RectTransform target, RectTransform[] alongside = null)
+        {
+            var lesson = At(mechanic, target, alongside);
+            lesson.Deferred = true;
+            return lesson;
+        }
     }
 
     /// <summary>
@@ -186,8 +221,13 @@ namespace GlimmerGrove
             // teaches it — that is exactly who the review key is for.
             Offer(_probe.Count > 0);
 
+            // A deferred lesson waits for its moment — see Lesson.Deferred and Teach — and is
+            // deliberately left out here even when nothing else is queued, or it would be spent
+            // at the opening on every first grove of a chapter and never over the thing it is
+            // about.
             for (int i = 0; i < _probe.Count; i++)
-                if (!TipLedger.HasSeen(_probe[i].Mechanic)) _queue.Add(_probe[i].Mechanic);
+                if (!_probe[i].Deferred && !TipLedger.HasSeen(_probe[i].Mechanic))
+                    _queue.Add(_probe[i].Mechanic);
 
             _probe.Clear();
 
@@ -267,6 +307,48 @@ namespace GlimmerGrove
         /// that was destroyed rather than accepted.
         /// </para>
         /// </summary>
+        // ------------------------------------------------------------------ mid-run
+        /// <summary>
+        /// Raises one lesson now, over a board the player has just changed, if they have never
+        /// been shown it.
+        ///
+        /// <para>
+        /// The mode calls this at the moment a deferred lesson's subject comes to exist — a
+        /// bolt standing where five just burst — and only then, so the tip is over the thing
+        /// the player made rather than a rule recited before anything happened. It goes through
+        /// the same hold, latch and queue as the opening, because a second way of putting a
+        /// tip up is a second thing that can disagree about when the board is handed back.
+        /// Refused while a lesson is already up, while the board cannot be taught (mid-chain,
+        /// finished, closing), and for anything already seen — so a mode may call it on every
+        /// forge for the life of the run and it costs one showing.
+        /// </para>
+        /// <para>
+        /// The lesson is resolved through <c>Lessons</c> like every other, so a mode that
+        /// wants a mid-run tip lists it as <see cref="Lesson.Later"/> there, pointing at its
+        /// subject once one stands. A mechanic the mode does not list teaches without pointing.
+        /// </para>
+        /// </summary>
+        public void Teach(Mechanic mechanic)
+        {
+            if (!_run || _teaching || !_run.Teachable) return;
+            if (TipLedger.HasSeen(mechanic)) return;
+
+            _queue.Clear();
+            _taught = 0;
+            _queue.Add(mechanic);
+
+            _teaching = true;
+            _hold.Take(RunHold.Teaching);
+
+            _run.Latch(true);
+            Refresh();
+
+            // A beat, not the opening delay: the board is already here and has just stopped
+            // moving, and the pause is only so the tip does not land in the same frame as the
+            // last thing the chain drew.
+            Tween.After(BetweenLessons, ShowLesson, _run);
+        }
+
         void ShowLesson()
         {
             if (!_run) return;

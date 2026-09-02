@@ -1,3 +1,4 @@
+using System;
 using GlimmerGrove.Ads;
 using GlimmerGrove.Homestead;
 using GlimmerGrove.Localization;
@@ -43,6 +44,16 @@ namespace GlimmerGrove
         Text _status, _size;
         bool _paid, _buying;
 
+        /// <summary>
+        /// The floor this region belongs to, so the offer can answer the ladder as well as the
+        /// price. Read once rather than per repaint: the catalog does not change under an open
+        /// panel, and <c>HomesteadCatalog.Current</c> is a property that rebuilds nothing but is
+        /// still a lookup on a path a balance change runs down.
+        /// </summary>
+        GroveFloor Floor => HomesteadCatalog.IsLoaded ? HomesteadCatalog.Current.Floor : null;
+
+        HomesteadOffer Offer => GroveLand.OfferFor(Region, Floor);
+
         protected override void Build()
         {
             MakePanel(new Vector2(PanelW, PanelH),
@@ -86,22 +97,54 @@ namespace GlimmerGrove
         // ---------------------------------------------------------------- action
         void BuildAction()
         {
-            var offer = GroveLand.OfferFor(Region);
+            var offer = Offer;
 
             var size = new Vector2(560f, 122f);
             var anchor = new Vector2(.5f, 0f);
             var at = new Vector2(0f, 104f);
 
-            if (offer.State == HomesteadPurchaseState.TooExpensive)
+            // Ground further up the ladder is a dead end without this: the panel would stand
+            // there naming a stretch the player cannot buy, with no way on but the close cross.
+            // So the button becomes the stretch that *is* for sale — which is the one thing they
+            // can act on, and it is what they came here to find out.
+            if (offer.State == HomesteadPurchaseState.EarlierFirst)
             {
-                _action = UIKit.TextButton("Earn", Panel, "btn_blue", Loc.Get("ui.companion.get_coins"), 40,
-                                           size, anchor, at, OnGetCoins, "ic_play");
+                var next = GroveLand.NextForSale(Floor);
+
+                _action = UIKit.TextButton("Next", Panel, "btn_blue",
+                                           Loc.Format("ui.land.open_next",
+                                                      next == null ? string.Empty : Loc.Get(next.NameKey)),
+                                           40, size, anchor, at, () => OnOpenNext(next));
+                _action.Interactable = next != null;
+            }
+            else if (offer.State == HomesteadPurchaseState.TooExpensive)
+            {
+                // Two different shortfalls and two different ways out of them. Credits have a
+                // video that pays them; gems do not and never will (invariant 10d), so the free
+                // way is offered where one exists and the shelf is brought to the player where
+                // it does not — never a dead button, which is this panel's whole rule.
+                bool gems = Region != null && Region.IsGemPriced;
+
+                _action = UIKit.TextButton("Earn", Panel, "btn_blue",
+                                           Loc.Get(gems ? "ui.land.get_gems" : "ui.companion.get_coins"),
+                                           40, size, anchor, at,
+                                           gems ? (Action)OnGetGems : OnGetCoins,
+                                           gems ? "ic_gem" : "ic_play");
             }
             else
             {
+                // The price carries its own glyph, because "BUY FOR 600" over a stretch of
+                // ground says nothing about which 600 — and half this floor is sold in each
+                // currency, so the two cards sit on the same shelf a scroll apart. Which is why
+                // the credit half carrying *no* glyph was the half that broke it: a bare number
+                // beside a gem-marked one reads as the same currency with the mark left off.
+                bool priced = Region != null && Region.IsGemPriced;
+
                 _action = UIKit.TextButton("Buy", Panel, "btn_green",
                                            Loc.Format("ui.grove.buy_for", Compact.Number(offer.Cost)), 40,
-                                           size, anchor, at, OnBuy);
+                                           size, anchor, at, OnBuy,
+                                           priced ? Art.S("Ui/ic_gem") : Art.CoinFace(),
+                                           iconTrails: true);
                 _action.Interactable = offer.CanBuy;
             }
 
@@ -109,6 +152,18 @@ namespace GlimmerGrove
             UIKit.FitLabel(_action);
 
             Repaint();
+        }
+
+        /// <summary>
+        /// Swaps this panel for the stretch that is actually on offer.
+        ///
+        /// Closed and reopened rather than rebound, because <c>ModalView</c> builds once: a
+        /// second panel is four lines and a re-entrant rebuild is a class of bug.
+        /// </summary>
+        void OnOpenNext(GroveRegion next)
+        {
+            if (next == null) return;
+            Close(() => Flow.Modal<GroveLandOverlay>(v => v.Region = next), quiet: true);
         }
 
         /// <summary>
@@ -124,20 +179,46 @@ namespace GlimmerGrove
         {
             if (!this || _paid || _buying) return;
 
-            var offer = GroveLand.OfferFor(Region);
+            var offer = Offer;
 
             if (_status)
             {
-                _status.text = offer.State == HomesteadPurchaseState.TooExpensive
-                    ? Loc.Format("ui.grove.price", Compact.Number(offer.Cost))
-                    : Loc.Format("ui.land.balance", Compact.Number(offer.Balance));
+                bool gems = Region != null && Region.IsGemPriced;
 
-                _status.color = offer.State == HomesteadPurchaseState.TooExpensive
-                    ? Pal.A(Pal.Sun, .90f)
-                    : new Color(1f, .96f, .88f, .72f);
+                switch (offer.State)
+                {
+                    // Names the stretch that comes first rather than quoting a price, because
+                    // the price is not what is stopping them and printing it would say it was.
+                    case HomesteadPurchaseState.EarlierFirst:
+                        var next = GroveLand.NextForSale(Floor);
+                        _status.text = next == null ? string.Empty
+                            : Loc.Format("ui.land.earlier_first", Loc.Get(next.NameKey));
+                        _status.color = Pal.A(Pal.Aqua, .90f);
+                        break;
+
+                    case HomesteadPurchaseState.TooExpensive:
+                        _status.text = Loc.Format(gems ? "ui.grove.price_gems" : "ui.grove.price",
+                                                  Compact.Number(offer.Cost));
+                        _status.color = Pal.A(gems ? Pal.Bloom : Pal.Sun, .90f);
+                        break;
+
+                    // The balance is the one this stretch is bought with — HomesteadOffer
+                    // carries it, so nothing here has to pick a wallet by hand.
+                    default:
+                        _status.text = Loc.Format("ui.land.balance", Compact.Number(offer.Balance));
+                        _status.color = new Color(1f, .96f, .88f, .72f);
+                        break;
+                }
             }
 
-            if (_action) _action.Interactable = offer.CanBuy || offer.State == HomesteadPurchaseState.TooExpensive;
+            // The ladder is the one refusal that does not become live when money arrives, so it
+            // is the one state where the button stays dead-lettered — except that it is not a
+            // buy button at all there: it opens the stretch that is on offer, and that is always
+            // live. Which is why this asks about the *offer* rather than about the button.
+            if (_action)
+                _action.Interactable = offer.CanBuy
+                                    || offer.State == HomesteadPurchaseState.TooExpensive
+                                    || offer.State == HomesteadPurchaseState.EarlierFirst;
         }
 
         void OnBuy()
@@ -158,7 +239,7 @@ namespace GlimmerGrove
             {
                 // Re-checked here rather than trusted from the button, because the balance can
                 // have moved since it was painted.
-                bought = GroveLand.TryBuy(Region);
+                bought = GroveLand.TryBuy(Region, Floor);
             }
             finally
             {
@@ -193,6 +274,23 @@ namespace GlimmerGrove
                 v.PlacementId = AdPlacement.CoinBonus;
                 v.Rewarded = () => { if (this) Repaint(); };
             });
+        }
+
+        /// <summary>
+        /// The gem shelf, stacked on this panel rather than navigated to.
+        ///
+        /// <para>
+        /// Nothing is frozen behind this one — the reason <c>GemShopOverlay</c> was written —
+        /// so walking to the shop would not lose anything. It is stacked anyway because of what
+        /// it comes back to: a keeper who has just decided they want a particular stretch of
+        /// ground, and who would otherwise pay for gems and then have to find their way back
+        /// through two screens to the panel that asked. The shelf steps out from under its own
+        /// receipt, so buying leaves the offer standing with the price now met.
+        /// </para>
+        /// </summary>
+        void OnGetGems()
+        {
+            Flow.Modal<GemShopOverlay>(v => v.Bought = () => { if (this) Repaint(); });
         }
     }
 }

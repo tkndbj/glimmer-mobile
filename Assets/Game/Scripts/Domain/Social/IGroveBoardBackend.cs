@@ -51,7 +51,7 @@ namespace GlimmerGrove.Social
         /// it being called for nothing, not any check on the server.
         /// </para>
         /// </summary>
-        Task<(CloudResult result, GroveCard card)> PublishGroveAsync(
+        Task<(CloudResult result, GrovePublication published)> PublishGroveAsync(
             string userId, CancellationToken cancellation = default);
 
         /// <summary>

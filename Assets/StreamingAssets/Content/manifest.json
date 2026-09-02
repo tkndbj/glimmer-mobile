@@ -1,7 +1,7 @@
 {
   "schemaVersion": 2,
   "progressionVersion": 4,
-  "groveVersion": 10,
+  "groveVersion": 11,
   "chapters": [
     {
       "id": "c01_shallows",
@@ -181,22 +181,22 @@
     },
     {
       "id": "b02_tanglewood",
-      "version": 1,
+      "version": 4,
       "order": 100,
       "disabled": false,
       "minAppVersion": 0,
       "mode": "bud",
       "levels": [
-        "b02_firstvine",
-        "b02_longreach",
-        "b02_deepthicket",
-        "b02_windingway",
-        "b02_twovines",
-        "b02_thewilds",
-        "b02_crossvine",
-        "b02_thornedvine",
-        "b02_thetangle",
-        "b02_tangleheart"
+        "b02_firstbolt",
+        "b02_makefive",
+        "b02_sunspark",
+        "b02_crossfire",
+        "b02_stormheart",
+        "b02_sixfold",
+        "b02_thundering",
+        "b02_sunwell",
+        "b02_wildstorm",
+        "b02_stormcrown"
       ]
     }
   ],
@@ -220,12 +220,30 @@
         "c01_grovekeepers_knot"
       ],
       "milestones": [
-        { "goal": 1, "credits": 60 },
-        { "goal": 2, "credits": 90 },
-        { "goal": 4, "credits": 250 },
-        { "goal": 6, "credits": 400 },
-        { "goal": 8, "credits": 600 },
-        { "goal": 10, "credits": 1000 }
+        {
+          "goal": 1,
+          "credits": 60
+        },
+        {
+          "goal": 2,
+          "credits": 90
+        },
+        {
+          "goal": 4,
+          "credits": 250
+        },
+        {
+          "goal": 6,
+          "credits": 400
+        },
+        {
+          "goal": 8,
+          "credits": 600
+        },
+        {
+          "goal": 10,
+          "credits": 1000
+        }
       ]
     }
   ],
@@ -236,7 +254,10 @@
       "animated": "c5",
       "unlockLevel": 0,
       "unlockCost": 0,
-      "disabled": false
+      "disabled": false,
+      "groveW": 176,
+      "groveH": 162,
+      "groveHit": "380781f07f0ff9ffbfffffffdffbbe0"
     },
     {
       "id": "cinder",
@@ -244,7 +265,10 @@
       "animated": "",
       "unlockLevel": 2,
       "unlockCost": 800,
-      "disabled": false
+      "disabled": false,
+      "groveW": 400,
+      "groveH": 284,
+      "groveHit": "00ffc000fff000fffc007ffe003fff00ffffe1fffffdfffffffffffffffffffdffffe0fffe007fff001fff803fffe03ffff81ffffc07e0fc0"
     },
     {
       "id": "timber",
@@ -252,7 +276,10 @@
       "animated": "c2",
       "unlockLevel": 3,
       "unlockCost": 1000,
-      "disabled": false
+      "disabled": false,
+      "groveW": 122,
+      "groveH": 176,
+      "groveHit": "707cfefe7e7cfefe7f3e7e"
     },
     {
       "id": "sorrel",
@@ -260,7 +287,10 @@
       "animated": "",
       "unlockLevel": 4,
       "unlockCost": 1200,
-      "disabled": false
+      "disabled": false,
+      "groveW": 219,
+      "groveH": 284,
+      "groveHit": "01800e003dc07f01fc17e3ff1ff8ffe3ffcfff3ffcfff3ffcffe1ff87fc07e0"
     },
     {
       "id": "sprocket",
@@ -268,7 +298,10 @@
       "animated": "c3",
       "unlockLevel": 5,
       "unlockCost": 1400,
-      "disabled": false
+      "disabled": false,
+      "groveW": 141,
+      "groveH": 176,
+      "groveHit": "0e0f83c3c3f1fcfcffffffcfe"
     },
     {
       "id": "peep",
@@ -276,7 +309,10 @@
       "animated": "",
       "unlockLevel": 6,
       "unlockCost": 1600,
-      "disabled": false
+      "disabled": false,
+      "groveW": 183,
+      "groveH": 231,
+      "groveHit": "3f87fcffeffeffffffffffffffeffe7fc1fe07e038018"
     },
     {
       "id": "thistle",
@@ -284,7 +320,10 @@
       "animated": "c4",
       "unlockLevel": 7,
       "unlockCost": 1800,
-      "disabled": false
+      "disabled": false,
+      "groveW": 157,
+      "groveH": 176,
+      "groveHit": "0a07c1fc3f0f8fc3f1feffdff3f8"
     },
     {
       "id": "gourd",
@@ -292,7 +331,10 @@
       "animated": "",
       "unlockLevel": 8,
       "unlockCost": 2000,
-      "disabled": false
+      "disabled": false,
+      "groveW": 283,
+      "groveH": 341,
+      "groveHit": "006000d9003fc007f807ff83ff81ffe0fffc3fff1fffe7fffbffffffffffffffffffffffffffdfffefffffffffffffff03f"
     },
     {
       "id": "puff",
@@ -300,7 +342,10 @@
       "animated": "c1",
       "unlockLevel": 9,
       "unlockCost": 2200,
-      "disabled": false
+      "disabled": false,
+      "groveW": 176,
+      "groveH": 159,
+      "groveHit": "1d07f0ff1ff3fcffbfffff3fc7f8"
     },
     {
       "id": "clementine",
@@ -308,7 +353,10 @@
       "animated": "",
       "unlockLevel": 10,
       "unlockCost": 2400,
-      "disabled": false
+      "disabled": false,
+      "groveW": 283,
+      "groveH": 341,
+      "groveHit": "0078003e000ff003fc07ff03ff01ffe0fffc3fff1fffe7fffbffffffffffffffffffffffffffdfffefffffffffffffff03f"
     },
     {
       "id": "plum",
@@ -316,7 +364,10 @@
       "animated": "",
       "unlockLevel": 11,
       "unlockCost": 2600,
-      "disabled": false
+      "disabled": false,
+      "groveW": 400,
+      "groveH": 279,
+      "groveHit": "00ffc000fff000fffc007ffe003fff01ffffe1fffffdfffffffffffffffffffdffffe07fff003fff001fff803fffe01ffff80ffffc07e0fc0"
     },
     {
       "id": "frond",
@@ -324,7 +375,10 @@
       "animated": "",
       "unlockLevel": 13,
       "unlockCost": 3000,
-      "disabled": false
+      "disabled": false,
+      "groveW": 371,
+      "groveH": 235,
+      "groveHit": "7f0200ffc73cfff7bc0ffff803fff801fff801fff061fff07ffffe7ffffe7ffffc3f8ffc0f1ffe003fff003fff"
     },
     {
       "id": "button",
@@ -332,7 +386,10 @@
       "animated": "",
       "unlockLevel": 15,
       "unlockCost": 3500,
-      "disabled": false
+      "disabled": false,
+      "groveW": 264,
+      "groveH": 227,
+      "groveHit": "07f00ffe07ff07ffc3ffe1fff07ff8fffefffffffffffe41ff01ff80ffc079e0"
     },
     {
       "id": "shell",
@@ -340,7 +397,10 @@
       "animated": "",
       "unlockLevel": 17,
       "unlockCost": 4000,
-      "disabled": false
+      "disabled": false,
+      "groveW": 276,
+      "groveH": 201,
+      "groveHit": "1b001fc00ff003fe90fffe3fff8fffffffff7fff843fe00ff807fe01ee0"
     },
     {
       "id": "dewdrop",
@@ -348,7 +408,10 @@
       "animated": "",
       "unlockLevel": 19,
       "unlockCost": 4500,
-      "disabled": false
+      "disabled": false,
+      "groveW": 375,
+      "groveH": 353,
+      "groveHit": "00ff0001ff8003ffc007ffe007ffe00fffe01ffff03ffff87ffffefffffefffffffffffffffffffffffffffffffffffe7ffffe7ffffc1ffff03ffff83ffff83f83f81f01f0"
     },
     {
       "id": "flit",
@@ -356,7 +419,10 @@
       "animated": "",
       "unlockLevel": 21,
       "unlockCost": 5000,
-      "disabled": false
+      "disabled": false,
+      "groveW": 307,
+      "groveH": 151,
+      "groveHit": "0060030f7ef9ffffbffc3fff83fff807fc003fc003f8001f00"
     },
     {
       "id": "toadstool",
@@ -364,7 +430,10 @@
       "animated": "",
       "unlockLevel": 23,
       "unlockCost": 6000,
-      "disabled": false
+      "disabled": false,
+      "groveW": 210,
+      "groveH": 213,
+      "groveHit": "3fc1ff8fff3ffefffbfff7ffdffe7ff1ffc7ff1ff8ffe1e78"
     },
     {
       "id": "quill",
@@ -372,7 +441,10 @@
       "animated": "",
       "unlockLevel": 25,
       "unlockCost": 7000,
-      "disabled": false
+      "disabled": false,
+      "groveW": 233,
+      "groveH": 186,
+      "groveHit": "7ff1fff3ffe7ff8fff1ff81c7e00fe00fe01fc00f801f"
     },
     {
       "id": "olive",
@@ -380,7 +452,10 @@
       "animated": "",
       "unlockLevel": 27,
       "unlockCost": 8000,
-      "disabled": false
+      "disabled": false,
+      "groveW": 281,
+      "groveH": 322,
+      "groveHit": "0e3003de00f7803fc007f001f800ffc07ff83fff1fffcffffbffffffffffffffffffffff7fffbffffffffff87f7c0f8"
     },
     {
       "id": "indigo",
@@ -388,7 +463,10 @@
       "animated": "",
       "unlockLevel": 29,
       "unlockCost": 9000,
-      "disabled": false
+      "disabled": false,
+      "groveW": 400,
+      "groveH": 293,
+      "groveHit": "040018033fcc01fffe00ffff007fff801fff80fffff8fffffefffffffffffffffffff8fffff03fff801fff801fffc01ffff00ffffc07f0fe03f03e0"
     },
     {
       "id": "tadpole",
@@ -396,7 +474,10 @@
       "animated": "",
       "unlockLevel": 31,
       "unlockCost": 10000,
-      "disabled": false
+      "disabled": false,
+      "groveW": 209,
+      "groveH": 278,
+      "groveHit": "07807c07e03e00f803c30f0e3df8fff1ffc7ff9ffe7ffcfff1ff8ffe3ff8f1e"
     },
     {
       "id": "pebble",
@@ -404,7 +485,10 @@
       "animated": "",
       "unlockLevel": 34,
       "unlockCost": 11500,
-      "disabled": false
+      "disabled": false,
+      "groveW": 250,
+      "groveH": 192,
+      "groveHit": "01c007c007e00ff00ff83ffcfffeffffffffdffe1ffc1ffc"
     },
     {
       "id": "saffron",
@@ -412,7 +496,10 @@
       "animated": "",
       "unlockLevel": 37,
       "unlockCost": 13000,
-      "disabled": false
+      "disabled": false,
+      "groveW": 375,
+      "groveH": 359,
+      "groveHit": "00ff0003ff8007ffc00fffe00ffff01ffff01ffff83ffff83ffffcfffffefffffffffffffffffffffffffffffffffffffffffe7ffffe3ffff81ffff83ffff83ffff81f81f8"
     },
     {
       "id": "coral",
@@ -420,7 +507,10 @@
       "animated": "",
       "unlockLevel": 40,
       "unlockCost": 14500,
-      "disabled": false
+      "disabled": false,
+      "groveW": 338,
+      "groveH": 348,
+      "groveHit": "00fe0007f8001fe0003f303cffe1ffffcfffffbfffffffffffffffe1ffff87fffe1ffff87fffe1ffff87fffe1ffff83fffc0ffff03fffe0ffff83f0fe"
     },
     {
       "id": "rust",
@@ -428,7 +518,10 @@
       "animated": "",
       "unlockLevel": 43,
       "unlockCost": 16000,
-      "disabled": false
+      "disabled": false,
+      "groveW": 306,
+      "groveH": 222,
+      "groveHit": "07fc007fe007fe03fffc7fffeffffefffffffffe47ff407fe603fcf0018f000c600078"
     },
     {
       "id": "fizz",
@@ -436,7 +529,10 @@
       "animated": "",
       "unlockLevel": 46,
       "unlockCost": 17500,
-      "disabled": false
+      "disabled": false,
+      "groveW": 193,
+      "groveH": 326,
+      "groveHit": "00387f87f87fc7ff3ff9ffcffe7ff7ffbffdffcffc7fe3ff1ff8ffc3fe3ff1ffcf3e0"
     },
     {
       "id": "marrow",
@@ -444,7 +540,10 @@
       "animated": "",
       "unlockLevel": 49,
       "unlockCost": 19000,
-      "disabled": false
+      "disabled": false,
+      "groveW": 400,
+      "groveH": 287,
+      "groveHit": "007fc000fff0007ffc007ffe003fff803fffc07ffff0fffffefffffffffffffffffffffffff03fff901fff800fffe00ffff007fffc03f0fc0"
     },
     {
       "id": "bramble",
@@ -452,7 +551,10 @@
       "animated": "",
       "unlockLevel": 53,
       "unlockCost": 21500,
-      "disabled": false
+      "disabled": false,
+      "groveW": 274,
+      "groveH": 325,
+      "groveHit": "fcfc3fff07ff81ffe07ff80fbc0031003ff01ffe0fffc3fff0fffe7fff9fffe7fff8fffe7fff3fffeffffffffffc1f8"
     },
     {
       "id": "wisp",
@@ -460,7 +562,10 @@
       "animated": "",
       "unlockLevel": 57,
       "unlockCost": 24000,
-      "disabled": false
+      "disabled": false,
+      "groveW": 235,
+      "groveH": 248,
+      "groveHit": "07f81ff83ff8fff1ffe7ffffff7fffffff3ff87fe0ff80ff07ff0ffe1e3c"
     },
     {
       "id": "boulder",
@@ -468,7 +573,10 @@
       "animated": "",
       "unlockLevel": 61,
       "unlockCost": 26500,
-      "disabled": false
+      "disabled": false,
+      "groveW": 310,
+      "groveH": 246,
+      "groveHit": "0ffe03fff83fff87fffc7fffc7fffe7fffefffffffffffffffffffffffffffffe7fffc0fff007df0"
     },
     {
       "id": "thorn",
@@ -476,7 +584,10 @@
       "animated": "",
       "unlockLevel": 66,
       "unlockCost": 30000,
-      "disabled": false
+      "disabled": false,
+      "groveW": 229,
+      "groveH": 208,
+      "groveHit": "003001f00fe01fe03fe0ff9ffe7ff8ffc1ffc0ff83fc07f80"
     }
   ]
 }

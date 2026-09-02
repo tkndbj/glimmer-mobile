@@ -189,8 +189,11 @@ BUD_NODE_WARNING, BUD_NODE_CEILING = 20_000, 60_000
 #: Below this many shortest plays the grove is a puzzle, which this mode is deliberately not.
 BUD_TOO_FEW_WAYS = 2
 
-#: Mirrors `BudLayout.MaxRunners`. A readability bound rather than a cost one.
-BUD_MAX_RUNNERS = 6
+#: Mirrors `BudValidator.MaxDealtSpecials`: a special is something the player makes.
+BUD_MAX_DEALT_SPECIALS = 2
+
+#: Mirrors `BudValidator.LeastPar`. At par 2 both star lines round onto 3.
+BUD_LEAST_PAR = 3
 
 
 def check_bud(lid, chapter_id, level, block):
@@ -205,12 +208,21 @@ def check_bud(lid, chapter_id, level, block):
                  gold=0, silver=0, lamps=0, sources=0, fragile=0, bound=0,
                  crossings=0, briars=0, mode='bud',
                  ways=0, greedy=-1, nodes=0, buds=0, cocoons=0, ready=0, deal='',
-                 runners=0, ran=0, changed=0, caught=0, taps=0)
+                 grafts=False, specials=0, forgeable=0, forged=0, fired=0)
 
     w, h = block.get('width') or 0, block.get('height') or 0
     rows = block.get('rows') or []
     deal = block.get('colours') or ''
-    vines = block.get('runners') or None
+    grafts = bool(block.get('grafts'))
+    specials = block.get('specials') or None
+    forges = bool(block.get('forges'))
+
+    # A retired field is refused by name, never ignored (invariant 5f): JsonUtility would drop it
+    # silently and the author would believe an object no build can draw. Mirrors `BudMode.TryRead`.
+    if block.get('runners') or block.get('winds') or block.get('firefly'):
+        errors.append("%s: this grove authors 'runners', 'winds' or 'firefly', all retired - "
+                      "the vine, the windmill and the firefly were withdrawn from Budburst" % lid)
+        return empty
 
     if not (bud.MIN_SIDE <= w <= bud.MAX_SIDE):
         errors.append("%s: a grove is %d..%d wide; this one says %d"
@@ -225,7 +237,7 @@ def check_bud(lid, chapter_id, level, block):
         return empty
 
     try:
-        grove = bud.Grove(rows, deal, regrow, vines)
+        grove = bud.Grove(rows, deal, regrow, grafts, specials, forges)
     except (ValueError, KeyError, IndexError) as bad:
         errors.append("%s: %s" % (lid, bad))
         return empty
@@ -267,44 +279,24 @@ def check_bud(lid, chapter_id, level, block):
                       "ever grows one - so no chain can ever crack it"
                       % (lid, i % grove.w, i // grove.w))
 
-    # Everything about a runner that can be read off the picture. Mirrors `BudValidator.Strung`
-    # - a vine between two squares that already touch delivers a colour the wave was delivering
-    # anyway, which is invariant 5d in its purest form and the one case provable by looking.
-    if grove.runners > BUD_MAX_RUNNERS:
-        errors.append("%s: this grove is strung with %d runners, above the %d a grove may carry"
-                      % (lid, grove.runners, BUD_MAX_RUNNERS))
+    # A living grove is a full rectangle: everything falls into the holes under it and new
+    # flowers grow into what is left, so an authored hole is gone after the first chain. Mirrors
+    # the same check in `BudValidator` - puffballs and hives are pieces, not holes.
+    if regrow:
+        gaps = sum(1 for g in grove.ground if g == bud.EMPTY)
+        if gaps:
+            errors.append("%s: this grove leaves %d cell(s) of bare ground, and it is a grove "
+                          "that grows - a living grove is authored as a full rectangle"
+                          % (lid, gaps))
 
-    for i in range(grove.count):
-        far = grove.runner[i]
-        if far < i:
-            continue
+    # A special is something the player makes; a grove deals one only to teach what firing it
+    # does. Mirrors `BudValidator.Standing`.
+    if grove.specials > BUD_MAX_DEALT_SPECIALS:
+        errors.append("%s: this grove deals %d specials already forged, above the %d a grove may"
+                      % (lid, grove.specials, BUD_MAX_DEALT_SPECIALS))
 
-        ax, ay = i % grove.w, i // grove.w
-        bx, by = far % grove.w, far // grove.w
-        span = abs(ax - bx) + abs(ay - by)
-
-        if span <= 1:
-            errors.append("%s: the runner between %d,%d and %d,%d joins two squares that already "
-                          "touch, so it can never deliver anything the wave was not delivering "
-                          "anyway" % (lid, ax, ay, bx, by))
-        elif span < 3:
-            warnings.append("%s: the runner between %d,%d and %d,%d spans %d squares, about as "
-                            "far as one wave reaches on its own"
-                            % (lid, ax, ay, bx, by, span))
-
-        for end in (i, far):
-            ex, ey = end % grove.w, end // grove.w
-            if grove.ground[end] == "f":
-                continue
-            if grove.ground[end] == "c":
-                warnings.append("%s: the runner end at %d,%d is authored under a cocoon, so that "
-                                "half of it is inert until the grove falls something else onto it"
-                                % (lid, ex, ey))
-                continue
-            errors.append("%s: the runner end at %d,%d stands on nothing a bunch could ever "
-                          "include" % (lid, ex, ey))
-
-    par, ways, nodes, proved = bud.search(rows, deal, regrow, vines)
+    par, ways, nodes, proved, forged, fired = bud.search(rows, deal, regrow, grafts, specials,
+                                                         forges)
 
     if not proved:
         errors.append("%s: this grove could not be proved inside %d positions (it looked at "
@@ -315,6 +307,12 @@ def check_bud(lid, chapter_id, level, block):
     if par < 1:
         errors.append("%s: no order of taps frees every critter on this grove" % lid)
         return empty
+
+    # Par 3 is the floor: at par 2 both star lines round onto 3 and the two-star band is empty,
+    # which the factor check cannot see. Mirrors `BudValidator.LeastPar`.
+    if par < BUD_LEAST_PAR:
+        errors.append("%s: this grove is par %d, below the %d a Budburst grove needs - at par 2 "
+                      "both star lines round onto 3 and the middle band is empty" % (lid, par, BUD_LEAST_PAR))
 
     budget_h = factor_of(level, 'budgetFactor', bud.BUDGET_HUNDREDTHS)
     gold_h = factor_of(level, 'goldFactor', bud.GOLD_HUNDREDTHS)
@@ -352,19 +350,20 @@ def check_bud(lid, chapter_id, level, block):
                         "so this grove is a puzzle rather than a place to make a mess"
                         % (lid, par))
 
-    # What the vines are worth on the board as dealt - invariant 26g's own test rather than a
-    # difficulty reading. Mirrors `BudValidator.Carrying`, and a warning for its reason: a grove
-    # may carry a vine that does nothing on the opening board and everything two taps in.
-    ran, changed, caught, legal = 0, 0, 0, 0
-    if grove.runners:
-        _best, _where, ran = bud.biggest(rows, deal, regrow, vines)
-        changed, caught, legal = bud.vines(rows, deal, regrow, vines)
-        if changed == 0:
-            warnings.append("%s: not one of this grove's %d opening taps plays out differently "
-                            "with every vine cut, so the runners are scenery on the board as "
-                            "dealt" % (lid, legal))
+    # What the specials are worth - invariant 26g's own test rather than a difficulty reading.
+    # Mirrors `BudValidator.Deciding`, and a warning for its reason: a grove may forge nothing
+    # on the board as dealt and everything two taps in.
+    forgeable = bud.forgeable(rows, deal, regrow, grafts, specials, forges)
+    if grove.forges:
+        if forgeable == 0 and not grove.specials:
+            warnings.append("%s: no opening move on this grove makes a bunch of five, so the "
+                            "player cannot forge a special on the board as dealt" % lid)
+        if fired == 0:
+            warnings.append("%s: none of the %d shortest plays fires a special, so on this grove "
+                            "the specials are never the best thing to do" % (lid, ways))
 
-    careless = bud.careless(rows, deal, budget or (par + bud.DEFAULT_SPARE), regrow, vines)
+    careless = bud.careless(rows, deal, budget or (par + bud.DEFAULT_SPARE), regrow, grafts,
+                            specials, forges)
     if careless < 0:
         warnings.append("%s: a player who always taps whatever sets off the biggest chain never "
                         "finishes this grove, which is the bar this mode is held to" % lid)
@@ -380,7 +379,8 @@ def check_bud(lid, chapter_id, level, block):
                 ready=len(set(grove.colour[i] for i in range(grove.count)
                               if grove.ground[i] == "f")),
                 deal=deal, grow=regrow or '',
-                runners=grove.runners, ran=ran, changed=changed, caught=caught, taps=legal)
+                grafts=grafts, forges=grove.forges, specials=grove.specials,
+                forgeable=forgeable, forged=forged, fired=fired)
 
 
 #: Where a well stops being cheap to prove, and where it stops being shippable. Mirrors
@@ -1178,6 +1178,11 @@ MIN_SEPARATION = NODE_DIAMETER + NODE_CLEARANCE
 # the mode switcher arrived under the banner - this copy was left behind, so the offline
 # check was the looser of the two and could pass a marker the Editor would flag.
 TEASER_GAP, TEASER_HEADROOM, TEASER_X = 0.22, 700.0, 0.66
+# ChapterMap.Crown*/Body*: what a cleared glade draws above its disc (record and rank), and
+# what any perch - a glade's or the marker's - hangs below and above its own centre. The disc
+# distance above is not what collides; these are.
+CROWN_HALF_WIDTH, CROWN_BOTTOM, CROWN_TOP = 204.0, 106.0, 302.0
+BODY_HALF_WIDTH, BODY_BELOW, BODY_ABOVE = 180.0, 227.0, 100.0
 
 
 def check_chapter_map(chapter, cid, ordered):
@@ -1224,6 +1229,26 @@ def check_chapter_map(chapter, cid, ordered):
             warnings.append(f"chapter '{cid}': '{lid}' is {gap:.0f} canvas units from the "
                             f"end-of-chapter marker at ({teaser[0]:.2f}, {teaser[1]:.2f})")
 
+    # Mirrors ChapterMap.Overshadows: a rectangle test, body over crown, because the
+    # standing mark is four times wider than it is tall and a radius that cleared its
+    # corners would refuse every alternating layout that ships.
+    def overshadows(body, crown):
+        dx = abs(body[0] - crown[0]) * MAP_WIDTH
+        if dx >= BODY_HALF_WIDTH + CROWN_HALF_WIDTH:
+            return False
+        dy = (body[1] - crown[1]) * height
+        return dy - BODY_BELOW < CROWN_TOP and dy + BODY_ABOVE > CROWN_BOTTOM
+
+    for lid, p in pts:
+        for other, q in pts:
+            if other != lid and overshadows(q, p):
+                warnings.append(f"chapter '{cid}': '{other}' stands on the standing mark above "
+                                f"'{lid}'; put them on opposite sides of the map, or further apart")
+        if overshadows(teaser, p):
+            warnings.append(f"chapter '{cid}': the end-of-chapter marker at ({teaser[0]:.2f}, "
+                            f"{teaser[1]:.2f}) stands on the standing mark above '{lid}'; end the "
+                            "chapter on the other side of the map from the marker")
+
 
 SLOT_KINDS = ("ground", "hearth", "structure", "bed", "path", "edge", "canopy")
 
@@ -1232,6 +1257,29 @@ SLOT_KINDS = ("ground", "hearth", "structure", "bed", "path", "edge", "canopy")
 # The mirror of GroveResidents.Retired - a save holding an old id has its placement
 # rewritten at load, for ever, so a target that leaves the roster empties somebody's slot.
 RESIDENT_PREFIX = "friend_"
+
+#: The most a piece may stand on, a side - GroveFootprint.MaxSide.
+MAX_FOOTPRINT = 4
+
+#: One hit-mask cell every this many art pixels - GroveHitMask.CellPx.
+HIT_CELL = 16
+
+
+def hit_length(w, h):
+    """How long a hit mask is for a picture this size - GroveHitMask.HexLengthFor."""
+    side = lambda px: 0 if not px or px <= 0 else (px + HIT_CELL - 1) // HIT_CELL
+    return (side(w) * side(h) + 3) // 4
+
+
+def png_size(path):
+    """A PNG's pixel size from its header alone, so no image library is needed here."""
+    if not path or not os.path.isfile(path):
+        return (None, None)
+    with open(path, "rb") as f:
+        head = f.read(24)
+    if len(head) < 24 or head[:8] != b"\x89PNG\r\n\x1a\n" or head[12:16] != b"IHDR":
+        return (None, None)
+    return (int.from_bytes(head[16:20], "big"), int.from_bytes(head[20:24], "big"))
 
 RETIRED_RESIDENTS = {
     "sunmote": "puff",
@@ -1242,7 +1290,31 @@ RETIRED_RESIDENTS = {
 }
 
 
-def check_grove(keys, level_ids, chapter_ids, companions, companion_costs=None):
+def land_price(region):
+    """What a stretch of ground costs, as (credits, gems).
+
+    Mirrors GroveRegion.Cost/Gems. A region is sold in one currency or the other; both
+    zero is starter land. Nothing here converts one into the other, deliberately - the
+    only credit figure ever read off a region is the grove's worth, and gem-priced land
+    is worth nothing there (see GroveRegionDto.gems).
+    """
+    return int(region.get("cost", 0) or 0), int(region.get("gems", 0) or 0)
+
+
+def is_starter_land(region):
+    """Land nothing gates - what a new player builds on.
+
+    Mirrors GroveRegion.IsStarter, *including* the correction that shipped with the gem
+    prices: this is both prices and not just credits. The narrow reading was the whole
+    rule while credits priced the whole floor and becomes "every gem-priced region is
+    free" the moment they do not, which would have handed over half the floor at launch
+    and read as correct in every file.
+    """
+    cost, gems = land_price(region)
+    return cost <= 0 and gems <= 0
+
+
+def check_grove(keys, level_ids, chapter_ids, companions, companion_costs=None, companion_rows=None):
     """The grove catalog: its land, its residents and its shop.
 
     The offline half of ContentValidation.ValidateHomestead. It matters more than the
@@ -1270,6 +1342,13 @@ def check_grove(keys, level_ids, chapter_ids, companions, companion_costs=None):
 
     art_root = os.path.abspath(os.path.join(os.path.dirname(ROOT), "..", "Game", "Art"))
 
+    def art_file(key, animated):
+        full = os.path.join(art_root, key.replace("/", os.sep))
+        if not animated:
+            return full + ".png"
+        frames = sorted(f for f in os.listdir(full) if f.lower().endswith(".png")) if os.path.isdir(full) else []
+        return os.path.join(full, frames[0]) if frames else None
+
     def art_exists(key, animated):
         full = os.path.join(art_root, key.replace("/", os.sep))
         return os.path.isdir(full) if animated else os.path.exists(full + ".png")
@@ -1289,6 +1368,9 @@ def check_grove(keys, level_ids, chapter_ids, companions, companion_costs=None):
     region_ids = set()
     starters = 0
     land_total = 0
+    land_gems = 0
+    rungs = {}
+    sellable = 0
 
     for region in regions:
         rid = region.get("id", "")
@@ -1301,7 +1383,8 @@ def check_grove(keys, level_ids, chapter_ids, companions, companion_costs=None):
 
         rc, rr = int(region.get("col", 0)), int(region.get("row", 0))
         rw, rh = int(region.get("cols", 0)), int(region.get("rows", 0))
-        cost = int(region.get("cost", 0))
+        cost, gems = land_price(region)
+        order = int(region.get("order", 0))
 
         if rw <= 0 or rh <= 0:
             errors.append(f"grove region '{rid}' is {rw}x{rh}; it holds no tiles")
@@ -1311,10 +1394,38 @@ def check_grove(keys, level_ids, chapter_ids, companions, companion_costs=None):
             errors.append(f"grove region '{rid}' runs off a {cols}x{rows} field")
             continue
 
-        if cost <= 0:
+        # One currency or the other. Both is the mistake with no safe reading: the shop
+        # cannot draw a button for a stretch that costs 5,000 credits and 600 gems, and
+        # whichever half the code picked would be a price nobody authored.
+        if cost > 0 and gems > 0:
+            errors.append(f"grove region '{rid}' is priced in both credits ({cost}) and gems "
+                          f"({gems}); a region is sold in one currency or the other")
+
+        if is_starter_land(region):
             starters += 1
+            # Starter land is not sold, so it is not on the ladder. A rung on it pushes every
+            # real rung one place down and makes the free ground look like something to buy.
+            if order > 0:
+                errors.append(f"grove region '{rid}' is free but sits on ladder rung {order}; "
+                              "starter land is not sold, so it is not on the ladder")
         else:
             land_total += cost
+            land_gems += gems
+            sellable += 1
+
+            # GroveLand.NextForSale offers the lowest unowned rung and nothing else, so a
+            # missing rung strands the stretch *and everything behind it*, and a duplicate
+            # one is a tie broken by authoring order, which nobody thinks of as a decision.
+            if order <= 0:
+                errors.append(f"grove region '{rid}' is for sale but has no ladder rung "
+                              "('order'); it would never be offered, and nothing behind it "
+                              "would be either")
+            elif order in rungs:
+                errors.append(f"grove regions '{rungs[order]}' and '{rid}' both sit on ladder "
+                              f"rung {order}; only one can be offered and which is decided by "
+                              "authoring order")
+            else:
+                rungs[order] = rid
 
         if f"ui.land.{rid}" not in keys:
             errors.append(f"grove region '{rid}' missing string 'ui.land.{rid}'")
@@ -1327,6 +1438,11 @@ def check_grove(keys, level_ids, chapter_ids, companions, companion_costs=None):
                                   f"{tid}; who owns it would depend on the order of the file")
                     continue
                 owner[tid] = rid
+
+    for rung in range(1, sellable + 1):
+        if rung not in rungs:
+            errors.append(f"the grove's land ladder has no rung {rung}; the rungs must be 1 to "
+                          f"{sellable} with no gaps")
 
     # An error, because it is the one that ships a broken first launch: a floor with no free
     # region opens the Grovement onto a screen the player owns nothing on.
@@ -1352,14 +1468,40 @@ def check_grove(keys, level_ids, chapter_ids, companions, companion_costs=None):
                           "and can never be owned")
             return None
         rid = owner[tid]
-        cost = next((int(x.get("cost", 0)) for x in regions if x.get("id") == rid), 0)
-        if cost > 0:
+        held = next((x for x in regions if x.get("id") == rid), None)
+        if held is not None and not is_starter_land(held):
+            cost, gems = land_price(held)
             errors.append(f"the grove's {what} stands on {tid}, in region '{rid}', which costs "
-                          f"{cost}; a new player would see it behind a padlock")
+                          f"{cost or gems}; a new player would see it behind a padlock")
         return tid
 
     hall = named_tile("hallTile", "hall", True)
-    named_tile("starterTile", "starter companion", False)
+    starter_tile = named_tile("starterTile", "starter companion", False)
+
+    # The hall's footprint is a fact about the floor (GroveFloor.HallFootprint): every
+    # dwelling has to author the same one, or buying a bigger home would take ground.
+    hall_cols = int(floor.get("hallCols") or 1)
+    hall_rows = int(floor.get("hallRows") or 1)
+    if not (1 <= hall_cols <= MAX_FOOTPRINT and 1 <= hall_rows <= MAX_FOOTPRINT):
+        errors.append(f"the grove's hall is {hall_cols}x{hall_rows}; a footprint is 1..{MAX_FOOTPRINT} a side")
+
+    hall_tiles = set()
+    if hall:
+        hc, hr = int(hall[2:5]), int(hall[6:9])
+        for c in range(hc, hc + hall_cols):
+            for r in range(hr, hr + hall_rows):
+                tid = "t_%03d_%03d" % (c, r)
+                hall_tiles.add(tid)
+                if tid not in owner:
+                    errors.append(f"the grove's hall ({hall_cols}x{hall_rows} from {hall}) covers {tid}, "
+                                  "which belongs to no region")
+                elif not is_starter_land(
+                        next((x for x in regions if x.get("id") == owner[tid]), {})):
+                    errors.append(f"the grove's hall covers {tid}, which is in a region that is "
+                                  "for sale; a new player would see their home behind a padlock")
+        if starter_tile in hall_tiles:
+            errors.append(f"the grove's starter companion on {starter_tile} stands under the hall; "
+                          "the game drops the companion")
 
     tile_art = floor.get("tileArt") or ""
     if tile_art and not art_exists(tile_art, False):
@@ -1449,6 +1591,33 @@ def check_grove(keys, level_ids, chapter_ids, companions, companion_costs=None):
         if not art_exists(art, piece.get("animated", False)):
             errors.append(f"grove piece '{pid}' has no art at Art/{art}"
                           f"{'/' if piece.get('animated') else '.png'}")
+        else:
+            # The picture's own facts, authored so the layout never waits for the sprite and a
+            # tap tests paint rather than air (HomesteadPiece.ArtWidth, GroveHitMask). Written
+            # by grove_art_facts.py; the size is re-read off the PNG header here, and the mask's
+            # shape is checked - its content is the tool's own --check.
+            pw, ph = png_size(art_file(art, piece.get("animated", False)))
+            if piece.get("w") != pw or piece.get("h") != ph:
+                errors.append(f"grove piece '{pid}' authors art size {piece.get('w')}x{piece.get('h')} "
+                              f"and the PNG is {pw}x{ph}; run Tools/grove_art_facts.py")
+            hit = piece.get("hit") or ""
+            if len(hit) != hit_length(pw, ph) or any(ch not in "0123456789abcdef" for ch in hit):
+                errors.append(f"grove piece '{pid}' has no {hit_length(pw, ph)}-character hit mask for "
+                              f"a {pw}x{ph} picture; run Tools/grove_art_facts.py")
+            elif set(hit) == {"0"}:
+                errors.append(f"grove piece '{pid}' has an empty hit mask, so nothing about it can "
+                              "be tapped; is the art blank?")
+
+        # What the piece stands on. A judgement, so only its shape is checked here; the hall's
+        # is the floor's and every dwelling must agree with it (GroveFloor.HallFootprint).
+        fcols = int(piece.get("cols") or 1)
+        frows = int(piece.get("rows") or 1)
+        if not (1 <= fcols <= MAX_FOOTPRINT and 1 <= frows <= MAX_FOOTPRINT):
+            errors.append(f"grove piece '{pid}' has a footprint of {fcols}x{frows}; a side is "
+                          f"1..{MAX_FOOTPRINT}")
+        if kind == "dwelling" and (fcols, frows) != (hall_cols, hall_rows):
+            errors.append(f"grove home '{pid}' is {fcols}x{frows} and the hall is "
+                          f"{hall_cols}x{hall_rows}; buying it would take or leave ground")
 
         if f"ui.piece.{pid}" not in keys:
             errors.append(f"grove piece '{pid}' missing string 'ui.piece.{pid}'")
@@ -1466,6 +1635,42 @@ def check_grove(keys, level_ids, chapter_ids, companions, companion_costs=None):
     if not piece_starters:
         errors.append("no grove piece is free from the first launch; a new player would open "
                       "the picker onto an empty list")
+
+    # The masks' *content* - whether each one is what the PNG would produce today - is the
+    # generator's own question, asked here so a re-cut sprite fails offline rather than only
+    # when somebody remembers to run the tool. It needs Pillow, which every art tool in
+    # Tools/ already needs; a machine without it cannot verify content and is told so.
+    try:
+        sys.path.insert(0, os.path.join(os.path.dirname(ROOT), "..", "..", "Tools"))
+        import grove_art_facts
+    except ImportError as e:
+        errors.append(f"the grove's hit masks could not be checked ({e}); install Pillow")
+    else:
+        stale = 0
+        for piece in pieces:
+            facts = grove_art_facts.facts_for(*grove_art_facts.piece_art(piece))
+            if facts is None:
+                continue
+            if (piece.get("w"), piece.get("h"), piece.get("hit")) != facts:
+                stale += 1
+                if stale <= 3:
+                    errors.append(f"grove piece '{piece.get('id')}' has art facts that differ from "
+                                  "its PNG; run Tools/grove_art_facts.py")
+        # A resident is a companion, and the grove draws its art too: the same facts live on
+        # the manifest's companion entries (groveW / groveH / groveHit) under the same check.
+        for companion in companion_rows or []:
+            cid = companion.get("id", "")
+            facts = grove_art_facts.facts_for(*grove_art_facts.companion_art(companion))
+            if facts is None:
+                errors.append(f"companion '{cid}' has no art for the grove to draw")
+                continue
+            if (companion.get("groveW"), companion.get("groveH"), companion.get("groveHit")) != facts:
+                stale += 1
+                if stale <= 3:
+                    errors.append(f"companion '{cid}' has grove art facts that differ from its "
+                                  "PNG; run Tools/grove_art_facts.py")
+        if stale > 3:
+            errors.append(f"{stale} grove pieces or companions have art facts that differ from their PNGs")
 
     if not companions:
         warnings.append("the manifest carries no companions; the grove's residents shelf is "
@@ -1554,6 +1759,10 @@ def check_grove(keys, level_ids, chapter_ids, companions, companion_costs=None):
     # catalog, which is the authored pieces with the roster projected in, so leaving them
     # out here would make this disagree with both the game and the build gate.
     roster = sum((companion_costs or {}).values())
+
+    # land_total and not the gems beside it: gem-priced land is worth nothing to a grove's
+    # score, so counting it here would put a star rung above what credits can ever reach.
+    # See GroveRegionDto.gems for why the leaderboard cannot price a gem.
     everything = total + land_total + roster
 
     if everything <= 0:
@@ -1566,7 +1775,8 @@ def check_grove(keys, level_ids, chapter_ids, companions, companion_costs=None):
     return {
         "homes": len(dwellings), "ladder": sum(c for _t, _p, c in dwellings),
         "cols": cols, "rows": rows, "regions": len(regions), "free_regions": starters,
-        "owned_tiles": len(owner), "land": land_total,
+        "owned_tiles": len(owner), "land": land_total, "land_gems": land_gems,
+        "ladder_names": " -> ".join(rungs[r] for r in sorted(rungs)),
         "slots": cols * rows, "pieces": len(pieces),
         "residents": len(companions),
         "for_sale": for_sale, "earned": earned, "starters": piece_starters, "total": total,
@@ -2166,14 +2376,16 @@ def run_bud_vectors():
     ripens between taps - and one without is *still*, which is how this mode shipped. The still
     cases go on pinning the base rule in isolation from everything built on top of it.
 
-    The runner cases are the same bargain one layer up: a vine carries a bursting flower's colour
-    across the board, and what has to be pinned is *when it does not* - a bunch that only touches
-    an end rather than including it, an end whose flower is not in the bunch, and a bomb, which
-    has no colour to send.
+    The special cases are the same bargain one layer up: a bunch of five forging a bolt where
+    the player tapped and a bunch of eight forging a sun, a bolt clearing its row and column, a
+    sun its square, a special in a fired special's reach firing too, a special taken into a
+    bunch firing, a bomb firing one, a graft that works and one that snaps back - and what has to
+    be pinned is the *threshold* each is made of, because a copy that forges at four passes every
+    other check.
 
-    Every case with a par also carries the taps of one shortest play and what each one came to,
-    which is the half par alone cannot pin: two copies can agree exactly about how many taps a
-    grove costs and still disagree about how far the chain ran.
+    Every case with a par also carries the moves of one shortest play and what each one came
+    to, which is the half par alone cannot pin: two copies can agree exactly about how many
+    moves a grove costs and still disagree about how far the chain ran.
     """
     doc = json.load(open(BUD_VECTORS, encoding="utf-8"))
     cases = doc.get("cases") or []
@@ -2184,68 +2396,78 @@ def run_bud_vectors():
     bad = []
     for case in cases:
         name = case.get("name", "?")
-        vines = case.get("runners") or None
+        strip = case.get("regrow") or None
+        grafts = bool(case.get("grafts"))
+        specials = case.get("specials") or None
+        forges = bool(case.get("forges"))
+        args = (case["rows"], case["colours"], strip, grafts, specials, forges)
 
         try:
-            grove = bud.Grove(case["rows"], case["colours"], case.get("regrow") or None, vines)
+            grove = bud.Grove(*args)
         except (ValueError, KeyError, IndexError) as why:
             bad.append("%s: %s" % (name, why))
             continue
 
-        strip = case.get("regrow") or None
         start = bud.Board(grove)
-        par, ways, _, proved = bud.search(case["rows"], case["colours"], strip, vines)
-        best, _where, ran = bud.biggest(case["rows"], case["colours"], strip, vines)
+        par, ways, _, proved, forged, fired = bud.search(*args)
+        best, _where = bud.biggest(*args)
+        forgeable = bud.forgeable(*args)
 
         for label, got, want in (("proved", proved, case["proved"]),
                                  ("par", par, case["par"]),
                                  ("flowers", start.flowers, case["flowers"]),
                                  ("cocoons", start.shut, case["cocoons"]),
+                                 ("specialsDealt", grove.specials, case.get("specialsDealt", 0)),
                                  ("bestBurst", best[0], case["bestBurst"]),
                                  ("bestWaves", best[1], case["bestWaves"]),
                                  ("bestFreed", best[2], case["bestFreed"]),
-                                 ("runners", grove.runners, case.get("runnerCount", 0)),
-                                 ("ran", ran, case.get("ran", 0))):
+                                 ("forgeable", forgeable, case.get("forgeable", 0))):
             if got != want:
                 bad.append("%s: %s is %r, vectors say %r" % (name, label, got, want))
 
         if case["par"] > 0:
-            if ways != case["ways"]:
-                bad.append("%s: ways is %r, vectors say %r" % (name, ways, case["ways"]))
+            for label, got in (("ways", ways), ("forged", forged), ("fired", fired)):
+                if got != case.get(label, 0):
+                    bad.append("%s: %s is %r, vectors say %r"
+                               % (name, label, got, case.get(label, 0)))
 
             careless = bud.careless(case["rows"], case["colours"],
-                                    case["par"] + bud.DEFAULT_SPARE, strip, vines)
+                                    case["par"] + bud.DEFAULT_SPARE, strip, grafts, specials, forges)
             if careless != case["careless"]:
                 bad.append("%s: careless is %r, vectors say %r"
                            % (name, careless, case["careless"]))
 
         board = bud.Board(grove)
         for nth, beat in enumerate(case.get("beats") or []):
-            at = beat["tap"]
-            allowed = board.can_tap(at)
+            kind = beat.get("kind") or "tap"
+            move = (kind, beat["tap"], beat.get("other", -1))
+
+            if kind == "tap":
+                allowed = board.can_tap(beat["tap"])
+            else:
+                allowed = board.can_graft(beat["tap"], beat.get("other", -1))
 
             if allowed != beat["allowed"]:
-                bad.append("%s: tap %d allowed is %r, vectors say %r"
+                bad.append("%s: move %d allowed is %r, vectors say %r"
                            % (name, nth + 1, allowed, beat["allowed"]))
 
-            b, w, f, c = board.tap(at) if allowed else (0, 0, 0, 0)
+            b, w, f, c, fo, fi = board.play(move) if allowed else (0, 0, 0, 0, 0, 0)
 
             for label, got in (("burst", b), ("waves", w), ("freed", f), ("cracked", c),
-                               ("flowersLeft", board.flowers), ("shut", board.shut)):
-                if got != beat[label]:
-                    bad.append("%s: tap %d %s is %r, vectors say %r"
-                               % (name, nth + 1, label, got, beat[label]))
-
+                               ("forged", fo), ("fired", fi),
+                               ("flowersLeft", board.flowers), ("shut", board.shut),
+                               ("specialsLeft", board.specials)):
+                want = beat.get(label, 0)
+                if got != want:
+                    bad.append("%s: move %d %s is %r, vectors say %r"
+                               % (name, nth + 1, label, got, want))
 
     # A vector set that has quietly lost its teeth is worse than none: it passes, it is printed
     # beside the word "ok", and nothing says the rule stopped being checked.
     covers = dict(chain=False, unfinishable=False, nomove=False, tough=False, wood=False,
-                  refused=False, runner=False, runner_idle=False)
+                  refused=False, bolt=False, sun=False, fired=False, chained=False,
+                  graft=False, snapped=False)
     for case in cases:
-        if case.get("runnerCount"):
-            covers["runner"] = True
-            if not case.get("ran"):
-                covers["runner_idle"] = True
         if case["bestWaves"] >= 3:
             covers["chain"] = True
         if case["par"] == 0:
@@ -2256,8 +2478,22 @@ def run_bud_vectors():
             covers["tough"] = True
         if case["stones"] > 0:
             covers["wood"] = True
-        if any(not beat["allowed"] for beat in (case.get("beats") or [])):
-            covers["refused"] = True
+        for beat in (case.get("beats") or []):
+            kind = beat.get("kind") or "tap"
+            if not beat["allowed"]:
+                covers["refused"] = True
+            if kind == "graft" and beat["allowed"]:
+                covers["graft"] = True
+            if kind == "graft" and not beat["allowed"]:
+                covers["snapped"] = True
+            if beat.get("forged") and beat.get("bolt"):
+                covers["bolt"] = True
+            if beat.get("forged") and beat.get("sun"):
+                covers["sun"] = True
+            if beat.get("fired") == 1:
+                covers["fired"] = True
+            if beat.get("fired", 0) >= 2:
+                covers["chained"] = True
 
     for what, held in covers.items():
         if not held:
@@ -2481,7 +2717,8 @@ def main():
                         {lv for e in manifest["chapters"] for lv in (e.get("levels") or [])},
                         {e["id"] for e in manifest["chapters"] if e.get("id")},
                         {c["id"] for c in live_companions},
-                        {c["id"]: int(c.get("unlockCost") or 0) for c in live_companions})
+                        {c["id"]: int(c.get("unlockCost") or 0) for c in live_companions},
+                        live_companions)
 
     others = [x for x in summaries if x.get("mode")]
     if others:
@@ -2515,15 +2752,17 @@ def main():
             elif c['mode'] == 'keeper':
                 held = f"{c['beds']} bed(s), {c['hearts']} heartbed(s), deals {c['deal']}"
             elif c['mode'] == 'bud':
-                # Runners named separately, with the readings that say whether they are doing
-                # anything. `changed` is invariant 26g's test - opening taps that play out
-                # differently with every vine cut, so 0 condemns the board - and `caught` is the
-                # one an author holds out for: taps that burst MORE because a vine carried, which
-                # is the arrangement the player is making. `ran` says the best tap fires one,
-                # which is what makes the mechanic something anybody watches.
-                vines = (f", {c['runners']} runner(s) (best tap fires {c['ran']}; of "
-                         f"{c['taps']} opening taps {c['changed']} play differently and "
-                         f"{c['caught']} burst more)") if c.get('runners') else ""
+                # The chapter's two things named separately, each with the reading that says
+                # whether it is doing anything - invariant 26g's test, warned at 0 by `check_bud`.
+                bits = []
+                if c.get('grafts'):
+                    bits.append("grafts")
+                if c.get('specials'):
+                    bits.append(f"{c['specials']} special(s) dealt")
+                if c.get('forges'):
+                    bits.append(f"{c['forgeable']} opening move(s) forge a special, "
+                                f"{c['fired']} of {c['ways']} plays fire one")
+                vines = (", " + ", ".join(bits)) if bits else ""
 
                 held = (f"{c['buds']} flower(s) in {c['ready']} colour(s), "
                         f"{c['cocoons']} critter(s) shut in{vines}, deals {c['deal']}")
@@ -2540,8 +2779,15 @@ def main():
               f"{grove['pieces']} piece(s) - {grove['residents']} resident(s) from the roster, "
               f"{grove['starters']} free, {grove['earned']} earned, {grove['for_sale']} for sale "
               f"({grove['total']} credits in all)")
+        gem_land = f" and {grove['land_gems']} gem(s)" if grove["land_gems"] else ""
         print(f"       land: {grove['regions']} region(s), {grove['free_regions']} free, "
-              f"{grove['owned_tiles']} tile(s) sellable - {grove['land']} credits to own it all")
+              f"{grove['owned_tiles']} tile(s) sellable - {grove['land']} credits{gem_land} "
+              "to own it all")
+        print(f"       land ladder: {grove['ladder_names']}")
+        if grove["land_gems"]:
+            print("       gem-priced land is worth nothing to a grove's score - the score is "
+                  "the credits' worth of what is held (16g) and the server's clamp is "
+                  "denominated in credits (19a)")
         print(f"       home ladder: {grove['homes']} rung(s), {grove['ladder']} credits to the top")
         if grove["bundled"]:
             shelves = ", ".join(f"{k} x{n}" for k, n in sorted(grove["bundle_kinds"].items()))

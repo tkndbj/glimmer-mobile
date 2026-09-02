@@ -532,6 +532,9 @@ namespace GlimmerGrove.Content
         /// </summary>
         const int TooFewWays = 2;
 
+        /// <summary>The least par a grove may ship at. See the star-band note in <c>Validate</c>.</summary>
+        const int LeastPar = 3;
+
         public override void Validate(LevelDefinition level, List<LevelIssue> issues)
         {
             var grove = (BudRules)level.Rules;
@@ -551,7 +554,7 @@ namespace GlimmerGrove.Content
             // about what to move.
             Reachable(layout, issues);
             Settled(layout, issues);
-            Strung(layout, issues);
+            Standing(layout, issues);
 
             // **Old wood is retired from this mode.** The parser still understands `#` — the
             // character is shared vocabulary with Groovekeeper and a second rule about it would
@@ -605,6 +608,16 @@ namespace GlimmerGrove.Content
                 return;
             }
 
+            // **Par 3 is the floor, and it is arithmetic rather than taste.** At par 2 both star
+            // lines round onto 3 (ceil(2.4) and ceil(2.8)), so the two-star band is empty and a
+            // careless player drops straight from three stars to one. `CheckStarBands` reads
+            // the factors and cannot see it; only the derived lines can (CRAFT.md).
+            if (survey.Par < LeastPar)
+                issues.Add(new LevelIssue(LevelIssueSeverity.Error,
+                    $"this grove is par {survey.Par}, below the {LeastPar} a Budburst grove needs: " +
+                    "at par 2 the three-star and two-star lines both round onto 3 and the middle " +
+                    "band is empty. Add a cocoon the chain cannot reach in one, or move one away"));
+
             if (survey.Nodes > NodeCeiling)
                 issues.Add(new LevelIssue(LevelIssueSeverity.Error,
                     $"proving this grove took {survey.Nodes} positions, above the {NodeCeiling} " +
@@ -629,12 +642,13 @@ namespace GlimmerGrove.Content
                     "so this grove is a puzzle rather than a place to make a mess. Add a bud, " +
                     "ripen one, or move a cocoon so more than one chain reaches it"));
 
+            // And whether the objects are worth anything, which is the reading this mode's
+            // second chapter added. See `Deciding` — invariant 26g's test, not a difficulty.
+            Deciding(layout, survey, issues);
+
             // And the bar this mode actually has. A player who never looks past this tap is the
             // player this mode is for, and a grove they cannot finish inside the satchel is
             // asking for more than the mode promises.
-            // And whether the vines are worth anything, which is the one reading this mode's
-            // second chapter added. See `Carrying` — invariant 26g's test, not a difficulty.
-            Carrying(layout, issues);
 
             int careless = BudSolver.Careless(layout, level.Tuning.MoveBudget);
 
@@ -680,121 +694,55 @@ namespace GlimmerGrove.Content
         }
 
         /// <summary>
-        /// Everything about a runner that can be read off the picture rather than searched for.
-        ///
-        /// <para>
-        /// <b>The one that is an error is adjacency</b>, and it is an error rather than a taste:
-        /// a burst already washes its colour into every flower touching it, so a runner joining
-        /// two squares that touch delivers a colour the wave was delivering anyway. It is the
-        /// purest form of the fault this project keeps paying for — an object that rejects no
-        /// arrangement (invariant 5d) — and unlike the readings below it can be proved by
-        /// looking at two numbers.
-        /// </para>
+        /// Everything about a dealt special that can be read off the picture rather than
+        /// searched for: it stands on a flower (the parser refuses anything else), and there are
+        /// not so many of them that the board is dealt solved.
         /// </summary>
-        static void Strung(BudLayout layout, List<LevelIssue> issues)
+        static void Standing(BudLayout layout, List<LevelIssue> issues)
         {
-            if (!layout.HasRunners) return;
-
-            if (layout.Runners > BudLayout.MaxRunners)
+            if (layout.Specials > MaxDealtSpecials)
                 issues.Add(new LevelIssue(LevelIssueSeverity.Error,
-                    $"this grove is strung with {layout.Runners} runners, above the " +
-                    $"{BudLayout.MaxRunners} a grove may carry. A runner moves colour somewhere " +
-                    "the player is not looking, so a board laced with them is a wiring diagram " +
-                    "rather than somewhere to make a mess"));
-
-            for (int i = 0; i < layout.Count; i++)
-            {
-                int far = layout.FarEnd(i);
-                if (far < i) continue;                  // once per runner, at its lower end
-
-                int ax = i % layout.Width, ay = i / layout.Width;
-                int bx = far % layout.Width, by = far / layout.Width;
-                int span = Math.Abs(ax - bx) + Math.Abs(ay - by);
-
-                if (span <= 1)
-                {
-                    issues.Add(new LevelIssue(LevelIssueSeverity.Error,
-                        $"the runner between {ax},{ay} and {bx},{by} joins two squares that " +
-                        "already touch, and a burst washes its colour into everything touching " +
-                        "it — so this vine can never deliver anything the wave was not " +
-                        "delivering anyway"));
-                }
-                else if (span < 3)
-                {
-                    issues.Add(new LevelIssue(LevelIssueSeverity.Warning,
-                        $"the runner between {ax},{ay} and {bx},{by} spans {span} squares, which " +
-                        "is about as far as one wave of an ordinary chain reaches on its own. A " +
-                        "runner is worth authoring for the distance it covers"));
-                }
-
-                End(layout, i, issues);
-                End(layout, far, issues);
-            }
+                    $"this grove deals {layout.Specials} specials already forged, above the " +
+                    $"{MaxDealtSpecials} a grove may. A special is something the player makes; " +
+                    "a grove deals one only to teach what firing it does"));
         }
 
-        /// <summary>What one end of a runner is standing on, which decides whether it can work.</summary>
-        static void End(BudLayout layout, int end, List<LevelIssue> issues)
-        {
-            if (layout.IsFlower(end)) return;
-
-            int x = end % layout.Width, y = end / layout.Width;
-
-            if (layout.IsCocoon(end))
-            {
-                issues.Add(new LevelIssue(LevelIssueSeverity.Warning,
-                    $"the runner end at {x},{y} is authored under a cocoon, so that half of it " +
-                    "is inert until the grove falls something else onto it. Legal — and a vine " +
-                    "nobody can use on the opening board is a vine nobody will notice is there"));
-                return;
-            }
-
-            issues.Add(new LevelIssue(LevelIssueSeverity.Error,
-                $"the runner end at {x},{y} stands on nothing a bunch could ever include. A " +
-                "runner carries a bursting flower’s colour, so both its ends belong on the " +
-                "grove itself"));
-        }
+        /// <summary>The most specials a grove may deal already forged.</summary>
+        const int MaxDealtSpecials = 2;
 
         /// <summary>
-        /// Whether the vines decide anything, measured by cutting them.
+        /// Whether the specials decide anything, measured rather than argued about.
         ///
         /// <para>
-        /// <b>This is invariant 26g’s test rather than a difficulty reading</b>, and the two
-        /// mechanics that were withdrawn from Lightfall are why it exists at all: a mirror and a
-        /// wick both passed every check in this repository while changing nothing about any board
-        /// they stood on, and the comparison that would have caught either is one line —
-        /// <em>replace the new object with the nearest existing one and see whether anything
-        /// changes</em>. Here the nearest existing thing is no runner, and what is compared is
-        /// every opening tap the grove has, played out both ways.
+        /// <b>This is invariant 26g's test rather than a difficulty reading</b>, and five
+        /// withdrawn mechanics are why it exists at all. Two numbers: whether the board as dealt
+        /// lets the player <em>forge</em> a special at all, and whether any shortest play
+        /// <em>fires</em> one. A grove where neither is true is a grove of the first chapter
+        /// wearing the second's name.
         /// </para>
         /// <para>
-        /// <b>Not par, which is the reading this started as and which cannot work in this
-        /// mode.</b> A grove is dealt far more taps than its answer needs and its chains reach
-        /// most of the board, so par sits on a floor set by how many critters are shut in and
-        /// how far apart they are — measured across a few thousand swept boards, cutting every
-        /// vine moved par on <em>none</em> of them, on groves where the vine plainly decided how
-        /// the grove played. A metric that answers "nothing" for every input is not a strict
-        /// gate, it is a broken one, and shipping it would have meant every level of the chapter
-        /// carrying a warning nobody could act on.
-        /// </para>
-        /// <para>
-        /// A warning rather than a refusal, for <c>CheckDecidableTiles</c>’ reason: a grove
-        /// may carry a vine that does nothing on the board <em>as dealt</em> and everything two
-        /// taps in, once the grove has fallen through it.
+        /// A warning rather than a refusal, for <c>CheckDecidableTiles</c>' reason: a grove may
+        /// forge nothing on the board <em>as dealt</em> and everything two taps in, once the
+        /// grove has fallen into place.
         /// </para>
         /// </summary>
-        static void Carrying(BudLayout layout, List<LevelIssue> issues)
+        static void Deciding(BudLayout layout, BudSurvey survey, List<LevelIssue> issues)
         {
-            if (!layout.HasRunners) return;
+            if (!layout.Grafts && !layout.HasSpecials) return;
 
-            var reading = BudRunnerReading.Of(layout);
-            if (reading.Changed > 0) return;
+            var reading = BudObjectReading.Of(layout, survey);
 
-            issues.Add(new LevelIssue(LevelIssueSeverity.Warning,
-                $"not one of this grove's {reading.Taps} opening taps plays out differently with " +
-                "every vine cut, so the runners are scenery on the board as dealt. That is the " +
-                "state a mirror and a wick both shipped in and were withdrawn for — move an end " +
-                "where a bunch can take it in, or put two alike beside the far one so the colour " +
-                "that arrives completes something"));
+            if (reading.Forgeable == 0 && !layout.HasSpecials)
+                issues.Add(new LevelIssue(LevelIssueSeverity.Warning,
+                    "no opening move on this grove makes a bunch of five, so the player cannot " +
+                    "forge a special on the board as dealt. Author a four somewhere the hand's " +
+                    "colour completes"));
+
+            if (reading.Fired == 0)
+                issues.Add(new LevelIssue(LevelIssueSeverity.Warning,
+                    $"none of the {reading.Ways} shortest plays fires a special, so on this grove " +
+                    "the specials are never the best thing to do. Put the cocoons where a bolt's " +
+                    "line or a sun's square reaches them"));
         }
 
         /// <summary>

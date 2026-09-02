@@ -53,7 +53,7 @@ namespace GlimmerGrove.Tests
             {
                 Level("t_a", .33f, .20f),
                 Level("t_b", .67f, .45f),
-                Level("t_c", .32f, .70f),
+                Level("t_c", .30f, .70f),
             };
 
             var issues = ChapterMapValidator.Validate(Chapter(3), levels);
@@ -157,6 +157,104 @@ namespace GlimmerGrove.Tests
 
             var issues = ChapterMapValidator.Validate(Chapter(3), levels);
             Assert.IsTrue(Mentions(issues, "end-of-chapter marker"), Describe(issues));
+        }
+
+        /// <summary>
+        /// The shape every mode's first chapter shipped in: the last glade on the right, under
+        /// a marker on its default side, 308 canvas units straight up. The discs clear each
+        /// other by 88 units, so the distance check passed — and the marker's name plate sat on
+        /// the player's standing above the tenth glade. Mirrored, with the tenth glade on the
+        /// left, the same chapter is clean.
+        /// </summary>
+        [Test]
+        public void AMarkerAboveTheLastGladeStandsOnItsStandingMark()
+        {
+            float marker = ChapterMap.TeaserPosition(1f, 6).y;
+
+            var shipped = new List<LevelDefinition>
+            {
+                Level("t_a", .34f, marker - .13f),
+                Level("t_b", ChapterMap.TeaserX, marker - .043f),
+            };
+
+            var issues = ChapterMapValidator.Validate(Chapter(6), shipped);
+            Assert.IsTrue(Mentions(issues, "standing mark above 't_b'"), Describe(issues));
+            Assert.IsFalse(Mentions(issues, "canvas units from the end-of-chapter marker"),
+                           "the discs clear each other, which is the whole point:\n  " + Describe(issues));
+
+            var mirrored = new List<LevelDefinition>
+            {
+                Level("t_a", ChapterMap.TeaserX, marker - .13f),
+                Level("t_b", .30f, marker - .043f),
+            };
+
+            var clean = ChapterMapValidator.Validate(Chapter(6), mirrored);
+            Assert.AreEqual(0, clean.Count, Describe(clean));
+        }
+
+        /// <summary>
+        /// The same rule between two glades: one standing 360 units straight above another
+        /// clears its disc by 140 and still hangs its plate over the lower glade's standing.
+        /// On the other side of the map, or 576 units up, it is clean — which is why every
+        /// shipped chapter alternates sides.
+        /// </summary>
+        [Test]
+        public void AGladeStandingOnAnothersMarkWarns()
+        {
+            var stacked = new List<LevelDefinition>
+            {
+                Level("t_a", .30f, .20f),
+                Level("t_b", .30f, .25f),
+            };
+
+            var issues = ChapterMapValidator.Validate(Chapter(6), stacked);
+            Assert.IsTrue(Mentions(issues, "'t_b' stands on the standing mark above 't_a'"), Describe(issues));
+
+            var opposite = new List<LevelDefinition>
+            {
+                Level("t_a", .30f, .20f),
+                Level("t_b", .70f, .25f),
+            };
+            Assert.AreEqual(0, ChapterMapValidator.Validate(Chapter(6), opposite).Count);
+
+            var higher = new List<LevelDefinition>
+            {
+                Level("t_a", .30f, .20f),
+                Level("t_b", .30f, .28f),
+            };
+            Assert.AreEqual(0, ChapterMapValidator.Validate(Chapter(6), higher).Count);
+        }
+
+        /// <summary>
+        /// The crown and the body are what the screen draws, measured in Domain where the
+        /// validator can reach them. The screen may not hold the map's geometry (8a) and
+        /// Domain may not read the screen, so this is the only place the two meet: resize the
+        /// standing pill, the plate or the rock and this names the number that stopped
+        /// covering it.
+        /// </summary>
+        [Test]
+        public void TheCrownAndBodyCoverWhatTheMapDraws()
+        {
+            Assert.GreaterOrEqual(ChapterMap.CrownHalfWidth, LevelsScreen.RankMarkTwoLine.x * .5f,
+                                  "the standing pill is wider than the crown");
+            Assert.LessOrEqual(ChapterMap.CrownBottom, LevelsScreen.RankMarkBottom,
+                               "the standing pill starts below the crown");
+
+            float pillTop = LevelsScreen.RankMarkBottom + LevelsScreen.RankMarkTwoLine.y;
+            float medalTop = LevelsScreen.RankMarkBottom + LevelsScreen.RankMarkTwoLine.y * .5f
+                             + LevelsScreen.MedalY + LevelsScreen.MedalSize * .5f;
+            Assert.GreaterOrEqual(ChapterMap.CrownTop, Mathf.Max(pillTop, medalTop),
+                                  "the standing mark reaches above the crown");
+
+            Assert.GreaterOrEqual(ChapterMap.BodyHalfWidth,
+                                  Mathf.Max(LevelsScreen.PerchWidth, LevelsScreen.PlateWidth) * .5f,
+                                  "a perch is wider than the body");
+            Assert.GreaterOrEqual(ChapterMap.BodyBelow, -LevelsScreen.PlateY + LevelsScreen.PlateHeight * .5f,
+                                  "the name plate hangs below the body");
+            Assert.GreaterOrEqual(ChapterMap.BodyAbove,
+                                  Mathf.Max(LevelsScreen.NodeSize * .5f + 2f,
+                                            LevelsScreen.PerchRockY + LevelsScreen.PerchRockHeight * .5f),
+                                  "the disc or the rock reaches above the body");
         }
 
         /// <summary>

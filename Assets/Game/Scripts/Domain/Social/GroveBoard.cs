@@ -30,11 +30,18 @@ namespace GlimmerGrove.Social
     /// which this is the second and larger instance of.
     /// </para>
     /// <para>
-    /// <b>Subscriptions, not call sites.</b> Publishing is asked for by the three ledgers and
-    /// the profile raising their own events, wired once in <see cref="Attach"/>. This file's
-    /// project has paid three times over for the alternative — a step every new call site has
-    /// to remember, forgotten by the third one — and a grove that silently stops updating on
-    /// the board is exactly the failure nobody notices until a player reports it.
+    /// <b>A card is asked for after the sync, never after the change.</b> The server builds
+    /// the card from the save under <c>players/{uid}</c>, so a publish requested the moment a
+    /// piece was placed was answered from the save pushed <em>last</em> time — and the
+    /// fingerprint then noted as published stopped the real one ever being sent. Every board
+    /// in the game showed every grove one session behind, for a week, with a successful call
+    /// and a well-formed card on each publish. So the only thing that asks for a publish is
+    /// <see cref="CloudSaveService.Settled"/>, the card is built from the save the receipt
+    /// carries (<see cref="GroveCard.OfSave"/>) rather than from the live ledgers, and the
+    /// reply is checked against the revision the receipt named
+    /// (<see cref="GrovePublication.Proves"/>). What makes the change reach the server
+    /// promptly is <see cref="SyncTriggers"/>, wired once in <c>Boot</c>: a placement or a
+    /// purchase asks for a sync, and the sync asks for the card.
     /// </para>
     /// </summary>
     public static class GroveBoard
@@ -63,14 +70,26 @@ namespace GlimmerGrove.Social
         static readonly Dictionary<string, (LeaderboardBoard board, double at)> _boards =
             new Dictionary<string, (LeaderboardBoard, double)>(StringComparer.Ordinal);
 
-        static readonly Dictionary<string, GroveCard> _cards =
-            new Dictionary<string, GroveCard>(StringComparer.Ordinal);
+        static readonly Dictionary<string, (GroveCard card, double at)> _cards =
+            new Dictionary<string, (GroveCard, double)>(StringComparer.Ordinal);
         static readonly List<string> _cardOrder = new List<string>();
 
         static int _publishing;
         static double _now;
         static bool _attached;
         static bool _ranksAsked;
+
+        /// <summary>
+        /// The last receipt a sync handed over, kept so it can be judged again.
+        ///
+        /// A receipt arriving before the grove catalog has loaded cannot be scored — every
+        /// piece is worth nothing against an empty catalog — so it is held here and evaluated
+        /// again when the catalog is published. Without that, a rename made before the player
+        /// ever opened their grove would wait for the next sync that happened to run with the
+        /// catalog loaded. Judging an old receipt again is safe: what it proves is that the
+        /// server holds at least that revision, which only becomes more true.
+        /// </summary>
+        static SyncReceipt _receipt;
 
         /// <summary>Raised when this account's published card changed, so a screen can repaint.</summary>
         public static event Action Published;
@@ -121,24 +140,64 @@ namespace GlimmerGrove.Social
             if (_attached) return;
             _attached = true;
 
-            HomesteadLedger.Changed += RequestPublish;   // pieces, and residents through it
-            GroveLand.Changed += RequestPublish;
-            HomesteadLayout.Changed += RequestPublish;
-            Wallet.ProfileChanged += RequestPublish;     // the name and the worn companion
-            GameSettings.Changed += OnSettingsChanged;
+            // The one source. A settled sync is the only moment the server is known to hold
+            // the grove a card would be built from, and the receipt says which save and which
+            // revision — see the type's remarks. Nothing else may ask, because a request
+            // raised by the change itself was the bug this file's header describes.
+            CloudSaveService.Settled += OnSettled;
 
-            // And once when the account is known, which is what puts a grove built before the
-            // boards existed onto them. Every event above fires on a *change*, so without this
-            // a player who had already bought everything would never publish anything —
-            // silently, and for ever. It is nearly free: the remembered fingerprint below
-            // means an unchanged grove asks for nothing.
-            CloudSaveService.Synced += OnSynced;
+            // A receipt held back for want of a catalog is judged when the catalog arrives.
+            HomesteadCatalog.Changed += Reconsider;
+
+            // Turning the board off takes the card down; turning it on has to reach the
+            // server's copy of the setting first, so it asks for a sync rather than a card.
+            GameSettings.Changed += OnSettingsChanged;
         }
 
-        static void OnSynced()
+        static void OnSettled(SyncReceipt receipt)
         {
+            if (!receipt.IsValid) return;
+
+            _receipt = receipt;
             Remember();
-            RequestPublish();
+            Consider(receipt);
+        }
+
+        static void Reconsider()
+        {
+            if (_receipt.IsValid) Consider(_receipt);
+        }
+
+        /// <summary>
+        /// Decides whether the save the server now holds is worth a card, and asks for one.
+        ///
+        /// <para>
+        /// Built from the receipt's save rather than from the ledgers, for
+        /// <see cref="GroveCard.OfSave"/>'s reason: a change made while the push was in
+        /// flight is on the device and not on the server, and only the file the server holds
+        /// can say what the server will publish. The request carries the revision that file
+        /// has there, and the reply is held to it.
+        /// </para>
+        /// </summary>
+        static void Consider(SyncReceipt receipt)
+        {
+            if (!IsAvailable) return;
+
+            if (!OptedIn)
+            {
+                _policy.RequestWithdrawal();
+                return;
+            }
+
+            // Nothing can be scored against an empty catalog, and "worth nothing" would be
+            // the wrong answer; the receipt is kept and judged when the catalog is published.
+            if (!HomesteadCatalog.IsLoaded) return;
+
+            var card = GroveCard.OfSave(HomesteadCatalog.Current, receipt.Save, CloudState.UserId,
+                                        PlayerProgression.Level.Level, SaveSchema.NowUnix());
+
+            _policy.Request(card.Fingerprint(), receipt.ServerRevision,
+                            card.Score >= GrovePublishPolicy.Worth);
         }
 
         // ------------------------------------------------------------- remembering
@@ -157,7 +216,15 @@ namespace GlimmerGrove.Social
         /// suppress the incoming grove's first publish entirely.
         /// </para>
         /// </summary>
-        const string PublishedKey = "grove.published.";
+        /// <remarks>
+        /// Versioned, and the bump is deliberate. Every note written under the first key
+        /// vouched for a card built from the previous session's save (this file's header), so
+        /// each of them is a claim that a stale card is current — and the proof that would
+        /// catch that only runs on a reply, which no old note is ever going to get. A new key
+        /// makes every device republish exactly once on its next settled sync. Bump it again
+        /// only for the same reason: a fingerprint that has been recorded against a wrong card.
+        /// </remarks>
+        const string PublishedKey = "grove.published.2.";
 
         static void Remember()
         {
@@ -183,31 +250,16 @@ namespace GlimmerGrove.Social
             DevicePrefs.WriteString(PublishedKey + uid, fingerprint ?? string.Empty);
         }
 
-        /// <summary>
-        /// Something visible changed, so the card is owed a rebuild.
-        ///
-        /// Cheap enough to call on every event: the policy compares fingerprints and drops a
-        /// request that would republish what is already there, which is most of them.
-        /// </summary>
-        public static void RequestPublish()
+        static void OnSettingsChanged()
         {
             if (!IsAvailable) return;
 
-            if (!OptedIn)
-            {
-                _policy.RequestWithdrawal();
-                return;
-            }
-
-            var card = BuildMine();
-            _policy.Request(card.Fingerprint(), card.Score >= GrovePublishPolicy.Worth);
-        }
-
-        static void OnSettingsChanged()
-        {
-            // Turning it off has to take the card down rather than merely stop rebuilding it,
-            // and turning it back on has to republish rather than wait for the next purchase.
-            if (OptedIn) RequestPublish();
+            // Turning it off has to take the card down rather than merely stop rebuilding it.
+            // Turning it back on cannot publish here: the server reads the opt-in off the save
+            // it holds, and the save it holds still says off — asked now, it would withdraw
+            // the card the player has just asked for. So the setting goes up first, and the
+            // sync that carries it asks for the card through Settled like any other change.
+            if (OptedIn) CloudSaveService.RequestSync();
             else _policy.RequestWithdrawal();
         }
 
@@ -237,6 +289,10 @@ namespace GlimmerGrove.Social
             NameReports.Forget();
             Mine = GroveCard.Empty;
             _ranksAsked = false;
+
+            // A receipt describes an account's save on the server; the next account's
+            // arrives with its own sync.
+            _receipt = default;
         }
 
         // ------------------------------------------------------------------- ticking
@@ -262,7 +318,7 @@ namespace GlimmerGrove.Social
             switch (_policy.Tick(deltaSeconds))
             {
                 case GrovePublishAction.Publish:
-                    _ = RunPublishAsync(_policy.InFlightFingerprint);
+                    _ = RunPublishAsync(_policy.InFlightFingerprint, _policy.InFlightRevision);
                     break;
 
                 case GrovePublishAction.Withdraw:
@@ -290,18 +346,44 @@ namespace GlimmerGrove.Social
         /// </summary>
         public static GroveCard Predicted() => BuildMine();
 
-        static async Task RunPublishAsync(string fingerprint)
+        static async Task RunPublishAsync(string fingerprint, long revision)
         {
             if (Interlocked.Exchange(ref _publishing, 1) != 0) return;
 
             try
             {
-                var (result, card) = await Backend.PublishGroveAsync(CloudState.UserId);
+                var (result, published) = await Backend.PublishGroveAsync(CloudState.UserId);
 
                 if (result.Ok)
                 {
-                    Mine = card ?? GroveCard.Empty;
-                    _policy.Succeeded(fingerprint);
+                    // The proof. The request was made after a sync that left the server's
+                    // document at `revision`; a card built from anything older is a card of
+                    // a grove this device has already replaced, however well-formed.
+                    if (!published.Proves(revision))
+                    {
+                        UnityEngine.Debug.LogWarning(
+                            $"[Boards] the card was built from save revision {published.SaveRevision} " +
+                            $"where this device had settled {revision}");
+
+                        if (_policy.Stale())
+                        {
+                            // Push again, and the sync that lands asks for the card again;
+                            // the policy holds the work meanwhile with a backoff.
+                            CloudSaveService.RequestSync();
+                            return;
+                        }
+
+                        // Retries spent. Taken as published rather than retried for ever
+                        // (invariant 13a); the next real change asks afresh.
+                        UnityEngine.Debug.LogWarning("[Boards] accepting the stale card after " +
+                                                     $"{GrovePublishPolicy.MaxStaleRetries} retries");
+                    }
+                    else
+                    {
+                        _policy.Succeeded(fingerprint);
+                    }
+
+                    Mine = published.Card ?? GroveCard.Empty;
                     Note(fingerprint);
 
                     // Our own row on any cached board is now stale. Cheaper and more honest
@@ -423,10 +505,11 @@ namespace GlimmerGrove.Social
         /// One keeper's grove. Held briefly, so stepping back up a list is free.
         ///
         /// <para>
-        /// A card is not aged out the way a board is: it is a picture of somebody's grove and
-        /// a five-minute-old one is not wrong in any way a visitor could notice, whereas a
-        /// board carries this player's own row and wants to move when they buy something. The
-        /// cache is bounded by count instead, oldest first.
+        /// Aged the way a board is, against the same <see cref="CacheSeconds"/>, and bounded
+        /// by count as well, oldest first. A card used to be kept for the life of the process
+        /// on the argument that a picture of somebody else's grove is never wrong in a way a
+        /// visitor could notice — which is true of a five-minute-old one and false of a
+        /// week-old one, and a phone that is never quite closed keeps a process for weeks.
         /// </para>
         /// </summary>
         public static async Task<(CloudResult result, GroveCard card)> FetchCardAsync(
@@ -435,7 +518,8 @@ namespace GlimmerGrove.Social
             if (string.IsNullOrEmpty(ownerId))
                 return (CloudResult.Failed(CloudFailure.Rejected, "no owner"), GroveCard.Empty);
 
-            if (_cards.TryGetValue(ownerId, out var held)) return (CloudResult.Success, held);
+            if (_cards.TryGetValue(ownerId, out var held) && _now - held.at < CacheSeconds)
+                return (CloudResult.Success, held.card);
 
             var (result, card) = await Backend.ReadGroveCardAsync(ownerId, cancellation);
 
@@ -487,7 +571,7 @@ namespace GlimmerGrove.Social
         static void Remember(string ownerId, GroveCard card)
         {
             if (!_cards.ContainsKey(ownerId)) _cardOrder.Add(ownerId);
-            _cards[ownerId] = card;
+            _cards[ownerId] = (card, _now);
 
             while (_cardOrder.Count > MaxRememberedCards)
             {

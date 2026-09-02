@@ -79,14 +79,11 @@ ORDINAL = 3
 STRIPS = mapart.strips(ORDINAL)
 SKIES = mapart.skies(ORDINAL)
 
-#: The marker sits opposite the last glade, which ends on the right - the same side
-#: c03_amberwood puts it on, because the two chapters draw the same map.
-TEASER = 0.30
 
-#: The Deep Well's own spacing, proved against `ChapterMapValidator` for ten nodes at five
-#: strips, which is what the third chapter of every mode is cut into.
-WHERE = [(0.30, 0.055), (0.72, 0.140), (0.26, 0.225), (0.70, 0.310), (0.28, 0.395),
-         (0.74, 0.480), (0.30, 0.560), (0.68, 0.645), (0.26, 0.730), (0.72, 0.815)]
+#: Where the ten nodes stand - `mapart`'s one layout for every chapter of every mode, with
+#: the last glade on the left and the end-of-chapter marker on the right, proved against
+#: `ChapterMapValidator` by `Tools/verify/content.py`.
+WHERE = mapart.places(ORDINAL)
 
 
 class Well(object):
@@ -264,7 +261,6 @@ def chapter_json():
         "slate": SLATE,
         "backdrop": SKIES[0],
         "mapStrips": list(STRIPS),
-        "teaserX": TEASER,
         "levels": [level_json(w, i) for i, w in enumerate(BOARDS)],
     }
 

@@ -63,6 +63,22 @@ namespace GlimmerGrove
         /// </summary>
         public bool OneLine;
 
+        /// <summary>
+        /// True when <see cref="Icon"/> belongs <em>after</em> the caption rather than in
+        /// front of it.
+        ///
+        /// <para>
+        /// A leading glyph is a label on the action — the play triangle on WATCH, the gem on
+        /// a gem price — and reads as part of the verb. A trailing one is a <em>unit</em> on
+        /// the number the caption ends with: "BUY FOR 4,500 ⬤" says which coin, the same way
+        /// the shop's price faces do. The two are different jobs, so which one a button wants
+        /// is a property of the button and not of whoever last repainted it — otherwise a
+        /// caption change through <see cref="SetCaption"/> would silently move the glyph back
+        /// to the front, which is the trap <see cref="OneLine"/> exists for one line up.
+        /// </para>
+        /// </summary>
+        public bool IconTrails;
+
         /// <summary>Smallest the caption may be shrunk to while keeping it on one line.</summary>
         public int LabelMinSize = 16;
 
@@ -381,6 +397,17 @@ namespace GlimmerGrove
         /// </summary>
         public static Flipbook Attach(Image img, Sprite[] frames, float fps = 24f, bool loop = true)
         {
+            // One flipbook per image, always. Attaching over a running one used to be the
+            // caller's job, and the callers did it with GetComponent — which finds the *first*
+            // flipbook, so two repaints in one frame (a placement's event and the art's arrival
+            // landing together) left the second one running. It went on painting its frames
+            // into an image that had since been re-sized and re-sprited for a different piece:
+            // a lantern's flame drawn a third of its size inside a fence's box, or a well still
+            // turning on a tile that now held brambles. Reported as "objects appear much smaller
+            // when working with other objects rapidly". Detach takes every one, so it cannot
+            // matter how many a frame stacked up.
+            Detach(img);
+
             var f = img.gameObject.AddComponent<Flipbook>();
             f._img = img;
             f._frames = frames;
@@ -388,6 +415,26 @@ namespace GlimmerGrove
             f._loop = loop;
             if (f._frames != null && f._frames.Length > 0) img.sprite = f._frames[0];
             return f;
+        }
+
+        /// <summary>
+        /// Stops and removes every flipbook on an image, so a still sprite set afterwards is not
+        /// overwritten a frame later.
+        ///
+        /// Disabled first because <c>Destroy</c> lands at the end of the frame and a component
+        /// that is merely doomed still gets its <c>Update</c>. Every one rather than the first:
+        /// see <see cref="Attach"/> for the bug a single <c>GetComponent</c> left standing.
+        /// </summary>
+        public static void Detach(Image img)
+        {
+            if (img == null) return;
+
+            foreach (var running in img.GetComponents<Flipbook>())
+            {
+                if (running == null) continue;
+                running.enabled = false;
+                Destroy(running);
+            }
         }
 
         public float Duration => _frames == null ? 0f : _frames.Length / _fps;

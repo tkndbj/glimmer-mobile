@@ -40,7 +40,7 @@ namespace GlimmerGrove
 
             bool boost = Good.Kind == StoreGoodKind.HeartBoost;
 
-            var panel = MakePanel(new Vector2(880f, 1000f), Loc.Get(Good.NameKey));
+            var panel = MakePanel(new Vector2(PanelW, PanelH), Loc.Get(Good.NameKey));
 
             var art = UIKit.Box("Art", panel, new Vector2(300f, 300f), new Vector2(.5f, 1f),
                                 new Vector2(0f, -300f));
@@ -52,25 +52,25 @@ namespace GlimmerGrove
                 UIKit.Titled("Amount", panel,
                              boost ? Loc.Format("ui.shop.boost_hours", Good.Amount)
                                    : Loc.Format("ui.shop.hearts_count", Good.Amount),
-                             56, boost ? Pal.Sun : Pal.Rose, TextAnchor.MiddleCenter,
-                             new Vector2(700f, 76f), new Vector2(.5f, 1f), new Vector2(0f, -486f)), 30);
+                             56, boost ? Amber : Rose, TextAnchor.MiddleCenter,
+                             new Vector2(700f, 76f), new Vector2(.5f, 1f), new Vector2(0f, -AmountY),
+                             outline: 0f, shadow: 2f), 30);
 
             // What it does, read from the rules rather than written into the copy. A panel
             // explaining the game is the first thing to rot when the game is retuned — the
             // lesson StreakInfoOverlay and AdOfferOverlay were both rebuilt around.
             UIKit.Shrinkable(
-                UIKit.Titled("Note", panel, Explanation(boost), 28,
-                             new Color(1f, .96f, .88f, .82f), TextAnchor.UpperCenter,
-                             new Vector2(700f, 130f), new Vector2(.5f, 1f), new Vector2(0f, -566f),
-                             3f, 0f, wrap: true), 18);
+                UIKit.Titled("Note", panel, Explanation(boost), 28, Ink, TextAnchor.UpperCenter,
+                             new Vector2(700f, NoteH), new Vector2(.5f, 1f), new Vector2(0f, -NoteY),
+                             outline: 0f, shadow: 0f, wrap: true), 19);
 
             var held = UIKit.Titled("Held", panel,
                                     boost ? Loc.Format("ui.shop.boost_left",
                                                        Profile.Countdown(Wallet.HeartBoostSecondsLeft))
                                           : Loc.Format("ui.shop.hearts_held", Profile.Hearts),
-                                    26, new Color(1f, .96f, .88f, .62f), TextAnchor.MiddleCenter,
-                                    new Vector2(700f, 40f), new Vector2(.5f, 1f), new Vector2(0f, -716f),
-                                    3f, 0f);
+                                    26, Pal.A(Ink, .88f), TextAnchor.MiddleCenter,
+                                    new Vector2(700f, 46f), new Vector2(.5f, 1f), new Vector2(0f, -HeldY),
+                                    outline: 0f, shadow: 0f);
             UIKit.Shrinkable(held, 16);
 
             UIKit.TextButton("Buy", panel, "btn_violet",
@@ -78,10 +78,45 @@ namespace GlimmerGrove
                              new Vector2(560f, 118f), new Vector2(.5f, 0f), new Vector2(0f, 210f),
                              Confirm, "ic_gem");
 
-            UIKit.TextButton("Cancel", panel, Skins.Resting, Loc.Get("ui.common.cancel"), 30,
+            // Red rather than the resting grey. Grey means "not a control right now"
+            // (see Skins), and this is a live way out of a panel that is asking for gems —
+            // the same job btn_red already does for leaving and for wiping.
+            UIKit.TextButton("Cancel", panel, "btn_red", Loc.Get("ui.common.cancel"), 30,
                              new Vector2(360f, 92f), new Vector2(.5f, 0f), new Vector2(0f, 96f),
                              () => Close());
         }
+
+        // ------------------------------------------------------------- the layout
+        /// <summary>
+        /// Where each row sits, measured from the top of the panel to the row's <em>centre</em>
+        /// — <c>UIKit.Box</c> always pivots at the middle, whatever it is anchored to.
+        ///
+        /// <para>
+        /// Written down as constants because they were not, and the panel shipped with three
+        /// rows printed through one another: the amount ran into the first line of the
+        /// explanation, and "You are holding 3" sat under the top edge of the purple button.
+        /// Absolute offsets scattered through a build method are the failure
+        /// <c>ShopGrantOverlay</c> two classes down uses a cursor to avoid; this panel is short
+        /// and fixed enough not to need one, but it does need the numbers somewhere the next
+        /// person can add them up.
+        /// </para>
+        /// </summary>
+        const float PanelW = 880f;
+        const float PanelH = 1060f;
+        const float AmountY = 496f;   // 700x76  -> 458..534
+        const float NoteY = 628f;     // 700x150 -> 553..703
+        const float NoteH = 150f;
+        const float HeldY = 750f;     // 700x46  -> 727..773, clear of the button at 791
+
+        /// <summary>
+        /// Ink and two darkened accents, for <c>HomesteadBuyOverlay.Ink</c>'s reason:
+        /// <c>panel_main</c> is a light parchment, so cream copy on it is held apart from its
+        /// ground only by an outline, and <c>Pal.Sun</c> and <c>Pal.Rose</c> are colours chosen
+        /// against the board's near-black plate. Both were reported here as unreadable.
+        /// </summary>
+        static readonly Color Ink = new Color(.36f, .25f, .18f);
+        static readonly Color Rose = new Color(.70f, .19f, .17f);
+        static readonly Color Amber = new Color(.62f, .34f, .08f);
 
         /// <summary>
         /// What the purchase actually does, in the player's terms, derived from the live
@@ -269,11 +304,18 @@ namespace GlimmerGrove
                 ? 1
                 : (Grant.Gems > 0 ? 1 : 0) + (Grant.Credits > 0 ? 1 : 0);
 
+            // Only a container's receipt has a line under the chips, and the room for it is
+            // reserved only when it does. A currency product's chips already say the whole
+            // of what arrived, so a sentence under them was words for the sake of the shape
+            // of the panel — and a panel that keeps the gap after losing the sentence is a
+            // band of empty plate above its button.
+            bool note = Grant.IsContainer;
+
             float y = HeadRoom;
             float artY = y + ArtSize * .5f;    y += ArtSize + 8f;
             float nameY = y;                   y += NameH + 16f;
             float chipsY = y;                  y += lines * ChipStep + 10f;
-            float noteY = y;                   y += NoteH + 20f;
+            float noteY = y;                   if (note) y += NoteH + 20f;
             float buttonY = y + ButtonH * .5f; y += ButtonH + FootRoom;
 
             // Never dismissed by a stray tap on the scrim. This is the receipt for a real
@@ -301,13 +343,13 @@ namespace GlimmerGrove
 
             BuildChips(panel, chipsY);
 
-            UIKit.Shrinkable(
-                UIKit.Titled("Note", panel, Grant.IsContainer
-                                 ? Loc.Format("ui.shop.capacity_note", Wallet.MaxHearts)
-                                 : Loc.Get("ui.shop.granted_note"), 26,
-                             new Color(1f, .96f, .88f, .74f), TextAnchor.UpperCenter,
-                             new Vector2(700f, NoteH), new Vector2(.5f, 1f),
-                             new Vector2(0f, -noteY - NoteH * .5f), 3f, 0f, wrap: true), 17);
+            if (note)
+                UIKit.Shrinkable(
+                    UIKit.Titled("Note", panel,
+                                 Loc.Format("ui.shop.capacity_note", Wallet.MaxHearts), 26,
+                                 new Color(1f, .96f, .88f, .74f), TextAnchor.UpperCenter,
+                                 new Vector2(700f, NoteH), new Vector2(.5f, 1f),
+                                 new Vector2(0f, -noteY - NoteH * .5f), 3f, 0f, wrap: true), 17);
 
             // The label tells the truth about what the button does. Where there is a balance
             // row underneath, this empties the panel into it and COLLECT is the honest verb;
@@ -510,7 +552,14 @@ namespace GlimmerGrove
             Tween.After(last, Payoff, this);
         }
 
-        /// <summary>The goods land: a spring, two shockwaves and a burst.</summary>
+        /// <summary>
+        /// The goods land: a spring, two shockwaves and a burst — and no sound of its own.
+        ///
+        /// The clunk that used to ride the entrance was withdrawn by the owner. What is left
+        /// still carries the beat, because the tokens start half a second later and the tune
+        /// lands under the confetti; adding a different noise here would be answering a
+        /// removal with a substitution.
+        /// </summary>
         void Arrive()
         {
             if (_art == null) return;
@@ -526,7 +575,6 @@ namespace GlimmerGrove
             Shockwave(.10f, 2.6f, .62f, .42f);
 
             Burst.Sparks(_art, Vector2.zero, Pal.Gold, 20, 380f, 30f, .72f);
-            Audio.Sfx("chest", .6f);
         }
 
         /// <summary>

@@ -160,11 +160,37 @@ function buildGroveConfig() {
     if (piece.kind === "dwelling") dwellings[piece.id] = Math.floor(piece.tier ?? 0);
   }
 
+  // Every region that is *sold*, at its worth in credits — which is nought for the ones
+  // priced in gems.
+  //
+  // Two jobs, and only the first is obvious. `groveWorth` sums this to score the bought half
+  // of a grove, and a zero adds nothing, which is the whole of invariant 16g's answer for gem
+  // land: the score is the credits' worth of what is held and the server's clamp is
+  // denominated in credits, so a gem cannot be priced into it. But `buildCard` also filters
+  // the published `land[]` through this table — as a sanity check that the catalog vouches for
+  // the id — and `GroveVisitScreen` draws only the ground the card says is owned. So a gem
+  // region left *out* would score correctly and quietly delete eight of the floor's fourteen
+  // columns from every visitor's view, with everything standing on them floating over nothing.
+  // Present at zero says both things at once; absent says one of them wrong.
+  //
+  // Starter land stays absent, and that is not the same case: it is never written into
+  // `groveLandOwned` at all (invariant 16e), so nothing ever looks it up here.
   const regions = {};
   for (const region of homestead.floor?.regions ?? []) {
     if (!region?.id) continue;
+
     const cost = Math.floor(region.cost ?? 0);
-    if (cost > 0) regions[region.id] = cost;
+    const gems = Math.floor(region.gems ?? 0);
+
+    if (cost > 0 && gems > 0) {
+      throw new Error(
+        `grove region '${region.id}' is priced in both credits (${cost}) and gems (${gems}); ` +
+        "a region is sold in one currency or the other, and a card built from two prices " +
+        "would score whichever this file happened to read first"
+      );
+    }
+
+    if (cost > 0 || gems > 0) regions[region.id] = cost;
   }
 
   const companions = {};

@@ -135,8 +135,25 @@ namespace GlimmerGrove.Homestead
         }
 
         /// <summary>
-        /// The cheapest region still for sale, or null when the whole floor is owned. Drives
-        /// the screen's "expand" prompt.
+        /// The one region the player may buy next, or null when the whole floor is owned.
+        ///
+        /// <para>
+        /// <b>The floor is a ladder, not a shelf.</b> The lowest unowned rung is the only thing
+        /// for sale; everything above it waits. That is a design decision — a stretch of ground
+        /// is the most expensive thing in the shop and the least legible, so a wall of nine
+        /// prices asks a new keeper to compare rectangles they cannot yet picture, where one
+        /// offer at a time is a next step. It is also what makes two currencies coherent: the
+        /// rung is authored (<see cref="GroveRegion.Order"/>), so the credit stretches come
+        /// first and the gem ones after, and no comparison between the two ever has to be made.
+        /// </para>
+        /// <para>
+        /// <b>Ranked on the rung and never on the price</b>, which is the half that would rot.
+        /// This used to answer the cheapest unowned region, correct while one currency priced
+        /// the whole floor and quietly wrong the moment 600 gems and 5,000 credits were both
+        /// "cost" — it would have sold the gem land first and for nothing, since a gem region's
+        /// <c>Cost</c> is zero. A ladder read off a price also reorders itself on a retune,
+        /// under players part-way up it.
+        /// </para>
         /// </summary>
         public static GroveRegion NextForSale(GroveFloor floor)
         {
@@ -145,35 +162,73 @@ namespace GlimmerGrove.Homestead
 
             foreach (var region in floor.Regions)
             {
-                if (!region.IsValid || IsOwned(region)) continue;
-                if (best == null || region.Cost < best.Cost) best = region;
+                if (!region.IsValid || region.IsStarter || IsOwned(region)) continue;
+                if (best == null || Rung(region) < Rung(best)) best = region;
             }
 
             return best;
         }
 
         /// <summary>
+        /// A region's place in the queue. An unauthored rung sorts last rather than first, so a
+        /// content mistake leaves a stretch unreachable — which somebody notices — instead of
+        /// jumping it to the front of the ladder, which nobody would.
+        /// </summary>
+        public static int Rung(GroveRegion region)
+            => region == null || region.Order <= 0 ? int.MaxValue : region.Order;
+
+        /// <summary>
+        /// Whether this region is the rung on offer: unowned, and with nothing cheaper still
+        /// unbought.
+        ///
+        /// Asked of the floor rather than of the region alone, because "next" is a fact about
+        /// what else the player holds.
+        /// </summary>
+        public static bool IsNext(GroveFloor floor, GroveRegion region)
+            => region != null && region.IsValid && !IsOwned(region)
+            && ReferenceEquals(NextForSale(floor), region);
+
+        /// <summary>
         /// What this region costs the player right now, and why they might not be able to pay.
         ///
-        /// Reuses <see cref="HomesteadOffer"/> rather than inventing a fourth near-identical
-        /// enum: the four states a purchase can be in are the same four whatever is being sold,
-        /// and a screen showing land beside decor should render one refusal, not two.
+        /// <para>
+        /// Reuses <see cref="HomesteadOffer"/> rather than inventing a near-identical enum: the
+        /// states a purchase can be in are the same states whatever is being sold, and a screen
+        /// showing land beside decor should render one refusal, not two.
+        /// </para>
+        /// <para>
+        /// <b>The balance quoted is the one this region is actually bought with.</b> A gem
+        /// stretch measured against the credit wallet is a button that says a player can afford
+        /// something they cannot, and — because credits outnumber gems by roughly a hundred to
+        /// one here — it would have said so for nearly everybody.
+        /// </para>
+        /// <para>
+        /// <b>The ladder is asked before the price</b>, which is invariant 15a's ordering and
+        /// for its reason: a keeper who is both several rungs down and short of gems should be
+        /// told about the wall money cannot climb, not quoted a price that would not have
+        /// helped. It needs the floor, so a caller with only a region gets the rest of the
+        /// answer and no ladder check — every screen here has the catalog open.
+        /// </para>
         /// </summary>
-        public static HomesteadOffer OfferFor(GroveRegion region)
+        public static HomesteadOffer OfferFor(GroveRegion region, GroveFloor floor = null)
         {
-            long balance = PlayerProgression.Credits;
-
             if (region == null || !region.IsValid)
-                return new HomesteadOffer(HomesteadPurchaseState.NotForSale, 0L, balance);
+                return new HomesteadOffer(HomesteadPurchaseState.NotForSale, 0L,
+                                          PlayerProgression.Credits);
+
+            long balance = PlayerProgression.Balance(region.PaidIn);
 
             if (IsOwned(region))
-                return new HomesteadOffer(HomesteadPurchaseState.AlreadyHeld, region.Cost, balance);
+                return new HomesteadOffer(HomesteadPurchaseState.AlreadyHeld, region.Price, balance);
 
-            var state = balance >= region.Cost
+            if (floor != null && !IsNext(floor, region))
+                return new HomesteadOffer(HomesteadPurchaseState.EarlierFirst, region.Price, balance);
+
+            var state = balance >= region.Price
                 ? HomesteadPurchaseState.Ready
                 : HomesteadPurchaseState.TooExpensive;
 
-            return new HomesteadOffer(state, region.Cost, balance);
+            return new HomesteadOffer(state, region.Price, balance);
         }
 
         // ------------------------------------------------------------- writing
@@ -186,17 +241,21 @@ namespace GlimmerGrove.Homestead
         /// spend log and put right, where the other order leaves land nobody paid for and
         /// nothing to distinguish it from a forgery.
         /// </summary>
-        public static bool TryBuy(GroveRegion region)
+        public static bool TryBuy(GroveRegion region, GroveFloor floor = null)
         {
-            var offer = OfferFor(region);
+            var offer = OfferFor(region, floor);
             if (!offer.CanBuy) return false;
 
-            if (!PlayerProgression.TrySpend(Currency.Credits, offer.Cost, SpendReason + region.Id))
+            // Whichever wallet the region is priced in. Never Currency.Credits by name: the
+            // debit and the button's caption have to come from one reading of the region, or
+            // the shop quotes gems and the ledger takes coins.
+            if (!PlayerProgression.TrySpend(region.PaidIn, offer.Cost, SpendReason + region.Id))
                 return false;
 
             _bought.Add(region.Id);
 
-            Telemetry.Track("grove_land_bought", "region", region.Id, "cost", offer.Cost);
+            Telemetry.Track("grove_land_bought", "region", region.Id,
+                            "cost", offer.Cost, "currency", region.PaidIn);
 
             SaveService.Save();
             Raise();

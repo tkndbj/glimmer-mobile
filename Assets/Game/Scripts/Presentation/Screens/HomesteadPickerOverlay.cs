@@ -327,8 +327,13 @@ namespace GlimmerGrove
 
             // Place first, close second. The screen behind repaints on HomesteadLayout.Changed,
             // so by the time the panel has faded the slot is already showing what was chosen —
-            // which is the whole feedback for the tap.
-            if (HomesteadLayout.Place(Slot.Id, piece.IsValid ? piece.Id : string.Empty))
+            // which is the whole feedback for the tap. The footprint is fitted around the tile
+            // the player touched, so a two-wide piece lands wherever it fits beside it.
+            var result = HomesteadLayout.TryPlace(HomesteadCatalog.Current, Slot.Col, Slot.Row,
+                                                  piece.IsValid ? piece.Id : string.Empty,
+                                                  out _, out _);
+
+            if (result == GrovePlaceResult.Placed)
             {
                 Audio.Sfx("pop", .6f);
 
@@ -337,6 +342,15 @@ namespace GlimmerGrove
                 // standing on an island — without it the slot would be empty until the whole
                 // grove was reloaded.
                 HomesteadArt.Claim(piece);
+            }
+
+            // A refusal is said by the grove, after this panel has gone: a picker that closes
+            // over a floor that did not change teaches the player the control is broken, and a
+            // toast under a closing panel is a toast nobody reads.
+            if (result == GrovePlaceResult.NoRoom)
+            {
+                Close(() => (Flow.Current as HomesteadScreen)?.SayNoRoom());
+                return;
             }
 
             Close();

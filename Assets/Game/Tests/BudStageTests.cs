@@ -60,9 +60,15 @@ namespace GlimmerGrove.Tests
         /// mode is judged on: the Thicket's finale runs eight waves, bursts twenty-seven flowers
         /// and frees ten critters, and it is where every ordering fault is worst.
         ///
-        /// **Both chapters**, because the Tanglewood puts a cue kind on the timeline that the
-        /// Thicket never emits — a runner's colour leaving one end and landing on the other — and
-        /// every rule this fixture proves is about the order things happen in.
+        /// **Both chapters**, because the Tanglewood puts cue kinds on the timeline that the
+        /// Thicket never emits — a row sliding before the chain, a puffball's spores leaving it
+        /// and landing, a hive's swarm — and every rule this fixture proves is about the order
+        /// things happen in.
+        ///
+        /// **Every move, not only the taps**, because a Tanglewood grove's best opening is very
+        /// often the object it teaches: the windmill's gust on the first, a graft on the third.
+        /// Through <c>BudSolver.Opening</c>, so the move this fixture animates is the one
+        /// <c>BudLadderTests</c> pins.
         /// </summary>
         static IEnumerable<Tap> Taps()
         {
@@ -71,33 +77,20 @@ namespace GlimmerGrove.Tests
             {
                 var layout = rung.Layout();
 
-                BudChainResult best = default;
-                BudPulse[] pulses = null;
-                BudWash[] washes = null;
-                BudDrop[] drops = null;
+                var move = BudSolver.Opening(layout, out var best);
+                Assert.IsTrue(move.Any, rung.Id + ": no legal opening move");
 
-                // The first colour the basket deals, which is what an opening tap is made with.
-                int colour = layout.Deal.At(0);
+                var p = new List<BudPulse>();
+                var w = new List<BudWash>();
+                var d = new List<BudDrop>();
 
-                for (int i = 0; i < layout.Count; i++)
-                {
-                    var board = new BudBoard(layout);
-                    if (!board.CanTap(i, colour)) continue;
+                var board = new BudBoard(layout);
+                BudRun.Apply(board, move, layout.Deal.At(0), p, out var chain, w, d);
+                Assert.AreEqual(best.Waves, chain.Waves, rung.Id + ": the opening replayed differently");
 
-                    var p = new List<BudPulse>();
-                    var w = new List<BudWash>();
-                    var d = new List<BudDrop>();
-
-                    var chain = board.Tap(i, colour, p, w, d);
-                    if (pulses != null && chain.Waves <= best.Waves) continue;
-
-                    best = chain;
-                    pulses = p.ToArray();
-                    washes = w.ToArray();
-                    drops = d.ToArray();
-                }
-
-                Assert.IsNotNull(pulses, rung.Id + ": no legal opening tap");
+                var pulses = p.ToArray();
+                var washes = w.ToArray();
+                var drops = d.ToArray();
 
                 var score = BudStage.Of(best.Waves, pulses, washes, drops, layout.Width);
 
@@ -300,10 +293,28 @@ namespace GlimmerGrove.Tests
                 {
                     switch (cue.Kind)
                     {
-                        // A flower going off and a cocoon opening both leave bare ground.
+                        // A flower going off and a cocoon opening both leave bare ground; a
+                        // special firing clears its own cell too.
                         case BudCueKind.Burst:
                         case BudCueKind.Free:
+                        case BudCueKind.Fire:
                             drawn[cue.Cell] = false;
+                            break;
+
+                        // A forge stands a special up where its bunch went off, which was
+                        // drawn as bare a beat earlier.
+                        case BudCueKind.Forge:
+                            drawn[cue.Cell] = true;
+                            break;
+
+                        // A slide moves a piece sideways into a square the other piece of the
+                        // same slide is leaving, so the pair stays full: what has to be true is
+                        // only that something was standing where it came from.
+                        case BudCueKind.Slide:
+                            Assert.IsTrue(drawn[cue.From],
+                                $"{tap.Id}: a piece slides out of cell {cue.From}, which nothing "
+                                + "was standing in");
+                            drawn[cue.Cell] = true;
                             break;
 
                         case BudCueKind.Fall:
@@ -481,6 +492,9 @@ namespace GlimmerGrove.Tests
                 {
                     if (cue.Kind != BudCueKind.Burst) continue;
 
+                    // A cell a special clears is struck, not gathered: it has no wind-up.
+                    if (cue.From >= 0) continue;
+
                     Assert.IsTrue(wind.TryGetValue(Key(cue.Wave, cue.Cell), out float until),
                                   tap.Id + ": a flower goes off having never wound up");
                     Assert.AreEqual(cue.At, until, .0001f,
@@ -582,74 +596,142 @@ namespace GlimmerGrove.Tests
         }
 
         /// <summary>
-        /// A runner's colour leaves the end that went off and lands at the other one a fixed
-        /// beat later, and the burst that sent it comes first.
+        /// A special fires at the head of its wave and the cells it clears go off after it,
+        /// racing outward a fixed step apart — and a forge lands a beat after the bunch that
+        /// made it has gone.
         ///
         /// <para>
         /// <b>Three things, and the first is that it happens at all.</b> Nothing else in this
-        /// fixture would notice a <c>Run</c> cue disappearing from the timeline: the chain would
-        /// still be correct, the grove would still end where the model says, and the only symptom
-        /// would be a colour arriving across the board with no light having travelled to it —
-        /// which is precisely the complaint <c>Creep</c> earned and the whole reason the vine is
-        /// drawn (invariant 20m).
-        /// </para>
-        /// <para>
-        /// The fixed beat is the one place this mode deliberately breaks its own one-gravity
-        /// rule. A falling flower must move at <c>BudTempo.Pace</c> or a six-row drop outruns the
-        /// one-row drop beside it; a runner is not a thing moving but a message arriving, and the
-        /// player is watching <em>both ends at once</em> — so a long vine and a short one take
-        /// exactly as long. See <c>BudTempo.RunLag</c>.
+        /// fixture would notice a <c>Fire</c> cue disappearing from the timeline: the chain
+        /// would still be correct, the grove would still end where the model says, and the only
+        /// symptom would be a whole row going off with nothing having caused it.
         /// </para>
         /// </summary>
         [Test]
-        public void ARunnersColourLeavesOneEndAndLandsAtTheOtherAFixedBeatLater()
+        public void ASpecialFiresBeforeWhatItClearsAndAForgeLandsAfterItsBunch()
         {
-            int runs = 0;
-
-            foreach (var tap in Taps())
+            var grove = BudLadderTests.Grove(new[]
             {
-                foreach (var cue in tap.Score.Cues)
-                {
-                    if (cue.Kind != BudCueKind.Run) continue;
+                "RGBYRGB",
+                "GoRBoBR",
+                "BRGYBRG",
+                "oGBRGBo",
+                "RBYGRYB",
+            }, "R", "RGBYMC", specials: new[] { "...|...", ".......", ".......", ".......", "......." });
 
-                    runs++;
+            var board = new BudBoard(grove);
+            var pulses = new List<BudPulse>();
+            var washes = new List<BudWash>();
+            var drops = new List<BudDrop>();
 
-                    Assert.GreaterOrEqual(cue.From, 0,
-                                          tap.Id + ": a runner cue with no end to have come from");
-                    Assert.AreNotEqual(cue.From, cue.Cell,
-                                       tap.Id + ": a runner that carried to itself");
+            var chain = board.Tap(grove.Index(3, 0), Energy.R, pulses, washes, drops);
+            Assert.AreEqual(1, chain.Fired, "the tapped bolt did not fire");
 
-                    // The burst that sent it.
-                    float sent = float.NaN;
-                    foreach (var other in tap.Score.Cues)
-                        if (other.Kind == BudCueKind.Burst && other.Wave == cue.Wave
-                            && other.Cell == cue.From) sent = other.At;
+            var score = BudStage.Of(chain.Waves, pulses.ToArray(), washes.ToArray(),
+                                    drops.ToArray(), grove.Width);
 
-                    Assert.IsFalse(float.IsNaN(sent),
-                                   tap.Id + ": a runner fired from a cell that never burst");
-                    Assert.AreEqual(sent, cue.At, .0005f,
-                                    tap.Id + ": the light leaves the vine before the flower on " +
-                                    "it goes off");
+            float fired = float.NaN;
+            foreach (var cue in score.Cues)
+                if (cue.Kind == BudCueKind.Fire) fired = cue.At;
+            Assert.IsFalse(float.IsNaN(fired), "a fired special put no Fire cue on the timeline");
 
-                    // And the colour it carries lands exactly when the travel ends.
-                    float landed = float.NaN;
-                    foreach (var other in tap.Score.Cues)
-                        if (other.Kind == BudCueKind.Wash && other.Wave == cue.Wave
-                            && other.Cell == cue.Cell && other.From == cue.From)
-                            landed = other.At;
-
-                    Assert.IsFalse(float.IsNaN(landed),
-                                   tap.Id + ": light ran down a vine and nothing arrived");
-                    Assert.AreEqual(cue.At + cue.Over, landed, .0005f,
-                                    tap.Id + ": the colour lands somewhere other than the end of " +
-                                    "its own travel");
-                }
+            int struck = 0;
+            float last = float.NegativeInfinity;
+            foreach (var cue in score.Cues)
+            {
+                if (cue.Kind != BudCueKind.Burst || cue.From < 0) continue;
+                struck++;
+                Assert.GreaterOrEqual(cue.At, fired - .0005f,
+                                      "a cell the bolt cleared went off before the bolt fired");
+                Assert.GreaterOrEqual(cue.At, last - .0005f,
+                                      "the bolt's line is not laid out nearest first");
+                last = cue.At;
             }
 
-            Assert.Greater(runs, 0,
-                           "no grove in either shipped chapter fires a vine on its best opening " +
-                           "tap, so nothing here would notice the runner's own cue leaving the " +
-                           "timeline — see invariant 20m");
+            Assert.AreEqual(grove.Width + grove.Height - 1, struck,
+                            "the bolt did not clear its whole row and column");
+
+            // And a forge: five alike on a grove that forges, then the special arrives after
+            // the last burst of its bunch.
+            var forge = BudLadderTests.Grove(new[]
+            {
+                "YYRYY",
+                "GBRBG",
+                "BoGoB",
+                "RGBGR",
+            }, "G", "RGBYMC", forges: true);
+
+            var fb = new BudBoard(forge);
+            pulses.Clear(); washes.Clear(); drops.Clear();
+            var fc = fb.Tap(forge.Index(2, 0), Energy.G, pulses, washes, drops);
+            Assert.AreEqual(1, fc.Forged, "five alike did not forge");
+
+            var fs = BudStage.Of(fc.Waves, pulses.ToArray(), washes.ToArray(), drops.ToArray(),
+                                 forge.Width);
+
+            float lastBurst = float.NegativeInfinity, forged = float.NaN;
+            foreach (var cue in fs.Cues)
+            {
+                if (cue.Kind == BudCueKind.Burst && cue.Wave == 0 && cue.At > lastBurst) lastBurst = cue.At;
+                if (cue.Kind == BudCueKind.Forge) forged = cue.At;
+            }
+
+            Assert.IsFalse(float.IsNaN(forged), "a forge put no cue on the timeline");
+            Assert.GreaterOrEqual(forged, lastBurst + BudTempo.ForgeLag * BudTempo.SlackFloor - .0005f,
+                                  "the special arrived before the bunch that made it had gone");
+        }
+
+        /// <summary>
+        /// A graft's slide comes first, alone, and nothing of the chain is drawn until it has
+        /// landed.
+        ///
+        /// It is the player's own move, so it is drawn the way a tap's spin is: before the first
+        /// wind-up. A wind-up that started under a flower still sliding would be a bunch winding
+        /// up out of flowers that are not there yet.
+        /// </summary>
+        [Test]
+        public void ASlideComesFirstAndTheChainWaitsForIt()
+        {
+            var grove = BudLadderTests.Grove(new[]
+            {
+                "RGYRG",
+                "GYBYR",
+                "BRGoB",
+                "RoBGB",
+            }, "G", "RGBYMC", grafts: true);
+
+            var board = new BudBoard(grove);
+            Assert.IsTrue(board.CanGraft(grove.Index(1, 1), grove.Index(2, 1)),
+                          "the yellow and the blue do not trade into a bunch");
+
+            var pulses = new List<BudPulse>();
+            var washes = new List<BudWash>();
+            var drops = new List<BudDrop>();
+
+            var chain = board.Graft(grove.Index(1, 1), grove.Index(2, 1), pulses, washes, drops);
+            var score = BudStage.Of(chain.Waves, pulses.ToArray(), washes.ToArray(),
+                                    drops.ToArray(), grove.Width);
+
+            float slid = float.NegativeInfinity;
+            int slides = 0;
+
+            foreach (var cue in score.Cues)
+            {
+                if (cue.Kind != BudCueKind.Slide) continue;
+                slides++;
+                Assert.AreEqual(0f, cue.At, .0005f, "a slide that did not start with the tap");
+                Assert.AreEqual(BudTempo.Slide, cue.Over, .0005f, "a slide at a speed of its own");
+                if (cue.Until > slid) slid = cue.Until;
+            }
+
+            Assert.AreEqual(2, slides, "a graft slides exactly two pieces");
+
+            foreach (var cue in score.Cues)
+            {
+                if (cue.Kind == BudCueKind.Slide) continue;
+                Assert.GreaterOrEqual(cue.At, slid - .0005f,
+                                      cue.Kind + " was drawn before the pieces had finished sliding");
+            }
         }
 
         /// <summary>An empty tap is a score with nothing in it but a full stop.</summary>

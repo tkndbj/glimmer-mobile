@@ -53,6 +53,29 @@ PER_CHAPTER = 10
 BLOCKS = 4
 
 
+#: Where a chapter's ten nodes stand, as fractions of its own map. One layout for every
+#: chapter of every mode, because the art already is (above) and because seven copies of
+#: this table in seven generators had drifted apart - the Mill Vale and the Deep Well drew
+#: the same four-strip map with two different spacings.
+#:
+#: The shape: odd glades on the right, even on the left, so consecutive nodes are always on
+#: opposite sides - and **the tenth glade on the left**, because the end-of-chapter marker
+#: sits on the right (`ChapterMap.TeaserX`, 0.66, which no chapter overrides any more). Every
+#: mode's first chapter shipped the other way round, marker straight above the tenth glade,
+#: and the marker's name plate sat on that glade's standing mark - the record and rank a
+#: cleared glade draws above its disc - which the disc-distance check could not see. The ninth
+#: glade is on the marker's side, so it has to sit at least 529 canvas units below it (the
+#: mark's 302 plus the plate's 227): that is what the four-strip column's 0.73 is for, and why
+#: the rows differ by strip count at all. `ChapterMap.Overshadows` is the rule and
+#: `Tools/verify/content.py` proves every chapter against it.
+XS = (0.70, 0.28, 0.74, 0.30, 0.72, 0.26, 0.70, 0.32, 0.74, 0.28)
+YS = {
+    6: (0.055, 0.140, 0.225, 0.310, 0.395, 0.480, 0.560, 0.645, 0.730, 0.815),
+    5: (0.060, 0.145, 0.225, 0.305, 0.390, 0.475, 0.555, 0.640, 0.725, 0.815),
+    4: (0.065, 0.145, 0.220, 0.300, 0.390, 0.485, 0.560, 0.650, 0.730, 0.830),
+}
+
+
 def ordinal_of(chapter_id, mode_chapters):
     """1-based position of a chapter inside its own mode, given that mode's ids in order."""
     return list(mode_chapters).index(chapter_id) + 1
@@ -62,6 +85,13 @@ def strips(ordinal):
     """The map strips a chapter at this ordinal draws, bottom to top."""
     which = (ordinal - 1) % len(STRIPS) + 1
     return ["map%d_strip%d" % (which, i) for i in range(STRIPS[which])]
+
+
+def places(ordinal):
+    """Where a chapter at this ordinal stands its ten nodes: (mapX, mapY) in play order."""
+    which = (ordinal - 1) % len(STRIPS) + 1
+    ys = YS[STRIPS[which]]
+    return [(XS[i], ys[i]) for i in range(PER_CHAPTER)]
 
 
 def sky(ordinal, level_index):

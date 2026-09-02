@@ -26,22 +26,34 @@ what a bundle sells. Cutting them a second time under a bundle name would put id
 pixels at two addresses in the same global bundle, which is memory spent to avoid sharing
 a string — see `ShopArt.Bundles`.
 
-**The background is keyed by chroma, not by brightness, and that is the whole tool.**
-Both sheets are painted on a flat ground with a soft coloured glow behind each object, and
-the glow overlaps the objects in brightness completely — the gem piles' own violet sits
-inside the range their halo covers, and the coin sack's body is in places *darker* than
-the ground it stands on. What separates them is direction: the glow is the ground's own
-hue scaled up, so its residual against the ground lies almost exactly along one axis in
-RGB, while every painted thing on these sheets carries some colour off that axis. So the
-residual is split into a component along the glow's axis and one across it, and a pixel is
-part of an object when it is far enough across (`--perp`), or extremely far along it *and*
-not perfectly on-axis. That last clause is what keeps a violet gem and its own violet halo
-apart, and it is the one an earlier version got wrong: without it every gem card kept a
-hard-edged crescent of leftover halo above the pile.
+**The background is cut by where the ink stops, not by what colour it is, and that is the
+whole tool.** Both sheets are painted on a flat ground with a soft coloured glow behind
+each object, and the glow overlaps the objects in brightness *and* in hue completely — the
+gem piles' own violet sits inside the range their halo covers, and the coin sack's body is
+in places darker than the ground it stands on. So no threshold on colour separates them:
+the version that tried shipped a sack with its bottom keyed away, a chest with its lid
+sliced off flat, and crescents of leftover halo on three cards, all of which passed every
+check in this repo.
 
-A drop shadow is the same problem upside down — painted *darker* than the ground, hanging
-off the outside of the silhouette where a hole fill cannot judge it — so it is removed by
-the same two numbers, and the object's own dark interiors are put back by a fill afterwards.
+What does separate them is that a painted thing has an **edge** and a glow does not. So the
+ground is found by flooding inward from the tile's border and stopping wherever the picture
+turns sharply; whatever the flood cannot reach is the object. That inverts which mistake is
+cheap. An edge threshold set too low only means interior detail becomes a barrier too, and
+an interior barrier is invisible — it is inside the silhouette, so the hole fill puts it
+back. Where the old test had to be right about every pixel, this one has to be right about
+one closed curve.
+
+**The reading it floods over is `perp`, and that is the half that makes it work on a glow.**
+The halo is the ground's own hue scaled up, so its residual against the ground lies almost
+exactly along one axis in RGB, while every painted thing carries some colour off that axis.
+Splitting the residual into a component along that axis and one across it and then flooding
+over the one *across* means the halo, its rays, the sparkles' bloom and the drop shadow are
+all flat — they raise no edge at any threshold, so none of them can wall the flood off, and
+none of them is admitted. Run on raw colour instead, the rays fence off pockets of empty
+ground between them and every gem pile keeps a hard-edged blue blob it never had.
+
+The axis is measured, not written down, which needs a silhouette to measure around — hence
+a first rough flood on raw colour whose only job is to be roughly right.
 
 **The source is outside the repo** (see the art-source-packs note): two Freepik EPS packs,
 of which only the shipped JPG preview is used. That is not a compromise — the sheets are
@@ -103,19 +115,25 @@ class Sheet:
     `flat` says whether the ground is one colour or a gradient. The gem sheet is a single
     value everywhere; the coin sheet is a horizontal wash, so its ground has to be measured
     per column or the items at the ends key differently from the ones in the middle.
+
+    `edge` is how steeply the off-axis colour has to turn to count as a painted outline.
+    Both sheets want the same number, which is the point rather than a coincidence: the
+    reading it is applied to has the ground's own hue divided out of it, so what is left is
+    a fact about ink meeting ink. It stays a per-sheet knob because a third pack painted on
+    a busier ground would need its own.
     """
 
-    def __init__(self, folder, name, flat, rows, cols, perp, par):
+    def __init__(self, folder, name, flat, rows, cols, edge):
         self.folder, self.name, self.flat = folder, name, flat
         self.rows, self.cols = rows, cols
-        self.perp, self.par = perp, par
+        self.edge = edge
 
 
 COINS = Sheet("freepik-shop-coins", "2303.w054.n005.336B.p1.336.jpg",
-              flat=False, rows=1, cols=6, perp=45, par=300)
+              flat=False, rows=1, cols=6, edge=3.0)
 
 GEMS = Sheet("freepik-shop-gems", "2211.w030.n003.515B.p1.515.jpg",
-             flat=True, rows=2, cols=4, perp=45, par=205)
+             flat=True, rows=2, cols=4, edge=3.0)
 
 # Which tile of which sheet becomes which rung, smallest first. A tile is (row, column).
 #
@@ -136,13 +154,42 @@ def disc(r):
     return (x * x + y * y) <= r * r
 
 
-def biggest(mask, frac=0.004):
-    """Drops speckle — the painted sparkles scattered over both grounds."""
+def belongs(mask, frac=0.01):
+    """Keeps the body of the item and the pieces spilled from it, and nothing else.
+
+    Both sheets scatter sparkles, four-pointed stars and bokeh dots over the ground, and a
+    keyed one is a real closed shape — it cannot be told from a spilled coin by looking at
+    it alone. Two readings together do tell them apart, and neither carries a length in
+    pixels, so a re-cut source or a third pack needs no re-tuning:
+
+    * **how big it is, against the body** — a piece that belongs is at least a hundredth of
+      what it fell off (a spilled coin 1.1%, the gems heaped beside a chest 10%), and every
+      sparkle on either sheet is under 0.6%;
+    * **how far it lies, against its own width** — something spilled is touching or nearly
+      touching (8 and 64 pixels for pieces 160 and 338 across), where the one sparkle big
+      enough to pass the first reading sits 127 pixels off a body it is 44 across.
+
+    The failure this replaced was a fraction of the *tile*, which is a different bar for
+    every rung because a tile is as wide as the sheet's widest item: it threw away the coins
+    spilling off one chest and kept a star beside another.
+    """
     lab, n = ndi.label(mask)
-    if not n:
+    if n < 2:
         return mask
+
     sizes = ndi.sum(mask, lab, range(1, n + 1))
-    return np.isin(lab, 1 + np.flatnonzero(sizes > frac * mask.size))
+    body = 1 + int(np.argmax(sizes))
+    away = ndi.distance_transform_edt(lab != body)
+
+    keep = [body]
+    for k in range(1, n + 1):
+        if k == body or sizes[k - 1] < frac * sizes[body - 1]:
+            continue
+        width = 2.0 * np.sqrt(sizes[k - 1] / np.pi)
+        if away[lab == k].min() <= width:
+            keep.append(k)
+
+    return np.isin(lab, keep)
 
 
 def ground(a, flat):
@@ -152,43 +199,47 @@ def ground(a, flat):
     return np.median(np.concatenate([a[:30], a[-30:]], 0), 0)[None, :, :]
 
 
-def outlines(sub, threshold=10, bridge=22):
-    """Everything enclosed by a painted edge.
+def steepness(plane, blur=1.2):
+    """How fast one plane changes, with the JPEG's own grain smoothed off first.
 
-    A closing before the fill is what makes this work on flat interiors: a chest's wooden
-    front has no internal detail at all, so its own outline has to be bridged into a ring
-    before a hole fill has anything to fill.
-
-    **The threshold is low on purpose, and it has to be.** A silhouette that is open
-    anywhere is not a silhouette — the fill leaks out through the gap and the whole interior
-    is lost, which is a far worse failure than admitting a little noise. The coin sack is the
-    case that proves it: it is dark brown standing on a dark purple ground with its own
-    shadow pooling under it, so at a threshold of 20 its *bottom* edge went undetected, the
-    fill drained out of the hole and the card shipped showing the sack's white outline
-    wrapped around nothing. Nothing but looking at it could have caught that — the sprite was
-    the right size, correctly centred, and 24% opaque.
-
-    What makes a low threshold safe here is that the halo these sheets are painted on is
-    *smooth*: it carries a lot of brightness and almost no gradient, so it contributes no
-    edges at any threshold worth using. Speckle from the painted sparkles and from JPEG
-    ringing is real and is what `biggest` is for.
+    The blur is what makes the threshold below meaningful: without it the ringing around
+    every painted edge is a few levels everywhere, which is the same size as the signal a
+    smooth ground is being judged by.
     """
-    lum = sub.mean(2)
-    mag = np.hypot(ndi.sobel(lum, 1), ndi.sobel(lum, 0)) / 4.0
+    plane = ndi.gaussian_filter(plane, blur)
+    return np.hypot(ndi.sobel(plane, 1), ndi.sobel(plane, 0)) / 4.0
 
-    m = mag > threshold
-    m = ndi.binary_closing(m, disc(bridge))
-    m = ndi.binary_fill_holes(m)
-    m = ndi.binary_opening(m, disc(3))
-    m = ndi.binary_fill_holes(m)
-    return biggest(m)
+
+def colour_steepness(sub, blur=1.2):
+    """The same reading over RGB — the steepest of the three channels."""
+    sm = ndi.gaussian_filter(sub, (blur, blur, 0))
+    out = np.zeros(sub.shape[:2])
+    for c in range(3):
+        out = np.maximum(out, np.hypot(ndi.sobel(sm[..., c], 1),
+                                       ndi.sobel(sm[..., c], 0)) / 4.0)
+    return out
+
+
+def enclosed(barrier):
+    """Everything a flood from the tile's border cannot reach without crossing an edge.
+
+    This is the whole tool. See the module docstring for why it replaced a colour test.
+    """
+    lab, n = ndi.label(~barrier)
+    if not n:
+        return np.zeros(barrier.shape, bool)
+
+    rim = set(lab[0]) | set(lab[-1]) | set(lab[:, 0]) | set(lab[:, -1])
+    rim.discard(0)
+    return ndi.binary_fill_holes(~np.isin(lab, sorted(rim)))
 
 
 def glow_axis(sub, bg, seed):
     """The direction in RGB the halo runs in, measured from the halo itself.
 
-    Taken from a ring just outside the outlines rather than written down, because the two
-    sheets glow in different colours and a third pack would glow in a third.
+    Taken from a ring just outside a first rough silhouette rather than written down,
+    because the two sheets glow in different colours and a third pack would glow in a
+    third.
     """
     band = ndi.binary_dilation(seed, disc(25)) & ~ndi.binary_dilation(seed, disc(6))
     res = (sub - bg)[band]
@@ -199,33 +250,35 @@ def glow_axis(sub, bg, seed):
     return axis / np.linalg.norm(axis)
 
 
-def keyed(sub, bg, perp_t, par_t):
+def keyed(sub, bg, edge_t):
     """The alpha for one item: painted thing 1, ground and halo and shadow 0."""
-    seed = outlines(sub)
+    # A first flood on raw colour, run only so the glow has a silhouette to be measured
+    # around. It is allowed to be wrong in exactly the way the second one is not — a ray
+    # admitted here moves the axis by nothing, because the axis is an average over the
+    # whole ring and a ray points along it anyway.
+    seed = enclosed(colour_steepness(sub) > 4.0)
     axis = glow_axis(sub, bg, seed)
 
     res = sub - bg
     par = res @ axis
     perp = np.linalg.norm(res - par[..., None] * axis, axis=2)
 
-    # Across the halo's axis, or so far along it that no halo reaches — and the second
-    # clause is gated on being at least slightly off-axis, or a violet gem's own violet
-    # halo is admitted with it.
-    m = seed | (perp > perp_t) | ((par > par_t) & (perp > 22))
-    m = ndi.binary_closing(m, disc(9))
-    m = ndi.binary_fill_holes(m)
-    m = ndi.binary_opening(m, disc(4))
-    m = biggest(m)
+    # The real pass, and it reads `perp` rather than the picture. Everything the ground
+    # does — the halo, its rays, the sparkles' bloom, the drop shadow — is the ground's own
+    # hue scaled up or down, so it is flat in `perp` and raises no edge at any threshold.
+    # Every painted thing carries some colour off that axis, so its outline does.
+    m = enclosed(steepness(perp) > edge_t)
+
+    # A ray's *core* is bright enough to raise an edge of its own, and a sparkle is a
+    # painted star with real corners; both are thin, and a body is not.
+    m = ndi.binary_opening(m, disc(3))
+    m = belongs(m)
     m = ndi.binary_fill_holes(m)
 
-    # A shadow is the ground made darker and a halo is the ground made brighter; both are
-    # on-axis and neither is the object. They hang off the outside of the silhouette, which
-    # is where a hole fill has no opinion, so they are cut by value and the object's own
-    # dark interiors are put back by the fill that follows.
-    m &= ~((par < 14) & (perp < 26))
-    m = ndi.binary_closing(m, disc(6))
-    m = biggest(m)
-    m = ndi.binary_fill_holes(m)
+    # The flood halts on the far side of the edge it met, so the mask carries the outer
+    # half of that edge — a couple of pixels of ground wrapped round the silhouette, which
+    # on the card's plate is a dark rim.
+    m = ndi.binary_erosion(m, disc(2))
 
     alpha = ndi.gaussian_filter(m.astype(np.float32), 1.4)
     return np.clip((alpha - 0.52) / 0.30, 0, 1)
@@ -302,7 +355,7 @@ def build(source):
         grid = tiles(sheet, source)
         for rung, cell in enumerate(rungs, start=1):
             sub, bg = grid[cell]
-            made[f"{prefix}_{rung}"] = square(sub, keyed(sub, bg, sheet.perp, sheet.par))
+            made[f"{prefix}_{rung}"] = square(sub, keyed(sub, bg, sheet.edge))
     return made
 
 

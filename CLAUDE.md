@@ -166,7 +166,12 @@ In practice:
 8a. **Map geometry lives in `ChapterMap` (Domain), not beside the screen.** `mapX`/`mapY` are fractions of a
    chapter's own map, so collisions and backwards trails are facts about a chapter that the build gate can
    check — and a validator cannot reach into Presentation. `MapLayout` reads them from there rather than
-   holding a second copy.
+   holding a second copy. **And the footprint it checks has to be what collides, not the disc**: the
+   standing mark above a cleared glade reaches 302 units up and every perch hangs a plate 227 down, so a
+   check guaranteeing the discs' 220 passed every mode's first chapter with the next-chapter marker
+   sitting on the tenth glade's record. `ChapterMap.Overshadows` is the rectangle test, `ChapterMapTests`
+   holds its numbers to what `LevelsScreen` draws, and the ten node positions are one table in
+   `Tools/chapters/mapart.py` — tenth glade on the left, marker on the right, in every mode.
 9. **XP and earned credits are derived, never accumulated.** A pure function of the star ledger via
    `ProgressionLedger`. An accumulator cannot be merged across devices (nothing distinguishes "cleared twice"
    from "counted twice"), cannot be retuned for existing players, and cannot be recovered when lost. The only
@@ -323,6 +328,78 @@ In practice:
     section is empty, so a rolled-back client and a not-yet-redeployed `groveWorth` both keep working. The
     migration grants `max(placed, 1)`, because neither `HomesteadLedger.LoadFrom` nor `SaveMerge` has the
     catalog loaded and a fixed grant would hand ten copies of a singly-sold piece to anybody who owned one.
+16i. **A piece occupies a footprint, the ground is a layer under everything, and a tap tests paint — three
+    reports from one session, each a piece whose picture and whose ground disagreed.** *Buried:* a cell held
+    its tile and its piece sorted as one, so the tile in front painted its face and its skirt over the base
+    of whatever stood behind — every piece drawn standing *on* the ground lost its feet. The ground plane is
+    flat and nothing on it is behind it, so `GroveFieldView` draws all ground first and every piece over all
+    of it; a cell owns a node in each layer. *Covers more than one tile:* a cottage was one slot painting
+    over three, which could still be built on. `HomesteadPiece.Footprint` (`cols`×`rows`, content) is what a
+    piece **occupies**; the save still stores one anchor row, the rest is derived through the catalog
+    (`GroveOccupancy`), so it cost no schema version and a merge landing two footprints on one tile keeps
+    both (11) — the index answers a covered tile with the nearer stand. A mirrored footprint swaps its axes,
+    because screen x is `(col − row)`. The hall's footprint is the **floor's** (`hallCols`/`hallRows`) and
+    every dwelling must equal it, or buying a manor would evict what stood beside the cabin. Every placement
+    goes through one of `TryPlace`, `PlanMove`/`Move` and `Flip`, which fit the footprint around the touched
+    tile and answer `NoRoom` out loud; the drag lights the whole footprint green or red from the same plan
+    the drop executes. *Hard to tap:* a tap tested the sprite's **box**, and an oak's box is nine tiles of
+    air around a forty-pixel trunk. `hit` is a mask of one cell per sixteen art pixels over the picture,
+    generated from the PNG by `Tools/grove_art_facts.py` with `w`/`h` — the grid is the size's, so a mask
+    is refused unless it is exactly the length its picture implies — and the tap's forgiveness is a
+    **distance** on the floor (`GrovePick.TouchSlop`), never a count of cells, so a torch and a boulder
+    are as forgiving as each other. Residents carry the same facts on their manifest entry
+    (`groveW`/`groveH`/`groveHit`, written back by `ManifestSync` and proved by its round trip), because
+    a resident is a companion and the grove draws its art too. `content.py` and `ContentValidation`
+    refuse a piece or companion whose facts differ from its file, because a number describing a picture
+    is only true until the picture is re-cut (5's `TileFaceRatio`). Two things bought by the same session: **the size a piece draws
+    at is authored, not measured off the loaded sprite**, so a tile laid out before its art arrived is not
+    laid out around a placeholder; and **"objects appear smaller when working rapidly" was a flipbook
+    leak** — two repaints in one frame stacked two `Flipbook`s, `GetComponent` stopped the first, and the
+    survivor went on painting a well's frames into a box re-sized for brambles. `Flipbook.Detach` takes
+    every one, `FlipbookTests` pins it. The occupancy index (`HomesteadLayout.Occupancy`) is memoised on a
+    version that every row write **and the ledger's own event** bump, so nothing rebuilds it on a bind and
+    nothing asks the ledger whether it is stale. The zoom band moved with it (`DefaultZoom` .85, .55–1.2), because a
+    tile at .7 was a quarter of an inch tall; `render_grove.py` mirrors all of it and stays pinned.
+16j. **The floor is sold in two currencies up a ladder, and both halves of that broke a rule that
+    had been "the whole rule" while there was only one currency.** The five biggest stretches are
+    priced in **gems** (600 → 2,000) and the three smallest in credits, and they are offered **one at
+    a time in an authored order** (`east_meadow` → `still_shore`), because ground is the dearest and
+    least legible thing in the shop — a wall of nine prices asks a new keeper to compare rectangles
+    they cannot picture, where one offer at a time is a next step.
+    <br>**`IsStarter` was `Cost <= 0`, and that is exactly right until a region has a price that is
+    not a cost.** It gates `IsOwned`, the shelf, the ladder, the hall's ground, the published card
+    and what is written into the save — so under the narrow reading every gem stretch reads as free
+    and **half the world is handed over at launch**, with every file still reading as authored.
+    `content.py` had the same line and needed the same fix. **Before pricing anything in a second
+    currency, grep for the predicate that means "free" and read every caller.**
+    <br>**The ladder is authored (`order`) and never derived from price**, for a reason and a
+    half. It cannot be derived — 600 gems and 5,000 credits do not compare — and the near-miss is
+    worse than the impossibility: a gem region's `Cost` is **nought**, so `NextForSale`'s old
+    "cheapest unowned" would have sold the five dearest stretches in the game first and for
+    nothing. Derived order also reorders itself on a retune, under players part-way up it. An
+    unauthored rung sorts **last**, so a content mistake strands a stretch — which somebody
+    notices — rather than jumping it to the front, which nobody would; `ContentValidation`,
+    `content.py` and `HomesteadTests` each prove the rungs are 1..N with no gaps and no ties.
+    <br>**Gem-priced land is worth nothing to a grove's score, and that costs no code at all.**
+    The score is the *credits'* worth of what is held (16g) against a server ceiling denominated
+    in credits (19a), so a gem cannot be priced into it in either direction — counting it would
+    overstate a forgery or understate an honest buyer, and `grove.ts` calls the second one a bug.
+    Both worth sums already skip a region costing nothing, so it falls out. A complete grove is
+    now **436,270 credits and 6,200 gems**, and only the first number is a score.
+    <br>**The one thing that did need saying is the seeder.** `config/grove.regions` is read
+    twice — `groveWorth` sums it, and `buildCard` filters the published `land[]` through it as a
+    catalog check — so a gem region left *out* scores correctly and quietly deletes eight of the
+    floor's fourteen columns from every **visitor's** view, with everything standing on them
+    floating over nothing. It is published **present at zero**, which says both things; absent
+    says one of them wrong. Starter land stays absent and is not the same case, because it never
+    reaches `groveLandOwned` at all (16e).
+    <br>Two smaller rules. A region carries **one price or the other**; `HomesteadMapper` salvages
+    a double-priced one by dropping the credit half so a remote push cannot brick a live client,
+    which means the *build gate* for it is the mapper's own message (every mapper problem is an
+    error) plus `content.py` and `seed-config.mjs`, which see the file first — a check written
+    after the mapper would be dead code wearing a gate's clothes. And **the ladder is asked before
+    the price** (15a's ordering): a keeper both a rung down and short of gems is told about the
+    wall money cannot climb.
 16a. **A resident is a companion, and the roster is written down once.** The grove used to author five of its
     own — a second roster with its own unlock rule, its own prices and two screens that could disagree about
     what somebody owned. `GroveResidents` projects the roster in, so a drop that adds a companion adds a
@@ -506,6 +583,28 @@ In practice:
     brigade of three costs a real player a plainer row — where waiting on a queue means the offensive name
     stands as long as the queue. A restore stamps `reviewedAt` and never deletes the reports, or the same
     three reporters could undo the review with one tap.
+19j. **A card is asked for after the sync, never after the change, and the reply is proved.**
+    `publishGrove` builds the card from `players/{uid}`, so a publish requested the moment a piece was
+    placed was answered from the save pushed *last* time — and the fingerprint then noted as published
+    stopped the real one ever being sent. Every board showed every grove one session behind, for as long
+    as the boards existed, with a successful call and a well-formed card on each publish. Three parts,
+    each closing a way back. **The only thing that asks is `CloudSaveService.Settled`**, raised by a sync
+    that left the server holding the save it carries and by nothing else — `Synced` is also raised by a
+    switch, a link, a purchase and a deletion, none of which pushed anything — and the card judged is
+    `GroveCard.OfSave` over the receipt's save, never the live ledgers, because a piece placed while a push
+    is in flight is on the device and not on the server. **The reply is held to the revision the receipt
+    named** (`GrovePublication.Proves`): a card built from an older save is `Stale`, pushed again and
+    retried, and accepted after `MaxStaleRetries` because a refusal that will still be true tomorrow must
+    never loop (13a); a server that reports no revision is not held to one (25's rule — presence says a
+    deployment understands the field). **What makes a change reach the server promptly is
+    `SyncTriggers`**, hung on *intent* events (`HomesteadLayout.Edited`, the three `Bought`s,
+    `ProfileChanged`) and never on `Changed`, which every ledger raises on load and every sync raises by
+    adopting a merge — a sync every three seconds for the life of the process. Two faults found on the
+    way, both silent: `GroveCard.OfPlayer` walked `PlacedIds` (piece ids) as slot ids and carried no
+    placements, so a rearrangement never moved the fingerprint; and opting back in published before the
+    setting was pushed, so the server read "off" and withdrew the card just asked for. The note key is
+    versioned (`grove.published.2.`) because every old note vouches for a stale card, and nothing but a
+    reply can ever say so.
 20. **A mode is code, and a chapter names one.** A way of playing brings an interaction, a fail state and a
     scoring rule, so content can never add one — but a chapter says which mode it belongs to (`mode` in
     `manifest.json`, absent meaning the classic `glade`), so a drop ships a whole second game with no app
@@ -631,8 +730,12 @@ In practice:
    something, which is a simulation task no generosity in the numbers touches.
    <br>Four rules answered it, gated on one field: a grove with a <b>strip</b> (`regrow`) is **living**, and
    one without is **still** — the shape the mode shipped with, kept because eight vector cases pin the base
-   rule in isolation. **The board says which taps pop** (`BudRun.Pops`), which is the change; the choice is
-   untouched and what is gone is the arithmetic in front of it. **It falls, and it grows**, so the board never
+   rule in isolation. **The board said which taps pop** (`BudRun.Pops`), which was the change; the choice was
+   untouched and what went was the arithmetic in front of it. **Withdrawn by the owner after playing the
+   second chapter**: the halo, the graft links and the white flower's breath were all hints, and the board
+   is to be *found* rather than read — which tap goes off, which pair trades and what white does are the
+   player's to discover. A special's mark still turns, because that is what a special is rather than advice
+   about it. The hint key stays, because it is paid for. **It falls, and it grows**, so the board never
    thins and the fortieth tap is dealt as good a grove as the first. **White is the bomb** — it holds every
    channel so it could never be mixed into, which made it a dead cell and the one state that punished the
    player for playing well, and tapping it now clears the square around it at the cost of no new object. And
@@ -655,40 +758,51 @@ In practice:
    means the grove decided nothing at all. What does **not** flip is anything about money or grading: par is
    still searched, the star lines are the same multiples, and the fail state is real. An easy mode is one
    whose *boards* are generous, never one whose arithmetic is.
-20m. **Every object in Budburst acts on a cell and its four neighbours, so the only axis its second
-   chapter had left was reach.** The mix, the bunch, the wash, the crack and the bomb's square are all
-   adjacency, and a mode whose entire product is the chain has nothing to gain from another thing built out
-   of it — 26g's *weaker-or-equal* test, applied to a mode made of one idea. The **runner** takes the
-   adjacency out: two squares of the grove are joined by a vine, and a bunch that <b>takes in</b> one end
-   sends its colour to whatever is standing on the other, however far that is. It brings no operator (`|`,
-   the mode's own), no second kind of light and no new cell, and it leaves the termination proof untouched,
-   because all it can ever do is put channels onto a flower that is already there. A vine belongs to the
-   **ground**, never to the flower, which is what lets a living grove fall through it where old wood could
-   not stand on one at all (20l).
-   <br>**The threshold is *in the bunch*, not *beside it*, and that is the whole of why it is not a
-   solvent** (20j's third test). A spread that fires on anything happening nearby walks outward for ever and
-   makes every board more solvable; one that has to be **built into** is a thing the player arranges — and
-   it is the only decision the mechanic has, because what a vine is worth is settled entirely by what is
-   standing at the **far** end at the instant it fires. Sending a colour that end already wears is the one
-   mistake a runner can punish, so `BudBoard` reports a runner's wash **even when it changes nothing**: the
-   one place `BudWash` breaks its own rule that a wash is a flower *changing*, and 20g at its smallest.
-   <br>**The vine is on the board from the first frame, and that is load-bearing rather than decoration.**
-   The last time this mode moved colour with no cause beside it — `Creep`, ripening one flower between taps —
-   it came back from play as *"another far flower's colour changes… I'm not sure if this is a bug"*. A runner
-   does the same thing on purpose and far harder, so the answer could not be a better animation on the day:
-   the two ends are joined by a painted vine before anything has happened, and when it fires the light
-   travels the line the player has been looking at all along.
-   <br>**The reading that judges a board is `changed`, and the obvious one could not work.** The measurement
-   26g literally prescribes is par with every vine cut — and it answers *nothing* for every input, because a
-   grove is dealt far more taps than its answer needs, so par sits on a floor set by how many critters are
-   shut in and how far apart they are: **cutting every vine moved par on none of several thousand swept
-   boards**, on many of which the vine plainly decided how the grove played. What works is the same test one
-   level down — play **every opening tap** both ways and compare the grove each leaves behind. Zero taps that
-   differ condemns the board; `caught`, taps that burst *more* because a vine carried, is what an author
-   holds out for. **A metric that answers "nothing" for every input is a broken gate rather than a strict
-   one, and the only way to find out is to run it over real boards before trusting it.** Two structural
-   refusals need no search at all: a vine joining two squares that already touch delivers what the wash
-   delivered anyway, and an end on bare ground can never be taken into a bunch.
+20m. **A mechanic the author places is one the player finds, and a payoff has to be one they made.** Budburst's
+   second chapter shipped a **runner** — two squares joined by a vine, firing whenever a bunch took in an end
+   — measured before it was authored (`changed`, `caught`, the threshold *in* the bunch, the vine painted from
+   the first frame), and it came back from one session as *it does no visually different animation, you do
+   not have to do anything special to trigger it, and I do not like the vines passing through the board*. It
+   was replaced by **five candidates on a grove each** — a windmill that slid a row, a firefly that banked a
+   colour, the graft, a puffball that painted its square on the second burst, a hive that swarmed at the third
+   — each chosen for a decision the player makes and a way of being wrong (26h's second half), each with its
+   own reading warned at nought, every gate green. The verdict on all five was one sentence: *zero new
+   animation, nothing different, all I see is flowers popping.* And it was right, for one reason that is
+   not about animation: **every one of them paid out as the same chain, and every one of them was put on
+   the board by me.** A player who finds an object has been handed a rule; a player who makes one has been
+   handed a reward. 26g's test (*replace it with the nearest existing thing*) and 26h's (*what does the
+   player decide*) both pass a mechanic that is nobody's achievement. The test that was missing is
+   **who put it there.**
+   <br>**So the chapter is now the genre's own loop.** A bunch of **five** leaves a **bolt** on the cell the
+   player tapped; a bunch of **eight** leaves a **sun**. A special is a flower wearing the bunch's colour,
+   and it fires when tapped, when a bunch takes it in, or when another special's reach hits it: a bolt clears
+   its row and column, a sun the five-by-five around it, and **a special in a fired special's reach fires
+   too**, in the same wave, which is the chain the chapter is for. What a special clears it does **not** wash
+   (20j's solvent, again), but it cracks every cocoon it hits and every cocoon beside what it cleared. The
+   **graft** stayed — drag two neighbours to trade, refused unless it makes a bunch — because it was the one
+   thing the owner said *made a little sense*, and because it is how the genre makes fives. `forges` and
+   `grafts` gate both, because the Thicket was authored and pinned without either and bunches of five happen
+   there. The forge lands on the cell the player touched, the graft's special on the flower they moved: what
+   you did is what you get.
+   <br>**Four rules from building it. One: the event is the reward, so it gets the biggest drawing in the
+   mode** — a forge is drawn as an arrival (bare for a beat, motes gathering back, the special standing up
+   under a ring with the one "you got something" sound), a bolt as lightning drawn out to both edges with
+   the cells in its line racing outward (`BudTempo.FireStep`), a sun as a blast with the heaviest shake in
+   the mode. **Two: a move that spends a tap need not spend a colour** (`BudRun.Dealt` beside `Spent`): a
+   graft keeps the colour in hand, or every trade is also a colour thrown away. **Three: a strong move
+   collapses par, and the fix is the board.** A graft bursts by construction, so a grafting grove of eight
+   cocoons is par 2 on every fill; the shipped ones carry twelve to fourteen, several tough, spread to every
+   edge. **Four: two readings, both warned at nought** — `forgeable`, opening moves that forge one (the
+   player can make one on the board as dealt), and `fired`, shortest plays that fire one, measured over every
+   shortest solution (26h's `kindled`). `BudObjectReading` holds them, `bud.py` mirrors them,
+   `BudLadderTests` pins them, and move order is part of the contract (`BudRun.Moves`).
+   <br>**Retired ids that must never be reused: the lessons `bud_runner`, `bud_gust`, `bud_firefly`,
+   `bud_puff` and `bud_hive`; the fields `runners`, `winds` and `firefly` (refused by name, 5f); the ten
+   level ids of the runner chapter** (`b02_firstvine`, `b02_longreach`, `b02_deepthicket`,
+   `b02_windingway`, `b02_twovines`, `b02_thewilds`, `b02_crossvine`, `b02_thornedvine`, `b02_thetangle`,
+   `b02_tangleheart`) **and the five of the objects chapter** (`b02_windrow`, `b02_lanternfly`,
+   `b02_graftwood`, `b02_puffhollow`, `b02_hivehill`) — the second five were played on a device, so a save
+   holds their records. The chapter id `b02_tanglewood` is kept.
 21. **A chapter is opened by stars, and only its first level asks.** Inside a chapter the chain is unchanged;
     at a **boundary** `LevelUnlock.GateFor` opens the next chapter once the player holds `starsPerLevel` stars
     per level of the one behind it (shipping as 2, so 20 of a ten-level chapter's 30). The two rules answer
@@ -1222,11 +1336,19 @@ compile. Do not guess — verify offline:
   *meets* it rather than about its solution (5g).
 - **Shop art and sound checks:** `Tools/make_shop_art.py --check` and `Tools/make_sfx.py --check` prove the
   shipped pictures and clips are what the tools would cut. **They prove reproducibility and say nothing about
-  quality**, and that distinction shipped a broken card once — every check green over a coin sack whose fill
-  had drained out through an undetected edge. Two numeric gates were tried and **neither separates a broken
-  cut from a healthy one**, because a bite out of one side is not distinguishable by any global statistic
-  from a thin part that belongs there. So `--contact` is the gate: a sheet laid out at the size a card really
-  draws, and a page that *plays* the sounds at the pitches and repeat rates the game uses. Look and listen.
+  quality**, and that distinction shipped four broken cards — every check green over a coin sack whose fill
+  had drained out through an undetected edge, a gem sack cut off at the waist, a chest with its lid sliced
+  flat and crescents of leftover halo. Two numeric gates were tried and **neither separates a broken cut from
+  a healthy one**, because a bite out of one side is not distinguishable by any global statistic from a thin
+  part that belongs there. So `--contact` is the gate: a sheet laid out at the size a card really draws, and
+  a page that *plays* the sounds at the pitches and repeat rates the game uses. Look and listen.
+  <br>**All four were one fault, and the repair is a different question rather than a better threshold.** The
+  cut was a *colour* test, which needs to be right about every pixel on sheets where the glow behind an object
+  covers the object's own brightness and hue; it is now a flood inward from the tile's border that stops at
+  edges, which has to be right about one closed curve, and it floods over the residual *across* the glow's
+  axis so the halo, its rays and the drop shadow are flat and can neither wall it off nor be admitted. **A
+  keyed sparkle is a real closed shape**, so speckle is judged by size against the body and distance against
+  its own width — never by a fraction of the tile, which is a different bar for every rung.
 - **Sound and music name check:** `Tools/verify/sfxnames.py` proves three lists agree — what the code
   plays, what is on disk, and what `AssetManifest.Sfxs` preloads. A misspelled name was a runtime
   `InvalidKeyException` and a silence that shipped green. It reads **literals only** and scans
@@ -1445,19 +1567,33 @@ live in **Hard-won facts**.
 - **Economy** — real-money shop (Unity IAP 5.4.2), gems as the soft sink, rewarded ads, refund sweeps,
   server-adjudicated grants, a gem-priced continue on a lost run (23) and a bonus wheel on the victory
   panel's video offer (25), neither costing the save file a field.
-- **The Grovement** — 14x14 isometric tile floor, land regions bought with credits, decor bought by the
+- **The Grovement** — 14x14 isometric tile floor drawn as a ground layer under a piece layer, pieces on
+  authored footprints (the hall and every dwelling 2x2, nine structures and paths 2x2 or 1x2), taps
+  resolved through per-piece hit masks, land sold one rung at a time up an authored ladder — the
+  three smallest stretches for credits and the five biggest for gems (16j) — decor bought by the
   copy, residents projected from the companion roster, derived grove worth.
 - **Boards** — public `groves/{uid}` cards, published rank distribution, unique keeper names with
-  server-side filtering and reporting.
+  server-side filtering and reporting. A card is rebuilt about fifteen seconds after its owner changes
+  the grove while online (a three-second sync debounce, then a ten-second publish debounce), or on
+  their next launch; the cost grows with decorating, never with playing (19j).
 - **Modes beyond the classic glade** — Lightfall (`f01_lightfall`, `f02_glasswater`, `f03_whorlwater`),
-  Budburst (`b01_thicket`, `b02_tanglewood`), Groovekeeper (`k01_grovekeeper`) and the Hollow
-  (`h01_emberfall`). Lightfall is the only one to reach a third chapter, and what a second or third costs is
-  the shape to copy: one new object (the lens, then the whorl, then Budburst's runner), one lesson id, a few
-  fields on the mode's own step type — and **no save schema version, no merge rule, no `progression.json`
-  retune and no server work** (20a). Lightfall's third chapter also cost **two** withdrawn mechanics before
-  it kept one, which is 26g and 26h and by some distance the more useful half of the lesson; the runner is
-  what those two rules look like applied *before* anything was authored (20m). Lightweave and Ripplewake are
-  retired; `weave` and `ripple` are spent mode ids.
+  Budburst (`b01_thicket`, `b02_tanglewood`) and Groovekeeper (`k01_grovekeeper`).
+  <br>**The Hollow does not ship and never did.** `LevelModes` registers exactly four — `GladeMode`,
+  `FallMode`, `KeeperMode`, `BudMode` — there is no `HollowMode`, and `h01_emberfall` is in neither
+  `manifest.json` nor `chapters/`. What survives is the *level shape* (`HollowDto`, invariants 20c–20e),
+  which is why the rest of this file still talks about hollows: those entries are design rules, not a
+  shipping mode. This was found on 2026-09-02 by deriving the store listing from `manifest.json` instead
+  of from this file — the draft claimed five modes and a hundred levels "across eleven chapters", and the
+  truth is **four modes, ten chapters, one hundred levels**. Read the manifest, never this table, when the
+  number reaches a customer.
+  <br>Lightfall is the only one to reach a third chapter, and what a second or third costs is
+  the shape to copy: one new object (the lens, then the whorl), one lesson id, a few fields on the mode's
+  own step type — and **no save schema version, no merge rule, no `progression.json` retune and no server
+  work** (20a). Lightfall's third chapter also cost **two** withdrawn mechanics before it kept one, which is
+  26g and 26h and by some distance the more useful half of the lesson; Budburst's second chapter cost
+  **six** (the runner, then a windmill, a firefly, a puffball and a hive, 20m) before it kept the genre's
+  own loop — specials the player forges, and the graft. Lightweave and Ripplewake are retired; `weave` and
+  `ripple` are spent mode ids.
 - **Privacy/ads plumbing** — Google UMP consent, ATT prompt, `app-ads.txt` (placeholders).
 
 ### Content shipped
@@ -1472,9 +1608,9 @@ live in **Hard-won facts**.
 | `f02_glasswater` | fall | 10 | 3–6 drops | par + 5 (motes) | the lens, charged and fired; motes 5 → 33, glass 1 → 3 panes, channels asked for 1 → 6 |
 | `f03_whorlwater` | fall | 10 | 2–5 drops | par + 5 (motes) | the whorl: the only place two *motes* are combined. Motes 4 → 26, headroom 4 → 2, whorls 1 → 2, `ways` 1 → 16, greedy beaten on nine of ten |
 | `k01_grovekeeper` | keeper | 10 | 2–8 tiles | none, then par + 5 (tiles) | the inversion, then stone, the heartbed and the prism; beds 2 → 4 |
-| `h01_emberfall` | hollow | 10 | 1–2 sparks | — | ladder is *how few openings win*: 7,8,6,4,2,3,4,1,4,1 |
+| ~~`h01_emberfall`~~ | ~~hollow~~ | — | — | — | **never shipped** — no file, not in the manifest, no `HollowMode` in `LevelModes`. Kept as a row so nobody re-adds it from memory |
 | `b01_thicket` | bud | 10 | 3 taps | none, none, par + 8, then par + 5 | every grove *living* (20l); 5x5 → 8x7, flowers 22 → 49, critters 3 → 12, opening tap 3 waves → 8. The first two rungs cannot be lost (24) |
-| `b02_tanglewood` | bud | 10 | 3 taps | par + 5 (taps) | the runner (20m): reach without adjacency. 7x6 → 8x7, critters 6 → 14, vines 0 → 3, three rungs carrying none |
+| `b02_tanglewood` | bud | 10 | 3 taps | par + 5, then + 4, then + 3 (taps) | the bolt, the sun and the graft (20m): five alike forge a bolt where you tapped, eight a sun, and a fired special sets off every special in its reach. 8x7, fifteen then sixteen shut in, tough ones 3 → 8, a bolt dealt on rung one and a sun on rung three; every shortest play on every rung fires a special |
 
 **No level authors a difficulty number except the first glade in the game, and no chapter authors a clock**
 (invariant 22). Par is derived from the board; both star lines and the losing line are multiples of it —
@@ -1532,9 +1668,15 @@ Free play collects about **593 credits and 6 gems a day**; `Tools/verify/content
 
 - **Companions** — 31, one free (`monarch`, the starter), 30 priced 800 → 30,000
   (~270,500 total). Unlock is keeper level **and** purchase.
-- **Grove catalog** — 493,770 credits complete: 154,770 decor and homes, 68,500 land
-  (9 regions, a free 6x6 starter), 270,500 residents. 150 priced pieces, of which 99 sell
-  in bundles of ten at what one used to cost. Home ladder 5 rungs, first free.
+- **Grove catalog** — 436,270 credits **and 6,200 gems** complete: 154,770 decor and homes,
+  11,000 credits + 6,200 gems of land (9 regions, a free 6x6 starter), 270,500 residents.
+  150 priced pieces, of which 99 sell in bundles of ten at what one used to cost. Home
+  ladder 5 rungs, first free.
+- **Land** — one ladder, cheapest rung first and nothing else on offer:
+  `east_meadow` 2,500 → `west_hollow` 3,500 → `north_reach` 5,000 in credits, then
+  `south_bank` 600 → `sunrise_field` 900 → `dusk_field` 1,200 → `far_terrace` 1,500 →
+  `still_shore` 2,000 in **gems**. Only the credit half counts toward a grove's score
+  (16j), which is why the complete figure above is two numbers and only one is a score.
 - **Grove star ladder** — 10K / 20K / 50K / 100K / 200K, content in `homestead.json`.
 - **Hearts** — refill cap 5, ceiling 50, 8h refill (4h boosted). A loss costs one. Two kinds of
   run cost nothing (invariant 24): the **first 3 levels of the first chapter of each mode**
@@ -1550,11 +1692,24 @@ Free play collects about **593 credits and 6 gems a day**; `Tools/verify/content
 - **Streak** — a 7-night lap that wraps: 500 credits, 1 heart, 5 gems, 2 hearts, a 12h boost,
   3 hearts, 10 gems.
 - **Ads** — four placements, all opt-in, no interstitials: `heart_refill` 2 hearts,
-  `coin_bonus` 1,000 credits, `win_bonus` credits, `hint_refill` 1 hint. (`run_continue` is
+  `coin_bonus` **300** credits, `win_bonus` credits, `hint_refill` 1 hint. (`run_continue` is
   retired — invariant 22.) Daily caps 20/12/**6**/10 — the first, second and fourth are
   deliberately above what any network will fill, so they bind only as a lever that can be
   lowered; `win_bonus` is the exception and its six is a real bound, because the wheel more
   than doubled what one view of it pays. `AdRules.MaxDailyCap` 30 is a hard `const`.
+  <br>**`coin_bonus` was 1,000 and that made a video worth four perfect runs.** A 3-star clear
+  pays 200 (avg 239 golden) in every mode, the whole hundred-level game pays ~23,000 once —
+  **4.7% of the 493,770-credit catalog** — and a repeatable video paid 1,000, so the economy
+  said the boards were the least valuable thing on the screen. Three readings agreed and none
+  of them needed live data: against the **store** it gave away $0.53–$0.80 of IAP for an
+  impression worth about a cent; against the **boards** it bought rank outright, since ad
+  grants land in `granted` and `grove.ts` clamps the bought half to
+  `earnedCredits + grantedBaseline` (19a); and against **playing** it was 4× a perfect run.
+  What made it urgent rather than academic is that the cap of 12 does not bind today — the
+  economy was being held in place by **ad fill rate**, so it would have loosened about
+  fourfold the day AdMob instances landed, with no code change and no signal. 300 sits just
+  above a 3-star clear, so a video reads as one good level. **A repeatable faucet must be
+  priced against the non-repeatable one, never against the store alone.**
 - **Bonus wheel** — eight equal slices on `win_bonus`, at 100 / 200 / 150 / 300 / 100 / 250 /
   150 / 500 percent of its authored 200, so the rim reads 200 / 400 / 300 / 600 / 200 / 500 /
   300 / **1,000** and every slice is a 1-in-8 chance. Mean 218.75%, so a view really pays about
@@ -1596,7 +1751,7 @@ Firebase project `glimmer-groove-1cd60`, Firestore `eur3`, Node 22 in `europe-we
 **Fourteen functions**: `getWallet`, `submitSpends`, `claimAwards`, `redeemPurchase`,
 `adReward`, `appleNotification`, `sweepVoidedPurchases`, `publishGroveStats`, `publishGrove`,
 `withdrawGrove`, `publishGroveRanks`, `claimName`, `reportKeeperName`, `deleteAccount`.
-`firebase/README.md` is the guide; `firebase/e2e/smoke-test.mjs` is **90/90 live** and
+`firebase/README.md` is the guide; `firebase/e2e/smoke-test.mjs` is **91/91 live** and
 `firebase/e2e/delete-account.mjs` is **14/14 live** — the second erases the throwaway accounts it
 makes, so it is the only suite here that leaves less behind than it creates.
 
@@ -1629,20 +1784,32 @@ changes nothing until that function is redeployed.
    delete an Apple-linked account in-app, then **Settings ▸ your name ▸ Sign-In & Security ▸ Sign
    in with Apple** — the app should be gone from that list, and the log should say
    `appleRevoked: true`.
-1. The sixteen products in the **Play Console**, and the **three heart containers in App Store
-   Connect** (the other thirteen iOS products are done and verified end to end — a sandbox
-   `gg_gems_1` redeemed on 2026-08-24). `gg_heart_vessel_1/2/3` must be created as
-   **non-consumables** in both, at the $19.99 / $29.99 / $39.99 tiers; a consumable would let the
-   store sell a permanent upgrade twice and would break Restore. The whole server side is live as
-   of 2026-08-26. What is still unproven is a real receipt reaching `redeemPurchase`, which needs
-   a sandbox buy on a device.
-2. **View financial data** on the Play service account, or the refund sweep silently no-ops.
+1. **A real receipt reaching `redeemPurchase`, and a real impression reaching `adReward`.** These are
+   the two money paths, both fully built, both deployed, and **neither has ever executed once** —
+   which is a different state from unconfigured and the one that reads as done. Ads *load* on device;
+   no view has ever paid. All sixteen Play products exist as of 2026-09-02 and all sixteen iOS ones
+   before that (a sandbox `gg_gems_1` redeemed 2026-08-24), so what is left is a sandbox buy and a
+   watched video on a phone. Do both the day closed testing opens.
+2. ~~**View financial data** on the Play service account~~ — **done 2026-09-02.**
+   `play-billing@glimmer-groove-1cd60.iam.gserviceaccount.com` holds *View financial data* and *Manage
+   orders and subscriptions*, granted at **app** scope, and the key is `GOOGLE_PLAY_SERVICE_ACCOUNT`
+   v2 with `redeemPurchase` and `sweepVoidedPurchases` redeployed against it. Proved rather than
+   assumed: a signed JWT for that account fetched `purchases/voidedpurchases` and got **HTTP 200**.
+   Before that the secret held the string `UNSET` behind a BOM, so every Android purchase would have
+   been refused and auto-refunded in three days with nothing anywhere saying why.
 3. The `appleNotification` URL registered for **both** production and sandbox.
 4. AdMob **instances** under each of the ten LevelPlay ad units (the units exist on both
-   sides; only the mediation link between them is missing).
+   sides; only the mediation link between them is missing). Blocked on a public listing, not on
+   effort: AdMob's *App store details* field rejects a URL that does not resolve, and an unlisted
+   AdMob app gets limited serving by policy — so `No fill` cannot be read as a wiring fault until
+   the store page is live.
 5. Fill in `app-ads.txt` from each network's dashboard and host it on the domain in both
-   store listings; turn on in-app bidding.
+   store listings; turn on in-app bidding. The AdMob line is real and verified; the ironSource and
+   Unity Ads lines are still commented placeholders in **both** repos and must move together.
 6. Delete the ~210 synthetic saves and the name reservations the live suite leaves behind.
+6a. **Watch the EU consent form actually appear.** `UmpConsentGateway` has only ever returned
+   `NotRequired` from outside the EEA, so the branch that shows a form has never run. Needs an EEA
+   device or a debug geography override; a consent failure here is completely silent.
 7. **Measure the turn tuning.** The three lines (1.20 / 1.40 / 1.60) were reasoned about, never played
    against: run `difficulty.py` and, once there is live data, first-attempt clear rates. The budget is the
    only fail state a glade has, so it is the number most likely to be wrong and the one with the shortest
@@ -1668,15 +1835,14 @@ changes nothing until that function is redeployed.
     `win_bonus` is the funnel; it decides whether the cap is now the thing that binds (it was never meant to
     be) and whether the tail slice is rare enough to stay a story. The server side is live and proved end to
     end.
-14a. **Measure the Tanglewood, and read the runner's *reason* before its difficulty.** The chapter is
-    Budburst's second and the runner is its one new object (20m). Two questions, and only the second is
-    about difficulty. **Do players work out the threshold?** — that a bunch has to *take in* an end rather
-    than merely go off beside one. A player who has not is playing a chapter with a decoration on it, and
-    the symptom is a vine that never fires rather than a complaint. There is deliberately no event for it
-    yet; if the funnel needs one, count opening taps that fire a vine against taps that go off *beside* an
-    end and do not. And **is the chapter's step up from the Thicket the right size?** — it rides on how many
-    are shut in (six to fourteen) and on the vines, since par cannot move (26d). If it is a wall, the cheap
-    fix is fewer critters on the early rungs, which is a content drop and no store review.
+14a. **Measure the Tanglewood, and read whether players *make* specials before whether they fire them.**
+    Two questions. **Do players work out that five is what forges one?** Rung one deals a bolt so the first
+    thing anybody does is fire one; rung two deals nothing, and a player who has not made the connection
+    plays it as the Thicket. There is deliberately no event for it yet; if the funnel needs one, count forges
+    per run against bunches of four. **And is a chain of specials reachable by an ordinary player?** — every
+    rung's shortest plays fire at least one, which is a fact about the search and not about a thumb. If the
+    specials read as decoration, the cheap fix is more shut in beside the lines a bolt takes, which is a
+    content drop and no store review.
 14. **Measure the Budburst ramp.** Its ten groves are all par 3 and dealt eight taps each, so the whole ramp
     is how many are shut in. The mode is commissioned against a *feeling* (20k), so the reading that matters
     is not the clear rate (it should be ~100%) but the **three-star rate**, which should stay high and dip

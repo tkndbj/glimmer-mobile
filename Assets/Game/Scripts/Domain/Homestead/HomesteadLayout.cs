@@ -37,7 +37,8 @@ namespace GlimmerGrove.Homestead
     /// <b>It stores nothing.</b> Fill is a pure function of the arrangement already in the
     /// save file, which is invariant 14's preferred shape: no counter to merge, no floor to
     /// keep monotonic, no migration, and a retune that widens a region simply moves everybody's
-    /// stage down a notch and back up as they fill it.
+    /// stage down a notch and back up as they fill it. A two-tile piece fills two tiles, which
+    /// is why fill is asked of the catalog rather than of the floor alone.
     /// </para>
     /// <para>
     /// The thresholds are deliberately generous at the bottom and exact at the top. The first
@@ -59,8 +60,8 @@ namespace GlimmerGrove.Homestead
             return fill > 0f ? TendedStage.Started : TendedStage.Bare;
         }
 
-        public static TendedStage Of(GroveFloor floor, GroveRegion region)
-            => Of(HomesteadLayout.FillOf(floor, region));
+        public static TendedStage Of(HomesteadCatalog catalog, GroveRegion region)
+            => Of(HomesteadLayout.FillOf(catalog, region));
     }
 
     /// <summary>What stands in one slot, and when the player decided it.</summary>
@@ -82,7 +83,8 @@ namespace GlimmerGrove.Homestead
         /// transform would rotate the <em>painting</em> rather than the object: a tree leans
         /// over, and a fence's painted side wall goes on facing the old way while its footprint
         /// runs diagonally across the ground plane. A mirror is the one transform that leaves an
-        /// isometric drawing still standing on its own tile, so it is the one offered.
+        /// isometric drawing still standing on its own tile, so it is the one offered — and a
+        /// mirrored footprint swaps its columns for its rows, see <see cref="GroveFootprint"/>.
         /// </para>
         /// <para>
         /// It rides the row it belongs to rather than getting a stamp of its own, and that is
@@ -102,6 +104,38 @@ namespace GlimmerGrove.Homestead
         }
 
         public bool IsOccupied => !string.IsNullOrEmpty(PieceId);
+    }
+
+    /// <summary>
+    /// What a move would do, worked out before anything is written — so a drag can show its
+    /// answer under the finger and the drop can execute exactly what was shown.
+    /// </summary>
+    public readonly struct GroveMovePlan
+    {
+        public readonly GrovePlaceResult Result;
+
+        /// <summary>Where the moving piece's anchor would land.</summary>
+        public readonly int AnchorCol, AnchorRow;
+
+        /// <summary>The moving piece's footprint, facing as it does.</summary>
+        public readonly GroveFootprint Footprint;
+
+        /// <summary>The stand that would move the other way, or invalid for a move onto clear ground.</summary>
+        public readonly GroveStand Swapped;
+
+        public GroveMovePlan(GrovePlaceResult result, int anchorCol, int anchorRow,
+                             GroveFootprint footprint, GroveStand swapped = default)
+        {
+            Result = result;
+            AnchorCol = anchorCol;
+            AnchorRow = anchorRow;
+            Footprint = footprint;
+            Swapped = swapped;
+        }
+
+        public bool Ok => Result == GrovePlaceResult.Placed;
+
+        public bool IsSwap => Ok && Swapped.IsValid;
     }
 
     /// <summary>
@@ -134,6 +168,15 @@ namespace GlimmerGrove.Homestead
     /// stale side would put the tree back.
     /// </para>
     /// <para>
+    /// <b>A row names an anchor, and a piece may cover more than its anchor.</b> The tiles a
+    /// piece occupies are derived through the catalog (<see cref="GroveOccupancy"/>), so
+    /// footprints cost the file nothing and can be retuned in a drop. The rules that keep the
+    /// floor consistent — nothing placed where something stands, nothing under the hall — are
+    /// applied when the player acts, through <see cref="TryPlace"/>, <see cref="PlanMove"/>
+    /// and <see cref="Flip"/>, never to the stored rows: a merge that lands two pieces on one
+    /// tile keeps both, because losing either is the failure invariant 11 refuses.
+    /// </para>
+    /// <para>
     /// <see cref="Join"/> is a maximum over (has a stamp, then the stamp, then ordinal
     /// order), taken independently per slot — so it is idempotent, commutative and
     /// associative, which is what invariant 11 promises about every merge in this file.
@@ -148,8 +191,18 @@ namespace GlimmerGrove.Homestead
         static readonly Dictionary<string, Placement> _placed =
             new Dictionary<string, Placement>(StringComparer.Ordinal);
 
+        /// <summary>Bumped on every write, so a derived index knows when it is stale.</summary>
+        static int _version;
+
         /// <summary>Raised when anything moved, so an open screen can redraw.</summary>
         public static event Action Changed;
+
+        /// <summary>
+        /// Raised when the <em>player</em> placed, moved, flipped or cleared something —
+        /// never when a save was loaded or a merge adopted, which is the difference from
+        /// <see cref="Changed"/> and the whole reason this exists. See <c>SyncTriggers</c>.
+        /// </summary>
+        public static event Action Edited;
 
         // ------------------------------------------------------------- reading
         /// <summary>The piece id in a slot, or empty. Unknown slots answer empty.</summary>
@@ -158,6 +211,7 @@ namespace GlimmerGrove.Homestead
                 ? p.PieceId
                 : string.Empty;
 
+        /// <summary>Whether a row with a piece in it is anchored on this slot.</summary>
         public static bool IsOccupied(string slotId) => !string.IsNullOrEmpty(At(slotId));
 
         /// <summary>
@@ -203,8 +257,94 @@ namespace GlimmerGrove.Homestead
         public static HomesteadPiece PieceAt(HomesteadCatalog catalog, string slotId)
             => catalog == null ? default : catalog.Find(At(slotId));
 
+        // ----------------------------------------------------------- occupancy
+        static GroveOccupancy _index = GroveOccupancy.Empty;
+        static HomesteadCatalog _indexCatalog;
+        static int _indexVersion = -1;
+
         /// <summary>
-        /// How many tiles anywhere on the floor hold something.
+        /// The index depends on one thing this class does not write: which home the player
+        /// holds, which the hall stand is drawn from. So the ledger's event bumps the version
+        /// exactly as a row write does, and the index never has to ask the ledger whether it
+        /// is stale — a question that used to be asked on every tile bind.
+        /// </summary>
+        static HomesteadLayout()
+        {
+            HomesteadLedger.Changed += () => _version++;
+        }
+
+        /// <summary>
+        /// Every tile covered by what, for this catalog — rebuilt only when a row, the catalog
+        /// or the held homes change, and otherwise the same object on every call.
+        ///
+        /// <para>
+        /// The hall is in it, as a stand that is never placed and never picked up, so a rule
+        /// asking "is there room here" gets one answer from one index rather than a hall check
+        /// and an occupancy check that could disagree. The starter companion is in it while
+        /// its tile is untouched, exactly as <see cref="Shown"/> draws it.
+        /// </para>
+        /// </summary>
+        public static GroveOccupancy Occupancy(HomesteadCatalog catalog)
+        {
+            if (catalog == null) return GroveOccupancy.Empty;
+
+            if (ReferenceEquals(catalog, _indexCatalog) && _indexVersion == _version) return _index;
+
+            _index = new GroveOccupancy(Stands(catalog, HomesteadLedger.BestDwelling(catalog).Id));
+            _indexCatalog = catalog;
+            _indexVersion = _version;
+            return _index;
+        }
+
+        static IEnumerable<GroveStand> Stands(HomesteadCatalog catalog, string dwelling)
+        {
+            var floor = catalog.Floor;
+
+            var hall = floor.HallStand(dwelling);
+            if (hall.IsValid) yield return hall;
+
+            foreach (var pair in _placed)
+            {
+                if (!pair.Value.IsOccupied || !floor.Contains(pair.Key)) continue;
+
+                var stand = GroveOccupancy.Of(catalog, pair.Key, pair.Value.PieceId, pair.Value.Flipped);
+                if (stand.IsValid) yield return stand;
+            }
+
+            string starter = floor.StarterPiece;
+            if (!string.IsNullOrEmpty(starter) && !_placed.ContainsKey(floor.StarterTile))
+            {
+                var stand = GroveOccupancy.Of(catalog, floor.StarterTile, starter, false);
+                if (stand.IsValid) yield return stand;
+            }
+        }
+
+        /// <summary>
+        /// The stand a tile belongs to — anchored on it or reaching over it — if any. The one
+        /// question a tap, a hold and a drop all ask.
+        /// </summary>
+        public static bool TryStandAt(HomesteadCatalog catalog, int col, int row, out GroveStand stand)
+            => Occupancy(catalog).TryStandAt(col, row, out stand);
+
+        /// <summary>Whether the player may build on a tile: owned land that the hall does not cover.</summary>
+        static Func<int, int, bool> Buildable(HomesteadCatalog catalog)
+        {
+            var floor = catalog.Floor;
+            if (!ReferenceEquals(floor, _buildableFloor))
+            {
+                _buildableFloor = floor;
+                _buildable = (c, r) => GroveLand.IsOwned(floor, c, r);
+            }
+
+            return _buildable;
+        }
+
+        static GroveFloor _buildableFloor;
+        static Func<int, int, bool> _buildable;
+
+        // --------------------------------------------------------------- counts
+        /// <summary>
+        /// How many things stand anywhere on the floor.
         ///
         /// Counted over the stored rows rather than by walking the field, because the field is
         /// hundreds of tiles and almost all of them are empty — the save only ever holds a row
@@ -222,39 +362,23 @@ namespace GlimmerGrove.Homestead
         }
 
         /// <summary>
-        /// How many of one region's buildable tiles hold something.
-        ///
-        /// The hall's tile is excluded, because it is drawn from what the player owns rather
-        /// than placed — counting it would make a region that can never read as finished.
+        /// How many of one region's buildable tiles hold something, counting every tile a
+        /// footprint covers. The hall's tiles are excluded — see <see cref="GroveOccupancy.CoveredCount"/>.
         /// </summary>
-        public static int OccupiedCount(GroveFloor floor, GroveRegion region)
-        {
-            if (floor == null || region == null || !region.IsValid) return 0;
-
-            int count = 0;
-            for (int c = region.Col; c < region.Col + region.Cols; c++)
-                for (int r = region.Row; r < region.Row + region.Rows; r++)
-                {
-                    string id = GroveFloor.TileId(c, r);
-                    if (!floor.IsHall(id) && IsOccupied(id)) count++;
-                }
-
-            return count;
-        }
+        public static int CoveredCount(HomesteadCatalog catalog, GroveRegion region)
+            => catalog == null ? 0 : Occupancy(catalog).CoveredCount(region);
 
         /// <summary>
         /// How full a region is, 0 to 1. One with nowhere to place answers 0.
         ///
         /// <b>This is the whole "I built this" signal</b> — see <see cref="GroveTending"/>.
         /// </summary>
-        public static float FillOf(GroveFloor floor, GroveRegion region)
+        public static float FillOf(HomesteadCatalog catalog, GroveRegion region)
         {
-            if (floor == null || region == null || !region.IsValid) return 0f;
+            if (catalog == null || region == null || !region.IsValid) return 0f;
 
-            int total = region.TileCount;
-            if (floor.HallIsIn(region)) total--;
-
-            return total <= 0 ? 0f : (float)OccupiedCount(floor, region) / total;
+            int total = region.TileCount - catalog.Floor.HallTilesIn(region);
+            return total <= 0 ? 0f : Math.Min(1f, (float)CoveredCount(catalog, region) / total);
         }
 
         /// <summary>
@@ -319,6 +443,29 @@ namespace GlimmerGrove.Homestead
         /// not know are included — the address simply misses, and dropping them here would
         /// mean a rollback silently stopped loading art it might still have.
         /// </summary>
+        /// <summary>
+        /// The slots with something standing in them, by slot id.
+        ///
+        /// <para>
+        /// Distinct from <see cref="PlacedIds"/>, which answers in <em>piece</em> ids for the
+        /// art loader, and the distinction cost a card: <c>GroveCard.OfPlayer</c> walked
+        /// <see cref="PlacedIds"/> as though it were slots, asked <see cref="At"/> about each
+        /// piece id, got nothing back, and so the locally built card carried no placements at
+        /// all — which meant its fingerprint never changed when the player rearranged, and a
+        /// rearranged grove never asked to be republished. An emptied slot has a row and is
+        /// not listed here; the starter companion has no row and is not either.
+        /// </para>
+        /// </summary>
+        public static IReadOnlyCollection<string> OccupiedSlots()
+        {
+            var slots = new List<string>(_placed.Count);
+
+            foreach (var pair in _placed)
+                if (pair.Value.IsOccupied) slots.Add(pair.Key);
+
+            return slots;
+        }
+
         public static IReadOnlyCollection<string> PlacedIds()
         {
             var ids = new HashSet<string>(StringComparer.Ordinal);
@@ -338,7 +485,11 @@ namespace GlimmerGrove.Homestead
 
         // ------------------------------------------------------------- writing
         /// <summary>
-        /// Puts a piece in a slot, or clears it when <paramref name="pieceId"/> is empty.
+        /// Puts a piece in a slot, or clears it when <paramref name="pieceId"/> is empty —
+        /// <b>the raw write, with no room check.</b> A caller that has a tile and a piece from
+        /// the player wants <see cref="TryPlace"/>, which fits the footprint; this is what
+        /// that calls once it has decided, and what a clear uses, because clearing an anchor
+        /// never needs room.
         ///
         /// <para>
         /// Returns false when nothing changed, which is what stops a repaint and a save from
@@ -359,18 +510,101 @@ namespace GlimmerGrove.Homestead
 
             // A new piece faces the way it was drawn. Carrying the old facing over would make
             // the slot remember a decision about something that is no longer standing in it.
-            _placed[slotId] = new Placement(wanted, GameClock.NowUnix(), false);
+            Write(slotId, new Placement(wanted, GameClock.NowUnix(), false));
 
             Telemetry.Track("grove_placed", "slot", slotId,
                             "piece", string.IsNullOrEmpty(wanted) ? "(cleared)" : wanted);
 
-            SaveService.Save();
-            Raise();
+            Commit();
             return true;
         }
 
-        /// <summary>Takes whatever is in a slot away. A choice, and stamped as one.</summary>
+        /// <summary>Takes whatever is anchored on a slot away. A choice, and stamped as one.</summary>
         public static bool Clear(string slotId) => Place(slotId, string.Empty);
+
+        /// <summary>
+        /// Puts a piece down on the tile the player touched, laying its footprint wherever it
+        /// fits around that tile — or clears whatever stands there when the piece is empty.
+        ///
+        /// <para>
+        /// <b>The touched tile is the request, the anchor is the answer.</b> A player tapping a
+        /// gap and choosing a two-wide bench is asking for the bench to be <em>there</em>, not
+        /// for that tile to be its back corner, so the footprint is fitted around the touch
+        /// (<see cref="GroveOccupancy.TryFit"/>) and the row is written at whatever anchor
+        /// came of it. Whatever was standing on the touched tile is replaced — its anchor is
+        /// cleared, in the same instant, so the pair survives a merge together — which is what
+        /// a tap on an occupied tile has always meant here.
+        /// </para>
+        /// <para>
+        /// <see cref="GrovePlaceResult.NoRoom"/> is the one answer the caller has to say out
+        /// loud: a picker that closes over a grove that did not change teaches the player that
+        /// the control is broken.
+        /// </para>
+        /// </summary>
+        public static GrovePlaceResult TryPlace(HomesteadCatalog catalog, int col, int row, string pieceId,
+                                                out int anchorCol, out int anchorRow)
+        {
+            anchorCol = col;
+            anchorRow = row;
+
+            if (catalog == null) return GrovePlaceResult.Refused;
+
+            var floor = catalog.Floor;
+            if (!floor.Contains(col, row) || floor.IsHall(col, row)) return GrovePlaceResult.Refused;
+
+            var index = Occupancy(catalog);
+            bool standing = index.TryStandAt(col, row, out var was);
+            if (standing && was.IsHall) return GrovePlaceResult.Refused;
+
+            string wanted = pieceId ?? string.Empty;
+
+            if (wanted.Length == 0)
+            {
+                if (!standing) return GrovePlaceResult.Unchanged;
+
+                anchorCol = was.AnchorCol;
+                anchorRow = was.AnchorRow;
+                return Clear(was.AnchorId) ? GrovePlaceResult.Placed : GrovePlaceResult.Unchanged;
+            }
+
+            var piece = catalog.Find(wanted);
+            var footprint = piece.IsValid ? piece.Footprint : GroveFootprint.Single;
+
+            // A dwelling is drawn from what the player owns, never placed (invariant 16). The
+            // picker never offers one; the rule is here as well because a picker is not where
+            // a rule lives.
+            if (piece.IsValid && !piece.CanBePlaced) return GrovePlaceResult.Refused;
+
+            // Re-choosing what is already there, at the same anchor and the same size, is the
+            // no-op it has always been. A different footprint (a retune since it was placed) is
+            // a real change and falls through to be re-fitted.
+            if (standing && string.Equals(was.PieceId, wanted, StringComparison.Ordinal)
+                && !was.Flipped && was.Footprint == footprint)
+            {
+                anchorCol = was.AnchorCol;
+                anchorRow = was.AnchorRow;
+                return GrovePlaceResult.Unchanged;
+            }
+
+            long ignore = standing ? was.AnchorKey : GroveOccupancy.NoKey;
+
+            if (!index.TryFit(floor, footprint, col, row, Buildable(catalog),
+                              out anchorCol, out anchorRow, ignore))
+                return GrovePlaceResult.NoRoom;
+
+            long now = GameClock.NowUnix();
+            string anchorId = GroveFloor.TileId(anchorCol, anchorRow);
+
+            if (standing && !string.Equals(was.AnchorId, anchorId, StringComparison.Ordinal))
+                Write(was.AnchorId, new Placement(string.Empty, now, false));
+
+            Write(anchorId, new Placement(wanted, now, false));
+
+            Telemetry.Track("grove_placed", "slot", anchorId, "piece", wanted);
+
+            Commit();
+            return GrovePlaceResult.Placed;
+        }
 
         /// <summary>
         /// Mirrors whatever a tile is showing, and writes the row that says so.
@@ -381,33 +615,100 @@ namespace GlimmerGrove.Homestead
         /// so flipping it has to write the piece down as well as the facing — otherwise the row
         /// would say "this tile is mirrored and empty" and the friend would vanish.
         /// </para>
+        /// <para>
+        /// A mirrored footprint runs along the other diagonal, so a piece longer than it is
+        /// wide is asked whether it still fits before it turns. A single tile always does.
+        /// </para>
         /// </summary>
-        public static bool Flip(HomesteadCatalog catalog, string slotId)
+        public static GrovePlaceResult Flip(HomesteadCatalog catalog, string slotId)
         {
-            if (string.IsNullOrEmpty(slotId)) return false;
+            if (catalog == null || string.IsNullOrEmpty(slotId)) return GrovePlaceResult.Refused;
 
             string piece = Shown(catalog, slotId);
-            if (string.IsNullOrEmpty(piece)) return false;
+            if (string.IsNullOrEmpty(piece)) return GrovePlaceResult.Refused;
 
-            _placed[slotId] = new Placement(piece, GameClock.NowUnix(), !FlippedAt(slotId));
+            if (!GroveFloor.TryParse(slotId, out int col, out int row)) return GrovePlaceResult.Refused;
+
+            var index = Occupancy(catalog);
+            if (!index.TryAnchored(col, row, out var stand) || stand.IsHall)
+                return GrovePlaceResult.Refused;
+
+            bool flipped = !stand.Flipped;
+            var turned = stand.Footprint.Mirrored;
+
+            if (turned != stand.Footprint
+                && !index.Fits(catalog.Floor, turned, col, row, Buildable(catalog), stand.AnchorKey))
+                return GrovePlaceResult.NoRoom;
+
+            Write(slotId, new Placement(piece, GameClock.NowUnix(), flipped));
 
             Telemetry.Track("grove_flipped", "slot", slotId, "piece", piece);
 
-            SaveService.Save();
-            Raise();
-            return true;
+            Commit();
+            return GrovePlaceResult.Placed;
+        }
+
+        /// <summary>
+        /// What moving the stand anchored on one tile onto another tile would do.
+        ///
+        /// <para>
+        /// <b>A move and a swap are deliberately the same operation.</b> Ground with room takes
+        /// the piece; ground held by exactly one other stand exchanges the two, provided each
+        /// fits where the other was. One path rather than two means there is no state in which
+        /// a drag can be refused for a reason the player has to discover, and every move is
+        /// undone by making it again. A footprint that would land on two different stands at
+        /// once is <see cref="GrovePlaceResult.NoRoom"/>, because "swap with both" has no
+        /// answer a player could predict.
+        /// </para>
+        /// <para>
+        /// Planned apart from being done because the drag shows its answer under the finger on
+        /// every frame — the footprint lit green where it would land, red where it would not —
+        /// and the drop must do exactly what was shown, so both read one function.
+        /// </para>
+        /// </summary>
+        public static GroveMovePlan PlanMove(HomesteadCatalog catalog, string fromSlot, int toCol, int toRow)
+        {
+            var refused = new GroveMovePlan(GrovePlaceResult.Refused, toCol, toRow, GroveFootprint.Single);
+            if (catalog == null || string.IsNullOrEmpty(fromSlot)) return refused;
+
+            var floor = catalog.Floor;
+            if (!GroveFloor.TryParse(fromSlot, out int fromCol, out int fromRow)) return refused;
+            if (!floor.Contains(fromCol, fromRow) || !floor.Contains(toCol, toRow)) return refused;
+            if (floor.IsHall(toCol, toRow)) return refused;
+
+            var index = Occupancy(catalog);
+            if (!index.TryAnchored(fromCol, fromRow, out var moving) || moving.IsHall) return refused;
+
+            var footprint = moving.Footprint;
+            var buildable = Buildable(catalog);
+
+            // Room, first: the anchor that keeps the touched tile inside the footprint.
+            if (index.TryFit(floor, footprint, toCol, toRow, buildable,
+                             out int anchorCol, out int anchorRow, moving.AnchorKey))
+            {
+                if (anchorCol == fromCol && anchorRow == fromRow)
+                    return new GroveMovePlan(GrovePlaceResult.Unchanged, anchorCol, anchorRow, footprint);
+
+                return new GroveMovePlan(GrovePlaceResult.Placed, anchorCol, anchorRow, footprint);
+            }
+
+            // Then a swap: anchored on the touched tile itself, landing on exactly one other
+            // stand that in turn fits where this one was.
+            if (index.Overlapping(footprint, toCol, toRow, out var other, moving.AnchorKey) != 1 || other.IsHall)
+                return new GroveMovePlan(GrovePlaceResult.NoRoom, toCol, toRow, footprint);
+
+            bool ok = index.Fits(floor, footprint, toCol, toRow, buildable, moving.AnchorKey, other.AnchorKey)
+                   && index.Fits(floor, other.Footprint, fromCol, fromRow, buildable, moving.AnchorKey, other.AnchorKey);
+
+            return ok
+                ? new GroveMovePlan(GrovePlaceResult.Placed, toCol, toRow, footprint, other)
+                : new GroveMovePlan(GrovePlaceResult.NoRoom, toCol, toRow, footprint);
         }
 
         /// <summary>
         /// Moves what stands on one tile to another, swapping with whatever was already there.
+        /// See <see cref="PlanMove"/> for the rule; this writes what it planned.
         ///
-        /// <para>
-        /// <b>A move and a swap are deliberately the same operation.</b> The destination's
-        /// contents — which may be nothing — are written back to the source, so a drop onto an
-        /// occupied tile exchanges the two and a drop onto bare ground clears the tile behind
-        /// it. One path rather than two means there is no state in which a drag can be refused
-        /// for a reason the player has to discover, and every move is undone by making it again.
-        /// </para>
         /// <para>
         /// <b>The facing travels with the piece</b>, because it is a fact about the thing rather
         /// than about the ground under it — a mirrored fence dragged two tiles left is still the
@@ -415,44 +716,62 @@ namespace GlimmerGrove.Homestead
         /// controls fight each other.
         /// </para>
         /// <para>
-        /// Both rows are stamped with the same instant, which is what makes the pair survive a
-        /// merge together: a device that sees only one of them would show the piece twice or
-        /// not at all, and a shared stamp means the join takes both or neither from whichever
-        /// side is newer. The hall is refused at both ends — it is drawn from what the player
-        /// owns rather than placed (invariant 16), so it has nothing to give and no room to
-        /// take. Like <see cref="Place"/>, this does not re-derive whether the land is owned:
-        /// the field only draws tiles the player has, and a second copy of that rule here is a
-        /// second answer for a retune to put out of step with the first.
+        /// Every row a move touches is stamped with the same instant, which is what makes the
+        /// set survive a merge together: a device that sees only one of them would show the
+        /// piece twice or not at all, and a shared stamp means the join takes all or none from
+        /// whichever side is newer. Like <see cref="Place"/>, this does not re-derive whether
+        /// the piece is held: the rows already say it is standing here.
         /// </para>
         /// </summary>
-        public static bool Move(HomesteadCatalog catalog, string fromSlot, string toSlot)
+        public static GrovePlaceResult Move(HomesteadCatalog catalog, string fromSlot, int toCol, int toRow)
         {
-            if (catalog == null) return false;
-            if (string.IsNullOrEmpty(fromSlot) || string.IsNullOrEmpty(toSlot)) return false;
-            if (string.Equals(fromSlot, toSlot, StringComparison.Ordinal)) return false;
+            var plan = PlanMove(catalog, fromSlot, toCol, toRow);
+            if (!plan.Ok) return plan.Result;
 
-            var floor = catalog.Floor;
-            if (floor == null) return false;
-            if (!floor.Contains(fromSlot) || !floor.Contains(toSlot)) return false;
-            if (floor.IsHall(fromSlot) || floor.IsHall(toSlot)) return false;
-
-            string moving = Shown(catalog, fromSlot);
-            if (string.IsNullOrEmpty(moving)) return false;
-
-            bool movingFlipped = FlippedAt(fromSlot);
-            string displaced = Shown(catalog, toSlot);
-            bool displacedFlipped = FlippedAt(toSlot);
+            var index = Occupancy(catalog);
+            GroveFloor.TryParse(fromSlot, out int fromCol, out int fromRow);
+            index.TryAnchored(fromCol, fromRow, out var moving);
 
             long now = GameClock.NowUnix();
-            _placed[toSlot] = new Placement(moving, now, movingFlipped);
-            _placed[fromSlot] = new Placement(displaced, now, displacedFlipped);
+            string toAnchor = GroveFloor.TileId(plan.AnchorCol, plan.AnchorRow);
 
-            Telemetry.Track("grove_moved", "from", fromSlot, "to", toSlot, "piece", moving,
-                            "swapped", string.IsNullOrEmpty(displaced) ? "no" : "yes");
+            // Everything the move vacates is cleared first, then everything it fills is
+            // written, so a row that is both (a swap partner's anchor, a piece nudged one tile
+            // within its own old footprint) ends up holding what lands there.
+            Write(fromSlot, new Placement(string.Empty, now, false));
+            if (plan.IsSwap) Write(plan.Swapped.AnchorId, new Placement(string.Empty, now, false));
 
+            Write(toAnchor, new Placement(moving.PieceId, now, moving.Flipped));
+            if (plan.IsSwap) Write(fromSlot, new Placement(plan.Swapped.PieceId, now, plan.Swapped.Flipped));
+
+            Telemetry.Track("grove_moved", "from", fromSlot, "to", toAnchor, "piece", moving.PieceId,
+                            "swapped", plan.IsSwap ? "yes" : "no");
+
+            Commit();
+            return GrovePlaceResult.Placed;
+        }
+
+        /// <summary>The same move, named by the tile dropped on.</summary>
+        public static GrovePlaceResult Move(HomesteadCatalog catalog, string fromSlot, string toSlot)
+            => GroveFloor.TryParse(toSlot, out int col, out int row)
+                ? Move(catalog, fromSlot, col, row)
+                : GrovePlaceResult.Refused;
+
+        static void Write(string slotId, Placement placement)
+        {
+            _placed[slotId] = placement;
+            _version++;
+        }
+
+        static void Commit()
+        {
             SaveService.Save();
             Raise();
-            return true;
+
+            // After Changed, and only here: LoadFrom raises Changed too, and anything hung on
+            // this event — a sync request — must never fire for a save being read.
+            try { Edited?.Invoke(); }
+            catch (Exception e) { UnityEngine.Debug.LogException(e); }
         }
 
         static void Raise()
@@ -465,6 +784,7 @@ namespace GlimmerGrove.Homestead
         internal static void LoadFrom(SaveFileDto dto)
         {
             _placed.Clear();
+            _version++;
 
             var rows = dto?.homesteadPlaced;
             if (rows != null)
@@ -596,6 +916,10 @@ namespace GlimmerGrove.Homestead
         }
 
         /// <summary>Test seam: an empty grove, as a fresh install would have.</summary>
-        internal static void ResetForTests() => _placed.Clear();
+        internal static void ResetForTests()
+        {
+            _placed.Clear();
+            _version++;
+        }
     }
 }

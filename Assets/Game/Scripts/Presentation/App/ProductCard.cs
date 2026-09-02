@@ -83,10 +83,20 @@ namespace GlimmerGrove
         const float PlateInsetX = ProductCardBadges.PlateInsetX, PlateInsetY = ProductCardBadges.PlateInsetY;
         const float RefPlateW = RefWidth - PlateInsetX, RefPlateH = RefHeight - PlateInsetY;
 
-        readonly Image _plate, _edge, _glow, _rays, _ribbon, _seal, _priceFace;
+        readonly Image _plate, _edge, _glow, _rays, _ribbon, _seal, _priceFace, _priceMark;
         readonly RectTransform _art;
         readonly Text _amount, _sub, _price, _ribbonText, _sealText;
         readonly int _radius;
+
+        /// <summary>
+        /// How wide the price caption and any glyph beside it may be, together.
+        ///
+        /// Kept because <see cref="UIKit.CentreGlyph"/> needs it on every repaint and the box it
+        /// would otherwise be read from is the one that call is about to narrow — measuring from
+        /// the last centring is how a caption walks off centre a little further each time it is
+        /// drawn.
+        /// </summary>
+        readonly float _priceWidth;
 
         public RectTransform Root { get; }
 
@@ -156,13 +166,30 @@ namespace GlimmerGrove
                                    new Vector2(look.Width - 110f * kh, faceH),
                                    new Vector2(.5f, 0f), new Vector2(0f, 78f * kv));
 
+            _priceWidth = look.Width - 160f * kh;
+
             _price = UIKit.Shrinkable(
                 UIKit.Titled("P", _priceFace.transform, string.Empty, Font(34, kh), Pal.Cream,
                              TextAnchor.MiddleCenter,
-                             new Vector2(look.Width - 160f * kh, 56f * kv),
+                             new Vector2(_priceWidth, 56f * kv),
                              new Vector2(.5f, .5f), new Vector2(0f, faceH * UIKit.PillFaceLift),
                              3f, 3f),
                 Font(18, kh));
+
+            // The gem in front of a gem price. Built once and hidden, rather than created and
+            // destroyed as the shelf scrolls: this cell is rebound rather than rebuilt
+            // (invariant 16d), so a glyph that came and went would be a new object on most
+            // binds on the one screen that must not stutter.
+            //
+            // It is on the price face rather than beside the caption because the face is what
+            // moves when the card is pressed — a glyph parented anywhere else would stay put
+            // while the price it belongs to squashed away from it.
+            _priceMark = UIKit.Img("PriceMark", _priceFace.transform, Art.S("Ui/ic_gem"), Pal.Cream,
+                                   Vector2.one * (faceH * .34f), new Vector2(.5f, .5f),
+                                   new Vector2(0f, faceH * UIKit.PillFaceLift));
+            _priceMark.preserveAspect = true;
+            _priceMark.raycastTarget = false;
+            _priceMark.gameObject.SetActive(false);
 
             if (!look.Decorated) return;
 
@@ -360,10 +387,17 @@ namespace GlimmerGrove
             bool priced = ready || state == GoodOfferState.ShortOfGems;
 
             _priceFace.sprite = Art.S("Ui/" + (ready ? "btn_violet" : "btn_gray"));
-            _price.text = priced
-                ? Loc.Format("ui.shop.gem_price", Compact.Number(good.Gems))
-                : Loc.Get(StoreWording.GoodRefusal(state));
             _price.color = ready ? Pal.Cream : Pal.A(Pal.Cream, .72f);
+
+            // The gem rides with the number and only with the number. A price on this face is
+            // the one figure in the shop with no currency written beside it — every money card
+            // carries the store's own formatted string, symbol and all — so without the glyph
+            // "280" is a quantity of nothing, sitting under a card whose *other* number is a
+            // quantity of hearts. It comes off for the two full refusals, which are sentences
+            // rather than prices: a gem in front of "your hearts are full" prices the refusal.
+            SetPrice(priced ? Loc.Format("ui.shop.gem_price", Compact.Number(good.Gems))
+                            : Loc.Get(StoreWording.GoodRefusal(state)),
+                     gem: priced);
 
             PaintRibbon(0);
             PaintSeal(null);
@@ -379,6 +413,13 @@ namespace GlimmerGrove
         /// </summary>
         void PaintPrice(StoreOffer offer)
         {
+            // Never a gem: everything drawn through here is bought with money, and the string is
+            // the store's own with the player's own currency symbol already in it. The glyph is
+            // taken off explicitly rather than left alone, because the same cell object is
+            // rebound between a gem-priced good and a real-money container as the supplies shelf
+            // scrolls (invariant 16d) — leaving it would put a gem in front of a dollar sign.
+            SetGemMark(false);
+
             switch (offer.State)
             {
                 case StoreOfferState.Ready:
@@ -419,6 +460,34 @@ namespace GlimmerGrove
                     _price.color = Pal.A(Pal.Cream, .70f);
                     break;
             }
+
+            // Re-centred after the caption changed, on the same rule a pill button follows: the
+            // caption and the glyph are one block, and the block moves when either does. Cheap
+            // enough to run on the no-glyph path too, and running it there is what puts the box
+            // back to full width after a gem price has narrowed it.
+            UIKit.CentreGlyph(_price, _priceMark, _priceWidth);
+        }
+
+        /// <summary>
+        /// Writes the price line, with or without the gem in front of it, and re-centres the
+        /// pair.
+        ///
+        /// One method rather than three assignments at each call site, because the caption and
+        /// the glyph have to be measured together and a caller that sets one and forgets the
+        /// other leaves a price shoved half a glyph off centre — the failure
+        /// <see cref="UIKit.CentreGlyph"/> exists to make unforgettable.
+        /// </summary>
+        void SetPrice(string text, bool gem)
+        {
+            _price.text = text;
+            SetGemMark(gem);
+            UIKit.CentreGlyph(_price, _priceMark, _priceWidth);
+        }
+
+        void SetGemMark(bool on)
+        {
+            if (_priceMark && _priceMark.gameObject.activeSelf != on)
+                _priceMark.gameObject.SetActive(on);
         }
 
         /// <summary>

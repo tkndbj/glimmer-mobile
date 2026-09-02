@@ -311,15 +311,22 @@ namespace GlimmerGrove
 
             if (OnLand)
             {
-                // Cheapest first, and owned land last: the shelf is a thing to buy, so what is
+                // In ladder order, and owned land last: the shelf is a thing to buy, so what is
                 // already bought belongs at the bottom of it rather than in the way.
+                //
+                // The rung rather than the price, which is the same correction GroveLand.
+                // NextForSale needed and for the same reason — half this shelf is priced in gems
+                // and a gem region's Cost is nought, so sorting on the credit figure would have
+                // stood the five most expensive stretches in the game at the top of the list
+                // looking free.
                 foreach (var region in catalog.Floor.Regions)
                     if (region.IsValid && !region.IsStarter) _land.Add(region);
 
                 _land.Sort((a, b) =>
                 {
                     bool oa = GroveLand.IsOwned(a), ob = GroveLand.IsOwned(b);
-                    return oa != ob ? (oa ? 1 : -1) : a.Cost.CompareTo(b.Cost);
+                    return oa != ob ? (oa ? 1 : -1)
+                                    : GroveLand.Rung(a).CompareTo(GroveLand.Rung(b));
                 });
             }
             else if (_shelf == GroveShelf.Home)
@@ -650,13 +657,36 @@ namespace GlimmerGrove
 
                 if (_region == null) { _status.text = string.Empty; return; }
 
-                _status.text = owned
-                    ? Loc.Format("ui.land.size", _region.Cols, _region.Rows)
-                    : Loc.Format("ui.grove.price", Compact.Number(_region.Cost));
+                if (owned)
+                {
+                    _status.text = Loc.Format("ui.land.size", _region.Cols, _region.Rows);
+                    _status.color = Pal.A(Pal.Mint, .95f);
+                    return;
+                }
 
-                _status.color = owned
-                    ? Pal.A(Pal.Mint, .95f)
-                    : Profile.CanAfford(_region.Cost) ? Pal.A(Pal.Sun, .95f) : Pal.A(Pal.Sun, .58f);
+                // Ground further up the ladder names the stretch that comes first rather than
+                // quoting a price, which is StatusOf's rule one line down: the refusal that
+                // binds is the one to print, and money is not the answer to this one. Aqua,
+                // because that is what every other gate on this shelf is painted.
+                var next = GroveLand.NextForSale(HomesteadCatalog.Current.Floor);
+                if (next != null && !ReferenceEquals(next, _region))
+                {
+                    _status.text = Loc.Format("ui.land.earlier_first", Loc.Get(next.NameKey));
+                    _status.color = Pal.A(Pal.Aqua, .95f);
+                    return;
+                }
+
+                bool gems = _region.IsGemPriced;
+
+                _status.text = Loc.Format(gems ? "ui.grove.price_gems" : "ui.grove.price",
+                                          Compact.Number(_region.Price));
+
+                // Measured against the wallet this stretch is actually bought with. Reading the
+                // credit balance for a gem price would paint nearly every gem stretch as
+                // affordable, since credits outnumber gems here by about a hundred to one.
+                var tint = gems ? Pal.Bloom : Pal.Sun;
+                _status.color = PlayerProgression.CanAfford(_region.PaidIn, _region.Price)
+                    ? Pal.A(tint, .95f) : Pal.A(tint, .58f);
             }
         }
 

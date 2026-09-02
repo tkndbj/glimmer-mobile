@@ -30,6 +30,14 @@
           }
         },
         {
+          "client_id": "310440655052-t4hbslr8nso3ivj82esgce4bk8fgtehc.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.tekoworld.glimmergroove",
+            "certificate_hash": "cece9b27b9a664df27647b67e7114c1bc30d5658"
+          }
+        },
+        {
           "client_id": "310440655052-g70cbf38g6tqr7rb63k3bbjkrvlut49i.apps.googleusercontent.com",
           "client_type": 3
         }

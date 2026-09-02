@@ -65,10 +65,10 @@ ORDINAL = 1
 STRIPS = mapart.strips(ORDINAL)
 SKIES = mapart.skies(ORDINAL)
 
-#: Left and right down the map, the spacing Lightweave's six strips already use - proved
-#: against `ChapterMapValidator` for ten nodes rather than guessed at.
-WHERE = [(0.30, 0.055), (0.72, 0.140), (0.26, 0.225), (0.70, 0.310), (0.28, 0.395),
-         (0.74, 0.480), (0.30, 0.560), (0.68, 0.645), (0.26, 0.730), (0.72, 0.815)]
+#: Where the ten nodes stand - `mapart`'s one layout for every chapter of every mode, with
+#: the last glade on the left and the end-of-chapter marker on the right, proved against
+#: `ChapterMapValidator` by `Tools/verify/content.py`.
+WHERE = mapart.places(ORDINAL)
 
 #: A well that cannot be lost. See the note above.
 UNLOSABLE = -1.0

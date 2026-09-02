@@ -908,6 +908,26 @@ export async function rebuildGroveRanks(): Promise<{ ranked: number; boards: num
  * out sees themselves gone from their own profile immediately and off the lists within a
  * day.
  */
+/**
+ * The revision of the save a card was built from, reported back to the client.
+ *
+ * Every save carries `cloud.revision`, which only ever rises (`revisionAdvances` in the
+ * rules). The client asks for a publish after a sync it knows the revision of, so handing
+ * this back lets it prove the card was built from the save it pushed rather than the one
+ * before — the failure this closes was a card one session behind its grove for the life of
+ * the account, with a successful call and a well-formed card on every publish.
+ *
+ * Absent or malformed reads as 0. The client treats a *missing field* as "cannot be
+ * checked" and a 0 as a real answer, so this must always be present on the reply.
+ */
+export function saveRevision(save: Record<string, unknown>): number {
+  const cloud = save.cloud as Record<string, unknown> | undefined;
+  if (!cloud || typeof cloud !== "object") return 0;
+
+  const revision = Math.floor(Number(cloud.revision ?? 0));
+  return Number.isFinite(revision) && revision > 0 ? revision : 0;
+}
+
 export async function withdrawCard(uid: string): Promise<void> {
   await getFirestore().doc(GROVE_PATHS.card(uid)).delete();
 }

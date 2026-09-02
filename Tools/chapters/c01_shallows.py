@@ -507,10 +507,10 @@ def g10(seed, bias):
 
 
 # ---------------------------------------------------------------- the chapter
-# Palette and map positions are unchanged from the chapter that shipped: the boards were
-# rebuilt, not the shallows. The art is no longer this file's decision at all - the map and
-# the ten skies come from `mapart` and the ordinal below, which is what makes the first
-# chapter of every mode the same place.
+# The palette is unchanged from the chapter that shipped: the boards were rebuilt, not the
+# shallows. Neither the art nor the node positions are this file's decision any more - the
+# map, the ten skies and where the ten glades stand all come from `mapart` and the ordinal
+# below, which is what makes the first chapter of every mode the same place.
 #
 # The palette is still authored and still matters: `accent` and `slate` are the board's own
 # light and its plate, which is where a glade's identity belongs. They no longer reach the
@@ -534,8 +534,7 @@ ORDINAL = 1
 STRIPS = mapart.strips(ORDINAL)
 SKIES = mapart.skies(ORDINAL)
 
-MAPX = [0.32, 0.68, 0.30, 0.70, 0.33, 0.67, 0.31, 0.69, 0.34, 0.66]
-MAPY = [0.05, 0.14, 0.23, 0.32, 0.41, 0.50, 0.59, 0.68, 0.77, 0.86]
+PLACES = mapart.places(ORDINAL)
 
 
 # Turns allowed before the run is lost, as a multiple of par. Negative is no budget at all;
@@ -642,8 +641,7 @@ def chapter_json(built):
         level["id"] = lid
         level["width"] = board.w
         level["height"] = board.h
-        level["mapX"] = MAPX[i]
-        level["mapY"] = MAPY[i]
+        level["mapX"], level["mapY"] = PLACES[i]
         if BUDGET[i] != 0:
             level["budgetFactor"] = BUDGET[i]
         accent, slate = PALETTE[lid]

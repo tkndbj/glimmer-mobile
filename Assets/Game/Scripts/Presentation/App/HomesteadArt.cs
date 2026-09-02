@@ -176,10 +176,11 @@ namespace GlimmerGrove
         {
             if (target == null) return;
 
-            // Deferred destruction means an old flipbook would spend a frame fighting the new
-            // sprite for the same Image.
-            var running = target.GetComponent<Flipbook>();
-            if (running) { running.enabled = false; UnityEngine.Object.Destroy(running); }
+            // Every flipbook the image carries, not the first one found: two repaints in one
+            // frame stacked two, GetComponent stopped one, and the other went on painting a
+            // well's frames into a tile that had been re-sized for brambles. See
+            // Flipbook.Detach for the report that found it.
+            Flipbook.Detach(target);
 
             if (!piece.IsValid)
             {
@@ -255,6 +256,14 @@ namespace GlimmerGrove
         public static Vector2 SizeOnFloor(HomesteadPiece piece, float floorScale)
         {
             float k = floorScale * (piece.IsValid ? piece.Scale : 1f);
+
+            // The authored size first, and that is the fix for pieces drawing small: a box
+            // taken from the catalog is the same box before the sprite arrives and after, so
+            // there is no window in which a tile can be laid out around a placeholder and
+            // then painted with the real picture. See HomesteadPiece.ArtWidth. Only a piece
+            // with no authored size — a resident projected from the roster — is measured off
+            // the sprite, and falls back to a square while it is in flight.
+            if (piece.HasArtSize) return new Vector2(piece.ArtWidth, piece.ArtHeight) * k;
 
             var sprite = piece.Animated ? FirstFrame(piece) : Still(piece);
             if (sprite == null) return new Vector2(140f, 140f) * k;
@@ -619,12 +628,9 @@ namespace GlimmerGrove
         {
             if (target == null) return;
 
-            // A browse cell is recycled, so it can arrive carrying a flipbook a previous
-            // binding left on it. Destroyed rather than re-pointed, because Destroy lands at
-            // the end of the frame and an old one would spend that frame fighting the new
-            // sprite for the same Image.
-            var running = target.GetComponent<Flipbook>();
-            if (running) { running.enabled = false; UnityEngine.Object.Destroy(running); }
+            // A browse cell is recycled, so it can arrive carrying a flipbook — or two — that
+            // previous bindings left on it. Every one is stopped, for Paint's reason.
+            Flipbook.Detach(target);
 
             // A piece that moves in the grove moves here too, which is the only way a player
             // browsing the shop can know that it does. This reverses a rule this file used to

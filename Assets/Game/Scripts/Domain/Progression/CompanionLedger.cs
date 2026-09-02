@@ -146,8 +146,16 @@ namespace GlimmerGrove.Progression
         /// </para>
         /// </summary>
         public static bool IsHeld(AvatarDefinition avatar, int keeperLevel)
+            => IsHeld(avatar, keeperLevel, _bought.Contains);
+
+        /// <summary>
+        /// The unlock rule over any purchased set — this ledger's, or the one written in a
+        /// save file (<c>SaveHoldings</c>). One body, so the two cannot come to disagree
+        /// about what "held" means; invariant 15a's rule reached through one door.
+        /// </summary>
+        public static bool IsHeld(AvatarDefinition avatar, int keeperLevel, Func<string, bool> bought)
             => avatar.IsValid
-            && (_bought.Contains(avatar.Id)
+            && ((bought != null && bought(avatar.Id))
                 || (!avatar.IsForSale && AvatarCatalog.ReachedBy(avatar, keeperLevel)));
 
         public static bool IsHeld(string id, int keeperLevel) => IsHeld(AvatarCatalog.Find(id), keeperLevel);

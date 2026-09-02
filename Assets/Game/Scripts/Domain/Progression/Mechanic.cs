@@ -130,23 +130,37 @@ namespace GlimmerGrove.Progression
         /// </summary>
         public static readonly Mechanic BudSatchel = new Mechanic("bud_satchel");
 
+        // **Five retired lesson ids that must never be reused: `bud_runner`, `bud_gust`,
+        // `bud_firefly`, `bud_puff` and `bud_hive`.** The runner — a vine joining two squares of
+        // the grove — was the second chapter's first object and was withdrawn after one session
+        // of play; the windmill, the firefly, the puffball and the hive replaced it and were
+        // withdrawn after the next, for one fault they all shared: every one of them paid out as
+        // the same chain, and none was something the player had *made*. A lesson id travels in
+        // the save (`tipsSeen`), and every one of these was shown on a device.
+
         /// <summary>
-        /// The runner: two squares of the grove joined by a vine, and a bunch that <em>includes</em>
-        /// one end sends its colour to the other.
-        ///
-        /// <para>
-        /// <b>The board shows almost all of it, and the half it cannot show is the half that
-        /// costs.</b> The vine is painted between its two ends and the light visibly runs down
-        /// it, so a player who fires one once knows what happened — which is exactly the
-        /// standard invariant 20g holds a mechanic to, and it is why this one is worth
-        /// shipping where a wick and a mirror were not. What no board can say is the
-        /// <em>threshold</em>: a bunch going off next door to an end does nothing at all, and
-        /// the flower standing on the end has to be one of the three. That is the whole
-        /// decision, and a player who has not been told it reads a vine that stayed dark as a
-        /// bug rather than as a near miss.
-        /// </para>
+        /// The graft: drag a flower onto its neighbour and the two trade places, if that makes
+        /// a bunch. The gesture every player of this genre already knows, said once because
+        /// nothing on the board invites a drag until somebody has been told to try one.
         /// </summary>
-        public static readonly Mechanic BudRunner = new Mechanic("bud_runner");
+        public static readonly Mechanic BudGraft = new Mechanic("bud_graft");
+
+        /// <summary>
+        /// The bolt: five alike leave a bolt where you tapped, and tapping it clears its whole
+        /// row and column.
+        ///
+        /// The board shows the forge and the firing; what it cannot say before the first one
+        /// exists is that a bunch of <em>five</em> is what makes one — a player who has not been
+        /// told makes threes for ever and never sees it.
+        /// </summary>
+        public static readonly Mechanic BudBolt = new Mechanic("bud_bolt");
+
+        /// <summary>
+        /// The sun: eight alike leave a sun, and tapping it clears the five-by-five around it —
+        /// and a special in a fired special's reach fires too, which is the chain the chapter
+        /// is built on and the half a single firing cannot show.
+        /// </summary>
+        public static readonly Mechanic BudSun = new Mechanic("bud_sun");
 
         // **`bud_wood` is a retired lesson id and must never be reused.** Old wood was
         // authored across most of the Thicket for one drop and taken out again, because a
@@ -516,7 +530,7 @@ namespace GlimmerGrove.Progression
         public static readonly Mechanic[] All =
         {
             FragileConduit, MoveBudget, RootedTile, AnyLight, ColourMixing, Crossing, Briar,
-            BoundConduit, BudChain, BudCocoon, BudSatchel, BudRunner,
+            BoundConduit, BudChain, BudCocoon, BudSatchel, BudGraft, BudBolt, BudSun,
             FallCook, FallSupply, FallBrim, FallLens, FallWhorl,
             KeeperBloom, KeeperBasket, KeeperStone,
             KeeperCompost, KeeperHeartbed, KeeperPrism, ModeSwitch, LuckySpin, Grove,

@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 
 namespace GlimmerGrove.Modes
@@ -6,7 +6,7 @@ namespace GlimmerGrove.Modes
     /// <summary>What one cell did on the wave it did it.</summary>
     public enum BudPulseKind
     {
-        /// <summary>A flower going off as part of a bunch.</summary>
+        /// <summary>A flower going off as part of a bunch, or cleared by a special firing.</summary>
         Burst = 0,
 
         /// <summary>
@@ -23,6 +23,15 @@ namespace GlimmerGrove.Modes
 
         /// <summary>A cocoon opening and the critter coming out.</summary>
         Freed = 2,
+
+        /// <summary>
+        /// A big bunch leaving a special behind where it went off. <c>Colour</c> is the bunch's,
+        /// <c>Held</c> the <see cref="BudSpecial"/> forged, <c>Bunch</c> how big the bunch was.
+        /// </summary>
+        Forged = 3,
+
+        /// <summary>A special firing. <c>Held</c> is which kind; the cells it clears follow as bursts.</summary>
+        Fired = 4,
     }
 
     /// <summary>One cell doing something, and which wave of the chain did it.</summary>
@@ -33,7 +42,7 @@ namespace GlimmerGrove.Modes
         /// <summary>0 for the bunch the tap made, 1 for what that set off, and so on.</summary>
         public readonly int Wave;
 
-        /// <summary>The colour it went off in. <c>Energy.None</c> on anything but a burst.</summary>
+        /// <summary>The colour it went off in. <c>Energy.None</c> on anything but a burst or a forge.</summary>
         public readonly int Colour;
 
         public readonly BudPulseKind Kind;
@@ -45,17 +54,31 @@ namespace GlimmerGrove.Modes
         /// A bunch is a connected blob of one colour, so working its size out from the pulses
         /// would mean a flood fill over a board that has already moved on — <c>BudWash</c>'s
         /// paragraph, in the other direction. It decides how loud one burst is drawn
-        /// (<c>BudChain.Blast</c>), and three alike going off is a different event from nine.
+        /// (<c>BudChain.Blast</c>), and three alike going off is a different event from nine. A
+        /// flower a special clears carries the special's own size, so a bolt's line is drawn
+        /// big and a sun's square huge.
         /// </summary>
         public readonly int Bunch;
 
-        public BudPulse(int cell, int wave, int colour, BudPulseKind kind, int bunch = 0)
+        /// <summary>Which special, as an <c>int</c> of <see cref="BudSpecial"/>, on a forge or a fire.</summary>
+        public readonly int Held;
+
+        /// <summary>
+        /// On a burst a special cleared: the cell of the special that fired, so the view can
+        /// draw the line racing out from it. -1 on an ordinary burst.
+        /// </summary>
+        public readonly int From;
+
+        public BudPulse(int cell, int wave, int colour, BudPulseKind kind, int bunch = 0,
+                        int held = 0, int from = -1)
         {
             Cell = cell;
             Wave = wave;
             Colour = colour;
             Kind = kind;
             Bunch = bunch;
+            Held = held;
+            From = from;
         }
 
         /// <summary>Whether this was a cocoon opening rather than a flower bursting.</summary>
@@ -63,6 +86,9 @@ namespace GlimmerGrove.Modes
 
         /// <summary>Whether this was a cocoon taking a crack and holding.</summary>
         public bool Cracked => Kind == BudPulseKind.Crack;
+
+        /// <summary>Whether this burst was a special clearing the cell rather than a bunch going off.</summary>
+        public bool Struck => Kind == BudPulseKind.Burst && From >= 0;
     }
 
     /// <summary>
@@ -100,43 +126,17 @@ namespace GlimmerGrove.Modes
         /// </summary>
         public readonly bool Ripened;
 
-        /// <summary>
-        /// The cell this colour ran from down a runner, or -1 where it simply came from next
-        /// door.
-        ///
-        /// <para>
-        /// <b>Carried because the view cannot work it out and must not guess.</b> A runner joins
-        /// two squares that are nowhere near each other, so a flower turning at one end has its
-        /// cause right across the board — which is precisely the shape that was reported as a
-        /// bug the last time this mode did it silently (see <see cref="Ripened"/>). The view
-        /// draws the light travelling down the vine, and it can only do that if it is told which
-        /// vine.
-        /// </para>
-        /// <para>
-        /// <b>A runner's wash is reported even when it changes nothing</b>, which is the one
-        /// place this type breaks its own rule that a wash is a flower <em>changing</em>. It has
-        /// to be: sending a colour the far end already wears is the mistake a runner is made of,
-        /// and a mistake nobody sees is a mistake nobody learns from (invariant 20g). The player
-        /// watches the light arrive and fizzle.
-        /// </para>
-        /// </summary>
-        public readonly int From;
-
-        public BudWash(int cell, int wave, int to, bool ripened = false, int from = -1)
+        public BudWash(int cell, int wave, int to, bool ripened = false)
         {
             Cell = cell;
             Wave = wave;
             To = to;
             Ripened = ripened;
-            From = from;
         }
-
-        /// <summary>Whether this colour arrived down a runner rather than from next door.</summary>
-        public bool Ran => From >= 0;
     }
 
     /// <summary>
-    /// One thing moving down the grove, so the view can draw it falling.
+    /// One thing moving on the grove, so the view can draw it going.
     ///
     /// <para>
     /// <b>Reported rather than re-derived, for <see cref="BudWash"/>'s reason.</b> By the time
@@ -145,35 +145,50 @@ namespace GlimmerGrove.Modes
     /// from and what it is, and a new flower carries <see cref="From"/> of -1 — which the view
     /// draws as arriving from above the top row.
     /// </para>
+    /// <para>
+    /// <b>A wave of -1 is a piece that moved <em>before</em> the chain</b> — two flowers grafted —
+    /// rather than one that fell because of it. The view draws those sideways and first.
+    /// </para>
     /// </summary>
     public readonly struct BudDrop
     {
         /// <summary>Where it came to rest.</summary>
         public readonly int Cell;
 
-        /// <summary>Where it fell from, or -1 for a flower that grew in along the top.</summary>
+        /// <summary>Where it came from, or -1 for a flower that grew in along the top.</summary>
         public readonly int From;
 
         public readonly int Wave;
 
-        /// <summary>What is standing there now: a colour mask, or cracks if it is a cocoon.</summary>
+        /// <summary>What is standing there now: a colour mask, or cracks on a cocoon.</summary>
         public readonly int Value;
 
-        public readonly bool Cocoon;
+        /// <summary>What kind of thing it is.</summary>
+        public readonly BudGround Kind;
 
-        public BudDrop(int cell, int from, int wave, int value, bool cocoon)
+        /// <summary>Whether the flower is a special, and which.</summary>
+        public readonly BudSpecial Special;
+
+        public BudDrop(int cell, int from, int wave, int value, BudGround kind,
+                       BudSpecial special = BudSpecial.None)
         {
             Cell = cell;
             From = from;
             Wave = wave;
             Value = value;
-            Cocoon = cocoon;
+            Kind = kind;
+            Special = special;
         }
 
         public bool Grew => From < 0;
+
+        public bool Cocoon => Kind == BudGround.Cocoon;
+
+        /// <summary>Whether this piece slid before the chain rather than falling inside it.</summary>
+        public bool Slid => Wave < 0;
     }
 
-    /// <summary>What one tap came to. The reading a preview and a real tap share.</summary>
+    /// <summary>What one move came to. The reading a preview and a real move share.</summary>
     public readonly struct BudChainResult
     {
         public readonly int Burst;
@@ -184,13 +199,19 @@ namespace GlimmerGrove.Modes
         /// <summary>The biggest single bunch that went off. What the celebration is pitched at.</summary>
         public readonly int Biggest;
 
-        public BudChainResult(int burst, int waves, int freed, int cracked, int biggest)
+        /// <summary>Specials forged and specials fired inside this chain.</summary>
+        public readonly int Forged, Fired;
+
+        public BudChainResult(int burst, int waves, int freed, int cracked, int biggest,
+                              int forged = 0, int fired = 0)
         {
             Burst = burst;
             Waves = waves;
             Freed = freed;
             Cracked = cracked;
             Biggest = biggest;
+            Forged = forged;
+            Fired = fired;
         }
 
         public static readonly BudChainResult Nothing = new BudChainResult(0, 0, 0, 0, 0);
@@ -198,11 +219,13 @@ namespace GlimmerGrove.Modes
         public bool Any => Burst > 0;
 
         public override string ToString()
-            => $"{Burst} burst, {Waves} wave(s), {Freed} freed, {Cracked} cracked";
+            => $"{Burst} burst, {Waves} wave(s), {Freed} freed, {Cracked} cracked, " +
+               $"{Forged} forged, {Fired} fired";
     }
 
     /// <summary>
-    /// <b>The grove as it stands.</b> What colour everything is, and who is still shut in.
+    /// <b>The grove as it stands.</b> What colour everything is, who is still shut in, and which
+    /// flowers are specials.
     ///
     /// <para>
     /// <b>One tap is a mix, and the mix is what starts everything.</b> The colour in hand is added
@@ -213,25 +236,19 @@ namespace GlimmerGrove.Modes
     /// mode.
     /// </para>
     /// <para>
+    /// <b>A big bunch leaves a special behind, and that is the second chapter.</b> Five alike
+    /// forge a <b>bolt</b> on the cell the player tapped; eight forge a <b>sun</b>. A special
+    /// is a flower the player made, and it fires when tapped — or when a bunch takes it in, or
+    /// when another special's reach hits it: a bolt clears its row and column, a sun the
+    /// five-by-five around it. What a fired special clears it does not wash, so a chain of
+    /// specials is bounded by the specials standing rather than by the grove; what it does do
+    /// is crack every cocoon it hits and every cocoon beside what it cleared.
+    /// </para>
+    /// <para>
     /// <b>Mixing only ever adds channels, so the grove is always being driven toward going off.</b>
     /// Nothing ever becomes less mixed, so every tap moves the board closer to a bunch and closer
     /// to white — which is what makes this chill rather than fiddly. The player is not fighting
     /// the board; they are choosing where it goes off.
-    /// </para>
-    /// <para>
-    /// <b>And it cannot run away.</b> Every wave removes at least three flowers and nothing is
-    /// ever added, so a chain is bounded by the grove it started on and the settle always
-    /// terminates. That is the property the two designs before this one could not manage: one
-    /// asked the player to predict four beats ahead, and the other froze into a position where no
-    /// input changed anything.
-    /// </para>
-    /// <para>
-    /// <b>A runner is the one thing here that takes the adjacency out.</b> Two squares of the
-    /// grove are joined by a vine, and a flower standing on one of them that goes off <em>as part
-    /// of a bunch</em> sends its colour to whatever is standing on the other — the same wash, the
-    /// same <c>|</c>, across the board. It adds no operator and no second kind of light, and it
-    /// leaves every proof above untouched, because it can only ever put channels onto a flower
-    /// that is already there. See <see cref="BudLayout.FarEnd"/>.
     /// </para>
     /// </summary>
     public sealed class BudBoard
@@ -240,26 +257,20 @@ namespace GlimmerGrove.Modes
 
         readonly BudGround[] _ground;
         readonly int[] _value;
+        readonly BudSpecial[] _special;
 
         readonly List<int> _bunch = new List<int>(32);
         readonly List<int> _queue = new List<int>(32);
+        readonly List<int> _fuse = new List<int>(8);
+        readonly List<int> _anvils = new List<int>(4);
+        readonly List<int> _reach = new List<int>(32);
         readonly List<int> _cracked = new List<int>(8);
         readonly List<int> _washed = new List<int>(32);
         readonly int[] _wash;
 
-        /// <summary>
-        /// For each cell washed this wave, which runner end sent the colour — or -1 where it came
-        /// from next door.
-        ///
-        /// <b>Beside <see cref="_wash"/> rather than folded into it</b>, because the two answer
-        /// different questions: <c>_wash</c> is what arrives, accumulated with <c>|=</c> from
-        /// however many bunches reach the cell, and this is <em>who</em> reached it from a
-        /// distance. Only the second is something the view could never work out for itself.
-        /// </summary>
-        readonly int[] _ran;
-
         readonly bool[] _seen;
         readonly List<int> _beside = new List<int>(4);
+        readonly List<int> _blast = new List<int>(9);
 
         /// <summary>
         /// How many flowers have grown in so far, which is where the strip is up to.
@@ -270,13 +281,17 @@ namespace GlimmerGrove.Modes
         /// </summary>
         public int Grown { get; private set; }
 
+        /// <summary>Specials forged and fired since the grove was dealt. Readings, not position.</summary>
+        public int Forged { get; private set; }
+        public int Fired { get; private set; }
+
         public BudBoard(BudLayout layout)
         {
             Layout = layout ?? throw new ArgumentNullException(nameof(layout));
             _ground = layout.Standing();
             _value = layout.Values();
+            _special = layout.SpecialsStanding();
             _wash = new int[layout.Count];
-            _ran = new int[layout.Count];
             _seen = new bool[layout.Count];
         }
 
@@ -286,13 +301,16 @@ namespace GlimmerGrove.Modes
 
             _ground = new BudGround[other._ground.Length];
             _value = new int[other._value.Length];
+            _special = new BudSpecial[other._special.Length];
             Array.Copy(other._ground, _ground, _ground.Length);
             Array.Copy(other._value, _value, _value.Length);
+            Array.Copy(other._special, _special, _special.Length);
 
             _wash = new int[_ground.Length];
-            _ran = new int[_ground.Length];
             _seen = new bool[_ground.Length];
             Grown = other.Grown;
+            Forged = other.Forged;
+            Fired = other.Fired;
         }
 
         public int Width => Layout.Width;
@@ -302,9 +320,11 @@ namespace GlimmerGrove.Modes
 
         public BudGround At(int index) => _ground[index];
         public int ValueAt(int index) => _value[index];
+        public BudSpecial SpecialAt(int index) => _special[index];
 
         public bool IsFlower(int index) => _ground[index] == BudGround.Flower;
         public bool IsCocoon(int index) => _ground[index] == BudGround.Cocoon;
+        public bool IsSpecial(int index) => _ground[index] == BudGround.Flower && _special[index] != BudSpecial.None;
 
         public int Flowers
         {
@@ -326,20 +346,29 @@ namespace GlimmerGrove.Modes
             }
         }
 
+        /// <summary>Specials standing on the grove now.</summary>
+        public int Specials
+        {
+            get
+            {
+                int n = 0;
+                for (int i = 0; i < _ground.Length; i++) if (IsSpecial(i)) n++;
+                return n;
+            }
+        }
+
         public bool IsFinished => Shut == 0;
 
         /// <summary>
-        /// Whether a tap could change anything at all — with any colour the basket still deals,
-        /// not merely with the one in hand.
+        /// Whether any move could change anything at all — a tap with any colour the basket
+        /// still deals, a special, or a graft.
         ///
         /// <para>
         /// <b>A flower left is not a move left, and that distinction is what the colour rule
-        /// added.</b> Under the ripeness rule the two were the same question: a bud was always
-        /// tappable, so "any bud left" answered it. A white flower holds every channel, so it can
-        /// never be mixed into by anything — a grove of nothing but white has flowers on it and no
-        /// legal tap in it, which is a board that can be neither won nor ended. That is exactly
-        /// the state invariant 20g forbids, and reading <see cref="Flowers"/> here is how it got
-        /// in.
+        /// added.</b> A white flower holds every channel, so it can never be mixed into by
+        /// anything — a grove of nothing but white has flowers on it and no legal tap in it,
+        /// which is a board that can be neither won nor ended. That is exactly the state
+        /// invariant 20g forbids, and reading <see cref="Flowers"/> here is how it got in.
         /// </para>
         /// <para>
         /// It asks about the <em>whole</em> basket because the basket repeats for ever, so a
@@ -361,6 +390,13 @@ namespace GlimmerGrove.Modes
                     if (CanTap(i, colour)) return true;
             }
 
+            if (Layout.Grafts)
+                for (int i = 0; i < _ground.Length; i++)
+                {
+                    if (i % Width < Width - 1 && CanGraft(i, i + 1)) return true;
+                    if (i / Width < Height - 1 && CanGraft(i, i + Width)) return true;
+                }
+
             return false;
         }
 
@@ -368,7 +404,8 @@ namespace GlimmerGrove.Modes
         public bool AnyFlower => Flowers > 0;
 
         /// <summary>
-        /// Whether this flower would actually change if the colour in hand were put on it.
+        /// Whether this flower would actually change if the colour in hand were put on it — or
+        /// is a special or a bomb, which fire whatever is in hand.
         ///
         /// A tap that mixes nothing in is refused rather than swallowed: it would spend a tap and
         /// leave the grove exactly as it was, which is the one move a player can make by accident
@@ -379,13 +416,10 @@ namespace GlimmerGrove.Modes
             if (cell < 0 || cell >= _ground.Length) return false;
             if (_ground[cell] != BudGround.Flower) return false;
 
-            // **White is the one flower that takes no colour and is therefore the best tap on the
-            // board.** It used to be the opposite: a flower holding every channel could not be
-            // mixed into, so it was a dead cell and a mistake the player had made — the one state
-            // in the mode that punished them for playing it well. Tapping it now sets it off
-            // (see <see cref="Bomb"/>), which turns the trap into the reward and gives every
-            // grove an obvious, spectacular button without adding a single new object to the
-            // board.
+            // **A special fires whatever is in hand**, and so does white. Tapping either is the
+            // best tap on the board and the one the player is looking for once they know it is
+            // there; neither mixes, so neither is refused for mixing nothing.
+            if (_special[cell] != BudSpecial.None) return true;
             if (IsBomb(cell)) return true;
 
             return (_value[cell] | colour) != _value[cell];
@@ -426,7 +460,7 @@ namespace GlimmerGrove.Modes
         }
 
         /// <summary>
-        /// The mix, and the whole chain it sets off.
+        /// The mix, and the whole chain it sets off — or a special or a bomb going off.
         ///
         /// Resolved wave by wave rather than all at once, because <em>when</em> a cell goes is
         /// what the view animates and what the count on screen climbs through — a chain reported
@@ -441,14 +475,200 @@ namespace GlimmerGrove.Modes
 
             if (!CanTap(cell, colour)) return BudChainResult.Nothing;
 
+            if (_special[cell] != BudSpecial.None) return Strike(cell, pulses, washes, drops);
             if (IsBomb(cell)) return Bomb(cell, pulses, washes, drops);
 
             _value[cell] |= colour;
             washes?.Add(new BudWash(cell, -1, _value[cell]));
 
-            return Settle(pulses, washes, drops, colour);
+            return Settle(pulses, washes, drops, colour, 0, cell);
         }
 
+        // ------------------------------------------------------------------ the graft
+        /// <summary>
+        /// Whether these two neighbouring flowers may trade places: different colours, and the
+        /// trade makes a bunch.
+        ///
+        /// <b>Must make a bunch, which is the genre's own rule.</b> A swap that makes nothing
+        /// snaps back and costs nothing, so a player can try a pair the way they try a tap — and
+        /// every graft the search has to consider bursts something, which is what keeps the
+        /// branching within what a phone can prove.
+        /// </summary>
+        public bool CanGraft(int a, int b)
+        {
+            if (!Layout.Grafts) return false;
+            if (a < 0 || b < 0 || a >= _ground.Length || b >= _ground.Length || a == b) return false;
+            if (_ground[a] != BudGround.Flower || _ground[b] != BudGround.Flower) return false;
+            if (_value[a] == _value[b] && _special[a] == _special[b]) return false;
+
+            int lo = a < b ? a : b, hi = a < b ? b : a;
+            bool touching = hi - lo == Width || (hi - lo == 1 && lo % Width < Width - 1);
+            if (!touching) return false;
+
+            Swap(a, b);
+            bool bunches = JoinsABunch(a) || JoinsABunch(b);
+            Swap(a, b);
+
+            return bunches;
+        }
+
+        void Swap(int a, int b)
+        {
+            int va = _value[a];
+            _value[a] = _value[b];
+            _value[b] = va;
+
+            var sa = _special[a];
+            _special[a] = _special[b];
+            _special[b] = sa;
+        }
+
+        public BudChainResult PreviewGraft(int a, int b, List<BudPulse> pulses = null,
+                                           List<BudWash> washes = null, List<BudDrop> drops = null)
+        {
+            if (!CanGraft(a, b))
+            {
+                pulses?.Clear();
+                washes?.Clear();
+                drops?.Clear();
+                return BudChainResult.Nothing;
+            }
+
+            return new BudBoard(this).Graft(a, b, pulses, washes, drops);
+        }
+
+        /// <summary>
+        /// Two neighbours trade places, and the grove settles. The colour in hand is kept.
+        ///
+        /// The special a bunch forges lands on the flower the player <em>moved</em>, which is the
+        /// genre's own rule and the one that reads: what you dragged is what you get.
+        /// </summary>
+        public BudChainResult Graft(int a, int b, List<BudPulse> pulses,
+                                    List<BudWash> washes = null, List<BudDrop> drops = null)
+        {
+            pulses?.Clear();
+            washes?.Clear();
+            drops?.Clear();
+
+            if (!CanGraft(a, b)) return BudChainResult.Nothing;
+
+            Swap(a, b);
+
+            drops?.Add(new BudDrop(a, b, -1, _value[a], BudGround.Flower, _special[a]));
+            drops?.Add(new BudDrop(b, a, -1, _value[b], BudGround.Flower, _special[b]));
+
+            return Settle(pulses, washes, drops, Energy.None, 0, b);
+        }
+
+        // ------------------------------------------------------------------ the specials
+        /// <summary>
+        /// A tapped special going off: wave nought is the special's own clearing, and the grove
+        /// settles from wave one.
+        /// </summary>
+        BudChainResult Strike(int cell, List<BudPulse> pulses, List<BudWash> washes,
+                              List<BudDrop> drops)
+        {
+            OpenWave();
+            _fuse.Clear();
+            _anvils.Clear();
+            _fuse.Add(cell);
+
+            int burst = 0, freed = 0, cracked = 0, fired = 0, biggest = 0;
+            Fire(pulses, 0, ref burst, ref fired, ref biggest);
+
+            Crack(pulses, 0, ref freed, ref cracked);
+            Paint(washes, 0);
+            Fall(drops, 0);
+
+            var after = Settle(pulses, washes, drops, Energy.None, 1);
+
+            return new BudChainResult(burst + after.Burst, 1 + after.Waves,
+                                      freed + after.Freed, cracked + after.Cracked,
+                                      after.Biggest > biggest ? after.Biggest : biggest,
+                                      after.Forged, fired + after.Fired);
+        }
+
+        /// <summary>
+        /// Every special on the fuse goes off, and everything in its reach with it.
+        ///
+        /// <para>
+        /// <b>A special in a fired special's reach fires too</b>, in the same wave, which is the
+        /// whole of why building two beside each other is worth it. Queued rather than recursed,
+        /// so a sun and a bolt that reach each other each fire once — a cell already cleared has
+        /// no special left on it, and the queue skips it.
+        /// </para>
+        /// <para>
+        /// <b>What a special clears it does not wash.</b> A bolt that washed the neighbours of a
+        /// whole row would set off most of the board, which makes every grove more solvable and
+        /// is invariant 20j's solvent; what it does instead is crack every cocoon it hits and
+        /// every cocoon beside what it cleared, which is exactly what the player fired it for.
+        /// </para>
+        /// <para>
+        /// The cells are reported in the order <see cref="BudLayout.Reach"/> hands them over —
+        /// nearest first — so the view draws the line racing out from the special.
+        /// </para>
+        /// </summary>
+        void Fire(List<BudPulse> pulses, int wave, ref int burst, ref int fired, ref int biggest)
+        {
+            for (int k = 0; k < _fuse.Count; k++)
+            {
+                int at = _fuse[k];
+                if (_ground[at] != BudGround.Flower || _special[at] == BudSpecial.None) continue;
+
+                var kind = _special[at];
+                int size = kind == BudSpecial.Sun ? BudLayout.SunFrom + 1 : BudLayout.BoltFrom;
+                if (size > biggest) biggest = size;
+
+                pulses?.Add(new BudPulse(at, wave, _value[at], BudPulseKind.Fired, size, (int)kind));
+                Fired++;
+                fired++;
+
+                // The special's own cell goes with the rest, and cracks what is beside it.
+                Touch(at, _value[at], false);
+                pulses?.Add(new BudPulse(at, wave, _value[at], BudPulseKind.Burst, size, (int)kind, at));
+                _ground[at] = BudGround.Bare;
+                _value[at] = Energy.None;
+                _special[at] = BudSpecial.None;
+                burst++;
+
+                Layout.Reach(at, kind, _reach);
+                for (int j = 0; j < _reach.Count; j++)
+                {
+                    int r = _reach[j];
+
+                    if (_ground[r] == BudGround.Cocoon)
+                    {
+                        // Struck directly, which is a crack, whether or not anything bursts
+                        // beside it.
+                        if (!_cracked.Contains(r)) _cracked.Add(r);
+                        continue;
+                    }
+
+                    if (_ground[r] != BudGround.Flower) continue;
+
+                    if (_special[r] != BudSpecial.None)
+                    {
+                        // Left standing for the queue to fire; it clears its own cell then.
+                        // **A special forged this very wave is not fired by it**: it arrives
+                        // after the wave's bursts, so it is not there yet to be hit — and a
+                        // reach that took it would draw it standing up out of a cell it had
+                        // already been cleared from.
+                        if (!_anvils.Contains(r) && !_fuse.Contains(r)) _fuse.Add(r);
+                        continue;
+                    }
+
+                    Touch(r, _value[r], false);
+                    pulses?.Add(new BudPulse(r, wave, _value[r], BudPulseKind.Burst, size, (int)kind, at));
+                    _ground[r] = BudGround.Bare;
+                    _value[r] = Energy.None;
+                    burst++;
+                }
+            }
+
+            _fuse.Clear();
+        }
+
+        // ------------------------------------------------------------------ the bomb
         /// <summary>
         /// A white flower going off: everything in the square around it bursts at once.
         ///
@@ -461,14 +681,8 @@ namespace GlimmerGrove.Modes
         /// </para>
         /// <para>
         /// It is reported as wave nought with a bunch of nine, so the view draws it as the
-        /// biggest kind of burst there is without being told about it separately.
-        /// </para>
-        /// <para>
-        /// <b>And it sends nothing down a runner</b>, for the same reason it washes nothing next
-        /// door: a runner carries a <em>bunch's colour</em>, and a bomb has no colour to carry —
-        /// it clears a block. One clause, and it stays one clause. What a bomb standing on a
-        /// runner end does is take that end off the board for a moment, which the grove then
-        /// fills in the ordinary way.
+        /// biggest kind of burst there is without being told about it separately. A special in
+        /// the square fires with it.
         /// </para>
         /// </summary>
         BudChainResult Bomb(int cell, List<BudPulse> pulses, List<BudWash> washes,
@@ -476,6 +690,8 @@ namespace GlimmerGrove.Modes
         {
             int x = cell % Width, y = cell / Width;
             _blast.Clear();
+            _fuse.Clear();
+            _anvils.Clear();
 
             for (int dy = -1; dy <= 1; dy++)
             for (int dx = -1; dx <= 1; dx++)
@@ -484,20 +700,17 @@ namespace GlimmerGrove.Modes
                 if (a < 0 || a >= Width || b < 0 || b >= Height) continue;
 
                 int at = b * Width + a;
-                if (_ground[at] == BudGround.Flower) _blast.Add(at);
+                if (_ground[at] != BudGround.Flower) continue;
+
+                if (_special[at] != BudSpecial.None) _fuse.Add(at);
+                else _blast.Add(at);
             }
 
-            int burst = 0, freed = 0, cracked = 0;
+            int burst = 0, freed = 0, cracked = 0, fired = 0, biggest = _blast.Count;
 
             // What it touches is read before any of it is taken away, exactly as a wave's wash is.
-            _cracked.Clear();
-            for (int k = 0; k < _blast.Count; k++)
-            {
-                Layout.Beside(_blast[k], _beside);
-                for (int j = 0; j < _beside.Count; j++)
-                    if (_ground[_beside[j]] == BudGround.Cocoon && !_cracked.Contains(_beside[j]))
-                        _cracked.Add(_beside[j]);
-            }
+            OpenWave();
+            for (int k = 0; k < _blast.Count; k++) Touch(_blast[k], _value[_blast[k]], false);
 
             for (int k = 0; k < _blast.Count; k++)
             {
@@ -508,38 +721,44 @@ namespace GlimmerGrove.Modes
                 burst++;
             }
 
+            Fire(pulses, 0, ref burst, ref fired, ref biggest);
             Crack(pulses, 0, ref freed, ref cracked);
+            Paint(washes, 0);
             Fall(drops, 0);
 
             var after = Settle(pulses, washes, drops, Energy.None, 1);
 
             return new BudChainResult(burst + after.Burst, 1 + after.Waves,
                                       freed + after.Freed, cracked + after.Cracked,
-                                      after.Biggest > _blast.Count ? after.Biggest : _blast.Count);
+                                      after.Biggest > biggest ? after.Biggest : biggest,
+                                      after.Forged, fired + after.Fired);
         }
 
-        readonly List<int> _blast = new List<int>(9);
-
+        // ------------------------------------------------------------------ the chain
         /// <summary>
-        /// Everything the grove does on its own once a colour has moved: bunches go off, their
+        /// Everything the grove does on its own once something has moved: bunches go off, their
         /// colour washes outward, and whatever that makes goes off in turn.
         /// </summary>
+        /// <param name="origin">
+        /// The cell the player touched, which is where a special the first wave forges is put.
+        /// After the first wave a bunch's special lands on its lowest cell, because there is no
+        /// hand on the board to put it under.
+        /// </param>
         public BudChainResult Settle(List<BudPulse> pulses, List<BudWash> washes,
                                     List<BudDrop> drops = null, int spent = Energy.None,
-                                    int from = 0)
+                                    int from = 0, int origin = -1)
         {
-            int burst = 0, freed = 0, cracked = 0, biggest = 0;
+            int burst = 0, freed = 0, cracked = 0, biggest = 0, forged = 0, fired = 0;
             int waves = from;
 
             // See BudLayout.MostWaves: once the grove regrows, "every wave removes flowers and
             // nothing is ever added" stops being true and the settle needs a bound of its own.
             while (waves - from < BudLayout.MostWaves)
             {
-                Array.Clear(_wash, 0, _wash.Length);
-                for (int i = 0; i < _ran.Length; i++) _ran[i] = -1;
-                _cracked.Clear();
-                _washed.Clear();
+                OpenWave();
                 _queue.Clear();
+                _fuse.Clear();
+                _anvils.Clear();
 
                 Array.Clear(_seen, 0, _seen.Length);
                 bool any = false;
@@ -556,65 +775,46 @@ namespace GlimmerGrove.Modes
 
                     int colour = _value[_bunch[0]];
 
+                    // **A big bunch leaves something behind.** Where the player tapped if the tap
+                    // is in this bunch; otherwise the bunch's lowest cell, which is `_bunch[0]`
+                    // because the scan is ascending.
+                    var forge = !Layout.Forges ? BudSpecial.None
+                              : _bunch.Count >= BudLayout.SunFrom ? BudSpecial.Sun
+                              : _bunch.Count >= BudLayout.BoltFrom ? BudSpecial.Bolt
+                              : BudSpecial.None;
+                    int anvil = -1;
+                    if (forge != BudSpecial.None)
+                        anvil = origin >= 0 && _bunch.Contains(origin) ? origin : _bunch[0];
+
                     // What the bunch touches is read before any of it is taken away, so the wash
                     // goes out from where the flowers were standing.
+                    for (int k = 0; k < _bunch.Count; k++) Touch(_bunch[k], colour, true);
+
                     for (int k = 0; k < _bunch.Count; k++)
                     {
-                        Layout.Beside(_bunch[k], _beside);
+                        int at = _bunch[k];
 
-                        for (int j = 0; j < _beside.Count; j++)
-                        {
-                            int nb = _beside[j];
+                        // The anvil is not a burst: it stays, and is reported only as forged.
+                        if (at == anvil) continue;
 
-                            if (_ground[nb] == BudGround.Cocoon)
-                            {
-                                if (!_cracked.Contains(nb)) _cracked.Add(nb);
-                            }
-                            else if (_ground[nb] == BudGround.Flower)
-                            {
-                                // Every flower it touches, with no cleverness about which. It
-                                // used to say `&& !_seen[nb]`, meaning to skip a flower that is
-                                // itself bursting — but `_seen` is the flood fill's *visited*
-                                // marker, so it also covered every flower already scanned as part
-                                // of a group of one or two that was discarded. Those are ordinary
-                                // flowers, and whether one was scanned before or after the bunch
-                                // is an accident of index order: the wash simply stopped in one
-                                // direction and not the other. The guard was redundant as well as
-                                // wrong, because the application loop below re-checks the ground.
-                                if (_wash[nb] == Energy.None) _washed.Add(nb);
-                                _wash[nb] |= colour;
-                            }
-                        }
+                        // A special taken into a bunch fires with it, whatever colour it wears —
+                        // and `Fire` reports its burst, so it is not reported here as well.
+                        if (_special[at] != BudSpecial.None) { _fuse.Add(at); continue; }
 
-                        // **And down the runner, which is the whole of the second chapter.** A
-                        // flower standing on one end of a runner sends its colour to whatever is
-                        // standing on the other, however far across the grove that is — the same
-                        // wash, over the same operator, with the adjacency taken out of it.
-                        //
-                        // **The threshold is that the end has to be *in* the bunch**, not merely
-                        // beside one. That is what stops it being a solvent (invariant 20j): a
-                        // spread that fires on anything happening nearby walks outward for ever
-                        // and makes every board more solvable, where a spread that has to be
-                        // *built into* is a thing the player arranges. It is also the whole
-                        // decision — which three to make, and in which colour, given what is
-                        // standing at the far end.
-                        //
-                        // Read here, with the adjacency wash, before anything is taken away, so
-                        // the wave still has no reading order: two runners whose ends burst
-                        // together each deliver into `_wash` and neither can see the other.
-                        int far = Layout.FarEnd(_bunch[k]);
-                        if (far >= 0 && _ground[far] == BudGround.Flower)
-                        {
-                            if (_wash[far] == Energy.None) _washed.Add(far);
-                            _wash[far] |= colour;
-                            _ran[far] = _bunch[k];
-                        }
+                        _queue.Add(at);
+                        pulses?.Add(new BudPulse(at, waves, colour, BudPulseKind.Burst, _bunch.Count));
                     }
 
-                    for (int k = 0; k < _bunch.Count; k++) _queue.Add(_bunch[k]);
-                    for (int k = 0; k < _bunch.Count; k++)
-                        pulses?.Add(new BudPulse(_bunch[k], waves, colour,
-                                                 BudPulseKind.Burst, _bunch.Count));
+                    if (anvil >= 0)
+                    {
+                        _anvils.Add(anvil);
+                        _special[anvil] = forge;
+                        _value[anvil] = colour;
+                        pulses?.Add(new BudPulse(anvil, waves, colour, BudPulseKind.Forged,
+                                                 _bunch.Count, (int)forge));
+                        Forged++;
+                        forged++;
+                    }
                 }
 
                 if (!any) break;
@@ -626,28 +826,12 @@ namespace GlimmerGrove.Modes
                     burst++;
                 }
 
+                Fire(pulses, waves, ref burst, ref fired, ref biggest);
                 Crack(pulses, waves, ref freed, ref cracked);
 
                 // Then the colour goes out. A flower touched by two bunches at once takes both,
                 // which is where the long chains come from.
-                for (int k = 0; k < _washed.Count; k++)
-                {
-                    int at = _washed[k];
-                    if (_ground[at] != BudGround.Flower) continue;
-
-                    int was = _value[at];
-                    _value[at] |= _wash[at];
-
-                    // A runner's delivery is reported whether or not it changed anything, and
-                    // an ordinary wash only when it did. See <see cref="BudWash.From"/>: the
-                    // travel is the event, and a runner that arrives carrying a colour the far
-                    // end already wears is the one mistake this mechanic can punish — so it is
-                    // the one the player has to be able to watch happen.
-                    if (_ran[at] >= 0)
-                        washes?.Add(new BudWash(at, waves, _value[at], from: _ran[at]));
-                    else if (_value[at] != was)
-                        washes?.Add(new BudWash(at, waves, _value[at]));
-                }
+                Paint(washes, waves);
 
                 // **And then the grove falls, and grows.** Everything above a hole slides down
                 // into it and new flowers arrive along the top — so the next turn of this loop is
@@ -657,6 +841,7 @@ namespace GlimmerGrove.Modes
                 Fall(drops, waves);
 
                 waves++;
+                origin = -1;
             }
 
             // **And only now does the grove grow back.** Falling happens inside the chain, where
@@ -665,7 +850,48 @@ namespace GlimmerGrove.Modes
             Grow(drops, waves);
             Creep(spent, washes, waves);
 
-            return new BudChainResult(burst, waves - from, freed, cracked, biggest);
+            return new BudChainResult(burst, waves - from, freed, cracked, biggest, forged, fired);
+        }
+
+        /// <summary>Clears everything a wave accumulates before it starts reading the board.</summary>
+        void OpenWave()
+        {
+            Array.Clear(_wash, 0, _wash.Length);
+            _cracked.Clear();
+            _washed.Clear();
+        }
+
+        /// <summary>
+        /// What one bursting flower reaches: a cocoon takes a crack, a flower takes the colour.
+        ///
+        /// <b>One method for a bunch, a bomb and a special</b>, because they are the same event
+        /// to everything standing beside them, and two copies of "what does a burst touch" is
+        /// two things that can disagree about a cocoon.
+        /// </summary>
+        void Touch(int cell, int colour, bool washes)
+        {
+            Layout.Beside(cell, _beside);
+
+            for (int j = 0; j < _beside.Count; j++)
+            {
+                int nb = _beside[j];
+
+                if (_ground[nb] == BudGround.Cocoon)
+                {
+                    if (!_cracked.Contains(nb)) _cracked.Add(nb);
+                }
+                else if (_ground[nb] == BudGround.Flower && washes)
+                {
+                    // Every flower it touches, with no cleverness about which. It used to say
+                    // `&& !_seen[nb]`, meaning to skip a flower that is itself bursting — but
+                    // `_seen` is the flood fill's *visited* marker, so it also covered every
+                    // flower already scanned as part of a group of one or two that was
+                    // discarded, and the wash simply stopped in one direction and not the other
+                    // purely by index order. The application loop re-checks the ground.
+                    if (_wash[nb] == Energy.None) _washed.Add(nb);
+                    _wash[nb] |= colour;
+                }
+            }
         }
 
         /// <summary>One crack per cocoon per wave, however many bunches of that wave touched it.</summary>
@@ -690,6 +916,21 @@ namespace GlimmerGrove.Modes
             }
         }
 
+        /// <summary>The colour this wave gathered lands on every flower it reached.</summary>
+        void Paint(List<BudWash> washes, int wave)
+        {
+            for (int k = 0; k < _washed.Count; k++)
+            {
+                int at = _washed[k];
+                if (_ground[at] != BudGround.Flower) continue;
+
+                int was = _value[at];
+                _value[at] |= _wash[at];
+
+                if (_value[at] != was) washes?.Add(new BudWash(at, wave, _value[at]));
+            }
+        }
+
         /// <summary>
         /// Everything slides down into the holes under it, and new flowers grow in along the top.
         ///
@@ -700,11 +941,10 @@ namespace GlimmerGrove.Modes
         /// pushing from the top has to be repeated until nothing moves.
         /// </para>
         /// <para>
-        /// <b>Cocoons fall too.</b> They are pods hanging in the grove rather than posts driven
-        /// into it, and a cocoon that hovered where its flowers used to be would be the one thing
-        /// on the board that does not obey what the player just watched happen. It also matters
-        /// to the rules: a cocoon is cracked by what goes off <em>beside</em> it, so one that fell
-        /// into the middle of the grove is a cocoon that can now be reached.
+        /// <b>Cocoons fall too, and a special falls as the flower it is.</b> They are things
+        /// hanging in the grove rather than posts driven into it, and a piece that hovered where
+        /// its flowers used to be would be the one thing on the board that does not obey what
+        /// the player just watched happen.
         /// </para>
         /// <para>
         /// A grove with no strip does not grow — it only falls — because both shapes ship and the
@@ -736,11 +976,12 @@ namespace GlimmerGrove.Modes
 
                     _ground[to] = _ground[at];
                     _value[to] = _value[at];
+                    _special[to] = _special[at];
                     _ground[at] = BudGround.Bare;
                     _value[at] = Energy.None;
+                    _special[at] = BudSpecial.None;
 
-                    drops?.Add(new BudDrop(to, at, wave, _value[to],
-                                           _ground[to] == BudGround.Cocoon));
+                    drops?.Add(new BudDrop(to, at, wave, _value[to], _ground[to], _special[to]));
                 }
             }
         }
@@ -783,6 +1024,7 @@ namespace GlimmerGrove.Modes
                 if (_ground[at] != BudGround.Bare) continue;
 
                 _ground[at] = BudGround.Flower;
+                _special[at] = BudSpecial.None;
 
                 // Walk the strip for one that settles. One lap and no more: if every colour it
                 // deals would match, the first is taken anyway and the chain simply carries on —
@@ -796,7 +1038,7 @@ namespace GlimmerGrove.Modes
                 }
 
                 Grown++;
-                drops?.Add(new BudDrop(at, -1, wave, _value[at], false));
+                drops?.Add(new BudDrop(at, -1, wave, _value[at], BudGround.Flower));
             }
         }
 
@@ -826,6 +1068,10 @@ namespace GlimmerGrove.Modes
         /// on the same grove are still playing the same board — which is the property invariant
         /// 26 threw a whole mode away for lacking.
         /// </para>
+        /// <para>
+        /// A graft and a special spend no colour, so nothing ripens after them: the creep is the
+        /// colour <em>just spent</em> leaning further, and nothing was.
+        /// </para>
         /// </summary>
         void Creep(int spent, List<BudWash> washes, int wave)
         {
@@ -842,7 +1088,7 @@ namespace GlimmerGrove.Modes
                 for (int j = 0; j < _beside.Count; j++)
                 {
                     int at = _beside[j];
-                    if (_ground[at] != BudGround.Flower) continue;
+                    if (_ground[at] != BudGround.Flower || _special[at] != BudSpecial.None) continue;
                     if ((_value[at] | spent) == _value[at]) continue;
 
                     int channels = Channels(_value[at]);
@@ -916,10 +1162,9 @@ namespace GlimmerGrove.Modes
             return false;
         }
 
-        /// <summary>The state as a string, for the solver's dedup.</summary>
         /// <summary>
         /// The state as a string, for the solver's dedup — and it carries <see cref="Grown"/>,
-        /// which is the part that is easy to forget.
+        /// which is the part that is easy to forget, and which flowers are specials.
         ///
         /// Two groves can look identical and still be different positions: one that has taken
         /// more flowers off the strip will grow different ones next. Leaving that out of the key
@@ -932,7 +1177,13 @@ namespace GlimmerGrove.Modes
             {
                 switch (_ground[i])
                 {
-                    case BudGround.Flower: into[i] = Energy.Letter(_value[i]); break;
+                    case BudGround.Flower:
+                        // A plain flower is its letter; a bolt a digit; a sun a mark below the
+                        // digits. Three disjoint runs, and none collides with a cocoon's.
+                        into[i] = _special[i] == BudSpecial.Bolt ? (char)('0' + _value[i])
+                                : _special[i] == BudSpecial.Sun ? (char)('!' + _value[i])
+                                : Energy.Letter(_value[i]);
+                        break;
                     case BudGround.Cocoon: into[i] = (char)('a' + _value[i]); break;
                     case BudGround.Stone: into[i] = '#'; break;
                     default: into[i] = '.'; break;
@@ -947,18 +1198,22 @@ namespace GlimmerGrove.Modes
             length = _ground.Length + 1;
         }
 
-        public void Save(BudGround[] ground, int[] value, out int grown)
+        public void Save(BudGround[] ground, int[] value, BudSpecial[] special, out int packed)
         {
             Array.Copy(_ground, ground, _ground.Length);
             Array.Copy(_value, value, _value.Length);
-            grown = Grown;
+            Array.Copy(_special, special, _special.Length);
+            packed = (Grown & 0xFFFF) | (Forged & 0xFF) << 16 | (Fired & 0x7F) << 24;
         }
 
-        public void Restore(BudGround[] ground, int[] value, int grown)
+        public void Restore(BudGround[] ground, int[] value, BudSpecial[] special, int packed)
         {
             Array.Copy(ground, _ground, _ground.Length);
             Array.Copy(value, _value, _value.Length);
-            Grown = grown;
+            Array.Copy(special, _special, _special.Length);
+            Grown = packed & 0xFFFF;
+            Forged = (packed >> 16) & 0xFF;
+            Fired = (packed >> 24) & 0x7F;
         }
     }
 }

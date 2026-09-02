@@ -15,7 +15,7 @@
   "levels": [
     {
       "id": "f01_first_fall",
-      "mapX": 0.3,
+      "mapX": 0.7,
       "mapY": 0.055,
       "budgetFactor": -1.0,
       "fall": {
@@ -34,7 +34,7 @@
     },
     {
       "id": "f01_two_lights",
-      "mapX": 0.72,
+      "mapX": 0.28,
       "mapY": 0.14,
       "backdrop": "sky_01",
       "fall": {
@@ -53,7 +53,7 @@
     },
     {
       "id": "f01_the_kindling",
-      "mapX": 0.26,
+      "mapX": 0.74,
       "mapY": 0.225,
       "backdrop": "sky_02",
       "fall": {
@@ -73,7 +73,7 @@
     },
     {
       "id": "f01_narrow_water",
-      "mapX": 0.7,
+      "mapX": 0.3,
       "mapY": 0.31,
       "backdrop": "sky_03",
       "fall": {
@@ -94,7 +94,7 @@
     },
     {
       "id": "f01_the_stack",
-      "mapX": 0.28,
+      "mapX": 0.72,
       "mapY": 0.395,
       "backdrop": "sky_04",
       "fall": {
@@ -114,7 +114,7 @@
     },
     {
       "id": "f01_deep_cistern",
-      "mapX": 0.74,
+      "mapX": 0.26,
       "mapY": 0.48,
       "backdrop": "sky_05",
       "fall": {
@@ -135,7 +135,7 @@
     },
     {
       "id": "f01_brimming",
-      "mapX": 0.3,
+      "mapX": 0.7,
       "mapY": 0.56,
       "backdrop": "sky_06",
       "fall": {
@@ -156,7 +156,7 @@
     },
     {
       "id": "f01_the_undertow",
-      "mapX": 0.68,
+      "mapX": 0.32,
       "mapY": 0.645,
       "backdrop": "sky_07",
       "fall": {
@@ -178,7 +178,7 @@
     },
     {
       "id": "f01_last_ember",
-      "mapX": 0.26,
+      "mapX": 0.74,
       "mapY": 0.73,
       "backdrop": "sky_08",
       "fall": {
@@ -200,7 +200,7 @@
     },
     {
       "id": "f01_the_deep_well",
-      "mapX": 0.72,
+      "mapX": 0.28,
       "mapY": 0.815,
       "backdrop": "sky_09",
       "fall": {

@@ -39,6 +39,7 @@ namespace GlimmerGrove.Content
             CheckSpacing(inPlayOrder, strips, issues);
             CheckAscending(inPlayOrder, issues);
             CheckTeaserClearance(inPlayOrder, strips, chapter.TeaserX, issues);
+            CheckCrowns(inPlayOrder, strips, chapter.TeaserX, issues);
 
             return issues;
         }
@@ -119,6 +120,54 @@ namespace GlimmerGrove.Content
                 Warn(issues, $"'{level.Id}' is {gap:F0} canvas units from the end-of-chapter marker at " +
                              $"({teaser.x:0.##}, {teaser.y:0.##}); leave room above the last glade " +
                              "or give the chapter another strip");
+            }
+        }
+
+        /// <summary>
+        /// Nothing may stand on a glade's standing mark.
+        ///
+        /// The disc is what <see cref="CheckSpacing"/> and <see cref="CheckTeaserClearance"/>
+        /// measure, and the disc is not what collides: a cleared glade carries its record and
+        /// rank above it, and every perch — a glade's or the marker's — hangs a name plate
+        /// below its own centre. The two reach further towards each other than the discs do,
+        /// so a layout can pass both distance checks and still draw the next chapter's plate
+        /// over the player's standing, which is exactly how the Shallows shipped. This asks
+        /// the question in the shape it is actually drawn (<see cref="ChapterMap.Overshadows"/>),
+        /// for every pair of glades in both directions and for the marker over each glade.
+        /// </summary>
+        static void CheckCrowns(IReadOnlyList<LevelDefinition> levels, int strips, float across,
+                                List<LevelIssue> issues)
+        {
+            float highest = 0f;
+            foreach (var level in levels)
+            {
+                float y = ChapterMap.Place(level.Presentation.MapPosition).y;
+                if (y > highest) highest = y;
+            }
+
+            var teaser = ChapterMap.TeaserPosition(highest, strips, across);
+
+            for (int i = 0; i < levels.Count; i++)
+            {
+                var crown = ChapterMap.Place(levels[i].Presentation.MapPosition);
+
+                for (int k = 0; k < levels.Count; k++)
+                {
+                    if (k == i) continue;
+
+                    var body = ChapterMap.Place(levels[k].Presentation.MapPosition);
+                    if (!ChapterMap.Overshadows(body, crown, strips)) continue;
+
+                    Warn(issues, $"'{levels[k].Id}' stands on the standing mark above '{levels[i].Id}' " +
+                                 "(the record and rank a cleared glade draws over its disc); put them on " +
+                                 "opposite sides of the map, or further apart");
+                }
+
+                if (!ChapterMap.Overshadows(teaser, crown, strips)) continue;
+
+                Warn(issues, $"the end-of-chapter marker at ({teaser.x:0.##}, {teaser.y:0.##}) stands on the " +
+                             $"standing mark above '{levels[i].Id}'; end the chapter on the other side of the " +
+                             "map from the marker, or leave more room above its last glade");
             }
         }
 

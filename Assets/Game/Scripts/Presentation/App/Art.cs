@@ -25,6 +25,30 @@ namespace GlimmerGrove
 
         public static Sprite[] Frames(string folder) => AssetLibrary.Frames(AssetManifest.ArtRoot + folder);
 
+        /// <summary>
+        /// The credits coin, face on and still — the glyph to put beside a price in coins.
+        ///
+        /// <para>
+        /// It is frame zero of the <c>Ui/Coin</c> flipbook because credits have no still
+        /// sprite of their own, and it must stay that way: a spinning coin turns edge-on for
+        /// part of every cycle, so a 40-pixel glyph beside a number spends a third of its life
+        /// as a thin orange bar that reads as a broken image. A reveal can afford the spin
+        /// because it is drawn large and watched; a caption read at a glance cannot.
+        /// </para>
+        /// <para>
+        /// Here rather than copied into each buy panel — there are four, and the point of one
+        /// coin is that they are all the same coin. Null when the frames have not arrived,
+        /// which every caller renders as no glyph rather than as a white square (invariant
+        /// 7b); in practice <c>Ui/Coin</c> is in <c>AssetManifest</c>'s preloaded set, so the
+        /// null branch is the missing-art case.
+        /// </para>
+        /// </summary>
+        public static Sprite CoinFace()
+        {
+            var frames = Frames("Ui/Coin");
+            return frames != null && frames.Length > 0 ? frames[0] : null;
+        }
+
         public static Font Font
         {
             get

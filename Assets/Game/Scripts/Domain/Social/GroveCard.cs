@@ -168,6 +168,42 @@ namespace GlimmerGrove.Social
         /// <summary>Every placement, for a mapper writing this back out.</summary>
         public IReadOnlyDictionary<string, Placement> Placements => _placed;
 
+        /// <summary>
+        /// Which tile of this grove is covered by what, through the visitor's own catalog.
+        ///
+        /// <para>
+        /// Built the way <c>HomesteadLayout.Occupancy</c> builds the player's, so a visited
+        /// grove and the same grove seen by its owner lay out identically — the footprint a
+        /// piece covers is a fact about the piece, and a visitor's build supplies it from the
+        /// same row of the same file. A card is immutable, so this is built once and kept.
+        /// </para>
+        /// </summary>
+        public GroveOccupancy Occupancy(HomesteadCatalog catalog)
+        {
+            if (catalog == null) return GroveOccupancy.Empty;
+            if (_occupancy != null && ReferenceEquals(_occupancyCatalog, catalog)) return _occupancy;
+
+            var stands = new List<GroveStand>(_placed.Count + 1);
+
+            var hall = catalog.Floor.HallStand(DwellingId);
+            if (hall.IsValid) stands.Add(hall);
+
+            foreach (var pair in _placed)
+            {
+                if (!catalog.Floor.Contains(pair.Key)) continue;
+
+                var stand = GroveOccupancy.Of(catalog, pair.Key, pair.Value.PieceId, pair.Value.Flipped);
+                if (stand.IsValid) stands.Add(stand);
+            }
+
+            _occupancy = new GroveOccupancy(stands);
+            _occupancyCatalog = catalog;
+            return _occupancy;
+        }
+
+        GroveOccupancy _occupancy;
+        HomesteadCatalog _occupancyCatalog;
+
         /// <summary>How many tiles have something on them. For the visit screen's caption.</summary>
         public int OccupiedCount => _placed.Count;
 
@@ -211,22 +247,82 @@ namespace GlimmerGrove.Social
                                          string name, string avatarId, int keeperLevel,
                                          long nowUnix)
         {
-            catalog = catalog ?? HomesteadCatalog.Empty;
-
-            var standing = GroveScore.Of(catalog);
-
-            var land = new List<string>();
-            foreach (var region in catalog.Floor.Regions)
-                if (!region.IsStarter && GroveLand.IsOwned(region)) land.Add(region.Id);
-
+            // OccupiedSlots, not PlacedIds: the latter answers in piece ids for the art
+            // loader, and walking it as slots is how this card came to carry no placements
+            // — see HomesteadLayout.OccupiedSlots for what that cost.
             var placed = new Dictionary<string, Placement>(StringComparer.Ordinal);
-            foreach (string slotId in HomesteadLayout.PlacedIds())
+            foreach (string slotId in HomesteadLayout.OccupiedSlots())
             {
                 string pieceId = HomesteadLayout.At(slotId);
                 if (string.IsNullOrEmpty(pieceId)) continue;      // emptied on purpose: nothing to show
 
                 placed[slotId] = new Placement(pieceId, 0L, HomesteadLayout.FlippedAt(slotId));
             }
+
+            return Build(catalog, LedgerHoldings.Instance, ownerId, name, avatarId, keeperLevel,
+                         nowUnix, placed);
+        }
+
+        /// <summary>
+        /// The card a <em>save file</em> describes — the one a sync has just settled with the
+        /// server, which is the save the server will build the real card from.
+        ///
+        /// <para>
+        /// This is what decides whether a publish is owed and what it is asked to prove
+        /// (<c>GroveBoard</c>), and it is built from the pushed file rather than from the live
+        /// ledgers for one reason: a piece placed while a push is in flight is on the device
+        /// and not on the server, and a fingerprint taken from the device would mark it
+        /// published when it never was — a card one placement behind, permanently, with no
+        /// error anywhere. Reading the same file the server holds makes that impossible
+        /// rather than unlikely.
+        /// </para>
+        /// <para>
+        /// It answers the same question <see cref="OfPlayer"/> answers, through the same
+        /// builder, over <see cref="SaveHoldings"/> in place of the ledgers; the placement
+        /// rows are read the way <c>HomesteadLayout.LoadFrom</c> reads them (the later of two
+        /// rows for one slot wins, an emptied slot shows nothing, a retired id is renamed).
+        /// Name and companion are the file's own, shown the way the wallet would show them.
+        /// </para>
+        /// </summary>
+        public static GroveCard OfSave(HomesteadCatalog catalog, Persistence.SaveFileDto save,
+                                       string ownerId, int keeperLevel, long nowUnix)
+        {
+            var placed = new Dictionary<string, Placement>(StringComparer.Ordinal);
+            var rows = save?.homesteadPlaced;
+            if (rows != null)
+                foreach (var row in rows)
+                {
+                    if (row == null || string.IsNullOrEmpty(row.slot)) continue;
+
+                    string pieceId = GroveResidents.Rename(row.piece);
+                    if (string.IsNullOrEmpty(pieceId))
+                    {
+                        placed.Remove(row.slot);       // emptied on purpose, and the later row wins
+                        continue;
+                    }
+
+                    placed[row.slot] = new Placement(pieceId, 0L, row.flipped);
+                }
+
+            string stored = save?.wallet?.displayName;
+            string name = string.IsNullOrEmpty(stored) ? Persistence.Wallet.DefaultName : stored;
+
+            return Build(catalog, new SaveHoldings(save, keeperLevel), ownerId, name,
+                         save?.wallet?.avatarId ?? string.Empty, keeperLevel, nowUnix, placed);
+        }
+
+        /// <summary>The one builder both readings go through, so they cannot drift.</summary>
+        static GroveCard Build(HomesteadCatalog catalog, IGroveHoldings held, string ownerId,
+                               string name, string avatarId, int keeperLevel, long nowUnix,
+                               IReadOnlyDictionary<string, Placement> placed)
+        {
+            catalog = catalog ?? HomesteadCatalog.Empty;
+
+            var standing = GroveScore.Of(catalog, held);
+
+            var land = new List<string>();
+            foreach (var region in catalog.Floor.Regions)
+                if (!region.IsStarter && held.Owns(region)) land.Add(region.Id);
 
             return new GroveCard(ownerId,
                                  GroveNames.Public(name),
@@ -236,7 +332,7 @@ namespace GlimmerGrove.Social
                                  standing.Stars,
                                  GroveLeague.IdFor(standing.Stars),
                                  nowUnix,
-                                 HomesteadLedger.BestDwelling(catalog).Id,
+                                 HomesteadLedger.BestDwelling(catalog, held).Id,
                                  land,
                                  placed);
         }

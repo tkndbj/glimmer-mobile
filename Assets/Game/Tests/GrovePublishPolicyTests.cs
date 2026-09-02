@@ -36,7 +36,7 @@ namespace GlimmerGrove.Tests
         public void AChangeIsPublishedAfterTheDebounce()
         {
             var policy = new GrovePublishPolicy();
-            policy.Request("a", true);
+            policy.Request("a", 1L, true);
 
             Assert.IsTrue(policy.HasWork);
 
@@ -54,7 +54,7 @@ namespace GlimmerGrove.Tests
         {
             var policy = new GrovePublishPolicy();
 
-            policy.Request("a", worthPublishing: false);
+            policy.Request("a", 1L, worthPublishing: false);
 
             Assert.IsFalse(policy.HasWork);
             Assert.AreEqual(GrovePublishAction.None, Settle(policy));
@@ -65,11 +65,11 @@ namespace GlimmerGrove.Tests
         {
             var policy = new GrovePublishPolicy();
 
-            policy.Request("a", true);
+            policy.Request("a", 1L, true);
             policy.Tick(GrovePublishPolicy.DebounceSeconds * .4f);
-            policy.Request("b", true);
+            policy.Request("b", 1L, true);
             policy.Tick(GrovePublishPolicy.DebounceSeconds * .4f);
-            policy.Request("c", true);
+            policy.Request("c", 1L, true);
 
             // The debounce restarts on each request, so nothing has gone yet.
             Assert.AreEqual(GrovePublishAction.None,
@@ -87,14 +87,14 @@ namespace GlimmerGrove.Tests
         {
             var policy = new GrovePublishPolicy();
 
-            policy.Request("a", true);
+            policy.Request("a", 1L, true);
             Settle(policy);
             policy.Succeeded("a");
 
             // This is the case that makes the whole thing cheap: a sync raised by a star, a
             // heart or a chest reaches the ledgers' events and changes nothing a visitor can
             // see, so the fingerprint is identical and no call is made.
-            policy.Request("a", true);
+            policy.Request("a", 1L, true);
 
             Assert.IsFalse(policy.HasWork);
             Assert.AreEqual(GrovePublishAction.None, Settle(policy));
@@ -105,11 +105,11 @@ namespace GlimmerGrove.Tests
         {
             var policy = new GrovePublishPolicy();
 
-            policy.Request("a", true);
+            policy.Request("a", 1L, true);
             Assert.AreEqual(GrovePublishAction.Publish, Settle(policy));
 
             // The player buys something while the call is out.
-            policy.Request("b", true);
+            policy.Request("b", 1L, true);
 
             // The reply is for the *old* fingerprint, and saying so is what stops the new work
             // being cleared by the success of a call that never carried it — SyncScheduler's
@@ -126,7 +126,7 @@ namespace GlimmerGrove.Tests
         {
             var policy = new GrovePublishPolicy();
 
-            policy.Request("a", true);
+            policy.Request("a", 1L, true);
             Settle(policy);
             policy.Failed();
 
@@ -145,7 +145,7 @@ namespace GlimmerGrove.Tests
         public void TheBackoffDoublesAndThenStops()
         {
             var policy = new GrovePublishPolicy();
-            policy.Request("a", true);
+            policy.Request("a", 1L, true);
 
             float last = 0f;
 
@@ -172,7 +172,7 @@ namespace GlimmerGrove.Tests
         {
             var policy = new GrovePublishPolicy();
 
-            policy.Request("a", true);
+            policy.Request("a", 1L, true);
             Settle(policy);
 
             // Invariant 13a: a client that keeps resubmitting a refusal that will still be
@@ -183,7 +183,7 @@ namespace GlimmerGrove.Tests
             Assert.AreEqual(GrovePublishAction.None, Settle(policy));
 
             // And the next real change still asks, because dropping is not disabling.
-            policy.Request("b", true);
+            policy.Request("b", 1L, true);
             Assert.AreEqual(GrovePublishAction.Publish, Settle(policy));
         }
 
@@ -193,7 +193,7 @@ namespace GlimmerGrove.Tests
             var policy = new GrovePublishPolicy();
 
             policy.NetworkChanged(false);
-            policy.Request("a", true);
+            policy.Request("a", 1L, true);
 
             Assert.AreEqual(GrovePublishAction.None, Settle(policy));
 
@@ -209,7 +209,7 @@ namespace GlimmerGrove.Tests
         {
             var policy = new GrovePublishPolicy();
 
-            policy.Request("a", true);
+            policy.Request("a", 1L, true);
             Settle(policy);
             policy.Failed();
             policy.Failed();
@@ -241,7 +241,7 @@ namespace GlimmerGrove.Tests
         {
             var policy = new GrovePublishPolicy();
 
-            policy.Request("a", true);
+            policy.Request("a", 1L, true);
             Settle(policy);
             policy.Succeeded("a");
 
@@ -255,7 +255,7 @@ namespace GlimmerGrove.Tests
         {
             var policy = new GrovePublishPolicy();
 
-            policy.Request("a", true);
+            policy.Request("a", 1L, true);
             policy.RequestWithdrawal();
 
             // Publishing and then deleting would leave a device that died between the two
@@ -279,7 +279,7 @@ namespace GlimmerGrove.Tests
         {
             var policy = new GrovePublishPolicy();
 
-            policy.Request("a", true);
+            policy.Request("a", 1L, true);
             Settle(policy);
             policy.Succeeded("a");
 
@@ -291,7 +291,7 @@ namespace GlimmerGrove.Tests
 
             // The identical grove has to go back up: the card was deleted, so "already
             // published" is no longer true of anything.
-            policy.Request("a", true);
+            policy.Request("a", 1L, true);
             Assert.AreEqual(GrovePublishAction.Publish, Settle(policy));
         }
 
@@ -301,7 +301,7 @@ namespace GlimmerGrove.Tests
         {
             var policy = new GrovePublishPolicy();
 
-            policy.Request("a", true);
+            policy.Request("a", 1L, true);
             Settle(policy);
             policy.Succeeded("a");
 
@@ -313,7 +313,7 @@ namespace GlimmerGrove.Tests
             // Invariant 17's discipline: the fingerprint described the *outgoing* account's
             // card. Kept, an incoming player whose grove happened to look the same would be
             // suppressed for ever and never reach the board at all.
-            policy.Request("a", true);
+            policy.Request("a", 1L, true);
             Assert.AreEqual(GrovePublishAction.Publish, Settle(policy));
         }
 
@@ -326,7 +326,7 @@ namespace GlimmerGrove.Tests
             // What the device noted last time it ran.
             policy.Adopt("a");
 
-            policy.Request("a", true);
+            policy.Request("a", 1L, true);
 
             Assert.IsFalse(policy.HasWork,
                            "a relaunch with an unchanged grove asked for a write");
@@ -339,7 +339,7 @@ namespace GlimmerGrove.Tests
             var policy = new GrovePublishPolicy();
 
             policy.Adopt("a");
-            policy.Request("b", true);
+            policy.Request("b", 1L, true);
 
             Assert.AreEqual(GrovePublishAction.Publish, Settle(policy));
         }
@@ -349,7 +349,7 @@ namespace GlimmerGrove.Tests
         {
             var policy = new GrovePublishPolicy();
 
-            policy.Request("a", true);
+            policy.Request("a", 1L, true);
 
             // Adopting here would mark as published something that has not been sent, and the
             // request would then be dropped for ever. The note is only ever taken by a policy
@@ -365,13 +365,135 @@ namespace GlimmerGrove.Tests
         {
             var policy = new GrovePublishPolicy();
 
-            policy.Request("a", true);
+            policy.Request("a", 1L, true);
             Assert.AreEqual(GrovePublishAction.Publish, Settle(policy));
 
             // Still in flight. A second start would be a second call, and a refusal recorded
             // as a failure would back the timer off for a reason that was never real.
             Assert.AreEqual(GrovePublishAction.None, Settle(policy));
             Assert.AreEqual(GrovePublishAction.None, Settle(policy));
+        }
+
+        // ============================================================= the proof
+        [Test]
+        public void ARequestCarriesTheRevisionThePublishHasToProve()
+        {
+            var policy = new GrovePublishPolicy();
+
+            policy.Request("a", 41L, true);
+            Assert.AreEqual(41L, policy.WantedRevision);
+
+            Assert.AreEqual(GrovePublishAction.Publish, Settle(policy));
+
+            // Read beside the fingerprint, for the same reason: a request arriving a moment
+            // later moves the wanted pair, and the reply must be held to what was sent.
+            Assert.AreEqual("a", policy.InFlightFingerprint);
+            Assert.AreEqual(41L, policy.InFlightRevision);
+
+            policy.Request("b", 42L, true);
+            Assert.AreEqual(41L, policy.InFlightRevision);
+            Assert.AreEqual(42L, policy.WantedRevision);
+        }
+
+        [Test]
+        public void AStaleReplyKeepsTheWorkAndBacksOff()
+        {
+            var policy = new GrovePublishPolicy();
+
+            policy.Request("a", 41L, true);
+            Settle(policy);
+
+            // The server built the card from an older save. Worth trying again — once the
+            // caller has pushed again — and never worth recording as published.
+            Assert.IsTrue(policy.Stale());
+            Assert.IsTrue(policy.HasWork);
+            Assert.AreEqual(string.Empty, policy.PublishedFingerprint);
+            Assert.AreEqual("a", policy.WantedFingerprint);
+            Assert.AreEqual(41L, policy.WantedRevision);
+
+            Assert.AreEqual(GrovePublishAction.None,
+                            policy.Tick(GrovePublishPolicy.FirstRetrySeconds * .5f));
+            Assert.AreEqual(GrovePublishAction.Publish,
+                            policy.Tick(GrovePublishPolicy.FirstRetrySeconds));
+        }
+
+        [Test]
+        public void AStaleReplyIsAcceptedOnceTheRetriesAreSpent()
+        {
+            var policy = new GrovePublishPolicy();
+
+            policy.Request("a", 41L, true);
+            Settle(policy);
+
+            for (int i = 0; i < GrovePublishPolicy.MaxStaleRetries; i++)
+            {
+                Assert.IsTrue(policy.Stale(), $"retry {i + 1} should still be owed");
+                Assert.AreEqual(GrovePublishAction.Publish, Settle(policy));
+            }
+
+            // A refusal that will still be true tomorrow must not be retried for ever
+            // (invariant 13a). Taken as the publish: nothing owed, fingerprint recorded, so
+            // the cost is one stale card until the next real change asks afresh.
+            Assert.IsFalse(policy.Stale());
+            Assert.IsFalse(policy.HasWork);
+            Assert.AreEqual("a", policy.PublishedFingerprint);
+            Assert.AreEqual(GrovePublishAction.None, Settle(policy));
+        }
+
+        [Test]
+        public void ASuccessClearsTheStaleCount()
+        {
+            var policy = new GrovePublishPolicy();
+
+            policy.Request("a", 41L, true);
+            Settle(policy);
+            Assert.IsTrue(policy.Stale());
+            Settle(policy);
+            policy.Succeeded("a");
+
+            // A fresh change starts a fresh count; one earlier stale reply does not bring
+            // the next one closer to being accepted unproven.
+            policy.Request("b", 42L, true);
+            Settle(policy);
+            for (int i = 0; i < GrovePublishPolicy.MaxStaleRetries; i++)
+            {
+                Assert.IsTrue(policy.Stale());
+                Settle(policy);
+            }
+            Assert.IsFalse(policy.Stale());
+        }
+
+        [Test]
+        public void AStaleReplyDoesNotResurrectAWithdrawalOrEatAnOptIn()
+        {
+            var policy = new GrovePublishPolicy();
+
+            policy.Request("a", 41L, true);
+            Settle(policy);
+
+            // The player opts out while the call is out. The stale verdict on the old call
+            // must leave the withdrawal standing rather than put the publish back.
+            policy.RequestWithdrawal();
+            Assert.IsTrue(policy.Stale());
+
+            Assert.AreEqual(GrovePublishAction.Withdraw, Settle(policy));
+        }
+
+        [Test]
+        public void StaleIsMeaninglessOutsideAPublish()
+        {
+            var policy = new GrovePublishPolicy();
+
+            // Nothing in flight, and a withdrawal in flight: neither can be stale, and
+            // saying so must change nothing.
+            Assert.IsFalse(policy.Stale());
+            Assert.IsFalse(policy.HasWork);
+
+            policy.RequestWithdrawal();
+            Settle(policy);
+            Assert.IsFalse(policy.Stale());
+            policy.Succeeded(string.Empty);
+            Assert.IsFalse(policy.HasWork);
         }
     }
 }

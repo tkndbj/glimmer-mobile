@@ -14,17 +14,15 @@ namespace GlimmerGrove.Modes
         Burst = 1,
 
         /// <summary>
-        /// Colour running the length of a runner, from the end that went off to the far one.
+        /// A special firing: the flash and the line or the blast, drawn the instant before the
+        /// cells it clears start going off. <c>Bunch</c> is the <see cref="BudSpecial"/> kind.
         ///
-        /// <b>Its own kind, sorted between the burst that sends it and the wash that lands, so
-        /// the score itself says which order the three happen in.</b> The alternative was a wash
-        /// carrying a flag and the view working out for itself when to draw the travel, which is
-        /// the shape this whole class exists to remove: a cue is a moment, and a runner has two
-        /// of them.
+        /// <b>Sorted before the bursts it causes</b>, so the score itself says the lightning
+        /// leaves the special and then the flowers in its path go.
         /// </summary>
-        Run = 2,
+        Fire = 2,
 
-        /// <summary>Colour landing on a flower beside a bunch, or at the end of a runner.</summary>
+        /// <summary>Colour landing on a flower beside a bunch.</summary>
         Wash = 3,
 
         /// <summary>
@@ -56,6 +54,21 @@ namespace GlimmerGrove.Modes
 
         /// <summary>The run may carry on.</summary>
         Done = 11,
+
+        /// <summary>
+        /// A piece sliding sideways <em>before</em> the chain: two flowers grafted. <c>From</c>
+        /// is where it came from, <c>Piece</c> what it is and <c>Bunch</c> which special, if any.
+        ///
+        /// <b>The one cue kind that is not a consequence of a burst.</b> It is the player's own
+        /// move, so it is drawn first and alone, and the first wave's wind-up waits for it.
+        /// </summary>
+        Slide = 12,
+
+        /// <summary>
+        /// A big bunch leaving a special behind, a beat after its last burst. <c>Colour</c> is
+        /// the bunch's, <c>Bunch</c> the <see cref="BudSpecial"/> kind.
+        /// </summary>
+        Forge = 13,
     }
 
     /// <summary>
@@ -86,10 +99,13 @@ namespace GlimmerGrove.Modes
         public readonly int Cell;
 
         /// <summary>
-        /// Where this came from: a fall's origin cell (-1 for one that grew), or the runner end
-        /// that sent a colour. -1 on everything else.
+        /// Where this came from: a fall's or a slide's origin cell (-1 for one that grew), or
+        /// on a burst a special cleared, the special that fired. -1 on everything else.
         /// </summary>
         public readonly int From;
+
+        /// <summary>What kind of thing a slide carries. Bare on everything else.</summary>
+        public readonly BudGround Piece;
 
         /// <summary>A burst's colour, a wash's arriving colour. <c>Energy.None</c> otherwise.</summary>
         public readonly int Colour;
@@ -113,7 +129,7 @@ namespace GlimmerGrove.Modes
 
         public BudCue(BudCueKind kind, float at, float over, int wave, int cell,
                       int from = -1, int colour = Energy.None, int bunch = 0,
-                      int rows = 0, int nth = 0, int of = 1)
+                      int rows = 0, int nth = 0, int of = 1, BudGround piece = BudGround.Bare)
         {
             Kind = kind;
             At = at;
@@ -126,6 +142,7 @@ namespace GlimmerGrove.Modes
             Rows = rows;
             Nth = nth;
             Of = of;
+            Piece = piece;
         }
 
         /// <summary>When it is finished with.</summary>
@@ -266,7 +283,7 @@ namespace GlimmerGrove.Modes
             float rowLag = BudTempo.RowLag * slack;
             float gap = BudTempo.WaveGap * slack;
             float washLag = BudTempo.WashLag * slack;
-            float runLag = BudTempo.RunLag * slack;
+            float forgeLag = BudTempo.ForgeLag * slack;
             float crackLag = BudTempo.CrackLag * slack;
 
             var cues = new List<BudCue>(pulses.Length * 2 + washes.Length + drops.Length + 8);
@@ -287,14 +304,53 @@ namespace GlimmerGrove.Modes
 
             float t = 0f, body = 0f, wordAt = -1f;
 
+            // ------------------------------------------------------------ the player's own move
+            // A gust or a graft slides pieces before anything goes off, and it is drawn first
+            // and alone: every one of its pieces moves at once, over one beat, and the first
+            // wave's wind-up starts when the last of them has arrived. A slide is not a fall —
+            // it is sideways, it is the player's own hand, and it is never squeezed, for the
+            // reason gravity is not.
+            int slides = 0;
+            for (int i = 0; i < drops.Length; i++) if (drops[i].Slid) slides++;
+
+            if (slides > 0)
+            {
+                int nthSlide = 0;
+                for (int i = 0; i < drops.Length; i++)
+                {
+                    if (!drops[i].Slid) continue;
+
+                    int fromX = drops[i].From % width, toX = drops[i].Cell % width;
+                    int fromY = drops[i].From / width, toY = drops[i].Cell / width;
+                    int rows = fromX == toX ? (fromY > toY ? fromY - toY : toY - fromY)
+                                            : (fromX > toX ? fromX - toX : toX - fromX);
+
+                    cues.Add(new BudCue(BudCueKind.Slide, 0f, BudTempo.Slide, -1, drops[i].Cell,
+                                        from: drops[i].From, colour: drops[i].Value, rows: rows,
+                                        nth: nthSlide++, of: slides, piece: drops[i].Kind,
+                                        bunch: (int)drops[i].Special));
+                }
+
+                t = BudTempo.Slide + gap;
+                body = BudTempo.Slide;
+            }
+
             // The one flower the grove ripens for the player, kept back until it can be seen.
             var ripen = default(BudWash);
             bool ripened = false;
+
+            // When each special of the wave being laid out fires, by cell, so the cells it
+            // clears can be timed off it rather than off the bunch ripple — and when each is
+            // forged, so a special that falls in the same wave is drawn standing first.
+            var firedAt = new Dictionary<int, float>(4);
+            var forgeAt = new Dictionary<int, float>(4);
 
             for (int wave = 0; wave <= waves; wave++)
             {
                 burstAt.Clear();
                 holeAt.Clear();
+                firedAt.Clear();
+                forgeAt.Clear();
 
                 // ------------------------------------------------------ the bunch winds up
                 int inWave = Count(pulses, wave, BudPulseKind.Burst);
@@ -308,12 +364,44 @@ namespace GlimmerGrove.Modes
                     ? Min(BudTempo.BurstStep, BudTempo.BurstBody / (inWave - 1))
                     : 0f;
 
+                // **A special fires at the head of the wave, and what it clears races out from
+                // it.** The bunch that took it in (or the tap that struck it) is the cause, so a
+                // special goes when the wave's ripple has reached it — or at the head of the wave
+                // if it was struck directly — and each cell in its reach goes a fixed step after
+                // the one before, nearest first, which is the order the model reported them in.
+                int nthFire = 0;
+                for (int i = 0; i < pulses.Length; i++)
+                {
+                    if (pulses[i].Wave != wave || pulses[i].Kind != BudPulseKind.Fired) continue;
+
+                    float at = from + nthFire * step;
+                    firedAt[pulses[i].Cell] = at;
+                    cues.Add(new BudCue(BudCueKind.Fire, at, 0f, wave, pulses[i].Cell,
+                                        colour: pulses[i].Colour, bunch: pulses[i].Held,
+                                        nth: nthFire++));
+                    if (at > last) last = at;
+                }
+
                 int nth = 0;
+                var struck = new Dictionary<int, int>(4);
                 for (int i = 0; i < pulses.Length; i++)
                 {
                     if (pulses[i].Wave != wave || pulses[i].Kind != BudPulseKind.Burst) continue;
 
-                    float at = from + nth * step;
+                    float at;
+                    if (pulses[i].Struck)
+                    {
+                        // Its place in its own special's line, racing outward.
+                        struck.TryGetValue(pulses[i].From, out int place);
+                        struck[pulses[i].From] = place + 1;
+                        float fired = firedAt.TryGetValue(pulses[i].From, out float went) ? went : from;
+                        at = fired + place * BudTempo.FireStep;
+                    }
+                    else
+                    {
+                        at = from + nth * step;
+                    }
+
                     burstAt[pulses[i].Cell] = at;
                     holeAt[pulses[i].Cell] = at;
                     if (at > last) last = at;
@@ -325,14 +413,32 @@ namespace GlimmerGrove.Modes
                     // (`BudTempo.Peak`), so a longer wind-up is a longer hold rather than a
                     // slower swell. What it buys is that nothing on the board is ever motionless
                     // while its neighbours are going off.
-                    cues.Add(new BudCue(BudCueKind.Wind, t, at - t, wave, pulses[i].Cell,
-                                        colour: pulses[i].Colour, bunch: pulses[i].Bunch,
-                                        nth: nth, of: inWave));
+                    // A cell a special clears has no wind-up: it is struck, not gathered.
+                    if (!pulses[i].Struck)
+                        cues.Add(new BudCue(BudCueKind.Wind, t, at - t, wave, pulses[i].Cell,
+                                            colour: pulses[i].Colour, bunch: pulses[i].Bunch,
+                                            nth: nth, of: inWave));
                     cues.Add(new BudCue(BudCueKind.Burst, at, 0f, wave, pulses[i].Cell,
                                         colour: pulses[i].Colour, bunch: pulses[i].Bunch,
-                                        nth: nth, of: inWave));
-                    nth++;
+                                        from: pulses[i].From, nth: nth, of: inWave));
+                    if (!pulses[i].Struck) nth++;
                 }
+
+                // ------------------------------------------------------ what the bunch left
+                // A forge is a beat after the last burst of its own bunch, which is the nearest
+                // burst to it in time: the anvil is one of the bunch's cells and the bunch went
+                // off in one ripple.
+                for (int i = 0; i < pulses.Length; i++)
+                {
+                    if (pulses[i].Wave != wave || pulses[i].Kind != BudPulseKind.Forged) continue;
+
+                    float at = last + forgeLag;
+                    forgeAt[pulses[i].Cell] = at;
+                    cues.Add(new BudCue(BudCueKind.Forge, at, 0f, wave, pulses[i].Cell,
+                                        colour: pulses[i].Colour, bunch: pulses[i].Held));
+                }
+
+                foreach (var pair in forgeAt) if (pair.Value > last) last = pair.Value;
 
                 // ------------------------------------------------------ what the bunch reached
                 // A wash, a crack and a critter getting out are all *consequences* of a burst
@@ -351,31 +457,9 @@ namespace GlimmerGrove.Modes
                     // came to read as a glitch. It waits for a still board.
                     if (washes[i].Ripened) { ripen = washes[i]; ripened = true; continue; }
 
-                    // **A runner's colour is timed off the end that sent it, not off a
-                    // neighbour**, because there is no burst next door to wait for — `Beside`
-                    // would fall back to the head of the wave and the light would leave before
-                    // the flower it left did. The travel and the landing are laid out together
-                    // here so the two can never come to disagree about when either happened.
-                    float at;
-
-                    if (washes[i].Ran)
-                    {
-                        float sentAt = burstAt.TryGetValue(washes[i].From, out float went)
-                                     ? went : from;
-
-                        cues.Add(new BudCue(BudCueKind.Run, sentAt, runLag, wave,
-                                            washes[i].Cell, from: washes[i].From,
-                                            colour: washes[i].To, nth: sent, of: sends));
-
-                        at = sentAt + runLag;
-                    }
-                    else
-                    {
-                        at = Beside(burstAt, washes[i].Cell, width, from) + washLag;
-                    }
+                    float at = Beside(burstAt, washes[i].Cell, width, from) + washLag;
 
                     cues.Add(new BudCue(BudCueKind.Wash, at, 0f, wave, washes[i].Cell,
-                                        from: washes[i].Ran ? washes[i].From : -1,
                                         colour: washes[i].To, nth: sent++, of: sends));
                     if (at > last) last = at;
                 }
@@ -391,7 +475,7 @@ namespace GlimmerGrove.Modes
 
                     if (pulses[i].Kind == BudPulseKind.Crack)
                     {
-                        float at = Beside(burstAt, pulses[i].Cell, width, from) + crackLag;
+                        float at = Beside(burstAt, pulses[i].Cell, width, Head(firedAt, from)) + crackLag;
                         cues.Add(new BudCue(BudCueKind.Crack, at, 0f, wave, pulses[i].Cell,
                                             nth: crack++, of: cracks));
                         if (at > last) last = at;
@@ -406,7 +490,8 @@ namespace GlimmerGrove.Modes
                     // floor rather than by a share of anything, because what has to be true is
                     // that the player sees each of them — a fact about a person, not about how
                     // long the wave happens to be.
-                    float greet = Beside(burstAt, pulses[i].Cell, width, from) + crackLag;
+                    float greet = Beside(burstAt, pulses[i].Cell, width, Head(firedAt, from)) + crackLag;
+
                     if (greet < lastGreet + BudTempo.GreetLag)
                         greet = lastGreet + BudTempo.GreetLag;
                     lastGreet = greet;
@@ -435,7 +520,7 @@ namespace GlimmerGrove.Modes
                 }
 
                 // ------------------------------------------------------ and the grove falls
-                float ended = Rain(cues, drops, wave, width, holeAt, from, hold, rowLag);
+                float ended = Rain(cues, drops, wave, width, holeAt, forgeAt, from, hold, rowLag);
                 if (ended > last) last = ended;
 
                 if (last > body) body = last;
@@ -498,7 +583,8 @@ namespace GlimmerGrove.Modes
         /// </para>
         /// </summary>
         static float Rain(List<BudCue> cues, BudDrop[] drops, int wave, int width,
-                          Dictionary<int, float> holeAt, float from, float hold, float rowLag)
+                          Dictionary<int, float> holeAt, Dictionary<int, float> forgeAt,
+                          float from, float hold, float rowLag)
         {
             int falling = 0;
             for (int i = 0; i < drops.Length; i++) if (drops[i].Wave == wave) falling++;
@@ -555,6 +641,10 @@ namespace GlimmerGrove.Modes
                     if (pair.Value > cause) cause = pair.Value;
                 }
 
+                // A special forged this wave is drawn standing before it falls.
+                if (!drop.Grew && forgeAt.TryGetValue(drop.From, out float forged) && forged > cause)
+                    cause = forged;
+
                 float start = cause + hold;
                 if (start < previous + rowLag) start = previous + rowLag;
                 previous = start;
@@ -603,6 +693,17 @@ namespace GlimmerGrove.Modes
                 && right > at) at = right;
 
             return float.IsNegativeInfinity(at) ? fallback : at;
+        }
+
+        /// <summary>
+        /// The moment the last special of this wave fired, or the head of the wave if none did:
+        /// what a cocoon struck directly by a special — beside no burst — is timed against.
+        /// </summary>
+        static float Head(Dictionary<int, float> firedAt, float from)
+        {
+            float at = from;
+            foreach (var pair in firedAt) if (pair.Value > at) at = pair.Value;
+            return at;
         }
 
         static int Count(BudPulse[] pulses, int wave, BudPulseKind kind)

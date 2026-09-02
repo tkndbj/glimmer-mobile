@@ -45,9 +45,6 @@ namespace GlimmerGrove
 
         const float HeaderHeight = 230f;
 
-        /// <summary>Art pixels to floor pixels. The same number the player's own grove uses.</summary>
-        const float PieceScale = 1.15f;
-
         string _ownerId;
         string _knownName;
 
@@ -201,14 +198,19 @@ namespace GlimmerGrove
         {
             if (_field == null) return;
 
-            var floor = HomesteadCatalog.Current.Floor;
+            var catalog = HomesteadCatalog.Current;
+            var floor = catalog.Floor;
 
             _field.SetFloor(floor);
+
+            GroveTileArt.Reach(catalog, out float up, out float side);
+            _field.SetReach(up, side);
+
             ShowOwned();
             _field.Rebuild();
 
             if (GroveFloor.TryParse(floor.HallTile, out int col, out int row))
-                _field.CentreOn(col, row);
+                _field.CentreOn(floor.HallFootprint.CentreCol(col), floor.HallFootprint.CentreRow(row));
             else
                 _field.CentreOn(floor.Cols / 2, floor.Rows / 2);
 
@@ -400,20 +402,27 @@ namespace GlimmerGrove
             readonly GroveVisitScreen _screen;
             readonly Image _ground, _art;
 
+            public RectTransform Ground { get; }
+
             public RectTransform Root { get; }
+
+            public int Depth { get; private set; }
 
             public VisitTile(GroveVisitScreen screen)
             {
                 _screen = screen;
 
-                Root = UIKit.Node("Tile", null);
-                Root.sizeDelta = new Vector2(GroveFloor.TileWidth, GroveFloor.TileHeight);
+                Ground = UIKit.Node("Tile", null);
+                Ground.sizeDelta = new Vector2(GroveFloor.TileWidth, GroveFloor.TileHeight);
 
-                _ground = UIKit.Img("G", Root, null, Color.white,
+                _ground = UIKit.Img("G", Ground, null, Color.white,
                                     new Vector2(GroveFloor.TileWidth, GroveFloor.TileHeight),
                                     new Vector2(.5f, .5f), Vector2.zero);
                 _ground.raycastTarget = false;
                 _ground.preserveAspect = false;
+
+                Root = UIKit.Node("Stand", null);
+                Root.sizeDelta = new Vector2(GroveFloor.TileWidth, GroveFloor.TileHeight);
 
                 _art = UIKit.Img("A", Root, null, Color.white, new Vector2(140f, 140f),
                                  new Vector2(.5f, .5f), Vector2.zero);
@@ -421,41 +430,28 @@ namespace GlimmerGrove
                 _art.raycastTarget = false;
             }
 
+            /// <summary>
+            /// Laid out through <see cref="GroveTileArt"/>, the same function the player's own
+            /// grove uses, so a visited grove and the same grove seen by its owner cannot differ.
+            /// </summary>
             public void Bind(int col, int row)
             {
                 var catalog = HomesteadCatalog.Current;
-                var floor = catalog.Floor;
-                string id = GroveFloor.TileId(col, row);
 
-                // The ground hangs by half its skirt, exactly as it does on the player's own
-                // floor — the top face of an isometric tile is 2:1 and whatever is painted
-                // below it is wall. Derived from the art rather than typed.
-                var ground = (RectTransform)_ground.transform;
-                ground.sizeDelta = HomesteadArt.TileDraw(floor, out float drop);
-                ground.anchoredPosition = new Vector2(0f, -drop);
-                _ground.sprite = HomesteadArt.Tile(floor);
-                _ground.color = Color.white;
+                GroveTileArt.LayGround(_ground, catalog.Floor);
 
-                bool hall = floor.IsHall(id);
+                var index = _screen._card.Occupancy(catalog);
+                bool anchored = index.TryAnchored(col, row, out var stand);
 
-                var piece = hall
-                    ? _screen._card.Dwelling(catalog)
-                    : _screen._card.PieceAt(catalog, id);
+                var piece = anchored
+                    ? (stand.IsHall ? _screen._card.Dwelling(catalog) : catalog.Find(stand.PieceId))
+                    : default;
 
-                bool empty = !piece.IsValid;
-                _art.gameObject.SetActive(!empty);
-                if (empty) return;
+                Depth = anchored ? stand.Depth : GroveFootprint.Single.Depth(col, row);
 
-                var size = HomesteadArt.SizeOnFloor(piece, PieceScale);
-                ((RectTransform)_art.transform).sizeDelta = size;
-                ((RectTransform)_art.transform).anchoredPosition = new Vector2(0f, size.y * piece.Lift);
-                HomesteadArt.Paint(_art, piece);
-
-                // Written on every bind rather than only when mirrored: cells are pooled and
-                // rebound as the camera pans, so a scale left behind by a flipped fence would
-                // be inherited by whatever tile reused the object.
-                _art.transform.localScale =
-                    new Vector3(!hall && _screen._card.FlippedAt(id) ? -1f : 1f, 1f, 1f);
+                bool drawn = anchored && piece.IsValid;
+                _art.gameObject.SetActive(drawn);
+                if (drawn) GroveTileArt.LayPiece(_art, piece, stand);
             }
         }
 

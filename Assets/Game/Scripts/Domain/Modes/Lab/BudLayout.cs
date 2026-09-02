@@ -143,12 +143,43 @@ namespace GlimmerGrove.Modes
 
         /// <summary>Old wood. Nothing grows on it and no burst crosses it.</summary>
         Stone = 3,
+    }
 
+    /// <summary>
+    /// What a flower is <em>besides</em> its colour: nothing, or one of the two specials a big
+    /// bunch forges.
+    ///
+    /// <para>
+    /// <b>This is the genre's own loop, and the second chapter is built on it.</b> A bunch of
+    /// five leaves a <see cref="Bolt"/> where the player tapped; a bunch of eight leaves a
+    /// <see cref="Sun"/>. Each is a flower the player <em>made</em>, standing on the board
+    /// wearing the bunch's colour, and each fires when tapped — a bolt clears its whole row and
+    /// column, a sun clears the five-by-five around it — with an event of its own that nothing
+    /// else on the board can make. A fired special sets off every special in its reach, which
+    /// is the chain the chapter is for.
+    /// </para>
+    /// <para>
+    /// <b>Earned, never placed, is what makes it a payoff</b> (invariant 26f): the runner and
+    /// the four objects that replaced it were all put on the board by an author, so the player
+    /// found them rather than made them. A special exists because of something the player just
+    /// did, and it is worth exactly what they choose to do with it next.
+    /// </para>
+    /// </summary>
+    public enum BudSpecial
+    {
+        None = 0,
+
+        /// <summary>Clears its whole row and column when fired.</summary>
+        Bolt = 1,
+
+        /// <summary>Clears the five-by-five around it when fired.</summary>
+        Sun = 2,
     }
 
     /// <summary>
     /// A grove: what is standing in it, what colour each flower wears, how many cracks each
-    /// cocoon takes, and the basket it is dealt.
+    /// cocoon takes, which flowers are already specials, the basket it is dealt, and whether
+    /// two neighbours may be dragged to trade places.
     /// </summary>
     public sealed class BudLayout
     {
@@ -183,23 +214,22 @@ namespace GlimmerGrove.Modes
         public const int ToughestCocoon = 2;
 
         /// <summary>
-        /// How many runners one grove may be strung with.
+        /// The bunch that forges a bolt, and the bunch that forges a sun.
         ///
-        /// <b>A readability bound rather than a cost one.</b> A runner is the one thing here that
-        /// moves colour somewhere the player is not looking, so a grove laced with them stops
-        /// being a board somebody can read at a glance and becomes a wiring diagram — which is
-        /// the failure invariant 20l is about, arriving from the other direction. The search does
-        /// not care.
+        /// <b>The same two thresholds the burst's own ladder uses</b> (<c>BudChain.BigFrom</c>
+        /// and <c>HugeFrom</c>), on purpose: a bunch that is drawn bigger is a bunch that leaves
+        /// something behind, so the drawing and the reward say the same thing.
         /// </summary>
-        public const int MaxRunners = 6;
+        public const int BoltFrom = 5, SunFrom = 8;
+
+        /// <summary>How far a sun reaches from its own cell, on each axis.</summary>
+        public const int SunReach = 2;
 
         public readonly int Width, Height;
 
         readonly BudGround[] _ground;
         readonly int[] _value;      // a colour mask on a flower, cracks on a cocoon, 0 otherwise
-
-        /// <summary>The other end of the runner rooted at each cell, or -1 where none is.</summary>
-        readonly int[] _runner;
+        readonly BudSpecial[] _special;
 
         public readonly BudDeal Deal;
 
@@ -214,10 +244,31 @@ namespace GlimmerGrove.Modes
         /// </summary>
         public readonly BudDeal Regrow;
 
+        /// <summary>
+        /// Whether two neighbouring flowers may be dragged to trade places.
+        ///
+        /// <b>A gesture rather than an object</b>, and the one thing here every player of this
+        /// genre already knows how to do. A graft has to make a bunch or it snaps back and costs
+        /// nothing, which is the genre's own rule and what keeps the search honest: every legal
+        /// graft bursts something.
+        /// </summary>
+        public readonly bool Grafts;
+
+        /// <summary>
+        /// Whether a big bunch on this grove leaves a special behind.
+        ///
+        /// <b>Gated, because the first chapter was authored and pinned without it.</b> Bunches of
+        /// five and eight happen on the Thicket, and a grove that forged there would be a
+        /// different grove from the one every fixture holds it to. A grove dealing a special
+        /// already forged forges, whatever it says.
+        /// </summary>
+        public readonly bool Forges;
+
         public bool Grows => Regrow != null;
 
         public BudLayout(int width, int height, BudGround[] ground, int[] value, BudDeal deal,
-                         BudDeal regrow = null, int[] runner = null)
+                         BudDeal regrow = null, bool grafts = false, BudSpecial[] special = null,
+                         bool forges = false)
         {
             if (width < MinWidth || width > MaxWidth)
                 throw new ArgumentOutOfRangeException(nameof(width));
@@ -228,17 +279,18 @@ namespace GlimmerGrove.Modes
             Height = height;
             Deal = deal ?? throw new ArgumentNullException(nameof(deal));
             Regrow = regrow;
+            Grafts = grafts;
 
             int n = width * height;
             _ground = new BudGround[n];
             _value = new int[n];
+            _special = new BudSpecial[n];
 
             if (ground != null) Array.Copy(ground, _ground, Math.Min(ground.Length, n));
             if (value != null) Array.Copy(value, _value, Math.Min(value.Length, n));
+            if (special != null) Array.Copy(special, _special, Math.Min(special.Length, n));
 
-            _runner = new int[n];
-            for (int i = 0; i < n; i++) _runner[i] = -1;
-            if (runner != null) Array.Copy(runner, _runner, Math.Min(runner.Length, n));
+            Forges = forges || Specials > 0;
         }
 
         public int Count => _ground.Length;
@@ -246,10 +298,12 @@ namespace GlimmerGrove.Modes
 
         public BudGround GroundAt(int index) => _ground[index];
         public int ValueAt(int index) => _value[index];
+        public BudSpecial SpecialAt(int index) => _special[index];
 
         public bool IsFlower(int index) => _ground[index] == BudGround.Flower;
         public bool IsCocoon(int index) => _ground[index] == BudGround.Cocoon;
         public bool IsStone(int index) => _ground[index] == BudGround.Stone;
+        public bool IsSpecial(int index) => _special[index] != BudSpecial.None;
 
         public int Flowers => CountOf(BudGround.Flower);
         public int Cocoons => CountOf(BudGround.Cocoon);
@@ -262,36 +316,18 @@ namespace GlimmerGrove.Modes
             return n;
         }
 
-        /// <summary>
-        /// The far end of the runner rooted at this cell, or -1 where nothing is.
-        ///
-        /// <para>
-        /// <b>A runner belongs to the ground, never to what is standing on it</b>, and that is
-        /// the whole of why it survives a living grove. Everything here falls: a flower that
-        /// carried its own vine would drag it down the board, and old wood was refused from this
-        /// mode for exactly that reason turned round (a barrier sliding down a grove is a wall
-        /// that fell over). Two squares of the grove are joined once and for ever, and whatever
-        /// is standing on them at the moment a bunch goes off is what the runner carries
-        /// between.
-        /// </para>
-        /// </summary>
-        public int FarEnd(int cell)
-            => cell >= 0 && cell < _runner.Length ? _runner[cell] : -1;
-
-        public bool IsRunner(int cell) => FarEnd(cell) >= 0;
-
-        /// <summary>How many runners are strung across this grove. A runner has two ends.</summary>
-        public int Runners
+        /// <summary>Specials standing on the grove as dealt. Most groves deal none.</summary>
+        public int Specials
         {
             get
             {
-                int ends = 0;
-                for (int i = 0; i < _runner.Length; i++) if (_runner[i] >= 0) ends++;
-                return ends / 2;
+                int n = 0;
+                for (int i = 0; i < _special.Length; i++) if (_special[i] != BudSpecial.None) n++;
+                return n;
             }
         }
 
-        public bool HasRunners => Runners > 0;
+        public bool HasSpecials => Specials > 0;
 
         /// <summary>Cocoons that take more than one crack.</summary>
         public int ToughCocoons
@@ -344,16 +380,53 @@ namespace GlimmerGrove.Modes
         }
 
         /// <summary>
-        /// The same grove with every vine cut. What the runners are measured against.
+        /// Every cell a special standing at <paramref name="index"/> reaches when it fires,
+        /// <em>not</em> counting its own cell, ordered by distance from it so the burst can be
+        /// drawn racing outward.
         ///
-        /// <b>Invariant 26g's own test, said in code</b>: replace the new object with the nearest
-        /// existing one and see whether anything changes. The nearest existing thing to a runner
-        /// is no runner, and the difference that can be measured is par — so a grove whose par is
-        /// the same with the vines cut is a grove whose vines decided nothing, which is exactly
-        /// the state that shipped a mirror and a wick before this mode ever met one.
+        /// A bolt reaches its whole row and column; a sun the square <see cref="SunReach"/>
+        /// cells each way. Both are clipped to the grove.
         /// </summary>
-        public BudLayout WithoutRunners()
-            => new BudLayout(Width, Height, _ground, _value, Deal, Regrow);
+        public void Reach(int index, BudSpecial kind, List<int> into)
+        {
+            into.Clear();
+
+            int x = index % Width, y = index / Width;
+            int far = Width > Height ? Width : Height;
+
+            for (int d = 1; d < far; d++)
+            {
+                if (kind == BudSpecial.Bolt)
+                {
+                    if (x - d >= 0) into.Add(index - d);
+                    if (x + d < Width) into.Add(index + d);
+                    if (y - d >= 0) into.Add(index - d * Width);
+                    if (y + d < Height) into.Add(index + d * Width);
+                    continue;
+                }
+
+                if (kind != BudSpecial.Sun || d > SunReach) break;
+
+                // The ring at Chebyshev distance d, in reading order.
+                for (int dy = -d; dy <= d; dy++)
+                for (int dx = -d; dx <= d; dx++)
+                {
+                    if (Math.Abs(dx) != d && Math.Abs(dy) != d) continue;
+
+                    int a = x + dx, b = y + dy;
+                    if (a < 0 || a >= Width || b < 0 || b >= Height) continue;
+
+                    into.Add(b * Width + a);
+                }
+            }
+        }
+
+        /// <summary>The same grove forging nothing. What the specials are measured against.</summary>
+        public BudLayout Plain()
+            => new BudLayout(Width, Height, _ground, _value, Deal, Regrow, Grafts);
+
+        /// <summary>Whether this grove has anything of the second chapter on it at all.</summary>
+        public bool HasObjects => Grafts || Forges;
 
         public BudGround[] Standing()
         {
@@ -366,6 +439,13 @@ namespace GlimmerGrove.Modes
         {
             var copy = new int[_value.Length];
             Array.Copy(_value, copy, _value.Length);
+            return copy;
+        }
+
+        public BudSpecial[] SpecialsStanding()
+        {
+            var copy = new BudSpecial[_special.Length];
+            Array.Copy(_special, copy, _special.Length);
             return copy;
         }
 
@@ -449,41 +529,26 @@ namespace GlimmerGrove.Modes
         }
 
         /// <summary>
-        /// Reads the second grid a grove may author: which squares are joined by a runner.
-        ///
-        /// <para>
-        /// A letter marks an end and the same letter marks its partner; <c>.</c>, <c>-</c> and a
-        /// space mark ordinary ground. A tag has to be written exactly twice, because a runner
-        /// has two ends and nothing here would know what a third one meant.
-        /// </para>
-        /// <para>
-        /// <b>A grid of its own rather than a list of coordinates</b>, for the reason
-        /// <see cref="TryReadRows"/> is one: an author reads a grove by looking at it, and a
-        /// runner is a fact about <em>where</em>. Written as a list, a vine's two ends are four
-        /// numbers nobody can picture; written as a layer, it is a shape lying over the board it
-        /// belongs to, and a wrong one is visible in the file that caused it.
-        /// </para>
+        /// Reads the second grid a grove may author: which flowers are already specials.
+        /// <c>|</c> a bolt, <c>*</c> a sun, <c>.</c> an ordinary flower. Absent means none —
+        /// a special is normally something the player forges, and a grove deals one only to
+        /// teach what it does.
         /// </summary>
-        public static bool TryReadRunners(string[] rows, int width, int height,
-                                          out int[] runner, out string error)
+        public static bool TryReadSpecials(string[] rows, int width, int height,
+                                           BudGround[] ground, out BudSpecial[] special,
+                                           out string error)
         {
-            runner = null;
+            special = new BudSpecial[width * height];
             error = null;
 
-            var ends = new int[width * height];
-            for (int i = 0; i < ends.Length; i++) ends[i] = -1;
-
-            if (rows == null || rows.Length == 0) { runner = ends; return true; }
+            if (rows == null || rows.Length == 0) return true;
 
             if (rows.Length != height)
             {
-                error = "the runners are drawn over the grove, so they are " + height +
+                error = "the specials are drawn over the grove, so they are " + height +
                         " rows; this one writes " + rows.Length;
                 return false;
             }
-
-            // Where each tag was first seen, so the second sighting can be joined to it.
-            var seen = new Dictionary<char, int>(4);
 
             for (int y = 0; y < height; y++)
             {
@@ -497,7 +562,7 @@ namespace GlimmerGrove.Modes
 
                     if (x >= width)
                     {
-                        error = "runner row " + y + " is wider than the " + width +
+                        error = "specials row " + y + " is wider than the " + width +
                                 " columns this grove declares";
                         return false;
                     }
@@ -507,83 +572,51 @@ namespace GlimmerGrove.Modes
 
                     if (c == '.' || c == '-' || c == ' ') continue;
 
-                    if (c < 'a' || c > 'z')
+                    BudSpecial kind;
+                    if (c == '|') kind = BudSpecial.Bolt;
+                    else if (c == '*') kind = BudSpecial.Sun;
+                    else
                     {
-                        error = "'" + c + "' at runner row " + y + " column " + (x - 1) +
-                                " is not a runner; a runner is written as one lower-case letter " +
-                                "on each of its two ends, with '.' everywhere else";
+                        error = "'" + c + "' at specials row " + y + " column " + (x - 1) +
+                                " is not a special; a bolt is '|' and a sun is '*', with '.' " +
+                                "on every ordinary flower";
                         return false;
                     }
 
-                    if (!seen.TryGetValue(c, out int first))
+                    if (ground == null || ground[at] != BudGround.Flower)
                     {
-                        seen[c] = at;
-                        continue;
-                    }
-
-                    if (ends[first] >= 0)
-                    {
-                        error = "runner '" + c + "' is written three or more times. A runner has " +
-                                "two ends; use another letter for another runner";
+                        error = "the special at " + (x - 1) + "," + y + " stands on nothing a " +
+                                "flower is standing on. A special is a flower";
                         return false;
                     }
 
-                    ends[first] = at;
-                    ends[at] = first;
+                    special[at] = kind;
                 }
 
                 if (x != width)
                 {
-                    error = "runner row " + y + " names " + x + " cells, expected " + width;
+                    error = "specials row " + y + " names " + x + " cells, expected " + width;
                     return false;
                 }
             }
 
-            foreach (var pair in seen)
-            {
-                if (ends[pair.Value] >= 0) continue;
-
-                error = "runner '" + pair.Key + "' is written once. A runner joins two squares, " +
-                        "so its letter goes on both of them";
-                return false;
-            }
-
-            runner = ends;
             return true;
         }
 
-        /// <summary>
-        /// The runners written back out, or null on a grove strung with none.
-        ///
-        /// Tagged in reading order — the first runner met is <c>a</c> — so the answer is a pure
-        /// function of the grove rather than of whichever letters somebody happened to pick,
-        /// which is what makes a round-trip proof a proof.
-        /// </summary>
-        public string[] WrittenRunners()
+        /// <summary>The specials written back out, or null on a grove dealing none.</summary>
+        public string[] WrittenSpecials()
         {
-            if (!HasRunners) return null;
+            if (!HasSpecials) return null;
 
             var rows = new string[Height];
             var line = new char[Width];
-            char tag = 'a';
-
-            var named = new Dictionary<int, char>(MaxRunners * 2);
-
-            for (int i = 0; i < _runner.Length; i++)
-            {
-                if (_runner[i] < 0 || named.ContainsKey(i)) continue;
-
-                named[i] = tag;
-                named[_runner[i]] = tag;
-                tag++;
-            }
 
             for (int y = 0; y < Height; y++)
             {
                 for (int x = 0; x < Width; x++)
                 {
-                    int at = Index(x, y);
-                    line[x] = named.TryGetValue(at, out char c) ? c : '.';
+                    var kind = _special[Index(x, y)];
+                    line[x] = kind == BudSpecial.Bolt ? '|' : kind == BudSpecial.Sun ? '*' : '.';
                 }
 
                 rows[y] = new string(line);

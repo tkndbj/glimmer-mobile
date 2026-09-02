@@ -81,10 +81,10 @@ namespace GlimmerGrove.Tests
 
             Assert.IsFalse(HomesteadLayout.FlippedAt(T(2, 2)), "a piece faces the way it was drawn");
 
-            Assert.IsTrue(HomesteadLayout.Flip(grove, T(2, 2)));
+            Assert.AreEqual(GrovePlaceResult.Placed, HomesteadLayout.Flip(grove, T(2, 2)));
             Assert.IsTrue(HomesteadLayout.FlippedAt(T(2, 2)));
 
-            Assert.IsTrue(HomesteadLayout.Flip(grove, T(2, 2)));
+            Assert.AreEqual(GrovePlaceResult.Placed, HomesteadLayout.Flip(grove, T(2, 2)));
             Assert.IsFalse(HomesteadLayout.FlippedAt(T(2, 2)), "and back again — it is a toggle");
         }
 
@@ -93,8 +93,8 @@ namespace GlimmerGrove.Tests
         {
             var grove = Grove();
 
-            Assert.IsFalse(HomesteadLayout.Flip(grove, T(3, 3)), "bare ground has no facing");
-            Assert.IsFalse(HomesteadLayout.Flip(grove, null));
+            Assert.AreNotEqual(GrovePlaceResult.Placed, HomesteadLayout.Flip(grove, T(3, 3)), "bare ground has no facing");
+            Assert.AreNotEqual(GrovePlaceResult.Placed, HomesteadLayout.Flip(grove, null));
         }
 
         /// <summary>
@@ -114,7 +114,7 @@ namespace GlimmerGrove.Tests
             Assert.AreEqual(starter, HomesteadLayout.Shown(grove, T(1, 0)));
             Assert.AreEqual(string.Empty, HomesteadLayout.At(T(1, 0)), "shown, not stored");
 
-            Assert.IsTrue(HomesteadLayout.Flip(grove, T(1, 0)));
+            Assert.AreEqual(GrovePlaceResult.Placed, HomesteadLayout.Flip(grove, T(1, 0)));
 
             Assert.AreEqual(starter, HomesteadLayout.At(T(1, 0)), "the friend is still there");
             Assert.IsTrue(HomesteadLayout.FlippedAt(T(1, 0)));
@@ -159,7 +159,7 @@ namespace GlimmerGrove.Tests
             var grove = Grove();
             HomesteadLayout.Place(T(2, 2), "oak");
 
-            Assert.IsTrue(HomesteadLayout.Move(grove, T(2, 2), T(4, 3)));
+            Assert.AreEqual(GrovePlaceResult.Placed, HomesteadLayout.Move(grove, T(2, 2), T(4, 3)));
 
             Assert.AreEqual("oak", HomesteadLayout.At(T(4, 3)));
             Assert.AreEqual(string.Empty, HomesteadLayout.At(T(2, 2)));
@@ -178,7 +178,7 @@ namespace GlimmerGrove.Tests
             HomesteadLayout.Place(T(2, 2), "oak");
             HomesteadLayout.Place(T(4, 3), "well");
 
-            Assert.IsTrue(HomesteadLayout.Move(grove, T(2, 2), T(4, 3)));
+            Assert.AreEqual(GrovePlaceResult.Placed, HomesteadLayout.Move(grove, T(2, 2), T(4, 3)));
 
             Assert.AreEqual("oak", HomesteadLayout.At(T(4, 3)));
             Assert.AreEqual("well", HomesteadLayout.At(T(2, 2)));
@@ -230,7 +230,7 @@ namespace GlimmerGrove.Tests
             var grove = Grove();
             string starter = grove.Floor.StarterPiece;
 
-            Assert.IsTrue(HomesteadLayout.Move(grove, T(1, 0), T(3, 4)));
+            Assert.AreEqual(GrovePlaceResult.Placed, HomesteadLayout.Move(grove, T(1, 0), T(3, 4)));
 
             Assert.AreEqual(starter, HomesteadLayout.At(T(3, 4)));
             Assert.AreEqual(string.Empty, HomesteadLayout.At(T(1, 0)));
@@ -246,8 +246,8 @@ namespace GlimmerGrove.Tests
             var grove = Grove();
             HomesteadLayout.Place(T(2, 2), "oak");
 
-            Assert.IsFalse(HomesteadLayout.Move(grove, T(2, 2), T(0, 0)), "nothing may stand on the hall");
-            Assert.IsFalse(HomesteadLayout.Move(grove, T(0, 0), T(2, 3)), "and the hall cannot be picked up");
+            Assert.AreNotEqual(GrovePlaceResult.Placed, HomesteadLayout.Move(grove, T(2, 2), T(0, 0)), "nothing may stand on the hall");
+            Assert.AreNotEqual(GrovePlaceResult.Placed, HomesteadLayout.Move(grove, T(0, 0), T(2, 3)), "and the hall cannot be picked up");
 
             Assert.AreEqual("oak", HomesteadLayout.At(T(2, 2)), "a refused move changes nothing");
         }
@@ -258,10 +258,10 @@ namespace GlimmerGrove.Tests
             var grove = Grove();
             HomesteadLayout.Place(T(2, 2), "oak");
 
-            Assert.IsFalse(HomesteadLayout.Move(grove, T(2, 2), T(2, 2)));
-            Assert.IsFalse(HomesteadLayout.Move(grove, T(3, 3), T(4, 4)), "bare ground holds nothing");
-            Assert.IsFalse(HomesteadLayout.Move(grove, T(2, 2), T(9, 9)), "off the floor");
-            Assert.IsFalse(HomesteadLayout.Move(null, T(2, 2), T(3, 3)));
+            Assert.AreNotEqual(GrovePlaceResult.Placed, HomesteadLayout.Move(grove, T(2, 2), T(2, 2)));
+            Assert.AreNotEqual(GrovePlaceResult.Placed, HomesteadLayout.Move(grove, T(3, 3), T(4, 4)), "bare ground holds nothing");
+            Assert.AreNotEqual(GrovePlaceResult.Placed, HomesteadLayout.Move(grove, T(2, 2), T(9, 9)), "off the floor");
+            Assert.AreNotEqual(GrovePlaceResult.Placed, HomesteadLayout.Move(null, T(2, 2), T(3, 3)));
         }
 
         // ========================================================= the save file

@@ -91,10 +91,10 @@ namespace GlimmerGrove.Cloud
         /// and says so, exactly as the account panel does. Nothing in the game becomes
         /// unplayable, and nothing pretends to have ranked anybody.
         /// </summary>
-        public Task<(CloudResult result, GroveCard card)> PublishGroveAsync(
+        public Task<(CloudResult result, GrovePublication published)> PublishGroveAsync(
             string userId, CancellationToken cancellation = default)
             => Task.FromResult((CloudResult.Failed(CloudFailure.Offline, "no cloud backend configured"),
-                                GroveCard.Empty));
+                                GrovePublication.Unproven));
 
         public Task<CloudResult> WithdrawGroveAsync(
             string userId, CancellationToken cancellation = default)

@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using GlimmerGrove.Localization;
 using GlimmerGrove.Modes;
 using UnityEngine;
+using UnityEngine.EventSystems;
 using UnityEngine.UI;
 
 namespace GlimmerGrove
@@ -74,6 +75,15 @@ namespace GlimmerGrove
         /// </summary>
         public Action Finishing { get; set; }
 
+        /// <summary>
+        /// A special of this kind stands where a bunch just burst, and the chain that made it
+        /// has finished playing. Raised once per kind per chain, after the board is still and
+        /// before anything reads the verdict — so a lesson raised from it lands over the thing
+        /// the player made (invariant 20m), on a board that can be latched. Not raised for a
+        /// special the grove was dealt with: those are found, this is earned.
+        /// </summary>
+        public Action<BudSpecial> Forged { get; set; }
+
         /// <summary>Input off. Set by every panel that goes over this board.</summary>
         public bool Locked { get; set; }
 
@@ -89,55 +99,24 @@ namespace GlimmerGrove
         BudLayout _layout;
         RectTransform _host, _grid, _field, _near, _residents, _fx, _tray, _plate;
 
-        /// <summary>
-        /// The vines, painted on the grove floor <em>under</em> everything standing on it.
-        ///
-        /// <para>
-        /// <b>Its own layer because a runner belongs to the ground</b> (<c>BudLayout.FarEnd</c>).
-        /// Every flower on this board falls; a vine drawn as a child of a cell would go down
-        /// with it and the two ends of one runner would drift apart on the first chain, which is
-        /// the "wall sliding down the board" that kept old wood out of this mode. Drawn once
-        /// when the grove is built, and never moved again.
-        /// </para>
-        /// <para>
-        /// It shares the field's clip so a vine cannot be drawn outside the grove, and it is
-        /// deliberately <em>not</em> a nested canvas: it is repainted only when a runner fires,
-        /// which is a handful of times a chain.
-        /// </para>
-        /// </summary>
-        RectTransform _vines;
-
-        /// <summary>The bar and the two collars of each runner, by its lower end.</summary>
-        readonly Dictionary<int, Vine> _vine = new Dictionary<int, Vine>(4);
-
-        /// <summary>One runner as it is drawn: the stem between its ends and the cuff on each.</summary>
-        sealed class Vine
-        {
-            public RectTransform Stem;
-            public Image Bar, Glow;
-
-            /// <summary>The two cells it joins, and the cuff drawn on each.</summary>
-            public int LowEnd, HighEnd;
-
-            public Image Low, High;
-
-            /// <summary>The cuff at one end of this vine, by the cell it is rooted on.</summary>
-            public Image CuffAt(int cell) => cell == LowEnd ? Low : High;
-        }
+        // ------------------------------------------------------------ the chapter's specials
+        /// <summary>What a bolt's lightning and a sun's blast are drawn in, over the flower's own colour.</summary>
+        static readonly Color BoltWhite = new Color(1f, 1f, 1f, 1f);
+        static readonly Color BoltMark = new Color(1f, 1f, .92f, .96f);
+        static readonly Color SunMark = new Color(1f, .93f, .62f, .95f);
 
         /// <summary>
-        /// What a vine looks like when nothing is running down it: leaf green, well under the
-        /// flowers, with the cuffs a little brighter because they are the half that has to
-        /// survive a grove of thirty flowers drawn on top of it.
+        /// Whether a drag is under way on some cell, so the click the event system raises when
+        /// it ends is not taken for a tap.
         ///
-        /// Named once rather than written out at each of the three places that need it — the
-        /// build, the firing and the cuff's own swell all have to agree about what "back to
-        /// normal" is, and an <c>OnAbandon</c> that restores the wrong green is a vine that
-        /// stays lit for the rest of the run.
+        /// <b>A flag rather than a frame count</b>, because the click arrives on the pointer
+        /// coming up — which may be thirty frames after the drag began — and it arrives
+        /// <em>before</em> the drag's own end message, so the flag is still standing when the
+        /// click is judged and is cleared a moment later.
         /// </summary>
-        static readonly Color VineStem = new Color(.45f, .78f, .40f, .34f);
-        static readonly Color VineBed = new Color(.45f, .78f, .40f, .28f);
-        static readonly Color VineCuff = new Color(.62f, .92f, .52f, .58f);
+        bool _dragging;
+
+
         Text _count, _left, _chain;
 
         Cell[] _cells;
@@ -170,6 +149,7 @@ namespace GlimmerGrove
         readonly List<int> _beside = new List<int>(4);
 
         Image _handChip;
+        RectTransform _handSeat;
         Image[] _queue;
 
         RectTransform _mark;
@@ -222,10 +202,16 @@ namespace GlimmerGrove
             public RectTransform Piece;
 
             public Image Soil, Bud, Halo, Glow, Pod, Critter, Ring;
+
+            /// <summary>
+            /// The special's mark over the flower: a four-pointed glint for a bolt, a wheel of
+            /// rays for a sun, each turning on its own so a special is never still.
+            /// </summary>
+            public Image Mark, Rays;
+            public Spinner MarkSpin, RaysSpin;
+
             public int Drawn = -1;
 
-            /// <summary>Whether this flower is currently breathing because a tap on it pops.</summary>
-            public bool Pops;
         }
 
         // ------------------------------------------------------------------ colour
@@ -263,7 +249,7 @@ namespace GlimmerGrove
             _mark = null;
             _hintAt = -1;
             _hintToken++;
-            _vine.Clear();
+            _dragging = false;
 
             // A restart is not a hint being taken, so the caller is never told. What it *is* is
             // the mark's cell ceasing to exist, so the pending callback is dropped rather than
@@ -318,6 +304,9 @@ namespace GlimmerGrove
         /// </summary>
         const float PlateLip = 13f;
 
+        /// <summary>How much of its piece a flower is drawn at. See <see cref="BuildCell"/>.</summary>
+        const float FlowerFill = .90f;
+
         void BuildGround()
         {
             float w = _layout.Width * _cell, h = _layout.Height * _cell;
@@ -353,12 +342,6 @@ namespace GlimmerGrove
                                  new Vector2(w + PlateLip * 2f, h + PlateLip * 2f),
                                  new Vector2(.5f, .5f), Vector2.zero);
             clip.gameObject.AddComponent<RectMask2D>();
-
-            // **Under the flowers and inside the same clip.** A vine is painted on the grove
-            // floor rather than on anything standing in it, so it goes down before the cells and
-            // is never touched again — see `_vines`.
-            _vines = UIKit.Box("Runners", clip, new Vector2(w, h), new Vector2(.5f, .5f),
-                               Vector2.zero);
 
             _field = UIKit.Box("Buds", clip, new Vector2(w, h), new Vector2(.5f, .5f),
                                Vector2.zero);
@@ -431,93 +414,6 @@ namespace GlimmerGrove
             _cells = new Cell[_layout.Count];
             _freed = new Image[_layout.Count];
             for (int i = 0; i < _cells.Length; i++) _cells[i] = BuildCell(_field, i);
-
-            BuildRunners();
-        }
-
-        /// <summary>How wide a resting vine is drawn, as a fraction of a flower.</summary>
-        const float VineWidth = .13f;
-
-        /// <summary>
-        /// How wide a runner's cuff is drawn, as a fraction of a cell.
-        ///
-        /// <b>Wider than the flower standing on it, which is the whole reason it is a number and
-        /// not a guess.</b> The vines live on their own layer <em>under</em> the field, so a cuff
-        /// drawn at the flower's own size is a ring the flower covers completely — which is
-        /// exactly what shipped in the first cut and was invisible in every check: the board
-        /// validated, the vines drew, and the two ends of each one had nothing marking them.
-        /// A ring outside the petals sits on the bare soil of the cell and cannot be hidden.
-        /// </summary>
-        const float VineCuffSize = 1.00f;
-
-        /// <summary>
-        /// The vines, once, for the life of the board.
-        ///
-        /// <para>
-        /// <b>A runner has to be legible before it has ever fired</b>, and that is what most of
-        /// this is for. The last time this mode moved colour somewhere with no cause beside it,
-        /// the change was drawn exactly like an ordinary wash and came back from play as
-        /// <em>"another far flower's colour changes... I'm not sure if this is a bug"</em>
-        /// (see <c>BudBoard.Creep</c>). A runner does the same thing on purpose and far harder,
-        /// so the answer cannot be a better animation on the day — the vine is on the board from
-        /// the first frame, joining two squares the player can see, and when it fires the light
-        /// visibly travels along the line they have been looking at all along.
-        /// </para>
-        /// <para>
-        /// Dim, green and under everything, because it is scenery until it is not: a vine drawn
-        /// as brightly as a flower would compete with the thing the player is actually choosing
-        /// between. The two <em>cuffs</em> are what carry the reading — a ring around each end
-        /// square, which is the one part that has to survive a grove of thirty flowers on top of
-        /// it.
-        /// </para>
-        /// </summary>
-        void BuildRunners()
-        {
-            if (_vines == null || _layout == null || !_layout.HasRunners) return;
-
-            for (int i = 0; i < _layout.Count; i++)
-            {
-                int far = _layout.FarEnd(i);
-                if (far < i) continue;                  // once per runner, at its lower end
-
-                Vector2 a = Where(i), b = Where(far);
-                var mid = (a + b) * .5f;
-
-                float span = Vector2.Distance(a, b);
-                float angle = Mathf.Atan2(b.y - a.y, b.x - a.x) * Mathf.Rad2Deg;
-
-                // A zero-sized box at the middle of the vine, turned to lie along it. Its two
-                // children carry their own size, so the whole runner is one transform to place
-                // and one angle to think about — and nothing here ever moves again.
-                var node = UIKit.Box("Runner" + i, _vines, Vector2.zero,
-                                     new Vector2(.5f, .5f), mid);
-                node.localRotation = Quaternion.Euler(0f, 0f, angle);
-
-                // The soft body of it, under the line itself, so a vine reads as growing out of
-                // the ground rather than as a wire laid on top of it.
-                var glow = UIKit.Img("Bed", node, Art.Round(12), VineBed,
-                                     new Vector2(span, _size * VineWidth * 2.6f),
-                                     new Vector2(.5f, .5f), Vector2.zero);
-
-                var bar = UIKit.Img("Stem", node, Art.Round(8), VineStem,
-                                    new Vector2(span, _size * VineWidth),
-                                    new Vector2(.5f, .5f), Vector2.zero);
-
-                // The cuffs are children of the layer rather than of the rotated stem, so they
-                // stay round however the vine leans.
-                var low = UIKit.Img("Cuff", _vines, Art.Ring(96, 6f), VineCuff,
-                                    Vector2.one * _size * VineCuffSize,
-                                    new Vector2(.5f, .5f), a);
-                var high = UIKit.Img("Cuff", _vines, Art.Ring(96, 6f), VineCuff,
-                                     Vector2.one * _size * VineCuffSize,
-                                     new Vector2(.5f, .5f), b);
-
-                _vine[i] = new Vine
-                {
-                    Stem = node, Bar = bar, Glow = glow,
-                    LowEnd = i, HighEnd = far, Low = low, High = high,
-                };
-            }
         }
 
         /// <summary>
@@ -579,8 +475,13 @@ namespace GlimmerGrove
                                       Vector2.one * _size * 1.5f, new Vector2(.5f, .5f),
                                       Vector2.zero);
 
+                // **Ninety per cent of the piece, up from seventy-eight.** An 8-wide board is
+                // width-bound at about 129 points a cell, and at .78 a third of every cell was
+                // gap — reported as the flowers looking small. Filling the cell is what the
+                // genre does; the column count stays, because the 8-wide shape is the one that
+                // holds par 3 under grafting.
                 cell.Bud = UIKit.Img("Flower", cell.Piece, Bloom(Energy.None), new Color(1, 1, 1, 0f),
-                                     Vector2.one * _size * .78f, new Vector2(.5f, .5f),
+                                     Vector2.one * _size * FlowerFill, new Vector2(.5f, .5f),
                                      Vector2.zero);
 
                 // The heart of the flower, drawn in the same colour but brighter. It is what
@@ -605,6 +506,25 @@ namespace GlimmerGrove
                 cell.Ring = UIKit.Img("Cracks", cell.Piece, Art.Ring(128, 6f), new Color(1, 1, 1, 0f),
                                       Vector2.one * _size * 1.06f, new Vector2(.5f, .5f),
                                       Vector2.zero);
+
+                // **A special's mark is built on every cell too**, for the cocoon's reason:
+                // a special is a flower and falls with the rest, so any square may come to hold
+                // one. A bolt wears a four-pointed glint and a sun a wheel of rays, both over
+                // the flower and both turning, so a special is the one thing on a settled board
+                // that never stops moving — which is what says "tap me" without a word.
+                cell.Mark = UIKit.Img("Mark", cell.Piece, Art.Glint(96, 4), new Color(1, 1, 1, 0f),
+                                      Vector2.one * _size * .92f, new Vector2(.5f, .5f),
+                                      Vector2.zero);
+                cell.MarkSpin = cell.Mark.gameObject.AddComponent<Spinner>();
+                cell.MarkSpin.Speed = 55f;
+                cell.MarkSpin.enabled = false;
+
+                cell.Rays = UIKit.Img("Rays", cell.Piece, Art.Rays(128, 10), new Color(1, 1, 1, 0f),
+                                      Vector2.one * _size * 1.16f, new Vector2(.5f, .5f),
+                                      Vector2.zero);
+                cell.RaysSpin = cell.Rays.gameObject.AddComponent<Spinner>();
+                cell.RaysSpin.Speed = -28f;
+                cell.RaysSpin.enabled = false;
             }
 
             var hit = root.gameObject.AddComponent<Image>();
@@ -618,6 +538,16 @@ namespace GlimmerGrove
             var hover = root.gameObject.AddComponent<Hover>();
             hover.Enter = () => ShowGhost(at);
             hover.Exit = HideGhost;
+
+            // The one gesture this mode has beyond a tap, and only on a grove that allows it.
+            if (_layout.Grafts)
+            {
+                var drag = root.gameObject.AddComponent<CellDrag>();
+                drag.Threshold = _cell * .30f;
+                drag.Began = () => _dragging = true;
+                drag.Ended = () => _dragging = false;
+                drag.Dragged = dir => Graft(at, dir);
+            }
 
             return cell;
         }
@@ -682,6 +612,8 @@ namespace GlimmerGrove
                                  Vector2.one * BudBand.HandSeat, new Vector2(.5f, .5f),
                                  new Vector2(BudBand.HandX, 0f));
 
+            _handSeat = (RectTransform)seat.transform;
+
             _handChip = UIKit.Img("Hand", seat.transform, Bloom(Energy.None), Color.white,
                                   Vector2.one * BudBand.HandSize, new Vector2(.5f, .5f),
                                   Vector2.zero);
@@ -724,6 +656,44 @@ namespace GlimmerGrove
             return _origin + new Vector2(x * _cell, -y * _cell);
         }
 
+        /// <summary>
+        /// The seat holding the colour in hand, for the lesson about mixing to ring beside the
+        /// flower it names — "the colour in your hand" is a sentence about a thing on screen,
+        /// and a first-timer does not yet know which thing.
+        /// </summary>
+        public RectTransform HandAnchor => _handSeat;
+
+        /// <summary>
+        /// The first pair of neighbours a graft would be accepted between, as the cell to drag
+        /// and the cell to drag it onto, for the lesson to ring both and walk a hand from one to
+        /// the other. False on a grove that grafts nothing, or one with no trade to show —
+        /// a demonstration of a move that would be refused is worse than none.
+        /// </summary>
+        public bool GraftPair(out RectTransform from, out RectTransform onto)
+        {
+            from = onto = null;
+            if (_cells == null || Run == null || _layout == null || !_layout.Grafts) return false;
+
+            for (int i = 0; i < _cells.Length; i++)
+            {
+                int right = i + 1, below = i + _layout.Width;
+
+                if (i % _layout.Width < _layout.Width - 1 && Run.CanGraft(i, right))
+                {
+                    from = _cells[i].Rt; onto = _cells[right].Rt;
+                    return from && onto;
+                }
+
+                if (i / _layout.Width < _layout.Height - 1 && Run.CanGraft(i, below))
+                {
+                    from = _cells[i].Rt; onto = _cells[below].Rt;
+                    return from && onto;
+                }
+            }
+
+            return false;
+        }
+
         /// <summary>Where a lesson about the chain should point: the ripest bud on the board.</summary>
         public RectTransform ChainAnchor
         {
@@ -744,48 +714,13 @@ namespace GlimmerGrove
             }
         }
 
-        /// <summary>
-        /// Where a lesson about a runner should point: the end whose flower is nearest to being
-        /// part of a bunch, so the tip rings a vine the player could actually fire.
-        ///
-        /// <b>The end rather than the middle of the vine</b>, because what has to be learned is
-        /// about the <em>square</em> — the flower standing there has to be one of the three, and
-        /// a ring drawn across the empty middle of the board would teach that a runner is a line
-        /// rather than a pair of places.
-        /// </summary>
-        public RectTransform RunnerAnchor
+        /// <summary>Where a lesson about a special should point: the first one of that kind standing, or null.</summary>
+        public RectTransform SpecialAnchor(BudSpecial kind)
         {
-            get
-            {
-                if (_cells == null || Run == null || _layout == null) return null;
-
-                int best = -1, most = -1;
-
-                for (int i = 0; i < _cells.Length; i++)
-                {
-                    if (!_layout.IsRunner(i) || !Run.Board.IsFlower(i)) continue;
-
-                    // How many flowers of its own colour touch it. Two is one wash from a bunch,
-                    // which is the state this lesson is trying to point at.
-                    _layout.Beside(i, _beside);
-                    int alike = 0;
-
-                    for (int j = 0; j < _beside.Count; j++)
-                        if (Run.Board.IsFlower(_beside[j])
-                            && Run.Board.ValueAt(_beside[j]) == Run.Board.ValueAt(i)) alike++;
-
-                    if (alike <= most) continue;
-                    most = alike;
-                    best = i;
-                }
-
-                if (best >= 0) return _cells[best].Rt;
-
-                for (int i = 0; i < _cells.Length; i++)
-                    if (_layout.IsRunner(i)) return _cells[i].Rt;
-
-                return null;
-            }
+            if (_cells == null || Run == null) return null;
+            for (int i = 0; i < _cells.Length; i++)
+                if (Run.Board.IsFlower(i) && Run.Board.SpecialAt(i) == kind) return _cells[i].Rt;
+            return null;
         }
 
         /// <summary>Where a lesson about a cocoon should point: the first one still shut.</summary>
@@ -813,7 +748,6 @@ namespace GlimmerGrove
         {
             for (int i = 0; i < _cells.Length; i++) PaintCell(i, false);
             PaintBand();
-            PaintPops();
         }
 
         void PaintCell(int index, bool animate)
@@ -826,17 +760,36 @@ namespace GlimmerGrove
             // **What is standing here is asked of the board, not of how the cell was built.** On
             // a living grove a cocoon slides into a square that was dealt a flower, so the cell's
             // own history says nothing about what it should be drawing.
-            bool flower = board.IsFlower(index);
-            bool shut = board.IsCocoon(index);
+            Paint(index, board.At(index), board.ValueAt(index), board.SpecialAt(index), animate);
+        }
+
+        /// <summary>
+        /// Draws one cell as holding <paramref name="kind"/> at <paramref name="value"/>,
+        /// whatever the board says.
+        ///
+        /// <b>Split from <see cref="PaintCell"/> for the slide.</b> A piece a windmill blows
+        /// along, or a graft trades, is drawn <em>before</em> the chain — and the board is the
+        /// position the whole chain ends in, so the flower that slid into this square may have
+        /// burst three waves later and been replaced by one that grew. The cue carries what slid,
+        /// and this paints it.
+        /// </summary>
+        void Paint(int index, BudGround kind, int value, BudSpecial special, bool animate)
+        {
+            var cell = _cells[index];
+            if (cell?.Bud == null) return;
+
+            bool flower = kind == BudGround.Flower;
+            bool shut = kind == BudGround.Cocoon;
+            if (!flower) special = BudSpecial.None;
 
             if (cell.Pod)
             {
                 cell.Pod.color = shut
-                    ? new Color(.84f, .78f, .60f, board.ValueAt(index) > 1 ? 1f : .86f)
+                    ? new Color(.84f, .78f, .60f, value > 1 ? 1f : .86f)
                     : new Color(1, 1, 1, 0f);
 
                 if (cell.Ring)
-                    cell.Ring.color = shut && board.ValueAt(index) > 1
+                    cell.Ring.color = shut && value > 1
                         ? Pal.A(Pal.Rope, .78f) : new Color(1, 1, 1, 0f);
 
                 if (cell.Critter)
@@ -853,8 +806,10 @@ namespace GlimmerGrove
                 }
             }
 
-            int colour = flower ? board.ValueAt(index) : Energy.None;
-            int drawn = shut ? -2 - board.ValueAt(index) : colour;
+            PaintMark(cell, special, flower ? value : Energy.None, index);
+
+            int colour = flower ? value : Energy.None;
+            int drawn = shut ? -2 - value : colour + (int)special * 16;
 
             if (cell.Drawn == drawn && !animate) return;
             cell.Drawn = drawn;
@@ -867,31 +822,53 @@ namespace GlimmerGrove
                     cell.Glow.color = shut ? Pal.A(Pal.Rope, .18f) : new Color(1, 1, 1, 0f);
 
                 RestFlower(cell.Bud);
-                cell.Pops = false;
                 return;
             }
 
             var tint = Petal(colour);
 
             cell.Bud.sprite = Bloom(colour);
-            cell.Bud.color = tint;
-            if (cell.Halo) cell.Halo.color = Pal.Lift(tint, .55f);
-            if (cell.Glow) cell.Glow.color = Pal.A(tint, colour == Energy.All ? .34f : .14f);
+            cell.Bud.color = special != BudSpecial.None ? Pal.Lift(tint, .25f) : tint;
+            if (cell.Halo) cell.Halo.color = Pal.Lift(tint, special != BudSpecial.None ? .85f : .55f);
+            if (cell.Glow)
+                cell.Glow.color = Pal.A(special == BudSpecial.Sun ? Pal.Gold : tint,
+                                        special != BudSpecial.None ? .48f : colour == Energy.All ? .34f : .14f);
 
-            // White holds every channel, so on a living grove it is the bomb — the loudest thing
-            // on the board and the only one that moves while nobody is tapping.
-            // KillAll takes the "this one pops" breath with it, so the flag has to come off too
-            // or PaintPops will think it is still running and never restart it.
-            // **Put back to rest before anything is started on it, and that is load-bearing
+            // **Put back to rest before anything is drawn on it, and that is load-bearing
             // rather than tidy.** `Tween.Breathe` captures whatever scale it finds as the size to
             // breathe *around*, for ever — so a flower repainted while something else was still
             // growing it kept that size for the rest of the run. See `RestFlower`, and
             // `ThrowFlower` for the growth that used to be there to find.
+            //
+            // **Nothing on a settled board breathes any more — not the white flower, not the
+            // taps that would pop.** Both were hints, and the owner asked for the board to be
+            // found rather than read: which tap goes off, which pair trades and what white
+            // does are the player's to discover. A special's mark still turns, because that is
+            // what a special *is* rather than advice about it.
             RestFlower(cell.Bud);
-            cell.Pops = false;
+        }
 
-            if (colour == Energy.All)
-                Tween.Breathe(cell.Bud.transform, .11f, 1.35f, index * .13f);
+        /// <summary>
+        /// The special's mark as it stands: a turning glint on a bolt, a turning wheel of rays on
+        /// a sun, nothing on an ordinary flower.
+        /// </summary>
+        void PaintMark(Cell cell, BudSpecial special, int colour, int index)
+        {
+            if (cell.Mark == null || cell.Rays == null) return;
+
+            bool bolt = special == BudSpecial.Bolt;
+            bool sun = special == BudSpecial.Sun;
+
+            cell.Mark.color = bolt ? BoltMark : new Color(1, 1, 1, 0f);
+            cell.Rays.color = sun ? SunMark : new Color(1, 1, 1, 0f);
+
+            if (cell.MarkSpin) cell.MarkSpin.enabled = bolt;
+            if (cell.RaysSpin) cell.RaysSpin.enabled = sun;
+
+            if (!bolt && cell.Mark.transform.localRotation != Quaternion.identity)
+                cell.Mark.transform.localRotation = Quaternion.identity;
+            if (!sun && cell.Rays.transform.localRotation != Quaternion.identity)
+                cell.Rays.transform.localRotation = Quaternion.identity;
         }
 
         /// <summary>
@@ -954,8 +931,11 @@ namespace GlimmerGrove
             // `Image` (see `RestFlower`).
             Rest(cell.Pod);
             Rest(cell.Critter);
+            Rest(cell.Mark);
+            Rest(cell.Rays);
+            if (cell.MarkSpin) cell.MarkSpin.enabled = false;
+            if (cell.RaysSpin) cell.RaysSpin.enabled = false;
 
-            cell.Pops = false;
             cell.Drawn = -1;
         }
 
@@ -1101,6 +1081,10 @@ namespace GlimmerGrove
         // ------------------------------------------------------------------ playing
         void Tap(int index)
         {
+            // A drag that began on this cell ends with the pointer up over it, which the event
+            // system reports as a click as well. That click is not a tap.
+            if (_dragging) return;
+
             if (!Playable || !Run.CanTap(index)) { Refuse(index); return; }
 
             // The mark goes the instant a tap lands, whether or not it was the marked one — it
@@ -1114,6 +1098,7 @@ namespace GlimmerGrove
             // moved on — the same trap that fired a bolt of lightning out of blank soil.
             int made = Run.Mixed(index);
             bool bomb = Run.Board.IsBomb(index);
+            var special = Run.Board.SpecialAt(index);
 
             var chain = Run.Tap(index, _pulses, _washes, _drops);
 
@@ -1126,7 +1111,8 @@ namespace GlimmerGrove
             _busy = true;
             HideGhost();
 
-            if (bomb) Detonate(index);
+            if (special != BudSpecial.None) Ignite(index, special);
+            else if (bomb) Detonate(index);
             else Struck(index, made);
 
             StartCoroutine(PlayChain(chain, ToPulses(_pulses), ToWashes(_washes),
@@ -1390,8 +1376,16 @@ namespace GlimmerGrove
                         Split(cue.Cell, cue.Wave, cue.Colour, cue.Bunch, beat);
                         break;
 
-                    case BudCueKind.Run:
-                        Runner(cue.From, cue.Cell, cue.Colour, cue.Over);
+                    case BudCueKind.Slide:
+                        Slide(cue);
+                        break;
+
+                    case BudCueKind.Forge:
+                        Forge(cue.Cell, cue.Colour, (BudSpecial)cue.Bunch, beat);
+                        break;
+
+                    case BudCueKind.Fire:
+                        Fire(cue.Cell, (BudSpecial)cue.Bunch, cue.Colour, beat);
                         break;
 
                     case BudCueKind.Wash:
@@ -1435,8 +1429,39 @@ namespace GlimmerGrove
                         _busy = false;
                         Settle();
                         TellHint();
+                        Announce(chain, pulses);
                         break;
                 }
+            }
+        }
+
+        /// <summary>
+        /// Tells the screen what this chain forged, once it has finished playing.
+        ///
+        /// <para>
+        /// Read off the pulses rather than remembered as the cues went by, because the pulses
+        /// are the record of the chain and a flag set during playback is a second record that
+        /// can disagree with it. Each kind is announced once however many were forged, in the
+        /// order they were made, and only while the run is still live: a chain that also ended
+        /// the run has a panel arriving, and a lesson raised under it would be spent unseen.
+        /// </para>
+        /// </summary>
+        void Announce(BudChainResult chain, BudPulse[] pulses)
+        {
+            if (chain.Forged <= 0 || _over || Forged == null || pulses == null) return;
+
+            int mask = 0;
+
+            for (int i = 0; i < pulses.Length; i++)
+            {
+                if (pulses[i].Kind != BudPulseKind.Forged) continue;
+
+                // BudBoard writes the kind into the pulse's Held slot for a forge.
+                var kind = (BudSpecial)pulses[i].Held;
+                if (kind == BudSpecial.None || (mask & (1 << (int)kind)) != 0) continue;
+
+                mask |= 1 << (int)kind;
+                Forged.Invoke(kind);
             }
         }
 
@@ -1574,10 +1599,8 @@ namespace GlimmerGrove
         /// <para>
         /// <b>Not animated, and that word is doing the work.</b> <c>PaintCell(i, true)</c> skips
         /// its own "nothing changed" guard, so this loop used to kill every tween on every flower
-        /// and snap every scale back to one — most of which were already correct. Every white
-        /// flower's breath and every "this one pops" hint died at once and <see cref="PaintPops"/>
-        /// restarted them from nothing, which is a whole board flinching at the moment it should
-        /// be settling.
+        /// and snap every scale back to one — most of which were already correct, which is a
+        /// whole board flinching at the moment it should be settling.
         /// </para>
         /// <para>
         /// <b>And it is scheduled rather than tacked on to the end of the chain.</b> It is a
@@ -1593,7 +1616,6 @@ namespace GlimmerGrove
 
             for (int i = 0; i < _cells.Length; i++) PaintCell(i, false);
             PaintBand();
-            PaintPops();
             Changed?.Invoke();
         }
 
@@ -2183,9 +2205,11 @@ namespace GlimmerGrove
                 // than dropping things onto other things. Which pieces are struck and at what
                 // note is `BudChorus`, in Domain, because "voice five of the twenty and space
                 // them evenly" is a rule that is wrong for a year without anybody being able to
-                // say why the board sounds thin.
+                // say why the board sounds thin. The note is `enter` — POP Brust 08, the
+                // owner's pick for a landing — which is also the tap's own note, so a flower
+                // arriving sounds like a flower being touched, a fifth softer.
                 if (BudChorus.Voiced(cue.Nth, cue.Of))
-                    Audio.Sfx("pop", .22f, BudChorus.Pitch(cue.Nth, cue.Of), .03f);
+                    Audio.Sfx("enter", .22f, BudChorus.Pitch(cue.Nth, cue.Of), .03f);
             });
 
             // **After the tween is registered, not before.** Registering supersedes whatever fall
@@ -2253,64 +2277,6 @@ namespace GlimmerGrove
                 }, piece, SquashChannel).OnAbandon(rest);
             });
         }
-
-        // ------------------------------------------------------------------ what would pop
-        /// <summary>
-        /// Every flower a tap would set something off on, breathing.
-        ///
-        /// <para>
-        /// <b>This is the single change that took the arithmetic out of the mode.</b> Every game
-        /// of this shape shows the player the matches and asks them to <em>pick</em>; Budburst
-        /// made them work out, in their head, which cell the colour in hand would turn into a
-        /// third of something — and then reported back, correctly, that it did not feel
-        /// brain-dead. The board now says which taps pop. The choice is still entirely theirs,
-        /// because most groves offer several and they differ enormously in size; what has gone is
-        /// the sum they had to do before they could see any of them.
-        /// </para>
-        /// <para>
-        /// <b>Recomputed only when the board or the colour in hand moves</b>, never per frame: it
-        /// is one full preview per flower, which settles a whole chain each. Fifty of those is
-        /// nothing once per tap and is a stall every frame.
-        /// </para>
-        /// </summary>
-        void PaintPops()
-        {
-            if (_cells == null || Run == null) return;
-
-            bool live = Playable;
-
-            for (int i = 0; i < _cells.Length; i++)
-            {
-                var cell = _cells[i];
-                if (cell?.Bud == null) continue;
-
-                // White is skipped: it breathes on its own account in PaintCell, harder, and
-                // it always pops — it is the bomb. Two breaths on one transform is the bug this
-                // file has paid for twice.
-                if (cell.Drawn == Energy.All) continue;
-
-                bool pops = live && Run.Pops(i);
-                if (pops == cell.Pops) continue;
-
-                cell.Pops = pops;
-                var rt = (RectTransform)cell.Bud.transform;
-
-                if (!pops)
-                {
-                    Tween.KillChannel(rt, PopsChannel);
-                    rt.localScale = Vector3.one;
-                    continue;
-                }
-
-                // A slow, small breath. It has to be readable across a board of fifty and it has
-                // to be quieter than anything that is actually happening, so it is the smallest
-                // motion in the mode.
-                Tween.Breathe(rt, BudTempo.PopsSwell, BudTempo.PopsBreath, i * .11f);
-            }
-        }
-
-        /// <summary>The channel the "this one pops" breath runs on.</summary>
-        const string PopsChannel = "breathe";
 
         /// <summary>The channel a cell's own spin runs on, so one spin supersedes another.</summary>
         const string SpinChannel = "budspin";
@@ -2864,129 +2830,6 @@ namespace GlimmerGrove
         /// what it has become.
         /// </para>
         /// </summary>
-        /// <summary>
-        /// A runner firing: the colour of a bunch running the length of a vine to whatever is
-        /// standing at the other end.
-        ///
-        /// <para>
-        /// <b>Three things at once, and each is answering a different question the player has.</b>
-        /// The <em>stem lights up</em> in the colour being carried, which says <em>what</em>;
-        /// a <em>head travels</em> down it from the end that went off, which says <em>which
-        /// way</em>; and the <em>far cuff swells</em> as the head lands, which says <em>where to
-        /// look now</em> — a beat before <see cref="Land"/> turns the flower there. It is the
-        /// same three-part reading a burst gets (flash, body, reach), spent on the one event in
-        /// this mode that happens somewhere the player is not already watching.
-        /// </para>
-        /// <para>
-        /// <b>It is drawn even when the far end does not change</b>, which is deliberate and is
-        /// the whole reason <c>BudBoard</c> reports a runner's wash unconditionally. Sending a
-        /// colour the far end already wears is the one mistake a runner can punish, and a
-        /// mistake the player cannot see is one nobody learns from (invariant 20g). What they
-        /// watch is the light arrive and the flower shrug.
-        /// </para>
-        /// <para>
-        /// A fixed beat rather than a speed — see <c>BudTempo.RunLag</c>, which is the one place
-        /// in this file that deliberately does not obey the one-gravity rule.
-        /// </para>
-        /// </summary>
-        void Runner(int from, int to, int colour, float over)
-        {
-            if (_layout == null || from < 0 || to < 0) return;
-
-            var vine = _vine.TryGetValue(from < to ? from : to, out var found) ? found : null;
-            if (vine == null) return;
-
-            var tint = Petal(colour);
-            float life = Mathf.Max(over, .08f);
-
-            Vector2 a = Where(from), b = Where(to);
-
-            // The stem itself, taken over for as long as the light is on it. Killed on its own
-            // channel rather than by a new tween on the image, so two runners firing on the same
-            // vine in one chain supersede rather than fight — the same rule every gesture in
-            // this file lives by.
-            var bar = vine.Bar;
-            var glow = vine.Glow;
-
-            if (bar)
-            {
-                Tween.Run(life * 2.2f, Ease.OutQuad, t =>
-                {
-                    if (!bar) return;
-                    bar.color = Color.Lerp(Pal.A(Pal.Lift(tint, .55f), .95f), VineStem, t);
-                }, bar, "run").OnAbandon(() => { if (bar) bar.color = VineStem; });
-            }
-
-            if (glow)
-            {
-                Tween.Run(life * 2.4f, Ease.OutQuad, t =>
-                {
-                    if (!glow) return;
-                    glow.color = Color.Lerp(Pal.A(tint, .58f), VineBed, t);
-                }, glow, "run").OnAbandon(() => { if (glow) glow.color = VineBed; });
-            }
-
-            // The head. On `_near` with the bursts rather than on the vine layer, because it is
-            // a thing happening rather than a thing that is there — and `_near` is nested, so a
-            // travelling glow does not dirty the board's own canvas every frame.
-            if (_near != null)
-            {
-                var spark = Art.Glow(128, 2.4f);
-                if (spark != null)
-                {
-                    var head = UIKit.Img("Sap", _near, spark, Pal.A(Pal.Lift(tint, .70f), .95f),
-                                         Vector2.one * _size * .92f, new Vector2(.5f, .5f), a);
-                    var rt = (RectTransform)head.transform;
-
-                    Tween.Run(life, Ease.InOutQuad, t =>
-                    {
-                        if (!head) return;
-                        rt.anchoredPosition = Vector2.Lerp(a, b, t);
-
-                        // Fattest in the middle of the run, so it reads as something passing
-                        // rather than as a dot sliding.
-                        float swell = 1f + .45f * Mathf.Sin(Mathf.Clamp01(t) * Mathf.PI);
-                        rt.localScale = Vector3.one * swell;
-                    }, head).OnDone(() => { if (head) Destroy(head.gameObject); });
-                }
-            }
-
-            // **Which cuff is which is read off the firing, not off the vine.** A runner
-            // carries in whichever direction the bunch went off, so the end that leaves and the
-            // end that answers swap over between one chain and the next — and a departure drawn
-            // on the wrong end is the mechanic pointing backwards.
-            Pulse(vine.CuffAt(from), tint, life, .0f);
-            Pulse(vine.CuffAt(to), tint, life * 1.3f, life);
-
-            // Leaving and arriving, because both ends are worth a note when the two are a board
-            // apart. The arrival is pitched above the departure so the pair reads as one gesture
-            // travelling rather than as two unrelated clicks.
-            Audio.Sfx("whoosh", .30f, 1.15f + Bright(tint) * .30f);
-            Audio.Sfx("lit", .32f, 1.30f + Bright(tint) * .28f, life);
-        }
-
-        /// <summary>One cuff answering: a swell of the colour that passed through it.</summary>
-        void Pulse(Image cuff, Color tint, float over, float after)
-        {
-            if (!cuff) return;
-
-            var rt = (RectTransform)cuff.transform;
-            float big = _size * VineCuffSize;
-
-            Tween.Run(Mathf.Max(over, .10f), Ease.OutCubic, t =>
-            {
-                if (!cuff) return;
-                cuff.color = Color.Lerp(Pal.A(Pal.Lift(tint, .80f), 1f), VineCuff, t);
-                rt.sizeDelta = Vector2.one * Mathf.Lerp(big * 1.55f, big, t);
-            }, cuff, "cuff").Delay(after)
-             .OnAbandon(() =>
-             {
-                 if (!cuff) return;
-                 cuff.color = VineCuff;
-                 rt.sizeDelta = Vector2.one * big;
-             });
-        }
-
         void Land(int index, int to, float beat)
         {
             if (_cells == null || index < 0 || index >= _cells.Length) return;
@@ -4124,26 +3967,523 @@ namespace GlimmerGrove
             Settle();
         }
 
-        // ------------------------------------------------------------------ housekeeping
-        bool _wasPlayable;
-
-        void Update()
+        /// <summary>
+        /// One piece sliding sideways before the chain: a grafted flower trading places.
+        ///
+        /// <b>Painted from the cue and not from the board</b>, for <see cref="Paint"/>'s reason:
+        /// the board is the position the chain ends in, and the flower that slid into this
+        /// square is very often the one that goes off on the first wave.
+        /// </summary>
+        void Slide(BudCue cue)
         {
-            // The halos are a fact about whether the run is *running*, which is written every
-            // frame by RunScreen and by nothing else — the same edge the hint key was painted on
-            // the wrong side of. Watched rather than recomputed: PaintPops is a full preview per
-            // flower, which is nothing once and a stall every frame.
-            if (Playable != _wasPlayable)
+            if (_cells == null || cue.Cell < 0 || cue.Cell >= _cells.Length) return;
+
+            var cell = _cells[cue.Cell];
+            if (cell?.Rt == null || cell.Piece == null) return;
+
+            Paint(cue.Cell, cue.Piece, cue.Colour, (BudSpecial)cue.Bunch, true);
+
+            Vector2 here = Where(cue.Cell);
+            Vector2 start = cue.From >= 0 ? Where(cue.From) - here : Vector2.zero;
+
+            var piece = cell.Piece;
+            Tween.KillChannel(piece, SquashChannel);
+
+            Action rest = () =>
             {
-                _wasPlayable = Playable;
-                PaintPops();
+                if (!piece) return;
+                piece.anchoredPosition = Vector2.zero;
+                piece.localScale = Vector3.one;
+            };
+
+            float over = Mathf.Max(cue.Over, .10f);
+
+            Tween.Run(over, Ease.OutCubic, t =>
+            {
+                if (!piece) return;
+                piece.anchoredPosition = Vector2.Lerp(start, Vector2.zero, t);
+
+                // A little lift in the middle, so the trade reads as picked up and put down
+                // rather than dragged.
+                float hop = Mathf.Sin(Mathf.Clamp01(t) * Mathf.PI);
+                piece.localScale = Vector3.one * (1f + hop * .16f);
+            }, piece, FallChannel).OnAbandon(rest).OnDone(() =>
+            {
+                if (!piece) return;
+                piece.anchoredPosition = Vector2.zero;
+                piece.localScale = Vector3.one;
+                Squash(piece, .10f, over * .6f);
+
+                if (cue.Nth == 0) Audio.Sfx("pop", .24f, 1.1f, .01f);
+            });
+
+            piece.anchoredPosition = start;
+            piece.localScale = Vector3.one;
+        }
+
+        // ------------------------------------------------------------------ the graft
+        /// <summary>
+        /// A drag from a cell in a direction: the two flowers trade places if that makes a
+        /// bunch, and snap back if it does not.
+        ///
+        /// <b>Refused visibly, never silently.</b> The pair nudges toward each other and back
+        /// with the game's own refusal note, which is what every game of this genre does and
+        /// what tells the player the gesture was understood and the pair was wrong.
+        /// </summary>
+        void Graft(int index, Vector2Int dir)
+        {
+            if (!Playable || _layout == null || !_layout.Grafts) return;
+
+            int x = index % _layout.Width + dir.x, y = index / _layout.Width - dir.y;
+            if (x < 0 || x >= _layout.Width || y < 0 || y >= _layout.Height) return;
+
+            int other = y * _layout.Width + x;
+
+            if (!Run.CanGraft(index, other))
+            {
+                RefuseGraft(index, other);
+                return;
             }
 
+            HideMark();
+            HideGhost();
+
+            var chain = Run.Play(BudMove.Graft(index, other), _pulses, _washes, _drops);
+
+            if (!_committed)
+            {
+                _committed = true;
+                Committed?.Invoke();
+            }
+
+            _busy = true;
+
+            Audio.Sfx("enter", .48f, 1.10f);
+            Burst.Sparks(_near, (Where(index) + Where(other)) * .5f, Pal.Cream, 8, 150f, 12f, .40f);
+
+            StartCoroutine(PlayChain(chain, ToPulses(_pulses), ToWashes(_washes),
+                                     ToDrops(_drops)));
+        }
+
+        void RefuseGraft(int a, int b)
+        {
+            if (_cells == null) return;
+
+            var pa = _cells[a]?.Piece;
+            var pb = _cells[b]?.Piece;
+            var away = (Where(b) - Where(a)) * .22f;
+
+            foreach (var pair in new[] { (pa, away), (pb, -away) })
+            {
+                var piece = pair.Item1;
+                var push = pair.Item2;
+                if (piece == null) continue;
+
+                Tween.KillChannel(piece, FallChannel);
+                Tween.Run(.26f, Ease.OutQuad, t =>
+                {
+                    if (!piece) return;
+                    piece.anchoredPosition = push * Mathf.Sin(Mathf.Clamp01(t) * Mathf.PI);
+                }, piece, FallChannel).OnAbandon(() => { if (piece) piece.anchoredPosition = Vector2.zero; })
+                 .OnDone(() => { if (piece) piece.anchoredPosition = Vector2.zero; });
+            }
+
+            Audio.Sfx("blocked", .40f, 1f);
+        }
+
+        // ------------------------------------------------------------------ the specials
+        /// <summary>
+        /// The tap on a special, before its cue fires it: the flower flashes white and the
+        /// player's own touch is answered at once, so the beat between the tap and the
+        /// lightning is the special charging rather than the game thinking.
+        /// </summary>
+        void Ignite(int index, BudSpecial kind)
+        {
+            var cell = _cells[index];
+            if (cell?.Rt == null) return;
+
+            Audio.Sfx("enter", .50f, 1.30f);
+
+            var rt = cell.Rt;
+            Tween.KillChannel(rt, "punch");
+            Tween.Run(BudTempo.Wind, Ease.OutQuad, t =>
+            {
+                if (!rt) return;
+                rt.localScale = Vector3.one * (1f + Mathf.Sin(Mathf.Clamp01(t) * Mathf.PI) * .35f);
+            }, rt, SpinChannel).OnAbandon(() => { if (rt) rt.localScale = Vector3.one; })
+             .OnDone(() => { if (rt) rt.localScale = Vector3.one; });
+
+            var tint = kind == BudSpecial.Sun ? Pal.Gold : Color.white;
+            Flare(Where(index), tint, BudTempo.Wind);
+            if (cell.Mark && kind == BudSpecial.Bolt) Tween.Punch(cell.Mark.transform, .5f, .30f);
+            if (cell.Rays && kind == BudSpecial.Sun) Tween.Punch(cell.Rays.transform, .4f, .30f);
+        }
+
+        /// <summary>
+        /// A big bunch leaving a special behind: the light of the bunch that just went off
+        /// gathers back into the cell, and the special stands up out of it under a ring.
+        ///
+        /// <para>
+        /// <b>This is the payoff the chapter is made of, and it is drawn as an arrival.</b> A
+        /// bunch of five is already the biggest thing the first chapter draws; what has to read
+        /// here is that something was <em>left</em> — so the cell is bare for a beat, motes fly
+        /// in from where the petals went, and the mark pops in oversize and settles. It is the
+        /// freed critter's own three beats (gather, land, stand) spent on a thing rather than a
+        /// creature, which is why it will read as a reward.
+        /// </para>
+        /// </summary>
+        void Forge(int index, int colour, BudSpecial kind, float beat)
+        {
+            if (_cells == null || index < 0 || index >= _cells.Length) return;
+
+            var cell = _cells[index];
+            if (cell == null) return;
+
+            var where = Where(index);
+            var tint = Petal(colour);
+            var mark = kind == BudSpecial.Sun ? Pal.Gold : Color.white;
+            float life = Mathf.Max(beat * .8f, .34f);
+
+            // The light comes back in: eight motes from the cells around, converging.
+            if (_near != null)
+            {
+                for (int i = 0; i < 8; i++)
+                {
+                    float ang = i * Mathf.PI * .25f;
+                    var from = where + new Vector2(Mathf.Cos(ang), Mathf.Sin(ang)) * _cell * 1.3f;
+                    var mote = UIKit.Img("Forge", _near, Art.Glow(64, 2.4f), Pal.A(tint, 0f),
+                                         Vector2.one * _size * .34f, new Vector2(.5f, .5f), from);
+                    var mrt = (RectTransform)mote.transform;
+
+                    Tween.Run(life * .55f, Ease.InQuad, t =>
+                    {
+                        if (!mote) return;
+                        mrt.anchoredPosition = Vector2.Lerp(from, where, t);
+                        mote.color = Pal.A(Color.Lerp(tint, mark, t), Mathf.Min(1f, t * 2.5f));
+                    }, mote).Delay(i * .015f).OnDone(() => { if (mote) Destroy(mote.gameObject); });
+                }
+            }
+
+            // Then it stands up: painted as the special it now is, thrown in from oversize.
+            Tween.After(life * .55f, () =>
+            {
+                if (!this || _cells == null) return;
+
+                Paint(index, BudGround.Flower, colour, kind, true);
+
+                var piece = cell.Piece;
+                if (piece)
+                {
+                    Tween.KillChannel(piece, SquashChannel);
+                    Tween.Run(.36f, Ease.OutBack, t =>
+                    {
+                        if (!piece) return;
+                        piece.localScale = Vector3.one * Mathf.LerpUnclamped(1.9f, 1f, t);
+                    }, piece, SquashChannel).OnAbandon(() => { if (piece) piece.localScale = Vector3.one; });
+                }
+
+                Flare(where, mark, life * .6f);
+                Shockwave(where, mark, _size * (kind == BudSpecial.Sun ? 3.4f : 2.6f), life * .8f);
+                Burst.Sparks(_near, where, mark, kind == BudSpecial.Sun ? 16 : 10, 190f, 14f, life);
+                if (_grid) Tween.Punch(_grid, .03f, .34f);
+
+                // A rising two-note chime, higher for a sun: the one sound in this mode that
+                // says "you got something" rather than "something went off".
+                Audio.Sfx("chime2", .55f, kind == BudSpecial.Sun ? 1.25f : 1.0f);
+                Audio.Sfx("star", .45f, kind == BudSpecial.Sun ? 1.5f : 1.3f, .09f);
+            }, this);
+        }
+
+        /// <summary>
+        /// A special going off.
+        ///
+        /// <para>
+        /// <b>A bolt is lightning down the whole row and the whole column</b>: a white-hot core
+        /// over a wide glow in the flower's colour, drawn out from the special to both edges of
+        /// the grove in the time the cells take to go, with the screen flashing and the board
+        /// kicked. The cells themselves burst as ordinary bursts, racing outward — that is the
+        /// score's doing (<c>BudTempo.FireStep</c>), and it is what makes the line read as
+        /// travelling rather than appearing.
+        /// </para>
+        /// <para>
+        /// <b>A sun is a blast</b>: a gold flash the size of its square, two shockwaves, a light
+        /// behind the whole grove, rockets, and the heaviest shake in the mode. Bigger than a
+        /// bunch of nine by being a different kind of thing, not by being the same thing louder.
+        /// </para>
+        /// </summary>
+        void Fire(int index, BudSpecial kind, int colour, float beat)
+        {
+            if (_cells == null || index < 0 || index >= _cells.Length) return;
+
+            var where = Where(index);
+            var tint = colour == Energy.None ? Pal.Gold : Petal(colour);
+
+            EmptyCell(index);
+
+            if (kind == BudSpecial.Sun) { FireSun(where, tint, beat); return; }
+
+            FireBolt(index, where, tint);
+        }
+
+        void FireBolt(int index, Vector2 where, Color tint)
+        {
+            if (_near == null || _layout == null) return;
+
+            int x = index % _layout.Width, y = index / _layout.Width;
+            float w = _layout.Width * _cell, h = _layout.Height * _cell;
+
+            // How far the line has to run each way, so the core is drawn out at the pace the
+            // cells go rather than appearing whole.
+            int reach = Mathf.Max(Mathf.Max(x, _layout.Width - 1 - x), Mathf.Max(y, _layout.Height - 1 - y));
+            float over = Mathf.Max(.10f, reach * BudTempo.FireStep + .06f);
+
+            Streak(where, true, w, tint, over);
+            Streak(where, false, h, tint, over);
+
+            // The strike itself: a hard flash on the special, a ring, and the screen answering.
+            var core = UIKit.Img("BoltCore", _near, Art.Glow(256, 3.6f), Color.white,
+                                 Vector2.one * _size * 2.4f, new Vector2(.5f, .5f), where);
+            var crt = (RectTransform)core.transform;
+            Tween.Run(.30f, Ease.OutQuint, t =>
+            {
+                if (!core) return;
+                crt.localScale = Vector3.one * Mathf.Lerp(.3f, 1.6f, t);
+                core.color = Pal.A(Color.Lerp(Color.white, tint, t), 1f - t * t);
+            }, core).OnDone(() => { if (core) Destroy(core.gameObject); });
+
+            Shockwave(where, Color.white, _size * 3.0f, .36f);
+            Burst.Sparks(_near, where, Pal.Lift(tint, .5f), 18, 260f, 16f, .6f);
+
+            Flow.Flash(Pal.A(Color.white, .30f), .06f, .30f);
+            if (_grid) { Tween.Shake(_grid, 18f, .34f); Tween.Punch(_grid, .05f, .40f); }
+
+            // Two strikes of the mode's own burst note an octave apart, and the whoosh of the
+            // line leaving — lightning has to be the loudest single thing on this board.
+            Audio.Sfx("burst", .75f, .60f);
+            Audio.Sfx("burst", .55f, 1.20f, .04f);
+            Audio.Sfx("whoosh", .60f, 1.30f);
+            Audio.Sfx("lit", .40f, 1.50f, over * .5f);
+        }
+
+        /// <summary>
+        /// One arm of a bolt: a white core over a wide glow in the colour, drawn out from the
+        /// special to both edges of the grove and then fading where it stands.
+        /// </summary>
+        void Streak(Vector2 where, bool across, float length, Color tint, float over)
+        {
+            // The line is centred on the grove and covers its whole width or height; it grows
+            // outward from the special by scaling about the special's own position, which is
+            // what a pivot at that fraction of the bar buys.
+            var glow = UIKit.Img("BoltGlow", _near, Art.SoftCapsule(40, 120), Pal.A(tint, 0f),
+                                 across ? new Vector2(length + _cell, _size * .55f)
+                                        : new Vector2(_size * .55f, length + _cell),
+                                 new Vector2(.5f, .5f), across ? new Vector2(0f, where.y)
+                                                               : new Vector2(where.x, 0f));
+            glow.transform.localRotation = Quaternion.Euler(0f, 0f, across ? 90f : 0f);
+
+            var bar = UIKit.Img("BoltCore", _near, Art.Round(8), Pal.A(Color.white, 0f),
+                                across ? new Vector2(length + _cell, _size * .12f)
+                                       : new Vector2(_size * .12f, length + _cell),
+                                new Vector2(.5f, .5f), across ? new Vector2(0f, where.y)
+                                                              : new Vector2(where.x, 0f));
+
+            var grt = (RectTransform)glow.transform;
+            var brt = (RectTransform)bar.transform;
+
+            // Where along the bar the special stands, 0..1, so the growth starts there.
+            float at = across ? (where.x + length * .5f) / length : (where.y + length * .5f) / length;
+            at = Mathf.Clamp01(at);
+            brt.pivot = across ? new Vector2(at, .5f) : new Vector2(.5f, at);
+            brt.anchoredPosition = across ? new Vector2(where.x, where.y) : new Vector2(where.x, where.y);
+
+            Tween.Run(over + .40f, Ease.Linear, t =>
+            {
+                if (!bar || !glow) return;
+
+                float grow = Mathf.Min(1f, t * (over + .40f) / over);
+                float fade = Mathf.Clamp01((t * (over + .40f) - over) / .40f);
+
+                brt.localScale = across ? new Vector3(grow, 1f, 1f) : new Vector3(1f, grow, 1f);
+                bar.color = Pal.A(Color.white, (1f - fade) * (1f - fade));
+
+                // The glow follows the core and thickens as it fades, like heat coming off it.
+                glow.color = Pal.A(tint, .85f * grow * (1f - fade));
+                grt.localScale = new Vector3(1f + fade * .8f, 1f, 1f);
+            }, bar).OnDone(() =>
+            {
+                if (bar) Destroy(bar.gameObject);
+                if (glow) Destroy(glow.gameObject);
+            });
+
+            // A few jags along the core, so it reads as lightning rather than a laser.
+            for (int i = 0; i < 5; i++)
+            {
+                float u = (i + .5f) / 5f;
+                var spot = across ? new Vector2(-length * .5f + u * length, where.y)
+                                  : new Vector2(where.x, -length * .5f + u * length);
+                float lean = (i % 2 == 0 ? 1f : -1f) * 32f;
+
+                var jag = UIKit.Img("Jag", _near, Art.Round(6), Pal.A(Color.white, 0f),
+                                    across ? new Vector2(_cell * .55f, _size * .09f)
+                                           : new Vector2(_size * .09f, _cell * .55f),
+                                    new Vector2(.5f, .5f), spot);
+                jag.transform.localRotation = Quaternion.Euler(0f, 0f, lean);
+
+                float delay = Mathf.Abs(across ? spot.x - where.x : spot.y - where.y) / _cell * BudTempo.FireStep;
+                Tween.Run(.22f, Ease.OutQuad, t =>
+                {
+                    if (!jag) return;
+                    jag.color = Pal.A(Color.white, (1f - t) * .95f);
+                }, jag).Delay(delay).OnDone(() => { if (jag) Destroy(jag.gameObject); });
+            }
+        }
+
+        void FireSun(Vector2 where, Color tint, float beat)
+        {
+            if (_near == null) return;
+
+            float span = _size * (BudLayout.SunReach * 2f + 1f);
+            float life = Mathf.Max(beat * 1.2f, .55f);
+
+            // The flash, the size of the square it clears.
+            var core = UIKit.Img("SunCore", _near, Art.Glow(256, 2.4f), Color.white,
+                                 Vector2.one * span * 1.2f, new Vector2(.5f, .5f), where);
+            var crt = (RectTransform)core.transform;
+            Tween.Run(life * .7f, Ease.OutQuint, t =>
+            {
+                if (!core) return;
+                crt.localScale = Vector3.one * Mathf.Lerp(.25f, 1.15f, t);
+                core.color = Pal.A(Color.Lerp(Color.white, Pal.Gold, Mathf.Min(1f, t * 3f)), 1f - t * t);
+            }, core).OnDone(() => { if (core) Destroy(core.gameObject); });
+
+            // The wheel of rays, thrown out and turning, in gold — the sun's own mark at
+            // blast size.
+            var rays = UIKit.Img("SunRays", _near, Art.Rays(256, 12), Pal.A(Pal.Gold, .9f),
+                                 Vector2.one * span * .6f, new Vector2(.5f, .5f), where);
+            var rrt = (RectTransform)rays.transform;
+            Tween.Run(life, Ease.OutQuad, t =>
+            {
+                if (!rays) return;
+                rrt.localScale = Vector3.one * Mathf.Lerp(.5f, 2.6f, t);
+                rrt.localRotation = Quaternion.Euler(0f, 0f, 90f * t);
+                rays.color = Pal.A(Pal.Gold, .9f * (1f - t) * (1f - t));
+            }, rays).OnDone(() => { if (rays) Destroy(rays.gameObject); });
+
+            Shockwave(where, Pal.Gold, span * 1.6f, life * .9f);
+            Tween.After(.12f, () => { if (this) Shockwave(where, Color.white, span * 2.2f, life); }, this);
+            Tween.After(.24f, () => { if (this) Shockwave(where, tint, span * 2.8f, life * 1.1f, _fx); }, this);
+
+            Burst.Sparks(_near, where, Pal.Gold, 26, 320f, 20f, life);
+            Burst.Sparks(_near, where, Color.white, 14, 220f, 14f, life * .8f);
+            Backlight(Pal.Gold, life);
+            Fireworks(where, Pal.Gold, 3, life * .8f);
+
+            Flow.Flash(Pal.A(new Color(1f, .95f, .75f), .55f), .08f, .55f);
+            if (_grid) { Tween.Shake(_grid, 26f, .46f); Tween.Punch(_grid, .09f, .55f); }
+
+            // The mode's own burst note struck low, three times a fifth apart, and a bell over
+            // the top: the biggest sound in the mode, for the biggest thing it does.
+            Audio.Sfx("burst", .85f, .50f);
+            Audio.Sfx("burst", .70f, .75f, .06f);
+            Audio.Sfx("burst", .55f, 1.10f, .12f);
+            Audio.Sfx("bell", .55f, 1.05f, .10f);
+        }
+
+        // ------------------------------------------------------------------ housekeeping
+        void Update()
+        {
             if (_hovered < 0) return;
 
             if (!Playable) { HideGhost(); return; }
 
             ShowGhost(_hovered);
+        }
+    }
+
+    /// <summary>
+    /// Something that turns: a windmill's sails, or a firefly's wing flapping about a lean.
+    ///
+    /// A component rather than a tween because it never ends, and a tween that never ends
+    /// is a tween nothing can kill cleanly on a restart. <see cref="Kick"/> is the one thing
+    /// a gust needs — a burst of speed that decays back to the idle turn.
+    /// </summary>
+    public sealed class Spinner : MonoBehaviour
+    {
+        public float Speed = 30f;
+        public bool Flap;
+        public float Phase, Lean;
+
+        float _extra, _decay, _angle;
+
+        public void Kick(float speed, float over)
+        {
+            _extra = speed;
+            _decay = over > .01f ? speed / over : speed;
+        }
+
+        void Update()
+        {
+            float dt = Time.unscaledDeltaTime;
+
+            if (Flap)
+            {
+                float t = Time.unscaledTime * Speed + Phase;
+                transform.localRotation = Quaternion.Euler(0f, 0f, Lean + Mathf.Sin(t) * 22f);
+                return;
+            }
+
+            _angle += (Speed + _extra) * dt;
+            if (_extra != 0f)
+            {
+                float step = _decay * dt;
+                _extra = _extra > 0f ? Mathf.Max(0f, _extra - step) : Mathf.Min(0f, _extra - step);
+            }
+
+            transform.localRotation = Quaternion.Euler(0f, 0f, _angle);
+        }
+    }
+
+    /// <summary>
+    /// A drag on a cell, reported once as a direction the moment it has gone far enough.
+    ///
+    /// Reports through the event system's own drag messages so the tap on the same cell is
+    /// still a tap: a press that never travels past <see cref="Threshold"/> is left alone.
+    /// </summary>
+    public sealed class CellDrag : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDragHandler
+    {
+        public Action<Vector2Int> Dragged;
+        public Action Began, Ended;
+        public float Threshold = 40f;
+
+        Vector2 _from;
+        bool _fired;
+
+        public void OnBeginDrag(PointerEventData e)
+        {
+            _from = e.position;
+            _fired = false;
+            Began?.Invoke();
+        }
+
+        public void OnDrag(PointerEventData e)
+        {
+            if (_fired) return;
+
+            var delta = e.position - _from;
+            float scale = transform.lossyScale.x > .0001f ? transform.lossyScale.x : 1f;
+            if (delta.magnitude < Threshold * scale) return;
+
+            _fired = true;
+            var dir = Mathf.Abs(delta.x) > Mathf.Abs(delta.y)
+                    ? new Vector2Int(delta.x > 0f ? 1 : -1, 0)
+                    : new Vector2Int(0, delta.y > 0f ? 1 : -1);
+            Dragged?.Invoke(dir);
+        }
+
+        public void OnEndDrag(PointerEventData e)
+        {
+            _fired = false;
+            Ended?.Invoke();
         }
     }
 }

@@ -38,6 +38,14 @@ namespace GlimmerGrove.Social
     /// choose the moment safe. See <c>functions/src/grove.ts</c>.
     /// </para>
     /// <para>
+    /// <b>The moment is after the sync, never after the change.</b> The server builds the
+    /// card from the save it holds, so a request made when the grove changed was answered
+    /// from the save pushed <em>last</em> time, and the fingerprint then noted as published
+    /// stopped the real one ever being sent. Every request here therefore carries the
+    /// revision the server's document had when it was made, and a reply that reports an
+    /// older one is <see cref="Stale"/> — the one outcome the old design could not see.
+    /// </para>
+    /// <para>
     /// <b>A player who never asks is simply not on the board.</b> That is the whole exploit
     /// available here and it is self-punishing, which is the shape a forgeable trigger should
     /// have.
@@ -79,6 +87,23 @@ namespace GlimmerGrove.Social
         public const float MaxRetrySeconds = 600f;
 
         /// <summary>
+        /// How many times a publish answered from an older save is tried again before the
+        /// answer is accepted.
+        ///
+        /// <para>
+        /// A stale reply should be impossible — the request is made after the sync that put
+        /// the save there, and the database reads its own writes — so one is a bug or an
+        /// outage, and the right response is to push again and ask again. But a refusal that
+        /// will still be true tomorrow must never be retried for ever (invariant 13a), and
+        /// "the server reports a revision below ours" could be exactly that: a document
+        /// somebody rewrote by hand, a rollback. So after this many the reply is taken as
+        /// published and the work is dropped, which costs one stale card until the next real
+        /// change and is logged where somebody will read it.
+        /// </para>
+        /// </summary>
+        public const int MaxStaleRetries = 2;
+
+        /// <summary>
         /// The least a grove may be worth before it is published at all.
         ///
         /// One credit: the bar is "has this player put anything into the place", not a
@@ -91,6 +116,7 @@ namespace GlimmerGrove.Social
 
         string _publishedFingerprint = string.Empty;
         string _wantedFingerprint = string.Empty;
+        long _wantedRevision;
 
         /// <summary>What the in-flight call is doing, or <see cref="GrovePublishAction.None"/>.</summary>
         GrovePublishAction _inFlight = GrovePublishAction.None;
@@ -103,11 +129,15 @@ namespace GlimmerGrove.Social
         /// </summary>
         string _inFlightFingerprint = string.Empty;
 
+        /// <summary>The revision the in-flight publish must prove it was built from.</summary>
+        long _inFlightRevision;
+
         bool _wanted;
         bool _withdrawWanted;
         bool _reachable = true;
         float _wait;
         float _backoff;
+        int _staleReplies;
 
         /// <summary>True when something is waiting to reach the server.</summary>
         public bool HasWork
@@ -144,7 +174,7 @@ namespace GlimmerGrove.Social
         }
 
         /// <summary>
-        /// The grove changed. Safe to call as often as anything likes.
+        /// The grove on the server changed. Safe to call as often as anything likes.
         ///
         /// <para>
         /// The fingerprint is what makes this cheap: <see cref="GroveCard.Fingerprint"/>
@@ -152,8 +182,14 @@ namespace GlimmerGrove.Social
         /// nothing. A request identical to what is already on the board is dropped here rather
         /// than at the server, which is the only place it can be dropped for free.
         /// </para>
+        /// <para>
+        /// <paramref name="serverRevision"/> is the revision the server's document carries
+        /// now, from the sync that made this request; the publish is asked to prove it read
+        /// that revision or later. Nought means the caller could not know, and nothing is
+        /// then proved — never pass nought to skip the proof on purpose.
+        /// </para>
         /// </summary>
-        public void Request(string fingerprint, bool worthPublishing)
+        public void Request(string fingerprint, long serverRevision, bool worthPublishing)
         {
             fingerprint = fingerprint ?? string.Empty;
 
@@ -168,6 +204,7 @@ namespace GlimmerGrove.Social
             }
 
             _wantedFingerprint = fingerprint;
+            _wantedRevision = serverRevision < 0L ? 0L : serverRevision;
             _withdrawWanted = false;
             _wanted = true;
 
@@ -189,6 +226,7 @@ namespace GlimmerGrove.Social
         {
             _wanted = false;
             _wantedFingerprint = string.Empty;
+            _wantedRevision = 0L;
             _withdrawWanted = true;
 
             if (_backoff <= 0f) _wait = DebounceSeconds;
@@ -222,11 +260,14 @@ namespace GlimmerGrove.Social
             _publishedFingerprint = string.Empty;
             _wantedFingerprint = string.Empty;
             _inFlightFingerprint = string.Empty;
+            _wantedRevision = 0L;
+            _inFlightRevision = 0L;
             _wanted = false;
             _withdrawWanted = false;
             _inFlight = GrovePublishAction.None;
             _backoff = 0f;
             _wait = 0f;
+            _staleReplies = 0;
         }
 
         /// <summary>
@@ -257,26 +298,29 @@ namespace GlimmerGrove.Social
             {
                 _withdrawWanted = false;
                 _inFlightFingerprint = string.Empty;
+                _inFlightRevision = 0L;
             }
             else
             {
                 _wanted = false;
                 _inFlightFingerprint = _wantedFingerprint;
+                _inFlightRevision = _wantedRevision;
             }
 
             return action;
         }
 
         /// <summary>
-        /// It reached the server. <paramref name="fingerprint"/> is what was sent — passed
-        /// back rather than remembered, so a request that arrived mid-flight is not mistaken
-        /// for the one that was published.
+        /// It reached the server and was built from the save asked for. <paramref name="fingerprint"/>
+        /// is what was sent — passed back rather than remembered, so a request that arrived
+        /// mid-flight is not mistaken for the one that was published.
         /// </summary>
         public void Succeeded(string fingerprint)
         {
             var was = _inFlight;
             _inFlight = GrovePublishAction.None;
             _backoff = 0f;
+            _staleReplies = 0;
 
             // A withdrawal leaves nothing on the board, so nothing is "already published" and
             // an identical grove has to go back up if the player opts in again.
@@ -285,6 +329,35 @@ namespace GlimmerGrove.Social
                 : fingerprint ?? string.Empty;
 
             _wait = HasWork ? DebounceSeconds : 0f;
+        }
+
+        /// <summary>
+        /// It reached the server, which built the card from a save <em>older</em> than the one
+        /// this device had just settled with it.
+        ///
+        /// <para>
+        /// Returns true when the work is kept and will be tried again after a backoff — the
+        /// caller should also ask for a sync, since the one thing that can put the document
+        /// right is another push. Returns false once <see cref="MaxStaleRetries"/> have been
+        /// spent: the reply is then taken as the publish (exactly as <see cref="Succeeded"/>
+        /// would take it), so a condition that will still be true tomorrow costs one stale
+        /// card rather than a retry for the life of the account. The caller logs that.
+        /// </para>
+        /// </summary>
+        public bool Stale()
+        {
+            if (_inFlight != GrovePublishAction.Publish) return false;
+
+            _staleReplies++;
+
+            if (_staleReplies > MaxStaleRetries)
+            {
+                Succeeded(_inFlightFingerprint);
+                return false;
+            }
+
+            Failed();
+            return true;
         }
 
         /// <summary>
@@ -309,6 +382,7 @@ namespace GlimmerGrove.Social
                 {
                     _wanted = true;
                     _wantedFingerprint = _inFlightFingerprint;
+                    _wantedRevision = _inFlightRevision;
                 }
             }
 
@@ -333,10 +407,12 @@ namespace GlimmerGrove.Social
         {
             _inFlight = GrovePublishAction.None;
             _inFlightFingerprint = string.Empty;
+            _inFlightRevision = 0L;
             _wanted = false;
             _withdrawWanted = false;
             _backoff = 0f;
             _wait = 0f;
+            _staleReplies = 0;
         }
 
         /// <summary>
@@ -360,6 +436,9 @@ namespace GlimmerGrove.Social
         /// <summary>The fingerprint the pending publish carries. For diagnostics and tests.</summary>
         public string WantedFingerprint => _wantedFingerprint;
 
+        /// <summary>The revision the pending publish will have to prove. For diagnostics and tests.</summary>
+        public long WantedRevision => _wantedRevision;
+
         /// <summary>
         /// The fingerprint the call that has just started is carrying.
         ///
@@ -371,5 +450,12 @@ namespace GlimmerGrove.Social
         /// that never was.
         /// </summary>
         public string InFlightFingerprint => _inFlightFingerprint;
+
+        /// <summary>
+        /// The revision the call that has just started must prove it was built from. Read
+        /// beside <see cref="InFlightFingerprint"/>, for the same reason, and compared against
+        /// the reply through <see cref="GrovePublication.Proves"/>.
+        /// </summary>
+        public long InFlightRevision => _inFlightRevision;
     }
 }

@@ -529,8 +529,7 @@ ORDINAL = 2
 STRIPS = mapart.strips(ORDINAL)
 SKIES = mapart.skies(ORDINAL)
 
-MAPX = [0.30, 0.70, 0.26, 0.72, 0.26, 0.68, 0.28, 0.72, 0.23, 0.71]
-MAPY = [0.065, 0.145, 0.220, 0.300, 0.390, 0.485, 0.560, 0.650, 0.752, 0.830]
+PLACES = mapart.places(ORDINAL)
 
 TEXT = {
     "c02_two_ways_over": (
@@ -598,7 +597,6 @@ def chapter_json(built):
     doc["slate"] = "#17301E"
     doc["backdrop"] = SKIES[0]
     doc["mapStrips"] = list(STRIPS)
-    doc["teaserX"] = 0.3
 
     levels = []
     for i, (lid, make, target) in enumerate(BOARDS):
@@ -607,8 +605,7 @@ def chapter_json(built):
         level["id"] = lid
         level["width"] = board.w
         level["height"] = board.h
-        level["mapX"] = MAPX[i]
-        level["mapY"] = MAPY[i]
+        level["mapX"], level["mapY"] = PLACES[i]
         accent, slate = PALETTE[lid]
         level["accent"] = accent
         level["slate"] = slate

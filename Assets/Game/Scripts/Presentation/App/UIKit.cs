@@ -186,6 +186,29 @@ namespace GlimmerGrove
         public static Btn TextButton(string name, Transform parent, string skin, string text, int fontSize,
                                      Vector2 size, Vector2 anchor, Vector2 pos, Action onClick,
                                      string icon = null)
+            => TextButton(name, parent, skin, text, fontSize, size, anchor, pos, onClick,
+                          string.IsNullOrEmpty(icon) ? null : Art.S("Ui/" + icon));
+
+        /// <summary>
+        /// The same pill, given the glyph as a sprite rather than as a name, and able to put
+        /// it <em>after</em> the caption.
+        ///
+        /// <para>
+        /// The sprite overload exists because not every glyph is an <c>Ui/ic_*</c> file:
+        /// credits have no still sprite at all in this UI, only the <c>Ui/Coin</c> flipbook,
+        /// so a coin beside a price is frame zero of that — the choice
+        /// <c>CompanionUnlockOverlay.CoinFace</c> already made and documented. Passing a
+        /// sprite also means a caller can pass <c>null</c> for art that has not arrived and
+        /// get a plain caption rather than a white square (invariant 7b).
+        /// </para>
+        /// <para>
+        /// <paramref name="iconTrails"/> is <see cref="Btn.IconTrails"/> — see there for when
+        /// a glyph belongs behind the caption instead of in front of it.
+        /// </para>
+        /// </summary>
+        public static Btn TextButton(string name, Transform parent, string skin, string text, int fontSize,
+                                     Vector2 size, Vector2 anchor, Vector2 pos, Action onClick,
+                                     Sprite icon, bool iconTrails = false)
         {
             var b = Button(name, parent, Art.S("Ui/" + skin), size, anchor, pos, onClick);
 
@@ -196,10 +219,11 @@ namespace GlimmerGrove
                              new Vector2(0f, lift));
             b.LabelWidth = size.x - 40f;
             b.LabelSize = fontSize;
+            b.IconTrails = iconTrails;
 
-            if (string.IsNullOrEmpty(icon)) return b;
+            if (icon == null) return b;
 
-            var glyph = Img("Icon", b.transform, Art.S("Ui/" + icon), Pal.Cream,
+            var glyph = Img("Icon", b.transform, icon, Pal.Cream,
                             Vector2.one * (size.y * .34f), new Vector2(.5f, .5f), new Vector2(0f, lift));
             glyph.preserveAspect = true;
             b.Icon = glyph;
@@ -259,34 +283,69 @@ namespace GlimmerGrove
                 Squeeze(button, room);
             }
 
-            var labelRt = button.Label.rectTransform;
+            CentreGlyph(button.Label, button.Icon, button.LabelWidth, button.IconTrails);
+        }
+
+        /// <summary>
+        /// Centres a glyph and a caption as one block inside <paramref name="width"/>, and puts
+        /// the caption back to full width when there is no glyph.
+        ///
+        /// <para>
+        /// <b>Extracted so it is not written twice.</b> <see cref="FitLabel"/> is the caller
+        /// that matters, but a glyph beside a number is not only a button — the shop's price
+        /// face is a painted plate on a card whose *whole* surface is the button, so it carries
+        /// a <see cref="Text"/> and an <see cref="Image"/> with no <see cref="Btn"/> between
+        /// them and cannot use <see cref="FitLabel"/> at all. This file already records what a
+        /// hand-written second copy of these six lines cost: <c>BonusWheelOverlay</c> carried
+        /// one, and the case it got wrong was the *no-glyph* branch, which is why that branch
+        /// is in here rather than left to the caller.
+        /// </para>
+        /// <para>
+        /// <see cref="Text.preferredWidth"/> is read directly — uGUI answers it from cached
+        /// glyph metrics in the same frame the caption was assigned, so no layout pass is
+        /// needed and none is forced.
+        /// </para>
+        /// </summary>
+        public static void CentreGlyph(Text label, Image glyph, float width, bool trailing = false)
+        {
+            if (label == null) return;
+
+            var labelRt = label.rectTransform;
 
             // No glyph: the caption owns the whole face, so the box is put back to full width
             // and centred. Returning early instead — which is what this did — leaves behind
-            // whatever the *last* fit wrote, and that is not hypothetical: a button built with a
-            // glyph is measured with one, so a caller that later takes the glyph away (the
-            // wheel's SPIN, the victory panel's COLLECTED) kept a narrowed box shoved to the
-            // right of centre by half a glyph. It read as a caption that is not quite centred,
-            // which is the kind of wrongness that is much easier to see than to explain.
-            // BonusWheelOverlay carried a hand-written copy of these two lines for exactly this;
-            // one restore in the one place that narrows the box is the version that cannot be
-            // forgotten by the next caller.
-            if (button.Icon == null)
+            // whatever the *last* fit wrote, and that is not hypothetical: a control built with
+            // a glyph is measured with one, so a caller that later takes the glyph away (the
+            // wheel's SPIN, the victory panel's COLLECTED, a shop card swapping a gem price for
+            // a store price) kept a narrowed box shoved to the right of centre by half a glyph.
+            // It read as a caption that is not quite centred, which is the kind of wrongness
+            // that is much easier to see than to explain.
+            if (glyph == null || !glyph.gameObject.activeSelf)
             {
-                labelRt.sizeDelta = new Vector2(button.LabelWidth, labelRt.sizeDelta.y);
+                labelRt.sizeDelta = new Vector2(width, labelRt.sizeDelta.y);
                 labelRt.anchoredPosition = new Vector2(0f, labelRt.anchoredPosition.y);
                 return;
             }
 
-            var glyphRt = (RectTransform)button.Icon.transform;
+            var glyphRt = (RectTransform)glyph.transform;
 
-            float text = Mathf.Min(button.Label.preferredWidth, room);
+            float mark = glyphRt.sizeDelta.x;
+            float room = Mathf.Max(0f, width - mark - GlyphGap);
+            float text = Mathf.Min(label.preferredWidth, room);
 
             labelRt.sizeDelta = new Vector2(text, labelRt.sizeDelta.y);
 
-            float block = glyph + GlyphGap + text;
-            glyphRt.anchoredPosition = new Vector2(-block * .5f + glyph * .5f, glyphRt.anchoredPosition.y);
-            labelRt.anchoredPosition = new Vector2(block * .5f - text * .5f, labelRt.anchoredPosition.y);
+            float block = mark + GlyphGap + text;
+
+            // One block, centred; only which half is which changes. Written as two offsets
+            // from the block's left edge rather than as two branches of arithmetic, so the
+            // trailing case cannot drift from the leading one.
+            float left = -block * .5f;
+            float glyphX = trailing ? left + text + GlyphGap + mark * .5f : left + mark * .5f;
+            float textX = trailing ? left + text * .5f : left + mark + GlyphGap + text * .5f;
+
+            glyphRt.anchoredPosition = new Vector2(glyphX, glyphRt.anchoredPosition.y);
+            labelRt.anchoredPosition = new Vector2(textX, labelRt.anchoredPosition.y);
         }
 
         /// <summary>

@@ -33,6 +33,12 @@ Everything here runs without Unity unless it says otherwise.
   thing about it whose quality is only visible as a picture. It found four faults in one pass: near-black
   wedges, a ramp putting five of eight slices on one colour, two warm rungs darkening to olive, and a
   jackpot the same gold as the rim.
+- `Tools/grove_art_facts.py` — writes each grove piece's `w`/`h` and its `hit` mask (a cell per sixteen
+  art pixels) into `homestead.json`, and each companion's into `manifest.json`, from the shipped PNGs;
+  `--check` proves the content still describes the art it ships, and `content.py` runs it. Run it after
+  any re-cut of grove or companion art. `Tools/render_grove.py` draws a grove exactly as the game does —
+  ground layer under piece layer, footprints, authored sizes — and is the fast loop for anything judged
+  by eye; re-verify it against a play-mode screenshot after touching `GroveTileArt` or `GroveFieldView`.
 - `Tools/grove_art.tsv` + `import_grove_art.py` — one row per grove piece (source, permanent id, slot kind,
   price, scale, lift, name). Copies the art, writes the loc string, regenerates the catalog, bumps
   `groveVersion`. It **refuses to remove an id it imported before**, because a piece id is in save files.
@@ -269,28 +275,36 @@ chain shorter; `bud_wood` is a spent lesson id. **Par 3 rather than par 2, and t
 par 2 both star lines round onto 3, so the two-star band is empty and a careless player drops straight to
 one star — `CheckStarBands` reads the *factors* and says nothing about it, so on a mode whose pars are this
 short, **look at the derived lines, not the factors**.
-<br>**The Tanglewood is ten more groves, still all par 3, and it ramps on the same dial** — six shut in to
-fourteen (**6, 7, 7, 8, 9, 9, 10, 10, 12, 14**), 7x6 up to 8x7, and one, two or three vines, with **three
-rungs carrying none at all**, because a chapter of nothing but its own new object is a chapter with one
-board in it. `greedy` stays 3 on nine of the ten and the satchel stays `par + 5`: what asks more is the
-board, never the arithmetic (20k).
-<br>**The Tanglewood is the second chapter and it brings the runner** — a vine joining two squares of the
-grove, drawn on the floor **under** everything standing on it, so a board that falls cannot drag it. A bunch
-that *takes in* one end sends its colour to whatever is standing on the other. Three things are drawn at
-once and each answers a different question the player has: the **stem lights up** in the colour being
-carried (*what*), a **head travels** down it from the end that went off (*which way*), and the **far cuff
-swells** as it lands, a beat before the flower there turns (*where to look now*). That is the same
-three-part reading a burst gets — flash, body, reach — spent on the one event in this mode that happens
-somewhere the player is not already watching.
-<br>**Its timing is the one place this mode deliberately breaks its own one-gravity rule.** A falling flower
-must move at `BudTempo.Pace` or a six-row drop visibly outruns the one-row drop beside it; a runner is not a
-thing moving but a *message arriving*, and the player is watching both ends at once — so `RunLag` is a
-**fixed beat whatever the distance**, long enough to be seen leaving and arriving and short enough that the
-far end still belongs to the wave that sent it. **And it is drawn even when the far end does not change**,
-which is why `BudBoard` reports a runner's wash unconditionally: sending a colour the far end already wears
-is the one mistake a runner can punish, and a mistake nobody watches is one nobody learns from. The vine
-existing *before* it ever fires is the whole answer to the complaint `Creep` earned — *"another far flower's
-colour changes… I'm not sure if this is a bug"* — because the cause is on the board from the first frame.
+<br>**The Tanglewood is ten groves that graft and forge, still all par 3, and the payoff is a thing the
+player made.** Two cuts before it were played and thrown away — a runner, then a windmill, a firefly, a
+puffball and a hive on a grove each — and the verdict on all five was one sentence: *zero new animation,
+nothing different, all I see is flowers popping.* Every one of them was placed by an author and paid out as
+the same chain. What replaced them is the genre's own loop: **five alike leave a bolt where you tapped, eight
+leave a sun**, and each fires with an event nothing else on the board can make.
+<br>**A special is drawn as the one thing on a settled board that never stops moving.** A bolt wears a
+four-pointed glint turning over the flower, a sun a wheel of rays turning the other way, both over a flower
+lit brighter than its neighbours with a wide glow behind it. The **forge** is drawn as an arrival, not a
+burst: the bunch's petals are thrown as always, the cell is bare for a beat (`BudTempo.ForgeLag`), eight
+motes fly back into it from around, and the special stands up out of a flash at nearly twice its size under a
+ring, with the mode's one "you got something" sound (`chime2` and `star`, higher for a sun). That is the
+freed critter's own three beats spent on a thing, which is why it reads as a reward.
+<br>**A bolt is lightning.** Tapping it flashes the flower white (`Ignite`, the player's own touch answered
+at once); on the `Fire` cue a white-hot core is drawn out from the special to both edges of the grove over a
+wide glow in the flower's colour, with jags along it that fade in the order the line passes them, and the
+cells in the line burst as ordinary bursts **racing outward** — `BudTempo.FireStep` apart, nearest first,
+which is the score's doing and what makes the line travel rather than appear. The screen flashes white, the
+board is kicked harder than any bunch kicks it, and the burst note is struck twice an octave apart under a
+whoosh. **A sun is a blast**: a gold flash the size of its square, its own wheel of rays thrown out and
+turning, three shockwaves, the light behind the whole grove, rockets, the heaviest shake in the mode and a
+bell — bigger than a bunch of nine by being a different kind of thing, not by being the same thing louder. A
+special caught in another special's reach fires in the same wave, which is the chain the chapter is for.
+<br>**The graft is a drag**, the one gesture every player of this genre already knows. Nothing marks which pairs
+trade — the owner asked for the board to be found rather than read, and the halo on taps that pop and the
+white flower's breath went at the same time; a refused pair nudges toward each other and snaps back with the
+game's own refusal note;
+a working one slides both flowers with a small lift before the chain (`BudCueKind.Slide`, at time nought,
+the first wave's wind-up waiting on it). A drag ends with the pointer up over the cell, which the event
+system reports as a click as well, so `BudView.Tap` drops a click while a drag stands.
 <br>**Freed critters stand in the grove and the grove still falls through their square, and that is measured
 rather than preferred.** The obvious fix — a freed cocoon leaves a **post** the grove may not move — was
 built, mirrored into `bud.py` and run against the shipped ten. It takes the mode out of the boards, because
@@ -531,7 +545,18 @@ Presentation and are invisible in a compile, a validator and a screenshot of the
   learned by getting it wrong: the route must be one the mode's own input could produce (a straight
   interpolation between two cells is a diagonal drag on a mode that has no diagonal); it must never be the
   board's own answer; and `Art.Hand` is **tilted on purpose**, because an upright finger over a closed fist is
-  a gesture that must never reach a teaching panel in any market.
+  a gesture that must never reach a teaching panel in any market. Budburst's graft is the second user:
+  `BudView.GraftPair` names a trade the board would accept, both flowers are ringed and the hand walks one
+  onto the other.
+- **A lesson about an event is taught at the event, and `Lesson.Later` is how a mode says so.** "Make five"
+  shown at the opening pointed at the ripest flower on a board where nothing had happened, and was reported
+  as exactly that; it now goes up over the bolt the player just made (20m: the event is the reward).
+  `RunLessons.Open` skips a deferred lesson, `RunLessons.Teach` raises one when the mode says the moment has
+  come (`BudView.Forged`, after the chain has finished playing), and the review key still lists it. `Teach`
+  refuses anything already seen, so a mode may call it on every forge and it costs one showing.
+- **A tip is written for a child.** Two or three short sentences, one idea each, the verb first; the
+  board shows the rest. A tip that needs a paragraph is describing a rule the board should be demonstrating
+  (20g), and a sentence about a thing on screen rings that thing — "the colour in your hand" rings the hand.
 - **Celebrate once.** The board already flashes, sounds and (for a glade) throws confetti when it solves; the
   win panel adds no fanfare and no confetti.
 - **The game does not vibrate at all, and `Haptic` is deleted.** Twenty call sites and a settings toggle, and

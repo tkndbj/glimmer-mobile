@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using GlimmerGrove.Homestead;
 using UnityEngine;
 using UnityEngine.EventSystems;
@@ -24,6 +25,16 @@ namespace GlimmerGrove
     /// objects for a screen that can draw one screenful, and it would get worse every time the
     /// floor grew. Tiles are realised as they come into view and returned to a pool as they
     /// leave, which is <see cref="GridView"/>'s bargain in two dimensions.
+    /// </para>
+    /// <para>
+    /// <b>The ground is one layer and everything standing on it is another.</b> A cell used to
+    /// hold its tile and its piece together, sorted as one — so the tile in front, painted
+    /// later, painted its top face and its skirt over the base of whatever stood behind it.
+    /// Every piece drawn standing <em>on</em> the ground rather than floating above its point
+    /// lost its feet: the cottage's plinth, a log, every path. Reported from play as objects
+    /// "buried in the tiles". The ground plane is flat and nothing on it can be behind it, so
+    /// all of it is drawn first and every piece is drawn over all of it; a cell now owns a
+    /// node in each layer, and the field positions and sorts both.
     /// </para>
     /// <para>
     /// <b>Pinch needs multi-touch, which the game turns off.</b> See
@@ -56,34 +67,43 @@ namespace GlimmerGrove
         const float PressSlop = 12f;
 
         /// <summary>
-        /// How far out and in the player may zoom.
+        /// How far out and in the player may zoom, and where the camera opens.
         ///
-        /// The upper bound is 1, deliberately: one is the size the art was cut for, and letting
-        /// somebody zoom past it only buys them a closer look at the resolution cap. The lower
-        /// bound is where a tile stops being a tappable target rather than where the field stops
-        /// fitting — a floor you can see all of but cannot touch is a picture, not a screen.
+        /// <para>
+        /// The tile is the target, and the band is set by what a thumb can hit. At the old
+        /// opening zoom of .7 a tile's diamond was 154 by 87 canvas units — under a quarter of
+        /// an inch tall on a phone — and the floor could be pulled out to .45, where nothing on
+        /// it was a target at all. Reported as "hard to tap on some tiles" and "make tiles
+        /// bigger". So the floor opens at <see cref="DefaultZoom"/>, a tile 187 wide and 105
+        /// tall; the far end of the pinch stops at <see cref="MinZoom"/>, where a tile is
+        /// still a fingertip; and the near end goes past one, because zooming in to place
+        /// something precisely is a real need and a little softness in the art at the closest
+        /// zoom is a fair price for it.
+        /// </para>
         /// </summary>
-        public const float MinZoom = .45f;
-        public const float MaxZoom = 1f;
+        public const float MinZoom = .55f;
+        public const float MaxZoom = 1.2f;
+        public const float DefaultZoom = .85f;
 
-        /// <summary>Tiles realised beyond each edge of the viewport. See <see cref="Cull"/>.</summary>
-        const int Overscan = 2;
+        /// <summary>Tiles realised beyond each edge of the viewport, on top of <see cref="SetReach"/>.</summary>
+        const int Overscan = 1;
 
-        RectTransform _viewport, _field;
+        RectTransform _viewport, _field, _groundLayer, _pieceLayer;
         GroveFloor _floor;
 
         Func<int, int, ITileCell> _make;
-        readonly System.Collections.Generic.Dictionary<long, ITileCell> _live =
-            new System.Collections.Generic.Dictionary<long, ITileCell>();
-        readonly System.Collections.Generic.Stack<ITileCell> _free =
-            new System.Collections.Generic.Stack<ITileCell>();
-        readonly System.Collections.Generic.List<long> _retiring = new System.Collections.Generic.List<long>();
+        readonly Dictionary<long, ITileCell> _live = new Dictionary<long, ITileCell>();
+        readonly Stack<ITileCell> _free = new Stack<ITileCell>();
+        readonly List<long> _retiring = new List<long>();
 
-        float _zoom = .7f;
+        float _zoom = DefaultZoom;
         Vector2 _pan;
         int _firstCol = 1, _lastCol = 0, _firstRow = 1, _lastRow = 0;
         float _pinchStart;
         float _zoomStart;
+
+        /// <summary>How far a piece's art can reach beyond its tile, in floor pixels. See <see cref="SetReach"/>.</summary>
+        float _reachUp = GroveFloor.TileHeight * 2f, _reachSide = GroveFloor.TileWidth;
 
         /// <summary>Raised when a tile is tapped. Never fires for a drag, or after a hold.</summary>
         public Action<int, int> TileTapped;
@@ -108,10 +128,22 @@ namespace GlimmerGrove
         /// </summary>
         public Action TappedNothing;
 
-        /// <summary>One tile of the field, built once and rebound as it is recycled.</summary>
+        /// <summary>
+        /// One tile of the field, built once and rebound as it is recycled.
+        ///
+        /// <para>
+        /// Two nodes, one per layer: <see cref="Ground"/> draws the tile and <see cref="Root"/>
+        /// whatever stands on it. Both are positioned by the field at the tile's point; the
+        /// cell offsets its art from there. <see cref="Depth"/> is what the piece layer is
+        /// sorted by, and a cell answers it after <see cref="Bind"/> — a two-deep house stands
+        /// in front of everything up to its front tile, not merely its anchor.
+        /// </para>
+        /// </summary>
         public interface ITileCell
         {
+            RectTransform Ground { get; }
             RectTransform Root { get; }
+            int Depth { get; }
             void Bind(int col, int row);
         }
 
@@ -160,6 +192,26 @@ namespace GlimmerGrove
             Measure(minCol, minRow, maxCol, maxRow);
         }
 
+        /// <summary>
+        /// How far beyond its tile a piece's art may reach — up the screen and to either side,
+        /// in floor pixels — so the culling window realises a tile whose picture is in view
+        /// while its ground is not.
+        ///
+        /// <para>
+        /// Without it a tall tree whose tile sat just under the bottom edge of the viewport
+        /// was culled with its canopy in full view, and popped in as the floor was dragged
+        /// another inch. The window used to be padded by two tiles, which is a quarter of an
+        /// oak. The screen reads the number off the catalog once (<c>GroveTileArt.Reach</c>);
+        /// the price is a row or two of extra cells at the bottom of the screen.
+        /// </para>
+        /// </summary>
+        public void SetReach(float up, float side)
+        {
+            _reachUp = Mathf.Max(GroveFloor.TileHeight, up);
+            _reachSide = Mathf.Max(GroveFloor.TileWidth * .5f, side);
+            Revisit();
+        }
+
         public static GroveFieldView Attach(RectTransform viewport, GroveFloor floor,
                                             Func<int, int, ITileCell> make)
         {
@@ -182,6 +234,11 @@ namespace GlimmerGrove
             view._field = field;
             view._floor = floor ?? GroveFloor.Empty;
             view._make = make;
+
+            // Ground first, pieces over it. Sibling order is draw order, so the two layers
+            // being two nodes is the whole of the layering rule.
+            view._groundLayer = UIKit.Node("Ground", field);
+            view._pieceLayer = UIKit.Node("Pieces", field);
 
             return view;
         }
@@ -241,24 +298,30 @@ namespace GlimmerGrove
         /// A mark naming a tile has to travel with that tile, and the only way to be sure of
         /// that is to be a child of the same transform — <c>HomesteadScreen</c>'s edit bar is
         /// the alternative and it has to be re-placed every frame from <c>LateUpdate</c>,
-        /// which is right for one bar and absurd for thirty diamonds. Kept out of the tile
-        /// pool, so <see cref="Restack"/> never renumbers it and it ends up drawn over every
-        /// tile rather than sorted among them.
+        /// which is right for one bar and absurd for thirty diamonds. Parented after both
+        /// layers, so it is drawn over every tile and every piece rather than sorted among them.
         /// </para>
         /// </summary>
         public RectTransform Layer(string name)
             => _field == null ? null : UIKit.Node(name, _field);
 
-        /// <summary>Rebinds every live tile without moving the camera. For an event repaint.</summary>
+        /// <summary>
+        /// Rebinds every live tile without moving the camera, and re-sorts them. For an event
+        /// repaint — a bind can change what a cell stands for and therefore its depth.
+        /// </summary>
         public void Refresh()
         {
             foreach (var pair in _live) pair.Value.Bind(Col(pair.Key), Row(pair.Key));
+            Restack();
         }
 
         /// <summary>Rebinds one tile, for a caller that knows exactly what changed.</summary>
         public void Refresh(int col, int row)
         {
-            if (_live.TryGetValue(Key(col, row), out var cell)) cell.Bind(col, row);
+            if (!_live.TryGetValue(Key(col, row), out var cell)) return;
+
+            cell.Bind(col, row);
+            Restack();
         }
 
         /// <summary>
@@ -304,8 +367,7 @@ namespace GlimmerGrove
             foreach (var pair in _live) _retiring.Add(pair.Key);
             foreach (long key in _retiring) Release(key);
 
-            _firstCol = 1; _lastCol = 0;
-            _firstRow = 1; _lastRow = 0;
+            Revisit();
         }
 
         // --------------------------------------------------------------- input
@@ -368,17 +430,18 @@ namespace GlimmerGrove
         }
 
         /// <summary>
-        /// The box a tile's art covers, in this field's own space, or a zero-width rect for a
-        /// tile with nothing standing on it.
+        /// The box and mask of the art drawn from a tile, in this field's own space — a hit
+        /// that <see cref="GroveHit.IsDrawn"/> answers false for on a tile drawing nothing.
         ///
         /// <para>
         /// Supplied by the screen rather than worked out here, because what stands on a tile
         /// and how big it draws are the screen's business — and it must be the <em>same</em>
         /// answer the screen paints with, or the player would be picking pieces that are not
-        /// where the picture says they are.
+        /// where the picture says they are. The screen answers for a stand's anchor tile only;
+        /// a tile a footprint reaches over answers nothing and lets the anchor's art speak.
         /// </para>
         /// </summary>
-        public Func<int, int, Rect> Footprint;
+        public Func<int, int, GroveHit> Hit;
 
         /// <summary>
         /// Which visible tile a screen point is over. False for a point off the floor, or over
@@ -387,7 +450,8 @@ namespace GlimmerGrove
         /// <para>
         /// What is <em>drawn</em> over the point beats what the ground under it says — see
         /// <see cref="GrovePick"/>. Without that, only a tile's bare diamond is touchable and
-        /// every piece standing on one is scenery.
+        /// every piece standing on one is scenery. A drawn answer is the stand's anchor; a
+        /// ground answer is the tile itself, which the caller may resolve to whatever covers it.
         /// </para>
         /// </summary>
         public bool TryTileAt(Vector2 screenPos, Camera cam, out int col, out int row)
@@ -418,27 +482,21 @@ namespace GlimmerGrove
         bool TryDrawnAt(Vector2 local, out int col, out int row)
         {
             col = row = 0;
-            if (Footprint == null) return false;
+            if (Hit == null) return false;
 
             _hits.Clear();
 
             foreach (var pair in _live)
             {
-                int c = Col(pair.Key), r = Row(pair.Key);
-
-                var box = Footprint(c, r);
-                if (box.width <= 0f || box.height <= 0f) continue;
-
-                _hits.Add(new GroveHit(c, r, box.center.x, box.center.y,
-                                       box.width * .5f, box.height * .5f));
+                var hit = Hit(Col(pair.Key), Row(pair.Key));
+                if (hit.IsDrawn) _hits.Add(hit);
             }
 
             return GrovePick.Topmost(_hits, local.x, local.y, out col, out row)
                 && (_visible == null || _visible(col, row));
         }
 
-        readonly System.Collections.Generic.List<GroveHit> _hits =
-            new System.Collections.Generic.List<GroveHit>();
+        readonly List<GroveHit> _hits = new List<GroveHit>();
 
         /// <summary>
         /// Where a tile is on the screen right now, in world space.
@@ -447,10 +505,11 @@ namespace GlimmerGrove
         /// Asked of the view rather than read off the tile's own object because a tile that has
         /// been panned out of view does not have one — culling is the feature here — and
         /// anything anchored to a tile has to keep answering while the tile is off screen, if
-        /// only to know that it should hide.
+        /// only to know that it should hide. Fractional coordinates are legal, so a footprint's
+        /// centre can be asked for as easily as a tile.
         /// </para>
         /// </summary>
-        public Vector3 TileWorld(int col, int row)
+        public Vector3 TileWorld(float col, float row)
             => _field == null
                 ? Vector3.zero
                 : _field.TransformPoint(new Vector3(GroveFloor.TileX(col, row),
@@ -583,6 +642,12 @@ namespace GlimmerGrove
         /// which is what the four corners give. Tiles inside the box but outside the view cost
         /// one cell each and are cheaper than getting the geometry wrong.
         /// </para>
+        /// <para>
+        /// The rectangle is the viewport grown by <see cref="SetReach"/>: downward by how far
+        /// a piece's art reaches up, sideways by how far it reaches out. A piece is drawn from
+        /// its anchor tile, so a tile whose art is in view must be live even when its ground
+        /// is off the bottom of the screen.
+        /// </para>
         /// </summary>
         void Cull()
         {
@@ -591,8 +656,8 @@ namespace GlimmerGrove
             float halfW = _viewport.rect.width * .5f / Mathf.Max(.01f, _zoom);
             float halfH = _viewport.rect.height * .5f / Mathf.Max(.01f, _zoom);
 
-            float left = -_pan.x - halfW, right = -_pan.x + halfW;
-            float top = _pan.y - halfH, bottom = _pan.y + halfH;
+            float left = -_pan.x - halfW - _reachSide, right = -_pan.x + halfW + _reachSide;
+            float top = _pan.y - halfH - GroveFloor.TileHeight, bottom = _pan.y + halfH + _reachUp;
 
             int minCol = int.MaxValue, maxCol = int.MinValue;
             int minRow = int.MaxValue, maxRow = int.MinValue;
@@ -654,9 +719,10 @@ namespace GlimmerGrove
         /// depth sorting exists to prevent.
         /// </para>
         /// <para>
-        /// So the whole window is ordered in one pass instead. It runs when the visible range
-        /// changes rather than every frame, which is a few times a second while panning and
-        /// never while still, and it sorts a screenful rather than a floor.
+        /// So the whole window is ordered in one pass instead, once per layer: the ground by
+        /// its tile, so each skirt is covered by the tile in front; the pieces by what each
+        /// cell reports it stands for. It runs when the visible range changes or a bind does
+        /// rather than every frame, and it sorts a screenful rather than a floor.
         /// </para>
         /// </summary>
         void Restack()
@@ -664,21 +730,34 @@ namespace GlimmerGrove
             _ordered.Clear();
             foreach (var pair in _live) _ordered.Add(pair.Key);
 
-            _ordered.Sort(Depth);
+            _ordered.Sort(GroundDepth);
+            for (int i = 0; i < _ordered.Count; i++)
+                _live[_ordered[i]].Ground.SetSiblingIndex(i);
 
+            // Made once, on first use, rather than in a constructor a MonoBehaviour must not
+            // declare or a field initialiser that may not capture `this`.
+            _pieceDepth ??= (a, b) =>
+            {
+                int byDepth = _live[a].Depth.CompareTo(_live[b].Depth);
+                return byDepth != 0 ? byDepth : GroundDepth(a, b);
+            };
+
+            _ordered.Sort(_pieceDepth);
             for (int i = 0; i < _ordered.Count; i++)
                 _live[_ordered[i]].Root.SetSiblingIndex(i);
         }
 
-        readonly System.Collections.Generic.List<long> _ordered = new System.Collections.Generic.List<long>();
+        readonly List<long> _ordered = new List<long>();
 
         /// <summary>
         /// Held rather than passed as a method group, which allocates a delegate at every call.
         /// This one runs on every pan that moves the window, so it is the one place in this
         /// screen where a per-call allocation would be continuous garbage under the thumb.
         /// </summary>
-        static readonly System.Comparison<long> Depth = (a, b)
+        static readonly Comparison<long> GroundDepth = (a, b)
             => GroveFloor.DrawOrder(Col(a), Row(a)).CompareTo(GroveFloor.DrawOrder(Col(b), Row(b)));
+
+        Comparison<long> _pieceDepth;
 
         void Realise(int col, int row, long key)
         {
@@ -686,18 +765,18 @@ namespace GlimmerGrove
             if (_free.Count > 0)
             {
                 cell = _free.Pop();
+                cell.Ground.gameObject.SetActive(true);
                 cell.Root.gameObject.SetActive(true);
             }
             else
             {
                 cell = _make(col, row);
-                cell.Root.SetParent(_field, false);
+                cell.Ground.SetParent(_groundLayer, false);
+                cell.Root.SetParent(_pieceLayer, false);
             }
 
-            var root = cell.Root;
-            root.anchorMin = root.anchorMax = new Vector2(.5f, .5f);
-            root.pivot = new Vector2(.5f, .5f);
-            root.anchoredPosition = new Vector2(GroveFloor.TileX(col, row), -GroveFloor.TileY(col, row));
+            Place(cell.Ground, col, row);
+            Place(cell.Root, col, row);
 
             cell.Bind(col, row);
 
@@ -706,11 +785,19 @@ namespace GlimmerGrove
             _live[key] = cell;
         }
 
+        static void Place(RectTransform node, int col, int row)
+        {
+            node.anchorMin = node.anchorMax = new Vector2(.5f, .5f);
+            node.pivot = new Vector2(.5f, .5f);
+            node.anchoredPosition = new Vector2(GroveFloor.TileX(col, row), -GroveFloor.TileY(col, row));
+        }
+
         void Release(long key)
         {
             if (!_live.TryGetValue(key, out var cell)) return;
 
             _live.Remove(key);
+            cell.Ground.gameObject.SetActive(false);
             cell.Root.gameObject.SetActive(false);
             _free.Push(cell);
         }

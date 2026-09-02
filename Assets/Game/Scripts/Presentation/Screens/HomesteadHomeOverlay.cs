@@ -210,7 +210,8 @@ namespace GlimmerGrove
                 default:
                     _action = UIKit.TextButton("Buy", Panel, "btn_green",
                                                Loc.Format("ui.grove.upgrade_for", Compact.Number(offer.Cost)), 40,
-                                               size, anchor, at, () => OnBuy(next));
+                                               size, anchor, at, () => OnBuy(next),
+                                               Art.CoinFace(), iconTrails: true);
                     _action.Interactable = offer.CanBuy;
                     break;
             }

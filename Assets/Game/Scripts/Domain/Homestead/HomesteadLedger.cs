@@ -31,6 +31,21 @@ namespace GlimmerGrove.Homestead
         /// apart.
         /// </summary>
         LevelLocked,
+
+        /// <summary>
+        /// A stretch of ground further up the ladder than the player has reached. Money cannot
+        /// answer it either — the rung below has to be bought first.
+        ///
+        /// <para>
+        /// Land-only, on <see cref="LevelLocked"/>'s precedent and for its reason: folding it
+        /// into <see cref="NotForSale"/> would tell a keeper that ground they can see priced on
+        /// the shelf "can only be earned by playing", and folding it into
+        /// <see cref="TooExpensive"/> would quote them a price that buys nothing. It is the one
+        /// refusal here that a player clears by spending rather than by waiting, so the sentence
+        /// has to name the stretch that comes first — see <c>GroveLand.NextForSale</c>.
+        /// </para>
+        /// </summary>
+        EarlierFirst,
     }
 
     /// <summary>What a piece costs this player right now, and whether they can pay it.</summary>
@@ -399,13 +414,20 @@ namespace GlimmerGrove.Homestead
         /// </para>
         /// </summary>
         public static HomesteadPiece BestDwelling(HomesteadCatalog catalog)
+            => BestDwelling(catalog, LedgerHoldings.Instance);
+
+        /// <summary>
+        /// The same rule over any holdings — this device's, or a save file's
+        /// (<see cref="SaveHoldings"/>), which is what the public card is built from.
+        /// </summary>
+        public static HomesteadPiece BestDwelling(HomesteadCatalog catalog, IGroveHoldings held)
         {
             var best = default(HomesteadPiece);
-            if (catalog == null) return best;
+            if (catalog == null || held == null) return best;
 
             foreach (var piece in catalog.Pieces)
             {
-                if (!piece.IsDwelling || !IsHeld(piece)) continue;
+                if (!piece.IsDwelling || !held.Holds(piece)) continue;
                 if (!best.IsValid || piece.Tier > best.Tier) best = piece;
             }
 

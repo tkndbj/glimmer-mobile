@@ -652,6 +652,142 @@ namespace GlimmerGrove.Tests
             Assert.IsTrue(GroveLand.IsBuildable(floor, 2, 2));
         }
 
+        // ================================================== the land ladder
+        [Test]
+        public void GroundPricedInGemsIsNotStarterLand()
+        {
+            GroveLand.ResetForTests();
+
+            // The narrow reading — Cost <= 0 — was the whole rule while credits priced the
+            // entire floor, and became "every gem-priced region is free" the moment they did
+            // not. It gates IsOwned, the shop shelf, the ladder, the hall's ground and what is
+            // written into the save, so getting it wrong hands over half the world at launch
+            // while every file still reads as authored.
+            var paid = new GroveRegion("shore", 0, 0, 2, 2, cost: 0, gems: 2000, order: 1);
+            var free = new GroveRegion("home", 2, 0, 2, 2, cost: 0);
+
+            Assert.IsFalse(paid.IsStarter, "gem-priced ground is sold, not given away");
+            Assert.IsTrue(free.IsStarter);
+
+            Assert.IsTrue(paid.IsGemPriced);
+            Assert.AreEqual(2000, paid.Price, "the price is the one it is actually sold at");
+            Assert.AreEqual(Currency.Gems, paid.PaidIn);
+
+            Assert.AreEqual(0, paid.Cost,
+                            "and it has no credit price, which is what keeps it out of the " +
+                            "grove's worth without needing a clause anywhere");
+
+            var floor = Field(4, 2, free, paid);
+            Assert.IsFalse(GroveLand.IsOwned(floor, 0, 0), "nobody starts owning it");
+        }
+
+        [Test]
+        public void OnlyTheLowestUnboughtRungIsForSale()
+        {
+            GroveLand.ResetForTests();
+
+            var floor = Field(6, 2,
+                              new GroveRegion("home", 0, 0, 2, 2, cost: 0),
+                              new GroveRegion("meadow", 2, 0, 2, 2, cost: 2500, order: 1),
+                              new GroveRegion("shore", 4, 0, 2, 2, cost: 0, gems: 2000, order: 2));
+
+            var meadow = floor.Region("meadow");
+            var shore = floor.Region("shore");
+
+            Assert.AreSame(meadow, GroveLand.NextForSale(floor));
+            Assert.IsTrue(GroveLand.IsNext(floor, meadow));
+            Assert.IsFalse(GroveLand.IsNext(floor, shore));
+
+            // The refusal is its own state, and it is answered before the price: a keeper who
+            // is both a rung down and short of gems is told about the wall money cannot climb,
+            // not quoted a figure that would not have helped. Invariant 15a's ordering.
+            Assert.AreEqual(HomesteadPurchaseState.EarlierFirst,
+                            GroveLand.OfferFor(shore, floor).State);
+
+            GroveLand.LoadFrom(new SaveFileDto
+            {
+                schemaVersion = SaveSchema.Version,
+                groveLandOwned = new[] { "meadow" },
+            });
+
+            Assert.AreSame(shore, GroveLand.NextForSale(floor), "the ladder moves up one");
+            Assert.AreNotEqual(HomesteadPurchaseState.EarlierFirst,
+                               GroveLand.OfferFor(shore, floor).State);
+        }
+
+        [Test]
+        public void TheLadderFollowsTheAuthoredRungAndNotThePrice()
+        {
+            GroveLand.ResetForTests();
+
+            // This is the case that says why the rung is authored at all. A gem region's Cost is
+            // nought, so a ladder read off the credit price would sell the five most expensive
+            // stretches in the game first and for nothing — and a ladder read off "whichever
+            // number is smaller" cannot be written, because 600 gems and 5,000 credits do not
+            // compare. Authoring it also survives a retune, which a derived one does not.
+            var floor = Field(6, 2,
+                              new GroveRegion("home", 0, 0, 2, 2, cost: 0),
+                              new GroveRegion("cheap_looking", 2, 0, 2, 2, cost: 0, gems: 600, order: 2),
+                              new GroveRegion("meadow", 4, 0, 2, 2, cost: 2500, order: 1));
+
+            Assert.AreSame(floor.Region("meadow"), GroveLand.NextForSale(floor),
+                           "the credit stretch is rung 1 even though its Cost is the larger number");
+        }
+
+        [Test]
+        public void AStretchWithNoRungIsNeverOfferedRatherThanOfferedFirst()
+        {
+            GroveLand.ResetForTests();
+
+            // Rung is int.MaxValue when unauthored, deliberately. A content mistake then strands
+            // that stretch — which somebody notices — instead of jumping it to the front of the
+            // ladder and selling the whole floor out of order, which nobody would.
+            var floor = Field(6, 2,
+                              new GroveRegion("home", 0, 0, 2, 2, cost: 0),
+                              new GroveRegion("unplaced", 2, 0, 2, 2, cost: 900),
+                              new GroveRegion("meadow", 4, 0, 2, 2, cost: 2500, order: 1));
+
+            Assert.AreSame(floor.Region("meadow"), GroveLand.NextForSale(floor));
+            Assert.AreEqual(int.MaxValue, GroveLand.Rung(floor.Region("unplaced")));
+        }
+
+        [Test]
+        public void TheShippedFloorIsALadderOfOnePriceEach()
+        {
+            // Pinned against the shipped file rather than only against the mapper, because the
+            // failure this catches is an authoring one: a rung reused, a rung skipped, or a
+            // stretch given two prices. ContentValidation says the same thing in the Editor;
+            // this is the half that runs offline.
+            var catalog = Shipped(out _);
+
+            var rungs = new Dictionary<int, string>();
+            int sellable = 0;
+
+            foreach (var region in catalog.Floor.Regions)
+            {
+                Assert.IsFalse(region.Cost > 0 && region.Gems > 0,
+                               $"'{region.Id}' is priced in both currencies");
+
+                if (region.IsStarter)
+                {
+                    Assert.AreEqual(0, region.Order,
+                                    $"'{region.Id}' is free and must not sit on the ladder");
+                    continue;
+                }
+
+                sellable++;
+                Assert.Greater(region.Order, 0, $"'{region.Id}' is for sale with no rung");
+                Assert.IsFalse(rungs.ContainsKey(region.Order),
+                               $"'{region.Id}' shares rung {region.Order} with " +
+                               (rungs.TryGetValue(region.Order, out var other) ? other : "another"));
+                rungs[region.Order] = region.Id;
+            }
+
+            for (int rung = 1; rung <= sellable; rung++)
+                Assert.IsTrue(rungs.ContainsKey(rung),
+                              $"the land ladder has no rung {rung}; nothing behind it is reachable");
+        }
+
         // ================================================== the shipped catalog
         static string CatalogPath =>
             Path.GetFullPath(Path.Combine(Application.dataPath, "StreamingAssets",

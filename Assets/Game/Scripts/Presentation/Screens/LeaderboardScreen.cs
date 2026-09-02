@@ -204,8 +204,10 @@ namespace GlimmerGrove
 
             _boardId = boardId;
             StyleTabs();
-            Audio.Sfx("pop", .5f);
 
+            // No sound of its own. The tab is an ordinary Btn, so it has already spoken on
+            // the way down; a second cue on the way up is the stutter Btn.ClickSfx was
+            // consolidated to remove, heard here as one tap making two noises.
             Fetch();
         }
 
@@ -303,7 +305,7 @@ namespace GlimmerGrove
         {
             if (!entry.IsValid) return;
 
-            Audio.Sfx("pop", .5f);
+            // Silent, for Select's reason: the row is a button and has already clicked.
             Flow.Go<GroveVisitScreen>(screen => screen.Visit(entry.OwnerId, entry.Name));
         }
 

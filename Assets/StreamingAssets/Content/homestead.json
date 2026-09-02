@@ -5,7 +5,7 @@
     "rows": 14,
     "tileArt": "Homestead/floor_grass",
     "hallTile": "t_006_006",
-    "starterTile": "t_007_006",
+    "starterTile": "t_008_006",
     "regions": [
       {
         "id": "dusk_field",
@@ -13,7 +13,9 @@
         "row": 0,
         "cols": 4,
         "rows": 4,
-        "cost": 11000
+        "cost": 0,
+        "gems": 1200,
+        "order": 6
       },
       {
         "id": "north_reach",
@@ -21,7 +23,8 @@
         "row": 0,
         "cols": 6,
         "rows": 4,
-        "cost": 5000
+        "cost": 5000,
+        "order": 3
       },
       {
         "id": "far_terrace",
@@ -29,7 +32,9 @@
         "row": 0,
         "cols": 4,
         "rows": 4,
-        "cost": 14000
+        "cost": 0,
+        "gems": 1500,
+        "order": 7
       },
       {
         "id": "west_hollow",
@@ -37,7 +42,8 @@
         "row": 4,
         "cols": 4,
         "rows": 6,
-        "cost": 3500
+        "cost": 3500,
+        "order": 2
       },
       {
         "id": "hearthstead",
@@ -53,7 +59,8 @@
         "row": 4,
         "cols": 4,
         "rows": 6,
-        "cost": 2500
+        "cost": 2500,
+        "order": 1
       },
       {
         "id": "still_shore",
@@ -61,7 +68,9 @@
         "row": 10,
         "cols": 4,
         "rows": 4,
-        "cost": 17000
+        "cost": 0,
+        "gems": 2000,
+        "order": 8
       },
       {
         "id": "south_bank",
@@ -69,7 +78,9 @@
         "row": 10,
         "cols": 6,
         "rows": 4,
-        "cost": 6500
+        "cost": 0,
+        "gems": 600,
+        "order": 4
       },
       {
         "id": "sunrise_field",
@@ -77,9 +88,13 @@
         "row": 10,
         "cols": 4,
         "rows": 4,
-        "cost": 9000
+        "cost": 0,
+        "gems": 900,
+        "order": 5
       }
-    ]
+    ],
+    "hallCols": 2,
+    "hallRows": 2
   },
   "score": {
     "stars": [
@@ -97,8 +112,13 @@
       "kind": "dwelling",
       "tier": 1,
       "cost": 0,
+      "cols": 2,
+      "rows": 2,
       "scale": 1.0,
-      "lift": 0.45
+      "lift": 0.45,
+      "w": 400,
+      "h": 368,
+      "hit": "000f00001f80001fc0003fe0007ff8007ffe00ffff00ffffc07fffe01ffff00ffff007fff803fffc01fffe01ffffc1fffff0fffff07ffff81ffff80ffff803ffe0007ff00001e000"
     },
     {
       "id": "lodge",
@@ -106,8 +126,13 @@
       "kind": "dwelling",
       "tier": 2,
       "cost": 2500,
+      "cols": 2,
+      "rows": 2,
       "scale": 1.08,
-      "lift": 0.45
+      "lift": 0.45,
+      "w": 400,
+      "h": 368,
+      "hit": "000f00001f80001fc0003fe0007ff8007ffe00ffff00ffffc07fffe01ffff00ffff007fff803fffc01fffe01ffffc1fffff0fffff07ffff81ffff80ffff803ffe0007ff00001e000"
     },
     {
       "id": "hall",
@@ -115,8 +140,13 @@
       "kind": "dwelling",
       "tier": 3,
       "cost": 6000,
+      "cols": 2,
+      "rows": 2,
       "scale": 1.17,
-      "lift": 0.45
+      "lift": 0.45,
+      "w": 400,
+      "h": 368,
+      "hit": "000f00001f80001fc0003fe0007ff8007ffe00ffff00ffffc07fffe01ffff00ffff007fff803fffc01fffe01ffffc1fffff0fffff07ffff81ffff80ffff803ffe0007ff00001e000"
     },
     {
       "id": "manor",
@@ -124,8 +154,13 @@
       "kind": "dwelling",
       "tier": 4,
       "cost": 13000,
+      "cols": 2,
+      "rows": 2,
       "scale": 1.26,
-      "lift": 0.45
+      "lift": 0.45,
+      "w": 400,
+      "h": 368,
+      "hit": "000f00001f80001fc0003fe0007ff8007ffe00ffff00ffffc07fffe01ffff00ffff007fff803fffc01fffe01ffffc1fffff0fffff07ffff81ffff80ffff803ffe0007ff00001e000"
     },
     {
       "id": "sanctum",
@@ -133,8 +168,13 @@
       "kind": "dwelling",
       "tier": 5,
       "cost": 28000,
+      "cols": 2,
+      "rows": 2,
       "scale": 1.35,
-      "lift": 0.45
+      "lift": 0.45,
+      "w": 400,
+      "h": 368,
+      "hit": "000f00001f80001fc0003fe0007ff8007ffe00ffff00ffffc07fffe01ffff00ffff007fff803fffc01fffe01ffffc1fffff0fffff07ffff81ffff80ffff803ffe0007ff00001e000"
     },
     {
       "id": "crystal",
@@ -148,7 +188,10 @@
       "lift": 0.45,
       "disabled": false,
       "slot": "structure",
-      "_generated": true
+      "_generated": true,
+      "w": 206,
+      "h": 260,
+      "hit": "3803e01f00f807f03f81fc1fc0ff03f83f81fa03fc0df04f03000800"
     },
     {
       "id": "cave",
@@ -158,10 +201,15 @@
       "cost": 0,
       "requiresLevel": "c01_sleeping_thicket",
       "requiresChapter": "",
+      "disabled": false,
+      "slot": "structure",
+      "cols": 2,
+      "rows": 2,
       "scale": 0.9,
       "lift": 0.45,
-      "disabled": false,
-      "slot": "structure"
+      "w": 400,
+      "h": 262,
+      "hit": "003c00001f80001fc0001ff0001ffc001fff001fff800fffe00ffff00ffffc3fffff9fffffeffffff9fffffc0ffff800fe780078000"
     },
     {
       "id": "well",
@@ -171,11 +219,16 @@
       "cost": 0,
       "requiresLevel": "c01_three_springs",
       "requiresChapter": "",
-      "scale": 0.9,
-      "lift": 0.45,
       "disabled": false,
       "slot": "structure",
-      "_generated": true
+      "_generated": true,
+      "cols": 2,
+      "rows": 2,
+      "scale": 0.9,
+      "lift": 0.45,
+      "w": 399,
+      "h": 306,
+      "hit": "00f80003fe0007ff0003ff8003ffc001ffe000fff0007ff8007ffe003fff003fffc01fffe00ffff007fff803fffc01ffff00ffff803fff000fff000070000"
     },
     {
       "id": "gravestone",
@@ -185,7 +238,10 @@
       "cost": 900,
       "scale": 0.95,
       "lift": 0.38,
-      "_imported": true
+      "_imported": true,
+      "w": 153,
+      "h": 138,
+      "hit": "3e0fc3f1fc7f1fcfffffffc"
     },
     {
       "id": "fish_trap",
@@ -195,7 +251,10 @@
       "cost": 1100,
       "scale": 0.95,
       "lift": 0.38,
-      "_imported": true
+      "_imported": true,
+      "w": 125,
+      "h": 170,
+      "hit": "feffffffff7f7e7e7f7f18"
     },
     {
       "id": "chest",
@@ -205,7 +264,10 @@
       "cost": 1200,
       "scale": 0.95,
       "lift": 0.38,
-      "_imported": true
+      "_imported": true,
+      "w": 146,
+      "h": 100,
+      "hit": "7f1fe7ffffffbfe060"
     },
     {
       "id": "great_stump",
@@ -215,7 +277,10 @@
       "cost": 1300,
       "scale": 0.95,
       "lift": 0.38,
-      "_imported": true
+      "_imported": true,
+      "w": 247,
+      "h": 191,
+      "hit": "0fe01ff01ff47fff7ffe7ffc3ff8fff8fff8fff89ff803a0"
     },
     {
       "id": "mushroom_log",
@@ -225,7 +290,10 @@
       "cost": 1400,
       "scale": 0.95,
       "lift": 0.38,
-      "_imported": true
+      "_imported": true,
+      "w": 147,
+      "h": 132,
+      "hit": "383f0fc3fcffbfe3fdfe320"
     },
     {
       "id": "stone_pillars",
@@ -235,7 +303,10 @@
       "cost": 1500,
       "scale": 0.95,
       "lift": 0.38,
-      "_imported": true
+      "_imported": true,
+      "w": 115,
+      "h": 148,
+      "hit": "c0c0f7ffffff7f1f0702"
     },
     {
       "id": "tent",
@@ -243,9 +314,12 @@
       "kind": "decor",
       "slot": "structure",
       "cost": 1600,
-      "scale": 0.85,
+      "scale": 0.75,
       "lift": 0.38,
-      "_imported": true
+      "_imported": true,
+      "w": 321,
+      "h": 309,
+      "hit": "0380001e0001fc000ff800ffe007ff007ffc03ffe03fff81fffe1ffff0ffffefffff7ffff3ffff07ffe00ffc003fc000780001000"
     },
     {
       "id": "sand_pillar",
@@ -255,7 +329,10 @@
       "cost": 1900,
       "scale": 0.8,
       "lift": 0.38,
-      "_imported": true
+      "_imported": true,
+      "w": 201,
+      "h": 373,
+      "hit": "0f81fe3ffdfffffffffffffffefff7ff9ffcffe7ff3ff9ff8ffc7fe7ffffffffffffbff07e00e0"
     },
     {
       "id": "obelisk",
@@ -265,7 +342,10 @@
       "cost": 2200,
       "scale": 0.75,
       "lift": 0.38,
-      "_imported": true
+      "_imported": true,
+      "w": 118,
+      "h": 308,
+      "hit": "3cfefefefefefefe7e7efffe7e7c3c1c1c1c0800"
     },
     {
       "id": "iceberg",
@@ -275,7 +355,10 @@
       "cost": 2400,
       "scale": 0.8,
       "lift": 0.38,
-      "_imported": true
+      "_imported": true,
+      "w": 247,
+      "h": 279,
+      "hit": "07000fc01fe03fe07fe07fe07fe0fffcfffffffffffffffefffefffefffe7ffc7c000000"
     },
     {
       "id": "beached_boat",
@@ -283,9 +366,12 @@
       "kind": "decor",
       "slot": "structure",
       "cost": 2800,
-      "scale": 0.6,
+      "scale": 0.52,
       "lift": 0.32,
-      "_imported": true
+      "_imported": true,
+      "w": 444,
+      "h": 304,
+      "hit": "0001fe00001ff8f007ffefffffffffffffeffffffeffffffcffffffcffffffc7fffffc7fffffc7fffffc7fffffc3fffffe3ffffff0ffffff03fffff01f3fe300003e0"
     },
     {
       "id": "wreck",
@@ -293,9 +379,14 @@
       "kind": "decor",
       "slot": "structure",
       "cost": 3000,
+      "cols": 2,
+      "rows": 2,
       "scale": 0.7,
       "lift": 0.34,
-      "_imported": true
+      "_imported": true,
+      "w": 591,
+      "h": 471,
+      "hit": "0007000000003800000001fc0000007fe0000007fc000007bfc000007fbc00000fffe000003fff000001ffb800000ff9c7c0007fff7e0003ffffff807ffffffe1fffffffffffffffffffffffffffe3fffffffc1fffffffc0fffffffc03ffffff801ffffff8007fffffe003ffffff000ffffffc007fffffe007ffffff8000ffe03c00007f00000000380000"
     },
     {
       "id": "willow_isle",
@@ -303,9 +394,12 @@
       "kind": "decor",
       "slot": "structure",
       "cost": 3200,
-      "scale": 0.55,
+      "scale": 0.48,
       "lift": 0.38,
-      "_imported": true
+      "_imported": true,
+      "w": 495,
+      "h": 428,
+      "hit": "003fe00000ffe00003fff0000ffff0001fffe0003fffc0003fff80007fff0000fffe0001fffc000ffffc001ffff8003ffff0007fffff00ffffff3ffffffefffffffdfffffffdfffffff9ffffffc3ffffff83fffffe03fffff003ffff8000c7fe000003f8000003f000"
     },
     {
       "id": "idol",
@@ -315,7 +409,10 @@
       "cost": 3600,
       "scale": 0.7,
       "lift": 0.38,
-      "_imported": true
+      "_imported": true,
+      "w": 214,
+      "h": 403,
+      "hit": "1fe0ff8ffe3ff8fff1ffc3ff87ff1ffc7ff1ffc7fe1ff87fe0ff83fc0ff07fc1ff87ff1ffc7ff1ffc7ff0000000"
     },
     {
       "id": "waterfall",
@@ -326,7 +423,10 @@
       "scale": 0.6,
       "lift": 0.46,
       "animated": true,
-      "_generated": true
+      "_generated": true,
+      "w": 384,
+      "h": 453,
+      "hit": "001e00003fc01f7ff03ffff03ffff03ffff03ffff03ffff87ffffefffffffffffffffffffffffffffffffffffe7ffffe7ffffe7ffffe7ffffe3ffffe3ffffc3ffffc3ffffc1ffffc1ffff807ffc0007f80003f00000c00"
     },
     {
       "id": "oak",
@@ -336,10 +436,13 @@
       "cost": 0,
       "requiresLevel": "",
       "requiresChapter": "c01_shallows",
-      "scale": 0.95,
+      "scale": 0.9,
       "lift": 0.45,
       "disabled": false,
-      "slot": "canopy"
+      "slot": "canopy",
+      "w": 321,
+      "h": 494,
+      "hit": "01fc001ff001ffc01fff00fff80fffe0ffff07fff87fffe3ffff3ffff9ffffefffff7ffffbffffdffffffffff3ffff8ffff80fff007fc0007e0003f0001f8001fc000ff001ffc03dff80076c00380000400"
     },
     {
       "id": "stump",
@@ -349,10 +452,13 @@
       "cost": 500,
       "requiresLevel": "",
       "requiresChapter": "",
-      "scale": 1.0,
+      "scale": 0.8,
       "lift": 0.45,
       "disabled": false,
-      "slot": "canopy"
+      "slot": "canopy",
+      "w": 320,
+      "h": 260,
+      "hit": "00700007e001fe003fe007fe007ff007ff00fff03fff97ffff7fff87ffe0fe1e0e00e0000e00008000080"
     },
     {
       "id": "dead_trunk",
@@ -362,7 +468,10 @@
       "cost": 600,
       "scale": 0.95,
       "lift": 0.42,
-      "_imported": true
+      "_imported": true,
+      "w": 104,
+      "h": 130,
+      "hit": "397effc3870e1c30"
     },
     {
       "id": "tree_slim",
@@ -372,7 +481,10 @@
       "cost": 620,
       "scale": 0.85,
       "lift": 0.42,
-      "_imported": true
+      "_imported": true,
+      "w": 193,
+      "h": 355,
+      "hit": "06003003c01e01f80fc0ff07f83fe3ff1ffdffefffffffffcffc1f80fc07e07f03fc1fe0e80"
     },
     {
       "id": "pine_bare",
@@ -382,7 +494,10 @@
       "cost": 640,
       "scale": 0.85,
       "lift": 0.42,
-      "_imported": true
+      "_imported": true,
+      "w": 211,
+      "h": 253,
+      "hit": "07003e01fc0ff87ff1ffc3ff1ffeffffffffff9ffc1fe01c007001c0"
     },
     {
       "id": "tree_leafy",
@@ -392,7 +507,10 @@
       "cost": 700,
       "scale": 0.85,
       "lift": 0.42,
-      "_imported": true
+      "_imported": true,
+      "w": 169,
+      "h": 202,
+      "hit": "3f0ff9fffffffffffffbfe3fc1c0380700e0"
     },
     {
       "id": "pine_round",
@@ -402,7 +520,10 @@
       "cost": 700,
       "scale": 0.85,
       "lift": 0.42,
-      "_imported": true
+      "_imported": true,
+      "w": 178,
+      "h": 285,
+      "hit": "0600f01f01f83f83fc7fcffeffeffffff7fc3f80e00e03f01f01f0"
     },
     {
       "id": "dead_tree",
@@ -412,7 +533,10 @@
       "cost": 700,
       "scale": 0.9,
       "lift": 0.42,
-      "_imported": true
+      "_imported": true,
+      "w": 138,
+      "h": 251,
+      "hit": "3d9fffdfe7f1f9fdf8fc7e0f07c7f7fbf0f0"
     },
     {
       "id": "dead_tree_bare",
@@ -422,7 +546,10 @@
       "cost": 700,
       "scale": 0.9,
       "lift": 0.42,
-      "_imported": true
+      "_imported": true,
+      "w": 188,
+      "h": 329,
+      "hit": "1f01f71ff5fcffc7fc3fc1fe1fe7f2ff0df0df0df01f01f01fc7feffc7f03c0"
     },
     {
       "id": "spire",
@@ -435,7 +562,10 @@
       "scale": 1.0,
       "lift": 0.45,
       "disabled": false,
-      "slot": "canopy"
+      "slot": "canopy",
+      "w": 160,
+      "h": 182,
+      "hit": "1c0703c1f07e1f8fe3f8fe3fc7e1e0"
     },
     {
       "id": "tree_round",
@@ -445,7 +575,10 @@
       "cost": 760,
       "scale": 0.85,
       "lift": 0.42,
-      "_imported": true
+      "_imported": true,
+      "w": 115,
+      "h": 201,
+      "hit": "18387c7cfefefffffffe7c7c3c"
     },
     {
       "id": "vines",
@@ -455,7 +588,10 @@
       "cost": 800,
       "scale": 0.9,
       "lift": 0.42,
-      "_imported": true
+      "_imported": true,
+      "w": 120,
+      "h": 194,
+      "hit": "033f7ffffffefefe7e7e7a3a12"
     },
     {
       "id": "pine",
@@ -465,7 +601,10 @@
       "cost": 800,
       "scale": 0.85,
       "lift": 0.42,
-      "_imported": true
+      "_imported": true,
+      "w": 123,
+      "h": 247,
+      "hit": "18387c7efe7efefefefffffe7c3c3c18"
     },
     {
       "id": "desert_snag",
@@ -475,7 +614,10 @@
       "cost": 800,
       "scale": 0.85,
       "lift": 0.42,
-      "_imported": true
+      "_imported": true,
+      "w": 139,
+      "h": 251,
+      "hit": "3d9fffdfe7f1f9fdf8fc7e0f07c7f7fbf0f0"
     },
     {
       "id": "tree_amber",
@@ -485,7 +627,10 @@
       "cost": 900,
       "scale": 0.85,
       "lift": 0.42,
-      "_imported": true
+      "_imported": true,
+      "w": 169,
+      "h": 202,
+      "hit": "1f0ff9fffffffffffffbff3fc1c0380700e0"
     },
     {
       "id": "pine_bent",
@@ -495,7 +640,10 @@
       "cost": 1000,
       "scale": 0.75,
       "lift": 0.42,
-      "_imported": true
+      "_imported": true,
+      "w": 150,
+      "h": 332,
+      "hit": "0703c1f8fe3f8fe7fbfeff9feffbffffcf81c0701f87e1fc1f018"
     },
     {
       "id": "pine_tall",
@@ -505,7 +653,10 @@
       "cost": 1000,
       "scale": 0.85,
       "lift": 0.42,
-      "_imported": true
+      "_imported": true,
+      "w": 124,
+      "h": 246,
+      "hit": "18387c7efe7efefefefffffe7c3c3c18"
     },
     {
       "id": "tree_orange",
@@ -515,7 +666,10 @@
       "cost": 1100,
       "scale": 0.85,
       "lift": 0.42,
-      "_imported": true
+      "_imported": true,
+      "w": 173,
+      "h": 202,
+      "hit": "3f0ff9fffffffffffffbfe3fc1c0380700e0"
     },
     {
       "id": "pine_frost",
@@ -525,7 +679,10 @@
       "cost": 1150,
       "scale": 0.8,
       "lift": 0.42,
-      "_imported": true
+      "_imported": true,
+      "w": 195,
+      "h": 328,
+      "hit": "07003c03f01f81fc1ff0ff8ffc7ff7ffbffdffe7ff1fe01b00c006003803e03f00f80"
     },
     {
       "id": "pine_night",
@@ -535,7 +692,10 @@
       "cost": 1150,
       "scale": 0.85,
       "lift": 0.42,
-      "_imported": true
+      "_imported": true,
+      "w": 195,
+      "h": 312,
+      "hit": "07003803e03f01fc1fe0ff8ffcfff7ffbffffff7fe1fe03c01e00f00fc07e03f0"
     },
     {
       "id": "pine_snow",
@@ -545,7 +705,10 @@
       "cost": 1200,
       "scale": 0.8,
       "lift": 0.42,
-      "_imported": true
+      "_imported": true,
+      "w": 147,
+      "h": 278,
+      "hit": "380f87f0fc7f9fe3f0fe7f9feffbfe7fcff1c0701c000"
     },
     {
       "id": "pine_leaning",
@@ -555,7 +718,10 @@
       "cost": 1200,
       "scale": 0.7,
       "lift": 0.42,
-      "_imported": true
+      "_imported": true,
+      "w": 163,
+      "h": 395,
+      "hit": "0601e03e0fe1fc3f87f0fe1fe7fdff1fe1fc1f838070ce1fc3f07e0d00a0140380300"
     },
     {
       "id": "pine_crimson",
@@ -565,7 +731,10 @@
       "cost": 1250,
       "scale": 0.85,
       "lift": 0.42,
-      "_imported": true
+      "_imported": true,
+      "w": 212,
+      "h": 253,
+      "hit": "07003e01fc0ff87ff1ffc3ff1ffeffffffffff9ffc1fe01c007001c0"
     },
     {
       "id": "tree_night",
@@ -575,7 +744,10 @@
       "cost": 1250,
       "scale": 0.85,
       "lift": 0.42,
-      "_imported": true
+      "_imported": true,
+      "w": 115,
+      "h": 201,
+      "hit": "18387c7cfefefffffffe7c7c3c"
     },
     {
       "id": "tree_apple",
@@ -585,7 +757,10 @@
       "cost": 1300,
       "scale": 0.85,
       "lift": 0.42,
-      "_imported": true
+      "_imported": true,
+      "w": 170,
+      "h": 212,
+      "hit": "1f0ff9fffffffffffffbff3fc1c0380700e0000"
     },
     {
       "id": "tree_gold",
@@ -595,7 +770,10 @@
       "cost": 1350,
       "scale": 0.85,
       "lift": 0.42,
-      "_imported": true
+      "_imported": true,
+      "w": 121,
+      "h": 221,
+      "hit": "38383c7c7efeffffffff7e3c3c38"
     },
     {
       "id": "palm",
@@ -605,7 +783,10 @@
       "cost": 1400,
       "scale": 0.8,
       "lift": 0.42,
-      "_imported": true
+      "_imported": true,
+      "w": 175,
+      "h": 224,
+      "hit": "06e7fdffffe7fcff9ff37e0f80701e03c078060"
     },
     {
       "id": "pine_snow_tall",
@@ -615,7 +796,10 @@
       "cost": 1500,
       "scale": 0.8,
       "lift": 0.42,
-      "_imported": true
+      "_imported": true,
+      "w": 163,
+      "h": 280,
+      "hit": "0701e07e1fc3f87f1fe3fcff9ff3ff7ffffdfe0780f01c0000"
     },
     {
       "id": "palm_curved",
@@ -625,7 +809,10 @@
       "cost": 1500,
       "scale": 0.8,
       "lift": 0.42,
-      "_imported": true
+      "_imported": true,
+      "w": 179,
+      "h": 369,
+      "hit": "3803f8ff8ffe7ffffeffc7fc7bc1901801801801801801801801803c07c07f07f07e0000"
     },
     {
       "id": "willow",
@@ -635,7 +822,10 @@
       "cost": 1600,
       "scale": 0.7,
       "lift": 0.42,
-      "_imported": true
+      "_imported": true,
+      "w": 306,
+      "h": 272,
+      "hit": "0ffc01ffe07fff87fffcffffefffffffffeffffeffffcffffc1fff807fc006f801fe001ffc003fe003ff0"
     },
     {
       "id": "oak_broad",
@@ -645,7 +835,10 @@
       "cost": 1700,
       "scale": 0.7,
       "lift": 0.42,
-      "_imported": true
+      "_imported": true,
+      "w": 254,
+      "h": 242,
+      "hit": "01f01ff87ff87ffeffffffff7fff7fff7fff3ffc0fc001c003c003c003c00000"
     },
     {
       "id": "palm_pair",
@@ -653,9 +846,12 @@
       "kind": "decor",
       "slot": "canopy",
       "cost": 1700,
-      "scale": 0.75,
+      "scale": 0.7,
       "lift": 0.42,
-      "_imported": true
+      "_imported": true,
+      "w": 400,
+      "h": 347,
+      "hit": "1f30000ff83007ff9f81ffffc7ffffffffeffffff7feffe3fe7ff8ff3ffe1f3fff8c0ffde600fe7700771f80100fc00003e00001f000007800007e00003f00001fc0000fc0"
     },
     {
       "id": "willow_old",
@@ -665,7 +861,10 @@
       "cost": 1900,
       "scale": 0.7,
       "lift": 0.42,
-      "_imported": true
+      "_imported": true,
+      "w": 252,
+      "h": 248,
+      "hit": "1ff03ff87ffeffffffffffff7fff7fff7fff1fff1fee0fec0380038003800100"
     },
     {
       "id": "daisies",
@@ -678,7 +877,10 @@
       "scale": 1.0,
       "lift": 0.3,
       "disabled": false,
-      "slot": "bed"
+      "slot": "bed",
+      "w": 120,
+      "h": 60,
+      "hit": "7bffff18"
     },
     {
       "id": "grass_blades",
@@ -692,7 +894,10 @@
       "scale": 1.0,
       "lift": 0.3,
       "disabled": false,
-      "slot": "bed"
+      "slot": "bed",
+      "w": 122,
+      "h": 92,
+      "hit": "666e7fffff7e"
     },
     {
       "id": "dry_tuft",
@@ -703,7 +908,10 @@
       "bundle": 10,
       "scale": 1.0,
       "lift": 0.35,
-      "_imported": true
+      "_imported": true,
+      "w": 65,
+      "h": 53,
+      "hit": "67bee"
     },
     {
       "id": "sprout_pair",
@@ -714,7 +922,10 @@
       "bundle": 10,
       "scale": 1.0,
       "lift": 0.35,
-      "_imported": true
+      "_imported": true,
+      "w": 79,
+      "h": 35,
+      "hit": "dedc"
     },
     {
       "id": "bud_amber",
@@ -725,7 +936,10 @@
       "bundle": 10,
       "scale": 1.0,
       "lift": 0.38,
-      "_imported": true
+      "_imported": true,
+      "w": 43,
+      "h": 88,
+      "hit": "ffefc"
     },
     {
       "id": "shrub_green",
@@ -736,7 +950,10 @@
       "bundle": 10,
       "scale": 1.0,
       "lift": 0.35,
-      "_imported": true
+      "_imported": true,
+      "w": 65,
+      "h": 49,
+      "hit": "e7bec"
     },
     {
       "id": "sprout_teal",
@@ -747,7 +964,10 @@
       "bundle": 10,
       "scale": 1.0,
       "lift": 0.35,
-      "_imported": true
+      "_imported": true,
+      "w": 79,
+      "h": 34,
+      "hit": "dedc"
     },
     {
       "id": "sprout",
@@ -761,7 +981,10 @@
       "scale": 1.0,
       "lift": 0.45,
       "disabled": false,
-      "slot": "bed"
+      "slot": "bed",
+      "w": 118,
+      "h": 140,
+      "hit": "e0e0ffff7ffc787070"
     },
     {
       "id": "dry_shrub",
@@ -772,7 +995,10 @@
       "bundle": 10,
       "scale": 1.0,
       "lift": 0.35,
-      "_imported": true
+      "_imported": true,
+      "w": 99,
+      "h": 79,
+      "hit": "79f3ffffc"
     },
     {
       "id": "flower_pink",
@@ -783,7 +1009,10 @@
       "bundle": 10,
       "scale": 1.0,
       "lift": 0.38,
-      "_imported": true
+      "_imported": true,
+      "w": 63,
+      "h": 71,
+      "hit": "ff6ff"
     },
     {
       "id": "flower_white",
@@ -794,7 +1023,10 @@
       "bundle": 10,
       "scale": 1.0,
       "lift": 0.38,
-      "_imported": true
+      "_imported": true,
+      "w": 62,
+      "h": 71,
+      "hit": "ff6ff"
     },
     {
       "id": "flower_daisy",
@@ -805,7 +1037,10 @@
       "bundle": 10,
       "scale": 1.0,
       "lift": 0.38,
-      "_imported": true
+      "_imported": true,
+      "w": 59,
+      "h": 58,
+      "hit": "6ff6"
     },
     {
       "id": "blossom",
@@ -819,7 +1054,10 @@
       "scale": 1.0,
       "lift": 0.45,
       "disabled": false,
-      "slot": "bed"
+      "slot": "bed",
+      "w": 138,
+      "h": 180,
+      "hit": "08140b0783e7f3ffff7e3e0e0e0"
     },
     {
       "id": "sea_grass",
@@ -830,7 +1068,10 @@
       "bundle": 10,
       "scale": 1.0,
       "lift": 0.35,
-      "_imported": true
+      "_imported": true,
+      "w": 99,
+      "h": 73,
+      "hit": "79f3ffffc"
     },
     {
       "id": "teal_plant",
@@ -841,7 +1082,10 @@
       "bundle": 10,
       "scale": 1.0,
       "lift": 0.35,
-      "_imported": true
+      "_imported": true,
+      "w": 99,
+      "h": 73,
+      "hit": "79f3ffffc"
     },
     {
       "id": "dusk_plant",
@@ -852,7 +1096,10 @@
       "bundle": 10,
       "scale": 1.0,
       "lift": 0.35,
-      "_imported": true
+      "_imported": true,
+      "w": 82,
+      "h": 60,
+      "hit": "73efbf"
     },
     {
       "id": "bush",
@@ -863,10 +1110,13 @@
       "bundle": 10,
       "requiresLevel": "",
       "requiresChapter": "",
-      "scale": 1.0,
+      "scale": 0.85,
       "lift": 0.45,
       "disabled": false,
-      "slot": "bed"
+      "slot": "bed",
+      "w": 321,
+      "h": 242,
+      "hit": "03e0003fe00fff80fffe0ffff87fffe3ffff1ffff8ffffc7fffe3ffff0ffff07fffc1fffc00ffc000380"
     },
     {
       "id": "lily_pads",
@@ -877,7 +1127,10 @@
       "bundle": 10,
       "scale": 1.0,
       "lift": 0.28,
-      "_imported": true
+      "_imported": true,
+      "w": 102,
+      "h": 70,
+      "hit": "fffffff7c"
     },
     {
       "id": "shade_bush",
@@ -888,7 +1141,10 @@
       "bundle": 10,
       "scale": 1.0,
       "lift": 0.35,
-      "_imported": true
+      "_imported": true,
+      "w": 153,
+      "h": 89,
+      "hit": "7f3fcffbfffff80"
     },
     {
       "id": "berry_bush",
@@ -899,7 +1155,10 @@
       "bundle": 10,
       "scale": 1.0,
       "lift": 0.35,
-      "_imported": true
+      "_imported": true,
+      "w": 112,
+      "h": 74,
+      "hit": "79fbf7efc"
     },
     {
       "id": "pumpkins",
@@ -910,7 +1169,10 @@
       "bundle": 10,
       "scale": 1.0,
       "lift": 0.35,
-      "_imported": true
+      "_imported": true,
+      "w": 100,
+      "h": 58,
+      "hit": "0c7bf18"
     },
     {
       "id": "bamboo",
@@ -921,7 +1183,10 @@
       "bundle": 10,
       "scale": 1.0,
       "lift": 0.42,
-      "_imported": true
+      "_imported": true,
+      "w": 99,
+      "h": 103,
+      "hit": "f9e3c7c79fde0"
     },
     {
       "id": "lantern",
@@ -935,7 +1200,10 @@
       "lift": 0.45,
       "disabled": false,
       "slot": "edge",
-      "_generated": true
+      "_generated": true,
+      "w": 161,
+      "h": 244,
+      "hit": "1c0781f07e0fc1f83f07e01c0380700e01c07c0f8040"
     },
     {
       "id": "fence_short",
@@ -949,7 +1217,10 @@
       "scale": 1.0,
       "lift": 0.45,
       "disabled": false,
-      "slot": "edge"
+      "slot": "edge",
+      "w": 120,
+      "h": 78,
+      "hit": "0c3cf8f0e0"
     },
     {
       "id": "flag_red",
@@ -961,7 +1232,10 @@
       "scale": 0.95,
       "lift": 0.42,
       "animated": true,
-      "_generated": true
+      "_generated": true,
+      "w": 180,
+      "h": 141,
+      "hit": "30c3ff3ff30c600600600e00e00"
     },
     {
       "id": "mooring_post",
@@ -972,7 +1246,10 @@
       "bundle": 10,
       "scale": 1.0,
       "lift": 0.42,
-      "_imported": true
+      "_imported": true,
+      "w": 46,
+      "h": 88,
+      "hit": "ffffc"
     },
     {
       "id": "fence_low",
@@ -986,7 +1263,10 @@
       "scale": 1.0,
       "lift": 0.45,
       "disabled": false,
-      "slot": "edge"
+      "slot": "edge",
+      "w": 120,
+      "h": 82,
+      "hit": "c0f0fc1c0c0c"
     },
     {
       "id": "sign_up",
@@ -997,7 +1277,10 @@
       "bundle": 10,
       "scale": 0.95,
       "lift": 0.42,
-      "_imported": true
+      "_imported": true,
+      "w": 87,
+      "h": 164,
+      "hit": "78c33efffffe31e70"
     },
     {
       "id": "sign_right",
@@ -1008,7 +1291,10 @@
       "bundle": 10,
       "scale": 0.95,
       "lift": 0.42,
-      "_imported": true
+      "_imported": true,
+      "w": 87,
+      "h": 164,
+      "hit": "78c33efffffe31e70"
     },
     {
       "id": "sign_left",
@@ -1019,7 +1305,10 @@
       "bundle": 10,
       "scale": 0.95,
       "lift": 0.42,
-      "_imported": true
+      "_imported": true,
+      "w": 87,
+      "h": 165,
+      "hit": "78c33efffffe31e78"
     },
     {
       "id": "candle",
@@ -1031,7 +1320,10 @@
       "scale": 1.0,
       "lift": 0.42,
       "animated": true,
-      "_generated": true
+      "_generated": true,
+      "w": 89,
+      "h": 99,
+      "hit": "30c33efff70"
     },
     {
       "id": "fence_timber",
@@ -1042,7 +1334,10 @@
       "bundle": 10,
       "scale": 0.9,
       "lift": 0.42,
-      "_imported": true
+      "_imported": true,
+      "w": 95,
+      "h": 101,
+      "hit": "1f7fffff000"
     },
     {
       "id": "fence_timber_end",
@@ -1053,7 +1348,10 @@
       "bundle": 10,
       "scale": 0.9,
       "lift": 0.42,
-      "_imported": true
+      "_imported": true,
+      "w": 76,
+      "h": 87,
+      "hit": "3bffffc0"
     },
     {
       "id": "sign_skull",
@@ -1064,7 +1362,10 @@
       "bundle": 10,
       "scale": 0.95,
       "lift": 0.42,
-      "_imported": true
+      "_imported": true,
+      "w": 87,
+      "h": 164,
+      "hit": "78c33efffffe31e70"
     },
     {
       "id": "fence_wide",
@@ -1078,7 +1379,10 @@
       "scale": 1.0,
       "lift": 0.45,
       "disabled": false,
-      "slot": "edge"
+      "slot": "edge",
+      "w": 180,
+      "h": 122,
+      "hit": "c00e00f801e00f803c00c00c"
     },
     {
       "id": "fence_rail",
@@ -1089,7 +1393,10 @@
       "bundle": 10,
       "scale": 0.9,
       "lift": 0.42,
-      "_imported": true
+      "_imported": true,
+      "w": 93,
+      "h": 144,
+      "hit": "1f7ffffffffac0"
     },
     {
       "id": "fence_rail_end",
@@ -1100,7 +1407,10 @@
       "bundle": 10,
       "scale": 0.9,
       "lift": 0.42,
-      "_imported": true
+      "_imported": true,
+      "w": 87,
+      "h": 144,
+      "hit": "0f7ffffffff8c0"
     },
     {
       "id": "ladder",
@@ -1111,7 +1421,10 @@
       "bundle": 10,
       "scale": 0.95,
       "lift": 0.42,
-      "_imported": true
+      "_imported": true,
+      "w": 88,
+      "h": 408,
+      "hit": "1b6ffedffdbffb7fb7dfedbffb7fb7fffffec30"
     },
     {
       "id": "spear",
@@ -1122,7 +1435,10 @@
       "bundle": 10,
       "scale": 0.95,
       "lift": 0.42,
-      "_imported": true
+      "_imported": true,
+      "w": 65,
+      "h": 168,
+      "hit": "4710c6308427fe"
     },
     {
       "id": "rope_fence",
@@ -1133,7 +1449,10 @@
       "bundle": 10,
       "scale": 0.95,
       "lift": 0.42,
-      "_imported": true
+      "_imported": true,
+      "w": 120,
+      "h": 123,
+      "hit": "03c6cefcf0c0e060"
     },
     {
       "id": "rope_fence_end",
@@ -1144,7 +1463,10 @@
       "bundle": 10,
       "scale": 0.95,
       "lift": 0.42,
-      "_imported": true
+      "_imported": true,
+      "w": 121,
+      "h": 144,
+      "hit": "c0c0c3e7f7dfc60606"
     },
     {
       "id": "fence_long",
@@ -1158,7 +1480,10 @@
       "scale": 1.0,
       "lift": 0.45,
       "disabled": false,
-      "slot": "edge"
+      "slot": "edge",
+      "w": 179,
+      "h": 122,
+      "hit": "00c03c0f81e0fc0f80e00c00"
     },
     {
       "id": "fence_picket",
@@ -1169,7 +1494,10 @@
       "bundle": 10,
       "scale": 0.9,
       "lift": 0.42,
-      "_imported": true
+      "_imported": true,
+      "w": 105,
+      "h": 124,
+      "hit": "e1dbf7f7edc306"
     },
     {
       "id": "fence_picket_end",
@@ -1180,7 +1508,10 @@
       "bundle": 10,
       "scale": 0.9,
       "lift": 0.42,
-      "_imported": true
+      "_imported": true,
+      "w": 105,
+      "h": 124,
+      "hit": "0cffffefdd9830"
     },
     {
       "id": "staff_skull",
@@ -1191,7 +1522,10 @@
       "bundle": 10,
       "scale": 0.95,
       "lift": 0.42,
-      "_imported": true
+      "_imported": true,
+      "w": 125,
+      "h": 176,
+      "hit": "78fcfc7e7f60606060e0e0"
     },
     {
       "id": "sign_arrow",
@@ -1202,7 +1536,10 @@
       "bundle": 10,
       "scale": 0.9,
       "lift": 0.42,
-      "_imported": true
+      "_imported": true,
+      "w": 115,
+      "h": 119,
+      "hit": "0cfefffe3c383810"
     },
     {
       "id": "sign_stone",
@@ -1213,7 +1550,10 @@
       "bundle": 10,
       "scale": 0.95,
       "lift": 0.42,
-      "_imported": true
+      "_imported": true,
+      "w": 60,
+      "h": 120,
+      "hit": "effff760"
     },
     {
       "id": "sign_wood",
@@ -1224,7 +1564,10 @@
       "bundle": 10,
       "scale": 0.9,
       "lift": 0.42,
-      "_imported": true
+      "_imported": true,
+      "w": 100,
+      "h": 128,
+      "hit": "39fff3f7ef0e1c"
     },
     {
       "id": "torch_low",
@@ -1236,7 +1579,10 @@
       "scale": 0.95,
       "lift": 0.42,
       "animated": true,
-      "_generated": true
+      "_generated": true,
+      "w": 68,
+      "h": 141,
+      "hit": "033de739dff0"
     },
     {
       "id": "arrow_sign",
@@ -1250,7 +1596,10 @@
       "scale": 1.0,
       "lift": 0.45,
       "disabled": false,
-      "slot": "edge"
+      "slot": "edge",
+      "w": 160,
+      "h": 128,
+      "hit": "3bbfeffbfefc0700f038"
     },
     {
       "id": "torch",
@@ -1262,7 +1611,10 @@
       "scale": 0.95,
       "lift": 0.42,
       "animated": true,
-      "_generated": true
+      "_generated": true,
+      "w": 77,
+      "h": 167,
+      "hit": "031dffb9ce738c"
     },
     {
       "id": "old_sign",
@@ -1276,7 +1628,10 @@
       "scale": 1.0,
       "lift": 0.45,
       "disabled": false,
-      "slot": "edge"
+      "slot": "edge",
+      "w": 169,
+      "h": 180,
+      "hit": "300f03e07e0fc1f83e01c01803c0700c0"
     },
     {
       "id": "banner_gold",
@@ -1288,7 +1643,10 @@
       "scale": 0.9,
       "lift": 0.42,
       "animated": true,
-      "_generated": true
+      "_generated": true,
+      "w": 180,
+      "h": 202,
+      "hit": "fe0fe0fc0fc0fdcffffff780600600600e00e00"
     },
     {
       "id": "banner_crimson",
@@ -1300,7 +1658,10 @@
       "scale": 0.9,
       "lift": 0.42,
       "animated": true,
-      "_generated": true
+      "_generated": true,
+      "w": 181,
+      "h": 202,
+      "hit": "fe0fe0fc0fc0fdcffffff780600600600e00e00"
     },
     {
       "id": "torch_tall",
@@ -1312,7 +1673,10 @@
       "scale": 0.9,
       "lift": 0.42,
       "animated": true,
-      "_generated": true
+      "_generated": true,
+      "w": 76,
+      "h": 239,
+      "hit": "031dff3bfe739ce739c"
     },
     {
       "id": "signpost",
@@ -1326,7 +1690,10 @@
       "scale": 1.0,
       "lift": 0.45,
       "disabled": false,
-      "slot": "edge"
+      "slot": "edge",
+      "w": 142,
+      "h": 260,
+      "hit": "0c040fdffffffbfdfe7f0f8602030180f070300"
     },
     {
       "id": "path_curve",
@@ -1340,7 +1707,10 @@
       "scale": 0.8,
       "lift": 0.3,
       "disabled": false,
-      "slot": "path"
+      "slot": "path",
+      "w": 200,
+      "h": 264,
+      "hit": "ff07fe1ff87fc1fe0ff07f83fc1fc0fe07f03fc1fe0ff83fc0ff0780"
     },
     {
       "id": "stepping_stones",
@@ -1351,7 +1721,10 @@
       "bundle": 10,
       "scale": 1.0,
       "lift": 0.26,
-      "_imported": true
+      "_imported": true,
+      "w": 82,
+      "h": 41,
+      "hit": "fbf38"
     },
     {
       "id": "path_bend",
@@ -1362,10 +1735,15 @@
       "bundle": 10,
       "requiresLevel": "",
       "requiresChapter": "",
+      "disabled": false,
+      "slot": "path",
+      "cols": 2,
+      "rows": 2,
       "scale": 0.8,
       "lift": 0.3,
-      "disabled": false,
-      "slot": "path"
+      "w": 392,
+      "h": 330,
+      "hit": "00007c0000fe007fff007fff80ffffc0ffffe0ffffe07fffe07fffc03f80003f80001fc0000fe7ff07ffffe3fffff9fffffc7fffff1fffff83ff7fe00007f00001f8"
     },
     {
       "id": "path_snake",
@@ -1376,10 +1754,15 @@
       "bundle": 10,
       "requiresLevel": "",
       "requiresChapter": "",
+      "disabled": false,
+      "slot": "path",
+      "cols": 2,
+      "rows": 2,
       "scale": 0.7,
       "lift": 0.3,
-      "disabled": false,
-      "slot": "path"
+      "w": 458,
+      "h": 496,
+      "hit": "007f03e01fffffc1fffffc1fffffc1fffffc0fffffc0ff0ff80ff000007f000003f000801f87ffe0ffffffc7fffffe3ffffff8ffffffc3fffffe0ff807f000003f000003f800003fc07f0ffc1fffffe1fffffe1fffffe0fffffe07ffffc03ffff001fc00000fe000003f000000e000000"
     },
     {
       "id": "rope_walk",
@@ -1390,7 +1773,10 @@
       "bundle": 10,
       "scale": 0.95,
       "lift": 0.28,
-      "_imported": true
+      "_imported": true,
+      "w": 120,
+      "h": 127,
+      "hit": "e0e0e6feffff1f0e"
     },
     {
       "id": "rope_walk_end",
@@ -1401,7 +1787,10 @@
       "bundle": 10,
       "scale": 0.95,
       "lift": 0.28,
-      "_imported": true
+      "_imported": true,
+      "w": 83,
+      "h": 119,
+      "hit": "e38e38f3e1c3"
     },
     {
       "id": "rope_walk_turn",
@@ -1412,7 +1801,10 @@
       "bundle": 10,
       "scale": 0.95,
       "lift": 0.28,
-      "_imported": true
+      "_imported": true,
+      "w": 85,
+      "h": 112,
+      "hit": "e38e3cfff3c"
     },
     {
       "id": "rope_walk_long",
@@ -1423,7 +1815,10 @@
       "bundle": 10,
       "scale": 0.95,
       "lift": 0.28,
-      "_imported": true
+      "_imported": true,
+      "w": 118,
+      "h": 127,
+      "hit": "070fefeffffef8e0"
     },
     {
       "id": "plank_bridge",
@@ -1432,9 +1827,12 @@
       "slot": "path",
       "cost": 700,
       "bundle": 10,
-      "scale": 0.9,
+      "scale": 0.8,
       "lift": 0.28,
-      "_imported": true
+      "_imported": true,
+      "w": 294,
+      "h": 309,
+      "hit": "0070001e0003c30078f01f9e0ffffbffffffffffffffffffffffffffffffcdffe03df0073c00078000f0000e0001c00"
     },
     {
       "id": "sand_steps",
@@ -1445,7 +1843,10 @@
       "bundle": 10,
       "scale": 0.9,
       "lift": 0.28,
-      "_imported": true
+      "_imported": true,
+      "w": 268,
+      "h": 239,
+      "hit": "00e000f801fc03ff07ffc7ffffffffffffffffffff3fff1ffe07fc00fc003800"
     },
     {
       "id": "timber_platform",
@@ -1454,9 +1855,12 @@
       "slot": "path",
       "cost": 850,
       "bundle": 10,
-      "scale": 0.85,
+      "scale": 0.8,
       "lift": 0.28,
-      "_imported": true
+      "_imported": true,
+      "w": 293,
+      "h": 309,
+      "hit": "00f0001e0003c30078f01f9e0ffffbffffffffffffffffffffffffffffffcdffe03df0073c00078000f0001e0001800"
     },
     {
       "id": "bridge_flat",
@@ -1470,7 +1874,10 @@
       "scale": 0.85,
       "lift": 0.3,
       "disabled": false,
-      "slot": "path"
+      "slot": "path",
+      "w": 290,
+      "h": 210,
+      "hit": "c00e1801c3003070070fffe0fff01fff01ffe03ffe03ffe07ffc07ffc07ffc0fffc"
     },
     {
       "id": "bridge_ramp",
@@ -1481,10 +1888,15 @@
       "bundle": 10,
       "requiresLevel": "",
       "requiresChapter": "",
+      "disabled": false,
+      "slot": "path",
+      "cols": 1,
+      "rows": 2,
       "scale": 0.85,
       "lift": 0.3,
-      "disabled": false,
-      "slot": "path"
+      "w": 464,
+      "h": 140,
+      "hit": "fff800c3fff0070fffe0383fffc180ffffdc01fffff003fff7000f800000700000"
     },
     {
       "id": "bridge_arch",
@@ -1495,10 +1907,15 @@
       "bundle": 10,
       "requiresLevel": "",
       "requiresChapter": "",
+      "disabled": false,
+      "slot": "path",
+      "cols": 2,
+      "rows": 2,
       "scale": 0.8,
       "lift": 0.3,
-      "disabled": false,
-      "slot": "path"
+      "w": 558,
+      "h": 350,
+      "hit": "c00e00001801c0000300300000700700000fffe00000fff000001fff000001ffe000003ffe000003ffe000007ffc000007ffc000007ffc000007ffc006007ffe00e007fff03c007fff870007fffce0007ffffe0003ffff80001f8000000380000"
     },
     {
       "id": "pier",
@@ -1509,7 +1926,10 @@
       "bundle": 10,
       "scale": 0.8,
       "lift": 0.28,
-      "_imported": true
+      "_imported": true,
+      "w": 293,
+      "h": 309,
+      "hit": "00f0001e0003c30078f01f9e0ffffbffffffffffffffffffffffffffffffcdffe03df0073c00078000f0001e0001800"
     },
     {
       "id": "bridge_rope",
@@ -1520,10 +1940,15 @@
       "bundle": 10,
       "requiresLevel": "",
       "requiresChapter": "",
+      "disabled": false,
+      "slot": "path",
+      "cols": 2,
+      "rows": 2,
       "scale": 0.8,
       "lift": 0.3,
-      "disabled": false,
-      "slot": "path"
+      "w": 572,
+      "h": 350,
+      "hit": "00003003800003003800003003800003c03c00003fff800001ffe000001ffe000003ffc000007ffc000007ff800000fff800001fff000003fff00c007ffe00e00fffc00e03fff800e0ffff000e7fffc000fffff8000ffffe0000001fc00000001c0000"
     },
     {
       "id": "grass_tuft",
@@ -1536,7 +1961,10 @@
       "scale": 1.0,
       "lift": 0.3,
       "disabled": false,
-      "slot": "ground"
+      "slot": "ground",
+      "w": 52,
+      "h": 50,
+      "hit": "cefe"
     },
     {
       "id": "pebble",
@@ -1549,7 +1977,10 @@
       "scale": 1.0,
       "lift": 0.3,
       "disabled": false,
-      "slot": "ground"
+      "slot": "ground",
+      "w": 38,
+      "h": 24,
+      "hit": "d8"
     },
     {
       "id": "stone",
@@ -1562,7 +1993,10 @@
       "scale": 1.0,
       "lift": 0.3,
       "disabled": false,
-      "slot": "ground"
+      "slot": "ground",
+      "w": 84,
+      "h": 56,
+      "hit": "7befbc"
     },
     {
       "id": "brambles",
@@ -1572,10 +2006,15 @@
       "cost": 0,
       "requiresLevel": "c01_thorn_hollow",
       "requiresChapter": "",
+      "disabled": false,
+      "slot": "ground",
+      "cols": 2,
+      "rows": 2,
       "scale": 1.0,
       "lift": 0.3,
-      "disabled": false,
-      "slot": "ground"
+      "w": 400,
+      "h": 300,
+      "hit": "0000e00002f8000ffc000ffe000fff000fff001fff807fffc07fffe03fffe01fffe007fffc0ffffc07fffc03fffe007fff803fe7e00300780000380"
     },
     {
       "id": "log",
@@ -1585,10 +2024,13 @@
       "cost": 0,
       "requiresLevel": "c01_bound_roots",
       "requiresChapter": "",
-      "scale": 1.0,
+      "scale": 0.75,
       "lift": 0.3,
       "disabled": false,
-      "slot": "ground"
+      "slot": "ground",
+      "w": 321,
+      "h": 184,
+      "hit": "001e0001f0001f8003fe07ffe03fff03ffe01ffe00ffc007f8003f8000f8000"
     },
     {
       "id": "rune_stone",
@@ -1601,7 +2043,10 @@
       "scale": 1.0,
       "lift": 0.45,
       "disabled": false,
-      "slot": "ground"
+      "slot": "ground",
+      "w": 140,
+      "h": 156,
+      "hit": "383e3f9fcfc7e3f1f8fc3e0"
     },
     {
       "id": "gravel",
@@ -1615,7 +2060,10 @@
       "scale": 1.0,
       "lift": 0.3,
       "disabled": false,
-      "slot": "ground"
+      "slot": "ground",
+      "w": 34,
+      "h": 16,
+      "hit": "c"
     },
     {
       "id": "small_stone",
@@ -1626,7 +2074,10 @@
       "bundle": 10,
       "scale": 1.0,
       "lift": 0.35,
-      "_imported": true
+      "_imported": true,
+      "w": 50,
+      "h": 29,
+      "hit": "ff"
     },
     {
       "id": "flat_stone",
@@ -1637,7 +2088,10 @@
       "bundle": 10,
       "scale": 1.0,
       "lift": 0.35,
-      "_imported": true
+      "_imported": true,
+      "w": 68,
+      "h": 40,
+      "hit": "fffc"
     },
     {
       "id": "field_stone",
@@ -1648,7 +2102,10 @@
       "bundle": 10,
       "scale": 1.0,
       "lift": 0.35,
-      "_imported": true
+      "_imported": true,
+      "w": 66,
+      "h": 48,
+      "hit": "e73c"
     },
     {
       "id": "stone_pair",
@@ -1659,7 +2116,10 @@
       "bundle": 10,
       "scale": 1.0,
       "lift": 0.35,
-      "_imported": true
+      "_imported": true,
+      "w": 82,
+      "h": 41,
+      "hit": "fbf38"
     },
     {
       "id": "rock_shard",
@@ -1670,7 +2130,10 @@
       "bundle": 10,
       "scale": 1.0,
       "lift": 0.38,
-      "_imported": true
+      "_imported": true,
+      "w": 54,
+      "h": 96,
+      "hit": "6ffff7"
     },
     {
       "id": "little_stump",
@@ -1681,7 +2144,10 @@
       "bundle": 10,
       "scale": 1.0,
       "lift": 0.35,
-      "_imported": true
+      "_imported": true,
+      "w": 44,
+      "h": 46,
+      "hit": "ff8"
     },
     {
       "id": "wood_post",
@@ -1692,7 +2158,10 @@
       "bundle": 10,
       "scale": 1.0,
       "lift": 0.38,
-      "_imported": true
+      "_imported": true,
+      "w": 42,
+      "h": 70,
+      "hit": "fffe"
     },
     {
       "id": "sand_rock",
@@ -1703,7 +2172,10 @@
       "bundle": 10,
       "scale": 1.0,
       "lift": 0.35,
-      "_imported": true
+      "_imported": true,
+      "w": 96,
+      "h": 68,
+      "hit": "fbefdf0c"
     },
     {
       "id": "shore_rock",
@@ -1714,7 +2186,10 @@
       "bundle": 10,
       "scale": 1.0,
       "lift": 0.35,
-      "_imported": true
+      "_imported": true,
+      "w": 124,
+      "h": 95,
+      "hit": "1e1e3e7ffffe"
     },
     {
       "id": "stone_stumps",
@@ -1725,7 +2200,10 @@
       "bundle": 10,
       "scale": 1.0,
       "lift": 0.35,
-      "_imported": true
+      "_imported": true,
+      "w": 107,
+      "h": 88,
+      "hit": "060f1e0c180"
     },
     {
       "id": "forest_rock",
@@ -1736,7 +2214,10 @@
       "bundle": 10,
       "scale": 1.0,
       "lift": 0.35,
-      "_imported": true
+      "_imported": true,
+      "w": 135,
+      "h": 106,
+      "hit": "3ffffffffffffffe"
     },
     {
       "id": "hay_bale",
@@ -1747,7 +2228,10 @@
       "bundle": 10,
       "scale": 1.0,
       "lift": 0.35,
-      "_imported": true
+      "_imported": true,
+      "w": 111,
+      "h": 74,
+      "hit": "39fbf7efc"
     },
     {
       "id": "ice_stump",
@@ -1758,7 +2242,10 @@
       "bundle": 10,
       "scale": 1.0,
       "lift": 0.35,
-      "_imported": true
+      "_imported": true,
+      "w": 72,
+      "h": 97,
+      "hit": "77f8ef700"
     },
     {
       "id": "stone_teeth",
@@ -1769,7 +2256,10 @@
       "bundle": 10,
       "scale": 1.0,
       "lift": 0.35,
-      "_imported": true
+      "_imported": true,
+      "w": 130,
+      "h": 98,
+      "hit": "106d3edb6ff0e000"
     },
     {
       "id": "snow_rock",
@@ -1780,7 +2270,10 @@
       "bundle": 10,
       "scale": 1.0,
       "lift": 0.35,
-      "_imported": true
+      "_imported": true,
+      "w": 151,
+      "h": 104,
+      "hit": "6f3fcffbfeffff8e00"
     },
     {
       "id": "ruin_block",
@@ -1791,7 +2284,10 @@
       "bundle": 10,
       "scale": 1.0,
       "lift": 0.35,
-      "_imported": true
+      "_imported": true,
+      "w": 81,
+      "h": 109,
+      "hit": "7bffbefbe70"
     },
     {
       "id": "skull",
@@ -1802,7 +2298,10 @@
       "bundle": 10,
       "scale": 1.0,
       "lift": 0.35,
-      "_imported": true
+      "_imported": true,
+      "w": 76,
+      "h": 68,
+      "hit": "fffff60"
     },
     {
       "id": "hay_stack",
@@ -1813,7 +2312,10 @@
       "bundle": 10,
       "scale": 1.0,
       "lift": 0.35,
-      "_imported": true
+      "_imported": true,
+      "w": 106,
+      "h": 88,
+      "hit": "060f1e0c180"
     },
     {
       "id": "cairn_stone",
@@ -1824,7 +2326,10 @@
       "bundle": 10,
       "scale": 1.0,
       "lift": 0.38,
-      "_imported": true
+      "_imported": true,
+      "w": 74,
+      "h": 135,
+      "hit": "631ce73bff70"
     },
     {
       "id": "mossy_rock",
@@ -1835,7 +2340,10 @@
       "bundle": 10,
       "scale": 1.0,
       "lift": 0.35,
-      "_imported": true
+      "_imported": true,
+      "w": 139,
+      "h": 103,
+      "hit": "1e1f0f8fcfffffd8"
     },
     {
       "id": "cairn_snow",
@@ -1846,7 +2354,10 @@
       "bundle": 10,
       "scale": 1.0,
       "lift": 0.38,
-      "_imported": true
+      "_imported": true,
+      "w": 117,
+      "h": 134,
+      "hit": "18383838fefffffe7c"
     },
     {
       "id": "crate",
@@ -1860,7 +2371,10 @@
       "scale": 1.0,
       "lift": 0.45,
       "disabled": false,
-      "slot": "ground"
+      "slot": "ground",
+      "w": 140,
+      "h": 96,
+      "hit": "787e3f1f8fc3c0"
     },
     {
       "id": "icicles",
@@ -1871,7 +2385,10 @@
       "bundle": 10,
       "scale": 1.0,
       "lift": 0.35,
-      "_imported": true
+      "_imported": true,
+      "w": 130,
+      "h": 97,
+      "hit": "186d3edb6ff0e000"
     },
     {
       "id": "sand_block",
@@ -1882,7 +2399,10 @@
       "bundle": 10,
       "scale": 1.0,
       "lift": 0.35,
-      "_imported": true
+      "_imported": true,
+      "w": 181,
+      "h": 148,
+      "hit": "1f01fc3fc7fefffffffff3fc1f80e0"
     },
     {
       "id": "snow_boulder",
@@ -1893,7 +2413,10 @@
       "bundle": 10,
       "scale": 1.0,
       "lift": 0.35,
-      "_imported": true
+      "_imported": true,
+      "w": 194,
+      "h": 168,
+      "hit": "07807e07f03f03f87ff3ff9ffcfffbffcff8"
     },
     {
       "id": "pedestal",
@@ -1904,7 +2427,10 @@
       "bundle": 10,
       "scale": 1.0,
       "lift": 0.35,
-      "_imported": true
+      "_imported": true,
+      "w": 99,
+      "h": 118,
+      "hit": "7dfbf7efffff18"
     },
     {
       "id": "broken_pillars",
@@ -1915,7 +2441,10 @@
       "bundle": 10,
       "scale": 1.0,
       "lift": 0.35,
-      "_imported": true
+      "_imported": true,
+      "w": 85,
+      "h": 111,
+      "hit": "dbefffffcc0"
     },
     {
       "id": "crystal_shards",
@@ -1927,7 +2456,10 @@
       "scale": 1.0,
       "lift": 0.35,
       "animated": true,
-      "_generated": true
+      "_generated": true,
+      "w": 130,
+      "h": 97,
+      "hit": "186d3edb6fb0e000"
     }
   ]
 }

@@ -11,7 +11,7 @@ namespace GlimmerGrove.Modes
         /// <summary>The cell to point at, or -1 when there is nothing to point at.</summary>
         public readonly int Cell;
 
-        /// <summary>What the colour in hand would turn that flower into.</summary>
+        /// <summary>What the colour would turn that flower into.</summary>
         public readonly int Colour;
 
         /// <summary>
@@ -49,7 +49,7 @@ namespace GlimmerGrove.Modes
     ///
     /// <para>
     /// <b>It answers a different question from <see cref="BudSolver"/>, which is why it is a
-    /// different class.</b> The solver asks how few taps finish a grove — content being graded,
+    /// different class.</b> The solver asks how few moves finish a grove — content being graded,
     /// mirrored in Python and pinned by vectors (invariant 9a). This asks which of the taps
     /// available right now is worth spending a hint on: a client convenience with no authored
     /// number behind it, nothing stored, nothing adjudicated and no second copy anywhere.
@@ -58,15 +58,22 @@ namespace GlimmerGrove.Modes
     /// </para>
     /// <para>
     /// <b>Correct first, spectacular second, and both halves matter.</b> The search finds every
-    /// opening tap that still leads to a finish inside the taps that are left; among those it
+    /// opening tap that still leads to a finish inside the moves that are left; among those it
     /// takes the one that goes off hardest, by the same ranking <see cref="BudSolver.Careless"/>
     /// uses. So a hint here can never quietly cost somebody the level, and it never points at the
     /// dull half of two equally good answers — which on a mode whose whole product is the cascade
     /// would be a resource spent to be handed the boring version.
     /// </para>
     /// <para>
-    /// <b>It is bounded and degrades rather than stalling.</b> Cost goes as the flower count to
-    /// the power of the taps left, exactly as par does, so a hint asked for on the first tap of a
+    /// <b>It points at flowers only.</b> A graft is a move the search counts on the way to a
+    /// proof, and a hint that named one would need a mark of a different shape; what is bought
+    /// here is a flower and the colour to put on it — or a special to fire — which is what the
+    /// mark draws, and on a grove where only a graft wins the hint falls back to the biggest tap
+    /// going.
+    /// </para>
+    /// <para>
+    /// <b>It is bounded and degrades rather than stalling.</b> Cost goes as the move count to the
+    /// power of the taps left, exactly as par does, so a hint asked for on the first tap of a
     /// big grove can be dearer than proving the whole board. Past <see cref="NodeBudget"/> it
     /// stops proving and answers with the biggest chain going, flagged
     /// <see cref="BudSpot.Proved"/> false. A hint that took a second to arrive would be worse
@@ -91,19 +98,19 @@ namespace GlimmerGrove.Modes
             if (run == null || run.Verdict.IsOver) return BudSpot.None;
 
             int left = run.Satchel.Bounded ? run.Satchel.Left : BudSolver.MaxTaps;
-            return Best(run.Board, run.Deal, run.Spent, left);
+            return Best(run.Board, run.Deal, run.Dealt, left);
         }
 
         /// <summary>
         /// The same question asked of a board directly, so it can be proved offline against a
         /// position rather than against a whole run.
         /// </summary>
-        public static BudSpot Best(BudBoard board, BudDeal deal, int spent, int tapsLeft)
+        public static BudSpot Best(BudBoard board, BudDeal deal, int dealt, int tapsLeft)
         {
             if (board == null || deal == null || tapsLeft <= 0) return BudSpot.None;
             if (board.IsFinished) return BudSpot.None;
 
-            int hand = deal.At(spent);
+            int hand = deal.At(dealt);
             if (hand == Energy.None) return BudSpot.None;
 
             // The fallback is worked out first and unconditionally, because it is also what
@@ -112,22 +119,26 @@ namespace GlimmerGrove.Modes
             var greedy = BudSpot.None;
             var greedyChain = BudChainResult.Nothing;
 
-            for (int i = 0; i < board.Count; i++)
-            {
-                if (!board.CanTap(i, hand)) continue;
+            var moves = new List<BudMove>(64);
+            BudRun.Moves(board, hand, moves);
 
-                var chain = board.Preview(i, hand);
+            for (int i = 0; i < moves.Count; i++)
+            {
+                var move = moves[i];
+                if (move.Kind != BudMoveKind.Tap) continue;
+
+                var chain = board.Preview(move.Cell, hand);
                 if (greedy.Any && !Better(chain, greedyChain)) continue;
 
                 greedyChain = chain;
-                greedy = new BudSpot(i, board.Mixed(i, hand), false,
+                greedy = new BudSpot(move.Cell, board.Mixed(move.Cell, hand), false,
                                      chain.Waves, chain.Burst, chain.Freed);
             }
 
             if (!greedy.Any) return BudSpot.None;
 
             int ceiling = tapsLeft < BudSolver.MaxTaps ? tapsLeft : BudSolver.MaxTaps;
-            var proved = new Search(board, deal).Run(spent, ceiling);
+            var proved = new Search(board, deal).Run(dealt, ceiling);
 
             return proved.Any ? proved : greedy;
         }
@@ -148,7 +159,7 @@ namespace GlimmerGrove.Modes
         }
 
         /// <summary>
-        /// Iterative deepening over the taps that are left, one first move at a time.
+        /// Iterative deepening over the moves that are left, one first tap at a time.
         ///
         /// <para>
         /// <b>Every first move gets its own search rather than sharing one tree, and the reason
@@ -166,7 +177,9 @@ namespace GlimmerGrove.Modes
 
             readonly BudGround[][] _groundAt;
             readonly int[][] _valueAt;
+            readonly BudSpecial[][] _specialAt;
             readonly int[] _grownAt;
+            readonly List<BudMove>[] _movesAt;
 
             readonly HashSet<string> _seen = new HashSet<string>();
             readonly char[] _key;
@@ -182,43 +195,52 @@ namespace GlimmerGrove.Modes
                 int depth = BudSolver.MaxTaps + 2;
                 _groundAt = new BudGround[depth][];
                 _valueAt = new int[depth][];
+                _specialAt = new BudSpecial[depth][];
+                _movesAt = new List<BudMove>[depth];
 
                 for (int i = 0; i < depth; i++)
                 {
                     _groundAt[i] = new BudGround[board.Count];
                     _valueAt[i] = new int[board.Count];
+                    _specialAt[i] = new BudSpecial[board.Count];
+                    _movesAt[i] = new List<BudMove>(64);
                 }
 
                 _grownAt = new int[depth];
-                _key = new char[board.Count + 4];
+                _key = new char[board.Count + 6];
             }
 
-            public BudSpot Run(int spent, int ceiling)
+            public BudSpot Run(int dealt, int ceiling)
             {
                 var best = BudSpot.None;
 
                 for (int limit = 1; limit <= ceiling; limit++)
                 {
                     var chosen = BudChainResult.Nothing;
-                    int hand = _deal.At(spent);
+                    int hand = _deal.At(dealt);
 
-                    _board.Save(_groundAt[0], _valueAt[0], out _grownAt[0]);
+                    _board.Save(_groundAt[0], _valueAt[0], _specialAt[0], out _grownAt[0]);
 
-                    for (int i = 0; i < _board.Count; i++)
+                    var moves = _movesAt[0];
+                    BudRun.Moves(_board, hand, moves);
+
+                    for (int i = 0; i < moves.Count; i++)
                     {
-                        if (!_board.CanTap(i, hand)) continue;
+                        var move = moves[i];
+                        if (move.Kind != BudMoveKind.Tap) continue;
 
-                        int made = _board.Mixed(i, hand);
-                        var chain = _board.Tap(i, hand, null);
+                        int made = _board.Mixed(move.Cell, hand);
+
+                        int took = BudRun.Apply(_board, move, hand, null, out var chain);
 
                         _seen.Clear();
-                        bool wins = Reaches(spent + 1, limit - 1, 1);
-                        _board.Restore(_groundAt[0], _valueAt[0], _grownAt[0]);
+                        bool wins = Reaches(dealt + took, limit - 1, 1);
+                        _board.Restore(_groundAt[0], _valueAt[0], _specialAt[0], _grownAt[0]);
 
                         if (wins && (!best.Any || Better(chain, chosen)))
                         {
                             chosen = chain;
-                            best = new BudSpot(i, made, true,
+                            best = new BudSpot(move.Cell, made, true,
                                                chain.Waves, chain.Burst, chain.Freed);
                         }
 
@@ -233,26 +255,27 @@ namespace GlimmerGrove.Modes
                 return best;
             }
 
-            /// <summary>Whether the grove as it stands finishes inside <paramref name="left"/> taps.</summary>
-            bool Reaches(int spent, int left, int depth)
+            /// <summary>Whether the grove as it stands finishes inside <paramref name="left"/> moves.</summary>
+            bool Reaches(int dealt, int left, int depth)
             {
                 if (_exhausted) return false;
                 if (++_nodes > NodeBudget) { _exhausted = true; return false; }
 
                 if (_board.IsFinished) return true;
                 if (left <= 0 || depth >= _groundAt.Length) return false;
-                if (!Fresh(spent, left)) return false;
+                if (!Fresh(dealt, left)) return false;
 
-                _board.Save(_groundAt[depth], _valueAt[depth], out _grownAt[depth]);
-                int hand = _deal.At(spent);
+                _board.Save(_groundAt[depth], _valueAt[depth], _specialAt[depth], out _grownAt[depth]);
+                int hand = _deal.At(dealt);
 
-                for (int i = 0; i < _board.Count; i++)
+                var moves = _movesAt[depth];
+                BudRun.Moves(_board, hand, moves);
+
+                for (int i = 0; i < moves.Count; i++)
                 {
-                    if (!_board.CanTap(i, hand)) continue;
-
-                    _board.Tap(i, hand, null);
-                    bool won = Reaches(spent + 1, left - 1, depth + 1);
-                    _board.Restore(_groundAt[depth], _valueAt[depth], _grownAt[depth]);
+                    int took = BudRun.Apply(_board, moves[i], hand, null, out _);
+                    bool won = Reaches(dealt + took, left - 1, depth + 1);
+                    _board.Restore(_groundAt[depth], _valueAt[depth], _specialAt[depth], _grownAt[depth]);
 
                     if (won) return true;
                     if (_exhausted) return false;
@@ -261,16 +284,16 @@ namespace GlimmerGrove.Modes
                 return false;
             }
 
-            bool Fresh(int spent, int left)
+            bool Fresh(int dealt, int left)
             {
                 _board.KeyInto(_key, out int length);
 
-                // How much rope is left is part of the position, and so is the colour in hand:
-                // the same grove with two taps to go is a different problem from the same grove
-                // with five, so a position visited under a longer allowance must never prune the
-                // shorter one.
+                // How much rope is left is part of the position, and so is where the basket is
+                // up to: the same grove with two taps to go is a different problem from the same
+                // grove with five, so a position visited under a longer allowance must never
+                // prune the shorter one.
                 _key[length] = (char)('0' + (left & 15));
-                _key[length + 1] = Energy.Letter(_deal.At(spent));
+                _key[length + 1] = (char)('a' + dealt % _deal.Count);
 
                 return _seen.Add(new string(_key, 0, length + 2));
             }

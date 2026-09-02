@@ -45,7 +45,7 @@ import { rebuildStats } from "./stats";
 import {
   DEFAULT_KEEPER_CURVE, GROVE_PATHS, GroveCardDoc, KeeperCurve,
   assertUsableGroveConfig, buildCard, derivedXp, groveWorth, keeperLevel,
-  optedIn, rebuildGroveRanks, withdrawCard,
+  optedIn, rebuildGroveRanks, saveRevision, withdrawCard,
 } from "./grove";
 import {
   ClaimOutcome, NameHolding, RENAME_COOLDOWN_SECONDS, claimName as claimName_, heldName, nameKey, publishableName,
@@ -1130,6 +1130,8 @@ export const publishGroveStats = onSchedule(
 export const publishGrove = onCall(callOptions, async (request): Promise<{
   card: GroveCardDoc | null;
   withdrawn?: boolean;
+  /** The revision of the save the card was built from. See `saveRevision`. */
+  revision: number;
 }> => {
   const uid = requireUid(request);
   const db = getFirestore();
@@ -1153,7 +1155,7 @@ export const publishGrove = onCall(callOptions, async (request): Promise<{
   // whatever is already published rather than merely declining to refresh it.
   if (!optedIn(save)) {
     await withdrawCard(uid);
-    return { card: null, withdrawn: true };
+    return { card: null, withdrawn: true, revision: saveRevision(save) };
   }
 
   const groveConfig = groveSnapshot.data();
@@ -1241,7 +1243,9 @@ export const publishGrove = onCall(callOptions, async (request): Promise<{
     });
   }
 
-  return { card };
+  // Which save this card was built from, so the client can prove it was the one it pushed.
+  // Always present: the client reads a *missing* field as "cannot be checked".
+  return { card, revision: saveRevision(save) };
 });
 
 /**

@@ -535,8 +535,7 @@ ORDINAL = 3
 STRIPS = mapart.strips(ORDINAL)
 SKIES = mapart.skies(ORDINAL)
 
-MAPX = [0.28, 0.72, 0.26, 0.70, 0.30, 0.74, 0.28, 0.70, 0.24, 0.72]
-MAPY = [0.060, 0.145, 0.225, 0.305, 0.390, 0.475, 0.555, 0.640, 0.725, 0.815]
+PLACES = mapart.places(ORDINAL)
 
 TEXT = {
     "c03_amberlight": (
@@ -606,7 +605,6 @@ def chapter_json(built):
     doc["slate"] = slate
     doc["backdrop"] = SKIES[0]
     doc["mapStrips"] = list(STRIPS)
-    doc["teaserX"] = 0.3
 
     levels = []
     for i, (lid, name, make, target) in enumerate(BOARDS):
@@ -615,8 +613,7 @@ def chapter_json(built):
         level["id"] = lid
         level["width"] = board.w
         level["height"] = board.h
-        level["mapX"] = MAPX[i]
-        level["mapY"] = MAPY[i]
+        level["mapX"], level["mapY"] = PLACES[i]
         if i > 0:                       # the first glade inherits the chapter's palette
             a, s = PALETTE[lid]
             level["accent"] = a

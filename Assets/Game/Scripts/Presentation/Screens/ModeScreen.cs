@@ -249,19 +249,39 @@ namespace GlimmerGrove
         }
 
         /// <summary>How tall the header band is, and where the readout row sits under it.</summary>
-        const float BarHeight = 210f, ReadoutsY = 282f;
+        const float BarHeight = 210f, ReadoutsY = 274f;
+
+        /// <summary>
+        /// How tall the readout row is, and where its two lines sit inside it.
+        ///
+        /// <para>
+        /// The row spans <c>ReadoutsY ± RowHeight / 2</c>, so 214 to 334 down from the safe
+        /// area's top edge: it starts just under the header bar and its foot stays above the
+        /// 350 every mode's board host begins at (<c>FallScreen</c>, <c>KeeperScreen</c>,
+        /// <c>BudBand.LegendTop</c>). The two offsets are the only place a value and its
+        /// caption are placed, read by both <see cref="Slot"/> and <see cref="Lay"/>, because
+        /// the same two numbers written twice is how a row comes to be built at one height and
+        /// laid out at another.
+        /// </para>
+        /// <para>
+        /// The type was raised from 58 / 22 after the row was reported as too small to read at
+        /// a glance mid-run. The values are sized as a row rather than one at a time, for the
+        /// reason on <see cref="BuildReadouts"/>.
+        /// </para>
+        /// </summary>
+        const float RowHeight = 120f, ValueY = 20f, CaptionY = -38f;
+        const int ValueSize = 74, ValueMinSize = 32, CaptionSize = 28, CaptionMinSize = 18;
 
         /// <summary>
         /// How far the header's shade reaches below the bar, in canvas units.
         ///
-        /// Derived rather than typed: the readout row is 100 tall centred at
-        /// <see cref="ReadoutsY"/>, so its foot is at <c>ReadoutsY + 50</c> measured down from
-        /// the safe area's top edge, and the shade has to clear that by a little or the gradient
-        /// runs out exactly where the captions are. A typed number here is the fault
-        /// <c>PanelStack</c> exists to prevent, one screen over — a row moves and the thing
-        /// meant to sit behind it does not.
+        /// Derived rather than typed: the readout row's foot is at
+        /// <c>ReadoutsY + RowHeight / 2</c> measured down from the safe area's top edge, and
+        /// the shade has to clear that by a little or the gradient runs out exactly where the
+        /// captions are. A typed number here is the fault <c>PanelStack</c> exists to prevent,
+        /// one screen over — a row moves and the thing meant to sit behind it does not.
         /// </summary>
-        const float ShadeDrop = ReadoutsY + 50f + 40f - BarHeight;
+        const float ShadeDrop = ReadoutsY + RowHeight * .5f + 40f - BarHeight;
 
         /// <summary>
         /// The key in the header's right-hand corner: what it is, and what pressing it does.
@@ -358,11 +378,11 @@ namespace GlimmerGrove
         /// </summary>
         void BuildReadouts()
         {
-            var row = UIKit.Box("Readouts", Safe, new Vector2(0f, 100f), new Vector2(.5f, 1f),
+            var row = UIKit.Box("Readouts", Safe, new Vector2(0f, RowHeight), new Vector2(.5f, 1f),
                                 new Vector2(0f, -ReadoutsY));
             row.anchorMin = new Vector2(0f, 1f);
             row.anchorMax = new Vector2(1f, 1f);
-            row.sizeDelta = new Vector2(0f, 100f);
+            row.sizeDelta = new Vector2(0f, RowHeight);
 
             // Every slot is built and the unused ones are switched off, rather than the row
             // being rebuilt when a mode's count changes. GridView's bargain: three Texts cost
@@ -397,8 +417,8 @@ namespace GlimmerGrove
                 // aspect ratio.
                 float x = ReadoutRow.XFor(i, count);
 
-                Place(_values[i], x, 14f);
-                Place(_captions[i], x, -34f);
+                Place(_values[i], x, ValueY);
+                Place(_captions[i], x, CaptionY);
             }
         }
 
@@ -413,15 +433,17 @@ namespace GlimmerGrove
         /// </summary>
         static Text Slot(RectTransform row, out Text caption)
         {
-            var value = UIKit.Titled("Value", row, "0", 58, Pal.Cream, TextAnchor.MiddleCenter,
-                                     new Vector2(280f, 68f), new Vector2(.5f, .5f),
-                                     new Vector2(0f, 14f), 4f, 3f);
-            UIKit.Shrinkable(value, 26);
+            // The value's box is 80 tall and the caption's 36: together they fill the row's
+            // 120 with a little air at the top and the foot, and they meet at the row's middle.
+            var value = UIKit.Titled("Value", row, "0", ValueSize, Pal.Cream, TextAnchor.MiddleCenter,
+                                     new Vector2(ReadoutRow.Width, 80f), new Vector2(.5f, .5f),
+                                     new Vector2(0f, ValueY), 4f, 3f);
+            UIKit.Shrinkable(value, ValueMinSize);
 
-            caption = UIKit.Titled("Cap", row, "", 22, new Color(.92f, .96f, 1f, .55f),
-                                   TextAnchor.MiddleCenter, new Vector2(280f, 28f),
-                                   new Vector2(.5f, .5f), new Vector2(0f, -34f), 3f, 0f);
-            UIKit.Shrinkable(caption, 14);
+            caption = UIKit.Titled("Cap", row, "", CaptionSize, new Color(.92f, .96f, 1f, .62f),
+                                   TextAnchor.MiddleCenter, new Vector2(ReadoutRow.Width, 36f),
+                                   new Vector2(.5f, .5f), new Vector2(0f, CaptionY), 3f, 0f);
+            UIKit.Shrinkable(caption, CaptionMinSize);
             return value;
         }
 

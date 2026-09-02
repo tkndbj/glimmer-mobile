@@ -790,23 +790,30 @@ namespace GlimmerGrove.Cloud
         /// what the profile draws afterwards rather than its own prediction.
         /// </para>
         /// </summary>
-        public async Task<(CloudResult result, Social.GroveCard card)> PublishGroveAsync(
+        public async Task<(CloudResult result, Social.GrovePublication published)> PublishGroveAsync(
             string userId, CancellationToken cancellation = default)
         {
             if (!await EnsureReadyAsync())
-                return (CloudResult.Failed(CloudFailure.Offline, "Firebase unavailable"), Social.GroveCard.Empty);
+                return (CloudResult.Failed(CloudFailure.Offline, "Firebase unavailable"), Social.GrovePublication.Unproven);
 
             if (string.IsNullOrEmpty(userId))
-                return (CloudResult.Failed(CloudFailure.Unauthenticated, "no user id"), Social.GroveCard.Empty);
+                return (CloudResult.Failed(CloudFailure.Unauthenticated, "no user id"), Social.GrovePublication.Unproven);
 
             try
             {
                 var reply = await CallAsync("publishGrove", new Dictionary<string, object>());
-                return (CloudResult.Success, ReadCard(userId, ReadMap(reply, "card")));
+
+                // Absent and zero are different answers. A deployment that predates the field
+                // reports nothing, and the client must not read that as "built from nothing"
+                // — see GrovePublication for why that would be a retry loop.
+                long revision = reply != null && reply.ContainsKey("revision") ? ReadLong(reply, "revision") : -1L;
+
+                return (CloudResult.Success,
+                        new Social.GrovePublication(ReadCard(userId, ReadMap(reply, "card")), revision));
             }
             catch (Exception e)
             {
-                return (Classify(e, "publish grove"), Social.GroveCard.Empty);
+                return (Classify(e, "publish grove"), Social.GrovePublication.Unproven);
             }
         }
 

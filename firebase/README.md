@@ -206,30 +206,50 @@ Deployed and verified live on 2026-08-15:
   client that reads them, which is the order that matters: a rule deployed late means a
   screen that reads permission-denied, and a `hasOnly` key deployed late means every save
   write fails
-- `config/grove` seeded at grove v9 — 150 priced pieces, 8 regions, 30 companions, 5 home
-  rungs, a complete grove worth 493,770. Until it is seeded `publishGrove` refuses every
+- `config/grove` seeded at grove v11 — 150 priced pieces, 8 regions, 30 companions, 5 home
+  rungs, a complete grove worth 436,270. Until it is seeded `publishGrove` refuses every
   call by design, because a board scored against a catalog the server does not have would
-  rank the whole world at zero
+  rank the whole world at zero.
+  <br>**Five of the eight regions are published at a worth of nought**, and that is not a
+  bug to tidy up: they are the ones priced in gems, and gem-priced land is worth nothing to
+  a grove's score (invariant 16j). They are in the table rather than left out because
+  `buildCard` filters the published `land[]` through it — a gem region omitted here would
+  score correctly and quietly delete eight of the floor's fourteen columns from every
+  visitor's view of that grove. Starter land is genuinely absent, and is a different case:
+  it never reaches `groveLandOwned` at all
 - `firebase/e2e/smoke-test.mjs` is **64/64 live**, of which 21 are the boards and 15 the
   keeper names
 
 ### Showcase groves
 
-`node firebase/seed/seed-showcase.mjs` writes ten built villages so the boards are not
+`node firebase/seed/seed-showcase.mjs` writes ten designed villages so the boards are not
 empty on launch day. They are **not permanent**: every account is a `showcase-` id, every
-card carries `synthetic: true`, and `--remove` takes the lot down in one command. Take
-them down when there are real groves worth visiting.
+card carries `synthetic: true`, and `--remove` takes the lot down in one command — the
+name reservations with it. Take them down when there are real groves worth visiting.
 
-Worth 215,290 to 441,990, so all ten sit in the five-star league — which means the global
-top ten is synthetic until real players catch up. That is the trade, and it is why they
-are one command to remove.
+**The villages are authored, not generated.** `firebase/seed/showcase-villages.json` holds
+each one as a fourteen-line plan, one character per tile, with a legend per village; the
+script compiles, proves and writes it. Two generations of procedural composer came before
+it, and both produced groves the owner called random, because design is a decision about
+where each thing goes rather than a probability over where it may. To change a village,
+edit its plan, then `--dry-run --dump out/` and `python Tools/render_grove.py --layout`
+to look at it before writing anything. The header of the script lists the four facts about
+the art a plan has to respect (which fences join into a line, and along which diagonal).
+
+They span the four- and five-star leagues (roughly 100,000 to 250,000 credits' worth; the
+dry run prints each), so the global top ten is synthetic until real players catch up. That
+is the trade, and it is why they are one command to remove.
 
 Each card is built by `buildCard`/`groveWorth` out of the compiled functions, so it is
-exactly what `publishGrove` would have written from the same save. Writing one by hand
-would put a number on the board that the server's own derivation disagrees with. The
-script also refuses to place a piece its keeper does not hold — free, earned, bought or a
-resident on their roster — because a village assembled by a script has no picker to
-guarantee it.
+exactly what `publishGrove` would have written from the same save — including the keeper
+level, derived from the star ledger the way the server derives it, which is what bounds
+how far up the companion ladder a showcase account can honestly have bought. Writing one
+by hand would put a number on the board that the server's own derivation disagrees with.
+The script also refuses to place a piece its keeper does not hold — bought by the copy in
+`homesteadStock`, free, earned, or a resident on their roster — because a village assembled
+by a script has no picker to guarantee it; and it reserves each keeper's name in `names/`
+exactly as `claimName` would, so a real player cannot stand on the boards beside a
+synthetic namesake.
 
 Run `gcloud scheduler jobs run firebase-schedule-publishGroveRanks-europe-west1` after
 writing them, or wait for 04:00 UTC.

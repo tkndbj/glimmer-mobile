@@ -1770,14 +1770,93 @@ namespace GlimmerGrove.EditorTools
             RequireStarterTile(floor, owner, floor.HallTile, "hall", true, result);
             RequireStarterTile(floor, owner, floor.StarterTile, "starter companion", false, result);
 
-            long land = 0;
-            foreach (var region in floor.Regions) land += region.Cost;
+            CheckLandLadder(floor, result);
+
+            long land = 0, landGems = 0;
+            foreach (var region in floor.Regions)
+            {
+                land += region.Cost;
+                landGems += region.Gems;
+            }
 
             long daily = DailyCreditIncome(ProgressionRules.Table);
             if (verbose && daily > 0)
                 Debug.Log($"[Glimmer] grove land: {starters} free region(s), " +
-                          $"{floor.Regions.Count - starters} for sale - {land} credits in all, " +
-                          $"about {land / daily} day(s) of play at {daily} credits a day");
+                          $"{floor.Regions.Count - starters} for sale - {land} credits and " +
+                          $"{landGems} gem(s) in all, about {land / daily} day(s) of play at " +
+                          $"{daily} credits a day (gem-priced land is worth nothing to a grove's " +
+                          "score - see GroveRegionDto.gems)");
+        }
+
+        /// <summary>
+        /// That the floor is a ladder: one price each, and rungs 1..N with no gaps and no ties.
+        ///
+        /// <para>
+        /// <b>Two prices is not checked here, and that is worth saying out loud.</b> A stretch
+        /// costing both 5,000 credits and 600 gems is one the shop cannot draw a button for, so
+        /// <c>HomesteadMapper</c> salvages it by dropping the credit half — which means that by
+        /// the time this runs there is only ever one price left and a check for both would be
+        /// dead code wearing a gate's clothes. The mapper's own message is the gate: every
+        /// problem it reports becomes an <em>error</em> on this result, so the build still
+        /// fails and still names the region. The two readers that see the file before the
+        /// mapper does — <c>content.py</c> and <c>seed-config.mjs</c> — check it directly.
+        /// </para>
+        /// <para>
+        /// <b>The rungs matter more than they look.</b> <c>GroveLand.NextForSale</c> sells the
+        /// lowest unowned rung and nothing else, so a duplicate rung makes two stretches claim
+        /// the same place — and the tie is broken by catalog order, which is authoring order,
+        /// which nobody thinks of as a decision. A gap is worse and quieter: the ladder still
+        /// works, so nothing looks wrong, and it only shows up as an off-by-one if somebody
+        /// later counts rungs to draw progress. A missing rung on a sellable region is the one
+        /// that would strand it — <c>Rung</c> sorts an unauthored region last on purpose, so the
+        /// stretch is simply never offered, and the whole floor behind it goes with it.
+        /// </para>
+        /// <para>
+        /// Starter land is not on the ladder and must not carry a rung, because it is not sold —
+        /// a rung on it would push every real rung one place down and make the free ground look
+        /// like something to buy.
+        /// </para>
+        /// </summary>
+        static void CheckLandLadder(GroveFloor floor, ContentValidationResult result)
+        {
+            var rungs = new Dictionary<int, GroveRegion>();
+            int sellable = 0;
+
+            foreach (var region in floor.Regions)
+            {
+                if (!region.IsValid) continue;
+
+                if (region.IsStarter)
+                {
+                    if (region.Order > 0)
+                        result.Errors.Add($"grove region '{region.Id}' is free but sits on ladder " +
+                                          $"rung {region.Order}; starter land is not sold, so it " +
+                                          "is not on the ladder");
+                    continue;
+                }
+
+                sellable++;
+
+                if (region.Order <= 0)
+                {
+                    result.Errors.Add($"grove region '{region.Id}' is for sale but has no ladder " +
+                                      "rung ('order'); it would never be offered, and nothing " +
+                                      "behind it would be either");
+                    continue;
+                }
+
+                if (rungs.TryGetValue(region.Order, out var already))
+                    result.Errors.Add($"grove regions '{already.Id}' and '{region.Id}' both sit " +
+                                      $"on ladder rung {region.Order}; only one can be offered " +
+                                      "and which is decided by authoring order");
+                else
+                    rungs[region.Order] = region;
+            }
+
+            for (int rung = 1; rung <= sellable; rung++)
+                if (!rungs.ContainsKey(rung))
+                    result.Errors.Add($"the grove's land ladder has no rung {rung}; the rungs " +
+                                      $"must be 1 to {sellable} with no gaps");
         }
 
         /// <summary>
@@ -1873,7 +1952,7 @@ namespace GlimmerGrove.EditorTools
 
             if (!region.IsStarter)
                 result.Errors.Add($"the grove's {what} stands on {tileId}, in region " +
-                                  $"'{region.Id}', which costs {region.Cost}; a new player would " +
+                                  $"'{region.Id}', which costs {region.Price}; a new player would " +
                                   "see it behind a padlock");
         }
 
@@ -1937,6 +2016,35 @@ namespace GlimmerGrove.EditorTools
                 result.Errors.Add($"the first home '{first.Id}' is not free; a new grove would open " +
                                   "with nothing on its hearth");
 
+            // The hall's footprint is the floor's, and every rung of the ladder has to author
+            // the same one — a manor that covered more ground than the cabin would evict
+            // whatever the player had planted beside their door the moment they bought it.
+            // See GroveFloor.HallFootprint.
+            foreach (var piece in dwellings)
+                if (piece.Footprint != grove.Floor.HallFootprint)
+                    result.Errors.Add($"grove home '{piece.Id}' stands on {piece.Footprint} and the " +
+                                      $"hall is {grove.Floor.HallFootprint}; buying it would take " +
+                                      "or leave ground");
+
+            if (GroveFloor.TryParse(grove.Floor.HallTile, out int hallCol, out int hallRow))
+            {
+                var hall = grove.Floor.HallFootprint;
+                for (int c = 0; c < hall.Cols; c++)
+                    for (int r = 0; r < hall.Rows; r++)
+                    {
+                        var region = grove.Floor.RegionOf(hallCol + c, hallRow + r);
+                        if (region == null || !region.IsStarter)
+                            result.Errors.Add($"the grove's hall ({hall} from {grove.Floor.HallTile}) " +
+                                              $"covers {GroveFloor.TileId(hallCol + c, hallRow + r)}, " +
+                                              "which is not on starter land; a new player would see " +
+                                              "their home behind a padlock");
+                    }
+
+                if (grove.Floor.IsHall(grove.Floor.StarterTile))
+                    result.Errors.Add("the grove's starter companion stands under the hall; the " +
+                                      "companion is dropped");
+            }
+
             if (verbose && first.IsValid)
             {
                 long ladder = 0;
@@ -1976,6 +2084,8 @@ namespace GlimmerGrove.EditorTools
                 if (piece.Lift < -1f || piece.Lift > 1.5f)
                     result.Warnings.Add($"grove piece '{piece.Id}' has lift {piece.Lift:0.00}; " +
                                         "it will draw well away from its slot");
+
+                CheckArtFacts(piece, result);
             }
 
             // An error for the plots' reason: a picker with nothing in it on a first visit is a
@@ -2024,6 +2134,64 @@ namespace GlimmerGrove.EditorTools
         /// worse than a wrong number, because it reads as a rule somebody is relying on.
         /// </para>
         /// </summary>
+        /// <summary>
+        /// That what the catalog says about a piece's picture is what the picture is.
+        ///
+        /// <para>
+        /// <c>w</c>, <c>h</c> and <c>hit</c> are numbers describing a PNG, written by
+        /// <c>Tools/grove_art_facts.py</c> — and a number describing a picture is only true
+        /// until somebody re-cuts the picture (<see cref="CheckTileProjection"/>'s lesson). The
+        /// size is compared against the imported texture here, which needs no CPU access; the
+        /// mask's content is the tool's own <c>--check</c>, because the texture is not readable
+        /// in a build and should not be made so for a validator. An authored piece with no
+        /// facts at all is an error, because the layout and the tap both fall back to the
+        /// behaviour these fields exist to replace.
+        /// </para>
+        /// </summary>
+        static void CheckArtFacts(HomesteadPiece piece, ContentValidationResult result)
+        {
+            // A resident's facts come from the manifest's companion entry rather than from
+            // homestead.json, and are checked here against the same art the grove draws.
+            if (!piece.HasArtSize)
+            {
+                result.Errors.Add($"grove piece '{piece.Id}' authors no art size; run " +
+                                  "Tools/grove_art_facts.py so the layout is exact before its art loads");
+                return;
+            }
+
+            if (!piece.Hit.IsSet)
+                result.Errors.Add($"grove piece '{piece.Id}' has no hit mask; run " +
+                                  "Tools/grove_art_facts.py so it can be tapped where it is painted");
+
+            string path = "Assets/Game/Art/" + piece.Art + (piece.Animated ? string.Empty : ".png");
+            Texture2D texture = null;
+
+            if (piece.Animated)
+            {
+                var frames = AssetDatabase.FindAssets("t:Texture2D", new[] { path });
+                if (frames.Length > 0)
+                    texture = AssetDatabase.LoadAssetAtPath<Texture2D>(AssetDatabase.GUIDToAssetPath(frames[0]));
+            }
+            else texture = AssetDatabase.LoadAssetAtPath<Texture2D>(path);
+
+            if (texture == null) return;   // the missing-art error is raised beside this one
+
+            // The importer may have scaled the texture down (ArtImportRules.Caps), so what is
+            // compared is the source file's size, which the importer records.
+            var importer = AssetImporter.GetAtPath(AssetDatabase.GetAssetPath(texture)) as TextureImporter;
+            int w = texture.width, h = texture.height;
+            if (importer != null)
+            {
+                importer.GetSourceTextureWidthAndHeight(out int sw, out int sh);
+                if (sw > 0 && sh > 0) { w = sw; h = sh; }
+            }
+
+            if (w != piece.ArtWidth || h != piece.ArtHeight)
+                result.Errors.Add($"grove piece '{piece.Id}' authors art size " +
+                                  $"{piece.ArtWidth}x{piece.ArtHeight} and the file is {w}x{h}; " +
+                                  "run Tools/grove_art_facts.py");
+        }
+
         static void ValidateGroveBundle(HomesteadPiece piece, ContentValidationResult result)
         {
             if (piece.Bundle <= 1) return;

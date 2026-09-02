@@ -19,9 +19,16 @@ So this reimplements the drawing half of `GroveFieldView` / `GroveVisitScreen` a
 same art and the same numbers:
 
   * the grid is `GroveFloor` — 220px tiles, a 0.5628 face ratio (not 0.5, see there),
-    `x = (col - row) * w/2`, `y = (col + row) * h/2`, drawn back to front by `col + row`
-  * the ground hangs by half its skirt, derived from the tile art's own aspect
-  * a piece draws at native size x `piece.scale` x 1.15, lifted by `size.y * piece.lift`
+    `x = (col - row) * w/2`, `y = (col + row) * h/2`
+  * every tile of ground is drawn first, back to front, and every piece over all of it —
+    `GroveFieldView`'s two layers, which is what keeps a tile's skirt off the base of the
+    piece behind it
+  * a piece stands on its footprint (`cols` x `rows`, mirrored when flipped, the hall's
+    from the floor) and is drawn at the footprint's centre, sorted by its front tile —
+    `GroveFootprint.Depth`, with a single tile one step in front of a larger one on the
+    same front tile
+  * a piece draws at authored `w` x `h` (the PNG's size) x `piece.scale` x 1.15, lifted by
+    `size.y * piece.lift` — `GroveTileArt.LayPiece`
   * a resident is its critter flipbook's first frame at scale .95, lift .45
 
 It is a *renderer*, deliberately: it takes no view on whether a layout is good. That is
@@ -57,11 +64,11 @@ RESIDENT_SCALE = 0.95               # GroveResidents.Scale
 RESIDENT_LIFT = 0.45                # GroveResidents.Lift
 
 
-def tile_x(col: int, row: int) -> float:
+def tile_x(col: float, row: float) -> float:
     return (col - row) * TILE_W * 0.5
 
 
-def tile_y(col: int, row: int) -> float:
+def tile_y(col: float, row: float) -> float:
     return (col + row) * TILE_H * 0.5
 
 
@@ -83,6 +90,10 @@ def load_catalog():
             "lift": float(p.get("lift", 0.45)),
             "kind": p.get("kind", "decor"),
             "slot": p.get("slot", "ground"),
+            "cols": int(p.get("cols") or 1),
+            "rows": int(p.get("rows") or 1),
+            "w": int(p.get("w") or 0),
+            "h": int(p.get("h") or 0),
         }
 
     # Residents are projected in, exactly as GroveResidents.From does.
@@ -97,6 +108,10 @@ def load_catalog():
             "lift": RESIDENT_LIFT,
             "kind": "resident",
             "slot": "ground",
+            "cols": 1,
+            "rows": 1,
+            "w": 0,
+            "h": 0,
         }
 
     return homestead["floor"], pieces
@@ -178,20 +193,32 @@ def render(floor, pieces, land, placed, dwelling, scale=0.5, pad_top=760.0):
         for (c, w) in sorted(owned, key=lambda t: draw_order(*t)):
             paste(tile_art, tile_x(c, w), tile_y(c, w) + drop, gw, gh)
 
-    # ---- everything standing on it, back to front
+    # ---- everything standing on it, back to front by footprint depth
     hall = floor["hallTile"]
-    standing = []
+    hall_cols, hall_rows = int(floor.get("hallCols") or 1), int(floor.get("hallRows") or 1)
+
+    standing = []   # (depth, anchor col, anchor row, footprint cols, rows, piece id, flip)
+
+    def stand(c, w, pid, flip, fcols, frows):
+        front = draw_order(c + fcols - 1, w + frows - 1)
+        depth = front * 2 + (1 if fcols == 1 and frows == 1 else 0)
+        standing.append((depth, c, w, fcols, frows, pid, flip))
+
     for (c, w) in owned:
         tid = f"t_{c:03d}_{w:03d}"
         if tid == hall:
-            standing.append((c, w, dwelling, False))
+            stand(c, w, dwelling, False, hall_cols, hall_rows)
         elif tid in placed:
             pid, flip = placed[tid]
-            standing.append((c, w, pid, flip))
+            piece = pieces.get(pid)
+            fcols, frows = (piece["cols"], piece["rows"]) if piece else (1, 1)
+            if flip:
+                fcols, frows = frows, fcols
+            stand(c, w, pid, flip, fcols, frows)
 
-    standing.sort(key=lambda t: draw_order(t[0], t[1]))
+    standing.sort()
 
-    for (c, w, pid, flip) in standing:
+    for (_depth, c, w, fcols, frows, pid, flip) in standing:
         piece = pieces.get(pid)
         if not piece:
             print(f"  note: unknown piece {pid}", file=sys.stderr)
@@ -202,8 +229,13 @@ def render(floor, pieces, land, placed, dwelling, scale=0.5, pad_top=760.0):
             continue
 
         k = PIECE_SCALE * piece["scale"]
-        pw, ph = img.width * k, img.height * k
-        paste(img, tile_x(c, w), tile_y(c, w) - ph * piece["lift"], pw, ph, flip)
+        aw = piece["w"] or img.width
+        ah = piece["h"] or img.height
+        pw, ph = aw * k, ah * k
+
+        cc = c + (fcols - 1) * 0.5
+        cw = w + (frows - 1) * 0.5
+        paste(img, tile_x(cc, cw), tile_y(cc, cw) - ph * piece["lift"], pw, ph, flip)
 
     return canvas.convert("RGB")
 
