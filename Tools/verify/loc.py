@@ -54,7 +54,14 @@ DERIVED_PREFIXES = ("level.", "chapter.", "ui.companion.", "ui.avatar.", "ui.tip
                     # does (invariant 5a): the switcher has to label a way of playing without
                     # reading anything, and an overridable key would put a file read in front
                     # of a control that is drawn before any chapter has loaded.
-                    "mode.")
+                    "mode.",
+                    # A line of dialogue is named by the chapter body that says it, which is
+                    # the one place in this game a key is *authored* rather than derived from
+                    # an id (see `StoryLine.Key`). It is unreachable from source by
+                    # construction, so it would read as unused here - and it is checked far
+                    # more strictly by `content.py`, which resolves every key a chapter
+                    # actually authors and errors on one that is missing.
+                    "story.")
 
 # Keys whose middle segment is a content id: `ui.event.<id>.name`. The prefix alone would
 # also hide the event panel's own generic keys, which are written out and worth checking.

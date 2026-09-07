@@ -369,6 +369,16 @@ namespace GlimmerGrove.Tests
         /// container that also paid gems would put an amount straight back onto the client's
         /// side of a purchase. See <c>StoreProduct.HeartCapacity</c>.
         /// </para>
+        /// <para>
+        /// <b>An event pass is the second entitlement, and it passes the same test for the same
+        /// reason.</b> What it grants is <c>owned: true</c> on one account/event document, so
+        /// applying it twice is applying it once and there is nothing for a save to remember.
+        /// It is more strictly bounded than a container, not less: the pass's own rewards are
+        /// paid by <c>eventPass</c> against a server-held claim floor, so the receipt buys
+        /// permission to claim and never an amount. This case reads the union rather than
+        /// naming the shelves, so a third entitlement added next year fails here until somebody
+        /// has thought about it — which is the whole point of the assertion.
+        /// </para>
         /// </summary>
         [Test]
         public void EveryBuiltInProductGrantsCurrencyOrAnEntitlementAndNeverBoth()
@@ -376,14 +386,17 @@ namespace GlimmerGrove.Tests
             foreach (var product in StoreCatalog.Default.Products)
             {
                 bool currency = product.Credits > 0 || product.Gems > 0;
+                bool entitlement = product.IsContainer || product.IsEventPass;
 
-                Assert.IsTrue(currency || product.IsContainer, product.Id);
-                Assert.IsFalse(currency && product.IsContainer,
-                               $"{product.Id} grants currency and a capacity");
+                Assert.IsTrue(currency || entitlement, product.Id);
+                Assert.IsFalse(currency && entitlement,
+                               $"{product.Id} grants currency and an entitlement");
+                Assert.IsFalse(product.IsContainer && product.IsEventPass,
+                               $"{product.Id} grants two entitlements");
 
                 // An entitlement that could be sold twice is one the store would happily
                 // charge for twice, and it is what makes a Restore able to bring it back.
-                if (product.IsContainer)
+                if (entitlement)
                     Assert.IsTrue(product.IsOneTime, $"{product.Id} must be a non-consumable");
 
                 Assert.AreEqual("store.product." + product.Id, product.NameKey);

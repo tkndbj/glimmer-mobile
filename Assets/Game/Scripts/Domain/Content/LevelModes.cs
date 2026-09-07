@@ -8,7 +8,7 @@ namespace GlimmerGrove.Content
     /// <para>
     /// <b>This list is the only place a mode is registered.</b> Everything else — the content
     /// mapper, the validator, the catalog index, the map's switcher — asks here rather than
-    /// enumerating modes it happens to know about, so a fifth mode is a subclass and one line
+    /// enumerating modes it happens to know about, so a further mode is a subclass and one line
     /// and nothing else in the game has to be edited or even recompiled against a new case.
     /// </para>
     /// <para>
@@ -29,8 +29,10 @@ namespace GlimmerGrove.Content
         {
             new GladeMode(),
             new FallMode(),
-            new KeeperMode(),
             new BudMode(),
+            new MarchMode(),
+            new EmberMode(),
+            new KindleMode(),
         };
 
         public static IReadOnlyList<LevelMode> All => _all;

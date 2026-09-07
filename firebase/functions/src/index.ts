@@ -59,6 +59,7 @@ import {
   WHEEL_MIN_PERCENT, applyWheelPercent, readWheelPosition, usableWheelConfig, wheelPercent,
 } from "./wheel";
 import { earnedCredits } from "./progression";
+import { validatePass } from "./event-pass";
 import {
   deriveEarned,
   loadProgressionConfig,
@@ -71,6 +72,8 @@ import {
 
 
 initializeApp();
+
+export { eventPass } from "./event-pass";
 
 // Secrets live in Secret Manager, never in source and never in environment config that
 // ends up in a repository. Absent secrets make validation fail closed — see receipts.ts.
@@ -894,6 +897,23 @@ export const redeemPurchase = onCall(
         return { state, granted: {} as Record<string, number>, already: true };
       }
 
+      if (grant.eventPassId) {
+        const event = config.events?.find(e => e.id === grant.eventPassId);
+        validatePass(event);
+        if (event.premiumProductId !== purchase.productId)
+          throw new HttpsError("failed-precondition", "event pass product mismatch");
+        const previousPass = await transaction.get(db.doc(PATHS.eventPass(uid, grant.eventPassId)));
+        // Entitlement and receipt commit together. Re-deliveries take the receipt branch above.
+        // Merge preserves the claim floor through a refund/re-purchase.
+        transaction.set(db.doc(PATHS.eventPass(uid, grant.eventPassId)), {
+          owned: true, productId: purchase.productId, receiptPath: receiptRef.path,
+          definition: previousPass.data()?.definition ?? event,
+          // A new payment after a refund buys the full contract again. The previous
+          // grant was reversed; a verified re-purchase can collect it again.
+          ...(!previousPass.data()?.owned ? { collectedGoal: 0, paidCredits: 0, paidGems: 0 } : {}),
+          updatedAt: FieldValue.serverTimestamp(),
+        }, { merge: true });
+      }
       const granted: Record<string, number> = {};
 
       for (const [currency, amount] of entries) {
@@ -918,6 +938,7 @@ export const redeemPurchase = onCall(
         // Recorded so a refund can be reversed without re-reading the product catalog,
         // which may have been re-seeded by then. `revokeReceipt` reads exactly this.
         capacity: grant.capacity,
+        eventPassId: grant.eventPassId ?? "",
         granted,
         sandbox: purchase.sandbox,
         purchasedAt: Timestamp.fromMillis(purchase.purchasedAtMillis),

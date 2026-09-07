@@ -254,7 +254,11 @@ namespace GlimmerGrove.Content
                     return false;
                 }
 
-                milestones.Add(new Events.EventMilestone(rung.goal, rung.credits));
+                if (rung.premiumCredits < 0 || rung.premiumCredits > Events.EventRules.MaxMilestoneCredits ||
+                    rung.premiumGems < 0 || rung.premiumGems > 1000 ||
+                    (string.IsNullOrEmpty(entry.premiumProductId) && (rung.premiumCredits > 0 || rung.premiumGems > 0)))
+                { _problems.Add($"event '{entry.id}' has invalid premium rewards"); return false; }
+                milestones.Add(new Events.EventMilestone(rung.goal, rung.credits, rung.premiumCredits, rung.premiumGems));
                 previousGoal = rung.goal;
             }
 
@@ -285,7 +289,7 @@ namespace GlimmerGrove.Content
             }
 
             _events.Add(new Events.GroveEvent(entry.id, entry.startUnix, entry.endUnix,
-                                              levels, milestones, icon));
+                                              levels, milestones, icon, entry.premiumProductId));
             return true;
         }
 

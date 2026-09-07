@@ -24,12 +24,23 @@ namespace GlimmerGrove.Content
         /// <summary>Sprite key under Art/Bg. Null means chapter.</summary>
         public readonly string Backdrop;
 
+        /// <summary>
+        /// What this level has to say while it is played. Never null — <c>StoryScript.Silent</c>
+        /// for the ninety-one levels that say nothing, so no caller tests it.
+        /// </summary>
+        public readonly StoryScript Story;
+
         public LevelPresentation(Vector2 mapPosition, Color? accent, Color? slate, string backdrop)
+            : this(mapPosition, accent, slate, backdrop, null) { }
+
+        public LevelPresentation(Vector2 mapPosition, Color? accent, Color? slate, string backdrop,
+                                 StoryScript story)
         {
             MapPosition = mapPosition;
             Accent = accent;
             Slate = slate;
             Backdrop = string.IsNullOrEmpty(backdrop) ? null : backdrop;
+            Story = story ?? StoryScript.Silent;
         }
 
         public Color ResolveAccent(ChapterDefinition chapter)

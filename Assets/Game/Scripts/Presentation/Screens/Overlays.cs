@@ -327,9 +327,10 @@ namespace GlimmerGrove
                 // and a mode nothing can play never reaches here.
                 case DefeatReason.WellFlooded: return "ui.defeat.flood_title";
                 case DefeatReason.OutOfMotes: return "ui.defeat.motes_title";
-                case DefeatReason.Overgrown: return "ui.defeat.overgrown_title";
-                case DefeatReason.OutOfTiles: return "ui.defeat.tiles_title";
+                // DefeatReason.Overgrown and OutOfTiles are retired with Groovekeeper and
+                // deliberately absent, on OutOfInk's terms.
                 case DefeatReason.OutOfTaps: return "ui.defeat.taps_title";
+                case DefeatReason.Stuck: return "ui.defeat.stuck_title";
                 case DefeatReason.Barren: return "ui.defeat.barren_title";
                 default: return "ui.defeat.moves_title";
             }

@@ -82,7 +82,9 @@ namespace GlimmerGrove.Events
                     var candidate = all[i];
                     if (candidate == null || !candidate.IsValid) continue;
                     if (!candidate.HasEndedAt(now)) continue;
-                    if (!ProgressOf(candidate).AnyWaiting) continue;
+                    // Premium claims live on the server; retain access after collecting free tiers.
+                    if (!ProgressOf(candidate).AnyWaiting &&
+                        !(candidate.HasPremium && ProgressOf(candidate).Finished > 0)) continue;
 
                     if (best == null || candidate.EndUnix > best.EndUnix) best = candidate;
                 }
@@ -142,8 +144,7 @@ namespace GlimmerGrove.Events
                     return levelId;
                 }
 
-                long at = record.FirstClearedUnix;
-                if (at < groveEvent.StartUnix || at >= groveEvent.EndUnix) return levelId;
+                // A replay cannot change a first-clear date outside the event window.
             }
 
             return LevelId.None;

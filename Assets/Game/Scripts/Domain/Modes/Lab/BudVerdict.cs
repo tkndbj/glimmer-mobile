@@ -24,7 +24,7 @@ namespace GlimmerGrove.Modes
     /// The reading of a grove against its satchel, in one predicate.
     ///
     /// <para>
-    /// <see cref="FallVerdict"/>, <see cref="KeeperVerdict"/> and this are the same class for the
+    /// <see cref="FallVerdict"/>, <see cref="ProtoVerdict"/> and this are the same class for the
     /// same reason: three booleans in an <c>if</c> on a screen is three edges where the run is
     /// decided and the screen has not caught up.
     /// </para>

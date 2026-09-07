@@ -1,593 +1,873 @@
 {
-  "schemaVersion": 2,
-  "progressionVersion": 4,
-  "groveVersion": 11,
-  "chapters": [
+ "schemaVersion": 2,
+ "progressionVersion": 4,
+ "groveVersion": 11,
+ "chapters": [
+  {
+   "id": "c01_shallows",
+   "version": 6,
+   "order": 10,
+   "disabled": false,
+   "minAppVersion": 0,
+   "levels": [
+    "c01_first_light",
+    "c01_twin_streams",
+    "c01_prism_heart",
+    "c01_thorn_hollow",
+    "c01_bound_roots",
+    "c01_duskcap_hollow",
+    "c01_lantern_ring",
+    "c01_sleeping_thicket",
+    "c01_three_springs",
+    "c01_grovekeepers_knot"
+   ]
+  },
+  {
+   "id": "c02_millvale",
+   "version": 4,
+   "order": 20,
+   "disabled": false,
+   "minAppVersion": 0,
+   "levels": [
+    "c02_two_ways_over",
+    "c02_the_millrace",
+    "c02_under_the_boughs",
+    "c02_the_old_weir",
+    "c02_braided_water",
+    "c02_the_wheelhouse",
+    "c02_hollow_ford",
+    "c02_stonebridge",
+    "c02_three_bridges",
+    "c02_the_millers_knot"
+   ]
+  },
+  {
+   "id": "c03_amberwood",
+   "version": 1,
+   "order": 30,
+   "disabled": false,
+   "minAppVersion": 0,
+   "levels": [
+    "c03_amberlight",
+    "c03_two_lights",
+    "c03_the_verdigris",
+    "c03_foxfire",
+    "c03_the_quiet_hollow",
+    "c03_rootbound",
+    "c03_three_springs",
+    "c03_under_the_lanterns",
+    "c03_the_ashen_path",
+    "c03_the_amberwood_knot"
+   ]
+  },
+  {
+   "id": "c04_nightbriar",
+   "version": 1,
+   "order": 40,
+   "disabled": false,
+   "minAppVersion": 0,
+   "levels": [
+    "c04_thornlight",
+    "c04_the_shut_way",
+    "c04_nightfall",
+    "c04_bramble_and_bridge",
+    "c04_the_hollow_gate",
+    "c04_rootbriar",
+    "c04_three_thorns",
+    "c04_the_long_dark",
+    "c04_wick_and_wane",
+    "c04_the_nightbriar_knot"
+   ]
+  },
+  {
+   "id": "f01_lightfall",
+   "version": 2,
+   "order": 50,
+   "disabled": false,
+   "minAppVersion": 0,
+   "mode": "fall",
+   "levels": [
+    "f01_first_fall",
+    "f01_two_lights",
+    "f01_the_kindling",
+    "f01_narrow_water",
+    "f01_the_stack",
+    "f01_deep_cistern",
+    "f01_brimming",
+    "f01_the_undertow",
+    "f01_last_ember",
+    "f01_the_deep_well"
+   ]
+  },
+  {
+   "id": "b01_thicket",
+   "version": 3,
+   "order": 70,
+   "disabled": false,
+   "minAppVersion": 0,
+   "mode": "bud",
+   "levels": [
+    "b01_firstburst",
+    "b01_catchalight",
+    "b01_twiceknocked",
+    "b01_sunspill",
+    "b01_dewfall",
+    "b01_widewild",
+    "b01_honeylight",
+    "b01_wildwaking",
+    "b01_everbloom",
+    "b01_thicketheart"
+   ]
+  },
+  {
+   "id": "f02_glasswater",
+   "version": 3,
+   "order": 80,
+   "disabled": false,
+   "minAppVersion": 0,
+   "mode": "fall",
+   "levels": [
+    "f02_the_glass",
+    "f02_stillwater",
+    "f02_low_tide",
+    "f02_the_crossing",
+    "f02_two_panes",
+    "f02_far_shore",
+    "f02_lantern_row",
+    "f02_slack_water",
+    "f02_underglass",
+    "f02_the_glasswater"
+   ]
+  },
+  {
+   "id": "f03_whorlwater",
+   "version": 3,
+   "order": 90,
+   "disabled": false,
+   "minAppVersion": 0,
+   "mode": "fall",
+   "levels": [
+    "f03_first_whorl",
+    "f03_make_the_pair",
+    "f03_the_span",
+    "f03_buried",
+    "f03_two_shores",
+    "f03_twin_mouths",
+    "f03_through_the_glass",
+    "f03_the_deep_draw",
+    "f03_every_light",
+    "f03_whorlwater"
+   ]
+  },
+  {
+   "id": "b02_tanglewood",
+   "version": 4,
+   "order": 100,
+   "disabled": false,
+   "minAppVersion": 0,
+   "mode": "bud",
+   "levels": [
+    "b02_firstbolt",
+    "b02_makefive",
+    "b02_sunspark",
+    "b02_crossfire",
+    "b02_stormheart",
+    "b02_sixfold",
+    "b02_thundering",
+    "b02_sunwell",
+    "b02_wildstorm",
+    "b02_stormcrown"
+   ]
+  },
+  {
+   "id": "m01_hollowmarch",
+   "version": 1,
+   "order": 110,
+   "disabled": false,
+   "minAppVersion": 0,
+   "mode": "march",
+   "levels": [
+    "m01_firstcore",
+    "m01_haulroad",
+    "m01_thegate"
+   ]
+  },
+  {
+   "id": "e01_emberforge",
+   "version": 1,
+   "order": 120,
+   "disabled": false,
+   "minAppVersion": 0,
+   "mode": "ember",
+   "levels": [
+    "e01_firstember",
+    "e01_twinlocks",
+    "e01_ironribs",
+    "e01_frostvein",
+    "e01_chainfire",
+    "e01_deepcell",
+    "e01_ironward",
+    "e01_twinstars",
+    "e01_slaghold",
+    "e01_emberheart"
+   ]
+  },
+  {
+   "id": "k01_kindlewake",
+   "version": 1,
+   "order": 130,
+   "disabled": false,
+   "minAppVersion": 0,
+   "mode": "kindle",
+   "levels": [
+    "k01_firstlight",
+    "k01_stillwood",
+    "k01_crossways",
+    "k01_stonerow",
+    "k01_thechoir",
+    "k01_dimhollow",
+    "k01_threefold",
+    "k01_lanternweft",
+    "k01_deepwake",
+    "k01_kindleheart"
+   ]
+  }
+ ],
+ "events": [
+  {
+   "id": "first_bloom",
+   "icon": "bloom",
+   "startUnix": 1786320000,
+   "endUnix": 1794096000,
+   "disabled": false,
+   "levels": [
+    "c01_first_light",
+    "c01_twin_streams",
+    "c01_prism_heart",
+    "c01_thorn_hollow",
+    "c01_bound_roots",
+    "c01_duskcap_hollow",
+    "c01_lantern_ring",
+    "c01_sleeping_thicket",
+    "c01_three_springs",
+    "c01_grovekeepers_knot",
+    "c02_two_ways_over",
+    "c02_the_millrace",
+    "c02_under_the_boughs",
+    "c02_the_old_weir",
+    "c02_braided_water",
+    "c02_the_wheelhouse",
+    "c02_hollow_ford",
+    "c02_stonebridge",
+    "c02_three_bridges",
+    "c02_the_millers_knot",
+    "c03_amberlight",
+    "c03_two_lights",
+    "c03_the_verdigris",
+    "c03_foxfire",
+    "c03_the_quiet_hollow",
+    "c03_rootbound",
+    "c03_three_springs",
+    "c03_under_the_lanterns",
+    "c03_the_ashen_path",
+    "c03_the_amberwood_knot",
+    "c04_thornlight",
+    "c04_the_shut_way",
+    "c04_nightfall",
+    "c04_bramble_and_bridge",
+    "c04_the_hollow_gate",
+    "c04_rootbriar",
+    "c04_three_thorns",
+    "c04_the_long_dark",
+    "c04_wick_and_wane",
+    "c04_the_nightbriar_knot"
+   ],
+   "milestones": [
     {
-      "id": "c01_shallows",
-      "version": 6,
-      "order": 10,
-      "disabled": false,
-      "minAppVersion": 0,
-      "levels": [
-        "c01_first_light",
-        "c01_twin_streams",
-        "c01_prism_heart",
-        "c01_thorn_hollow",
-        "c01_bound_roots",
-        "c01_duskcap_hollow",
-        "c01_lantern_ring",
-        "c01_sleeping_thicket",
-        "c01_three_springs",
-        "c01_grovekeepers_knot"
-      ]
+     "goal": 1,
+     "credits": 60,
+     "premiumCredits": 225,
+     "premiumGems": 0
     },
     {
-      "id": "c02_millvale",
-      "version": 4,
-      "order": 20,
-      "disabled": false,
-      "minAppVersion": 0,
-      "levels": [
-        "c02_two_ways_over",
-        "c02_the_millrace",
-        "c02_under_the_boughs",
-        "c02_the_old_weir",
-        "c02_braided_water",
-        "c02_the_wheelhouse",
-        "c02_hollow_ford",
-        "c02_stonebridge",
-        "c02_three_bridges",
-        "c02_the_millers_knot"
-      ]
+     "goal": 2,
+     "credits": 90,
+     "premiumCredits": 225,
+     "premiumGems": 0
     },
     {
-      "id": "c03_amberwood",
-      "version": 1,
-      "order": 30,
-      "disabled": false,
-      "minAppVersion": 0,
-      "levels": [
-        "c03_amberlight",
-        "c03_two_lights",
-        "c03_the_verdigris",
-        "c03_foxfire",
-        "c03_the_quiet_hollow",
-        "c03_rootbound",
-        "c03_three_springs",
-        "c03_under_the_lanterns",
-        "c03_the_ashen_path",
-        "c03_the_amberwood_knot"
-      ]
+     "goal": 3,
+     "credits": 50,
+     "premiumCredits": 225,
+     "premiumGems": 0
     },
     {
-      "id": "c04_nightbriar",
-      "version": 1,
-      "order": 40,
-      "disabled": false,
-      "minAppVersion": 0,
-      "levels": [
-        "c04_thornlight",
-        "c04_the_shut_way",
-        "c04_nightfall",
-        "c04_bramble_and_bridge",
-        "c04_the_hollow_gate",
-        "c04_rootbriar",
-        "c04_three_thorns",
-        "c04_the_long_dark",
-        "c04_wick_and_wane",
-        "c04_the_nightbriar_knot"
-      ]
+     "goal": 4,
+     "credits": 250,
+     "premiumCredits": 225,
+     "premiumGems": 0
     },
     {
-      "id": "f01_lightfall",
-      "version": 2,
-      "order": 50,
-      "disabled": false,
-      "minAppVersion": 0,
-      "mode": "fall",
-      "levels": [
-        "f01_first_fall",
-        "f01_two_lights",
-        "f01_the_kindling",
-        "f01_narrow_water",
-        "f01_the_stack",
-        "f01_deep_cistern",
-        "f01_brimming",
-        "f01_the_undertow",
-        "f01_last_ember",
-        "f01_the_deep_well"
-      ]
+     "goal": 5,
+     "credits": 50,
+     "premiumCredits": 0,
+     "premiumGems": 50
     },
     {
-      "id": "k01_grovekeeper",
-      "version": 2,
-      "order": 60,
-      "disabled": false,
-      "minAppVersion": 0,
-      "mode": "keeper",
-      "levels": [
-        "k01_first_grove",
-        "k01_the_second_bed",
-        "k01_stonecrop",
-        "k01_the_boulder",
-        "k01_four_petals",
-        "k01_heartwood",
-        "k01_twin_hearts",
-        "k01_the_prism",
-        "k01_the_pocket",
-        "k01_keepers_grove"
-      ]
+     "goal": 6,
+     "credits": 400,
+     "premiumCredits": 225,
+     "premiumGems": 0
     },
     {
-      "id": "b01_thicket",
-      "version": 3,
-      "order": 70,
-      "disabled": false,
-      "minAppVersion": 0,
-      "mode": "bud",
-      "levels": [
-        "b01_firstburst",
-        "b01_catchalight",
-        "b01_twiceknocked",
-        "b01_sunspill",
-        "b01_dewfall",
-        "b01_widewild",
-        "b01_honeylight",
-        "b01_wildwaking",
-        "b01_everbloom",
-        "b01_thicketheart"
-      ]
+     "goal": 7,
+     "credits": 50,
+     "premiumCredits": 225,
+     "premiumGems": 0
     },
     {
-      "id": "f02_glasswater",
-      "version": 3,
-      "order": 80,
-      "disabled": false,
-      "minAppVersion": 0,
-      "mode": "fall",
-      "levels": [
-        "f02_the_glass",
-        "f02_stillwater",
-        "f02_low_tide",
-        "f02_the_crossing",
-        "f02_two_panes",
-        "f02_far_shore",
-        "f02_lantern_row",
-        "f02_slack_water",
-        "f02_underglass",
-        "f02_the_glasswater"
-      ]
+     "goal": 8,
+     "credits": 600,
+     "premiumCredits": 225,
+     "premiumGems": 0
     },
     {
-      "id": "f03_whorlwater",
-      "version": 3,
-      "order": 90,
-      "disabled": false,
-      "minAppVersion": 0,
-      "mode": "fall",
-      "levels": [
-        "f03_first_whorl",
-        "f03_make_the_pair",
-        "f03_the_span",
-        "f03_buried",
-        "f03_two_shores",
-        "f03_twin_mouths",
-        "f03_through_the_glass",
-        "f03_the_deep_draw",
-        "f03_every_light",
-        "f03_whorlwater"
-      ]
+     "goal": 9,
+     "credits": 50,
+     "premiumCredits": 225,
+     "premiumGems": 0
     },
     {
-      "id": "b02_tanglewood",
-      "version": 4,
-      "order": 100,
-      "disabled": false,
-      "minAppVersion": 0,
-      "mode": "bud",
-      "levels": [
-        "b02_firstbolt",
-        "b02_makefive",
-        "b02_sunspark",
-        "b02_crossfire",
-        "b02_stormheart",
-        "b02_sixfold",
-        "b02_thundering",
-        "b02_sunwell",
-        "b02_wildstorm",
-        "b02_stormcrown"
-      ]
+     "goal": 10,
+     "credits": 1000,
+     "premiumCredits": 1200,
+     "premiumGems": 100
+    },
+    {
+     "goal": 11,
+     "credits": 80,
+     "premiumCredits": 225,
+     "premiumGems": 0
+    },
+    {
+     "goal": 12,
+     "credits": 80,
+     "premiumCredits": 225,
+     "premiumGems": 0
+    },
+    {
+     "goal": 13,
+     "credits": 80,
+     "premiumCredits": 225,
+     "premiumGems": 0
+    },
+    {
+     "goal": 14,
+     "credits": 80,
+     "premiumCredits": 225,
+     "premiumGems": 0
+    },
+    {
+     "goal": 15,
+     "credits": 300,
+     "premiumCredits": 0,
+     "premiumGems": 50
+    },
+    {
+     "goal": 16,
+     "credits": 80,
+     "premiumCredits": 225,
+     "premiumGems": 0
+    },
+    {
+     "goal": 17,
+     "credits": 80,
+     "premiumCredits": 225,
+     "premiumGems": 0
+    },
+    {
+     "goal": 18,
+     "credits": 80,
+     "premiumCredits": 225,
+     "premiumGems": 0
+    },
+    {
+     "goal": 19,
+     "credits": 80,
+     "premiumCredits": 225,
+     "premiumGems": 0
+    },
+    {
+     "goal": 20,
+     "credits": 300,
+     "premiumCredits": 1200,
+     "premiumGems": 100
+    },
+    {
+     "goal": 21,
+     "credits": 80,
+     "premiumCredits": 225,
+     "premiumGems": 0
+    },
+    {
+     "goal": 22,
+     "credits": 80,
+     "premiumCredits": 225,
+     "premiumGems": 0
+    },
+    {
+     "goal": 23,
+     "credits": 80,
+     "premiumCredits": 225,
+     "premiumGems": 0
+    },
+    {
+     "goal": 24,
+     "credits": 80,
+     "premiumCredits": 225,
+     "premiumGems": 0
+    },
+    {
+     "goal": 25,
+     "credits": 300,
+     "premiumCredits": 0,
+     "premiumGems": 50
+    },
+    {
+     "goal": 26,
+     "credits": 80,
+     "premiumCredits": 225,
+     "premiumGems": 0
+    },
+    {
+     "goal": 27,
+     "credits": 80,
+     "premiumCredits": 225,
+     "premiumGems": 0
+    },
+    {
+     "goal": 28,
+     "credits": 80,
+     "premiumCredits": 225,
+     "premiumGems": 0
+    },
+    {
+     "goal": 29,
+     "credits": 80,
+     "premiumCredits": 225,
+     "premiumGems": 0
+    },
+    {
+     "goal": 30,
+     "credits": 300,
+     "premiumCredits": 1200,
+     "premiumGems": 100
+    },
+    {
+     "goal": 31,
+     "credits": 80,
+     "premiumCredits": 225,
+     "premiumGems": 0
+    },
+    {
+     "goal": 32,
+     "credits": 80,
+     "premiumCredits": 225,
+     "premiumGems": 0
+    },
+    {
+     "goal": 33,
+     "credits": 80,
+     "premiumCredits": 225,
+     "premiumGems": 0
+    },
+    {
+     "goal": 34,
+     "credits": 80,
+     "premiumCredits": 225,
+     "premiumGems": 0
+    },
+    {
+     "goal": 35,
+     "credits": 300,
+     "premiumCredits": 0,
+     "premiumGems": 50
+    },
+    {
+     "goal": 36,
+     "credits": 80,
+     "premiumCredits": 225,
+     "premiumGems": 0
+    },
+    {
+     "goal": 37,
+     "credits": 80,
+     "premiumCredits": 225,
+     "premiumGems": 0
+    },
+    {
+     "goal": 38,
+     "credits": 80,
+     "premiumCredits": 225,
+     "premiumGems": 0
+    },
+    {
+     "goal": 39,
+     "credits": 80,
+     "premiumCredits": 225,
+     "premiumGems": 0
+    },
+    {
+     "goal": 40,
+     "credits": 300,
+     "premiumCredits": 1200,
+     "premiumGems": 100
     }
-  ],
-  "events": [
-    {
-      "id": "first_bloom",
-      "icon": "bloom",
-      "startUnix": 1786320000,
-      "endUnix": 1794096000,
-      "disabled": false,
-      "levels": [
-        "c01_first_light",
-        "c01_twin_streams",
-        "c01_prism_heart",
-        "c01_thorn_hollow",
-        "c01_bound_roots",
-        "c01_duskcap_hollow",
-        "c01_lantern_ring",
-        "c01_sleeping_thicket",
-        "c01_three_springs",
-        "c01_grovekeepers_knot"
-      ],
-      "milestones": [
-        {
-          "goal": 1,
-          "credits": 60
-        },
-        {
-          "goal": 2,
-          "credits": 90
-        },
-        {
-          "goal": 4,
-          "credits": 250
-        },
-        {
-          "goal": 6,
-          "credits": 400
-        },
-        {
-          "goal": 8,
-          "credits": 600
-        },
-        {
-          "goal": 10,
-          "credits": 1000
-        }
-      ]
-    }
-  ],
-  "companions": [
-    {
-      "id": "monarch",
-      "portrait": "monarch",
-      "animated": "c5",
-      "unlockLevel": 0,
-      "unlockCost": 0,
-      "disabled": false,
-      "groveW": 176,
-      "groveH": 162,
-      "groveHit": "380781f07f0ff9ffbfffffffdffbbe0"
-    },
-    {
-      "id": "cinder",
-      "portrait": "cinder",
-      "animated": "",
-      "unlockLevel": 2,
-      "unlockCost": 800,
-      "disabled": false,
-      "groveW": 400,
-      "groveH": 284,
-      "groveHit": "00ffc000fff000fffc007ffe003fff00ffffe1fffffdfffffffffffffffffffdffffe0fffe007fff001fff803fffe03ffff81ffffc07e0fc0"
-    },
-    {
-      "id": "timber",
-      "portrait": "timber",
-      "animated": "c2",
-      "unlockLevel": 3,
-      "unlockCost": 1000,
-      "disabled": false,
-      "groveW": 122,
-      "groveH": 176,
-      "groveHit": "707cfefe7e7cfefe7f3e7e"
-    },
-    {
-      "id": "sorrel",
-      "portrait": "sorrel",
-      "animated": "",
-      "unlockLevel": 4,
-      "unlockCost": 1200,
-      "disabled": false,
-      "groveW": 219,
-      "groveH": 284,
-      "groveHit": "01800e003dc07f01fc17e3ff1ff8ffe3ffcfff3ffcfff3ffcffe1ff87fc07e0"
-    },
-    {
-      "id": "sprocket",
-      "portrait": "sprocket",
-      "animated": "c3",
-      "unlockLevel": 5,
-      "unlockCost": 1400,
-      "disabled": false,
-      "groveW": 141,
-      "groveH": 176,
-      "groveHit": "0e0f83c3c3f1fcfcffffffcfe"
-    },
-    {
-      "id": "peep",
-      "portrait": "peep",
-      "animated": "",
-      "unlockLevel": 6,
-      "unlockCost": 1600,
-      "disabled": false,
-      "groveW": 183,
-      "groveH": 231,
-      "groveHit": "3f87fcffeffeffffffffffffffeffe7fc1fe07e038018"
-    },
-    {
-      "id": "thistle",
-      "portrait": "thistle",
-      "animated": "c4",
-      "unlockLevel": 7,
-      "unlockCost": 1800,
-      "disabled": false,
-      "groveW": 157,
-      "groveH": 176,
-      "groveHit": "0a07c1fc3f0f8fc3f1feffdff3f8"
-    },
-    {
-      "id": "gourd",
-      "portrait": "gourd",
-      "animated": "",
-      "unlockLevel": 8,
-      "unlockCost": 2000,
-      "disabled": false,
-      "groveW": 283,
-      "groveH": 341,
-      "groveHit": "006000d9003fc007f807ff83ff81ffe0fffc3fff1fffe7fffbffffffffffffffffffffffffffdfffefffffffffffffff03f"
-    },
-    {
-      "id": "puff",
-      "portrait": "puff",
-      "animated": "c1",
-      "unlockLevel": 9,
-      "unlockCost": 2200,
-      "disabled": false,
-      "groveW": 176,
-      "groveH": 159,
-      "groveHit": "1d07f0ff1ff3fcffbfffff3fc7f8"
-    },
-    {
-      "id": "clementine",
-      "portrait": "clementine",
-      "animated": "",
-      "unlockLevel": 10,
-      "unlockCost": 2400,
-      "disabled": false,
-      "groveW": 283,
-      "groveH": 341,
-      "groveHit": "0078003e000ff003fc07ff03ff01ffe0fffc3fff1fffe7fffbffffffffffffffffffffffffffdfffefffffffffffffff03f"
-    },
-    {
-      "id": "plum",
-      "portrait": "plum",
-      "animated": "",
-      "unlockLevel": 11,
-      "unlockCost": 2600,
-      "disabled": false,
-      "groveW": 400,
-      "groveH": 279,
-      "groveHit": "00ffc000fff000fffc007ffe003fff01ffffe1fffffdfffffffffffffffffffdffffe07fff003fff001fff803fffe01ffff80ffffc07e0fc0"
-    },
-    {
-      "id": "frond",
-      "portrait": "frond",
-      "animated": "",
-      "unlockLevel": 13,
-      "unlockCost": 3000,
-      "disabled": false,
-      "groveW": 371,
-      "groveH": 235,
-      "groveHit": "7f0200ffc73cfff7bc0ffff803fff801fff801fff061fff07ffffe7ffffe7ffffc3f8ffc0f1ffe003fff003fff"
-    },
-    {
-      "id": "button",
-      "portrait": "button",
-      "animated": "",
-      "unlockLevel": 15,
-      "unlockCost": 3500,
-      "disabled": false,
-      "groveW": 264,
-      "groveH": 227,
-      "groveHit": "07f00ffe07ff07ffc3ffe1fff07ff8fffefffffffffffe41ff01ff80ffc079e0"
-    },
-    {
-      "id": "shell",
-      "portrait": "shell",
-      "animated": "",
-      "unlockLevel": 17,
-      "unlockCost": 4000,
-      "disabled": false,
-      "groveW": 276,
-      "groveH": 201,
-      "groveHit": "1b001fc00ff003fe90fffe3fff8fffffffff7fff843fe00ff807fe01ee0"
-    },
-    {
-      "id": "dewdrop",
-      "portrait": "dewdrop",
-      "animated": "",
-      "unlockLevel": 19,
-      "unlockCost": 4500,
-      "disabled": false,
-      "groveW": 375,
-      "groveH": 353,
-      "groveHit": "00ff0001ff8003ffc007ffe007ffe00fffe01ffff03ffff87ffffefffffefffffffffffffffffffffffffffffffffffe7ffffe7ffffc1ffff03ffff83ffff83f83f81f01f0"
-    },
-    {
-      "id": "flit",
-      "portrait": "flit",
-      "animated": "",
-      "unlockLevel": 21,
-      "unlockCost": 5000,
-      "disabled": false,
-      "groveW": 307,
-      "groveH": 151,
-      "groveHit": "0060030f7ef9ffffbffc3fff83fff807fc003fc003f8001f00"
-    },
-    {
-      "id": "toadstool",
-      "portrait": "toadstool",
-      "animated": "",
-      "unlockLevel": 23,
-      "unlockCost": 6000,
-      "disabled": false,
-      "groveW": 210,
-      "groveH": 213,
-      "groveHit": "3fc1ff8fff3ffefffbfff7ffdffe7ff1ffc7ff1ff8ffe1e78"
-    },
-    {
-      "id": "quill",
-      "portrait": "quill",
-      "animated": "",
-      "unlockLevel": 25,
-      "unlockCost": 7000,
-      "disabled": false,
-      "groveW": 233,
-      "groveH": 186,
-      "groveHit": "7ff1fff3ffe7ff8fff1ff81c7e00fe00fe01fc00f801f"
-    },
-    {
-      "id": "olive",
-      "portrait": "olive",
-      "animated": "",
-      "unlockLevel": 27,
-      "unlockCost": 8000,
-      "disabled": false,
-      "groveW": 281,
-      "groveH": 322,
-      "groveHit": "0e3003de00f7803fc007f001f800ffc07ff83fff1fffcffffbffffffffffffffffffffff7fffbffffffffff87f7c0f8"
-    },
-    {
-      "id": "indigo",
-      "portrait": "indigo",
-      "animated": "",
-      "unlockLevel": 29,
-      "unlockCost": 9000,
-      "disabled": false,
-      "groveW": 400,
-      "groveH": 293,
-      "groveHit": "040018033fcc01fffe00ffff007fff801fff80fffff8fffffefffffffffffffffffff8fffff03fff801fff801fffc01ffff00ffffc07f0fe03f03e0"
-    },
-    {
-      "id": "tadpole",
-      "portrait": "tadpole",
-      "animated": "",
-      "unlockLevel": 31,
-      "unlockCost": 10000,
-      "disabled": false,
-      "groveW": 209,
-      "groveH": 278,
-      "groveHit": "07807c07e03e00f803c30f0e3df8fff1ffc7ff9ffe7ffcfff1ff8ffe3ff8f1e"
-    },
-    {
-      "id": "pebble",
-      "portrait": "pebble",
-      "animated": "",
-      "unlockLevel": 34,
-      "unlockCost": 11500,
-      "disabled": false,
-      "groveW": 250,
-      "groveH": 192,
-      "groveHit": "01c007c007e00ff00ff83ffcfffeffffffffdffe1ffc1ffc"
-    },
-    {
-      "id": "saffron",
-      "portrait": "saffron",
-      "animated": "",
-      "unlockLevel": 37,
-      "unlockCost": 13000,
-      "disabled": false,
-      "groveW": 375,
-      "groveH": 359,
-      "groveHit": "00ff0003ff8007ffc00fffe00ffff01ffff01ffff83ffff83ffffcfffffefffffffffffffffffffffffffffffffffffffffffe7ffffe3ffff81ffff83ffff83ffff81f81f8"
-    },
-    {
-      "id": "coral",
-      "portrait": "coral",
-      "animated": "",
-      "unlockLevel": 40,
-      "unlockCost": 14500,
-      "disabled": false,
-      "groveW": 338,
-      "groveH": 348,
-      "groveHit": "00fe0007f8001fe0003f303cffe1ffffcfffffbfffffffffffffffe1ffff87fffe1ffff87fffe1ffff87fffe1ffff83fffc0ffff03fffe0ffff83f0fe"
-    },
-    {
-      "id": "rust",
-      "portrait": "rust",
-      "animated": "",
-      "unlockLevel": 43,
-      "unlockCost": 16000,
-      "disabled": false,
-      "groveW": 306,
-      "groveH": 222,
-      "groveHit": "07fc007fe007fe03fffc7fffeffffefffffffffe47ff407fe603fcf0018f000c600078"
-    },
-    {
-      "id": "fizz",
-      "portrait": "fizz",
-      "animated": "",
-      "unlockLevel": 46,
-      "unlockCost": 17500,
-      "disabled": false,
-      "groveW": 193,
-      "groveH": 326,
-      "groveHit": "00387f87f87fc7ff3ff9ffcffe7ff7ffbffdffcffc7fe3ff1ff8ffc3fe3ff1ffcf3e0"
-    },
-    {
-      "id": "marrow",
-      "portrait": "marrow",
-      "animated": "",
-      "unlockLevel": 49,
-      "unlockCost": 19000,
-      "disabled": false,
-      "groveW": 400,
-      "groveH": 287,
-      "groveHit": "007fc000fff0007ffc007ffe003fff803fffc07ffff0fffffefffffffffffffffffffffffff03fff901fff800fffe00ffff007fffc03f0fc0"
-    },
-    {
-      "id": "bramble",
-      "portrait": "bramble",
-      "animated": "",
-      "unlockLevel": 53,
-      "unlockCost": 21500,
-      "disabled": false,
-      "groveW": 274,
-      "groveH": 325,
-      "groveHit": "fcfc3fff07ff81ffe07ff80fbc0031003ff01ffe0fffc3fff0fffe7fff9fffe7fff8fffe7fff3fffeffffffffffc1f8"
-    },
-    {
-      "id": "wisp",
-      "portrait": "wisp",
-      "animated": "",
-      "unlockLevel": 57,
-      "unlockCost": 24000,
-      "disabled": false,
-      "groveW": 235,
-      "groveH": 248,
-      "groveHit": "07f81ff83ff8fff1ffe7ffffff7fffffff3ff87fe0ff80ff07ff0ffe1e3c"
-    },
-    {
-      "id": "boulder",
-      "portrait": "boulder",
-      "animated": "",
-      "unlockLevel": 61,
-      "unlockCost": 26500,
-      "disabled": false,
-      "groveW": 310,
-      "groveH": 246,
-      "groveHit": "0ffe03fff83fff87fffc7fffc7fffe7fffefffffffffffffffffffffffffffffe7fffc0fff007df0"
-    },
-    {
-      "id": "thorn",
-      "portrait": "thorn",
-      "animated": "",
-      "unlockLevel": 66,
-      "unlockCost": 30000,
-      "disabled": false,
-      "groveW": 229,
-      "groveH": 208,
-      "groveHit": "003001f00fe01fe03fe0ff9ffe7ff8ffc1ffc0ff83fc07f80"
-    }
-  ]
+   ],
+   "premiumProductId": "gg_first_bloom_pass"
+  }
+ ],
+ "companions": [
+  {
+   "id": "monarch",
+   "portrait": "monarch",
+   "animated": "c5",
+   "unlockLevel": 0,
+   "unlockCost": 0,
+   "disabled": false,
+   "groveW": 176,
+   "groveH": 162,
+   "groveHit": "380781f07f0ff9ffbfffffffdffbbe0"
+  },
+  {
+   "id": "cinder",
+   "portrait": "cinder",
+   "animated": "",
+   "unlockLevel": 2,
+   "unlockCost": 800,
+   "disabled": false,
+   "groveW": 400,
+   "groveH": 284,
+   "groveHit": "00ffc000fff000fffc007ffe003fff00ffffe1fffffdfffffffffffffffffffdffffe0fffe007fff001fff803fffe03ffff81ffffc07e0fc0"
+  },
+  {
+   "id": "timber",
+   "portrait": "timber",
+   "animated": "c2",
+   "unlockLevel": 3,
+   "unlockCost": 1000,
+   "disabled": false,
+   "groveW": 122,
+   "groveH": 176,
+   "groveHit": "707cfefe7e7cfefe7f3e7e"
+  },
+  {
+   "id": "sorrel",
+   "portrait": "sorrel",
+   "animated": "",
+   "unlockLevel": 4,
+   "unlockCost": 1200,
+   "disabled": false,
+   "groveW": 219,
+   "groveH": 284,
+   "groveHit": "01800e003dc07f01fc17e3ff1ff8ffe3ffcfff3ffcfff3ffcffe1ff87fc07e0"
+  },
+  {
+   "id": "sprocket",
+   "portrait": "sprocket",
+   "animated": "c3",
+   "unlockLevel": 5,
+   "unlockCost": 1400,
+   "disabled": false,
+   "groveW": 141,
+   "groveH": 176,
+   "groveHit": "0e0f83c3c3f1fcfcffffffcfe"
+  },
+  {
+   "id": "peep",
+   "portrait": "peep",
+   "animated": "",
+   "unlockLevel": 6,
+   "unlockCost": 1600,
+   "disabled": false,
+   "groveW": 183,
+   "groveH": 231,
+   "groveHit": "3f87fcffeffeffffffffffffffeffe7fc1fe07e038018"
+  },
+  {
+   "id": "thistle",
+   "portrait": "thistle",
+   "animated": "c4",
+   "unlockLevel": 7,
+   "unlockCost": 1800,
+   "disabled": false,
+   "groveW": 157,
+   "groveH": 176,
+   "groveHit": "0a07c1fc3f0f8fc3f1feffdff3f8"
+  },
+  {
+   "id": "gourd",
+   "portrait": "gourd",
+   "animated": "",
+   "unlockLevel": 8,
+   "unlockCost": 2000,
+   "disabled": false,
+   "groveW": 283,
+   "groveH": 341,
+   "groveHit": "006000d9003fc007f807ff83ff81ffe0fffc3fff1fffe7fffbffffffffffffffffffffffffffdfffefffffffffffffff03f"
+  },
+  {
+   "id": "puff",
+   "portrait": "puff",
+   "animated": "c1",
+   "unlockLevel": 9,
+   "unlockCost": 2200,
+   "disabled": false,
+   "groveW": 176,
+   "groveH": 159,
+   "groveHit": "1d07f0ff1ff3fcffbfffff3fc7f8"
+  },
+  {
+   "id": "clementine",
+   "portrait": "clementine",
+   "animated": "",
+   "unlockLevel": 10,
+   "unlockCost": 2400,
+   "disabled": false,
+   "groveW": 283,
+   "groveH": 341,
+   "groveHit": "0078003e000ff003fc07ff03ff01ffe0fffc3fff1fffe7fffbffffffffffffffffffffffffffdfffefffffffffffffff03f"
+  },
+  {
+   "id": "plum",
+   "portrait": "plum",
+   "animated": "",
+   "unlockLevel": 11,
+   "unlockCost": 2600,
+   "disabled": false,
+   "groveW": 400,
+   "groveH": 279,
+   "groveHit": "00ffc000fff000fffc007ffe003fff01ffffe1fffffdfffffffffffffffffffdffffe07fff003fff001fff803fffe01ffff80ffffc07e0fc0"
+  },
+  {
+   "id": "frond",
+   "portrait": "frond",
+   "animated": "",
+   "unlockLevel": 13,
+   "unlockCost": 3000,
+   "disabled": false,
+   "groveW": 371,
+   "groveH": 235,
+   "groveHit": "7f0200ffc73cfff7bc0ffff803fff801fff801fff061fff07ffffe7ffffe7ffffc3f8ffc0f1ffe003fff003fff"
+  },
+  {
+   "id": "button",
+   "portrait": "button",
+   "animated": "",
+   "unlockLevel": 15,
+   "unlockCost": 3500,
+   "disabled": false,
+   "groveW": 264,
+   "groveH": 227,
+   "groveHit": "07f00ffe07ff07ffc3ffe1fff07ff8fffefffffffffffe41ff01ff80ffc079e0"
+  },
+  {
+   "id": "shell",
+   "portrait": "shell",
+   "animated": "",
+   "unlockLevel": 17,
+   "unlockCost": 4000,
+   "disabled": false,
+   "groveW": 276,
+   "groveH": 201,
+   "groveHit": "1b001fc00ff003fe90fffe3fff8fffffffff7fff843fe00ff807fe01ee0"
+  },
+  {
+   "id": "dewdrop",
+   "portrait": "dewdrop",
+   "animated": "",
+   "unlockLevel": 19,
+   "unlockCost": 4500,
+   "disabled": false,
+   "groveW": 375,
+   "groveH": 353,
+   "groveHit": "00ff0001ff8003ffc007ffe007ffe00fffe01ffff03ffff87ffffefffffefffffffffffffffffffffffffffffffffffe7ffffe7ffffc1ffff03ffff83ffff83f83f81f01f0"
+  },
+  {
+   "id": "flit",
+   "portrait": "flit",
+   "animated": "",
+   "unlockLevel": 21,
+   "unlockCost": 5000,
+   "disabled": false,
+   "groveW": 307,
+   "groveH": 151,
+   "groveHit": "0060030f7ef9ffffbffc3fff83fff807fc003fc003f8001f00"
+  },
+  {
+   "id": "toadstool",
+   "portrait": "toadstool",
+   "animated": "",
+   "unlockLevel": 23,
+   "unlockCost": 6000,
+   "disabled": false,
+   "groveW": 210,
+   "groveH": 213,
+   "groveHit": "3fc1ff8fff3ffefffbfff7ffdffe7ff1ffc7ff1ff8ffe1e78"
+  },
+  {
+   "id": "quill",
+   "portrait": "quill",
+   "animated": "",
+   "unlockLevel": 25,
+   "unlockCost": 7000,
+   "disabled": false,
+   "groveW": 233,
+   "groveH": 186,
+   "groveHit": "7ff1fff3ffe7ff8fff1ff81c7e00fe00fe01fc00f801f"
+  },
+  {
+   "id": "olive",
+   "portrait": "olive",
+   "animated": "",
+   "unlockLevel": 27,
+   "unlockCost": 8000,
+   "disabled": false,
+   "groveW": 281,
+   "groveH": 322,
+   "groveHit": "0e3003de00f7803fc007f001f800ffc07ff83fff1fffcffffbffffffffffffffffffffff7fffbffffffffff87f7c0f8"
+  },
+  {
+   "id": "indigo",
+   "portrait": "indigo",
+   "animated": "",
+   "unlockLevel": 29,
+   "unlockCost": 9000,
+   "disabled": false,
+   "groveW": 400,
+   "groveH": 293,
+   "groveHit": "040018033fcc01fffe00ffff007fff801fff80fffff8fffffefffffffffffffffffff8fffff03fff801fff801fffc01ffff00ffffc07f0fe03f03e0"
+  },
+  {
+   "id": "tadpole",
+   "portrait": "tadpole",
+   "animated": "",
+   "unlockLevel": 31,
+   "unlockCost": 10000,
+   "disabled": false,
+   "groveW": 209,
+   "groveH": 278,
+   "groveHit": "07807c07e03e00f803c30f0e3df8fff1ffc7ff9ffe7ffcfff1ff8ffe3ff8f1e"
+  },
+  {
+   "id": "pebble",
+   "portrait": "pebble",
+   "animated": "",
+   "unlockLevel": 34,
+   "unlockCost": 11500,
+   "disabled": false,
+   "groveW": 250,
+   "groveH": 192,
+   "groveHit": "01c007c007e00ff00ff83ffcfffeffffffffdffe1ffc1ffc"
+  },
+  {
+   "id": "saffron",
+   "portrait": "saffron",
+   "animated": "",
+   "unlockLevel": 37,
+   "unlockCost": 13000,
+   "disabled": false,
+   "groveW": 375,
+   "groveH": 359,
+   "groveHit": "00ff0003ff8007ffc00fffe00ffff01ffff01ffff83ffff83ffffcfffffefffffffffffffffffffffffffffffffffffffffffe7ffffe3ffff81ffff83ffff83ffff81f81f8"
+  },
+  {
+   "id": "coral",
+   "portrait": "coral",
+   "animated": "",
+   "unlockLevel": 40,
+   "unlockCost": 14500,
+   "disabled": false,
+   "groveW": 338,
+   "groveH": 348,
+   "groveHit": "00fe0007f8001fe0003f303cffe1ffffcfffffbfffffffffffffffe1ffff87fffe1ffff87fffe1ffff87fffe1ffff83fffc0ffff03fffe0ffff83f0fe"
+  },
+  {
+   "id": "rust",
+   "portrait": "rust",
+   "animated": "",
+   "unlockLevel": 43,
+   "unlockCost": 16000,
+   "disabled": false,
+   "groveW": 306,
+   "groveH": 222,
+   "groveHit": "07fc007fe007fe03fffc7fffeffffefffffffffe47ff407fe603fcf0018f000c600078"
+  },
+  {
+   "id": "fizz",
+   "portrait": "fizz",
+   "animated": "",
+   "unlockLevel": 46,
+   "unlockCost": 17500,
+   "disabled": false,
+   "groveW": 193,
+   "groveH": 326,
+   "groveHit": "00387f87f87fc7ff3ff9ffcffe7ff7ffbffdffcffc7fe3ff1ff8ffc3fe3ff1ffcf3e0"
+  },
+  {
+   "id": "marrow",
+   "portrait": "marrow",
+   "animated": "",
+   "unlockLevel": 49,
+   "unlockCost": 19000,
+   "disabled": false,
+   "groveW": 400,
+   "groveH": 287,
+   "groveHit": "007fc000fff0007ffc007ffe003fff803fffc07ffff0fffffefffffffffffffffffffffffff03fff901fff800fffe00ffff007fffc03f0fc0"
+  },
+  {
+   "id": "bramble",
+   "portrait": "bramble",
+   "animated": "",
+   "unlockLevel": 53,
+   "unlockCost": 21500,
+   "disabled": false,
+   "groveW": 274,
+   "groveH": 325,
+   "groveHit": "fcfc3fff07ff81ffe07ff80fbc0031003ff01ffe0fffc3fff0fffe7fff9fffe7fff8fffe7fff3fffeffffffffffc1f8"
+  },
+  {
+   "id": "wisp",
+   "portrait": "wisp",
+   "animated": "",
+   "unlockLevel": 57,
+   "unlockCost": 24000,
+   "disabled": false,
+   "groveW": 235,
+   "groveH": 248,
+   "groveHit": "07f81ff83ff8fff1ffe7ffffff7fffffff3ff87fe0ff80ff07ff0ffe1e3c"
+  },
+  {
+   "id": "boulder",
+   "portrait": "boulder",
+   "animated": "",
+   "unlockLevel": 61,
+   "unlockCost": 26500,
+   "disabled": false,
+   "groveW": 310,
+   "groveH": 246,
+   "groveHit": "0ffe03fff83fff87fffc7fffc7fffe7fffefffffffffffffffffffffffffffffe7fffc0fff007df0"
+  },
+  {
+   "id": "thorn",
+   "portrait": "thorn",
+   "animated": "",
+   "unlockLevel": 66,
+   "unlockCost": 30000,
+   "disabled": false,
+   "groveW": 229,
+   "groveH": 208,
+   "groveHit": "003001f00fe01fe03fe0ff9ffe7ff8ffc1ffc0ff83fc07f80"
+  }
+ ]
 }

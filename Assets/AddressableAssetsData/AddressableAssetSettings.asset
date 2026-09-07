@@ -68,11 +68,15 @@ MonoBehaviour:
   m_BuildAddressablesWithPlayerBuild: 1
   m_overridePlayerVersion: '[UnityEditor.PlayerSettings.bundleVersion]'
   m_GroupAssets:
+  - {fileID: 11400000, guid: b4a75044c8f2cf74596ddc4d05226ab2, type: 2}
   - {fileID: 11400000, guid: 47c46bda514740a4dbc05a44d4a23ac8, type: 2}
+  - {fileID: 11400000, guid: d1fe196abfd75f44ab4a7b89333771b5, type: 2}
   - {fileID: 11400000, guid: 984a834b48cbf384482d9e2e9aebfe5d, type: 2}
+  - {fileID: 11400000, guid: 5cd5e268b80596b479805f2b149c473f, type: 2}
   - {fileID: 11400000, guid: 82cde781aeb2b8c47a1f377b73392623, type: 2}
   - {fileID: 11400000, guid: 6b8ee20c106436343bb2b083b38a0556, type: 2}
   - {fileID: 11400000, guid: eb66a2de3aecee54b8958759c2eff7bc, type: 2}
+  - {fileID: 11400000, guid: e5ce6f6c55cafb9469db839bba4d7dc8, type: 2}
   - {fileID: 11400000, guid: d66337f20f2bdd44d867926ead515cc3, type: 2}
   m_BuildSettings:
     m_LogResourceManagerExceptions: 1
@@ -141,6 +145,82 @@ MonoBehaviour:
     - Fx/Bench/Hits
     - Fx/Bench/Muzzles
     - Fx/Bench/Projectiles
+    - Art/Fx/Nova/boom_fire
+    - Art/Fx/Nova/boom_gold
+    - Art/Fx/Nova/boom_red
+    - Art/Fx/Nova/boom_smoke
+    - Art/Fx/Nova/boom_spark
+    - Art/Nova/bolt
+    - Art/Nova/brute
+    - Art/Nova/brute_dead
+    - Art/Nova/brute_hit
+    - Art/Nova/collector
+    - Art/Nova/drone
+    - Art/Nova/mon1
+    - Art/Nova/mon1_jump
+    - Art/Nova/mon2
+    - Art/Nova/mon2_jump
+    - Art/Nova/mon3
+    - Art/Nova/mon3_jump
+    - Art/Fx/Quarry/boom_fire
+    - Art/Fx/Quarry/boom_gold
+    - Art/Fx/Quarry/boom_red
+    - Art/Fx/Quarry/boom_smoke
+    - Art/Fx/Quarry/boom_spark
+    - Art/Quarry/bolt
+    - Art/Quarry/brute
+    - Art/Quarry/brute_dead
+    - Art/Quarry/brute_hit
+    - Art/Quarry/collector
+    - Art/Quarry/drone
+    - Art/Quarry/mon1
+    - Art/Quarry/mon1_jump
+    - Art/Quarry/mon2
+    - Art/Quarry/mon2_jump
+    - Art/Quarry/mon3
+    - Art/Quarry/mon3_jump
+    - Art/Fx/March/boom_fire
+    - Art/Fx/March/boom_gold
+    - Art/Fx/March/boom_red
+    - Art/Fx/March/boom_smoke
+    - Art/Fx/March/boom_spark
+    - Art/March/bolt
+    - Art/March/brute
+    - Art/March/brute_dead
+    - Art/March/brute_hit
+    - Art/March/collector
+    - Art/March/drone
+    - Art/March/mon1
+    - Art/March/mon1_jump
+    - Art/March/mon2
+    - Art/March/mon2_jump
+    - Art/March/mon3
+    - Art/March/mon3_jump
+    - Art/Ember/bolt
+    - Art/Ember/collector
+    - Art/Ember/mon1
+    - Art/Ember/mon1_jump
+    - Art/Ember/mon2
+    - Art/Ember/mon2_jump
+    - Art/Ember/mon3
+    - Art/Ember/mon3_jump
+    - Art/Ember/warden
+    - Art/Ember/warden_dead
+    - Art/Ember/warden_hit
+    - Art/Fx/Ember/boom_blue
+    - Art/Fx/Ember/boom_fire
+    - Art/Fx/Ember/boom_gold
+    - Art/Fx/Ember/boom_smoke
+    - Art/Fx/Ember/boom_violet
+    - Art/Fx/Kindle/flare_bloom
+    - Art/Fx/Kindle/flare_cold
+    - Art/Fx/Kindle/flare_warm
+    - Art/Kindle/mon1
+    - Art/Kindle/mon1_jump
+    - Art/Kindle/mon2
+    - Art/Kindle/mon2_jump
+    - Art/Kindle/mon3
+    - Art/Kindle/mon3_jump
   m_SchemaTemplates: []
   m_GroupTemplateObjects:
   - {fileID: 11400000, guid: 1c550e3b8c7244948b0ae7d2fbce14c6, type: 2}

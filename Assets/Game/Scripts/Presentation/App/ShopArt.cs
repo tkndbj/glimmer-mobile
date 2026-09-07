@@ -94,6 +94,12 @@ namespace GlimmerGrove
 
             // A heart container is not a pile of currency, so it is not composed like one.
             if (product.IsContainer) { PaintContainer(box, product); return; }
+            if (product.IsEventPass)
+            {
+                UIKit.Img("BloomPass", box, Art.S("Ui/Shop/coins_5"), Color.white,
+                          Vector2.one * Mathf.Max(200f, box.rect.width), new Vector2(.5f, .5f), Vector2.zero).preserveAspect = true;
+                return;
+            }
 
             var ladder = LadderFor(product);
 

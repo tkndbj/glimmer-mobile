@@ -7,17 +7,33 @@ namespace GlimmerGrove
     /// <summary>Shared set dressing: parallax skies, vignettes, toasts and star rows.</summary>
     public static class Scenery
     {
-        /// <summary>Three painted layers that drift against each other.</summary>
-        public static RectTransform Layered(Transform parent, string prefix, float dim = .18f)
+        /// <summary>
+        /// Three painted layers that drift against each other.
+        ///
+        /// <para>
+        /// <paramref name="vignette"/> is separate from <paramref name="dim"/> because they
+        /// darken different things: the shade is flat and costs the whole picture the same,
+        /// where the vignette costs the corners several times what it costs the middle. A
+        /// screen whose content is a centred column can afford a heavy one; a screen whose
+        /// backdrop <em>is</em> the mood — the season pass, whose art is a sunrise — cannot,
+        /// and passing 0 there is what lets it keep its own sky. The default is what every
+        /// screen built before the parameter existed was already getting.
+        /// </para>
+        /// </summary>
+        public static RectTransform Layered(Transform parent, string prefix, float dim = .18f,
+                                            float vignette = .55f)
         {
             var host = UIKit.Node("Backdrop", parent);
             AddLayer(host, prefix + "_sky", 8f, 1.06f);
             AddLayer(host, prefix + "_ground", 20f, 1.08f);
             AddLayer(host, prefix + "_deco", 38f, 1.11f);
 
-            var shade = UIKit.Img("Shade", host, Art.Pixel, new Color(.04f, .08f, .12f, dim));
-            var vig = UIKit.Img("Vignette", host, Art.Vignette(256), new Color(.02f, .05f, .09f, .55f));
-            vig.type = Image.Type.Simple;
+            if (dim > 0f) UIKit.Img("Shade", host, Art.Pixel, new Color(.04f, .08f, .12f, dim));
+            if (vignette > 0f)
+            {
+                var vig = UIKit.Img("Vignette", host, Art.Vignette(256), new Color(.02f, .05f, .09f, vignette));
+                vig.type = Image.Type.Simple;
+            }
             return host;
         }
 

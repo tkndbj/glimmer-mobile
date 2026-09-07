@@ -134,6 +134,7 @@ namespace GlimmerGrove.Content
 
         /// <summary>The reward track, lowest goal first.</summary>
         public ManifestEventMilestoneDto[] milestones;
+        public string premiumProductId;
     }
 
     /// <summary>
@@ -144,6 +145,8 @@ namespace GlimmerGrove.Content
     [Serializable]
     public sealed class ManifestEventMilestoneDto
     {
+        public int premiumCredits;
+        public int premiumGems;
         public int goal;
         public int credits;
     }
@@ -338,14 +341,50 @@ namespace GlimmerGrove.Content
         // Which one it is decides how the level is played - see LevelModes. Adding a mode is a
         // field here plus a LevelMode subclass, and nothing else in the game changes.
         public FallDto fall;
-        public KeeperDto keeper;
         public BudDto bud;
+
+        // Hollowmarch, which authors the shared prototype block - a grid of rows, a deal and a
+        // slack. The name *is* the claim (LevelMode.Claims), rather than one field plus a
+        // "which mode" string, so a level carrying two blocks is a level the mapper reports on
+        // rather than one it quietly reads twice. What the mode adds is not in this block at
+        // all - see `story` below.
+        public ProtoDto march;
+
+        // Emberforge, which authors the same block and leaves its `cores` field empty - the
+        // wall is everything the level hands over, and a mode that dealt anything into it
+        // would be a mode whose future is not fixed and so cannot be searched (invariant 26).
+        public ProtoDto ember;
+
+        // Kindlewake, which authors the same block and leaves `cores` empty for the same reason
+        // Emberforge does: a hollow is everything the level hands over, and a board with anything
+        // dealt into it has a future nothing can search (invariant 26).
+        public ProtoDto kindle;
+
+
+        // `quarry`, `topple`, `nova`, `keeper`, `nectar`, `ribbon`, `fling`, `warren`, `orbit`
+        // and `moonwake` are **retired field names and must never be reused**, for the duskcap's
+        // reason (invariant 5f): JsonUtility drops an unknown field without a word, so a chapter
+        // body still carrying one would index, derive a plausible glade and ship as something
+        // nobody authored. `content.py` refuses every one of them by name (RETIRED_BLOCKS)
+        // rather than ignoring them.
 
         public float mapX;
         public float mapY;
         public string accent;
         public string slate;
         public string backdrop;
+
+        /// <summary>
+        /// What this level has to say for itself while it is being played.
+        ///
+        /// <b>Presentation, and deliberately not part of any mode's block.</b> A mode's block is
+        /// the board, and every graded number in this game derives from the board — so a field
+        /// that could move par has to live there and a field that provably cannot must not. A
+        /// story cannot move par, a star line, an allowance or a fail state; it is read by one
+        /// screen and by nothing that grades a run. It sits here beside `backdrop` for the same
+        /// reason `backdrop` does.
+        /// </summary>
+        public StoryDto story;
 
         // ---- text ------------------------------------------------------------
         // Deliberately absent. A level's loc keys are derived from its id — see
@@ -447,54 +486,68 @@ namespace GlimmerGrove.Content
     }
 
     /// <summary>
-    /// Groovekeeper's grove: the ground, the beds that have to bloom, and the procession of tiles
-    /// to do it with.
+    /// The board of a prototype mode: a grid, a deal and the room it forgives.
     ///
     /// <para>
-    /// <b>No par and no difficulty number, and that is the whole of why this mode stopped being a
-    /// prototype.</b> It used to author a tile <em>count</em> and roll its colours from a seed,
-    /// which is a board with no fixed future: par cannot be derived from one, so it authored no
-    /// goal, no star line and no fail state, and two players on the same level were not playing
-    /// the same board (invariant 26). Everything graded now derives from a search over these
-    /// three fields — see <c>KeeperSolver</c>.
+    /// <b>One block shape, and no number in it that can be wrong.</b> Par is searched from the
+    /// grid (<c>ProtoSearch</c>) and both star lines and the allowance derive from it, so there
+    /// is nothing here an author can type that comes to disagree with how the level actually
+    /// plays. That is the same bargain every mode in this game strikes, and the reason five
+    /// modes could be built at once for the price of a little over one: what a mode brings is
+    /// its rules, and what a level brings is a picture of a board. Four of the five were then
+    /// withdrawn and this shape outlived them, which is the argument for it made twice.
+    /// </para>
+    /// <para>
+    /// <b>It replaced <c>KeeperDto</c>, whose field name is a spent id.</b> Groovekeeper's ten
+    /// levels were withdrawn and the mode with them; a chapter body still carrying a
+    /// <c>keeper</c> block is content written for a build that no longer exists, and
+    /// <c>ContentValidation</c> says so rather than <c>JsonUtility</c> discarding it in silence
+    /// (invariant 5f's rule for a retired token).
     /// </para>
     /// </summary>
     [Serializable]
-    public sealed class KeeperDto
+    public sealed class ProtoDto
     {
         public int width;
         public int height;
 
         /// <summary>
-        /// The ground, one row per line and one letter per column: <c>.</c> bare ground,
-        /// <c>#</c> stone, <c>*</c> a bed, <c>r</c>/<c>g</c>/<c>b</c> a heartbed that only its own
-        /// colour may be planted on, and <c>R</c>/<c>G</c>/<c>B</c> a sprig already standing.
+        /// The board, one string per row, top first. Spaces are ignored so a row may be spaced
+        /// out for reading.
+        ///
+        /// Which letters mean what is the mode's business — see each mode's <c>Layout</c>, which
+        /// is the one place its vocabulary is written down. A letter the mode does not know is
+        /// refused by row and column rather than read as bare ground: a mistyped board that
+        /// quietly loses a critter validates, derives a plausible par and ships.
         /// </summary>
         public string[] rows;
 
         /// <summary>
-        /// The ordered procession this grove deals, written in R, G, B and P for a prism. It
-        /// repeats, so it never needs to be longer than one lap — see <c>KeeperDeal</c>.
+        /// The deal: what the board hands the player, in order, repeating.
+        ///
+        /// <para>
+        /// The third of the three things this block has always claimed to carry — a grid, a deal
+        /// and a slack — and the first mode to want one. Hollowmarch writes its magazine here in
+        /// <c>R</c>, <c>G</c>, <c>B</c> and <c>Y</c>; it repeats, so one lap is enough, exactly as
+        /// <see cref="BudDto.colours"/> and <see cref="FallDto.motes"/> do.
+        /// </para>
+        /// <para>
+        /// <b>Ordered and repeating rather than random</b>, which is not a stylistic choice: a
+        /// board with no fixed future cannot be searched, so it can author no par, and with no
+        /// par there is no star line, no allowance and no fail state (invariant 26). A mode with
+        /// no deal simply leaves it out.
+        /// </para>
         /// </summary>
-        public string tiles;
+        public string cores;
 
         /// <summary>
-        /// Wasted tiles this grove forgives above par. Absent takes <c>KeeperRules.DefaultSpare</c>,
-        /// which is what every level ships with.
+        /// Wasted moves this board forgives above par. 0 takes <c>ProtoLevelRules.DefaultSpare</c>.
         ///
-        /// A count rather than a factor, because a wrong tile costs about the same wherever it
-        /// happens — it is gone, and it has taken a cell of ground with it — while a fraction of
-        /// par gives a short grove almost no room at all. See <c>LevelTuning.Slack</c>.
+        /// A count rather than a factor, for <c>FallDto.spare</c>'s reason: a wrong move costs
+        /// about the same wherever it happens, while a fraction of par gives a short board almost
+        /// no room at all. See <c>LevelTuning.Slack</c>.
         /// </summary>
         public int spare;
-
-        /// <summary>
-        /// <b>Retired.</b> A grove was dealt from a seed and is now authored. Kept only so
-        /// validation can name a stale one rather than JsonUtility silently discarding it and the
-        /// author believing a number that does nothing — the same tripwire
-        /// <see cref="ChapterDto.order"/> is.
-        /// </summary>
-        public int seed;
 
         /// <summary>
         /// Whether this block was authored. <b>Never test the block itself for null</b> —
@@ -595,7 +648,7 @@ namespace GlimmerGrove.Content
         /// <summary>
         /// Wasted taps this grove forgives above par. Absent takes <c>BudRules.DefaultSpare</c>.
         ///
-        /// A count rather than a factor, for <see cref="KeeperDto.spare"/>'s reason: a wasted tap
+        /// A count rather than a factor, for <see cref="ProtoDto.spare"/>'s reason: a wasted tap
         /// costs about the same wherever it happens — one colour spent and whatever small chain it
         /// set off — while a fraction of par gives a short grove almost no room at all.
         /// </summary>
@@ -783,6 +836,7 @@ namespace GlimmerGrove.Content
     [Serializable]
     public sealed class StoreProductDto
     {
+        public string eventPassId;
         /// <summary>Permanent, and identical in App Store Connect and the Play Console.</summary>
         public string id;
 
@@ -1067,8 +1121,15 @@ namespace GlimmerGrove.Content
         /// <summary>Motes a well's continue hands over, on the same terms.</summary>
         public int motes = -1;
 
-        /// <summary>Tiles a grove's continue hands over, on the same terms.</summary>
+        /// <summary>
+        /// <b>Retired.</b> Tiles a Groovekeeper continue handed over. Kept for <c>ink</c>'s
+        /// reason: a published table still carries the key, and deleting it would make every one
+        /// of them read as malformed for no gain.
+        /// </summary>
         public int tiles = -1;
+
+        /// <summary>Moves a prototype board's continue hands over, on the same terms.</summary>
+        public int moves = -1;
     }
 
     /// <summary>
@@ -1629,5 +1690,44 @@ namespace GlimmerGrove.Content
     {
         public string key;
         public string text;
+    }
+
+    /// <summary>One line of dialogue: who says it, and which string.</summary>
+    [Serializable]
+    public sealed class StoryLineDto
+    {
+        /// <summary>A <c>StoryCast</c> id. A name nothing recognises is refused by the gate.</summary>
+        public string who;
+
+        /// <summary>The loc key. See <c>StoryLine.Key</c> for why it is authored, not derived.</summary>
+        public string key;
+    }
+
+    /// <summary>Everything said at one moment of a run.</summary>
+    [Serializable]
+    public sealed class StoryBeatDto
+    {
+        /// <summary>One of <c>StoryScript.CueNames</c>. Anything else is a build error.</summary>
+        public string cue;
+
+        public StoryLineDto[] lines;
+    }
+
+    /// <summary>
+    /// A level's dialogue.
+    ///
+    /// <b>Never test this block for null.</b> <c>JsonUtility</c> instantiates a
+    /// <c>[Serializable]</c> class field on every level in the game, so <c>dto.story != null</c>
+    /// is true for every level ever parsed, including the ninety-one that have never had a word
+    /// written for them. Absence has to be a value a real script cannot hold, which is invariant
+    /// 11b's shape reached from the parser's side. Arrays are the one thing <c>JsonUtility</c>
+    /// does leave null, which is exactly why <see cref="beats"/> is one.
+    /// </summary>
+    [Serializable]
+    public sealed class StoryDto
+    {
+        public StoryBeatDto[] beats;
+
+        public bool IsAuthored => beats != null && beats.Length > 0;
     }
 }

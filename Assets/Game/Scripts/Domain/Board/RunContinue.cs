@@ -36,13 +36,31 @@ namespace GlimmerGrove
         Motes = 2,
 
         /// <summary>
-        /// Tiles in a grove's basket. Groovekeeper's turn is a tile, planted or composted, and
-        /// its budget is par plus the slack every mode with a countable mistake is dealt.
+        /// <b>Retired.</b> Tiles in a Groovekeeper basket. The mode is gone; the member stays
+        /// because the ordinal reaches analytics on every continue ever bought, so re-pointing it
+        /// at another unit would silently re-label that history - the same rule <see cref="Ink"/>
+        /// is kept under.
         /// </summary>
         Tiles = 3,
 
         /// <summary>Taps in a thicket's satchel (<c>BudSatchel</c>).</summary>
         Taps = 4,
+
+        /// <summary>
+        /// Moves in a prototype board's allowance (<c>ProtoBudget</c>).
+        ///
+        /// <para>
+        /// <b>One unit however many modes share the shape, and it is honest rather than a
+        /// shortcut.</b> A pull is exactly one input taken from one meter, so every mode built on
+        /// this shape is graded in the same thing and a continue sells them the same thing. A unit
+        /// each would be a key each in <c>progression.json</c>, a field each to seed and a number
+        /// each to keep in step, all carrying one figure. It was minted for five prototypes and
+        /// four of them were withdrawn without it moving, which is the argument for it. If one of
+        /// these modes ships for real and wants its own economy, it gets its own unit then - which
+        /// is an addition, and the compiler names every place.
+        /// </para>
+        /// </summary>
+        Moves = 5,
     }
 
     /// <summary>

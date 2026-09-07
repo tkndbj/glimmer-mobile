@@ -1213,70 +1213,463 @@ In practice:
     grove, so par was cheap only while good boards were common, and tightening one chapter's acceptance bar
     from ~1.1% of seeds to 0.3% took its ten groves from tens of milliseconds to **965ms**, all spent while
     the chapter body parsed. **A mode's par can stop being cheap without its code changing.**
-28. **A mode that cannot be lost is a prototype, and Groovekeeper was the second one.** Invariant 26 by the
-    same route and answered the same way. **A groove now authors its ground, the beds that have to bloom and
-    the procession it is dealt, and nothing else.** Par is the fewest tiles that open every bed, found by
-    `KeeperSolver`, and the star lines are the same multiples. The whole feature cost the save file **no
-    schema version, no merge rule and no server work** (20a).
-28a. **The inversion is the mode, and a bed is what turns it into a puzzle.** Every edge-matching game
-    rewards putting like against like; this one rewards the opposite — a seam between two unlike colours is
-    worth something and a seam between two of the same is worth nothing, and a tile whose own colour and its
-    neighbours' between them carry all three **blooms**. That alone is a toy; the **bed** makes the question
-    "what does this one complete, and what does it leave the next one able to complete". **One tile can open
-    five** (`KeeperFlourish.Most`), because a planting is read against the cell it lands on *and* the four
-    beside it, and that is exactly what par rewards: the prettiest play and the most efficient one are the
-    same play. Because the board is append-only, **blooming is derived rather than stored**, so a solver's
-    state is the grid and nothing else and there is no flag for the two to disagree about.
-28b. **The room to err is a count of tiles, and the fifth of them is the two-star line.** 26e for a second
-    mode: a wrong tile is permanent *and* takes ground a bed may have needed. What is new is why the count is
-    **five** rather than four — a budget of `par + spare` has to clear `ceil(par × 1.40)` or the bottom band
-    is stranded and every clear is worth two stars or three (22's fault from the budget's side). Four holds to
-    par seven and collides at par eight, which is where this chapter's finale sits; nothing but
-    `CheckStarBands` noticed.
-28c. **Two fail states, and only one may be sold a continue.** The basket running out is a shortage more
-    tiles fix; a groove with **nowhere left to grow** is not, so `KeeperVerdict` answers
-    `RunContinue.NoContinue` — the mistake money cannot fix is the spatial one, which is the half this mode is
-    about. That is also the exact reading of "the first groove cannot be lost": a negative `budgetFactor`
-    turns off the *basket*, not every ending, because a groove with nowhere left to grow is genuinely over and
-    a board that can be neither won nor ended is the one state 20g forbids.
-28d. **Composting is the one move that changes nothing, and it costs a tile for that reason.** A heartbed
-    refuses every colour but its own, so a run can hold exactly the wrong tile with the right bed waiting, and
-    the honest answer is a priced re-deal rather than a free one — the player is simply asked "is moving the
-    procession on worth a tile", with the basket in front of them. It is allowed on the **last** tile too,
-    deliberately: withholding it there reads as protective and is the one setting that can produce a groove
-    which will not end.
-28e. **A heartbed refuses rather than spoils.** The wrong tile cannot be planted there *at all*, so nobody
-    can kill one with a mis-tap, and the bed wears its colour where anyone can see it before they tap. That is
-    what turns the ordered procession from scenery into the puzzle (20e for a third mode): a plain bed is
-    opened by whichever tile is in hand when its neighbours are ready, where a heartbed has to be reached with
-    one particular tile.
-28f. **The proof that a bed is lost never ends a run, and only decides whether it would be honest to sell
-    one.** `KeeperBoard.AnyBedLost` is Lightfall's removed clause kept for the one question where it is right.
-    Ending a run on it is the mistake `FallVerdict` shipped and took back: it came back from play as a run
-    that ended while the tray still had motes in it, which reads as the game deciding on the player's behalf.
-    A player who wants to spend their last three tiles on a groove that cannot be finished is entitled to.
-    Both clauses are certainties rather than heuristics, because the answer decides whether money changes
-    hands, so it under-reports and never over-reports.
-28g. **A Groovekeeper procession need not carry all three colours, and that is the one place this mode is not
-    Lightfall.** A well refuses a two-colour deal and has to (26c); nothing here does that — a tile that
-    cannot bloom is simply a tile, the sprigs are permanent, and **two of the ten grooves are finished with a
-    two-colour basket** because the third colour is already on the board. The check was written anyway, by
-    reflex, and errored on both. What matters is that every bed can be *opened*, which is what the search
-    proves. **Copying a rule across from a mode that looks similar is how a gate comes to refuse correct
-    content.**
-28h. **The search is what the mode rests on, so its floor is the thing to be careful with.** Par is found by
-    iterative deepening over a grid whose every tile's colour is decided by *when* it was laid, so two
-    orderings of the same cells are two states and the frontier grows like permutations. Both prunes are exact
-    — a bound that could ever be too high would cut the shortest answer and hand back a par nothing can reach.
-    The **floor** is the one worth understanding: beds whose closed neighbourhoods touch may share a tile, so
-    their costs are grouped and only the worst of each group counts, while groups more than two steps apart
-    are **added** — taking the maximum instead left a two-bed groove bounded at three against a real answer of
-    six. The distance term stays a maximum and is compared rather than added, because a path to one bed may be
-    a path to another: the one part that could double-count is the one part not summed. Cost goes roughly as
-    the open cell count to the power of par (**par eight on tight ground is a few hundred positions, par nine
-    on open ground a few hundred thousand**), which is why the chapter tops out at eight and `KeeperValidator`
-    refuses a groove above 90,000 — the player's device runs this same search once, when somebody opens the
-    level.
+28. **Groovekeeper is retired, and what survives is its arithmetic.** It shipped one chapter of ten
+    grooves — lay a tile so that *unlike* edges bloom — and was withdrawn by the owner as boring: every
+    reading was good and the board played as arithmetic, which is 20l's complaint one step further in. Five
+    prototype modes took its slot and four of those were withdrawn in turn (29), Toppleglen and then
+    Nova Raid after them (31), and the Iron Quarry stands where Groovekeeper stood. Four of its rules
+    outlive it and are stated where they are now used:
+    the **room to err is a count, and its fifth unit is the two-star line** (`par + spare` has to clear
+    `ceil(par × 1.40)` or the bottom band is stranded — four holds to par seven and collides at eight, and
+    nothing but `CheckStarBands` noticed); **a proof that a board is lost never ends a run** and only decides
+    whether it would be honest to sell one (28f, kept verbatim below); **copying a rule across from a mode
+    that looks similar is how a gate comes to refuse correct content** (a check demanding all three colours
+    was written by reflex and errored on two correct grooves); and **a mode whose par is a search has a
+    ceiling on par**, lower the more the mode puts on the board (26d).
+    <br>**Retired ids that must never be reused:** the mode id **`keeper`**; the level block **`keeper`**
+    (refused *by name* by `content.py`, for the duskcap's reason — JsonUtility drops an unknown field without
+    a word, so a chapter written for a build that is gone would index and ship as something nobody authored);
+    the chapter id `k01_grovekeeper` and its ten level ids (`k01_first_grove`, `k01_the_second_bed`,
+    `k01_stonecrop`, `k01_the_boulder`, `k01_four_petals`, `k01_heartwood`, `k01_twin_hearts`,
+    `k01_the_prism`, `k01_the_pocket`, `k01_keepers_grove`); the six lesson ids `keeper_bloom`, `keeper_basket`, `keeper_stone`,
+    `keeper_compost`, `keeper_heartbed`, `keeper_prism`; `ContinueUnit.Tiles` and `DefeatReason.OutOfTiles`
+    / `DefeatReason.Overgrown`, whose **ordinals** reach analytics on every run ever recorded and so are kept
+    as members rather than deleted. A real save may still hold a record against one of those level ids, which
+    is exactly why `ProgressionStore`'s high-water floors exist (invariant 9): derived XP and credits fall
+    when a level leaves the catalog, and the floors are what stop a player noticing.
+28f. **The proof that a board is lost never ends a run, and only decides whether it would be honest to sell
+    one.** Ending a run on it is the mistake `FallVerdict` shipped and took back: it came back from play as a
+    run that ended while the tray still had motes in it, which reads as the game deciding on the player's
+    behalf. A player who wants to spend their last three moves on a board that cannot be finished is entitled
+    to. So it is asked at the moment the allowance runs out and at no other (`ProtoVerdict.Read`), and it is a
+    **certainty** rather than a heuristic, because the answer decides whether money changes hands — it
+    under-reports and never over-reports.
+
+29. **Five modes were commissioned at once to be judged by playing them, four were withdrawn, and the
+    way that was affordable in both directions was sharing everything except the rules.** Toppleglen,
+    Nectarrun, Ribbonfall, Seedfling and Warrenwake replaced Groovekeeper's ten levels with **one chapter of
+    one level each**, so the owner met five verbs and said which were worth a chapter. The answer was
+    **one**: Toppleglen stood and the other four went — and Toppleglen was itself withdrawn later (31),
+    which does not weaken the argument so much as finish it. Every one of them was a *run* rather than a
+    demo — a permanent `LevelId`, a searched par, both star lines, a real fail state, a heart, a chest, a
+    streak and a star ledger — and between them they cost the save file **no schema version, no merge rule,
+    no `firestore.rules` change and no server work** (20a). What they cost is one new `ContinueUnit`, which
+    is kept, because every mode built on this shape since is graded in it. **And that is the half worth
+    writing down: removing
+    four of five modes cost the save file, the wire and the server exactly what adding them did —
+    nothing.** A mode built the way 20a demands can be taken back out on the strength of one session of
+    play, which is what makes commissioning five at once a sane thing to do rather than a gamble.
+    <br>**Retired ids that must never be reused:** the mode ids **`nectar`**, **`ribbon`**, **`fling`** and
+    **`warren`**; the level block names **`nectar`**, **`ribbon`**, **`fling`** and **`warren`** (refused
+    *by name* by `content.py`'s `RETIRED_BLOCKS`, for the duskcap's reason — JsonUtility drops an unknown
+    field without a word, so a chapter written for a build that is gone would index and ship as a glade
+    nobody authored); the chapter ids `n01_nectarrun`, `r01_ribbonfall`, `s01_seedfling` and
+    `w01_warrenwake` with their four level ids `n01_firstpour`, `r01_firstribbon`, `s01_firstfling` and
+    `w01_firstparade`; and the eight lesson ids `nectar_pour`, `nectar_hollow`, `ribbon_draw`,
+    `ribbon_sink`, `fling_flick`, `fling_catch`, `warren_cut` and `warren_carry`. All four were **played on
+    a device**, so a real save may hold a record or a `tipsSeen` entry against any of them — which is the
+    line that separates this from Lightfall's `f03_wickwater` (26h), where the chapter never left the
+    working tree and its ids were honestly re-authored. `ProgressionStore`'s high-water floors are what stop
+    a player noticing that derived XP and credits fell when four levels left the catalog (invariant 9).
+29a. **They share a level *shape*, not a rule, and that distinction is the whole design.** Each authors a
+    grid of letters, an optional deal and a slack (`ProtoDto`), so `ProtoGrid`, `ProtoSearch`, `ProtoBudget`,
+    `ProtoVerdict`, `ProtoRun`, `ProtoMode`, `ProtoValidator`, `ProtoView` and `ProtoScreen` are each written
+    **once** and every mode supplies only its own rules. Five copies of "a run is decided once", "a move is
+    charged once" or "is this ladder ordered" would be five places for one of them to stop being true, which
+    is what taking `RunScreen` apart was for. A mode that wanted to be drawn some other way could ignore
+    every drawing helper and still inherit the latches, which is the dangerous half. **The withdrawal proved
+    the split from the other side**: taking four modes out was deleting four board files, four view files,
+    four table entries and four sections of the offline mirror, and not one line of the shared spine moved.
+29b. **All five were breadth-first searchable because all five were monotone, and that was the entry test.**
+    A pull removes a stone, a stopper never goes back, three blooms leave the grove, a pod bursts, a bramble
+    is cut — nothing is ever added, so the state graph is a DAG, the run always ends, the board cannot stall
+    and the first layer holding a finished board is par (20j, three properties from one). Groovekeeper
+    deepened iteratively because its board *grew*; nothing here does, so two orderings that remove the same
+    things merge — which is also what makes counting shortest answers cheap. **Note what the test did and
+    did not buy**: all five passed it and four were still withdrawn, because monotone says a mode can be
+    *graded*, never that it is worth playing. That is 20j and 26h asking different questions, and both have
+    to be asked.
+29c. **A companion is on every board, their part is fixed by the level, and that is what keeps par honest.**
+    They catch a critter that rolls to them — and, on the four modes now gone, drank the first pour that
+    reached them, made the bloom standing on them wild, threw a seed back up and carried one critter home.
+    **What they may never be is the player's *worn* companion changing what a move does**: par is searched
+    per board offline, so an ability that varied with who is worn would vary par, both star lines and the
+    fail line per player — and somebody who bought Coral would be playing an easier game than somebody who
+    did not. The worn companion supplies the *portrait* and nothing else. Thirty-one companions therefore
+    become thirty-one flavours of help across future drops **with no code**, because which one a level hosts
+    is content.
+29d. **A prototype is refused if a greedy player can finish it, and the one that ships is at nought.**
+    `careless` is a warning in `ProtoValidator` rather than a gate, because early in a chapter thoughtlessness
+    is supposed to work — but such a board is the *only* board of its mode, so `ProtoLadderTests` pins it: a
+    prototype greedy play clears is a prototype nobody has played. `ways` is pinned for the other direction,
+    which is the one nothing else sees: a rule change that makes a board **easier** leaves par plausible and
+    every gate green (Budburst's wash bug, from the other side).
+29e. **The two mirrors disagreed twice, and both disagreements were silent.** *(Both bugs were in modes now
+    withdrawn; the rule is not.)* `Tools/verify/proto.py` is the offline copy, and `ProtoLadderTests` holds
+    the shipped boards **inline** because every `*VectorTests` in this project reads JSON through
+    `JsonUtility` — a native call — and so is reported as "needs the Editor" and skipped on the way past. It
+    earned its place immediately. **One:** the Python `Ribbon.clone` rebuilt the companion cell from the
+    grid, which cannot work, because that cell was authored two ways (a bare `@`, or a lower-case letter
+    meaning "the marker is here and this bloom is standing on it") — so every position after the first lost
+    the wild. **Two, and it is Python-only:** `here in 'RGB'` is **True** for the empty string, so every hole
+    in the grove read as a bloom. Neither moved par on the shipped board. Both moved `ways`, `nodes` and the
+    careless reading, which is exactly the half nobody would have looked at.
+29f. **A stopper that has been pulled is a channel, and asking the authored letter instead is a whole mode
+    that does not work.** *(Nectarrun is retired; the rule is not.)* Its two ground predicates read the
+    letter in the file, so a cell the player had just cleared was still refused as impassable: every pour
+    stopped there, the cup behind it never filled, and the board came out unsolvable with every character
+    correct. The general shape: **a predicate about the *ground* must not answer a question about the
+    *state* standing on it** — whether a stopper is still in the channel is the caller's question, and the
+    board had already asked it.
+30. **Two modes were commissioned into one slot on one day and withdrawn the same day, and what
+    they left is the rules below.** Deep Orbit (aim a salvage drum down a lane of an alien deck) and
+    Moonwake (ring a bell and the monsters slide) were both built on 2026-09-06 to be judged by playing
+    and both came back as *not enough on the screen* — one verb, one gesture, and nothing a mass-market
+    player recognises as a game. Both were played on a device, so their ids are **spent**: the mode ids
+    `orbit` and `moonwake`; the level blocks `orbit` and `moonwake` (refused by name in `content.py`);
+    the chapter ids `o01_hollowfleet` and `m01_moonwake`; the level ids `o01_firstbreak`,
+    `o01_sentryline`, `o01_wardensgate` and `m01_bellbreak`; and the lesson ids `orbit_launch` and
+    `orbit_pod`. What was kept is everything that was a *seam* rather than a mode — the story band, the
+    cue system, the second-world backdrops, and three rules about a talking, animating board — because a
+    seam survives the thing it was built for.
+30d. **A level may speak, and every line is a loc key authored in content — the one place in this game a
+    key is written down rather than derived.** A level's own name is a function of its id (5a) because
+    anything holding a `LevelId` has to name it without reading a body; nothing ever needs to name a line
+    of dialogue it has not read. What the derivation buys is protection from typos, and that is bought back
+    **more strictly** by `content.py` and `ContentValidation` resolving every authored key against
+    `loc/en.json` — which also catches one that is correctly shaped and simply missing. `loc.py` cannot see
+    them at all, so if it were not checked there it would be checked nowhere.
+    <br>**Cues, not a timeline** (`StoryCue`): a run is played rather than watched, so content says "when a
+    monster comes out, this is what Bolt says". Every cue is raised off the turn the board just resolved,
+    so the story costs **no state at all** — nothing stored, nothing merged, nothing recomputed (14's
+    bargain). Several beats may share a cue and they are handed out in order and then fall silent, because
+    a board that frees three monsters and hears one sentence three times is a board whose dialogue stops
+    being read. The runtime **drops** a malformed line and refuses nothing; the build gate **errors** on it.
+    Losing a sentence is better than losing the board it was written for.
+    <br>The band never blocks except once — the opening lines hold the board with the same latch a lesson
+    uses, so nobody drags a crystal through a sentence and no heart is owed for a level nobody has touched.
+    `StoryCast` is a list rather than a convention because a speaker names a folder of frames, and a
+    mistyped one is a portrait that draws as a **white rectangle** (7b). The cue ids and the cast are
+    content vocabulary and not save ids, so re-casting them for a new mode cost nothing.
+30e. **A backdrop belongs to a mode's *world* as well as to a level's place, and that is one axis added
+    to 7c rather than an exception to it.** Every sky in this game is one cloud painting at forty colours,
+    which is exactly right while every mode is set in the same forest and exactly wrong the first time one
+    is not. `mapart.sky` takes the mode, `MODE_WORLD` says which world it is set in, and the arithmetic is
+    unchanged: same ordinal, same level index, same forty. Hollowmarch is set in the **village** the raid is
+    stripping — forty isometric night villages composed out of eight of the licensed tile packs by
+    `Tools/make_village_art.py`, deterministic from the index, graded through the same `vivid` and the
+    same hue ladder as the skies, so a second chapter still costs no art. **The map is deliberately not
+    part of it** — a mode is told apart on the map by its perch and by nothing else (7c).
+30g. **"No dialogue" and "the board ignores every tap" were one line, and the line was
+    `SetActive(false)` on the object the component lives on.** `StoryBubble` hid itself by deactivating
+    its own node, so the next `Speak` called `StartCoroutine` on a disabled behaviour — which Unity
+    refuses silently, returning null. The band never appeared, and the `done` callback the screen was
+    waiting on to hand the board back **never fired**, so the board sat `Locked` for the life of the
+    screen. Three rules, and only the first is about this class. **A `MonoBehaviour` that hides itself
+    must not disable the object it needs to be alive on** — alpha for the look, `blocksRaycasts` for the
+    input, and the object stays awake. **Anything that hands out a callback must be unable to strand its
+    caller**: `Speak` fires `done` immediately when it could not start. And **anything that latches a board
+    must bound its own release** — the opening scene holds the latch only across the speaking, and even
+    that is capped (`MostToSay`).
+30h. **A modal sets `Time.timeScale` to nought, so a screen coroutine that waits in *scaled* seconds
+    never finishes while a lesson is up.** The opening scene waited `new WaitForSeconds(...)` and the
+    mode's lesson arrives 0.15s after the board — inside that very wait. `WaitForSecondsRealtime`
+    throughout, and the scene waits for `Teaching.Teaching` to clear before it takes the latch at all.
+    **Before waiting on a clock in a screen coroutine, ask what a modal does to it.**
+30i. **A recorded turn says where a piece was *immediately before* an event, and the cells between two
+    events carry no beat at all.** Deep Orbit's view began each hop at the beat's `From`, which
+    teleported the drum across every empty cell it should have flown and then animated the last one.
+    **Nothing else in this project can see that class of fault**: par, `ways`, `careless`, both validators
+    and every content gate read the *model*, and the model was right the whole time. Hollowmarch
+    inherited the rule rather than the bug: `MarchDeedRecord.At` is a **track slot** and never a
+    position in the line, because the line shifts under its own indices as pods leave it — and the
+    line's shape after every wave is carried as a **snapshot** (`MarchFrame`) rather than
+    reconstructed, so the view interpolates between two states it was handed rather than doing
+    arithmetic nothing can check.
+31. **Nova Raid and Toppleglen are retired, and what survives is the reason both were
+    withdrawn.** A match-three on a small lattice and a heap of stone that falls: every reading
+    on both was good, every gate green, and the owner's verdict on the pair was that neither was
+    the *fresh* thing the slot was commissioned for. That is 20j and 26h asking their questions
+    a fourth and fifth time and getting the same answer — a mode can be monotone, searchable,
+    correctly par'd, spectacular in the file and still not be a game anybody wants to play, and
+    the only instrument that says so is somebody playing it. **Retired ids that must never be
+    reused:** the mode ids **`nova`** and **`topple`**; the level blocks **`nova`** and
+    **`topple`** (refused by name in `content.py`'s `RETIRED_BLOCKS`); the chapter ids
+    `v01_harvester` with `v01_firstlight`, `v01_ironwatch` and `v01_thehold`, and
+    `t01_toppleglen` with `t01_firstfall`; and the lesson ids `nova_swap`, `nova_armour`,
+    `topple_roll` and `topple_burrow`. Both were played on a device, so a save may hold a record
+    or a `tipsSeen` entry against any of them. What was **kept** is everything that was a *seam*
+    rather than a mode — the prototype level shape, the story band and its cast, the village
+    world of backdrops, and the whole cast and explosion art, all of which the Iron Quarry
+    inherited for the price of one folder rename.
+32. **The Iron Quarry is retired, and the reason is the one this file keeps writing down.** It
+    shipped three levels — cut a charge loose, it slides until something stops it and goes off
+    there — and was withdrawn by the owner *without being played*, on the strength of what it
+    looked like: a floor of cut stone with one hot thing crossing it, three flicks deep, with
+    nothing on it the player **made** and nothing that kept paying out after they stopped. That
+    is 20j and 26h asking their questions a sixth time and getting the same answer, and it is
+    also the first time the answer arrived before a device did. **Retired ids that must never be
+    reused:** the mode id **`quarry`**; the level block **`quarry`** (refused by name in
+    `content.py`'s `RETIRED_BLOCKS`); the chapter id `q01_ironquarry` with its three level ids
+    `q01_cutloose`, `q01_wardenrow` and `q01_thedeepcut`; and the lesson ids `quarry_flick` and
+    `quarry_armour`. Four of its rules outlive it and are stated where they are now used: a goal
+    must be the most legible thing on the board and **no numeric gate can tell you it is not**
+    (32b, kept verbatim below); a preview may show **geometry and never outcome** (32c); a board
+    is **dealt by seed into a designed template** and kept for what it measured (32d); and a
+    recorded turn says where a piece was *immediately before* an event (30i). What was **kept**
+    is everything that was a seam rather than a mode — the prototype level shape, the story band
+    and its cast, the village world of backdrops, and the whole cast and explosion art, all of
+    which Hollowmarch inherited for the price of one folder rename. That is the fourth time that
+    art has been inherited and the third time the rename was the whole cost.
+32b. **A goal has to be the most legible thing on the board, and no numeric gate can tell you it
+    is not.** The quarry's cage shipped its first cut as a ruin pack's wooden posts stood over
+    the monster, and every gate was green: par, `ways`, `careless`, `chain`, both validators, the
+    content check and the art audit. Rendered at the size a phone draws it, it was three brown
+    logs with a sliver of colour behind them — *firewood*, in a mode whose entire goal was the
+    thing behind those logs. **Approximating a goal out of scenery is how a goal comes to look
+    like dressing**, so it is composed rather than cut. Hollowmarch took the lesson the first
+    time rather than the second: its pods, its cage, its road and its gate are all
+    `Tools/make_march_art.py`, where their size, their contrast against the plate and their
+    silhouettes are decisions rather than accidents — and the licensed art is left to do the work
+    it is good at, which is a cast that moves and explosions.
+32c. **What a preview may show is geometry, and never outcome.** A core has to be aimed, so while
+    the finger is down the board lights the road between the launcher and where the core will
+    wedge, and lights the run it will wedge into — facts the player can already read off the
+    board, drawn faster. What is deliberately *not* drawn is what the blast will catch, because
+    that is the thing the player is working out; a mode whose chains are printed on the board
+    before they happen is Budburst's withdrawn halo all over again (20l).
+32d. **Every board is dealt by seed into a designed template and kept for what it asked.** What is
+    *designed* is the thing a player reads — where the road winds, how far it is from the gate,
+    where the launcher stands. What is *dealt* is the arrangement nobody can eyeball, and
+    `Tools/march_sweep.py` reports par, `ways`, `careless`, `nodes`, `chained`, `forged`, `lanced`
+    and `menace` for every deal worth keeping. The three rungs are seed 170 of `first`, 22 of
+    `road` and 1 of `gate`; the seeds are recorded in `Tools/chapters/m01_hollowmarch.py` so a
+    board can be re-derived rather than only re-typed.
+
+33. **Hollowmarch is a wedge, and what the wedge is really for is the gap closing behind it.**
+    The raiders are walking a line of pods along a haul-road to a portal and some of those pods
+    are carrying caged critters. Fire a core into the line and it wedges in beside its own
+    colour; three alike go off; the line **slides shut** — and if the closure brings three more
+    together, that goes off too, and again, each wave louder and a semitone higher. That cascade
+    is the engine the whole casual genre runs on and it is the first time this game has had one,
+    which is the point: nine modes have been built here against a rule nobody had met before, and
+    two of them survived. **A mode may be built on a loop a hundred million people already know,
+    so long as the twist is real** — and the twist is that the line is *walking*.
+    <br>It cost the save file no schema version, no merge rule, no `firestore.rules` change and no
+    server work (20a), and it is the tenth mode the prototype level shape has carried. What it
+    added to that shape is one field: `ProtoDto.cores`, the **deal**, which the block had
+    described itself as carrying since it was written and which no mode built on it had ever
+    wanted. That is a seam paying off rather than being stretched.
+33a. **The allowance is drawn on the board, and that is the whole reason the march exists.** Every
+    core spent is a step the raiders take toward the gate, so how much time is left is something
+    a player *reads off the line* rather than out of a corner — and the number in the corner is
+    the same number, so the two can never disagree. It is the first fail state in this game that
+    is a picture, and the continue buys the one thing that picture is about.
+33b. **A plain pod goes through the gate and is gone; a pod carrying a critter jams the line.** The
+    first half is a real cost with no fail state attached — the line bleeds the very material a
+    core needs to match, so a player who ignores the front of it finds their options narrowing.
+    The second half is a **rule**, and the alternative was tried first: letting a cage through the
+    gate makes a board that can be **neither won nor lost**, which is the one state invariant 20g
+    says a mode may never ship — and it arrives here through the front door, because the opening
+    board of every mode is authored without an allowance at all (24) and would therefore march
+    for ever. The jam is also what lets `MarchBoard.Stranded` honestly answer **false**: every
+    goal a board opened with is still standing on it however long the run goes on, so more cores
+    always help, which is exactly what a deficit of nought says (28f).
+33c. **The monotone quantity is the magazine, not the pods.** A dumped core *adds* to the line, so
+    the board does not only ever shrink — which would have failed 20j's second test read
+    carelessly. What every legal shot does is advance the magazine by exactly one, so depth **is**
+    cores spent, the state graph is layered by construction, a run always ends and
+    `ProtoSearch` finds par by breadth-first walk with nothing to prove about termination.
+    **Before admitting a mode on the monotone test, ask which quantity is monotone** — it is not
+    always the thing on the board.
+33d. **The chain has to clear the same threshold again on every wave, and that is what stops it
+    being a solvent** (20j's third test). A closure that made three alike goes off; one that made
+    two does not, so a chain dies wherever the line is not already nearly right. And what the
+    chain is *worth* is bounded the same way: a shot that destroys five pods forges a **Spark**
+    into the next core, which is the only thing in this mode the player makes (20m) — so the
+    mode's best move and its reward are the same move, and a big chain is something to aim at
+    rather than something that happens.
+33e. **A Spark cuts plating, which is the only reason it is not a bigger core.** A colour match
+    can never take a warden in one shot; a lance takes the run it is aimed at, the group either
+    side of it, and any plating in the way. That is 26g's test asked of the thing the *player*
+    makes rather than of the thing the author placed — a mirror that only ever did what a lens
+    did was withdrawn for competing on degree rather than on kind, and the same question has to
+    be asked of a special before it is animated.
+33f. **The reading that judges the mechanics is taken over the shortest answers, never over the
+    opening move.** "Can the first core set off a chain" collapses exactly when a board is good —
+    a line whose very first shot sets off a four-wave cascade is a line that is *over* in three
+    shots — so tuning against it selects for short boards and quietly rejects the long ones.
+    `MarchReading.Chained`, `.Forged` and `.Lanced` walk **every** shortest solution and report
+    what they do, which is Budburst's `fired` and the whorl's `kindled` (20m, 26h) asked here.
+    They are carried along the frontier of the search that already ran, so they cost one triple of
+    integers per state and never more than the search itself.
+33g. **A haul-road is derived from what is drawn, and it costs exactly one rule.** A level draws a
+    winding rail through the grid and `MarchLayout` reads the order off it, which is the only
+    shape where what is drawn and what is played cannot come apart — invariant 4a's argument
+    about the manifest, applied to a board. The rule is that every road cell has two road
+    neighbours except the two ends, which have one; a road that forks is then refused **by cell**
+    rather than read some arbitrary way, which is `ProtoGrid`'s rule about naming the row and the
+    column.
+33h. **The road is drawn full-bleed, and a render is what said so.** The first cut inset each road
+    tile and rounded its corners, which is right for one tile and wrong for forty: laid end to end
+    they read as a row of separate *sockets* with dark gaps between them, so the haul-road — the
+    one thing on the board that says where the convoy is going — disappeared into the ground.
+    Every numeric gate was green, because every numeric gate reads the model. The same render
+    caught the magazine hanging off the plate on three roads out of four, and forty per cent of
+    the finale being empty rail behind the convoy. **`Tools/render_march.py` is the eye, and it
+    has now earned its place three times in one session.**
+33i. **Three shipped rungs is a test, not a chapter.** What is owed is somebody playing it — see
+    the owed list. The questions in order: does the **wedge** read (a core does not land where the
+    finger went, it travels to the run it matches, which is why every run of your colour lights up
+    while the finger is down); is the **chain** something players work out how to *arrange* rather
+    than something they watch; and does the **Spark** read as a different piece rather than as a
+    bigger core. If the third fails the fix is more boards where a warden stands behind a run
+    worth five, not a longer tip.
+
+34. **Emberforge is the genre's own verb with one thing taken away, and what it takes away is the
+    refill.** Swap two neighbours so three alike line up and they do not clear — they **fuse**, into
+    one **ember** standing on the cell the finger ended on. Tap it and a **cross** of light sweeps its
+    whole row and column; push two together instead and they combine into a **star** that takes the
+    diagonals with them; and a beam that crosses an ember sets that off too, which is the chain. That
+    ladder is Royal Match's rocket and its combinations, and 33's argument applies unchanged: a mode
+    may be built on a loop a hundred million people already know so long as the twist is real. **The
+    twist is that nothing ever falls in from above.** Every ember is three jewels that are not coming
+    back and the beams destroy the wall they cross, so a board is worth about three explosions and
+    *where* they are spent is the whole game — the player is not choosing which match to take, they
+    are choosing what to spend the wall on. It is the eleventh mode the prototype level shape has
+    carried and it cost the save file no schema version, no merge rule, no `firestore.rules` change
+    and no server work (20a). It authors the shared block and leaves `cores` **empty**, and the
+    reader refuses a wall that deals anything: the wall is everything the level hands over.
+34a. **The monotone quantity is the wall, and that is what buys the search.** A fuse consumes at least
+    three pieces and puts back one, a tap spends that one, a merge spends two, and a beam only ever
+    removes — gravity slides shards down a column and nothing is ever added anywhere. So the state
+    graph is a DAG, a run always ends, the board cannot stall for ever, and `ProtoSearch` finds par by
+    breadth-first walk with nothing to prove about termination (20j's second test). **A refill is the
+    one thing this mode may never have**: it would make the wall inexhaustible, the future unfixed and
+    par unsearchable, which is 26 restated — and every consequence of that (no star line, no
+    allowance, no fail state) follows immediately.
+34b. **The chain runs through the player's own work and stops the instant it reaches wall that is
+    not.** A beam sets off an *ember* and passes straight through a plain shard, so the threshold a
+    cascade has to clear again on every beat is "did somebody build one here" (20j's third test). That
+    is also 20m: the payoff is a thing they made, never a thing the author placed — which is why
+    `EmberValidator` warns above **two** dealt embers and `ProtoLadderTests` refuses even one on a
+    shipped wall. The chapter deals none at all.
+34c. **A finite wall has two fail states and only one of them is the meter, so the mode needed a
+    reading no other one did.** Everywhere else a run ends when the allowance runs out; here the wall
+    itself can be dead while the readout still says four moves left, which is the game deciding on the
+    player's behalf. `EmberReading.Life` plays the most extravagant possible player — biggest gain
+    every time — and counts how many moves the wall survives, and a board where that is under the
+    allowance is warned about and was not shipped. It is the mirror of `careless`: that one asks
+    whether thoughtlessness *wins*, this one asks how long the wall survives it.
+34d. **Both directions of a fuse are one move, and it is provable — which is why getting it wrong was
+    invisible.** A swap exchanges two *different* characters (two alike are refused as a no-op) and a
+    fused group is a run of one character, so the group can hold at most one of the two swapped cells
+    and settles on the same one whichever way the finger went. The first cut carried the swap's own
+    cells into every beat of the **cascade**, so a group four beats downstream could still tell them
+    apart: 39 of 2,398 pairs differed, `EmberBoard.Moves` therefore had to offer both, and the search
+    added the paths of two move indices reaching one state — **`ways` double-counted at every depth,
+    on every board, in the one reading invariant 5d is about**. Par never moved, which is why nothing
+    else could see it. The rule now is that the swap's cells reach the first fuse pass and no further,
+    everything a cascade makes settles on its own middle, and
+    `ProtoLadderTests.NoFuseOnAShippedWallCanTellItsTwoDirectionsApart` is the guard on the
+    optimisation. **Before pinning a difficulty reading, ask whether two moves can reach one state.**
+34e. **A goal has to win a legibility fight against four jewels, and only a render can say whether it
+    does.** 32b again, and it cost the same two rounds: the cage was first composed out of the pack's
+    own stone frame with two chains and a padlock over it, and at the size a phone draws it that was a
+    tiny lock over a mess — in a mode whose entire point is the thing behind those bars. It is now
+    **drawn**: four thick iron uprights, a rail top and bottom, its own warm light behind so the
+    critter reads through it, and the lock on the join. The ember needed the same treatment for the
+    opposite reason — the pack's bomb is very nearly black, and the one object on the board that is
+    *tapped* rather than dragged was the dimmest thing on it. `Tools/render_ember.py` caught both and
+    every numeric gate was green through both.
+34f. **The four shards differ in silhouette as well as in hue** — a heart, a cabochon, a rhombus and
+    an emerald cut. The mode's whole verb is "are these three the same", so a player who cannot
+    separate red from green has to be able to separate a heart from a circle; a palette alone would
+    make it a different game for them rather than a harder one. CRAFT.md's rule about the board's
+    vocabulary, asked of a mode where it decides every move.
+
+35. **Kindlewake is the classic glade's question asked with Emberforge's material, and what it
+    proves is that a mode can inherit a *goal* without inheriting a verb.** Cold embers are
+    scattered over a dark hollow with critters asleep among them. Join two embers of the **same
+    colour** that share a row or column and a **strand** of light burns along the line between
+    them for good; every critter it crosses takes that channel. A critter wanting a blend can only
+    be woken where **two strands cross on the square it is sleeping on** - which is a colour
+    neither strand carried, and the only thing on the board the player had to arrange. The goal,
+    the colour arithmetic (`Energy`, reused outright) and the word "critter" are the glade's; the
+    verb is not. It is the twelfth mode the prototype level shape has carried and it cost the save
+    file **no schema version, no merge rule, no `firestore.rules` change and no server work**
+    (20a).
+35a. **The monotone quantity is the embers, and light is the thing that only ever grows.** Every
+    join spends exactly two and nothing puts one back, so depth is bounded by half the material,
+    the state graph is a DAG, and `ProtoSearch` finds par by breadth-first walk with nothing to
+    prove about termination (20j's second test). Note which quantity that is - the board *gains*
+    light and light never goes out, so 33c's warning has to be read the right way round: it is the
+    thing being **spent** that is monotone. It also means every route to a given arrangement has
+    the same length, so no state can appear at two depths, which is what lets **one** walk answer
+    both "what do the shortest answers do" and "how deep can any play go" (`KindleReading.Walk`).
+35b. **The no-op rule was drawn too tight first, and drawing it tight removes the player's ability
+    to be wrong.** A strand is legal whenever it puts its channel somewhere that lacked it
+    (`KindleBoard.Changes`). The tighter rule - refuse one unless it reaches a *sleeping critter*
+    that lacks the channel - is **provably safe for the solver**, because light only ever wakes
+    critters and removing embers can never help, so such a strand can never be in a shortest
+    answer. It is still wrong, for a reason no solver can see: under it no move spends material
+    for nothing, so the allowance can never bind, `life` equals par on every board, and the meter
+    counts down to an ending that cannot happen. **A pruning rule that is sound for the search can
+    still delete the mode's fail state.**
+35c. **`life` is the longest play, not the greedy one, and Emberforge's version of the reading
+    would have said nothing here.** That one walks a spendthrift until there is nothing to play;
+    on a hollow there is nothing to play the instant the last critter wakes, so it would report
+    "how long until this is over" and equal par on every board greedy wins. What is wanted is the
+    deepest layer any play reaches, which the same walk gives for free - and it is **capped at the
+    allowance**, because that is the only question it is asked and the whole graph of a hollow
+    with twenty embers is ten layers deep.
+35d. **A spent ember leaves a socket that blocks light, and that rule exists because a measurement
+    demanded one.** Without it every strand costs the same two embers and light never hurts, so
+    taking the pair that covers the most critters is very nearly always right: across **320 swept
+    hollows a careless player finished every single one**, which is the reading Lightweave was
+    withdrawn for (5d - a mechanic that rejects no arrangement is decoration). With it a strand
+    leaves two permanent holes in the geometry, `ways` fell by more than half on the deepest board
+    in the chapter, and boards greedy cannot finish exist at all - three of the ten shipped.
+    **Three is still not many**, so the honest summary is that Kindlewake asks *which pair* rather than
+    punishing greed, and whether that is enough is the first thing to judge by playing it.
+    Consequence: `KindleValidator.Unreachable` stops being complete and stays *certain* - it errors
+    only when no pair of the right colour covers a critter at all, which no later strand can undo.
+35e. **A critter can only be lit by a strand that brackets it, and that is geometry an author
+    cannot eyeball.** Ten templates were written before the rule was stated and **every one was
+    impossible**, always the same way: a critter whose column ran into stone before it found a
+    second ember of the colour it wanted. The grammar the chapter is built on is therefore
+    explicit - critters stand on **odd** columns, their rows carry ember sites on the **even**
+    ones, the rows between them are solid sites so every column has partners above and below, and
+    **stone never shares a column with a critter**. The dealer plants the pairs a hollow needs
+    *before* filling the rest (20i's rule read across from Lightweave: grow what the board needs
+    before the answer is carved), so a board is winnable by construction rather than by rejection -
+    random dealing kept fewer than one seed in fifty on a board with five critters.
+35f. **A hollow needs 2x(par + spare) embers, and that is what sets the chapter's pars.** A strand
+    spends two, so the longest play is about half the material; the allowance has to clear the
+    two-star line (`ceil(par x 1.40)`) *and* be reachable. `spare` is 3 on every bounded board
+    because it is the only value that satisfies both at every par the chapter uses. **And par 2 is
+    refused outright**: at par 2 the three-star and two-star lines both round onto 3, so the middle
+    band is empty and two stars can never be scored - which is why the opening hollow stands three
+    critters rather than two.
+35g. **The crossing is the payoff, so it is drawn on top of the strands that made it.** Drawn the
+    other way round - strands over pools - the one square carrying a colour neither strand had is
+    the one square you cannot see, and only a render says so. So the layers are ground, strands,
+    **pools**, pieces, fx; and a pool is painted **only where two or more channels meet**, because
+    a single-channel cell is already drawn by the strand running through it and painting those too
+    turned every strand into a chain of discs. `Tools/render_kindle.py --lit` is what caught it.
+35h. **The husk was the fourth goal in this project to be illegible and pass every gate.** The
+    first cut was a dark ring with a dim brown light on near-black moss - the thing every level is
+    *for*, drawn as the least visible object on the board. That is the Iron Quarry's cage (32b),
+    Hollowmarch's road (33h) and Emberforge's cage (34e) for the fourth time, and it was caught by
+    a contact sheet and by nothing else. It is now a bright warm bowl, open at the top, carrying
+    its own light so the critter reads through it, and wearing no hue of its own so the coloured
+    ring saying *what it wants* has nothing to fight.
+35i. **It ships silent, and that is a decision.** The story band is a paid-for seam, but its cast
+    are raiders - Bolt and the Collector belong to the smelter and the haul-road - and a grove mode
+    borrowing them would be two stories wearing one set of ids. Every mode set in the grove ships
+    without dialogue (four chapters of glades, three of Lightfall, two of Budburst) and this one
+    joins them; a later chapter that wants a voice changes one base class and authors a `story`
+    block, and nothing else moves.
 
 ## Layout
 
@@ -1322,18 +1715,83 @@ compile. Do not guess — verify offline:
 - **Content check:** `Tools/verify/content.py` — parse the StreamingAssets JSON, prove every level
   solvable, derive par, confirm every loc key resolves, and run `board-vectors.json` through both Python
   copies of the four-armed-tile rule (`BoardVectorTests` runs the C# one). The per-mode checks are rolled
-  into it: **Groovekeeper** (par searched, a sprig to grow from, a bed to open, a heartbed whose colour the
-  basket deals; `beds`, `heartbeds`, `ways`, `greedy`), **Lightfall** (par searched, brim row empty, nothing
+  into it: the **prototype modes** (one check for all of them - par searched, not finished on
+  arrival, a legal move to make, plus the handful of questions only each mode's own rules can ask;
+  `ways`, `careless`, `nodes`) - which now carries **Kindlewake** (par searched, every critter reachable by some pair of
+  embers, something to join at all; `ways`, `careless`, `life`, `crossed`, `blended`, `idle`,
+  `lonely`) and **Emberforge** (par searched, the wall
+  authored **settled**, nothing dealt into it, no goal walled off from every beam; `ways`,
+  `careless`, `life`, `chained`, `forged`, `starred`, `lonely`, `dealt`) and **Hollowmarch** and asks of a haul-road that it
+  has a line to fire into, that the line is authored *settled*, that no pod wears a colour the
+  magazine never deals, and that its chains and its Sparks are doing work (`march_rules`;
+  `chained`, `forged`, `lanced`, `menace`) - **Lightfall** (par searched, brim row empty, nothing
   floating, procession carrying all three channels; `motes`, `headroom`, `ways`, `greedy`, and from the
   second chapter `lenses`, `whorls`, `fused`, `kindled`, `aim`, `reach`), and **Budburst** (par searched, the grove **authored
   settled**, every cocoon with a flower beside it, the basket pure colour only; `ways`, `careless`, `nodes`,
   two of which are read **backwards** on that mode — invariant 20k — and from the second chapter `runners`,
-  `changed`, `caught` and `ran`). `fall-vectors.json`,
-  `keeper-vectors.json` and `bud-vectors.json` are the contracts with the shipping C# rules.
+  `changed`, `caught` and `ran`). `fall-vectors.json` and
+  `bud-vectors.json` are the contracts with the shipping C# rules; the prototype modes have no vector
+  file and are pinned **inline** by `ProtoLadderTests` instead, for the reason invariant 29e gives.
 - **Difficulty check:** `python Tools/verify/difficulty.py` — what each glade actually asks of a player,
   counted rather than argued about. Not a gate (5d). It enumerates rotations of a grid of conduits, so it
   reports glades and names other modes as skipped. `dealt` is the one column about the board as the player
   *meets* it rather than about its solution (5g).
+- **Story keys:** rolled into `content.py` and into the Editor's `Validate Content`. A line of dialogue is
+  the one loc key in this game that is *authored* rather than derived from an id (invariant 30d), so
+  `loc.py` cannot see it — both gates resolve every key a chapter actually writes and error on a missing
+  one, which is stricter than the naming convention it replaces.
+- **Kindlewake's art:** `Tools/make_kindle_art.py --check` proves every sprite, cast flipbook
+  and flare is what the tool cuts out of the licensed packs, and `--contact` lays them out to be
+  looked at. It reads the zips directly and **passes when the packs are absent**, so a checkout
+  without them still runs the gate. It is committed with its first drop (owed item 18's lesson,
+  taken before it cost anything).
+- **Kindlewake legibility:** `python Tools/render_kindle.py` draws every shipped hollow at the
+  size a phone draws it, with the real sprites, using `KindleScreen.HostInset` and
+  `KindleView`'s own arithmetic; `--lit` plays a shortest answer first so the strands and the
+  crossings are on the board. **Look at it.** It is the only check that can see a husk that
+  reads as a hole or a crossing hidden under the two strands that made it - both faults it
+  caught in one session, both past a green gate (invariants 35g, 35h).
+- **Kindlewake board sweep:** `python Tools/kindle_sweep.py --template <name> --seeds N` deals
+  colours into a designed hollow and prints par, `ways`, `nodes`, `careless`, `life`, `crossed`,
+  `blended` and `idle` for every deal worth keeping; `--board "row,row,..."` measures one
+  hollow. This is how the ten shipped hollows were chosen (32d).
+- **Emberforge's art:** `Tools/make_ember_art.py --check` proves every sprite, cast flipbook
+  and explosion is what the tool cuts out of the licensed packs, and `--contact` lays them out
+  to be looked at. It reads the zips directly and **passes when the packs are absent**, so a
+  checkout without them still runs the gate. It is committed with its first drop, which
+  `make_quarry_art.py` was not (owed item 18).
+- **Emberforge legibility:** `python Tools/render_ember.py` draws every shipped wall at the size a
+  phone draws it, with the real sprites, using `EmberScreen.HostInset` and `EmberView`'s own
+  arithmetic. **Look at it.** It is the only check that can see a cage that reads as a tiny padlock
+  or an ember too dark to want touching — two faults it caught in one session, both past a green
+  gate (invariant 34e).
+- **Emberforge board sweep:** `python Tools/ember_sweep.py --template <name> --seeds N` deals shards
+  into a designed wall and prints par, `ways`, `nodes`, `careless`, `life`, `chained`, `forged` and
+  `starred` for every deal worth keeping; `--board "row,row,..."` measures one wall. This is how the
+  ten shipped walls were chosen (32d).
+- **Hollowmarch's art:** `Tools/make_march_art.py --check` proves the twelve board sprites — the
+  road, the ground, the rubble, the gate, four pods, the Spark, the cage and the plate — are what
+  the tool would **draw**; they are composed rather than cut, for invariant 32b's reason.
+  <br>**The cast has no such check any more, and that is a loss worth recording rather than
+  hiding.** `make_quarry_art.py` cut the twelve cast flipbooks and five explosions out of the
+  licensed character and explosion packs, and it was never committed — so it went with the Iron
+  Quarry and cannot be recovered. The art it produced is intact and is what Hollowmarch draws
+  (`Assets/Game/Art/March/`, which is now tracked); what is gone is the ability to prove those
+  PNGs are what a tool would cut. Rewriting it is on the owed list, and until then a change to
+  the cast is a change nothing checks.
+  `Tools/make_village_art.py --check` covers the forty village backdrops, which are *composed* out
+  of eight isometric tile packs. Every one passes when the packs are absent, so a checkout without
+  them still runs the gate — and every one has `--contact`, which is the half that matters (see the
+  shop-art note below).
+- **Hollowmarch legibility:** `python Tools/render_march.py` draws every shipped road at the size a
+  phone draws it, with the real sprites, using `MarchScreen.HostInset` and `MarchView`'s own
+  arithmetic. **Look at it.** It is the only check that can see a road that reads as a row of
+  sockets, a magazine hanging off the plate, or a board that is half empty rail — three mistakes it
+  caught in one session, every one of them past a green gate (invariant 33h).
+- **Board sweep:** `python Tools/march_sweep.py --template <name> --seeds N` deals a convoy into a
+  designed road and prints par, `ways`, `careless`, `nodes`, `chained`, `forged`, `lanced` and
+  `menace` for every deal worth keeping; `--board "row,row,..."` measures one board. This is how the
+  three shipped roads were chosen (32d).
 - **Shop art and sound checks:** `Tools/make_shop_art.py --check` and `Tools/make_sfx.py --check` prove the
   shipped pictures and clips are what the tools would cut. **They prove reproducibility and say nothing about
   quality**, and that distinction shipped four broken cards — every check green over a coin sack whose fill
@@ -1349,13 +1807,28 @@ compile. Do not guess — verify offline:
   axis so the halo, its rays and the drop shadow are flat and can neither wall it off nor be admitted. **A
   keyed sparkle is a real closed shape**, so speckle is judged by size against the body and distance against
   its own width — never by a fraction of the tile, which is a different bar for every rung.
+- **Sprite name check:** `Tools/verify/artnames.py` proves every sprite and flipbook a *call site*
+  asks for exists on disk. **It was written the day the gap cost something**: `MarchView.Boom` spelt
+  its own folder out and asked for `Art/March/boom_fire` when the explosions live under
+  `Art/Fx/March/`, so every burst threw an `InvalidKeyException` and drew a **white rectangle** two
+  cells wide over the board (7b). Every other gate was green, because `AddressableAudit`,
+  `Validate Art` and the address probe all prove what is *on disk* is addressed and that what a
+  **mode declares** resolves — none of them proved that a name a call site asks for resolves to
+  anything. **A player found it, which is the most expensive way there is.** It reads literals, so
+  a name must be written rather than built (invariant 6's rule for loc keys, and `sfxnames.py`'s for
+  clips); it follows a thin wrapper whose whole body is an `AssetManifest` lookup, because routing
+  every lookup through one helper is what invariant 7 asks for and would otherwise make the check
+  blind to the file that needed it most; and it takes the *first* argument's literals, which is why
+  every art helper here takes its key first. A name that is genuinely built is **counted out loud**
+  rather than failed — 39 of them, and that number is the honest size of what still goes unchecked.
 - **Sound and music name check:** `Tools/verify/sfxnames.py` proves three lists agree — what the code
   plays, what is on disk, and what `AssetManifest.Sfxs` preloads. A misspelled name was a runtime
   `InvalidKeyException` and a silence that shipped green. It reads **literals only** and scans
   `Presentation` alone. A screen's music `Track` is checked the same way and is the other half of the same
   bug (`ShopScreen` shipped `"hub"`, not a clip, on the one screen that takes money); a `Track` written in
   any shape but a literal or `null` is an **error** rather than skipped. Music is deliberately not
-  preloaded. `Art.S`/`Art.Frames` still have no such gate.
+  preloaded. `Art.S`/`Art.Frames` have one now — `artnames.py` above, which is the same idea for
+  sprites and was owed for months before a white rectangle on a player's phone paid for it.
 - **Word list check:** `Tools/make_name_blocklist.py --check`; the filter itself is
   `npm --prefix firebase/functions test`.
 - **Name fold check:** `Tools/verify/names.py` runs `GroveNames` against the shared vectors **on Unity's
@@ -1382,6 +1855,19 @@ Builds are gated: `ContentBuildGate` fails the build on any content error.
   mobile build with no art and no error explaining it.
 - **`m_BuildAddressablesWithPlayerBuild: 1`** is set explicitly in the project asset, not left to the
   per-machine Editor preference, so CI and teammates build identically.
+- **A probe that writes off a whole class of failure as "expected here" cannot see a real one inside
+  that class — and it will report success.** Hollowmarch's view was built in edit mode on all three
+  boards before it shipped, and the probe counted **94 images with a null sprite**. That was written
+  off, correctly and fatally, as "the asset scope is not loaded in a probe": every art-backed image
+  was blank, the count matched exactly, and the reasoning was sound. Five of those blanks were a real
+  bug — `MarchView.Boom` asking for `Art/March/boom_fire` when the explosions live under
+  `Art/Fx/March/` — and a player met them as five `InvalidKeyException`s a level and a **white
+  rectangle** two cells wide over the board at every burst (7b). A second probe then walked
+  `MarchMode.Art` and reported **29 of 29 addresses resolve**, which was true and answered the wrong
+  question: it checked what the mode *declares*, not what the view *asks for*. **When a probe's
+  environment makes a class of failure invisible, the answer is a check that does not run in that
+  environment** — here `Tools/verify/artnames.py`, which reads the call sites off the source and holds
+  them to disk, and which reproduces this bug the moment it is put back.
 - **A `[Serializable]` class field is never null after `JsonUtility`, so never test one for null.** It
   instantiates the field even when the JSON has no such key, so `dto.hollow != null` is true for every level
   ever parsed — which read all forty shipped glades as hollow and failed the Android build with eighty
@@ -1413,6 +1899,15 @@ Builds are gated: `ContentBuildGate` fails the build on any content error.
   stricter**, since a wash stopping early makes a board harder and par coming out one higher looks exactly
   like a level somebody authored — what cannot look plausible is the best opening tap moving cell and taking
   three fewer flowers, which is why `BudLadderTests` pins that too.
+- **`'' in 'RGB'` is `True` in Python, so an empty cell reads as a bloom.** Every offline mirror in this
+  project tests a cell against a string of letters, and every one of them is a substring test rather than a
+  membership test the moment the cell can be empty. It shipped in `proto.py`: the hole a burst had left read
+  as a bloom, so `Runs` emitted ribbons over empty ground. **Par did not move** on the shipped board — what
+  moved was `ways`, `nodes` and the careless reading, which is the half nobody would have looked at. The C#
+  copy could not have the bug at all (`IsBloom(char)` compares three characters), so the only thing that
+  could see it was the two copies being compared: `ProtoLadderTests`, which holds the shipped boards inline
+  because a vector file needs `JsonUtility` and is therefore skipped by the offline runner. **A mirror is
+  only as good as the fixture that compares it, and a fixture that needs the Editor compares nothing.**
 - **Nothing that decides a cell may be a `float`, because the runtimes disagree about them.** A generator
   capped a walk at `(int)(free / (float)walksLeft * 1.3f)`; thirty free cells across three walks computes
   12.99999952…, which truncates to **13** in single precision and to **12** once promoted to double. Both
@@ -1427,6 +1922,17 @@ Builds are gated: `ContentBuildGate` fails the build on any content error.
   holds each factor as hundredths (`GoldHundredths`) and derives thresholds with `(par * n + 99) / 100`; the
   floats are what an author writes, and nothing that produces a graded number reads them. `CheckStarBands`
   compares the hundredths for the same reason. Survivable only because stars are stored and only promoted.
+- **A flood keyer is the wrong tool for an object whose *edge is a glow*, and it fails by keeping
+  almost nothing.** `make_shop_art.keyed` walks inward from a tile's border and stops at painted
+  outlines, which is exactly right for a bomb with an ink outline and exactly wrong for a crackling
+  energy orb: the flood walks straight through the soft edge and takes all but the fuse. Measured on
+  the same sheet, one bomb kept 852,000 pixels and the orb beside it kept **29,000** — a difference
+  so large it reads as a missing file rather than as a bad cut, which is the only reason it was
+  noticed at all. The repair is a *different question*, not a better threshold: distance from the
+  plate, keeping the halo, because the thing being cut out **is** a glow and a prism with a hard
+  edge is a marble. Both lived in `make_quarry_floor.py`, one line apart, chosen per object;
+  that file went with the Iron Quarry, and the lesson is half of why Hollowmarch's board
+  sprites are *drawn* rather than keyed out of a sheet at all.
 - **A licensed pack's preview sheets carry the vendor's own dummy lettering, and grading it makes it *less*
   obvious rather than more.** One backdrop was cut from a flat panel with two blocks of placeholder text on
   it; reduced to luminance, blurred and graded, the words came through as two dark smudges that read as
@@ -1458,8 +1964,25 @@ Builds are gated: `ContentBuildGate` fails the build on any content error.
   `Object.Destroy`, which is correct in a build and **refused in edit mode** with an error log that NUnit
   fails the case on — declare it with `LogAssert.Expect` rather than teaching shipping code to branch on
   `Application.isPlaying`.
+- **The ads plugin's Editor consent stub sets `Time.timeScale` to nought and leaves it there, and
+  nothing in this project writes `timeScale` at all.** Found driving Nova Raid through the bridge: the
+  swap tweened, then the burst never came, and `Time.time` had advanced four seconds since boot. The
+  Google Mobile Ads stub form ("Welcome to AdSamplerTestApp") pauses the game while it is up, and in the
+  Editor nobody dismisses it. So invariant 30h's diagnosis was this rather than a lesson modal, and the
+  rule it leaves is stricter: **a board coroutine waits in real seconds**, because every tween it waits
+  on runs on the unscaled clock (`Tw.unscaled` is the default) and a scaled wait desynchronises from
+  them the moment anything touches the scale. Set `Time.timeScale = 1f` through `execute_code` before
+  driving a board in the Editor.
 - **Unity only re-resolves packages and reimports on window focus.** If a change seems not to apply, the
   Editor probably has not been clicked.
+- **And `refresh_unity` says `compile_requested: true` without compiling anything**, which is worse than
+  not asking: a probe driven through the bridge then runs the *previous* assembly and reports a fault that
+  was fixed minutes ago, or — far worse — passes a check against code that is no longer there. It cost
+  three rounds of chasing a drag-direction bug that had already been fixed on disk; what settled it was
+  comparing timestamps, `Library/ScriptAssemblies/GlimmerGrove.Presentation.dll` against the `.cs`. The
+  reliable force is `UnityEditor.Compilation.CompilationPipeline.RequestScriptCompilation()` through
+  `execute_code`. **Before believing anything a bridge probe tells you about code you just edited, check
+  the DLL is newer than the file.**
 - **An Editor launched from the Hub gets a minimal `PATH`, and one failed post-processor abandons the
   rest.** Measured on macOS: `/usr/bin:/bin:/usr/sbin:/sbin`. Homebrew on Apple Silicon installs to
   `/opt/homebrew/bin` while EDM4U's iOS resolver searches the process `PATH` plus the *Intel*
@@ -1577,15 +2100,29 @@ live in **Hard-won facts**.
   the grove while online (a three-second sync debounce, then a ten-second publish debounce), or on
   their next launch; the cost grows with decorating, never with playing (19j).
 - **Modes beyond the classic glade** — Lightfall (`f01_lightfall`, `f02_glasswater`, `f03_whorlwater`),
-  Budburst (`b01_thicket`, `b02_tanglewood`) and Groovekeeper (`k01_grovekeeper`).
-  <br>**The Hollow does not ship and never did.** `LevelModes` registers exactly four — `GladeMode`,
-  `FallMode`, `KeeperMode`, `BudMode` — there is no `HollowMode`, and `h01_emberfall` is in neither
-  `manifest.json` nor `chapters/`. What survives is the *level shape* (`HollowDto`, invariants 20c–20e),
-  which is why the rest of this file still talks about hollows: those entries are design rules, not a
-  shipping mode. This was found on 2026-09-02 by deriving the store listing from `manifest.json` instead
-  of from this file — the draft claimed five modes and a hundred levels "across eleven chapters", and the
-  truth is **four modes, ten chapters, one hundred levels**. Read the manifest, never this table, when the
-  number reaches a customer.
+  Budburst (`b01_thicket`, `b02_tanglewood`), **Hollowmarch** (`m01_hollowmarch`, three
+  levels, invariant 33), **Emberforge** (`e01_emberforge`, ten levels, invariant 34) and
+  **Kindlewake** (`k01_kindlewake`, ten levels, invariant 35) — the last of these the classic
+  glade's goal reached by a verb the glade does not have — the
+  first board in this game built on the cascade the whole casual genre runs on, and the first
+  whose allowance is drawn on the board rather than in a corner; and then the first built on the
+  genre's own *verb*, where a match does not clear but fuses into something you spend.
+  **Deep Orbit and Moonwake are retired** (30); so are **Nova Raid and Toppleglen** (31), and
+  **the Iron Quarry** (32). All five sets of ids are spent.
+  **Groovekeeper is retired** (28), and so are four of the five prototypes that took its slot — Nectarrun,
+  Ribbonfall, Seedfling and Warrenwake were withdrawn after play and their mode, chapter, level and lesson
+  ids are all spent (29).
+  <br>**The Hollow does not ship and never did.** `LevelModes` registers exactly six — `GladeMode`,
+  `FallMode`, `BudMode`, `MarchMode`, `EmberMode`, `KindleMode` — there is no `HollowMode`, no `KeeperMode` and no `QuarryMode`, and
+  `h01_emberfall` is in neither. What survives is the *level shape*
+  (`HollowDto`, invariants 20c–20e), which is why the rest of this file still talks about hollows: those
+  entries are design rules, not a shipping mode. This was found on 2026-09-02 by deriving the store
+  listing from `manifest.json` instead of from this file — the draft claimed five modes and a hundred
+  levels "across eleven chapters", and the truth was **four modes, ten chapters, one hundred levels** at
+  the time. It is now **six modes, twelve chapters, one hundred and thirteen levels** — and one of those
+  modes is short: Hollowmarch is three levels built to be played and judged, which is exactly the
+  sort of thing a store listing must not count as a finished game mode. Read the manifest, never
+  this table, when the number reaches a customer.
   <br>Lightfall is the only one to reach a third chapter, and what a second or third costs is
   the shape to copy: one new object (the lens, then the whorl), one lesson id, a few fields on the mode's
   own step type — and **no save schema version, no merge rule, no `progression.json` retune and no server
@@ -1594,6 +2131,14 @@ live in **Hard-won facts**.
   **six** (the runner, then a windmill, a firefly, a puffball and a hive, 20m) before it kept the genre's
   own loop — specials the player forges, and the graft. Lightweave and Ripplewake are retired; `weave` and
   `ripple` are spent mode ids.
+  <br>**Hollowmarch is the tenth mode the prototype level shape has carried**: a grid of letters,
+  a deal, a searched par and a slack, so `ProtoGrid`, `ProtoSearch`, `ProtoRun`, `ProtoVerdict`,
+  `ProtoView` and `ProtoScreen` were all inherited and the mode supplied a board (`MarchBoard`), a
+  look, a validator and a view. It is the first of them to use the block's third field —
+  `ProtoDto.cores`, the **deal**, described since the block was written and never wanted until
+  now. It inherits the **story** band (30d), the **world** of backdrops (30e) and the whole cast
+  and explosion art from the Iron Quarry, which had it from Nova Raid, and adds twelve drawn
+  sprites of its own — none of which reached the save file, the wire or the server.
 - **Privacy/ads plumbing** — Google UMP consent, ATT prompt, `app-ads.txt` (placeholders).
 
 ### Content shipped
@@ -1607,10 +2152,20 @@ live in **Hard-won facts**.
 | `f01_lightfall` | fall | 10 | 2–6 drops | none, then par + 5 (motes) | the cook, then the chain; motes 3 → 30, headroom 4 → 2, `ways` never above 8 |
 | `f02_glasswater` | fall | 10 | 3–6 drops | par + 5 (motes) | the lens, charged and fired; motes 5 → 33, glass 1 → 3 panes, channels asked for 1 → 6 |
 | `f03_whorlwater` | fall | 10 | 2–5 drops | par + 5 (motes) | the whorl: the only place two *motes* are combined. Motes 4 → 26, headroom 4 → 2, whorls 1 → 2, `ways` 1 → 16, greedy beaten on nine of ten |
-| `k01_grovekeeper` | keeper | 10 | 2–8 tiles | none, then par + 5 (tiles) | the inversion, then stone, the heartbed and the prism; beds 2 → 4 |
+| ~~`k01_grovekeeper`~~ | ~~keeper~~ | — | — | — | **retired** (28) — withdrawn as boring; its ids are spent |
+| ~~`t01_toppleglen`~~ | ~~topple~~ | — | — | — | **retired** (31) — withdrawn after play; its ids are spent |
+| ~~`n01_nectarrun`~~ | ~~nectar~~ | — | — | — | **retired** (29) — withdrawn after play; its ids are spent |
+| ~~`r01_ribbonfall`~~ | ~~ribbon~~ | — | — | — | **retired** (29) — withdrawn after play; its ids are spent |
+| ~~`s01_seedfling`~~ | ~~fling~~ | — | — | — | **retired** (29) — withdrawn after play; its ids are spent |
+| ~~`w01_warrenwake`~~ | ~~warren~~ | — | — | — | **retired** (29) — withdrawn after play; its ids are spent |
 | ~~`h01_emberfall`~~ | ~~hollow~~ | — | — | — | **never shipped** — no file, not in the manifest, no `HollowMode` in `LevelModes`. Kept as a row so nobody re-adds it from memory |
 | `b01_thicket` | bud | 10 | 3 taps | none, none, par + 8, then par + 5 | every grove *living* (20l); 5x5 → 8x7, flowers 22 → 49, critters 3 → 12, opening tap 3 waves → 8. The first two rungs cannot be lost (24) |
+| ~~`v01_harvester`~~ | ~~nova~~ | — | — | — | **retired** (31) — withdrawn after play; its ids are spent |
+| ~~`q01_ironquarry`~~ | ~~quarry~~ | — | — | — | **retired** (32) — withdrawn without ever being played; its ids are spent |
+| `m01_hollowmarch` | march | 3 | 4–7 cores | none, then par + 5 (moves) | fire a core into the line, three alike go off and the line slides shut behind them — and if the closure makes three more, that goes too; then the **hauler**, which wears no colour so no run spans one and a blast beside it scraps it; then four colours, a **warden** under plating that only a **Spark** cuts in one shot, and a line ten steps from the gate. `ways` 14 → 48 → 56, `chained` 3 → 4 → 4, `forged` 2 → 3 → 3, `lanced` 1 → 2 → 2, `careless` 4 → 0 → 0, goals 3 → 5 → 8 |
 | `b02_tanglewood` | bud | 10 | 3 taps | par + 5, then + 4, then + 3 (taps) | the bolt, the sun and the graft (20m): five alike forge a bolt where you tapped, eight a sun, and a fired special sets off every special in its reach. 8x7, fifteen then sixteen shut in, tough ones 3 → 8, a bolt dealt on rung one and a sun on rung three; every shortest play on every rung fires a special |
+| `k01_kindlewake` | kindle | 10 | 3–5 strands | none, none, then par + 3 | join two embers of a colour and light burns along the line between them for good; cross two strands on a sleeping critter and it wakes to a colour neither carried. A spent ember leaves a socket that blocks light, so every pair closes lines. 6x6 → 7x7, critters 3 → 5, blends 0 → 3, `ways` 6 → 60, `crs` 0 → 6, `bln` 0 → 3, greed beaten on three of ten. The first two rungs cannot be lost (24) |
+| `e01_emberforge` | ember | 10 | 3–5 moves | none, none, then par + 3 (par + 4 on the last two) | swap two jewels so three alike line up and they **fuse** into an ember; tap it for a cross of light down its row and column, or push two together for a star that takes the diagonals. Nothing refills. Stone, then frost, then the chain, then a pocket, then a warden, then the star. 6x6 → 8x8, goals 1 → 5, `ways` 35 → 6, `chained` 3 → 5, `forged` 3 → 7, `careless` 0 on every rung but the second. The first two rungs cannot be lost (24) |
 
 **No level authors a difficulty number except the first glade in the game, and no chapter authors a clock**
 (invariant 22). Par is derived from the board; both star lines and the losing line are multiples of it —
@@ -1736,7 +2291,8 @@ Free play collects about **593 credits and 6 gems a day**; `Tools/verify/content
   attempt, graded like any other. Content (`hearts.rescueGems` / `hearts.rescueHearts`), and
   `"rescueHearts": 0` withdraws it.
 - **Continue** — **20 gems** for **+15 turns** on a glade, **+6 motes** on a well,
-  **+6 tiles** on a groove or **+4 taps** on a grove, flat and repeatable for as long as the
+  **+4 taps** on a grove or **+4 moves** on a prototype board, flat and
+  repeatable for as long as the
   player can pay (invariant 23). About three days of free gems, or a fifth of the entry rung.
   The grant is *on top of* whatever it took to un-lose the board, and a bought run can only ever
   score one star. Content (`continueRun`), and `"enabled": 0` withdraws it.
@@ -1860,6 +2416,56 @@ changes nothing until that function is redeployed.
     <br>**The one number to watch is how often a whorl is opened early**, which is the mistake the mechanic
     is made of and the only one it can punish. There is deliberately no event for it yet; if the funnel needs
     a denominator, that is the one to add.
+17. **Judge Hollowmarch by playing it, which is what its three levels are for.** Built the way
+    the five prototypes were (invariant 29) — a whole mode with a real par, real star lines, a
+    real fail state and no save-file cost — so it can be taken back out for the price of a chapter
+    body and six files, exactly as Nova Raid, Toppleglen and the Iron Quarry were. Three questions
+    in order. **Does the wedge read?** A core does not land where the finger went: it travels to
+    the run it matches and pushes in beside it, which is why every run of the colour in hand
+    lights up while the finger is down and why the road lights between the launcher and the
+    landing. If a player taps a pod of the wrong colour and expects something, the tip is wrong
+    rather than the rule. **Is the chain something they arrange, or something they watch?** Every
+    rung's shortest answers set off a two-to-four wave chain and forge a Spark, which is a fact
+    about the search and not about a thumb — if chains only ever happen *to* players, the cheap
+    fix is more pairs of the same colour either side of a run, which is a content drop and no
+    store review. **Does the Spark read as a different piece?** It is the only thing that cuts a
+    warden's plating in one shot and the only thing on the board with points on it; if it still
+    reads as a bigger core, the fix is more boards where a warden stands behind a run worth five,
+    not a longer tip.
+    <br>Nothing about these boards was watched on a device before this was written: every offline
+    gate is green, the Editor's `Validate Content` and `Validate Art` are green, the whole suite
+    passes, and every board has been rendered and looked at. There is deliberately no analytics
+    event yet; the first worth adding is how often a run ends with the line jammed at the gate
+    rather than merely out of cores, because those are two different failures and only one of them
+    is about the puzzle.
+19. **Judge Kindlewake by playing it, and read one number first.** Ten levels built the way
+    every mode since the five prototypes has been (invariant 29), so it can be taken back out for
+    the price of a chapter body and six files. Three questions in order.
+    <br>**Does the pairing read?** A strand is drawn between two embers of the *same* colour on a
+    clear row or column, so holding one lights every partner it can reach and the line to each.
+    If players tap a critter expecting something, the refusal sentence is wrong rather than the
+    rule.
+    <br>**Do they work out that light stays?** A blend critter can only be woken by two strands
+    crossing on its own square, which means drawing one, leaving it, and coming back to it later.
+    A player who reads a strand as a one-shot has not met the mode. Rungs 3 and 5 are built so
+    that the order of two strands decides the board.
+    <br>**And the number: does asking *which pair* carry a chapter without punishing greed?** Seven
+    of the ten can be cleared by always taking the pair that helps most - which is a warning, and
+    on this mode it is the warning that matters, because it is what Lightweave was withdrawn for.
+    Before the socket rule it was ten of ten (35d). If it plays as arithmetic, the cheap fix is
+    fewer embers rather than more critters: contention is what makes the pairing a decision, and
+    it is a content drop and no store review. There is deliberately no analytics event yet; the
+    first worth adding is how often a run ends `Stuck` (no pair left that helps) rather than out
+    of moves, because those are two different failures and only one of them is about the puzzle.
+    <br>Nothing about these boards was watched on a device before this was written: every offline
+    gate is green, the Editor's `Validate Content` and `Validate Art` are green, the whole suite
+    passes, the view builds over all ten hollows in the Editor, and every board has been rendered
+    and looked at.
+18. **Rewrite the cast art tool.** `make_quarry_art.py` cut the twelve cast flipbooks and five
+    explosions out of the licensed packs and was never committed, so it went with the Iron Quarry.
+    The art is intact and tracked; what is gone is the proof that it is what a tool would cut, so a
+    change to the cast is currently a change nothing checks. Cheap to rebuild and worth doing
+    before the cast is touched again.
 16. **Measure the continue.** 20 gems for +15 turns was reasoned about, never played against, and it is the
     second number after the move budget most likely to be wrong: too dear and a defeat is a dead end, too
     cheap and the fail state stops meaning anything. `continue_offered` / `continue_bought` are the funnel,

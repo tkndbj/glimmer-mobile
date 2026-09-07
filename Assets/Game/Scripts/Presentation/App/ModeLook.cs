@@ -57,8 +57,10 @@ namespace GlimmerGrove
         {
             new GladeLook(),
             new FallLook(),
-            new KeeperLook(),
             new BudLook(),
+            new MarchLook(),
+            new EmberLook(),
+            new KindleLook(),
         };
 
         public static IReadOnlyList<ModeLook> All => _all;
@@ -103,18 +105,6 @@ namespace GlimmerGrove
         // perch is left to read as the thing it is.
     }
 
-    sealed class KeeperLook : ModeLook
-    {
-        public override GameMode Mode => GameMode.Keeper;
-        public override Type Screen => typeof(KeeperScreen);
-
-        /// <summary>Cut timber, for the mode about laying things out.</summary>
-        public override string Perch => "rock_wood";
-
-        public override Color Accent => Pal.Mint;
-        public override Color Wash => new Color(.84f, 1f, .88f, 1f);
-    }
-
     /// <summary>
     /// Budburst. Gold, because the whole mode is light spreading — a chain is a wave of it
     /// crossing the thicket, and the one colour on this board that is not a bud is the flash
@@ -128,5 +118,70 @@ namespace GlimmerGrove
         public override string Perch => "rock_chip";
         public override Color Accent => Pal.Gold;
         public override Color Wash => new Color(1f, .96f, .80f, 1f);
+    }
+
+    /// <summary>
+    /// Hollowmarch. The one mode set in a raided village rather than the grove, so it takes the
+    /// perch that glows rather than sits in something — a lit stone, which reads as a beacon in
+    /// a strip of nodes and is the only tile in the set that does not look like ground.
+    ///
+    /// <para>
+    /// Ember, because the mode <em>is</em> the chain: a cold road walking through a dark village
+    /// with a line of hot things on it, and the whole payoff is those hot things going off one
+    /// after another. The map picks the heat up on the trail and the switcher row, which is the
+    /// one place a mode is allowed to say what it feels like before it is opened.
+    /// </para>
+    /// </summary>
+    sealed class MarchLook : ModeLook
+    {
+        public override GameMode Mode => GameMode.March;
+        public override Type Screen => typeof(MarchScreen);
+        public override string Perch => "rock_lumen";
+        public override Color Accent => Pal.Ember;
+        public override Color Wash => new Color(1f, .93f, .86f, 1f);
+    }
+
+    /// <summary>
+    /// Emberforge. A tall standing stone, which is the one tile in the set that reads as a
+    /// chimney rather than as ground - and this mode is played inside the raiders' smelter, so
+    /// what the strip of nodes should look like from across the map is a row of stacks.
+    ///
+    /// <para>
+    /// Foxglove, and it is the only cold-bright accent among five modes. Four of them are warm
+    /// already (gold, ember, gold, ember), so a fifth warm one would be a difference only some
+    /// people can see - which is exactly what the perch rule exists to avoid relying on. The
+    /// board itself is furnace-lit; the map is where the mode says what it feels like before it
+    /// is opened, and what this one feels like is the cold jewel light coming out of a hot room.
+    /// </para>
+    /// </summary>
+    sealed class EmberLook : ModeLook
+    {
+        public override GameMode Mode => GameMode.Ember;
+        public override Type Screen => typeof(EmberScreen);
+        public override string Perch => "rock_tall";
+        public override Color Accent => Pal.Foxglove;
+        public override Color Wash => new Color(.94f, .92f, 1f, 1f);
+    }
+
+    /// <summary>
+    /// Kindlewake. The wooded stone, which is the one tile in the set with growth standing on
+    /// it - and this mode is played in a hollow under the trees with the light gone out of it,
+    /// so what a strip of these should read as from across the map is a stand of woodland.
+    ///
+    /// <para>
+    /// Verdant, and it is the second cold accent among six modes. The board itself is almost
+    /// unlit, so the map is where this one says what it feels like before it is opened, and what
+    /// it feels like is the green just before dawn. It shares a perch silhouette with no other
+    /// mode, which is the rule that matters: a tint alone is a difference only some people can
+    /// see (invariant 7c).
+    /// </para>
+    /// </summary>
+    sealed class KindleLook : ModeLook
+    {
+        public override GameMode Mode => GameMode.Kindle;
+        public override Type Screen => typeof(KindleScreen);
+        public override string Perch => "rock_wood";
+        public override Color Accent => Pal.Verdant;
+        public override Color Wash => new Color(.90f, 1f, .94f, 1f);
     }
 }

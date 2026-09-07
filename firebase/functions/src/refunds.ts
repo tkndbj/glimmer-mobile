@@ -48,6 +48,7 @@ export interface RevocableReceipt {
   uid?: string;
   productId?: string;
   capacity?: number;
+  eventPassId?: string;
   granted?: Record<string, number>;
 }
 
@@ -119,9 +120,9 @@ export function revocationUpdate(
 export async function revokeReceipt(
   store: string,
   transactionId: string,
-  reason: string
+  reason: string,
+  db: FirebaseFirestore.Firestore = getFirestore()
 ): Promise<boolean> {
-  const db = getFirestore();
   const receiptRef = db.doc(PATHS.receipt(store, transactionId));
 
   return db.runTransaction(async (transaction) => {
@@ -139,6 +140,11 @@ export async function revokeReceipt(
     const walletRef = db.doc(PATHS.wallet(receipt.uid));
     const walletSnapshot = await transaction.get(walletRef);
 
+    const passRef = receipt.eventPassId ? db.doc(PATHS.eventPass(receipt.uid, receipt.eventPassId)) : null;
+    const passSnapshot = passRef ? await transaction.get(passRef) : null;
+    const pass = passSnapshot?.data();
+    const revokePass = !!passRef && pass?.receiptPath === receiptRef.path;
+
     // No wallet means nothing was ever granted into one. Stamp the receipt anyway so a
     // repeated notification stops asking.
     if (walletSnapshot.exists) {
@@ -151,10 +157,21 @@ export async function revokeReceipt(
         (id) => FieldValue.arrayUnion(id)
       );
 
+      if (revokePass) {
+        // Revoke exactly the rewards paid under this entitlement, once. The claim floor stays.
+        const held = walletSnapshot.data() as RevocableWallet;
+        for (const currency of CURRENCIES) {
+          const amount = Math.max(0, Math.floor(pass?.[currency === "credits" ? "paidCredits" : "paidGems"] ?? 0));
+          if (amount > 0) update[`${currency}.granted`] = Math.max(0, (held[currency]?.granted ?? 0) - amount);
+        }
+      }
       update.updatedAt = FieldValue.serverTimestamp();
       transaction.update(walletRef, update);
     }
 
+    if (revokePass && passRef) transaction.set(passRef, {
+      owned: false, paidCredits: 0, paidGems: 0, updatedAt: FieldValue.serverTimestamp(),
+    }, { merge: true });
     transaction.update(receiptRef, {
       revokedAt: FieldValue.serverTimestamp(),
       revokedReason: reason,

@@ -1,0 +1,88 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: bbb281ee3bf0b054c82ac2347e9e782c, type: 3}
+  m_Name: Glimmer Chapter m01_hollowmarch
+  m_EditorClassIdentifier: Unity.Addressables.Editor::UnityEditor.AddressableAssets.Settings.AddressableAssetGroup
+  m_GroupName: Glimmer Chapter m01_hollowmarch
+  m_GUID: 2775cd0400bee5e479c7732bf5e03f7b
+  m_SerializeEntries:
+  - m_GUID: 0bcaec291499b9745abfc3711fd2a5ca
+    m_Address: Art/March/ground
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 279da954a1412f44a97c8925ba46de40
+    m_Address: Art/March/cage
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 2a9a4d4af3461dc4fae78b9d68fddd42
+    m_Address: Art/March/road
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 90b1f534b4a9c2448a8a5e80ceba9d1d
+    m_Address: Art/March/portal
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: a62f36810f60bc44ab181f13ca8db99e
+    m_Address: Art/March/pod_y
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: c68711be957472d4c8052d9c534f47d4
+    m_Address: Art/March/pod_g
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: cc71aec75bebf65478e57f22d1f2981d
+    m_Address: Art/March/pod_r
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: d9cb63aa31f1bcc448532d00325c49cb
+    m_Address: Art/March/road_lit
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: db8c8b06d7ab64a4ea1c24f450a0dc11
+    m_Address: Art/March/plate
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: e55004f0f2836f7448d3c776084f311e
+    m_Address: Art/March/pod_b
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: f85abac24b50fb24b9007458b81307c2
+    m_Address: Art/March/rubble
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: faacede57f67ff846be2dd167e8affb3
+    m_Address: Art/March/pod_spark
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  m_ReadOnly: 0
+  m_Settings: {fileID: 11400000, guid: 6c4c5f6eb57af6542b195d29840b42f2, type: 2}
+  m_SchemaSet:
+    m_Schemas:
+    - {fileID: 11400000, guid: 3bbce752f20cdd747bd596ea9741a573, type: 2}
+    - {fileID: 11400000, guid: f5dd3eea09e6a4f478583c4093608487, type: 2}
+    m_SchemaDisplayOrder:
+    - Glimmer Chapter m01_hollowmarch_BundledAssetGroupSchema
+    - Glimmer Chapter m01_hollowmarch_ContentUpdateGroupSchema
+  m_IncludeInBuild: 1
+  m_IncludeInBuildMigrated: 1

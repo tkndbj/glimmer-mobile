@@ -257,7 +257,7 @@ namespace GlimmerGrove
         /// <para>
         /// The row spans <c>ReadoutsY ± RowHeight / 2</c>, so 214 to 334 down from the safe
         /// area's top edge: it starts just under the header bar and its foot stays above the
-        /// 350 every mode's board host begins at (<c>FallScreen</c>, <c>KeeperScreen</c>,
+        /// 350 every mode's board host begins at (<c>FallScreen</c>, <c>ProtoScreen</c>,
         /// <c>BudBand.LegendTop</c>). The two offsets are the only place a value and its
         /// caption are placed, read by both <see cref="Slot"/> and <see cref="Lay"/>, because
         /// the same two numbers written twice is how a row comes to be built at one height and

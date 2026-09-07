@@ -1,0 +1,884 @@
+{
+ "schemaVersion": 2,
+ "id": "e01_emberforge",
+ "accent": "#B478FF",
+ "slate": "#160E1E",
+ "backdrop": "village_00",
+ "mapStrips": [
+  "map1_strip0",
+  "map1_strip1",
+  "map1_strip2",
+  "map1_strip3",
+  "map1_strip4",
+  "map1_strip5"
+ ],
+ "levels": [
+  {
+   "id": "e01_firstember",
+   "mapX": 0.7,
+   "mapY": 0.055,
+   "budgetFactor": -1.0,
+   "backdrop": "village_00",
+   "ember": {
+    "width": 6,
+    "height": 6,
+    "rows": [
+     "yrggyy",
+     "ggygyr",
+     "rr#r#y",
+     "ggCybb",
+     "brggbg",
+     "ybbgyy"
+    ]
+   },
+   "story": {
+    "beats": [
+     {
+      "cue": "intro",
+      "lines": [
+       {
+        "who": "collector",
+        "key": "story.e01_firstember.intro1"
+       },
+       {
+        "who": "bolt",
+        "key": "story.e01_firstember.intro2"
+       },
+       {
+        "who": "bolt",
+        "key": "story.e01_firstember.intro3"
+       }
+      ]
+     },
+     {
+      "cue": "forged",
+      "lines": [
+       {
+        "who": "bolt",
+        "key": "story.e01_firstember.forged"
+       }
+      ]
+     },
+     {
+      "cue": "freed",
+      "lines": [
+       {
+        "who": "mon1",
+        "key": "story.e01_firstember.freed"
+       }
+      ]
+     },
+     {
+      "cue": "won",
+      "lines": [
+       {
+        "who": "bolt",
+        "key": "story.e01_firstember.won"
+       }
+      ]
+     },
+     {
+      "cue": "lost",
+      "lines": [
+       {
+        "who": "collector",
+        "key": "story.e01_firstember.lost"
+       }
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "id": "e01_twinlocks",
+   "mapX": 0.28,
+   "mapY": 0.14,
+   "budgetFactor": -1.0,
+   "backdrop": "village_01",
+   "ember": {
+    "width": 6,
+    "height": 6,
+    "rows": [
+     "gbygyg",
+     "rCbybg",
+     "gr#y#y",
+     "ryygbb",
+     "ggyrCg",
+     "byggbg"
+    ]
+   },
+   "story": {
+    "beats": [
+     {
+      "cue": "intro",
+      "lines": [
+       {
+        "who": "bolt",
+        "key": "story.e01_twinlocks.intro1"
+       },
+       {
+        "who": "collector",
+        "key": "story.e01_twinlocks.intro2"
+       }
+      ]
+     },
+     {
+      "cue": "forged",
+      "lines": [
+       {
+        "who": "bolt",
+        "key": "story.e01_twinlocks.forged"
+       }
+      ]
+     },
+     {
+      "cue": "freed",
+      "lines": [
+       {
+        "who": "mon2",
+        "key": "story.e01_twinlocks.freed"
+       }
+      ]
+     },
+     {
+      "cue": "won",
+      "lines": [
+       {
+        "who": "bolt",
+        "key": "story.e01_twinlocks.won"
+       }
+      ]
+     },
+     {
+      "cue": "lost",
+      "lines": [
+       {
+        "who": "collector",
+        "key": "story.e01_twinlocks.lost"
+       }
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "id": "e01_ironribs",
+   "mapX": 0.74,
+   "mapY": 0.225,
+   "backdrop": "village_02",
+   "ember": {
+    "width": 7,
+    "height": 7,
+    "rows": [
+     "byrrbrg",
+     "bg#r#yg",
+     "gCybbry",
+     "gy#b#yg",
+     "bryrbCr",
+     "yg#y#bb",
+     "ygyygby"
+    ],
+    "spare": 3
+   },
+   "story": {
+    "beats": [
+     {
+      "cue": "intro",
+      "lines": [
+       {
+        "who": "bolt",
+        "key": "story.e01_ironribs.intro1"
+       },
+       {
+        "who": "bolt",
+        "key": "story.e01_ironribs.intro2"
+       }
+      ]
+     },
+     {
+      "cue": "fired",
+      "lines": [
+       {
+        "who": "bolt",
+        "key": "story.e01_ironribs.fired"
+       }
+      ]
+     },
+     {
+      "cue": "freed",
+      "lines": [
+       {
+        "who": "mon3",
+        "key": "story.e01_ironribs.freed"
+       }
+      ]
+     },
+     {
+      "cue": "tight",
+      "lines": [
+       {
+        "who": "bolt",
+        "key": "story.e01_ironribs.tight"
+       }
+      ]
+     },
+     {
+      "cue": "won",
+      "lines": [
+       {
+        "who": "bolt",
+        "key": "story.e01_ironribs.won"
+       }
+      ]
+     },
+     {
+      "cue": "lost",
+      "lines": [
+       {
+        "who": "collector",
+        "key": "story.e01_ironribs.lost"
+       }
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "id": "e01_frostvein",
+   "mapX": 0.3,
+   "mapY": 0.31,
+   "backdrop": "village_03",
+   "ember": {
+    "width": 7,
+    "height": 7,
+    "rows": [
+     "ybybryy",
+     "yrg*gyy",
+     "rCr*rCg",
+     "ggr*bbr",
+     "rg#r#gb",
+     "grgrbgg",
+     "ggrggby"
+    ],
+    "spare": 3
+   },
+   "story": {
+    "beats": [
+     {
+      "cue": "intro",
+      "lines": [
+       {
+        "who": "collector",
+        "key": "story.e01_frostvein.intro1"
+       },
+       {
+        "who": "bolt",
+        "key": "story.e01_frostvein.intro2"
+       }
+      ]
+     },
+     {
+      "cue": "fired",
+      "lines": [
+       {
+        "who": "bolt",
+        "key": "story.e01_frostvein.fired"
+       }
+      ]
+     },
+     {
+      "cue": "freed",
+      "lines": [
+       {
+        "who": "mon1",
+        "key": "story.e01_frostvein.freed"
+       }
+      ]
+     },
+     {
+      "cue": "tight",
+      "lines": [
+       {
+        "who": "bolt",
+        "key": "story.e01_frostvein.tight"
+       }
+      ]
+     },
+     {
+      "cue": "won",
+      "lines": [
+       {
+        "who": "mon1",
+        "key": "story.e01_frostvein.won"
+       }
+      ]
+     },
+     {
+      "cue": "lost",
+      "lines": [
+       {
+        "who": "collector",
+        "key": "story.e01_frostvein.lost"
+       }
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "id": "e01_chainfire",
+   "mapX": 0.72,
+   "mapY": 0.395,
+   "backdrop": "village_04",
+   "ember": {
+    "width": 7,
+    "height": 7,
+    "rows": [
+     "bygrrgy",
+     "bCbgbCg",
+     "gbr#rry",
+     "gg#b#gg",
+     "bgygbbg",
+     "byggbCy",
+     "rrbbygb"
+    ],
+    "spare": 3
+   },
+   "story": {
+    "beats": [
+     {
+      "cue": "intro",
+      "lines": [
+       {
+        "who": "bolt",
+        "key": "story.e01_chainfire.intro1"
+       },
+       {
+        "who": "bolt",
+        "key": "story.e01_chainfire.intro2"
+       }
+      ]
+     },
+     {
+      "cue": "fired",
+      "lines": [
+       {
+        "who": "bolt",
+        "key": "story.e01_chainfire.fired1"
+       }
+      ]
+     },
+     {
+      "cue": "fired",
+      "lines": [
+       {
+        "who": "collector",
+        "key": "story.e01_chainfire.fired2"
+       }
+      ]
+     },
+     {
+      "cue": "freed",
+      "lines": [
+       {
+        "who": "mon2",
+        "key": "story.e01_chainfire.freed"
+       }
+      ]
+     },
+     {
+      "cue": "tight",
+      "lines": [
+       {
+        "who": "bolt",
+        "key": "story.e01_chainfire.tight"
+       }
+      ]
+     },
+     {
+      "cue": "won",
+      "lines": [
+       {
+        "who": "bolt",
+        "key": "story.e01_chainfire.won"
+       }
+      ]
+     },
+     {
+      "cue": "lost",
+      "lines": [
+       {
+        "who": "collector",
+        "key": "story.e01_chainfire.lost"
+       }
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "id": "e01_deepcell",
+   "mapX": 0.26,
+   "mapY": 0.48,
+   "backdrop": "village_05",
+   "ember": {
+    "width": 8,
+    "height": 7,
+    "rows": [
+     "bygrrgyb",
+     "b#gbgg#b",
+     "r#CrrC#r",
+     "g#gbgg#b",
+     "gygbbgby",
+     "bg#gy#br",
+     "rbygbgyb"
+    ],
+    "spare": 3
+   },
+   "story": {
+    "beats": [
+     {
+      "cue": "intro",
+      "lines": [
+       {
+        "who": "bolt",
+        "key": "story.e01_deepcell.intro1"
+       },
+       {
+        "who": "mon3",
+        "key": "story.e01_deepcell.intro2"
+       }
+      ]
+     },
+     {
+      "cue": "freed",
+      "lines": [
+       {
+        "who": "mon3",
+        "key": "story.e01_deepcell.freed"
+       }
+      ]
+     },
+     {
+      "cue": "fired",
+      "lines": [
+       {
+        "who": "bolt",
+        "key": "story.e01_deepcell.fired"
+       }
+      ]
+     },
+     {
+      "cue": "tight",
+      "lines": [
+       {
+        "who": "bolt",
+        "key": "story.e01_deepcell.tight"
+       }
+      ]
+     },
+     {
+      "cue": "won",
+      "lines": [
+       {
+        "who": "mon3",
+        "key": "story.e01_deepcell.won"
+       }
+      ]
+     },
+     {
+      "cue": "lost",
+      "lines": [
+       {
+        "who": "collector",
+        "key": "story.e01_deepcell.lost"
+       }
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "id": "e01_ironward",
+   "mapX": 0.7,
+   "mapY": 0.56,
+   "backdrop": "village_06",
+   "ember": {
+    "width": 8,
+    "height": 7,
+    "rows": [
+     "bbgrbggy",
+     "ryCgbCyy",
+     "rrbgyryb",
+     "brbWggby",
+     "bgyybbyg",
+     "yr#gb#yg",
+     "yggygrbb"
+    ],
+    "spare": 3
+   },
+   "story": {
+    "beats": [
+     {
+      "cue": "intro",
+      "lines": [
+       {
+        "who": "collector",
+        "key": "story.e01_ironward.intro1"
+       },
+       {
+        "who": "bolt",
+        "key": "story.e01_ironward.intro2"
+       },
+       {
+        "who": "bolt",
+        "key": "story.e01_ironward.intro3"
+       }
+      ]
+     },
+     {
+      "cue": "kill",
+      "lines": [
+       {
+        "who": "bolt",
+        "key": "story.e01_ironward.kill"
+       }
+      ]
+     },
+     {
+      "cue": "freed",
+      "lines": [
+       {
+        "who": "mon1",
+        "key": "story.e01_ironward.freed"
+       }
+      ]
+     },
+     {
+      "cue": "fired",
+      "lines": [
+       {
+        "who": "bolt",
+        "key": "story.e01_ironward.fired"
+       }
+      ]
+     },
+     {
+      "cue": "tight",
+      "lines": [
+       {
+        "who": "bolt",
+        "key": "story.e01_ironward.tight"
+       }
+      ]
+     },
+     {
+      "cue": "won",
+      "lines": [
+       {
+        "who": "bolt",
+        "key": "story.e01_ironward.won"
+       }
+      ]
+     },
+     {
+      "cue": "lost",
+      "lines": [
+       {
+        "who": "collector",
+        "key": "story.e01_ironward.lost"
+       }
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "id": "e01_twinstars",
+   "mapX": 0.32,
+   "mapY": 0.645,
+   "backdrop": "village_07",
+   "ember": {
+    "width": 8,
+    "height": 7,
+    "rows": [
+     "bygrrgyb",
+     "bCgbggCb",
+     "rrb##rgg",
+     "bggbgygb",
+     "b#gbygrg",
+     "ybrrbCyg",
+     "bgybgbgy"
+    ],
+    "spare": 3
+   },
+   "story": {
+    "beats": [
+     {
+      "cue": "intro",
+      "lines": [
+       {
+        "who": "bolt",
+        "key": "story.e01_twinstars.intro1"
+       },
+       {
+        "who": "bolt",
+        "key": "story.e01_twinstars.intro2"
+       }
+      ]
+     },
+     {
+      "cue": "fired",
+      "lines": [
+       {
+        "who": "bolt",
+        "key": "story.e01_twinstars.fired"
+       }
+      ]
+     },
+     {
+      "cue": "freed",
+      "lines": [
+       {
+        "who": "mon2",
+        "key": "story.e01_twinstars.freed"
+       }
+      ]
+     },
+     {
+      "cue": "tight",
+      "lines": [
+       {
+        "who": "bolt",
+        "key": "story.e01_twinstars.tight"
+       }
+      ]
+     },
+     {
+      "cue": "won",
+      "lines": [
+       {
+        "who": "bolt",
+        "key": "story.e01_twinstars.won"
+       }
+      ]
+     },
+     {
+      "cue": "lost",
+      "lines": [
+       {
+        "who": "collector",
+        "key": "story.e01_twinstars.lost"
+       }
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "id": "e01_slaghold",
+   "mapX": 0.74,
+   "mapY": 0.73,
+   "backdrop": "village_08",
+   "ember": {
+    "width": 8,
+    "height": 8,
+    "rows": [
+     "gybbybyb",
+     "r#ryr#yy",
+     "bbCbryCg",
+     "gbr*bgrr",
+     "rg#br#gr",
+     "bCybWgyg",
+     "rbygyryg",
+     "rybgbyrb"
+    ],
+    "spare": 4
+   },
+   "story": {
+    "beats": [
+     {
+      "cue": "intro",
+      "lines": [
+       {
+        "who": "collector",
+        "key": "story.e01_slaghold.intro1"
+       },
+       {
+        "who": "bolt",
+        "key": "story.e01_slaghold.intro2"
+       }
+      ]
+     },
+     {
+      "cue": "kill",
+      "lines": [
+       {
+        "who": "bolt",
+        "key": "story.e01_slaghold.kill"
+       }
+      ]
+     },
+     {
+      "cue": "freed",
+      "lines": [
+       {
+        "who": "mon3",
+        "key": "story.e01_slaghold.freed"
+       }
+      ]
+     },
+     {
+      "cue": "fired",
+      "lines": [
+       {
+        "who": "bolt",
+        "key": "story.e01_slaghold.fired"
+       }
+      ]
+     },
+     {
+      "cue": "tight",
+      "lines": [
+       {
+        "who": "collector",
+        "key": "story.e01_slaghold.tight"
+       }
+      ]
+     },
+     {
+      "cue": "won",
+      "lines": [
+       {
+        "who": "bolt",
+        "key": "story.e01_slaghold.won"
+       }
+      ]
+     },
+     {
+      "cue": "lost",
+      "lines": [
+       {
+        "who": "collector",
+        "key": "story.e01_slaghold.lost"
+       }
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "id": "e01_emberheart",
+   "mapX": 0.28,
+   "mapY": 0.815,
+   "backdrop": "village_09",
+   "ember": {
+    "width": 8,
+    "height": 8,
+    "rows": [
+     "rybgyggy",
+     "y#Cyry#g",
+     "ggyr*rby",
+     "bgCgyCby",
+     "ybg##bgb",
+     "yWygrCyr",
+     "grgbybyb",
+     "bbrygrry"
+    ],
+    "spare": 4
+   },
+   "story": {
+    "beats": [
+     {
+      "cue": "intro",
+      "lines": [
+       {
+        "who": "collector",
+        "key": "story.e01_emberheart.intro1"
+       },
+       {
+        "who": "bolt",
+        "key": "story.e01_emberheart.intro2"
+       },
+       {
+        "who": "collector",
+        "key": "story.e01_emberheart.intro3"
+       }
+      ]
+     },
+     {
+      "cue": "kill",
+      "lines": [
+       {
+        "who": "bolt",
+        "key": "story.e01_emberheart.kill"
+       }
+      ]
+     },
+     {
+      "cue": "fired",
+      "lines": [
+       {
+        "who": "bolt",
+        "key": "story.e01_emberheart.fired"
+       }
+      ]
+     },
+     {
+      "cue": "freed",
+      "lines": [
+       {
+        "who": "mon1",
+        "key": "story.e01_emberheart.freed1"
+       }
+      ]
+     },
+     {
+      "cue": "freed",
+      "lines": [
+       {
+        "who": "mon2",
+        "key": "story.e01_emberheart.freed2"
+       }
+      ]
+     },
+     {
+      "cue": "tight",
+      "lines": [
+       {
+        "who": "collector",
+        "key": "story.e01_emberheart.tight"
+       }
+      ]
+     },
+     {
+      "cue": "won",
+      "lines": [
+       {
+        "who": "bolt",
+        "key": "story.e01_emberheart.won1"
+       },
+       {
+        "who": "collector",
+        "key": "story.e01_emberheart.won2"
+       },
+       {
+        "who": "mon3",
+        "key": "story.e01_emberheart.won3"
+       }
+      ]
+     },
+     {
+      "cue": "lost",
+      "lines": [
+       {
+        "who": "collector",
+        "key": "story.e01_emberheart.lost"
+       }
+      ]
+     }
+    ]
+   }
+  }
+ ]
+}

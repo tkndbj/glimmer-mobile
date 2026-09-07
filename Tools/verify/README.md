@@ -11,6 +11,7 @@ python Tools/verify/loc.py                # every key-shaped literal resolves
 python Tools/verify/names.py              # the keeper-name fold, on Unity's own Mono
 python Tools/verify/difficulty.py         # what each glade actually asks of a player
 python Tools/verify/sfxnames.py           # every sound the code plays exists, and vice versa
+python Tools/verify/artnames.py           # every sprite the code asks for exists
 ```
 
 `names.py` is the one that runs the shipped code on **Unity's Mono** as well as on the
@@ -29,6 +30,13 @@ each pinned against its shipping C# copy by a vector file (`fall-vectors.json`,
 `keeper-vectors.json`, `bud-vectors.json`) that the Editor suite runs through the other
 side. Every vector case carries a **play** as well as a par, because two copies can agree
 about what a board costs and still disagree about what happened on the way.
+
+`artnames.py` closes the same gap for sprites, and it was written the day it cost
+something: `MarchView.Boom` asked for `Art/March/boom_fire` when the explosions live
+under `Art/Fx/March/`, so every burst threw and drew a **white rectangle** two cells
+wide over the board. Every other gate was green - they prove what is *on disk* is
+addressed and that what a *mode declares* resolves, and none of them proved that a
+name a **call site** asks for resolves to anything. A player found it.
 
 `sfxnames.py` closes for audio the gap the loc gate has always covered for strings: it
 proves what the code plays, what is on disk and what `AssetManifest.Sfxs` preloads all

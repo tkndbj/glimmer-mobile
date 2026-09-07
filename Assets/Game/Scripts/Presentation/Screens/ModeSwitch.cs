@@ -83,6 +83,15 @@ namespace GlimmerGrove
         const float RowW = 500f, RowH = 124f, RowGap = 12f;
 
         /// <summary>
+        /// The shortest a row may be squeezed to, and how much air is kept under the list.
+        ///
+        /// Below <see cref="MinRowH"/> the two lines of a row - the mode's name and its one-line
+        /// tagline - stop being two lines and start being a smudge, so this is the number that
+        /// says the control needs rethinking rather than shrinking again.
+        /// </summary>
+        const float MinRowH = 96f, ListFoot = 120f;
+
+        /// <summary>
         /// A row's width inside the plate, and how much of it the text may use — a margin either
         /// side, so a long translation stops short of the rim rather than on it.
         ///
@@ -229,11 +238,28 @@ namespace GlimmerGrove
 
             var modes = index.Modes;
             int rows = modes.Count + (Bench ? 1 : 0);
-            float height = rows * RowH + (rows - 1) * RowGap;
+
+            // How tall a row may be, given how many there are.
+            //
+            // **A fixed row height stopped being safe at eight modes.** The list hangs from under
+            // the header and grows downwards, so its height is a count times a constant - which is
+            // fine at three or four and runs off the bottom of a short phone at eight. It is
+            // squeezed rather than scrolled deliberately: a two-line row still reads at 96 units,
+            // and a scrolling list of *ways to play* is a list that hides one of them behind a
+            // gesture nobody would think to make. The floor is what says how many modes this
+            // control can honestly carry before it needs rethinking, and `ModeSwitchTests` is
+            // what fails when it is passed.
+            float top = pillY - PillH * .5f - MenuGap;
+            float room = Mathf.Max(0f, veil.rect.height + top - ListFoot);
+            float rowH = rows > 1
+                ? Mathf.Clamp((room - (rows - 1) * RowGap) / rows, MinRowH, RowH)
+                : RowH;
+
+            float height = rows * rowH + (rows - 1) * RowGap;
 
             // Hung from the same top edge the pill is, so the two cannot drift: the plaque, the
             // pill and the list are one stack measured downwards from the header.
-            float listY = pillY - PillH * .5f - MenuGap - height * .5f;
+            float listY = top - height * .5f;
 
             var list = UIKit.Box("Modes", veil, new Vector2(RowW, height), new Vector2(.5f, 1f),
                                  new Vector2(0f, listY));
@@ -279,9 +305,9 @@ namespace GlimmerGrove
 
                 // Top-down, so the entry nearest the pill is the first one in the list and the
                 // order reads the way the list opens.
-                float rowY = height * .5f - RowH * .5f - i * (RowH + RowGap);
+                float rowY = height * .5f - rowH * .5f - i * (rowH + RowGap);
                 Row(list, "Mode_" + mode.Value, Loc.Get(mode.NameKey), Loc.Get(mode.TaglineKey),
-                    ModeLooks.Of(mode).Accent, mode == current, rowY,
+                    ModeLooks.Of(mode).Accent, mode == current, rowY, rowH,
                     () => { Close(); choose?.Invoke(mode); });
             }
 
@@ -292,8 +318,8 @@ namespace GlimmerGrove
             // here is ever seen by a player, and a key would be a string the translators are
             // asked to carry for ever.
             {
-                float rowY = height * .5f - RowH * .5f - modes.Count * (RowH + RowGap);
-                Row(list, "Mode_demo", "DEMO", "vfx bench", Pal.Bloom, false, rowY,
+                float rowY = height * .5f - rowH * .5f - modes.Count * (rowH + RowGap);
+                Row(list, "Mode_demo", "DEMO", "vfx bench", Pal.Bloom, false, rowY, rowH,
                     () => { Close(); Flow.Go<Dev.VfxDemoScreen>(); });
             }
 #endif
@@ -323,10 +349,15 @@ namespace GlimmerGrove
         /// does not have a key.
         /// </remarks>
         static void Row(RectTransform parent, string id, string title, string tagline,
-                        Color accent, bool selected, float y, Action tap)
+                        Color accent, bool selected, float y, float height, Action tap)
         {
-            var row = UIKit.Box(id, parent, new Vector2(RowInner, RowH),
+            var row = UIKit.Box(id, parent, new Vector2(RowInner, height),
                                 new Vector2(.5f, .5f), new Vector2(0f, y));
+
+            // The two lines sit either side of the row's middle by a fraction of its height
+            // rather than by a fixed offset, so a squeezed row closes the gap between them
+            // instead of letting the tagline slide out of the seat. See MinRowH.
+            float split = height * .165f;
 
             // The row's own hit area. UIKit.Img leaves raycastTarget off on everything it
             // builds, so a row made only of pictures is a row no tap ever reaches — invisible
@@ -350,7 +381,7 @@ namespace GlimmerGrove
             var name = UIKit.Titled("Name", row, title, 36,
                                     selected ? Pal.Cream : Pal.A(Pal.Cream, .82f),
                                     TextAnchor.MiddleCenter, new Vector2(TextW, 42f),
-                                    new Vector2(.5f, .5f), new Vector2(0f, 20f), 0f, 2f);
+                                    new Vector2(.5f, .5f), new Vector2(0f, split), 0f, 2f);
             UIKit.Shrinkable(name);
 
             // The tagline is the only place the game ever says what a mode *is*, and it is here
@@ -358,7 +389,7 @@ namespace GlimmerGrove
             var tag = UIKit.Label("Tag", row, tagline, 24,
                                   Pal.A(Pal.Cream, .60f), TextAnchor.MiddleCenter,
                                   new Vector2(TextW, 40f), new Vector2(.5f, .5f),
-                                  new Vector2(0f, -22f));
+                                  new Vector2(0f, -split - 2f));
             UIKit.Shrinkable(tag, 14);
 
             row.gameObject.AddComponent<Btn>().Setup(tap);

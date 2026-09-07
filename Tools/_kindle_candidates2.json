@@ -1,0 +1,57 @@
+{
+ "ribs": [],
+ "narrow": [
+  {
+   "par": 5,
+   "ways": 120,
+   "nodes": 7731,
+   "less": 5,
+   "life": 8,
+   "crs": 3,
+   "bln": 3,
+   "idle": 1,
+   "goal": 3,
+   "budget": 8,
+   "gold": 6,
+   "silver": 7,
+   "seed": 2,
+   "rows": [
+    "rbrbggr",
+    ".#...#.",
+    "b.M.C.b",
+    "rbrrggr",
+    ".#...#.",
+    "g..Y..g",
+    "gbbrrgg"
+   ]
+  },
+  {
+   "par": 5,
+   "ways": 120,
+   "nodes": 9604,
+   "less": 5,
+   "life": 8,
+   "crs": 4,
+   "bln": 3,
+   "idle": 2,
+   "goal": 3,
+   "budget": 8,
+   "gold": 6,
+   "silver": 7,
+   "seed": 4,
+   "rows": [
+    "bbrrgbg",
+    ".#...#.",
+    "b.M.C.b",
+    "ggrgrbr",
+    ".#...#.",
+    "g..Y..g",
+    "rrgrgbr"
+   ]
+  }
+ ],
+ "prism": [],
+ "weft": [],
+ "deep": [],
+ "heart": []
+}

@@ -4,7 +4,7 @@
     /// How long everything in a grove takes, and where the satchel sits under it.
     ///
     /// <para>
-    /// <b>Here rather than beside the paint, for <c>FallTempo</c>'s and <c>KeeperTempo</c>'s
+    /// <b>Here rather than beside the paint, for <c>FallTempo</c>'s
     /// reason.</b> Motion is the one subsystem whose failures show up only in play, so the
     /// arithmetic has to be reachable without an Editor.
     /// </para>

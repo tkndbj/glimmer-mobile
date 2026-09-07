@@ -962,6 +962,102 @@ both 3 and the two-star band was empty.
 it — it will never burst and never join a bunch. One or two make a grove read richer; a grove of
 them is a board that can be neither won nor ended, and `BudBoard.AnyMove` is what notices.
 
+## Emberforge levels
+
+A wall of jewels bolted into the raiders' smelter, with critters caged in among them. The level
+authors the **whole wall** and nothing else — no deal, and the reader refuses one that tries:
+nothing ever falls in from above, which is what keeps the board monotone and therefore
+searchable at all (invariant 34a).
+
+```json
+"ember": {
+  "width": 7, "height": 7, "spare": 3,
+  "rows": [
+    "byggbgb",
+    "gr#b#by",
+    "yCbrygg",
+    "yr#r#rg",
+    "bbgygCy",
+    "rb#r#rg",
+    "gybrbgy"
+  ]
+}
+```
+
+| token | what it is |
+|---|---|
+| `r` `g` `b` `y` | a **shard**. Three alike in a line fuse into an ember. |
+| `O` | an **ember**, dealt. Tap it and a cross of light sweeps its row and column. |
+| `.` | a **breach**: wall that is already blown out. Shards slide down through it. |
+| `#` | **stone**. Permanent, unswappable, holds the wall above it up, and **stops a beam**. |
+| `*` | **frost**. Unswappable, holds the wall up, stops nothing — a beam melts it and the column above it falls. |
+| `C` | a **cage**. A goal. Any beam crossing it frees the critter and carries on. |
+| `W` | a **warden**. A goal. It **stops a beam**, so it takes two: one cracks the plating, the next finishes it. |
+
+`V` — a warden with its plating gone — is a state a board reaches and never one it is written in,
+exactly as a blend is in Budburst. It is not in the grammar and is refused if typed.
+
+**Nothing here is a number.** Par is the fewest moves that free every cage and wreck every warden,
+found by breadth-first search on the device that opens the level (invariant 26d); both star lines
+and the allowance are the same 1.20 / 1.40 multiples every mode uses. `spare` is the only tuning a
+wall carries, and it is a **count** of wasted moves rather than a multiple of par, because a wrong
+move costs about the same wherever it happens (26e).
+
+### Authoring a wall
+
+**The wall is designed and the shards are dealt** (invariant 32d), and `Tools/ember_sweep.py` is
+the split made into a tool. Draw the fittings by hand — where the stone runs, how much frost holds
+a shelf up, where the cages are buried, where a warden stands — because those are what a player
+*reads*; leave every other cell as `?` and let the sweep deal colours into it by seed, because
+which jewel is in which square is exactly the sort of arrangement nobody can eyeball.
+
+```
+python Tools/ember_sweep.py --template ribs --seeds 140 --spare 3
+python Tools/ember_sweep.py --board "byggbgb,gr#b#by,..." --spare 3
+```
+
+What to keep a seed for, and what each column means:
+
+- **`par`** — the ladder derives from it. Two is a teaching wall (one swap, one tap); five or six
+  is a finale. Cost goes as the wall's size to the power of par, so a big wall wants a short answer.
+- **`ways`** — how many shortest answers there are (invariant 5d). One is a wall that has to be
+  *solved* rather than played; three hundred is a wall deciding nothing. The shipped ten sit
+  between 8 and 60.
+- **`less`** — what a player who never looks ahead spends. **Nought** on every shipped wall: this
+  mode is not commissioned to be effortless the way Budburst is.
+- **`life`** — how many moves the wall survives the most extravagant possible player. **The reading
+  this mode needed and no other one did** (34c): the wall is finite, so a board can be dead while
+  the readout still says four moves left, and a wall whose `life` is under its allowance is
+  counting down to an ending that will not be the one that happens.
+- **`chn` / `frg` / `str`** — what the *shortest answers* actually do: the deepest chain, the embers
+  the player has to make, the stars worth spending. Measured over **every** shortest answer rather
+  than over the opening move, because an opening-move reading collapses exactly when a board is
+  good — a wall whose first swap sets off a four-beat cascade is a wall that is over in three moves.
+
+Three rules the sweep will not tell you.
+
+**A wall is authored settled.** Three alike already in a line fuse before anybody has touched it,
+so the wall the player meets is not the wall that was authored, proved or graded. The dealer
+guarantees it and both gates refuse it.
+
+**Deal nothing, or at most one.** An ember the player did not make is a payoff the author placed,
+which invariant 20m says is not a payoff at all. `EmberValidator` warns above two and the fixture
+refuses even one on a shipped wall; the first chapter deals none.
+
+**Stone is what makes the aim a decision.** A wall with none of it is a wall where every cross
+reaches the same distance wherever it goes off, and the validator says so.
+
+### What makes a wall good
+
+The ramp is not par. It is **how many separate blasts the goals need** and how hard they are to
+aim: one cage in a clear row is two moves, two cages sharing no line is four, and a warden is two
+beams on its own. Board size, frost, and how much of the wall a cross eats do the rest.
+
+**Look at it.** `python Tools/render_ember.py` draws every shipped wall with the real sprites at
+the size a phone draws it. Two faults came out of it that no numeric gate could see — a cage that
+read as a tiny padlock and an ember too dark to want touching (invariant 34e) — and both were past
+every green check in the repository.
+
 ## What makes a glade hard
 
 `Tools/verify/difficulty.py` answers this in numbers rather than in opinions, and it is

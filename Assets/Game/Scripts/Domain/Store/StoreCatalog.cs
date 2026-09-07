@@ -237,6 +237,8 @@ namespace GlimmerGrove.Store
         public static readonly StoreCatalog Default = new StoreCatalog(
             new[]
             {
+                new StoreProduct("gg_first_bloom_pass", StoreProductKind.NonConsumable, StoreShelf.EventPass,
+                                 0, 0, 499, StoreBadge.None, 0, "first_bloom"),
                 // --- gems: the ladder every other price is measured against ------------
                 new StoreProduct("gg_gems_1", StoreProductKind.Consumable, StoreShelf.Gems,
                                  0, 100, 99, StoreBadge.None),
@@ -424,6 +426,10 @@ namespace GlimmerGrove.Store
             long credits = dto.credits < 0 ? 0 : dto.credits;
             long gems = dto.gems < 0 ? 0 : dto.gems;
             int capacity = dto.heartCapacity < 0 ? 0 : dto.heartCapacity;
+            string passId = dto.eventPassId ?? string.Empty;
+            if ((passId.Length > 0 && (!IsUsableId(passId) || !oneTime || credits != 0 || gems != 0 || capacity != 0 || shelf != StoreShelf.EventPass)) ||
+                (shelf == StoreShelf.EventPass && passId.Length == 0))
+            { problems.Add($"store product '{id}' has invalid event pass entitlement"); return null; }
 
             // A container and a currency pack are the two things a real-money product may be,
             // and it may not be both. See StoreProduct.HeartCapacity: what makes a capacity
@@ -439,7 +445,7 @@ namespace GlimmerGrove.Store
                 return null;
             }
 
-            if (credits == 0 && gems == 0 && capacity == 0)
+            if (credits == 0 && gems == 0 && capacity == 0 && passId.Length == 0)
             {
                 problems.Add($"store product '{id}' grants nothing");
                 return null;
@@ -530,7 +536,7 @@ namespace GlimmerGrove.Store
             }
 
             return new StoreProduct(id, oneTime ? StoreProductKind.NonConsumable : StoreProductKind.Consumable,
-                                    shelf, credits, gems, dto.referenceUsdCents, badge, capacity);
+                                    shelf, credits, gems, dto.referenceUsdCents, badge, capacity, passId);
         }
 
         static StoreGood ReadGood(StoreGoodDto dto, HashSet<string> seen, List<string> problems)
@@ -591,6 +597,7 @@ namespace GlimmerGrove.Store
         {
             value = StoreShelf.Gems;
             if (string.IsNullOrEmpty(shelf)) return false;
+            if (string.Equals(shelf, "event_pass", StringComparison.OrdinalIgnoreCase)) { value = StoreShelf.EventPass; return true; }
             if (string.Equals(shelf, "gems", StringComparison.OrdinalIgnoreCase)) { value = StoreShelf.Gems; return true; }
             if (string.Equals(shelf, "coins", StringComparison.OrdinalIgnoreCase)) { value = StoreShelf.Coins; return true; }
             if (string.Equals(shelf, "bundles", StringComparison.OrdinalIgnoreCase)) { value = StoreShelf.Bundles; return true; }

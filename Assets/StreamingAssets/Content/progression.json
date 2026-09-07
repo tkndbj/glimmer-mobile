@@ -194,7 +194,8 @@
     "gems": 20,
     "gemsStep": 0,
     "turns": 15,
-    "taps": 4
+    "taps": 4,
+    "moves": 4
   },
   "prompts": {
     "chapterBudget": 2,
@@ -382,6 +383,13 @@
         "heartCapacity": 50,
         "referenceUsdCents": 3999,
         "badge": "best_value"
+      },
+      {
+        "id": "gg_first_bloom_pass",
+        "kind": "nonconsumable",
+        "shelf": "event_pass",
+        "eventPassId": "first_bloom",
+        "referenceUsdCents": 499
       }
     ],
     "goods": [

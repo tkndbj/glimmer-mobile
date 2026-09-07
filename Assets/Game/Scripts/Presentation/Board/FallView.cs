@@ -58,7 +58,7 @@ namespace GlimmerGrove
         /// <summary>
         /// The closing cascade has begun, so nothing else may end this run.
         ///
-        /// <c>KeeperView.Finishing</c>'s rule, and it earns its place here for the same reason:
+        /// the rule every mode's view shares, and it earns its place here for this reason:
         /// the run is decided when the last mote bursts and the panel opens a beat later while
         /// the chain plays out, so everything that could still end a run has to stop at the
         /// first of those two moments rather than the second.

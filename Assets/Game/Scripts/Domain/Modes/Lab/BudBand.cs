@@ -5,7 +5,7 @@ namespace GlimmerGrove.Modes
     ///
     /// <para>
     /// <b>Whether two things on a screen overlap is arithmetic, so it goes in Domain and gets a
-    /// test.</b> <c>ChapterMap</c> made that argument for map nodes and <c>KeeperBand</c> for the
+    /// test.</b> <c>ChapterMap</c> made that argument for map nodes and the retired <c>KeeperBand</c> for the
     /// basket; a row of typed constants with a paragraph explaining why they clear each other is
     /// a paragraph that will be wrong within one drop.
     /// </para>

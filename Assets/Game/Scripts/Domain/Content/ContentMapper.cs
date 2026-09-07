@@ -149,7 +149,47 @@ namespace GlimmerGrove.Content
         static LevelPresentation ReadPresentation(LevelDto dto)
             => new LevelPresentation(new Vector2(dto.mapX, dto.mapY),
                                      OptionalColour(dto.accent), OptionalColour(dto.slate),
-                                     dto.backdrop);
+                                     dto.backdrop, ReadStory(dto.story));
+
+        /// <summary>
+        /// A level's dialogue, or <c>StoryScript.Silent</c>.
+        ///
+        /// <para>
+        /// <b>Anything malformed is dropped rather than reported, and that is the opposite of
+        /// how a board is read.</b> A board that will not parse is a level nobody can play, so
+        /// the mapper refuses it and the build gate says why. A line whose speaker is misspelt
+        /// is a sentence nobody hears, and losing it is strictly better than losing the level it
+        /// was written for — a story ships ahead of the art it names exactly as content ships
+        /// ahead of builds. What stops a typo reaching a player is the build gate, which reads
+        /// the same file and <em>errors</em> on every one of these; this is the runtime half,
+        /// and its job is to be unable to break a run.
+        /// </para>
+        /// </summary>
+        static StoryScript ReadStory(StoryDto dto)
+        {
+            if (dto == null || !dto.IsAuthored) return StoryScript.Silent;
+
+            var beats = new List<StoryBeat>(dto.beats.Length);
+
+            foreach (var beat in dto.beats)
+            {
+                if (beat == null || !StoryScript.TryReadCue(beat.cue, out var cue)) continue;
+                if (beat.lines == null || beat.lines.Length == 0) continue;
+
+                var lines = new List<StoryLine>(beat.lines.Length);
+                foreach (var line in beat.lines)
+                {
+                    if (line == null) continue;
+
+                    var read = new StoryLine(line.who, line.key);
+                    if (read.IsValid) lines.Add(read);
+                }
+
+                if (lines.Count > 0) beats.Add(new StoryBeat(cue, lines));
+            }
+
+            return beats.Count > 0 ? new StoryScript(beats) : StoryScript.Silent;
+        }
 
         public static ManifestDto ReadManifest(string json, out string error)
         {

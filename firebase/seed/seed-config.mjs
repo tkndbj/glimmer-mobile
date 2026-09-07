@@ -302,7 +302,7 @@ function readStore(progression) {
 
   const MAX_GRANT = 5000000;                  // mirrors StoreLimits.MaxGrant and products.ts
   const MIN_CAPACITY = 6, MAX_CAPACITY = 50;  // mirrors StoreLimits and products.ts
-  const SHELVES = new Set(["gems", "coins", "bundles", "supplies"]);
+  const SHELVES = new Set(["gems", "coins", "bundles", "supplies", "event_pass"]);
   const KINDS = new Set(["consumable", "nonconsumable"]);
 
   const products = {};
@@ -335,6 +335,10 @@ function readStore(progression) {
     const credits = Math.floor(entry.credits ?? 0);
     const gems = Math.floor(entry.gems ?? 0);
     const capacity = Math.floor(entry.heartCapacity ?? 0);
+    const eventPassId = entry.eventPassId ?? "";
+    if ((eventPassId && (!/^[a-z0-9_]{1,64}$/.test(eventPassId) || entry.kind !== "nonconsumable" ||
+        credits || gems || capacity || entry.shelf !== "event_pass")) ||
+        (entry.shelf === "event_pass" && !eventPassId)) throw new Error(`invalid event pass product '${id}'`);
 
     if (!Number.isFinite(credits) || !Number.isFinite(gems) || credits < 0 || gems < 0) {
       throw new Error(`store product '${id}' grants ${entry.credits} credits and ${entry.gems} gems`);
@@ -376,7 +380,7 @@ function readStore(progression) {
       );
     }
 
-    if (credits === 0 && gems === 0 && capacity === 0) {
+    if (credits === 0 && gems === 0 && capacity === 0 && !eventPassId) {
       throw new Error(`store product '${id}' grants nothing`);
     }
 
@@ -413,7 +417,7 @@ function readStore(progression) {
     // Only what the server needs in order to honour a receipt. The shelf, the badge and
     // the reference price are display and validation; publishing them would invite
     // somebody to think the server had an opinion about them.
-    products[id] = { credits, gems, kind: entry.kind, capacity };
+    products[id] = { credits, gems, kind: entry.kind, capacity, ...(eventPassId ? { eventPassId } : {}) };
   }
 
   // The ladder has to get better as it gets bigger. A middle rung worth less per unit of
@@ -544,13 +548,18 @@ function readEvents(manifest, levelChapters) {
         throw new Error(`event '${id}' milestone at ${goal} pays ${rung?.credits}`);
       }
 
-      milestones.push({ goal, credits });
+      const premiumCredits = rung.premiumCredits ?? 0, premiumGems = rung.premiumGems ?? 0;
+      if (!Number.isSafeInteger(premiumCredits) || premiumCredits < 0 || premiumCredits > 5000 ||
+          !Number.isSafeInteger(premiumGems) || premiumGems < 0 || premiumGems > 1000 ||
+          (!entry.premiumProductId && (premiumCredits || premiumGems))) throw new Error(`invalid premium reward '${id}'`);
+      milestones.push({ goal, credits, premiumCredits, premiumGems });
       previousGoal = goal;
     }
 
     if (milestones.length === 0) throw new Error(`event '${id}' has no milestones, so it pays nothing`);
 
-    published.push({ id, startUnix, endUnix, levels, milestones });
+    if (milestones.length > 40) throw new Error(`event '${id}' exceeds 40 tiers`);
+    published.push({ id, startUnix, endUnix, levels, milestones, premiumProductId: entry.premiumProductId ?? "" });
   }
 
   return published.length > 0 ? published : null;
@@ -946,6 +955,14 @@ async function writeDoc(token, path, data, options = {}) {
 
 // ------------------------------------------------------------------------- main
 const { config, levelCount, products } = buildProgressionConfig();
+for (const event of config.events ?? []) {
+  if (event.premiumProductId && products?.[event.premiumProductId]?.eventPassId !== event.id)
+    throw new Error(`event '${event.id}' has no matching premium store product`);
+}
+if (process.argv.includes("--check")) {
+  console.log(`Validated ${levelCount} levels, ${Object.keys(products ?? {}).length} store products and event pass links. No remote writes.`);
+  process.exit(0);
+}
 const token = accessToken();
 
 await writeDoc(token, "config/progression", config);

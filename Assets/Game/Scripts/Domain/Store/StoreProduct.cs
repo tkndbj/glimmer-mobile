@@ -37,6 +37,7 @@ namespace GlimmerGrove.Store
         /// </para>
         /// </summary>
         Supplies,
+        EventPass,
     }
 
     /// <summary>
@@ -122,7 +123,7 @@ namespace GlimmerGrove.Store
     {
         public StoreProduct(string id, StoreProductKind kind, StoreShelf shelf,
                             long credits, long gems, int referenceUsdCents, StoreBadge badge,
-                            int heartCapacity = 0)
+                            int heartCapacity = 0, string eventPassId = null)
         {
             Id = id ?? string.Empty;
             Kind = kind;
@@ -132,6 +133,7 @@ namespace GlimmerGrove.Store
             ReferenceUsdCents = referenceUsdCents < 0 ? 0 : referenceUsdCents;
             Badge = badge;
             HeartCapacity = heartCapacity < 0 ? 0 : heartCapacity;
+            EventPassId = eventPassId ?? string.Empty;
         }
 
         /// <summary>
@@ -207,8 +209,10 @@ namespace GlimmerGrove.Store
 
         /// <summary>True when this product sells a permanent heart capacity rather than currency.</summary>
         public bool IsContainer => HeartCapacity > 0;
+        public string EventPassId { get; }
+        public bool IsEventPass => EventPassId.Length > 0;
 
-        public bool IsValid => Id.Length > 0 && (Credits > 0 || Gems > 0 || HeartCapacity > 0);
+        public bool IsValid => Id.Length > 0 && (Credits > 0 || Gems > 0 || HeartCapacity > 0 || IsEventPass);
 
         /// <summary>True when the store will only ever sell this once per account.</summary>
         public bool IsOneTime => Kind == StoreProductKind.NonConsumable;

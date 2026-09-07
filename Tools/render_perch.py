@@ -48,12 +48,15 @@ NODE_FACE_LIFT = 0.165         # UIKit.NodeFaceLift — where the number sits on
 SHADOW_RGBA = (8, 26, 41, 97)
 CONTACT_RGBA = (5, 20, 31, 115)
 
-# ModeLook.Wash, per mode. White is "no wash", which is what the glade takes.
+# ModeLook.Wash, per mode, and it is the whole of ModeLook: a key here that names no
+# registered mode renders a perch for a mode nobody can play. White is "no wash", which is
+# what the glade takes.
 WASHES = {
     "glade": (255, 255, 255),
-    "ripple": (204, 245, 255),
-    "fall": (255, 214, 204),
-    "keeper": (214, 255, 224),
+    "fall": (255, 255, 255),     # no Wash override; see FallLook's note about ice
+    "topple": (255, 247, 230),
+    "bud": (255, 245, 204),
+    "nova": (232, 226, 255),
 }
 
 
@@ -149,7 +152,7 @@ def card(rock: Path, wash, strip: str, pad: int = 14) -> Image.Image:
 def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("rocks", nargs="*", help="source PNGs; default is every shipped perch")
-    ap.add_argument("--mode", default="weave", choices=sorted(WASHES))
+    ap.add_argument("--mode", default="glade", choices=sorted(WASHES))
     ap.add_argument("--strip", default="map2_strip1")
     ap.add_argument("--out", default="out/perches")
     args = ap.parse_args()

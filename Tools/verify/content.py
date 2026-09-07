@@ -5,7 +5,7 @@ import re, math, os, sys
 from collections import deque
 
 import fall                                  # Lightfall's rules, mirrored - see fall.py
-import keeper                                # Groovekeeper's rules, mirrored - see keeper.py
+import proto                                 # the prototype modes, mirrored - see proto.py
 import bud                                   # Budburst's rules, mirrored - see bud.py
 
 ROOT = os.path.join(os.path.dirname(os.path.abspath(__file__)),
@@ -180,7 +180,43 @@ DEFAULT_BUDGET_FACTOR = 1.60
 GOLD_FACTOR, SILVER_FACTOR = 1.20, 1.40
 
 
-MODE_BLOCKS = ("fall", "keeper", "bud")
+MODE_BLOCKS = ("fall", "bud", "march", "ember", "kindle")
+
+#: Block names that named a mode this build no longer has. Refused by name rather than ignored,
+#: for the duskcap's reason (invariant 5f): JsonUtility drops an unknown field without a word, so
+#: a chapter written for a build that is gone would validate, index and ship as a level nobody
+#: authored. `keeper` is Groovekeeper's, withdrawn with the mode; the other four are the
+#: Block names that named a mode this build no longer has. Refused **by name** rather than
+#: ignored, for the duskcap's reason (invariant 5f): JsonUtility drops an unknown field without
+#: a word, so a chapter body still carrying one would index, derive a plausible glade and ship
+#: as something nobody authored. Nine modes have been withdrawn after play now - Groovekeeper,
+#: four of the five prototypes that took its slot, Deep Orbit and Moonwake, and then Toppleglen
+#: and Nova Raid, then the Iron Quarry, whose slot Hollowmarch has.
+RETIRED_BLOCKS = ("keeper", "nectar", "ribbon", "fling", "warren", "orbit", "moonwake",
+                  "topple", "nova", "quarry")
+
+#: Mirrors `ProtoValidator`. About the *player's* device: par is resolved lazily when somebody
+#: opens the level, so this is the beat between tapping a node and the board arriving.
+PROTO_NODE_WARNING, PROTO_NODE_CEILING = 30_000, 90_000
+
+#: Above this many shortest answers the board is not deciding much (invariant 5d).
+PROTO_TOO_MANY_WAYS = 300
+
+#: Mirrors `EmberValidator.MaxDealt`: an ember the player did not make is a payoff the author
+#: placed, and invariant 20m says that is not a payoff at all.
+EMBER_MAX_DEALT = 2
+
+#: Mirrors `EmberValidator.LifeSlack`. The wall is finite, so a board can be dead while the
+#: meter still says four moves left - which reads as the game deciding on the player's behalf.
+EMBER_LIFE_SLACK = 0
+
+#: Mirrors `KindleValidator.LifeSlack`. The material is finite here too, so a hollow can be dead
+#: while the meter still says three moves left.
+KINDLE_LIFE_SLACK = 0
+
+#: Mirrors `KindleValidator.TooManyIdle`. An ember with no partner on a clear line reads as a
+#: move that is not there, and an ember is the most eye-catching thing on the board.
+KINDLE_TOO_MANY_IDLE = 2
 
 
 #: Mirrors `BudValidator`. Lower than the other two because branching is the flower count.
@@ -592,154 +628,471 @@ def check_fall(lid, chapter_id, level, block):
                 charged=sum(1 for g in well.glass if g))
 
 
-#: Mirrors `KeeperValidator`. Lower than Lightfall's pair because a position here costs more to
-#: expand: the floor this search prunes on walks every bed and every standing tile.
-KEEPER_NODE_WARNING, KEEPER_NODE_CEILING = 30_000, 90_000
+def check_proto(mode, lid, chapter_id, level, block):
+    """Everything a prototype board has to prove, mirroring `ProtoValidator`.
 
-#: Above this many shortest answers the ground is not deciding much. Invariant 5d, counted.
-KEEPER_TOO_MANY_WAYS = 300
+    One function however many modes, because they share a shape rather than a rule: each authors
+    a whole board, each searches it for par, and every graded number derives from the answer. What
+    differs is the handful of questions only one mode's own rules can ask, and those are at the
+    bottom. It carried five while five prototypes were being judged and did not move when four of
+    them were withdrawn.
 
-
-def check_keeper(lid, chapter_id, level, block):
-    """Everything a Groovekeeper grove has to prove, mirroring `KeeperValidator`.
-
-    The one thing that cannot be checked by reading the file is whether every bed can be
-    *opened*, so most of this is a search. Every failure below looks like a perfectly authored
-    grove in the JSON, which is the whole reason the gate exists.
+    The one thing that cannot be checked by reading the file is whether the board can be
+    *finished*, so most of this is a search. Every failure below looks like a perfectly authored
+    board in the JSON, which is the whole reason the gate exists.
     """
     empty = dict(id=lid, chapter=chapter_id, w=0, h=0, par=0, budget=0,
                  gold=0, silver=0, lamps=0, sources=0, fragile=0, bound=0,
-                 crossings=0, briars=0, mode='keeper',
-                 ways=0, greedy=-1, nodes=0, beds=0, hearts=0, deal='')
+                 crossings=0, briars=0, mode=mode,
+                 ways=0, greedy=-1, nodes=0, goals=0, deal='')
 
     w, h = block.get('width') or 0, block.get('height') or 0
 
-    if not (keeper.MIN_SIDE <= w <= keeper.MAX_SIDE):
-        errors.append("%s: a grove is %d..%d wide; this one says %d"
-                      % (lid, keeper.MIN_SIDE, keeper.MAX_SIDE, w))
-        return empty
-
-    if not (keeper.MIN_SIDE <= h <= keeper.MAX_SIDE):
-        errors.append("%s: a grove is %d..%d tall; this one says %d"
-                      % (lid, keeper.MIN_SIDE, keeper.MAX_SIDE, h))
-        return empty
-
-    # A grove used to be dealt from a seed. An author who writes one now is describing a board
-    # that no longer exists, and JsonUtility would drop it without a word - the same tripwire
-    # ChapterDto.order is.
-    if block.get('seed'):
-        errors.append("%s: this grove authors 'seed', which does nothing: a grove is authored "
-                      "now rather than rolled, so its rows and its procession are the whole "
-                      "board" % lid)
-
     try:
-        grove = keeper.Grove(block.get('rows') or [], block.get('tiles') or '')
+        grid, board = proto.build(mode, block)
     except ValueError as bad:
         errors.append("%s: %s" % (lid, bad))
         return empty
 
-    if grove.width != w or grove.height != h:
-        errors.append("%s: declares %dx%d and writes %dx%d"
-                      % (lid, w, h, grove.width, grove.height))
+    if grid.w != w or grid.h != h:
+        errors.append("%s: declares %dx%d and writes %dx%d" % (lid, w, h, grid.w, grid.h))
         return empty
 
-    if not grove.sprig_count:
-        errors.append("%s: this grove has no sprig, so there is nothing to lay the first tile "
-                      "beside and no way to start it" % lid)
+    if getattr(board, 'stirred', False):
+        errors.append("%s: this board is not authored at rest - it settles before the player "
+                      "touches it, so the board proved is not the board that opens" % lid)
         return empty
 
-    if not grove.beds:
-        errors.append("%s: this grove has no bed, so it is already finished" % lid)
+    if board.won():
+        errors.append("%s: this board is finished before the player touches it" % lid)
         return empty
 
-    # A procession that cannot supply a colour some heartbed insists on makes that bed
-    # unopenable however many tiles are bought. The search would catch it, but not in words
-    # anybody could act on.
-    if grove.wanted & ~grove.channels:
-        absent = grove.wanted & ~grove.channels
-        errors.append("%s: a heartbed here insists on %s and this procession never deals it, so "
-                      "that bed could never be opened by anybody"
-                      % (lid, keeper.LETTER.get(absent, '?')))
+    if not board.any_move():
+        errors.append("%s: this board has no legal move on it, so the run is over before it "
+                      "begins" % lid)
+        return empty
 
-    # Note what is deliberately *not* checked: that the procession carries all three channels.
-    # Lightfall refuses a deal that does not and has to; nothing here does the same thing, because
-    # a tile that cannot bloom is simply a tile and the sprigs are permanent. Two of the ten
-    # grooves that ship are finished with a two-colour basket. What matters is that every bed can
-    # be opened, and the search below proves exactly that. See `KeeperValidator`.
+    problem = MODE_RULES[mode](lid, grid, board)
+    if problem:
+        errors.append("%s: %s" % (lid, problem))
+        return empty
 
-    par, ways, nodes, proved = keeper.search(grove)
+    par, ways, nodes, proved = proto.search(board)
 
     if not proved:
-        errors.append("%s: this grove could not be proved inside %d positions (it looked at %d) "
-                      "or within %d tiles - it may be unsolvable, or simply too big to prove, "
+        errors.append("%s: this board could not be proved inside %d positions (it looked at %d) "
+                      "or within %d moves - it may be unsolvable, or simply too big to prove, "
                       "and either way the player's device runs the same search to work out par"
-                      % (lid, keeper.NODE_BUDGET, nodes, keeper.MAX_TILES))
+                      % (lid, proto.NODE_BUDGET, nodes, proto.MAX_DEPTH))
         return empty
 
     if par < 1:
-        errors.append("%s: no sequence of tiles opens every bed on this grove, so nobody can "
-                      "finish it" % lid)
+        errors.append("%s: no sequence of moves finishes this board, so nobody can clear it" % lid)
         return empty
 
-    budget_h = factor_of(level, 'budgetFactor', keeper.BUDGET_HUNDREDTHS)
-    gold_h = factor_of(level, 'goldFactor', keeper.GOLD_HUNDREDTHS)
-    silver_h = factor_of(level, 'silverFactor', keeper.SILVER_HUNDREDTHS)
+    budget_h = factor_of(level, 'budgetFactor', 160)
+    gold_h = factor_of(level, 'goldFactor', proto.GOLD_HUNDREDTHS)
+    silver_h = factor_of(level, 'silverFactor', proto.SILVER_HUNDREDTHS)
 
-    # A grove's room is a count of wasted tiles rather than a multiple of par: a wrong tile is
-    # permanent *and* takes a cell of ground a bed beside it may have needed, so a mistake costs
-    # about two tiles wherever it happens. Mirrors LevelTuning.Slack and KeeperRules.DefaultSpare.
-    spare = block.get('spare') or keeper.DEFAULT_SPARE
+    # Room above par is a count of wasted moves rather than a multiple of par: every wrong move
+    # in every one of these modes is permanent *and* makes the board worse, so a mistake costs
+    # about the same wherever it happens (invariant 26e). Mirrors ProtoLevelRules.DefaultSpare.
+    spare = block.get('spare') or proto.DEFAULT_SPARE
     budget = (par + spare) if budget_h > 0 else 0
 
-    if budget_h > 0 and budget_h != keeper.BUDGET_HUNDREDTHS:
-        errors.append("%s: this grove authors budgetFactor %.2f, which does nothing - a grove's "
-                      "room above par is 'spare', counted in tiles. Use 'spare', or a negative "
+    if budget_h > 0 and budget_h != 160:
+        errors.append("%s: this board authors budgetFactor %.2f, which does nothing - room above "
+                      "par here is 'spare', counted in moves. Use 'spare', or a negative "
                       "budgetFactor if it is meant to be unlosable" % (lid, budget_h / 100.0))
 
-    gold, silver = keeper.over(par, gold_h), keeper.over(par, silver_h)
+    gold, silver = proto.over(par, gold_h), proto.over(par, silver_h)
 
     if gold_h >= silver_h:
         errors.append("%s: goldFactor and silverFactor leave the two-star band empty" % lid)
     elif budget and budget <= gold:
-        errors.append("%s: the basket is at or under the three-star line, so every surviving run "
-                      "would be a three-star run" % lid)
+        errors.append("%s: the allowance is at or under the three-star line, so every surviving "
+                      "run would be a three-star run" % lid)
     elif budget and budget <= silver:
-        warnings.append("%s: the basket is inside the two-star band, so one star can never be "
+        warnings.append("%s: the allowance is inside the two-star band, so one star can never be "
                         "scored" % lid)
 
-    if nodes > KEEPER_NODE_CEILING:
-        errors.append("%s: proving this grove took %d positions, above the %d a level may cost - "
-                      "the player's device runs the same search when somebody opens the level, "
-                      "so this is about a quarter of a second of nothing happening on the way in"
-                      % (lid, nodes, KEEPER_NODE_CEILING))
-    elif nodes > KEEPER_NODE_WARNING:
-        warnings.append("%s: proving this grove took %d positions against the %d a level is "
+    if nodes > PROTO_NODE_CEILING:
+        errors.append("%s: proving this board took %d positions, above the %d a level may cost - "
+                      "the player's device runs the same search when somebody opens the level"
+                      % (lid, nodes, PROTO_NODE_CEILING))
+    elif nodes > PROTO_NODE_WARNING:
+        warnings.append("%s: proving this board took %d positions against the %d a level is "
                         "expected to cost (the refusal is at %d)"
-                        % (lid, nodes, KEEPER_NODE_WARNING, KEEPER_NODE_CEILING))
+                        % (lid, nodes, PROTO_NODE_WARNING, PROTO_NODE_CEILING))
 
-    # A basket bigger than the ground can hold ends the run on the one fail state a continue
-    # cannot rescue, with tiles still in the basket.
-    room = grove.room - grove.sprig_count
-    if budget and budget > room:
-        warnings.append("%s: this grove is dealt %d tiles onto %d cells of bare ground, so a "
-                        "careless run runs out of somewhere to plant before it runs out of tiles"
-                        % (lid, budget, room))
+    if ways > PROTO_TOO_MANY_WAYS:
+        warnings.append("%s: %d different runs of %d moves finish this board, so almost any play "
+                        "wins and the arrangement is deciding nothing" % (lid, ways, par))
 
-    if ways > KEEPER_TOO_MANY_WAYS:
-        warnings.append("%s: %d different groves of %d tiles open every bed here, so almost any "
-                        "tidy play wins and the ground is deciding nothing" % (lid, ways, par))
+    greedy = proto.careless(proto.build(mode, block)[1], budget or (par + proto.DEFAULT_SPARE))
+    if par > 2 and greedy > 0:
+        warnings.append("%s: a player who never looks ahead finishes this board in %d moves "
+                        "against an allowance of %s"
+                        % (lid, greedy, budget if budget else "none at all"))
 
-    greedy = keeper.greedy(grove, budget or (par + keeper.DEFAULT_SPARE))
-    if par > 3 and 0 <= greedy <= max(budget, 1):
-        warnings.append("%s: a player who never looks ahead finishes this grove in %d tiles "
-                        "against a basket of %d" % (lid, greedy, budget))
+    out = dict(id=lid, chapter=chapter_id, w=grid.w, h=grid.h, par=par,
+               budget=budget, gold=gold, silver=silver, lamps=0, sources=0, fragile=0,
+               bound=0, crossings=0, briars=0, mode=mode,
+               ways=ways, greedy=greedy, nodes=nodes,
+               goals=board.goals() if hasattr(board, 'goals') else 0,
+               deal='')
 
-    return dict(id=lid, chapter=chapter_id, w=grove.width, h=grove.height, par=par,
-                budget=budget, gold=gold, silver=silver, lamps=0, sources=0, fragile=0,
-                bound=0, crossings=0, briars=0, mode='keeper',
-                ways=ways, greedy=greedy, nodes=nodes,
-                beds=len(grove.beds), hearts=len(grove.heartbeds),
-                deal=block.get('tiles'))
+    # The handful of numbers only this mode's own rules can give, carried out so the printed
+    # table can show them beside par. `chain` is the mode's payoff measured and `shatter` is
+    # what separates a prism from a charge with a longer reach.
+    if mode == 'march':
+        import march as rules
+        out.update(rules.readings(rules.Layout(grid, 0, block.get('cores'))))
+    elif mode == 'ember':
+        import ember as rules
+        out.update(rules.readings(rules.Layout(grid, 0)))
+        out['life'] = ember_life(rules.Layout(grid, 0), budget)
+        ember_life_check(lid, rules.Layout(grid, 0), budget)
+    elif mode == 'kindle':
+        import kindle as rules
+        lay = rules.Layout(grid, 0)
+        out.update(rules.readings(lay, budget))
+        kindle_life_check(lid, out['life'], budget)
+
+    return out
+
+
+def march_rules(lid, grid, board):
+    """A haul-road: a line to fire into, a chain on the way to the answer, and a march that arrives.
+
+    Mirrors `MarchMode.Compose` and `MarchValidator.Inspect`. Everything here is a reading the
+    search cannot give in words an author could act on - "no sequence of cores finishes this
+    board" is true and useless, where "the line carries a Y pod and the magazine only deals RGB"
+    is the sentence that names the thing to move.
+    """
+    import march as rules
+
+    b = board.board
+    lay = b.layout
+
+    read = rules.readings(lay)
+
+    if read['pods'] == 0:
+        return "this road is empty, so there is no line to fire into"
+
+    if b.goals == 0:
+        return "this road carries no cage and no raider, so there is nothing to do"
+
+    # A line holding three alike already touching plays its own first move before anybody has
+    # looked at it - Budburst's "authored settled" rule, and it matters more here because the
+    # chain would run on from it.
+    if not read['settled']:
+        return ("the line holds three alike already touching, so it would go off before "
+                "anybody had fired a core - a line is authored settled")
+
+    if not b.any_move:
+        return ("no core can be fired into this line at all - it matches nothing and the road "
+                "is packed solid")
+
+    # Certain, and the search would only answer "unsolvable": a colour the magazine never deals
+    # can never be matched, however the run goes.
+    for c in lay.line:
+        hue = rules.hue(c)
+        if hue != "\0" and hue not in lay.cores:
+            return ("the line carries a '%s' pod and the magazine deals '%s', so nothing can "
+                    "ever be matched to it" % (hue, lay.cores))
+
+    if read['wardens'] and not read['forged']:
+        warnings.append("%s: this road walks %d warden(s) and no shortest run of it forges a "
+                        "Spark - a warden wears two plates, so it wants two blasts beside it or "
+                        "the one core that cuts plating" % (lid, read['wardens']))
+
+    if read['chained'] < 2:
+        warnings.append("%s: no shortest run of this board ever sets off a second wave, so "
+                        "nothing on it chains - which is this mode with its payoff taken out"
+                        % lid)
+
+    if read['haulers'] + read['wardens'] == 0 and read['pods'] > 12:
+        warnings.append("%s: this road walks no haulers at all, so nothing divides the line and "
+                        "the colours alone decide it" % lid)
+
+    if read['colours'] < 4 and read['pods'] >= 16:
+        warnings.append("%s: %d pods dealt from %d colours is a line that matches itself - add "
+                        "the fourth colour to the deal" % (lid, read['pods'], read['colours']))
+
+    return None
+
+
+def ember_life(layout, budget):
+    """How many moves the most extravagant possible player gets out of one wall.
+
+    Mirrors `EmberReading.Alive`, and it is the reading this mode needed that no other one
+    did: everywhere else a run ends when the allowance runs out, and here the wall itself is
+    finite, so a board can be dead while the meter still says four moves left.
+    """
+    import ember as rules
+
+    most = budget + 4 if 0 < budget < 36 else 40
+    at = rules.Board(layout)
+
+    for spent in range(most):
+        moves = at.moves()
+        if not moves:
+            return spent
+
+        best_gain, best_to = -1, None
+        for move in moves:
+            forked = at.fork()
+            log = forked.fire(move)
+            if log is None:
+                continue
+            gain = log.goals * 100 + log.took
+            if gain <= best_gain:
+                continue
+            best_gain, best_to = gain, forked
+
+        if best_to is None:
+            return spent
+        at = best_to
+
+    return most
+
+
+def ember_rules(lid, grid, board):
+    """A wall: something to fuse, something a beam can reach, and a chain on the way to the answer.
+
+    Mirrors `EmberMode.Compose` and `EmberValidator.Inspect`. Everything here is a reading the
+    search cannot give in words an author could act on - "no sequence of moves finishes this
+    board" is true and useless, where "the cage at row 3 column 5 is walled in by stone on every
+    approach" is the sentence that names the thing to move.
+    """
+    import ember as rules
+
+    b = board.board
+    lay = b.layout
+
+    if lay.fault:
+        return lay.fault
+
+    read = rules.readings(lay)
+
+    if not read['settled']:
+        return ("this wall holds %d alike already in a line, so it would fuse before anybody "
+                "had touched it - a wall is authored settled" % rules.FUSE_AT)
+
+    if not b.any_move:
+        return ("no swap on this wall lines anything up and it carries no ember, so there is "
+                "no move to make")
+
+    # Certain, and the search would only answer "unsolvable": a goal stone has walled off along
+    # every approach on its own row and column can never be reached by any beam.
+    walled = _ember_walled(lay)
+    if walled:
+        return ("%d goal(s) on this wall stand where no beam could ever arrive - stone blocks "
+                "every approach along their own row and column" % walled)
+
+    if read['lonely'] > 1:
+        warnings.append("%s: %d of this wall's colours have fewer than %d shards on it, so they "
+                        "can never be fused and only break up the runs of the colours that can"
+                        % (lid, read['lonely'], rules.FUSE_AT))
+
+    if read['dealt'] > EMBER_MAX_DEALT:
+        warnings.append("%s: this wall is dealt %d embers - the payoff of this mode is the thing "
+                        "the player makes, so a wall handing several over has had its point "
+                        "taken out" % (lid, read['dealt']))
+
+    if read['chained'] < 2:
+        warnings.append("%s: no shortest run of this wall ever sets off a second beat, so "
+                        "nothing on it chains - which is this mode with its payoff taken out"
+                        % lid)
+
+    if read['forged'] == 0:
+        warnings.append("%s: no shortest run of this wall ever fuses an ember, so it is finished "
+                        "with what it was dealt rather than with anything the player made" % lid)
+
+    if read['stone'] + read['wardens'] == 0:
+        warnings.append("%s: this wall holds no stone and no warden, so nothing stops a beam and "
+                        "every cross reaches the same distance wherever it goes off" % lid)
+
+    return None
+
+
+def ember_life_check(lid, layout, budget):
+    """The fail state the readout is not showing. Mirrors `EmberValidator`'s life clause."""
+    if budget <= 0:
+        return
+
+    alive = ember_life(layout, budget)
+    if alive + EMBER_LIFE_SLACK < budget:
+        warnings.append("%s: a player spending everything as fast as they can runs this wall out "
+                        "of moves in %d against an allowance of %d, so the meter is counting down "
+                        "to an ending that will not be the one that happens"
+                        % (lid, alive, budget))
+
+
+def _ember_walled(layout):
+    """Goals no beam could ever arrive at. Mirrors `EmberValidator.Unreachable`."""
+    import ember as rules
+
+    grid = layout.grid
+    w, h, walled = grid.w, grid.h, 0
+
+    for cell in range(len(grid.cells)):
+        if not rules.is_goal(grid.cells[cell]):
+            continue
+
+        gx, gy = cell % w, cell // w
+        reachable = False
+
+        for d in range(rules.CROSS_RAYS):
+            x, y = gx, gy
+            while True:
+                x += rules.STEP_X[d]
+                y += rules.STEP_Y[d]
+                if x < 0 or y < 0 or x >= w or y >= h:
+                    break
+                if rules.stops(grid.cells[y * w + x]):
+                    break
+                reachable = True
+                break
+            if reachable:
+                break
+
+        if not reachable:
+            walled += 1
+
+    return walled
+
+
+def kindle_rules(lid, grid, board):
+    """A hollow: something to join, a critter a strand can reach, and a crossing on the way there.
+
+    Mirrors `KindleMode.Compose` and `KindleValidator.Inspect`. Everything here is a reading the
+    search cannot give in words an author could act on - "no sequence of strands finishes this
+    board" is true and useless, where "the critter at row 3 column 5 wants blue and no two blue
+    embers share a clear line through it" is the sentence that names the thing to move.
+    """
+    import kindle as rules
+
+    b = board.board
+    lay = b.layout
+
+    if lay.fault:
+        return lay.fault
+
+    if not b.any_move():
+        return ("no two embers on this hollow can be joined into a strand that helps anybody, "
+                "so there is no move to make")
+
+    # Certain, exact, and it names the cell. This is the one thing the search genuinely cannot
+    # say: it answers "unsolvable" and points at nothing.
+    starved = rules.unreachable(lay)
+    if starved:
+        return starved
+
+    read = rules.readings(lay)
+
+    if read['lonely']:
+        warnings.append("%s: %d of this hollow's colours have fewer than %d embers on it, so no "
+                        "strand of that colour can ever be drawn"
+                        % (lid, read['lonely'], rules.JOIN_AT))
+
+    if read['blends'] and not read['blended']:
+        warnings.append("%s: this hollow stands %d critter(s) wanting a blend and no shortest run "
+                        "of it ever wakes one, so the crossing - which is the whole of what this "
+                        "mode is - never has to be arranged" % (lid, read['blends']))
+
+    if not read['crossed']:
+        warnings.append("%s: no shortest run of this hollow ever crosses one strand over another, "
+                        "so every line is drawn over dark ground and light never mixes" % lid)
+
+    if not read['stone']:
+        warnings.append("%s: this hollow holds no stone, so nothing blocks a strand and every "
+                        "ember of a colour can reach every other one" % lid)
+
+    if read['idle'] > KINDLE_TOO_MANY_IDLE:
+        warnings.append("%s: %d embers on this hollow have no partner of their own colour on a "
+                        "clear row or column, so each of them reads as a move that is not there"
+                        % (lid, read['idle']))
+
+    return None
+
+
+def kindle_life_check(lid, life, budget):
+    """The fail state the readout is not showing. Mirrors `KindleValidator`'s life clause."""
+    if budget <= 0:
+        return
+
+    if life + KINDLE_LIFE_SLACK < budget:
+        warnings.append("%s: a player drawing everything they can runs this hollow out of strands "
+                        "in %d against an allowance of %d, so the meter is counting down to an "
+                        "ending that will not be the one that happens" % (lid, life, budget))
+
+
+MODE_RULES = {
+    'march': march_rules,
+    'ember': ember_rules,
+    'kindle': kindle_rules,
+}
+
+
+#: Every cue a chapter body may write. Mirrors `StoryScript.TryReadCue`.
+STORY_CUES = ("intro", "freed", "forged", "fired", "kill", "tight", "won", "lost")
+
+#: Everyone who may speak. Mirrors `StoryCast.All`, and each name is also a folder of frames
+#: under `Art/March/`, which is why a typo has to be an error rather than a silent drop: an
+#: unknown speaker is a portrait that does not load, and a missing sprite draws as a **white
+#: rectangle** rather than as nothing (invariant 7b).
+STORY_CAST = ("bolt", "collector", "mon1", "mon2", "mon3")
+
+
+def check_story(lid, story, keys):
+    """Every line a level authors: a cue that exists, a speaker that exists, a key that resolves.
+
+    **This is the gate that replaces deriving the key.** A level's own name and tagline are a
+    pure function of its id (invariant 5a), so nothing can mistype one; a line of dialogue is
+    authored, because nothing ever needs to name a line it has not read. What that costs is the
+    protection a convention gives, and it is bought back here - and bought back *better*, since
+    resolving the key against `loc/en.json` also catches one that is correctly shaped and simply
+    absent. `Tools/verify/loc.py` cannot see these at all (they are unreachable from source), so
+    if this is not checked here it is not checked anywhere.
+
+    The runtime does the opposite thing on purpose: `ContentMapper.ReadStory` drops a malformed
+    line rather than refusing the level, because losing a sentence is better than losing the
+    board it was written for. That asymmetry is only safe while this exists.
+    """
+    if not story:
+        return
+
+    beats = story.get("beats")
+    if not beats:
+        errors.append(f"level '{lid}' carries a story block with no beats in it")
+        return
+
+    for i, beat in enumerate(beats):
+        cue = (beat or {}).get("cue")
+        if cue not in STORY_CUES:
+            errors.append(f"level '{lid}' story beat {i} has cue '{cue}', which is not one of "
+                          f"{', '.join(STORY_CUES)}")
+            continue
+
+        lines = beat.get("lines") or []
+        if not lines:
+            errors.append(f"level '{lid}' story beat {i} ('{cue}') has no lines")
+            continue
+
+        for j, line in enumerate(lines):
+            who = (line or {}).get("who")
+            key = (line or {}).get("key")
+
+            if who not in STORY_CAST:
+                errors.append(f"level '{lid}' story {cue}[{j}] is spoken by '{who}', who is not "
+                              f"in the cast ({', '.join(STORY_CAST)})")
+            if not key:
+                errors.append(f"level '{lid}' story {cue}[{j}] has no loc key")
+            elif key not in keys:
+                errors.append(f"level '{lid}' story {cue}[{j}] says '{key}', which is not in "
+                              "loc/en.json")
 
 
 def factor_of(level, key, fallback_hundredths):
@@ -770,6 +1123,12 @@ def check_level(level, chapter_id):
     """
     lid = level.get('id', '?')
 
+    stale = [b for b in RETIRED_BLOCKS if level.get(b)]
+    for block_name in stale:
+        errors.append("%s: carries a '%s' block, which named a mode this build no longer has. "
+                      "JsonUtility drops an unknown field without a word, so this level would "
+                      "index and ship as something nobody authored" % (lid, block_name))
+
     claimed = [b for b in MODE_BLOCKS if level.get(b)]
     if len(claimed) > 1:
         errors.append("%s: carries %s blocks; a level is played one way"
@@ -786,10 +1145,10 @@ def check_level(level, chapter_id):
         if claimed[0] == 'fall':
             return check_fall(lid, chapter_id, level, block)
 
-        # Groovekeeper is the other mode whose whole level is in the file, so this gate proves
-        # it too: the ground, the procession and the search that turns the two into par.
-        if claimed[0] == 'keeper':
-            return check_keeper(lid, chapter_id, level, block)
+        # Every prototype mode shares one check, because they share a level shape: a grid, a
+        # deal and a slack, all of it searched for par. See check_proto.
+        if claimed[0] in MODE_RULES:
+            return check_proto(claimed[0], lid, chapter_id, level, block)
 
         # Budburst is the third, and for the same reason: everything about a grove is in the
         # file, so the flowers, the basket and the search that turns the two into par can all be
@@ -1789,7 +2148,7 @@ def check_grove(keys, level_ids, chapter_ids, companions, companion_costs=None, 
 # What a card may promise, mirrored from StoreLimits so a content push cannot exceed what
 # the reader and the server will both accept.
 MAX_GRANT = 5_000_000
-STORE_SHELVES = {"gems", "coins", "bundles", "supplies"}
+STORE_SHELVES = {"gems", "coins", "bundles", "supplies", "event_pass"}
 
 # The heart-container rungs. Mirrors StoreLimits.MinHeartCapacity / MaxHeartCapacity and
 # products.ts MAX_CAPACITY.
@@ -1940,7 +2299,7 @@ def check_hints(progression, warnings):
 GOOD_KINDS = {"hearts", "heart_boost"}
 
 
-def check_store(progression, keys):
+def check_store(progression, keys, manifest=None):
     """The shop: what money buys, and what gems buy.
 
     Checked offline as well as in the Editor, and for a sharper reason than the grove is.
@@ -1998,6 +2357,24 @@ def check_store(progression, keys):
         credits = int(entry.get("credits") or 0)
         gems = int(entry.get("gems") or 0)
         capacity = int(entry.get("heartCapacity") or 0)
+        pass_id = entry.get("eventPassId") or ""
+
+        # An event pass: the second non-currency thing a real-money product may grant, and it
+        # passes invariant 18d for the same reason a heart capacity does. What it buys is
+        # `owned: true` on one account/event document, so applying it twice is applying it
+        # once and there is nothing for a save to remember. Mirrors StoreCatalog.Resolve and
+        # seed-config.mjs, which is why the clauses are the same clauses in the same order.
+        if pass_id and (not re.fullmatch(r"[a-z0-9_]{1,64}", pass_id)
+                        or entry.get("kind") != "nonconsumable"
+                        or credits or gems or capacity
+                        or entry.get("shelf") != "event_pass"):
+            errors.append(f"store product '{pid}' has an invalid event pass entitlement; a pass "
+                          "is a nonconsumable on the 'event_pass' shelf that grants no currency "
+                          "and no capacity, because the receipt buys permission to claim rather "
+                          "than an amount")
+        elif entry.get("shelf") == "event_pass" and not pass_id:
+            errors.append(f"store product '{pid}' sits on the event pass shelf without naming an "
+                          "event; nothing would ever be unlocked by buying it")
 
         # A heart container: the one non-currency thing a real-money product may grant,
         # because a capacity is an idempotent permanent entitlement rather than an amount.
@@ -2028,7 +2405,7 @@ def check_store(progression, keys):
             errors.append(f"store product '{pid}' sits on the supplies shelf without selling a "
                           "heart capacity; that shelf is otherwise for goods bought with gems")
 
-        if credits <= 0 and gems <= 0 and capacity <= 0:
+        if credits <= 0 and gems <= 0 and capacity <= 0 and not pass_id:
             errors.append(f"store product '{pid}' grants nothing")
         if credits > MAX_GRANT or gems > MAX_GRANT:
             errors.append(f"store product '{pid}' grants more than {MAX_GRANT}; the server "
@@ -2048,6 +2425,19 @@ def check_store(progression, keys):
         # it, because the store will not sell one twice. See ValidateStoreLadder.
         if entry.get("kind") != "nonconsumable" and cents:
             shelves.setdefault(entry["shelf"], []).append((cents, pid, credits, gems))
+
+    # An event that sells a pass must have a product that unlocks it, and the two must name
+    # each other. Split across two files, the halves drift: the manifest names a product id
+    # and progression.json names an event id, and a typo in either is a purchase that takes
+    # real money and unlocks nothing. Mirrors ContentValidation and seed-config.mjs.
+    by_pass = {e.get("eventPassId"): e.get("id") for e in products if e.get("eventPassId")}
+    for event in (manifest or {}).get("events") or []:
+        wanted = event.get("premiumProductId") or ""
+        if not wanted:
+            continue
+        if by_pass.get(event.get("id")) != wanted:
+            errors.append(f"event '{event.get('id')}' names premium product '{wanted}', which is "
+                          "not a store product carrying that event's pass entitlement")
 
     # The container ladder, which the money ladder below cannot see: a container grants no
     # currency, so its value per unit of money is zero and it would fail any shelf it was
@@ -2174,7 +2564,6 @@ def daily_income(progression):
 
 BOARD_VECTORS = os.path.join(os.path.dirname(os.path.abspath(__file__)), "board-vectors.json")
 FALL_VECTORS = os.path.join(os.path.dirname(os.path.abspath(__file__)), "fall-vectors.json")
-KEEPER_VECTORS = os.path.join(os.path.dirname(os.path.abspath(__file__)), "keeper-vectors.json")
 BUD_VECTORS = os.path.join(os.path.dirname(os.path.abspath(__file__)), "bud-vectors.json")
 
 # The marker the four-armed-tile rule's warning carries, in all three copies of it.
@@ -2278,84 +2667,6 @@ def run_fall_vectors():
 
     return (f"fall vectors: {len(cases)} case(s), the offline rules agree"
             if not bad else f"fall vectors: {len(bad)} disagreement(s)")
-
-
-def run_keeper_vectors():
-    """Runs `keeper-vectors.json` through this file's copy of Groovekeeper's rules.
-
-    The bloom rule exists twice - `KeeperBoard`/`KeeperSolver`, which is what ships, and
-    `keeper.py`, which is what this gate and the chapter script run because they have no Unity
-    anywhere. Invariant 9a's answer for a board rule: the vector file is the contract, this
-    proves the Python side of it and `KeeperVectorTests` proves the C# side.
-
-    The cases are the places a loose transcription reads plausibly and answers differently -
-    a tile that was already blooming being counted a second time, a heartbed accepting a
-    colour it should refuse, stone conducting, a prism carrying one channel instead of three,
-    and a walled-off bed coming back *timed out* rather than proved unopenable.
-    """
-    doc = json.load(open(KEEPER_VECTORS, encoding="utf-8"))
-    cases = doc.get("cases") or []
-    if not cases:
-        errors.append("keeper-vectors.json has no cases")
-        return "keeper vectors: none found"
-
-    bad = []
-    for case in cases:
-        name = case.get("name", "?")
-        try:
-            grove = keeper.Grove(case["rows"], case["tiles"])
-        except ValueError as why:
-            bad.append("%s: %s" % (name, why))
-            continue
-
-        par, ways, _, proved = keeper.search(grove)
-        budget = par + keeper.DEFAULT_SPARE if par else 0
-
-        for label, got, want in (("proved", proved, case["proved"]),
-                                 ("par", par, case["par"]),
-                                 ("beds", len(grove.beds), case["beds"]),
-                                 ("heartbeds", len(grove.heartbeds), case["heartbeds"]),
-                                 ("room", grove.room, case["room"]),
-                                 ("sprigs", grove.sprig_count, case["sprigs"])):
-            if got != want:
-                bad.append("%s: %s is %r, vectors say %r" % (name, label, got, want))
-
-        if case["par"] > 0:
-            if ways != case["ways"]:
-                bad.append("%s: ways is %r, vectors say %r" % (name, ways, case["ways"]))
-
-            greedy = keeper.greedy(grove, budget)
-            if greedy != case["greedy"]:
-                bad.append("%s: greedy is %r, vectors say %r" % (name, greedy, case["greedy"]))
-
-    # A vector set that has quietly lost its teeth is worse than none: it passes, it is printed
-    # beside the word "ok", and nothing says the rule stopped being checked.
-    covers = dict(flourish=False, unopenable=False, heartbed=False, stone=False,
-                  prism=False, only_one=False)
-    for case in cases:
-        if case["beds"] >= 4:
-            covers["flourish"] = True
-        if case["proved"] and case["par"] == 0:
-            covers["unopenable"] = True
-        if case["heartbeds"] > 0:
-            covers["heartbed"] = True
-        if case["room"] < len(case["rows"]) * len(case["rows"][0].replace(" ", "")):
-            covers["stone"] = True
-        if keeper.PRISM in case["tiles"]:
-            covers["prism"] = True
-        if case["par"] > 0 and case["ways"] == 1:
-            covers["only_one"] = True
-
-    for what, held in covers.items():
-        if not held:
-            bad.append("no case covering '%s', so nothing here would notice that rule going away"
-                       % what)
-
-    for b in bad:
-        errors.append("keeper vectors: " + b)
-
-    return (f"keeper vectors: {len(cases)} case(s), the offline rules agree"
-            if not bad else f"keeper vectors: {len(bad)} disagreement(s)")
 
 
 def run_bud_vectors():
@@ -2700,6 +3011,8 @@ def main():
                 if k not in keys:
                     errors.append(f"level '{lid}' missing string '{k}'")
 
+            check_story(lid, level.get("story"), keys)
+
     print(f"{'#':<3}{'level id':<22}{'chapter':<16}{'size':<7}{'par':<5}{'gold':<6}{'silver':<7}"
           f"{'budget':<8}{'hearts':<7}{'critters':<9}{'brittle':<8}"
           f"{'roots':<7}{'crossings':<11}briars")
@@ -2749,8 +3062,8 @@ def main():
 
                 held = (f"{c['fall_motes']} mote(s), {c['headroom']} headroom{glass}{whorls}, "
                         f"deals {c['deal']}")
-            elif c['mode'] == 'keeper':
-                held = f"{c['beds']} bed(s), {c['hearts']} heartbed(s), deals {c['deal']}"
+            elif c['mode'] in MODE_RULES:
+                held = f"{c['goals']} to finish"
             elif c['mode'] == 'bud':
                 # The chapter's two things named separately, each with the reading that says
                 # whether it is doing anything - invariant 26g's test, warned at 0 by `check_bud`.
@@ -2807,7 +3120,7 @@ def main():
     progression = json.load(open(progression_path, encoding="utf-8")) \
         if os.path.exists(progression_path) else {}
 
-    shop = check_store(progression, keys)
+    shop = check_store(progression, keys, manifest)
     per_day_credits, per_day_gems = daily_income(progression)
 
     errors.extend(check_hints(progression, warnings))
@@ -2907,20 +3220,20 @@ def main():
         motes = carry.get("motes", 6)
         if motes < 0:
             motes = 6
-        tiles = carry.get("tiles", 6)
-        if tiles < 0:
-            tiles = 6
         taps = carry.get("taps", 4)
         if taps < 0:
             taps = 4
+        moves = carry.get("moves", 4)
+        if moves < 0:
+            moves = 4
 
-        # `ink` and `stones` are deliberately absent. They were Lightweave's and Ripplewake's
-        # units, both modes are gone, and the fields are kept in the DTO only so a published table
-        # still carrying the key does not read as malformed - printing one here would say a mode
-        # this build cannot play is still priced.
+        # `ink`, `stones` and `tiles` are deliberately absent. They were Lightweave's,
+        # Ripplewake's and Groovekeeper's units, all three modes are gone, and the fields are kept
+        # in the DTO only so a published table still carrying the key does not read as malformed -
+        # printing one here would say a mode this build cannot play is still priced.
         print(f"continue: {gems} gem(s) for +{turns} turn(s) on a glade, "
-              f"+{motes} mote(s) on a well, +{tiles} tile(s) on a groove, "
-              f"+{taps} tap(s) on a grove")
+              f"+{motes} mote(s) on a well, +{taps} tap(s) on a grove, "
+              f"+{moves} move(s) on a prototype board")
 
         # What the price means, said in the two units a player actually earns gems in.
         # A price nobody can reach is the failure mode this whole block is content for.
@@ -3009,7 +3322,6 @@ def main():
     print()
     print(run_board_vectors())
     print(run_fall_vectors())
-    print(run_keeper_vectors())
     print(run_bud_vectors())
 
     for w in warnings:

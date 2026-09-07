@@ -242,6 +242,8 @@ namespace GlimmerGrove.Store
 
         /// <summary>Raised once per purchase, after the server has granted it.</summary>
         public static event Action<StoreGrant> Granted;
+        /// <summary>Every verified premium entitlement, including a restore or receipt retry.</summary>
+        public static event Action<StoreProduct> EventPassVerified;
 
         /// <summary>Raised when a purchase attempt ended without a transaction.</summary>
         public static event Action<string, StoreFailure, string> Failed;
@@ -762,8 +764,14 @@ namespace GlimmerGrove.Store
             // which is exactly the retry case above. A Restore onto a fresh install *does*
             // celebrate, and should: from the player's side something they had lost has just
             // come back.
+            if (product != null && product.IsEventPass)
+            {
+                try { EventPassVerified?.Invoke(product); }
+                catch (Exception e) { Debug.LogException(e); }
+            }
             bool worthShowing = product != null &&
-                                (product.IsContainer ? entitled : redemption.GrantedAnything);
+                                (product.IsEventPass ? !redemption.AlreadyGranted :
+                                 product.IsContainer ? entitled : redemption.GrantedAnything);
 
             if (worthShowing)
             {

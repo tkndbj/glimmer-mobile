@@ -59,7 +59,9 @@ namespace GlimmerGrove.Content
         {
             new GladeValidator(),
             new FallValidator(),
-            new KeeperValidator(),
+            new MarchValidator(),
+            new EmberValidator(),
+            new KindleValidator(),
             new BudValidator(),
         };
 
@@ -350,118 +352,92 @@ namespace GlimmerGrove.Content
     }
 
     /// <summary>
-    /// Groovekeeper. A grove is authored rather than generated, so unlike a weave everything here
-    /// is in the file — but whether every bed on it can be <em>opened</em> is not, and that is
-    /// what most of this proves.
+    /// Everything a prototype mode has to prove, once.
     ///
     /// <para>
-    /// The mode's checks used to be three lines about width, height and a tile count, which was
-    /// the honest amount for a score attack with no goal in it. A level with a goal, a derived par
-    /// and two fail states has considerably more that can be silently wrong, and every one of
-    /// these failures looks like a perfectly authored grove in the JSON.
+    /// <b>A shared validator because they share a shape, not a rule.</b> Such a mode authors a
+    /// whole board, searches it for par with <see cref="ProtoSearch"/> and derives every graded
+    /// number from the answer - so "was it proved", "how many ways", "does careless play finish
+    /// it", "is the ladder ordered" and "does it cost too much to prove on a phone" are one set of
+    /// questions with one set of words. What a subclass adds is the handful of things only its own
+    /// rules can ask. It was written for five modes and four of them were withdrawn; the split
+    /// held, which is the argument for it.
+    /// </para>
+    /// <para>
+    /// <b>The node figures are about the player's device, not this one.</b>
+    /// <see cref="ProtoSearch.NodeBudget"/> is large because it has to make a genuinely hard board
+    /// <em>provable</em>; these two are the separate question of what that proof costs where it is
+    /// actually paid - once per level, on a phone, on the way into it (invariant 26d).
     /// </para>
     /// </summary>
-    sealed class KeeperValidator : ModeValidator
+    abstract class ProtoValidator : ModeValidator
     {
-        public override GameMode Mode => GameMode.Keeper;
-
-        /// <summary>
-        /// Where a grove stops being cheap to prove, and where it stops being shippable.
-        ///
-        /// <para>
-        /// <b>These are about the <em>player's</em> device, not about this one.</b>
-        /// <see cref="KeeperSolver.NodeBudget"/> is large because it has to make a genuinely hard
-        /// grove <em>provable</em> — a grove it cannot prove is a grove with no par, and
-        /// everything a player is graded against derives from par. These two are the separate
-        /// question of what that proof costs where it is actually paid: once per level, on the
-        /// phone, when somebody opens it (invariant 26d).
-        /// </para>
-        /// <para>
-        /// Lower than Lightfall's pair, and deliberately: a position here costs more to expand
-        /// than a well's does, because the floor this search prunes on walks every bed and every
-        /// standing tile. Cost goes roughly as the open cell count to the power of par, so the
-        /// cheap fixes are more stone, fewer beds, or a bed one step nearer the sprig — never a
-        /// bigger grove.
-        /// </para>
-        /// </summary>
         const int NodeWarning = 30_000, NodeCeiling = 90_000;
 
         /// <summary>
-        /// Above this many shortest answers the grove is not deciding much — see
-        /// <see cref="KeeperSurvey.Ways"/> and invariant 5d.
+        /// Above this many shortest answers the board is not deciding much (invariant 5d).
+        ///
+        /// A warning at the top and nothing at the bottom, which is the ordinary reading: none of
+        /// these five is commissioned to be effortless the way Budburst is, so a single forced
+        /// answer is a legitimate opening board rather than a fault.
         /// </summary>
         const int TooManyWays = 300;
 
+        /// <summary>What this mode calls the thing a move is spent on, for the messages.</summary>
+        protected abstract string Noun { get; }
+
+        /// <summary>Anything only this mode's rules can ask. Runs after the board is proved.</summary>
+        protected virtual void Inspect(ProtoLevelRules rules, LevelDefinition level,
+                                       ProtoAnswer answer, List<LevelIssue> issues) { }
+
         public override void Validate(LevelDefinition level, List<LevelIssue> issues)
         {
-            var grove = (KeeperRules)level.Rules;
-            var layout = grove.Layout;
+            var rules = (ProtoLevelRules)level.Rules;
 
-            // A procession that cannot supply a colour some heartbed insists on makes that bed
-            // unopenable however many tiles are bought, so the grove can never be finished. The
-            // search below would catch it, but not in words anybody could act on.
-            int wanted = layout.Wanted;
-            if ((wanted & ~layout.Deal.Channels) != Energy.None)
-            {
-                int absent = wanted & ~layout.Deal.Channels;
-                issues.Add(new LevelIssue(LevelIssueSeverity.Error,
-                    $"a heartbed here insists on {Energy.Letter(absent)} and this procession " +
-                    "never deals it, so that bed could never be opened by anybody"));
-            }
-
-            // Note what is deliberately *not* checked: that the procession carries all three
-            // channels. Lightfall refuses a deal that does not, and has to — a drop onto bare
-            // ground there makes a fresh mote wanting the two colours it lacks, so a two-colour
-            // procession can be walked into a position no amount of play recovers from. Nothing
-            // here does that. A tile that cannot bloom is simply a tile, the sprigs standing on
-            // the ground are permanent, and two of the ten grooves that ship are finished with a
-            // two-colour basket precisely because the third colour is already on the board. What
-            // matters is that every bed can be opened, and the search below proves exactly that.
-
-            // Room above par is `spare`, in tiles, so a budgetFactor on a grove is a number that
-            // does nothing. Refused rather than ignored, for ChapterDto.order's reason — and
+            // Room above par is `spare`, counted in moves, so a budgetFactor here is a number that
+            // does nothing. Refused rather than ignored, for ChapterDto.order's reason - and
             // refused rather than honoured, because two ways to say one thing is how they come to
             // disagree. A negative factor still means "cannot be lost", which is not an override
-            // and is what the first grove in the game is authored with.
+            // and is what the first board of every mode is authored with (invariant 24).
             if (level.Tuning.BudgetFactorIsIgnored)
                 issues.Add(new LevelIssue(LevelIssueSeverity.Error,
-                    $"this grove authors budgetFactor {level.Tuning.BudgetFactor:0.##}, which " +
-                    "does nothing: a grove's room above par is 'spare', counted in tiles, " +
-                    "because a wrong tile costs the same wherever it happens. Use 'spare', or a " +
-                    "negative budgetFactor if it is meant to be unlosable"));
+                    $"this board authors budgetFactor {level.Tuning.BudgetFactor:0.##}, which " +
+                    "does nothing: room above par here is 'spare', counted in moves, because a " +
+                    "wrong move costs the same wherever it happens. Use 'spare', or a negative " +
+                    "budgetFactor if it is meant to be unlosable"));
 
-            var survey = KeeperSolver.Survey(layout);
+            var answer = ProtoSearch.Solve(rules.Opening());
 
-            if (!survey.Proved)
+            if (!answer.Proved)
             {
                 issues.Add(new LevelIssue(LevelIssueSeverity.Error,
-                    $"this grove could not be proved inside {KeeperSolver.NodeBudget} positions " +
-                    $"(it looked at {survey.Nodes}) or within {KeeperSolver.MaxTiles} tiles. It " +
-                    "may be unsolvable, or simply too big to prove — either way it cannot ship, " +
+                    $"this board could not be proved inside {ProtoSearch.NodeBudget} positions " +
+                    $"(it looked at {answer.Nodes}) or within {ProtoSearch.MaxDepth} moves. It " +
+                    "may be unsolvable, or simply too big to prove - either way it cannot ship, " +
                     "because the player's device runs the same search to work out par"));
                 return;
             }
 
-            if (!survey.IsSolvable)
+            if (!answer.Solvable)
             {
                 issues.Add(new LevelIssue(LevelIssueSeverity.Error,
-                    "no sequence of tiles opens every bed on this grove, so nobody can finish " +
-                    "it — every arrangement was searched and none won"));
+                    "no sequence of moves finishes this board, so nobody can clear it - every " +
+                    "arrangement was searched and none won"));
                 return;
             }
 
-            if (survey.Nodes > NodeCeiling)
+            if (answer.Nodes > NodeCeiling)
                 issues.Add(new LevelIssue(LevelIssueSeverity.Error,
-                    $"proving this grove took {survey.Nodes} positions, above the {NodeCeiling} " +
+                    $"proving this board took {answer.Nodes} positions, above the {NodeCeiling} " +
                     "a level may cost. The player's device runs this same search when somebody " +
                     "opens the level, so this is about a quarter of a second of nothing " +
-                    "happening on the way in. Cost goes roughly as the open cell count to the " +
-                    "power of par, so the cheapest fixes are more stone or a shorter answer"));
-            else if (survey.Nodes > NodeWarning)
+                    "happening on the way in. Cost goes roughly as the board size to the power " +
+                    "of par, so the cheapest fixes are a smaller board or a shorter answer"));
+            else if (answer.Nodes > NodeWarning)
                 issues.Add(new LevelIssue(LevelIssueSeverity.Warning,
-                    $"proving this grove took {survey.Nodes} positions against the " +
-                    $"{NodeWarning} a level is expected to cost. It ships — the refusal is at " +
-                    $"{NodeCeiling} — but the player's device runs this same search when " +
+                    $"proving this board took {answer.Nodes} positions against the " +
+                    $"{NodeWarning} a level is expected to cost. It ships - the refusal is at " +
+                    $"{NodeCeiling} - but the player's device runs this same search when " +
                     "somebody opens the level"));
 
             // The same three-line check every mode with a fail line gets. Shared rather than
@@ -469,35 +445,505 @@ namespace GlimmerGrove.Content
             // step with LevelTuning (invariant 9a).
             LevelValidator.CheckStarBands(level, issues);
 
-            // A basket bigger than the ground can hold is a fail state that fires the wrong way:
-            // the run ends Overgrown with tiles still in the basket, which reads to a player as
-            // the game stopping rather than as running out of anything.
-            int room = layout.Room - layout.Sprigs;
-            if (level.Tuning.HasBudget && level.Tuning.MoveBudget > room)
+            if (answer.Ways > TooManyWays)
                 issues.Add(new LevelIssue(LevelIssueSeverity.Warning,
-                    $"this grove is dealt {level.Tuning.MoveBudget} tiles onto {room} cells of " +
-                    "bare ground, so a careless run runs out of somewhere to plant before it " +
-                    "runs out of tiles — which ends it on the one fail state a continue cannot " +
-                    "rescue"));
-
-            // Invariant 5d, counted. A grove almost any tidy play finishes is one where the
-            // ground and the procession decide nothing, however pretty it looks.
-            if (survey.Ways > TooManyWays)
-                issues.Add(new LevelIssue(LevelIssueSeverity.Warning,
-                    $"{survey.Ways} different groves of {survey.Par} tiles open every bed here, " +
-                    "so almost any tidy play wins and the ground is deciding nothing — add " +
-                    "stone, move a bed further from the sprig, or make one of them a heartbed"));
+                    $"{answer.Ways} different runs of {answer.Par} moves finish this board, so " +
+                    "almost any play wins and the arrangement is deciding nothing - add stone, " +
+                    $"move a {Noun} further out of reach, or take a move away from the answer"));
 
             // Reported rather than gated. On a chapter's opening levels thoughtlessness is
-            // supposed to work — that is what teaching the verb looks like — so this is a reading
+            // supposed to work - that is what teaching the verb looks like - so this is a reading
             // for the author, and a chapter's ladder is where it stops being true.
-            int greedy = KeeperSolver.Greedy(layout, level.Tuning.MoveBudget);
-            if (greedy >= 0 && greedy <= level.Tuning.MoveBudget && survey.Par > 3)
+            int careless = ProtoSearch.Careless(rules.Opening(), level.Tuning.MoveBudget);
+            if (careless > 0 && answer.Par > 2)
+            {
+                // Spelt out rather than printed, because a board authored without a fail line
+                // carries `int.MaxValue` and "an allowance of 2147483647" is a sentence that
+                // reads as a bug in the checker rather than as a fact about the level.
+                string allowance = level.Tuning.HasBudget
+                                 ? level.Tuning.MoveBudget.ToString() : "none at all";
+
                 issues.Add(new LevelIssue(LevelIssueSeverity.Warning,
-                    $"a player who never looks ahead finishes this grove in {greedy} tiles " +
-                    $"against a basket of {level.Tuning.MoveBudget}, so it can be cleared by " +
-                    "always taking the biggest flourish going — fine early in a chapter, and " +
-                    "worth knowing later in one"));
+                    $"a player who never looks ahead finishes this board in {careless} moves " +
+                    $"against an allowance of {allowance}, so it can be cleared by " +
+                    "always taking the biggest thing going - fine early in a chapter, and worth " +
+                    "knowing later in one"));
+            }
+
+            Inspect(rules, level, answer, issues);
+        }
+    }
+
+    /// <summary>
+    /// Hollowmarch. What a haul-road has to prove on top of being solvable.
+    ///
+    /// <para>
+    /// Everything below is a reading the search cannot give in words an author could act on.
+    /// "No sequence of cores finishes this board" is true and useless; "the warden at position
+    /// nine can never be scrapped, because no shot on this road ever destroys five pods and so
+    /// no Spark can ever be forged" is the sentence that names the thing to move. The refusals
+    /// about the board's opening state — a road that forks, a line already three alike, nothing
+    /// to fire at — live in the mode's own reader, because a player's build runs that reader and
+    /// must not open a board that cannot be played.
+    /// </para>
+    /// </summary>
+    sealed class MarchValidator : ProtoValidator
+    {
+        public override GameMode Mode => GameMode.March;
+        protected override string Noun => "pod";
+
+        /// <summary>
+        /// How much road a line may have behind it before the march stops meaning anything.
+        ///
+        /// The march is this mode's allowance drawn on the board, so a road long enough that the
+        /// raiders could never reach the gate inside the allowance is a road where the pressure
+        /// is a picture of a threat rather than a threat. Generous, because a teaching board
+        /// wants exactly that picture and nothing more (invariant 24 read one step further in).
+        /// </summary>
+        const int Slack = 6;
+
+        protected override void Inspect(ProtoLevelRules rules, LevelDefinition level,
+                                        ProtoAnswer answer, List<LevelIssue> issues)
+        {
+            var layout = ((MarchRules)rules).Layout;
+            var board = MarchBoard.Build(layout);
+
+            int budget = level.Tuning.HasBudget ? level.Tuning.MoveBudget : 0;
+            var reading = MarchReading.Of(layout);
+
+            // Certain, and the search would only say "unsolvable". A warden wears two plates, so
+            // it takes two separate blasts beside it or one lance — and a lance exists only if
+            // some shot on this road can ever take ForgeAt pods. That is a sentence an author
+            // can act on where "no sequence of cores wins" is not.
+            if (reading.Wardens > 0 && reading.Forged == 0)
+                issues.Add(new LevelIssue(LevelIssueSeverity.Warning,
+                    $"this road walks {reading.Wardens} warden(s) and no shortest run of it " +
+                    $"ever forges a Spark. A warden wears two plates, so it wants either two " +
+                    "blasts beside it or the one core that cuts plating - check it can be " +
+                    "reached at all"));
+
+            // Invariant 5d, asked of the thing this mode's payoff is made of. The reading is
+            // taken over **every** shortest solution rather than over the opening move, and that
+            // is the whole point of it: a line whose very first shot sets off a four-wave chain
+            // is a line that is *over* in three shots, so an opening-move reading selects for
+            // short boards and quietly punishes the good ones (invariant 26h's `kindled`, and
+            // Budburst's `fired` before it).
+            if (reading.Chained < 2 && answer.Par > 2)
+                issues.Add(new LevelIssue(LevelIssueSeverity.Warning,
+                    "no shortest run of this board ever sets off a second wave, so nothing on " +
+                    "it chains - which is this mode with its payoff taken out. Move a pod so " +
+                    "that closing one gap brings three more together"));
+
+            // A Spark that cannot be made on the board as dealt is a Spark the author placed
+            // rather than one the player earned, and invariant 20m says that is not a payoff at
+            // all. Only asked of a road long enough to have room for one: on a teaching board a
+            // player is still working out what a match is.
+            if (reading.Forged == 0 && answer.Par > 4)
+                issues.Add(new LevelIssue(LevelIssueSeverity.Warning,
+                    "no shortest run of this board forges a Spark, so the only way one ever " +
+                    "reaches the player's hands here is by luck. Leave a run where a chain can " +
+                    $"take {MarchLayout.ForgeAt} pods at once"));
+
+            // The march is the allowance made visible, so the two have to be in step. Read
+            // against `Menace` — when a *goal* reaches the gate and the line jams — rather than
+            // against when the first plain pod goes through, because losing a crate costs
+            // material and losing nothing at all costs the mode its pressure.
+            if (budget > 0 && reading.Menace > budget + Slack)
+                issues.Add(new LevelIssue(LevelIssueSeverity.Warning,
+                    $"the line is {reading.Menace} steps from jamming at the gate and the run " +
+                    $"only lasts {budget}, so the march can never arrive and the raiders " +
+                    "walking is scenery. Author the line nearer the portal"));
+
+            // The other end of the same rule, and this one is a real cost rather than a missing
+            // one: pods that go through the gate are match material the player never gets, so a
+            // board that spills most of its line before par is a board whose own clock is
+            // taking the answer away.
+            if (budget > 0 && reading.Runway == 0 && answer.Par > 2)
+                issues.Add(new LevelIssue(LevelIssueSeverity.Warning,
+                    "the line is authored already at the gate, so it starts losing a pod every " +
+                    "shot from the first one. That is material leaving before the player has " +
+                    "had a turn"));
+
+            // A road with no raider is a line with nothing dividing it, so every run of one
+            // colour runs into the next and most shots are as good as any other. Raiders are
+            // what make *which* match a decision.
+            if (reading.Haulers + reading.Wardens == 0 && answer.Par > 4)
+                issues.Add(new LevelIssue(LevelIssueSeverity.Warning,
+                    "this road walks no haulers at all, so nothing divides the line and the " +
+                    "colours alone decide it. A hauler is what makes which match a choice"));
+
+            // Three colours across a long line makes a run of three almost unavoidable, so the
+            // board keeps going off without being aimed at - 20j's solvent arriving through the
+            // front door rather than through the cascade.
+            if (reading.Colours < 4 && reading.Pods >= 16)
+                issues.Add(new LevelIssue(LevelIssueSeverity.Warning,
+                    $"{reading.Pods} pods dealt from {reading.Colours} colours is a line that " +
+                    "matches itself - add the fourth colour to the deal"));
+
+            // The deal has to be able to reach every colour standing on the road, or a pod of
+            // the missing one can never be matched however the run goes. Certain, like the
+            // warden: the search would answer "unsolvable" and name nothing.
+            for (int i = 0; i < layout.Line.Length; i++)
+            {
+                char hue = MarchLayout.Hue(layout.Line[i]);
+                if (hue == '\0' || layout.Cores.IndexOf(hue) >= 0) continue;
+
+                issues.Add(new LevelIssue(LevelIssueSeverity.Error,
+                    $"the line carries a '{hue}' pod and the magazine deals '{layout.Cores}', " +
+                    "so nothing can ever be matched to it"));
+                break;
+            }
+        }
+    }
+
+    /// <summary>
+    /// Emberforge. What a wall has to prove on top of being solvable.
+    ///
+    /// <para>
+    /// Everything below is a reading the search cannot give in words an author could act on.
+    /// "No sequence of moves finishes this board" is true and useless; "the wall carries four
+    /// yellow shards and it takes three in a line to fuse one, so most of that colour is
+    /// confetti" is the sentence that names the thing to move. The refusals about the wall's
+    /// opening state — three alike already in a line, no goal at all, nothing to swap — live in
+    /// the mode's own reader, because a player's build runs that reader and must not open a
+    /// board that cannot be played.
+    /// </para>
+    /// </summary>
+    sealed class EmberValidator : ProtoValidator
+    {
+        public override GameMode Mode => GameMode.Ember;
+        protected override string Noun => "cage";
+
+        /// <summary>
+        /// The most embers a wall may be <em>dealt</em>.
+        ///
+        /// <para>
+        /// Invariant 20m counted, and it is the number this mode is most likely to get wrong,
+        /// because dealing one is the cheapest way to make an opening board feel generous. A
+        /// payoff the author placed is not a payoff — so one is a demonstration, two is a leg
+        /// up, and three is a wall where the biggest thing that happens was nobody's
+        /// achievement. Budburst's <c>MaxDealtSpecials</c>, and the same figure for the same
+        /// reason.
+        /// </para>
+        /// </summary>
+        const int MaxDealt = 2;
+
+        /// <summary>
+        /// How much room a wall wants above what a spendthrift can survive on it.
+        ///
+        /// <para>
+        /// The wall is finite, so this mode has two fail states and only one of them is the
+        /// meter. A board where the most extravagant possible play runs the material out
+        /// <em>before</em> the allowance runs out is a board whose readout is counting down to an
+        /// ending that will not be the one that happens — which reads as the game deciding on the
+        /// player's behalf. Nought, because the honest bar is simply "the wall outlasts the
+        /// meter"; anything more would be asking a finite wall to be generous, which is the one
+        /// thing this mode is not.
+        /// </para>
+        /// </summary>
+        const int LifeSlack = 0;
+
+        protected override void Inspect(ProtoLevelRules rules, LevelDefinition level,
+                                        ProtoAnswer answer, List<LevelIssue> issues)
+        {
+            var layout = ((EmberRules)rules).Layout;
+
+            int budget = level.Tuning.HasBudget ? level.Tuning.MoveBudget : 0;
+            var reading = EmberReading.Of(layout, budget);
+
+            // Certain, and the search would only say "unsolvable". A colour with fewer than
+            // three shards can never be fused into anything, so every one of them is material
+            // that only breaks up other people's runs.
+            if (reading.Lonely > 1)
+                issues.Add(new LevelIssue(LevelIssueSeverity.Warning,
+                    $"{reading.Lonely} of this wall's colours have fewer than " +
+                    $"{EmberLayout.FuseAt} shards on it, so they can never be fused into " +
+                    "anything and only break up the runs of the colours that can. Either give " +
+                    "them enough to matter or take them off the wall"));
+
+            // Invariant 20m. An ember the player did not make is a payoff the author placed.
+            if (reading.Dealt > MaxDealt)
+                issues.Add(new LevelIssue(LevelIssueSeverity.Warning,
+                    $"this wall is dealt {reading.Dealt} embers. The whole payoff of this mode " +
+                    "is the thing the player makes, so a wall handing several over has had its " +
+                    $"point taken out - {MaxDealt} is a demonstration and more is a gift"));
+
+            // Invariant 5d, asked of the thing this mode's payoff is made of, and taken over
+            // **every** shortest solution rather than over the opening move (see EmberReading).
+            if (reading.Chained < 2 && answer.Par > 2)
+                issues.Add(new LevelIssue(LevelIssueSeverity.Warning,
+                    "no shortest run of this wall ever sets off a second beat, so nothing on it " +
+                    "chains - which is this mode with its payoff taken out. Leave two embers " +
+                    "where one blast can reach the other, or stand a cage where a chain has to " +
+                    "reach it"));
+
+            // The other half of the same rule: a wall whose answer never makes an ember is a
+            // wall being finished with what it was handed.
+            if (reading.Forged == 0 && answer.Par > 1)
+                issues.Add(new LevelIssue(LevelIssueSeverity.Warning,
+                    "no shortest run of this wall ever fuses an ember, so it is finished with " +
+                    "what it was dealt rather than with anything the player made"));
+
+            // The fail state the readout is not showing. See EmberReading.Life.
+            if (budget > 0 && reading.Life + LifeSlack < budget)
+                issues.Add(new LevelIssue(LevelIssueSeverity.Warning,
+                    $"a player spending everything as fast as they can runs this wall out of " +
+                    $"moves in {reading.Life} against an allowance of {budget}, so the meter is " +
+                    "counting down to an ending that will not be the one that happens. Pack more " +
+                    "shards in, or take the allowance down with 'spare'"));
+
+            // Stone is the only thing on the wall that shapes a beam for ever, so a wall
+            // without any is one where every cross is worth the same wherever it is fired.
+            if (reading.Stone + reading.Wardens == 0 && answer.Par > 2)
+                issues.Add(new LevelIssue(LevelIssueSeverity.Warning,
+                    "this wall holds no stone and no warden, so nothing stops a beam and every " +
+                    "cross reaches the same distance wherever it goes off. Stone is what makes " +
+                    "which row a decision"));
+
+            // Certain: a goal nothing can ever reach. A cage walled off by stone on every side
+            // of both its lines can never be caught by any beam, and the search would answer
+            // "unsolvable" while naming nothing.
+            int walled = Unreachable(layout);
+            if (walled > 0)
+                issues.Add(new LevelIssue(LevelIssueSeverity.Error,
+                    $"{walled} goal(s) on this wall stand where no beam could ever arrive - " +
+                    "stone blocks every approach along their own row and column, so nothing " +
+                    "that happens anywhere on this board can reach them"));
+        }
+
+        /// <summary>
+        /// Goals that no blast could reach from anywhere, because stone stands between them and
+        /// every cell of their own row and column.
+        ///
+        /// <para>
+        /// Deliberately a <em>necessary</em> condition rather than a sufficient one: it asks
+        /// whether a beam fired from some cell on the goal's own lines would arrive, and ignores
+        /// the diagonals a star adds and whether an ember could ever stand there. So it
+        /// under-reports, which is the right direction for a check that errors — everything it
+        /// names really is unreachable, and the search catches the rest as "unsolvable".
+        /// </para>
+        /// </summary>
+        static int Unreachable(EmberLayout layout)
+        {
+            var grid = layout.Grid;
+            int w = grid.Width, h = grid.Height, walled = 0;
+
+            for (int cell = 0; cell < grid.Count; cell++)
+            {
+                if (!EmberLayout.IsGoal(grid.At(cell))) continue;
+
+                int gx = cell % w, gy = cell / w;
+                bool reachable = false;
+
+                // Four approaches, each walked outward from the goal until something would stop
+                // a beam coming the other way. Anything but stone lets light through, and the
+                // goal itself is what the beam is looking for.
+                for (int d = 0; d < EmberLayout.CrossRays && !reachable; d++)
+                {
+                    int x = gx, y = gy;
+
+                    while (true)
+                    {
+                        x += EmberLayout.StepX[d];
+                        y += EmberLayout.StepY[d];
+                        if (x < 0 || y < 0 || x >= w || y >= h) break;
+
+                        char c = grid.At(y * w + x);
+                        if (EmberLayout.Stops(c)) break;
+
+                        // A cell a gem could stand on now, or could fall into later, is a cell
+                        // an ember could go off in.
+                        reachable = true;
+                        break;
+                    }
+                }
+
+                if (!reachable) walled++;
+            }
+
+            return walled;
+        }
+    }
+
+    /// <summary>
+    /// Kindlewake. What a hollow has to prove on top of being solvable.
+    ///
+    /// <para>
+    /// Everything below is a reading the search cannot give in words an author could act on. "No
+    /// sequence of strands finishes this board" is true and useless; "the critter at row 3 column
+    /// 5 wants blue and no two blue embers share a clear line through it, so nothing that happens
+    /// anywhere on this hollow can ever reach it" is the sentence that names the thing to move.
+    /// The refusals about the hollow's opening state — no sleeper at all, no channel with two
+    /// embers, nothing that can be joined — live in the mode's own reader, because a player's
+    /// build runs that reader and must not open a board that cannot be played.
+    /// </para>
+    /// </summary>
+    sealed class KindleValidator : ProtoValidator
+    {
+        public override GameMode Mode => GameMode.Kindle;
+        protected override string Noun => "critter";
+
+        /// <summary>
+        /// How much room a hollow wants above what a spendthrift can survive on it.
+        ///
+        /// <para>
+        /// Emberforge's <c>LifeSlack</c>, and nought for the same reason: the material is finite,
+        /// so this mode has two fail states and only one of them is the meter. The honest bar is
+        /// simply "the hollow outlasts the allowance"; anything more would be asking a finite
+        /// board to be generous, which is the one thing this mode is not.
+        /// </para>
+        /// </summary>
+        const int LifeSlack = 0;
+
+        /// <summary>
+        /// Embers standing where no partner can see them before it is worth saying so.
+        ///
+        /// One is scenery and nobody minds. Several is a hollow that looks far richer than it
+        /// plays, which is the specific way this mode's boards go wrong — an ember is the most
+        /// eye-catching thing on the field, so a walled-off one reads as an option that is not
+        /// there.
+        /// </summary>
+        const int TooManyIdle = 2;
+
+        protected override void Inspect(ProtoLevelRules rules, LevelDefinition level,
+                                        ProtoAnswer answer, List<LevelIssue> issues)
+        {
+            var layout = ((KindleRules)rules).Layout;
+
+            int budget = level.Tuning.HasBudget ? level.Tuning.MoveBudget : 0;
+            var reading = KindleReading.Of(layout, budget);
+
+            // Certain, and the search would only answer "unsolvable". A channel with one ember on
+            // it can never be joined into anything, so a critter wanting it is a critter nothing
+            // can ever reach - and the author has to be told which colour rather than which board.
+            if (reading.Lonely > 0)
+                issues.Add(new LevelIssue(LevelIssueSeverity.Warning,
+                    $"{reading.Lonely} of this hollow's colours have fewer than " +
+                    $"{KindleLayout.JoinAt} embers on it, so no strand of that colour can ever be " +
+                    "drawn. Either give them a partner or take them off the board"));
+
+            // Certain, exact, and it names the cell. This is the one thing the search genuinely
+            // cannot say: it answers "unsolvable" and points at nothing.
+            var starved = Unreachable(layout);
+            if (starved != null)
+                issues.Add(new LevelIssue(LevelIssueSeverity.Error, starved));
+
+            // Invariant 5d, asked of the thing this mode's payoff is made of, and taken over
+            // **every** shortest solution rather than over the opening move (see KindleReading).
+            if (reading.Blends > 0 && reading.Blended == 0)
+                issues.Add(new LevelIssue(LevelIssueSeverity.Warning,
+                    $"this hollow stands {reading.Blends} critter(s) wanting a blend and no " +
+                    "shortest run of it ever wakes one, so the crossing - which is the whole of " +
+                    "what this mode is - never has to be arranged. Move a blend critter onto a " +
+                    "cell two strands of different colours could both reach"));
+
+            // The softer half of the same rule, and it is about the *board* rather than about the
+            // answer: a hollow whose strands never meet at all is four chapters of glade with the
+            // conduits taken out.
+            if (reading.Crossed == 0 && answer.Par > 2)
+                issues.Add(new LevelIssue(LevelIssueSeverity.Warning,
+                    "no shortest run of this hollow ever crosses one strand over another, so " +
+                    "every line is drawn over dark ground and light never mixes. That is this " +
+                    "mode with its subject taken out"));
+
+            // Stone is the only thing on the board that shapes a strand, so a hollow without any
+            // is one where every ember of a colour can see every other one and the pairing rejects
+            // nothing. It is exactly Emberforge's argument about its own stone.
+            if (reading.Stone == 0 && answer.Par > 2)
+                issues.Add(new LevelIssue(LevelIssueSeverity.Warning,
+                    "this hollow holds no stone, so nothing blocks a strand and every ember of a " +
+                    "colour can reach every other one. Stone is what makes which pair a decision"));
+
+            // Material that looks like an option and is not.
+            if (reading.Idle > TooManyIdle)
+                issues.Add(new LevelIssue(LevelIssueSeverity.Warning,
+                    $"{reading.Idle} embers on this hollow have no partner of their own colour " +
+                    "on a clear row or column, so they can never be joined to anything. An ember " +
+                    "is the most eye-catching thing on the board, so each of these reads as a " +
+                    "move that is not there"));
+
+            // The fail state the readout is not showing. See KindleReading.Life, and Emberforge's
+            // before it - the material is finite, so the meter is not the only way to run out.
+            if (budget > 0 && reading.Life + LifeSlack < budget)
+                issues.Add(new LevelIssue(LevelIssueSeverity.Warning,
+                    $"a player drawing everything they can runs this hollow out of strands in " +
+                    $"{reading.Life} against an allowance of {budget}, so the meter is counting " +
+                    "down to an ending that will not be the one that happens. Scatter more " +
+                    "embers, or take the allowance down with 'spare'"));
+        }
+
+        /// <summary>
+        /// The first critter wanting a channel that no pair of embers could ever deliver to it,
+        /// as a sentence naming its cell — or null.
+        ///
+        /// <para>
+        /// <b>A necessary condition rather than a sufficient one, and that is the safe
+        /// direction for a check that errors.</b> The layout's <c>Pairs</c> array is every line
+        /// this hollow could hold <em>as it is dealt</em>, so a critter that no pair of the right
+        /// colour covers is one no run could ever reach, whatever else happens — everything this
+        /// names really is unreachable. What it deliberately does not model is what the player
+        /// does to the board: a spent ember leaves a socket that blocks light, so a pair listed
+        /// here can be walled off by an earlier strand, and two critters may want the same ember.
+        /// That contention is the search's job, which answers "unsolvable" and names nothing. So
+        /// this runs first and names the cell.
+        /// </para>
+        /// </summary>
+        static string Unreachable(KindleLayout layout)
+        {
+            var grid = layout.Grid;
+            int w = grid.Width;
+
+            for (int cell = 0; cell < grid.Count; cell++)
+            {
+                char c = grid.At(cell);
+                if (!KindleLayout.IsSleeper(c)) continue;
+
+                int want = KindleLayout.WantOf(c);
+
+                for (int k = 0; k < KindleLayout.Embers.Length; k++)
+                {
+                    int channel = 1 << k;
+                    if ((want & channel) == 0) continue;
+                    if (Covered(layout, cell, channel)) continue;
+
+                    return $"the critter at row {cell / w} column {cell % w} wants " +
+                           $"'{Energy.Letter(channel)}' light and no two '{KindleLayout.Embers[k]}' " +
+                           "embers share a clear row or column through its cell, so nothing that " +
+                           "happens anywhere on this hollow could ever wake it";
+                }
+            }
+
+            return null;
+        }
+
+        /// <summary>Whether some candidate pair of this channel lays a strand across this cell.</summary>
+        static bool Covered(KindleLayout layout, int cell, int channel)
+        {
+            var grid = layout.Grid;
+            int w = grid.Width;
+            int cx = cell % w, cy = cell / w;
+
+            var pairs = layout.Pairs;
+            for (int i = 0; i < pairs.Length; i += 2)
+            {
+                int a = pairs[i], b = pairs[i + 1];
+                if (KindleLayout.ChannelOf(grid.At(a)) != channel) continue;
+
+                int ax = a % w, ay = a / w, bx = b % w, by = b / w;
+
+                if (ay == by)
+                {
+                    if (cy != ay) continue;
+                    if (cx >= (ax < bx ? ax : bx) && cx <= (ax > bx ? ax : bx)) return true;
+                }
+                else
+                {
+                    if (cx != ax) continue;
+                    if (cy >= (ay < by ? ay : by) && cy <= (ay > by ? ay : by)) return true;
+                }
+            }
+
+            return false;
         }
     }
 

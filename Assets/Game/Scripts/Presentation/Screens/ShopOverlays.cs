@@ -300,7 +300,7 @@ namespace GlimmerGrove
 
             // A container has exactly one line — what the cap is now — and every currency
             // product has one per currency it granted.
-            int lines = Grant.IsContainer
+            int lines = Grant.IsContainer || Grant.Product.IsEventPass
                 ? 1
                 : (Grant.Gems > 0 ? 1 : 0) + (Grant.Credits > 0 ? 1 : 0);
 
@@ -411,6 +411,13 @@ namespace GlimmerGrove
         void BuildChips(RectTransform panel, float top)
         {
             float y = top + ChipH * .5f;
+
+            if (Grant.Product.IsEventPass)
+            {
+                UIKit.Titled("PassUnlocked", panel, Loc.Get("ui.pass.unlocked"), 40, Pal.Gold,
+                             TextAnchor.MiddleCenter, new Vector2(700f, ChipH), new Vector2(.5f, 1f), new Vector2(0f, -y));
+                return;
+            }
 
             if (Grant.IsContainer) { _capacity = CapacityRow(panel, y); return; }
 

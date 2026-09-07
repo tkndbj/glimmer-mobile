@@ -1,0 +1,68 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: bbb281ee3bf0b054c82ac2347e9e782c, type: 3}
+  m_Name: Glimmer Chapter k01_kindlewake
+  m_EditorClassIdentifier: Unity.Addressables.Editor::UnityEditor.AddressableAssets.Settings.AddressableAssetGroup
+  m_GroupName: Glimmer Chapter k01_kindlewake
+  m_GUID: 26079a843cb086d4db922a8d13416bd6
+  m_SerializeEntries:
+  - m_GUID: 276228cfedd10bd44885aa6feff7e3e2
+    m_Address: Art/Kindle/ember_g
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 45eda4e00f4ba034ea4dbd706946f87a
+    m_Address: Art/Kindle/ember_r
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 6a3601b3c516bc345857e66aa531c6e3
+    m_Address: Art/Kindle/stone
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 6f422e62da0e5314e8884f7a2acfa9b8
+    m_Address: Art/Kindle/husk
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 8bf37d119f29bc74eab1d1438d18140e
+    m_Address: Art/Kindle/socket
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 970342f20cf199d4fbf820b7426c3364
+    m_Address: Art/Kindle/moss_lit
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: bcbd1fb1607c2654f85d8f354e520d0b
+    m_Address: Art/Kindle/moss
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: d033bbff15318424a8afd187dd4553e9
+    m_Address: Art/Kindle/ember_b
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  m_ReadOnly: 0
+  m_Settings: {fileID: 11400000, guid: 6c4c5f6eb57af6542b195d29840b42f2, type: 2}
+  m_SchemaSet:
+    m_Schemas:
+    - {fileID: 11400000, guid: 35e4798f58fe97a49a0d5a05bbdc6312, type: 2}
+    - {fileID: 11400000, guid: 27232fd5d54b7904b92675705b55fafe, type: 2}
+    m_SchemaDisplayOrder:
+    - Glimmer Chapter k01_kindlewake_BundledAssetGroupSchema
+    - Glimmer Chapter k01_kindlewake_ContentUpdateGroupSchema
+  m_IncludeInBuild: 1
+  m_IncludeInBuildMigrated: 1

@@ -94,12 +94,51 @@ def places(ordinal):
     return [(XS[i], ys[i]) for i in range(PER_CHAPTER)]
 
 
-def sky(ordinal, level_index):
+#: The worlds a mode can be set in, and the family of backdrops each one draws.
+#:
+#: **One axis added to the rule above, and it belongs to the mode rather than to the
+#: chapter.** Every sky in this game is the same cloud painting at forty colours, which is
+#: exactly right while every mode is set in the same forest and exactly wrong the first time
+#: one is not: a cloud sky behind a raided village at night is not a grading problem, it is the
+#: wrong room. So a mode names a world, a world names a family, and the arithmetic below is
+#: unchanged - same ordinal, same level index, same forty. Nothing about any existing chapter
+#: moves, and a second Nova Raid chapter still costs no art (`Tools/make_village_art.py`).
+#:
+#: The map is deliberately **not** part of this. Invariant 7c says a mode is told apart on
+#: the map by its perch and by nothing else, and that is still true: every mode of every
+#: world draws `map1` for its first chapter.
+WORLDS = {
+    "grove": "sky",
+    "village": "village",
+}
+
+#: Which world each mode is set in. Absent means the grove, so every mode that shipped
+#: before there was a second world keeps its art with its entry unwritten.
+MODE_WORLD = {
+    "march": "village",
+    # Emberforge is played on the hull of the harvester the raiders parked in that same
+    # village, so it is the same world seen from a few streets away - which is what a
+    # world is for. A third one would be forty new backdrops for a change of room.
+    "ember": "village",
+}
+
+# `quarry` was the entry here before Hollowmarch took its slot and its village. A retired mode
+# id is not re-pointed and is not kept: nothing loads a chapter naming one (invariant 20), so an
+# entry for it would be a line that can never be read.
+
+
+def world_of(mode):
+    """The world a mode is set in. `mode` may be None or '' for the classic glade."""
+    return MODE_WORLD.get(mode or "glade", "grove")
+
+
+def sky(ordinal, level_index, mode=None):
     """The backdrop one level draws."""
+    family = WORLDS[world_of(mode)]
     block = (ordinal - 1) % BLOCKS
-    return "sky_%02d" % (block * PER_CHAPTER + level_index % PER_CHAPTER)
+    return "%s_%02d" % (family, block * PER_CHAPTER + level_index % PER_CHAPTER)
 
 
-def skies(ordinal, count=PER_CHAPTER):
+def skies(ordinal, count=PER_CHAPTER, mode=None):
     """The backdrops a chapter's levels draw, in play order."""
-    return [sky(ordinal, i) for i in range(count)]
+    return [sky(ordinal, i, mode) for i in range(count)]

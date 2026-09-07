@@ -32,6 +32,44 @@ namespace GlimmerGrove.AssetPipeline
         public static string Companion(string key) => CompanionRoot + key;
 
         public static string Backdrop(string key) => BackdropRoot + key;
+
+        /// <summary>
+        /// One of Hollowmarch's sprites — a road tile, a pod, one of the cast as a folder of
+        /// frames — and one of its explosions.
+        ///
+        /// Here rather than spelt out at the call sites, for invariant 7's reason: a path built
+        /// by hand in two places is two paths, and one of them is wrong the day the folder moves.
+        /// The folder has now moved twice — Nova Raid was withdrawn and the Iron Quarry
+        /// inherited its cast, then the quarry was withdrawn and Hollowmarch inherited the same
+        /// cast again — and both times it cost one line, which is the whole argument for this
+        /// being a function rather than a string spelt out wherever art is asked for.
+        /// </summary>
+        public static string MarchArt(string key) => ArtRoot + "March/" + key;
+        public static string MarchFx(string key) => ArtRoot + "Fx/March/" + key;
+
+        /// <summary>Emberforge's wall: its shards, its fittings and its cast.</summary>
+        public static string EmberArt(string key) => ArtRoot + "Ember/" + key;
+
+        /// <summary>Emberforge's explosions, which live under Fx rather than beside the wall.</summary>
+        public static string EmberFx(string key) => ArtRoot + "Fx/Ember/" + key;
+
+        /// <summary>
+        /// Kindlewake's hollow: its embers, its stone, its sleeping critters and its cast.
+        ///
+        /// <para>
+        /// <b>Its own folder rather than Emberforge's</b>, though the two are cut from the same
+        /// licensed packs and could have shared every address. Sharing is not free: an address two
+        /// chapters ask for belongs to neither (<c>AddressableAddresses.ChapterOwnership</c>), so
+        /// it would move into the global group and Emberforge's wall would go from
+        /// chapter-scoped to resident for the whole session on every device (invariant 7b). It
+        /// would also weld the two modes together, and this project withdraws modes often enough
+        /// that being able to delete one without touching another is worth a folder.
+        /// </para>
+        /// </summary>
+        public static string KindleArt(string key) => ArtRoot + "Kindle/" + key;
+
+        /// <summary>Kindlewake's flares, which live under Fx rather than beside the hollow.</summary>
+        public static string KindleFx(string key) => ArtRoot + "Fx/Kindle/" + key;
         public static string MapArt(string key) => MapRoot + key;
         public static string Ui(string key) => UiRoot + key;
         public static string Sfx(string key) => SfxRoot + key;
@@ -498,6 +536,20 @@ namespace GlimmerGrove.AssetPipeline
 
             foreach (var level in chapter.Levels)
                 AddSprite(Backdrop(level.Presentation.ResolveBackdrop(definition)));
+
+            // Art the *mode* draws, asked once for the chapter rather than once per level.
+            // Every mode but one answers with nothing, so this adds no request to any chapter
+            // that shipped before it existed. Asked of the first level's mode because a chapter
+            // is one mode by construction - `ChapterModeValidator` errors on any that is not,
+            // and a chapter that somehow held two would simply load the first one's cast rather
+            // than crashing here.
+            if (chapter.Levels.Count > 0)
+            {
+                var mode = Content.LevelModes.Find(chapter.Levels[0].Mode);
+                if (mode != null)
+                    foreach (var request in mode.Art)
+                        if (seen.Add(request.Address)) list.Add(request);
+            }
 
             return list;
         }

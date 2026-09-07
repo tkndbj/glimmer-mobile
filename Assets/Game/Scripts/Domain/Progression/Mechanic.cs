@@ -305,111 +305,145 @@ namespace GlimmerGrove.Progression
         public const string RetiredWick = "fall_wick";
 
         /// <summary>
-        /// Groovekeeper's verb, and the inversion at the heart of it: a tile is laid beside the
-        /// grove, and a tile whose own colour and its neighbours' between them carry all three
-        /// bursts into bloom.
+        /// The allowance a prototype board is dealt: how many moves it gives you, and that every
+        /// one of them is permanent.
         ///
         /// <para>
-        /// <b>The one rule of this mode no board can show</b>, and it has to be told before the
-        /// first tile because the mistake it prevents is the whole of the game. Every other mode
-        /// here rewards putting like with like — four chapters of joining a colour to its own, a
-        /// weave whose crystals are dragged to critters wearing the same light — so a basket of
-        /// coloured tiles reads as "match them up" to anybody who has played this game at all.
-        /// It is the exact opposite: red beside red is a wasted edge, and red beside green and
-        /// blue is a flower.
+        /// <b>One lesson for however many modes share the shape, because it really is one
+        /// rule.</b> A pull takes exactly one from the meter and cannot be taken back — which is
+        /// the half a player arriving from four chapters of turning conduits has to be told,
+        /// since a glade hands a turn back for every undo and so rewards tapping about to see
+        /// what happens. Separate from <see cref="MoveBudget"/>, <see cref="FallSupply"/> and
+        /// <see cref="BudSatchel"/> for the reason those three are separate from each other:
+        /// what matters is not that a pot empties, it is what a wrong move costs before it does.
+        /// It was written for five modes and kept its wording when four of them went, because
+        /// the id is spent either way and the sentence was never about any one of them.
         /// </para>
         /// <para>
-        /// What the board <em>can</em> show, and does, is the rest of it: a bed wears a halo in
-        /// the colours it is still waiting for, the ghost under a thumb says what a cell would
-        /// open before anything is committed, and a bloom throws petals. So the lesson is two
-        /// sentences and a ring rather than a tutorial.
+        /// Only on a board that can actually run out. The opening board of such a mode is
+        /// authored without an allowance — as the first glade, the first well and the first
+        /// thicket are (invariant 24) — and a lesson shown over a meter that is not there is one
+        /// that can never be shown again.
         /// </para>
         /// </summary>
-        public static readonly Mechanic KeeperBloom = new Mechanic("keeper_bloom");
+        public static readonly Mechanic ProtoMoves = new Mechanic("proto_moves");
 
         /// <summary>
-        /// A grove's basket: the tiles it is dealt, that they come in an order the player can see,
-        /// and that a tile laid down stays there.
+        /// Hollowmarch's verb: fire a core into the line and it wedges in beside its own colour.
         ///
         /// <para>
-        /// <b>Separate from <see cref="MoveBudget"/>, <see cref="BudSatchel"/> and
-        /// <see cref="FallSupply"/> for the reason those three are separate from each other.</b>
-        /// All four are a pot that empties and ends a run, and everything a player has to be told
-        /// is in the half that differs. A glade hands a turn back for every undo, without limit,
-        /// so exploring costs nothing there. A grove has no undo at all, and a wrong tile is gone
-        /// twice over because it has taken a cell of ground with it. Somebody who learned the
-        /// glade's rule and was never taught this one would tap about to see what happens, which
-        /// on this board is how you lose.
-        /// </para>
-        /// <para>
-        /// Only on a grove that can actually run out. The first level of the chapter is authored
-        /// without a basket — exactly as the first glade and the first well are — and a lesson
-        /// shown over a meter that is not there is one that can never be shown again.
+        /// One sentence, and it is about the <em>aim</em> rather than about matching. Three alike
+        /// going off is a picture anybody reads the first time they see it, and the closing gap
+        /// explains itself as it happens — what a board cannot show before it has happened once
+        /// is that a core does not land where the finger went. It travels to the run it matches
+        /// and pushes in beside it, which is why every run of your colour lights up while the
+        /// finger is down.
         /// </para>
         /// </summary>
-        public static readonly Mechanic KeeperBasket = new Mechanic("keeper_basket");
+        public static readonly Mechanic MarchFire = new Mechanic("march_fire");
 
         /// <summary>
-        /// Stone: ground nothing may be planted on, which a grove has to reach around.
+        /// That a big shot forges a Spark, and that a Spark cuts what a colour never can.
         ///
         /// <para>
-        /// Half of this the board shows and half of it it cannot. That the grey cells are not
-        /// ground is obvious the moment one is tapped; what is not is the consequence — a bed
-        /// beside stone has fewer neighbours to gather from, so the colours it is missing have to
-        /// come from a shorter list of cells, and a grove that grows the wrong way round a rock
-        /// arrives at a bed with no room left to feed it. That is worth one sentence before it is
-        /// met rather than after.
+        /// The one rule here a board cannot demonstrate before it is met, and it is deliberately
+        /// two halves of one sentence: <em>how</em> the thing is made and <em>what</em> it does.
+        /// Either half alone is useless — a player who does not know five pods forges one will
+        /// never make one on purpose, and a player who has one in hand and reads it as a bigger
+        /// core will spend it on the nearest run rather than on the plating that is the only
+        /// reason it exists.
+        /// </para>
+        /// <para>
+        /// The rescue needs no lesson at all; a critter running out of a broken cage explains
+        /// itself, which is why this is the mode's second lesson and not its third.
         /// </para>
         /// </summary>
-        public static readonly Mechanic KeeperStone = new Mechanic("keeper_stone");
+        public static readonly Mechanic MarchSpark = new Mechanic("march_spark");
 
         /// <summary>
-        /// Composting: spending a tile without planting it, to bring the next one round.
+        /// Emberforge verb: swap two neighbours so three alike line up, and they fuse into an
+        /// ember rather than clearing.
         ///
         /// <para>
-        /// <b>A lesson about a control, and one the board genuinely cannot teach</b>, because
-        /// nothing about a grove implies that the key under the basket does anything but look
-        /// decorative. It is also the one move here that costs something and changes nothing, so
-        /// a player who has not been told what it is for reads it as a mistake waiting to happen
-        /// rather than as the answer to holding the wrong colour.
-        /// </para>
-        /// <para>
-        /// Taught before the heartbeds arrive rather than with them, deliberately: the two are
-        /// one idea in the wrong order otherwise — a bed that refuses every colour but its own is
-        /// alarming until you already know that the procession can be moved on.
+        /// One sentence, and it is about what a match <em>makes</em> rather than about matching.
+        /// Everybody who has played this genre already knows how to line three up; nobody has
+        /// met a board where doing it leaves a bomb standing on the cell their finger ended on,
+        /// and that last clause is the half a wall cannot show before it has happened once.
         /// </para>
         /// </summary>
-        public static readonly Mechanic KeeperCompost = new Mechanic("keeper_compost");
+        public static readonly Mechanic EmberFuse = new Mechanic("ember_fuse");
 
         /// <summary>
-        /// A heartbed: a bed drawn in a colour, which only that colour may be planted on.
+        /// That an ember is <em>tapped</em> to fire it, and that two pushed together make a star.
         ///
         /// <para>
-        /// It is what turns an ordered procession from scenery into the puzzle. A plain bed is
-        /// opened by whichever tile happens to be in hand when its neighbours are ready; a
-        /// heartbed has to be reached with one particular tile, which means counting forward
-        /// through the basket and deciding what to do with everything in between (see
-        /// <see cref="KeeperCompost"/>).
-        /// </para>
-        /// <para>
-        /// The refusal is what needs saying, and it is deliberately a refusal rather than a
-        /// mistake: the wrong tile cannot be planted there at all, so nobody can kill a heartbed
-        /// with a mis-tap. A player who is not told that reads the cell as broken.
+        /// Deliberately two halves of one sentence, exactly as <see cref="MarchSpark"/> is. A
+        /// player who does not know an ember is tapped will make three of them and wonder why
+        /// nothing is happening; a player who taps every one the moment it appears never sees
+        /// the biggest thing in the mode. Which of the two to spend and when is the whole
+        /// decision, so both halves have to arrive at once.
         /// </para>
         /// </summary>
-        public static readonly Mechanic KeeperHeartbed = new Mechanic("keeper_heartbed");
+        public static readonly Mechanic EmberStar = new Mechanic("ember_star");
 
         /// <summary>
-        /// A prism: the one tile in the procession that carries all three channels at once.
+        /// Kindlewake's verb: pick two embers of the <em>same</em> colour and light burns along
+        /// the line between them.
         ///
         /// <para>
-        /// It blooms wherever it lands and it opens any bed, heartbed included — so the lesson is
-        /// not what it does, which the ghost shows plainly, but that there is only one and it is
-        /// coming. A prism spent on a bed that two ordinary tiles would have opened is a grove
-        /// that runs out four tiles later, and that is a decision worth arriving at knowingly.
+        /// One sentence, and it is about what the pair makes rather than about matching. A player
+        /// arriving from four chapters of glades already knows that critters want light of their
+        /// own colour; what no hollow can show before it has happened once is that the light comes
+        /// from <em>two</em> embers rather than one, and that both of them are gone afterwards.
         /// </para>
         /// </summary>
-        public static readonly Mechanic KeeperPrism = new Mechanic("keeper_prism");
+        public static readonly Mechanic KindleJoin = new Mechanic("kindle_join");
+
+        /// <summary>
+        /// That light stays where it was put, and that two strands crossing on one cell make a
+        /// colour neither of them carried.
+        ///
+        /// <para>
+        /// Deliberately two halves of one sentence, exactly as <see cref="EmberStar"/> and
+        /// <see cref="MarchSpark"/> are. A player who does not know the light stays will draw
+        /// their strands one at a time and never see a blend; one who knows it stays but not that
+        /// crossings mix will read a purple critter as a bug. Which two lines to cross, and on
+        /// which square, is the whole decision this mode is made of, so both halves have to
+        /// arrive at once.
+        /// </para>
+        /// </summary>
+        public static readonly Mechanic KindleCross = new Mechanic("kindle_cross");
+
+        // **Two retired lesson ids that must never be reused: `quarry_flick` and
+        // `quarry_armour`.** The Iron Quarry was withdrawn by the owner and Hollowmarch took its
+        // slot. A lesson id travels in the save (`tipsSeen`) exactly as a level id travels in the
+        // ledger, so re-pointing one at a rule it never described would tell a player they have
+        // already been shown something they never saw. Unlike the eleven below, the quarry was
+        // never played on a device - but the ids are spent all the same, because "no save can
+        // hold this" is a claim about every device in the world and the cost of being wrong is
+        // silent (invariant 26h's own precedent for keeping a level id and moving the string
+        // above it).
+
+        // **Six retired lesson ids that must never be reused: `topple_roll`, `topple_burrow`,
+        // `nova_drag`, `nova_swap`, `nova_forge` and `nova_armour`.** Toppleglen and Nova Raid
+        // were both withdrawn by the owner after play on 2026-09-06 and the Iron Quarry took
+        // their slot. A lesson id travels in the save (`tipsSeen`) exactly as a level id travels
+        // in the ledger, so re-pointing one at a rule it never described would tell a player
+        // they have already been shown something they never saw - and both modes were played on
+        // a device, which is precisely when that stops being hypothetical.
+
+        // **Two more retired lesson ids: `orbit_launch` and `orbit_pod`**, Deep Orbit's,
+        // withdrawn with the mode on 2026-09-06 after being played on a device.
+
+        // **Eight retired lesson ids that must never be reused: `nectar_pour`, `nectar_hollow`,
+        // `ribbon_draw`, `ribbon_sink`, `fling_flick`, `fling_catch`, `warren_cut` and
+        // `warren_carry`.** Nectarrun, Ribbonfall, Seedfling and Warrenwake were four of the five
+        // prototypes built into Groovekeeper's slot to be judged by playing them (invariant 29);
+        // Toppleglen is the one the owner kept. A lesson id travels in the save (`tipsSeen`)
+        // exactly as a level id travels in the ledger, so re-pointing one at a rule it never
+        // described would tell a player they have already been shown something they never saw —
+        // and all four modes were played on a device, which is precisely when that stops being
+        // hypothetical. `topple_roll` and `topple_burrow` are the two that survive.
 
         /// <summary>
         /// That there is more than one way to play, and where the switch between them is.
@@ -532,8 +566,8 @@ namespace GlimmerGrove.Progression
             FragileConduit, MoveBudget, RootedTile, AnyLight, ColourMixing, Crossing, Briar,
             BoundConduit, BudChain, BudCocoon, BudSatchel, BudGraft, BudBolt, BudSun,
             FallCook, FallSupply, FallBrim, FallLens, FallWhorl,
-            KeeperBloom, KeeperBasket, KeeperStone,
-            KeeperCompost, KeeperHeartbed, KeeperPrism, ModeSwitch, LuckySpin, Grove,
+            ProtoMoves, MarchFire, MarchSpark, EmberFuse, EmberStar, KindleJoin, KindleCross,
+            ModeSwitch, LuckySpin, Grove,
             GroveShop,
         };
 

@@ -45,7 +45,7 @@ namespace GlimmerGrove.Modes
     /// move together.
     ///
     /// <para>
-    /// <c>FallRun</c> and <c>KeeperRun</c> are the same split for the same reason. The board is
+    /// <c>FallRun</c> and <c>ProtoRun</c> are the same split for the same reason. The board is
     /// the puzzle, the satchel is the meter, the verdict is the reading of one against the other,
     /// and this is the only thing that knows a tap leaves the satchel when a bud goes off.
     /// </para>

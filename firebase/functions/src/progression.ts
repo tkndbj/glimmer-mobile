@@ -65,12 +65,15 @@ export interface ProgressionConfig {
 
 /** One rung of an event's reward track. */
 export interface EventMilestone {
+  premiumCredits?: number;
+  premiumGems?: number;
   goal: number;
   credits: number;
 }
 
 /** A time-boxed run at a set of glades, exactly as the manifest authors it. */
 export interface EventConfig {
+  premiumProductId?: string;
   id: string;
   startUnix: number;
   endUnix: number;

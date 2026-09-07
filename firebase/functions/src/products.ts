@@ -18,6 +18,7 @@ import { CURRENCIES, CurrencyId } from "./config";
 
 /** What one product grants. Absent currencies are zero rather than missing. */
 export interface ProductGrant {
+  eventPassId?: string;
   credits: number;
   gems: number;
 
@@ -110,6 +111,13 @@ export function readProduct(table: unknown, productId: string): ProductGrant {
     capacity: nonNegative(raw.capacity),
   };
 
+  if (raw.eventPassId !== undefined && raw.eventPassId !== "") {
+    if (typeof raw.eventPassId !== "string" || !/^[a-z0-9_]{1,64}$/.test(raw.eventPassId) ||
+        grant.kind !== "nonconsumable" || grant.capacity !== 0 || grant.credits !== 0 || grant.gems !== 0) {
+      throw new ProductRejected(`product '${productId}' has an invalid event pass entitlement`);
+    }
+    grant.eventPassId = raw.eventPassId;
+  }
   if (grant.capacity > 0 && (grant.credits > 0 || grant.gems > 0)) {
     throw new ProductRejected(
       `product '${productId}' grants both a heart capacity and currency; a product may grant ` +
@@ -126,7 +134,7 @@ export function readProduct(table: unknown, productId: string): ProductGrant {
     );
   }
 
-  if (grant.credits === 0 && grant.gems === 0 && grant.capacity === 0) {
+  if (grant.credits === 0 && grant.gems === 0 && grant.capacity === 0 && !grant.eventPassId) {
     throw new ProductRejected(`product '${productId}' grants nothing`);
   }
 

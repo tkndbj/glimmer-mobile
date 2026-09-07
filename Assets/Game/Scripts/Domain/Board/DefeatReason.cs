@@ -79,7 +79,7 @@ namespace GlimmerGrove
         ///
         /// The spatial half of the pair above, and the one no purchase can rescue: no number of
         /// tiles gives a grove somewhere to plant that it does not have. See
-        /// <c>KeeperVerdict</c>.
+        /// the retired <c>KeeperVerdict</c>.
         /// </summary>
         Overgrown = 7,
 
@@ -94,5 +94,19 @@ namespace GlimmerGrove
         /// taps helps — the mirror of a well flooding and a grove overgrowing.
         /// </summary>
         Barren = 9,
+
+        /// <summary>
+        /// A prototype board with no legal move left on it, and the goal unmet.
+        ///
+        /// <para>
+        /// The spatial ending a prototype board reaches: no stone left to pull, and nothing on
+        /// the ground that a purchase could put back. It is the ending money cannot fix, so it is
+        /// the one
+        /// <c>ProtoVerdict</c> answers <c>RunContinueDeficit.None</c> for - and it is told apart
+        /// from <see cref="OutOfMoves"/>, which those modes also use, because the two want
+        /// opposite fixes and only one of them may be sold a continue.
+        /// </para>
+        /// </summary>
+        Stuck = 10,
     }
 }

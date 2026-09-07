@@ -1127,6 +1127,31 @@ namespace GlimmerGrove.Cloud
             return (CloudResult.Success, redemption ?? CloudRedemption.Nothing);
         }
 
+        /// <summary>Read/claim a pass with the same account gate as a purchase. Claims first sync play.</summary>
+        public static async Task<(CloudResult result, Events.EventPassState state)> EventPassAsync(
+            string eventId, int goal = 0, CancellationToken cancellation = default)
+        {
+            if (!IsAvailable || !(_backend is Events.IEventPassBackend passBackend))
+                return (CloudResult.Failed(CloudFailure.Offline, "event pass unavailable"), null);
+            var authorised = await AuthoriseAsync(cancellation, repair: false);
+            if (!authorised.Ok) return (authorised, null);
+            string userId = CloudState.UserId;
+            if (goal > 0)
+            {
+                var sync = await SyncAsync(cancellation);
+                if (!sync.Ok) return (sync, null);
+            }
+            if (userId != CloudState.UserId || userId != _backend.CurrentIdentity.UserId)
+                return (CloudResult.Failed(CloudFailure.Rejected, "account changed"), null);
+            var (result, wallets, state) = await passBackend.EventPassAsync(userId, eventId, goal, cancellation);
+            if (!result.Ok) return (result, null);
+            if (userId != CloudState.UserId || userId != _backend.CurrentIdentity.UserId)
+                return (CloudResult.Failed(CloudFailure.Rejected, "account changed"), null);
+            ApplyWalletStates(wallets);
+            SaveService.Save();
+            return (result, state);
+        }
+
         static void ApplyWalletStates(List<CloudWalletState> wallets)
         {
             if (wallets == null) return;

@@ -20,6 +20,7 @@ export const BUNDLE_ID = "com.tekoworld.glimmergroove";
 
 /** Firestore paths, named once so a typo cannot become two collections. */
 export const PATHS = {
+  eventPass: (uid: string, eventId: string) => `players/${uid}/eventPasses/${eventId}`,
   player: (uid: string) => `players/${uid}`,
   wallet: (uid: string) => `players/${uid}/private/wallet`,
   spend: (uid: string, spendId: string) => `players/${uid}/spendLog/${spendId}`,

@@ -8,7 +8,7 @@ namespace GlimmerGrove.Events
     public static class EventRules
     {
         /// <summary>Milestones one event may carry. A track nobody can read is not a track.</summary>
-        public const int MaxMilestones = 8;
+        public const int MaxMilestones = 40;
 
         /// <summary>Most credits a single milestone may pay.</summary>
         public const int MaxMilestoneCredits = 5000;
@@ -37,10 +37,14 @@ namespace GlimmerGrove.Events
         public readonly int Goal;
 
         public readonly int Credits;
+        public readonly int PremiumCredits;
+        public readonly int PremiumGems;
 
-        public EventMilestone(int goal, int credits)
+        public EventMilestone(int goal, int credits, int premiumCredits = 0, int premiumGems = 0)
         {
             Goal = goal < 1 ? 1 : goal;
+            PremiumCredits = Math.Max(0, Math.Min(EventRules.MaxMilestoneCredits, premiumCredits));
+            PremiumGems = Math.Max(0, Math.Min(1000, premiumGems));
             Credits = credits < 0 ? 0
                     : credits > EventRules.MaxMilestoneCredits ? EventRules.MaxMilestoneCredits
                     : credits;
@@ -92,10 +96,12 @@ namespace GlimmerGrove.Events
         /// lives with the drawing.
         /// </summary>
         public readonly string Icon;
+        public readonly string PremiumProductId;
+        public bool HasPremium => !string.IsNullOrEmpty(PremiumProductId);
 
         public GroveEvent(string id, long startUnix, long endUnix,
                           IReadOnlyList<LevelId> levels, IReadOnlyList<EventMilestone> milestones,
-                          string icon = null)
+                          string icon = null, string premiumProductId = null)
         {
             Id = id ?? string.Empty;
             StartUnix = startUnix;
@@ -103,6 +109,7 @@ namespace GlimmerGrove.Events
             Levels = levels ?? Array.Empty<LevelId>();
             Milestones = milestones ?? Array.Empty<EventMilestone>();
             Icon = icon ?? string.Empty;
+            PremiumProductId = premiumProductId ?? string.Empty;
         }
 
         public bool IsValid => !string.IsNullOrEmpty(Id) && EndUnix > StartUnix && Levels.Count > 0;

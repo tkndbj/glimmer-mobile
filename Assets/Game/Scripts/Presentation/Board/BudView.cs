@@ -69,7 +69,7 @@ namespace GlimmerGrove
         public Action Committed { get; set; }
 
         /// <summary>
-        /// The closing chain has begun, so nothing else may end this run — <c>KeeperView</c>'s
+        /// The closing chain has begun, so nothing else may end this run — <c>FallView</c>'s
         /// rule: the run is decided when the last cocoon opens and the panel arrives a beat later
         /// while the thicket is still going off.
         /// </summary>

@@ -12,7 +12,7 @@ namespace GlimmerGrove.Modes
     /// The taps a grove is dealt, and what has become of them.
     ///
     /// <para>
-    /// Pure integers and no policy at all, for <c>KeeperBasket</c>'s reason: where the budget
+    /// Pure integers and no policy at all, for <c>ProtoBudget</c>'s reason: where the budget
     /// comes from is <c>LevelTuning</c>'s business and what a continue costs is
     /// <c>ContinueTable</c>'s. This only counts, which is what lets "three taps spent of eight
     /// leaves five" be proved offline against plain arithmetic rather than by building a grove.

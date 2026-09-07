@@ -310,6 +310,13 @@ namespace GlimmerGrove.EditorTools
         {
             var catalog = table.Store;
             if (catalog == null) { result.Errors.Add("progression.json produced no store catalog"); return; }
+            foreach (var groveEvent in result.Content.Index.Events)
+            {
+                if (!groveEvent.HasPremium) continue;
+                var product = catalog.Find(groveEvent.PremiumProductId);
+                if (product == null || !product.IsEventPass || product.EventPassId != groveEvent.Id)
+                    result.Errors.Add($"event '{groveEvent.Id}' has no matching premium store product");
+            }
 
             if (!catalog.HasAnything)
             {
@@ -2562,6 +2569,22 @@ namespace GlimmerGrove.EditorTools
             {
                 Require(table, mode.NameKey, $"mode '{mode.Value}'", result);
                 Require(table, mode.TaglineKey, $"mode '{mode.Value}'", result);
+            }
+
+            // And every line of dialogue a level authors, which is the one kind of key in this
+            // game that is *written down* rather than derived from an id (see `StoryLine.Key`).
+            // It is unreachable from source by construction, so the scan below cannot see it and
+            // nothing else can either; and `ContentMapper.ReadStory` deliberately *drops* a line
+            // it cannot read rather than refusing the level, which is only safe while this
+            // exists. A missing string here is a character standing in silence.
+            foreach (var level in content.AllLevels())
+            {
+                var story = level.Presentation.Story;
+                if (story == null || !story.Any) continue;
+
+                foreach (var beat in story.Beats)
+                    foreach (var line in beat.Lines)
+                        Require(table, line.Key, $"level '{level.Id}' ({beat.Cue})", result);
             }
 
             ValidateKeysUsedInCode(table, result);

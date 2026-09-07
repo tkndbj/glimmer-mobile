@@ -96,5 +96,27 @@ namespace GlimmerGrove.Content
         /// A loc key stem rather than a word, so it translates and pluralises.
         /// </summary>
         public virtual string RecordStem => "ui.rank.record";
+
+        /// <summary>
+        /// Art this mode's boards draw, over and above what a chapter names for itself.
+        ///
+        /// <para>
+        /// <b>Scoped to a chapter rather than global, and asked here rather than hand-listed</b>
+        /// (invariants 7 and 7b). Every mode until now drew its board out of the generated
+        /// shapes in <c>Art</c> and needed nothing; a mode whose pieces are painted characters
+        /// needs its cast, and that cast is wanted exactly when a chapter of that mode is
+        /// entered and released when it is left. Putting it in <c>GlobalAssets</c> would decode
+        /// nine flipbooks at every launch for a mode most sessions never open, which is the bill
+        /// the companion roster and the grove catalog are both kept out of the global group to
+        /// avoid.
+        /// </para>
+        /// <para>
+        /// Empty for every mode that draws itself, which is all of them but one — so this costs
+        /// the others nothing, and <c>AssetManifest.ChapterAssets</c> asks once per chapter
+        /// rather than once per level.
+        /// </para>
+        /// </summary>
+        public virtual IReadOnlyList<AssetPipeline.AssetRequest> Art
+            => System.Array.Empty<AssetPipeline.AssetRequest>();
     }
 }
