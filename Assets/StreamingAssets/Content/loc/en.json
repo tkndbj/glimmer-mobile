@@ -5126,8 +5126,12 @@
    "text": "GO!"
   },
   {
-   "key": "mode.siege.fallen",
+   "key": "ui.defeat.wards_title",
    "text": "THE LINE HAS FALLEN"
+  },
+  {
+   "key": "ui.defeat.wards_reason",
+   "text": "Every ward is down, so nothing a match feeds is still standing. Feed the colour that is furthest down the hill."
   }
  ]
 }

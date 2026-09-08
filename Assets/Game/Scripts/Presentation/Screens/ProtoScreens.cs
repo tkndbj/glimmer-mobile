@@ -346,6 +346,13 @@ namespace GlimmerGrove
         protected override Mechanic Friend => Mechanic.SiegeLine;
 
         /// <summary>
+        /// A siege does not run out of board — its line falls while the hill is still full, which
+        /// is a different piece of news and wants different words. See
+        /// <c>ProtoScreen.StuckReason</c>.
+        /// </summary>
+        protected override DefeatReason StuckReason => DefeatReason.WardsLost;
+
+        /// <summary>
         /// Three numbers, and the middle one is not the one every other mode on this shape shows.
         ///
         /// <para>

@@ -104,7 +104,7 @@ namespace GlimmerGrove
         /// </summary>
         public SiegeBoard Siege => _board;
 
-        RectTransform _hill, _lane, _mobs, _wall, _field, _fx;
+        RectTransform _hill, _mobs, _wall, _field, _fx;
 
         readonly List<Gem> _gems = new List<Gem>(48);
         readonly List<Mob> _mob = new List<Mob>(24);
@@ -358,6 +358,10 @@ namespace GlimmerGrove
             _gems.Clear();
             _mob.Clear();
 
+            _tally.Clear();
+            _chain = null;
+            _chainAura = null;
+
             // The pool's widgets hang off `_fx`, which this rebuild replaces — so a spare kept
             // across it is a destroyed node handed out as a live one, and every bolt after the
             // first rebuild would be invisible.
@@ -376,14 +380,12 @@ namespace GlimmerGrove
             _gemCentre = (h * (.5f - HillBand - LineBand) - h * .5f) * .5f;
 
             _hill = Layer("Hill");
-            _lane = Layer("Lanes");
             _mobs = Layer("Raiders");
             _wall = Layer("Line");
             _field = Layer("Field");
             _fx = Layer("Fx");
 
             Ground();
-            Lanes();
             Line();
             Sockets();
             Deal();
@@ -420,21 +422,11 @@ namespace GlimmerGrove
             // is the wave - it walks on, in front of a field that is plainly a field.
         }
 
-        /// <summary>Faint tracks, so a raider reads as walking down something.</summary>
-        void Lanes()
-        {
-            float h = _hillTop - _hillFoot;
-
-            for (int i = 0; i < SiegeTuning.Lanes; i++)
-            {
-                var strip = UIKit.Img("Lane", _lane, Art.Round(6), new Color(1f, 1f, 1f, .045f),
-                                      new Vector2(Span.x / SiegeTuning.Lanes * .82f, h));
-                strip.raycastTarget = false;
-                strip.type = Image.Type.Sliced;
-                strip.rectTransform.anchoredPosition =
-                    new Vector2(LaneX(i), (_hillTop + _hillFoot) * .5f);
-            }
-        }
+        // **The hill has no lanes drawn on it, and it used to.** Five pale strips at 4.5% white
+        // marked where the raiders walk; over grass they were invisible and over the mine floor
+        // they read as two seams running the height of the board. They were never load-bearing -
+        // a raider's lane is visible from the raider - so they are gone rather than re-tinted:
+        // a marking that has to be nearly invisible to be tolerable is a marking nothing needed.
 
         /// <summary>The rampart and the wards standing on it.</summary>
         void Line()
@@ -606,6 +598,12 @@ namespace GlimmerGrove
         /// </summary>
         IEnumerator Countdown()
         {
+            // **Four beats inside the quiet, and the quiet was lengthened to fit them.** At a
+            // 2.2-second opening the numbers went past in half a second each and read as a
+            // flicker; the count now paces itself and `FirstWaveAfter` is what it is so that
+            // GO! and the first raider still land together. The count does not hold the game up
+            // - the clock runs underneath it - so lengthening it lengthens the quiet, which is
+            // the honest thing for it to do.
             float step = SiegeTuning.FirstWaveAfter / 4f;
 
             for (int i = 3; i >= 0; i--)
@@ -1134,8 +1132,8 @@ namespace GlimmerGrove
             // Sized by the frame's *width*, which is the comet's own width because the bake frames
             // it that tightly — so this number means "a bolt is two thirds of a gem across" and
             // stays true when a reel is re-baked into a different shape.
-            var puff = Lend(frames, Color.white, Cell * .62f, at, angle, 30f, true, HeadAt);
-            Glow(puff, tint, Cell * 1.15f);
+            var puff = Lend(frames, Color.white, Cell * 1.0f, at, angle, 30f, true, HeadAt);
+            Glow(puff, tint, Cell * 1.7f);
             return puff;
         }
 
@@ -1174,15 +1172,23 @@ namespace GlimmerGrove
         /// How long a bolt is in the air.
         ///
         /// <para>
-        /// <b>Longer than it was, and the art is the reason.</b> A round crossing the hill in six
-        /// hundredths of a second is a dot teleporting whatever is drawn on it — which was fine
-        /// while it was a dot, and throws away a fourteen-frame comet. The ceiling is what keeps
-        /// it honest: a ward fires every <c>SiegeTuning.FireEvery</c>, so a flight much past that
-        /// puts two of a ward's own bolts in the air at once and the line reads as a hose rather
-        /// than as a gun.
+        /// <b>Longer than it was, twice, and the art is the reason both times.</b> A round
+        /// crossing the hill in six hundredths of a second is a dot teleporting whatever is drawn
+        /// on it — fine while it was a dot, and it throws away a fourteen-frame comet. Doubled
+        /// again after play: at a fifth of a second the animation was still over before it could
+        /// be looked at, which was reported as not being able to see it at all.
+        ///
+        /// <para>
+        /// <b>It is deliberately longer than the cadence now, and that is a change of shape rather
+        /// than of degree.</b> A ward fires every <c>SiegeTuning.FireEvery</c> (.22), so a flight
+        /// of up to .40 puts two of a ward's own bolts in the air at once — the line reads as a
+        /// stream of comets rather than as one thing at a time, which is what makes a trail
+        /// visible at all. What stops that being a hose is the cadence, which was slowed for the
+        /// same verdict and cannot go further without losing the level.
+        /// </para>
         /// </para>
         /// </summary>
-        const float ShortestFlight = .09f, LongestFlight = .20f;
+        const float ShortestFlight = .20f, LongestFlight = .40f;
 
         void Bolt(SiegeBolt shot)
         {
@@ -1287,7 +1293,7 @@ namespace GlimmerGrove
             // The pack's own flash is drawn pointing along the shot; the shared one is a radial
             // burst with no direction in it, so it is spun instead of aimed.
             var puff = Lend(frames, own ? Color.white : Pal.A(Pal.Lift(tint, .55f), 1f),
-                            Cell * (own ? 1.9f : 1.7f), at,
+                            Cell * (own ? 2.7f : 1.7f), at,
                             own ? angle : Random.Range(0f, 360f), 33f, false,
                             own ? MuzzleAt : .5f);
 
@@ -1303,7 +1309,7 @@ namespace GlimmerGrove
             var frames = HitArt(colour);
 
             if (frames != null && frames.Length > 0)
-                Ends(Lend(frames, Color.white, Cell * (shot.Killed ? 3.0f : 2.35f), at, angle,
+                Ends(Lend(frames, Color.white, Cell * (shot.Killed ? 4.1f : 3.2f), at, angle,
                           35f, false, .5f), .35f);
 
             Pop(at, shot.Weak ? Pal.Gold : tint, shot.Weak ? 1.9f : 1.2f, .24f);
@@ -1316,7 +1322,7 @@ namespace GlimmerGrove
                 Shockwave(at, Pal.Gold, 1.7f, .26f);
             }
 
-            Number(at, shot.Damage, shot.Weak);
+            Number(shot.Raider, at, shot.Damage, shot.Weak);
 
             if (shot.Killed) Audio.SfxVaried("burst", .42f);
 
@@ -1378,7 +1384,9 @@ namespace GlimmerGrove
             Tween.Move(rt, new Vector2(0f, _hillFoot + Cell * 1.9f), 1.5f, Ease.OutCubic)
                  .OnDone(() => Tween.Fade(group, 0f, .4f));
 
-            Audio.Sfx("bell", .5f, wave == 0 ? 1f : 1.08f);
+            // **No sound of its own.** The first wave steps out on the same frame the countdown
+            // says GO!, so a bell here was the same bell twice a frame apart - which is a flam
+            // rather than emphasis. What announces a wave is the banner and the raiders.
             Flow.Flash(new Color(1f, .55f, .45f), .18f, .35f);
         }
 
@@ -1395,19 +1403,164 @@ namespace GlimmerGrove
             else Tween.After(.6f, () => { if (img) Destroy(img.gameObject); });
         }
 
-        void Number(Vector2 at, int damage, bool weak)
+        /// <summary>
+        /// One raider's damage as it lands, floating off it.
+        ///
+        /// <para>
+        /// <b>Numbers are tallied per raider rather than one to a bolt, and that is what makes
+        /// them readable here at all.</b> A lit line fires every <c>SiegeTuning.FireEvery</c>, so
+        /// four wards on one target is about eighteen hits a second — eighteen separate figures a
+        /// second is a wall of text nobody can read one number out of, and drawing each of them
+        /// bigger makes that worse rather than better. So a hit landing on a raider that is
+        /// already showing a number <em>adds to it</em>: the figure climbs, grows, punches again
+        /// and its float restarts, and what the player watches is one number running up while they
+        /// hold fire on something. The next one starts its own after <see cref="TallyFor"/> of
+        /// quiet.
+        /// </para>
+        /// <para>
+        /// <b>A double reads as a different kind of number rather than a bigger one</b> — gold, a
+        /// much harder punch, a longer and higher float — because the elemental double is the one
+        /// rule this mode is about, and this is the only place it is ever said in figures.
+        /// </para>
+        /// </summary>
+        const float TallyFor = .34f;
+
+        sealed class Tally
         {
-            var label = UIKit.Label("Hit", _fx, damage.ToString(),
-                                    Mathf.RoundToInt(Cell * (weak ? .42f : .32f)),
-                                    weak ? Pal.Gold : Pal.Cream, TextAnchor.MiddleCenter,
-                                    new Vector2(Cell * 2f, Cell * .6f));
+            public int Raider, Total;
+            public bool Weak;
+            public float Until, Drift;
+            public Text Label;
+            public RectTransform Rt;
+        }
 
-            var rt = label.rectTransform;
-            rt.anchoredPosition = at + new Vector2(Random.Range(-Cell * .2f, Cell * .2f), 0f);
+        readonly Dictionary<int, Tally> _tally = new Dictionary<int, Tally>();
 
-            Tween.Move(rt, rt.anchoredPosition + new Vector2(0f, Cell * .8f), .55f, Ease.OutCubic);
-            Tween.Fade(label, 0f, .55f, Ease.InQuad)
-                 .OnDone(() => { if (label) Destroy(label.gameObject); });
+        /// <summary>Which way the next number leans, so a run of them fans out instead of stacking.</summary>
+        int _fan;
+
+        void Number(int raider, Vector2 at, int damage, bool weak)
+        {
+            if (_tally.TryGetValue(raider, out var running) && running.Label &&
+                Time.unscaledTime < running.Until)
+            {
+                running.Total += damage;
+                running.Weak |= weak;
+                running.Until = Time.unscaledTime + TallyFor;
+
+                Paint(running);
+                Punch(running);
+                Rise(running);
+                return;
+            }
+
+            var tally = new Tally
+            {
+                Raider = raider,
+                Total = damage,
+                Weak = weak,
+                Until = Time.unscaledTime + TallyFor,
+                Drift = (_fan++ & 1) == 0 ? -1f : 1f,
+            };
+
+            // Built through `Titled` rather than `Label`: a bare figure over a lit hill and a
+            // bright cast is unreadable, and the outline is most of what a floating number is.
+            tally.Label = UIKit.Titled("Hit", _fx, damage.ToString(), 24, Pal.Cream,
+                                       TextAnchor.MiddleCenter,
+                                       new Vector2(Cell * 5f, Cell * 2f), default, default,
+                                       Cell * .055f, Cell * .06f);
+
+            tally.Rt = tally.Label.rectTransform;
+            tally.Rt.anchoredPosition =
+                at + new Vector2(Random.Range(-Cell * .3f, Cell * .3f), Cell * .45f);
+
+            _tally[raider] = tally;
+
+            Paint(tally);
+            Punch(tally);
+            Rise(tally);
+        }
+
+        /// <summary>The figure, sized by what it has come to. A big number is a big number.</summary>
+        void Paint(Tally tally)
+        {
+            if (!tally.Label) return;
+
+            float grown = Mathf.Min(tally.Total, 30) / 30f;
+            float size = Cell * (tally.Weak ? .58f : .40f) * (1f + grown * .5f);
+
+            tally.Label.fontSize = Mathf.Max(8, Mathf.RoundToInt(size));
+            tally.Label.text = tally.Total.ToString();
+            tally.Label.color = tally.Weak ? Pal.Gold : Pal.Cream;
+        }
+
+        /// <summary>The arrival: overshoot and settle, once per hit that lands on it.</summary>
+        void Punch(Tally tally)
+        {
+            var rt = tally.Rt;
+            if (!rt) return;
+
+            float from = tally.Weak ? 1.85f : 1.4f;
+
+            Tween.KillChannel(tally.Label, "pop");
+            Tween.Run(.17f, Ease.OutBack, k =>
+            {
+                if (rt) rt.localScale = Vector3.one * Mathf.Lerp(from, 1f, k);
+            }, tally.Label, "pop");
+        }
+
+        /// <summary>
+        /// The float, restarted from wherever the number has got to every time it takes another
+        /// hit — so a figure still climbing does not drift off in the middle of its own tally.
+        ///
+        /// Every channel is owned by the <c>Text</c> rather than by its transform, because they
+        /// are two different Unity objects and a channel killed on one is not killed on the other.
+        /// </summary>
+        void Rise(Tally tally)
+        {
+            var rt = tally.Rt;
+            var label = tally.Label;
+            if (!rt || !label) return;
+
+            Tween.KillChannel(label, "rise");
+            Tween.KillChannel(label, "fade");
+
+            var opaque = label.color;
+            opaque.a = 1f;
+            label.color = opaque;
+
+            // **Lower and shorter than it was.** The first cut floated a cell and a half over a
+            // second, which is a long time for a figure to be over the hill when the next one is
+            // 55 milliseconds behind it — the numbers stacked up the screen and stayed there. What
+            // a floating number owes the player is to be legible on arrival and then get out of
+            // the way, so it lifts about half a cell and is gone inside two thirds of a second.
+            float life = tally.Weak ? .68f : .52f;
+            Vector2 from = rt.anchoredPosition;
+            Vector2 to = from + new Vector2(tally.Drift * Cell * .22f,
+                                            Cell * (tally.Weak ? .75f : .55f));
+
+            Tween.Run(life, Ease.OutCubic, k =>
+            {
+                if (rt) rt.anchoredPosition = Vector2.Lerp(from, to, k);
+            }, label, "rise");
+
+            // Held at full for the first half and only then let go, because a number that starts
+            // fading the instant it appears is one nobody has finished reading.
+            Tween.Run(life, Ease.Linear, k =>
+            {
+                if (!label) return;
+                var colour = label.color;
+                colour.a = k < .45f ? 1f : 1f - (k - .45f) / .55f;
+                label.color = colour;
+            }, label, "fade").OnDone(() => Retire(tally));
+        }
+
+        void Retire(Tally tally)
+        {
+            if (_tally.TryGetValue(tally.Raider, out var held) && held == tally)
+                _tally.Remove(tally.Raider);
+
+            if (tally.Label) Destroy(tally.Label.gameObject);
         }
 
         // ------------------------------------------------------------------ the field
@@ -1488,11 +1641,13 @@ namespace GlimmerGrove
             var ga = _gems[turn.A];
             var gb = _gems[turn.B];
 
-            Tween.Move(ga.Img.rectTransform, CentreOf(turn.B), .15f, Ease.OutQuad);
-            Tween.Move(gb.Img.rectTransform, CentreOf(turn.A), .15f, Ease.OutQuad);
+            Tween.Move(ga.Img.rectTransform, CentreOf(turn.B), SiegeTuning.SwapFor * .94f,
+                       Ease.OutQuad);
+            Tween.Move(gb.Img.rectTransform, CentreOf(turn.A), SiegeTuning.SwapFor * .94f,
+                       Ease.OutQuad);
             Audio.SfxVaried("rotate_a", .3f);
 
-            yield return new WaitForSecondsRealtime(.16f);
+            yield return new WaitForSecondsRealtime(SiegeTuning.SwapFor);
 
             var keep = _gems[turn.A];
             _gems[turn.A] = _gems[turn.B];
@@ -1548,7 +1703,11 @@ namespace GlimmerGrove
 
             if (beat.Depth > 1) Chain(beat.Depth);
 
-            yield return new WaitForSecondsRealtime(.2f);
+            // Halves of `BeatFor`, because the board books this beat's fuel to land a whole
+            // `BeatFor` after the last one - see `SiegeTuning.FuelLands`. Typed here they would
+            // drift, and a mote that arrives after its fuel does is the bug this schedule exists
+            // to stop.
+            yield return new WaitForSecondsRealtime(SiegeTuning.BeatFor * .5f);
 
             // The fall. New gems come in from above the field so a refill reads as a refill and
             // not as a board being redrawn.
@@ -1580,7 +1739,7 @@ namespace GlimmerGrove
                 Tween.Move(gem.Img.rectTransform, CentreOf(to), fall, Ease.OutBounce);
             }
 
-            yield return new WaitForSecondsRealtime(.2f);
+            yield return new WaitForSecondsRealtime(SiegeTuning.BeatFor * .5f);
         }
 
         /// <summary>
@@ -1632,7 +1791,7 @@ namespace GlimmerGrove
             // travelling rather than as one line being drawn.
             float bow = Random.Range(-Cell * 1.1f, Cell * 1.1f);
 
-            Tween.Run(.42f, Ease.InOutSine, t =>
+            Tween.Run(SiegeTuning.FuelFlight, Ease.InOutSine, t =>
             {
                 if (!rt) return;
                 var p = Vector2.Lerp(from, to, t);
@@ -1656,17 +1815,116 @@ namespace GlimmerGrove
             Audio.SfxVaried("lit", .18f);
         }
 
+        /// <summary>
+        /// How hot a chain reads. Yellow, gold, ember, rose — a heat ladder rather than one
+        /// colour at four sizes, because the thing being said is <em>how big</em>.
+        /// </summary>
+        /// <summary>The dark behind the banner, which a heavy outline alone cannot replace here.</summary>
+        static Color Under(float alpha) => new Color(.04f, .06f, .09f, .62f * alpha);
+
+        static Color ChainHeat(int depth)
+        {
+            switch (depth)
+            {
+                case 2: return Pal.Sun;
+                case 3: return Pal.Gold;
+                case 4: return Pal.Ember;
+                default: return Pal.Rose;
+            }
+        }
+
+        Text _chain;
+        Image _chainAura;
+
+        /// <summary>
+        /// A cascade, announced over the ward line.
+        ///
+        /// <para>
+        /// <b>Over the turrets rather than over the field, which is where it was and where nobody
+        /// saw it.</b> It sat just above the gems in a plain label at half the size it is now — on
+        /// top of the one part of the board the player is already staring at, in the same band as
+        /// forty gems, with no outline to separate it from any of them. A chain is the loudest
+        /// thing that can happen on this board and it read as a caption.
+        /// </para>
+        /// <para>
+        /// It is drawn on the empty run of hill just above the line: nothing else lives there, the
+        /// eye is already going that way to see what the wards are shooting, and it is far enough
+        /// from the field that it never covers the move that earned it. A soft dark aura sits under
+        /// it, because a heavy outline alone is not enough over a lit hill.
+        /// </para>
+        /// <para>
+        /// <b>One banner, reused.</b> A cascade raises this once per wave of it, so two arriving in
+        /// a quarter of a second would otherwise be two labels in one place — the second one
+        /// re-punches the first instead, which is also what makes a long chain read as one thing
+        /// getting louder.
+        /// </para>
+        /// </summary>
         void Chain(int depth)
         {
-            var label = UIKit.Label("Chain", _fx, Loc.Format("mode.siege.chain", depth),
-                                    Mathf.RoundToInt(Cell * .5f), Pal.Gold,
-                                    TextAnchor.MiddleCenter, new Vector2(Span.x, Cell));
-            label.rectTransform.anchoredPosition = new Vector2(0f, _gemCentre + Cell * .4f);
+            var heat = ChainHeat(depth);
+            float y = _lineY + Cell * 2.35f;
 
-            label.transform.localScale = Vector3.one * .5f;
-            Tween.Scale(label.transform, 1.1f, .2f, Ease.OutBack);
-            Tween.Fade(label, 0f, .7f, Ease.InQuad)
-                 .OnDone(() => { if (label) Destroy(label.gameObject); });
+            if (_chain == null)
+            {
+                var host = UIKit.Node("Chain", _fx);
+                host.anchoredPosition = new Vector2(0f, y);
+
+                _chainAura = UIKit.Img("Aura", host, Art.Glow(128, 1.7f), Under(1f),
+                                       new Vector2(Cell * 7f, Cell * 2.6f));
+                _chainAura.raycastTarget = false;
+
+                _chain = UIKit.Titled("Text", host, "", 24, heat, TextAnchor.MiddleCenter,
+                                      new Vector2(Span.x, Cell * 1.6f), default, default,
+                                      Cell * .07f, Cell * .07f);
+            }
+
+            var rt = (RectTransform)_chain.transform.parent;
+            rt.anchoredPosition = new Vector2(0f, y);
+
+            // Bigger with depth as well as hotter, so a five reads as more than a two across the
+            // room rather than only up close.
+            _chain.fontSize = Mathf.RoundToInt(Cell * (.72f + Mathf.Min(depth, 6) * .05f));
+            _chain.text = Loc.Format("mode.siege.chain", depth);
+            _chain.color = heat;
+
+            var solid = _chain.color;
+            solid.a = 1f;
+            _chain.color = solid;
+
+            if (_chainAura) _chainAura.color = Under(1f);
+
+            Tween.KillAll(rt);
+            Tween.KillAll(_chain);
+
+            Tween.Run(.22f, Ease.OutBack, k =>
+            {
+                if (rt) rt.localScale = Vector3.one * Mathf.Lerp(.55f, 1f, k);
+            }, rt, "pop");
+
+            var banner = _chain;
+            var group = rt;
+            var aura = _chainAura;
+
+            // Held solid for most of its life and then let go quickly: a banner that starts fading
+            // as it arrives is one nobody reads, and this one has a number in it.
+            Tween.Run(.95f, Ease.Linear, k =>
+            {
+                if (!banner || !group) return;
+
+                float fade = k < .62f ? 1f : 1f - (k - .62f) / .38f;
+
+                var lit = banner.color;
+                lit.a = fade;
+                banner.color = lit;
+
+                if (aura) aura.color = Under(fade);
+
+                group.anchoredPosition = new Vector2(0f, y + Cell * .3f * k);
+            }, banner, "fade").OnDone(() =>
+            {
+                if (group) Destroy(group.gameObject);
+                if (_chain == banner) { _chain = null; _chainAura = null; }
+            });
 
             Audio.Sfx("chime", .35f, Mathf.Min(1.6f, .9f + depth * .12f));
         }
@@ -1751,37 +2009,7 @@ namespace GlimmerGrove
             ShakeBoard(26f);
             Flow.Flash(new Color(1f, .28f, .24f), .5f, .5f);
 
-            Fallen();
-
             yield return base.Ruin();
-        }
-
-        /// <summary>
-        /// The word, over the board, before the panel.
-        ///
-        /// <para>
-        /// <b>A run has to be told it is over on the board it was lost on.</b> Every other mode
-        /// here ends with a modal a beat later and that is enough, because their boards visibly
-        /// stop - a glade goes dark, a wall stops coming apart. A siege does not: the hill is
-        /// still walking and the field is still full, so without this the half-second between the
-        /// last ward falling and the panel arriving reads as nothing having happened.
-        /// </para>
-        /// </summary>
-        void Fallen()
-        {
-            if (_fx == null) return;
-
-            var label = UIKit.Label("Fallen", _fx, Loc.Get("mode.siege.fallen"),
-                                    Mathf.RoundToInt(Cell * 1.05f), Pal.Rose,
-                                    TextAnchor.MiddleCenter, new Vector2(Span.x, Cell * 2f));
-            label.rectTransform.anchoredPosition = new Vector2(0f, _lineY + Cell * 2.2f);
-
-            label.transform.localScale = new Vector3(2.4f, 2.4f, 1f);
-            Tween.Scale(label.transform, 1f, .3f, Ease.OutBack);
-
-            var group = UIKit.Group(label.rectTransform);
-            group.alpha = 0f;
-            Tween.Fade(group, 1f, .18f);
         }
 
         /// <summary>

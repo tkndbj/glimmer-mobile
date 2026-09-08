@@ -331,6 +331,7 @@ namespace GlimmerGrove
                 // deliberately absent, on OutOfInk's terms.
                 case DefeatReason.OutOfTaps: return "ui.defeat.taps_title";
                 case DefeatReason.Stuck: return "ui.defeat.stuck_title";
+                case DefeatReason.WardsLost: return "ui.defeat.wards_title";
                 case DefeatReason.Barren: return "ui.defeat.barren_title";
                 default: return "ui.defeat.moves_title";
             }

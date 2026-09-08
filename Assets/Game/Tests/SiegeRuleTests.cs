@@ -153,6 +153,9 @@ namespace GlimmerGrove.Tests
             var turn = board.Swap(a, b);
             Assert.IsNotNull(turn);
 
+            // The fuel is in flight - it lands when the motes do. See the test below.
+            Frames(board, SiegeTuning.FuelLands(turn.Beats.Count) + .2f);
+
             float fuelled = 0f;
             int wards = 0;
 
@@ -179,14 +182,16 @@ namespace GlimmerGrove.Tests
             var board = SiegeBoard.Build(Shipped());
 
             Assert.IsTrue(First(board, out int a, out int b), "no swap on this field");
-            board.Swap(a, b);
+            var turn = board.Swap(a, b);
+
+            Frames(board, SiegeTuning.FuelLands(turn.Beats.Count) + .2f);
 
             float before = Total(board);
             Assert.Greater(before, 0f);
 
-            // Nothing is on the hill for the first few seconds, so there is nothing to fire at
-            // and nothing may leave the tubes.
-            for (int i = 0; i < 120; i++) board.Advance(1f / 60f);
+            // Nothing is on the hill for the first couple of seconds, so there is nothing to
+            // fire at and nothing may leave the tubes.
+            for (int i = 0; i < 60; i++) board.Advance(1f / 60f);
 
             Assert.AreEqual(before, Total(board), .0001f,
                             "fuel left a ward with nothing to shoot at");
@@ -213,6 +218,41 @@ namespace GlimmerGrove.Tests
         }
 
         [Test]
+        public void FuelReachesAWardWhenTheMotesDoAndNotWhenTheSwapIsMade()
+        {
+            // **The one thing a player could see going wrong here and no gate could.** A swap
+            // resolves in an instant; its animation takes the better part of a second, and the
+            // motes that carry the colour up to the line are the last part of it. Credited at the
+            // swap, a ward opens fire before the gems it was paid for have even gone off -
+            // reported from play in exactly those words. So the fuel is booked and lands on the
+            // schedule the view really draws (`SiegeTuning.FuelLands`), and this is what says the
+            // two still agree.
+            var board = SiegeBoard.Build(Shipped());
+
+            Assert.IsTrue(First(board, out int a, out int b), "no swap on this field");
+
+            var turn = board.Swap(a, b);
+            Assert.IsNotNull(turn);
+            Assert.Greater(turn.Worth, 0);
+
+            Assert.AreEqual(0f, Total(board), .0001f,
+                            "a ward was fuelled on the frame of the swap, before anything had "
+                            + "left the field");
+
+            Assert.IsNotEmpty(board.Flying, "the match booked nothing");
+
+            // Still nothing, right up to the moment the first motes arrive.
+            Frames(board, SiegeTuning.FuelLands(0) - .1f);
+
+            Assert.AreEqual(0f, Total(board), .0001f, "fuel arrived ahead of its motes");
+
+            // And then it is there.
+            Frames(board, .25f);
+
+            Assert.Greater(Total(board), 0f, "fuel never arrived at all");
+        }
+
+        [Test]
         public void AWardThatHasFallenTakesNoFuelAndTheGemsStillGo()
         {
             // The whole cost of losing a ward: its colour is still on the field and is worth
@@ -227,6 +267,11 @@ namespace GlimmerGrove.Tests
 
             Assert.IsNotNull(turn, "the gems still go");
             Assert.Greater(turn.Worth, 0);
+
+            // Long enough for every mote to have arrived, so this is about the fallen line and
+            // not about the fuel still being in flight.
+            Frames(board, SiegeTuning.FuelLands(turn.Beats.Count) + .5f);
+
             Assert.AreEqual(0f, Total(board), .001f, "a fallen line took fuel");
         }
 
@@ -390,19 +435,26 @@ namespace GlimmerGrove.Tests
                         $"the line finished untouched at {whole}, so nothing on this hill ever "
                         + "reached it and the fail state rejects nothing");
 
-            // And the other half, which is what says the star ladder is not decoration: an
-            // ordinary run has to land *above* par (or par is free) and inside a band a good one
-            // could beat (or three stars is unreachable). Wide on purpose - this is a model of a
-            // player, not a player, and the number that settles it is a real one on a device.
+            // And the other half, which is what says the star ladder is not decoration: a good
+            // run has to land *inside* it.
+            //
+            // **Not "above par", which is what this asserted first and had to give up.** Par was
+            // written as a floor and is not one (see SiegeTuning.MatchGemsTenths); calibrated, it
+            // sits at about what a good run really costs, so a model of a good player ties it. The
+            // question worth asking is therefore not whether par is beaten but whether the three
+            // lines derived from it are all landable: a good run scoring three stars, and par not
+            // sitting so far above real play that the bands are meaningless.
             int par = SiegeTuning.Par(Shipped());
+            int gold = (par * 120 + 99) / 100;
 
-            Assert.Greater(matches, par,
-                           $"an unhurried player finished in {matches} against par {par}, so par "
-                           + "is not a floor and three stars is free");
+            Assert.LessOrEqual(matches, gold,
+                               $"an unhurried player needed {matches} against a three-star line "
+                               + $"of {gold}, so nobody playing this way ever sees three stars");
 
-            Assert.Less(matches, par * 3,
-                        $"an unhurried player needed {matches} against par {par}, so the ladder "
-                        + "is out of reach of anybody playing this way");
+            Assert.GreaterOrEqual(matches * 2, par,
+                                  $"an unhurried player finished in {matches} against par {par}, "
+                                  + "so par is more than twice what the level really costs and "
+                                  + "every band under it is unreachable");
         }
 
         /// <summary>

@@ -79,6 +79,10 @@ FIELD = "craftpix-net-869102-tower-defense-neighborhood-top-down-2d-asset-pack.z
 #: what a matched gem comes apart into.
 KIT = "craftpix-net-239749-merge-shooter-cartoon-asset-kit.zip"
 
+#: The mine tileset the hill is floored with. Its own download rather than one of the folders
+#: above, so `--mine` points at it.
+MINE = Path(r"C:\Users\Digikey\Downloads\graphicriver-95eo2prH-topdown-tiles-mine.zip")
+
 #: One gem, in pixels. An import-cap decision rather than a drawing one - `ArtImportRules.Caps`
 #: gives this folder 512, and a texture costs its dimensions rather than its file size.
 TILE = 192
@@ -154,6 +158,12 @@ FIRE_FRAMES = 7
 
 #: A ward, in pixels. Taller than it is wide, because a turret is.
 WARD_W, WARD_H = 192, 240
+
+#: How far a ward's pixels are pulled toward its own hue. **Not all the way**: at 1.0 a turret is
+#: one flat colour, which is what the first bake shipped and what came back as needing "a touch of
+#: different colours". A fifth of the pack's own spread survives at 0.8, which is enough for the
+#: orange trim to stay warm against a red body and for the dome to stay cool against a green one.
+HUE_PULL = 0.8
 
 STONE_DARK = (38, 46, 58)
 STONE_MID = (62, 74, 90)
@@ -240,66 +250,75 @@ def ground(w, h, top, bottom, seed):
 
 
 def hill():
-    """The ground the raiders walk over: the top-down pack's own grass, laid as a field.
+    """The ground the raiders walk over: the mine tileset's own floor, laid as a field.
 
-    **A field rather than a graded gradient, and that is the owner's verdict.** The first cut was
-    dark earth with a black wash over the top of it, and played on a device it read as a hole
-    rather than as somewhere things walk. What is up there now is grass drawn to be looked down on,
-    which is what this band is - and it is bright, which means the plate rule (CRAFT.md: a dark
-    ground is what makes bright pieces read) has to be bought somewhere else. It is: every raider
-    wears a coloured wash and carries a gem over its head, and the gem field below keeps its own
-    dark plate.
+    <b>Three grounds in three sittings, and the reason it moved twice is worth keeping.</b> The
+    first was drawn - dark earth under a black wash - and read as a hole. The second was the
+    top-down pack's grass, which read correctly and was chosen for brightness. This is the owner's
+    third call and it is a *place* rather than a brightness: a mine floor, which is what a line of
+    turrets standing in front of a jewel field is plausibly defending.
+
+    <b>The plate rule comes back with it</b> (CRAFT.md: a dark ground is what makes bright pieces
+    read), so unlike the grass this needs no help - the raiders are saturated cartoon colours and
+    every one of them now sits on something that is not competing with it. What it does need is to
+    not be *flat*, which is what the ore is for.
     """
-    z = zipped(FIELD, TOWER)
+    z = zipped(MINE.name, MINE.parent)
     if z is None:
         return None
 
-    tiles = [read(z, n) for n in sorted(n for n in z.namelist()
-                                        if n.startswith("Png/Grass/") and n.endswith(".png")
-                                        and "__MACOSX" not in n)]
+    art = {}
+    for n in z.namelist():
+        if not n.endswith(".png") or "__MACOSX" in n:
+            continue
+        stem = n.split("/")[-1].replace("Asset ", "").replace("xhdpi.png", "")
+        if stem.isdigit():
+            art[int(stem)] = read(z, n)
 
-    # The pack's grass comes as 216-pixel squares, most of them a plain green centre inside a
-    # paved border. Only the plain ones are wanted - a border on every tile would draw a
-    # chessboard across the whole hill - so they are picked by how little of the tile is not
-    # green. **The bar is high on purpose**: at 0.86 enough paving survived to litter the field
-    # with pale rectangles, which a render caught and no other check could.
-    plain = [t for t in tiles if t.size == (216, 216) and greenness(t) > 0.985]
-    if not plain:
-        plain = [t for t in tiles if t.size == (216, 216)]
-    if not plain:
+    if not art:
         return None
 
-    side = 216
-    across, down = 4, 5
-    im = Image.new("RGBA", (side * across, side * down), (0, 0, 0, 255))
+    # The 265-square pieces are the floor; everything taller is a wall block or an ore cluster.
+    floor = [im for im in art.values() if im.size == (265, 265)]
+    if not floor:
+        return None
 
-    rng = np.random.RandomState(19)
+    # The plainest of them, by how little of the tile is edge shadow - a floor laid out of pieces
+    # that each carry a dark rim draws a grid across the whole hill, which is the fault the grass
+    # was re-filtered for.
+    floor.sort(key=flatness, reverse=True)
+    floor = floor[:6]
+
+    side = 265
+    across, down = 4, 5
+    im = Image.new("RGBA", (side * across, side * down), (26, 24, 26, 255))
+
+    rng = np.random.RandomState(23)
     for y in range(down):
         for x in range(across):
-            im.alpha_composite(plain[int(rng.rand() * len(plain))], (x * side, y * side))
+            im.alpha_composite(floor[int(rng.rand() * len(floor))], (x * side, y * side))
+
+    # **No ore scattered over it.** The pack's ore clusters were laid across the floor to stop it
+    # reading as flat, drained most of the way to grey so they would not compete with the four
+    # colours this board spends on things the player has to tell apart. Played, they read as
+    # litter. What keeps the floor from being flat is the six different tiles it is laid from,
+    # which is the amount of variety a surface *under* the action should have.
 
     # A little depth up the hill, so the far end reads as further away rather than as the same
-    # lawn twice. Gentle - anything more and it is the wash that was just taken out.
-    shadeup = np.asarray(im).astype(np.float32)
-    ramp = np.linspace(0.72, 1.0, im.height, dtype=np.float32)[:, None, None]
-    shadeup[..., :3] *= ramp
-    im = Image.fromarray(np.clip(shadeup, 0, 255).astype(np.uint8), "RGBA")
+    # floor twice.
+    a = np.asarray(im).astype(np.float32)
+    ramp = np.linspace(0.80, 1.10, im.height, dtype=np.float32)[:, None, None]
+    a[..., :3] = np.clip(a[..., :3] * ramp + 16.0, 0, 255)
+    im = Image.fromarray(a.astype(np.uint8), "RGBA")
 
     return im.resize((512, 640), Image.LANCZOS)
 
 
-def greenness(tile):
-    """What share of a tile is grass rather than paving. Used to pick the plain tiles."""
+def flatness(tile):
+    """How little of a tile is dark rim. Used to pick the plain floor pieces."""
     a = np.asarray(tile).astype(np.float32)
-    if a.shape[2] < 4:
-        return 0.0
-
-    lit = a[..., 3] > 8
-    if not lit.any():
-        return 0.0
-
-    green = (a[..., 1] > a[..., 0] + 12) & (a[..., 1] > a[..., 2] + 12) & lit
-    return float(green.sum()) / float(lit.sum())
+    lum = a[..., 0] * 0.30 + a[..., 1] * 0.59 + a[..., 2] * 0.11
+    return float((lum > lum.mean() * 0.82).mean())
 
 
 def rampart():
@@ -345,7 +364,12 @@ def plate():
     d = ImageDraw.Draw(im)
     d.rounded_rectangle([0, 0, side - 1, side - 1], radius=26, fill=(12, 18, 26, 232))
     d.rounded_rectangle([0, 0, side - 1, side - 1], radius=26, outline=(84, 98, 118, 210), width=4)
-    d.rounded_rectangle([6, 6, side - 7, 22], radius=10, fill=(255, 255, 255, 16))
+
+    # **No highlight along the top, and that is a lesson about stretching a sprite.** There was a
+    # 16-pixel band of white at 6% up there, which is a sheen on a 256-pixel panel and a *bar* on
+    # one stretched to six hundred - it sat in the plate's own margin above the first row of gems
+    # and read as a second container nobody had asked for. Anything drawn a fixed number of pixels
+    # from the edge of a sprite that will be stretched is drawn at a size nobody chose.
 
     return im
 
@@ -382,10 +406,28 @@ def hued(im, hue):
 
     # Pulled up rather than set: a pixel that was grey metal stays greyish, a pixel that was
     # coloured becomes strongly coloured.
-    sat = np.clip(sat * 0.45 + 0.55, 0.0, 1.0)
+    sat = np.clip(sat * 0.48 + 0.50, 0.0, 1.0)
     val = np.clip(mx * 1.10 + 0.06, 0.0, 1.0)
 
-    h = np.full_like(mx, hue)
+    # **Most of the way to the target rather than all of it.** Setting every pixel to one hue
+    # gives a turret that is *entirely* one colour, which came back from play as flat - the pack
+    # drew orange trim on a blue body and a purple dome, and all of that collapsed into a single
+    # red shape. Blending keeps a fifth of the original spread, so a red ward is unmistakably red
+    # and still has warm and cool notes in it. The blend is circular, so a hue two thirds of the
+    # way round the wheel takes the short way and not the long one.
+    r, g, b = rgb[..., 0], rgb[..., 1], rgb[..., 2]
+
+    was = np.zeros_like(mx)
+    lit = span > 1e-6
+    with np.errstate(invalid="ignore", divide="ignore"):
+        safe = np.where(lit, span, 1.0)
+        was = np.where(lit & (mx == r), ((g - b) / safe) % 6.0, was)
+        was = np.where(lit & (mx == g), ((b - r) / safe) + 2.0, was)
+        was = np.where(lit & (mx == b), ((r - g) / safe) + 4.0, was)
+    was = was / 6.0
+
+    step = ((hue - was + 0.5) % 1.0) - 0.5
+    h = (was + step * HUE_PULL) % 1.0
     i = np.floor(h * 6.0)
     f = h * 6.0 - i
     p = val * (1.0 - sat)
@@ -658,7 +700,7 @@ def contact(made):
 
 
 def main():
-    global SOURCE, TOWER
+    global SOURCE, TOWER, MINE
 
     ap = argparse.ArgumentParser()
     ap.add_argument("--write", action="store_true")
@@ -666,10 +708,12 @@ def main():
     ap.add_argument("--contact", action="store_true")
     ap.add_argument("--source", default=str(SOURCE))
     ap.add_argument("--tower", default=str(TOWER))
+    ap.add_argument("--mine", default=str(MINE))
     args = ap.parse_args()
 
     SOURCE = Path(args.source)
     TOWER = Path(args.tower)
+    MINE = Path(args.mine)
 
     made = build()
 

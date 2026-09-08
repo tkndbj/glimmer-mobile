@@ -291,9 +291,29 @@ namespace GlimmerGrove.Modes
         ///
         /// <b>It buys no damage and it buys the whole feel.</b> A bolt costs one fuel whatever the
         /// cadence, so a ward with three fuel does twelve damage at any speed - what this decides
-        /// is whether feeding a ward reads as *opening fire* or as a lamp ticking over. Fast.
+        /// is whether feeding a ward reads as *opening fire* or as a lamp ticking over.
+        ///
+        /// <para>
+        /// <b>It was .14 and that was too fast, which is the owner's verdict after playing it.</b>
+        /// Seven bolts a second per ward is twenty-eight across a lit line, and at that rate a
+        /// bolt is not an event - it is a hose, and nothing crossing the hill can be looked at.
+        /// The fix is here rather than in the view, because a shorter flight or a smaller bolt
+        /// would be treating the symptom: what was wrong is how often the thing happens. At .22 a
+        /// ward still opens fire rather than ticking over, and a bolt has all but landed before
+        /// the next one leaves (<c>SiegeView.LongestFlight</c> is .20).
+        /// </para>
+        /// <para>
+        /// <b>And it is not free, which is why it went back through the hold simulation.</b> Fuel
+        /// still buys the same damage, but it arrives later - and the raiders do not wait, so a
+        /// slower line lets them further down the hill and takes more blows. See
+        /// <c>SiegeRuleTests.AnUnhurriedPlayerHoldsThisLine</c>, which is this mode's only
+        /// instrument (invariant 37j). It is also what picked this number: .20 and .22 hold the
+        /// line, and <b>.26 loses it outright</b> - the hill unclear and every ward down. So the
+        /// band between "too fast to watch" and "too slow to hold" is narrow, and anything slower
+        /// than this has to buy the time back somewhere else.
+        /// </para>
         /// </summary>
-        public const float FireEvery = .14f;
+        public const float FireEvery = .22f;
 
         /// <summary>Fuel one bolt spends.</summary>
         public const float FuelPerShot = 1f;
@@ -311,7 +331,7 @@ namespace GlimmerGrove.Modes
 
         /// <summary>A brute: slower, far tougher, and twice as expensive to let through.</summary>
         public const int BruteHealth = 48;
-        public const float BruteMarch = 21f;
+        public const float BruteMarch = 26f;
         public const int BruteBlow = 2;
 
         /// <summary>
@@ -345,14 +365,39 @@ namespace GlimmerGrove.Modes
         /// <c>SiegeRuleTests.AnUnhurriedPlayerHoldsThisLine</c> rather than reasoned about.
         /// </para>
         /// </summary>
-        public const float FirstWaveAfter = 2.2f;
-        public const float BetweenWaves = 24f;
+        public const float FirstWaveAfter = 3.4f;
+        public const float BetweenWaves = 26f;
 
         /// <summary>Seconds between one raider of a wave stepping out and the next.</summary>
         public const float RaiderSpacing = 1.35f;
 
         /// <summary>Lanes a raider may walk down. Wider than the ward line, so blows travel.</summary>
         public const int Lanes = 5;
+
+        // ------------------------------------------------------------------ fuel in flight
+        /// <summary>
+        /// How long a match takes to reach the wards it feeds, and the three numbers it is made
+        /// of.
+        ///
+        /// <para>
+        /// <b>These are drawing numbers living in the rules, and that is deliberate.</b> A swap
+        /// resolves in an instant and its animation takes the better part of a second — the gems
+        /// swap, they burst, motes fly up to the line. Fuel credited at the *instant of the swap*
+        /// therefore reaches the wards before the player has seen anything leave the field, and
+        /// what that looks like is a turret killing a raider before the gems it was paid for have
+        /// gone off. Reported from play in exactly those words.
+        /// </para>
+        /// <para>
+        /// So fuel is <b>in flight</b>: <see cref="Swap"/> books it and <see cref="Advance"/>
+        /// lands it, on the schedule the view really draws. Putting the schedule here rather than
+        /// in the view is what stops the two drifting — a mote that arrives before or after its
+        /// fuel does is the same bug again, and there is no gate that could see it.
+        /// </para>
+        /// </summary>
+        public const float SwapFor = .16f, BeatFor = .40f, FuelFlight = .42f;
+
+        /// <summary>When a cascade's <paramref name="beat"/>th wave of fuel reaches the line.</summary>
+        public static float FuelLands(int beat) => SwapFor + beat * BeatFor + FuelFlight;
 
         public static int HealthOf(bool brute) => brute ? BruteHealth : CreeperHealth;
         public static float MarchOf(bool brute) => brute ? BruteMarch : CreeperMarch;
@@ -541,6 +586,14 @@ namespace GlimmerGrove.Modes
         public bool Any => Bolts.Count > 0 || Blows.Count > 0 || Arrived.Count > 0 || Wave >= 0;
     }
 
+    /// <summary>Fuel a match has earned that has not reached its ward yet.</summary>
+    public struct SiegeCharge
+    {
+        public int Ward;
+        public float Fuel;
+        public float In;
+    }
+
     /// <summary>One gem falling, or arriving. <see cref="From"/> below nought is a new gem.</summary>
     public readonly struct SiegeDrop
     {
@@ -601,6 +654,7 @@ namespace GlimmerGrove.Modes
         readonly SiegeWard[] _wards;
         readonly List<SiegeRaider> _raiders = new List<SiegeRaider>(24);
         readonly SiegeReport _report = new SiegeReport();
+        readonly List<SiegeCharge> _flying = new List<SiegeCharge>(16);
 
         uint _rng;
         int _wave;
@@ -635,6 +689,9 @@ namespace GlimmerGrove.Modes
         public int IndexOf(int x, int y) => y * Width + x;
 
         public IReadOnlyList<SiegeWard> Wards => _wards;
+
+        /// <summary>Fuel booked and still crossing the field. Nothing grades on it.</summary>
+        public IReadOnlyList<SiegeCharge> Flying => _flying;
         public IReadOnlyList<SiegeRaider> Raiders => _raiders;
 
         public int WardsStanding
@@ -762,12 +819,16 @@ namespace GlimmerGrove.Modes
                 {
                     if (beat.Fuel[w] <= 0f) continue;
 
-                    // A fallen ward takes nothing. The gems still go, which is the whole cost of
-                    // losing one: the colour is still on the field and is worth nothing now.
-                    if (!_wards[w].Alive) continue;
-
-                    _wards[w].Fuel = Math.Min(SiegeTuning.WardCapacity,
-                                              _wards[w].Fuel + beat.Fuel[w]);
+                    // **Booked, not paid.** It lands when the motes do - see
+                    // `SiegeTuning.FuelLands`. A fallen ward is not filtered here either: it may
+                    // still be standing now and down by the time this arrives, and the ward that
+                    // is asked is the one that exists when the fuel gets there.
+                    _flying.Add(new SiegeCharge
+                    {
+                        Ward = w,
+                        Fuel = beat.Fuel[w],
+                        In = SiegeTuning.FuelLands(depth - 1),
+                    });
                 }
 
                 Collapse(beat);
@@ -868,6 +929,7 @@ namespace GlimmerGrove.Modes
             if (dt <= 0f) return _report;
             if (dt > .25f) dt = .25f;      // a resumed app must not teleport a wave into the line
 
+            Land(dt);
             Muster(dt);
             Walk(dt);
             Shoot(dt);
@@ -879,14 +941,57 @@ namespace GlimmerGrove.Modes
             return _report;
         }
 
+        /// <summary>
+        /// Lands whatever fuel has finished crossing the field.
+        ///
+        /// <b>Before anything else in the step</b>, so a ward fed on this frame may fire on it -
+        /// the delay is the flight, not a further beat of hesitation once it has arrived.
+        /// </summary>
+        void Land(float dt)
+        {
+            for (int i = _flying.Count - 1; i >= 0; i--)
+            {
+                var charge = _flying[i];
+                charge.In -= dt;
+
+                if (charge.In > 0f)
+                {
+                    _flying[i] = charge;
+                    continue;
+                }
+
+                _flying.RemoveAt(i);
+
+                // A fallen ward takes nothing. The gems still went, which is the whole cost of
+                // losing one: the colour is still on the field and is worth nothing now.
+                var ward = _wards[charge.Ward];
+                if (!ward.Alive) continue;
+
+                ward.Fuel = Math.Min(SiegeTuning.WardCapacity, ward.Fuel + charge.Fuel);
+            }
+        }
+
         void Muster(float dt)
         {
             if (_wave >= Layout.Waves.Length) return;
 
-            // **On a clock, and never on a clear.** See `BetweenWaves`: waiting for the hill to
-            // empty meant a player who was winning met no pressure at all.
+            // **On a clock, or the moment the hill is empty — whichever comes first.**
+            //
+            // The clock alone was the fix for waiting-on-a-clear, which let a winning player
+            // stroll; a clear alone is what it replaced. Both together are what the mode actually
+            // wants: the clock is the pressure and never lets up, and the shortcut means a player
+            // who is *ahead* of it is rewarded with the next wave rather than made to stand and
+            // watch an empty field. Note the guard — the shortcut cannot fire before the first
+            // wave, because the hill is legitimately empty at the start of every run.
             _rest -= dt;
-            if (_rest > 0f) return;
+
+            if (_rest > 0f)
+            {
+                if (_wave == 0) return;
+
+                for (int i = 0; i < _raiders.Count; i++)
+                    if (_raiders[i].Alive) return;
+            }
 
             string wave = Layout.Waves[_wave];
 

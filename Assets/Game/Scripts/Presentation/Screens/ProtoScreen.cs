@@ -264,6 +264,20 @@ namespace GlimmerGrove
         }
 
         // ------------------------------------------------------------------ one more go
+        /// <summary>
+        /// What this mode calls a board that has no legal move left on it.
+        ///
+        /// <para>
+        /// <b>A hook rather than a constant, because the sentence a player reads is on the other
+        /// end of it.</b> Every board on this shape reaches the same *reading* — no move left,
+        /// and no purchase that helps — but they reach it for reasons that want different words
+        /// and that analytics has to be able to tell apart. A prototype board ran out of *board*;
+        /// a Thornwatch line fell while the hill was still full, and "nothing left to do" over
+        /// that reads as a bug.
+        /// </para>
+        /// </summary>
+        protected virtual DefeatReason StuckReason => DefeatReason.Stuck;
+
         /// <summary>A prototype board is measured in moves, so that is what a continue sells.</summary>
         protected internal override ContinueUnit MeasuredIn => ContinueUnit.Moves;
 
@@ -386,7 +400,7 @@ namespace GlimmerGrove
             // The two ways a board ends want opposite fixes, so they are told apart in the one
             // place that can still see the difference.
             var reason = run.Verdict.Ending == ProtoEnding.Stuck
-                       ? DefeatReason.Stuck : DefeatReason.OutOfMoves;
+                       ? StuckReason : DefeatReason.OutOfMoves;
 
             // No near miss. That line is measured in turns from the solution, which these boards
             // have no notion of - one is a lucky move from finished or five from it, depending on

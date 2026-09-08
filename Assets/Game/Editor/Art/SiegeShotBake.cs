@@ -156,10 +156,14 @@ namespace GlimmerGrove.EditorTools
         /// so nothing has to be told what they came out as.
         /// </para>
         /// </summary>
-        const float LeanestShot = 1.8f, LongestShot = 6f;
+        const float LeanestShot = 1.6f, LongestShot = 8f;
 
-        const int ShotTall = 288;
-        const int NarrowestShot = 40, WidestShot = 160;
+                // **Raised once the haze stopped being baked in.** A bolt is drawn about 70 points wide
+        // on a 1080 phone, so 48 was an upscale on the one thing in this mode the eye follows;
+        // held beside a straight render of the same prefab the head was visibly soft. Held down
+        // rather than raised further by what four reels of it cost resident in the chapter scope.
+        const int ShotTall = 384;
+        const int NarrowestShot = 56, WidestShot = 224;
 
         /// <summary>
         /// The shape the bake aims a comet's <em>flight</em> at, before measuring what it got.
@@ -168,7 +172,31 @@ namespace GlimmerGrove.EditorTools
         /// this is a target rather than a promise — and it is deliberately near the middle of the
         /// band above, so a reel that misses it lands somewhere still comet-shaped.
         /// </summary>
-        const float WantedShot = 3.2f;
+        const float WantedShot = 2.6f;
+
+        /// <summary>
+        /// How much tail a comet is framed with, counted in its own head-widths.
+        ///
+        /// <para>
+        /// <b>This pack's trails are about six times the head, and that cannot all be shown.</b>
+        /// The view sizes a bolt by its frame's <em>width</em>, so a head worth looking at means a
+        /// frame roughly a head wide — and at six to one the sprite is then longer than the flight
+        /// it has to cross, which reads as a static ribbon rather than as something travelling.
+        /// Flying it slower to shorten the trail only goes so far before the flames pile onto the
+        /// head and the comet becomes an oval with debris round it, which is a bug this project
+        /// has shipped once already.
+        /// </para>
+        /// <para>
+        /// So the far tail is left out of the frame instead — and <b>dissolved rather than cut</b>
+        /// (<see cref="TailFade"/>), because the end of one of these is faint and thinning anyway,
+        /// so a ramp over the last of it is invisible where a straight edge would be a line drawn
+        /// across the sky.
+        /// </para>
+        /// </summary>
+        const float TailHeads = 2.8f;
+
+        /// <summary>How much of the frame's bottom the tail dissolves over.</summary>
+        const float TailFade = .18f;
 
         /// <summary>
         /// An impact is radial, so it is square, and 192 as every other reel in <c>Fx/Siege</c>.
@@ -223,7 +251,7 @@ namespace GlimmerGrove.EditorTools
         /// instead and the head is allowed to be smaller. Nothing is ever clipped.
         /// </para>
         /// </summary>
-        const float SlowestBake = .45f, FastestBake = 1.4f;
+        const float SlowestBake = .30f, FastestBake = 1.4f;
 
         // ------------------------------------------------------------------ menu
         [MenuItem("Glimmer Grove/Art/Bake Siege Projectiles", false, 30)]
@@ -322,7 +350,7 @@ namespace GlimmerGrove.EditorTools
             made["shot_" + shot.Key] =
                 Capture(stage, cam, prefab, shot.Hue, ShotFrames, ShotSeconds, speed, warm,
                         SiegeView.HeadAt, ShotTall, NarrowestShot, WidestShot,
-                        LeanestShot, LongestShot);
+                        LeanestShot, LongestShot, comet: true);
 
             // The pack fires as three parts and the vendor's own demo plays all three. Showing the
             // middle one alone was judging a sentence by its verb.
@@ -334,13 +362,13 @@ namespace GlimmerGrove.EditorTools
                 made["muzzle_" + shot.Key] =
                     Capture(stage, cam, muzzle, shot.Hue, MuzzleFrames, Burst(muzzle), 0f, 0f,
                             SiegeView.MuzzleAt, BurstSide, NarrowestMuzzle, BurstSide,
-                            LeanestMuzzle, LongestMuzzle);
+                            LeanestMuzzle, LongestMuzzle, comet: false);
 
             var hit = Companion(prefab, "hitPrefab");
             if (hit != null)
                 made["hit_" + shot.Key] =
                     Capture(stage, cam, hit, shot.Hue, HitFrames, Burst(hit), 0f, 0f,
-                            .5f, BurstSide, BurstSide, BurstSide, 1f, 1f);
+                            .5f, BurstSide, BurstSide, BurstSide, 1f, 1f, comet: false);
         }
 
         // ------------------------------------------------------------------ the rig
@@ -413,7 +441,8 @@ namespace GlimmerGrove.EditorTools
         /// </summary>
         static Book Capture(Transform stage, Camera cam, GameObject prefab, Color hue, int frames,
                             float seconds, float speed, float warm, float head, int tallPx,
-                            int narrowest, int widest, float leanest, float longest)
+                            int narrowest, int widest, float leanest, float longest,
+                            bool comet)
         {
             // **Rendered twice, and the second one is what ships.** The first pass is framed off
             // the renderers' bounds, which is the only thing available before anything has been
@@ -438,7 +467,7 @@ namespace GlimmerGrove.EditorTools
             try
             {
                 float ratio = (float)tallPx / roughPx;
-                float height = Frame(seen, head, ratio);
+                float height = Frame(seen, head, ratio, comet);
 
                 raw = Roll(stage, cam, rt, pixels, prefab, frames, seconds, speed, warm, head,
                            height);
@@ -468,7 +497,7 @@ namespace GlimmerGrove.EditorTools
 
                 float finalRatio = (float)tallPx / wide;
                 float take = shown.HasValue
-                    ? Mathf.Min(height, Frame(shown.Value, head, finalRatio))
+                    ? Mathf.Min(height, Frame(shown.Value, head, finalRatio, comet))
                     : height;
 
                 if (wide != roughPx || take < height * .97f || window < seconds * .97f ||
@@ -490,7 +519,7 @@ namespace GlimmerGrove.EditorTools
 
             return new Book
             {
-                Sheet = Reel(raw, hue, wide, tallPx),
+                Sheet = Reel(raw, hue, wide, tallPx, comet),
                 Wide = wide,
                 Tall = tallPx,
                 Frames = frames,
@@ -506,7 +535,9 @@ namespace GlimmerGrove.EditorTools
             if (leanest >= longest) return leanest;
 
             float wide = Mathf.Max(.02f, seen.Across * 2f);
-            float tall = Mathf.Max(seen.Behind / Mathf.Max(.05f, head),
+            float behind = Mathf.Min(seen.Behind, wide * TailHeads);
+
+            float tall = Mathf.Max(behind / Mathf.Max(.05f, head),
                                    seen.Ahead / Mathf.Max(.05f, 1f - head));
 
             return Mathf.Clamp(tall / wide, leanest, longest);
@@ -533,10 +564,16 @@ namespace GlimmerGrove.EditorTools
         /// The smallest frame of this shape that holds what was measured, with the head at
         /// <paramref name="head"/>. Returns its world height; the width is that over the aspect.
         /// </summary>
-        static float Frame(Seen seen, float head, float aspect)
+        static float Frame(Seen seen, float head, float aspect, bool comet)
         {
+            // A comet shows its head and the tail nearest it; the rest runs off the bottom and is
+            // faded out there. Everything else is framed round all of itself.
+            float behind = comet
+                ? Mathf.Min(seen.Behind, seen.Across * 2f * TailHeads)
+                : seen.Behind;
+
             float w = Mathf.Max(seen.Across * 2f,
-                      Mathf.Max(seen.Behind / (Mathf.Max(.05f, head) * aspect),
+                      Mathf.Max(behind / (Mathf.Max(.05f, head) * aspect),
                                 seen.Ahead / (Mathf.Max(.05f, 1f - head) * aspect)));
 
             return Mathf.Max(1.2f, w * aspect) * 1.10f;
@@ -992,8 +1029,22 @@ namespace GlimmerGrove.EditorTools
         /// frame at a time would make the last dying spark as bright as the muzzle flash, which is
         /// the animation inverted.
         /// </para>
+        /// <para>
+        /// <b>And the curve bends the other way from the one this shipped with, which is the whole
+        /// difference between a fireball and a red smudge.</b> The first cut lifted faint coverage
+        /// (an exponent below one) on the argument that a trail at a tenth of an alpha disappears
+        /// into grass. What that actually did was promote the near-black haze every one of these
+        /// effects sits in — invisible in the pack's own render, because it is additive over black
+        /// and adds nothing — into a translucent cloud twice the size of the flame. Held up beside
+        /// a straight render of the same prefab the difference was not subtle: a small crisp
+        /// yellow head with sparks, against a blurred column. So haze below <see cref="Haze"/> is
+        /// dropped outright and what survives is bent <em>down</em>, which keeps a core solid and
+        /// lets a wisp be a wisp.
+        /// </para>
         /// </summary>
-        static Texture2D Reel(Color[][] raw, Color hue, int wide, int tall)
+        const float Haze = .05f;
+        const float Lift = 1.25f;
+        static Texture2D Reel(Color[][] raw, Color hue, int wide, int tall, bool comet)
         {
             int bigW = wide * Super;
             int frames = raw.Length;
@@ -1011,7 +1062,7 @@ namespace GlimmerGrove.EditorTools
                     var c = src[i];
                     float cover = Mathf.Max(c.r, Mathf.Max(c.g, c.b));
 
-                    if (cover <= .0035f) { dst[i] = new Color(0f, 0f, 0f, 0f); continue; }
+                    if (cover <= Haze) { dst[i] = new Color(0f, 0f, 0f, 0f); continue; }
 
                     dst[i] = Grade(new Color(c.r / cover, c.g / cover, c.b / cover, 1f), hue);
                     dst[i].a = cover;
@@ -1022,11 +1073,6 @@ namespace GlimmerGrove.EditorTools
             }
 
             float gain = peak > .02f ? 1f / peak : 1f;
-
-            // A gentle lift on top of the normalisation: these are drawn over grass and a trail at
-            // a tenth of an alpha disappears into it. Below one so a wisp gains more than a core,
-            // which is the shape of the curve rather than a brightening of the whole reel.
-            const float Lift = .86f;
 
             var sheet = new Texture2D(wide, tall * frames, TextureFormat.RGBA32, false, false);
             var outPix = new Color32[wide * tall * frames];
@@ -1049,12 +1095,18 @@ namespace GlimmerGrove.EditorTools
                                 r += c.r * c.a; g += c.g * c.a; b += c.b * c.a; a += c.a;
                             }
 
+                        // The tail runs off the bottom of a comet's frame, so it is thinned out
+                        // over the last of it: a hard edge there is a line drawn across the sky.
+                        float ramp = comet
+                            ? Mathf.SmoothStep(0f, 1f, Mathf.InverseLerp(0f, tall * TailFade, y))
+                            : 1f;
+
                         Color32 outc;
-                        if (a <= 1e-5f) outc = new Color32(255, 255, 255, 0);
+                        if (a <= 1e-5f || ramp <= 0f) outc = new Color32(255, 255, 255, 0);
                         else
                         {
                             float alpha = Mathf.Pow(
-                                Mathf.Clamp01(a / (Super * Super) * gain), Lift);
+                                Mathf.Clamp01(a / (Super * Super) * gain), Lift) * ramp;
 
                             outc = new Color32((byte)(Mathf.Clamp01(r / a) * 255f),
                                                (byte)(Mathf.Clamp01(g / a) * 255f),
@@ -1098,6 +1150,20 @@ namespace GlimmerGrove.EditorTools
         /// </summary>
         const float MostWhite = .62f;
 
+        /// <summary>
+        /// How far a pixel is pulled toward the ward's hue.
+        ///
+        /// <b>A nudge, because a re-hue is what made these look like stickers.</b> Replacing the
+        /// hue outright turns a fireball's yellow-hot head and orange body into one flat red — and
+        /// the white-core rule does not save it, because a flame's core is *saturated yellow*
+        /// rather than white, so it is graded like everything else. What is actually wanted is
+        /// small: these four were chosen because the pack already draws them roughly the colours
+        /// the wards burn (a warm fireball, a green dart, a cold icicle, a gold bolt), so agreement
+        /// with <c>Pal</c> is a lean rather than a repaint. The rest of invariant 37f's job is done
+        /// by the halo under the bolt's head, which <c>SiegeView</c> tints from the same entry.
+        /// </summary>
+        const float Toward = .38f;
+
         static Color Grade(Color lit, Color hue)
         {
             Color.RGBToHSV(lit, out _, out float s, out float v);
@@ -1107,9 +1173,9 @@ namespace GlimmerGrove.EditorTools
                           * MostWhite;
 
             float sat = Mathf.Clamp01(s * .45f + .55f) * (1f - white);
-            float val = Mathf.Clamp01(v * 1.06f + .04f);
+            var wanted = Color.HSVToRGB(h, sat, Mathf.Clamp01(v * 1.06f + .04f));
 
-            return Color.HSVToRGB(h, sat, val);
+            return Color.Lerp(lit, wanted, Toward * (1f - white));
         }
 
         // ------------------------------------------------------------------ on disk
@@ -1281,7 +1347,7 @@ namespace GlimmerGrove.EditorTools
 
             int height = keys.Count * Row;
             var pix = new Color32[width * height];
-            var ground = new Color32(38, 74, 34, 255);   // the hill, roughly
+            var ground = new Color32(46, 44, 42, 255);   // the hill, roughly
             for (int i = 0; i < pix.Length; i++) pix[i] = ground;
 
             for (int row = 0; row < keys.Count; row++)

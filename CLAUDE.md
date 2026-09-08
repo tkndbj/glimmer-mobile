@@ -1816,14 +1816,55 @@ In practice:
     health 10, a blow every 1.9s, a creeper crossing in 15 seconds and a brute in 21, twenty
     raiders and eight of them brutes. **A mode with no search has exactly one instrument, and every
     rule change has to be put back through it.**
-37k. **A wave comes on a clock, never when the last one is cleared — and the polite version was
-    withdrawn for being polite.** It shipped waiting for the hill to empty, which is safe (a run
-    can never be outpaced) and is exactly why it was wrong: a player who was winning met no
-    pressure at all, because the hill stopped and waited for them. On a clock the waves overlap and
-    falling behind compounds, which is what a siege *is*. What it costs is the guarantee: a run can
-    now be outpaced, so `BetweenWaves` is the number that decides whether a level is holdable and
-    it is pinned by 37j's simulation rather than reasoned about — the cliff is sharp, two seconds
-    either side of it, which is itself the argument for measuring rather than arguing.
+37k. **A wave comes on a clock *or* the moment the hill is empty, and it took both to be right.**
+    It shipped waiting for the hill to empty, which is safe — a run can never be outpaced — and is
+    exactly why it was wrong: a player who was winning met no pressure at all, because the hill
+    stopped and waited for them. On a clock alone the pressure is real and a player who is *ahead*
+    of it stands watching an empty field, which is the same fault seen from the other side. Both
+    together is the rule: the clock never lets up, and the shortcut means being ahead is rewarded
+    with the next wave rather than with a wait. **The guard matters** — the shortcut cannot fire
+    before the first wave, because the hill is legitimately empty at the start of every run.
+    <br>What the clock costs is the old guarantee, so `BetweenWaves` is the number that decides
+    whether a level is holdable and it is pinned by 37j's simulation rather than reasoned about —
+    the cliff is sharp, two seconds either side of it, which is itself the argument for measuring
+    rather than arguing.
+37p. **A hue rotation goes *most* of the way, never all of it.** The wards' first bake set every
+    pixel to one hue, which is unmistakable and flat: the pack drew orange trim on a blue body and
+    a purple dome, and all of it collapsed into a single red shape. Pulling 80% of the way keeps a
+    fifth of the original spread, so a red ward is unmistakably red and still has warm and cool
+    notes in it — the difference between a thing painted a colour and a thing *made of* one. The
+    blend is circular, or a hue two thirds of the way round the wheel takes the long way.
+37s. **A move's *effect* may not land before its animation does, and this mode is where that bites.**
+    A swap resolves in an instant and its drawing takes the better part of a second - the gems
+    trade, they burst, motes carry the colour up to the line. Fuel credited at the instant of the
+    swap therefore reached the wards before anything had left the field, and what a player saw was
+    **a turret killing a raider before the gems it was paid for had gone off**. Every other mode
+    here is immune by construction, because a turn-based board has nothing running while the
+    animation plays; a siege's clock does.
+    <br>So fuel is **in flight**: `Swap` books it and `Advance` lands it, on the schedule the view
+    really draws (`SiegeTuning.SwapFor`, `BeatFor`, `FuelFlight`, and `FuelLands(beat)` over them).
+    **The schedule lives in the rules and the view reads it**, which is the wrong way round until
+    you ask what happens otherwise: a mote that arrives before or after its own fuel is the same
+    bug again, and there is no gate anywhere that could see it. One number, one place.
+    <br>It cost about a second of latency on every match, which is most of a raider's life, and the
+    level had to be re-tuned around it - the brute march went from 21 seconds to 26. **A timing
+    fix is a difficulty change**, and 37j is what said by how much.
+37q. **Two sounds a frame apart are a flam, not emphasis.** The countdown's GO! and the first
+    wave's arrival landed on the same frame and both rang a bell. The wave gave its up: what
+    announces a wave is the banner and the raiders walking on, and the one sound belongs to the
+    moment the player is being counted in.
+37r. **A mode's defeat is its own piece of news, and `DefeatReason` is where that is said.**
+    A siege reaches the same *reading* every prototype board does — no legal move, and no purchase
+    that helps — so it took `Stuck` and a player met "NOTHING LEFT TO DO" over a hill still full of
+    raiders, which reads as a bug. `WardsLost` is its own ordinal for this enum's usual reason
+    (analytics cannot tell two endings apart afterwards) and for one more: a prototype board ran
+    out of *board*, which is a level-design reading, and a siege line falls because the player was
+    outpaced, which is a tuning one. `ProtoScreen.StuckReason` is the hook, because the sentence is
+    at the other end of it.
+    <br>**And the panel says it, not the board.** An on-board banner was tried first and was
+    withdrawn: at a size that read across a phone it overflowed its own box, and every other mode
+    in this game ends with the same modal a beat later. A mode does not need its own way of saying
+    it has ended; it needs the shared one to say the right words.
 37l. **`Image.color` is a multiply, so a tint can only ever darken — and a run-time tint is
     therefore the wrong way to colour anything the player is meant to find *bright*.** The wards
     were tinted at run time on a good argument: one `Pal` entry feeding the gems, the raiders and
@@ -1873,6 +1914,63 @@ In practice:
     a bolt is drawn, silhouette is the only difference that survives - and the hue is graded from
     `Pal` **in the bake**, so a ward, its bolt, its flash, its impact and the gems that feed it
     cannot drift (37f).
+    <br>**And the first cut of it was played and reported as bad next to the vendor's own demo,
+    which is the fault worth writing down before the six below.** Nothing was wrong with the
+    render; what was wrong was the *key*. The coverage a pixel was given was lifted by an exponent
+    below one, on the reasonable-sounding argument that a trail at a tenth of an alpha disappears
+    into grass — and what that promoted was the near-black **haze** every one of these effects sits
+    in, which is invisible in the pack's own picture because additive over black adds nothing.
+    Alpha-blended it became a translucent cloud twice the size of the flame. Held beside a straight
+    render of the same prefab the difference was not subtle and needed no judgement: a small crisp
+    yellow head with sparks, against a blurred red column. **Bake an effect and put it next to an
+    ungraded render of itself before believing it.** Two more came out of the same comparison — a
+    full **re-hue** turns a fireball's yellow-hot core into flat red (a flame's core is saturated
+    yellow, not white, so the white-core rule never fires on it; the grade is now a 38% lean, and
+    the ward's colour is carried by the tinted halo under the head), and the frames were **too
+    small** at 48 wide for something drawn at 70 points and followed by the eye.
+    <br>**The same session's other verdict was that the wards fire too fast**, and that is a rule
+    rather than a drawing: `SiegeTuning.FireEvery` was .14, which is seven bolts a second per ward
+    and twenty-eight across a lit line, at which rate a bolt is not an event. It is .22 now — and
+    the band is narrow, because .26 loses the line outright (invariant 37j's simulation, which is
+    where every change to this mode's arithmetic has to go).
+    <br>**Played again it came back as three more fine tunes, and two of them are one rule.**
+    *Too small to see* and *too fast to see* are the same complaint about a thing that is on screen
+    for a tenth of a second, so the flight doubled to .20-.40s — deliberately **longer than the
+    cadence**, so a ward has two bolts in the air at once and the line reads as a stream of comets
+    rather than one thing at a time. Size is where it got interesting: the view scales a bolt by
+    its frame's **width**, so a head worth looking at means a frame about a head wide — and this
+    pack's trails are roughly **six times** the head, which makes the sprite longer than the flight
+    it has to cross and turns a comet into a static ribbon. Flying it slower in the bake only goes
+    so far before the flames pile onto the head. **So the far tail is framed out and dissolved**
+    (`TailHeads`, `TailFade`): the end of one of these is faint and thinning anyway, so a ramp over
+    the last of it is invisible where a straight edge would be a line drawn across the sky.
+    <br>**And the damage numbers are tallied per raider, which is what makes them readable at
+    all.** Asked for as *proper World-of-Warcraft floating damage*, and the obvious build — one
+    outlined figure per hit — is wrong here for a reason that is about the mode rather than about
+    text: a lit line lands about **eighteen hits a second**, and eighteen figures a second is a
+    wall nobody can read one number out of, which drawing each of them bigger makes worse. So a hit
+    on a raider that is already showing a number *adds to it* — the figure climbs, grows, punches
+    again and its float restarts — and what the player watches is one number running up while they
+    hold fire on something. A double is gold, punches harder and floats higher, because the
+    elemental double is the rule this mode is about and this is the only place it is said in
+    figures. **Before drawing a number per event, count the events.**
+    <br>**Then two more, and both are the same fault in opposite directions: something loud drawn
+    quietly, and something quiet drawn loudly.** The **chain banner** — the one announcement of the
+    biggest thing that can happen on this board — sat just above the gems at half the size it is
+    now, in a plain label with no outline, in the same band as forty gems. It reads as a caption
+    there because the eye is already busy there. It is drawn over the **ward line** now, on the
+    empty run of hill nothing else lives on and where the eye is already going to see what the
+    turrets are shooting, at roughly a cell tall, on a heat ladder (yellow, gold, ember, rose) that
+    grows with depth, over a soft dark aura — because a heavy outline alone is not enough over a
+    lit hill. One banner, reused: a second cascade re-punches the first rather than stacking a
+    label on it, which is also what makes a long chain read as one thing getting louder.
+    <br>And the **floating numbers came back down**: a cell and a half over a second was a long
+    time for a figure to be over the hill when the next is 55 milliseconds behind it, so they
+    stacked up the screen and stayed there. Half a cell, gone inside two thirds of a second, with
+    consecutive ones fanning left and right. **What a floating number owes the player is to be
+    legible on arrival and then get out of the way** — the temptation with a readout that is hard
+    to see is to make it live longer, and on a board this busy that is the one change that makes
+    it worse.
     <br>**Six faults, in the order they were found, every one green on every gate.**
     `ParticleSystem.Simulate` with `restart: false` **continues** from where a system is, and a
     system stopped-and-cleared so its seed could be set is stopped - so the first bake ran to
@@ -1980,12 +2078,14 @@ compile. Do not guess — verify offline:
   `loc.py` cannot see it — both gates resolve every key a chapter actually writes and error on a missing
   one, which is stricter than the naming convention it replaces.
 - **Thornwatch's art:** `Tools/make_siege_art.py --check` proves every sprite, cast flipbook
-  and explosion is what the tool writes. Its gems and its cast are **cut** from the licensed packs
-  and everything else on the board - the hill, the gateway, the rampart, the plinths, the four
-  wards and the broken one - is **drawn**, for invariant 32b's reason: the one thing a player has
-  to read in a glance is which ward is which colour and whether it is still standing. It reads the
-  zips directly and **passes when the packs are absent**, so a checkout without them still runs
-  the gate, and `--contact` lays it out to be looked at.
+  and explosion is what the tool writes. It reads **three** source folders - the CraftPix packs,
+  the turret/top-down packs in `to-assets`, and the mine tileset - passes when any of them is
+  absent, so a checkout without them still runs the gate, and `--contact` lays it out to be
+  looked at. Gems, cast, turrets and the mine floor are **cut**; only the rampart, the field's
+  plate and the plinth are drawn.
+  <br>**The per-colour shot, muzzle and hit reels under `Art/Fx/Siege/` are not its work and
+  nothing re-derives them** - they were added by hand. That is owed item 18's shape again: art
+  nobody can re-cut is art that quietly drifts from whatever produced it.
 - **Thornwatch's projectiles:** `Glimmer Grove ▸ Art ▸ Bake Siege Projectiles` renders the four
   ward projectiles, their muzzle flashes and their impacts out of the bought pack's own prefabs
   into sprite reels under `Art/Fx/Siege` (invariant 37k); `▸ Verify Siege Projectiles` re-bakes and
@@ -2432,7 +2532,7 @@ live in **Hard-won facts**.
 | `m01_hollowmarch` | march | 3 | 4–7 cores | none, then par + 5 (moves) | fire a core into the line, three alike go off and the line slides shut behind them — and if the closure makes three more, that goes too; then the **hauler**, which wears no colour so no run spans one and a blast beside it scraps it; then four colours, a **warden** under plating that only a **Spark** cuts in one shot, and a line ten steps from the gate. `ways` 14 → 48 → 56, `chained` 3 → 4 → 4, `forged` 2 → 3 → 3, `lanced` 1 → 2 → 2, `careless` 4 → 0 → 0, goals 3 → 5 → 8 |
 | `b02_tanglewood` | bud | 10 | 3 taps | par + 5, then + 4, then + 3 (taps) | the bolt, the sun and the graft (20m): five alike forge a bolt where you tapped, eight a sun, and a fired special sets off every special in its reach. 8x7, fifteen then sixteen shut in, tough ones 3 → 8, a bolt dealt on rung one and a sun on rung three; every shortest play on every rung fires a special |
 | ~~`k01_kindlewake`~~ | ~~kindle~~ | — | — | — | **retired** (35) — withdrawn after play: the verb was not the one commissioned and the animation followed from that. Its ids are spent |
-| `s01_thornwatch` | siege | 1 | 29 matches | none — the ward line is the fail state | raiders come down the hill at four coloured wards; match a colour and that ward fuels up and opens fire, and a bolt is worth double against a raider of its own colour. Fuel leaves a ward as a bolt and no other way (37c). 8x5 field, 20 raiders in 3 waves — four, then eight, then eight **brutes** — all four colours against all four wards. Waves come on a clock and overlap (37k). An unhurried player holds it in about 35 matches with 40% of the line's health gone (37j). The one level of the mode, and it cannot be lost on moves (24) |
+| `s01_thornwatch` | siege | 1 | 29 matches | none — the ward line is the fail state | raiders come down the hill at four coloured wards; match a colour and that ward fuels up and opens fire, and a bolt is worth double against a raider of its own colour. Fuel leaves a ward as a bolt and no other way (37c). 8x5 field, 20 raiders in 3 waves — four, then eight, then eight **brutes** — all four colours against all four wards. Waves come on a clock, or early if the hill is cleared (37k). An unhurried player holds it in about 35 matches with 40% of the line's health gone (37j). The one level of the mode, and it cannot be lost on moves (24) |
 | `p01_prismvale` | prism | 2 | 3–4 swaps | none, then par + 3 | drag a gem onto its neighbour and the two change places; a lantern feeds the gems of its own colour touching it, that colour runs on through every matching gem beside them, and a critter standing against the vein wakes. Nothing is ever spent, so a vein can be **broken**. 6x6, critters 2 → 3, lanterns 2 → 3, `ways` 10 → 120, `dealt` 2 → 3 of 25, `used` 2 → 3, greed beaten on the second. The first rung cannot be lost (24) |
 | `e01_emberforge` | ember | 10 | 3–5 moves | none, none, then par + 3 (par + 4 on the last two) | swap two jewels so three alike line up and they **fuse** into an ember; tap it for a cross of light down its row and column, or push two together for a star that takes the diagonals. Nothing refills. Stone, then frost, then the chain, then a pocket, then a warden, then the star. 6x6 → 8x8, goals 1 → 5, `ways` 35 → 6, `chained` 3 → 5, `forged` 3 → 7, `careless` 0 on every rung but the second. The first two rungs cannot be lost (24) |
 

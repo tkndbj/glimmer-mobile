@@ -108,5 +108,24 @@ namespace GlimmerGrove
         /// </para>
         /// </summary>
         Stuck = 10,
+
+        /// <summary>
+        /// A Thornwatch ward line with nothing left standing on it.
+        ///
+        /// <para>
+        /// Its own value rather than <see cref="Stuck"/>, which is what a siege technically
+        /// reaches — with no ward up, a match feeds nothing and there is no legal move. It is told
+        /// apart for this enum's reason: the two want different fixes and analytics cannot tell
+        /// them apart afterwards. A prototype board goes <see cref="Stuck"/> because it *ran out
+        /// of board*, which is a level-design reading; a siege line falls because the player was
+        /// outpaced, which is a tuning one. And a player is owed the difference too — "nothing
+        /// left to do" over a hill still full of raiders is a sentence that reads as a bug.
+        /// </para>
+        /// <para>
+        /// Money cannot fix it either, so it is answered <c>RunContinueDeficit.None</c> exactly as
+        /// <see cref="Stuck"/> is.
+        /// </para>
+        /// </summary>
+        WardsLost = 11,
     }
 }

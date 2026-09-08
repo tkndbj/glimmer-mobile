@@ -38,7 +38,7 @@ import sys
 from pathlib import Path
 
 try:
-    from PIL import Image, ImageDraw
+    from PIL import Image, ImageDraw, ImageFilter
 except ImportError:                                        # pragma: no cover
     sys.exit("This needs Pillow:  python -m pip install pillow")
 
@@ -150,6 +150,88 @@ def aimed(sheet, im, hx, hy, wide, ux, uy, head=0.5):
     cy = hy - uy * back
 
     sheet.alpha_composite(turned, (int(cx - turned.width / 2), int(cy - turned.height / 2)))
+
+
+def face(size):
+    """A bold face for the floating numbers, or None if this machine has none to offer."""
+    from PIL import ImageFont
+    for name in ("arialbd.ttf", "seguibl.ttf", "DejaVuSans-Bold.ttf", "Arial Bold.ttf"):
+        try:
+            return ImageFont.truetype(name, size)
+        except OSError:
+            continue
+    return None
+
+
+def damage(sheet, cx, cy, total, weak, cell):
+    """`SiegeView.Number` - a raider's tally, outlined, floating off it.
+
+    Drawn at the size the view draws it (`Paint`), which is what this is for: a number big enough
+    to read against a lit hill and a bright cast is a decision no gate can look at, and the mode
+    fires often enough that four wards on one raider is eighteen hits a second - so what is drawn
+    is one figure per raider that climbs, never one per bolt.
+    """
+    grown = min(total, 30) / 30.0
+    size = int(cell * (0.58 if weak else 0.40) * (1.0 + grown * 0.5))
+
+    font = face(size)
+    if font is None:
+        return
+
+    colour = (255, 201, 60, 255) if weak else (245, 236, 214, 255)
+    ink = (23, 36, 51, 245)
+    ring = max(2, int(cell * 0.055))
+
+    text = str(total)
+    layer = Image.new("RGBA", sheet.size, (0, 0, 0, 0))
+    pen = ImageDraw.Draw(layer)
+
+    for dx in range(-ring, ring + 1):
+        for dy in range(-ring, ring + 1):
+            if dx * dx + dy * dy > ring * ring:
+                continue
+            pen.text((cx + dx, cy + dy), text, font=font, fill=ink, anchor="mm")
+
+    pen.text((cx, cy), text, font=font, fill=colour, anchor="mm")
+    sheet.alpha_composite(layer)
+
+
+def banner(sheet, cx, cy, depth, cell, span):
+    """`SiegeView.Chain` - a cascade announced over the ward line.
+
+    **Drawn here because it was drawn nowhere anybody looked.** It used to sit just above the
+    gems, half this size, in a plain label with no outline, in the same band as forty gems - the
+    loudest thing that can happen on this board, reading as a caption. This is the only check that
+    can say whether the new one carries; every gate reads the model and the model was always right.
+    """
+    heat = {2: (255, 201, 60), 3: (255, 194, 60), 4: (255, 138, 61)}.get(depth, (240, 106, 128))
+    size = int(cell * (0.72 + min(depth, 6) * 0.05))
+
+    font = face(size)
+    if font is None:
+        return
+
+    layer = Image.new("RGBA", sheet.size, (0, 0, 0, 0))
+    pen = ImageDraw.Draw(layer)
+
+    # The aura under it: a heavy outline alone is not enough over a lit hill.
+    pen.ellipse([cx - span * 0.34, cy - cell * 1.1, cx + span * 0.34, cy + cell * 1.1],
+                fill=(10, 15, 23, 158))
+    layer = layer.filter(ImageFilter.GaussianBlur(cell * 0.18))
+
+    pen = ImageDraw.Draw(layer)
+    text = "CHAIN x%d" % depth
+    ink = (23, 36, 51, 250)
+    ring = max(2, int(cell * 0.07))
+
+    for dx in range(-ring, ring + 1):
+        for dy in range(-ring, ring + 1):
+            if dx * dx + dy * dy > ring * ring:
+                continue
+            pen.text((cx + dx, cy + dy), text, font=font, fill=ink, anchor="mm")
+
+    pen.text((cx, cy), text, font=font, fill=heat + (255,), anchor="mm")
+    sheet.alpha_composite(layer)
 
 
 def put(sheet, im, cx, cy, w, h):
@@ -331,10 +413,20 @@ def draw(level, raiders, bolts=True):
             # copies of one instant.
             along = (0.30, 0.55, 0.78, 0.42)[i % 4]
 
-            aimed(sheet, loudest("muzzle_" + key), mx, my, cell * 1.9, ux, uy, MUZZLE_AT)
+            aimed(sheet, loudest("muzzle_" + key), mx, my, cell * 2.7, ux, uy, MUZZLE_AT)
             aimed(sheet, blast("shot_" + key, 6),
-                  mx + dx * along, my + dy * along, cell * 0.62, ux, uy, HEAD_AT)
-            aimed(sheet, loudest("hit_" + key), tx, ty, cell * 2.35, ux, uy)
+                  mx + dx * along, my + dy * along, cell * 1.0, ux, uy, HEAD_AT)
+            aimed(sheet, loudest("hit_" + key), tx, ty, cell * 3.2, ux, uy)
+
+            # The tally floating off it. Two of the four are drawn as doubles, because the
+            # elemental double is the rule this mode is about and it has to read as a different
+            # kind of number rather than as a bigger one.
+            damage(sheet, tx, ty - cell * 0.7, (14, 6, 22, 8)[i % 4], i % 2 == 0, cell)
+
+    # The chain banner, over the ward line where the view now puts it.
+    if bolts:
+        bx, by = at(0, line_y + cell * 2.35)
+        banner(sheet, bx, by, 3, cell, span[0])
 
     # ------------------------------------------------------------------ the field
     cx, cy = at(0, gem_centre)
