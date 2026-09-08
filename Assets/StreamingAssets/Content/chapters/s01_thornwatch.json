@@ -1,0 +1,42 @@
+{
+ "schemaVersion": 2,
+ "id": "s01_thornwatch",
+ "accent": "#E8615A",
+ "slate": "#1A0F14",
+ "backdrop": "sky_00",
+ "mapStrips": [
+  "map1_strip0",
+  "map1_strip1",
+  "map1_strip2",
+  "map1_strip3",
+  "map1_strip4",
+  "map1_strip5"
+ ],
+ "levels": [
+  {
+   "id": "s01_firstwatch",
+   "mapX": 0.7,
+   "mapY": 0.055,
+   "budgetFactor": -1.0,
+   "backdrop": "sky_00",
+   "siege": {
+    "width": 8,
+    "height": 5,
+    "rows": [
+     "rgrgyrry",
+     "bgygybbg",
+     "grrbbgyr",
+     "bybbgryg",
+     "ryygybrb"
+    ],
+    "gems": "rgby",
+    "wards": "rgby",
+    "waves": [
+     "rgby",
+     "rgbyrgby",
+     "RGBYRGBY"
+    ]
+   }
+  }
+ ]
+}

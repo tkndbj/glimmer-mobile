@@ -106,31 +106,55 @@ namespace GlimmerGrove.Content
         public static readonly GameMode Ember = new GameMode("ember");
 
         /// <summary>
-        /// Kindlewake. Join two embers of the same colour and a strand of light burns between
-        /// them for good; where two strands cross, the cell holds a colour neither carried, and
-        /// that is how a critter wanting a blend is woken. See <c>KindleBoard</c>.
+        /// Prismvale. A field of coloured gems with lanterns standing in it; drag a gem onto its
+        /// neighbour to line the lantern's own colour up all the way to a sleeping critter, and
+        /// the vein between them lights. See <c>PrismBoard</c>.
         ///
         /// <para>
-        /// The classic glade's question — get light of the right colour onto every critter — asked
-        /// with Emberforge's material and none of its verb. Nothing turns and nothing bursts:
-        /// light accumulates and embers do not come back, so choosing which ember to pair with
-        /// which is choosing which crossings the hollow will ever be able to make.
+        /// The classic glade's question - get light onto every critter - asked with the jewel
+        /// board's own gesture and none of its match-three. Nothing bursts and nothing falls: a
+        /// gem is never removed, so every move is a rearrangement and a vein is something the
+        /// player builds rather than something they spend. Light is read off the arrangement
+        /// rather than stored, which is what makes a vein breakable and a careless swap on one
+        /// side of the board something that can put out the line on the other.
         /// </para>
         /// <para>
-        /// It reuses <see cref="Energy"/> outright, which is the point of that class living in
-        /// Domain: the three channels, the four blends and the seven authored letters are the ones
-        /// four chapters of glades already ship, so a second mode about colour did not have to
-        /// mint a second arithmetic. Note what it still cost the save file, the wire and the
-        /// server: nothing (invariant 20a).
+        /// Note what it cost the save file, the wire and the server: nothing (invariant 20a). It
+        /// is the twelfth mode the prototype level shape has carried.
         /// </para>
         /// </summary>
-        public static readonly GameMode Kindle = new GameMode("kindle");
+        public static readonly GameMode Prism = new GameMode("prism");
 
-        // Note for anyone reading the two together: **`kindle` is not `keeper`.** Groovekeeper's
-        // mode id, its chapter id `k01_grovekeeper` and its ten level ids are retired and stay
-        // retired (see below); Kindlewake is a different mode with a different id whose first
-        // chapter is `k01_kindlewake`, which no save has ever held. The shared letter is a
-        // reading convenience and never an identity - invariant 1 binds ids and not prefixes.
+        /// <summary>
+        /// Thornwatch. The raiders come down the hill at the grove's ward line; match a colour and
+        /// the ward of that colour fuels up and looses bolts until its fuel fades. Let them
+        /// through and they break the wards. See <c>SiegeBoard</c>.
+        ///
+        /// <para>
+        /// <b>The first mode here that runs on a clock, and the first whose par is not a proof.</b>
+        /// Everything else in this game is turn-based and searchable — a move is a layer of a
+        /// breadth-first walk and par is the depth of the first layer that wins. Raiders that walk
+        /// while nobody is touching the board have no such graph, so par is arithmetic over what
+        /// the level sends: the fewest matches that could possibly have destroyed it. Everything
+        /// else about being a run is unchanged, and it cost the save file no schema version, no
+        /// merge rule and no server work (invariant 20a).
+        /// </para>
+        /// </summary>
+        public static readonly GameMode Siege = new GameMode("siege");
+
+        // "kindle" is a **retired mode id and must never be reused.** Kindlewake shipped one
+        // chapter of ten hollows - join two embers of a colour and a strand of light burns
+        // between them for good - and was withdrawn by the owner after playing it: the way it
+        // played was not the way the mode had been asked for, and its animations were the
+        // second half of the same verdict. Prismvale took its slot and was built against the
+        // same commission stated again. Its chapter id `k01_kindlewake` and its ten level ids
+        // `k01_firstlight`, `k01_stillwood`, `k01_crossways`, `k01_stonerow`, `k01_thechoir`,
+        // `k01_dimhollow`, `k01_threefold`, `k01_lanternweft`, `k01_deepwake` and
+        // `k01_kindleheart` are spent with it, as are the lesson ids `kindle_join` and
+        // `kindle_cross`. It was played on a device, so a real save may hold a record or a
+        // `tipsSeen` entry against any of them - which is exactly why `ProgressionStore`'s
+        // high-water floors exist (invariant 9): derived XP and credits fall when levels leave
+        // the catalog, and the floors are what stop a player noticing.
 
         // "quarry" is a **retired mode id and must never be reused.** The Iron Quarry shipped
         // three levels - cut a charge loose, it slides until something stops it and goes off

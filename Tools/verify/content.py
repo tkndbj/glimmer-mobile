@@ -180,20 +180,19 @@ DEFAULT_BUDGET_FACTOR = 1.60
 GOLD_FACTOR, SILVER_FACTOR = 1.20, 1.40
 
 
-MODE_BLOCKS = ("fall", "bud", "march", "ember", "kindle")
+MODE_BLOCKS = ("fall", "bud", "march", "ember", "prism", "siege")
 
 #: Block names that named a mode this build no longer has. Refused by name rather than ignored,
 #: for the duskcap's reason (invariant 5f): JsonUtility drops an unknown field without a word, so
 #: a chapter written for a build that is gone would validate, index and ship as a level nobody
-#: authored. `keeper` is Groovekeeper's, withdrawn with the mode; the other four are the
 #: Block names that named a mode this build no longer has. Refused **by name** rather than
 #: ignored, for the duskcap's reason (invariant 5f): JsonUtility drops an unknown field without
 #: a word, so a chapter body still carrying one would index, derive a plausible glade and ship
-#: as something nobody authored. Nine modes have been withdrawn after play now - Groovekeeper,
-#: four of the five prototypes that took its slot, Deep Orbit and Moonwake, and then Toppleglen
-#: and Nova Raid, then the Iron Quarry, whose slot Hollowmarch has.
+#: as something nobody authored. Ten modes have been withdrawn after play now - Groovekeeper,
+#: four of the five prototypes that took its slot, Deep Orbit and Moonwake, then Toppleglen and
+#: Nova Raid, then the Iron Quarry, and then Kindlewake, whose slot Prismvale has.
 RETIRED_BLOCKS = ("keeper", "nectar", "ribbon", "fling", "warren", "orbit", "moonwake",
-                  "topple", "nova", "quarry")
+                  "topple", "nova", "quarry", "kindle")
 
 #: Mirrors `ProtoValidator`. About the *player's* device: par is resolved lazily when somebody
 #: opens the level, so this is the beat between tapping a node and the board arriving.
@@ -210,13 +209,13 @@ EMBER_MAX_DEALT = 2
 #: meter still says four moves left - which reads as the game deciding on the player's behalf.
 EMBER_LIFE_SLACK = 0
 
-#: Mirrors `KindleValidator.LifeSlack`. The material is finite here too, so a hollow can be dead
-#: while the meter still says three moves left.
-KINDLE_LIFE_SLACK = 0
+#: Mirrors `PrismValidator.DealtLitPercent`. Invariant 5g: a board dealt with most of its veins
+#: already running is a board that starts half done, and nothing else notices.
+PRISM_DEALT_LIT_PERCENT = 35
 
-#: Mirrors `KindleValidator.TooManyIdle`. An ember with no partner on a clear line reads as a
-#: move that is not there, and an ember is the most eye-catching thing on the board.
-KINDLE_TOO_MANY_IDLE = 2
+#: Mirrors `PrismValidator.TooManyIdle`. A lantern with no gem at all beside it reads as a route
+#: that is not there, and a lantern is the brightest thing on the field.
+PRISM_TOO_MANY_IDLE = 1
 
 
 #: Mirrors `BudValidator`. Lower than the other two because branching is the flower count.
@@ -753,11 +752,9 @@ def check_proto(mode, lid, chapter_id, level, block):
         out.update(rules.readings(rules.Layout(grid, 0)))
         out['life'] = ember_life(rules.Layout(grid, 0), budget)
         ember_life_check(lid, rules.Layout(grid, 0), budget)
-    elif mode == 'kindle':
-        import kindle as rules
-        lay = rules.Layout(grid, 0)
-        out.update(rules.readings(lay, budget))
-        kindle_life_check(lid, out['life'], budget)
+    elif mode == 'prism':
+        import prism as rules
+        out.update(rules.readings(rules.Layout(grid, 0), budget))
 
     return out
 
@@ -964,15 +961,16 @@ def _ember_walled(layout):
     return walled
 
 
-def kindle_rules(lid, grid, board):
-    """A hollow: something to join, a critter a strand can reach, and a crossing on the way there.
+def prism_rules(lid, grid, board):
+    """A field of gems: a critter light can reach, a lantern that is doing something, and colour
+    that decides which.
 
-    Mirrors `KindleMode.Compose` and `KindleValidator.Inspect`. Everything here is a reading the
-    search cannot give in words an author could act on - "no sequence of strands finishes this
-    board" is true and useless, where "the critter at row 3 column 5 wants blue and no two blue
-    embers share a clear line through it" is the sentence that names the thing to move.
+    Mirrors `PrismMode.Compose` and `PrismValidator.Inspect`. Everything here is a reading the
+    search cannot give in words an author could act on - "no sequence of swaps finishes this
+    board" is true and useless, where "the critter at row 3 column 5 stands in a run of gems no
+    lantern is touching" is the sentence that names the thing to move.
     """
-    import kindle as rules
+    import prism as rules
 
     b = board.board
     lay = b.layout
@@ -980,59 +978,51 @@ def kindle_rules(lid, grid, board):
     if lay.fault:
         return lay.fault
 
+    if b.stirred():
+        return ("a vein on this board is already touching a sleeping critter, so it would wake "
+                "before anybody had moved a gem - a board is authored dark")
+
     if not b.any_move():
-        return ("no two embers on this hollow can be joined into a strand that helps anybody, "
-                "so there is no move to make")
+        return ("no two touching gems on this board are different colours, so there is no swap "
+                "to make and the run is over before it begins")
 
     # Certain, exact, and it names the cell. This is the one thing the search genuinely cannot
-    # say: it answers "unsolvable" and points at nothing.
-    starved = rules.unreachable(lay)
-    if starved:
-        return starved
+    # say: it answers "unsolvable" and points at nothing. Which cells hold gems never changes,
+    # so no arrangement can undo it.
+    stuck = lay.stranded()
+    if stuck:
+        cell = stuck[0]
+        return ("the critter at row %d column %d stands in a run of gems that no lantern is "
+                "touching - or against no gem at all - so nothing that happens anywhere on this "
+                "board could ever wake it" % (cell // lay.w, cell % lay.w))
 
     read = rules.readings(lay)
 
-    if read['lonely']:
-        warnings.append("%s: %d of this hollow's colours have fewer than %d embers on it, so no "
-                        "strand of that colour can ever be drawn"
-                        % (lid, read['lonely'], rules.JOIN_AT))
+    if read['hues'] > 1 and read['used'] < 2:
+        warnings.append("%s: this board stands %d lantern colours and no shortest run of it ever "
+                        "wakes a critter with more than one of them, so the rest are decoration "
+                        "and the colour decided nothing" % (lid, read['hues']))
 
-    if read['blends'] and not read['blended']:
-        warnings.append("%s: this hollow stands %d critter(s) wanting a blend and no shortest run "
-                        "of it ever wakes one, so the crossing - which is the whole of what this "
-                        "mode is - never has to be arranged" % (lid, read['blends']))
+    if read['gems'] and read['dealt'] * 100 > read['gems'] * PRISM_DEALT_LIT_PERCENT:
+        warnings.append("%s: %d of this board's %d gems are already lit as it is dealt, which is "
+                        "over %d%% of it - so the player is handed a board somebody else has half "
+                        "finished" % (lid, read['dealt'], read['gems'], PRISM_DEALT_LIT_PERCENT))
 
-    if not read['crossed']:
-        warnings.append("%s: no shortest run of this hollow ever crosses one strand over another, "
-                        "so every line is drawn over dark ground and light never mixes" % lid)
+    if not read['bare']:
+        warnings.append("%s: this board holds no bare ground, so nothing shapes a vein and every "
+                        "gem of a colour can reach every other one" % lid)
 
-    if not read['stone']:
-        warnings.append("%s: this hollow holds no stone, so nothing blocks a strand and every "
-                        "ember of a colour can reach every other one" % lid)
-
-    if read['idle'] > KINDLE_TOO_MANY_IDLE:
-        warnings.append("%s: %d embers on this hollow have no partner of their own colour on a "
-                        "clear row or column, so each of them reads as a move that is not there"
-                        % (lid, read['idle']))
+    if read['idle'] > PRISM_TOO_MANY_IDLE:
+        warnings.append("%s: %d lanterns on this board have no gem at all standing against them, "
+                        "so no vein could ever start there" % (lid, read['idle']))
 
     return None
-
-
-def kindle_life_check(lid, life, budget):
-    """The fail state the readout is not showing. Mirrors `KindleValidator`'s life clause."""
-    if budget <= 0:
-        return
-
-    if life + KINDLE_LIFE_SLACK < budget:
-        warnings.append("%s: a player drawing everything they can runs this hollow out of strands "
-                        "in %d against an allowance of %d, so the meter is counting down to an "
-                        "ending that will not be the one that happens" % (lid, life, budget))
 
 
 MODE_RULES = {
     'march': march_rules,
     'ember': ember_rules,
-    'kindle': kindle_rules,
+    'prism': prism_rules,
 }
 
 
@@ -1113,6 +1103,105 @@ def factor_of(level, key, fallback_hundredths):
     return int(round(raw * 100))
 
 
+#: `SiegeValidator.ShortestPar`. A siege shorter than this is over before the fuel has faded
+#: once, so nothing the mode is built on ever gets to bite.
+SIEGE_SHORTEST_PAR = 6
+
+
+def check_siege(lid, chapter_id, level, block):
+    """A siege: a field, a ward line and what is coming down the hill at it.
+
+    **The one mode here whose par is not a search.** Every other check in this file proves a board
+    by walking its state graph; raiders walk while nobody is touching the field and the field
+    refills, so there is no graph. What is proved instead is exactly what is provable about the
+    file - the layout's own refusals, the arithmetic par, and the readings an author can act on -
+    and `siege.par` is held to `SiegeTuning.Par` by being the same three lines of arithmetic.
+
+    Mirrors `SiegeValidator`. Every failure below looks like a perfectly authored level in the
+    JSON, which is the whole reason the gate exists.
+    """
+    import siege as rules
+
+    empty = dict(id=lid, chapter=chapter_id, w=0, h=0, par=0, budget=0,
+                 gold=0, silver=0, lamps=0, sources=0, fragile=0, bound=0,
+                 crossings=0, briars=0, mode='siege',
+                 ways=0, greedy=-1, nodes=0, goals=0, deal='')
+
+    w, h = block.get('width') or 0, block.get('height') or 0
+
+    try:
+        grid = proto.Grid(block.get('rows') or [], w, h, rules.LETTERS)
+    except ValueError as bad:
+        errors.append("%s: %s" % (lid, bad))
+        return empty
+
+    layout = rules.Layout(grid, block.get('gems'), block.get('wards'), block.get('waves'))
+
+    if layout.fault:
+        errors.append("%s: %s" % (lid, layout.fault))
+        return empty
+
+    par = rules.par(layout)
+    read = rules.readings(layout)
+
+    budget_h = factor_of(level, 'budgetFactor', 160)
+    gold_h = factor_of(level, 'goldFactor', proto.GOLD_HUNDREDTHS)
+    silver_h = factor_of(level, 'silverFactor', proto.SILVER_HUNDREDTHS)
+
+    # A siege is lost when the last ward falls, so a move allowance would be a second fail state
+    # and its meter would count down to an ending that never happens.
+    if budget_h > 0:
+        errors.append("%s: this siege authors budgetFactor %.2f. A siege is lost when the last "
+                      "ward falls, so an allowance would be a second fail state - author "
+                      "budgetFactor -1" % (lid, budget_h / 100.0))
+
+    if block.get('spare'):
+        errors.append("%s: this siege authors 'spare', which does nothing here - there is no move "
+                      "allowance to be spared from" % lid)
+
+    if gold_h >= silver_h:
+        errors.append("%s: goldFactor and silverFactor leave the two-star band empty" % lid)
+
+    gold, silver = proto.over(par, gold_h), proto.over(par, silver_h)
+
+    if par < SIEGE_SHORTEST_PAR:
+        warnings.append("%s: this siege is over in %d matches at best, under the %d it takes for "
+                        "a ward's fuel to fade and be wanted again" % (lid, par,
+                                                                       SIEGE_SHORTEST_PAR))
+
+    if read['waves'] < 2:
+        warnings.append("%s: this siege sends one wave, so it never lets up and never comes back"
+                        % lid)
+
+    for ward in layout.wards:
+        if any(ward == t.lower() for wave in layout.waves for t in wave):
+            continue
+        warnings.append("%s: nothing coming down this hill wears '%s', so that ward's bolts are "
+                        "always worth half and the gems that feed it are worth half with them"
+                        % (lid, ward))
+
+    if read['colours'] < 2:
+        warnings.append("%s: everything coming down this hill wears one colour, so which ward to "
+                        "feed is not a question" % lid)
+
+    if not read['threat']:
+        warnings.append("%s: no wave here holds enough raiders to bring a ward down even if every "
+                        "one of them reached the line, so this siege cannot be lost" % lid)
+
+    # Certain, and only this gate can see it: the board reshuffles rather than locking, so a field
+    # authored with no opening swap costs the player the first second of a run whose clock is
+    # already going.
+    if not read['swap']:
+        warnings.append("%s: no swap on this field lines anything up as it is dealt, so the board "
+                        "deals itself again before the player has moved" % lid)
+
+    return dict(id=lid, chapter=chapter_id, w=grid.w, h=grid.h, par=par,
+                budget=0, gold=gold, silver=silver, lamps=0, sources=0, fragile=0,
+                bound=0, crossings=0, briars=0, mode='siege',
+                ways=0, greedy=-1, nodes=0, goals=layout.raiders,
+                deal=layout.deal, siege=read)
+
+
 def check_level(level, chapter_id):
     """A level is a glade, or it carries exactly one mode block.
 
@@ -1155,6 +1244,10 @@ def check_level(level, chapter_id):
         # proved with no Unity anywhere.
         if claimed[0] == 'bud':
             return check_bud(lid, chapter_id, level, block)
+
+        # Thornwatch is the fourth, and the one that is *not* a search. See check_siege.
+        if claimed[0] == 'siege':
+            return check_siege(lid, chapter_id, level, block)
 
         return dict(id=lid, chapter=chapter_id,
                     w=block.get('width', 0), h=block.get('height', 0), par=0, budget=0,
@@ -3062,6 +3155,13 @@ def main():
 
                 held = (f"{c['fall_motes']} mote(s), {c['headroom']} headroom{glass}{whorls}, "
                         f"deals {c['deal']}")
+            elif c['mode'] == 'siege':
+                # A siege counts what is coming and what is holding it, because neither is a
+                # reading of a search - there is no search (see check_siege).
+                r = c['siege']
+                held = (f"{r['raiders']} raider(s) in {r['waves']} wave(s) "
+                        f"({r['brutes']} brute(s), {r['colours']} colour(s)) against "
+                        f"{r['wards']} ward(s), deals {c['deal']}")
             elif c['mode'] in MODE_RULES:
                 held = f"{c['goals']} to finish"
             elif c['mode'] == 'bud':

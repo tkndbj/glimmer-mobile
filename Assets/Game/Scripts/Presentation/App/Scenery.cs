@@ -104,18 +104,47 @@ namespace GlimmerGrove
             return t;
         }
 
-        /// <summary>Floating message that rises and fades. Sits below the header by default.</summary>
+        /// <summary>How wide a toast is, and the air either side of the words inside it.</summary>
+        const float ToastWide = 920f, ToastPad = 34f, ToastLeast = 148f;
+
+        /// <summary>
+        /// Floating message that rises and fades. Sits below the header by default.
+        ///
+        /// <para>
+        /// <b>It grows to fit what it is asked to say.</b> It was a fixed 148-unit box, which is
+        /// two lines: a mode's one-sentence rule ran to five and the rest of it was drawn outside
+        /// the plate, because a <c>Text</c> that overflows is not clipped and nothing says so.
+        /// The height is now measured off the text itself.
+        /// </para>
+        /// <para>
+        /// <b>And it renders markup</b>, which is why <c>ui.tip</c>-style emphasis in a mode's
+        /// refusal reads as bold rather than as the letters <c>&lt;b&gt;</c>. Safe here and
+        /// nowhere else by default: a toast is always a loc string, never a player's own text
+        /// (see <c>UIKit.Titled</c>).
+        /// </para>
+        /// </summary>
         public static void Toast(Transform parent, string message, Color? tint = null, float hold = 1.9f,
                                  Vector2 anchor = default, float y = 300f)
         {
             if (anchor == default) anchor = new Vector2(.5f, 0f);
             var bg = UIKit.Img("Toast", parent, Art.Round(30), new Color(.05f, .11f, .16f, .0f),
-                               new Vector2(920f, 148f), anchor, new Vector2(0f, y - 50f));
+                               new Vector2(ToastWide, ToastLeast), anchor, new Vector2(0f, y - 50f));
             var edge = UIKit.Img("Edge", bg.transform, Art.RoundOutline(30, 3f), new Color(1, 1, 1, 0f));
             UIKit.StretchTo((RectTransform)edge.transform, 0, 0, 0, 0);
-            var t = UIKit.Titled("Text", bg.transform, message, 34, tint ?? Pal.Cream, TextAnchor.MiddleCenter,
-                                 outline: 3f, shadow: 3f, wrap: true);
-            UIKit.StretchTo((RectTransform)t.transform, 30, 8, 30, 12);
+
+            // Built at the width it will really have, so `preferredHeight` below is the height
+            // this string really needs rather than the height of one endless line.
+            var t = UIKit.Titled("Text", bg.transform, message, 34, tint ?? Pal.Cream,
+                                 TextAnchor.MiddleCenter,
+                                 boxSize: new Vector2(ToastWide - ToastPad * 2f, ToastLeast),
+                                 anchorPt: new Vector2(.5f, .5f),
+                                 outline: 3f, shadow: 3f, wrap: true, rich: true);
+
+            bg.rectTransform.sizeDelta =
+                new Vector2(ToastWide, Mathf.Max(ToastLeast, t.preferredHeight + 44f));
+            ((RectTransform)t.transform).sizeDelta =
+                new Vector2(ToastWide - ToastPad * 2f, bg.rectTransform.sizeDelta.y - 24f);
+
             t.color = Pal.A(t.color, 0f);
 
             var rt = (RectTransform)bg.transform;

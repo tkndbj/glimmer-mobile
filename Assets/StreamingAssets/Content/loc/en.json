@@ -4602,36 +4602,8 @@
    "text": "still caged"
   },
   {
-   "key": "mode.kindle.name",
-   "text": "Kindlewake"
-  },
-  {
-   "key": "mode.kindle.tagline",
-   "text": "Join two embers. Cross the light. Wake the grove."
-  },
-  {
-   "key": "mode.kindle.notcritter",
-   "text": "Light comes out of <b>embers</b>. Tap one, then tap another of the <b>same colour</b> on its row or column — the strand between them lights everything it crosses."
-  },
-  {
    "key": "mode.cap.asleep",
    "text": "still asleep"
-  },
-  {
-   "key": "ui.tip.kindle_join.title",
-   "text": "JOIN TWO OF A COLOUR"
-  },
-  {
-   "key": "ui.tip.kindle_join.body",
-   "text": "Tap an ember, then tap another of the <b>same colour</b> sharing its row or column. Light burns along the line between them and wakes any critter it crosses.\n\nBoth embers are <b>spent</b>. Nothing puts one back, so which pair you join is the whole decision — and standing stone stops a strand dead."
-  },
-  {
-   "key": "ui.tip.kindle_cross.title",
-   "text": "CROSS TWO STRANDS"
-  },
-  {
-   "key": "ui.tip.kindle_cross.body",
-   "text": "The light <b>stays</b>. Where a new strand runs over one you drew earlier, that square holds both colours at once — red and blue make purple, red and yellow make orange, yellow and blue make green.\n\nA critter wearing a blended ring can only be woken that way: get two strands to cross on the square it is sleeping on."
   },
   {
    "key": "ui.tip.ember_fuse.title",
@@ -4652,10 +4624,6 @@
   {
    "key": "chapter.e01_emberforge.name",
    "text": "The Emberforge"
-  },
-  {
-   "key": "chapter.k01_kindlewake.name",
-   "text": "The Kindlewake"
   },
   {
    "key": "level.e01_firstember.name",
@@ -4736,86 +4704,6 @@
   {
    "key": "level.e01_emberheart.tagline",
    "text": "Bring the whole forge down"
-  },
-  {
-   "key": "level.k01_firstlight.name",
-   "text": "First Light"
-  },
-  {
-   "key": "level.k01_stillwood.name",
-   "text": "Still Wood"
-  },
-  {
-   "key": "level.k01_crossways.name",
-   "text": "Crossways"
-  },
-  {
-   "key": "level.k01_stonerow.name",
-   "text": "Stone Row"
-  },
-  {
-   "key": "level.k01_thechoir.name",
-   "text": "The Choir"
-  },
-  {
-   "key": "level.k01_dimhollow.name",
-   "text": "Dim Hollow"
-  },
-  {
-   "key": "level.k01_threefold.name",
-   "text": "Threefold"
-  },
-  {
-   "key": "level.k01_lanternweft.name",
-   "text": "Lantern Weft"
-  },
-  {
-   "key": "level.k01_deepwake.name",
-   "text": "Deep Wake"
-  },
-  {
-   "key": "level.k01_kindleheart.name",
-   "text": "Kindleheart"
-  },
-  {
-   "key": "level.k01_firstlight.tagline",
-   "text": "Two embers, one strand"
-  },
-  {
-   "key": "level.k01_stillwood.tagline",
-   "text": "The light stays where you put it"
-  },
-  {
-   "key": "level.k01_crossways.tagline",
-   "text": "Two colours, crossed on one square"
-  },
-  {
-   "key": "level.k01_stonerow.tagline",
-   "text": "Stone stops a strand dead"
-  },
-  {
-   "key": "level.k01_thechoir.tagline",
-   "text": "One line, three sleepers"
-  },
-  {
-   "key": "level.k01_dimhollow.tagline",
-   "text": "Only one way in"
-  },
-  {
-   "key": "level.k01_threefold.tagline",
-   "text": "Every colour is wanted somewhere"
-  },
-  {
-   "key": "level.k01_lanternweft.tagline",
-   "text": "Short lines, and not enough of them"
-  },
-  {
-   "key": "level.k01_deepwake.tagline",
-   "text": "Barely enough to go round"
-  },
-  {
-   "key": "level.k01_kindleheart.tagline",
-   "text": "Three strands, one square"
   },
   {
    "key": "story.e01_firstember.intro1",
@@ -5128,6 +5016,118 @@
   {
    "key": "story.e01_emberheart.lost",
    "text": "Bank the fire. We melt at dawn."
+  },
+  {
+   "key": "mode.prism.name",
+   "text": "Prismvale"
+  },
+  {
+   "key": "mode.prism.tagline",
+   "text": "Line the gems up. Let the light through."
+  },
+  {
+   "key": "mode.prism.nodrag",
+   "text": "Lanterns and sleeping critters do not move — <b>gems</b> do. Drag one onto the gem beside it and the two trade places."
+  },
+  {
+   "key": "ui.tip.prism_drag.title",
+   "text": "DRAG A GEM"
+  },
+  {
+   "key": "ui.tip.prism_drag.body",
+   "text": "Drag a gem onto the one next to it and the two <b>trade places</b>.\n\nA lantern lights only the gems of <b>its own colour</b> that are touching it — and that colour runs on through every matching gem beside them. Line one up all the way to a sleeping critter and it wakes."
+  },
+  {
+   "key": "ui.tip.prism_vein.title",
+   "text": "LIGHT FOLLOWS THE GEMS"
+  },
+  {
+   "key": "ui.tip.prism_vein.body",
+   "text": "Nothing is ever used up here. Gems do not burst and do not fall — the board you are dealt is the board you finish on.\n\nSo the light is not stored: it is wherever the matching gems happen to be <b>right now</b>. Pull a gem out of a lit line and that line goes out again."
+  },
+  {
+   "key": "chapter.p01_prismvale.name",
+   "text": "Prismvale"
+  },
+  {
+   "key": "level.p01_firstvein.name",
+   "text": "First Vein"
+  },
+  {
+   "key": "level.p01_twinlight.name",
+   "text": "Twin Light"
+  },
+  {
+   "key": "level.p01_firstvein.tagline",
+   "text": "Line them up to the light"
+  },
+  {
+   "key": "level.p01_twinlight.tagline",
+   "text": "Every colour is wanted somewhere"
+  },
+  {
+   "key": "mode.siege.name",
+   "text": "Thornwatch"
+  },
+  {
+   "key": "mode.siege.tagline",
+   "text": "Feed the wards. Hold the line."
+  },
+  {
+   "key": "mode.siege.nodrag",
+   "text": "Gems are <b>dragged</b>, not tapped — pull one onto the gem beside it. Line three of a colour up and that ward opens fire."
+  },
+  {
+   "key": "mode.siege.wave",
+   "text": "WAVE {0} OF {1}"
+  },
+  {
+   "key": "mode.siege.chain",
+   "text": "CHAIN x{0}"
+  },
+  {
+   "key": "mode.cap.wards",
+   "text": "wards left"
+  },
+  {
+   "key": "mode.cap.matches",
+   "text": "matches"
+  },
+  {
+   "key": "chapter.s01_thornwatch.name",
+   "text": "Thornwatch"
+  },
+  {
+   "key": "level.s01_firstwatch.name",
+   "text": "First Watch"
+  },
+  {
+   "key": "level.s01_firstwatch.tagline",
+   "text": "Feed the colour that is coming"
+  },
+  {
+   "key": "ui.tip.siege_fuel.title",
+   "text": "A MATCH IS A COLOUR"
+  },
+  {
+   "key": "ui.tip.siege_fuel.body",
+   "text": "Nothing on the field down here is worth points. Line three gems up and that colour's <b>ward</b> fills with fuel and starts firing.\n\nA ward's bolts hurt a raider of its <b>own colour</b> twice as hard - so the question is never which match is biggest, it is which colour is walking down the hill."
+  },
+  {
+   "key": "ui.tip.siege_line.title",
+   "text": "FUEL FADES"
+  },
+  {
+   "key": "ui.tip.siege_line.body",
+   "text": "Fuel drains away on its own, so a colour you match early is a colour you have wasted. Feed the ward that is wanted <b>now</b>.\n\nAnd the ward line is your life. Every raider that reaches it swings, every ward has four blows in it, and when the last one falls the grove is taken."
+  },
+  {
+   "key": "mode.siege.go",
+   "text": "GO!"
+  },
+  {
+   "key": "mode.siege.fallen",
+   "text": "THE LINE HAS FALLEN"
   }
  ]
 }

@@ -1058,6 +1058,107 @@ the size a phone draws it. Two faults came out of it that no numeric gate could 
 read as a tiny padlock and an ember too dark to want touching (invariant 34e) — and both were past
 every green check in the repository.
 
+## Prismvale levels
+
+A field of coloured gems on a dark grove floor, with lanterns standing in it and critters asleep
+among them. **Drag a gem onto its neighbour and the two change places.** A lantern feeds the gems
+of *its own colour* that are touching it, that colour runs on through every matching gem beside
+them, and a critter standing against that vein wakes.
+
+The level authors the **whole field** and nothing else — no deal, and the reader refuses one that
+tries: nothing ever falls in from above and nothing is ever removed, which is what keeps the board
+searchable at all (invariant 36).
+
+```json
+"prism": {
+  "width": 6, "height": 6, "spare": 3,
+  "rows": [
+    "Rbrgg.",
+    "br@rgG",
+    "ggb.rr",
+    "b.gg@r",
+    "rb@grg",
+    "Brbg.g"
+  ]
+}
+```
+
+| token | what it is |
+|---|---|
+| `r` `g` `b` `y` | a **gem**. Drag it onto a touching gem of another colour and they trade places. |
+| `R` `G` `B` `Y` | a **lantern**. Fixed. Feeds gems of its own colour that are touching it. |
+| `@` | a **critter**, asleep. A goal. It wakes when a lit gem is standing beside it. |
+| `.` | **bare ground**. Nothing stands on it, nothing swaps with it, and a vein stops dead at it. |
+
+`*` — a critter that has woken — is a state a board reaches and never one it is written in, exactly
+as `V` is in Emberforge. It is not in the grammar and is refused if typed.
+
+**A critter wants light and not a colour**, deliberately (36d): the colour already decides
+everything through the lantern, and a coloured critter would be the same question asked twice.
+
+**Nothing here is a number.** Par is the fewest swaps that wake every critter, found by
+breadth-first search on the device that opens the level (invariant 26d); both star lines and the
+allowance are the same 1.20 / 1.40 multiples every mode uses. `spare` is the only tuning a field
+carries, and it is a **count** of wasted moves (26e).
+
+### Authoring a field
+
+**The field is designed and the colours are dealt** (invariant 32d), and `Tools/prism_sweep.py` is
+that split made into a tool. Draw the shape by hand — where the bare ground runs, where the
+lanterns stand, how far each critter is from one — because those are what a player *reads*; leave
+every other cell as `-` and let the sweep deal colours into it by seed.
+
+```
+python Tools/prism_sweep.py --template first --seeds 200 --par 3 --used 2 --dealt 4
+python Tools/prism_sweep.py --board "Rbrgg.,br@rgG,..." --spare 3
+```
+
+What to keep a seed for, and what each column means:
+
+- **`par`** — the ladder derives from it, and **it is capped at 4 on this mode** (36b). Cost goes
+  as the swap count to the power of par and a 6x6 field carries thirty to fifty swaps, so par 3
+  proves in about 200 positions, par 4 in about 1,700, and par 5 is over what a level may cost on
+  a phone. A longer chapter ramps on critters, lanterns and bare ground rather than on length.
+- **`ways`** — how many shortest answers there are (invariant 5d). The two shipped boards are 10
+  and 120.
+- **`less`** — what a player who never looks ahead spends. **It cannot be beaten at par 3** (36f),
+  because three critters at one swap each is exactly what a greedy player takes; check it only on
+  boards whose par exceeds their goal count.
+- **`dealt`** — gems already lit as the board is dealt, which is invariant 5g counted. A gem or two
+  beside each lantern is how the mode teaches itself without a sentence; a third of the field is a
+  level somebody else half finished, and nothing else would ever notice. The gate warns above 35%.
+- **`used`** — how many distinct lantern colours a *shortest* answer really wakes a critter with.
+  A field standing three lanterns whose answer only ever uses one is a field with two decorative
+  lanterns on it. Measured over **every** shortest answer, for the reason Emberforge's `chn` is.
+- **`pair`** — the most critters one swap wakes. Two is a vein the player *arranged* to serve both,
+  which is the only thing on this board better than the obvious move.
+
+Three rules the sweep will not tell you.
+
+**A field is authored dark.** A vein already standing against a sleeping critter wakes it before
+anybody has touched the board, so the goal count the player is graded against has already moved.
+Both gates refuse it.
+
+**Every critter needs a lantern in its own run of gems.** Which cells hold gems never changes, so
+a critter whose gems belong to a run no lantern touches can never be woken however the colours are
+arranged — and no amount of sweeping fixes it. `PrismLayout.Marooned` is certain, errors, and names
+the cell.
+
+**Bare ground is the only thing that shapes a vein.** A field with none of it is one where every
+gem of a colour can reach every other one and the routing rejects nothing.
+
+### What makes a field good
+
+The ramp is not par. It is **how many critters there are, how many lantern colours are really
+wanted, and how much bare ground the light has to be routed around**. A second lantern of the same
+colour as the first is not a second decision; a second *colour* is.
+
+**Look at it.** `python Tools/render_prism.py` draws every shipped field with the real sprites at
+the size a phone draws it, and `--lit` plays a shortest answer first so the veins are on the board.
+One fault came out of it that no numeric gate could see — a lantern drawn as a hooped drum, which
+at cell size reads as a **crosshair** on the one object nothing may be aimed at (invariant 36g) —
+and it was past every green check in the repository.
+
 ## What makes a glade hard
 
 `Tools/verify/difficulty.py` answers this in numbers rather than in opinions, and it is

@@ -114,12 +114,24 @@ namespace GlimmerGrove
         }
 
         /// <summary>Chunky readable text: dark outline plus a drop shadow.</summary>
+        /// <summary>
+        /// Chunky readable text: dark outline plus a drop shadow.
+        ///
+        /// <para>
+        /// <paramref name="rich"/> is off by default and must stay off anywhere a <b>player</b>
+        /// supplies the string — a keeper's name rendered as rich text would let one player put
+        /// markup on another player's screen. It is on only where the text is a loc string, which
+        /// is what <see cref="Scenery.Toast"/> is.
+        /// </para>
+        /// </summary>
         public static Text Titled(string name, Transform parent, string text, int size, Color colour,
                                   TextAnchor anchor = TextAnchor.MiddleCenter,
                                   Vector2 boxSize = default, Vector2 anchorPt = default, Vector2 pos = default,
-                                  float outline = 4f, float shadow = 5f, bool wrap = false)
+                                  float outline = 4f, float shadow = 5f, bool wrap = false,
+                                  bool rich = false)
         {
             var t = Label(name, parent, text, size, colour, anchor, boxSize, anchorPt, pos, wrap: wrap);
+            t.supportRichText = rich;
             if (outline > 0f)
             {
                 var o = t.gameObject.AddComponent<Outline>();

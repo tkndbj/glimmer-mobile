@@ -60,7 +60,8 @@ namespace GlimmerGrove
             new BudLook(),
             new MarchLook(),
             new EmberLook(),
-            new KindleLook(),
+            new PrismLook(),
+            new SiegeLook(),
         };
 
         public static IReadOnlyList<ModeLook> All => _all;
@@ -164,24 +165,47 @@ namespace GlimmerGrove
     }
 
     /// <summary>
-    /// Kindlewake. The wooded stone, which is the one tile in the set with growth standing on
-    /// it - and this mode is played in a hollow under the trees with the light gone out of it,
-    /// so what a strip of these should read as from across the map is a stand of woodland.
+    /// Prismvale. The wooded stone, which is the one tile in the set with growth standing on
+    /// it - and this mode is played in a grove where the light has gone out of everything but
+    /// the gems, so what a strip of these should read as from across the map is a stand of
+    /// woodland.
     ///
     /// <para>
-    /// Verdant, and it is the second cold accent among six modes. The board itself is almost
-    /// unlit, so the map is where this one says what it feels like before it is opened, and what
-    /// it feels like is the green just before dawn. It shares a perch silhouette with no other
-    /// mode, which is the rule that matters: a tint alone is a difference only some people can
-    /// see (invariant 7c).
+    /// Verdant, and it is the second cold accent among six modes. The board itself is dark
+    /// ground with bright jewels scattered over it, so the map is where this one says what it
+    /// feels like before it is opened, and what it feels like is the green just before dawn. It
+    /// shares a perch silhouette with no other mode, which is the rule that matters: a tint
+    /// alone is a difference only some people can see (invariant 7c).
     /// </para>
     /// </summary>
-    sealed class KindleLook : ModeLook
+    sealed class PrismLook : ModeLook
     {
-        public override GameMode Mode => GameMode.Kindle;
-        public override Type Screen => typeof(KindleScreen);
+        public override GameMode Mode => GameMode.Prism;
+        public override Type Screen => typeof(PrismScreen);
         public override string Perch => "rock_wood";
         public override Color Accent => Pal.Verdant;
         public override Color Wash => new Color(.90f, 1f, .94f, 1f);
+    }
+
+    /// <summary>
+    /// Thornwatch. The bare sandy stone, which is the one tile in the set with nothing growing on
+    /// it - and this mode is played on a hill the raiders have already walked over, so what a
+    /// strip of these should read as from across the map is ground that has been crossed.
+    ///
+    /// <para>
+    /// Rose, and it is the only warning colour among seven modes. Every other accent says what a
+    /// place feels like; this one says what is about to happen there, because it is the only mode
+    /// in the game where something is coming at the player while they think. It shares a perch
+    /// silhouette with no other mode, which is the rule that matters: a tint alone is a difference
+    /// only some people can see (invariant 7c).
+    /// </para>
+    /// </summary>
+    sealed class SiegeLook : ModeLook
+    {
+        public override GameMode Mode => GameMode.Siege;
+        public override Type Screen => typeof(SiegeScreen);
+        public override string Perch => "rock_sand";
+        public override Color Accent => Pal.Rose;
+        public override Color Wash => new Color(1f, .90f, .88f, 1f);
     }
 }

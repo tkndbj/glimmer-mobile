@@ -1,0 +1,113 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: bbb281ee3bf0b054c82ac2347e9e782c, type: 3}
+  m_Name: Glimmer Chapter p01_prismvale
+  m_EditorClassIdentifier: Unity.Addressables.Editor::UnityEditor.AddressableAssets.Settings.AddressableAssetGroup
+  m_GroupName: Glimmer Chapter p01_prismvale
+  m_GUID: 1a1098a62db7ffc4bb744c5bfee02079
+  m_SerializeEntries:
+  - m_GUID: 035eb1dbe717c9445bde8f5354510711
+    m_Address: Art/Prism/moss_lit
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 0d8fc059ee2f8a44ba7733b940d77337
+    m_Address: Art/Prism/mon2_jump
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 0fe3ccf5c338edb42af5c432e237b4fe
+    m_Address: Art/Prism/mon3
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 14bbc40aff5de70498b692c497824c02
+    m_Address: Art/Prism/gem_b
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 196a455da3ddb244c85d83ae23aec746
+    m_Address: Art/Prism/husk
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 1d577d9d0376eba479621bdb5fbfc93e
+    m_Address: Art/Prism/lamp_dark
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 53a4b2b226fdc2f4c90f4d9e908505ce
+    m_Address: Art/Prism/moss
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 5797c4cf5d433d04e837f9cdd55450d4
+    m_Address: Art/Prism/mon1
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 57f7056eaa431734fa50141e55d1bdc3
+    m_Address: Art/Prism/gem_y
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 58f6d1c116810a9479d39434171d3df8
+    m_Address: Art/Fx/Prism/flare_warm
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 5e466a47d04f0d74b8652934ea82daa7
+    m_Address: Art/Fx/Prism/flare_bloom
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 74b3c15436b0ff04187c69302df9b844
+    m_Address: Art/Prism/lamp
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 8668ec06cb3b5894dba11552e9f9db08
+    m_Address: Art/Prism/mon2
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: ab80ea590e98ff04ea5661689fc03e92
+    m_Address: Art/Prism/gem_r
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: b9b9487fc98e1254d8fa7906f5333ed7
+    m_Address: Art/Prism/mon3_jump
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: e56b02f34caf44e4396fa6078d9eabe2
+    m_Address: Art/Prism/gem_g
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: fd731f733d1441346bd62bac4ba453a8
+    m_Address: Art/Prism/mon1_jump
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  m_ReadOnly: 0
+  m_Settings: {fileID: 11400000, guid: 6c4c5f6eb57af6542b195d29840b42f2, type: 2}
+  m_SchemaSet:
+    m_Schemas:
+    - {fileID: 11400000, guid: 03fb38c387534bc4f916b34c6e0397d8, type: 2}
+    - {fileID: 11400000, guid: a006b119c50fc464fba4ccdbf89ce826, type: 2}
+    m_SchemaDisplayOrder:
+    - Glimmer Chapter p01_prismvale_BundledAssetGroupSchema
+    - Glimmer Chapter p01_prismvale_ContentUpdateGroupSchema
+  m_IncludeInBuild: 1
+  m_IncludeInBuildMigrated: 1

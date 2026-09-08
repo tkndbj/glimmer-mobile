@@ -387,32 +387,66 @@ namespace GlimmerGrove.Progression
         public static readonly Mechanic EmberStar = new Mechanic("ember_star");
 
         /// <summary>
-        /// Kindlewake's verb: pick two embers of the <em>same</em> colour and light burns along
-        /// the line between them.
+        /// Prismvale's verb: drag a gem onto its neighbour and the two change places.
         ///
         /// <para>
-        /// One sentence, and it is about what the pair makes rather than about matching. A player
-        /// arriving from four chapters of glades already knows that critters want light of their
-        /// own colour; what no hollow can show before it has happened once is that the light comes
-        /// from <em>two</em> embers rather than one, and that both of them are gone afterwards.
+        /// One sentence, and it is about what a lantern does rather than about dragging. A
+        /// player arriving from four chapters of glades already knows that a critter wants
+        /// light; what no board can show before it has happened once is where the light comes
+        /// <em>from</em> - a lantern feeds only the gems of its own colour that are touching it,
+        /// and that colour runs on through every gem of the same colour beside it.
         /// </para>
         /// </summary>
-        public static readonly Mechanic KindleJoin = new Mechanic("kindle_join");
+        public static readonly Mechanic PrismDrag = new Mechanic("prism_drag");
 
         /// <summary>
-        /// That light stays where it was put, and that two strands crossing on one cell make a
-        /// colour neither of them carried.
+        /// That a vein can be <em>broken</em>, and that a gem is never spent.
         ///
         /// <para>
         /// Deliberately two halves of one sentence, exactly as <see cref="EmberStar"/> and
-        /// <see cref="MarchSpark"/> are. A player who does not know the light stays will draw
-        /// their strands one at a time and never see a blend; one who knows it stays but not that
-        /// crossings mix will read a purple critter as a bug. Which two lines to cross, and on
-        /// which square, is the whole decision this mode is made of, so both halves have to
-        /// arrive at once.
+        /// <see cref="MarchSpark"/> are. A player who does not know the light is read off the
+        /// arrangement will pull a gem out of a working vein and think the game took it away;
+        /// one who thinks gems are spent will hoard them. Both halves are the same fact - the
+        /// board never changes, only where things stand - and it is the one thing that makes a
+        /// careless swap cost something, so both have to arrive at once.
         /// </para>
         /// </summary>
-        public static readonly Mechanic KindleCross = new Mechanic("kindle_cross");
+        public static readonly Mechanic PrismVein = new Mechanic("prism_vein");
+
+        /// <summary>
+        /// Thornwatch's verb: a match is not worth anything by itself, it is worth the
+        /// <em>colour</em> it was.
+        ///
+        /// <para>
+        /// Nothing on the field is a goal, which is the one thing a player arriving from any other
+        /// jewel board in this game will get wrong. They will look for the biggest match; what
+        /// matters is which ward it feeds, and that a bolt is worth double against a raider of its
+        /// own colour. A board can show the second half — the bolts visibly go for their own
+        /// colour — and cannot show the first, because a match that feeds a full ward looks
+        /// exactly like a match that feeds an empty one.
+        /// </para>
+        /// </summary>
+        public static readonly Mechanic SiegeFuel = new Mechanic("siege_fuel");
+
+        /// <summary>
+        /// That fuel <em>fades</em>, and that the ward line is the run.
+        ///
+        /// <para>
+        /// Deliberately two halves of one sentence, exactly as <see cref="EmberStar"/> and
+        /// <see cref="PrismVein"/> are. A player who does not know fuel fades will bank a colour
+        /// through a quiet moment and find it gone; one who does not know the line is the fail
+        /// state will let a wave through to keep matching. Both halves are the same fact — what a
+        /// colour is worth depends entirely on when it is spent — and it is the only thing that
+        /// makes an unhurried match cost anything, so both have to arrive at once.
+        /// </para>
+        /// </summary>
+        public static readonly Mechanic SiegeLine = new Mechanic("siege_line");
+
+        // **Two retired lesson ids that must never be reused: `kindle_join` and `kindle_cross`.**
+        // Kindlewake was withdrawn by the owner after play and Prismvale took its slot. A lesson
+        // id travels in the save (`tipsSeen`) exactly as a level id travels in the ledger, so
+        // re-pointing one at a rule it never described would tell a player they have already been
+        // shown something they never saw.
 
         // **Two retired lesson ids that must never be reused: `quarry_flick` and
         // `quarry_armour`.** The Iron Quarry was withdrawn by the owner and Hollowmarch took its
@@ -566,7 +600,8 @@ namespace GlimmerGrove.Progression
             FragileConduit, MoveBudget, RootedTile, AnyLight, ColourMixing, Crossing, Briar,
             BoundConduit, BudChain, BudCocoon, BudSatchel, BudGraft, BudBolt, BudSun,
             FallCook, FallSupply, FallBrim, FallLens, FallWhorl,
-            ProtoMoves, MarchFire, MarchSpark, EmberFuse, EmberStar, KindleJoin, KindleCross,
+            ProtoMoves, MarchFire, MarchSpark, EmberFuse, EmberStar, PrismDrag, PrismVein,
+            SiegeFuel, SiegeLine,
             ModeSwitch, LuckySpin, Grove,
             GroveShop,
         };

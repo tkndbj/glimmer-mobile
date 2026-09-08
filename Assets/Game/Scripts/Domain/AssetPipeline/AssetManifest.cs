@@ -54,7 +54,7 @@ namespace GlimmerGrove.AssetPipeline
         public static string EmberFx(string key) => ArtRoot + "Fx/Ember/" + key;
 
         /// <summary>
-        /// Kindlewake's hollow: its embers, its stone, its sleeping critters and its cast.
+        /// Prismvale's field: its gems, its lanterns, its sleeping critters and its cast.
         ///
         /// <para>
         /// <b>Its own folder rather than Emberforge's</b>, though the two are cut from the same
@@ -66,10 +66,22 @@ namespace GlimmerGrove.AssetPipeline
         /// that being able to delete one without touching another is worth a folder.
         /// </para>
         /// </summary>
-        public static string KindleArt(string key) => ArtRoot + "Kindle/" + key;
+        public static string PrismArt(string key) => ArtRoot + "Prism/" + key;
 
-        /// <summary>Kindlewake's flares, which live under Fx rather than beside the hollow.</summary>
-        public static string KindleFx(string key) => ArtRoot + "Fx/Kindle/" + key;
+        /// <summary>Prismvale's flares, which live under Fx rather than beside the board.</summary>
+        public static string PrismFx(string key) => ArtRoot + "Fx/Prism/" + key;
+
+        /// <summary>
+        /// Thornwatch's siege: its gems, its wards, the hill and the raiders walking down it.
+        ///
+        /// Its own folder, for the reason Prismvale's is its own: an address two chapters ask for
+        /// belongs to neither, so sharing one would drag another mode's art out of its chapter
+        /// scope and into the global group for the whole session (invariant 7b).
+        /// </summary>
+        public static string SiegeArt(string key) => ArtRoot + "Siege/" + key;
+
+        /// <summary>Thornwatch's explosions, which live under Fx rather than beside the board.</summary>
+        public static string SiegeFx(string key) => ArtRoot + "Fx/Siege/" + key;
         public static string MapArt(string key) => MapRoot + key;
         public static string Ui(string key) => UiRoot + key;
         public static string Sfx(string key) => SfxRoot + key;

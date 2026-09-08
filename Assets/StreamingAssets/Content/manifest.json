@@ -213,23 +213,26 @@
    ]
   },
   {
-   "id": "k01_kindlewake",
+   "id": "p01_prismvale",
    "version": 1,
    "order": 130,
    "disabled": false,
    "minAppVersion": 0,
-   "mode": "kindle",
+   "mode": "prism",
    "levels": [
-    "k01_firstlight",
-    "k01_stillwood",
-    "k01_crossways",
-    "k01_stonerow",
-    "k01_thechoir",
-    "k01_dimhollow",
-    "k01_threefold",
-    "k01_lanternweft",
-    "k01_deepwake",
-    "k01_kindleheart"
+    "p01_firstvein",
+    "p01_twinlight"
+   ]
+  },
+  {
+   "id": "s01_thornwatch",
+   "version": 1,
+   "order": 140,
+   "disabled": false,
+   "minAppVersion": 0,
+   "mode": "siege",
+   "levels": [
+    "s01_firstwatch"
    ]
   }
  ],

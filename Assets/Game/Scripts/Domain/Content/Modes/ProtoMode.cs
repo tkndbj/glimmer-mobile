@@ -480,96 +480,95 @@ namespace GlimmerGrove.Content
         }
     }
 
-    /// <summary>Kindlewake: a dark hollow, the embers scattered over it and the critters asleep in it.</summary>
-    public sealed class KindleRules : ProtoLevelRules
+    /// <summary>Prismvale: a field of gems, the lanterns standing in it and the critters asleep among them.</summary>
+    public sealed class PrismRules : ProtoLevelRules
     {
-        public readonly KindleLayout Layout;
+        public readonly PrismLayout Layout;
 
-        public KindleRules(KindleLayout layout, int spare) : base(spare) => Layout = layout;
+        public PrismRules(PrismLayout layout, int spare) : base(spare) => Layout = layout;
 
-        public override GameMode Mode => GameMode.Kindle;
+        public override GameMode Mode => GameMode.Prism;
         public override ProtoGrid Grid => Layout.Grid;
-        public override IProtoBoard Fresh() => KindleBoard.Build(Layout);
-        public override ProtoPosition Opening() => new KindleFuture(KindleBoard.Build(Layout));
+        public override IProtoBoard Fresh() => PrismBoard.Build(Layout);
+        public override ProtoPosition Opening() => new PrismFuture(PrismBoard.Build(Layout));
 
         /// <summary>
-        /// The fallback par, used only when a board could not be proved on the device that opened
-        /// it — which means broken content shipped, so it is chosen to be impossible to lose to
-        /// rather than to be accurate (see <see cref="ProtoSetup.Par"/>). Every strand this hollow
-        /// could ever draw, which is half its embers: more joins than any run could be asked for,
-        /// because there is no board on which every pair is both legal and useful.
+        /// The fallback par, used only when a board could not be proved on the device that
+        /// opened it - which means broken content shipped, so it is chosen to be impossible to
+        /// lose to rather than to be accurate (see <see cref="ProtoSetup.Par"/>). One swap for
+        /// every gem on the board, which is more moves than any arrangement of them could ever
+        /// ask for.
         /// </summary>
         public override int Room
         {
             get
             {
-                int embers = 0;
-                for (int i = 0; i < Layout.Grid.Count; i++)
-                    if (KindleLayout.IsEmber(Layout.Grid.At(i))) embers++;
+                int room = 0;
+                for (int i = 0; i < Layout.Count; i++)
+                    if (PrismLayout.IsGem(Layout.At(i))) room++;
 
-                int room = embers / KindleLayout.JoinAt;
                 return room > 0 ? room : 1;
             }
         }
     }
 
     /// <summary>
-    /// Kindlewake. Join two embers of the same colour and light burns between them; cross two
-    /// strands on a sleeping critter and it wakes to a colour neither of them carried.
+    /// Prismvale. Drag a gem onto its neighbour; line the lantern's own colour up all the way to
+    /// a sleeping critter, and the vein between them lights.
     ///
     /// <para>
     /// <b>It authors the shared prototype block and leaves the deal empty</b>, exactly as
-    /// Emberforge does and for the same reason: a hollow is everything the level hands over, so
-    /// its future is fixed and <see cref="ProtoSearch"/> can prove it. The three sitting side by
-    /// side on one reader is the seam doing what it was built for — this is the twelfth mode it
-    /// has carried and the parsing, the row counting, the bad-character message and the lazy par
-    /// are all inherited untouched.
+    /// Emberforge does and for the same reason: the field of gems is everything the level hands
+    /// over, so its future is fixed and <see cref="ProtoSearch"/> can prove it. The three
+    /// sitting side by side on one reader is the seam doing what it was built for - this is the
+    /// twelfth mode it has carried and the parsing, the row counting, the bad-character message
+    /// and the lazy par are all inherited untouched.
     /// </para>
     /// </summary>
-    public sealed class KindleMode : ProtoMode
+    public sealed class PrismMode : ProtoMode
     {
-        public override GameMode Mode => GameMode.Kindle;
+        public override GameMode Mode => GameMode.Prism;
 
-        protected override ProtoDto Block(LevelDto dto) => dto.kindle;
-        protected override string Letters => KindleLayout.Letters;
+        protected override ProtoDto Block(LevelDto dto) => dto.prism;
+        protected override string Letters => PrismLayout.Letters;
 
         /// <summary>
-        /// The hollow, the embers, the sleeping critters and the cast.
+        /// The ground, the gems, the lanterns, the sleeping critters and the cast.
         ///
         /// <para>
         /// Listed here rather than derived from a board, for the reason Emberforge's list gives:
-        /// which of three critters climbs out of a husk is a drawing decision the view makes from
-        /// the cell, so a hollow holding one sleeper still needs all three loadable, and a set
+        /// which of three critters runs out of a husk is a drawing decision the view makes from
+        /// the cell, so a board holding one sleeper still needs all three loadable, and a set
         /// that varied per level would be a scope changing under the player mid-chapter.
         /// </para>
         /// <para>
-        /// <b>Ten sprites draw the whole hollow.</b> A ground tile and its lit twin, stone, three
-        /// embers, a spent socket, a husk and the mote a woken critter leaves — every cell is one
-        /// of them drawn again, which is what leaves the budget for a cast that moves and for
-        /// flares that are frames rather than particles.
+        /// <b>Ten sprites draw the whole board.</b> A ground tile and its lit twin, four gems, a
+        /// lantern and its dark twin, and a husk - every cell is one of them drawn again, which
+        /// is what leaves the budget for a cast that moves and for flares that are frames rather
+        /// than particles.
         /// </para>
         /// </summary>
         static readonly AssetRequest[] Cast =
         {
-            AssetRequest.Sprite(AssetManifest.KindleArt("moss")),
-            AssetRequest.Sprite(AssetManifest.KindleArt("moss_lit")),
-            AssetRequest.Sprite(AssetManifest.KindleArt("stone")),
-            AssetRequest.Sprite(AssetManifest.KindleArt("socket")),
-            AssetRequest.Sprite(AssetManifest.KindleArt("husk")),
-            AssetRequest.Sprite(AssetManifest.KindleArt("ember_r")),
-            AssetRequest.Sprite(AssetManifest.KindleArt("ember_g")),
-            AssetRequest.Sprite(AssetManifest.KindleArt("ember_b")),
+            AssetRequest.Sprite(AssetManifest.PrismArt("moss")),
+            AssetRequest.Sprite(AssetManifest.PrismArt("moss_lit")),
+            AssetRequest.Sprite(AssetManifest.PrismArt("lamp")),
+            AssetRequest.Sprite(AssetManifest.PrismArt("lamp_dark")),
+            AssetRequest.Sprite(AssetManifest.PrismArt("husk")),
+            AssetRequest.Sprite(AssetManifest.PrismArt("gem_r")),
+            AssetRequest.Sprite(AssetManifest.PrismArt("gem_g")),
+            AssetRequest.Sprite(AssetManifest.PrismArt("gem_b")),
+            AssetRequest.Sprite(AssetManifest.PrismArt("gem_y")),
 
-            AssetRequest.SpriteSet(AssetManifest.KindleArt("mon1")),
-            AssetRequest.SpriteSet(AssetManifest.KindleArt("mon1_jump")),
-            AssetRequest.SpriteSet(AssetManifest.KindleArt("mon2")),
-            AssetRequest.SpriteSet(AssetManifest.KindleArt("mon2_jump")),
-            AssetRequest.SpriteSet(AssetManifest.KindleArt("mon3")),
-            AssetRequest.SpriteSet(AssetManifest.KindleArt("mon3_jump")),
+            AssetRequest.SpriteSet(AssetManifest.PrismArt("mon1")),
+            AssetRequest.SpriteSet(AssetManifest.PrismArt("mon1_jump")),
+            AssetRequest.SpriteSet(AssetManifest.PrismArt("mon2")),
+            AssetRequest.SpriteSet(AssetManifest.PrismArt("mon2_jump")),
+            AssetRequest.SpriteSet(AssetManifest.PrismArt("mon3")),
+            AssetRequest.SpriteSet(AssetManifest.PrismArt("mon3_jump")),
 
-            AssetRequest.SpriteSet(AssetManifest.KindleFx("flare_warm")),
-            AssetRequest.SpriteSet(AssetManifest.KindleFx("flare_cold")),
-            AssetRequest.SpriteSet(AssetManifest.KindleFx("flare_bloom")),
+            AssetRequest.SpriteSet(AssetManifest.PrismFx("flare_warm")),
+            AssetRequest.SpriteSet(AssetManifest.PrismFx("flare_bloom")),
         };
 
         public override IReadOnlyList<AssetRequest> Art => Cast;
@@ -581,13 +580,13 @@ namespace GlimmerGrove.Content
 
             if (!string.IsNullOrEmpty(block.cores))
             {
-                problems.Add($"{id}: this hollow deals '{block.cores}', and nothing is ever dealt " +
-                             "into a Kindlewake hollow - what is authored is all there is, which " +
+                problems.Add($"{id}: this board deals '{block.cores}', and nothing is ever dealt " +
+                             "into a Prismvale board - what is authored is all there is, which " +
                              "is what makes par searchable at all");
                 return false;
             }
 
-            var layout = new KindleLayout(grid, block.spare);
+            var layout = new PrismLayout(grid, block.spare);
 
             if (layout.Fault != null)
             {
@@ -595,26 +594,34 @@ namespace GlimmerGrove.Content
                 return false;
             }
 
-            var board = KindleBoard.Build(layout);
+            var board = PrismBoard.Build(layout);
 
             if (board.IsFinished)
             {
-                problems.Add($"{id}: this hollow opens with every critter awake");
+                problems.Add($"{id}: this board opens with every critter awake");
                 return false;
             }
 
-            // A hollow needs no "authored settled" clause and cannot have one: nothing here acts
-            // until a finger draws between two embers, and no cell carries light before the first
-            // strand. That is a fact about the mode rather than an omission - it is the same
-            // property that makes a run impossible to get stuck in halfway through a beat.
+            // A board dealt with a vein already standing against a sleeper is a board whose
+            // first move its author played - Budburst's "authored settled" rule. It matters
+            // here because the goal count the player is graded against would already have
+            // moved, so the board proved is not the board that opens.
+            if (board.Stirred)
+            {
+                problems.Add($"{id}: a vein on this board is already touching a sleeping " +
+                             "critter, so it would wake before anybody had moved a gem - a " +
+                             "board is authored dark");
+                return false;
+            }
+
             if (!board.AnyMove)
             {
-                problems.Add($"{id}: no two embers on this hollow can be joined into a strand " +
-                             "that helps anybody, so there is no move to make");
+                problems.Add($"{id}: no two touching gems on this board are different colours, " +
+                             "so there is no swap to make and the run is over before it begins");
                 return false;
             }
 
-            rules = new KindleRules(layout, block.spare);
+            rules = new PrismRules(layout, block.spare);
             return true;
         }
     }

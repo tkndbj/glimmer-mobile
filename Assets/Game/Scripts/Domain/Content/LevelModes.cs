@@ -32,7 +32,8 @@ namespace GlimmerGrove.Content
             new BudMode(),
             new MarchMode(),
             new EmberMode(),
-            new KindleMode(),
+            new PrismMode(),
+            new SiegeMode(),
         };
 
         public static IReadOnlyList<LevelMode> All => _all;

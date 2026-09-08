@@ -77,23 +77,23 @@ namespace GlimmerGrove.Tests
             public readonly int Chained, Forged, Lanced, Starred;
 
             /// <summary>
-            /// Kindlewake's own two, and they are the same question asked of a mode with no
-            /// chain in it at all: <see cref="Crossed"/> counts the cells where a shortest
-            /// answer laid one strand over another, and <see cref="Blended"/> counts the
-            /// critters it woke with a colour <em>neither</em> strand carried. The second is
-            /// the strict one - a crossing over bare ground is a tidier picture and decides
-            /// nothing, where one the player had to arrange on a particular square is the thing
-            /// they made (invariant 20m).
+            /// Prismvale's own two, and they are the same question asked of a mode with no chain
+            /// in it at all: <see cref="Dealt"/> counts the gems already lit as the board is
+            /// dealt (invariant 5g - a board that starts half done passes every other gate), and
+            /// <see cref="Used"/> counts the lantern colours a shortest answer really wakes a
+            /// critter with. The second is this mode's <c>forged</c>: a board standing three
+            /// lanterns whose answer only ever uses one is a board with two decorative lanterns
+            /// on it, and colour decided nothing (invariant 5d).
             /// </summary>
-            public readonly int Crossed, Blended;
+            public readonly int Dealt, Used;
 
             public Rung(string id, GameMode mode, string[] rows,
                         int par, int ways, int careless, int nodes, int spare = 0,
                         string cores = null, int chained = 0, int forged = 0, int lanced = 0,
-                        int starred = 0, int crossed = 0, int blended = 0)
+                        int starred = 0, int dealt = 0, int used = 0)
             {
-                Crossed = crossed;
-                Blended = blended;
+                Dealt = dealt;
+                Used = used;
                 Cores = cores;
                 Chained = chained;
                 Forged = forged;
@@ -305,138 +305,35 @@ namespace GlimmerGrove.Tests
             }, par: 5, ways: 6, careless: 0, nodes: 927, spare: 4,
                chained: 3, forged: 5, starred: 1),
 
-            // The teaching hollow: three critters wanting one channel each, no stone and no
-            // allowance at all (invariant 24). Careless play *does* finish it, deliberately - it is
-            // the rung where the verb is learned. Par 3 rather than 2 because at par 2 both star
-            // lines round onto one number and two stars could never be scored.
-            new Rung("k01_firstlight", GameMode.Kindle, new[]
+            // The teaching board: two lanterns, two critters, and one gem already lit beside
+            // each lantern so the rule is shown rather than told - with no allowance at all
+            // (invariant 24). Careless play *does* finish it, deliberately: it is the rung where
+            // the verb is learned. Par 3 rather than 2 because at par 2 both star lines round
+            // onto one number and two stars could never be scored.
+            new Rung("p01_firstvein", GameMode.Prism, new[]
             {
-                ".b.g.r",
-                "......",
-                "rRrGgg",
-                ".b.g.r",
-                "......",
-                "r.bBgb",
-            }, par: 3, ways: 6, careless: 3, nodes: 35, spare: 0,
-               crossed: 0, blended: 0),
+                "Rrb.r.",
+                "bg@bgg",
+                "r.rg.r",
+                "rrb.gr",
+                ".rr@rb",
+                "g.rbgG",
+            }, par: 3, ways: 10, careless: 3, nodes: 208, spare: 0,
+               dealt: 2, used: 2),
 
-            // That light stays. Two critters want the same channel, so one strand can be made
-            // to serve both - and the third wants another. Still unlosable.
-            new Rung("k01_stillwood", GameMode.Kindle, new[]
+            // Three lanterns, three critters, every colour wanted somewhere - and the first
+            // board a player who never looks ahead cannot finish. One of its four moves wakes
+            // two critters at once, which is the only thing here better than the obvious move.
+            new Rung("p01_twinlight", GameMode.Prism, new[]
             {
-                ".r.r.g",
-                "......",
-                "gRgRrr",
-                ".r.r.b",
-                "......",
-                "b.gGgb",
-            }, par: 3, ways: 6, careless: 3, nodes: 49, spare: 0,
-               crossed: 0, blended: 0),
-
-            // The blend, and the first hollow a careless player cannot finish. One critter
-            // wants two channels, so two strands have to cross on the square it sleeps on.
-            new Rung("k01_crossways", GameMode.Kindle, new[]
-            {
-                ".r.b.b",
-                "..#...",
-                "bMgGgb",
-                ".r.r.g",
-                "....#.",
-                "b.r.rg",
-            }, par: 3, ways: 3, careless: 0, nodes: 42, spare: 3,
-               crossed: 4, blended: 1),
-
-            // Stone, and the deepest answer in the chapter. Which pair can see each other at
-            // all is now the question, and greed loses.
-            new Rung("k01_stonerow", GameMode.Kindle, new[]
-            {
-                ".b.g.b.",
-                "..#.#..",
-                "rMbMb.r",
-                "r.r.r.b",
-                ".......",
-                "g.rYg.r",
-                ".b.g.b.",
-            }, par: 5, ways: 60, careless: 0, nodes: 838, spare: 3,
-               crossed: 6, blended: 3),
-
-            // Three blends on one line, so a single strand serves all three at once - the
-            // shortest answer in the second half and the hardest to spot.
-            new Rung("k01_thechoir", GameMode.Kindle, new[]
-            {
-                ".r.r.r.",
-                "#.....#",
-                "bMgMgMb",
-                "r.r.b.b",
-                "..#.#..",
-                ".r.r.r.",
-            }, par: 4, ways: 24, careless: 4, nodes: 257, spare: 3,
-               crossed: 3, blended: 3),
-
-            // A pocket: stone at the mouth of the outer columns.
-            new Rung("k01_dimhollow", GameMode.Kindle, new[]
-            {
-                ".r.g.r.",
-                "#.....#",
-                "bMrCbMb",
-                "b.r.g.g",
-                ".......",
-                ".r.g.r.",
-            }, par: 4, ways: 24, careless: 4, nodes: 152, spare: 3,
-               crossed: 3, blended: 3),
-
-            // Two blends of different pairs at opposite ends, so no colour is spare.
-            new Rung("k01_threefold", GameMode.Kindle, new[]
-            {
-                ".r.g.r.",
-                "..#....",
-                "bMgCg.b",
-                "b.b.r.r",
-                "....#..",
-                "g.rYr.g",
-                ".r.g.g.",
-            }, par: 4, ways: 24, careless: 4, nodes: 193, spare: 3,
-               crossed: 3, blended: 3),
-
-            // A lattice. Every strand is short and the material is the whole decision.
-            new Rung("k01_lanternweft", GameMode.Kindle, new[]
-            {
-                ".r.g.r.",
-                "..#.#..",
-                "bMgCg.b",
-                "r.r.b.b",
-                "..#.#..",
-                "g.rYg.r",
-                ".r.g.g.",
-            }, par: 4, ways: 24, careless: 4, nodes: 183, spare: 3,
-               crossed: 3, blended: 3),
-
-            // The most material and the most lines through it, and greed loses again.
-            new Rung("k01_deepwake", GameMode.Kindle, new[]
-            {
-                "g.g.b.r",
-                ".r#r.b.",
-                "bMgMg.b",
-                ".r.g#b.",
-                "b.r.b.r",
-                ".bCr.b.",
-                "r.g.r.g",
-            }, par: 5, ways: 30, careless: 0, nodes: 1445, spare: 3,
-               crossed: 5, blended: 3),
-
-            // The finale: a critter wanting all three channels, which is three strands
-            // crossing one square.
-            new Rung("k01_kindleheart", GameMode.Kindle, new[]
-            {
-                ".b.g.r.",
-                ".......",
-                "rMbWb.r",
-                "b.b.g.g",
-                "..#.#..",
-                "b.gCb.g",
-                ".b.g.r.",
-            }, par: 5, ways: 60, careless: 5, nodes: 472, spare: 3,
-               crossed: 6, blended: 3),
+                "Rbrgg.",
+                "br@rgG",
+                "ggb.rr",
+                "b.gg@r",
+                "rb@grg",
+                "Brbg.g",
+            }, par: 4, ways: 120, careless: 0, nodes: 1722, spare: 3,
+               dealt: 3, used: 3),
         };
 
         static ProtoLevelRules Read(Rung rung)
@@ -456,7 +353,7 @@ namespace GlimmerGrove.Tests
             // loud rather than defaulting to whichever block happened to be first.
             if (rung.Mode == GameMode.March) dto.march = block;
             else if (rung.Mode == GameMode.Ember) dto.ember = block;
-            else if (rung.Mode == GameMode.Kindle) dto.kindle = block;
+            else if (rung.Mode == GameMode.Prism) dto.prism = block;
             else Assert.Fail($"{rung.Id}: '{rung.Mode}' has no block on LevelDto to author it in");
 
             var mode = LevelModes.Find(rung.Mode);
@@ -801,65 +698,85 @@ namespace GlimmerGrove.Tests
             }
         }
         /// <summary>
-        /// What a Kindlewake hollow's <em>shortest answers</em> do: whether the strands on the
-        /// road to the answer ever cross, and whether a crossing is ever what wakes somebody.
+        /// What a Prismvale board's <em>shortest answers</em> do: how many of its lanterns are
+        /// really wanted, and how little of it is already finished when it is dealt.
         ///
         /// <para>
-        /// The same question the two tests above ask of Hollowmarch and Emberforge, and it is
-        /// the only thing in the suite that would notice this mode's payoff quietly becoming
-        /// free or quietly becoming unreachable. <c>Blended</c> is the one that condemns a
-        /// board: a hollow standing critters that want a blend and never waking one on a
-        /// shortest answer is a hollow where the crossing never had to be arranged, which is
-        /// this mode with its subject taken out (invariants 20m, 26h).
+        /// The same question the two tests above ask of Hollowmarch and Emberforge, and it is the
+        /// only thing in the suite that would notice this mode's subject quietly going away.
+        /// <c>Used</c> is the one that condemns a board: a field standing three lantern colours
+        /// whose answer only ever uses one is a field with two decorative lanterns on it, and the
+        /// colour rule — which is the whole mode — decided nothing (invariants 5d, 20m, 26h).
+        /// </para>
+        /// <para>
+        /// <c>Dealt</c> is invariant 5g counted, and it is here rather than only in the validator
+        /// because it is the reading that goes wrong <em>silently</em>: a board dealt with most
+        /// of its veins already running is still solvable, still correctly par'd and still fully
+        /// validated, and the player is simply handed a level somebody else half finished.
         /// </para>
         /// </summary>
         [Test]
-        public void EveryShippedHollowStillCrossesOnItsShortestAnswers()
+        public void EveryShippedFieldStillWantsEveryLanternOnIt()
         {
             foreach (var rung in Ladder)
             {
-                if (rung.Mode != GameMode.Kindle) continue;
+                if (rung.Mode != GameMode.Prism) continue;
 
-                var rules = (KindleRules)Read(rung);
+                var rules = (PrismRules)Read(rung);
                 var budget = rung.Par + rules.Spare;
-                var reading = KindleReading.Of(rules.Layout, budget);
+                var reading = PrismReading.Of(rules.Layout, budget);
 
-                Assert.AreEqual(rung.Crossed, reading.Crossed,
-                    $"{rung.Id}: crossings on a shortest answer moved from {rung.Crossed} "
-                    + $"to {reading.Crossed}");
+                Assert.AreEqual(rung.Used, reading.Used,
+                    $"{rung.Id}: lantern colours a shortest answer wakes with moved from "
+                    + $"{rung.Used} to {reading.Used}");
 
-                Assert.AreEqual(rung.Blended, reading.Blended,
-                    $"{rung.Id}: critters woken by a blend on a shortest answer moved from "
-                    + $"{rung.Blended} to {reading.Blended}");
+                Assert.AreEqual(rung.Dealt, reading.Dealt,
+                    $"{rung.Id}: gems already lit as the board is dealt moved from "
+                    + $"{rung.Dealt} to {reading.Dealt}");
             }
         }
 
         /// <summary>
-        /// The meter has to be reachable on every board that has one.
+        /// No shipped Prismvale board may be dealt with a vein already standing against a
+        /// sleeping critter.
         ///
         /// <para>
-        /// <b>The fail state a readout can be lying about.</b> Kindlewake's material is finite -
-        /// a strand spends two embers and nothing puts one back - so a hollow can run out of
-        /// board while the allowance still says three moves left, which reads as the game
-        /// deciding on the player's behalf. It is Emberforge's <c>Life</c> check, asked here of
-        /// the shipped boards rather than only of new ones.
+        /// Budburst's "authored settled" rule, and it bites harder here than the percentage the
+        /// validator warns on: a critter touched at the deal has <em>already woken</em> before a
+        /// finger arrives, so the goal count the player is graded against has moved and the board
+        /// proved is not the board that opens. The mode's own reader refuses it, and this is what
+        /// notices if that refusal is ever loosened.
+        /// </para>
+        /// <para>
+        /// <b>And there is deliberately no <c>life</c> test here</b>, where Emberforge and the
+        /// retired Kindlewake both have one. Nothing on this board is ever consumed — a gem is
+        /// moved and never spent — so a run always has a legal move and the allowance is the only
+        /// way to lose. A check asking "does the board outlast the meter" could only ever answer
+        /// yes, and a check that cannot fail is not a check.
         /// </para>
         /// </summary>
         [Test]
-        public void EveryShippedHollowCanActuallyReachItsAllowance()
+        public void NoShippedFieldIsDealtWithLightAlreadyOnACritter()
         {
             foreach (var rung in Ladder)
             {
-                if (rung.Mode != GameMode.Kindle || rung.Spare <= 0) continue;
+                if (rung.Mode != GameMode.Prism) continue;
 
-                var rules = (KindleRules)Read(rung);
-                int budget = rung.Par + rules.Spare;
-                var reading = KindleReading.Of(rules.Layout, budget);
+                var rules = (PrismRules)Read(rung);
 
-                Assert.GreaterOrEqual(reading.Life, budget,
-                    $"{rung.Id}: the longest play is {reading.Life} strands against an "
-                    + $"allowance of {budget}, so the meter counts down to an ending that "
-                    + "cannot happen");
+                // Bound to a local rather than read through the rules twice, which is the idiom
+                // `compile.py`'s `.Layout.` guard is asking for - a glade's own board can be
+                // absent, so nothing may walk into one without saying it knows that.
+                var layout = rules.Layout;
+                var board = PrismBoard.Build(layout);
+
+                Assert.IsFalse(board.Stirred,
+                    $"{rung.Id}: a vein is already touching a sleeping critter as this board is "
+                    + "dealt, so it would wake before anybody had moved a gem");
+
+                Assert.AreEqual(0, layout.Marooned.Length,
+                    $"{rung.Id}: a critter on this board stands where no lantern could ever "
+                    + "reach it, whatever the gems are arranged into");
             }
         }
 

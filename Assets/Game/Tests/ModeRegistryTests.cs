@@ -307,23 +307,42 @@ namespace GlimmerGrove.Tests
                     height = 4,
                     rows = new[] { "brgb", "grgr", "rbCb", "bggr" },
                 };
-            else if (mode == GameMode.Kindle)
-                dto.kindle = new ProtoDto
+            else if (mode == GameMode.Prism)
+                dto.prism = new ProtoDto
                 {
-                    // The smallest hollow that is still one: a critter wanting a blend with a
-                    // red pair across its row and a blue pair down its column, so the two have
-                    // to cross on the square it is sleeping on. Par 2.
+                    // The smallest field that is still one: a red lantern, a critter across the
+                    // top row, and one swap that puts a red gem between them. Par 1.
                     //
                     // Small on purpose: this case is about the registry reading its own block,
                     // not about a board being interesting - but it does have to be *solvable*,
                     // because this mode searches for par and an unwinnable sample spends the
                     // whole node budget proving nothing and then logs the refusal the build gate
-                    // exists to raise. It carries no `cores`, and that is the point of it: a
-                    // hollow is everything the level hands over, and the mode's reader refuses
-                    // one that deals anything at all.
+                    // exists to raise. It carries no `cores`, and that is the point of it: the
+                    // field of gems is everything the level hands over, and the mode's reader
+                    // refuses one that deals anything at all.
                     width = 3,
                     height = 3,
-                    rows = new[] { ".b.", "rMr", ".b." },
+                    rows = new[] { "Rg@", "rrb", "b.g" },
+                };
+            else if (mode == GameMode.Siege)
+                dto.siege = new SiegeDto
+                {
+                    // The smallest siege that is still one: a field with four colours on it and
+                    // nothing already lined up, two wards, and one wave of two raiders they are
+                    // each strong against. Par 2.
+                    //
+                    // Small on purpose: this case is about the registry reading its own block,
+                    // not about a level being interesting. It does *not* have to be provable the
+                    // way the searched modes' samples do - this is the one mode whose par is
+                    // arithmetic over what the level sends rather than the depth of a search - but
+                    // it does have to be readable, because a mode that cannot read its own level
+                    // is a mode whose chapter ships as a skipped one.
+                    width = 3,
+                    height = 3,
+                    rows = new[] { "rgb", "gbr", "brg" },
+                    gems = "rgby",
+                    wards = "rg",
+                    waves = new[] { "rg" },
                 };
             else if (mode == GameMode.Bud)
                 dto.bud = new BudDto

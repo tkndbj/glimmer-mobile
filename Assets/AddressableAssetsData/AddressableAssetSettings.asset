@@ -68,9 +68,10 @@ MonoBehaviour:
   m_BuildAddressablesWithPlayerBuild: 1
   m_overridePlayerVersion: '[UnityEditor.PlayerSettings.bundleVersion]'
   m_GroupAssets:
-  - {fileID: 11400000, guid: b4a75044c8f2cf74596ddc4d05226ab2, type: 2}
+  - {fileID: 11400000, guid: 9cc25d4702763464993f52cb3d98129b, type: 2}
   - {fileID: 11400000, guid: 47c46bda514740a4dbc05a44d4a23ac8, type: 2}
   - {fileID: 11400000, guid: d1fe196abfd75f44ab4a7b89333771b5, type: 2}
+  - {fileID: 11400000, guid: 4d5a579f47b771f40be12597dc3a83b4, type: 2}
   - {fileID: 11400000, guid: 984a834b48cbf384482d9e2e9aebfe5d, type: 2}
   - {fileID: 11400000, guid: 5cd5e268b80596b479805f2b149c473f, type: 2}
   - {fileID: 11400000, guid: 82cde781aeb2b8c47a1f377b73392623, type: 2}
@@ -221,6 +222,38 @@ MonoBehaviour:
     - Art/Kindle/mon2_jump
     - Art/Kindle/mon3
     - Art/Kindle/mon3_jump
+    - Art/Siege/mon1
+    - Art/Siege/mon2
+    - Art/Prism/mon3
+    - Art/Siege/brute
+    - Art/Fx/Prism/flare_bloom
+    - Art/Prism/mon1_jump
+    - Art/Siege/mon3
+    - Art/Prism/mon2
+    - Art/Fx/Siege/boom_fire
+    - Art/Prism/mon3_jump
+    - Art/Prism/mon2_jump
+    - Art/Prism/mon1
+    - Art/Fx/Siege/boom_smoke
+    - Art/Fx/Prism/flare_warm
+    - Art/Fx/Siege/flash
+    - Art/Siege/fire2
+    - Art/Siege/fire3
+    - Art/Fx/Siege/pop
+    - Art/Siege/fire4
+    - Art/Siege/fire1
+    - Art/Fx/Siege/hit_g
+    - Art/Fx/Siege/muzzle_b
+    - Art/Fx/Siege/muzzle_r
+    - Art/Fx/Siege/shot_g
+    - Art/Fx/Siege/hit_y
+    - Art/Fx/Siege/hit_b
+    - Art/Fx/Siege/shot_b
+    - Art/Fx/Siege/muzzle_y
+    - Art/Fx/Siege/hit_r
+    - Art/Fx/Siege/shot_r
+    - Art/Fx/Siege/shot_y
+    - Art/Fx/Siege/muzzle_g
   m_SchemaTemplates: []
   m_GroupTemplateObjects:
   - {fileID: 11400000, guid: 1c550e3b8c7244948b0ae7d2fbce14c6, type: 2}

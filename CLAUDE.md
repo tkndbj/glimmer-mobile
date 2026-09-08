@@ -1588,88 +1588,323 @@ In practice:
     make it a different game for them rather than a harder one. CRAFT.md's rule about the board's
     vocabulary, asked of a mode where it decides every move.
 
-35. **Kindlewake is the classic glade's question asked with Emberforge's material, and what it
-    proves is that a mode can inherit a *goal* without inheriting a verb.** Cold embers are
-    scattered over a dark hollow with critters asleep among them. Join two embers of the **same
-    colour** that share a row or column and a **strand** of light burns along the line between
-    them for good; every critter it crosses takes that channel. A critter wanting a blend can only
-    be woken where **two strands cross on the square it is sleeping on** - which is a colour
-    neither strand carried, and the only thing on the board the player had to arrange. The goal,
-    the colour arithmetic (`Energy`, reused outright) and the word "critter" are the glade's; the
-    verb is not. It is the twelfth mode the prototype level shape has carried and it cost the save
-    file **no schema version, no merge rule, no `firestore.rules` change and no server work**
+35. **Kindlewake is retired, and the reason it went is the reason it should never have been
+    built the way it was.** It shipped ten hollows - join two embers of a colour and a strand of
+    light burns between them for good - and the owner's verdict after playing it was that the
+    gameplay was not what had been asked for and the animations were bad. That is one fault and
+    not two: the commission was *the glade's question with gems instead of conduits*, and what was
+    delivered was a **tap-tap pairing puzzle** whose payoff was an abstract crossing of two bars.
+    Nothing about it looked like moving jewels, so nothing about its animation could. **Read a
+    commission for its *verb* before its goal** - "use gems instead of conduits" names the thing
+    the finger does, and a mode that keeps the goal and invents a different verb has answered a
+    question nobody asked. Prismvale took its slot with the same brief read that way.
+    <br>**Retired ids that must never be reused:** the mode id **`kindle`**; the level block
+    **`kindle`** (refused by name in `content.py`'s `RETIRED_BLOCKS`); the chapter id
+    `k01_kindlewake` with its ten level ids (`k01_firstlight`, `k01_stillwood`, `k01_crossways`,
+    `k01_stonerow`, `k01_thechoir`, `k01_dimhollow`, `k01_threefold`, `k01_lanternweft`,
+    `k01_deepwake`, `k01_kindleheart`); and the lesson ids `kindle_join` and `kindle_cross`. It
+    was played on a device, so a save may hold a record or a `tipsSeen` entry against any of them.
+    <br>Three of its rules outlive it and are stated where they are now used: **a pruning rule
+    that is sound for the search can still delete the mode's fail state** (35b); **`life` is the
+    longest play and not the greedy one**, which is a reading only a mode whose material runs out
+    needs at all (35c); and **a mode set in the grove ships silent**, because the story band's
+    cast are raiders and borrowing them would be two stories wearing one set of ids.
+35b. **A pruning rule that is sound for the search can still delete the mode's fail state.**
+    Kindlewake first refused any move that did not reach a *goal* - provably safe, because such a
+    move can never be in a shortest answer. It is still wrong for a reason no solver can see:
+    under it no move spends anything for nothing, so the allowance can never bind, the longest
+    play equals par on every board, and the meter counts down to an ending that cannot happen. **A
+    no-op rule must refuse only what genuinely changes nothing**, never what merely fails to help.
+35c. **`life` is the longest play, not the greedy one - and a mode where nothing is consumed
+    needs no `life` at all.** A greedy walk answers "how long until this is over", which equals
+    par on every board greed wins; what is wanted is the deepest layer any play reaches, capped at
+    the allowance. The reading exists so a *finite* board cannot be dead while the meter still says
+    three moves left. Prismvale has none, deliberately: a gem is moved and never spent, so there is
+    always a legal move and the allowance is the only way to lose - and a check that could only
+    ever answer yes is not a check.
+
+36. **Prismvale is the classic glade's question asked with the jewel board's own verb, and the
+    verb is the whole point.** A field of coloured gems with lanterns standing in it and critters
+    asleep among them; **drag a gem onto its neighbour and the two change places**. A lantern feeds
+    the gems of *its own colour* that are touching it, that colour runs on through every matching
+    gem beside them, and a critter standing against that vein wakes. It is the twelfth mode the
+    prototype level shape has carried and it cost the save file **no schema version, no merge rule,
+    no `firestore.rules` change and no server work** (20a). It authors the shared block and leaves
+    `cores` **empty**, and the reader refuses a board that deals anything: the field is everything
+    the level hands over.
+36a. **Nothing is ever removed, and that decides everything else.** Gems do not burst, do not fall
+    and are never spent, so every move is a *rearrangement* - which is what makes a vein something
+    to build rather than something to buy, and what makes it **breakable**. Light is not stored: it
+    is read off the arrangement, so a gem pulled out of a working vein takes the light with it and
+    a careless swap on one side of the board can put out the line on the other. That is the only
+    thing a wrong move here costs, and it is why the board's key is its **cells alone** - a key
+    carrying the light would be carrying a derived value that can disagree with itself.
+36b. **It does not pass 20j's second test, and the honest statement is narrower.** A swap is
+    reversible, so nothing here "only goes one way": swap two gems back and forth for ever and the
+    board is where it started. What the search actually needs is weaker and is true - the **goal**
+    count is monotone (a woken critter never sleeps), the arrangements are finite so the visited
+    set closes the walk, and a run can never stall because two touching gems of different colours
+    are always a legal move. **What that costs is a real ceiling on par**: cost goes as the swap
+    count to the power of par and a board carries thirty to fifty swaps, so par 3 proves in ~200
+    positions, par 4 in ~1,700 and par 5 is over the budget a level may cost on a phone (26d). The
+    two shipped rungs are par 3 and par 4, and that is arithmetic rather than taste.
+36c. **The fail state is the meter and nothing else, which no other mode on this shape can say.**
+    Every one of them has two endings because its material runs out - a well runs dry, a wall runs
+    out of shards. Nothing here is consumed, so `AnyMove` is true until the last critter wakes,
+    `Stranded` is a fact about the **layout** rather than about the run, and a lost run may always
+    honestly be sold a continue (28f). `Stranded` is certain and never clever: a critter with no
+    gem beside it, or one whose run of gem cells no lantern touches, can never be woken however the
+    colours are arranged - and *which cells hold gems never changes*, which is the invariant that
+    whole check rests on. Contention (are there **enough** gems of the right colour, do two critters
+    want the same ones) is the search's job, and the search answers "unsolvable" and points at
+    nothing, so the layout check runs first and names the cell.
+36d. **A critter wants light and not a colour, and that is a decision.** The colour already decides
+    everything through the *lantern*: which gems are worth moving, which lantern is worth using, and
+    which of two routes is affordable. Giving a critter a colour of its own would ask the same
+    question twice and put a fourth idea on a board meant to be read at a glance. A later chapter
+    that wants blends has the whole letter space free for them.
+36e. **The reading that judges a board is `used`, and the one that catches the silent fault is
+    `dealt`.** `used` counts the distinct lantern colours a *shortest* answer really wakes a critter
+    with - a field standing three lanterns whose answer only ever uses one is a field with two
+    decorative lanterns on it, and colour decided nothing (5d). It is read over **every** shortest
+    solution rather than over the opening move, which is 26h's `kindled` and 20m's `fired` asked
+    here. `dealt` is invariant 5g counted: a board handed over with most of its veins already
+    running is one somebody else half finished, and it is still solvable, still correctly par'd and
+    still fully validated - so nothing else would ever notice. A *little* is the opposite of a
+    fault and is how the mode teaches itself without a sentence; both shipped boards deal two or
+    three lit gems out of twenty-five.
+36f. **`careless` is not beaten at par 3, and that is a fact about the mode rather than about the
+    boards.** At par three with three critters each one takes exactly one swap, so a player taking
+    the biggest thing on offer every time takes those three - measured over 1,200 dealt boards, and
+    not one was beaten. The second rung is par 4 for exactly that reason and greed loses on it.
+    **Before tuning a board against `careless`, check whether par exceeds the goal count**; below
+    that the reading cannot say anything.
+36g. **A lantern that reads as a gem is the one confusion this board cannot afford**, and the first
+    cut made it. A gem moves and a lantern never does, so the two must not share a silhouette - and
+    the first lantern was a hooped glass drum, which draws at cell size as a **crosshair**: an
+    unmistakable "aim here" on the one object nothing may be aimed at. It is a radiating star now,
+    which cannot be read as a faceted stone. That is 32b for the fifth time (the Iron Quarry's cage,
+    Hollowmarch's road, Emberforge's cage, Kindlewake's husk, this one), and it was caught by
+    `Tools/render_prism.py` and by nothing else - every numeric gate was green through it, because
+    no gate in this project opens a PNG.
+36h. **The vein is a permanent highlight rather than an effect, and its arrival is a *run*.** Every
+    pair of touching lit cells carries a bar that stays for as long as both are lit, so the player
+    can always read what is connected to what and a broken vein is visibly the light going out
+    rather than nothing happening. When a swap lands, `PrismFlare` names every newly lit cell **in
+    flood order out of its lantern**, and the view lights them one at a time on a rising note - so
+    the payoff is drawn as something travelling rather than as a set of cells switching on
+    (invariant 20m, and 30i: the view replays a log and never reconstructs one).
+36i. **Two levels is a test, not a chapter.** What is owed is somebody playing it - see the owed
+    list. The questions in order: does **drag-to-swap** read as the verb; does the player work out
+    that a lantern feeds only **its own colour**; and does a vein going **out** when it is broken
+    read as their own mistake rather than as the game taking something away.
+
+37. **Thornwatch is the first mode here that runs on a clock, and everything it costs and
+    everything it does not is worth being exact about.** The raiders come down a hill at the
+    grove's ward line; match gems and the colour you matched fuels the **ward** of that colour,
+    which looses bolts until its fuel fades; a bolt is worth double against a raider of its own
+    colour; let them through and they break the wards, and the run ends when the last one falls.
+    Two proven loops bolted together with one thing changed, which is what 33 and 34 established a
+    mode here may be built on - and the change is that **nothing on the jewel board is a goal**.
+    The goals are on the hill, so a match is never worth anything by itself and is only ever worth
+    the *colour* it was. It is the thirteenth mode the level shape has carried, and it cost the
+    save file **no schema version, no merge rule, no `firestore.rules` change and no server work**
     (20a).
-35a. **The monotone quantity is the embers, and light is the thing that only ever grows.** Every
-    join spends exactly two and nothing puts one back, so depth is bounded by half the material,
-    the state graph is a DAG, and `ProtoSearch` finds par by breadth-first walk with nothing to
-    prove about termination (20j's second test). Note which quantity that is - the board *gains*
-    light and light never goes out, so 33c's warning has to be read the right way round: it is the
-    thing being **spent** that is monotone. It also means every route to a given arrangement has
-    the same length, so no state can appear at two depths, which is what lets **one** walk answer
-    both "what do the shortest answers do" and "how deep can any play go" (`KindleReading.Walk`).
-35b. **The no-op rule was drawn too tight first, and drawing it tight removes the player's ability
-    to be wrong.** A strand is legal whenever it puts its channel somewhere that lacked it
-    (`KindleBoard.Changes`). The tighter rule - refuse one unless it reaches a *sleeping critter*
-    that lacks the channel - is **provably safe for the solver**, because light only ever wakes
-    critters and removing embers can never help, so such a strand can never be in a shortest
-    answer. It is still wrong, for a reason no solver can see: under it no move spends material
-    for nothing, so the allowance can never bind, `life` equals par on every board, and the meter
-    counts down to an ending that cannot happen. **A pruning rule that is sound for the search can
-    still delete the mode's fail state.**
-35c. **`life` is the longest play, not the greedy one, and Emberforge's version of the reading
-    would have said nothing here.** That one walks a spendthrift until there is nothing to play;
-    on a hollow there is nothing to play the instant the last critter wakes, so it would report
-    "how long until this is over" and equal par on every board greedy wins. What is wanted is the
-    deepest layer any play reaches, which the same walk gives for free - and it is **capped at the
-    allowance**, because that is the only question it is asked and the whole graph of a hollow
-    with twenty embers is ten layers deep.
-35d. **A spent ember leaves a socket that blocks light, and that rule exists because a measurement
-    demanded one.** Without it every strand costs the same two embers and light never hurts, so
-    taking the pair that covers the most critters is very nearly always right: across **320 swept
-    hollows a careless player finished every single one**, which is the reading Lightweave was
-    withdrawn for (5d - a mechanic that rejects no arrangement is decoration). With it a strand
-    leaves two permanent holes in the geometry, `ways` fell by more than half on the deepest board
-    in the chapter, and boards greedy cannot finish exist at all - three of the ten shipped.
-    **Three is still not many**, so the honest summary is that Kindlewake asks *which pair* rather than
-    punishing greed, and whether that is enough is the first thing to judge by playing it.
-    Consequence: `KindleValidator.Unreachable` stops being complete and stays *certain* - it errors
-    only when no pair of the right colour covers a critter at all, which no later strand can undo.
-35e. **A critter can only be lit by a strand that brackets it, and that is geometry an author
-    cannot eyeball.** Ten templates were written before the rule was stated and **every one was
-    impossible**, always the same way: a critter whose column ran into stone before it found a
-    second ember of the colour it wanted. The grammar the chapter is built on is therefore
-    explicit - critters stand on **odd** columns, their rows carry ember sites on the **even**
-    ones, the rows between them are solid sites so every column has partners above and below, and
-    **stone never shares a column with a critter**. The dealer plants the pairs a hollow needs
-    *before* filling the rest (20i's rule read across from Lightweave: grow what the board needs
-    before the answer is carved), so a board is winnable by construction rather than by rejection -
-    random dealing kept fewer than one seed in fifty on a board with five critters.
-35f. **A hollow needs 2x(par + spare) embers, and that is what sets the chapter's pars.** A strand
-    spends two, so the longest play is about half the material; the allowance has to clear the
-    two-star line (`ceil(par x 1.40)`) *and* be reachable. `spare` is 3 on every bounded board
-    because it is the only value that satisfies both at every par the chapter uses. **And par 2 is
-    refused outright**: at par 2 the three-star and two-star lines both round onto 3, so the middle
-    band is empty and two stars can never be scored - which is why the opening hollow stands three
-    critters rather than two.
-35g. **The crossing is the payoff, so it is drawn on top of the strands that made it.** Drawn the
-    other way round - strands over pools - the one square carrying a colour neither strand had is
-    the one square you cannot see, and only a render says so. So the layers are ground, strands,
-    **pools**, pieces, fx; and a pool is painted **only where two or more channels meet**, because
-    a single-channel cell is already drawn by the strand running through it and painting those too
-    turned every strand into a chain of discs. `Tools/render_kindle.py --lit` is what caught it.
-35h. **The husk was the fourth goal in this project to be illegible and pass every gate.** The
-    first cut was a dark ring with a dim brown light on near-black moss - the thing every level is
-    *for*, drawn as the least visible object on the board. That is the Iron Quarry's cage (32b),
-    Hollowmarch's road (33h) and Emberforge's cage (34e) for the fourth time, and it was caught by
-    a contact sheet and by nothing else. It is now a bright warm bowl, open at the top, carrying
-    its own light so the critter reads through it, and wearing no hue of its own so the coloured
-    ring saying *what it wants* has nothing to fight.
-35i. **It ships silent, and that is a decision.** The story band is a paid-for seam, but its cast
-    are raiders - Bolt and the Collector belong to the smelter and the haul-road - and a grove mode
-    borrowing them would be two stories wearing one set of ids. Every mode set in the grove ships
-    without dialogue (four chapters of glades, three of Lightfall, two of Budburst) and this one
-    joins them; a later chapter that wants a voice changes one base class and authors a `story`
-    block, and nothing else moves.
+37a. **A mode may run on a clock, and what that costs is exactly one thing: par stops being a
+    proof.** Every other mode here is a DAG whose depth is moves spent, so par is the first layer
+    of a breadth-first walk that wins and both star lines fall out of it (20j). Raiders that walk
+    while nobody is touching the board have no such graph, and a field that refills has no fixed
+    future (26's argument, met head on). So `SiegeTuning.Par` is **arithmetic over what the level
+    sends** - the hill's total health over the most one match could ever be worth - and
+    `SiegeRules.Opening()` answers **null** rather than a position pretending to be searchable.
+    Note what did *not* change: the graded count is still something the player spends (matches),
+    the star lines are still the same 1.20 / 1.40 multiples, the fail state is real, and the level
+    is an ordinary level with a permanent id.
+    <br>**And par here is a calibrated estimate rather than a floor, which is the second thing a
+    clock costs and the one that was got wrong first.** It shipped as `health / (3 gems x damage)`
+    on the argument that a match clears at least three, so no shorter run could deliver the health.
+    That is not a floor, because a match on a full field **cascades** and a cascade's gems are fuel
+    too: measured over a played run a match clears about five and a half, so the "floor" sat nearly
+    twice above real play and three stars was free. `SiegeTuning.MatchGemsTenths` is the measured
+    number, it is pinned by the simulation in 37j, and it is a property of a *four-colour* field -
+    a level dealing five would cascade less and want a smaller one.
+37b. **The fail state is the ward line, so there is no move allowance at all** - and the two are
+    the same decision rather than two. A budget would be a second fail state, and its readout
+    would count down to an ending that never happens, which is 22's fault from the budget's side.
+    So `budgetFactor` is -1 on every siege and both gates **error** on one that is not; what
+    replaces the meter is the line itself, drawn on the board with a health pip per blow, which
+    is Hollowmarch's rule kept (33a) - the number in the corner and the picture on the board are
+    the same number, so the two can never disagree. Consequence: `ProtoVerdict` reads a fallen
+    line as `Stuck`, so **no continue is ever offered** (28f), because no purchase puts a ward
+    back up.
+37c. **Fuel used to fade on a clock and does not any more, and what the withdrawal cost is worth
+    writing down.** The rule was that a standing ward lost fuel every second whether or not it was
+    shooting, so a colour matched early was a colour wasted; the argument for it was 5d asked of a
+    resource - a mechanic that rejects no *timing* is decoration. Played, it produced a meter
+    draining while nothing was happening, which reads as the game taking something away rather than
+    as a reason to hurry, and the owner withdrew it. Fuel now leaves a ward one way only, as a
+    bolt.
+    <br>**Removing it roughly doubled what a match delivers, and that fell out in three places at
+    once** - which is the general lesson, because none of them is where the rule was. Par's
+    arithmetic stopped being conservative and became generous (37a); the ward line finished
+    *untouched*, so the fail state rejected nothing (5d again, asked of a threat); and the level
+    ran 32 seconds. Every one of those was invisible except through the simulation in 37j. What
+    fixed them is the hill and the mode's constants - **the boards' job**, not the rule's. What
+    still makes the colour of a match a decision is the elemental double, which the board can
+    *show* (the bolts visibly go for their own colour) where a clock could only be felt.
+37d. **A level authors what is standing there and what is coming, and no numbers at all** (20d).
+    A field, the colours it refills from, a ward line and a list of waves written one letter per
+    raider - lower case a creeper, upper case a brute - so a wave's shape is visible in the file.
+    Everything else is `SiegeTuning`: fuel per gem, capacity, fade, cadence, damage, health,
+    march, blows. Two consequences. A retune is one edit and cannot leave two levels disagreeing
+    about what a gem does; and because par derives from those constants, **moving one moves every
+    star line in the mode at once**, which is correct and is why they are in one place where that
+    is obvious.
+37e. **A field that refills has to be dealt, and every deal is deterministic.** xorshift32 seeded
+    by FNV-1a over the authored field, all 32-bit, for `DailyChestTable`'s reason - two devices
+    deal the same board, so a bug reported against a level is a bug somebody else can meet, and no
+    level ever authors a seed. And **the field is dealt again rather than allowed to lock**: this
+    mode's clock does not stop, so a board with no legal swap is a run the player watches
+    themselves lose. `siege.any_swap` warns about a level *authored* into that state, which is the
+    only part of it a gate can see.
+37f. **A raider says its colour three times and none of them is enough on its own.** The licensed
+    cast are painted in four colours of their own that have nothing to do with this board's four,
+    so an untinted raider wears a colour the player has to *learn*; a tint alone is a difference
+    only some people can see (CRAFT.md's rule about the board's vocabulary); and an aura alone is
+    lost the moment two raiders overlap. So a body is coated 62% toward its colour, stands in a
+    wash of it, and carries the gem itself over its head. **Before drawing a rule in colour, count
+    how many ways it is said.**
+37g. **Three bands is a board no gate can look at, and a render moved two of them.** The hill, the
+    ward line and the field divide the height, and at the tenth the mode was commissioned with, a
+    ward's own furniture - plinth, fuel tube, four health pips - is nearly two cells tall against
+    a band of one and a half. The tube fell behind the field's plate, so **the one readout every
+    decision in this mode rests on was invisible**, and the field was a column of air either side
+    of it. Both were caught by `Tools/render_siege.py` and by nothing else, with every numeric
+    gate green - which is the Iron Quarry's cage, Hollowmarch's road, Emberforge's cage and
+    Kindlewake's husk for the fifth time (32b, 33h, 34e, 35h).
+    <br>**It then earned its place twice more on the same board.** After the wards were re-cut it
+    caught them sitting so low that the field's plate covered their feet and they read as small,
+    and it caught pale paving tiles surviving the grass filter and littering the hill. Neither is a
+    thing any number could have reported.
+    <br>**And the wards themselves are the exception 32b needs and did not have.** They were
+    *composed* first - a stone pillar with a crystal in it - on 32b's argument that a goal
+    approximated out of scenery comes to look like dressing. Played, the verdict was that they were
+    not turrets. Composing buys **legibility** and cannot buy **character**, and a turret is the
+    thing a player looks at for a whole run; so they are cut from a pack drawn for exactly this,
+    and the legibility is bought a different way - four models for the silhouette, and a **run-time
+    tint** from the same `Pal` entry the gems and the raiders use, so a ward, its bullets, its
+    muzzle flash and the gems that feed it cannot come to disagree about what red is.
+37h. **Only a ward coming down flashes the screen.** A flash on every blow is five a second once a
+    wave is at the line, at which point it stops reading as damage taken and starts reading as a
+    fault. The general rule is 26f's asked of a *drawing* rather than of a mechanic: before
+    animating anything, ask how often it fires.
+37j. **A mode with no search needs somebody to play it, so one is written down — and it caught
+    the level on its first run.** `SiegeRuleTests.AnUnhurriedPlayerHoldsThisLine` plays the shipped
+    siege with a deliberately ordinary player (a match every 2.4 seconds, always aimed at whatever
+    is furthest down the hill, never looking for a bigger one) and asserts the hill is cleared with
+    the line standing **and visibly damaged**. Everywhere else that reading comes free — par is the
+    depth of the first winning layer, so "can this be finished" is answered on the way to "in how
+    few" — and here nothing else could have answered it: as first authored the level **could not be
+    held**, the line falling with three raiders left, and every other gate was green. The tuning
+    that fixed it is the mode's constants rather than the level, because what was wrong was the
+    mode's arithmetic and not what the level sends. The second assertion matters as much as the
+    first: a line nothing ever reaches is a fail state that rejects nothing (5d asked of a threat),
+    so the level would play as a jewel board with scenery over it.
+    <br>**It then caught the whole mode a second time, from the other direction.** Withdrawing the
+    fuel fade (37c) doubled what a match delivers; the same test immediately reported the line
+    finishing *untouched*, and re-tuning against it is what produced the numbers that ship - ward
+    health 10, a blow every 1.9s, a creeper crossing in 15 seconds and a brute in 21, twenty
+    raiders and eight of them brutes. **A mode with no search has exactly one instrument, and every
+    rule change has to be put back through it.**
+37k. **A wave comes on a clock, never when the last one is cleared — and the polite version was
+    withdrawn for being polite.** It shipped waiting for the hill to empty, which is safe (a run
+    can never be outpaced) and is exactly why it was wrong: a player who was winning met no
+    pressure at all, because the hill stopped and waited for them. On a clock the waves overlap and
+    falling behind compounds, which is what a siege *is*. What it costs is the guarantee: a run can
+    now be outpaced, so `BetweenWaves` is the number that decides whether a level is holdable and
+    it is pinned by 37j's simulation rather than reasoned about — the cliff is sharp, two seconds
+    either side of it, which is itself the argument for measuring rather than arguing.
+37l. **`Image.color` is a multiply, so a tint can only ever darken — and a run-time tint is
+    therefore the wrong way to colour anything the player is meant to find *bright*.** The wards
+    were tinted at run time on a good argument: one `Pal` entry feeding the gems, the raiders and
+    the line means the three can never drift. Played, they came back "too dim"; lifted toward white
+    first they came back **pastel**; and there is no third setting, because the operation cannot
+    add light. They now carry a real **hue rotation** baked into the sprite
+    (`make_siege_art.hued`), which keeps every highlight the pack drew and simply makes the body
+    that colour, and are drawn at white. **A tint is for saying which of several things this is; it
+    is not for making something look lit.** The cast keep theirs, because that is exactly the job
+    they use it for.
+37m. **A ward is never drawn darker than its own colour, and "has fuel" reads as brighter rather
+    than "no fuel" as dimmer.** The first cut faded an unfuelled ward to 72% of its coat, which
+    means it dimmed on the first frame of every run and stayed dim — reported as "they are bright
+    when the match starts and immediately dim down". A light goes *up*.
+37n. **A toast grows to fit what it is asked to say, and renders its markup.** It was a fixed
+    148-unit box: a mode's one-sentence rule ran to five lines and the rest was drawn outside the
+    plate, because a Unity `Text` that overflows is not clipped and nothing anywhere says so. And
+    it drew `<b>` as four letters, because `UIKit.Label` turns rich text off — correctly, since a
+    keeper's name reaching a label is a string another player wrote. So the flag is a parameter,
+    off by default, and on only for the toast, which is always a loc string. **Both faults were in
+    shared code and every mode with an emphasised refusal had them.**
+37o. **A siege says the word on the board, because its board does not stop.** Every other mode ends
+    with a modal a beat after the run is over, and that is enough because their boards visibly halt
+    — a glade goes dark, a wall stops coming apart. A hill keeps walking and a field stays full, so
+    the half-second before the panel read as nothing having happened. The countdown at the start is
+    the same argument from the other end: three, two, one, **once**, so a player gets a moment to
+    look at an empty hill before anything is on it — and the clock runs underneath it, so the count
+    is telling the truth rather than holding the game up.
+37i. **One level is a test, not a chapter.** What is owed is somebody playing it - see the owed
+    list. The three questions in order: does **fuelling a colour** read as the verb, or do players
+    hunt for the biggest match; does **fuel fading** land as a reason to hurry rather than as the
+    game taking something away; and is **par 22 a line a good run can get under**, which is the
+    one number in this mode nothing offline can answer.
+37k. **A bought 3D VFX pack reaches a board here as a *bake*, and every one of the six ways that
+    went wrong was silent.** Each ward now fires its own projectile - a fireball, a venom dart, an
+    icicle and a lightning bolt, with the muzzle flash and the impact the pack draws for each -
+    rendered out of `UniqueProjectilesVol5`'s own prefabs by `SiegeShotBake` and shipped as sprite
+    reels under `Art/Fx/Siege`. **Not the prefabs**, because the canvas is `ScreenSpaceOverlay`
+    and `Boot.EnsureCamera` gives the only camera `cullingMask = 0`, so a particle system in the
+    scene is never drawn at all; the one route that does draw is a stage, a camera and a
+    `RenderTexture` of its own, which is `VfxDemoScreen` and which its own note says never to
+    couple a mode to. **And not its flat textures either**, which is where Budburst's explosions
+    came from: that is right when the picture you want is lying in the pack's `Textures/` folder,
+    and wrong here, because what was bought is sixty *motions*. Unity rasterises the motion once,
+    offline; what ships is sprites, which is what a board firing twenty-eight bolts a second can
+    afford. Four elements rather than four tints, for `WardArt`'s reason one step on - at the size
+    a bolt is drawn, silhouette is the only difference that survives - and the hue is graded from
+    `Pal` **in the bake**, so a ward, its bolt, its flash, its impact and the gems that feed it
+    cannot drift (37f).
+    <br>**Six faults, in the order they were found, every one green on every gate.**
+    `ParticleSystem.Simulate` with `restart: false` **continues** from where a system is, and a
+    system stopped-and-cleared so its seed could be set is stopped - so the first bake ran to
+    completion, wrote twelve reels and reported success, and every one held only the two mesh
+    renderers that draw whether or not anything is playing. Its last argument quantises to
+    `Time.fixedDeltaTime`, four times coarser than the substep, so a *fixed* step is a bake of
+    nothing or of four times too much. `Particle.GetCurrentSize` is a **mesh scale** for a system
+    rendering a mesh, and this pack's fireball heads answer 120 - every extent came back as the
+    same suspiciously round number in all three directions, so measure `Renderer.bounds` instead.
+    A frame **shaped by a constant** pads a comet whose real proportions are eight to one until it
+    is a quarter of its own width, and since the view sizes a bolt by its frame's width that came
+    straight off the board: a twelve-pixel sliver. A **window** has two ends and neither is the
+    effect's lifetime - the fireball's muzzle draws a ring inward before it bursts and the
+    lightning's builds for a third of a second, so a fixed window baked the run-up and threw away
+    the event. And the grade's **white-core protection has to be capped**, because an icicle and a
+    lightning bolt are near-white nearly all over: uncapped, half the pack came out colourless,
+    measured as 0.18 median saturation on a bolt fired by a blue turret.
+    <br>**What found each of them.** Nothing numeric found any of them. The empty reels, the
+    sliver, the run-up and the colourless icicle were all caught by looking - `Siege Projectile
+    Contact Sheet` and `Tools/render_siege.py`, which now draws the exchange on the real board
+    (32b for the sixth time). **And the render has to show a reel at its loudest**: drawn from a
+    fixed frame index it caught two of the four muzzles mid-dip and read as a bake that had
+    failed, which is an instrument lying about the thing it exists to judge.
+    <br>Two consequences worth stating. The reels are **pooled** (`SiegeView.Puff`), which is
+    premature everywhere else in this project and not here - a lit line is twenty-eight
+    three-part shots a second. And **this is the one art tool here with no offline gate**: no
+    Python script can rasterise a particle system, so `Verify Siege Projectiles` re-bakes and
+    compares within a tolerance (two GPUs are not obliged to rasterise a triangle identically),
+    and it needs the pack, which is gitignored - the same bargain `make_siege_art.py --check`
+    already strikes with the licensed zips.
+
+
 
 ## Layout
 
@@ -1717,9 +1952,9 @@ compile. Do not guess — verify offline:
   copies of the four-armed-tile rule (`BoardVectorTests` runs the C# one). The per-mode checks are rolled
   into it: the **prototype modes** (one check for all of them - par searched, not finished on
   arrival, a legal move to make, plus the handful of questions only each mode's own rules can ask;
-  `ways`, `careless`, `nodes`) - which now carries **Kindlewake** (par searched, every critter reachable by some pair of
-  embers, something to join at all; `ways`, `careless`, `life`, `crossed`, `blended`, `idle`,
-  `lonely`) and **Emberforge** (par searched, the wall
+  `ways`, `careless`, `nodes`) - which now carries **Prismvale** (par searched, the field authored
+  **dark**, nothing dealt into it, no critter standing where no lantern could ever reach it;
+  `ways`, `careless`, `dealt`, `used`, `paired`, `idle`) and **Emberforge** (par searched, the wall
   authored **settled**, nothing dealt into it, no goal walled off from every beam; `ways`,
   `careless`, `life`, `chained`, `forged`, `starred`, `lonely`, `dealt`) and **Hollowmarch** and asks of a haul-road that it
   has a line to fire into, that the line is authored *settled*, that no pod wears a colour the
@@ -1730,6 +1965,10 @@ compile. Do not guess — verify offline:
   settled**, every cocoon with a flower beside it, the basket pure colour only; `ways`, `careless`, `nodes`,
   two of which are read **backwards** on that mode — invariant 20k — and from the second chapter `runners`,
   `changed`, `caught` and `ran`). `fall-vectors.json` and
+  **Thornwatch** is the one mode it does *not* search, because there is nothing to search
+  (invariant 37a): what is proved is the layout's own refusals, the arithmetic par held to
+  `SiegeTuning.Par` by being the same three lines, and the readings a validator can act on
+  (`waves`, `raiders`, `brutes`, `colours`, `wards`, `threat`, `swap`). `fall-vectors.json` and
   `bud-vectors.json` are the contracts with the shipping C# rules; the prototype modes have no vector
   file and are pinned **inline** by `ProtoLadderTests` instead, for the reason invariant 29e gives.
 - **Difficulty check:** `python Tools/verify/difficulty.py` — what each glade actually asks of a player,
@@ -1740,21 +1979,45 @@ compile. Do not guess — verify offline:
   the one loc key in this game that is *authored* rather than derived from an id (invariant 30d), so
   `loc.py` cannot see it — both gates resolve every key a chapter actually writes and error on a missing
   one, which is stricter than the naming convention it replaces.
-- **Kindlewake's art:** `Tools/make_kindle_art.py --check` proves every sprite, cast flipbook
+- **Thornwatch's art:** `Tools/make_siege_art.py --check` proves every sprite, cast flipbook
+  and explosion is what the tool writes. Its gems and its cast are **cut** from the licensed packs
+  and everything else on the board - the hill, the gateway, the rampart, the plinths, the four
+  wards and the broken one - is **drawn**, for invariant 32b's reason: the one thing a player has
+  to read in a glance is which ward is which colour and whether it is still standing. It reads the
+  zips directly and **passes when the packs are absent**, so a checkout without them still runs
+  the gate, and `--contact` lays it out to be looked at.
+- **Thornwatch's projectiles:** `Glimmer Grove ▸ Art ▸ Bake Siege Projectiles` renders the four
+  ward projectiles, their muzzle flashes and their impacts out of the bought pack's own prefabs
+  into sprite reels under `Art/Fx/Siege` (invariant 37k); `▸ Verify Siege Projectiles` re-bakes and
+  holds what is on disk to it within a tolerance, and `▸ Siege Projectile Contact Sheet` lays every
+  reel out on the hill's own colour. **This is the one art tool here with no offline gate** — no
+  Python script can rasterise a particle system — and it needs the pack, which is gitignored, so it
+  is silent on a checkout without it. Re-run `▸ Addressables ▸ Sync All Assets` after a bake: the
+  importer hook does not fire on files a tool wrote while the Editor was busy.
+- **Thornwatch legibility:** `python Tools/render_siege.py` draws the shipped level at the size a
+  phone draws it, with the real sprites, using `SiegeScreen.HostInset` and `SiegeView`'s own
+  arithmetic; `--raiders N` stands that many of the first wave on the hill, and `--no-bolts` takes
+  the exchange off it. **Look at it.** It is the only check that can see a fuel tube hidden behind
+  the field's plate, a raider whose colour does not read, or a bolt baked so loosely that it
+  crosses the hill as a sliver — every one of those a fault it caught, all past a green gate
+  (invariants 37g, 37k). It draws each reel at its **loudest** frame, because these effects dip:
+  drawn at a fixed index it caught two muzzles mid-dip and reported a bake that was fine as broken.
+- **Prismvale's art:** `Tools/make_prism_art.py --check` proves every sprite, cast flipbook
   and flare is what the tool cuts out of the licensed packs, and `--contact` lays them out to be
   looked at. It reads the zips directly and **passes when the packs are absent**, so a checkout
   without them still runs the gate. It is committed with its first drop (owed item 18's lesson,
   taken before it cost anything).
-- **Kindlewake legibility:** `python Tools/render_kindle.py` draws every shipped hollow at the
-  size a phone draws it, with the real sprites, using `KindleScreen.HostInset` and
-  `KindleView`'s own arithmetic; `--lit` plays a shortest answer first so the strands and the
-  crossings are on the board. **Look at it.** It is the only check that can see a husk that
-  reads as a hole or a crossing hidden under the two strands that made it - both faults it
-  caught in one session, both past a green gate (invariants 35g, 35h).
-- **Kindlewake board sweep:** `python Tools/kindle_sweep.py --template <name> --seeds N` deals
-  colours into a designed hollow and prints par, `ways`, `nodes`, `careless`, `life`, `crossed`,
-  `blended` and `idle` for every deal worth keeping; `--board "row,row,..."` measures one
-  hollow. This is how the ten shipped hollows were chosen (32d).
+- **Prismvale legibility:** `python Tools/render_prism.py` draws every shipped board at the
+  size a phone draws it, with the real sprites, using `PrismScreen.HostInset` and
+  `PrismView`'s own arithmetic; `--lit` plays a shortest answer first so the veins are on the
+  board. **Look at it.** It is the only check that can see a lantern that reads as a crosshair,
+  or a vein that does not read as one connected line - the first of those was caught here and by
+  nothing else, past a green gate (invariant 36g).
+- **Prismvale board sweep:** `python Tools/prism_sweep.py --template <name> --seeds N` deals
+  colours into a designed field and prints par, `ways`, `nodes`, `careless`, `dealt`, `used`,
+  `paired` and `idle` for every deal worth keeping; `--board "row,row,..."` measures one board,
+  and `--par`, `--used`, `--dealt` and `--greedy` filter. This is how the two shipped boards were
+  chosen (32d).
 - **Emberforge's art:** `Tools/make_ember_art.py --check` proves every sprite, cast flipbook
   and explosion is what the tool cuts out of the licensed packs, and `--contact` lays them out
   to be looked at. It reads the zips directly and **passes when the packs are absent**, so a
@@ -2102,8 +2365,12 @@ live in **Hard-won facts**.
 - **Modes beyond the classic glade** — Lightfall (`f01_lightfall`, `f02_glasswater`, `f03_whorlwater`),
   Budburst (`b01_thicket`, `b02_tanglewood`), **Hollowmarch** (`m01_hollowmarch`, three
   levels, invariant 33), **Emberforge** (`e01_emberforge`, ten levels, invariant 34) and
-  **Kindlewake** (`k01_kindlewake`, ten levels, invariant 35) — the last of these the classic
-  glade's goal reached by a verb the glade does not have — the
+  **Prismvale** (`p01_prismvale`, two levels, invariant 36) and **Thornwatch**
+  (`s01_thornwatch`, one level, invariant 37) — the last of these the first mode here that runs on
+  a **clock**: raiders walk down a hill at a line of coloured wards, and a match is worth only the
+  colour it was. Prismvale before it is the classic
+  glade's goal reached by the jewel board's own verb, drag-to-swap, with the match-three taken
+  out of it — the
   first board in this game built on the cascade the whole casual genre runs on, and the first
   whose allowance is drawn on the board rather than in a corner; and then the first built on the
   genre's own *verb*, where a match does not clear but fuses into something you spend.
@@ -2112,17 +2379,17 @@ live in **Hard-won facts**.
   **Groovekeeper is retired** (28), and so are four of the five prototypes that took its slot — Nectarrun,
   Ribbonfall, Seedfling and Warrenwake were withdrawn after play and their mode, chapter, level and lesson
   ids are all spent (29).
-  <br>**The Hollow does not ship and never did.** `LevelModes` registers exactly six — `GladeMode`,
-  `FallMode`, `BudMode`, `MarchMode`, `EmberMode`, `KindleMode` — there is no `HollowMode`, no `KeeperMode` and no `QuarryMode`, and
+  <br>**The Hollow does not ship and never did.** `LevelModes` registers exactly seven — `GladeMode`,
+  `FallMode`, `BudMode`, `MarchMode`, `EmberMode`, `PrismMode`, `SiegeMode` — there is no `HollowMode`, no `KeeperMode` and no `QuarryMode`, and
   `h01_emberfall` is in neither. What survives is the *level shape*
   (`HollowDto`, invariants 20c–20e), which is why the rest of this file still talks about hollows: those
   entries are design rules, not a shipping mode. This was found on 2026-09-02 by deriving the store
   listing from `manifest.json` instead of from this file — the draft claimed five modes and a hundred
   levels "across eleven chapters", and the truth was **four modes, ten chapters, one hundred levels** at
-  the time. It is now **six modes, twelve chapters, one hundred and thirteen levels** — and one of those
-  modes is short: Hollowmarch is three levels built to be played and judged, which is exactly the
-  sort of thing a store listing must not count as a finished game mode. Read the manifest, never
-  this table, when the number reaches a customer.
+  the time. It is now **seven modes, thirteen chapters, one hundred and six levels** — and three of
+  those modes are short: Hollowmarch is three levels, Prismvale two and Thornwatch one, all built
+  to be played and judged, which is exactly the sort of thing a store listing must not count as a
+  finished game mode. Read the manifest, never this table, when the number reaches a customer.
   <br>Lightfall is the only one to reach a third chapter, and what a second or third costs is
   the shape to copy: one new object (the lens, then the whorl), one lesson id, a few fields on the mode's
   own step type — and **no save schema version, no merge rule, no `progression.json` retune and no server
@@ -2164,7 +2431,9 @@ live in **Hard-won facts**.
 | ~~`q01_ironquarry`~~ | ~~quarry~~ | — | — | — | **retired** (32) — withdrawn without ever being played; its ids are spent |
 | `m01_hollowmarch` | march | 3 | 4–7 cores | none, then par + 5 (moves) | fire a core into the line, three alike go off and the line slides shut behind them — and if the closure makes three more, that goes too; then the **hauler**, which wears no colour so no run spans one and a blast beside it scraps it; then four colours, a **warden** under plating that only a **Spark** cuts in one shot, and a line ten steps from the gate. `ways` 14 → 48 → 56, `chained` 3 → 4 → 4, `forged` 2 → 3 → 3, `lanced` 1 → 2 → 2, `careless` 4 → 0 → 0, goals 3 → 5 → 8 |
 | `b02_tanglewood` | bud | 10 | 3 taps | par + 5, then + 4, then + 3 (taps) | the bolt, the sun and the graft (20m): five alike forge a bolt where you tapped, eight a sun, and a fired special sets off every special in its reach. 8x7, fifteen then sixteen shut in, tough ones 3 → 8, a bolt dealt on rung one and a sun on rung three; every shortest play on every rung fires a special |
-| `k01_kindlewake` | kindle | 10 | 3–5 strands | none, none, then par + 3 | join two embers of a colour and light burns along the line between them for good; cross two strands on a sleeping critter and it wakes to a colour neither carried. A spent ember leaves a socket that blocks light, so every pair closes lines. 6x6 → 7x7, critters 3 → 5, blends 0 → 3, `ways` 6 → 60, `crs` 0 → 6, `bln` 0 → 3, greed beaten on three of ten. The first two rungs cannot be lost (24) |
+| ~~`k01_kindlewake`~~ | ~~kindle~~ | — | — | — | **retired** (35) — withdrawn after play: the verb was not the one commissioned and the animation followed from that. Its ids are spent |
+| `s01_thornwatch` | siege | 1 | 29 matches | none — the ward line is the fail state | raiders come down the hill at four coloured wards; match a colour and that ward fuels up and opens fire, and a bolt is worth double against a raider of its own colour. Fuel leaves a ward as a bolt and no other way (37c). 8x5 field, 20 raiders in 3 waves — four, then eight, then eight **brutes** — all four colours against all four wards. Waves come on a clock and overlap (37k). An unhurried player holds it in about 35 matches with 40% of the line's health gone (37j). The one level of the mode, and it cannot be lost on moves (24) |
+| `p01_prismvale` | prism | 2 | 3–4 swaps | none, then par + 3 | drag a gem onto its neighbour and the two change places; a lantern feeds the gems of its own colour touching it, that colour runs on through every matching gem beside them, and a critter standing against the vein wakes. Nothing is ever spent, so a vein can be **broken**. 6x6, critters 2 → 3, lanterns 2 → 3, `ways` 10 → 120, `dealt` 2 → 3 of 25, `used` 2 → 3, greed beaten on the second. The first rung cannot be lost (24) |
 | `e01_emberforge` | ember | 10 | 3–5 moves | none, none, then par + 3 (par + 4 on the last two) | swap two jewels so three alike line up and they **fuse** into an ember; tap it for a cross of light down its row and column, or push two together for a star that takes the diagonals. Nothing refills. Stone, then frost, then the chain, then a pocket, then a warden, then the star. 6x6 → 8x8, goals 1 → 5, `ways` 35 → 6, `chained` 3 → 5, `forged` 3 → 7, `careless` 0 on every rung but the second. The first two rungs cannot be lost (24) |
 
 **No level authors a difficulty number except the first glade in the game, and no chapter authors a clock**
@@ -2438,29 +2707,61 @@ changes nothing until that function is redeployed.
     event yet; the first worth adding is how often a run ends with the line jammed at the gate
     rather than merely out of cores, because those are two different failures and only one of them
     is about the puzzle.
-19. **Judge Kindlewake by playing it, and read one number first.** Ten levels built the way
+19. **Judge Prismvale by playing it, which is what its two levels are for.** Built the way
     every mode since the five prototypes has been (invariant 29), so it can be taken back out for
-    the price of a chapter body and six files. Three questions in order.
-    <br>**Does the pairing read?** A strand is drawn between two embers of the *same* colour on a
-    clear row or column, so holding one lights every partner it can reach and the line to each.
-    If players tap a critter expecting something, the refusal sentence is wrong rather than the
-    rule.
-    <br>**Do they work out that light stays?** A blend critter can only be woken by two strands
-    crossing on its own square, which means drawing one, leaving it, and coming back to it later.
-    A player who reads a strand as a one-shot has not met the mode. Rungs 3 and 5 are built so
-    that the order of two strands decides the board.
-    <br>**And the number: does asking *which pair* carry a chapter without punishing greed?** Seven
-    of the ten can be cleared by always taking the pair that helps most - which is a warning, and
-    on this mode it is the warning that matters, because it is what Lightweave was withdrawn for.
-    Before the socket rule it was ten of ten (35d). If it plays as arithmetic, the cheap fix is
-    fewer embers rather than more critters: contention is what makes the pairing a decision, and
-    it is a content drop and no store review. There is deliberately no analytics event yet; the
-    first worth adding is how often a run ends `Stuck` (no pair left that helps) rather than out
-    of moves, because those are two different failures and only one of them is about the puzzle.
+    the price of a chapter body and six files, exactly as Kindlewake just was. Three questions in
+    order.
+    <br>**Does drag-to-swap read as the verb?** This is the whole reason the mode exists: the
+    commission was the glade's goal with gems instead of conduits, and the mode it replaced kept
+    the goal and invented a tapping verb nobody had asked for. A player who drags a gem in the
+    first ten seconds has met it. One who taps has not, and the fix would be a coach hand on the
+    gem beside the lantern rather than a longer tip.
+    <br>**Do they work out that a lantern feeds only its own colour?** Both boards are dealt with
+    one gem already lit beside each lantern, so the rule is *shown* rather than told. If players
+    line matching gems up in the middle of the board and wonder why nothing lights, the teaching
+    deal is not doing its job and the cheap fix is a second lit gem, which is a content drop and no
+    store review.
+    <br>**And does a vein going out read as their own mistake?** Nothing here is ever spent, so the
+    only thing a wrong swap costs is light that was already on the board. That is the mode's whole
+    fail pressure and it is the one thing that could read as the game taking something away. There
+    is deliberately no analytics event yet; the first worth adding is how often a run ends with
+    more gems dark than it started with, because that is the mistake the mode is made of.
+    <br>**Two readings are known and are worth saying before anybody plays.** `careless` is *not*
+    beaten on the first board and cannot be at par 3 (invariant 36f), which is fine on a teaching
+    rung and would not be later. And par is capped at 4 by the search cost of a swap board
+    (36b), so a longer chapter ramps on critters, lanterns and bare ground rather than on length.
     <br>Nothing about these boards was watched on a device before this was written: every offline
-    gate is green, the Editor's `Validate Content` and `Validate Art` are green, the whole suite
-    passes, the view builds over all ten hollows in the Editor, and every board has been rendered
-    and looked at.
+    gate is green, the whole suite passes, and both boards have been rendered and looked at. What
+    has **not** been done is opening them in the Editor - `Validate Content`, `Validate Art` and a
+    build of the view over the two boards are all owed, and the art folder wants
+    `Addressables ▸ Sync All Assets` because it was written while the Editor was closed (see
+    *Hard-won facts*).
+20. **Judge Thornwatch by playing it, which is what its one level is for.** Built the way every
+    mode since the five prototypes has been (invariant 29), so it can be taken back out for the
+    price of a chapter body and six files. Three questions in order.
+    <br>**Does fuelling a colour read as the verb?** Nothing on the jewel board is a goal, which
+    is the one thing a player arriving from Emberforge or Prismvale will get wrong: they will hunt
+    for the biggest match, and what matters is which ward it feeds. If they never look up at the
+    hill, the tip is wrong rather than the rule.
+    <br>**Does the last wave feel like a siege?** Eight brutes arrive together and an unhurried
+    player holds them with about half the line's health gone (37j). If the line never gets touched
+    the fail state is decoration; if it falls every time the opening level is doing a later
+    level's job. Both are fixed in the hill, which is a content edit.
+    <br>**And the number: is par 29 a line a good run can get under?** This is the only mode in
+    the game whose par is arithmetic rather than a proof (invariant 37a), so it is the only one
+    where three stars might be unreachable or free and nothing offline can say which. Watch the
+    star a real run scores. If three is free, the honest fix is a longer hill rather than a
+    tighter factor; if it is unreachable, `MatchGemsTenths` is wrong and it is one constant.
+    <br>**A fourth question was added with the projectiles** (invariant 37k): does a bolt read as
+    *that ward's*? Each of the four now fires its own thing — a fireball, a venom dart, an icicle
+    and a lightning bolt — so the answer should be yes by silhouette before it is yes by hue, and
+    the icicle is the one to watch, because it is the palest of the four and the only one whose
+    colour had to be forced rather than agreed with.
+    <br>Nothing about this level was watched on a device before this was written: every offline
+    gate is green, the whole suite passes, and the board has been rendered and looked at. There is
+    deliberately no analytics event yet; the first worth adding is how often a run ends with the
+    line *down* rather than with the hill cleared, because those are two different failures and
+    only one of them is about the puzzle.
 18. **Rewrite the cast art tool.** `make_quarry_art.py` cut the twelve cast flipbooks and five
     explosions out of the licensed packs and was never committed, so it went with the Iron Quarry.
     The art is intact and tracked; what is gone is the proof that it is what a tool would cut, so a

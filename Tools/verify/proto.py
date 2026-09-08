@@ -23,7 +23,7 @@ Read `ProtoSearch.cs` first; the names match deliberately.
 from collections import deque
 
 import ember                              # Emberforge's rules, mirrored - see ember.py
-import kindle                             # Kindlewake's rules, mirrored - see kindle.py
+import prism                              # Prismvale's rules, mirrored - see prism.py
 import march                              # Hollowmarch's rules, mirrored - see march.py
 
 # ---------------------------------------------------------------------------- the search
@@ -219,10 +219,10 @@ MODES = {
     'ember': (ember.LETTERS,
               lambda grid, block: ember.Future(ember.Board(ember.Layout(grid, 0)))),
 
-    # Kindlewake deals nothing either, for the same reason: a hollow is everything the level
-    # hands over, so its future is fixed and the search can prove it.
-    'kindle': (kindle.LETTERS,
-               lambda grid, block: kindle.Future(kindle.Board(kindle.Layout(grid, 0)))),
+    # Prismvale deals nothing either, for the same reason: the field of gems is everything the
+    # level hands over, so its future is fixed and the search can prove it.
+    'prism': (prism.LETTERS,
+              lambda grid, block: prism.Future(prism.Board(prism.Layout(grid, 0)))),
 }
 
 

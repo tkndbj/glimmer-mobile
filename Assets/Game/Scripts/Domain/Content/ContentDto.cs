@@ -355,10 +355,21 @@ namespace GlimmerGrove.Content
         // would be a mode whose future is not fixed and so cannot be searched (invariant 26).
         public ProtoDto ember;
 
-        // Kindlewake, which authors the same block and leaves `cores` empty for the same reason
-        // Emberforge does: a hollow is everything the level hands over, and a board with anything
-        // dealt into it has a future nothing can search (invariant 26).
-        public ProtoDto kindle;
+        // Prismvale, which authors the same block and leaves `cores` empty for the same reason
+        // Emberforge does: a field of gems is everything the level hands over, and a board with
+        // anything dealt into it has a future nothing can search (invariant 26).
+        //
+        // `kindle` was the field here and is a **retired block name that must never be reused**,
+        // for the duskcap's reason (invariant 5f): JsonUtility drops an unknown field without a
+        // word, so a chapter body still carrying one would index, derive a plausible glade and
+        // ship as something nobody authored. `Tools/verify/content.py` refuses it by name.
+        public ProtoDto prism;
+
+        // Thornwatch, which is the one mode here that could not author the shared block: a siege
+        // carries a ward line and a list of waves as well as a field, and a field that refills has
+        // no `spare` because it has no move allowance at all - the fail state is the ward line
+        // (invariant 22b in the unit this mode is graded in). See SiegeDto.
+        public SiegeDto siege;
 
 
         // `quarry`, `topple`, `nova`, `keeper`, `nectar`, `ribbon`, `fling`, `warren`, `orbit`
@@ -505,6 +516,68 @@ namespace GlimmerGrove.Content
     /// (invariant 5f's rule for a retired token).
     /// </para>
     /// </summary>
+    /// <summary>
+    /// Thornwatch's level: a field of gems, the colours it refills from, the ward line standing
+    /// in front of it, and the waves coming down the hill at it.
+    ///
+    /// <para>
+    /// <b>No numbers at all</b>, which is invariant 20d's rule. How much fuel a match is worth,
+    /// how hard a bolt lands, how fast a ward's fuel fades, how long a raider takes to cross the
+    /// hill and what a blow costs a ward are all <c>SiegeRules</c> — constants in code, retuned
+    /// for the whole mode at once. Par is derived from those and from what is written here, so a
+    /// typed one could only ever drift from the level it claims to describe (invariant 5).
+    /// </para>
+    /// <para>
+    /// <b>And no <c>spare</c>, deliberately.</b> Every other mode on this shape is lost by running
+    /// out of moves; this one is lost when the last ward falls, so a move allowance would be a
+    /// second fail state nobody asked for and the readout of it would count down to an ending
+    /// that never happens. What is left of that idea is the ward line itself — the mode's
+    /// allowance, drawn on the board rather than in a corner, which is the thing Hollowmarch
+    /// found and this one inherits.
+    /// </para>
+    /// </summary>
+    [Serializable]
+    public sealed class SiegeDto
+    {
+        public int width;
+        public int height;
+
+        /// <summary>
+        /// The field as it is dealt, one string per row, top first. Spaces are ignored.
+        ///
+        /// <c>r</c>, <c>g</c>, <c>b</c> and <c>y</c>, and it must be authored <b>settled</b> — no
+        /// three alike already touching, or the field would go off before anybody had moved a gem
+        /// and the count the run is graded against would have moved with it.
+        /// </summary>
+        public string[] rows;
+
+        /// <summary>
+        /// The colours the field refills from, written as letters.
+        ///
+        /// An alphabet rather than a queue: a board that refills has no fixed future whichever way
+        /// the next gem is chosen, so nothing is bought by making the stream authorable. What it
+        /// does buy is a level that can leave a colour out.
+        /// </summary>
+        public string gems;
+
+        /// <summary>The ward line, left to right, one letter each. No two the same.</summary>
+        public string wards;
+
+        /// <summary>
+        /// The waves, in the order they come. One letter per raider — lower case a creeper, upper
+        /// case a brute — so a wave's shape is visible in the file. A wave steps out when the one
+        /// before it has been destroyed.
+        /// </summary>
+        public string[] waves;
+
+        /// <summary>
+        /// Whether this block was authored. <b>Never test the block itself for null</b> —
+        /// JsonUtility instantiates a [Serializable] class field on every level in the game, so
+        /// absence has to be a value a real block cannot hold.
+        /// </summary>
+        public bool IsAuthored => width > 0 || height > 0;
+    }
+
     [Serializable]
     public sealed class ProtoDto
     {

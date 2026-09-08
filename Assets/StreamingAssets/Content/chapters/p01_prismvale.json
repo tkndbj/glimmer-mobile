@@ -1,0 +1,55 @@
+{
+ "schemaVersion": 2,
+ "id": "p01_prismvale",
+ "accent": "#54E48C",
+ "slate": "#0E1A14",
+ "backdrop": "sky_00",
+ "mapStrips": [
+  "map1_strip0",
+  "map1_strip1",
+  "map1_strip2",
+  "map1_strip3",
+  "map1_strip4",
+  "map1_strip5"
+ ],
+ "levels": [
+  {
+   "id": "p01_firstvein",
+   "mapX": 0.7,
+   "mapY": 0.055,
+   "budgetFactor": -1.0,
+   "backdrop": "sky_00",
+   "prism": {
+    "width": 6,
+    "height": 6,
+    "rows": [
+     "Rrb.r.",
+     "bg@bgg",
+     "r.rg.r",
+     "rrb.gr",
+     ".rr@rb",
+     "g.rbgG"
+    ]
+   }
+  },
+  {
+   "id": "p01_twinlight",
+   "mapX": 0.28,
+   "mapY": 0.14,
+   "backdrop": "sky_01",
+   "prism": {
+    "width": 6,
+    "height": 6,
+    "rows": [
+     "Rbrgg.",
+     "br@rgG",
+     "ggb.rr",
+     "b.gg@r",
+     "rb@grg",
+     "Brbg.g"
+    ],
+    "spare": 3
+   }
+  }
+ ]
+}

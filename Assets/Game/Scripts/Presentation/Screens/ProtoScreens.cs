@@ -240,21 +240,20 @@ namespace GlimmerGrove
     }
 
     /// <summary>
-    /// <b>Kindlewake.</b> Join two embers of the same colour and light burns between them; cross
-    /// two strands on a sleeping critter and it wakes to a colour neither of them carried.
+    /// <b>Prismvale.</b> Drag a gem onto its neighbour; line the lantern's own colour up all the
+    /// way to a sleeping critter, and the vein between them lights.
     ///
     /// <para>
-    /// <b>It inherits the whole run and the whole band.</b> Everything about being a run — the
-    /// heart, the stake, the record, the chests, the streak, the continue, what a restart costs,
-    /// which latch holds the board while a lesson is up — comes from <see cref="ProtoScreen"/>,
-    /// and everything about a level that talks comes from <see cref="StoryScreen"/>. What is left
-    /// here is four answers, which is what invariant 20b asks of a mode: bring your own board,
-    /// share the run.
+    /// <b>It inherits the whole run.</b> Everything about being a run — the heart, the stake, the
+    /// record, the chests, the streak, the continue, what a restart costs, which latch holds the
+    /// board while a lesson is up — comes from <see cref="ProtoScreen"/>. What is left here is
+    /// four answers, which is what invariant 20b asks of a mode: bring your own board, share the
+    /// run.
     /// </para>
     /// </summary>
-    public sealed class KindleScreen : ProtoScreen
+    public sealed class PrismScreen : ProtoScreen
     {
-        KindleView _hollow;
+        PrismView _field;
 
         /// <summary>
         /// <b>It takes <see cref="ProtoScreen"/> rather than <see cref="StoryScreen"/>, and that
@@ -267,27 +266,133 @@ namespace GlimmerGrove
         /// </summary>
         protected override ProtoView Attach(GameObject host)
         {
-            _hollow = host.AddComponent<KindleView>();
-            return _hollow;
+            _field = host.AddComponent<PrismView>();
+            return _field;
         }
 
         protected override string GoalCaption => "mode.cap.asleep";
 
         /// <summary>
-        /// The one refusal the hollow cannot show for itself: light comes out of <em>embers</em>,
-        /// so a tap on the critter is the first thing a new player does and the one thing the
-        /// board cannot answer by moving. Everything else answers on the board — a held ember
-        /// lights its partners, and a tap on bare moss puts it down.
+        /// The one refusal the board cannot show for itself: a lantern and a critter are
+        /// <em>fixed</em>, so the first thing a new player does is try to drag one of them.
+        /// Everything else answers on the board — two gems of a colour lean into each other and
+        /// come back, which is the genre's own answer and needs no sentence.
         /// </summary>
-        protected override string RefusalKey => "mode.kindle.notcritter";
+        protected override string RefusalKey => "mode.prism.nodrag";
 
-        protected override Mechanic Verb => Mechanic.KindleJoin;
-        protected override Mechanic Friend => Mechanic.KindleCross;
+        protected override Mechanic Verb => Mechanic.PrismDrag;
+        protected override Mechanic Friend => Mechanic.PrismVein;
 
         /// <summary>
-        /// The board sits low and wide, because this mode has no band under it and no readout
-        /// of its own — everything it counts is drawn on the hollow itself.
+        /// The board sits low and wide, because this mode has no band under it and no readout of
+        /// its own — everything it counts is drawn on the field itself.
         /// </summary>
         protected override Vector4 HostInset => new Vector4(14f, 250f, 14f, 300f);
+    }
+
+    /// <summary>
+    /// <b>Thornwatch.</b> The raiders are coming down the hill. Match a colour and the ward of
+    /// that colour fuels up and looses bolts; let them through and they break the line.
+    ///
+    /// <para>
+    /// <b>It inherits the whole run.</b> Everything about being a run - the heart, the stake, the
+    /// record, the chests, the streak, what a restart costs, which latch holds the board while a
+    /// lesson is up - comes from <see cref="ProtoScreen"/>, which is invariant 20b's whole demand
+    /// of a mode: bring your own board, share the run. What is left here is four answers and one
+    /// override, and the override is the readouts.
+    /// </para>
+    /// <para>
+    /// <b>It takes <see cref="ProtoScreen"/> rather than <see cref="StoryScreen"/>, and that is a
+    /// decision rather than an omission.</b> The band is a seam and it is paid for, but its cast
+    /// are the raiders of the smelter and the haul-road; a chapter that wants a voice later can
+    /// change this one line and author a `story` block, because nothing else here would move.
+    /// </para>
+    /// </summary>
+    public sealed class SiegeScreen : ProtoScreen
+    {
+        SiegeView _siege;
+
+        protected override ProtoView Attach(GameObject host)
+        {
+            _siege = host.AddComponent<SiegeView>();
+            return _siege;
+        }
+
+        protected override string GoalCaption => "mode.cap.raid";
+
+        /// <summary>
+        /// Whether this run may advance - and it is <em>not</em> whether the board is taking
+        /// input, which is what every other mode on this shape answers.
+        ///
+        /// <para>
+        /// A cascade latches the board so a second swap cannot land while the first is still
+        /// falling, and it is half a second long. Answering the shared question would therefore
+        /// stop the hill on every match, which both freezes the one thing this mode is racing and
+        /// hands the player a way to hold time still by swapping. It also keeps
+        /// <c>RunScreen.Played</c> counting through a cascade, which is right: a siege is running
+        /// whether or not a finger would do anything.
+        /// </para>
+        /// </summary>
+        protected internal override bool Runnable => _siege != null && _siege.Advancing;
+
+        /// <summary>
+        /// The one refusal the board cannot show for itself: a gem is <em>dragged</em>, and
+        /// nothing here is tapped at all. Everything else answers on the board - a swap that lines
+        /// nothing up leans and comes back, which is the genre's own answer and needs no sentence.
+        /// </summary>
+        protected override string RefusalKey => "mode.siege.nodrag";
+
+        protected override Mechanic Verb => Mechanic.SiegeFuel;
+        protected override Mechanic Friend => Mechanic.SiegeLine;
+
+        /// <summary>
+        /// Three numbers, and the middle one is not the one every other mode on this shape shows.
+        ///
+        /// <para>
+        /// <b>The allowance is replaced by the ward line</b>, because this mode has no move
+        /// allowance and the shared readout would print "free" over the one screen where something
+        /// really is running out. What is running out is the line, and it is coloured for the same
+        /// reason the allowance is elsewhere: it is the only one of the three that can end the run.
+        /// </para>
+        /// <para>
+        /// The line is drawn on the board as well, with a health pip per blow, which is
+        /// Hollowmarch's rule kept (invariant 33a) - the number in the corner and the picture on
+        /// the board are the same number, so the two can never disagree.
+        /// </para>
+        /// </summary>
+        protected override void Readouts(List<Readout> into)
+        {
+            var run = _siege != null ? _siege.Run : null;
+            var board = _siege != null ? _siege.Siege : null;
+
+            into.Add(new Readout(Loc.Get(GoalCaption), run == null ? "0" : run.Left.ToString()));
+
+            if (board == null)
+            {
+                into.Add(new Readout(Loc.Get("mode.cap.wards"), "0"));
+            }
+            else
+            {
+                int standing = board.WardsStanding;
+
+                var tint = standing <= 1 ? Pal.Ember
+                         : standing <= 2 ? Pal.Gold
+                         : Pal.Cream;
+
+                into.Add(new Readout(Loc.Get("mode.cap.wards"),
+                                     standing + "/" + board.Wards.Count, tint));
+            }
+
+            into.Add(new Readout(Loc.Get("mode.cap.matches"),
+                                 run == null ? "0" : run.Spent.ToString()));
+        }
+
+        /// <summary>
+        /// Room at the foot for nothing at all: this mode counts one thing the header does not
+        /// already carry, and it is drawn on the ward line itself. The board is tall because it
+        /// holds three bands - a hill, a line and a field - and the hill is the half a player
+        /// spends the run looking at.
+        /// </summary>
+        protected override Vector4 HostInset => new Vector4(10f, 190f, 10f, 300f);
     }
 }
