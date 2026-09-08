@@ -245,8 +245,8 @@ namespace GlimmerGrove.Tests
             }, 1);
             builder.Add(new ManifestChapterDto
             {
-                id = "b01_thicket", order = 30, version = 1, mode = "bud",
-                levels = new[] { "thicket_a" },
+                id = "p01_prismvale", order = 30, version = 1, mode = "prism",
+                levels = new[] { "prismvale_a" },
             }, 1);
             return builder.Build();
         }
@@ -403,13 +403,13 @@ namespace GlimmerGrove.Tests
         [Test]
         public void AModeIsNeverGatedOnAnotherModesStars()
         {
-            // Invariant 20a. The thicket chapter is the first of its own mode, so it is open to
+            // Invariant 20a. The Prismvale chapter is the first of its own mode, so it is open to
             // a player who has not touched the ordinary game at all.
             var index = TwoChapters();
             Holding();
 
-            Assert.IsTrue(LevelUnlock.IsChapterUnlocked(index, ChapterId.Parse("b01_thicket")));
-            Assert.IsTrue(LevelUnlock.IsUnlocked(index, LevelId.Parse("thicket_a")));
+            Assert.IsTrue(LevelUnlock.IsChapterUnlocked(index, ChapterId.Parse("p01_prismvale")));
+            Assert.IsTrue(LevelUnlock.IsUnlocked(index, LevelId.Parse("prismvale_a")));
         }
 
         [Test]

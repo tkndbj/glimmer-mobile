@@ -7,7 +7,7 @@
    "id": "c01_shallows",
    "version": 6,
    "order": 10,
-   "disabled": false,
+   "disabled": true,
    "minAppVersion": 0,
    "levels": [
     "c01_first_light",
@@ -26,7 +26,7 @@
    "id": "c02_millvale",
    "version": 4,
    "order": 20,
-   "disabled": false,
+   "disabled": true,
    "minAppVersion": 0,
    "levels": [
     "c02_two_ways_over",
@@ -45,7 +45,7 @@
    "id": "c03_amberwood",
    "version": 1,
    "order": 30,
-   "disabled": false,
+   "disabled": true,
    "minAppVersion": 0,
    "levels": [
     "c03_amberlight",
@@ -64,7 +64,7 @@
    "id": "c04_nightbriar",
    "version": 1,
    "order": 40,
-   "disabled": false,
+   "disabled": true,
    "minAppVersion": 0,
    "levels": [
     "c04_thornlight",
@@ -83,7 +83,7 @@
    "id": "f01_lightfall",
    "version": 2,
    "order": 50,
-   "disabled": false,
+   "disabled": true,
    "minAppVersion": 0,
    "mode": "fall",
    "levels": [
@@ -100,30 +100,10 @@
    ]
   },
   {
-   "id": "b01_thicket",
-   "version": 3,
-   "order": 70,
-   "disabled": false,
-   "minAppVersion": 0,
-   "mode": "bud",
-   "levels": [
-    "b01_firstburst",
-    "b01_catchalight",
-    "b01_twiceknocked",
-    "b01_sunspill",
-    "b01_dewfall",
-    "b01_widewild",
-    "b01_honeylight",
-    "b01_wildwaking",
-    "b01_everbloom",
-    "b01_thicketheart"
-   ]
-  },
-  {
    "id": "f02_glasswater",
    "version": 3,
    "order": 80,
-   "disabled": false,
+   "disabled": true,
    "minAppVersion": 0,
    "mode": "fall",
    "levels": [
@@ -143,7 +123,7 @@
    "id": "f03_whorlwater",
    "version": 3,
    "order": 90,
-   "disabled": false,
+   "disabled": true,
    "minAppVersion": 0,
    "mode": "fall",
    "levels": [
@@ -157,59 +137,6 @@
     "f03_the_deep_draw",
     "f03_every_light",
     "f03_whorlwater"
-   ]
-  },
-  {
-   "id": "b02_tanglewood",
-   "version": 4,
-   "order": 100,
-   "disabled": false,
-   "minAppVersion": 0,
-   "mode": "bud",
-   "levels": [
-    "b02_firstbolt",
-    "b02_makefive",
-    "b02_sunspark",
-    "b02_crossfire",
-    "b02_stormheart",
-    "b02_sixfold",
-    "b02_thundering",
-    "b02_sunwell",
-    "b02_wildstorm",
-    "b02_stormcrown"
-   ]
-  },
-  {
-   "id": "m01_hollowmarch",
-   "version": 1,
-   "order": 110,
-   "disabled": false,
-   "minAppVersion": 0,
-   "mode": "march",
-   "levels": [
-    "m01_firstcore",
-    "m01_haulroad",
-    "m01_thegate"
-   ]
-  },
-  {
-   "id": "e01_emberforge",
-   "version": 1,
-   "order": 120,
-   "disabled": false,
-   "minAppVersion": 0,
-   "mode": "ember",
-   "levels": [
-    "e01_firstember",
-    "e01_twinlocks",
-    "e01_ironribs",
-    "e01_frostvein",
-    "e01_chainfire",
-    "e01_deepcell",
-    "e01_ironward",
-    "e01_twinstars",
-    "e01_slaghold",
-    "e01_emberheart"
    ]
   },
   {
@@ -242,7 +169,7 @@
    "icon": "bloom",
    "startUnix": 1786320000,
    "endUnix": 1794096000,
-   "disabled": false,
+   "disabled": true,
    "levels": [
     "c01_first_light",
     "c01_twin_streams",

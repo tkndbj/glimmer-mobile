@@ -44,11 +44,24 @@ namespace GlimmerGrove.Tests
         }
 
         [Test]
-        public void TheClassicModeIsFirstAndStaysFirst()
+        public void TheFrontDoorIsThornwatchAndOnlyMovesDeliberately()
         {
-            // The switcher offers them in this order, and a player reaches for the first entry
-            // without looking. A mode inserted ahead of the glade would move it under them.
-            Assert.AreEqual(GameMode.Glade, LevelModes.All[0].Mode);
+            // Index nought is what the switcher offers first and what a map with nothing
+            // remembered opens on (CatalogIndex.DefaultMode), so it is the mode a new player
+            // meets before choosing anything. It was the glade while the glade was that mode;
+            // the glade and Lightfall are hidden now (invariant 38). The case exists so that
+            // moving it is a deliberate act with a failing test in front of it, rather than
+            // something a reordered initialiser does under a thumb.
+            Assert.AreEqual(GameMode.Siege, LevelModes.All[0].Mode);
+        }
+
+        [Test]
+        public void TheParsingDefaultIsStillTheGladeAndAlwaysWillBe()
+        {
+            // A different question from the one above, and the two were checked together for as
+            // long as they had the same answer. A chapter with no `mode` field is a glade for
+            // ever, which is what lets every chapter authored before modes existed keep working
+            // with its file untouched. Nothing about which mode the game leads with may move it.
             Assert.AreEqual(GameMode.Glade, GameMode.Default);
         }
 
@@ -270,43 +283,6 @@ namespace GlimmerGrove.Tests
                     rows = new[] { "......", "......", "......", "......", "......", "YY...." },
                     motes = "BGR",
                 };
-            else if (mode == GameMode.March)
-                dto.march = new ProtoDto
-                {
-                    // The smallest haul-road that is still one: a gate, four rail cells and a
-                    // launcher, with a pair of caged reds standing on it. One red core makes
-                    // three and frees both. Par 1.
-                    //
-                    // Small on purpose: this case is about the registry reading its own block,
-                    // not about a board being interesting - but it does have to be *solvable*,
-                    // because this mode searches for par and an unwinnable sample spends the
-                    // whole node budget proving nothing and then logs the refusal the build gate
-                    // exists to raise. And it has to carry a `cores`, for the same reason the
-                    // well one over has to carry `motes`: a mode that cannot read its own level
-                    // is a mode whose chapter ships as a skipped one.
-                    width = 3,
-                    height = 3,
-                    rows = new[] { "Zrr", "..+", "..A" },
-                    cores = "R",
-                };
-            else if (mode == GameMode.Ember)
-                dto.ember = new ProtoDto
-                {
-                    // The smallest wall that is still one: a cage bricked into sixteen shards,
-                    // with one swap that lines three up on the cage's own column and one tap on
-                    // what they fuse into. Par 2.
-                    //
-                    // Small on purpose: this case is about the registry reading its own block,
-                    // not about a board being interesting - but it does have to be *solvable*,
-                    // because this mode searches for par and an unwinnable sample spends the
-                    // whole node budget proving nothing and then logs the refusal the build gate
-                    // exists to raise. It carries no `cores`, and that is the point of it: a
-                    // wall is everything the level hands over, and the mode's reader refuses one
-                    // that deals anything at all.
-                    width = 4,
-                    height = 4,
-                    rows = new[] { "brgb", "grgr", "rbCb", "bggr" },
-                };
             else if (mode == GameMode.Prism)
                 dto.prism = new ProtoDto
                 {
@@ -343,27 +319,6 @@ namespace GlimmerGrove.Tests
                     gems = "rgby",
                     wards = "rg",
                     waves = new[] { "rg" },
-                };
-            else if (mode == GameMode.Bud)
-                dto.bud = new BudDto
-                {
-                    // A grove authors its ground and what it deals, because par is searched from
-                    // the two. Small on purpose: this case is about the registry reading its own
-                    // block, not about a board being interesting.
-                    //
-                    // The basket used to be missing here and this fixture was the only thing in
-                    // the repository that noticed — the mode gained it after this sample was
-                    // written, exactly as the well one over did, and a mode that cannot read its
-                    // own level is a mode whose chapter would ship as a skipped one.
-                    // It also has to be *solvable*, which a grid and a basket alone are not:
-                    // this mode searches for par, so an unwinnable sample spends the whole node
-                    // budget proving nothing and then logs the refusal the build gate exists to
-                    // raise. One tap here — green into the red — makes three touching yellows,
-                    // which burst and crack the cocoon beside them. Par 1.
-                    width = 4,
-                    height = 4,
-                    rows = new[] { "....", ".RY.", ".Yo.", "...." },
-                    colours = "GRB",
                 };
             else
                 Assert.Fail($"ModeRegistryTests has no sample level for '{mode}'. A mode was "

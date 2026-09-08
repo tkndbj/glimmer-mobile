@@ -111,12 +111,12 @@ namespace GlimmerGrove.Tests
             }, 1);
             builder.Add(new ManifestChapterDto
             {
-                id = "b01_thicket", order = 30, version = 1, mode = "bud",
+                id = "p01_prismvale", order = 30, version = 1, mode = "prism",
                 levels = new[] { "w1", "w2", "w3", "w4" },
             }, 1);
             builder.Add(new ManifestChapterDto
             {
-                id = "b02_grove", order = 40, version = 1, mode = "bud",
+                id = "p02_valeheart", order = 40, version = 1, mode = "prism",
                 levels = new[] { "w5", "w6" },
             }, 1);
             return builder.Build();
@@ -227,9 +227,9 @@ namespace GlimmerGrove.Tests
 
             Assert.AreEqual(3, HeartStake.FreeLevelsIn(index, ChapterId.Parse("c01_one")));
             Assert.AreEqual(0, HeartStake.FreeLevelsIn(index, ChapterId.Parse("c02_two")));
-            Assert.AreEqual(3, HeartStake.FreeLevelsIn(index, ChapterId.Parse("b01_thicket")),
+            Assert.AreEqual(3, HeartStake.FreeLevelsIn(index, ChapterId.Parse("p01_prismvale")),
                             "a mode's own first chapter, not the catalog's");
-            Assert.AreEqual(0, HeartStake.FreeLevelsIn(index, ChapterId.Parse("b02_grove")));
+            Assert.AreEqual(0, HeartStake.FreeLevelsIn(index, ChapterId.Parse("p02_valeheart")));
         }
 
         [Test]
@@ -241,12 +241,12 @@ namespace GlimmerGrove.Tests
             var index = Catalog();
 
             Assert.AreEqual(4, HeartStake.FreeLevelsIn(index, ChapterId.Parse("c01_one")));
-            Assert.AreEqual(4, HeartStake.FreeLevelsIn(index, ChapterId.Parse("b01_thicket")),
+            Assert.AreEqual(4, HeartStake.FreeLevelsIn(index, ChapterId.Parse("p01_prismvale")),
                             "exactly the whole of a four-level chapter");
 
             Grace(HeartLimits.MaxGraceLevels);
             Assert.AreEqual(5, HeartStake.FreeLevelsIn(index, ChapterId.Parse("c01_one")));
-            Assert.AreEqual(4, HeartStake.FreeLevelsIn(index, ChapterId.Parse("b01_thicket")));
+            Assert.AreEqual(4, HeartStake.FreeLevelsIn(index, ChapterId.Parse("p01_prismvale")));
         }
 
         [Test]

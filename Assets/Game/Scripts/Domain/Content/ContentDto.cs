@@ -341,28 +341,19 @@ namespace GlimmerGrove.Content
         // Which one it is decides how the level is played - see LevelModes. Adding a mode is a
         // field here plus a LevelMode subclass, and nothing else in the game changes.
         public FallDto fall;
-        public BudDto bud;
 
-        // Hollowmarch, which authors the shared prototype block - a grid of rows, a deal and a
-        // slack. The name *is* the claim (LevelMode.Claims), rather than one field plus a
-        // "which mode" string, so a level carrying two blocks is a level the mapper reports on
-        // rather than one it quietly reads twice. What the mode adds is not in this block at
-        // all - see `story` below.
-        public ProtoDto march;
-
-        // Emberforge, which authors the same block and leaves its `cores` field empty - the
-        // wall is everything the level hands over, and a mode that dealt anything into it
-        // would be a mode whose future is not fixed and so cannot be searched (invariant 26).
-        public ProtoDto ember;
-
-        // Prismvale, which authors the same block and leaves `cores` empty for the same reason
-        // Emberforge does: a field of gems is everything the level hands over, and a board with
-        // anything dealt into it has a future nothing can search (invariant 26).
+        // Prismvale, which authors the shared prototype block - a grid of rows, a deal and a
+        // slack - and leaves `cores` empty: a field of gems is everything the level hands over,
+        // and a board with anything dealt into it has a future nothing can search
+        // (invariant 26). The name *is* the claim (LevelMode.Claims), rather than one field
+        // plus a "which mode" string, so a level carrying two blocks is a level the mapper
+        // reports on rather than one it quietly reads twice.
         //
-        // `kindle` was the field here and is a **retired block name that must never be reused**,
-        // for the duskcap's reason (invariant 5f): JsonUtility drops an unknown field without a
-        // word, so a chapter body still carrying one would index, derive a plausible glade and
-        // ship as something nobody authored. `Tools/verify/content.py` refuses it by name.
+        // `kindle`, `bud`, `march` and `ember` were fields here and are **retired block names
+        // that must never be reused**, for the duskcap's reason (invariant 5f): JsonUtility
+        // drops an unknown field without a word, so a chapter body still carrying one would
+        // index, derive a plausible glade and ship as something nobody authored.
+        // `Tools/verify/content.py` refuses all four by name.
         public ProtoDto prism;
 
         // Thornwatch, which is the one mode here that could not author the shared block: a siege
@@ -600,9 +591,10 @@ namespace GlimmerGrove.Content
         ///
         /// <para>
         /// The third of the three things this block has always claimed to carry — a grid, a deal
-        /// and a slack — and the first mode to want one. Hollowmarch writes its magazine here in
-        /// <c>R</c>, <c>G</c>, <c>B</c> and <c>Y</c>; it repeats, so one lap is enough, exactly as
-        /// <see cref="BudDto.colours"/> and <see cref="FallDto.motes"/> do.
+        /// and a slack. No mode on this block wants one today: the retired Hollowmarch wrote its
+        /// magazine here, and Prismvale leaves it empty, because a board with anything dealt into
+        /// it has a future nothing can search. A deal repeats, so one lap is enough, exactly as
+        /// <see cref="FallDto.motes"/> does.
         /// </para>
         /// <para>
         /// <b>Ordered and repeating rather than random</b>, which is not a stylistic choice: a
@@ -619,111 +611,6 @@ namespace GlimmerGrove.Content
         /// A count rather than a factor, for <c>FallDto.spare</c>'s reason: a wrong move costs
         /// about the same wherever it happens, while a fraction of par gives a short board almost
         /// no room at all. See <c>LevelTuning.Slack</c>.
-        /// </summary>
-        public int spare;
-
-        /// <summary>
-        /// Whether this block was authored. <b>Never test the block itself for null</b> —
-        /// JsonUtility instantiates a [Serializable] class field on every level in the game, so
-        /// absence has to be a value a real block cannot hold.
-        /// </summary>
-        public bool IsAuthored => width > 0 || height > 0;
-    }
-
-    /// <summary>
-    /// Budburst's grove: the flowers standing in it and the colours it is dealt.
-    ///
-    /// <para>
-    /// <b>No seed and no difficulty number.</b> Par is the fewest taps that free every critter,
-    /// found by search (<c>BudSolver</c>), and both star lines and the tap budget derive from it.
-    /// </para>
-    /// </summary>
-    [Serializable]
-    public sealed class BudDto
-    {
-        public int width;
-        public int height;
-
-        /// <summary>
-        /// The grove, one row per line and one letter per column: <c>R</c>/<c>G</c>/<c>B</c> a
-        /// flower of that pure colour, <c>Y</c>/<c>M</c>/<c>C</c>/<c>W</c> one already wearing a
-        /// blend, <c>o</c> a cocoon with a critter in it, <c>O</c> one that takes two cracks,
-        /// <c>#</c> old wood, which no burst crosses, and <c>.</c> bare ground.
-        ///
-        /// A grove must be authored <em>settled</em> — no bunch of three alike already touching —
-        /// or it would go off before anybody had touched it.
-        /// </summary>
-        public string[] rows;
-
-        /// <summary>
-        /// The ordered basket, written in <c>R</c>, <c>G</c> and <c>B</c>. It repeats, so one lap
-        /// is enough.
-        ///
-        /// <b>Pure colour only.</b> Every blend on the board is one the player made by mixing,
-        /// which is what keeps the basket three symbols wide however rich the grove gets.
-        /// </summary>
-        public string colours;
-
-        /// <summary>
-        /// The ordered strip new flowers grow from, written in <c>R</c>, <c>G</c> and <c>B</c>.
-        /// It repeats, exactly as <see cref="colours"/> does.
-        ///
-        /// <para>
-        /// <b>Its presence is what makes a grove a growing one.</b> A grove with a strip never
-        /// thins out: what bursts leaves a hole, everything above slides down into it, and new
-        /// flowers grow in along the top. That is the whole reason cascades compound here rather
-        /// than getting rarer as the board empties, and it is why a growing grove authors no bare
-        /// ground and no old wood — every cell is filled and everything falls.
-        /// </para>
-        /// <para>
-        /// Absent leaves the grove as it was: a fixed board that only ever loses flowers. Both
-        /// shapes parse and both are proved, because the first chapter was authored one way
-        /// before it was authored the other and a level format that cannot read what it shipped
-        /// last month is a format nobody can roll back.
-        /// </para>
-        /// </summary>
-        public string regrow;
-
-        /// <summary>
-        /// Whether two neighbouring flowers may be dragged to trade places. A graft must make a
-        /// bunch or it snaps back and costs nothing; one that does costs a tap and keeps the
-        /// colour in hand.
-        /// </summary>
-        public bool grafts;
-
-        /// <summary>
-        /// Whether a bunch of five leaves a bolt and a bunch of eight a sun on this grove.
-        /// Absent is false, which is what the whole first chapter is; a grove dealing a special
-        /// forges whatever this says.
-        /// </summary>
-        public bool forges;
-
-        /// <summary>
-        /// Specials the grove deals already forged, as a second grid over the first: <c>|</c> a
-        /// bolt, <c>*</c> a sun, <c>.</c> an ordinary flower. Absent on almost every grove — a
-        /// special is normally something the player forges by making a bunch of five or eight,
-        /// and a grove deals one only to teach what firing it does.
-        /// </summary>
-        public string[] specials;
-
-        /// <summary>
-        /// <b>Retired, all four.</b> The runner (a vine joining two squares), the windmill
-        /// (<c>winds</c>) and the firefly (<c>firefly</c>) were the second chapter's first
-        /// objects and were withdrawn after play; puffballs and hives went with them. Kept only
-        /// so validation can name a stale one rather than JsonUtility silently discarding it —
-        /// the same tripwire <see cref="FallDto.seed"/> is. A body carrying any is content
-        /// written for a build that no longer exists.
-        /// </summary>
-        public string[] runners;
-        public string winds;
-        public string firefly;
-
-        /// <summary>
-        /// Wasted taps this grove forgives above par. Absent takes <c>BudRules.DefaultSpare</c>.
-        ///
-        /// A count rather than a factor, for <see cref="ProtoDto.spare"/>'s reason: a wasted tap
-        /// costs about the same wherever it happens — one colour spent and whatever small chain it
-        /// set off — while a fraction of par gives a short grove almost no room at all.
         /// </summary>
         public int spare;
 

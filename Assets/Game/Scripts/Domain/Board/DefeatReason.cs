@@ -84,14 +84,16 @@ namespace GlimmerGrove
         Overgrown = 7,
 
         /// <summary>
-        /// A thicket ran out of taps with a critter still shut in. A shortage, so it is always
-        /// worth a continue: more taps is exactly what it is short of.
+        /// <b>Retired.</b> A Budburst thicket ran out of taps with a critter still shut in. The
+        /// mode is gone; the member stays because the ordinal reaches analytics on every run that
+        /// mode ever recorded, so re-pointing it would silently re-label that history. Retired in
+        /// place, exactly as <see cref="OutOfTime"/> and <see cref="OutOfTiles"/> are.
         /// </summary>
         OutOfTaps = 8,
 
         /// <summary>
-        /// A thicket with no bud left to tap. Nothing here ever grows one back, so no number of
-        /// taps helps — the mirror of a well flooding and a grove overgrowing.
+        /// <b>Retired.</b> A Budburst thicket with no bud left to tap. Kept for the reason
+        /// <see cref="OutOfTaps"/> is.
         /// </summary>
         Barren = 9,
 

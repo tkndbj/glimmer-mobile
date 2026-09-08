@@ -34,36 +34,18 @@ namespace GlimmerGrove.AssetPipeline
         public static string Backdrop(string key) => BackdropRoot + key;
 
         /// <summary>
-        /// One of Hollowmarch's sprites — a road tile, a pod, one of the cast as a folder of
-        /// frames — and one of its explosions.
-        ///
-        /// Here rather than spelt out at the call sites, for invariant 7's reason: a path built
-        /// by hand in two places is two paths, and one of them is wrong the day the folder moves.
-        /// The folder has now moved twice — Nova Raid was withdrawn and the Iron Quarry
-        /// inherited its cast, then the quarry was withdrawn and Hollowmarch inherited the same
-        /// cast again — and both times it cost one line, which is the whole argument for this
-        /// being a function rather than a string spelt out wherever art is asked for.
-        /// </summary>
-        public static string MarchArt(string key) => ArtRoot + "March/" + key;
-        public static string MarchFx(string key) => ArtRoot + "Fx/March/" + key;
-
-        /// <summary>Emberforge's wall: its shards, its fittings and its cast.</summary>
-        public static string EmberArt(string key) => ArtRoot + "Ember/" + key;
-
-        /// <summary>Emberforge's explosions, which live under Fx rather than beside the wall.</summary>
-        public static string EmberFx(string key) => ArtRoot + "Fx/Ember/" + key;
-
-        /// <summary>
         /// Prismvale's field: its gems, its lanterns, its sleeping critters and its cast.
         ///
         /// <para>
-        /// <b>Its own folder rather than Emberforge's</b>, though the two are cut from the same
-        /// licensed packs and could have shared every address. Sharing is not free: an address two
-        /// chapters ask for belongs to neither (<c>AddressableAddresses.ChapterOwnership</c>), so
-        /// it would move into the global group and Emberforge's wall would go from
-        /// chapter-scoped to resident for the whole session on every device (invariant 7b). It
-        /// would also weld the two modes together, and this project withdraws modes often enough
-        /// that being able to delete one without touching another is worth a folder.
+        /// <b>Its own folder rather than a shared one</b>, though every mode's cast is cut from
+        /// the same licensed packs and they could have shared every address. Sharing is not free:
+        /// an address two chapters ask for belongs to neither
+        /// (<c>AddressableAddresses.ChapterOwnership</c>), so it would move into the global group
+        /// and each mode's board art would go from chapter-scoped to resident for the whole
+        /// session on every device (invariant 7b). It would also weld the modes together, and
+        /// this project withdraws modes often enough that being able to delete one without
+        /// touching another is worth a folder — which is exactly what deleting Budburst,
+        /// Hollowmarch and Emberforge cost.
         /// </para>
         /// </summary>
         public static string PrismArt(string key) => ArtRoot + "Prism/" + key;
@@ -211,13 +193,13 @@ namespace GlimmerGrove.AssetPipeline
 
             list.Add(AssetRequest.SpriteSet($"{ArtRoot}Fx/Victory"));
 
-            // **Budburst asks for no explosion art at all, and that is the third answer to
-            // it.** Two cuts from a licensed VFX pack were shipped and thrown away — the first
-            // took the pack's shader utility maps by mistake, the second was a correct cut of a
-            // smoke plume and still read as dust on a puzzle grid. The whole set is generated
-            // now (`Art.Flash`, `Wave`, `Glint`, `Bolt`), so there is nothing here to preload,
-            // nothing to address, nothing in the bundle and no frame where an Image is a white
-            // rectangle because the art had not arrived. See the explosions block in `Art`.
+            // **The retired Budburst asked for no explosion art at all, and that is the third
+            // answer to it.** Two cuts from a licensed VFX pack were shipped and thrown away —
+            // the first took the pack's shader utility maps by mistake, the second was a correct
+            // cut of a smoke plume and still read as dust on a puzzle grid. The whole set is
+            // generated (`Art.Flash`, `Wave`, `Glint`, `Bolt`), so there is nothing here to
+            // preload, nothing to address, nothing in the bundle and no frame where an Image is a
+            // white rectangle because the art had not arrived. See the explosions block in `Art`.
             list.Add(AssetRequest.SpriteSet($"{UiRoot}Coin"));
 
             // The streak flame. Global rather than scoped for the reason the coin is: it is

@@ -12,9 +12,25 @@ namespace GlimmerGrove.Content
     /// and nothing else in the game has to be edited or even recompiled against a new case.
     /// </para>
     /// <para>
-    /// The classic mode is first and stays first: it is where a new player is, and a switcher
-    /// that reorders itself as modes are added would move the entry somebody reaches for without
-    /// looking. Order after that is the order they shipped.
+    /// <b>Thornwatch is first, and first is a decision rather than an accident of when things
+    /// shipped.</b> This order is what the switcher offers and what a map with nothing remembered
+    /// opens on (<see cref="CatalogIndex.DefaultMode"/>), so index nought is the game's front
+    /// door — the mode a new player meets before they have chosen anything. It was the classic
+    /// glade for as long as the classic glade was that mode; the glade and Lightfall are hidden
+    /// now (invariant 38) and Thornwatch is what the game leads with, so it leads here.
+    /// </para>
+    /// <para>
+    /// <b>What has not changed is that the order only moves deliberately.</b> A switcher that
+    /// reordered itself as modes were added would move the entry somebody reaches for without
+    /// looking, which is why this is a written list and not a sort. Everything after the front
+    /// door is still the order they shipped.
+    /// </para>
+    /// <para>
+    /// Note what this is <em>not</em>: <see cref="GameMode.Default"/> is untouched and is still
+    /// the glade. That constant answers a different question — a chapter with no <c>mode</c>
+    /// field is a glade, for ever, so every chapter authored before modes existed keeps working
+    /// with its file untouched. Front door and parsing default were the same answer for a long
+    /// time and are two questions.
     /// </para>
     /// <para>
     /// A chapter naming a mode this build has never heard of is skipped whole and reported to
@@ -27,13 +43,10 @@ namespace GlimmerGrove.Content
     {
         static readonly LevelMode[] _all =
         {
+            new SiegeMode(),
+            new PrismMode(),
             new GladeMode(),
             new FallMode(),
-            new BudMode(),
-            new MarchMode(),
-            new EmberMode(),
-            new PrismMode(),
-            new SiegeMode(),
         };
 
         public static IReadOnlyList<LevelMode> All => _all;

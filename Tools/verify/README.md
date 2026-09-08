@@ -24,12 +24,14 @@ may be a float**. Every mode shipping now authors its board in the file and sear
 integers, and a mode that ever generates one again needs that diff back before it ships a
 single board.
 
-`content.py` is where the three non-glade modes are proved, because all three author their
-whole level in the file: `fall.py`, `keeper.py` and `bud.py` are the mirrors it runs,
-each pinned against its shipping C# copy by a vector file (`fall-vectors.json`,
-`keeper-vectors.json`, `bud-vectors.json`) that the Editor suite runs through the other
-side. Every vector case carries a **play** as well as a par, because two copies can agree
-about what a board costs and still disagree about what happened on the way.
+`content.py` is where the non-glade modes are proved, because each of them authors its whole
+level in the file: `fall.py`, `proto.py` (with `prism.py`) and `siege.py` are the mirrors it
+runs. `fall.py` is pinned against its shipping C# copy by `fall-vectors.json`, which the Editor
+suite runs through the other side; the prototype modes have no vector file and are pinned
+**inline** by `ProtoLadderTests` instead, for the reason invariant 29e gives. Every vector case
+carries a **play** as well as a par, because two copies can agree about what a board costs and
+still disagree about what happened on the way. `keeper.py`, `bud.py`, `march.py`, `ember.py` and
+`bud-vectors.json` all went with their modes.
 
 `artnames.py` closes the same gap for sprites, and it was written the day it cost
 something: `MarchView.Boom` asked for `Art/March/boom_fire` when the explosions live

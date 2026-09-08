@@ -177,8 +177,8 @@ rejected, because where the game goes next must be readable from one file and
 changeable by pushing that one file.
 
 **`mode` is derived too, and that is invariant 20h.** It was the last field of an entry
-written by hand, and it is the one field whose absence nothing notices: a Budburst chapter
-missing `"mode": "bud"` is indexed as a glade chapter, and every level still parses,
+written by hand, and it is the one field whose absence nothing notices: a second-mode chapter
+missing its `"mode"` is indexed as a glade chapter, and every level still parses,
 every board is still proved solvable, every string resolves and the build goes green —
 while the chapter is gated on a stranger's stars, filed under the wrong tab and routed to
 a screen that cannot play it. Sync now reads the mode off the body, `Validate Content`
@@ -740,323 +740,18 @@ goes as the column count to the power of par, so par 7 on a six-wide well is fou
 the same board: narrow the well or shorten the answer, and start it fuller rather than making it
 bigger.
 
-## Budburst levels
+## Budburst, Hollowmarch and Emberforge levels — deleted
 
-`"mode": "bud"` on a manifest chapter entry says its levels are **groves**. A grove carries a
-`bud` block instead of a `rows` grid, and the block is a grid, a basket and nothing else.
+All three modes were withdrawn together (invariant 38), and the sections that said how to author a
+grove, a haul-road and a wall went with them. **`bud`, `march` and `ember` are retired block names
+and must never be reused**: `Tools/verify/content.py` refuses each of them by name, for the
+duskcap's reason (invariant 5f) — `JsonUtility` drops an unknown field without a word, so a chapter
+body still carrying one would index, derive a plausible glade and ship as something nobody authored.
+Their chapter and level ids are spent too; the list is in `GameMode.cs` and in invariant 38.
 
-```json
-{
-  "id": "b01_firstburst",
-  "mapX": 0.3,
-  "mapY": 0.08,
-  "bud": {
-    "width": 7,
-    "height": 6,
-    "rows": [
-      "GYRYBBR",
-      "BRoBoYG",
-      "RBCRGRY",
-      "GRoYoGY",
-      "BBCRYRR",
-      ".GGRYG."
-    ],
-    "colours": "GBR"
-  }
-}
-```
-
-Ten characters, and they are the whole vocabulary:
-
-```
-.              bare ground
-R G B          a flower in a pure colour
-Y M C          a flower in a blend - yellow (R+G), magenta (R+B), cyan (G+B)
-W              a flower holding every channel. It can never be mixed into again
-o              a cocoon with a critter in it - one crack opens it
-O              a cocoon that takes two
-#              old wood - no bunch and no wash crosses it, and nothing grows on it
-```
-
-**A grove with a `regrow` strip is a *living* one** and behaves differently enough to be worth
-saying once: what bursts leaves a hole, everything above slides down into it, new flowers arrive
-along the top from that strip, a white flower is a **bomb** rather than a wall, and one flower
-ripens on its own between taps. A living grove is therefore authored as a **full rectangle** —
-bare ground and old wood are both refused on one, because the first chain fills every hole and
-they never come back. Everything shipped is living; a grove without a strip is the shape this
-mode shipped with and still parses.
-
-`colours` is the **basket**: the colours dealt one per tap, repeating for ever. It is written in
-`R`, `G` and `B` only — **a blend is never dealt**, because a blend handed over is the one decision
-the mode has in it. Anything else is refused rather than ignored.
-
-The letters are the game's own — `Energy.Letter`, the same ones a glade's critters and conduits
-use — so the arithmetic an author reasons in is the arithmetic four chapters of glades already
-taught the player.
-
-**Every flower is drawn as the same four-petal shape whatever colour it is**, except `W`, which
-gets eight — because white is the only one whose difference is a *rule* (nothing can be mixed
-into it) rather than a colour. So an author composing a grove is composing in colour alone, and
-what reads as a bunch on paper reads as a bunch on the board. `BudFlower` is the single answer to
-that and the legend above the grove asks the same one, so a chip and a cell can never disagree.
-
-**A grove's celebration is content only in its words.** The four rungs a chain earns — GREAT,
-AMAZING, EPIC, LEGENDARY — are `mode.bud.chain_*` strings and nothing else: which rung a chain
-lands on is `BudChain.WordKey`, how loudly it is drawn is `BudChain.WordPointsFor`, and how long
-it all takes is `BudTempo`. If a chapter ever wants a different voice, translate the four
-strings; do not add a fifth rung without moving the ladder, because the rung index is what picks
-the colour and the size.
-
-**The colour legend above the grove is derived, so there is nothing to author.** `BudMixing`
-builds the three recipes from the same masks the board mixes with, and each is drawn on a card of
-its own so the row reads as three statements rather than as thirteen things in a box. It takes a
-strip off the top of the screen (`BudBand.BoardCeiling`), which is checked by `BudLegendTests`
-rather than argued about — do not add a fourth chip without re-running it.
-
-**There is no difficulty number here and there must never be one.** Par is the fewest taps that
-free every critter, found by search, and both star lines derive from it. Room above par is
-`spare`, counted in **taps**, and defaults to 5.
-
-### The second chapter: specials, and the graft
-
-The Tanglewood is ten groves and the genre's own loop laid over Budburst: **a big bunch leaves a special
-behind, the player chooses when to fire it, and firing it is a board-scale event that sets off
-every special in its reach.** Two objects and one gesture, gated on two fields:
-
-```json
-"bud": {
-  "rows":     ["...", "..."],
-  "grafts":   true,              drag two neighbours to trade places
-  "forges":   true,              five alike leave a bolt, eight a sun
-  "specials": ["...|...", ...],  optional: specials dealt already forged, | bolt, * sun
-  "colours":  "GRB",
-  "regrow":   "RGBYMC"
-}
-```
-
-**The bolt and the sun** (`forges`). A bunch of **five** or more leaves a **bolt** on the cell
-the player tapped (or the flower they dragged; once the chain has moved on, the bunch's lowest
-cell); a bunch of **eight** forges a **sun**. A special is a flower wearing the bunch's colour,
-standing on the board, turning so it is never still. It **fires** when tapped (whatever colour is
-in hand), when a bunch takes it in, or when another special's reach hits it: a bolt clears its
-whole row and column, a sun the five-by-five around it. What a special clears it does **not**
-wash — a bolt that washed the neighbours of a whole row would set off most of the board, which is
-invariant 20j's solvent — but it cracks every cocoon it hits and every cocoon beside what it
-cleared, which is what it was fired for. A bomb (white) fires a special in its square. **Gated**,
-because the first chapter was authored and pinned without it: bunches of five happen on the
-Thicket, and a Thicket that forged would be a different chapter. A grove dealing a special
-(`specials`) forges whatever `forges` says; at most `BudValidator.MaxDealtSpecials` (2), because a
-special is something the player makes and a grove deals one only to teach what firing it does.
-
-**Earned, never placed, is what makes it a payoff.** The runner, and the windmill, the firefly,
-the puffball and the hive that replaced it, were all put on the board by an author — so the
-player found them, and every one paid out as the same chain. Play reported all five as *flowers
-popping, nothing different*. A special exists because of something the player just did and is
-worth exactly what they choose to do with it next.
-
-**The graft** (`grafts`). Drag a flower onto its neighbour and the two trade places, **if that
-makes a bunch**; otherwise it snaps back and costs nothing. One that works costs a tap and keeps
-the colour in hand. A graft bursts by construction and so collapses par: a grafting grove wants
-**many shut in, spread to every edge, several tough** — the shipped groves carry twelve to
-fourteen — or par is two on every fill.
-
-Two readings say whether the chapter's idea is on a grove, both printed by `content.py` and
-`Glimmer Grove > Validate Content` and both **warned at 0**:
-
-```
-forgeable   opening moves that forge a special. 0 means the player cannot make one on the
-            board as dealt - author a four the hand's colour completes.
-fired       of the shortest plays, how many fire a special (Whorlwater's `kindled`, measured
-            over every shortest solution rather than the first). 0 means the specials are
-            never the best thing to do - put the cocoons where a line or a square reaches them.
-forged      of the shortest plays, how many forge one. Printed, not gated.
-```
-
-**Two counters, and the difference is the graft.** `Spent` is taps out of the satchel, which
-every move costs; `Dealt` is colours off the basket, which only a flower tap costs (a special or
-a bomb counts as a tap). **Par counts moves of every kind.** Move order is part of the contract
-with the Python mirror: taps by cell, then grafts by cell, rightward before downward
-(`BudRun.Moves`, `bud.Board.moves`); ties in the careless player's ranking and the best-opening
-reading go to the earlier move.
-
-**Retired and refused by name**: `runners`, `winds` and `firefly` on a level, and the lesson ids
-`bud_runner`, `bud_gust`, `bud_firefly`, `bud_puff`, `bud_hive`.
-
-### The rule, in three lines
-
-```
-tap a flower      the colour in hand is OR-ed into it. Red + green in hand = yellow.
-                  A tap that would change nothing is refused, not swallowed.
-three alike       any bunch of 3+ touching flowers of one colour bursts.
-a burst washes    its colour into every flower it touches, which makes more bunches, which
-                  makes more. A cocoon beside any of it takes one crack per wave. On a grove
-                  that forges, five alike leave a bolt and eight a sun.
-```
-
-### What makes a grove good
-
-Not hard — *good*. This mode is built against a feeling rather than a difficulty (invariant 20k),
-so two of the usual readings are read backwards:
-
-```
-ways      how many different plays of exactly par taps win.
-          WARNED BELOW 2 - one shortest play means the grove is a puzzle, which this
-          mode is deliberately not. Everywhere else in this game a high count is the warning.
-careless  what a player who always taps whatever sets off the biggest chain spends.
-          WARNED WHEN THEY CANNOT FINISH - this is the bar rather than a difficulty
-          reading. Everywhere else a careless player finishing is the complaint.
-nodes     what proving par costs, which the player's device pays once per level.
-          Warned above 20,000, refused above 60,000. Branching is the flower count, so the
-          cheap fix is a shorter answer - a cocoon nearer the fuse, never a bigger board.
-forgeable, fired
-          on a grove that forges, WARNED AT 0. See *The second chapter*.
-```
-
-**Par is 3 on every grove this mode has shipped, and that is arithmetic rather than a
-preference.** Cost goes as the flower count to the power of par, and the player's own device runs
-this search when it opens the level (invariant 26d), so a par of 4 on a grove big enough to
-cascade is refused outright by the node ceiling — and one small enough to prove comes back at
-twenty flowers with a *one-wave* best tap, which is this mode with the mode taken out of it. So a
-chapter's ramp is spent on what does not multiply the search: **how many are shut in**, how much
-grove there is, how many cocoons take two cracks, and whether a careless run still scores
-three stars. A grafting grove needs a dozen shut in to hold par 3 at all.
-
-**`Tools/chapters/budforge.py` is the sweeper**, and both shipped chapters were found with it:
-draw the skeleton — where the cocoons sit, how big the grove is, which specials are dealt — and
-it searches the *fill* against `Tools/verify/bud.py`, the same mirror the build gate runs,
-holding out (`want`) for `forgeable` and `fired`. Its header carries the three facts that decide how a sweep has to be
-run, each of which cost a day to find.
-
-**Author the layout, then sweep the basket.** That split is what makes this mode cheap to author:
-the layout decides what the grove *looks* like and the basket decides how it *plays*, and only the
-second is worth searching. Twenty-four baskets gave the shipped layout a par of 3; the one taken
-deals all three colours, so the rotation the player can see under the grove is visible on the very
-first board rather than being a rule they take on trust.
-
-**Blends are what make a chain possible, so a grove of pure colour is flat.** A red beside a green
-is one tap from being two yellows; two yellows and a red are one tap from a bunch. The shipped
-board runs about half blends, which is what gives it a thirteen-flower opening tap and still a par
-of 3.
-
-**A board must be authored settled.** Three alike already touching bursts in the first frame — the
-player is shown a chain they did not cause, and par is measured against a position they never met.
-Both gates refuse it and name the cell.
-
-**Where the cocoons go decides par far more than how many flowers there are.** A cocoon inside the
-fuse is freed by the big chain for nothing; one out at the edge needs a tap of its own. The shipped
-board has three of each, which is why its shortest answer is one huge tap and two small ones.
-
-**Every cocoon needs a flower beside it.** Nothing in a grove ever grows one back, so a cocoon
-walled in by bare ground and old wood can never be cracked — the build gate refuses that by reading
-the board rather than by searching it, because "nobody can finish this" tells an author nothing
-about what to move.
-
-**Watch the derived star lines on a short par, because no gate does.** `CheckStarBands` reads the
-*factors* rather than the thresholds, deliberately: at par 1 or 2 all three round onto the same
-number however they are set, and reporting that would be a complaint about board size. On this
-mode pars are that short, so it is worth reading the tool's own output — the shipped board was
-moved from par 2 to par 3 for exactly this reason, since `ceil(2 x 1.20)` and `ceil(2 x 1.40)` are
-both 3 and the two-star band was empty.
-
-**A white flower is a wall, not a flower.** It holds every channel, so nothing can be mixed into
-it — it will never burst and never join a bunch. One or two make a grove read richer; a grove of
-them is a board that can be neither won nor ended, and `BudBoard.AnyMove` is what notices.
-
-## Emberforge levels
-
-A wall of jewels bolted into the raiders' smelter, with critters caged in among them. The level
-authors the **whole wall** and nothing else — no deal, and the reader refuses one that tries:
-nothing ever falls in from above, which is what keeps the board monotone and therefore
-searchable at all (invariant 34a).
-
-```json
-"ember": {
-  "width": 7, "height": 7, "spare": 3,
-  "rows": [
-    "byggbgb",
-    "gr#b#by",
-    "yCbrygg",
-    "yr#r#rg",
-    "bbgygCy",
-    "rb#r#rg",
-    "gybrbgy"
-  ]
-}
-```
-
-| token | what it is |
-|---|---|
-| `r` `g` `b` `y` | a **shard**. Three alike in a line fuse into an ember. |
-| `O` | an **ember**, dealt. Tap it and a cross of light sweeps its row and column. |
-| `.` | a **breach**: wall that is already blown out. Shards slide down through it. |
-| `#` | **stone**. Permanent, unswappable, holds the wall above it up, and **stops a beam**. |
-| `*` | **frost**. Unswappable, holds the wall up, stops nothing — a beam melts it and the column above it falls. |
-| `C` | a **cage**. A goal. Any beam crossing it frees the critter and carries on. |
-| `W` | a **warden**. A goal. It **stops a beam**, so it takes two: one cracks the plating, the next finishes it. |
-
-`V` — a warden with its plating gone — is a state a board reaches and never one it is written in,
-exactly as a blend is in Budburst. It is not in the grammar and is refused if typed.
-
-**Nothing here is a number.** Par is the fewest moves that free every cage and wreck every warden,
-found by breadth-first search on the device that opens the level (invariant 26d); both star lines
-and the allowance are the same 1.20 / 1.40 multiples every mode uses. `spare` is the only tuning a
-wall carries, and it is a **count** of wasted moves rather than a multiple of par, because a wrong
-move costs about the same wherever it happens (26e).
-
-### Authoring a wall
-
-**The wall is designed and the shards are dealt** (invariant 32d), and `Tools/ember_sweep.py` is
-the split made into a tool. Draw the fittings by hand — where the stone runs, how much frost holds
-a shelf up, where the cages are buried, where a warden stands — because those are what a player
-*reads*; leave every other cell as `?` and let the sweep deal colours into it by seed, because
-which jewel is in which square is exactly the sort of arrangement nobody can eyeball.
-
-```
-python Tools/ember_sweep.py --template ribs --seeds 140 --spare 3
-python Tools/ember_sweep.py --board "byggbgb,gr#b#by,..." --spare 3
-```
-
-What to keep a seed for, and what each column means:
-
-- **`par`** — the ladder derives from it. Two is a teaching wall (one swap, one tap); five or six
-  is a finale. Cost goes as the wall's size to the power of par, so a big wall wants a short answer.
-- **`ways`** — how many shortest answers there are (invariant 5d). One is a wall that has to be
-  *solved* rather than played; three hundred is a wall deciding nothing. The shipped ten sit
-  between 8 and 60.
-- **`less`** — what a player who never looks ahead spends. **Nought** on every shipped wall: this
-  mode is not commissioned to be effortless the way Budburst is.
-- **`life`** — how many moves the wall survives the most extravagant possible player. **The reading
-  this mode needed and no other one did** (34c): the wall is finite, so a board can be dead while
-  the readout still says four moves left, and a wall whose `life` is under its allowance is
-  counting down to an ending that will not be the one that happens.
-- **`chn` / `frg` / `str`** — what the *shortest answers* actually do: the deepest chain, the embers
-  the player has to make, the stars worth spending. Measured over **every** shortest answer rather
-  than over the opening move, because an opening-move reading collapses exactly when a board is
-  good — a wall whose first swap sets off a four-beat cascade is a wall that is over in three moves.
-
-Three rules the sweep will not tell you.
-
-**A wall is authored settled.** Three alike already in a line fuse before anybody has touched it,
-so the wall the player meets is not the wall that was authored, proved or graded. The dealer
-guarantees it and both gates refuse it.
-
-**Deal nothing, or at most one.** An ember the player did not make is a payoff the author placed,
-which invariant 20m says is not a payoff at all. `EmberValidator` warns above two and the fixture
-refuses even one on a shipped wall; the first chapter deals none.
-
-**Stone is what makes the aim a decision.** A wall with none of it is a wall where every cross
-reaches the same distance wherever it goes off, and the validator says so.
-
-### What makes a wall good
-
-The ramp is not par. It is **how many separate blasts the goals need** and how hard they are to
-aim: one cage in a clear row is two moves, two cages sharing no line is four, and a warden is two
-beams on its own. Board size, frost, and how much of the wall a cross eats do the rest.
-
-**Look at it.** `python Tools/render_ember.py` draws every shipped wall with the real sprites at
-the size a phone draws it. Two faults came out of it that no numeric gate could see — a cage that
-read as a tiny padlock and an ember too dark to want touching (invariant 34e) — and both were past
-every green check in the repository.
+The **glade** and **Lightfall** sections above still stand and are still correct. Those two modes are
+*hidden* rather than deleted — `"disabled": true` on their manifest entries and nothing else — so a
+chapter of either can be authored, validated and turned back on without a code change.
 
 ## Prismvale levels
 
@@ -1090,8 +785,8 @@ searchable at all (invariant 36).
 | `@` | a **critter**, asleep. A goal. It wakes when a lit gem is standing beside it. |
 | `.` | **bare ground**. Nothing stands on it, nothing swaps with it, and a vein stops dead at it. |
 
-`*` — a critter that has woken — is a state a board reaches and never one it is written in, exactly
-as `V` is in Emberforge. It is not in the grammar and is refused if typed.
+`*` — a critter that has woken — is a state a board reaches and never one it is written in. It is
+not in the grammar and is refused if typed.
 
 **A critter wants light and not a colour**, deliberately (36d): the colour already decides
 everything through the lantern, and a coloured critter would be the same question asked twice.
@@ -1129,7 +824,9 @@ What to keep a seed for, and what each column means:
   level somebody else half finished, and nothing else would ever notice. The gate warns above 35%.
 - **`used`** — how many distinct lantern colours a *shortest* answer really wakes a critter with.
   A field standing three lanterns whose answer only ever uses one is a field with two decorative
-  lanterns on it. Measured over **every** shortest answer, for the reason Emberforge's `chn` is.
+  lanterns on it. Measured over **every** shortest answer rather than over the opening move:
+  `ways` is rarely one, so the first winning line is arbitrary among several and tuning against it
+  is tuning against a coin toss (invariant 26h).
 - **`pair`** — the most critters one swap wakes. Two is a vein the player *arranged* to serve both,
   which is the only thing on this board better than the obvious move.
 
@@ -1772,9 +1469,9 @@ Two numbers, and the difference between them is the feature:
 **`graceLevels` is where the gate does not apply.** The first three levels of the first
 chapter of *each mode* cost no heart at all — lose them, restart them or walk away from
 them as often as you like. It is per mode rather than once per account because a mode
-shipped a year from now is somebody's first board of that mode: Budburst is tapped
-rather than tapped and is lost on ink rather than turns, so a player meeting it is a
-beginner again in every sense that decides whether taking a heart off them is fair. The
+shipped a year from now is somebody's first board of that mode: Thornwatch is matched
+rather than turned and is lost on a ward line rather than on moves, so a player meeting it
+is a beginner again in every sense that decides whether taking a heart off them is fair. The
 window is counted inside the first chapter and stops at that chapter's end, so the same
 three means three of ten on a full chapter and all of a one-glade one. Nought switches it
 off and is a legal value; unwritten inherits three. `HeartStake` owns the rule, nothing

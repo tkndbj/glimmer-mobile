@@ -191,8 +191,6 @@ namespace GlimmerGrove.EditorTools
             ("/Art/Homestead/", 512),   // props on an island, ~500px at most
             ("/Art/Companions/", 512),  // portraits, drawn at 320
             ("/Art/Critters/", 256),    // flipbook frames, drawn small and there are many
-            ("/Art/March/", 512),      // Hollowmarch: its road, its pods and the raid's cast
-            ("/Art/Ember/", 512),       // Emberforge: its wall, its jewels and the smelter's cast
             ("/Art/Prism/", 512),       // Prismvale: its floor, its gems, its lanterns and its cast
             ("/Art/Siege/", 512),       // Thornwatch: its hill, its ward line, its gems and the raid
             ("/Art/Fx/", 512),          // explosions, drawn at ~2 cells and mostly soft

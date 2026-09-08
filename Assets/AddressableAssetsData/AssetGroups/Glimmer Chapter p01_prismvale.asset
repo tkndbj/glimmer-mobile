@@ -85,6 +85,11 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: b8c6bb81a9dfbc64eb7f24ee25f7dacd
+    m_Address: Art/Bg/sky_01
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: b9b9487fc98e1254d8fa7906f5333ed7
     m_Address: Art/Prism/mon3_jump
     m_ReadOnly: 0

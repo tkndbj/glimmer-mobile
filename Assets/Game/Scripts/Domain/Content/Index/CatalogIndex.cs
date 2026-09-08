@@ -97,6 +97,36 @@ namespace GlimmerGrove.Content
         public bool HasSeveralModes => _modes.Length > 1;
 
         /// <summary>
+        /// The mode a screen opens on when nothing has said which: the first entry of
+        /// <see cref="Modes"/>, which is the first row of the switcher.
+        ///
+        /// <para>
+        /// <b>The front door and the top of the list are one answer on purpose.</b> They were
+        /// briefly two — this read "the classic mode when the catalog has it, else the first" —
+        /// and two answers means a map that opens on one mode while the control above it offers
+        /// a different one first, which is a difference nobody could explain and nothing would
+        /// have caught. Which mode leads is decided once, in <see cref="LevelModes"/>, and read
+        /// here.
+        /// </para>
+        /// <para>
+        /// <b>Not <see cref="GameMode.Default"/>, and the difference is the whole point.</b>
+        /// That constant answers a question about <em>parsing</em>: a chapter with no
+        /// <c>mode</c> field is a glade, for ever, so that every chapter authored before modes
+        /// existed keeps working with its file untouched. This one answers a question about
+        /// <em>this catalog</em>, and the two part company twice over — the front door is
+        /// Thornwatch now, and the classic mode can have no chapters at all (every glade chapter
+        /// disabled from a config push, a client rolled back, a drop that has not downloaded). A
+        /// screen that took the parsing answer would open onto a mode with nothing in it, which
+        /// is a blank map with a back arrow.
+        /// </para>
+        /// <para>
+        /// <see cref="GameMode.None"/> for an empty catalog, which is a content failure the
+        /// caller has to be able to see rather than one dressed up as a mode.
+        /// </para>
+        /// </summary>
+        public GameMode DefaultMode => _modes.Length > 0 ? _modes[0] : GameMode.None;
+
+        /// <summary>
         /// How a glade is played. <see cref="GameMode.Default"/> for one the catalog has never
         /// heard of, which is the same forgiving answer <see cref="ChapterOf"/> gives.
         /// </summary>

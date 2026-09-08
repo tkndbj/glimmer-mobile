@@ -713,8 +713,14 @@ namespace GlimmerGrove
         {
             var catalog = GameContent.Catalog;
 
-            var target = LevelUnlock.NextToPlay(catalog.Index);
-            if (!target.IsValid) target = catalog.First;
+            // The catalog's own default rather than the classic mode: with every glade chapter
+            // disabled the classic one has no levels at all, and both of these would answer
+            // nothing — so the one chapter body the game reads at launch would be no chapter,
+            // and the player would meet the map with its art still on disk.
+            var opening = catalog.Index != null ? catalog.Index.DefaultMode : GameMode.Default;
+
+            var target = LevelUnlock.NextToPlay(catalog.Index, opening);
+            if (!target.IsValid) target = catalog.Index.FirstIn(opening);
 
             var chapterId = catalog.ChapterOf(target);
             if (!chapterId.IsValid) { _target = 1f; yield break; }

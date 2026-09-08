@@ -6,7 +6,6 @@ from collections import deque
 
 import fall                                  # Lightfall's rules, mirrored - see fall.py
 import proto                                 # the prototype modes, mirrored - see proto.py
-import bud                                   # Budburst's rules, mirrored - see bud.py
 
 ROOT = os.path.join(os.path.dirname(os.path.abspath(__file__)),
                     "..", "..", "Assets", "StreamingAssets", "Content")
@@ -180,7 +179,7 @@ DEFAULT_BUDGET_FACTOR = 1.60
 GOLD_FACTOR, SILVER_FACTOR = 1.20, 1.40
 
 
-MODE_BLOCKS = ("fall", "bud", "march", "ember", "prism", "siege")
+MODE_BLOCKS = ("fall", "prism", "siege")
 
 #: Block names that named a mode this build no longer has. Refused by name rather than ignored,
 #: for the duskcap's reason (invariant 5f): JsonUtility drops an unknown field without a word, so
@@ -192,7 +191,7 @@ MODE_BLOCKS = ("fall", "bud", "march", "ember", "prism", "siege")
 #: four of the five prototypes that took its slot, Deep Orbit and Moonwake, then Toppleglen and
 #: Nova Raid, then the Iron Quarry, and then Kindlewake, whose slot Prismvale has.
 RETIRED_BLOCKS = ("keeper", "nectar", "ribbon", "fling", "warren", "orbit", "moonwake",
-                  "topple", "nova", "quarry", "kindle")
+                  "topple", "nova", "quarry", "kindle", "bud", "march", "ember")
 
 #: Mirrors `ProtoValidator`. About the *player's* device: par is resolved lazily when somebody
 #: opens the level, so this is the beat between tapping a node and the board arriving.
@@ -201,14 +200,6 @@ PROTO_NODE_WARNING, PROTO_NODE_CEILING = 30_000, 90_000
 #: Above this many shortest answers the board is not deciding much (invariant 5d).
 PROTO_TOO_MANY_WAYS = 300
 
-#: Mirrors `EmberValidator.MaxDealt`: an ember the player did not make is a payoff the author
-#: placed, and invariant 20m says that is not a payoff at all.
-EMBER_MAX_DEALT = 2
-
-#: Mirrors `EmberValidator.LifeSlack`. The wall is finite, so a board can be dead while the
-#: meter still says four moves left - which reads as the game deciding on the player's behalf.
-EMBER_LIFE_SLACK = 0
-
 #: Mirrors `PrismValidator.DealtLitPercent`. Invariant 5g: a board dealt with most of its veins
 #: already running is a board that starts half done, and nothing else notices.
 PRISM_DEALT_LIT_PERCENT = 35
@@ -216,217 +207,6 @@ PRISM_DEALT_LIT_PERCENT = 35
 #: Mirrors `PrismValidator.TooManyIdle`. A lantern with no gem at all beside it reads as a route
 #: that is not there, and a lantern is the brightest thing on the field.
 PRISM_TOO_MANY_IDLE = 1
-
-
-#: Mirrors `BudValidator`. Lower than the other two because branching is the flower count.
-BUD_NODE_WARNING, BUD_NODE_CEILING = 20_000, 60_000
-
-#: Below this many shortest plays the grove is a puzzle, which this mode is deliberately not.
-BUD_TOO_FEW_WAYS = 2
-
-#: Mirrors `BudValidator.MaxDealtSpecials`: a special is something the player makes.
-BUD_MAX_DEALT_SPECIALS = 2
-
-#: Mirrors `BudValidator.LeastPar`. At par 2 both star lines round onto 3.
-BUD_LEAST_PAR = 3
-
-
-def check_bud(lid, chapter_id, level, block):
-    """Everything a Budburst grove has to prove, mirroring `BudValidator`.
-
-    Two of the checks are the house rules read backwards and that is deliberate: everywhere else
-    a board almost anything finishes is a warning (invariant 5d) and a careless player finishing
-    is one too. This mode's brief is a board almost anything finishes, so what is worth refusing
-    is a grove a careless player *cannot* finish.
-    """
-    empty = dict(id=lid, chapter=chapter_id, w=0, h=0, par=0, budget=0,
-                 gold=0, silver=0, lamps=0, sources=0, fragile=0, bound=0,
-                 crossings=0, briars=0, mode='bud',
-                 ways=0, greedy=-1, nodes=0, buds=0, cocoons=0, ready=0, deal='',
-                 grafts=False, specials=0, forgeable=0, forged=0, fired=0)
-
-    w, h = block.get('width') or 0, block.get('height') or 0
-    rows = block.get('rows') or []
-    deal = block.get('colours') or ''
-    grafts = bool(block.get('grafts'))
-    specials = block.get('specials') or None
-    forges = bool(block.get('forges'))
-
-    # A retired field is refused by name, never ignored (invariant 5f): JsonUtility would drop it
-    # silently and the author would believe an object no build can draw. Mirrors `BudMode.TryRead`.
-    if block.get('runners') or block.get('winds') or block.get('firefly'):
-        errors.append("%s: this grove authors 'runners', 'winds' or 'firefly', all retired - "
-                      "the vine, the windmill and the firefly were withdrawn from Budburst" % lid)
-        return empty
-
-    if not (bud.MIN_SIDE <= w <= bud.MAX_SIDE):
-        errors.append("%s: a grove is %d..%d wide; this one says %d"
-                      % (lid, bud.MIN_SIDE, bud.MAX_SIDE, w))
-        return empty
-
-    regrow = (block.get('regrow') or '') or None
-
-    if not (bud.MIN_SIDE <= h <= bud.MAX_SIDE):
-        errors.append("%s: a grove is %d..%d tall; this one says %d"
-                      % (lid, bud.MIN_SIDE, bud.MAX_SIDE, h))
-        return empty
-
-    try:
-        grove = bud.Grove(rows, deal, regrow, grafts, specials, forges)
-    except (ValueError, KeyError, IndexError) as bad:
-        errors.append("%s: %s" % (lid, bad))
-        return empty
-
-    if grove.w != w or grove.h != h:
-        errors.append("%s: declares %dx%d and writes %dx%d" % (lid, w, h, grove.w, grove.h))
-        return empty
-
-    start = bud.Board(grove)
-
-    if not start.shut:
-        errors.append("%s: nobody is shut in on this grove, so it is already finished" % lid)
-        return empty
-
-    if not start.flowers:
-        errors.append("%s: this grove has no flower on it, so there is nothing to tap" % lid)
-        return empty
-
-    # A grove holding a bunch of three before a tap is spent is a board that goes off on its own
-    # in the first frame - the player is shown a chain they did not cause, and par is measured
-    # against a position they never met. Mirrors `BudValidator.Settled`.
-    blobs = start.groups()
-    if blobs:
-        where = blobs[0][1][0]
-        errors.append("%s: this grove already holds a bunch of three alike at %d,%d, so it "
-                      "bursts before the player has touched it - author a settled board"
-                      % (lid, where % grove.w, where // grove.w))
-        return empty
-
-    # A cocoon with no flower beside it can never be cracked, because nothing here grows one
-    # back. The search catches it as "nobody can finish this", which is true and says nothing
-    # about what to move. Mirrors `BudValidator.Reachable`.
-    for i in range(grove.count):
-        if grove.ground[i] != "c":
-            continue
-        if any(grove.ground[n] == "f" for n in grove.beside(i)):
-            continue
-        errors.append("%s: the cocoon at %d,%d has no flower beside it, and nothing in a grove "
-                      "ever grows one - so no chain can ever crack it"
-                      % (lid, i % grove.w, i // grove.w))
-
-    # A living grove is a full rectangle: everything falls into the holes under it and new
-    # flowers grow into what is left, so an authored hole is gone after the first chain. Mirrors
-    # the same check in `BudValidator` - puffballs and hives are pieces, not holes.
-    if regrow:
-        gaps = sum(1 for g in grove.ground if g == bud.EMPTY)
-        if gaps:
-            errors.append("%s: this grove leaves %d cell(s) of bare ground, and it is a grove "
-                          "that grows - a living grove is authored as a full rectangle"
-                          % (lid, gaps))
-
-    # A special is something the player makes; a grove deals one only to teach what firing it
-    # does. Mirrors `BudValidator.Standing`.
-    if grove.specials > BUD_MAX_DEALT_SPECIALS:
-        errors.append("%s: this grove deals %d specials already forged, above the %d a grove may"
-                      % (lid, grove.specials, BUD_MAX_DEALT_SPECIALS))
-
-    par, ways, nodes, proved, forged, fired = bud.search(rows, deal, regrow, grafts, specials,
-                                                         forges)
-
-    if not proved:
-        errors.append("%s: this grove could not be proved inside %d positions (it looked at "
-                      "%d) or within %d taps - the player's device runs the same search to work "
-                      "out par" % (lid, bud.NODE_BUDGET, nodes, bud.MAX_TAPS))
-        return empty
-
-    if par < 1:
-        errors.append("%s: no order of taps frees every critter on this grove" % lid)
-        return empty
-
-    # Par 3 is the floor: at par 2 both star lines round onto 3 and the two-star band is empty,
-    # which the factor check cannot see. Mirrors `BudValidator.LeastPar`.
-    if par < BUD_LEAST_PAR:
-        errors.append("%s: this grove is par %d, below the %d a Budburst grove needs - at par 2 "
-                      "both star lines round onto 3 and the middle band is empty" % (lid, par, BUD_LEAST_PAR))
-
-    budget_h = factor_of(level, 'budgetFactor', bud.BUDGET_HUNDREDTHS)
-    gold_h = factor_of(level, 'goldFactor', bud.GOLD_HUNDREDTHS)
-    silver_h = factor_of(level, 'silverFactor', bud.SILVER_HUNDREDTHS)
-
-    spare = block.get('spare') or bud.DEFAULT_SPARE
-    budget = (par + spare) if budget_h > 0 else 0
-
-    if budget_h > 0 and budget_h != bud.BUDGET_HUNDREDTHS:
-        errors.append("%s: this grove authors budgetFactor %.2f, which does nothing - room "
-                      "above par is 'spare', counted in taps" % (lid, budget_h / 100.0))
-
-    gold, silver = bud.over(par, gold_h), bud.over(par, silver_h)
-
-    if gold_h >= silver_h:
-        errors.append("%s: goldFactor and silverFactor leave the two-star band empty" % lid)
-    elif budget and budget <= gold:
-        errors.append("%s: the satchel is at or under the three-star line, so every surviving "
-                      "run would be a three-star run" % lid)
-    elif budget and budget <= silver:
-        warnings.append("%s: the satchel is inside the two-star band, so one star can never be "
-                        "scored" % lid)
-
-    if nodes > BUD_NODE_CEILING:
-        errors.append("%s: proving this grove took %d positions, above the %d a level may "
-                      "cost - the player's device runs the same search when somebody opens it"
-                      % (lid, nodes, BUD_NODE_CEILING))
-    elif nodes > BUD_NODE_WARNING:
-        warnings.append("%s: proving this grove took %d positions against the %d a level is "
-                        "expected to cost (the refusal is at %d)"
-                        % (lid, nodes, BUD_NODE_WARNING, BUD_NODE_CEILING))
-
-    if ways < BUD_TOO_FEW_WAYS:
-        warnings.append("%s: there is only one play of %d taps that frees every critter here, "
-                        "so this grove is a puzzle rather than a place to make a mess"
-                        % (lid, par))
-
-    # What the specials are worth - invariant 26g's own test rather than a difficulty reading.
-    # Mirrors `BudValidator.Deciding`, and a warning for its reason: a grove may forge nothing
-    # on the board as dealt and everything two taps in.
-    forgeable = bud.forgeable(rows, deal, regrow, grafts, specials, forges)
-    if grove.forges:
-        if forgeable == 0 and not grove.specials:
-            warnings.append("%s: no opening move on this grove makes a bunch of five, so the "
-                            "player cannot forge a special on the board as dealt" % lid)
-        if fired == 0:
-            warnings.append("%s: none of the %d shortest plays fires a special, so on this grove "
-                            "the specials are never the best thing to do" % (lid, ways))
-
-    careless = bud.careless(rows, deal, budget or (par + bud.DEFAULT_SPARE), regrow, grafts,
-                            specials, forges)
-    if careless < 0:
-        warnings.append("%s: a player who always taps whatever sets off the biggest chain never "
-                        "finishes this grove, which is the bar this mode is held to" % lid)
-    elif budget and careless > budget:
-        warnings.append("%s: a careless player takes %d taps against a satchel of %d"
-                        % (lid, careless, budget))
-
-    return dict(id=lid, chapter=chapter_id, w=grove.w, h=grove.h, par=par,
-                budget=budget, gold=gold, silver=silver, lamps=0, sources=0, fragile=0,
-                bound=0, crossings=0, briars=0, mode='bud',
-                ways=ways, greedy=careless, nodes=nodes,
-                buds=start.flowers, cocoons=start.shut,
-                ready=len(set(grove.colour[i] for i in range(grove.count)
-                              if grove.ground[i] == "f")),
-                deal=deal, grow=regrow or '',
-                grafts=grafts, forges=grove.forges, specials=grove.specials,
-                forgeable=forgeable, forged=forged, fired=fired)
-
-
-#: Where a well stops being cheap to prove, and where it stops being shippable. Mirrors
-#: `FallValidator`. These are about the *player's* device: the search runs once per level, on
-#: the phone, when somebody opens it. Forty thousand positions is about twenty milliseconds of
-#: desktop .NET and a few tens on a phone; a hundred and twenty thousand is a quarter of a
-#: second, which is a pause on the way into a level.
-FALL_NODE_WARNING, FALL_NODE_CEILING = 40_000, 120_000
-
-#: Above this many shortest solutions the board is not deciding much. Invariant 5d, counted.
-FALL_TOO_MANY_WAYS = 400
 
 
 def check_fall(lid, chapter_id, level, block):
@@ -744,221 +524,11 @@ def check_proto(mode, lid, chapter_id, level, block):
     # The handful of numbers only this mode's own rules can give, carried out so the printed
     # table can show them beside par. `chain` is the mode's payoff measured and `shatter` is
     # what separates a prism from a charge with a longer reach.
-    if mode == 'march':
-        import march as rules
-        out.update(rules.readings(rules.Layout(grid, 0, block.get('cores'))))
-    elif mode == 'ember':
-        import ember as rules
-        out.update(rules.readings(rules.Layout(grid, 0)))
-        out['life'] = ember_life(rules.Layout(grid, 0), budget)
-        ember_life_check(lid, rules.Layout(grid, 0), budget)
-    elif mode == 'prism':
+    if mode == 'prism':
         import prism as rules
         out.update(rules.readings(rules.Layout(grid, 0), budget))
 
     return out
-
-
-def march_rules(lid, grid, board):
-    """A haul-road: a line to fire into, a chain on the way to the answer, and a march that arrives.
-
-    Mirrors `MarchMode.Compose` and `MarchValidator.Inspect`. Everything here is a reading the
-    search cannot give in words an author could act on - "no sequence of cores finishes this
-    board" is true and useless, where "the line carries a Y pod and the magazine only deals RGB"
-    is the sentence that names the thing to move.
-    """
-    import march as rules
-
-    b = board.board
-    lay = b.layout
-
-    read = rules.readings(lay)
-
-    if read['pods'] == 0:
-        return "this road is empty, so there is no line to fire into"
-
-    if b.goals == 0:
-        return "this road carries no cage and no raider, so there is nothing to do"
-
-    # A line holding three alike already touching plays its own first move before anybody has
-    # looked at it - Budburst's "authored settled" rule, and it matters more here because the
-    # chain would run on from it.
-    if not read['settled']:
-        return ("the line holds three alike already touching, so it would go off before "
-                "anybody had fired a core - a line is authored settled")
-
-    if not b.any_move:
-        return ("no core can be fired into this line at all - it matches nothing and the road "
-                "is packed solid")
-
-    # Certain, and the search would only answer "unsolvable": a colour the magazine never deals
-    # can never be matched, however the run goes.
-    for c in lay.line:
-        hue = rules.hue(c)
-        if hue != "\0" and hue not in lay.cores:
-            return ("the line carries a '%s' pod and the magazine deals '%s', so nothing can "
-                    "ever be matched to it" % (hue, lay.cores))
-
-    if read['wardens'] and not read['forged']:
-        warnings.append("%s: this road walks %d warden(s) and no shortest run of it forges a "
-                        "Spark - a warden wears two plates, so it wants two blasts beside it or "
-                        "the one core that cuts plating" % (lid, read['wardens']))
-
-    if read['chained'] < 2:
-        warnings.append("%s: no shortest run of this board ever sets off a second wave, so "
-                        "nothing on it chains - which is this mode with its payoff taken out"
-                        % lid)
-
-    if read['haulers'] + read['wardens'] == 0 and read['pods'] > 12:
-        warnings.append("%s: this road walks no haulers at all, so nothing divides the line and "
-                        "the colours alone decide it" % lid)
-
-    if read['colours'] < 4 and read['pods'] >= 16:
-        warnings.append("%s: %d pods dealt from %d colours is a line that matches itself - add "
-                        "the fourth colour to the deal" % (lid, read['pods'], read['colours']))
-
-    return None
-
-
-def ember_life(layout, budget):
-    """How many moves the most extravagant possible player gets out of one wall.
-
-    Mirrors `EmberReading.Alive`, and it is the reading this mode needed that no other one
-    did: everywhere else a run ends when the allowance runs out, and here the wall itself is
-    finite, so a board can be dead while the meter still says four moves left.
-    """
-    import ember as rules
-
-    most = budget + 4 if 0 < budget < 36 else 40
-    at = rules.Board(layout)
-
-    for spent in range(most):
-        moves = at.moves()
-        if not moves:
-            return spent
-
-        best_gain, best_to = -1, None
-        for move in moves:
-            forked = at.fork()
-            log = forked.fire(move)
-            if log is None:
-                continue
-            gain = log.goals * 100 + log.took
-            if gain <= best_gain:
-                continue
-            best_gain, best_to = gain, forked
-
-        if best_to is None:
-            return spent
-        at = best_to
-
-    return most
-
-
-def ember_rules(lid, grid, board):
-    """A wall: something to fuse, something a beam can reach, and a chain on the way to the answer.
-
-    Mirrors `EmberMode.Compose` and `EmberValidator.Inspect`. Everything here is a reading the
-    search cannot give in words an author could act on - "no sequence of moves finishes this
-    board" is true and useless, where "the cage at row 3 column 5 is walled in by stone on every
-    approach" is the sentence that names the thing to move.
-    """
-    import ember as rules
-
-    b = board.board
-    lay = b.layout
-
-    if lay.fault:
-        return lay.fault
-
-    read = rules.readings(lay)
-
-    if not read['settled']:
-        return ("this wall holds %d alike already in a line, so it would fuse before anybody "
-                "had touched it - a wall is authored settled" % rules.FUSE_AT)
-
-    if not b.any_move:
-        return ("no swap on this wall lines anything up and it carries no ember, so there is "
-                "no move to make")
-
-    # Certain, and the search would only answer "unsolvable": a goal stone has walled off along
-    # every approach on its own row and column can never be reached by any beam.
-    walled = _ember_walled(lay)
-    if walled:
-        return ("%d goal(s) on this wall stand where no beam could ever arrive - stone blocks "
-                "every approach along their own row and column" % walled)
-
-    if read['lonely'] > 1:
-        warnings.append("%s: %d of this wall's colours have fewer than %d shards on it, so they "
-                        "can never be fused and only break up the runs of the colours that can"
-                        % (lid, read['lonely'], rules.FUSE_AT))
-
-    if read['dealt'] > EMBER_MAX_DEALT:
-        warnings.append("%s: this wall is dealt %d embers - the payoff of this mode is the thing "
-                        "the player makes, so a wall handing several over has had its point "
-                        "taken out" % (lid, read['dealt']))
-
-    if read['chained'] < 2:
-        warnings.append("%s: no shortest run of this wall ever sets off a second beat, so "
-                        "nothing on it chains - which is this mode with its payoff taken out"
-                        % lid)
-
-    if read['forged'] == 0:
-        warnings.append("%s: no shortest run of this wall ever fuses an ember, so it is finished "
-                        "with what it was dealt rather than with anything the player made" % lid)
-
-    if read['stone'] + read['wardens'] == 0:
-        warnings.append("%s: this wall holds no stone and no warden, so nothing stops a beam and "
-                        "every cross reaches the same distance wherever it goes off" % lid)
-
-    return None
-
-
-def ember_life_check(lid, layout, budget):
-    """The fail state the readout is not showing. Mirrors `EmberValidator`'s life clause."""
-    if budget <= 0:
-        return
-
-    alive = ember_life(layout, budget)
-    if alive + EMBER_LIFE_SLACK < budget:
-        warnings.append("%s: a player spending everything as fast as they can runs this wall out "
-                        "of moves in %d against an allowance of %d, so the meter is counting down "
-                        "to an ending that will not be the one that happens"
-                        % (lid, alive, budget))
-
-
-def _ember_walled(layout):
-    """Goals no beam could ever arrive at. Mirrors `EmberValidator.Unreachable`."""
-    import ember as rules
-
-    grid = layout.grid
-    w, h, walled = grid.w, grid.h, 0
-
-    for cell in range(len(grid.cells)):
-        if not rules.is_goal(grid.cells[cell]):
-            continue
-
-        gx, gy = cell % w, cell // w
-        reachable = False
-
-        for d in range(rules.CROSS_RAYS):
-            x, y = gx, gy
-            while True:
-                x += rules.STEP_X[d]
-                y += rules.STEP_Y[d]
-                if x < 0 or y < 0 or x >= w or y >= h:
-                    break
-                if rules.stops(grid.cells[y * w + x]):
-                    break
-                reachable = True
-                break
-            if reachable:
-                break
-
-        if not reachable:
-            walled += 1
-
-    return walled
 
 
 def prism_rules(lid, grid, board):
@@ -1020,8 +590,6 @@ def prism_rules(lid, grid, board):
 
 
 MODE_RULES = {
-    'march': march_rules,
-    'ember': ember_rules,
     'prism': prism_rules,
 }
 
@@ -1239,13 +807,7 @@ def check_level(level, chapter_id):
         if claimed[0] in MODE_RULES:
             return check_proto(claimed[0], lid, chapter_id, level, block)
 
-        # Budburst is the third, and for the same reason: everything about a grove is in the
-        # file, so the flowers, the basket and the search that turns the two into par can all be
-        # proved with no Unity anywhere.
-        if claimed[0] == 'bud':
-            return check_bud(lid, chapter_id, level, block)
-
-        # Thornwatch is the fourth, and the one that is *not* a search. See check_siege.
+        # Thornwatch is the third, and the one that is *not* a search. See check_siege.
         if claimed[0] == 'siege':
             return check_siege(lid, chapter_id, level, block)
 
@@ -2657,7 +2219,6 @@ def daily_income(progression):
 
 BOARD_VECTORS = os.path.join(os.path.dirname(os.path.abspath(__file__)), "board-vectors.json")
 FALL_VECTORS = os.path.join(os.path.dirname(os.path.abspath(__file__)), "fall-vectors.json")
-BUD_VECTORS = os.path.join(os.path.dirname(os.path.abspath(__file__)), "bud-vectors.json")
 
 # The marker the four-armed-tile rule's warning carries, in all three copies of it.
 DECIDES_MARKER = "still finishes the glade"
@@ -2760,155 +2321,6 @@ def run_fall_vectors():
 
     return (f"fall vectors: {len(cases)} case(s), the offline rules agree"
             if not bad else f"fall vectors: {len(bad)} disagreement(s)")
-
-
-def run_bud_vectors():
-    """Runs `bud-vectors.json` through this file's copy of Budburst's rules.
-
-    The chain rule exists twice - `BudBoard`/`BudSolver`, which is what ships, and `bud.py`,
-    which is what this gate and the chapter script run because they have no Unity anywhere.
-    Invariant 9a's answer for a board rule: the vector file is the contract, this proves the
-    Python side of it and `BudVectorTests` proves the C# side.
-
-    The cases are the places a loose transcription reads plausibly and answers differently - a
-    bunch of two going off, a burst forgetting to wash its colour outward, old wood carrying a
-    chain, a cocoon taking every crack of a wave at once, and a tap that mixes nothing being
-    allowed to spend a colour.
-
-    Half the cases carry a `regrow` strip and half do not, and the split is the point: a grove
-    with a strip is *living* - it falls, it grows, its white flowers are bombs and one flower
-    ripens between taps - and one without is *still*, which is how this mode shipped. The still
-    cases go on pinning the base rule in isolation from everything built on top of it.
-
-    The special cases are the same bargain one layer up: a bunch of five forging a bolt where
-    the player tapped and a bunch of eight forging a sun, a bolt clearing its row and column, a
-    sun its square, a special in a fired special's reach firing too, a special taken into a
-    bunch firing, a bomb firing one, a graft that works and one that snaps back - and what has to
-    be pinned is the *threshold* each is made of, because a copy that forges at four passes every
-    other check.
-
-    Every case with a par also carries the moves of one shortest play and what each one came
-    to, which is the half par alone cannot pin: two copies can agree exactly about how many
-    moves a grove costs and still disagree about how far the chain ran.
-    """
-    doc = json.load(open(BUD_VECTORS, encoding="utf-8"))
-    cases = doc.get("cases") or []
-    if not cases:
-        errors.append("bud-vectors.json has no cases")
-        return "bud vectors: none found"
-
-    bad = []
-    for case in cases:
-        name = case.get("name", "?")
-        strip = case.get("regrow") or None
-        grafts = bool(case.get("grafts"))
-        specials = case.get("specials") or None
-        forges = bool(case.get("forges"))
-        args = (case["rows"], case["colours"], strip, grafts, specials, forges)
-
-        try:
-            grove = bud.Grove(*args)
-        except (ValueError, KeyError, IndexError) as why:
-            bad.append("%s: %s" % (name, why))
-            continue
-
-        start = bud.Board(grove)
-        par, ways, _, proved, forged, fired = bud.search(*args)
-        best, _where = bud.biggest(*args)
-        forgeable = bud.forgeable(*args)
-
-        for label, got, want in (("proved", proved, case["proved"]),
-                                 ("par", par, case["par"]),
-                                 ("flowers", start.flowers, case["flowers"]),
-                                 ("cocoons", start.shut, case["cocoons"]),
-                                 ("specialsDealt", grove.specials, case.get("specialsDealt", 0)),
-                                 ("bestBurst", best[0], case["bestBurst"]),
-                                 ("bestWaves", best[1], case["bestWaves"]),
-                                 ("bestFreed", best[2], case["bestFreed"]),
-                                 ("forgeable", forgeable, case.get("forgeable", 0))):
-            if got != want:
-                bad.append("%s: %s is %r, vectors say %r" % (name, label, got, want))
-
-        if case["par"] > 0:
-            for label, got in (("ways", ways), ("forged", forged), ("fired", fired)):
-                if got != case.get(label, 0):
-                    bad.append("%s: %s is %r, vectors say %r"
-                               % (name, label, got, case.get(label, 0)))
-
-            careless = bud.careless(case["rows"], case["colours"],
-                                    case["par"] + bud.DEFAULT_SPARE, strip, grafts, specials, forges)
-            if careless != case["careless"]:
-                bad.append("%s: careless is %r, vectors say %r"
-                           % (name, careless, case["careless"]))
-
-        board = bud.Board(grove)
-        for nth, beat in enumerate(case.get("beats") or []):
-            kind = beat.get("kind") or "tap"
-            move = (kind, beat["tap"], beat.get("other", -1))
-
-            if kind == "tap":
-                allowed = board.can_tap(beat["tap"])
-            else:
-                allowed = board.can_graft(beat["tap"], beat.get("other", -1))
-
-            if allowed != beat["allowed"]:
-                bad.append("%s: move %d allowed is %r, vectors say %r"
-                           % (name, nth + 1, allowed, beat["allowed"]))
-
-            b, w, f, c, fo, fi = board.play(move) if allowed else (0, 0, 0, 0, 0, 0)
-
-            for label, got in (("burst", b), ("waves", w), ("freed", f), ("cracked", c),
-                               ("forged", fo), ("fired", fi),
-                               ("flowersLeft", board.flowers), ("shut", board.shut),
-                               ("specialsLeft", board.specials)):
-                want = beat.get(label, 0)
-                if got != want:
-                    bad.append("%s: move %d %s is %r, vectors say %r"
-                               % (name, nth + 1, label, got, want))
-
-    # A vector set that has quietly lost its teeth is worse than none: it passes, it is printed
-    # beside the word "ok", and nothing says the rule stopped being checked.
-    covers = dict(chain=False, unfinishable=False, nomove=False, tough=False, wood=False,
-                  refused=False, bolt=False, sun=False, fired=False, chained=False,
-                  graft=False, snapped=False)
-    for case in cases:
-        if case["bestWaves"] >= 3:
-            covers["chain"] = True
-        if case["par"] == 0:
-            covers["unfinishable"] = True
-        if case["proved"] and case["par"] == 0 and case["flowers"] > 0:
-            covers["nomove"] = True
-        if case["tough"] > 0:
-            covers["tough"] = True
-        if case["stones"] > 0:
-            covers["wood"] = True
-        for beat in (case.get("beats") or []):
-            kind = beat.get("kind") or "tap"
-            if not beat["allowed"]:
-                covers["refused"] = True
-            if kind == "graft" and beat["allowed"]:
-                covers["graft"] = True
-            if kind == "graft" and not beat["allowed"]:
-                covers["snapped"] = True
-            if beat.get("forged") and beat.get("bolt"):
-                covers["bolt"] = True
-            if beat.get("forged") and beat.get("sun"):
-                covers["sun"] = True
-            if beat.get("fired") == 1:
-                covers["fired"] = True
-            if beat.get("fired", 0) >= 2:
-                covers["chained"] = True
-
-    for what, held in covers.items():
-        if not held:
-            bad.append("no case covering '%s', so nothing here would notice that rule going away"
-                       % what)
-
-    for b in bad:
-        errors.append("bud vectors: " + b)
-
-    return (f"bud vectors: {len(cases)} case(s), the offline rules agree"
-            if not bad else f"bud vectors: {len(bad)} disagreement(s)")
 
 
 def run_board_vectors():
@@ -3164,21 +2576,6 @@ def main():
                         f"{r['wards']} ward(s), deals {c['deal']}")
             elif c['mode'] in MODE_RULES:
                 held = f"{c['goals']} to finish"
-            elif c['mode'] == 'bud':
-                # The chapter's two things named separately, each with the reading that says
-                # whether it is doing anything - invariant 26g's test, warned at 0 by `check_bud`.
-                bits = []
-                if c.get('grafts'):
-                    bits.append("grafts")
-                if c.get('specials'):
-                    bits.append(f"{c['specials']} special(s) dealt")
-                if c.get('forges'):
-                    bits.append(f"{c['forgeable']} opening move(s) forge a special, "
-                                f"{c['fired']} of {c['ways']} plays fire one")
-                vines = (", " + ", ".join(bits)) if bits else ""
-
-                held = (f"{c['buds']} flower(s) in {c['ready']} colour(s), "
-                        f"{c['cocoons']} critter(s) shut in{vines}, deals {c['deal']}")
             else:
                 held = ""
 
@@ -3422,7 +2819,6 @@ def main():
     print()
     print(run_board_vectors())
     print(run_fall_vectors())
-    print(run_bud_vectors())
 
     for w in warnings:
         print("WARN  " + w)

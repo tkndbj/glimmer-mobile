@@ -54,9 +54,6 @@ namespace GlimmerGrove.Content
         /// <summary>Motes drop into columns and cook toward white. See <c>FallBoard</c>.</summary>
         public static readonly GameMode Fall = new GameMode("fall");
 
-        /// <summary>Buds that burst and ripen what is beside them. See <c>BudBoard</c>.</summary>
-        public static readonly GameMode Bud = new GameMode("bud");
-
         /// <summary>Pull a stone and the cairn comes down. See <c>ToppleBoard</c>.</summary>
         public static readonly GameMode Topple = new GameMode("topple");
 
@@ -72,38 +69,6 @@ namespace GlimmerGrove.Content
         /// </para>
         /// </summary>
         public static readonly GameMode Nova = new GameMode("nova");
-
-        /// <summary>
-        /// Hollowmarch. The raiders are walking a line of pods to a portal and some of them are
-        /// carrying caged critters; fire a core into the line and three alike go off, the gap
-        /// closes, and if the closure makes three more it goes again. See <c>MarchBoard</c>.
-        ///
-        /// <para>
-        /// The first mode here built on the cascade the whole casual genre runs on, and the
-        /// first whose allowance is drawn on the board rather than in a corner — every core
-        /// spent is a step the raiders take toward the gate, so how much time is left is
-        /// something a player reads off the line. It cost the rules nothing that every mode
-        /// before it did not also pay: one shot is one layer of the search, so depth is cores
-        /// spent and par falls out of a breadth-first walk (invariant 20j).
-        /// </para>
-        /// </summary>
-        public static readonly GameMode March = new GameMode("march");
-
-        /// <summary>
-        /// Emberforge. Swap two neighbours so three alike line up and they fuse into an
-        /// <b>ember</b>; tap it and it throws a cross of light down its whole row and column,
-        /// or push two together for a star that takes the diagonals too. See
-        /// <c>EmberBoard</c>.
-        ///
-        /// <para>
-        /// The genre's own verb and its own special ladder, with one thing changed: nothing
-        /// refills. Every ember is three shards that are not coming back and the beams destroy
-        /// the wall they cross, so a board is worth about three explosions and where they are
-        /// spent is the whole game. That is also what keeps it searchable — the wall only ever
-        /// shrinks, so the state graph is a DAG and par is a breadth-first walk (invariant 20j).
-        /// </para>
-        /// </summary>
-        public static readonly GameMode Ember = new GameMode("ember");
 
         /// <summary>
         /// Prismvale. A field of coloured gems with lanterns standing in it; drag a gem onto its
@@ -141,6 +106,24 @@ namespace GlimmerGrove.Content
         /// </para>
         /// </summary>
         public static readonly GameMode Siege = new GameMode("siege");
+
+        // "bud", "march" and "ember" are **retired mode ids and must never be reused.**
+        // Budburst (tap a flower, the chain spreads), Hollowmarch (fire a core into a walking
+        // line of pods) and Emberforge (swap three alike and they fuse into something you
+        // spend) were all withdrawn by the owner together, leaving Prismvale and Thornwatch as
+        // the game's two live modes and the classic glade and Lightfall hidden behind
+        // `disabled` in the manifest. All three were played on a device, so a real save may
+        // hold a record or a `tipsSeen` entry against any of their ids, which are spent with
+        // them: the chapters `b01_thicket`, `b02_tanglewood`, `m01_hollowmarch` and
+        // `e01_emberforge` with all thirty-three of their level ids; the level blocks `bud`,
+        // `march` and `ember` (refused by name in `content.py`'s RETIRED_BLOCKS, for the
+        // duskcap's reason); and the lesson ids `bud_chain`, `bud_cocoon`, `bud_satchel`,
+        // `bud_graft`, `bud_bolt`, `bud_sun`, `march_fire`, `march_spark`, `ember_fuse` and
+        // `ember_star`. `ContinueUnit.Taps`, `DefeatReason.OutOfTaps` and
+        // `DefeatReason.Barren` are kept as members rather than deleted, because their
+        // **ordinals** reach analytics on every run those modes ever recorded. That derived XP
+        // and credits fall when thirty-three levels leave the catalog is what
+        // `ProgressionStore`'s high-water floors exist for (invariant 9).
 
         // "kindle" is a **retired mode id and must never be reused.** Kindlewake shipped one
         // chapter of ten hollows - join two embers of a colour and a strand of light burns

@@ -43,7 +43,12 @@ namespace GlimmerGrove
         /// </summary>
         Tiles = 3,
 
-        /// <summary>Taps in a thicket's satchel (<c>BudSatchel</c>).</summary>
+        /// <summary>
+        /// <b>Retired.</b> Taps in a Budburst thicket's satchel. The mode is gone; the member
+        /// stays because the ordinal reaches analytics on every continue that mode ever sold, so
+        /// re-pointing it at another unit would silently re-label that history - the same rule
+        /// <see cref="Ink"/> and <see cref="Tiles"/> are kept under.
+        /// </summary>
         Taps = 4,
 
         /// <summary>

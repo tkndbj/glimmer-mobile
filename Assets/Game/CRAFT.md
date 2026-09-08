@@ -17,19 +17,18 @@ Everything here runs without Unity unless it says otherwise.
   proved it gone; it needs no play mode and takes a second. `1080x1440` is the old 4:3 tablet, `1620x2160`
   the new one, `1080x2340` the phone everything was tuned on.
 - `Tools/verify/` — `compile.py`, `tests.py`, `content.py`, `loc.py`, `names.py`, `sfxnames.py`,
-  `difficulty.py`, `fall.py`, `bud.py`, `proto.py` (every prototype mode in one file, because they
-  share a shape rather than a rule), and three shared contracts: `board-vectors.json`,
-  `fall-vectors.json`, `bud-vectors.json`. The prototype modes have no vector file: they are pinned
+  `difficulty.py`, `fall.py`, `prism.py`, `siege.py`, `proto.py` (every prototype mode in one file,
+  because they share a shape rather than a rule), and two shared contracts: `board-vectors.json` and
+  `fall-vectors.json`. The prototype modes have no vector file: they are pinned
   **inline** by `ProtoLadderTests`, which is the only guard that actually runs offline (invariant 29e).
+  `bud.py`, `march.py`, `ember.py` and `bud-vectors.json` went with their modes (38).
 - `Tools/chapters/*.py` — one module per chapter; regenerates the shipped JSON and `--check`s itself
   against it. `author.py` is the shared glade board DSL (`cross`, `root`, `briar`, `path`) and derives a
   taproot's start rotations from the taps the root should cost rather than leaving four numbers to agree.
-  Non-glade: `f01_lightfall.py`, `f02_glasswater.py`, `f03_whorlwater.py`, `b01_thicket.py`,
-  `b02_tanglewood.py`, and `proto_chapters.py` — one module for every prototype chapter, which is
-  four lines of a table each and a board proved before it is written. For Lightfall and
-  Budburst the *shape* is drawn by hand and only the **fill** is swept — which blend or colour stands where,
-  which blend stands beside a whorl, what the board is dealt — the cheap half of the search and the half that
-  decides how a board plays. `*_strings.py` hold the strings belonging to a mode rather than to a level.
+  Non-glade: `f01_lightfall.py`, `f02_glasswater.py`, `f03_whorlwater.py`, `p01_prismvale.py` and
+  `s01_thornwatch.py`. For Lightfall and every mode dealt by seed the *shape* is drawn by hand and only
+  the **fill** is swept — which blend or colour stands where, which blend stands beside a whorl, what the
+  board is dealt — the cheap half of the search and the half that decides how a board plays. `*_strings.py` hold the strings belonging to a mode rather than to a level.
 - `Tools/hollow/` — the Hollow's rule mirror, board generator and `build_chapter.py`. The mirror is never
   authoritative; the shipping C# solver is what `Validate Content` runs.
 - `Tools/render_wheel.py` — draws the bonus wheel exactly as `WheelFace` does, without Unity, for the one
@@ -162,6 +161,12 @@ nothing on a glade tells two channels apart except tint, so that is the price of
 
 ## Modes
 
+**Thornwatch is the front door** — the first row of the switcher and what a map with nothing
+remembered opens on. That is one decision in one written list (`LevelModes`, invariant 38a), not a
+sort and not a per-screen default, so the control and the map cannot come to disagree about which
+mode a player meets first. The blurbs below are in shipping order rather than switcher order,
+because that is how they read; the switcher's order is `siege`, `prism`, `glade`, `fall`.
+
 **Classic glade** — `PlayScreen`. Turn conduits, light every critter. The move budget is the only fail
 state (22) at `par × 1.60`, and `Undo` refunds a move, so exploring a crossing that reads the same half a
 turn round costs nothing.
@@ -203,12 +208,13 @@ half especially, because two thirds of what the player does is filling a lens. `
 wave with glass in it a beat of its own and `ShotCeiling` bounds what a cascade may spend on them, which is
 a bound rather than a preference, because the board is latched while a wave plays.
 
-**The prototype level shape** (`ProtoView`, `ProtoScreen`) has now carried **nine** modes and every one
-of them was commissioned to be played and judged (invariant 29). Eight were withdrawn — Nectarrun,
-Ribbonfall, Seedfling, Warrenwake, Deep Orbit, Moonwake, Toppleglen and Nova Raid — and each took its
-screen, view, board and ids with it and left the plate, the grid, the latches and both endings exactly
-where they were. **That is the seam's whole argument, made eight times.** What a mode supplies is a board
-and a look; what it inherits is everything about being a *run*.
+**The prototype level shape** (`ProtoView`, `ProtoScreen`) has now carried **twelve** modes and every
+one of them was commissioned to be played and judged (invariant 29). Eleven were withdrawn — Nectarrun,
+Ribbonfall, Seedfling, Warrenwake, Deep Orbit, Moonwake, Toppleglen, Nova Raid, the Iron Quarry,
+Hollowmarch and Emberforge — and each took its screen, view, board and ids with it and left the plate,
+the grid, the latches and both endings exactly where they were. **That is the seam's whole argument,
+made eleven times.** What a mode supplies is a board and a look; what it inherits is everything about
+being a *run*. Prismvale is the one still standing on it.
 
 **Groovekeeper is retired** and its screen, view and rules are gone (invariant 28). What is worth keeping
 from its look is one paragraph: **the mode had no propagating event, and that was the whole of what was
@@ -223,237 +229,22 @@ number going up and *a number going up is not something anybody sees*.
 accumulates and never decays, so a player can never be stuck, the only endings are winning and running out,
 and unlimited undo is safe. Par is the fewest sparks that finish the board (`HollowSolver`), never authored.
 
-**Budburst** (`BudScreen`) — a grove of **coloured flowers** with critters shut in **cocoons**, and a basket
-of pure colour dealt one per tap. Tap a flower and the colour in hand **mixes** into it; any bunch of three
-or more touching flowers of one colour **bursts**, washing its colour into every flower it touches, which
-makes more bunches. A cocoon beside any burst takes a crack, and one out of cracks opens. A grove with a
-**strip** (`regrow`) is *living* — it falls and grows, its white flowers are bombs, one flower ripens between
-taps, and the board says which taps pop (20l).
-<br>**The mix is the whole design decision, and it is why this mode is chill rather than clever.** Mixing
-only ever *adds* channels, so every tap drives the board toward white and toward a burst: the grove wants to
-go off and the player is only choosing where. There is nothing to work backwards from, and it is the
-arithmetic four chapters of glades already taught, reused as a verb. A blend is never dealt — the basket is
-pure `R`/`G`/`B` only, because a blend handed over is the one decision the mode has in it. **The goal is the
-cocoons and not the flowers, and that is what makes it affordable**: "clear every flower" branches on the
-flower count, so a six-by-six cost ninety-five thousand positions and often could not be proved, where the
-cocoons are a far smaller target reached by the same chains. **A board must be authored settled**
-(`BudValidator.Settled`), or the player is shown a chain they did not cause and par is measured against a
-position they never met. Two fail states: the taps run out, or **no tap is legal any more** — white holds
-every channel, so a grove of nothing but white has flowers on it and no move in it (`BudBoard.AnyMove` asks
-over the *whole* basket rather than the colour in hand; `AnyFlower` is what got it wrong).
-<br>**A grove has a hint key, and it buys something a glade's does not.** Nothing here is meant to stop
-anybody, so what this one sells is the **big** version of a move they could have found anyway. `BudHint`
-takes every opening tap that still finishes the grove inside the taps left, then the one that goes off
-hardest: correct first, loud second, node-bounded, degrading to the biggest chain going rather than stalling.
-The mark **points and does not play**, or it spends a tap out of the satchel on the player's behalf.
-<br>**The Thicket is ten groves and every one is par 3** (26d's ceiling). The ramp is one dial — how many
-are shut in (**3, 4, 4, 6, 6, 6, 7, 8, 9, 12**) and with it how much grove there is. From the fourth rung on
-every grove is dealt `par + 5`, and it stays eight on the twelve-cocoon finale, because freeing twelve
-critters with the same allowance is more to do **without ever being tighter** (20k). **The first three rungs
-are where the verb is still being worked out, and none of them may punish that**: rungs one and two cannot
-be lost at all — every other mode's opening level was authored that way and this one was not — and rung
-three, the first grove in the game with a fail line on it and therefore where `bud_satchel` is first taught,
-is dealt `par + 8`. Nothing about those *boards* got easier, because at that size a grove whose chain runs
-three waves is one a single tap frees everybody on: par collapses to one and the star ladder goes with it. **Two dials were tried and thrown away** —
-`spare` falling five to three, and `greedy` true early and false late — both ramps built out of
-*withholding*, on a mode commissioned to be generous, and ramping `greedy` forced the sweep toward layouts
-whose biggest chain is a trap. **Old wood went with them**, being the one object here that can only make a
-chain shorter; `bud_wood` is a spent lesson id. **Par 3 rather than par 2, and the reason generalises**: at
-par 2 both star lines round onto 3, so the two-star band is empty and a careless player drops straight to
-one star — `CheckStarBands` reads the *factors* and says nothing about it, so on a mode whose pars are this
-short, **look at the derived lines, not the factors**.
-<br>**The Tanglewood is ten groves that graft and forge, still all par 3, and the payoff is a thing the
-player made.** Two cuts before it were played and thrown away — a runner, then a windmill, a firefly, a
-puffball and a hive on a grove each — and the verdict on all five was one sentence: *zero new animation,
-nothing different, all I see is flowers popping.* Every one of them was placed by an author and paid out as
-the same chain. What replaced them is the genre's own loop: **five alike leave a bolt where you tapped, eight
-leave a sun**, and each fires with an event nothing else on the board can make.
-<br>**A special is drawn as the one thing on a settled board that never stops moving.** A bolt wears a
-four-pointed glint turning over the flower, a sun a wheel of rays turning the other way, both over a flower
-lit brighter than its neighbours with a wide glow behind it. The **forge** is drawn as an arrival, not a
-burst: the bunch's petals are thrown as always, the cell is bare for a beat (`BudTempo.ForgeLag`), eight
-motes fly back into it from around, and the special stands up out of a flash at nearly twice its size under a
-ring, with the mode's one "you got something" sound (`chime2` and `star`, higher for a sun). That is the
-freed critter's own three beats spent on a thing, which is why it reads as a reward.
-<br>**A bolt is lightning.** Tapping it flashes the flower white (`Ignite`, the player's own touch answered
-at once); on the `Fire` cue a white-hot core is drawn out from the special to both edges of the grove over a
-wide glow in the flower's colour, with jags along it that fade in the order the line passes them, and the
-cells in the line burst as ordinary bursts **racing outward** — `BudTempo.FireStep` apart, nearest first,
-which is the score's doing and what makes the line travel rather than appear. The screen flashes white, the
-board is kicked harder than any bunch kicks it, and the burst note is struck twice an octave apart under a
-whoosh. **A sun is a blast**: a gold flash the size of its square, its own wheel of rays thrown out and
-turning, three shockwaves, the light behind the whole grove, rockets, the heaviest shake in the mode and a
-bell — bigger than a bunch of nine by being a different kind of thing, not by being the same thing louder. A
-special caught in another special's reach fires in the same wave, which is the chain the chapter is for.
-<br>**The graft is a drag**, the one gesture every player of this genre already knows. Nothing marks which pairs
-trade — the owner asked for the board to be found rather than read, and the halo on taps that pop and the
-white flower's breath went at the same time; a refused pair nudges toward each other and snaps back with the
-game's own refusal note;
-a working one slides both flowers with a small lift before the chain (`BudCueKind.Slide`, at time nought,
-the first wave's wind-up waiting on it). A drag ends with the pointer up over the cell, which the event
-system reports as a click as well, so `BudView.Tap` drops a click while a drag stands.
-<br>**Freed critters stand in the grove and the grove still falls through their square, and that is measured
-rather than preferred.** The obvious fix — a freed cocoon leaves a **post** the grove may not move — was
-built, mirrored into `bud.py` and run against the shipped ten. It takes the mode out of the boards, because
-a chain compounds *because* the grove falls into the hole a burst makes: the best opening taps collapse from
-5/7/6/8 waves to 1/2/3/3, one board drops to par 2 with a single winning play, and another stops being
-provable inside the node ceiling. About 1,200 (basket, strip) pairs were swept under the post rule and **not
-one** produced an opening tap of even three waves — so it is the rule rather than the fill, and its shape is
-the wrong way round for this mode: the more critters a player frees, the worse their grove gets at
-cascading.
+**Budburst, Hollowmarch and Emberforge are deleted** (invariant 38), and their screens, views, boards,
+validators, art and offline mirrors went with them. What survives is everything that was a *seam*: the
+prototype level shape, `StoryScreen` and the story band (30d), the village world of backdrops (30e), the
+cast and explosion art's lesson about inheritance, and the rules below — which were paid for by playing
+those modes and are the reason this section exists at all.
 
-**Hollowmarch** (`MarchScreen`) — a haul-road winding across a raided village at night, a line of lit pods
-walking it toward a portal, some of them carrying the taken monsters in barred cages, and Bolt at the near
-end of the road with a core launcher. Fire a core: it flies to the run of its own colour and *wedges in*,
-three alike go off, and the line **slides shut** behind them — and if the closure brings three more
-together, that goes too, and again. Every shot the raiders take one step nearer the gate. A **hauler** wears
-no colour, so no run spans one and it is scrapped only by a blast beside it; a **warden** wears two plates.
-A shot that destroys five pods forges a **Spark** into the next core, which cuts a lane through the line
-and straight through plating — the one thing here the player *makes*.
-
-<br>**Twelve sprites draw the whole board, and every one of them is drawn rather than cut.** A road tile, a
-ground tile, rubble, the gate, four pods, the Spark, a cage and a plate. That is the Iron Quarry's cage
-lesson (32b) taken the first time instead of the second: nothing in seventeen licensed isometric tilesets is
-a glowing energy pod, and a pod is this board's **noun** — it is what a player looks at, counts, matches and
-taps forty times a level, so its size, its contrast against the plate and its silhouette are decisions.
-`Tools/make_march_art.py` draws them; the licensed art still does the work it is good at, which is a cast
-that moves and explosions that fill two cells.
-
-<br>**A pod is a sphere and not a disc, and the difference is the whole read.** Three terms in numpy: a
-lambert falloff from a light up and to the left, a **rim light** on the far side so a dark pod on a dark
-plate keeps a silhouette that is not a black line drawn round it, and a specular blob. A flat disc with a
-highlight painted on reads as a sticker; a sphere reads as an object sitting on the road. Each carries a
-soft halo in its own colour, kept well under the body's alpha or a line of them turns the board to soup.
-
-<br>**Four colours, four silhouettes** — a star, a leaf, a diamond, a ring, stamped at 46% white inside the
-body. It costs nothing and it is the difference between a board a colour-blind player can read and one they
-cannot, which is the standing cost of grading anything by hue in this game. It is also what makes the line
-readable when it is drawn small, which is every board past the first. The four hues are separated in
-**lightness** as well as in hue — amber brightest, blue deepest — which is what stops the greens-and-blues
-problem before it starts.
-
-<br>**The road tile is rotationally symmetric and full-bleed, and both halves were found by rendering it.**
-A haul-road bends and runs in all four directions, so a tile with a direction in it would need four of
-itself and still be wrong on a corner: a square slab with a round socket in the middle reads as "something
-travels along here" whichever way the road goes, and one sprite draws the lot. The first cut inset that slab
-and rounded its corners — right for one tile, and laid end to end forty of them read as a row of separate
-*sockets* with dark gaps between, so the road disappeared into the ground. Edge to edge, with a lip along
-the top and left only, adjacent slabs merge into one surface catching one light.
-
-<br>**The gate is the only cold thing on the board, and it breathes.** Everything else here is warm — the
-pods, the explosions, the village behind — so the one thing the player is racing is violet, and it throws
-light onto the road in front of it rather than being drawn inside its own cell. It is the one thing on a
-still board that moves, because a threat that holds perfectly still reads as scenery.
-
-<br>**The aim preview is geometry and never outcome.** While the finger is down the road lights between the
-launcher and the cell the core will wedge at, and the run it will wedge into swells — facts the player can
-already read off the board, drawn faster. What it never draws is what the blast will catch: that is the
-thing they are working out, and a mode whose chains are printed before they happen is Budburst's withdrawn
-halo again.
-
-<br>**A wave is a beat, and the board is handed snapshots rather than left to work it out.** `MarchShot`
-comes back with every deed stamped with the wave it belongs to **and a `MarchFrame` per beat** — the line as
-the core landed, after each wave, and after the march. Every deed's `At` is a track **slot** and never a
-position in the line, because the line shifts under its own indices as pods leave it; a view that
-reconstructed where everything ended up would be doing exactly the arithmetic no par, no `ways`, no
-validator and no content gate can see going wrong (30i). Per wave: the **flash** (everything about to go
-swells and goes white for an eighth of a second, which is the cheapest anticipation there is and the reason
-a burst reads as *caused*), then the blast, then the **slide**. `pop` becomes `burst`, climbing a semitone
-per wave, the shake grows with it, and **×2, ×3, ×4** rises in gold off the blast that caused it — the one
-number this mode puts on the board, and deliberately not a score: what it says is *that this went off
-because the last one did*.
-
-<br>**The explosions are licensed frames, not a particle spray.** A chain of them is the largest thing that
-happens here and a spray reads as dust: `boom_fire` on the first wave, `boom_spark` on the second,
-`boom_red` beyond that, `boom_gold` for a cage coming open and `boom_smoke` for a raider coming apart. Each
-one is guarded by a timer as well as by its own `OnFinished`, because a folder that failed to load never
-finishes and would leave a white rectangle standing on the road for the life of the run (7b).
-
-<br>**The rescue runs home.** A cage comes apart, a shockwave goes out in gold, and the monster jumps along
-an arc to the launcher and sparks out there. It is the only thing on this board that travels *away* from
-the gate, which is the whole point of the level said in one movement.
-
-<br>**The forge is the biggest single flourish in the mode**, because it is the one thing on this board the
-player made (20m's first rule): a shockwave at the launcher, twenty-two sparks, a shake, and the core in the
-magazine turning into a Spark on an elastic scale-up. The Spark is the only thing here with **points** on
-it, which is what makes it read as a different kind of thing at a glance rather than as a bigger core.
-
-<br>**The magazine shows three, and that is a rule about the puzzle rather than about the furniture.** The
-deal is ordered and repeating (20e), so what is coming is knowable — and a mode where the player can only
-see the core in hand is one where every shot is a reaction. Two ahead is what makes "dump this one so the
-blue behind it lands where I want" a plan somebody can have. It is offset **inward** from the launcher
-rather than downward, because a launcher may be authored in any corner and a fixed offset puts the cores off
-the plate on three roads out of four — which is what the first render showed.
-
-<br>**The jam is the picture the mode is built around.** A plain pod that reaches the gate goes through it
-with a whoosh and is gone; a pod carrying a critter arrives and *stops*, shuddering against the gate while
-the portal flares. Nothing is lost, and the player can see exactly how much time they have left without
-reading a number.
-
-<br>**Look at it before believing it reads.** `Tools/render_march.py` draws every shipped road at the size a
-phone draws it, with the real sprites. Three faults came out of it in one session — the road reading as
-sockets, the magazine hanging off the plate, and forty per cent of the finale being empty rail behind the
-convoy — and every one of them was past a green gate.
-
-<br>**The story is the band, not a cutscene** (`StoryBubble`, invariant 30d, kept from Deep Orbit and
-re-cast three times since). Bolt talks the player through the first core, the Collector gloats about his
-haul, and each monster says something when its cage comes apart.
-
-**Emberforge** (`EmberScreen`) — a wall of stolen jewels bolted into the raiders' smelter, standing on
-the same village night Hollowmarch is fought over, a few streets away. Drag one jewel onto its neighbour
-so three alike line up: they do not clear, they **fuse**, into an **ember** standing on the square the
-finger stopped on. Tap the ember and a **cross** of light sweeps its whole row and column; drag two
-together instead and they combine into a **star** that takes the diagonals as well. Nothing refills, so a
-wall is worth about three explosions and every one of them is three jewels that are not coming back.
-<br>**The shards are four jewels from the licensed match-three set and they differ in *shape* as much as
-in colour** — a red heart, a green cabochon, a blue rhombus and an amber emerald cut. This mode's whole
-verb is "are these three the same", so a player who cannot separate red from green has to be able to
-separate a heart from a circle (invariant 34f). The backing tile is the pack's dark stone, graded down,
-because everything standing on it is a bright saturated shape and its ground is what it is read against.
-A blown-out cell is left as bare backing rather than filled in: a breach is progress, and on a board that
-only ever empties it is the one picture of how far the player has got.
-<br>**Everything is in service of one moment.** An ember is tapped, the beams race out from it as two
-bars — a wide soft one in gold and a white-hot core half its width, because one bar alone reads as a
-coloured stripe rather than as light — and every ember that light crosses goes off in turn, each beat
-louder, a semitone higher, shaking harder, with **×2, ×3, ×4** climbing in gold off the blast that caused
-it. A star fires eight of those instead of four. The five explosions are licensed frames rather than a
-particle spray (`boom_fire`, `boom_gold` for a cage coming open, `boom_blue` and `boom_violet` for the
-deeper beats, `boom_smoke` for a warden coming apart), each guarded by a timer as well as by its own
-`OnFinished` — a folder that failed to load never finishes and would leave a white rectangle standing on
-the wall for the life of the run (7b).
-<br>**The fuse is drawn as an arrival**, which is 20m's first rule: the shards fly into the square the
-finger stopped on, the square is bare for a beat, and the ember stands up out of it on an elastic
-scale-up under a ring, with the one "you made something" sound in the mode. It then breathes — a halo
-pulsing under it and the body swelling a few per cent — because it is the only thing on this board that
-is **tapped** rather than dragged, and nothing but its own drawing says so.
-<br>**Holding an ember lights the squares its cross would reach**, warm rather than brighter so a lit row
-reads as heat and not as selection. That is geometry the player can already read off the wall, drawn
-faster (32c) — and what it never shows is which shards would line up after a swap, because that is the
-thing they are working out. A swap that lines nothing up is answered on the board instead of in a
-sentence: the two pieces lean into each other and come back, which is the genre's own answer.
-<br>**The wall slumps.** Gravity slides shards down their column and the fittings — stone, frost, a cage,
-a warden — are bolted and hold up whatever is above them, so blowing a hole under a shelf drops it into
-something that matches. It is the mode's second answer to "where do I fire", and it is the whole reason
-frost exists: stone shapes the wall for ever, frost shapes it until somebody spends a beam on it.
-<br>**A cage is drawn rather than cut, and that took two rounds.** The first was the pack's stone frame
-with both chains and a padlock over it, and at the size a phone draws it that was a tiny lock over a
-mess — in a mode whose entire goal is the thing behind those bars (32b). It is now four thick iron
-uprights with a rail top and bottom, its own warm light behind it so the critter shows through, and the
-lock on the join. The warden is a rolling armoured robot whose idle is **coiled** and whose damaged
-animation is the same machine **uncoiled on its legs**, so "the plating cracked" is drawn by the
-character itself rather than by a tint.
-<br>**Look at it before believing it reads.** `Tools/render_ember.py` draws every shipped wall at the
-size a phone draws it, with the real sprites. Both of the faults above came out of it and every numeric
-gate was green through both.
-<br>**The story is the same band and the same cast** (`StoryScreen`, invariant 30d), drawn from this
-mode's own folder because an address owned by one chapter's scope is never re-claimed by another (7b).
-Bolt talks the player through the first ember, the Collector gloats about his hold, and each critter says
-something when its cage comes apart.
+**The classic glade and Lightfall are *hidden* rather than deleted** — `"disabled": true` on their
+manifest entries and nothing else. Their screens, views and blurbs above are all still true and still
+compiled; turning them back on is seven booleans.
 
 ### What a moving board has to get right
 
-Every rule below was paid for by a play report on Budburst, whose chain is the most complex thing this game
-draws. They generalise to anything that animates a board.
+Every rule below was paid for by a play report on Budburst, whose chain was the most complex thing this
+game ever drew. **That mode is deleted (38), so the class and method names below name code that is no
+longer here** — they are kept as the record of what each rule cost, because the rules generalise to
+anything that animates a board and the next one will meet them again.
 
 - **A chain is a score, written out first and walked against one clock** (`BudStage`, `PlayChain`).
   Independent tweens each working their delay out of their own share of a beat time causally related events

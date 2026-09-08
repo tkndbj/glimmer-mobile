@@ -2646,12 +2646,43 @@ namespace GlimmerGrove.EditorTools
         /// <summary>
         /// The frozen legacy index table must still point at real levels, or players
         /// updating from the original build would silently lose their stars.
+        ///
+        /// <para>
+        /// <b>Hidden is not gone, and the two get different severities.</b> A level whose
+        /// chapter carries <c>"disabled": true</c> is switched off, not removed: the manifest
+        /// still names the id, nothing else may claim it, and re-enabling the chapter puts every
+        /// record back exactly where it was. That is a real state this game ships in — the
+        /// classic glade and Lightfall are both hidden as of invariant 38 — and failing the
+        /// build on it would mean the flag could never be used on a chapter the legacy import
+        /// names, which is every chapter of the original build. A level the manifest does not
+        /// name <em>at all</em> is the failure invariant 2 exists to raise, and stays an error.
+        /// </para>
         /// </summary>
         static void ValidateLegacyMigration(CatalogIndex index, ContentValidationResult result)
         {
+            var listed = new HashSet<string>(StringComparer.Ordinal);
+
+            if (ChapterFiles.TryReadManifest(out var manifest, out _) && manifest?.chapters != null)
+                foreach (var chapter in manifest.chapters)
+                {
+                    if (chapter?.levels == null) continue;
+                    foreach (var id in chapter.levels)
+                        if (!string.IsNullOrEmpty(id)) listed.Add(id);
+                }
+
             foreach (var missing in LegacyPlayerPrefsImport.MissingFromCatalog(index))
+            {
+                if (listed.Contains(missing))
+                {
+                    result.Warnings.Add($"legacy save migration maps to '{missing}', whose chapter is " +
+                                        "disabled; the record is hidden rather than orphaned, and " +
+                                        "re-enabling the chapter restores it");
+                    continue;
+                }
+
                 result.Errors.Add($"legacy save migration maps to '{missing}', which is no longer in the catalog; " +
                                   "removing a level that shipped in the original build orphans player progress");
+            }
         }
     }
 

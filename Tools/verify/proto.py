@@ -22,9 +22,7 @@ Read `ProtoSearch.cs` first; the names match deliberately.
 
 from collections import deque
 
-import ember                              # Emberforge's rules, mirrored - see ember.py
 import prism                              # Prismvale's rules, mirrored - see prism.py
-import march                              # Hollowmarch's rules, mirrored - see march.py
 
 # ---------------------------------------------------------------------------- the search
 
@@ -210,17 +208,8 @@ class Grid(object):
 
 #: Which level field each mode's board is authored under, and how to build one.
 MODES = {
-    'march': (march.LETTERS,
-              lambda grid, block: march.Future(
-                  march.Board(march.Layout(grid, 0, block.get('cores'))))),
-
-    # Emberforge authors the same block and deals nothing into it: a wall is everything the
-    # level hands over, which is what keeps it monotone and therefore searchable at all.
-    'ember': (ember.LETTERS,
-              lambda grid, block: ember.Future(ember.Board(ember.Layout(grid, 0)))),
-
-    # Prismvale deals nothing either, for the same reason: the field of gems is everything the
-    # level hands over, so its future is fixed and the search can prove it.
+    # Prismvale deals nothing into its block: the field of gems is everything the level hands
+    # over, so its future is fixed and the search can prove it.
     'prism': (prism.LETTERS,
               lambda grid, block: prism.Future(prism.Board(prism.Layout(grid, 0)))),
 }

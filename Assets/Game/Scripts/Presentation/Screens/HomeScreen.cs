@@ -1324,7 +1324,13 @@ namespace GlimmerGrove
         static string NextGladeLine()
         {
             var index = GameContent.Index;
-            var next = LevelUnlock.NextToPlay(index);
+
+            // The catalog's own default rather than the classic mode, because the classic mode
+            // can be absent from a catalog (every glade chapter disabled, a client rolled back)
+            // and this line would then read "every glade is awake" to a player with a whole
+            // mode still in front of them. See CatalogIndex.DefaultMode.
+            var next = LevelUnlock.NextToPlay(index, index != null ? index.DefaultMode
+                                                                   : GameMode.Default);
 
             if (!next.IsValid) return Loc.Get("ui.home.all_awake");
 

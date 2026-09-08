@@ -84,91 +84,17 @@ namespace GlimmerGrove.Progression
         // nothing about a board implies the player has opened the Grovement, and nothing about
         // a glade implies they have ever met a second mode.
 
-        // ------------------------------------------------------------- Budburst
-        // Nine **retired lesson ids that must never be reused**: Lightweave's five (`weave_join`,
-        // `weave_bead`, `weave_ink`, `weave_hedge` and the `weave_fill` that was already spent
-        // before the mode was) and Ripplewake's five (`ripple_meet`, `ripple_satchel`,
-        // `ripple_reed`, `ripple_deep`, `ripple_lily`). A lesson id travels in the save
-        // (`tipsSeen`) exactly as a level id does, so re-pointing one at a rule it never
-        // described would tell a player they have already been shown something they never saw.
-
-        /// <summary>
-        /// Budburst's rule, and very nearly the only one it has: tapping a bud bursts it, and
-        /// everything beside it ripens.
-        ///
-        /// <para>
-        /// <b>Two sentences, and the second one is the mode.</b> A board can show the first
-        /// perfectly well — tap once and watch — but a player who has just seen one bud go off
-        /// has no reason to expect that a bud pushed past full goes off <em>too</em>, which is
-        /// where every chain in the game comes from. It is also the one thing that makes a
-        /// careless tap different from a good one, so it is worth the two sentences before the
-        /// first thicket rather than after the fourth.
-        /// </para>
-        /// </summary>
-        public static readonly Mechanic BudChain = new Mechanic("bud_chain");
-
-        /// <summary>
-        /// A cocoon: cracked by a burst beside it, and the only thing on the board that has to be
-        /// dealt with.
-        ///
-        /// <para>
-        /// The board says most of it — a critter is visibly shut in, and the counter says how
-        /// many are left — but not that a cocoon is opened by what happens <em>beside</em> it
-        /// rather than by being tapped. A player will tap one, and a tap that does nothing is the
-        /// shape this game refuses to let a rule be discovered by.
-        /// </para>
-        /// </summary>
-        public static readonly Mechanic BudCocoon = new Mechanic("bud_cocoon");
-
-        /// <summary>
-        /// The satchel: a thicket is dealt so many taps and no more.
-        ///
-        /// <b>Separate from <see cref="MoveBudget"/>, and for the half that differs</b>: a glade
-        /// hands a turn back on every undo, so exploring is free. There is no undo here, and a
-        /// bud spent is gone from the board along with whatever its chain took — so the count on
-        /// screen is the only thing standing between a careless run and the end of it.
-        /// </summary>
-        public static readonly Mechanic BudSatchel = new Mechanic("bud_satchel");
-
-        // **Five retired lesson ids that must never be reused: `bud_runner`, `bud_gust`,
-        // `bud_firefly`, `bud_puff` and `bud_hive`.** The runner — a vine joining two squares of
-        // the grove — was the second chapter's first object and was withdrawn after one session
-        // of play; the windmill, the firefly, the puffball and the hive replaced it and were
-        // withdrawn after the next, for one fault they all shared: every one of them paid out as
-        // the same chain, and none was something the player had *made*. A lesson id travels in
-        // the save (`tipsSeen`), and every one of these was shown on a device.
-
-        /// <summary>
-        /// The graft: drag a flower onto its neighbour and the two trade places, if that makes
-        /// a bunch. The gesture every player of this genre already knows, said once because
-        /// nothing on the board invites a drag until somebody has been told to try one.
-        /// </summary>
-        public static readonly Mechanic BudGraft = new Mechanic("bud_graft");
-
-        /// <summary>
-        /// The bolt: five alike leave a bolt where you tapped, and tapping it clears its whole
-        /// row and column.
-        ///
-        /// The board shows the forge and the firing; what it cannot say before the first one
-        /// exists is that a bunch of <em>five</em> is what makes one — a player who has not been
-        /// told makes threes for ever and never sees it.
-        /// </summary>
-        public static readonly Mechanic BudBolt = new Mechanic("bud_bolt");
-
-        /// <summary>
-        /// The sun: eight alike leave a sun, and tapping it clears the five-by-five around it —
-        /// and a special in a fired special's reach fires too, which is the chain the chapter
-        /// is built on and the half a single firing cannot show.
-        /// </summary>
-        public static readonly Mechanic BudSun = new Mechanic("bud_sun");
-
-        // **`bud_wood` is a retired lesson id and must never be reused.** Old wood was
-        // authored across most of the Thicket for one drop and taken out again, because a
-        // barrier is the one object that can only ever make a chain *shorter* — and a mode whose
-        // whole product is the chain has nothing to gain from it. It was reported the way it
-        // deserved: the mechanic contradicts the idea. The parser still understands `#`, because
-        // the character is shared vocabulary with Groovekeeper and refusing it would be a
-        // second rule to keep in step; `BudValidator` warns on a grove that authors one.
+        // ----------------------------------------------------- retired: Budburst
+        // **Six retired lesson ids that must never be reused: `bud_chain`, `bud_cocoon`,
+        // `bud_satchel`, `bud_graft`, `bud_bolt` and `bud_sun`**, alongside the eight this mode
+        // had already spent (`bud_runner`, `bud_gust`, `bud_firefly`, `bud_puff`, `bud_hive`,
+        // `bud_wood`) and the ten Lightweave and Ripplewake spent before it (`weave_join`,
+        // `weave_bead`, `weave_ink`, `weave_hedge`, `weave_fill`, `ripple_meet`,
+        // `ripple_satchel`, `ripple_reed`, `ripple_deep`, `ripple_lily`). Budburst was withdrawn
+        // with Hollowmarch and Emberforge, having shipped two chapters and been played on a
+        // device. A lesson id travels in the save (`tipsSeen`) exactly as a level id does, so
+        // re-pointing one at a rule it never described would tell a player they have already been
+        // shown something they never saw.
 
         /// <summary>
         /// Lightfall's verb: a mote dropped onto another adds its colour rather than matching
@@ -198,7 +124,7 @@ namespace GlimmerGrove.Progression
         /// A well's supply: the motes it is dealt, and that spending one is permanent.
         ///
         /// <para>
-        /// <b>Separate from <see cref="MoveBudget"/> and from <see cref="BudSatchel"/>, for the
+        /// <b>Separate from <see cref="MoveBudget"/>, for the
         /// reason those two are separate from each other.</b> All three are a pot that empties
         /// and ends a run, and everything a player has to be told is in the half that differs. A
         /// glade's budget counts committed turns and hands one back for every undo, without
@@ -313,8 +239,8 @@ namespace GlimmerGrove.Progression
         /// rule.</b> A pull takes exactly one from the meter and cannot be taken back — which is
         /// the half a player arriving from four chapters of turning conduits has to be told,
         /// since a glade hands a turn back for every undo and so rewards tapping about to see
-        /// what happens. Separate from <see cref="MoveBudget"/>, <see cref="FallSupply"/> and
-        /// <see cref="BudSatchel"/> for the reason those three are separate from each other:
+        /// what happens. Separate from <see cref="MoveBudget"/> and <see cref="FallSupply"/> for
+        /// the reason those two are separate from each other:
         /// what matters is not that a pot empties, it is what a wrong move costs before it does.
         /// It was written for five modes and kept its wording when four of them went, because
         /// the id is spent either way and the sentence was never about any one of them.
@@ -328,63 +254,10 @@ namespace GlimmerGrove.Progression
         /// </summary>
         public static readonly Mechanic ProtoMoves = new Mechanic("proto_moves");
 
-        /// <summary>
-        /// Hollowmarch's verb: fire a core into the line and it wedges in beside its own colour.
-        ///
-        /// <para>
-        /// One sentence, and it is about the <em>aim</em> rather than about matching. Three alike
-        /// going off is a picture anybody reads the first time they see it, and the closing gap
-        /// explains itself as it happens — what a board cannot show before it has happened once
-        /// is that a core does not land where the finger went. It travels to the run it matches
-        /// and pushes in beside it, which is why every run of your colour lights up while the
-        /// finger is down.
-        /// </para>
-        /// </summary>
-        public static readonly Mechanic MarchFire = new Mechanic("march_fire");
-
-        /// <summary>
-        /// That a big shot forges a Spark, and that a Spark cuts what a colour never can.
-        ///
-        /// <para>
-        /// The one rule here a board cannot demonstrate before it is met, and it is deliberately
-        /// two halves of one sentence: <em>how</em> the thing is made and <em>what</em> it does.
-        /// Either half alone is useless — a player who does not know five pods forges one will
-        /// never make one on purpose, and a player who has one in hand and reads it as a bigger
-        /// core will spend it on the nearest run rather than on the plating that is the only
-        /// reason it exists.
-        /// </para>
-        /// <para>
-        /// The rescue needs no lesson at all; a critter running out of a broken cage explains
-        /// itself, which is why this is the mode's second lesson and not its third.
-        /// </para>
-        /// </summary>
-        public static readonly Mechanic MarchSpark = new Mechanic("march_spark");
-
-        /// <summary>
-        /// Emberforge verb: swap two neighbours so three alike line up, and they fuse into an
-        /// ember rather than clearing.
-        ///
-        /// <para>
-        /// One sentence, and it is about what a match <em>makes</em> rather than about matching.
-        /// Everybody who has played this genre already knows how to line three up; nobody has
-        /// met a board where doing it leaves a bomb standing on the cell their finger ended on,
-        /// and that last clause is the half a wall cannot show before it has happened once.
-        /// </para>
-        /// </summary>
-        public static readonly Mechanic EmberFuse = new Mechanic("ember_fuse");
-
-        /// <summary>
-        /// That an ember is <em>tapped</em> to fire it, and that two pushed together make a star.
-        ///
-        /// <para>
-        /// Deliberately two halves of one sentence, exactly as <see cref="MarchSpark"/> is. A
-        /// player who does not know an ember is tapped will make three of them and wonder why
-        /// nothing is happening; a player who taps every one the moment it appears never sees
-        /// the biggest thing in the mode. Which of the two to spend and when is the whole
-        /// decision, so both halves have to arrive at once.
-        /// </para>
-        /// </summary>
-        public static readonly Mechanic EmberStar = new Mechanic("ember_star");
+        // -------------------------------------- retired: Hollowmarch and Emberforge
+        // **Four retired lesson ids that must never be reused: `march_fire`, `march_spark`,
+        // `ember_fuse` and `ember_star`.** Both modes were withdrawn with Budburst, and both were
+        // played on a device, so a real save may hold a `tipsSeen` entry against any of them.
 
         /// <summary>
         /// Prismvale's verb: drag a gem onto its neighbour and the two change places.
@@ -403,8 +276,7 @@ namespace GlimmerGrove.Progression
         /// That a vein can be <em>broken</em>, and that a gem is never spent.
         ///
         /// <para>
-        /// Deliberately two halves of one sentence, exactly as <see cref="EmberStar"/> and
-        /// <see cref="MarchSpark"/> are. A player who does not know the light is read off the
+        /// Deliberately two halves of one sentence. A player who does not know the light is read off the
         /// arrangement will pull a gem out of a working vein and think the game took it away;
         /// one who thinks gems are spent will hoard them. Both halves are the same fact - the
         /// board never changes, only where things stand - and it is the one thing that makes a
@@ -432,8 +304,8 @@ namespace GlimmerGrove.Progression
         /// That fuel <em>fades</em>, and that the ward line is the run.
         ///
         /// <para>
-        /// Deliberately two halves of one sentence, exactly as <see cref="EmberStar"/> and
-        /// <see cref="PrismVein"/> are. A player who does not know fuel fades will bank a colour
+        /// Deliberately two halves of one sentence, exactly as <see cref="PrismVein"/> is. A
+        /// player who does not know fuel fades will bank a colour
         /// through a quiet moment and find it gone; one who does not know the line is the fail
         /// state will let a wave through to keep matching. Both halves are the same fact — what a
         /// colour is worth depends entirely on when it is spent — and it is the only thing that
@@ -598,9 +470,9 @@ namespace GlimmerGrove.Progression
         public static readonly Mechanic[] All =
         {
             FragileConduit, MoveBudget, RootedTile, AnyLight, ColourMixing, Crossing, Briar,
-            BoundConduit, BudChain, BudCocoon, BudSatchel, BudGraft, BudBolt, BudSun,
+            BoundConduit,
             FallCook, FallSupply, FallBrim, FallLens, FallWhorl,
-            ProtoMoves, MarchFire, MarchSpark, EmberFuse, EmberStar, PrismDrag, PrismVein,
+            ProtoMoves, PrismDrag, PrismVein,
             SiegeFuel, SiegeLine,
             ModeSwitch, LuckySpin, Grove,
             GroveShop,

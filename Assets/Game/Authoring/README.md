@@ -30,18 +30,19 @@ than quietly dragging the folder back into the build.
 
 What deliberately does **not** belong here:
 
-- **`FallSolver`, `KeeperSolver` and `BudSolver`.** A level of each of those modes is
-  *graded* on what they return: par is the fewest drops, tiles or taps that finish the board,
-  both star lines and the budget the run is dealt are derived from it, and none of that may be
-  authored (a typed par drifts silently). So the player's device runs the search, once, the
-  first time anything asks — which is why `LevelTuning.Par` may be resolved lazily. The
-  authoring-only half of each is `Survey`, a dozen lines over the same `Search` the phone needs,
-  and splitting that out would mean making a four-hundred-line search class public across an
-  assembly boundary to save the dozen. It is a trade, and it is the only one left.
-  <br>There used to be a fourth and it was the weaker case: Lightweave's solver ran on the phone
-  as its *generator's* acceptance bar rather than as a grading rule. That mode is retired, and so
-  is Ripplewake, which came and went between it and Budburst — see invariant 20j.
-- **`ChapterMap`, `GroveFloor`, `BudBand`** and the rest of the geometry. Screens read
+- **`FallSolver` and `ProtoSearch`.** A level of each of those modes is *graded* on what they
+  return: par is the fewest drops or moves that finish the board, both star lines and the budget
+  the run is dealt are derived from it, and none of that may be authored (a typed par drifts
+  silently). So the player's device runs the search, once, the first time anything asks — which is
+  why `LevelTuning.Par` may be resolved lazily. The authoring-only half of each is `Survey`, a
+  dozen lines over the same `Search` the phone needs, and splitting that out would mean making a
+  four-hundred-line search class public across an assembly boundary to save the dozen. It is a
+  trade, and it is the only one left.
+  <br>There used to be one more and it was the weaker case: Lightweave's solver ran on the phone
+  as its *generator's* acceptance bar rather than as a grading rule. That mode is retired, along
+  with Ripplewake, Groovekeeper and — as of invariant 38 — Budburst, whose `BudSolver` was the
+  third entry here.
+- **`ChapterMap`, `GroveFloor`** and the rest of the geometry. Screens read
   them. Only the *checks over* them are authoring.
 
 ## What is here
@@ -53,15 +54,16 @@ What deliberately does **not** belong here:
 | `ModeValidator` | How each mode is proved fit to ship, and the registry of them. |
 | `ChapterMapValidator` | Node collisions, backwards trails, the end-of-chapter marker's clearance. |
 | `ChapterModeValidator` | A chapter's declared mode against the mode its levels are (invariant 20h). |
-| `BudRunnerReading` | What the vines on a Budburst grove are worth, measured by cutting them (invariant 20m). |
+| `PrismReading` | What a Prismvale field's shortest answers do, and what it was dealt (invariants 5g, 36e). |
 
-`BudRunnerReading` is a type of its own rather than a private method because it is asked
-**twice** — `ModeValidator` asks it to decide whether a grove may ship, and `BudLadderTests`
-asks it of every grove that already has, pinning the answer against `Tools/verify/bud.py`. A
-second copy of the arithmetic would be a second thing to keep in step with the mirror, and that
-is not hypothetical: the two *did* disagree by one on `b02_crossvine`, because the fixture
-compared a chain's four numbers where the mirror compared the whole grove — and a vine that
-moves a colour without setting anything off changes the second and not the first.
+A reading is a type of its own rather than a private method because it is asked **twice** —
+`ModeValidator` asks it to decide whether a board may ship, and `ProtoLadderTests` asks it of
+every board that already has, pinning the answer against `Tools/verify/prism.py`. A second copy
+of the arithmetic would be a second thing to keep in step with the mirror, and that is not
+hypothetical: `BudObjectReading` and its mirror *did* disagree by one on `b02_crossvine`, because
+the fixture compared a chain's four numbers where the mirror compared the whole grove. Budburst,
+Hollowmarch and Emberforge are gone (38) and `BudObjectReading`, `MarchReading` and `EmberReading`
+went with them; the shape they proved is why this one is written the same way.
 
 ## A mode is declared three times
 

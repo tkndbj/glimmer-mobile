@@ -2002,6 +2002,73 @@ In practice:
     and it needs the pack, which is gitignored - the same bargain `make_siege_art.py --check`
     already strikes with the licensed zips.
 
+38. **Budburst, Hollowmarch and Emberforge are deleted; the classic glade and Lightfall are
+    *hidden*; Prismvale and Thornwatch are what the game is.** The owner withdrew three modes in
+    one decision and held two more back rather than retiring them, and the difference between
+    those two words is the whole of this entry. **Deleted** means gone the way every mode before
+    them went (28–32, 35): the mode class, the board, the view, the screen, the validator, the
+    reading, the chapter bodies, the art, the offline mirrors and the tools, with the ids spent
+    and written down. **Hidden** means `"disabled": true` on their manifest entries and nothing
+    else — every file, every board and every screen still stands, so putting them back is seven
+    booleans and no code. That is what the flag was built for (`CatalogIndexBuilder.Add` skips a
+    disabled chapter in silence, and `CatalogIndex` leaves a mode with no chapters off the
+    switcher entirely), and it is why hiding costs nothing and deleting costs a session.
+    <br>**Deleting three modes at once cost the save file no schema version, no merge rule, no
+    `firestore.rules` change and no server work**, which is invariant 20a's bargain collected for
+    the sixth time — and the honest other half is that it cost **thirty-three levels' worth of
+    derived XP and credits**, which is exactly what `ProgressionStore`'s high-water floors exist
+    to stop a player noticing (invariant 9).
+    <br>**Two things this taught that the five withdrawals before it did not.** *One:* shared
+    machinery living inside a mode's file is a mode that cannot be deleted for the price of its
+    own files. `CellDrag` — the drag handler Prismvale and Thornwatch both use — was written
+    inside `BudView`, so removing Budburst took the verb out from under two live modes, and the
+    compiler was the only thing that said so. It has a file of its own now. *Two:* **hiding the
+    classic mode breaks anything that reads `GameMode.Default` as "the mode to open".** That
+    constant is a **parsing** answer — a chapter with no `mode` field is a glade, for ever — and
+    three call sites were using it as a **catalog** answer: the map's fallback, the home screen's
+    next-up line and the splash's one preloaded chapter. Each would have opened onto a mode with
+    no chapters in it. `CatalogIndex.DefaultMode` is the catalog answer and is what they ask now.
+    Before treating a constant as a default, ask which of the two questions it was written to
+    answer.
+38a. **The front door is `LevelModes`' first entry, and it is Thornwatch.** Index nought of that
+    registry is what the switcher offers first *and* what a map with nothing remembered opens on,
+    because `CatalogIndex.DefaultMode` is `Modes[0]` and nothing else. Those were briefly two
+    answers — the catalog preferred the classic mode where the switcher led with whatever the
+    registry led with — and two answers means a map opening on one mode while the control above
+    it offers a different one first: a difference nobody could explain and no gate would catch,
+    because each half is individually correct. **Which mode leads is decided once, in a written
+    list, and read everywhere else.** It is a list rather than a sort for the reason it always
+    was: a switcher that reorders itself moves the entry somebody reaches for without looking.
+    <br>**A remembered choice still wins**, so moving the front door moves nobody who has already
+    chosen — `glimmer_map_mode` is written on every map *arrival*, so in practice it moves only a
+    fresh install. And `GameMode.Default` did **not** move and must not: a chapter with no `mode`
+    field is a glade for ever.
+    <br>**Making that one answer exposed a bug the two answers had been hiding since the switcher
+    shipped.** `ModeChoice.Read` could not tell *nothing remembered* from *the classic mode
+    remembered*, because it read the stored string through `GameMode.TryParse` — which answers
+    **true for an empty string, with the glade**, that being the question it exists to answer.
+    Harmless for as long as the glade was also the fallback; the moment the front door moved it
+    became a map opening on the classic mode on a device that had never chosen it. An empty
+    preference is now answered before anything is parsed. **A parser's forgiving default is not a
+    reader's "unset"**, and the third place in one session where a constant answering two
+    questions cost something.
+    <br>**Retired ids that must never be reused:** the mode ids **`bud`**, **`march`** and
+    **`ember`**; the level blocks **`bud`**, **`march`** and **`ember`** (refused by name in
+    `content.py`'s `RETIRED_BLOCKS`); the chapter ids `b01_thicket`, `b02_tanglewood`,
+    `m01_hollowmarch` and `e01_emberforge` with all thirty-three of their level ids; and the
+    lesson ids `bud_chain`, `bud_cocoon`, `bud_satchel`, `bud_graft`, `bud_bolt`, `bud_sun`,
+    `march_fire`, `march_spark`, `ember_fuse` and `ember_star`. All three were played on a
+    device, so a real save may hold a record or a `tipsSeen` entry against any of them.
+    `ContinueUnit.Taps`, `DefeatReason.OutOfTaps` and `DefeatReason.Barren` are kept as members
+    rather than deleted, because their **ordinals** reach analytics on every run those modes ever
+    recorded. `progression.json` keeps its `continueRun.taps` figure for the same reason: it is a
+    retired unit's price, and the seeder publishes that block whole.
+    <br>**What was kept is everything that was a seam rather than a mode** — the prototype level
+    shape, the story band and its cast, the village world of backdrops, `ProtoDto.cores` and the
+    forty shared skies. `StoryScreen` now has no subclass at all and stays anyway, for the reason
+    it survived Deep Orbit, Nova Raid and the Iron Quarry: a seam outlives the thing it was built
+    for, and the next mode that talks costs one base class it does not have to write.
+
 
 
 ## Layout
@@ -2047,28 +2114,23 @@ compile. Do not guess — verify offline:
   `verify-content-without-unity` in the memory directory for the exact command.
 - **Content check:** `Tools/verify/content.py` — parse the StreamingAssets JSON, prove every level
   solvable, derive par, confirm every loc key resolves, and run `board-vectors.json` through both Python
-  copies of the four-armed-tile rule (`BoardVectorTests` runs the C# one). The per-mode checks are rolled
-  into it: the **prototype modes** (one check for all of them - par searched, not finished on
-  arrival, a legal move to make, plus the handful of questions only each mode's own rules can ask;
-  `ways`, `careless`, `nodes`) - which now carries **Prismvale** (par searched, the field authored
-  **dark**, nothing dealt into it, no critter standing where no lantern could ever reach it;
-  `ways`, `careless`, `dealt`, `used`, `paired`, `idle`) and **Emberforge** (par searched, the wall
-  authored **settled**, nothing dealt into it, no goal walled off from every beam; `ways`,
-  `careless`, `life`, `chained`, `forged`, `starred`, `lonely`, `dealt`) and **Hollowmarch** and asks of a haul-road that it
-  has a line to fire into, that the line is authored *settled*, that no pod wears a colour the
-  magazine never deals, and that its chains and its Sparks are doing work (`march_rules`;
-  `chained`, `forged`, `lanced`, `menace`) - **Lightfall** (par searched, brim row empty, nothing
-  floating, procession carrying all three channels; `motes`, `headroom`, `ways`, `greedy`, and from the
-  second chapter `lenses`, `whorls`, `fused`, `kindled`, `aim`, `reach`), and **Budburst** (par searched, the grove **authored
-  settled**, every cocoon with a flower beside it, the basket pure colour only; `ways`, `careless`, `nodes`,
-  two of which are read **backwards** on that mode — invariant 20k — and from the second chapter `runners`,
-  `changed`, `caught` and `ran`). `fall-vectors.json` and
-  **Thornwatch** is the one mode it does *not* search, because there is nothing to search
-  (invariant 37a): what is proved is the layout's own refusals, the arithmetic par held to
-  `SiegeTuning.Par` by being the same three lines, and the readings a validator can act on
-  (`waves`, `raiders`, `brutes`, `colours`, `wards`, `threat`, `swap`). `fall-vectors.json` and
-  `bud-vectors.json` are the contracts with the shipping C# rules; the prototype modes have no vector
-  file and are pinned **inline** by `ProtoLadderTests` instead, for the reason invariant 29e gives.
+  copies of the four-armed-tile rule (`BoardVectorTests` runs the C# one). It reads the manifest, so a
+  chapter carrying `"disabled": true` is skipped whole and the hidden glade and Lightfall chapters are
+  not proved on a run (invariant 38) — re-enable one and it is checked again with no other change. The
+  per-mode checks are rolled into it: the **prototype modes** (one check for all of them - par
+  searched, not finished on arrival, a legal move to make, plus the handful of questions only each
+  mode's own rules can ask; `ways`, `careless`, `nodes`) - which today carries only **Prismvale**
+  (par searched, the field authored **dark**, nothing dealt into it, no critter standing where no
+  lantern could ever reach it; `ways`, `careless`, `dealt`, `used`, `paired`, `idle`) -
+  **Lightfall** (par searched, brim row empty, nothing floating, procession carrying all three
+  channels; `motes`, `headroom`, `ways`, `greedy`, and from the second chapter `lenses`, `whorls`,
+  `fused`, `kindled`, `aim`, `reach`), and **Thornwatch**, which is the one mode it does *not*
+  search, because there is nothing to search (invariant 37a): what is proved is the layout's own
+  refusals, the arithmetic par held to `SiegeTuning.Par` by being the same three lines, and the
+  readings a validator can act on (`waves`, `raiders`, `brutes`, `colours`, `wards`, `threat`,
+  `swap`). `fall-vectors.json` is the contract with the shipping C# rules; the prototype modes have
+  no vector file and are pinned **inline** by `ProtoLadderTests` instead, for the reason invariant
+  29e gives. `bud-vectors.json` went with Budburst.
 - **Difficulty check:** `python Tools/verify/difficulty.py` — what each glade actually asks of a player,
   counted rather than argued about. Not a gate (5d). It enumerates rotations of a grid of conduits, so it
   reports glades and names other modes as skipped. `dealt` is the one column about the board as the player
@@ -2118,43 +2180,17 @@ compile. Do not guess — verify offline:
   `paired` and `idle` for every deal worth keeping; `--board "row,row,..."` measures one board,
   and `--par`, `--used`, `--dealt` and `--greedy` filter. This is how the two shipped boards were
   chosen (32d).
-- **Emberforge's art:** `Tools/make_ember_art.py --check` proves every sprite, cast flipbook
-  and explosion is what the tool cuts out of the licensed packs, and `--contact` lays them out
-  to be looked at. It reads the zips directly and **passes when the packs are absent**, so a
-  checkout without them still runs the gate. It is committed with its first drop, which
-  `make_quarry_art.py` was not (owed item 18).
-- **Emberforge legibility:** `python Tools/render_ember.py` draws every shipped wall at the size a
-  phone draws it, with the real sprites, using `EmberScreen.HostInset` and `EmberView`'s own
-  arithmetic. **Look at it.** It is the only check that can see a cage that reads as a tiny padlock
-  or an ember too dark to want touching — two faults it caught in one session, both past a green
-  gate (invariant 34e).
-- **Emberforge board sweep:** `python Tools/ember_sweep.py --template <name> --seeds N` deals shards
-  into a designed wall and prints par, `ways`, `nodes`, `careless`, `life`, `chained`, `forged` and
-  `starred` for every deal worth keeping; `--board "row,row,..."` measures one wall. This is how the
-  ten shipped walls were chosen (32d).
-- **Hollowmarch's art:** `Tools/make_march_art.py --check` proves the twelve board sprites — the
-  road, the ground, the rubble, the gate, four pods, the Spark, the cage and the plate — are what
-  the tool would **draw**; they are composed rather than cut, for invariant 32b's reason.
-  <br>**The cast has no such check any more, and that is a loss worth recording rather than
-  hiding.** `make_quarry_art.py` cut the twelve cast flipbooks and five explosions out of the
-  licensed character and explosion packs, and it was never committed — so it went with the Iron
-  Quarry and cannot be recovered. The art it produced is intact and is what Hollowmarch draws
-  (`Assets/Game/Art/March/`, which is now tracked); what is gone is the ability to prove those
-  PNGs are what a tool would cut. Rewriting it is on the owed list, and until then a change to
-  the cast is a change nothing checks.
-  `Tools/make_village_art.py --check` covers the forty village backdrops, which are *composed* out
-  of eight isometric tile packs. Every one passes when the packs are absent, so a checkout without
-  them still runs the gate — and every one has `--contact`, which is the half that matters (see the
-  shop-art note below).
-- **Hollowmarch legibility:** `python Tools/render_march.py` draws every shipped road at the size a
-  phone draws it, with the real sprites, using `MarchScreen.HostInset` and `MarchView`'s own
-  arithmetic. **Look at it.** It is the only check that can see a road that reads as a row of
-  sockets, a magazine hanging off the plate, or a board that is half empty rail — three mistakes it
-  caught in one session, every one of them past a green gate (invariant 33h).
-- **Board sweep:** `python Tools/march_sweep.py --template <name> --seeds N` deals a convoy into a
-  designed road and prints par, `ways`, `careless`, `nodes`, `chained`, `forged`, `lanced` and
-  `menace` for every deal worth keeping; `--board "row,row,..."` measures one board. This is how the
-  three shipped roads were chosen (32d).
+- **Gone with their modes** (invariant 38): `make_ember_art.py`, `render_ember.py`,
+  `ember_sweep.py`, `make_march_art.py`, `render_march.py`, `march_sweep.py`, `verify/bud.py`,
+  `verify/ember.py`, `verify/march.py` and `verify/bud-vectors.json`, along with
+  `Tools/chapters/b01_thicket.py`, `b02_tanglewood.py`, `budforge.py`, `e01_emberforge.py` and
+  `m01_hollowmarch.py`. `make_village_art.py --check` stays, because the village is a **world**
+  and not a mode (30e) — the next mode set outside the grove costs one line in
+  `Tools/chapters/mapart.py` and no art. So does `make_quarry_art.py`'s absence: it was never
+  committed, so the cast art it cut is intact and tracked and nothing can prove it is what a tool
+  would cut. That was the March cast and it is deleted now, which closes owed item 18 by removing
+  the thing it was owed for rather than by paying it — the lesson stands and is why every art tool
+  since is committed with its first drop.
 - **Shop art and sound checks:** `Tools/make_shop_art.py --check` and `Tools/make_sfx.py --check` prove the
   shipped pictures and clips are what the tools would cut. **They prove reproducibility and say nothing about
   quality**, and that distinction shipped four broken cards — every check green over a coin sack whose fill
@@ -2462,63 +2498,54 @@ live in **Hard-won facts**.
   server-side filtering and reporting. A card is rebuilt about fifteen seconds after its owner changes
   the grove while online (a three-second sync debounce, then a ten-second publish debounce), or on
   their next launch; the cost grows with decorating, never with playing (19j).
-- **Modes beyond the classic glade** — Lightfall (`f01_lightfall`, `f02_glasswater`, `f03_whorlwater`),
-  Budburst (`b01_thicket`, `b02_tanglewood`), **Hollowmarch** (`m01_hollowmarch`, three
-  levels, invariant 33), **Emberforge** (`e01_emberforge`, ten levels, invariant 34) and
-  **Prismvale** (`p01_prismvale`, two levels, invariant 36) and **Thornwatch**
-  (`s01_thornwatch`, one level, invariant 37) — the last of these the first mode here that runs on
-  a **clock**: raiders walk down a hill at a line of coloured wards, and a match is worth only the
-  colour it was. Prismvale before it is the classic
-  glade's goal reached by the jewel board's own verb, drag-to-swap, with the match-three taken
-  out of it — the
-  first board in this game built on the cascade the whole casual genre runs on, and the first
-  whose allowance is drawn on the board rather than in a corner; and then the first built on the
-  genre's own *verb*, where a match does not clear but fuses into something you spend.
-  **Deep Orbit and Moonwake are retired** (30); so are **Nova Raid and Toppleglen** (31), and
-  **the Iron Quarry** (32). All five sets of ids are spent.
-  **Groovekeeper is retired** (28), and so are four of the five prototypes that took its slot — Nectarrun,
-  Ribbonfall, Seedfling and Warrenwake were withdrawn after play and their mode, chapter, level and lesson
-  ids are all spent (29).
-  <br>**The Hollow does not ship and never did.** `LevelModes` registers exactly seven — `GladeMode`,
-  `FallMode`, `BudMode`, `MarchMode`, `EmberMode`, `PrismMode`, `SiegeMode` — there is no `HollowMode`, no `KeeperMode` and no `QuarryMode`, and
-  `h01_emberfall` is in neither. What survives is the *level shape*
-  (`HollowDto`, invariants 20c–20e), which is why the rest of this file still talks about hollows: those
-  entries are design rules, not a shipping mode. This was found on 2026-09-02 by deriving the store
-  listing from `manifest.json` instead of from this file — the draft claimed five modes and a hundred
-  levels "across eleven chapters", and the truth was **four modes, ten chapters, one hundred levels** at
-  the time. It is now **seven modes, thirteen chapters, one hundred and six levels** — and three of
-  those modes are short: Hollowmarch is three levels, Prismvale two and Thornwatch one, all built
-  to be played and judged, which is exactly the sort of thing a store listing must not count as a
-  finished game mode. Read the manifest, never this table, when the number reaches a customer.
-  <br>Lightfall is the only one to reach a third chapter, and what a second or third costs is
-  the shape to copy: one new object (the lens, then the whorl), one lesson id, a few fields on the mode's
-  own step type — and **no save schema version, no merge rule, no `progression.json` retune and no server
-  work** (20a). Lightfall's third chapter also cost **two** withdrawn mechanics before it kept one, which is
-  26g and 26h and by some distance the more useful half of the lesson; Budburst's second chapter cost
-  **six** (the runner, then a windmill, a firefly, a puffball and a hive, 20m) before it kept the genre's
-  own loop — specials the player forges, and the graft. Lightweave and Ripplewake are retired; `weave` and
-  `ripple` are spent mode ids.
-  <br>**Hollowmarch is the tenth mode the prototype level shape has carried**: a grid of letters,
-  a deal, a searched par and a slack, so `ProtoGrid`, `ProtoSearch`, `ProtoRun`, `ProtoVerdict`,
-  `ProtoView` and `ProtoScreen` were all inherited and the mode supplied a board (`MarchBoard`), a
-  look, a validator and a view. It is the first of them to use the block's third field —
-  `ProtoDto.cores`, the **deal**, described since the block was written and never wanted until
-  now. It inherits the **story** band (30d), the **world** of backdrops (30e) and the whole cast
-  and explosion art from the Iron Quarry, which had it from Nova Raid, and adds twelve drawn
-  sprites of its own — none of which reached the save file, the wire or the server.
+- **The two live modes, and the two hidden ones** (invariant 38) — the game a player opens today is
+  **Thornwatch** (`s01_thornwatch`, one level, invariant 37) and **Prismvale** (`p01_prismvale`,
+  two levels, invariant 36), and nothing else. **Thornwatch is the front door** — first row of the
+  switcher and what a map with nothing remembered opens on (38a) — and it is the first mode here
+  that runs on a **clock**: raiders walk down a hill at a line of coloured wards, and a match is
+  worth only the colour it was. Prismvale is the classic glade's goal reached by the jewel board's
+  own verb, drag-to-swap, with the match-three taken out of it.
+  <br>**The classic glade (`c01_shallows` … `c04_nightbriar`) and Lightfall (`f01_lightfall`,
+  `f02_glasswater`, `f03_whorlwater`) are *hidden*, not deleted** — `"disabled": true` in the
+  manifest and nothing else, so every board, screen and mode class still stands and seven booleans
+  put them back. A disabled chapter is skipped in silence by `CatalogIndexBuilder.Add`, and a mode
+  with no chapters is left off the switcher by `CatalogIndex`, so hiding costs no code at all.
+  <br>**Budburst, Hollowmarch and Emberforge are deleted** (38), and their mode, chapter, level and
+  lesson ids are all spent. So are **Deep Orbit and Moonwake** (30), **Nova Raid and Toppleglen**
+  (31), **the Iron Quarry** (32), **Kindlewake** (35), **Groovekeeper** (28) and four of the five
+  prototypes that took its slot — Nectarrun, Ribbonfall, Seedfling and Warrenwake (29). Lightweave
+  and Ripplewake are retired too; `weave` and `ripple` are spent mode ids.
+  <br>**The Hollow does not ship and never did.** `LevelModes` registers exactly four, in the
+  order the switcher offers them — `SiegeMode`, `PrismMode`, `GladeMode`, `FallMode` — there is no
+  `HollowMode`, no `KeeperMode`, no
+  `BudMode`, no `MarchMode` and no `EmberMode`, and `h01_emberfall` is in neither the manifest nor
+  the code. What survives is the *level shape* (`HollowDto`, invariants 20c–20e), which is why the
+  rest of this file still talks about hollows: those entries are design rules, not a shipping mode.
+  <br>**Read the manifest, never this table, when a number reaches a customer.** That rule was
+  bought on 2026-09-02 by a store draft claiming five modes and a hundred levels "across eleven
+  chapters" when the truth was four modes and ten chapters. What the manifest says today is **four
+  modes and nine chapters, of which two modes and two chapters are enabled** — three levels a
+  player can reach. Everything else is on disk behind a boolean.
+  <br>**Prismvale is the twelfth mode the prototype level shape has carried and the only one still
+  on it**: a grid of letters, a deal, a searched par and a slack, so `ProtoGrid`, `ProtoSearch`,
+  `ProtoRun`, `ProtoVerdict`, `ProtoView` and `ProtoScreen` are all inherited and the mode supplies
+  a board (`PrismBoard`), a look, a validator and a view. `ProtoDto.cores` — the **deal** — is
+  wanted by none of them now and stays, because the block has always described itself as carrying
+  one. `StoryScreen`, the **story** band (30d) and the **village world** of backdrops (30e) all
+  survive with no mode using them, which is what a seam is for.
 - **Privacy/ads plumbing** — Google UMP consent, ATT prompt, `app-ads.txt` (placeholders).
 
 ### Content shipped
 
 | Chapter | Mode | Levels | Par range | `budgetFactor` | Subject |
 |---|---|---|---|---|---|
-| `c01_shallows` | glade | 10 | 10–50 | none, then default | the verb, then colour, blending, rooted stone, brittle stone, taproots, pockets of colour |
-| `c02_millvale` | glade | 10 | 41–63 | default 1.60 | the crossing |
-| `c03_amberwood` | glade | 10 | 44–70 | default 1.60 | colour as the subject; no new rule |
-| `c04_nightbriar` | glade | 10 | 44–69 | default 1.60 | the briar |
-| `f01_lightfall` | fall | 10 | 2–6 drops | none, then par + 5 (motes) | the cook, then the chain; motes 3 → 30, headroom 4 → 2, `ways` never above 8 |
-| `f02_glasswater` | fall | 10 | 3–6 drops | par + 5 (motes) | the lens, charged and fired; motes 5 → 33, glass 1 → 3 panes, channels asked for 1 → 6 |
-| `f03_whorlwater` | fall | 10 | 2–5 drops | par + 5 (motes) | the whorl: the only place two *motes* are combined. Motes 4 → 26, headroom 4 → 2, whorls 1 → 2, `ways` 1 → 16, greedy beaten on nine of ten |
+| `c01_shallows` | glade *(hidden)* | 10 | 10–50 | none, then default | the verb, then colour, blending, rooted stone, brittle stone, taproots, pockets of colour |
+| `c02_millvale` | glade *(hidden)* | 10 | 41–63 | default 1.60 | the crossing |
+| `c03_amberwood` | glade *(hidden)* | 10 | 44–70 | default 1.60 | colour as the subject; no new rule |
+| `c04_nightbriar` | glade *(hidden)* | 10 | 44–69 | default 1.60 | the briar |
+| `f01_lightfall` | fall *(hidden)* | 10 | 2–6 drops | none, then par + 5 (motes) | the cook, then the chain; motes 3 → 30, headroom 4 → 2, `ways` never above 8 |
+| `f02_glasswater` | fall *(hidden)* | 10 | 3–6 drops | par + 5 (motes) | the lens, charged and fired; motes 5 → 33, glass 1 → 3 panes, channels asked for 1 → 6 |
+| `f03_whorlwater` | fall *(hidden)* | 10 | 2–5 drops | par + 5 (motes) | the whorl: the only place two *motes* are combined. Motes 4 → 26, headroom 4 → 2, whorls 1 → 2, `ways` 1 → 16, greedy beaten on nine of ten |
 | ~~`k01_grovekeeper`~~ | ~~keeper~~ | — | — | — | **retired** (28) — withdrawn as boring; its ids are spent |
 | ~~`t01_toppleglen`~~ | ~~topple~~ | — | — | — | **retired** (31) — withdrawn after play; its ids are spent |
 | ~~`n01_nectarrun`~~ | ~~nectar~~ | — | — | — | **retired** (29) — withdrawn after play; its ids are spent |
@@ -2526,15 +2553,15 @@ live in **Hard-won facts**.
 | ~~`s01_seedfling`~~ | ~~fling~~ | — | — | — | **retired** (29) — withdrawn after play; its ids are spent |
 | ~~`w01_warrenwake`~~ | ~~warren~~ | — | — | — | **retired** (29) — withdrawn after play; its ids are spent |
 | ~~`h01_emberfall`~~ | ~~hollow~~ | — | — | — | **never shipped** — no file, not in the manifest, no `HollowMode` in `LevelModes`. Kept as a row so nobody re-adds it from memory |
-| `b01_thicket` | bud | 10 | 3 taps | none, none, par + 8, then par + 5 | every grove *living* (20l); 5x5 → 8x7, flowers 22 → 49, critters 3 → 12, opening tap 3 waves → 8. The first two rungs cannot be lost (24) |
+| ~~`b01_thicket`~~ | ~~bud~~ | — | — | — | **deleted** (38) — Budburst withdrawn with Hollowmarch and Emberforge; its ids are spent |
 | ~~`v01_harvester`~~ | ~~nova~~ | — | — | — | **retired** (31) — withdrawn after play; its ids are spent |
 | ~~`q01_ironquarry`~~ | ~~quarry~~ | — | — | — | **retired** (32) — withdrawn without ever being played; its ids are spent |
-| `m01_hollowmarch` | march | 3 | 4–7 cores | none, then par + 5 (moves) | fire a core into the line, three alike go off and the line slides shut behind them — and if the closure makes three more, that goes too; then the **hauler**, which wears no colour so no run spans one and a blast beside it scraps it; then four colours, a **warden** under plating that only a **Spark** cuts in one shot, and a line ten steps from the gate. `ways` 14 → 48 → 56, `chained` 3 → 4 → 4, `forged` 2 → 3 → 3, `lanced` 1 → 2 → 2, `careless` 4 → 0 → 0, goals 3 → 5 → 8 |
-| `b02_tanglewood` | bud | 10 | 3 taps | par + 5, then + 4, then + 3 (taps) | the bolt, the sun and the graft (20m): five alike forge a bolt where you tapped, eight a sun, and a fired special sets off every special in its reach. 8x7, fifteen then sixteen shut in, tough ones 3 → 8, a bolt dealt on rung one and a sun on rung three; every shortest play on every rung fires a special |
+| ~~`m01_hollowmarch`~~ | ~~march~~ | — | — | — | **deleted** (38) — Hollowmarch withdrawn; its ids are spent |
+| ~~`b02_tanglewood`~~ | ~~bud~~ | — | — | — | **deleted** (38) — Budburst's second chapter; its ids are spent |
 | ~~`k01_kindlewake`~~ | ~~kindle~~ | — | — | — | **retired** (35) — withdrawn after play: the verb was not the one commissioned and the animation followed from that. Its ids are spent |
 | `s01_thornwatch` | siege | 1 | 29 matches | none — the ward line is the fail state | raiders come down the hill at four coloured wards; match a colour and that ward fuels up and opens fire, and a bolt is worth double against a raider of its own colour. Fuel leaves a ward as a bolt and no other way (37c). 8x5 field, 20 raiders in 3 waves — four, then eight, then eight **brutes** — all four colours against all four wards. Waves come on a clock, or early if the hill is cleared (37k). An unhurried player holds it in about 35 matches with 40% of the line's health gone (37j). The one level of the mode, and it cannot be lost on moves (24) |
 | `p01_prismvale` | prism | 2 | 3–4 swaps | none, then par + 3 | drag a gem onto its neighbour and the two change places; a lantern feeds the gems of its own colour touching it, that colour runs on through every matching gem beside them, and a critter standing against the vein wakes. Nothing is ever spent, so a vein can be **broken**. 6x6, critters 2 → 3, lanterns 2 → 3, `ways` 10 → 120, `dealt` 2 → 3 of 25, `used` 2 → 3, greed beaten on the second. The first rung cannot be lost (24) |
-| `e01_emberforge` | ember | 10 | 3–5 moves | none, none, then par + 3 (par + 4 on the last two) | swap two jewels so three alike line up and they **fuse** into an ember; tap it for a cross of light down its row and column, or push two together for a star that takes the diagonals. Nothing refills. Stone, then frost, then the chain, then a pocket, then a warden, then the star. 6x6 → 8x8, goals 1 → 5, `ways` 35 → 6, `chained` 3 → 5, `forged` 3 → 7, `careless` 0 on every rung but the second. The first two rungs cannot be lost (24) |
+| ~~`e01_emberforge`~~ | ~~ember~~ | — | — | — | **deleted** (38) — Emberforge withdrawn; its ids are spent |
 
 **No level authors a difficulty number except the first glade in the game, and no chapter authors a clock**
 (invariant 22). Par is derived from the board; both star lines and the losing line are multiples of it —
@@ -2760,20 +2787,9 @@ changes nothing until that function is redeployed.
     `win_bonus` is the funnel; it decides whether the cap is now the thing that binds (it was never meant to
     be) and whether the tail slice is rare enough to stay a story. The server side is live and proved end to
     end.
-14a. **Measure the Tanglewood, and read whether players *make* specials before whether they fire them.**
-    Two questions. **Do players work out that five is what forges one?** Rung one deals a bolt so the first
-    thing anybody does is fire one; rung two deals nothing, and a player who has not made the connection
-    plays it as the Thicket. There is deliberately no event for it yet; if the funnel needs one, count forges
-    per run against bunches of four. **And is a chain of specials reachable by an ordinary player?** — every
-    rung's shortest plays fire at least one, which is a fact about the search and not about a thumb. If the
-    specials read as decoration, the cheap fix is more shut in beside the lines a bolt takes, which is a
-    content drop and no store review.
-14. **Measure the Budburst ramp.** Its ten groves are all par 3 and dealt eight taps each, so the whole ramp
-    is how many are shut in. The mode is commissioned against a *feeling* (20k), so the reading that matters
-    is not the clear rate (it should be ~100%) but the **three-star rate**, which should stay high and dip
-    only a little at the end. Three dials that would have moved it were removed for being ramps built out of
-    withholding, so if the chapter is flat the fix is **more to free**, not less to spend.
-15. **Measure Whorlwater's ladder, and read the whorl's *reason* before its difficulty.** The **ramp** has
+15. **Measure Whorlwater's ladder, and read the whorl's *reason* before its difficulty.** *(Lightfall
+    is hidden as of invariant 38, so this is owed the day it is turned back on rather than now.)*
+    The **ramp** has
     not been played against. It rides on board size (4 motes to 26), headroom (4 rows to 2) and whorl count
     rather than on par, which wanders 2 → 5 on purpose; if it is a wall the cheap fix is a roomier well or a
     shorter deal on the early rungs, which is a content drop and no store review.
@@ -2785,28 +2801,6 @@ changes nothing until that function is redeployed.
     <br>**The one number to watch is how often a whorl is opened early**, which is the mistake the mechanic
     is made of and the only one it can punish. There is deliberately no event for it yet; if the funnel needs
     a denominator, that is the one to add.
-17. **Judge Hollowmarch by playing it, which is what its three levels are for.** Built the way
-    the five prototypes were (invariant 29) — a whole mode with a real par, real star lines, a
-    real fail state and no save-file cost — so it can be taken back out for the price of a chapter
-    body and six files, exactly as Nova Raid, Toppleglen and the Iron Quarry were. Three questions
-    in order. **Does the wedge read?** A core does not land where the finger went: it travels to
-    the run it matches and pushes in beside it, which is why every run of the colour in hand
-    lights up while the finger is down and why the road lights between the launcher and the
-    landing. If a player taps a pod of the wrong colour and expects something, the tip is wrong
-    rather than the rule. **Is the chain something they arrange, or something they watch?** Every
-    rung's shortest answers set off a two-to-four wave chain and forge a Spark, which is a fact
-    about the search and not about a thumb — if chains only ever happen *to* players, the cheap
-    fix is more pairs of the same colour either side of a run, which is a content drop and no
-    store review. **Does the Spark read as a different piece?** It is the only thing that cuts a
-    warden's plating in one shot and the only thing on the board with points on it; if it still
-    reads as a bigger core, the fix is more boards where a warden stands behind a run worth five,
-    not a longer tip.
-    <br>Nothing about these boards was watched on a device before this was written: every offline
-    gate is green, the Editor's `Validate Content` and `Validate Art` are green, the whole suite
-    passes, and every board has been rendered and looked at. There is deliberately no analytics
-    event yet; the first worth adding is how often a run ends with the line jammed at the gate
-    rather than merely out of cores, because those are two different failures and only one of them
-    is about the puzzle.
 19. **Judge Prismvale by playing it, which is what its two levels are for.** Built the way
     every mode since the five prototypes has been (invariant 29), so it can be taken back out for
     the price of a chapter body and six files, exactly as Kindlewake just was. Three questions in
@@ -2862,11 +2856,6 @@ changes nothing until that function is redeployed.
     deliberately no analytics event yet; the first worth adding is how often a run ends with the
     line *down* rather than with the hill cleared, because those are two different failures and
     only one of them is about the puzzle.
-18. **Rewrite the cast art tool.** `make_quarry_art.py` cut the twelve cast flipbooks and five
-    explosions out of the licensed packs and was never committed, so it went with the Iron Quarry.
-    The art is intact and tracked; what is gone is the proof that it is what a tool would cut, so a
-    change to the cast is currently a change nothing checks. Cheap to rebuild and worth doing
-    before the cast is touched again.
 16. **Measure the continue.** 20 gems for +15 turns was reasoned about, never played against, and it is the
     second number after the move budget most likely to be wrong: too dear and a defeat is a dead end, too
     cheap and the fail state stops meaning anything. `continue_offered` / `continue_bought` are the funnel,

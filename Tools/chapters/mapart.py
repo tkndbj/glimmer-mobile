@@ -115,16 +115,13 @@ WORLDS = {
 #: Which world each mode is set in. Absent means the grove, so every mode that shipped
 #: before there was a second world keeps its art with its entry unwritten.
 MODE_WORLD = {
-    "march": "village",
-    # Emberforge is played on the hull of the harvester the raiders parked in that same
-    # village, so it is the same world seen from a few streets away - which is what a
-    # world is for. A third one would be forty new backdrops for a change of room.
-    "ember": "village",
 }
 
-# `quarry` was the entry here before Hollowmarch took its slot and its village. A retired mode
-# id is not re-pointed and is not kept: nothing loads a chapter naming one (invariant 20), so an
-# entry for it would be a line that can never be read.
+# `quarry`, then `march` and `ember`, were the entries here; all three modes are retired. A
+# retired mode id is not re-pointed and is not kept: nothing loads a chapter naming one
+# (invariant 20), so an entry for it would be a line that can never be read. The village
+# backdrops themselves stay, because they are a *world* and not a mode - the next mode set
+# outside the grove costs one line here and no art.
 
 
 def world_of(mode):
