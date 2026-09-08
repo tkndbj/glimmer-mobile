@@ -66,20 +66,23 @@ CANVAS = (1080, 1920)
 
 #: `UtilityBar.Height`. The bar is a shelf that meets the board's plate rather than a strip
 #: floating under it, so the bottom inset is the bar and nothing else.
-BAR_HEIGHT = 290
-INSET = (10, BAR_HEIGHT, 10, 300)
+BAR_HEIGHT = 228
+INSET = (0, BAR_HEIGHT, 0, 300)
 
 #: `UtilityBar`'s own numbers.
-SLOT, SLOT_TOP, BADGE, ICON, PRICE = 224, 46, 64, 162, 46
+SLOTS, SLOT, BADGE, ICON = 5, 184, 60, 136
 UTILITY_ART = REPO / "Assets" / "Game" / "Art" / "Ui" / "Utility"
 UTILITIES = ["firepot", "mending", "surge"]
-PRICES = {"firepot": 12, "mending": 8, "surge": 10}
 
-#: `SiegeView`'s own numbers.
+#: `SiegeView`'s own numbers. The field is laid out to the *width* and the hill and the line
+#: then share what is left in the proportion below - see `SiegeView.Fit` and `MaxGemBand`.
 MARGIN = 18
-HILL_BAND, LINE_BAND, GEM_BAND = 0.44, 0.16, 0.40
+HILL_BAND, LINE_BAND, MAX_GEM_BAND = 0.44, 0.16, 0.52
 GEM_INSET = 0.84
 LANES = 5
+
+#: `SiegeTuning.BlastRows`.
+BLAST_ROWS = 4
 
 #: `Pal.Board`, over the dark ground a sky is graded against.
 PLATE = (14, 27, 37)
@@ -251,6 +254,17 @@ def banner(sheet, cx, cy, depth, cell, span):
     sheet.alpha_composite(layer)
 
 
+def post_x(span, index, wards):
+    """`SiegeView.PostX`, at module scope so the ward rings can use it too."""
+    wide = span[0] / (wards + 0.6)
+    return (index - (wards - 1) / 2) * wide
+
+
+def lane_x(span, lane):
+    """`SiegeView.LaneX`, at module scope so the aim grid can use it too."""
+    return (lane - (LANES - 1) * 0.5) * (span[0] / LANES)
+
+
 def put(sheet, im, cx, cy, w, h):
     """Draws a sprite centred on (cx, cy), fitted into w x h without changing its aspect."""
     if im is None:
@@ -298,31 +312,38 @@ def layout_of(level):
     return siege.Layout(grid, block["gems"], block["wards"], block["waves"])
 
 
-def draw(level, raiders, bolts=True):
+def draw(level, raiders, bolts=True, aim=False):
     lay = layout_of(level)
     grid = lay.grid
 
     left, bottom, right, top = INSET
     host = (CANVAS[0] - left - right, CANVAS[1] - top - bottom)
 
-    cell = min((host[0] - MARGIN * 2) / grid.w, (host[1] - MARGIN * 2) * GEM_BAND / grid.h)
+    cell = min((host[0] - MARGIN * 2) / grid.w,
+               (host[1] - MARGIN * 2) * MAX_GEM_BAND / grid.h)
     span = (max(cell * grid.w, host[0] - MARGIN * 2), max(cell * grid.h, host[1] - MARGIN * 2))
 
+    gem_band = min(max(cell * grid.h / span[1], 0.28), MAX_GEM_BAND)
+    rest = 1.0 - gem_band
+    hill_band = rest * (HILL_BAND / (HILL_BAND + LINE_BAND))
+    line_band = rest - hill_band
+
     hill_top = span[1] * 0.5 - cell * 0.35
-    hill_foot = span[1] * (0.5 - HILL_BAND)
-    line_y = hill_foot - span[1] * LINE_BAND * 0.30
-    gem_centre = (span[1] * (0.5 - HILL_BAND - LINE_BAND) - span[1] * 0.5) * 0.5
+    hill_foot = span[1] * (0.5 - hill_band)
+    line_y = hill_foot - span[1] * line_band * 0.30
+    gem_centre = (span[1] * (0.5 - hill_band - line_band) - span[1] * 0.5) * 0.5
 
     sheet = Image.new("RGBA", CANVAS, BACK + (255,))
     draw_on = ImageDraw.Draw(sheet)
 
-    # The plate, exactly where ProtoView puts it.
+    # The plate, exactly where ProtoView puts it - and rounded at the top only, because the
+    # action bar is stacked directly under it (`SiegeView.PlateSkin`, `Art.RoundTop`).
     px = left + host[0] / 2
     py = top + host[1] / 2
     draw_on.rounded_rectangle(
         [px - span[0] / 2 - MARGIN, py - span[1] / 2 - MARGIN,
          px + span[0] / 2 + MARGIN, py + span[1] / 2 + MARGIN],
-        radius=34, fill=PLATE + (210,))
+        radius=34, fill=PLATE + (210,), corners=(True, True, False, False))
 
     def at(x, y):
         """Field-local (x, y) to canvas pixels. The view's y runs up; a picture's runs down."""
@@ -461,6 +482,11 @@ def draw(level, raiders, bolts=True):
                                   radius=16, fill=(255, 255, 255, 12))
         put(sheet, sprite(GEM_ART[c]), cx, cy, cell * GEM_INSET, cell * GEM_INSET)
 
+    if aim == "hill":
+        hill_grid(sheet, span, cell, hill_top, hill_foot, at)
+    elif aim == "wards":
+        ward_rings(sheet, span, cell, line_y, len(lay.wards), at)
+
     return sheet
 
 
@@ -478,13 +504,12 @@ def load(path):
 def bar(sheet, held):
     """The action bar, where `SiegeScreen` hangs it: filling the foot of the safe area.
 
-    <p>Drawn here rather than left to the imagination because it is not decoration - it is 290
-    points of the screen, 15% of the height three bands were already competing for (invariant
-    37g). What this picture is for is seeing whether the hill, the ward line and the field still
-    read with a shelf under them, and whether the shelf reads as one.</p>
+    <p>Drawn here rather than left to the imagination because it is not decoration - it is 228
+    points of the screen, and it decides how much is left for the three bands above it
+    (invariant 37g). What this picture is for is seeing whether the hill, the ward line and the
+    field still read with a shelf under them, and whether the shelf reads as one.</p>
     """
     draw_on = ImageDraw.Draw(sheet)
-
     top = CANVAS[1] - BAR_HEIGHT
 
     tray = load(UTILITY_ART / "tray.png")
@@ -493,44 +518,90 @@ def bar(sheet, held):
 
     cell = load(UTILITY_ART / "slot.png")
 
-    for i, name in enumerate(UTILITIES):
-        cx = CANVAS[0] * (2 * i + 1) / (2 * len(UTILITIES))
-        cy = top + SLOT_TOP + SLOT / 2
+    for i in range(SLOTS):
+        cx = CANVAS[0] * (2 * i + 1) / (2 * SLOTS)
+        cy = top + BAR_HEIGHT / 2
 
         if cell is not None:
-            put(sheet, cell, cx, cy, SLOT, SLOT)
+            # An empty place on the shelf is drawn dimmer than one holding something.
+            pane = cell
+            if i >= len(UTILITIES):
+                pane = cell.copy()
+                pane.putalpha(pane.split()[3].point(lambda v: int(v * 0.55)))
 
+            put(sheet, pane, cx, cy, SLOT, SLOT)
+
+        if i >= len(UTILITIES):
+            continue
+
+        name = UTILITIES[i]
         n = held.get(name, 0)
         icon = load(UTILITY_ART / (name + ".png"))
 
         if icon is not None:
             if n <= 0:
-                # `Paint` dims an empty cell's picture and leaves the control live: an empty
-                # cell is the shop, not a refusal.
                 faded = icon.copy()
                 faded.putalpha(faded.split()[3].point(lambda v: int(v * 0.36)))
                 icon = faded
 
-            put(sheet, icon, cx, cy - SLOT * 0.06, ICON, ICON)
+            put(sheet, icon, cx, cy, ICON, ICON)
 
         if n > 0:
-            bx, by = cx + SLOT / 2 - 6 - BADGE / 2, cy + SLOT / 2 - 8 - BADGE / 2
+            bx = cx + SLOT / 2 - 4 - BADGE / 2
+            by = cy - SLOT / 2 + 4 + BADGE / 2
             draw_on.ellipse([bx - BADGE / 2, by - BADGE / 2, bx + BADGE / 2, by + BADGE / 2],
                             fill=(24, 34, 46, 255))
-            font = face(36)
-            if font is not None:
-                draw_on.text((bx, by), str(n), font=font, fill=(255, 243, 220, 255), anchor="mm")
-        else:
-            # The price, which is the whole of the shop from here.
-            py = cy + SLOT / 2 - PRICE * 0.58
-            gem = load(REPO / "Assets" / "Game" / "Art" / "Ui" / "ic_gem.png")
-            if gem is not None:
-                put(sheet, gem, cx - PRICE * 0.62, py, PRICE * 0.68, PRICE * 0.68)
-
             font = face(34)
             if font is not None:
-                draw_on.text((cx + PRICE * 0.18, py), str(PRICES.get(name, 0)), font=font,
-                             fill=(255, 201, 60, 255), anchor="lm")
+                draw_on.text((bx, by), str(n), font=font, fill=(255, 243, 220, 255), anchor="mm")
+
+
+def hill_grid(sheet, span, cell, hill_top, hill_foot, at):
+    """`SiegeView.AimHill` - what a firepot is aimed with.
+
+    <p>Drawn because it is the one thing on this board that is neither the board nor the bar, and
+    because whether twenty panes over a hill full of raiders reads as a target or as a mess is a
+    question only a picture answers.</p>
+    """
+    lanes, rows = LANES, BLAST_ROWS
+    top = hill_top + cell * 0.35
+    wide = span[0] / lanes
+    tall = (top - hill_foot) / rows
+
+    layer = Image.new("RGBA", sheet.size, (0, 0, 0, 0))
+    pen = ImageDraw.Draw(layer)
+
+    for row in range(rows):
+        for lane in range(lanes):
+            cx, cy = at(lane_x(span, lane), top - (row + 0.5) * tall)
+
+            pen.rounded_rectangle(
+                [cx - wide / 2 + 3, cy - tall / 2 + 3, cx + wide / 2 - 3, cy + tall / 2 - 3],
+                radius=18, fill=(79, 193, 255, 46))
+
+            r = min(wide, tall) * 0.23
+            pen.ellipse([cx - r, cy - r, cx + r, cy + r], outline=(79, 193, 255, 200), width=6)
+
+    sheet.alpha_composite(layer)
+
+
+def ward_rings(sheet, span, cell, line_y, wards, at):
+    """`SiegeView.AimWards` - what a mending and a surge are aimed with.
+
+    <p>Drawn because "does the ring cover the turret" is the only question about it, and it is a
+    question about two sprites at a size neither of them chose. The first cut was a circle of 1.6
+    cells centred a third of a cell high, which sat on the barrel rather than round the ward.</p>
+    """
+    layer = Image.new("RGBA", sheet.size, (0, 0, 0, 0))
+    pen = ImageDraw.Draw(layer)
+
+    for i in range(wards):
+        cx, cy = at(post_x(span, i, wards), line_y + cell * 0.06)
+        rx, ry = cell * 2.05 / 2, cell * 2.6 / 2
+
+        pen.ellipse([cx - rx, cy - ry, cx + rx, cy + ry], outline=(255, 201, 60, 230), width=7)
+
+    sheet.alpha_composite(layer)
 
 
 def main():
@@ -542,6 +613,8 @@ def main():
                     help="draw the board with nothing in flight")
     ap.add_argument("--no-bar", action="store_true",
                     help="draw the board without the utility bar under it")
+    ap.add_argument("--aim", choices=("hill", "wards"),
+                    help="draw a utility's targeting: the firepot's grid, or the ward rings")
     ap.add_argument("--out", default=str(REPO / "Tools" / "siege_boards.png"))
     args = ap.parse_args()
 
@@ -553,7 +626,7 @@ def main():
 
     shots = []
     for lv in picked:
-        shot = draw(lv, args.raiders, not args.no_bolts)
+        shot = draw(lv, args.raiders, not args.no_bolts, aim=args.aim)
         if not args.no_bar:
             bar(shot, held)
         shots.append((lv["id"], shot))

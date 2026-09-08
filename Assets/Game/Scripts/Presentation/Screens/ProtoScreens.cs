@@ -257,6 +257,10 @@ namespace GlimmerGrove
             _siege.Fire = Fire;
             _siege.Rejected = Refuse;
 
+            // The bar owns what is armed; the board only mirrors it. Without this the view
+            // disarmed itself and the slot kept its ring, which read as an item stuck on.
+            _siege.Done = () => { if (_bar != null) _bar.Arm(null); };
+
             _bar.Arm(null);
             _bar.Paint();
         }
@@ -484,11 +488,17 @@ namespace GlimmerGrove
         /// nearly held it.
         /// </para>
         /// <para>
+        /// <b>And nothing at the sides either.</b> The hill, the ward line and the field run to
+        /// the edges of the screen, so the board and the shelf under it are one column rather
+        /// than a panel with a tray beside it. What tells them apart is that the board's plate
+        /// has rounded corners and the shelf does not.
+        /// </para>
+        /// <para>
         /// The board is still tall because it holds a hill, a line and a field, and the hill is
         /// the half a player spends the run looking at.
         /// </para>
         /// </summary>
         protected override Vector4 HostInset
-            => new Vector4(10f, UtilityBar.Height, 10f, 300f);
+            => new Vector4(0f, UtilityBar.Height, 0f, 300f);
     }
 }

@@ -137,11 +137,9 @@ namespace GlimmerGrove.Utilities
         /// </summary>
         public readonly int Magnitude;
 
-        /// <summary>
-        /// How far a blast reaches, in hundredths of the hill's height. Nought for anything that
-        /// is not aimed at the hill.
-        /// </summary>
-        public readonly int Reach;
+        // No reach. A blast takes exactly what is standing in the box that was tapped
+        // (`SiegeTuning.BlastRows`), so how far it carries is a rule rather than a number — and a
+        // content field with one legal value is the decoration invariant 5d names.
 
         /// <summary>
         /// What one costs in gems, or nought for something only a chest hands out.
@@ -166,13 +164,12 @@ namespace GlimmerGrove.Utilities
         /// <summary>Where it sits on the bar. Authored, for <c>HomesteadRegion.Order</c>'s reason.</summary>
         public readonly int Order;
 
-        public UtilityItem(string id, UtilityKind kind, int magnitude, int reach,
+        public UtilityItem(string id, UtilityKind kind, int magnitude,
                            int gemPrice, int maxHeld, int order)
         {
             Id = id ?? string.Empty;
             Kind = kind;
             Magnitude = magnitude < 1 ? 1 : magnitude;
-            Reach = reach < 0 ? 0 : reach;
             GemPrice = gemPrice < 0 ? 0 : gemPrice;
             MaxHeld = maxHeld < 1 ? 1 : maxHeld > UtilityStock.MaxHeld ? UtilityStock.MaxHeld : maxHeld;
             Order = order;

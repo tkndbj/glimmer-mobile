@@ -2016,9 +2016,11 @@ def check_utilities(progression, keys, warnings):
             errors.append(f"utilities entry '{uid}' has magnitude {entry.get('magnitude', 0)}; "
                           "a utility that does nothing spends a slot and gives nothing back")
 
-        if kind == "blast" and entry.get("reach", 0) < 1:
-            errors.append(f"utilities entry '{uid}' is a blast with reach {entry.get('reach', 0)}; "
-                          "it could only ever be spent for nothing")
+        if "reach" in entry:
+            # Removed when the blast became a box on the hill's grid rather than a radius: a
+            # field nothing reads is a number somebody will tune and watch do nothing.
+            errors.append(f"utilities entry '{uid}' names 'reach', which no longer exists; a "
+                          "blast takes exactly what is standing in the box it is thrown at")
 
         if entry.get("gemPrice", 0) < 0:
             errors.append(f"utilities entry '{uid}' has a negative gem price")

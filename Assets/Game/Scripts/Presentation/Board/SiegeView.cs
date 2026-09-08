@@ -51,7 +51,22 @@ namespace GlimmerGrove
         /// but a picture at the size a phone draws it could have said so (invariant 33h).
         /// </para>
         /// </summary>
-        const float HillBand = .44f, LineBand = .16f, GemBand = .40f;
+        const float HillBand = .44f, LineBand = .16f;
+
+        /// <summary>
+        /// The most of the board's height the gem field may take.
+        ///
+        /// <para>
+        /// <b>A ceiling rather than a share, because the field is now laid out to the width.</b>
+        /// The three bands were 44 / 16 / 40 of the height and the cell was whichever of width and
+        /// height bound first — which on every phone was the height, so the gems sat in a column
+        /// with a hand's width of empty plate either side of them. They fill the width now, and
+        /// what that costs comes out of the hill: this is the line past which it stops costing the
+        /// hill anything, because a hill with no room to walk down is the one band this mode
+        /// cannot spend (invariant 37g).
+        /// </para>
+        /// </summary>
+        const float MaxGemBand = .52f;
 
         /// <summary>Air between a gem and its socket, as a fraction of a cell.</summary>
         const float GemInset = .84f;
@@ -141,6 +156,16 @@ namespace GlimmerGrove
 
         /// <summary>Raised when a target was chosen and refused, so the screen can say why.</summary>
         public System.Action Rejected { get; set; }
+
+        /// <summary>
+        /// Raised once a chosen target has resolved, however it resolved.
+        ///
+        /// <b>The bar owns what is armed, and this is how it finds out.</b> Without it the view
+        /// disarmed itself and the slot kept its ring — a highlight sitting on an item the player
+        /// had already spent, which is what it looked like: an item stuck on. Two places holding
+        /// one piece of state is the fault; one of them telling the other is the fix.
+        /// </summary>
+        public System.Action Done { get; set; }
 
         /// <summary>
         /// Which utility is being aimed, or null.
@@ -353,13 +378,31 @@ namespace GlimmerGrove
             }
         }
 
+        /// <summary>
+        /// Rounded at the top and square at the foot, because the action bar is stacked directly
+        /// under it.
+        ///
+        /// A fully rounded plate over a square shelf leaves two notches at the join, and at the
+        /// bottom of a board they read as a gap rather than as two things meeting — which is what
+        /// they are. This is the only mode with something under its board.
+        /// </summary>
+        protected override Sprite PlateSkin => Art.RoundTop(34);
+
         // ------------------------------------------------------------------ geometry
+        /// <summary>
+        /// The cell, driven by the width and capped by what the hill can spare.
+        ///
+        /// <b>The width leads.</b> Taking the smaller of the two meant the height always won and
+        /// the field was a column in the middle of a full-width plate, which is the one thing on
+        /// this screen that had no reason to be inset. See <see cref="MaxGemBand"/> for what caps
+        /// it, and `Compose` for how the hill and the line then share what is left.
+        /// </summary>
         protected override float Fit(Vector2 room)
         {
             _room = room;
 
             float wide = (room.x - Margin * 2f) / Width;
-            float tall = (room.y - Margin * 2f) * GemBand / Height;
+            float tall = (room.y - Margin * 2f) * MaxGemBand / Height;
             return Mathf.Min(wide, tall);
         }
 
@@ -423,14 +466,24 @@ namespace GlimmerGrove
             _aim = null;
             _marker = null;
 
+            // **The bands are derived from the cell, not the other way round.** The field is
+            // laid out to fill the width (see `Fit`), so how much height its rows need is a fact
+            // rather than a share — and the hill and the line then take what is left in the
+            // proportion they were authored in. Written as a share of the authored pair rather
+            // than as two more constants, so moving `HillBand` still moves only one thing.
             float h = Span.y;
+            float gems = Mathf.Clamp(Cell * Height / h, .28f, MaxGemBand);
+            float rest = 1f - gems;
+            float hill = rest * (HillBand / (HillBand + LineBand));
+            float line = rest - hill;
+
             _hillTop = h * .5f - Cell * .35f;
-            _hillFoot = h * (.5f - HillBand);
+            _hillFoot = h * (.5f - hill);
             // The wards stand *high* on the line, so their heads break into the grass rather
             // than tucking under the field's plate. A render is why: at the middle of the band
             // they were half-hidden behind the plate and read as small.
-            _lineY = _hillFoot - h * LineBand * .30f;
-            _gemCentre = (h * (.5f - HillBand - LineBand) - h * .5f) * .5f;
+            _lineY = _hillFoot - h * line * .30f;
+            _gemCentre = (h * (.5f - hill - line) - h * .5f) * .5f;
 
             _hill = Layer("Hill");
             _mobs = Layer("Raiders");
@@ -703,7 +756,6 @@ namespace GlimmerGrove
             {
                 Destroy(_aim.gameObject);
                 _aim = null;
-                _marker = null;
             }
 
             if (_arming == null || _fx == null) return;
@@ -716,99 +768,64 @@ namespace GlimmerGrove
         }
 
         /// <summary>
-        /// A pad over the hill, with a ring that follows the finger and fires on release.
+        /// The hill, drawn as the grid the rule reads: one box per lane per band, each a pane of
+        /// blue with a ring in the middle of it.
         ///
         /// <para>
-        /// <b>The ring is geometry and never outcome</b> (invariant 32c): it says how far the
-        /// burst reaches, which is a fact the player can already read off the board, and says
-        /// nothing about who would die. What the ring is drawn at is <see cref="Reach"/> mapped
-        /// through the same unit square <c>SiegeBoard.Blast</c> reads, so the picture and the
-        /// rule cannot come apart — invariant 33g's argument about the haul-road, applied to a
-        /// target.
+        /// <b>Boxes rather than a ring that follows a finger, and that is the whole change.</b> A
+        /// radius round wherever a drag ended is exact in the rule and unreadable on the board:
+        /// what a player had to do was judge a distance against raiders that were walking. A box
+        /// is a place. It is tapped, it is the thing that lights, and it is exactly what burns —
+        /// invariant 33g at its strongest, because <c>SiegeBoard.Blast</c> and this loop now share
+        /// their integers rather than agreeing about a mapping.
+        /// </para>
+        /// <para>
+        /// <b>The panes are geometry and never outcome</b> (invariant 32c). They say where the
+        /// boxes are, which is a fact about the board; nothing here counts what is standing in one
+        /// or marks the ones worth throwing at. That is the question the player is being asked.
         /// </para>
         /// </summary>
         void AimHill()
         {
             float top = _hillTop + Cell * .35f;
-            float band = top - _hillFoot;
-
-            var pad = UIKit.Img("Pad", _aim, Art.Pixel, new Color(0f, 0f, 0f, .12f),
-                                new Vector2(Span.x, band));
-            pad.rectTransform.anchoredPosition = new Vector2(0f, (top + _hillFoot) * .5f);
-
-            _marker = UIKit.Img("Reach", _aim, Art.Ring(160, 7f), Pal.A(Pal.Sun, .85f),
-                                ReachSpan(_arming, band));
-            _marker.rectTransform.anchoredPosition =
-                new Vector2(0f, (top + _hillFoot) * .5f);
-
-            var aim = pad.gameObject.AddComponent<AimPad>();
-            aim.Moved = local => MarkAt(local, pad.rectTransform);
-            aim.Released = local => { MarkAt(local, pad.rectTransform); Loose(local, pad.rectTransform); };
-            aim.Cancelled = () => Rejected?.Invoke();
-        }
-
-        /// <summary>
-        /// How large a blast's ring is drawn — and it is an <em>ellipse</em>, not a circle.
-        ///
-        /// <para>
-        /// <b>The rule reads a unit square whose two axes are drawn at different scales.</b>
-        /// <c>u</c> runs 0..1 across <c>Lanes - 1</c> lane steps, which is
-        /// <c>(Lanes - 1) / Lanes</c> of the board's width; <c>v</c> runs 0..1 down the hill
-        /// band, which is a different number of points entirely. A circle would have to pick one
-        /// of them and be wrong about the other — the first cut picked the width and overstated
-        /// the horizontal reach by a quarter, which is a marker promising ground it does not
-        /// burn. What is drawn has to be what is burned (invariant 33g), so both axes are
-        /// converted separately and the sprite is stretched.
-        /// </para>
-        /// </summary>
-        Vector2 ReachSpan(UtilityItem item, float band)
-        {
-            if (item == null) return Vector2.zero;
-
-            float r = item.Reach / 100f;
-            float across = SiegeTuning.Lanes <= 1
-                         ? Span.x
-                         : Span.x * (SiegeTuning.Lanes - 1) / SiegeTuning.Lanes;
-
-            return new Vector2(across * r * 2f, band * r * 2f);
-        }
-
-        void MarkAt(Vector2 local, RectTransform pad)
-        {
-            if (_marker == null || pad == null) return;
-
-            // The pad is centred on the hill band, so a local point is an offset from its middle
-            // — which is exactly what the marker's own anchored position is measured in.
-            _marker.rectTransform.anchoredPosition =
-                pad.anchoredPosition + Clamped(local, pad);
-        }
-
-        static Vector2 Clamped(Vector2 local, RectTransform pad)
-        {
-            float halfW = pad.sizeDelta.x * .5f, halfH = pad.sizeDelta.y * .5f;
-            return new Vector2(Mathf.Clamp(local.x, -halfW, halfW),
-                               Mathf.Clamp(local.y, -halfH, halfH));
-        }
-
-        /// <summary>
-        /// Turns the point a finger left into the unit square the rule reads, and fires.
-        ///
-        /// The two mappings are the inverses of <see cref="LaneX"/> and <see cref="MarchY"/>, so
-        /// what the player aimed at and what the board burns are the same point.
-        /// </summary>
-        void Loose(Vector2 local, RectTransform pad)
-        {
-            var at = Clamped(local, pad);
-
             float wide = Span.x / SiegeTuning.Lanes;
-            float laneIndex = at.x / wide + (SiegeTuning.Lanes - 1) * .5f;
-            float lane = SiegeTuning.Lanes <= 1
-                       ? 0f : Mathf.Clamp01(laneIndex / (SiegeTuning.Lanes - 1));
+            float tall = (top - _hillFoot) / SiegeTuning.BlastRows;
 
-            float y = pad.anchoredPosition.y + at.y;
-            float march = Mathf.Clamp01(Mathf.InverseLerp(_hillTop, _hillFoot, y));
+            for (int row = 0; row < SiegeTuning.BlastRows; row++)
+            {
+                for (int lane = 0; lane < SiegeTuning.Lanes; lane++)
+                {
+                    int atLane = lane, atRow = row;
 
-            Loose(SiegeAim.OnTheHill(lane, march));
+                    // Boxes are laid out from the top of the hill down, which is the direction
+                    // `march` runs: row 0 is where a wave walks on.
+                    var at = new Vector2(LaneX(lane), top - (row + .5f) * tall);
+
+                    var pane = UIKit.Button("Aim" + lane + "_" + row, _aim, Art.Round(18),
+                                            new Vector2(wide - 6f, tall - 6f),
+                                            new Vector2(.5f, .5f), at,
+                                            () => Loose(SiegeAim.OnTheHill(atLane, atRow)));
+
+                    pane.PressScale = .96f;
+                    pane.ClickSfx = null;
+
+                    var face = pane.GetComponent<Image>();
+                    if (face != null)
+                    {
+                        face.type = Image.Type.Sliced;
+                        face.color = Pal.A(Pal.Azure, .18f);
+                    }
+
+                    // The ring in the middle: what says the box is a target rather than a tile,
+                    // and where the burst will be centred.
+                    var eye = UIKit.Img("Eye", pane.transform, Art.Ring(96, 6f),
+                                        Pal.A(Pal.Azure, .78f),
+                                        Vector2.one * Mathf.Min(wide, tall) * .46f);
+                    eye.raycastTarget = false;
+
+                    Tween.Breathe(eye.transform, .07f, 1.6f, row * .12f + lane * .05f);
+                }
+            }
         }
 
         /// <summary>A target over each standing ward. A fallen one is not a target.</summary>
@@ -821,11 +838,17 @@ namespace GlimmerGrove
                 if (_board.Wards[i] == null || !_board.Wards[i].Alive) continue;
 
                 int ward = i;
-                float size = Cell * 1.6f;
+
+                // **Sized to the post it is round, not to a guess.** A ward's node is 1.8 by 2.3
+                // cells with its body standing a hair above the middle of it, so a circle of 1.6
+                // sat high and covered the barrel rather than the turret — reported as exactly
+                // that. This is an ellipse round the whole of it, which is also what makes it a
+                // target big enough to hit with a thumb.
+                var size = new Vector2(Cell * 2.05f, Cell * 2.6f);
 
                 var hit = UIKit.Button("AimWard" + i, _aim, Art.Ring(128, 7f),
-                                       Vector2.one * size, new Vector2(.5f, .5f),
-                                       new Vector2(PostX(i), _lineY + Cell * .35f),
+                                       size, new Vector2(.5f, .5f),
+                                       new Vector2(PostX(i), _lineY + Cell * .06f),
                                        () => Loose(SiegeAim.AtWard(ward)));
 
                 hit.PressScale = .92f;
@@ -854,6 +877,7 @@ namespace GlimmerGrove
             var use = Fire(item, aim, _strikes);
 
             Arming = null;
+            Done?.Invoke();
 
             if (!use.Landed)
             {
@@ -892,9 +916,11 @@ namespace GlimmerGrove
 
         void Firepot(SiegeAim aim)
         {
-            float wide = Span.x / SiegeTuning.Lanes;
-            float x = (aim.Lane * (SiegeTuning.Lanes - 1) - (SiegeTuning.Lanes - 1) * .5f) * wide;
-            var at = new Vector2(x, MarchY(aim.March));
+            // The middle of the box that was tapped, worked out the way the panes were laid out —
+            // one arithmetic, so the burst lands where the ring the player aimed at was.
+            float top = _hillTop + Cell * .35f;
+            float tall = (top - _hillFoot) / SiegeTuning.BlastRows;
+            var at = new Vector2(LaneX(aim.Lane), top - (aim.Row + .5f) * tall);
 
             Boom(at, Blast("boom_fire"), Cell * 3.4f);
             Burst.Sparks(_fx, at, Pal.Ember, 22, Cell * 3f, Cell * .3f);
@@ -945,7 +971,10 @@ namespace GlimmerGrove
             var mob = raider == null ? MobOf(hit.Raider) : Widget(raider);
             if (mob == null || mob.Node == null) return;
 
-            Number(hit.Raider, mob.Node.anchoredPosition, hit.Damage, false);
+            // Drawn as the player's own, which is bigger and hotter than a bolt's: a firepot
+            // is one event a run and the loudest thing they can cause, and a figure the same size
+            // as the eighteen a lit line throws every second is a figure nobody reads as theirs.
+            Number(hit.Raider, mob.Node.anchoredPosition, hit.Damage, false, mine: true);
 
             if (!hit.Killed) Tween.Shake(mob.Node, Cell * .12f, .22f);
         }
@@ -1754,6 +1783,9 @@ namespace GlimmerGrove
         {
             public int Raider, Total;
             public bool Weak;
+
+            /// <summary>Caused by the player rather than by a ward. Drawn bigger and hotter.</summary>
+            public bool Mine;
             public float Until, Drift;
             public Text Label;
             public RectTransform Rt;
@@ -1764,13 +1796,14 @@ namespace GlimmerGrove
         /// <summary>Which way the next number leans, so a run of them fans out instead of stacking.</summary>
         int _fan;
 
-        void Number(int raider, Vector2 at, int damage, bool weak)
+        void Number(int raider, Vector2 at, int damage, bool weak, bool mine = false)
         {
             if (_tally.TryGetValue(raider, out var running) && running.Label &&
                 Time.unscaledTime < running.Until)
             {
                 running.Total += damage;
                 running.Weak |= weak;
+                running.Mine |= mine;
                 running.Until = Time.unscaledTime + TallyFor;
 
                 Paint(running);
@@ -1784,6 +1817,7 @@ namespace GlimmerGrove
                 Raider = raider,
                 Total = damage,
                 Weak = weak,
+                Mine = mine,
                 Until = Time.unscaledTime + TallyFor,
                 Drift = (_fan++ & 1) == 0 ? -1f : 1f,
             };
@@ -1812,11 +1846,12 @@ namespace GlimmerGrove
             if (!tally.Label) return;
 
             float grown = Mathf.Min(tally.Total, 30) / 30f;
-            float size = Cell * (tally.Weak ? .58f : .40f) * (1f + grown * .5f);
+            float step = tally.Mine ? .82f : tally.Weak ? .58f : .40f;
+            float size = Cell * step * (1f + grown * .5f);
 
             tally.Label.fontSize = Mathf.Max(8, Mathf.RoundToInt(size));
             tally.Label.text = tally.Total.ToString();
-            tally.Label.color = tally.Weak ? Pal.Gold : Pal.Cream;
+            tally.Label.color = tally.Mine ? Pal.Ember : tally.Weak ? Pal.Gold : Pal.Cream;
         }
 
         /// <summary>The arrival: overshoot and settle, once per hit that lands on it.</summary>

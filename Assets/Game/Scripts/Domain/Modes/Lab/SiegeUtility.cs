@@ -3,28 +3,34 @@ using GlimmerGrove.Utilities;
 
 namespace GlimmerGrove.Modes
 {
-    /// <summary>Where a utility is being aimed. Which half is read depends on the kind.</summary>
+    /// <summary>
+    /// Where a utility is being aimed. Which half is read depends on the kind.
+    ///
+    /// <b>Integers throughout.</b> A blast names one box of the hill's grid rather than a point
+    /// on it, so there is nothing here a view and a rule could round differently — which is what
+    /// the float version quietly risked, on the one input a player pays gems for.
+    /// </summary>
     public readonly struct SiegeAim
     {
-        /// <summary>Across the hill, 0..1. Read by a blast.</summary>
-        public readonly float Lane;
+        /// <summary>Which lane, 0..<c>Lanes - 1</c>. Read by a blast.</summary>
+        public readonly int Lane;
 
-        /// <summary>Down the hill, 0..1. Read by a blast.</summary>
-        public readonly float March;
+        /// <summary>Which band down the hill, 0..<c>BlastRows - 1</c>. Read by a blast.</summary>
+        public readonly int Row;
 
         /// <summary>Which ward. Read by a mend and a surge.</summary>
         public readonly int Ward;
 
-        SiegeAim(float lane, float march, int ward)
+        SiegeAim(int lane, int row, int ward)
         {
             Lane = lane;
-            March = march;
+            Row = row;
             Ward = ward;
         }
 
-        public static SiegeAim OnTheHill(float lane, float march) => new SiegeAim(lane, march, -1);
+        public static SiegeAim OnTheHill(int lane, int row) => new SiegeAim(lane, row, -1);
 
-        public static SiegeAim AtWard(int ward) => new SiegeAim(0f, 0f, ward);
+        public static SiegeAim AtWard(int ward) => new SiegeAim(0, 0, ward);
     }
 
     /// <summary>
@@ -189,8 +195,7 @@ namespace GlimmerGrove.Modes
             {
                 case UtilityKind.Blast:
                 {
-                    int absorbed = board.Blast(aim.Lane, aim.March, item.Reach / 100f,
-                                               item.Magnitude, strikes);
+                    int absorbed = board.Blast(aim.Lane, aim.Row, item.Magnitude, strikes);
 
                     // A firepot that reached nobody is not spent. It is the one refusal that can
                     // only be known after the fact, and handing the item back is the only honest

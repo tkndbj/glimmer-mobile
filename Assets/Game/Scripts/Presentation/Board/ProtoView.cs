@@ -196,7 +196,7 @@ namespace GlimmerGrove
             Plate.anchoredPosition = Vector2.zero;
 
             var back = Plate.gameObject.AddComponent<Image>();
-            back.sprite = Art.Round(34);
+            back.sprite = PlateSkin;
             back.type = Image.Type.Sliced;
             back.color = Pal.Board;
             back.raycastTarget = false;
@@ -212,6 +212,15 @@ namespace GlimmerGrove
 
             Changed?.Invoke();
         }
+
+        /// <summary>
+        /// The plate's own skin: a rounded panel, unless a mode has something stacked under it.
+        ///
+        /// A property rather than a constant because a board that meets another surface has to
+        /// square off the edge that meets it — see <see cref="Art.RoundTop"/> — and which edge
+        /// that is, if any, is a fact about the screen rather than about the board.
+        /// </summary>
+        protected virtual Sprite PlateSkin => Art.Round(34);
 
         /// <summary>Builds everything this mode draws. The plate and the field already exist.</summary>
         protected abstract void Compose();

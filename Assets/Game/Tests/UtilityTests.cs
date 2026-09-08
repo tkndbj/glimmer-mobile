@@ -185,10 +185,10 @@ namespace GlimmerGrove.Tests
             => new UtilitiesDto { items = items };
 
         static UtilityDto Entry(string id, string kind, int order,
-                                int magnitude = 10, int reach = 20, int price = 5, int max = 9)
+                                int magnitude = 10, int price = 5, int max = 9)
             => new UtilityDto
             {
-                id = id, kind = kind, magnitude = magnitude, reach = reach,
+                id = id, kind = kind, magnitude = magnitude,
                 gemPrice = price, maxHeld = max, order = order,
             };
 
@@ -225,17 +225,6 @@ namespace GlimmerGrove.Tests
 
             Assert.AreEqual(1, catalog.Count);
             Assert.IsNotNull(catalog.Find("firepot"));
-            CollectionAssert.IsNotEmpty(problems);
-        }
-
-        [Test]
-        public void ABlastWithNoReachIsRefused()
-        {
-            var problems = new List<string>();
-            var catalog = UtilityCatalog.Resolve(
-                Authored(Entry("firepot", "blast", 1, reach: 0)), problems);
-
-            Assert.AreSame(UtilityCatalog.Default, catalog);
             CollectionAssert.IsNotEmpty(problems);
         }
 
@@ -371,19 +360,77 @@ namespace GlimmerGrove.Tests
         }
 
         [Test]
-        public void ABlastBurnsWhatIsNearItAndReportsWhatWasAbsorbed()
+        public void ABlastBurnsTheBoxItIsThrownAtAndReportsWhatWasAbsorbed()
         {
             var board = Board();
             Settle(board, SiegeTuning.FirstWaveAfter + 1f);
 
             var raider = board.Raiders[0];
-            float lane = raider.Lane / (float)(SiegeTuning.Lanes - 1);
 
             var strikes = new List<SiegeStrike>();
-            int absorbed = board.Blast(lane, raider.March, .5f, 5, strikes);
+            int absorbed = board.Blast(raider.Lane, SiegeTuning.RowOf(raider.March), 5, strikes);
 
             Assert.Greater(absorbed, 0);
             CollectionAssert.IsNotEmpty(strikes);
+        }
+
+        /// <summary>
+        /// The property the boxes exist for: what burns is exactly what is standing in the one
+        /// that was tapped. A radius could take a raider the player had not aimed at and leave one
+        /// they had; a box cannot, which is what makes the panes on the board honest (invariant
+        /// 33g).
+        /// </summary>
+        [Test]
+        public void ABlastTakesEverythingInItsBoxAndNothingOutsideIt()
+        {
+            var board = Board();
+            Settle(board, SiegeTuning.FirstWaveAfter + 1f);
+
+            var target = board.Raiders[0];
+            int lane = target.Lane, row = SiegeTuning.RowOf(target.March);
+
+            var inside = new HashSet<int>();
+            foreach (var raider in board.Raiders)
+                if (raider.Alive && raider.OnTheHill && raider.Lane == lane
+                    && SiegeTuning.RowOf(raider.March) == row) inside.Add(raider.Id);
+
+            var strikes = new List<SiegeStrike>();
+            board.Blast(lane, row, 1, strikes);
+
+            var struck = new HashSet<int>();
+            foreach (var hit in strikes) struck.Add(hit.Raider);
+
+            CollectionAssert.AreEquivalent(inside, struck);
+        }
+
+        [Test]
+        public void ABlastAimedOffTheGridBurnsNothing()
+        {
+            var board = Board();
+            Settle(board, SiegeTuning.FirstWaveAfter + 1f);
+
+            Assert.AreEqual(0, board.Blast(-1, 0, 50, null));
+            Assert.AreEqual(0, board.Blast(SiegeTuning.Lanes, 0, 50, null));
+            Assert.AreEqual(0, board.Blast(0, SiegeTuning.BlastRows, 50, null));
+        }
+
+        /// <summary>
+        /// Every march reading lands in a band, including the ends. A raider at the line reads as
+        /// the last row rather than as one past it, which is what an unclamped cast would do.
+        /// </summary>
+        [Test]
+        public void EveryPointOnTheHillFallsInABand()
+        {
+            Assert.AreEqual(0, SiegeTuning.RowOf(0f));
+            Assert.AreEqual(SiegeTuning.BlastRows - 1, SiegeTuning.RowOf(1f));
+            Assert.AreEqual(SiegeTuning.BlastRows - 1, SiegeTuning.RowOf(2f));
+            Assert.AreEqual(0, SiegeTuning.RowOf(-1f));
+
+            for (int row = 0; row < SiegeTuning.BlastRows; row++)
+            {
+                float middle = (row + .5f) / SiegeTuning.BlastRows;
+                Assert.AreEqual(row, SiegeTuning.RowOf(middle));
+            }
         }
 
         /// <summary>
@@ -398,16 +445,19 @@ namespace GlimmerGrove.Tests
             Settle(board, SiegeTuning.FirstWaveAfter + 1f);
 
             var raider = board.Raiders[0];
-            raider.Health = 3;
+            int lane = raider.Lane, row = SiegeTuning.RowOf(raider.March);
 
-            float lane = raider.Lane / (float)(SiegeTuning.Lanes - 1);
+            // Everything in the box, so the bound is the health that was really standing there.
+            int standing = 0;
+            foreach (var other in board.Raiders)
+                if (other.Alive && other.OnTheHill && other.Lane == lane
+                    && SiegeTuning.RowOf(other.March) == row) standing += other.Health;
+
             var strikes = new List<SiegeStrike>();
+            int absorbed = board.Blast(lane, row, 9_999, strikes);
 
-            // A radius small enough to take this raider and, at worst, whoever is standing on it.
-            int absorbed = board.Blast(lane, raider.March, .02f, 9_999, strikes);
-
-            Assert.LessOrEqual(absorbed, 3 + SiegeTuning.BruteHealth,
-                "absorbed damage is bounded by the health that was actually there");
+            Assert.AreEqual(standing, absorbed,
+                "absorbed damage is exactly the health that was actually there");
             Assert.Greater(absorbed, 0);
         }
 
@@ -419,8 +469,23 @@ namespace GlimmerGrove.Tests
 
             var item = UtilityCatalog.Default.Find("firepot");
 
-            // The foot of the hill, before anything has walked down it.
-            var use = SiegeUtility.Apply(board, item, SiegeAim.OnTheHill(.5f, 1f),
+            // A box nothing is standing in: the foot of the hill, before anything has walked
+            // down it. Which box that is has to be found rather than assumed, because a wave is
+            // dealt into lanes deterministically but not predictably.
+            int lane = 0, row = SiegeTuning.BlastRows - 1;
+            for (; lane < SiegeTuning.Lanes; lane++)
+            {
+                bool clear = true;
+                foreach (var raider in board.Raiders)
+                    if (raider.Alive && raider.OnTheHill && raider.Lane == lane
+                        && SiegeTuning.RowOf(raider.March) == row) clear = false;
+
+                if (clear) break;
+            }
+
+            Assert.Less(lane, SiegeTuning.Lanes, "every box at the foot of the hill is occupied");
+
+            var use = SiegeUtility.Apply(board, item, SiegeAim.OnTheHill(lane, row),
                                          new List<SiegeStrike>());
 
             Assert.IsFalse(use.Landed);

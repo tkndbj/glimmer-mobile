@@ -71,40 +71,42 @@ IRON = (108, 130, 156, 255)       # the pot's body: cool, so the flame reads war
 ROPE = (217, 195, 154, 255)      # Pal.Rope, the fuse
 
 # ------------------------------------------------------------------------ the tray
-# The bar's furniture is drawn in the *idle turret defense kit's* own language, because that is
-# the look the owner pointed at - a hazard-railed steel tray with bevelled cells inset in it. The
-# colours below were sampled straight out of that kit's `GroundBase/Ground-Base.png`, so the two
-# belong to one family rather than merely resembling each other.
+# The bar's furniture, in the board's own colours.
 #
-# **Drawn rather than cut, and the kit is why rather than in spite of it.** Its tray is one
-# fixed-width panel with five cells baked into the plate and two stone wedges overlapping its
-# ends; there is no clean rectangle in it to stretch, no cell-free column wide enough to repeat,
-# and it carries five cells where this bar wants three. Cutting it would mean reconstructing most
-# of it anyway and then living with whatever width the source happened to be. What the licensed
-# art is genuinely good at here is the *palette and the idiom*, and that is what is borrowed.
-STEEL_FACE = (144, 158, 163, 255)   # the plate a cell sits on
-STEEL_EDGE = (125, 139, 145, 255)   # a cell's own face, one step down from the plate
-STEEL_MID = (112, 123, 127, 255)    # the frame between plate and outline
-STEEL_DEEP = (95, 110, 117, 255)    # the shaded underside of the plate
-RECESS = (77, 89, 94, 255)          # the well a cell holds
-HAZARD = (251, 176, 59, 255)        # the rail's stripe
-HAZARD_BAR = (109, 115, 117, 255)   # the steel between the stripes
-OUTLINE = (45, 47, 48, 255)         # the frame's near-black rim
-WELL = (58, 70, 78, 255)            # the dark ground an item is seen against
-WELL_LIP = (44, 54, 61, 255)        # the shadow the rim casts into it
+# **Dark, and the first cut was not.** It was drawn in the source kit's steel greys, which is what
+# that kit's own screens sit on; here it sat under a near-black board of dark tiles and dark gem
+# sockets, and a light panel under a dark one reads as a different screen rather than as the same
+# one continued. These are `Pal.Board` and `Pal.Slate`'s family, so the shelf, the field's plate
+# and the hill's ground are one column.
+#
+# **And no hazard rail.** The kit stripes the top of its tray in black and yellow; borrowed here it
+# was the brightest thing on a screen whose whole job is telling four gem colours apart, drawing
+# the eye to a decoration. What separates the shelf from the board is that the board's plate has
+# rounded corners and this does not.
+FRAME = (12, 20, 28, 255)           # the rim, near-black, as dark as the board's own ground
+FACE = (26, 39, 52, 255)            # the shelf a cell sits on
+LIP = (18, 28, 38, 255)             # its shaded underside
+CELL_RIM = (46, 63, 80, 255)        # a cell's moulded edge, the one thing here that is lit
+CELL_LIP = (30, 42, 55, 255)        # the shadow that rim casts into the well
+WELL = (16, 26, 35, 255)            # the dark ground an item is seen against
 
 #: The tray, in points at the canvas's reference width.
 #:
 #: **Authored at 1024 rather than at the canvas's 1080** so the importer's Ui cap
-#: (`ArtImportRules.Caps`) never resamples it - a downscale-then-upscale is invisible on a flat
-#: plate and softens a diagonal stripe, which is the one thing on this panel with an edge worth
-#: keeping. The view stretches it the last 5%, which a panel does not mind.
+#: (`ArtImportRules.Caps`) never resamples it. The view stretches it the last 5%, which a flat
+#: panel does not mind.
 #:
 #: Kept in step with `UtilityBar` by hand, exactly as `render_siege.py`'s numbers are.
-TRAY_W, TRAY_H = 1024, 290
-RAIL_H = 26            # the hazard strip along the top
-STRIPE = 34            # one light-plus-dark period of it
-CELL = 224             # one slot, square
+TRAY_W, TRAY_H = 1024, 228
+
+#: How many cells the shelf holds, whatever the catalog currently fills.
+#:
+#: **Five, and three of them have something in them today.** A bar that resized itself with the
+#: catalog would move every slot under a player's thumb the day a fourth utility shipped, and a
+#: row of three on a full-width shelf reads as a tray built for more than it holds - which it is.
+#: Drawing the empty ones says how many there will be.
+SLOTS = 5
+CELL = 184
 
 
 def lift(colour, amount):
@@ -286,72 +288,45 @@ def surge(p):
 
 # --------------------------------------------------------------------------- the furniture
 def tray():
-    """The bar's plate: a hazard rail, a steel frame and the face the cells sit on.
+    """The bar's shelf: a square-cornered dark plate with a lit top edge.
 
-    <p>One sprite at a fixed width rather than a nine-sliced one, because a nine-slice needs a
-    border set on the importer and nothing in this project writes one - and because the rail's
-    stripes have a period, which is a thing a stretched middle destroys and a fixed sprite keeps.
-    The 5% stretch to the canvas's own width is the only scaling it ever sees.</p>
+    <p><b>Square corners, deliberately.</b> The board's plate above it is a rounded panel and this
+    is not, which is the whole of what separates the two: the shelf runs to the edges of the
+    screen and to the bottom of it, so a rounded corner would be a gap with nothing behind it.</p>
     """
     img = Image.new("RGBA", (TRAY_W, TRAY_H), (0, 0, 0, 0))
     d = ImageDraw.Draw(img)
 
-    r = 34
+    d.rectangle([0, 0, TRAY_W - 1, TRAY_H - 1], fill=FRAME)
 
-    # The outline, then the frame inside it, then the face: three rounded rectangles stepping
-    # inward, which is how every bevelled panel in the source kit is built.
-    d.rounded_rectangle([0, 0, TRAY_W - 1, TRAY_H - 1], radius=r, fill=OUTLINE)
-    d.rounded_rectangle([4, 4, TRAY_W - 5, TRAY_H - 5], radius=r - 4, fill=STEEL_MID)
+    # The face, inset, with a shaded lip along its bottom so the shelf reads as a surface rather
+    # than as a hole.
+    d.rectangle([0, 6, TRAY_W - 1, TRAY_H - 1], fill=LIP)
+    d.rectangle([0, 6, TRAY_W - 1, TRAY_H - 9], fill=FACE)
 
-    # The hazard rail, clipped to the frame's own rounded top so it cannot square off the corners.
-    rail = Image.new("RGBA", (TRAY_W, TRAY_H), (0, 0, 0, 0))
-    rd = ImageDraw.Draw(rail)
-    rd.rectangle([0, 4, TRAY_W, 4 + RAIL_H], fill=HAZARD_BAR)
-
-    # Stripes leaning the way the kit's do, drawn as parallelograms so the lean is real rather
-    # than a sheared bitmap.
-    lean = RAIL_H
-    for x in range(-lean, TRAY_W + STRIPE, STRIPE):
-        rd.polygon([(x, 4 + RAIL_H), (x + STRIPE // 2, 4 + RAIL_H),
-                    (x + STRIPE // 2 + lean, 4), (x + lean, 4)], fill=HAZARD)
-
-    mask = Image.new("L", (TRAY_W, TRAY_H), 0)
-    ImageDraw.Draw(mask).rounded_rectangle([4, 4, TRAY_W - 5, TRAY_H - 5], radius=r - 4, fill=255)
-    img.paste(rail, (0, 0), Image.fromarray(
-        (np.array(mask) * (np.array(rail.split()[3]) > 0)).astype("uint8")))
-
-    # The face the cells stand on, inset under the rail, with a shaded lip along its bottom so the
-    # tray reads as a shelf rather than as a sticker.
-    top = 4 + RAIL_H + 6
-    d.rounded_rectangle([14, top, TRAY_W - 15, TRAY_H - 15], radius=20, fill=STEEL_DEEP)
-    d.rounded_rectangle([14, top, TRAY_W - 15, TRAY_H - 22], radius=20, fill=STEEL_FACE)
+    # One lit line along the top edge - the only bright thing on it, and what says the shelf is
+    # in front of the board rather than behind it.
+    d.rectangle([0, 0, TRAY_W - 1, 5], fill=CELL_RIM)
 
     return img
 
 
 def slot():
-    """One cell: a bevelled rim with a dark well in it, which is what an item sits in.
+    """One cell: a moulded rim with a dark well in it, which is what an item sits in.
 
-    <p>Four steps rather than a border, because the kit's cells read as <em>moulded</em> - a lit
-    top edge, a rim, a shaded lip and a recess - and an outline alone reads as a sticker at any
-    size.</p>
-
-    <p><b>The well is darker than the plate, and the first cut had it the same.</b> Drawn level
-    with the tray's own face a cell reads as a flat sticker on a flat panel: there is nothing for
-    the eye to read as depth, and worse, a bright icon on mid-grey has nothing behind it. It is
-    the ground the items are seen against, so it is the darkest thing on the bar - which is also
-    what the reference does, whatever the source kit's own five cells do.</p>
+    <p><b>The well is darker than the shelf.</b> Drawn level with it a cell reads as a sticker on
+    a panel - there is nothing for the eye to read as depth, and an icon has nothing behind it. It
+    is the ground the items are seen against, so it is the darkest thing on the bar.</p>
     """
     img = Image.new("RGBA", (CELL, CELL), (0, 0, 0, 0))
     d = ImageDraw.Draw(img)
 
-    # The rim: lit along the top, shaded along the bottom, which is the whole of the moulding.
-    d.rounded_rectangle([0, 0, CELL - 1, CELL - 1], radius=28, fill=STEEL_DEEP)
-    d.rounded_rectangle([0, 0, CELL - 1, CELL - 8], radius=28, fill=STEEL_EDGE)
+    r = 24
+    d.rounded_rectangle([0, 0, CELL - 1, CELL - 1], radius=r, fill=CELL_LIP)
+    d.rounded_rectangle([0, 0, CELL - 1, CELL - 7], radius=r, fill=CELL_RIM)
 
-    # The well, and a hair of shadow under its top lip so the rim reads as standing proud of it.
-    d.rounded_rectangle([12, 12, CELL - 13, CELL - 17], radius=20, fill=WELL_LIP)
-    d.rounded_rectangle([12, 17, CELL - 13, CELL - 17], radius=20, fill=WELL)
+    d.rounded_rectangle([9, 9, CELL - 10, CELL - 14], radius=r - 7, fill=CELL_LIP)
+    d.rounded_rectangle([9, 13, CELL - 10, CELL - 14], radius=r - 7, fill=WELL)
 
     return img
 
@@ -407,26 +382,33 @@ def contact(sheet):
     except Exception:                                       # pragma: no cover
         font = ImageFont.load_default()
 
-    # 1. the shelf, assembled, with one cell deliberately empty so both states are visible
+    # 1. the shelf, assembled: five cells, three filled, one of those with nothing left in it -
+    #    which is every state a slot has.
     ground.alpha_composite(tray(), ((wide - TRAY_W) // 2, pad))
     cell = slot()
+    icon = int(CELL * 0.74)
 
-    for i, name in enumerate(sorted(ICONS)):
-        cx = (wide - TRAY_W) // 2 + TRAY_W * (2 * i + 1) // (2 * len(ICONS))
-        cy = pad + 46 + CELL // 2
+    for i in range(SLOTS):
+        cx = (wide - TRAY_W) // 2 + TRAY_W * (2 * i + 1) // (2 * SLOTS)
+        cy = pad + (TRAY_H - CELL) // 2 + CELL // 2
 
         ground.alpha_composite(cell, (cx - CELL // 2, cy - CELL // 2))
 
-        art = render(name).resize((162, 162), Image.LANCZOS)
+        if i >= len(ICONS):
+            continue
+
+        name = sorted(ICONS)[i]
+        art = render(name).resize((icon, icon), Image.LANCZOS)
+
         held = i != 1
         if not held:
             art.putalpha(art.split()[3].point(lambda v: int(v * 0.36)))
 
-        ground.alpha_composite(art, (cx - 81, cy - 81 - int(CELL * 0.06)))
+        ground.alpha_composite(art, (cx - icon // 2, cy - icon // 2))
 
         if held:
-            bx, by = cx + CELL // 2 - 38, cy + CELL // 2 - 40
-            draw.ellipse([bx - 32, by - 32, bx + 32, by + 32], fill=(24, 34, 46, 255))
+            bx, by = cx + CELL // 2 - 30, cy - CELL // 2 + 30
+            draw.ellipse([bx - 30, by - 30, bx + 30, by + 30], fill=(12, 20, 28, 255))
             draw.text((bx, by), "3", font=font, fill=(255, 243, 220, 255), anchor="mm")
 
     # 2 and 3. the icons alone, at the two sizes they are drawn at
@@ -435,7 +417,7 @@ def contact(sheet):
         art = render(name)
         x = pad + i * (big + pad)
 
-        small = art.resize((int(CELL * 0.72), int(CELL * 0.72)), Image.LANCZOS)
+        small = art.resize((int(CELL * 0.74), int(CELL * 0.74)), Image.LANCZOS)
         ground.alpha_composite(small, (x + (big - small.width) // 2, y))
         ground.alpha_composite(art.resize((big, big), Image.LANCZOS), (x, y + CELL + pad))
 

@@ -39,27 +39,41 @@ namespace GlimmerGrove
         ///
         /// <para>
         /// <b>It fills the room under the board rather than sitting in it.</b> The first cut was a
-        /// 148-point strip of loose squares floating at the foot of the screen with the board's
-        /// old margin above it, and it read as three buttons somebody had left there rather than
-        /// as a tray you keep things in. What a player is carrying is a permanent part of this
-        /// mode's furniture, so it is drawn as furniture: a hazard-railed steel shelf across the
-        /// whole width, meeting the board's own plate.
+        /// strip of loose squares floating at the foot of the screen with the board's old margin
+        /// above it, and it read as three buttons somebody had left there rather than as a tray
+        /// you keep things in. What a player is carrying is a permanent part of this mode's
+        /// furniture, so it is drawn as furniture: a dark shelf across the whole width, meeting
+        /// the board's own plate.
         /// </para>
         /// <para>
-        /// Kept in step with <c>Tools/make_utility_art.py</c>'s <c>TRAY_H</c> and <c>CELL</c> by
-        /// hand — the tray is one sprite at a fixed size, so the two numbers have to agree or the
-        /// cells sit off the plate.
+        /// Kept in step with <c>Tools/make_utility_art.py</c>'s <c>TRAY_H</c>, <c>CELL</c> and
+        /// <c>SLOTS</c> by hand — the shelf is one sprite at a fixed size, so the numbers have to
+        /// agree or the cells sit off the plate.
         /// </para>
         /// </summary>
-        public const float Height = 290f;
+        public const float Height = 228f;
+
+        /// <summary>
+        /// How many cells the shelf holds, whatever the catalog currently fills.
+        ///
+        /// <para>
+        /// <b>Five, and three of them have something in them today.</b> A bar sized to the catalog
+        /// would move every slot under a player's thumb the day a fourth utility shipped — the
+        /// muscle memory for "the mending is the middle one" is worth more than the empty cells
+        /// cost. It is also honest: the two on the right are where the next two go.
+        /// </para>
+        /// <para>
+        /// A catalog longer than this draws its first five. That is a content mistake rather than
+        /// a state to design for — <c>ContentValidation</c> is where it is caught — and drawing
+        /// what fits beats drawing off the end of the shelf.
+        /// </para>
+        /// </summary>
+        public const int Slots = 5;
 
         /// <summary>One cell, square, matching the tray sprite's own inset spacing.</summary>
-        const float SlotSize = 224f;
+        const float SlotSize = 184f;
 
-        /// <summary>Where a cell's middle sits inside the tray, from its top.</summary>
-        const float SlotTop = 46f;
-
-        const float IconSize = 162f, BadgeSize = 64f, PriceSize = 46f;
+        const float IconSize = 136f, BadgeSize = 60f;
 
         sealed class Slot
         {
@@ -69,12 +83,10 @@ namespace GlimmerGrove
             public Image Ring;
             public Image Badge;
             public Text Count;
-            public RectTransform Price;
-            public Text Gems;
             public CanvasGroup Group;
         }
 
-        readonly List<Slot> _slots = new List<Slot>(4);
+        readonly List<Slot> _slots = new List<Slot>(Slots);
 
         RectTransform _row;
         bool _live = true;
@@ -130,12 +142,8 @@ namespace GlimmerGrove
             rt.offsetMin = Vector2.zero;
             rt.offsetMax = new Vector2(0f, Height);
 
-            var items = UtilityLedger.Catalog.Items;
-            if (items.Count == 0) return;
-
             // The shelf itself, stretched over the whole bar. One sprite rather than a nine-slice
-            // because nothing here writes a sprite border, and the rail's stripes have a period a
-            // stretched middle would destroy — see the art tool.
+            // because nothing here writes a sprite border — see the art tool.
             var plate = UIKit.Img("Tray", rt, Art.S("Ui/Utility/tray"), Color.white);
             plate.rectTransform.anchorMin = Vector2.zero;
             plate.rectTransform.anchorMax = Vector2.one;
@@ -145,7 +153,10 @@ namespace GlimmerGrove
 
             _row = rt;
 
-            for (int i = 0; i < items.Count; i++) _slots.Add(BuildSlot(items[i], i, items.Count));
+            var items = UtilityLedger.Catalog.Items;
+
+            for (int i = 0; i < Slots; i++)
+                _slots.Add(BuildSlot(i < items.Count ? items[i] : null, i));
 
             // Detached first. Build is called once per screen today, but a subscription that
             // depends on that staying true is a subscription that silently doubles the day
@@ -157,27 +168,29 @@ namespace GlimmerGrove
         }
 
         /// <summary>
-        /// One cell, placed at its own even share of the width.
+        /// One cell at its own even share of the width, holding a utility or nothing.
         ///
-        /// <b>Spread rather than bunched.</b> Three cells centred on a full-width shelf leaves a
-        /// third of it empty at each end, which reads as a tray built for more than it holds. At
-        /// odd sixths they are as far from each other as from the ends, so a fourth utility
-        /// re-spaces the row rather than making it look finished for the first time.
+        /// A cell with no utility is drawn and never wired: it is a place, not a control, and a
+        /// button that answers a tap with nothing is worse than a surface that does not.
         /// </summary>
-        Slot BuildSlot(UtilityItem item, int index, int count)
+        Slot BuildSlot(UtilityItem item, int index)
         {
             var slot = new Slot { Item = item };
 
             // Anchored to its share of the width so the row follows the safe area rather than
-            // assuming the canvas's own 1080.
-            float share = (2f * index + 1f) / (2f * count);
+            // assuming the canvas's own reference width.
+            float share = (2f * index + 1f) / (2f * Slots);
 
-            slot.Button = UIKit.Button("Slot_" + item.Id, _row, Art.S("Ui/Utility/slot"),
-                                       Vector2.one * SlotSize, new Vector2(share, 1f),
-                                       new Vector2(0f, -(SlotTop + SlotSize * .5f)), () => Tap(slot));
+            slot.Button = UIKit.Button("Slot" + index, _row, Art.S("Ui/Utility/slot"),
+                                       Vector2.one * SlotSize, new Vector2(share, .5f),
+                                       Vector2.zero, () => Tap(slot));
 
-            slot.Button.PressScale = .95f;
+            slot.Button.PressScale = item == null ? 1f : .95f;
+            if (item == null) slot.Button.ClickSfx = null;
+
             slot.Group = UIKit.Group((RectTransform)slot.Button.transform);
+
+            if (item == null) return slot;
 
             // Behind the cell, so an armed slot reads as lit from within rather than as an
             // outline drawn over a picture.
@@ -187,34 +200,19 @@ namespace GlimmerGrove
             slot.Ring.enabled = false;
 
             slot.Face = UIKit.Img("Face", slot.Button.transform, Art.S(item.Art), Color.white,
-                                  Vector2.one * IconSize, new Vector2(.5f, .5f),
-                                  new Vector2(0f, SlotSize * .06f));
+                                  Vector2.one * IconSize);
             slot.Face.preserveAspect = true;
 
+            // **Top-right, over the cell's own rim.** At the foot it sat where a thumb rests and
+            // where the icon is widest; the corner above is the one part of a cell nothing else
+            // uses.
             slot.Badge = UIKit.Img("Badge", slot.Button.transform, Art.Disc(96), Pal.Ink,
-                                   Vector2.one * BadgeSize, new Vector2(1f, 0f),
-                                   new Vector2(-6f, 8f));
+                                   Vector2.one * BadgeSize, new Vector2(1f, 1f),
+                                   new Vector2(-4f, 4f));
 
-            slot.Count = UIKit.Label("Count", slot.Badge.transform, "0", 36, Pal.Cream,
+            slot.Count = UIKit.Label("Count", slot.Badge.transform, "0", 34, Pal.Cream,
                                      TextAnchor.MiddleCenter, Vector2.one * BadgeSize,
                                      new Vector2(.5f, .5f), Vector2.zero, FontStyle.Bold);
-
-            // What an empty cell says instead of a count: a gem and a price, which is the whole
-            // of the shop from here. A cell this size has room for the number, and a "+" alone
-            // was a control that did not say what it would cost.
-            slot.Price = UIKit.Box("Price", slot.Button.transform,
-                                   new Vector2(SlotSize, PriceSize), new Vector2(.5f, 0f),
-                                   new Vector2(0f, PriceSize * .58f));
-
-            var gem = UIKit.Img("Gem", slot.Price, Art.S("Ui/ic_gem"), Pal.Sun,
-                                Vector2.one * (PriceSize * .68f), new Vector2(.5f, .5f),
-                                new Vector2(-PriceSize * .62f, 0f));
-            gem.preserveAspect = true;
-
-            slot.Gems = UIKit.Label("Cost", slot.Price, string.Empty, 34, Pal.Sun,
-                                    TextAnchor.MiddleLeft, new Vector2(SlotSize * .5f, PriceSize),
-                                    new Vector2(.5f, .5f), new Vector2(PriceSize * .18f, 0f),
-                                    FontStyle.Bold);
 
             return slot;
         }
@@ -264,18 +262,22 @@ namespace GlimmerGrove
             for (int i = 0; i < _slots.Count; i++)
             {
                 var slot = _slots[i];
+
+                // A cell holding nothing at all: a place on the shelf, dimmed and inert.
+                if (slot.Item == null)
+                {
+                    slot.Group.alpha = _live ? .55f : .30f;
+                    slot.Button.Interactable = false;
+                    continue;
+                }
+
                 int held = UtilityLedger.Held(slot.Item);
-                bool armed = Armed == slot.Item;
 
                 slot.Count.text = held.ToString();
                 slot.Badge.enabled = held > 0;
                 slot.Count.enabled = held > 0;
 
-                bool selling = held <= 0 && slot.Item.ForSale;
-                slot.Price.gameObject.SetActive(selling);
-                if (selling) slot.Gems.text = slot.Item.GemPrice.ToString();
-
-                slot.Ring.enabled = armed;
+                slot.Ring.enabled = Armed == slot.Item;
                 slot.Face.color = held > 0 ? Color.white : new Color(1f, 1f, 1f, .36f);
 
                 // A slot with nothing in it stays *interactable* while the bar is live, because
@@ -295,6 +297,13 @@ namespace GlimmerGrove
             => Armed == null ? string.Empty
              : Loc.Get(Armed.Target == UtilityTarget.Ward
                        ? "utility.aim.ward" : "utility.aim.hill");
+
+        /// <summary>Whether this bar is drawing this utility at all.</summary>
+        public bool Shows(UtilityItem item)
+        {
+            for (int i = 0; i < _slots.Count; i++) if (_slots[i].Item == item) return true;
+            return false;
+        }
 
         void OnDestroy() => UtilityLedger.Changed -= Paint;
     }

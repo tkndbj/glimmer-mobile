@@ -86,17 +86,17 @@ namespace GlimmerGrove.Utilities
         /// </summary>
         public static readonly UtilityCatalog Default = new UtilityCatalog(new[]
         {
-            // Reach is hundredths of the hill's height: 22 is a little under a quarter of the
-            // walk, which takes in a raider and its neighbours without taking in a wave.
-            new UtilityItem("firepot", UtilityKind.Blast, magnitude: 44, reach: 22,
+            // Damage, into everything standing in the one box it is thrown at. Two creepers
+            // die; a brute is left with four health for a ward to finish.
+            new UtilityItem("firepot", UtilityKind.Blast, magnitude: 44,
                             gemPrice: 12, maxHeld: 9, order: 1),
 
-            new UtilityItem("mending", UtilityKind.Mend, magnitude: 6, reach: 0,
+            new UtilityItem("mending", UtilityKind.Mend, magnitude: 6,
                             gemPrice: 8, maxHeld: 9, order: 2),
 
             // Magnitude is fuel in tenths, so 90 is nine shots — a ward that had run dry firing
             // for about two seconds, which is most of a creeper.
-            new UtilityItem("surge", UtilityKind.Surge, magnitude: 90, reach: 0,
+            new UtilityItem("surge", UtilityKind.Surge, magnitude: 90,
                             gemPrice: 10, maxHeld: 9, order: 3),
         });
 
@@ -162,14 +162,6 @@ namespace GlimmerGrove.Utilities
                     return Default;
                 }
 
-                if (kind == UtilityKind.Blast && entry.reach < 1)
-                {
-                    problems.Add($"utilities entry '{entry.id}' is a blast with reach " +
-                                 $"{entry.reach}; a blast that reaches nowhere can only ever " +
-                                 "be spent for nothing");
-                    return Default;
-                }
-
                 if (entry.gemPrice < 0)
                 {
                     problems.Add($"utilities entry '{entry.id}' has gem price {entry.gemPrice}; " +
@@ -195,7 +187,7 @@ namespace GlimmerGrove.Utilities
                     return Default;
                 }
 
-                items.Add(new UtilityItem(entry.id, kind, entry.magnitude, entry.reach,
+                items.Add(new UtilityItem(entry.id, kind, entry.magnitude,
                                           entry.gemPrice, entry.maxHeld, entry.order));
             }
 

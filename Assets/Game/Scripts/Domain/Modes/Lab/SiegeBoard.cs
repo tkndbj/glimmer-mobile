@@ -374,6 +374,33 @@ namespace GlimmerGrove.Modes
         /// <summary>Lanes a raider may walk down. Wider than the ward line, so blows travel.</summary>
         public const int Lanes = 5;
 
+        /// <summary>
+        /// How many bands the hill is cut into for aiming, down its length.
+        ///
+        /// <para>
+        /// <b>The hill is a grid, and it is a grid because a target has to be a thing you can
+        /// see.</b> A blast used to be a radius around wherever a finger left the board, which is
+        /// exact in the rule and unreadable on the screen: the ring said how far it reached and
+        /// nothing said what was in it, so the player was asked to judge a distance against
+        /// raiders that were walking. Four rows against five lanes makes twenty boxes, each about
+        /// a raider and a half wide - big enough to be tapped, small enough that which box is
+        /// obviously a decision.
+        /// </para>
+        /// <para>
+        /// It is <c>SiegeView</c>'s number too: the boxes it draws are these boxes, which is
+        /// invariant 33g's rule about the haul-road - the drawn thing and the played thing have
+        /// to be one thing, and the cheapest way to guarantee that is for there to be only one.
+        /// </para>
+        /// </summary>
+        public const int BlastRows = 4;
+
+        /// <summary>Which band of the hill a march reading falls in.</summary>
+        public static int RowOf(float march)
+        {
+            int row = (int)(march * BlastRows);
+            return row < 0 ? 0 : row >= BlastRows ? BlastRows - 1 : row;
+        }
+
         // ------------------------------------------------------------------ fuel in flight
         /// <summary>
         /// How long a match takes to reach the wards it feeds, and the three numbers it is made
@@ -1188,16 +1215,16 @@ namespace GlimmerGrove.Modes
 
         // ------------------------------------------------------------------ utilities
         /// <summary>
-        /// Burns everything within <paramref name="radius"/> of a point on the hill.
+        /// Burns everything standing in one box of the hill.
         ///
         /// <para>
-        /// <b>The hill is a unit square here and nowhere else.</b> A raider stands at
-        /// <c>(lane / (Lanes - 1), march)</c>, both in 0..1, so a reach authored as a fraction
-        /// means the same thing on every board and can be proved offline against two floats -
-        /// and <c>SiegeView</c> draws the marker through the same mapping, so what the player
-        /// aims at and what the rule burns cannot come apart. That is invariant 33g's argument
-        /// about the haul-road applied to a target: the drawn thing and the played thing have
-        /// to be one thing.
+        /// <b>A box rather than a radius, and that is a change of kind rather than of degree.</b>
+        /// A blast used to take everything within a distance of the point a finger left; exact in
+        /// the rule, and on the screen it asked the player to judge a radius against raiders that
+        /// were moving. The hill is a grid now (<see cref="SiegeTuning.BlastRows"/> bands by
+        /// <see cref="SiegeTuning.Lanes"/> lanes), the boxes are drawn, and a firepot takes
+        /// exactly what is standing in the one that was tapped - which is invariant 33g's rule at
+        /// its strongest, because the drawn thing and the played thing are now the same integers.
         /// </para>
         /// <para>
         /// <b>It reports damage <em>absorbed</em>, not damage offered</b>, and that number is
@@ -1211,9 +1238,11 @@ namespace GlimmerGrove.Modes
         /// class of fault invariant 32c refuses.
         /// </para>
         /// </summary>
-        public int Blast(float lane, float march, float radius, int damage, List<SiegeStrike> into)
+        public int Blast(int lane, int row, int damage, List<SiegeStrike> into)
         {
-            if (damage <= 0 || radius <= 0f) return 0;
+            if (damage <= 0) return 0;
+            if (lane < 0 || lane >= SiegeTuning.Lanes) return 0;
+            if (row < 0 || row >= SiegeTuning.BlastRows) return 0;
 
             int absorbed = 0;
 
@@ -1222,10 +1251,8 @@ namespace GlimmerGrove.Modes
                 var raider = _raiders[i];
                 if (!raider.Alive || !raider.OnTheHill) continue;
 
-                float u = SiegeTuning.Lanes <= 1 ? 0f : raider.Lane / (float)(SiegeTuning.Lanes - 1);
-                float du = u - lane, dv = raider.March - march;
-
-                if (du * du + dv * dv > radius * radius) continue;
+                if (raider.Lane != lane) continue;
+                if (SiegeTuning.RowOf(raider.March) != row) continue;
 
                 int took = damage < raider.Health ? damage : raider.Health;
                 absorbed += took;

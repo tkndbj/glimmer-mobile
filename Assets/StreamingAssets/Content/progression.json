@@ -452,7 +452,6 @@
         "id": "firepot",
         "kind": "blast",
         "magnitude": 44,
-        "reach": 22,
         "gemPrice": 12,
         "maxHeld": 9,
         "order": 1
@@ -461,7 +460,6 @@
         "id": "mending",
         "kind": "mend",
         "magnitude": 6,
-        "reach": 0,
         "gemPrice": 8,
         "maxHeld": 9,
         "order": 2
@@ -470,7 +468,6 @@
         "id": "surge",
         "kind": "surge",
         "magnitude": 90,
-        "reach": 0,
         "gemPrice": 10,
         "maxHeld": 9,
         "order": 3

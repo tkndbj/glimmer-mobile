@@ -2153,28 +2153,66 @@ In practice:
     appeared that only one had been written for — so there is one switch now (`BankedDrop`), and
     what is deliberately *not* in it is currency, because the chest path and the ad path do
     genuinely different things with it (10a against 10d).
-39d. **The bar is furniture, not three buttons — and it took playing it to say so.** The first
-    cut was a 148-point strip of loose squares floating at the foot of the screen with the
-    board's old margin above them, and the verdict on it was *"not even an action bar"*. It read
-    as three controls somebody had left there because that is what it was: nothing said the row
-    was a *place* things are kept. It is now a full-width hazard-railed steel shelf that meets
-    the board's own plate, with the room this mode used to leave empty at the foot given over to
-    it entirely (`UtilityBar.Height`, 290, is the whole of `SiegeScreen`'s bottom inset).
-    <br>**The cells are dark wells and the plate is light, which is the opposite of the source
-    kit and is right.** Drawn level with the tray's own face a cell reads as a sticker on a
-    panel — there is nothing for the eye to read as depth, and a bright icon on mid-grey has
-    nothing behind it. The well is the ground the items are seen against, so it is the darkest
-    thing on the bar. Only a picture says that; both cuts were green on every gate.
-    <br>**Three cells sit at odd sixths rather than bunched in the middle**, because a
-    full-width shelf with its contents centred reads as a tray built for more than it holds. A
-    fourth utility re-spaces the row rather than making it look finished for the first time.
-    <br>**And it is drawn, in the source kit's own sampled palette, rather than cut from it.**
-    The kit's tray is one fixed-width panel with five cells baked into the plate and two stone
-    wedges overlapping its ends: no clean rectangle to stretch, no cell-free column wide enough
-    to repeat, and five cells where this bar wants three. Cutting it would mean rebuilding most
-    of it and then living with whatever width the source happened to be. What the licensed art
-    is good at here is the *idiom and the colours*, and that is what is borrowed — 32b's rule
-    arrived at from the other direction.
+39d. **The bar is furniture, not three buttons — and everything about it came back from
+    playing it.** The first cut was a strip of loose squares floating at the foot of the screen
+    with the board's old margin above them, and the verdict was *"not even an action bar"*. It
+    read as three controls somebody had left there because that is what it was: nothing said the
+    row was a *place* things are kept. It is a dark shelf across the whole width now, meeting the
+    board's own plate, with the room this mode used to leave empty given over to it entirely.
+    <br>**Five cells, and three of them hold something.** A bar sized to the catalog would move
+    every slot under a player's thumb the day a fourth utility ships, and the muscle memory for
+    "the mending is the middle one" is worth more than two empty cells cost. Drawing the empty
+    ones is also honest about where the next two go.
+    <br>**The cells are dark wells and the shelf is dark too.** Drawn level with the shelf a cell
+    reads as a sticker on a panel; drawn in the source kit's steel greys the whole bar read as a
+    different screen under the board's near-black tiles. The well is the ground the items are
+    seen against, so it is the darkest thing on the bar, and the shelf is `Pal.Board`'s family so
+    the board and the bar are one column. Only a picture says any of that; every cut was green on
+    every gate.
+    <br>**No hazard rail, no gem price under a cell, and the count moved to the top-right.** The
+    kit stripes the top of its tray black and yellow; borrowed here it was the brightest thing on
+    a screen whose whole job is telling four gem colours apart. A price under an empty cell was a
+    second number competing with the count. And the badge at the foot sat where a thumb rests and
+    where the icon is widest — the corner above it is the one part of a cell nothing else uses.
+    <br>**And it is drawn, in the source kit's own sampled palette, rather than cut from it.** The
+    kit's tray is one fixed-width panel with five cells baked into the plate and two stone wedges
+    overlapping its ends: no clean rectangle to stretch, no cell-free column wide enough to
+    repeat. Cutting it would mean rebuilding most of it and then living with whatever width the
+    source happened to be. What the licensed art is good at here is the *idiom and the colours* —
+    32b's rule arrived at from the other direction.
+39f. **A target has to be a place, not a distance.** A firepot was aimed by dragging a ring round
+    the hill and burning everything within a radius of where the finger left. Exact in the rule
+    and unreadable on the board: what the player had to do was judge a distance against raiders
+    that were walking, and the ring said how far it reached while nothing said what was in it.
+    <br>The hill is a **grid** now — `SiegeTuning.Lanes` by `SiegeTuning.BlastRows`, twenty boxes
+    — drawn as translucent panes each with a ring in the middle, and a firepot takes exactly what
+    is standing in the one that was tapped. That is invariant 33g at its strongest: the drawn
+    thing and the played thing are not two things agreeing about a mapping, they are the same two
+    integers. `SiegeAim` is integers throughout for the same reason.
+    <br>**And `reach` went with it.** A blast covering exactly one box has nothing to tune, and a
+    content field with one legal value is the decoration invariant 5d names — so the field is
+    gone from the DTO, the catalog, the content file and both gates, and `content.py` *errors* on
+    one that reappears rather than ignoring it.
+    <br>Two smaller things the same session fixed, both invisible in the source. The ring a
+    mending and a surge are aimed with was 1.6 cells centred a third of a cell high, which sat on
+    a ward's barrel rather than round the ward — it is an ellipse sized to the post's own node
+    now. And a spent utility kept the ring on its slot, because the view disarmed itself and the
+    bar was never told: **two places holding one piece of state**, fixed by one of them telling
+    the other (`SiegeView.Done`).
+39g. **The board runs to the edges of the screen, and the field is laid out to the width.** The
+    three bands were 44 / 16 / 40 of the height with the cell taken as the smaller of what the
+    width and the height allowed — which on every phone was the height, so the gem field sat in a
+    column with a hand's width of empty plate either side of it while the bar below ran edge to
+    edge. Two different shapes on one screen.
+    <br>The cell is driven by the **width** now and the hill and the line share what is left in
+    the proportion they were authored in, capped by `MaxGemBand` so the hill always has room to
+    walk down (37g).
+    <br>**And the plate is rounded at the top and square at the foot** (`Art.RoundTop`, reached
+    through `ProtoView.PlateSkin`). A fully rounded plate over a square shelf leaves two notches
+    where its corners curve away, and at the bottom of a board they read as a gap rather than as
+    two things meeting — which is what they are; it was reported from a device as exactly that,
+    with the two corners circled. The general rule is **round the end that is open and square the
+    end that meets something**, and this is the only mode with anything under its board.
 39e. **A sound is a piece of news, so the two loudest things a player can cause got their own.**
     A firepot bursting was `burst`, which a raider's death already plays thirteen times a wave
     and which is tuned to be the shortest, brightest thing in the set; sharing it tuned the
@@ -2289,7 +2327,8 @@ compile. Do not guess — verify offline:
 - **Thornwatch legibility:** `python Tools/render_siege.py` draws the shipped level at the size a
   phone draws it, with the real sprites, using `SiegeScreen.HostInset` and `SiegeView`'s own
   arithmetic; `--raiders N` stands that many of the first wave on the hill, `--no-bolts` takes
-  the exchange off it, and `--no-bar` takes the action bar off. **Its insets are in the screen's
+  the exchange off it, `--no-bar` takes the action bar off, and `--aim hill` / `--aim wards` draw
+  a utility's targeting. **Its insets are in the screen's
   own order — (left, bottom, right, top)** — and were written as (left, top, right, bottom) for
   a long time, which drew the board 55 points high: a diagnostic that is the only thing able to
   see a band in the wrong place must not itself put one there. **Look at it.** It is the only check that can see a fuel tube hidden behind
@@ -2672,11 +2711,12 @@ live in **Hard-won facts**.
   wanted by none of them now and stays, because the block has always described itself as carrying
   one. `StoryScreen`, the **story** band (30d) and the **village world** of backdrops (30e) all
   survive with no mode using them, which is what a seam is for.
-- **Utilities** — an account-wide action bar of three consumables filling the foot of
-  Thornwatch's screen (`UtilityBar`, a 290-point shelf), dropped by daily chests and bought
-  with gems, charged against the graded count at the mode's own exchange rate so one can never
-  buy a star (39). Two monotonic counters per id in the save (v22), catalogued in
-  `progression.json`, shelf, cells and icons all drawn by `Tools/make_utility_art.py`.
+- **Utilities** — an account-wide action bar filling the foot of Thornwatch's screen
+  (`UtilityBar`, a 228-point shelf of five cells, three of them filled), dropped by daily chests
+  and bought with gems, charged against the graded count at the mode's own exchange rate so one
+  can never buy a star (39). A firepot is aimed at one box of the hill's own grid (39f). Two
+  monotonic counters per id in the save (v22), catalogued in `progression.json`, shelf, cells
+  and icons all drawn by `Tools/make_utility_art.py`.
 - **Privacy/ads plumbing** — Google UMP consent, ATT prompt, `app-ads.txt` (placeholders).
 
 ### Content shipped

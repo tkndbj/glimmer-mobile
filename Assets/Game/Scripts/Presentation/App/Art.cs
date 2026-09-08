@@ -190,6 +190,35 @@ namespace GlimmerGrove
                 new Vector4(b, b, b, b));
         }
 
+        /// <summary>
+        /// Nine-sliced rectangle with its <em>top</em> corners rounded and its bottom two square.
+        ///
+        /// <para>
+        /// <b>For a panel something else is stacked directly under.</b> A fully rounded plate
+        /// sitting on a square shelf leaves two notches where the corners curve away from it, and
+        /// at the foot of a board they read as a gap rather than as a join — which is exactly what
+        /// they are. Rounding the end that is open and squaring the end that meets something is
+        /// the general rule; this is the first place it was needed.
+        /// </para>
+        /// <para>
+        /// Drawn as a box taller than the bitmap and centred low, so its bottom corners round off
+        /// below <c>y = 0</c> and are clipped away. That is cheaper and steadier than a second
+        /// distance field: the top corners come out of exactly the arithmetic
+        /// <see cref="Round"/> uses, so the two match at any radius.
+        /// </para>
+        /// </summary>
+        public static Sprite RoundTop(int radius = 24)
+        {
+            int size = radius * 2 + 8;
+            float h = size * .5f;
+
+            // The bottom slice only has to be tall enough to have something to repeat, and every
+            // row of it is solid: the shape is square by the time it gets there.
+            return Make($"roundtop{radius}", size, size,
+                (x, y) => Cover(SdRoundBox(x, y, h, h - radius, h, h + radius, radius)),
+                new Vector4(radius + 3, 2, radius + 3, radius + 3));
+        }
+
         /// <summary>Nine-sliced rounded rectangle outline.</summary>
         public static Sprite RoundOutline(int radius = 24, float thickness = 4f)
         {

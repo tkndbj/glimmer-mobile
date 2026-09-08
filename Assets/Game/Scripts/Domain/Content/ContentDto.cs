@@ -807,9 +807,6 @@ namespace GlimmerGrove.Content
         /// <summary>Damage, health, or fuel-tenths, depending on <see cref="kind"/>.</summary>
         public int magnitude;
 
-        /// <summary>Hundredths of the hill's height a blast reaches. Ignored by other kinds.</summary>
-        public int reach;
-
         /// <summary>Gems for one, or nought for a utility only a chest hands out.</summary>
         public int gemPrice;
 
