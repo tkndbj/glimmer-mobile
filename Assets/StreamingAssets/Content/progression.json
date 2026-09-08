@@ -48,19 +48,26 @@
             "kind": "credits",
             "min": 40,
             "max": 70,
-            "weight": 45
+            "weight": 40
           },
           {
             "kind": "hearts",
             "min": 1,
             "max": 1,
-            "weight": 30
+            "weight": 26
           },
           {
             "kind": "gems",
             "min": 1,
             "max": 1,
-            "weight": 25
+            "weight": 22
+          },
+          {
+            "kind": "utility",
+            "item": "mending",
+            "min": 1,
+            "max": 1,
+            "weight": 12
           }
         ]
       },
@@ -77,19 +84,26 @@
             "kind": "credits",
             "min": 80,
             "max": 130,
-            "weight": 45
+            "weight": 40
           },
           {
             "kind": "gems",
             "min": 2,
             "max": 3,
-            "weight": 40
+            "weight": 34
           },
           {
             "kind": "heart_boost",
             "min": 24,
             "max": 24,
-            "weight": 15
+            "weight": 13
+          },
+          {
+            "kind": "utility",
+            "item": "surge",
+            "min": 1,
+            "max": 1,
+            "weight": 13
           }
         ]
       },
@@ -106,13 +120,20 @@
             "kind": "gems",
             "min": 4,
             "max": 6,
-            "weight": 62
+            "weight": 55
           },
           {
             "kind": "heart_boost",
             "min": 24,
             "max": 24,
-            "weight": 38
+            "weight": 33
+          },
+          {
+            "kind": "utility",
+            "item": "firepot",
+            "min": 1,
+            "max": 1,
+            "weight": 12
           }
         ]
       }
@@ -422,6 +443,37 @@
         "kind": "heart_boost",
         "amount": 72,
         "gems": 75
+      }
+    ]
+  },
+  "utilities": {
+    "items": [
+      {
+        "id": "firepot",
+        "kind": "blast",
+        "magnitude": 44,
+        "reach": 22,
+        "gemPrice": 12,
+        "maxHeld": 9,
+        "order": 1
+      },
+      {
+        "id": "mending",
+        "kind": "mend",
+        "magnitude": 6,
+        "reach": 0,
+        "gemPrice": 8,
+        "maxHeld": 9,
+        "order": 2
+      },
+      {
+        "id": "surge",
+        "kind": "surge",
+        "magnitude": 90,
+        "reach": 0,
+        "gemPrice": 10,
+        "maxHeld": 9,
+        "order": 3
       }
     ]
   }

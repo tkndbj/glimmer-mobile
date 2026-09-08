@@ -2018,6 +2018,19 @@ In practice:
     the sixth time — and the honest other half is that it cost **thirty-three levels' worth of
     derived XP and credits**, which is exactly what `ProgressionStore`'s high-water floors exist
     to stop a player noticing (invariant 9).
+    <br>**Hiding costs no code and it does cost a seed, which is the half that was missing.**
+    `seed-config.mjs` skips a chapter carrying `"disabled": true`, so the moment anybody re-seeds
+    after hiding one, its levels leave `config/progression`'s `levelChapters` and the server
+    values a save holding them at **nothing**. That is *correct* — `CatalogIndexBuilder.Add`
+    skips a disabled chapter and `ProgressionLedger` values a record the catalog has never heard
+    of at nothing, so client and server agree — and it is the direction with teeth: a stale
+    published table is the **server over-valuing** hidden levels, which is a disagreement about
+    money. What it means in practice is that the flag is not quite free after all. Hiding a
+    chapter without seeding leaves the two disagreeing; hiding and seeding drops the server's
+    valuation of every record in it, so `submitSpends` will refuse debits an old save could
+    otherwise cover and `grove.ts` clamps its bought half harder (19a). **Re-enabling is seven
+    booleans and a re-seed**, not seven booleans. Found on 2026-09-08 by the live suite, which
+    went red on `c01_shallows` the first time anything was seeded after the modes were hidden.
     <br>**Two things this taught that the five withdrawals before it did not.** *One:* shared
     machinery living inside a mode's file is a mode that cannot be deleted for the price of its
     own files. `CellDrag` — the drag handler Prismvale and Thornwatch both use — was written
@@ -2069,6 +2082,123 @@ In practice:
     it survived Deep Orbit, Nova Raid and the Iron Quarry: a seam outlives the thing it was built
     for, and the next mode that talks costs one base class it does not have to write.
 
+
+
+39. **A utility buys a finish and never a grade, and in Thornwatch that is arithmetic rather
+    than a policy.** The action bar carries three consumables — a **firepot** thrown at the
+    hill, a **mending** poured into a ward, a **surge** of fuel — held account-wide, dropped
+    by daily chests and bought with gems. Everything about the shape of that follows from one
+    question: *how many matches would this have saved?*
+    <br>**Why the question has to be asked at all.** A grade is not a private number. Stars
+    derive credits, credits are a grove's worth, and a grove's worth reaches a public board
+    (19a) — so a consumable that made a run score better would move a public figure, and
+    utilities are **not adjudicated**, so a forged one would move it for free. Making them
+    server-owned was the obvious answer and the wrong one: a utility is not currency (13),
+    there is nothing for the server to recompute, and 10a's claim shape exists for money.
+    <br>**What closes it is the mode's own exchange rate.** `SiegeTuning.PerfectMatch` is *the
+    most* one match can ever deliver, which is exactly why `SiegeTuning.Par` is allowed to
+    divide by it and call itself a floor (37a). So a utility that delivers damage is charged
+    `ceil(damage / PerfectMatch)` against the graded count — a floor on the matches it saved —
+    and using one is at best exactly neutral and usually slightly dearer. `SiegeUtility`
+    is the only place that conversion is written, so a blast and a surge cannot come to price
+    themselves differently, and `UtilityTests` sweeps every damage a shipped utility could
+    deliver rather than asserting it at one point.
+    <br>**A mending charges nothing, and that is the same rule rather than an exception.** It
+    delivers no damage, so it saves no matches: what it buys is survival, which is precisely
+    what 23 says a purchase may sell. Two smaller consequences of asking the question honestly:
+    damage is counted as **absorbed**, so overkill on a raider with three health left is not
+    work the player was spared; and a **surge is charged for the whole pour** whatever the ward
+    takes, because over-charging is the safe direction and a constant is a price a player can
+    learn.
+    <br>**And a mending may never raise a fallen ward** — not a kindness withheld, but what
+    keeps `SiegeBoard.Stranded` a *certainty*. That predicate decides whether money changes
+    hands (28f) and is only allowed to say "no purchase rescues this" because nothing can put a
+    ward back up.
+    <br>**Which is also why a utility is not the difficulty a board was tuned against.** 29c
+    refuses a companion's ability the right to change what a move does, because par is fixed per
+    board and an ability that varied it would give two players two different games. A utility
+    varies the board and pays for it in the graded unit, so the ladder it is measured against
+    does not move — and the stock is account-wide precisely so that it is never a fact about a
+    level.
+39a. **The stock is two counters per id, and it is the first thing here that needed both.**
+    `utilityStock` (save v22) stores `earned` and `spent`, each monotonic, joined by a per-id
+    `max`, with what is in hand derived as the difference and clamped at nought. Hearts and
+    hints come back on a clock, so they are `RegenLedger`; grove decor is bought and then
+    *stands somewhere*, so `homesteadStock` stores purchases alone and derives the rest from the
+    placements already in the file (16h). A utility is granted, used and gone — nothing else in
+    the save implies it existed — so both halves have to be written down. That is 11b for the
+    fourth time and the first time the answer was two counters.
+    <br>**The join forgives rather than double-charges, deliberately.** Two devices offline from
+    the same five, spending two and three, merge to three spent — two uses free. Adding them is
+    not idempotent, so a re-uploaded save or a sync retried after a dropped reply would charge
+    them again, which is the failure that actually loses somebody something they paid gems for.
+    `RegenLedger` has made the same trade since v8; what makes it safe here is 39 — a forgiven
+    use buys an easier run and never a better one.
+39b. **A chest may pay a utility, and that cost the server nothing.** `ChestDropKind.Utility`
+    carries an **item id** on the drop, because one kind and an id is what keeps a utility
+    shipped next year *content* — an enum member per item would make every addition a code
+    change and a renumbered contract (9c). The server's mirror needed the id only so that two
+    different utilities in one chest do not fold into each other (`ChestDrop.SameAs`); it still
+    grants none of them, because `chestCurrencyValue` sums by currency and ignores the rest.
+    <br>**But a banked kind must still be published**, and that is the trap this laid bare. The
+    seeder's `DROP_KINDS` was the four currency-ish kinds and was shared with the streak, so a
+    chest band naming `hints` — a kind the client has shipped since v19 — would have **thrown**.
+    A band the seeder refuses is a band whose *streams* are missing, and each guaranteed band
+    draws on its own stream number, so dropping one shifts every stream after it and the server
+    and the client disagree about what a chest paid **in credits**. One set for two questions is
+    how a seeder comes to refuse correct content; there are two now.
+    <br>**And the two `Apply` switches had already drifted.** `DailyChests.Apply` handled hearts
+    and boosts and silently dropped a hint, on a table that is content and could roll one from a
+    config push tomorrow. That is 5b exactly — two copies of one rule, each correct until a case
+    appeared that only one had been written for — so there is one switch now (`BankedDrop`), and
+    what is deliberately *not* in it is currency, because the chest path and the ad path do
+    genuinely different things with it (10a against 10d).
+39d. **The bar is furniture, not three buttons — and it took playing it to say so.** The first
+    cut was a 148-point strip of loose squares floating at the foot of the screen with the
+    board's old margin above them, and the verdict on it was *"not even an action bar"*. It read
+    as three controls somebody had left there because that is what it was: nothing said the row
+    was a *place* things are kept. It is now a full-width hazard-railed steel shelf that meets
+    the board's own plate, with the room this mode used to leave empty at the foot given over to
+    it entirely (`UtilityBar.Height`, 290, is the whole of `SiegeScreen`'s bottom inset).
+    <br>**The cells are dark wells and the plate is light, which is the opposite of the source
+    kit and is right.** Drawn level with the tray's own face a cell reads as a sticker on a
+    panel — there is nothing for the eye to read as depth, and a bright icon on mid-grey has
+    nothing behind it. The well is the ground the items are seen against, so it is the darkest
+    thing on the bar. Only a picture says that; both cuts were green on every gate.
+    <br>**Three cells sit at odd sixths rather than bunched in the middle**, because a
+    full-width shelf with its contents centred reads as a tray built for more than it holds. A
+    fourth utility re-spaces the row rather than making it look finished for the first time.
+    <br>**And it is drawn, in the source kit's own sampled palette, rather than cut from it.**
+    The kit's tray is one fixed-width panel with five cells baked into the plate and two stone
+    wedges overlapping its ends: no clean rectangle to stretch, no cell-free column wide enough
+    to repeat, and five cells where this bar wants three. Cutting it would mean rebuilding most
+    of it and then living with whatever width the source happened to be. What the licensed art
+    is good at here is the *idiom and the colours*, and that is what is borrowed — 32b's rule
+    arrived at from the other direction.
+39e. **A sound is a piece of news, so the two loudest things a player can cause got their own.**
+    A firepot bursting was `burst`, which a raider's death already plays thirteen times a wave
+    and which is tuned to be the shortest, brightest thing in the set; sharing it tuned the
+    biggest moment in the mode by the smallest. A mending was `chime`, which read as a coin
+    landing rather than as a ward being put back together. They are `boom` and `mend` now.
+    <br>**`mend` needed a second source pack, and that is the shape of the finding.** The
+    GameBurp set is a library of *physical* noises — pops, bongs, impacts — and has nothing that
+    reads as a spell rather than as an object, so `make_sfx.py` grew an `rpg:` prefix resolved
+    against a second root, which is the `synth:` prefix's idiom for the third time. A row that
+    names no prefix still means the original pack, so nothing already in the table moved. Its
+    WAVs rather than its OGGs, because the trim, the pitch and the loudness match should run on
+    the original rather than on a decode of it.
+39c. **An icon is not content, so adding a utility is a build.** Prices, strengths, ceilings,
+    bar order and which chest drops what are all authored in `progression.json` and retunable
+    from a config push; a picture is in the app. `ContentValidation` and `content.py` both
+    **error** on a catalog entry whose icon `AssetManifest` does not name, rather than letting it
+    draw a white rectangle (7b) — and both resolve `utility.{id}.name` and `.note`, which are
+    derived from the id (5a) and therefore invisible to `loc.py`, exactly as a story line is
+    (30d). The three icons are **drawn** by `Tools/make_utility_art.py` rather than cut from a
+    pack, which is 32b's lesson taken before it cost anything: five goals in this project have
+    been approximated out of a licensed sheet and every one had to be re-done after somebody
+    looked at it. Its `--contact` earned its place immediately — the first cut's flame was a kite
+    on a stick and its flask had a notch where two nearly-agreeing shapes met, both invisible in
+    the source and both green on every gate.
 
 
 ## Layout
@@ -2158,12 +2288,21 @@ compile. Do not guess — verify offline:
   importer hook does not fire on files a tool wrote while the Editor was busy.
 - **Thornwatch legibility:** `python Tools/render_siege.py` draws the shipped level at the size a
   phone draws it, with the real sprites, using `SiegeScreen.HostInset` and `SiegeView`'s own
-  arithmetic; `--raiders N` stands that many of the first wave on the hill, and `--no-bolts` takes
-  the exchange off it. **Look at it.** It is the only check that can see a fuel tube hidden behind
+  arithmetic; `--raiders N` stands that many of the first wave on the hill, `--no-bolts` takes
+  the exchange off it, and `--no-bar` takes the action bar off. **Its insets are in the screen's
+  own order — (left, bottom, right, top)** — and were written as (left, top, right, bottom) for
+  a long time, which drew the board 55 points high: a diagnostic that is the only thing able to
+  see a band in the wrong place must not itself put one there. **Look at it.** It is the only check that can see a fuel tube hidden behind
   the field's plate, a raider whose colour does not read, or a bolt baked so loosely that it
   crosses the hill as a sliver — every one of those a fault it caught, all past a green gate
   (invariants 37g, 37k). It draws each reel at its **loudest** frame, because these effects dip:
   drawn at a fixed index it caught two muzzles mid-dip and reported a bake that was fine as broken.
+- **The action bar's art:** `python Tools/make_utility_art.py --check` proves the five shipped
+  PNGs — three icons, the shelf and one cell — are what the tool draws, and `--contact` shows the
+  bar **assembled** plus the icons alone at both sizes they are drawn at. **Look at it.**
+  Everything is *drawn*, so this gate needs no licensed pack and runs on every checkout; it is
+  also the only thing that can see a flame that reads as a kite, or a cell that reads as a
+  sticker (39c, 39d).
 - **Prismvale's art:** `Tools/make_prism_art.py --check` proves every sprite, cast flipbook
   and flare is what the tool cuts out of the licensed packs, and `--contact` lays them out to be
   looked at. It reads the zips directly and **passes when the packs are absent**, so a checkout
@@ -2477,7 +2616,7 @@ live in **Hard-won facts**.
 - **Content pipeline** — levels as data in `StreamingAssets/Content/`, stable `LevelId`s, manifest-built
   `CatalogIndex`, lazy chapter bodies, `Content ▸ Sync Manifest`, build gate.
 - **Save** — versioned atomic file with checksum, backup rotation, corrupt-file recovery, tested
-  migrations, monotonic merge. **Save schema v21.** Content schema: manifest and chapter bodies **v2**,
+  migrations, monotonic merge. **Save schema v22.** Content schema: manifest and chapter bodies **v2**,
   grove body **v3**.
 - **Cloud** — Firebase (Firestore + Auth + Functions), anonymous by default, Apple/Google linking,
   per-account local archive for switching, `SyncScheduler` debounce/backoff.
@@ -2533,6 +2672,11 @@ live in **Hard-won facts**.
   wanted by none of them now and stays, because the block has always described itself as carrying
   one. `StoryScreen`, the **story** band (30d) and the **village world** of backdrops (30e) all
   survive with no mode using them, which is what a seam is for.
+- **Utilities** — an account-wide action bar of three consumables filling the foot of
+  Thornwatch's screen (`UtilityBar`, a 290-point shelf), dropped by daily chests and bought
+  with gems, charged against the graded count at the mode's own exchange rate so one can never
+  buy a star (39). Two monotonic counters per id in the save (v22), catalogued in
+  `progression.json`, shelf, cells and icons all drawn by `Tools/make_utility_art.py`.
 - **Privacy/ads plumbing** — Google UMP consent, ATT prompt, `app-ads.txt` (placeholders).
 
 ### Content shipped
@@ -2640,6 +2784,14 @@ Free play collects about **593 credits and 6 gems a day**; `Tools/verify/content
   and they buy different things: a glade's turns the conduit (`BoardView.Hint`), a grove's
   *marks a flower* and shows the cascade tapping it would set off (`BudHint`, `BudView.Hint`).
   Neither costs the save file, the wire or the server anything.
+- **Utilities** — three, held up to 9 each, account-wide and shared by every Thornwatch
+  level. **Firepot** 12 gems (44 damage over 22% of the hill, charged 2 matches),
+  **mending** 8 gems (6 ward health, charged nothing), **surge** 10 gems (9 shots' fuel,
+  charged 2 matches). Each is a weighted option in one daily chest — mending in the first
+  (12 of 100), surge in the second (13 of 100), firepot in the day's prize (12 of 100) — so a
+  chest is the ordinary way to hold one and gems are the answer on the evening somebody is
+  stuck. Content (`utilities`), and the prices are the numbers most likely to be wrong first
+  guess.
 - **Streak** — a 7-night lap that wraps: 500 credits, 1 heart, 5 gems, 2 hearts, a 12h boost,
   3 hearts, 10 gems.
 - **Ads** — four placements, all opt-in, no interstitials: `heart_refill` 2 hearts,
@@ -2717,6 +2869,15 @@ account every run**, so anything derived from the account id varies — never ha
 derive it from what the config publishes (this has already broken the earned-credits case and
 three streak cases). And it is **sensitive to cold starts**: re-run before believing a failure
 that arrives in the first minute after a deploy.
+
+**The first rule is wider than "a figure" and the earned-credits case broke a fourth time
+proving it.** It derived the per-star numbers off the published table and still hard-coded the
+*level ids* it pushed — `c01_first_light` and `c01_twin_streams` — so the day their chapter was
+hidden and anything was seeded, the server correctly valued that save at nothing and a green
+suite went red for a content change. **Anything the published catalog decides has to be read
+off the published catalog**, ids included: it now takes the first two glades out of
+`levelChapters` and reads each one's reward rule from its own chapter, so a catalog with one
+level per chapter is fine too.
 
 **Two deployment traps.** Never `firebase deploy --only functions` for the whole codebase: it
 failed all fourteen updates with `Failed to make request to cloudfunctions.googleapis.com` —
@@ -2860,6 +3021,49 @@ changes nothing until that function is redeployed.
     second number after the move budget most likely to be wrong: too dear and a defeat is a dead end, too
     cheap and the fail state stops meaning anything. `continue_offered` / `continue_bought` are the funnel,
     and the distribution of `taken` decides whether `gems` moves or `gemsStep` stops being zero.
+21. ~~**Deploy the rules and re-seed `config/daily` for the utilities.**~~ — **done 2026-09-08**,
+    and proved rather than assumed: the live ruleset
+    (`e29083b5-f71f-4460-b7bb-9c86a92aac05`) carries `'utilityStock'` in `hasOnly` and the
+    64-row bound, and `config/progression`'s published chest table was read back out of
+    Firestore and diffed band-for-band against the shipped `progression.json` — three chests,
+    weights 40/26/22/**12**, 40/34/13/**13**, 55/33/**12**. The ordering rule it leaves behind
+    is the part worth keeping. The chest table now carries three `utility` bands and every weight in all
+    three chests was re-cut to make room for them, so the published table and a client's bundled
+    `progression.json` now differ. `claimAwards` re-rolls a chest from the published table and
+    grants **its own** figure while the client shows what *it* rolled, so any window where the two
+    disagree is a window where a player is shown one number of credits and paid another (39b).
+    Remote content delivery is off, so a client's table only moves when the app does — which
+    makes "seed early to be safe" exactly backwards, and means **the next content change to this
+    block has to be seeded in the same sitting as the build that carries it**.
+    <br>**The rules are the opposite and go first.** Adding `utilityStock` to `hasOnly` is purely
+    additive, so it can be deployed at any time and *must* precede any client that writes the
+    field: `hasOnly` is an allow-list over the whole document, so a client writing an unlisted key
+    loses **every** save write rather than that key (12a).
+    <br>Pre-launch this is all academic — there are no real players and the only accounts are the
+    ~210 synthetic saves — but the ordering is what it is the day there are.
+22. **Judge the action bar by playing Thornwatch, which is what the three utilities are for.**
+    Built the way every feature since the five prototypes has been, so it can be taken back out
+    for the price of one save field and a folder. Three questions in order.
+    <br>**Does the bar read as *yours* rather than as the level's?** The stock is account-wide
+    and shared by every siege (39), which is the whole design and is also the thing a player has
+    no way to be told. If they treat a firepot as something the board handed them, they will
+    hoard it for ever and the feature is decoration.
+    <br>**Does the charge land as fair?** Using a firepot costs two matches against the grade,
+    which is arithmetic (39) and is *invisible* — the match counter simply goes up by two. That
+    is deliberate, because the alternative is a panel explaining an exchange rate, and this file
+    has already learned that a rule needing a panel is usually the wrong rule (20g). But if
+    players read it as the game stealing matches, the honest fix is to say it on the slot rather
+    than to stop charging.
+    <br>**And is a mending the one that gets used?** It is the only one that costs the grade
+    nothing, so it should be the one a careful player reaches for — and if the firepot wins
+    anyway, the price of a star is too cheap. `utility_used` carries `matches`, which is the
+    distribution to read; there is deliberately no event for the empty-slot tap yet, and that is
+    the first one to add if the shop's funnel needs a denominator.
+    <br>Nothing about this was watched on a device before it was written: every offline gate is
+    green, the whole suite passes, and the icons have been rendered and looked at. What has
+    **not** been done is opening it in the Editor — `Validate Content`, `Validate Art`, a build of
+    the bar over the shipped siege, and `Addressables ▸ Sync All Assets`, because the three new
+    PNGs were written while the Editor was closed (see *Hard-won facts*).
 Ads **fill** as of 2026-08-24: all five placements load on device from ironSource's own network
 and Unity Ads, with no AdMob instances yet. What is still unproven is a real impression reaching
 `adReward` and paying, which needs a watched video rather than a load.

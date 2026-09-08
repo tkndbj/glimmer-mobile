@@ -518,39 +518,23 @@ namespace GlimmerGrove.Ads
         {
             if (!drop.IsValid) return;
 
-            switch (drop.Kind)
+            // Everything banked — hearts, a boost, a hint, a utility — is applied by one
+            // shared switch rather than by a copy here. This one used to be that copy, and
+            // it was the *correct* half of a pair that had drifted: the chest's had no hint
+            // case at all. See BankedDrop.
+            if (BankedDrop.Apply(drop)) return;
+
+            if (drop.IsCurrency)
             {
-                case ChestDropKind.Credits:
-                case ChestDropKind.Gems:
-                    // Already granted, or about to be, by the callback the network makes to
-                    // our server. Pulling rather than pushing: the sync adopts whatever the
-                    // server says the balance is, which is the same path a purchase takes.
-                    CloudSaveService.BeginSync();
-                    break;
-
-                case ChestDropKind.Hearts:
-                    Wallet.GrantHearts(drop.Amount);
-                    break;
-
-                case ChestDropKind.HeartBoost:
-                    Wallet.GrantHeartBoost(drop.Amount);
-                    break;
-
-                case ChestDropKind.Hints:
-                    // Banked and applied here, exactly as hearts are: not currency, so
-                    // nothing to adjudicate and nothing for the callback to grant. Refused
-                    // rather than clamped at a full pool, which is why the offer was never
-                    // made there — see WouldBenefit.
-                    Wallet.GrantHints(drop.Amount);
-                    break;
-
-                case ChestDropKind.RunTime:
-                    // Deliberately nothing, and now unreachable: the retired placement that
-                    // paid it is gone and AdRewardTable refuses a transient kind outright.
-                    // Kept as an explicit case rather than folded into a default, so adding
-                    // a kind and forgetting it here still fails the switch review.
-                    break;
+                // Already granted, or about to be, by the callback the network makes to our
+                // server. Pulling rather than pushing: the sync adopts whatever the server
+                // says the balance is, which is the same path a purchase takes.
+                CloudSaveService.BeginSync();
             }
+
+            // Anything left is transient, which is deliberately nothing and now unreachable:
+            // the retired placement that paid it is gone and AdRewardTable refuses a
+            // transient kind outright.
         }
 
         // ------------------------------------------------------------ the day

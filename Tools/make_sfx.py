@@ -96,6 +96,21 @@ OUT = REPO / "Assets" / "Game" / "Audio" / "Sfx"
 DEFAULT_SOURCE = Path(r"C:\Users\Digikey\Downloads\AUDIO\_extracted\gameburp-2000-sfx")
 WAVS = "GameBurp - 2000 Game Sound FX Collection (WAV)"
 
+#: A second pack, for the sounds the first one has nothing like.
+#:
+#: **Two roots rather than one, and a prefix rather than a guess.** The GameBurp set is a library
+#: of physical noises - pops, bongs, impacts - and it has no *spell*: nothing in it reads as a
+#: ward being mended rather than as a coin landing. So a row may name `rpg:` and be resolved
+#: against this instead, which is the `synth:` prefix's idiom for the third time. A row that names
+#: no prefix still means the GameBurp pack, so nothing already in the table moved.
+#:
+#: Its WAVs, not its OGGs: `sfx_dsp.read` opens wav files, the pack ships both, and taking the
+#: uncompressed one means the trim, the pitch and the loudness match all run on the original
+#: rather than on a decode of it.
+RPG_SOURCE = Path(r"C:\Users\Digikey\Downloads\AUDIO\_extracted\rpg-magic-sfx")
+RPG_WAVS = "RPG Magic SFX"
+RPG_PREFIX = "rpg:"
+
 # One perceived level for the whole set. Chosen by sweeping it: at 0.14 the median
 # clip peaks at 0.63 and three of the twenty are held by the ceiling, which is the
 # most level that can be had without the match itself becoming meaningless - a clip
@@ -134,6 +149,8 @@ USE = {
     "win":      ((1.00, 1.30), 0.00, "the fanfare"),
     "shatter":  ((1.00, 1.25), 0.00, "brittle stone breaking; a hint spent"),
     "blocked":  ((1.00, 1.00), 0.00, "a refused keeper name"),
+    "boom":     ((0.94, 1.06), 0.00, "a firepot bursting on Thornwatch's hill"),
+    "mend":     ((1.00, 1.00), 0.00, "a mending poured into a ward"),
 }
 
 
@@ -186,6 +203,14 @@ def cut(row, source_root):
             raise SystemExit(f"{row.slot}: no such generator {name!r} - "
                              f"sfx_dsp.SYNTH has {', '.join(sorted(dsp.SYNTH))}")
         a = make()
+    elif row.source.startswith(RPG_PREFIX):
+        src = RPG_SOURCE / RPG_WAVS / row.source[len(RPG_PREFIX):]
+        if not src.exists():
+            raise SystemExit(
+                f"{row.slot}: source not found\n  {src}\n"
+                f"See the audio-source-pack note for where the RPG Magic pack lives.")
+        a, rate = dsp.read(str(src))
+        a = dsp.resample(a, rate, dsp.RATE)
     else:
         src = source_root / WAVS / row.source
         if not src.exists():

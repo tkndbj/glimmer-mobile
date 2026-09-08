@@ -792,7 +792,31 @@ function readDaily(progression) {
   return { runsPerChest: Math.max(1, Math.floor(daily.runsPerChest ?? 3)), chests };
 }
 
-const DROP_KINDS = new Set(["credits", "gems", "hearts", "heart_boost"]);
+/**
+ * What a *streak* rung may pay.
+ *
+ * Narrower than what a chest may pay, and the two used to be one set — which meant a chest
+ * band naming `hints` threw here as an "unknown reward kind" even though the client has
+ * shipped that kind since v19. One set for two questions is how a seeder comes to refuse
+ * correct content; see CHEST_KINDS.
+ */
+const STREAK_KINDS = new Set(["credits", "gems", "hearts", "heart_boost"]);
+
+/**
+ * What a *chest* may pay: everything a streak may, plus the kinds that are banked on the
+ * phone and never adjudicated.
+ *
+ * The server does not grant these — `chestCurrencyValue` sums by currency and ignores
+ * everything else — but it must still accept them, because the published table is what it
+ * re-rolls against and a band it refuses to publish is a band whose *streams* would be
+ * missing. That is the one way a non-currency kind can move real money: drop a band from
+ * the config and every guaranteed band after it draws on a different stream number, so the
+ * server and the client disagree about what a chest paid in credits.
+ */
+const CHEST_KINDS = new Set([...STREAK_KINDS, "hints", "utility"]);
+
+/** Chest kinds that are incomplete without an `item`. Mirrors `ChestDropKinds.NeedsItem`. */
+const KINDS_NEEDING_ITEM = new Set(["utility"]);
 
 /**
  * The streak ladder, published so the server can pay a night without asking the client
@@ -835,7 +859,7 @@ function readStreak(progression) {
     // An empty entry is how a night that pays nothing is authored.
     if (!rung || !rung.kind) return { kind: "", amount: 0 };
 
-    if (!DROP_KINDS.has(rung.kind)) {
+    if (!STREAK_KINDS.has(rung.kind)) {
       throw new Error(`streak night ${night} names unknown reward kind '${rung.kind}'`);
     }
 
@@ -876,7 +900,7 @@ function maxStreakAmount(kind) {
 }
 
 function band8(band, chestIndex, role) {
-  if (!band || !DROP_KINDS.has(band.kind)) {
+  if (!band || !CHEST_KINDS.has(band.kind)) {
     throw new Error(`daily chest ${chestIndex} ${role} names unknown reward kind '${band?.kind}'`);
   }
 
@@ -887,7 +911,21 @@ function band8(band, chestIndex, role) {
     throw new Error(`daily chest ${chestIndex} ${role} '${band.kind}' has band ${min}..${max}`);
   }
 
-  return { kind: band.kind, min, max };
+  // A kind that names a thing and does not name one would be drawn on the panel as a prize
+  // and grant nothing. Mirrors `DailyChestTable.TryReadBand`, which refuses the same band.
+  const item = typeof band.item === "string" ? band.item : "";
+
+  if (KINDS_NEEDING_ITEM.has(band.kind) && !item) {
+    throw new Error(
+      `daily chest ${chestIndex} ${role} pays '${band.kind}' and names no item; a chest ` +
+      "cannot hand over a utility without saying which"
+    );
+  }
+
+  // The item is published even though the server never grants one, so `config/daily` is a
+  // faithful copy of what the client rolled. A published table that quietly differed from
+  // the authored one is the thing this whole function exists to prevent.
+  return item ? { kind: band.kind, min, max, item } : { kind: band.kind, min, max };
 }
 
 // -------------------------------------------------------- Firestore REST encoding

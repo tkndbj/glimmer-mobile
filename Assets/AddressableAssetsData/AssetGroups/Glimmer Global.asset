@@ -548,6 +548,11 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 1bb8e2033de626247999aa4ee0aa840c
+    m_Address: Art/Ui/Utility/tray
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 1c6d2dbc96f807846b9b61380a45e7a9
     m_Address: Art/Bg/splash_cover
     m_ReadOnly: 0
@@ -871,6 +876,11 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels:
     - Art/Siege/brute
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 2dc4de1106954d1e045b9dc9b4de22bd
+    m_Address: Audio/Sfx/mend
+    m_ReadOnly: 0
+    m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 2e24ba766515d9f4d83da6afe6f3b837
     m_Address: Art/Fx/Siege/muzzle_y/f00
@@ -1868,6 +1878,11 @@ MonoBehaviour:
     m_SerializedLabels:
     - Art/Prism/mon2_jump
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 680aae2bc24829545977922d564016bd
+    m_Address: Art/Ui/Utility
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 6965cb96735e4c8a32645948999911b2
     m_Address: Art/Fx/Victory/f01
     m_ReadOnly: 0
@@ -2568,6 +2583,11 @@ MonoBehaviour:
     m_SerializedLabels:
     - Art/Prism/mon2_jump
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 91dc9db257d4d5e4e8aab02b467a0486
+    m_Address: Art/Ui/Utility/slot
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 91f53977243ee0d4bbfa9d50eb87aeab
     m_Address: Art/Bg/village_27
     m_ReadOnly: 0
@@ -2843,6 +2863,11 @@ MonoBehaviour:
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: a3b082c542040a84a86f3e8265159b01
     m_Address: Art/Bg/village_26
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: a426e069ffe2af545977d53084cfc0ad
+    m_Address: Art/Ui/Utility/mending
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
@@ -3324,6 +3349,11 @@ MonoBehaviour:
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: bfed50f4788454a4d9b32e5ee6daa980
     m_Address: Art/Bg/village_18
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: bfedf970a4da0b54a87646bd1099e8b1
+    m_Address: Art/Ui/Utility/surge
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
@@ -3917,6 +3947,11 @@ MonoBehaviour:
     m_SerializedLabels:
     - Art/Siege/fire2
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: e36c10ebf2221777c7403a51de6de39b
+    m_Address: Audio/Sfx/boom
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: e458cee236b02044395c01034fb51c29
     m_Address: Art/Fx/Siege/hit_g/f08
     m_ReadOnly: 0
@@ -3990,6 +4025,11 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels:
     - Art/Siege/fire3
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: e7e14d03ba12d8a4a8c51f2edd522442
+    m_Address: Art/Ui/Utility/firepot
+    m_ReadOnly: 0
+    m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: e8383a8e319e62e4fad32e354debf690
     m_Address: Art/Prism/mon3/f11

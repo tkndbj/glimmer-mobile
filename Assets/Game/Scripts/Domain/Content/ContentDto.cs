@@ -755,6 +755,69 @@ namespace GlimmerGrove.Content
         /// </para>
         /// </summary>
         public StoreDto store;
+
+        /// <summary>
+        /// The utilities a player may hold, and what they cost. Optional: absent means the
+        /// built-in catalog stands.
+        ///
+        /// <para>
+        /// Rides here for the reasons every block above it does, and one of its own: a utility
+        /// arrives out of a <c>daily</c> chest and is bought with gems, so it is tuned against
+        /// the block directly above it and the chest table directly below the rewards. A
+        /// consumable priced without the chest odds in front of you is a consumable that is
+        /// either never bought or never dropped.
+        /// </para>
+        /// <para>
+        /// What it may <em>not</em> do is invent a <c>kind</c>: what a utility does is a rule
+        /// with a fail state and a grade attached, so an entry naming a kind this build has
+        /// never heard of is skipped, exactly as a chapter naming an unknown mode is
+        /// (invariant 20). See <c>UtilityCatalog</c>.
+        /// </para>
+        /// </summary>
+        public UtilitiesDto utilities;
+    }
+
+    /// <summary>
+    /// The utility catalog, as authored.
+    ///
+    /// A wrapper around one array rather than a bare array, for the reason every other block in
+    /// <see cref="ProgressionDto"/> is an object: <c>JsonUtility</c> gives a class-typed field an
+    /// instance even when the JSON has no such key, so a block has to carry a value a real one
+    /// cannot hold to be distinguishable from an absent one — here, an empty <see cref="items"/>.
+    /// </summary>
+    [Serializable]
+    public sealed class UtilitiesDto
+    {
+        /// <summary>In bar order, which is authored on each entry rather than by position.</summary>
+        public UtilityDto[] items;
+    }
+
+    /// <summary>
+    /// One utility. <c>kind</c> is a permanent id — <c>blast</c>, <c>mend</c>, <c>surge</c> —
+    /// and what <c>magnitude</c> measures depends on it: damage, health, or fuel in tenths.
+    /// </summary>
+    [Serializable]
+    public sealed class UtilityDto
+    {
+        /// <summary>Permanent. The save keys on it and a published chest table names it.</summary>
+        public string id;
+
+        public string kind;
+
+        /// <summary>Damage, health, or fuel-tenths, depending on <see cref="kind"/>.</summary>
+        public int magnitude;
+
+        /// <summary>Hundredths of the hill's height a blast reaches. Ignored by other kinds.</summary>
+        public int reach;
+
+        /// <summary>Gems for one, or nought for a utility only a chest hands out.</summary>
+        public int gemPrice;
+
+        /// <summary>The most a player may hold. A grant past it is refused, never clamped away.</summary>
+        public int maxHeld;
+
+        /// <summary>Where it sits on the bar: 1 up, no gaps and no ties.</summary>
+        public int order;
     }
 
     /// <summary>
@@ -1180,6 +1243,15 @@ namespace GlimmerGrove.Content
         public string kind;
         public int min;
         public int max;
+
+        /// <summary>
+        /// Which thing, for a kind that names one — today, the utility a <c>utility</c> band
+        /// pays. Ignored by every other kind, and required by the ones that need it.
+        ///
+        /// It does not reach the generator, so adding one to a shipped table cannot reroll an
+        /// unopened chest.
+        /// </summary>
+        public string item;
     }
 
     /// <summary>
@@ -1196,10 +1268,14 @@ namespace GlimmerGrove.Content
         public int min;
         public int max;
 
+        /// <summary>Which thing, for a kind that names one. See <see cref="DailyDropDto.item"/>.</summary>
+        public string item;
+
         /// <summary>Relative chance. The reader rejects anything below 1.</summary>
         public int weight;
 
-        public DailyDropDto AsBand() => new DailyDropDto { kind = kind, min = min, max = max };
+        public DailyDropDto AsBand()
+            => new DailyDropDto { kind = kind, min = min, max = max, item = item };
     }
 
     /// <summary>

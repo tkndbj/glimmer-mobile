@@ -3,21 +3,35 @@ using GlimmerGrove.Content;
 
 namespace GlimmerGrove.Daily
 {
-    /// <summary>An authored band: <c>min</c> to <c>max</c> of one kind, inclusive.</summary>
+    /// <summary>
+    /// An authored band: <c>min</c> to <c>max</c> of one kind, inclusive — and, for a kind that
+    /// names a thing, which thing.
+    /// </summary>
     public readonly struct ChestBand
     {
         public readonly ChestDropKind Kind;
         public readonly int Min;
         public readonly int Max;
 
-        public ChestBand(ChestDropKind kind, int min, int max)
+        /// <summary>
+        /// Which utility, for a band that pays one. Empty for every other kind.
+        ///
+        /// <b>It does not touch the streams.</b> Which id a band names changes what is granted and
+        /// never what is rolled, so adding one to a shipped table cannot reroll an unopened chest
+        /// — the property the whole generator is built around (invariant 9c).
+        /// </summary>
+        public readonly string Item;
+
+        public ChestBand(ChestDropKind kind, int min, int max, string item = null)
         {
             Kind = kind;
             Min = min < 1 ? 1 : min;
             Max = max < min ? Min : max;
+            Item = string.IsNullOrEmpty(item) ? string.Empty : item;
         }
 
-        public ChestDrop Resolve(ref ChestRandom random) => new ChestDrop(Kind, random.Between(Min, Max));
+        public ChestDrop Resolve(ref ChestRandom random)
+            => new ChestDrop(Kind, random.Between(Min, Max), Item);
 
         /// <summary>True when the band is a single number, which reads better on a panel.</summary>
         public bool IsFixed => Min == Max;
@@ -111,7 +125,12 @@ namespace GlimmerGrove.Daily
         }
 
         /// <summary>
-        /// Folds a drop into the list, adding to an existing entry of the same kind.
+        /// Folds a drop into the list, adding to an existing entry that is the same reward.
+        ///
+        /// <b>The same reward, not the same kind</b> — a chest that pays two different utilities
+        /// pays two of them, and folding them together would grant one id twice and the other
+        /// never. <c>ChestDrop.SameAs</c> is where that comparison lives so the server's mirror
+        /// can be held to the same rule.
         ///
         /// <para>
         /// Not cosmetic. A chest whose guaranteed band and whose bonus pick are both
@@ -133,8 +152,8 @@ namespace GlimmerGrove.Daily
 
             for (int i = 0; i < drops.Count; i++)
             {
-                if (drops[i].Kind != drop.Kind) continue;
-                drops[i] = new ChestDrop(drop.Kind, drops[i].Amount + drop.Amount);
+                if (!drops[i].SameAs(drop)) continue;
+                drops[i] = new ChestDrop(drop.Kind, drops[i].Amount + drop.Amount, drop.Item);
                 return;
             }
 
@@ -392,7 +411,17 @@ namespace GlimmerGrove.Daily
                 return false;
             }
 
-            band = new ChestBand(kind, dto.min, dto.max);
+            // A kind that names a thing and does not name one would be drawn on the panel as a
+            // prize and grant nothing. Refused rather than skipped, for the reason a transient
+            // kind is: this build knows the kind and knows the band to be wrong.
+            if (ChestDropKinds.NeedsItem(kind) && string.IsNullOrEmpty(dto.item))
+            {
+                problems.Add($"daily chest {chestIndex} {role} pays '{dto.kind}' and names no " +
+                             "item; a chest cannot hand over a utility without saying which");
+                return false;
+            }
+
+            band = new ChestBand(kind, dto.min, dto.max, dto.item);
             return true;
         }
     }

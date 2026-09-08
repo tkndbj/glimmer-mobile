@@ -551,6 +551,27 @@ namespace GlimmerGrove.Modes
     }
 
     /// <summary>A blow that landed on the line, for the view to draw.</summary>
+    /// <summary>
+    /// What a utility did to one raider - a hit that came from the player's own hand rather
+    /// than out of a ward.
+    ///
+    /// Its own record and not a <see cref="SiegeBolt"/>, because a bolt names the ward that
+    /// fired it and this has no ward: the view draws the two differently and analytics has to
+    /// be able to tell them apart.
+    /// </summary>
+    public readonly struct SiegeStrike
+    {
+        public readonly int Raider, Damage;
+        public readonly bool Killed;
+
+        public SiegeStrike(int raider, int damage, bool killed)
+        {
+            Raider = raider;
+            Damage = damage;
+            Killed = killed;
+        }
+    }
+
     public readonly struct SiegeBlow
     {
         public readonly int Ward, Raider, Damage;
@@ -1163,6 +1184,158 @@ namespace GlimmerGrove.Modes
             }
 
             return best;
+        }
+
+        // ------------------------------------------------------------------ utilities
+        /// <summary>
+        /// Burns everything within <paramref name="radius"/> of a point on the hill.
+        ///
+        /// <para>
+        /// <b>The hill is a unit square here and nowhere else.</b> A raider stands at
+        /// <c>(lane / (Lanes - 1), march)</c>, both in 0..1, so a reach authored as a fraction
+        /// means the same thing on every board and can be proved offline against two floats -
+        /// and <c>SiegeView</c> draws the marker through the same mapping, so what the player
+        /// aims at and what the rule burns cannot come apart. That is invariant 33g's argument
+        /// about the haul-road applied to a target: the drawn thing and the played thing have
+        /// to be one thing.
+        /// </para>
+        /// <para>
+        /// <b>It reports damage <em>absorbed</em>, not damage offered</b>, and that number is
+        /// what the run is charged for (invariant 39). Overkill on a raider with three health
+        /// left is not work the player was spared, so charging for it would price a firepot
+        /// above what it saved - safe, but wrong in a way the player would feel.
+        /// </para>
+        /// <para>
+        /// A raider still walking on (<c>Wait &gt; 0</c>) is untouched: it is not on the hill
+        /// yet, so it is not drawn there, and burning something the player cannot see is the
+        /// class of fault invariant 32c refuses.
+        /// </para>
+        /// </summary>
+        public int Blast(float lane, float march, float radius, int damage, List<SiegeStrike> into)
+        {
+            if (damage <= 0 || radius <= 0f) return 0;
+
+            int absorbed = 0;
+
+            for (int i = 0; i < _raiders.Count; i++)
+            {
+                var raider = _raiders[i];
+                if (!raider.Alive || !raider.OnTheHill) continue;
+
+                float u = SiegeTuning.Lanes <= 1 ? 0f : raider.Lane / (float)(SiegeTuning.Lanes - 1);
+                float du = u - lane, dv = raider.March - march;
+
+                if (du * du + dv * dv > radius * radius) continue;
+
+                int took = damage < raider.Health ? damage : raider.Health;
+                absorbed += took;
+
+                raider.Health -= took;
+                raider.Flash = .18f;
+
+                bool killed = raider.Health <= 0;
+                if (killed)
+                {
+                    raider.Alive = false;
+                    _felled++;
+                }
+
+                into?.Add(new SiegeStrike(raider.Id, took, killed));
+            }
+
+            // Felled raiders are cleared at the top of the next Advance, exactly as a bolt's
+            // are, so the view sees them one last time and can play the death it was handed.
+            return absorbed;
+        }
+
+        /// <summary>
+        /// Mends a ward, and answers how much health it actually took.
+        ///
+        /// <para>
+        /// <b>It mends a standing ward and can never raise a fallen one.</b> That is not a
+        /// kindness withheld: <see cref="Stranded"/> is a <em>certainty</em> that decides
+        /// whether money changes hands (invariant 28f), and it is only allowed to say "no
+        /// purchase rescues this" because nothing can put a ward back up. A mending that
+        /// revived one would make that claim false and leave <c>ProtoVerdict</c> refusing
+        /// continues it should have sold.
+        /// </para>
+        /// </summary>
+        public int Mend(int ward, int health)
+        {
+            if (ward < 0 || ward >= _wards.Length || health <= 0) return 0;
+
+            var post = _wards[ward];
+            if (!post.Alive) return 0;
+
+            int room = SiegeTuning.WardHealth - post.Health;
+            if (room <= 0) return 0;
+
+            int given = health < room ? health : room;
+            post.Health += given;
+
+            return given;
+        }
+
+        /// <summary>
+        /// Pours fuel into a ward, in tenths, and answers how many tenths it took.
+        ///
+        /// <para>
+        /// <b>Tenths rather than the ward's own float</b>, because what comes back decides a
+        /// graded number: <c>SiegeUtility</c> converts it to matches, and a graded number
+        /// decided by a float is one three code generators round three ways. The ward's live
+        /// fuel stays a float because it is drained by a clock, which is the one quantity here
+        /// that genuinely is continuous.
+        /// </para>
+        /// <para>
+        /// Room is <em>floored</em> to whole tenths, so this can never report taking more than
+        /// it gave. What refuses a ward too full to be worth it is <c>SiegeUtility</c>, before
+        /// an item is spent.
+        /// </para>
+        /// </summary>
+        public int Surge(int ward, int tenths)
+        {
+            if (ward < 0 || ward >= _wards.Length || tenths <= 0) return 0;
+
+            var post = _wards[ward];
+            if (!post.Alive) return 0;
+
+            int room = RoomForFuel(ward);
+            if (room <= 0) return 0;
+
+            int given = tenths < room ? tenths : room;
+            post.Fuel += given / 10f;
+
+            if (post.Fuel > SiegeTuning.WardCapacity) post.Fuel = SiegeTuning.WardCapacity;
+
+            return given;
+        }
+
+        /// <summary>
+        /// How much more fuel a ward could take, in whole tenths. Nought for a fallen one.
+        ///
+        /// Floored, so an offer is never made on room that turns out not to be there.
+        /// </summary>
+        public int RoomForFuel(int ward)
+        {
+            if (ward < 0 || ward >= _wards.Length) return 0;
+
+            var post = _wards[ward];
+            if (!post.Alive) return 0;
+
+            float room = SiegeTuning.WardCapacity - post.Fuel;
+            return room <= 0f ? 0 : (int)(room * 10f);
+        }
+
+        /// <summary>How much more health a ward could take. Nought for a fallen one.</summary>
+        public int RoomForHealth(int ward)
+        {
+            if (ward < 0 || ward >= _wards.Length) return 0;
+
+            var post = _wards[ward];
+            if (!post.Alive) return 0;
+
+            int room = SiegeTuning.WardHealth - post.Health;
+            return room < 0 ? 0 : room;
         }
 
         /// <summary>The raider with this id, or null once it has been taken off the hill.</summary>

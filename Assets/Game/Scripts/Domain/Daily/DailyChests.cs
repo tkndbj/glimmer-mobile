@@ -243,25 +243,22 @@ namespace GlimmerGrove.Daily
                 var drop = drops[i];
                 if (!drop.IsValid) continue;
 
-                switch (drop.Kind)
-                {
-                    case ChestDropKind.Credits:
-                    case ChestDropKind.Gems:
-                        string currency = ChestDropKinds.CurrencyOf(drop.Kind);
-                        PlayerProgression.Award(
-                            currency, drop.Amount,
-                            GrantEntry.DailyChestId(dayKey, chestIndex, currency),
-                            GrantEntry.DailyChestReason, now);
-                        break;
+                // Everything banked goes through one shared switch, and it is shared because
+                // this one used to be a second copy that had already drifted: it handled
+                // hearts and boosts and quietly dropped a hint, on a table that is content
+                // and could roll one from a config push. See BankedDrop.
+                if (BankedDrop.Apply(drop)) continue;
 
-                    case ChestDropKind.Hearts:
-                        Wallet.GrantHearts(drop.Amount);
-                        break;
+                if (!drop.IsCurrency) continue;
 
-                    case ChestDropKind.HeartBoost:
-                        Wallet.GrantHeartBoost(drop.Amount);
-                        break;
-                }
+                // Currency is the half that is adjudicated, and the id is derived from the
+                // chest rather than generated, so two devices opening the same chest produce
+                // one entry and the server keys its own record on the same string.
+                string currency = ChestDropKinds.CurrencyOf(drop.Kind);
+                PlayerProgression.Award(
+                    currency, drop.Amount,
+                    GrantEntry.DailyChestId(dayKey, chestIndex, currency),
+                    GrantEntry.DailyChestReason, now);
             }
         }
 

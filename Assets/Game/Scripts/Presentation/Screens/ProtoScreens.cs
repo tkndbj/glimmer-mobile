@@ -3,7 +3,9 @@ using System.Collections.Generic;
 using GlimmerGrove.Content;
 using GlimmerGrove.Localization;
 using GlimmerGrove.Modes;
+using GlimmerGrove.Analytics;
 using GlimmerGrove.Progression;
+using GlimmerGrove.Utilities;
 using UnityEngine;
 
 namespace GlimmerGrove
@@ -217,11 +219,171 @@ namespace GlimmerGrove
     public sealed class SiegeScreen : ProtoScreen
     {
         SiegeView _siege;
+        UtilityBar _bar;
 
         protected override ProtoView Attach(GameObject host)
         {
             _siege = host.AddComponent<SiegeView>();
             return _siege;
+        }
+
+        // ------------------------------------------------------------------ the action bar
+        /// <summary>
+        /// Builds the board and then the bar under it, and wires the one transaction between
+        /// them.
+        ///
+        /// <para>
+        /// <b>The bar hangs off the safe area rather than off the board host</b>, because the
+        /// host is what a mode's view fills and a view that resized itself around a bar would be
+        /// a view that has to know about one. What the board gives up for it is
+        /// <see cref="HostInset"/>'s bottom margin, which is the only line either of them shares.
+        /// </para>
+        /// </summary>
+        protected override void Play()
+        {
+            base.Play();
+            if (_siege == null) return;
+
+            if (_bar == null)
+            {
+                var node = UIKit.Node("Utilities", Safe);
+                _bar = node.gameObject.AddComponent<UtilityBar>();
+                _bar.Build(Safe);
+
+                _bar.Aiming = Aim;
+                _bar.Wanted = Offer;
+            }
+
+            _siege.Fire = Fire;
+            _siege.Rejected = Refuse;
+
+            _bar.Arm(null);
+            _bar.Paint();
+        }
+
+        /// <summary>
+        /// Arms or disarms a utility, and says what to do with it.
+        ///
+        /// <para>
+        /// <b>The one sentence this feature cannot show on the board.</b> Everything else about a
+        /// utility answers on the board — the ring says how far a firepot reaches, the ward
+        /// targets say which wards will take a mending — but whether the thing in your hand is
+        /// dragged or tapped is not a fact anything on screen can carry. Said on arming rather
+        /// than taught as a lesson, because it is a reminder about *this* item rather than a rule
+        /// about the mode, and a player who already knows it has still asked for it by tapping.
+        /// </para>
+        /// </summary>
+        void Aim(UtilityItem item)
+        {
+            if (_siege != null) _siege.Arming = item;
+            if (item == null || _bar == null) return;
+
+            Scenery.Toast(Safe, _bar.AimingNote, Pal.Cream, 1.8f,
+                          new Vector2(.5f, 0f), UtilityBar.Height + 90f);
+        }
+
+        /// <summary>
+        /// Uses one utility: the board first, the ledger second, and nothing at all if the board
+        /// refused.
+        ///
+        /// <para>
+        /// <b>The whole transaction, in one place, in that order.</b> The board is asked what the
+        /// utility would do before anything is taken, so a firepot that reached nobody and a
+        /// mending on a ward at full health cost the player nothing — which is invariant 23's
+        /// rule about a continue that does not continue, applied to a consumable. Charging the
+        /// run is the view's, because only a <c>ProtoView</c> may move the allowance; drawing it
+        /// is the view's for the same reason it draws everything else.
+        /// </para>
+        /// <para>
+        /// The held check is here rather than on the bar: a bar painted a moment ago is a bar
+        /// that can be one sync behind, and the ledger is the only thing that can answer for
+        /// certain.
+        /// </para>
+        /// </summary>
+        SiegeUse Fire(UtilityItem item, SiegeAim aim, List<SiegeStrike> strikes)
+        {
+            if (item == null || _siege == null || _siege.Siege == null) return SiegeUse.Refused;
+            if (UtilityLedger.WhyNotUse(item) != UtilityRefusal.None) return SiegeUse.Refused;
+
+            var use = SiegeUtility.Apply(_siege.Siege, item, aim, strikes);
+            if (!use.Landed) return SiegeUse.Refused;
+
+            // Only now, and only once — the board moved, so the item is gone. Nothing can change
+            // the stock between the check above and this, so the answer is not read: a `false`
+            // here would mean the ledger disagreed with itself, and the honest response to that
+            // is still to leave the board as it stands rather than to un-kill a raider.
+            UtilityLedger.TryUse(item);
+
+            LevelAnalytics.TrackUtility(Level, item.Id, use.Matches, use.Delivered);
+            return use;
+        }
+
+        /// <summary>Opens the shop behind an empty slot.</summary>
+        void Offer(UtilityItem item)
+        {
+            if (item == null) return;
+
+            if (!item.ForSale)
+            {
+                Scenery.Toast(Safe, Loc.Get("ui.utility.chest_only"), Pal.Cream, 2.4f,
+                              new Vector2(.5f, 0f), UtilityBar.Height + 90f);
+                return;
+            }
+
+            Flow.Modal<UtilityBuyOverlay>(v =>
+            {
+                v.Item = item;
+                v.Bought = () => { if (_bar != null) _bar.Paint(); };
+            });
+        }
+
+        /// <summary>
+        /// Says why a target was refused.
+        ///
+        /// One sentence for every kind, because the three refusals a player can actually meet —
+        /// a firepot that reached nobody, a mending on an unhurt ward, a surge into a full one —
+        /// are all the same news: nothing happened and nothing was taken.
+        /// </summary>
+        void Refuse()
+        {
+            Scenery.Toast(Safe, Loc.Get("ui.utility.no_target"), Pal.Cream, 2.2f,
+                          new Vector2(.5f, 0f), UtilityBar.Height + 90f);
+        }
+
+        /// <summary>
+        /// The bar follows the board: it takes input exactly when the run does, and arming is
+        /// dropped the moment it does not.
+        ///
+        /// Read from <see cref="Runnable"/> rather than tracked separately, so the bar and the
+        /// board cannot come to disagree about whether a run is under way — which is the second
+        /// thing this screen would otherwise have to remember, and the first one is what
+        /// invariant 24a is about.
+        /// </summary>
+        protected internal override void Running(bool running)
+        {
+            base.Running(running);
+
+            if (_bar != null) _bar.Live = running;
+            if (!running && _siege != null) _siege.Arming = null;
+        }
+
+        /// <summary>
+        /// A fresh board is a fresh bar: whatever was armed is put down.
+        ///
+        /// <c>SiegeView.Compose</c> drops its own half when the board is rebuilt, and this is the
+        /// other half - without it the slot would still be ringed over a board that had forgotten
+        /// what it was aiming.
+        /// </summary>
+        protected override void Rewind()
+        {
+            base.Rewind();
+            if (_bar != null) _bar.Arm(null);
+        }
+
+        public override void RetryAfterDefeat()
+        {
+            base.RetryAfterDefeat();
+            if (_bar != null) _bar.Arm(null);
         }
 
         protected override string GoalCaption => "mode.cap.raid";
@@ -306,6 +468,27 @@ namespace GlimmerGrove
         /// holds three bands - a hill, a line and a field - and the hill is the half a player
         /// spends the run looking at.
         /// </summary>
-        protected override Vector4 HostInset => new Vector4(10f, 190f, 10f, 300f);
+        /// <summary>
+        /// Room at the foot for the action bar, and the number is smaller than it looks.
+        ///
+        /// <para>
+        /// <b>Exactly the bar, and no gap at all.</b> The bar is a shelf that meets the board's
+        /// own plate rather than a strip floating under it — the room this mode used to leave
+        /// empty at the foot is the room it fills. `ProtoView` already insets its plate by
+        /// `Margin` inside this host, so the two are separated without a number here saying so.
+        /// </para>
+        /// <para>
+        /// Two earlier cuts, both caught by a render and neither by anything numeric (invariant
+        /// 37g): the first left 190 points of nothing between the field and three loose squares,
+        /// and the one before that added the bar's whole height to a margin that already very
+        /// nearly held it.
+        /// </para>
+        /// <para>
+        /// The board is still tall because it holds a hill, a line and a field, and the hill is
+        /// the half a player spends the run looking at.
+        /// </para>
+        /// </summary>
+        protected override Vector4 HostInset
+            => new Vector4(10f, UtilityBar.Height, 10f, 300f);
     }
 }

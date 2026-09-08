@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using GlimmerGrove.Homestead;
 using GlimmerGrove.Persistence;
+using GlimmerGrove.Utilities;
 
 namespace GlimmerGrove.Cloud
 {
@@ -130,6 +131,15 @@ namespace GlimmerGrove.Cloud
                 // reinstall. Neither is adjudicated: a piece is a cosmetic, and the money half
                 // is already defended by submitSpends. See HomesteadLedger.
                 { "homesteadStock", Stock(dto.homesteadStock) },
+
+                // The utilities, both counters per row. They travel for the grove stock's
+                // reason with one addition: a utility can be bought with gems, so a row that
+                // stayed on one phone is a purchase the player cannot see on their other
+                // device. Nothing here is adjudicated and invariant 39 is why that is safe —
+                // a utility that delivers damage is charged against the graded count at the
+                // most a match could ever have delivered, so a forged row buys an easier run
+                // and never a better one.
+                { "utilityStock", Utilities(dto.utilityStock) },
 
                 // The v19 mirror, derived by HomesteadLedger and carried so a rolled-back
                 // client and a not-yet-redeployed groveWorth both keep working.
@@ -362,6 +372,35 @@ namespace GlimmerGrove.Cloud
             return list;
         }
 
+        /// <summary>
+        /// The utility ledgers, dropping any row that says nothing.
+        ///
+        /// A row with both counters at nought is the same fact as no row at all, so writing one
+        /// would make the round trip return something it did not receive — which
+        /// <see cref="SaveDelta"/> would then read as a change on every launch, for ever. The
+        /// rule <see cref="Stock"/> already follows.
+        /// </summary>
+        static List<object> Utilities(UtilityStockDto[] rows)
+        {
+            var list = new List<object>();
+            if (rows == null) return list;
+
+            foreach (var row in rows)
+            {
+                if (row == null || string.IsNullOrEmpty(row.id)) continue;
+                if (row.earned <= 0 && row.spent <= 0) continue;
+
+                list.Add(new Dictionary<string, object>
+                {
+                    { "id", row.id },
+                    { "earned", (long)row.earned },
+                    { "spent", (long)row.spent },
+                });
+            }
+
+            return list;
+        }
+
         static List<object> Placements(HomesteadPlacementDto[] rows)
         {
             var list = new List<object>();
@@ -499,6 +538,11 @@ namespace GlimmerGrove.Cloud
             dto.homesteadStock = ReadStock(doc);
             dto.homesteadPlaced = ReadPlacements(doc);
 
+            // Absent on a document written before utilities existed, which reads back as no
+            // rows — the same fact as "granted none", so the join takes the local side whole
+            // and nothing has to detect the upgrade.
+            dto.utilityStock = ReadUtilities(doc);
+
             if (Map(doc, "progression") is IDictionary<string, object> progression)
             {
                 dto.progression.xpHighWater = Long(progression, "xpHighWater", -1);
@@ -604,6 +648,48 @@ namespace GlimmerGrove.Cloud
 
             return rows.ToArray();
         }
+
+        /// <summary>
+        /// The utility ledgers out of a cloud document, dropping anything malformed.
+        ///
+        /// A row with no id or with both counters at nought is skipped rather than repaired, for
+        /// <see cref="ReadStock"/>'s reason: <c>UtilityStock</c> would drop it a moment later
+        /// anyway, and letting it through would make the round trip write back a row it did not
+        /// receive.
+        /// </summary>
+        static UtilityStockDto[] ReadUtilities(IDictionary<string, object> doc)
+        {
+            if (!doc.TryGetValue("utilityStock", out object raw) || !(raw is IEnumerable<object> items))
+                return new UtilityStockDto[0];
+
+            var rows = new List<UtilityStockDto>();
+
+            foreach (object item in items)
+            {
+                if (!(item is IDictionary<string, object> map)) continue;
+
+                string id = Str(map, "id");
+                if (string.IsNullOrEmpty(id)) continue;
+
+                long earned = Long(map, "earned", 0L);
+                long spent = Long(map, "spent", 0L);
+                if (earned <= 0L && spent <= 0L) continue;
+
+                rows.Add(new UtilityStockDto
+                {
+                    id = id,
+                    earned = Clamp(earned),
+                    spent = Clamp(spent),
+                });
+            }
+
+            return rows.ToArray();
+        }
+
+        static int Clamp(long value)
+            => value < 0L ? 0
+             : value > UtilityStock.MaxHeld ? UtilityStock.MaxHeld
+             : (int)value;
 
         static HomesteadPlacementDto[] ReadPlacements(IDictionary<string, object> doc)
         {

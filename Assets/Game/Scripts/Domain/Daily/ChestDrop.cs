@@ -106,6 +106,31 @@ namespace GlimmerGrove.Daily
         /// </para>
         /// </summary>
         Hints,
+
+        /// <summary>
+        /// One utility for the account-wide bar — a firepot, a mending, a surge.
+        ///
+        /// <para>
+        /// The first kind that is not fully described by <see cref="ChestDrop.Amount"/>: a chest
+        /// has to say <em>which</em> one, so <see cref="ChestDrop.Item"/> carries the utility's
+        /// permanent id. One kind and an id rather than a kind per utility, because the whole
+        /// point of the catalog is that a utility shipped next year is content — an enum member
+        /// per item would make every addition a code change and a re-numbered contract
+        /// (invariant 9c).
+        /// </para>
+        /// <para>
+        /// Shaped like <see cref="Hints"/>: banked, not currency, and nothing about it reaches
+        /// the server. That is safe rather than merely cheap because a utility cannot improve a
+        /// grade — see invariant 39 and <c>SiegeUtility</c> — so there is nothing here for an
+        /// attacker to want and nothing for the server to recompute.
+        /// </para>
+        /// <para>
+        /// It has a ceiling and no headroom above it, exactly as hints do, so a grant at a full
+        /// bar is <em>refused</em> rather than clamped — which makes asking
+        /// <c>UtilityLedger.RoomFor</c> before offering one mandatory rather than polite.
+        /// </para>
+        /// </summary>
+        Utility,
     }
 
     /// <summary>
@@ -123,6 +148,7 @@ namespace GlimmerGrove.Daily
         public const string HeartBoost = "heart_boost";
         public const string RunTime = "run_time";
         public const string Hints = "hints";
+        public const string Utility = "utility";
 
         public static ChestDropKind Parse(string id)
         {
@@ -132,6 +158,7 @@ namespace GlimmerGrove.Daily
             if (string.Equals(id, HeartBoost, StringComparison.Ordinal)) return ChestDropKind.HeartBoost;
             if (string.Equals(id, RunTime, StringComparison.Ordinal)) return ChestDropKind.RunTime;
             if (string.Equals(id, Hints, StringComparison.Ordinal)) return ChestDropKind.Hints;
+            if (string.Equals(id, Utility, StringComparison.Ordinal)) return ChestDropKind.Utility;
             return ChestDropKind.None;
         }
 
@@ -145,6 +172,7 @@ namespace GlimmerGrove.Daily
                 case ChestDropKind.HeartBoost: return HeartBoost;
                 case ChestDropKind.RunTime: return RunTime;
                 case ChestDropKind.Hints: return Hints;
+                case ChestDropKind.Utility: return Utility;
                 default: return string.Empty;
             }
         }
@@ -169,6 +197,15 @@ namespace GlimmerGrove.Daily
         /// </summary>
         public static bool IsTransient(ChestDropKind kind) => kind == ChestDropKind.RunTime;
 
+        /// <summary>
+        /// Whether a kind is incomplete without <see cref="ChestDrop.Item"/>.
+        ///
+        /// Asked in one place so the reader, the roll and the grant cannot come to different
+        /// conclusions about what a well-formed band looks like — the rule
+        /// <see cref="IsCurrency"/> already follows.
+        /// </summary>
+        public static bool NeedsItem(ChestDropKind kind) => kind == ChestDropKind.Utility;
+
         /// <summary>The currency ledger a drop belongs to, or empty when it is not currency.</summary>
         public static string CurrencyOf(ChestDropKind kind)
             => kind == ChestDropKind.Credits ? Currency.Credits
@@ -176,24 +213,54 @@ namespace GlimmerGrove.Daily
              : string.Empty;
     }
 
-    /// <summary>One resolved reward: a kind and how much of it.</summary>
+    /// <summary>One resolved reward: a kind, how much of it, and — for a kind that needs one —
+    /// which thing.</summary>
     public readonly struct ChestDrop
     {
         public readonly ChestDropKind Kind;
         public readonly int Amount;
 
-        public ChestDrop(ChestDropKind kind, int amount)
+        /// <summary>
+        /// Which thing, for a kind that names one. Empty for every other kind.
+        ///
+        /// <para>
+        /// <b>Part of a drop's identity and not a payload beside it.</b> Two utilities in one
+        /// chest are two drops that must not fold into each other, so
+        /// <see cref="SameAs"/> compares this as well as the kind — and the id a currency claim
+        /// is keyed on is unaffected, because a utility is never currency.
+        /// </para>
+        /// </summary>
+        public readonly string Item;
+
+        public ChestDrop(ChestDropKind kind, int amount, string item = null)
         {
             Kind = kind;
             Amount = amount < 0 ? 0 : amount;
+            Item = string.IsNullOrEmpty(item) ? string.Empty : item;
         }
 
-        public bool IsValid => Kind != ChestDropKind.None && Amount > 0;
+        /// <summary>
+        /// Whether this is a reward at all.
+        ///
+        /// A kind that names a thing and does not is <em>invalid</em> rather than merely odd: it
+        /// would be drawn on the chest panel as a prize and grant nothing, which is the one
+        /// failure a chest may never have.
+        /// </summary>
+        public bool IsValid
+            => Kind != ChestDropKind.None && Amount > 0
+            && (!ChestDropKinds.NeedsItem(Kind) || Item.Length > 0);
 
         public static readonly ChestDrop None = new ChestDrop(ChestDropKind.None, 0);
 
         public bool IsCurrency => ChestDropKinds.IsCurrency(Kind);
 
-        public override string ToString() => $"{Amount} {ChestDropKinds.Id(Kind)}";
+        /// <summary>Whether two drops are the same reward and may therefore be added together.</summary>
+        public bool SameAs(ChestDrop other)
+            => Kind == other.Kind && string.Equals(Item, other.Item, StringComparison.Ordinal);
+
+        public override string ToString()
+            => Item.Length > 0
+             ? $"{Amount} {ChestDropKinds.Id(Kind)}:{Item}"
+             : $"{Amount} {ChestDropKinds.Id(Kind)}";
     }
 }

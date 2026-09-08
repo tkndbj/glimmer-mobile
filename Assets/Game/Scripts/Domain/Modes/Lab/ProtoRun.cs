@@ -72,8 +72,26 @@ namespace GlimmerGrove.Modes
 
         public bool Any => Left > 0;
 
-        /// <summary>Takes one for a move that landed. Called once per move and nowhere else.</summary>
-        public void Take() => Spent++;
+        /// <summary>
+        /// Takes from the allowance for something that landed.
+        ///
+        /// <para>
+        /// One by default, because one input is one move in every mode built on this shape. It
+        /// takes a count for the one thing that is not an input: a utility, which is charged in
+        /// this same unit at the rate its mode converts effect into moves, so that using one can
+        /// never score better than doing the same work by playing (invariant 39). Nought is legal
+        /// and is what a utility that delivers nothing worth charging for costs.
+        /// </para>
+        /// <para>
+        /// <b>It stays the only door into <see cref="Spent"/>.</b> A second way to move the grade
+        /// is a second place for "a run is charged once" to stop being true.
+        /// </para>
+        /// </summary>
+        public void Take(int moves = 1)
+        {
+            if (moves <= 0) return;
+            Spent += moves;
+        }
 
         /// <summary>
         /// Deals more, because a continue was paid for. Guarded against overflow rather than
@@ -295,6 +313,25 @@ namespace GlimmerGrove.Modes
             Budget.Take();
             if (worth > Best) Best = worth;
         }
+
+        /// <summary>
+        /// Charges the run for a utility that landed, in the unit the mode is graded in.
+        ///
+        /// <para>
+        /// <b>Separate from <see cref="Took"/> because it is not a move.</b> It does not touch
+        /// <see cref="Best"/>, which reads "the most one move was worth" and would be a lie if a
+        /// firepot could win it; and the count it takes is the mode's own conversion rather than
+        /// one, because what makes a utility safe is that it costs at least what the work it
+        /// replaced would have cost. See <c>SiegeUtility</c>.
+        /// </para>
+        /// <para>
+        /// A charge of nought is legal and still passes through here, so a mending that costs the
+        /// grade nothing still counts as the player having acted — which is what
+        /// <c>ProtoView.Took</c>'s commit flag is for and what stops a run being abandoned as
+        /// untouched after one was spent on it.
+        /// </para>
+        /// </summary>
+        public void Charged(int moves) => Budget.Take(moves);
 
         /// <summary>
         /// Deals more moves, because a continue was paid for. Nothing else moves: the board stands

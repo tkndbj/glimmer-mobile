@@ -111,7 +111,53 @@ namespace GlimmerGrove.Tests
                         slot = "t_007_006", piece = "lantern_post", setUnix = 1_699_000_500, flipped = true,
                     },
                 },
+                utilityStock = new[]
+                {
+                    // Both counters, and one row where they differ, because the pair is what the
+                    // join is: a fixture carrying only `earned` would prove half the wire and the
+                    // half it left out is the one a second device can lose.
+                    new UtilityStockDto { id = "firepot", earned = 4, spent = 1 },
+                    new UtilityStockDto { id = "mending", earned = 2, spent = 2 },
+                },
             };
+        }
+
+        /// <summary>
+        /// A document written before utilities existed reads back as no rows, which is the same
+        /// fact as "granted none" — so the join takes the local side whole and nothing has to
+        /// detect the upgrade. The bargain every id-keyed section in this file makes.
+        /// </summary>
+        [Test]
+        public void ADocumentWithNoUtilitiesReadsAsHavingBeenGrantedNone()
+        {
+            var doc = FirestoreSaveMapper.ToDocument(Populated());
+            doc.Remove("utilityStock");
+
+            var restored = FirestoreSaveMapper.FromDocument(doc);
+
+            Assert.IsNotNull(restored.utilityStock);
+            Assert.AreEqual(0, restored.utilityStock.Length);
+        }
+
+        /// <summary>
+        /// A row whose counters are both nought says nothing, so it is never written — and if it
+        /// were, the round trip would hand back a row it did not receive and
+        /// <c>SaveDelta</c> would read every launch as changed, for ever.
+        /// </summary>
+        [Test]
+        public void AnEmptyUtilityRowNeverReachesTheWire()
+        {
+            var dto = Populated();
+            dto.utilityStock = new[]
+            {
+                new UtilityStockDto { id = "firepot", earned = 3, spent = 0 },
+                new UtilityStockDto { id = "surge", earned = 0, spent = 0 },
+            };
+
+            var restored = FirestoreSaveMapper.FromDocument(FirestoreSaveMapper.ToDocument(dto));
+
+            Assert.AreEqual(1, restored.utilityStock.Length);
+            Assert.AreEqual("firepot", restored.utilityStock[0].id);
         }
 
         // ------------------------------------------------------- rules agreement

@@ -125,6 +125,14 @@ namespace GlimmerGrove.Persistence
                                                           other.groveLandOwned),
                 homesteadPlaced = Homestead.HomesteadLayout.Join(mine.homesteadPlaced,
                                                                  other.homesteadPlaced),
+
+                // The utilities, as two monotonic counters per id joined by max on each. The
+                // grove's stock could store purchases alone because the other half of its
+                // subtraction is already in this file; a utility is consumed and leaves no
+                // trace, so both halves travel. The join is lossless the way that one is: more
+                // earned is a chest the other device missed, more spent is a siege it missed,
+                // and there is nothing here for a stale snapshot to overwrite.
+                utilityStock = Utilities.UtilityStock.Join(mine.utilityStock, other.utilityStock),
             };
 
             return merged;

@@ -61,6 +61,7 @@ namespace GlimmerGrove.Persistence
             Wallet.LoadFrom(dto);
             TipLedger.LoadFrom(dto);
             Progression.CompanionLedger.LoadFrom(dto);
+            Utilities.UtilityLedger.LoadFrom(dto);
             Homestead.HomesteadLedger.LoadFrom(dto);
             Homestead.GroveLand.LoadFrom(dto);
             Homestead.HomesteadLayout.LoadFrom(dto);
@@ -165,6 +166,7 @@ namespace GlimmerGrove.Persistence
             TipLedger.WriteInto(dto);
             HeartContainerLedger.WriteInto(dto);
             Progression.CompanionLedger.WriteInto(dto);
+            Utilities.UtilityLedger.WriteInto(dto);
             Homestead.HomesteadLedger.WriteInto(dto);
             Homestead.GroveLand.WriteInto(dto);
             Homestead.HomesteadLayout.WriteInto(dto);
@@ -200,6 +202,7 @@ namespace GlimmerGrove.Persistence
             Wallet.LoadFrom(dto);
             TipLedger.LoadFrom(dto);
             Progression.CompanionLedger.LoadFrom(dto);
+            Utilities.UtilityLedger.LoadFrom(dto);
             Homestead.HomesteadLedger.LoadFrom(dto);
             Homestead.GroveLand.LoadFrom(dto);
             Homestead.HomesteadLayout.LoadFrom(dto);

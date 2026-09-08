@@ -4,6 +4,7 @@ using GlimmerGrove.AssetPipeline;
 using GlimmerGrove.Content;
 using GlimmerGrove.Localization;
 using GlimmerGrove.Modes;
+using GlimmerGrove.Utilities;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -116,6 +117,49 @@ namespace GlimmerGrove
         Vector2 _room;
         int _held = -1;
         int _wave;
+
+        // ------------------------------------------------------------------ aiming
+        RectTransform _aim;
+        Image _marker;
+        UtilityItem _arming;
+        readonly List<SiegeStrike> _strikes = new List<SiegeStrike>(16);
+
+        /// <summary>
+        /// What the screen does when a target is chosen: apply it, charge for it and spend it.
+        ///
+        /// <para>
+        /// <b>The view never spends and never charges by itself, and the split is deliberate.</b>
+        /// What a utility does to a board is a rule (<c>SiegeUtility</c>); whether the player has
+        /// one and whether they lose it is an account question the screen already owns; and what
+        /// it costs the run is the shared allowance, which only a <c>ProtoView</c> may touch. So
+        /// the screen owns the transaction and hands back what happened, and this class draws it.
+        /// A view that took the item itself would be a second place that could charge for a use
+        /// that did not land.
+        /// </para>
+        /// </summary>
+        public System.Func<UtilityItem, SiegeAim, List<SiegeStrike>, SiegeUse> Fire { get; set; }
+
+        /// <summary>Raised when a target was chosen and refused, so the screen can say why.</summary>
+        public System.Action Rejected { get; set; }
+
+        /// <summary>
+        /// Which utility is being aimed, or null.
+        ///
+        /// Setting it builds or tears down the targeting layer, so nothing outside has to
+        /// remember to do either — and disarming is what a paused board, a finished run and a
+        /// tapped slot all do.
+        /// </summary>
+        public UtilityItem Arming
+        {
+            get => _arming;
+            set
+            {
+                if (_arming == value) return;
+                _arming = value;
+
+                Aiming();
+            }
+        }
 
         // ------------------------------------------------------------------ art
         /// <summary>
@@ -369,6 +413,15 @@ namespace GlimmerGrove
 
             _held = -1;
             _wave = 0;
+
+            // The targeting layer hangs off the layers this rebuild is about to replace, so a
+            // board dealt again while something was armed would leave a destroyed node behind a
+            // live `Arming` — and the bar would still be showing a ring. Cleared through the
+            // field rather than the property, because the layer it would tear down is already
+            // gone; the screen re-arms nothing, which is what a fresh board should be.
+            _arming = null;
+            _aim = null;
+            _marker = null;
 
             float h = Span.y;
             _hillTop = h * .5f - Cell * .35f;
@@ -632,6 +685,278 @@ namespace GlimmerGrove
 
                 yield return new WaitForSecondsRealtime(step);
             }
+        }
+
+        // ------------------------------------------------------------------ aiming
+        /// <summary>
+        /// Builds or tears down the targeting layer for whatever is armed.
+        ///
+        /// <para>
+        /// Built on arming rather than kept and hidden, because it is a <em>layer over the
+        /// board</em>: a pad that stayed alive would sit in front of the gems for the whole run
+        /// and swallow every swap, which is the class of fault a hidden raycast target always is.
+        /// </para>
+        /// </summary>
+        void Aiming()
+        {
+            if (_aim != null)
+            {
+                Destroy(_aim.gameObject);
+                _aim = null;
+                _marker = null;
+            }
+
+            if (_arming == null || _fx == null) return;
+
+            _aim = Layer("Aim");
+            _aim.SetAsLastSibling();
+
+            if (_arming.Target == UtilityTarget.Ward) AimWards();
+            else AimHill();
+        }
+
+        /// <summary>
+        /// A pad over the hill, with a ring that follows the finger and fires on release.
+        ///
+        /// <para>
+        /// <b>The ring is geometry and never outcome</b> (invariant 32c): it says how far the
+        /// burst reaches, which is a fact the player can already read off the board, and says
+        /// nothing about who would die. What the ring is drawn at is <see cref="Reach"/> mapped
+        /// through the same unit square <c>SiegeBoard.Blast</c> reads, so the picture and the
+        /// rule cannot come apart — invariant 33g's argument about the haul-road, applied to a
+        /// target.
+        /// </para>
+        /// </summary>
+        void AimHill()
+        {
+            float top = _hillTop + Cell * .35f;
+            float band = top - _hillFoot;
+
+            var pad = UIKit.Img("Pad", _aim, Art.Pixel, new Color(0f, 0f, 0f, .12f),
+                                new Vector2(Span.x, band));
+            pad.rectTransform.anchoredPosition = new Vector2(0f, (top + _hillFoot) * .5f);
+
+            _marker = UIKit.Img("Reach", _aim, Art.Ring(160, 7f), Pal.A(Pal.Sun, .85f),
+                                ReachSpan(_arming, band));
+            _marker.rectTransform.anchoredPosition =
+                new Vector2(0f, (top + _hillFoot) * .5f);
+
+            var aim = pad.gameObject.AddComponent<AimPad>();
+            aim.Moved = local => MarkAt(local, pad.rectTransform);
+            aim.Released = local => { MarkAt(local, pad.rectTransform); Loose(local, pad.rectTransform); };
+            aim.Cancelled = () => Rejected?.Invoke();
+        }
+
+        /// <summary>
+        /// How large a blast's ring is drawn — and it is an <em>ellipse</em>, not a circle.
+        ///
+        /// <para>
+        /// <b>The rule reads a unit square whose two axes are drawn at different scales.</b>
+        /// <c>u</c> runs 0..1 across <c>Lanes - 1</c> lane steps, which is
+        /// <c>(Lanes - 1) / Lanes</c> of the board's width; <c>v</c> runs 0..1 down the hill
+        /// band, which is a different number of points entirely. A circle would have to pick one
+        /// of them and be wrong about the other — the first cut picked the width and overstated
+        /// the horizontal reach by a quarter, which is a marker promising ground it does not
+        /// burn. What is drawn has to be what is burned (invariant 33g), so both axes are
+        /// converted separately and the sprite is stretched.
+        /// </para>
+        /// </summary>
+        Vector2 ReachSpan(UtilityItem item, float band)
+        {
+            if (item == null) return Vector2.zero;
+
+            float r = item.Reach / 100f;
+            float across = SiegeTuning.Lanes <= 1
+                         ? Span.x
+                         : Span.x * (SiegeTuning.Lanes - 1) / SiegeTuning.Lanes;
+
+            return new Vector2(across * r * 2f, band * r * 2f);
+        }
+
+        void MarkAt(Vector2 local, RectTransform pad)
+        {
+            if (_marker == null || pad == null) return;
+
+            // The pad is centred on the hill band, so a local point is an offset from its middle
+            // — which is exactly what the marker's own anchored position is measured in.
+            _marker.rectTransform.anchoredPosition =
+                pad.anchoredPosition + Clamped(local, pad);
+        }
+
+        static Vector2 Clamped(Vector2 local, RectTransform pad)
+        {
+            float halfW = pad.sizeDelta.x * .5f, halfH = pad.sizeDelta.y * .5f;
+            return new Vector2(Mathf.Clamp(local.x, -halfW, halfW),
+                               Mathf.Clamp(local.y, -halfH, halfH));
+        }
+
+        /// <summary>
+        /// Turns the point a finger left into the unit square the rule reads, and fires.
+        ///
+        /// The two mappings are the inverses of <see cref="LaneX"/> and <see cref="MarchY"/>, so
+        /// what the player aimed at and what the board burns are the same point.
+        /// </summary>
+        void Loose(Vector2 local, RectTransform pad)
+        {
+            var at = Clamped(local, pad);
+
+            float wide = Span.x / SiegeTuning.Lanes;
+            float laneIndex = at.x / wide + (SiegeTuning.Lanes - 1) * .5f;
+            float lane = SiegeTuning.Lanes <= 1
+                       ? 0f : Mathf.Clamp01(laneIndex / (SiegeTuning.Lanes - 1));
+
+            float y = pad.anchoredPosition.y + at.y;
+            float march = Mathf.Clamp01(Mathf.InverseLerp(_hillTop, _hillFoot, y));
+
+            Loose(SiegeAim.OnTheHill(lane, march));
+        }
+
+        /// <summary>A target over each standing ward. A fallen one is not a target.</summary>
+        void AimWards()
+        {
+            if (_posts == null) return;
+
+            for (int i = 0; i < _posts.Length; i++)
+            {
+                if (_board.Wards[i] == null || !_board.Wards[i].Alive) continue;
+
+                int ward = i;
+                float size = Cell * 1.6f;
+
+                var hit = UIKit.Button("AimWard" + i, _aim, Art.Ring(128, 7f),
+                                       Vector2.one * size, new Vector2(.5f, .5f),
+                                       new Vector2(PostX(i), _lineY + Cell * .35f),
+                                       () => Loose(SiegeAim.AtWard(ward)));
+
+                hit.PressScale = .92f;
+                hit.ClickSfx = null;
+
+                var img = hit.GetComponent<Image>();
+                if (img != null) img.color = Pal.A(Pal.Sun, .9f);
+
+                Tween.Breathe(hit.transform, .06f, .9f);
+            }
+        }
+
+        /// <summary>
+        /// Hands a chosen target to the screen and draws whatever came back.
+        ///
+        /// <b>Disarmed first, whatever happens.</b> A refusal that left the layer up would put
+        /// the player back in a targeting mode they had just been told they could not use, and a
+        /// success that left it up would arm a second use of an item they may no longer hold.
+        /// </summary>
+        void Loose(SiegeAim aim)
+        {
+            var item = _arming;
+            if (item == null || Fire == null) { Arming = null; return; }
+
+            _strikes.Clear();
+            var use = Fire(item, aim, _strikes);
+
+            Arming = null;
+
+            if (!use.Landed)
+            {
+                Rejected?.Invoke();
+                return;
+            }
+
+            Charged(use.Matches);
+            Struck(item, aim, use);
+            Judge();
+        }
+
+        /// <summary>What a landed utility looks like.</summary>
+        void Struck(UtilityItem item, SiegeAim aim, SiegeUse use)
+        {
+            switch (item.Kind)
+            {
+                case UtilityKind.Blast:
+                    Firepot(aim);
+                    break;
+
+                case UtilityKind.Mend:
+                    Mended(use.Ward);
+                    break;
+
+                case UtilityKind.Surge:
+                    Surged(use.Ward);
+                    break;
+            }
+
+            for (int i = 0; i < _strikes.Count; i++) Hurt(_strikes[i]);
+
+            Reap();
+            Changed?.Invoke();
+        }
+
+        void Firepot(SiegeAim aim)
+        {
+            float wide = Span.x / SiegeTuning.Lanes;
+            float x = (aim.Lane * (SiegeTuning.Lanes - 1) - (SiegeTuning.Lanes - 1) * .5f) * wide;
+            var at = new Vector2(x, MarchY(aim.March));
+
+            Boom(at, Blast("boom_fire"), Cell * 3.4f);
+            Burst.Sparks(_fx, at, Pal.Ember, 22, Cell * 3f, Cell * .3f);
+            Shockwave(at, Pal.Sun, Cell * 4.5f, .34f);
+            ShakeBoard(26f);
+
+            // Its own clip rather than the `burst` a raider's death plays. That one is struck
+            // thirteen times in a wave and is tuned to be the shortest, brightest thing in the
+            // set; a firepot is one event a run and the loudest thing a player can cause, so
+            // sharing a sound would tune the big moment by the small one.
+            Audio.SfxVaried("boom", .8f);
+        }
+
+        void Mended(int ward)
+        {
+            if (_posts == null || ward < 0 || ward >= _posts.Length) return;
+
+            var at = new Vector2(PostX(ward), _lineY + Cell * .5f);
+
+            Burst.Sparks(_fx, at, Pal.Mint, 16, Cell * 2f, Cell * .2f, .5f);
+            Shockwave(at, Pal.Mint, Cell * 2.6f, .30f);
+            Tween.Pop(_posts[ward].Node, 1.12f, .28f);
+
+            // A spell rather than an object. `chime` read as a coin landing here, which is the
+            // wrong news about a ward being put back together.
+            Audio.Sfx("mend", .75f);
+        }
+
+        void Surged(int ward)
+        {
+            if (_posts == null || ward < 0 || ward >= _posts.Length) return;
+
+            var post = _posts[ward];
+            var at = new Vector2(PostX(ward), _lineY + Cell * .5f);
+            var tint = TintOf(_board.Wards[ward].Colour);
+
+            Burst.Sparks(_fx, at, tint, 20, Cell * 2.2f, Cell * .2f, .45f);
+            Shockwave(at, tint, Cell * 3f, .30f);
+            Tween.Shake(post.Node, Cell * .1f, .3f);
+
+            Audio.Sfx("lit", .7f, .85f);
+        }
+
+        /// <summary>One raider taking a hit from the player's own hand.</summary>
+        void Hurt(SiegeStrike hit)
+        {
+            var raider = _board.Find(hit.Raider);
+            var mob = raider == null ? MobOf(hit.Raider) : Widget(raider);
+            if (mob == null || mob.Node == null) return;
+
+            Number(hit.Raider, mob.Node.anchoredPosition, hit.Damage, false);
+
+            if (!hit.Killed) Tween.Shake(mob.Node, Cell * .12f, .22f);
+        }
+
+        /// <summary>The widget for a raider the board has already taken off the hill.</summary>
+        Mob MobOf(int id)
+        {
+            for (int i = 0; i < _mob.Count; i++)
+                if (_mob[i].Id == id) return _mob[i];
+
+            return null;
         }
 
         void Banner()

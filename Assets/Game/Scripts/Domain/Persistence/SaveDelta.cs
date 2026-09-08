@@ -140,6 +140,12 @@ namespace GlimmerGrove.Persistence
             if (!SameStock(remote.homesteadStock, merged.homesteadStock)) return true;
             if (!SameSet(remote.groveLandOwned, merged.groveLandOwned)) return true;
             if (!SamePlacements(remote.homesteadPlaced, merged.homesteadPlaced)) return true;
+
+            // The utilities. These travel for the grove stock's reason with one addition: a
+            // utility can be bought with gems, so a row that stayed on one phone is a purchase
+            // the player made and cannot see on their other device — and *spent* has to travel
+            // with *earned*, or the two devices would each hand back what the other used.
+            if (!SameUtilities(remote.utilityStock, merged.utilityStock)) return true;
             if (!Same(remote.lastPlayedLevelId, merged.lastPlayedLevelId)) return true;
 
             var a = remote.settings ?? new SettingsDto();
@@ -275,6 +281,29 @@ namespace GlimmerGrove.Persistence
 
                 if (!string.Equals(x.id, y.id, StringComparison.Ordinal)) return false;
                 if (x.copies != y.copies) return false;
+            }
+
+            return true;
+        }
+
+        /// <summary>
+        /// The utility ledgers, as an ordered walk. Both sides are written sorted by
+        /// <c>UtilityStock.Write</c>, so order is part of the comparison rather than something
+        /// this has to normalise — the rule <see cref="SameStock"/> already follows.
+        /// </summary>
+        static bool SameUtilities(UtilityStockDto[] a, UtilityStockDto[] b)
+        {
+            int an = a?.Length ?? 0;
+            int bn = b?.Length ?? 0;
+            if (an != bn) return false;
+
+            for (int i = 0; i < an; i++)
+            {
+                var x = a[i] ?? new UtilityStockDto();
+                var y = b[i] ?? new UtilityStockDto();
+
+                if (!string.Equals(x.id, y.id, StringComparison.Ordinal)) return false;
+                if (x.earned != y.earned || x.spent != y.spent) return false;
             }
 
             return true;

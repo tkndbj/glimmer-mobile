@@ -4,6 +4,7 @@ using System.IO;
 using System.Text;
 using System.Text.RegularExpressions;
 using GlimmerGrove.Ads;
+using GlimmerGrove.AssetPipeline;
 using GlimmerGrove.Content;
 using GlimmerGrove.Content.Sources;
 using GlimmerGrove.Daily;
@@ -12,6 +13,7 @@ using GlimmerGrove.Localization;
 using GlimmerGrove.Persistence;
 using GlimmerGrove.Progression;
 using GlimmerGrove.Store;
+using GlimmerGrove.Utilities;
 using UnityEditor;
 using UnityEditor.Build;
 using UnityEditor.Build.Reporting;
@@ -262,6 +264,7 @@ namespace GlimmerGrove.EditorTools
             ValidateChapterGate(table.ChapterGate, index, result, verbose);
             ValidateContinue(table.Continue, table.Store, result, verbose);
             ValidateDailyChests(table.Daily, table.Hearts, result, verbose);
+            ValidateUtilities(table.Utilities, table.Daily, result, verbose);
             ValidateStreak(table.Streak, result, verbose);
             ValidateGolden(table.Golden, table, index, result, verbose);
             ValidateWheel(table.Ads, result, verbose);
@@ -757,6 +760,80 @@ namespace GlimmerGrove.EditorTools
                            ? "; the ceiling is the cap, so a granted hint at a full pool is "
                              + "refused rather than banked"
                            : string.Empty));
+        }
+
+        /// <summary>
+        /// The action bar's catalog: what the reader survived, plus the two things it cannot see.
+        ///
+        /// <para>
+        /// <b>An icon is not content.</b> Which utilities exist, what they cost and how strong
+        /// they are are all authored and retunable from a config push; a picture is in the build.
+        /// So an entry this build has no sprite for would draw a white rectangle on the bar
+        /// (invariant 7b) and is an <em>error</em> — adding a utility is a build, exactly as
+        /// adding a mode is (invariant 20). The loc keys are checked in
+        /// <see cref="ValidateLocalisation"/>, where every other derived key is.
+        /// </para>
+        /// <para>
+        /// <b>And a chest may only name a utility that exists.</b> This is the one cross-block
+        /// check here that is otherwise invisible: a band paying <c>utility:firepop</c> rolls,
+        /// publishes, seeds and grants nothing at all — the client's reader skips the id, the
+        /// server never granted utilities in the first place, and the only symptom is a chest
+        /// that quietly pays less than its odds say.
+        /// </para>
+        /// </summary>
+        static void ValidateUtilities(UtilityCatalog utilities, DailyChestTable daily,
+                                      ContentValidationResult result, bool verbose)
+        {
+            if (utilities == null)
+            {
+                result.Errors.Add("progression.json produced no utility catalog");
+                return;
+            }
+
+            var known = new HashSet<string>(StringComparer.Ordinal);
+            var declared = new HashSet<string>(StringComparer.Ordinal);
+
+            foreach (var request in AssetManifest.GlobalAssets()) declared.Add(request.Address);
+
+            foreach (var item in utilities.Items)
+            {
+                known.Add(item.Id);
+
+                if (!declared.Contains(AssetManifest.ArtRoot + item.Art))
+                    result.Errors.Add($"utility '{item.Id}' draws '{item.Art}', which " +
+                                      "AssetManifest does not name; a picture is not content, so " +
+                                      "adding a utility is a build");
+            }
+
+            if (daily != null)
+            {
+                for (int i = 0; i < daily.ChestCount; i++)
+                {
+                    var chest = daily.Chest(i);
+
+                    foreach (var band in chest.Guaranteed) CheckUtilityBand(band, i, known, result);
+                    foreach (var option in chest.Options) CheckUtilityBand(option.Band, i, known, result);
+                }
+            }
+
+            if (!verbose) return;
+
+            foreach (var item in utilities.Items)
+                Debug.Log($"[Glimmer] utility '{item.Id}': {UtilityKinds.Id(item.Kind)} " +
+                          $"{item.Magnitude}, hold up to {item.MaxHeld}, " +
+                          (item.ForSale ? $"{item.GemPrice} gem(s)" : "chests only"));
+        }
+
+        static void CheckUtilityBand(ChestBand band, int chest, HashSet<string> known,
+                                     ContentValidationResult result)
+        {
+            if (band.Kind != ChestDropKind.Utility) return;
+
+            if (string.IsNullOrEmpty(band.Item))
+                result.Errors.Add($"daily chest {chest} pays a utility and names none");
+            else if (!known.Contains(band.Item))
+                result.Errors.Add($"daily chest {chest} pays utility '{band.Item}', which the " +
+                                  "utilities block does not define; it would grant nothing");
         }
 
         /// <summary>
@@ -2557,6 +2634,16 @@ namespace GlimmerGrove.EditorTools
             {
                 Require(table, mechanic.TitleKey, $"mechanic '{mechanic.Id}'", result);
                 Require(table, mechanic.BodyKey, $"mechanic '{mechanic.Id}'", result);
+            }
+
+            // And a utility's two, derived from its id like everything above (invariant 5a) and
+            // therefore invisible to the source scan below. A utility with no strings ships as
+            // "utility.firepot.name" written across a shop panel and a bar slot with no name at
+            // all — which is exactly what a mechanic with no strings does, one screen along.
+            foreach (var item in ProgressionRules.Table.Utilities.Items)
+            {
+                Require(table, item.NameKey, $"utility '{item.Id}'", result);
+                Require(table, item.NoteKey, $"utility '{item.Id}'", result);
             }
 
             // And a mode's, for the same reason and with one sharper edge. Both of its strings

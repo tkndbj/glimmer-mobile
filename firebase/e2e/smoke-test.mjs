@@ -88,6 +88,44 @@ const bearer = { Authorization: `Bearer ${auth.idToken}` };
 const json = { ...bearer, "Content-Type": "application/json" };
 console.log(`signed in anonymously as ${uid}\n`);
 
+// --------------------------------------------------------------- which glades to use
+/**
+ * Two glades the *published catalog* actually names, and the chapter each belongs to.
+ *
+ * <p><b>Derived rather than written down, which is this suite's oldest lesson one field
+ * over.</b> The per-star figures below are already read from the published table because
+ * hard-coding them meant a retune turned this case red with an answer that was entirely
+ * correct. The level ids were still hard-coded — `c01_first_light` and `c01_twin_streams` —
+ * and they went the same way the moment their chapter was hidden: `seed-config.mjs` skips a
+ * disabled chapter, so those levels stopped being in `levelChapters`, the server correctly
+ * valued a save holding them at nothing, and a green suite went red for a content change
+ * rather than for a disagreement.</p>
+ *
+ * <p>Note which side was wrong. The client's `CatalogIndex` has always skipped a disabled
+ * chapter (`CatalogIndexBuilder.Add`) and `ProgressionLedger` values a record the catalog
+ * has never heard of at nothing, so a *stale* published table was the server over-valuing
+ * hidden levels — the seed brought the two into agreement. What this case is for is proving
+ * they agree, and it can only do that about glades that ship.</p>
+ *
+ * <p>Each carries its own chapter, so the two need not share one: a catalog with one level
+ * per chapter is a legal catalog and this suite should not be the thing that notices.</p>
+ */
+const glades = await (async () => {
+  const doc = await (await fetch(`${FS}/config/progression`, { headers: bearer })).json();
+  const map = doc?.fields?.levelChapters?.mapValue?.fields ?? {};
+
+  const ids = Object.keys(map).sort();
+  if (ids.length < 2) {
+    throw new Error(
+      `config/progression names ${ids.length} level(s); this suite needs two to prove the ` +
+      "server derives credits. Run: node firebase/seed/seed-config.mjs");
+  }
+
+  return ids.slice(0, 2).map((id) => ({ id, chapter: map[id]?.stringValue ?? "" }));
+})();
+
+console.log(`deriving credits against ${glades.map((g) => g.id).join(" and ")}\n`);
+
 // ------------------------------------------------------------------ the save
 console.log("save document");
 
@@ -96,12 +134,12 @@ const save = {
     schemaVersion: { integerValue: "2" },
     updatedUnix: { integerValue: "1700000000" },
     legacyImportDone: { booleanValue: true },
-    lastPlayedLevelId: { stringValue: "c01_first_light" },
+    lastPlayedLevelId: { stringValue: glades[0].id },
     checksum: { stringValue: "smoketest" },
     // A map keyed by level id, matching FirestoreSaveMapper. An array here would be
     // refused by the rules and would derive no credits on the server.
     levels: { mapValue: { fields: {
-      c01_first_light: { mapValue: { fields: {
+      [glades[0].id]: { mapValue: { fields: {
         stars: { integerValue: "3" },
         bestMoves: { integerValue: "12" },
         clears: { integerValue: "1" },
@@ -238,10 +276,10 @@ check(tooMuchLand.status === 403, "an oversized land set is refused", `got ${too
 // The point of keying the ledger by level id: one glade can be written on its own
 // rather than re-uploading a ledger that may run to thousands of entries.
 const partial = await fetch(
-  `${FS}/players/${uid}?updateMask.fieldPaths=${encodeURIComponent("levels.c01_twin_streams")}`, {
+  `${FS}/players/${uid}?updateMask.fieldPaths=${encodeURIComponent(`levels.${glades[1].id}`)}`, {
     method: "PATCH", headers: json,
     body: JSON.stringify({ fields: { levels: { mapValue: { fields: {
-      c01_twin_streams: { mapValue: { fields: {
+      [glades[1].id]: { mapValue: { fields: {
         stars: { integerValue: "2" }, bestMoves: { integerValue: "30" },
         clears: { integerValue: "1" }, firstClearedUnix: { integerValue: "1700000100" },
         lastPlayedUnix: { integerValue: "1700000100" },
@@ -251,7 +289,7 @@ check(partial.ok, "one glade can be written on its own", partial.ok ? "" : (awai
 
 const afterPartial = await (await fetch(`${FS}/players/${uid}`, { headers: bearer })).json();
 const ledger = afterPartial?.fields?.levels?.mapValue?.fields ?? {};
-check(!!ledger.c01_first_light && !!ledger.c01_twin_streams,
+check(!!ledger[glades[0].id] && !!ledger[glades[1].id],
       "the partial write did not clobber the rest of the ledger",
       `keys: ${Object.keys(ledger).join(",")}`);
 
@@ -398,9 +436,9 @@ check(wheelRow?.wheelDay === Math.floor(Date.now() / 1000 / 86400),
 check(new Set((wallet.body?.result?.wallets ?? []).map((w) => `${w.wheelDay}:${w.wheelSpins}`)).size === 1,
       "and every currency row agrees about it");
 
-// The save above holds two cleared glades in c01_shallows, one at three stars and one at
-// two. The server derives what they are worth from the ledger itself — nothing in the
-// request said anything about currency.
+// The save above holds the two glades picked off the published catalog, one cleared at
+// three stars and one at two. The server derives what they are worth from the ledger
+// itself — nothing in the request said anything about currency.
 //
 // The per-star figures are read from the published table rather than written here. They
 // were hard-coded as 20 + 10 per star, the chapter was later retuned to 50 + 25, and this
@@ -408,31 +446,39 @@ check(new Set((wallet.body?.result?.wallets ?? []).map((w) => `${w.wheelDay}:${w
 // golden bands above already document, one field over: a money suite that goes red for a
 // tuning change is a money suite people learn to ignore. Deriving them means a retune
 // moves the expectation with it and only a real disagreement fails.
-const chapterRewards = await (async () => {
+//
+// Read per glade rather than once, because the two need not share a chapter: `glades` takes
+// whatever the published catalog names, and a chapter with one level in it is legal.
+const rewardsFor = await (async () => {
   const body = await publishedConfig.clone().json().catch(() => null);
 
   // Published by buildChapterRules as a map keyed by chapter id, not as the array the
   // content file authors. resolveRule has already folded the defaults in, so an override
   // that names only some fields still arrives complete.
-  const rule = body?.fields?.chapterRewards?.mapValue?.fields?.c01_shallows?.mapValue?.fields;
+  const overrides = body?.fields?.chapterRewards?.mapValue?.fields ?? {};
+  const base = body?.fields?.rewards?.mapValue?.fields;
 
-  // No override published for this chapter: the base table governs.
-  const source = rule ?? body?.fields?.rewards?.mapValue?.fields;
+  return (chapter) => {
+    // No override published for this chapter: the base table governs.
+    const source = overrides?.[chapter]?.mapValue?.fields ?? base;
 
-  return {
-    firstClear: Number(source?.creditsFirstClear?.integerValue ?? NaN),
-    perStar: Number(source?.creditsPerStar?.integerValue ?? NaN),
+    return {
+      firstClear: Number(source?.creditsFirstClear?.integerValue ?? NaN),
+      perStar: Number(source?.creditsPerStar?.integerValue ?? NaN),
+    };
   };
 })();
 
-check(Number.isFinite(chapterRewards.firstClear) && Number.isFinite(chapterRewards.perStar),
-      "the published table names what a c01_shallows clear pays",
-      `got ${JSON.stringify(chapterRewards)}`);
+const gladeRewards = glades.map((g) => rewardsFor(g.chapter));
+
+check(gladeRewards.every((r) => Number.isFinite(r.firstClear) && Number.isFinite(r.perStar)),
+      "the published table names what each of those glades pays",
+      `got ${JSON.stringify(gladeRewards)}`);
 
 // Three stars and two stars, which is what the save above holds.
 const BASE_CREDITS = [
-  chapterRewards.firstClear + chapterRewards.perStar * 3,
-  chapterRewards.firstClear + chapterRewards.perStar * 2,
+  gladeRewards[0].firstClear + gladeRewards[0].perStar * 3,
+  gladeRewards[1].firstClear + gladeRewards[1].perStar * 2,
 ];
 const percents = await goldenBands;
 

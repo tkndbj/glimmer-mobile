@@ -114,6 +114,22 @@ namespace GlimmerGrove.AssetPipeline
             "seal_gold", "crest_gold", "bar_track", "bar_fill",
             "potion1", "potion2", "potion3", "potion4", "potion5", "potion6",
 
+            // The action bar's three utilities. Global rather than scoped to the one mode that
+            // offers them, because the bar is drawn on the board *and* in a shop panel that can
+            // open over it, and three 256-pixel icons are not worth a scope's two failure modes
+            // (an Image with no sprite is a white rectangle, invariant 7b).
+            //
+            // **Named here even though which utilities exist is content**, and that is the one
+            // place the catalog's reach stops: a content push can retune a price, a strength or
+            // which chest drops what, but it cannot ship a picture. So adding a *new* utility is
+            // a build, exactly as adding a mode is (invariant 20), and `ContentValidation` errors
+            // on a catalog entry whose icon is not one of these rather than letting it draw blank.
+            "Utility/firepot", "Utility/mending", "Utility/surge",
+
+            // The bar's own furniture: the shelf and one cell. Global with the icons,
+            // because the bar is drawn on the board and in a shop panel that opens over it.
+            "Utility/tray", "Utility/slot",
+
             // The victory crest, drawn by WinOverlay. Declared here rather than left to the
             // on-demand path for two reasons: the audit is how this project proves no address
             // is unaccounted for, and a sprite first requested during a celebration is a
@@ -181,6 +197,7 @@ namespace GlimmerGrove.AssetPipeline
             "click", "back", "menu", "tip", "enter", "poke", "wheel", "collect", "reward", "coin", "rotate_a", "rotate_b", "blocked",
             "unlock", "shatter", "burst", "free", "pop", "pop2", "whoosh", "chest", "win", "star",
             "tick", "tock", "bell", "lit", "chime", "chime2",
+            "boom", "mend",
         };
 
         /// <summary>Everything the game needs before the menu appears.</summary>

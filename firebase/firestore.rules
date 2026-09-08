@@ -59,6 +59,7 @@ service cloud.firestore {
                  'companionsOwned', 'homesteadStock', 'homesteadOwned',
                  'homesteadPlaced', 'groveLandOwned',
                  'heartContainersOwned', 'heartContainersRevoked',
+                 'utilityStock',
                  'checksum'
                ])
                && d.schemaVersion is int
@@ -161,7 +162,17 @@ service cloud.firestore {
                // that size is merged and checksummed on every sync for ever, which is why
                // invariant 16e stores the coarser thing. The cap is generous against that.
                && (!('groveLandOwned' in d) || (d.groveLandOwned is list
-                                                && d.groveLandOwned.size() <= 128));
+                                                && d.groveLandOwned.size() <= 128))
+
+               // Utilities. Bounded like everything else the client controls the length of,
+               // and generously against `UtilityCatalog.MaxItems` (16) so a content drop that
+               // adds one never needs a rules deploy to land — and rows naming a utility an
+               // older build does not know are carried through rather than dropped.
+               // The bound matches `UtilityStock.MaxIds`, and it has to: `hasOnly` is an
+               // allow-list over the whole document, so a save the client will write and these
+               // rules refuse loses *every* save write rather than the extra rows (12a).
+               && (!('utilityStock' in d) || (d.utilityStock is list
+                                              && d.utilityStock.size() <= 64));
       }
 
       // The revision only ever moves forward, which gives the sync optimistic

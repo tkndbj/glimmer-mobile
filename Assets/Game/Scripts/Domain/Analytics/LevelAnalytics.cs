@@ -24,6 +24,7 @@ namespace GlimmerGrove.Analytics
         public const string Abandoned = "level_abandoned";
         public const string Defeated = "level_defeated";
         public const string HintUsed = "level_hint_used";
+        public const string UtilityUsed = "utility_used";
 
         /// <summary>
         /// The two halves of the continue funnel.
@@ -134,6 +135,44 @@ namespace GlimmerGrove.Analytics
                 "chapter_id", level.Chapter.Value,
                 "hints_remaining", hintsRemaining,
                 "moves", moves);
+        }
+
+        /// <summary>
+        /// A utility was spent on a board.
+        ///
+        /// <para>
+        /// <paramref name="matches"/> is the half worth watching, and it is not the same
+        /// question as how often one is used. It is what the utility cost the <em>grade</em>
+        /// (invariant 39) — the fewest matches that could have done the same work — so the
+        /// distribution says whether players are spending them on things worth spending them on.
+        /// A firepot that repeatedly costs one match is a firepot being thrown at stragglers,
+        /// which is a board problem rather than a price problem.
+        /// </para>
+        /// <para>
+        /// <paramref name="delivered"/> is the same event in the utility's own unit — damage,
+        /// health or fuel-tenths — and it is the one that says whether the *magnitude* is right.
+        /// A mending that always restores less than it is worth is a mending whose number is
+        /// larger than a ward's remaining room ever is, which the charge cannot show because a
+        /// mending is charged nothing.
+        /// </para>
+        /// <para>
+        /// There is deliberately no event for a utility being <em>offered</em>. The bar is on
+        /// screen for every second of every run, so an offer is not a moment and counting one
+        /// would be counting frames. What a funnel would need instead is the empty-slot tap,
+        /// which is <c>UtilityBuyOverlay</c>'s to add when somebody asks the question.
+        /// </para>
+        /// </summary>
+        public static void TrackUtility(LevelDefinition level, string utility,
+                                        int matches, int delivered)
+        {
+            if (level == null || string.IsNullOrEmpty(utility)) return;
+
+            Telemetry.Track(UtilityUsed,
+                "level_id", level.Id.Value,
+                "chapter_id", level.Chapter.Value,
+                "utility_id", utility,
+                "matches", matches,
+                "delivered", delivered);
         }
 
         /// <summary>

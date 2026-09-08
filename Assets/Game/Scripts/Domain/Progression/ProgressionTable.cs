@@ -5,6 +5,7 @@ using GlimmerGrove.Content;
 using GlimmerGrove.Daily;
 using GlimmerGrove.Persistence;
 using GlimmerGrove.Store;
+using GlimmerGrove.Utilities;
 using UnityEngine;
 
 namespace GlimmerGrove.Progression
@@ -85,7 +86,7 @@ namespace GlimmerGrove.Progression
                          GoldenTable golden, HeartRuleTable hearts, HintRuleTable hints,
                          StoreCatalog store,
                          AccountPromptRuleTable prompts, ChapterGateTable chapterGate,
-                         ContinueTable carryOn)
+                         ContinueTable carryOn, UtilityCatalog utilities)
         {
             _cumulative = cumulative;
             _defaultRule = defaultRule;
@@ -100,6 +101,7 @@ namespace GlimmerGrove.Progression
             Prompts = prompts ?? AccountPromptRuleTable.Default;
             ChapterGate = chapterGate ?? ChapterGateTable.Default;
             Continue = carryOn ?? ContinueTable.Default;
+            Utilities = utilities ?? UtilityCatalog.Default;
         }
 
         /// <summary>
@@ -110,6 +112,17 @@ namespace GlimmerGrove.Progression
         /// precisely the window an economy exploit lives in.
         /// </summary>
         public DailyChestTable Daily { get; }
+
+        /// <summary>
+        /// The utilities a player may hold, published with the curve for the chest table's
+        /// reason and one of its own.
+        ///
+        /// A utility is granted by a chest and bought with gems, so its strength and its price
+        /// are one number seen from two sides of this file — and a client holding a retuned
+        /// price against an untuned drop rate has a consumable that is either free or pointless.
+        /// See <see cref="UtilityCatalog"/>.
+        /// </summary>
+        public UtilityCatalog Utilities { get; }
 
         /// <summary>
         /// What rewarded ads pay, published with the curve for the same reason the chest
@@ -233,7 +246,8 @@ namespace GlimmerGrove.Progression
             store: StoreCatalog.Default,
             prompts: AccountPromptRuleTable.Default,
             chapterGate: ChapterGateTable.Default,
-            carryOn: ContinueTable.Default);
+            carryOn: ContinueTable.Default,
+            utilities: UtilityCatalog.Default);
 
         /// <summary>Highest level this curve defines. Level 1 always exists.</summary>
         public int MaxLevel => _cumulative.Length;
@@ -441,9 +455,15 @@ namespace GlimmerGrove.Progression
             // unreadable block costs live tuning and never the feature — see ContinueTable.
             var carryOn = ContinueTable.Resolve(dto.continueRun, problems);
 
+            // And the consumables, which is the block that sits across two others: a utility
+            // drops out of a chest and is bought with gems, so it is only meaningful beside
+            // both. An unreadable block costs live tuning and never the feature — the built-in
+            // catalog is a working bar.
+            var utilities = UtilityCatalog.Resolve(dto.utilities, problems);
+
             table = Build(dto.xpToNext, dto.tailXpToNext, dto.tailXpIncrement, maxLevel,
                           defaultRule, chapterRules, daily, ads, streak, golden, hearts, hints,
-                          store, prompts, chapterGate, carryOn);
+                          store, prompts, chapterGate, carryOn, utilities);
             return true;
         }
 
@@ -455,7 +475,7 @@ namespace GlimmerGrove.Progression
                                       HeartRuleTable hearts, HintRuleTable hints,
                                       StoreCatalog store,
                                       AccountPromptRuleTable prompts, ChapterGateTable chapterGate,
-                                      ContinueTable carryOn)
+                                      ContinueTable carryOn, UtilityCatalog utilities)
         {
             if (maxLevel < 1) maxLevel = 1;
 
@@ -474,7 +494,7 @@ namespace GlimmerGrove.Progression
 
             return new ProgressionTable(cumulative, defaultRule, chapterRules, daily, ads, streak,
                                         golden, hearts, hints, store, prompts,
-                                        chapterGate, carryOn);
+                                        chapterGate, carryOn, utilities);
         }
     }
 }

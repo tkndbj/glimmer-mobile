@@ -272,8 +272,38 @@ namespace GlimmerGrove.Persistence
         ///      A v20 file reads as "bought nothing, refunded nothing", which is true, so
         ///      there is no migration. See <see cref="HeartContainerLedger"/>.
         ///      </para>
+        /// v22 — the utilities a player is holding (<see cref="SaveFileDto.utilityStock"/>): a
+        ///      firepot thrown onto the hill, a mending poured into a ward, a surge of fuel.
+        ///      <para>
+        ///      <b>The first consumable in this file that is neither currency nor on a clock</b>,
+        ///      and the shape follows from that in one step. Hearts and hints come back by
+        ///      themselves, so they are <see cref="RegenLedger"/>: three counters and a deadline.
+        ///      Grove decor is bought and then <em>stands somewhere</em>, so
+        ///      <see cref="SaveFileDto.homesteadStock"/> stores purchases alone and derives what
+        ///      is left from the placements already in this file. A utility is granted, used, and
+        ///      gone — nothing else in the save implies it ever existed — so both halves have to
+        ///      be written down: <c>earned</c> and <c>spent</c>, each monotonic, joined by a
+        ///      per-id <c>max</c>, with what is in hand derived as the difference and clamped at
+        ///      nought. That is invariant 11b for the fourth time, and the first time the answer
+        ///      was two counters per id rather than one.
+        ///      </para>
+        ///      <para>
+        ///      <b>Nothing here is adjudicated, and invariant 39 is why that is safe.</b> A
+        ///      utility is not currency (invariant 13), so the server is told nothing about one —
+        ///      but a consumable that made a board easier could still reach a public number
+        ///      through stars, which derive credits, which are a grove's worth on a leaderboard
+        ///      (invariant 19a). What closes that is the grade: a utility that delivers damage is
+        ///      charged against the graded count at the most a match could ever have delivered, so
+        ///      no number written in this section can improve a star. A forged row buys an easier
+        ///      run and never a better one.
+        ///      </para>
+        ///      <para>
+        ///      Absent is the same fact as "granted none", so a v21 file needs no migration and
+        ///      no sentinel — the property that makes every other id-keyed section here
+        ///      mergeable. See <see cref="Utilities.UtilityStock"/>.
+        ///      </para>
         /// </summary>
-        public const int Version = 21;
+        public const int Version = 22;
 
         /// <summary>Progress that predates this file: index-keyed keys in PlayerPrefs.</summary>
         public const int LegacyPlayerPrefsVersion = 0;
@@ -547,6 +577,33 @@ namespace GlimmerGrove.Persistence
         /// </para>
         /// </summary>
         public string[] heartContainersRevoked;
+
+        /// <summary>
+        /// The utilities this player has been granted and used, sorted by id.
+        ///
+        /// <para>
+        /// <b>Two counters per row, both monotonic, joined by a per-id <c>max</c>.</b> A count of
+        /// utilities <em>remaining</em> is the shape invariant 11b forbids — two devices showing
+        /// 3 and 1 are equally consistent with "one opened a chest" and "one spent two on a
+        /// siege" — so what is stored is everything ever granted and everything ever used, and
+        /// what is in hand is the difference, clamped at nought. The subtraction may briefly go
+        /// negative when two devices each spend the last one before syncing, and nothing is taken
+        /// back to balance it: that is <see cref="homesteadStock"/>'s rule and for its reason.
+        /// </para>
+        /// <para>
+        /// <b>Account-wide, and shared by every level of every mode that offers them.</b> A stock
+        /// kept per level would be state keyed on a level id and, worse, would make a utility part
+        /// of a board's difficulty — which is exactly what invariant 29c refuses a companion's
+        /// ability. What a player is holding is a fact about the account.
+        /// </para>
+        /// <para>
+        /// Unknown ids are carried through untouched, for <see cref="tipsSeen"/>'s reason: a
+        /// utility granted on a newer build must not be confiscated by a trip through an older
+        /// one, and here that could be taking back something bought with gems. See
+        /// <see cref="Utilities.UtilityStock"/>.
+        /// </para>
+        /// </summary>
+        public UtilityStockDto[] utilityStock;
 
         /// <summary>
         /// Integrity check over the rest of the file. Empty on files written before
@@ -1067,6 +1124,36 @@ namespace GlimmerGrove.Persistence
         /// left to place is this minus what is standing in the grove, clamped at zero.
         /// </summary>
         public int copies;
+    }
+
+    /// <summary>
+    /// One utility, and the double-entry ledger of it: everything ever granted, everything ever
+    /// used.
+    ///
+    /// <para>
+    /// An array on the wire and a map everywhere else, keyed by the utility's permanent id —
+    /// invariant 11a, for <see cref="SaveFileDto.levels"/>'s reason.
+    /// </para>
+    /// <para>
+    /// <b>Both counters, and never one.</b> Grove decor could store purchases alone because the
+    /// other half of its subtraction — what is standing in the grove — is already in this file.
+    /// A utility is consumed inside a run and leaves no trace anywhere, so what has been spent
+    /// has to be written down too. Two monotonic counters joined by <c>max</c> is the same shape
+    /// <see cref="RegenLedger"/> gives hearts and hints, without the clock neither of these needs.
+    /// See <see cref="Utilities.UtilityStock"/>.
+    /// </para>
+    /// </summary>
+    [Serializable]
+    public sealed class UtilityStockDto
+    {
+        /// <summary>The utility's permanent id, as authored in <c>progression.json</c>.</summary>
+        public string id;
+
+        /// <summary>Every one ever handed over — a chest, a purchase. Only ever rises.</summary>
+        public int earned;
+
+        /// <summary>Every one ever used on a board. Only ever rises.</summary>
+        public int spent;
     }
 
     [Serializable]

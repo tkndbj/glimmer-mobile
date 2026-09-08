@@ -52,11 +52,28 @@ ART = REPO / "Assets" / "Game" / "Art" / "Siege"
 FX = REPO / "Assets" / "Game" / "Art" / "Fx" / "Siege"
 CHAPTERS = REPO / "Assets" / "StreamingAssets" / "Content" / "chapters"
 
-#: The canvas the game lays out in, and the room `SiegeScreen.HostInset` leaves the board:
-#: (left, top, right, bottom). Kept in step with the screen by hand - this is a diagnostic, not a
-#: rendering, and a copy that drifts is still worth more than no picture at all.
+#: The canvas the game lays out in, and the room `SiegeScreen.HostInset` leaves the board.
+#:
+#: **In the screen's own order: (left, bottom, right, top).** That is what a `Vector4` means to
+#: `ModeScreen` - `offsetMin` is (left, bottom) and `offsetMax` is (-right, -top) - and this file
+#: used to write it as (left, top, right, bottom), which put the board 55 points higher here than
+#: on a phone. Harmless while both numbers were close and exactly the kind of quiet drift a
+#: diagnostic must not have, since the whole reason this tool exists is that it is the only thing
+#: that can see a band in the wrong place (invariant 37g).
+#:
+#: Kept in step with the screen by hand.
 CANVAS = (1080, 1920)
-INSET = (10, 190, 10, 300)
+
+#: `UtilityBar.Height`. The bar is a shelf that meets the board's plate rather than a strip
+#: floating under it, so the bottom inset is the bar and nothing else.
+BAR_HEIGHT = 290
+INSET = (10, BAR_HEIGHT, 10, 300)
+
+#: `UtilityBar`'s own numbers.
+SLOT, SLOT_TOP, BADGE, ICON, PRICE = 224, 46, 64, 162, 46
+UTILITY_ART = REPO / "Assets" / "Game" / "Art" / "Ui" / "Utility"
+UTILITIES = ["firepot", "mending", "surge"]
+PRICES = {"firepot": 12, "mending": 8, "surge": 10}
 
 #: `SiegeView`'s own numbers.
 MARGIN = 18
@@ -285,7 +302,8 @@ def draw(level, raiders, bolts=True):
     lay = layout_of(level)
     grid = lay.grid
 
-    host = (CANVAS[0] - INSET[0] - INSET[2], CANVAS[1] - INSET[1] - INSET[3])
+    left, bottom, right, top = INSET
+    host = (CANVAS[0] - left - right, CANVAS[1] - top - bottom)
 
     cell = min((host[0] - MARGIN * 2) / grid.w, (host[1] - MARGIN * 2) * GEM_BAND / grid.h)
     span = (max(cell * grid.w, host[0] - MARGIN * 2), max(cell * grid.h, host[1] - MARGIN * 2))
@@ -299,8 +317,8 @@ def draw(level, raiders, bolts=True):
     draw_on = ImageDraw.Draw(sheet)
 
     # The plate, exactly where ProtoView puts it.
-    px = INSET[0] + host[0] / 2
-    py = INSET[1] + host[1] / 2
+    px = left + host[0] / 2
+    py = top + host[1] / 2
     draw_on.rounded_rectangle(
         [px - span[0] / 2 - MARGIN, py - span[1] / 2 - MARGIN,
          px + span[0] / 2 + MARGIN, py + span[1] / 2 + MARGIN],
@@ -451,6 +469,70 @@ def levels():
     return body["levels"]
 
 
+def load(path):
+    """One PNG, or None. Unlike `sprite` this takes a path, because the bar's art is not the
+    mode's - it is shared UI, which is exactly why it lives in the global group."""
+    return Image.open(path).convert("RGBA") if path.exists() else None
+
+
+def bar(sheet, held):
+    """The action bar, where `SiegeScreen` hangs it: filling the foot of the safe area.
+
+    <p>Drawn here rather than left to the imagination because it is not decoration - it is 290
+    points of the screen, 15% of the height three bands were already competing for (invariant
+    37g). What this picture is for is seeing whether the hill, the ward line and the field still
+    read with a shelf under them, and whether the shelf reads as one.</p>
+    """
+    draw_on = ImageDraw.Draw(sheet)
+
+    top = CANVAS[1] - BAR_HEIGHT
+
+    tray = load(UTILITY_ART / "tray.png")
+    if tray is not None:
+        sheet.alpha_composite(tray.resize((CANVAS[0], BAR_HEIGHT), Image.LANCZOS), (0, top))
+
+    cell = load(UTILITY_ART / "slot.png")
+
+    for i, name in enumerate(UTILITIES):
+        cx = CANVAS[0] * (2 * i + 1) / (2 * len(UTILITIES))
+        cy = top + SLOT_TOP + SLOT / 2
+
+        if cell is not None:
+            put(sheet, cell, cx, cy, SLOT, SLOT)
+
+        n = held.get(name, 0)
+        icon = load(UTILITY_ART / (name + ".png"))
+
+        if icon is not None:
+            if n <= 0:
+                # `Paint` dims an empty cell's picture and leaves the control live: an empty
+                # cell is the shop, not a refusal.
+                faded = icon.copy()
+                faded.putalpha(faded.split()[3].point(lambda v: int(v * 0.36)))
+                icon = faded
+
+            put(sheet, icon, cx, cy - SLOT * 0.06, ICON, ICON)
+
+        if n > 0:
+            bx, by = cx + SLOT / 2 - 6 - BADGE / 2, cy + SLOT / 2 - 8 - BADGE / 2
+            draw_on.ellipse([bx - BADGE / 2, by - BADGE / 2, bx + BADGE / 2, by + BADGE / 2],
+                            fill=(24, 34, 46, 255))
+            font = face(36)
+            if font is not None:
+                draw_on.text((bx, by), str(n), font=font, fill=(255, 243, 220, 255), anchor="mm")
+        else:
+            # The price, which is the whole of the shop from here.
+            py = cy + SLOT / 2 - PRICE * 0.58
+            gem = load(REPO / "Assets" / "Game" / "Art" / "Ui" / "ic_gem.png")
+            if gem is not None:
+                put(sheet, gem, cx - PRICE * 0.62, py, PRICE * 0.68, PRICE * 0.68)
+
+            font = face(34)
+            if font is not None:
+                draw_on.text((cx + PRICE * 0.18, py), str(PRICES.get(name, 0)), font=font,
+                             fill=(255, 201, 60, 255), anchor="lm")
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--level")
@@ -458,6 +540,8 @@ def main():
                     help="how many of the first wave to stand on the hill")
     ap.add_argument("--no-bolts", action="store_true",
                     help="draw the board with nothing in flight")
+    ap.add_argument("--no-bar", action="store_true",
+                    help="draw the board without the utility bar under it")
     ap.add_argument("--out", default=str(REPO / "Tools" / "siege_boards.png"))
     args = ap.parse_args()
 
@@ -465,7 +549,14 @@ def main():
     if not picked:
         sys.exit("no level called %s" % args.level)
 
-    shots = [(lv["id"], draw(lv, args.raiders, not args.no_bolts)) for lv in picked]
+    held = {"firepot": 2, "mending": 0, "surge": 5}
+
+    shots = []
+    for lv in picked:
+        shot = draw(lv, args.raiders, not args.no_bolts)
+        if not args.no_bar:
+            bar(shot, held)
+        shots.append((lv["id"], shot))
 
     pad = 24
     sheet = Image.new("RGBA",

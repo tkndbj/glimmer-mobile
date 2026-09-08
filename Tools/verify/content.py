@@ -1951,6 +1951,114 @@ def check_hints(progression, warnings):
     return errors
 
 
+#: The utility kinds this build knows. Content may not invent one: what a utility *does* is a
+#: rule with a fail state and a grade attached, so an entry naming an unknown kind is skipped
+#: exactly as a chapter naming an unknown mode is (invariant 20). Mirrors `UtilityKinds`.
+UTILITY_KINDS = {"blast", "mend", "surge"}
+
+#: What the build actually carries a picture for. Which utilities exist is content and which
+#: pictures exist is not, so adding one is a build - and an entry with no icon would draw a white
+#: rectangle on the bar (invariant 7b). Mirrors the `Utility/` block in `AssetManifest.UiSprites`.
+UTILITY_ART = {"firepot", "mending", "surge"}
+
+
+def check_utilities(progression, keys, warnings):
+    """The action bar's catalog. `ContentValidation.ValidateUtilities`, offline.
+
+    Four things the reader on the phone cannot know, and one it can but must not have to.
+
+    * **Every id has a picture in this build.** A price is content; a PNG is not.
+    * **Every id resolves its two loc keys.** They are *derived* from the id
+      (`utility.{id}.name`, `.note`), so `loc.py` cannot see them at all - which is invariant
+      30d's situation exactly, and the reason they are checked here or nowhere.
+    * **The ladder is 1..N with no gaps and no ties**, because it is authored rather than
+      derived: a duplicated rung reorders the bar under a player between two content pushes.
+    * **Every utility a chest names exists**, which is the one cross-block check in this file
+      that can be wrong in a way nothing else notices - a chest paying `utility:firepop` rolls,
+      publishes, seeds and grants nothing.
+    """
+    errors = []
+    block = progression.get("utilities")
+
+    if block is None:
+        # Absent is legitimate: the client falls back to its built-in catalog. Said out loud,
+        # because "the bar went empty" is otherwise a silent symptom of an edit to the wrong file.
+        warnings.append("progression.json has no 'utilities' block, so the built-in catalog "
+                        "stands and the bar cannot be retuned")
+        return errors, set()
+
+    items = block.get("items") or []
+    if not items:
+        errors.append("utilities block lists no items")
+        return errors, set()
+
+    seen, orders, known = set(), [], set()
+
+    for entry in items:
+        uid = entry.get("id") or ""
+        if not uid:
+            errors.append("a utilities entry has no id; an id is what the save keys on")
+            continue
+
+        if uid in seen:
+            errors.append(f"utilities names '{uid}' twice; an id is permanent and two entries "
+                          "under one would be two things in one save row")
+            continue
+        seen.add(uid)
+
+        kind = entry.get("kind") or ""
+        if kind not in UTILITY_KINDS:
+            errors.append(f"utilities entry '{uid}' names unknown kind '{kind}'")
+            continue
+        known.add(uid)
+
+        if entry.get("magnitude", 0) < 1:
+            errors.append(f"utilities entry '{uid}' has magnitude {entry.get('magnitude', 0)}; "
+                          "a utility that does nothing spends a slot and gives nothing back")
+
+        if kind == "blast" and entry.get("reach", 0) < 1:
+            errors.append(f"utilities entry '{uid}' is a blast with reach {entry.get('reach', 0)}; "
+                          "it could only ever be spent for nothing")
+
+        if entry.get("gemPrice", 0) < 0:
+            errors.append(f"utilities entry '{uid}' has a negative gem price")
+
+        if entry.get("maxHeld", 0) < 1:
+            errors.append(f"utilities entry '{uid}' may be held {entry.get('maxHeld', 0)} times, "
+                          "so a grant could never land")
+
+        if uid not in UTILITY_ART:
+            errors.append(f"utilities entry '{uid}' has no icon in this build - a picture is not "
+                          "content, so adding a utility is a build (see AssetManifest)")
+
+        for key in (f"utility.{uid}.name", f"utility.{uid}.note"):
+            if key not in keys:
+                errors.append(f"utilities entry '{uid}' needs loc key '{key}'")
+
+        orders.append(entry.get("order", 0))
+
+    if orders and sorted(orders) != list(range(1, len(orders) + 1)):
+        errors.append(f"utilities orders are {sorted(orders)}; every entry needs its own rung "
+                      "from 1 up, or the bar reshuffles itself on a retune")
+
+    # And the cross-block half: a chest naming a utility that does not exist rolls, publishes,
+    # seeds and grants nothing at all.
+    for index, chest in enumerate(((progression.get("daily") or {}).get("chests")) or []):
+        for role in ("guaranteed", "options"):
+            for band in chest.get(role) or []:
+                if band.get("kind") != "utility":
+                    continue
+
+                item = band.get("item") or ""
+                if not item:
+                    errors.append(f"daily chest {index} {role} pays 'utility' and names no item")
+                elif item not in known:
+                    errors.append(f"daily chest {index} {role} pays utility '{item}', which the "
+                                  "utilities block does not define")
+
+    return errors, known
+
+
 GOOD_KINDS = {"hearts", "heart_boost"}
 
 
@@ -2622,6 +2730,9 @@ def main():
 
     errors.extend(check_hints(progression, warnings))
     errors.extend(check_wheel(progression, warnings))
+
+    utility_errors, utilities = check_utilities(progression, keys, warnings)
+    errors.extend(utility_errors)
 
     if shop:
         shelves = ", ".join(f"{n} {shelf}" for shelf, n in sorted(shop["shelves"].items()))

@@ -280,7 +280,30 @@ namespace GlimmerGrove
         protected void Took(int worth)
         {
             Run.Took(worth);
+            Commit();
+        }
 
+        /// <summary>
+        /// Charges the run for a utility that landed, in the unit the mode is graded in.
+        ///
+        /// <b>Every mode goes through here and none of them touches <see cref="Run"/> directly</b>
+        /// — <see cref="Took"/>'s rule, for the resource that costs real money to replace. What
+        /// the charge is worth is the mode's (see <c>SiegeUtility</c>); what this owns is that it
+        /// happens exactly once and that the run notices.
+        /// </summary>
+        protected void Charged(int moves)
+        {
+            Run.Charged(moves);
+            Commit();
+        }
+
+        /// <summary>
+        /// Marks the run as touched and repaints. The half <see cref="Took"/> and
+        /// <see cref="Charged"/> share, written once so the two cannot drift about what
+        /// committing means — which is the flag a heart is charged against.
+        /// </summary>
+        void Commit()
+        {
             if (!_committed)
             {
                 _committed = true;

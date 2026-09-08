@@ -4244,6 +4244,70 @@
   {
    "key": "ui.defeat.wards_reason",
    "text": "Every ward is down, so nothing a match feeds is still standing. Feed the colour that is furthest down the hill."
+  },
+  {
+   "key": "utility.firepot.name",
+   "text": "Firepot"
+  },
+  {
+   "key": "utility.firepot.note",
+   "text": "Bursts on the hill, burning every raider close to where it lands."
+  },
+  {
+   "key": "utility.mending.name",
+   "text": "Mending"
+  },
+  {
+   "key": "utility.mending.note",
+   "text": "Pours into one ward and puts its stones back. It cannot raise a fallen one."
+  },
+  {
+   "key": "utility.surge.name",
+   "text": "Surge"
+  },
+  {
+   "key": "utility.surge.note",
+   "text": "Fills one ward with fuel, so it opens fire whatever colour you have matched."
+  },
+  {
+   "key": "utility.aim.hill",
+   "text": "Drag on the hill, then let go"
+  },
+  {
+   "key": "utility.aim.ward",
+   "text": "Tap a ward"
+  },
+  {
+   "key": "ui.utility.buy",
+   "text": "BUY  {0}"
+  },
+  {
+   "key": "ui.utility.get_gems",
+   "text": "GET GEMS"
+  },
+  {
+   "key": "ui.utility.short",
+   "text": "{0} more gems needed. You have {1}."
+  },
+  {
+   "key": "ui.utility.holding",
+   "text": "You are carrying {0} of {1}."
+  },
+  {
+   "key": "ui.utility.full",
+   "text": "You are carrying all {0} you can."
+  },
+  {
+   "key": "ui.utility.chest_only",
+   "text": "This one comes out of daily chests."
+  },
+  {
+   "key": "ui.utility.bought",
+   "text": "In your pack."
+  },
+  {
+   "key": "ui.utility.no_target",
+   "text": "Nothing there to use it on."
   }
  ]
 }

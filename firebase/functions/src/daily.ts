@@ -24,13 +24,37 @@
 
 import { chestSeed, Rolls } from "./random";
 
-export const DROP_KINDS = ["credits", "gems", "hearts", "heart_boost"] as const;
+/**
+ * Every kind a chest may pay.
+ *
+ * <p>Wider than the four the server actually grants, deliberately. `chestCurrencyValue` sums
+ * by currency and ignores everything else, so a banked kind (`hearts`, `hints`, `utility`) is
+ * rolled here and never granted — but it has to be *rolled*, because each guaranteed band
+ * draws on its own stream and a band this file refused to model would shift every stream
+ * after it. That is the one way a non-currency kind can move real money.</p>
+ *
+ * <p>It was narrower than the client's list for as long as `hints` has shipped, which was
+ * survivable only because nothing had authored a hint band yet. Widened rather than left as
+ * a comment, because the type is what a future editor of this file will trust.</p>
+ */
+export const DROP_KINDS = [
+  "credits", "gems", "hearts", "heart_boost", "run_time", "hints", "utility",
+] as const;
 export type DropKind = (typeof DROP_KINDS)[number];
 
 export interface DropBand {
   kind: DropKind;
   min: number;
   max: number;
+
+  /**
+   * Which thing, for a kind that names one — today, the utility a `utility` band pays.
+   *
+   * It never reaches the generator, so adding one to a published table cannot reroll an
+   * unopened chest. It exists here so two drops of *different* utilities do not fold into
+   * one, which mirrors `ChestDrop.SameAs` on the client.
+   */
+  item?: string;
 }
 
 export interface DropOption extends DropBand {
@@ -83,12 +107,14 @@ class ChestRandom extends Rolls {
 export interface RolledDrop {
   kind: DropKind;
   amount: number;
+  item?: string;
 }
 
 function clampBand(band: DropBand): DropBand {
   const min = band.min < 1 ? 1 : Math.floor(band.min);
   const max = band.max < min ? min : Math.floor(band.max);
-  return { kind: band.kind, min, max };
+  const item = typeof band.item === "string" ? band.item : "";
+  return item ? { kind: band.kind, min, max, item } : { kind: band.kind, min, max };
 }
 
 /**
@@ -116,19 +142,24 @@ export function rollChest(
    * whose floor and whose bonus are both credits awards one id, so the two halves have
    * to be one number on both sides or the client and the server disagree about a wallet.
    */
-  const merge = (kind: DropKind, amount: number): void => {
+  const merge = (kind: DropKind, amount: number, item?: string): void => {
     if (amount <= 0) return;
 
-    const existing = drops.find((drop) => drop.kind === kind);
+    // Keyed on the whole reward and not on the kind alone: a chest paying two different
+    // utilities pays two of them, and folding them would grant one twice and the other
+    // never. Mirrors `ChestDrop.SameAs`.
+    const key = item ?? "";
+    const existing = drops.find((drop) => drop.kind === kind && (drop.item ?? "") === key);
+
     if (existing) existing.amount += amount;
-    else drops.push({ kind, amount });
+    else drops.push(key ? { kind, amount, item: key } : { kind, amount });
   };
 
   const guaranteed = chest.guaranteed ?? [];
   for (let i = 0; i < guaranteed.length; i++) {
     const band = clampBand(guaranteed[i]);
     const random = new ChestRandom(playerKey, dayKey, chestIndex, streamForGuaranteed(i));
-    merge(band.kind, random.between(band.min, band.max));
+    merge(band.kind, random.between(band.min, band.max), band.item);
   }
 
   const options = chest.options ?? [];
@@ -147,7 +178,7 @@ export function rollChest(
 
     const band = clampBand(chosen);
     const amountRandom = new ChestRandom(playerKey, dayKey, chestIndex, STREAM_AMOUNT);
-    merge(band.kind, amountRandom.between(band.min, band.max));
+    merge(band.kind, amountRandom.between(band.min, band.max), band.item);
   }
 
   return drops;
